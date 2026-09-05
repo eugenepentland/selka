@@ -1,8 +1,8 @@
 # C/D: typed-handle pool foundation
 
-Status: backend implemented in `src/typed_pool.zig`. Source pool declarations,
-guest handle types/operations, and arena-backed allocation remain pending. This
-experiment does not complete C or D.
+Status: backend implemented in `src/typed_pool.zig`; [source declarations and
+operations](source-pools.md) now integrate it with the compiler and VM. Arena-backed
+pools remain pending. This experiment does not complete C or D.
 
 ## Identity and storage
 
@@ -58,7 +58,7 @@ Cumulative insertion/removal counters saturate.
 - 10,000 graph creation/clear cycles within 4 KiB live allocation and zero bytes
   remaining after deinitialization.
 
-Source acceptance must still show nominal guest handle diagnostics, recoverable
-pool errors, source ownership/effects, and graph programs through the CLI. Arena
-experiments must separately establish reset/lifetime rules and backing allocation
-behavior. Host generic pool tests do not establish those language guarantees.
+[Source acceptance](source-pools.md) now covers nominal guest handle diagnostics,
+recoverable pool errors, source ownership/effects, and graph programs through the CLI.
+Nested source arena experiments must still establish escape rules and backing
+allocation behavior. Host generic pool tests alone do not establish those language guarantees.

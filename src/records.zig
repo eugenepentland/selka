@@ -52,9 +52,11 @@ pub const Catalog = struct {
 };
 
 /// All storage is owned by the compilation arena.
-pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const ast.Record, domains: []const ast.Domain, variant_types: []const ast.Variants, arrays: []const ast.ArrayType, buffers: []const ast.Domain, resources: []const ast.Domain, sink: *diagnostic.Sink) Error!Catalog {
-    const storage = try allocator.alloc(typed.Record, declarations.len + domains.len + variant_types.len + buffers.len + resources.len + arrays.len);
-    var catalog: Catalog = .{ .records = storage[0 .. declarations.len + domains.len + variant_types.len + buffers.len + resources.len], .names = .empty, .field_names = try allocator.alloc(std.StringHashMapUnmanaged(usize), declarations.len + domains.len + variant_types.len + buffers.len + resources.len) };
+pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const ast.Record, domains: []const ast.Domain, variant_types: []const ast.Variants, arrays: []const ast.ArrayType, buffers: []const ast.Domain, resources: []const ast.Domain, pools: []const ast.Pool, sink: *diagnostic.Sink) Error!Catalog {
+    const pool_base = declarations.len + domains.len + variant_types.len + buffers.len + resources.len;
+    const named_count = pool_base + pools.len * 2;
+    const storage = try allocator.alloc(typed.Record, named_count + arrays.len);
+    var catalog: Catalog = .{ .records = storage[0..named_count], .names = .empty, .field_names = try allocator.alloc(std.StringHashMapUnmanaged(usize), named_count) };
     @memset(catalog.field_names, .empty);
     for (declarations, 0..) |declaration, i| {
         const name = src.text(declaration.name);
@@ -103,6 +105,17 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
         const kind = std.meta.stringToEnum(@import("external_resources.zig").Kind, src.text(declaration.backing)) orelse return sink.fail("E_RESOURCE_KIND", declaration.backing, "resource kind must be filesystem or network");
         try catalog.names.put(allocator, name, id);
         storage[index] = .{ .id = id, .name = name, .declaration = declaration.name, .fields = &.{}, .resource = kind, .move_only = true };
+    }
+    for (pools, 0..) |declaration, offset| {
+        for ([_]Span{ declaration.name, declaration.handle }, 0..) |span, part| {
+            const name = src.text(span);
+            if (catalog.names.get(name)) |previous| return sink.failRelated("E_DUPLICATE_TYPE", span, "type is already declared", .{ .span = storage[previous.recordIndex()].declaration, .message = "previous type declaration" });
+            const index = pool_base + offset * 2 + part;
+            const id: typed.Type = @fromBackingInt(index + typed.Type.record_base);
+            try catalog.names.put(allocator, name, id);
+            storage[index] = .{ .id = id, .name = name, .declaration = span, .fields = &.{} };
+            if (part == 1) storage[index].handle_pool = storage[index - 1].id;
+        }
     }
     var interned: std.AutoHashMapUnmanaged(typed.Array, typed.Type) = .empty;
     for (arrays) |syntax| {
@@ -168,6 +181,10 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
     for (buffers, 0..) |declaration, offset| {
         storage[declarations.len + domains.len + variant_types.len + offset].buffer = try catalog.resolve(src, declaration.backing, sink);
     }
+    for (pools, 0..) |declaration, offset| {
+        const index = pool_base + offset * 2;
+        storage[index].pool = .{ .element = try catalog.resolve(src, declaration.element, sink), .handle = storage[index + 1].id };
+    }
     // Iterative DFS rejects cycles without expanding records or recursing on the host.
     const State = enum { unseen, visiting, complete };
     const states = try allocator.alloc(State, catalog.records.len);
@@ -184,10 +201,10 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
             const last = work.items.len - 1;
             const visit = work.items[last];
             const schema = catalog.records[visit.record];
-            const edge_count = if (schema.variants) |v| v.cases.len else if (schema.array != null or schema.buffer != null) @as(usize, 1) else schema.fields.len;
+            const edge_count = if (schema.variants) |v| v.cases.len else if (schema.array != null or schema.buffer != null or schema.pool != null) @as(usize, 1) else schema.fields.len;
             if (visit.next_field == edge_count) {
                 var requires_handling = false;
-                var move_only = schema.buffer != null or schema.resource != null;
+                var move_only = schema.buffer != null or schema.resource != null or schema.pool != null;
                 if (schema.variants) |variants| {
                     requires_handling = variants.fallible;
                     for (variants.cases) |case| if (case.payload) |payload| {
@@ -206,6 +223,9 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
                 if (schema.buffer) |element| {
                     if (typed.moveOnly(element, catalog.records) or typed.requiresHandling(element, catalog.records)) return sink.fail("E_BUFFER_ELEMENT", schema.declaration, "buffer elements must be ordinary copyable values without result obligations");
                 }
+                if (schema.pool) |pool| {
+                    if (typed.moveOnly(pool.element, catalog.records) or typed.requiresHandling(pool.element, catalog.records)) return sink.fail("E_POOL_ELEMENT", schema.declaration, "pool elements must be ordinary copyable values without result obligations");
+                }
                 catalog.records[visit.record].move_only = move_only;
                 catalog.records[visit.record].requires_handling = requires_handling;
                 states[visit.record] = .complete;
@@ -213,7 +233,7 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
                 continue;
             }
             work.items[last].next_field += 1;
-            const field: typed.Field = if (schema.variants) |v| .{ .name = v.cases[visit.next_field].name, .ty = v.cases[visit.next_field].payload orelse continue, .declaration = v.cases[visit.next_field].declaration } else if (schema.array) |a| .{ .name = "element", .ty = a.element, .declaration = schema.declaration } else if (schema.buffer) |element| .{ .name = "element", .ty = element, .declaration = schema.declaration } else schema.fields[visit.next_field];
+            const field: typed.Field = if (schema.variants) |v| .{ .name = v.cases[visit.next_field].name, .ty = v.cases[visit.next_field].payload orelse continue, .declaration = v.cases[visit.next_field].declaration } else if (schema.array) |a| .{ .name = "element", .ty = a.element, .declaration = schema.declaration } else if (schema.buffer) |element| .{ .name = "element", .ty = element, .declaration = schema.declaration } else if (schema.pool) |pool| .{ .name = "element", .ty = pool.element, .declaration = schema.declaration } else schema.fields[visit.next_field];
             if (!field.ty.isAggregate()) continue;
             const child = field.ty.recordIndex();
             if (states[child] == .visiting) return sink.fail("E_RECURSIVE_RECORD", field.declaration, "record fields must form a finite by-value layout; this field closes a cycle");

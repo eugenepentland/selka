@@ -93,6 +93,8 @@ pub const Value = union(enum) {
     aggregate: *Aggregate,
     resource: *Resource,
     external_resource: *ExternalResource,
+    pool: *@import("pool_runtime.zig").Owner,
+    handle: struct { ty: Type, id: @import("pool_runtime.zig").Id },
     environment_capability: @import("environment.zig").Capability,
     resource_capability: @import("external_resources.zig").Capability,
     allocator: @import("memory.zig").AllocatorCapability,
@@ -100,6 +102,8 @@ pub const Value = union(enum) {
 
     pub fn typeOf(self: Value) Type {
         return switch (self) {
+            .pool => |owner| owner.ty,
+            .handle => |handle| handle.ty,
             .allocator => .allocator,
             .environment_capability => .environment_cap,
             .external_resource => |resource| resource.ty,
@@ -192,6 +196,7 @@ pub const Value = union(enum) {
         return .{ .external_resource = resource };
     }
     pub fn retain(self: Value) Value {
+        if (self == .pool) self.pool.references += 1;
         if (self == .external_resource) self.external_resource.references += 1;
         if (self == .resource) self.resource.references += 1;
         if (self == .aggregate) self.aggregate.references += 1;
@@ -217,6 +222,10 @@ pub const Value = union(enum) {
     }
 
     fn enqueueRelease(value: Value, pending: *?*Aggregate, allocator: std.mem.Allocator) void {
+        if (value == .pool) {
+            value.pool.release();
+            return;
+        }
         if (value == .external_resource) {
             const resource = value.external_resource;
             std.debug.assert(resource.references != 0);

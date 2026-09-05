@@ -4,7 +4,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 
-pub const version = "exact-v25";
+pub const version = "exact-v26";
 pub const Population = enum { production, tests, generated, reference, intentional };
 pub const near = @import("near_duplicates.zig");
 pub const Options = struct { min_nodes: usize = 8, population: Population = .production, approximate: bool = false, near_options: near.Options = .{} };
@@ -51,6 +51,14 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                 writer.print("expr {s} {s} obligation {}\n", .{ typed.typeName(node.ty, program.records), @tagName(node.data), typed.requiresHandling(node.ty, program.records) }) catch return error.OutOfMemory;
                 writer.print("move-only {}\n", .{typed.moveOnly(node.ty, program.records)}) catch return error.OutOfMemory;
                 switch (node.data) {
+                    .pool_operation => |operation| {
+                        writer.print("pool {s} local {d}\n", .{ @tagName(operation.kind), @backingInt(operation.owner) }) catch return error.OutOfMemory;
+                        var i = operation.arguments.len;
+                        while (i > 0) {
+                            i -= 1;
+                            try work.append(allocator, .{ .expression = operation.arguments[i] });
+                        }
+                    },
                     .buffer_operation => |operation| {
                         writer.print("buffer {s} local {d}\n", .{ @tagName(operation.kind), @backingInt(operation.owner) }) catch return error.OutOfMemory;
                         var i = operation.arguments.len;
@@ -107,7 +115,7 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                         writer.print("external {s}\n", .{@tagName(read.kind)}) catch return error.OutOfMemory;
                         try work.append(allocator, .{ .expression = read.capability });
                     },
-                    .acquire_buffer => |acquire| {
+                    .acquire_buffer, .acquire_pool => |acquire| {
                         try work.append(allocator, .{ .expression = acquire.capacity });
                         try work.append(allocator, .{ .expression = acquire.allocator });
                     },

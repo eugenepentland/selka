@@ -34,7 +34,7 @@ const Output = struct {
 };
 fn genericHead(tag: Tag) bool {
     return switch (tag) {
-        .kw_cast, .kw_wrap, .kw_acquire_buffer, .kw_acquire_resource, .kw_complete_resource, .kw_clock_now, .kw_random_u64, .kw_environment_get, .kw_restrict_resource, .kw_read_resource, .kw_write_resource, .kw_read_resource_slice, .kw_write_resource_slice, .kw_write_buffer, .kw_append_buffer, .kw_resize_buffer, .kw_reserve_buffer => true,
+        .kw_cast, .kw_wrap, .kw_insert_pool, .kw_read_pool, .kw_replace_pool, .kw_remove_pool, .kw_acquire_pool, .kw_acquire_buffer, .kw_acquire_resource, .kw_complete_resource, .kw_clock_now, .kw_random_u64, .kw_environment_get, .kw_restrict_resource, .kw_read_resource, .kw_write_resource, .kw_read_resource_slice, .kw_write_resource_slice, .kw_write_buffer, .kw_append_buffer, .kw_resize_buffer, .kw_reserve_buffer => true,
         else => false,
     };
 }

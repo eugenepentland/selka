@@ -101,6 +101,7 @@ test {
     _ = @import("memory_test.zig");
     _ = @import("owned_scope_test.zig");
     _ = @import("buffers_test.zig");
+    _ = @import("pools_test.zig");
     _ = @import("effects_test.zig");
     _ = @import("allocator_capabilities_test.zig");
     _ = @import("external_capabilities_test.zig");

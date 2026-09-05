@@ -7,9 +7,10 @@ const memory = @import("memory.zig");
 const external = @import("external_capabilities.zig");
 const Diagnostic = @import("diagnostic.zig").Diagnostic;
 const environment = @import("environment.zig");
+const pool_runtime = @import("pool_runtime.zig");
 const resource_runtime = @import("resource_runtime.zig");
 pub const MemoryBacking = enum { general, arena };
-pub const Options = struct { memory_backing: MemoryBacking = .general, environment: ?environment.Provider = null, resources: resource_runtime.Options = .{}, external: external.Providers = .{}, provide_allocator: bool = true, memory_statistics: ?*memory.Statistics = null, memory_limits: memory.Limits = .{}, max_steps: u64 = 10_000_000, max_frames: u64 = 1024 };
+pub const Options = struct { pool_limits: pool_runtime.Limits = .{}, pool_statistics: ?*pool_runtime.Statistics = null, memory_backing: MemoryBacking = .general, environment: ?environment.Provider = null, resources: resource_runtime.Options = .{}, external: external.Providers = .{}, provide_allocator: bool = true, memory_statistics: ?*memory.Statistics = null, memory_limits: memory.Limits = .{}, max_steps: u64 = 10_000_000, max_frames: u64 = 1024 };
 pub const Result = union(enum) { value: i64, trap: Diagnostic };
 fn integer(value: typed.Value, allocator: std.mem.Allocator) error{InternalError}!i64 {
     defer value.release(allocator);
@@ -85,6 +86,11 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
     defer {
         region.deinit();
         if (options.memory_statistics) |statistics| statistics.* = storage.statistics;
+    }
+    var pools: pool_runtime.Runtime = .{ .allocator = allocator, .limits = options.pool_limits };
+    defer {
+        std.debug.assert(pools.statistics.live_pools == 0);
+        if (options.pool_statistics) |statistics| statistics.* = pools.statistics;
     }
     var environment_execution = environment.Runtime.init(storage.identity, options.environment);
     defer environment_execution.close();
@@ -275,6 +281,15 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 }
                 frames.items[frame_index].pc = arm.target;
             },
+            .cmp_handle => |comparison| {
+                const right = try pop(&stack, frame.operand_base);
+                defer right.release(allocator);
+                const left = try pop(&stack, frame.operand_base);
+                defer left.release(allocator);
+                if (left != .handle or right != .handle or left.typeOf() != comparison.ty or right.typeOf() != comparison.ty) return error.InternalError;
+                const equal = std.meta.eql(left.handle.id, right.handle.id);
+                try stack.append(allocator, .{ .bool = if (comparison.predicate == .eq) equal else !equal });
+            },
             .cmp_enum => |comparison| {
                 const right = try pop(&stack, frame.operand_base);
                 defer right.release(allocator);
@@ -436,6 +451,35 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 const reference = references.items[frame.reference_base + @backingInt(id)] orelse return trap("R_REFERENCE_LIFETIME", "reference is not active", instruction.span, frames.items, program);
                 storage.write(reference.lease, 0, value) catch |err| return memoryFailure(err, instruction, frames.items, program);
             },
+            .pool_operation => |operation| {
+                const count = operation.kind.arity();
+                if (stack.items.len - frame.operand_base < count) return error.InternalError;
+                const start = stack.items.len - count;
+                const local_index = frame.local_base + @backingInt(operation.owner);
+                if (owners.contains(local_index)) return error.InternalError;
+                const local = locals.items[local_index] orelse return error.InternalError;
+                if (local != .pool or local.pool.runtime != &pools) return error.InternalError;
+                const schema = program.records[local.pool.ty.recordIndex()].pool orelse return error.InternalError;
+                var status: i64 = 0;
+                const output = local.pool.perform(operation.kind, schema, stack.items[start..]) catch |err| failed: {
+                    status = switch (err) {
+                        error.InvalidHandle => 1,
+                        error.ForeignPool => 2,
+                        error.CapacityLimit => 3,
+                        error.OutOfMemory => return error.OutOfMemory,
+                        else => return error.InternalError,
+                    };
+                    if (!operation.kind.fallible()) return error.InternalError;
+                    break :failed typed.Value{ .i64 = status };
+                };
+                defer output.release(allocator);
+                for (stack.items[start..]) |argument| argument.release(allocator);
+                stack.shrinkRetainingCapacity(start);
+                if (operation.kind.fallible()) {
+                    const shape = typed.resultShape(operation.output, program.records).?;
+                    try pushOwned(&stack, allocator, try typed.Value.createVariant(allocator, operation.output, if (status == 0) shape.ok_tag else shape.error_tag, output));
+                } else try pushOwned(&stack, allocator, output.retain());
+            },
             .buffer_operation => |operation| {
                 const count = operation.kind.arity();
                 if (stack.items.len - frame.operand_base < count) return error.InternalError;
@@ -568,6 +612,30 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 };
                 const shape = typed.resultShape(read.output, program.records).?;
                 try pushOwned(&stack, allocator, try typed.Value.createVariant(allocator, read.output, if (status == 0) shape.ok_tag else shape.error_tag, if (status == 0) typed.Value.number(shape.ok_type, sample) else .{ .i64 = status }));
+            },
+            .acquire_pool => |ty| {
+                const capacity = try numeric(&stack, frame.operand_base, null, allocator);
+                const authority = try pop(&stack, frame.operand_base);
+                defer authority.release(allocator);
+                if (authority != .allocator) return error.InternalError;
+                storage.checkAllocator(authority.allocator) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                const shape = typed.resultShape(ty, program.records).?;
+                var status: i64 = 1;
+                const owner: ?typed.Value = if (capacity < 0 or capacity > std.math.maxInt(usize)) null else pools.acquire(shape.ok_type, @intCast(capacity)) catch |err| switch (err) {
+                    error.CapacityLimit => null,
+                    error.IdentityExhausted => exhausted: {
+                        status = 2;
+                        break :exhausted null;
+                    },
+                    error.OutOfMemory => return error.OutOfMemory,
+                    else => return error.InternalError,
+                };
+                if (owner) |value| {
+                    defer value.release(allocator);
+                    try pushOwned(&stack, allocator, try typed.Value.createVariant(allocator, ty, shape.ok_tag, value));
+                } else {
+                    try pushOwned(&stack, allocator, try typed.Value.createVariant(allocator, ty, shape.error_tag, .{ .i64 = status }));
+                }
             },
             .acquire_buffer => |ty| {
                 const capacity = try numeric(&stack, frame.operand_base, null, allocator);

@@ -50,10 +50,23 @@ pub const Parser = struct {
         var functions: std.ArrayList(ast.Function) = .empty;
         var records: std.ArrayList(ast.Record) = .empty;
         var domains: std.ArrayList(ast.Domain) = .empty;
+        var pools: std.ArrayList(ast.Pool) = .empty;
         var buffers: std.ArrayList(ast.Domain) = .empty;
         var resources: std.ArrayList(ast.Domain) = .empty;
         var variants: std.ArrayList(ast.Variants) = .empty;
         while (self.current().tag != .eof) {
+            if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "pool")) {
+                self.pos += 1;
+                const name = try self.expect(.ident);
+                _ = try self.expect(.lparen);
+                const handle = try self.expect(.ident);
+                _ = try self.expect(.rparen);
+                _ = try self.expect(.colon);
+                const element = try self.typeName();
+                _ = try self.expect(.semicolon);
+                try pools.append(self.allocator, .{ .name = name.span, .handle = handle.span, .element = element });
+                continue;
+            }
             if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "buffer")) {
                 self.pos += 1;
                 const name = try self.expect(.ident);
@@ -117,7 +130,7 @@ pub const Parser = struct {
             }
             try functions.append(self.allocator, try self.function(null));
         }
-        return .{ .resources = try resources.toOwnedSlice(self.allocator), .buffers = try buffers.toOwnedSlice(self.allocator), .variants = try variants.toOwnedSlice(self.allocator), .domains = try domains.toOwnedSlice(self.allocator), .array_types = try self.array_types.toOwnedSlice(self.allocator), .nodes = self.nodes, .statements = self.statements, .functions = try functions.toOwnedSlice(self.allocator), .records = try records.toOwnedSlice(self.allocator) };
+        return .{ .pools = try pools.toOwnedSlice(self.allocator), .resources = try resources.toOwnedSlice(self.allocator), .buffers = try buffers.toOwnedSlice(self.allocator), .variants = try variants.toOwnedSlice(self.allocator), .domains = try domains.toOwnedSlice(self.allocator), .array_types = try self.array_types.toOwnedSlice(self.allocator), .nodes = self.nodes, .statements = self.statements, .functions = try functions.toOwnedSlice(self.allocator), .records = try records.toOwnedSlice(self.allocator) };
     }
     fn function(self: *Parser, owner: ?Span) diagnostic.Error!ast.Function {
         const restricted = self.take(.kw_private);
@@ -344,6 +357,34 @@ pub const Parser = struct {
         defer self.depth -= 1;
         const token = self.current();
         var left: ast.NodeId = switch (token.tag) {
+            .kw_len_pool, .kw_capacity_pool, .kw_read_pool, .kw_replace_pool, .kw_insert_pool, .kw_remove_pool, .kw_clear_pool => pool: {
+                self.pos += 1;
+                const kind: @import("pool_operations.zig").Kind = switch (token.tag) {
+                    .kw_len_pool => .length,
+                    .kw_capacity_pool => .capacity,
+                    .kw_read_pool => .read,
+                    .kw_replace_pool => .replace,
+                    .kw_insert_pool => .insert,
+                    .kw_remove_pool => .remove,
+                    .kw_clear_pool => .clear,
+                    else => unreachable,
+                };
+                const result: ?Span = if (kind.fallible()) result: {
+                    _ = try self.expect(.lt);
+                    const ty = try self.typeName();
+                    _ = try self.expect(.gt);
+                    break :result ty;
+                } else null;
+                _ = try self.expect(.lparen);
+                const owner = try self.expect(.ident);
+                const arguments = try self.allocator.alloc(ast.NodeId, kind.arity());
+                for (arguments) |*argument| {
+                    _ = try self.expect(.comma);
+                    argument.* = try self.expression(0);
+                }
+                const close = try self.expect(.rparen);
+                break :pool try self.append(.{ .span = .join(token.span, close.span), .data = .{ .pool_operation = .{ .kind = kind, .owner = owner.span, .result = result, .arguments = arguments } } });
+            },
             .kw_len_buffer, .kw_capacity_buffer, .kw_read_buffer, .kw_write_buffer, .kw_append_buffer, .kw_resize_buffer, .kw_reserve_buffer => buffer: {
                 self.pos += 1;
                 const kind: @import("buffer_operations.zig").Kind = switch (token.tag) {
@@ -484,19 +525,19 @@ pub const Parser = struct {
                 const close = try self.expect(.rparen);
                 break :read try self.append(.{ .span = .join(token.span, close.span), .data = .{ .read_ref = name.span } });
             },
-            .kw_cast, .kw_wrap, .kw_acquire_buffer => cast: {
+            .kw_cast, .kw_wrap, .kw_acquire_buffer, .kw_acquire_pool => cast: {
                 self.pos += 1;
                 _ = try self.expect(.lt);
                 const ty = try self.typeName();
                 _ = try self.expect(.gt);
                 _ = try self.expect(.lparen);
                 const first = try self.expression(0);
-                const value = if (token.tag == .kw_acquire_buffer) value: {
+                const value = if (token.tag == .kw_acquire_buffer or token.tag == .kw_acquire_pool) value: {
                     _ = try self.expect(.comma);
                     break :value try self.expression(0);
                 } else first;
                 const close = try self.expect(.rparen);
-                break :cast try self.append(.{ .span = .join(token.span, close.span), .data = if (token.tag == .kw_acquire_buffer) .{ .acquire_buffer = .{ .ty = ty, .allocator = first, .value = value } } else if (token.tag == .kw_cast) .{ .cast = .{ .ty = ty, .value = value } } else .{ .wrap = .{ .ty = ty, .value = value } } });
+                break :cast try self.append(.{ .span = .join(token.span, close.span), .data = if (token.tag == .kw_acquire_pool) .{ .acquire_pool = .{ .ty = ty, .allocator = first, .value = value } } else if (token.tag == .kw_acquire_buffer) .{ .acquire_buffer = .{ .ty = ty, .allocator = first, .value = value } } else if (token.tag == .kw_cast) .{ .cast = .{ .ty = ty, .value = value } } else .{ .wrap = .{ .ty = ty, .value = value } } });
             },
             .kw_new => record: {
                 self.pos += 1;

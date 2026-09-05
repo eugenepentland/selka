@@ -14,13 +14,15 @@ pub fn dump(allocator: std.mem.Allocator, program: bc.Program, src: Source) ![]u
 
 fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer.Error!void {
     for (program.records) |record| {
-        try writer.print("{s} {s} type#{d}\n", .{ if (record.variants) |v| (if (v.fallible) "result" else if (v.is_union) "union" else "enum") else if (record.resource != null) "resource" else if (record.buffer != null) "buffer" else if (record.tableKey() != null) "table" else if (record.array != null) "array" else if (record.domain != null) "domain" else "record", record.name, @backingInt(record.id) });
+        try writer.print("{s} {s} type#{d}\n", .{ if (record.variants) |v| (if (v.fallible) "result" else if (v.is_union) "union" else "enum") else if (record.pool != null) "pool" else if (record.handle_pool != null) "handle" else if (record.resource != null) "resource" else if (record.buffer != null) "buffer" else if (record.tableKey() != null) "table" else if (record.array != null) "array" else if (record.domain != null) "domain" else "record", record.name, @backingInt(record.id) });
         if (record.variants) |v| for (v.cases, 0..) |variant, tag| {
             try writer.print("  variant {d}: {s}", .{ tag, variant.name });
             if (variant.payload) |ty| try writer.print(": {s}", .{typed.typeName(ty, program.records)});
             try writer.writeByte('\n');
         };
         if (record.resource) |kind| try writer.print("  provider {s} (owned)\n", .{@tagName(kind)});
+        if (record.pool) |pool| try writer.print("  element {s} handle {s} (owned)\n", .{ typed.typeName(pool.element, program.records), typed.typeName(pool.handle, program.records) });
+        if (record.handle_pool) |pool| try writer.print("  pool {s} (inert ID)\n", .{typed.typeName(pool, program.records)});
         if (record.buffer) |element| try writer.print("  element {s} (owned)\n", .{typed.typeName(element, program.records)});
         if (record.domain) |backing| try writer.print("  backing {s} (private)\n", .{typed.typeName(backing, program.records)});
         for (record.fields, 0..) |field, i| try writer.print("  field {d}: {s}: {s}\n", .{ i, field.name, typed.typeName(field.ty, program.records) });
@@ -63,6 +65,7 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
                     for (dispatch.arms, program.records[dispatch.ty.recordIndex()].variants.?.cases) |arm, variant| try writer.print(" {s}:target={d},slot={?d}", .{ variant.name, arm.target, if (arm.slot) |slot| @as(?usize, @backingInt(slot)) else null });
                 },
                 .cmp_enum => |comparison| try writer.print("CMP_ENUM {s} {s}", .{ typed.typeName(comparison.ty, program.records), @tagName(comparison.predicate) }),
+                .cmp_handle => |comparison| try writer.print("CMP_HANDLE {s} {s}", .{ typed.typeName(comparison.ty, program.records), @tagName(comparison.predicate) }),
                 .wrap_domain => |ty| try writer.print("WRAP_DOMAIN {s}", .{typed.typeName(ty, program.records)}),
                 .unwrap_domain => |ty| try writer.print("UNWRAP_DOMAIN {s}", .{typed.typeName(ty, program.records)}),
                 .cast_integer => |ty| try writer.print("CAST_INT {f}", .{ty}),
@@ -78,6 +81,7 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
                 .read_ref => |id| try writer.print("READ_REF {d}", .{@backingInt(id)}),
                 .write_ref => |id| try writer.print("WRITE_REF {d}", .{@backingInt(id)}),
                 .buffer_operation => |operation| try writer.print("BUFFER_{s} local={d} -> {s}", .{ @tagName(operation.kind), @backingInt(operation.owner), typed.typeName(operation.output, program.records) }),
+                .pool_operation => |operation| try writer.print("POOL_{s} local={d} -> {s}", .{ @tagName(operation.kind), @backingInt(operation.owner), typed.typeName(operation.output, program.records) }),
                 .take_field => |read| try writer.print("TAKE_FIELD local={d} field={d} -> {s}", .{ @backingInt(read.owner), read.field, typed.typeName(read.output, program.records) }),
                 .read_field => |read| try writer.print("READ_FIELD local={d} field={d} -> {s}", .{ @backingInt(read.owner), read.field, typed.typeName(read.output, program.records) }),
                 .resource_io => |io| try writer.print("RESOURCE_{s} local={d} -> {s}", .{ if (io.reference != null) (if (io.kind == .read) "read_slice" else "write_slice") else @tagName(io.kind), @backingInt(io.owner), typed.typeName(io.output, program.records) }),
@@ -86,6 +90,7 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
                 .complete_resource => |output| try writer.print("COMPLETE_RESOURCE -> {s}", .{typed.typeName(output, program.records)}),
                 .acquire_resource => |acquire| try writer.print("ACQUIRE_RESOURCE -> {s}", .{typed.typeName(acquire.output, program.records)}),
                 .external_read => |read| try writer.print("EXTERNAL_{s} -> {s}", .{ @tagName(read.kind), typed.typeName(read.output, program.records) }),
+                .acquire_pool => |ty| try writer.print("ACQUIRE_POOL {f}", .{ty}),
                 .acquire_buffer => |ty| try writer.print("ACQUIRE_BUFFER {f}", .{ty}),
                 .move_local => |slot| try writer.print("MOVE_LOCAL {d}", .{@backingInt(slot)}),
                 .drop_local => |slot| try writer.print("DROP_LOCAL {d}", .{@backingInt(slot)}),

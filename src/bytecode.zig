@@ -17,6 +17,7 @@ pub const Instruction = struct {
         wrap_domain: typed.Type,
         make_variant: struct { ty: typed.Type, tag: usize },
         switch_variant: struct { ty: typed.Type, arms: []const SwitchArm },
+        cmp_handle: struct { ty: typed.Type, predicate: Equality },
         cmp_enum: struct { ty: typed.Type, predicate: Equality },
         unwrap_domain: typed.Type,
         neg_integer: typed.Type,
@@ -38,12 +39,14 @@ pub const Instruction = struct {
         take_field: FieldAccess,
         write_ref: typed.ReferenceId,
         buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: typed.LocalId, output: typed.Type },
+        pool_operation: struct { kind: @import("pool_operations.zig").Kind, owner: typed.LocalId, output: typed.Type },
         complete_resource: typed.Type,
         acquire_resource: struct { output: typed.Type, request: typed.Type },
         resource_io: struct { reference: ?typed.ReferenceId = null, kind: @import("external_resources.zig").IoKind, owner: typed.LocalId, output: typed.Type, input: ?typed.Type },
         restrict_resource: struct { permissions: @import("external_resources.zig").Permissions, ty: typed.Type },
         environment_get: struct { output: typed.Type, name: typed.Type },
         external_read: struct { kind: @import("external_capabilities.zig").Kind, output: typed.Type },
+        acquire_pool: typed.Type,
         acquire_buffer: typed.Type,
         move_local: typed.LocalId,
         drop_local: typed.LocalId,
@@ -98,6 +101,15 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
     try @import("effects.zig").validate(allocator, program);
     for (program.records, 0..) |record, i| {
         if (@backingInt(record.id) != i + typed.Type.record_base) return error.InternalError;
+        if (record.pool) |pool| {
+            if (!validType(pool.element, program) or typed.moveOnly(pool.element, program.records) or typed.requiresHandling(pool.element, program.records) or !validType(pool.handle, program) or !pool.handle.isAggregate()) return error.InternalError;
+            if (program.records[pool.handle.recordIndex()].handle_pool != record.id or !record.move_only or record.requires_handling or record.handle_pool != null or record.resource != null or record.buffer != null or record.array != null or record.domain != null or record.variants != null or record.fields.len != 0) return error.InternalError;
+        }
+        if (record.handle_pool) |owner| {
+            if (!validType(owner, program) or !owner.isAggregate()) return error.InternalError;
+            const pool = program.records[owner.recordIndex()].pool orelse return error.InternalError;
+            if (pool.handle != record.id or record.move_only or record.requires_handling or record.pool != null or record.resource != null or record.buffer != null or record.array != null or record.domain != null or record.variants != null or record.fields.len != 0) return error.InternalError;
+        }
         if (record.resource != null) {
             if (!record.move_only or record.requires_handling or record.buffer != null or record.array != null or record.domain != null or record.variants != null or record.fields.len != 0) return error.InternalError;
         }
@@ -207,6 +219,9 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                 const schema = try variantSchema(variant.ty, program);
                 if (variant.tag >= schema.cases.len) return error.InternalError;
             },
+            .cmp_handle => |comparison| {
+                if (!validType(comparison.ty, program) or !comparison.ty.isAggregate() or program.records[comparison.ty.recordIndex()].handle_pool == null) return error.InternalError;
+            },
             .cmp_enum => |comparison| {
                 if ((try variantSchema(comparison.ty, program)).is_union) return error.InternalError;
             },
@@ -229,6 +244,17 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                 if (local.reference_parameter != null or !validType(local.ty, program) or !local.ty.isAggregate()) return error.InternalError;
                 const schema = program.records[local.ty.recordIndex()];
                 if (!schema.isRecord() or read.field >= schema.fields.len or schema.fields[read.field].ty != read.output or (instruction.op == .read_field and (typed.moveOnly(read.output, program.records) or typed.requiresHandling(read.output, program.records))) or (instruction.op == .take_field and !typed.moveOnly(local.ty, program.records) and !typed.requiresHandling(local.ty, program.records))) return error.InternalError;
+            },
+            .pool_operation => |operation| {
+                if (@backingInt(operation.owner) >= function.locals.len or !validType(operation.output, program)) return error.InternalError;
+                const local = function.locals[@backingInt(operation.owner)];
+                if (local.reference_parameter != null or !validType(local.ty, program) or !local.ty.isAggregate() or (operation.kind.mutates() and !local.mutable)) return error.InternalError;
+                const pool = program.records[local.ty.recordIndex()].pool orelse return error.InternalError;
+                const expected = operation.kind.output(pool);
+                if (operation.kind.fallible()) {
+                    const shape = typed.resultShape(operation.output, program.records) orelse return error.InternalError;
+                    if (shape.ok_type != expected or shape.error_type != .i64) return error.InternalError;
+                } else if (operation.output != expected) return error.InternalError;
             },
             .buffer_operation => |operation| {
                 if (@backingInt(operation.owner) >= function.locals.len or !validType(operation.output, program)) return error.InternalError;
@@ -275,6 +301,10 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                 const shape = typed.resultShape(read.output, program.records) orelse return error.InternalError;
                 if (shape.ok_type != (if (read.kind == .clock) typed.Type.i64 else typed.Type.u64) or shape.error_type != .i64) return error.InternalError;
             },
+            .acquire_pool => |ty| {
+                const shape = typed.resultShape(ty, program.records) orelse return error.InternalError;
+                if (!validType(shape.ok_type, program) or !shape.ok_type.isAggregate() or program.records[shape.ok_type.recordIndex()].pool == null or shape.error_type != .i64) return error.InternalError;
+            },
             .acquire_buffer => |ty| {
                 const shape = typed.resultShape(ty, program.records) orelse return error.InternalError;
                 if (!validType(shape.ok_type, program) or !shape.ok_type.isAggregate() or program.records[shape.ok_type.recordIndex()].buffer == null or shape.error_type != .i64) return error.InternalError;
@@ -311,7 +341,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             },
             .make_record => |record| {
                 if (!record.ty.isAggregate() or !validType(record.ty, program)) return error.InternalError;
-                if (program.records[record.ty.recordIndex()].resource != null or program.records[record.ty.recordIndex()].buffer != null or program.records[record.ty.recordIndex()].domain != null or program.records[record.ty.recordIndex()].variants != null) return error.InternalError;
+                if (program.records[record.ty.recordIndex()].pool != null or program.records[record.ty.recordIndex()].handle_pool != null or program.records[record.ty.recordIndex()].resource != null or program.records[record.ty.recordIndex()].buffer != null or program.records[record.ty.recordIndex()].domain != null or program.records[record.ty.recordIndex()].variants != null) return error.InternalError;
                 if (record.fields != program.records[record.ty.recordIndex()].count()) return error.InternalError;
                 if (record.order.len != 0) {
                     if (record.order.len != record.fields) return error.InternalError;
@@ -408,6 +438,11 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                         if (height == 0) return error.InternalError;
                     } else height += 1;
                 },
+                .pool_operation => |operation| {
+                    const count = operation.kind.arity();
+                    if (height < count) return error.InternalError;
+                    height = height - count + 1;
+                },
                 .buffer_operation => |operation| {
                     const count = operation.kind.arity();
                     if (height < count) return error.InternalError;
@@ -440,7 +475,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (height == 0) return error.InternalError;
                     height -= 1;
                 },
-                .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .cmp_i64, .cmp_bool, .binary_integer, .get_index, .cmp_enum => {
+                .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .cmp_i64, .cmp_bool, .binary_integer, .get_index, .cmp_enum, .cmp_handle => {
                     if (height < 2) return error.InternalError;
                     height -= 1;
                 },
@@ -448,7 +483,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (height < 2) return error.InternalError;
                     height -= 2;
                 },
-                .acquire_buffer, .acquire_resource, .environment_get => {
+                .acquire_buffer, .acquire_pool, .acquire_resource, .environment_get => {
                     if (height < 2) return error.InternalError;
                     height -= 1;
                 },

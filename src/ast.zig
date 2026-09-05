@@ -1,5 +1,6 @@
 //! Untyped expression and statement tables preserve source spelling and locations.
 const std = @import("std");
+const Acquisition = struct { ty: Span, allocator: NodeId, value: NodeId };
 const FieldAccess = struct { owner: Span, field: Span };
 const Span = @import("source.zig").Span;
 pub const NodeId = enum(usize) { _ };
@@ -21,13 +22,15 @@ pub const Node = struct {
         read_slice: struct { name: Span, index: NodeId },
         len_slice: Span,
         buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: Span, result: ?Span, arguments: []const NodeId },
+        pool_operation: struct { kind: @import("pool_operations.zig").Kind, owner: Span, result: ?Span, arguments: []const NodeId },
         acquire_resource: struct { ty: Span, capability: NodeId, request: NodeId },
         complete_resource: struct { ty: Span, value: NodeId },
         resource_io: struct { reference: ?Span = null, kind: @import("external_resources.zig").IoKind, owner: Span, ty: Span, value: ?NodeId },
         restrict_resource: struct { permissions: @import("external_resources.zig").Permissions, value: NodeId },
         environment_get: struct { ty: Span, capability: NodeId, name: NodeId },
         external_read: struct { kind: @import("external_capabilities.zig").Kind, ty: Span, capability: NodeId },
-        acquire_buffer: struct { ty: Span, allocator: NodeId, value: NodeId },
+        acquire_pool: Acquisition,
+        acquire_buffer: Acquisition,
         cast: TypedValue,
         wrap: TypedValue,
         variant: struct { ty: Span, name: Span, value: ?NodeId },
@@ -69,12 +72,14 @@ pub const FieldInit = struct { name: Span, value: NodeId };
 pub const Record = struct { name: Span, fields: []const Parameter };
 pub const Range = struct { start: NodeId, end: NodeId };
 pub const Parameter = struct { name: Span, ty: Span, reference: ?bool = null, slice: bool = false };
+pub const Pool = struct { name: Span, handle: Span, element: Span };
 pub const Domain = struct { name: Span, backing: Span };
 pub const ReturnReference = struct { source: Span, mutable: bool, slice: bool };
 pub const Function = struct { effect_bound: ?@import("effect_set.zig").Bound = null, return_reference: ?ReturnReference = null, owner: ?Span = null, restricted: bool = false, conversion: bool = false, name: Span, parameters: []const Parameter, return_type: Span, body: StatementId };
 pub const ArrayIndex = union(enum) { length: Span, enum_type: Span };
 pub const ArrayType = struct { span: Span, index: ArrayIndex, element: Span };
 pub const Program = struct {
+    pools: []const Pool = &.{},
     buffers: []const Domain = &.{},
     resources: []const Domain = &.{},
     domains: []const Domain = &.{},

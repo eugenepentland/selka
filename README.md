@@ -152,7 +152,8 @@ exclusive destinations, lifetime checks, and snapshot preservation.
 
 [Typed-handle pool backend](docs/experiments/typed-pools.md) now supports nominal
 ID categories, stale-handle rejection, cyclic graphs, slot reuse, retained snapshots,
-and bulk clearing. Guest pool syntax and arena allocation remain pending.
+and bulk clearing. [Source pools](docs/experiments/source-pools.md) now expose these
+operations with allocator authority and quotas; arena-backed pools remain pending.
 
 [Arena backing and checked region reset](docs/experiments/arenas.md) now separate
 buffer backing from retained snapshots, reject live borrows before reset, and reuse
@@ -191,3 +192,8 @@ borrowing operations are explicitly unsupported by this backend.
 [Partial record field moves](docs/experiments/partial-fields.md) use
 `take_field(owner, field)` to transfer individual fields immediately while preserving
 access to the remainder and enforcing result obligations and branch consistency.
+
+Source [pools and nominal handles](docs/experiments/source-pools.md) now support
+cyclic graphs, snapshot reads, checked IDs, and shared execution quotas. Run
+`zig build run -- run examples/pools.my` for the graph fixture (result `52`).
+Source arena scopes and generics remain pending.

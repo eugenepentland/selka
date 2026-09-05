@@ -51,7 +51,7 @@ pub const Walker = struct {
                     try self.expr(acquire.capability);
                 },
                 .external_read => |read| try self.expr(read.capability),
-                .acquire_buffer => |acquire| {
+                .acquire_buffer, .acquire_pool => |acquire| {
                     try self.expr(acquire.capacity);
                     try self.expr(acquire.allocator);
                 },
@@ -61,6 +61,7 @@ pub const Walker = struct {
                 .variant => |v| if (v.value) |value| try self.expr(value),
                 .array => |values| try self.arguments(values),
                 .record => |values| try self.fields(values),
+                .pool_operation => |op| try self.arguments(op.arguments),
                 .buffer_operation => |op| try self.arguments(op.arguments),
                 .call => |call| try self.arguments(call.arguments),
                 .field => |field| try self.expr(field.base),

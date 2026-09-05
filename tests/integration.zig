@@ -565,6 +565,7 @@ test "CLI formatter preserves checking and is idempotent across the language fix
         @embedFile("fixtures/integers.my"),
         @embedFile("fixtures/propagation.my"),
         @embedFile("fixtures/partial-fields.my"),
+        @embedFile("fixtures/pools.my"),
         @embedFile("fixtures/records.my"),
         @embedFile("fixtures/reference-parameters.my"),
         @embedFile("fixtures/references.my"),
@@ -617,4 +618,20 @@ test "CLI supports partial field moves while preserving remaining ownership chec
     try testing.expect(std.mem.indexOf(u8, dumped.stdout, "TAKE_FIELD") != null);
     const invalid = "buffer B: i64; struct Pair { field: B } fn f(pair: Pair) -> Pair { discard take_field(pair, field); return pair; } fn main() -> i64 { return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates", "report-quality", "emit-c" }) |command| try invoke(command, invalid, 1, "", "error[E_PARTIAL_MOVE]");
+}
+
+test "CLI executes typed pool graphs and preserves diagnostics across analysis commands" {
+    const source = @embedFile("fixtures/pools.my");
+    try invoke("run", source, 0, "52\n", "");
+    try invokeOptions("run", source, &.{"--memory=arena"}, 0, "52\n", "");
+    try invoke("check", source, 0, "", "");
+    const dumped = try runFixture("dump-bytecode", source, &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "ACQUIRE_POOL") != null);
+    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "POOL_replace") != null);
+    try invoke("emit-c", source, 1, "", "error[E_NATIVE_FEATURE]");
+    const invalid = "pool P(Id): i64; fn main() -> i64 { discard new Id {}; return 0; }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates", "report-quality", "emit-c" }) |command| try invoke(command, invalid, 1, "", "error[E_TYPE]");
 }

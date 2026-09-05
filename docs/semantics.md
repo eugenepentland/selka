@@ -192,8 +192,8 @@ clean up at block/match exits, return, and propagated failure. Results retain th
 explicit handling obligations. See [source ownership semantics and current limits](experiments/owned-buffers.md).
 [Buffer operations and views](experiments/buffer-operations.md) now provide length/capacity
 queries, retained reads, typed mutation statuses, and borrowed slices that work with
-existing slice helpers and returned-view contracts. Allocator and clock/random capabilities are described below; further external
-operations and arenas/pools remain pending.
+existing slice helpers and returned-view contracts. Allocator/external capabilities,
+resource I/O, and source pools are described below; nested arena scopes remain pending.
 
 
 Function annotations `noalloc`, `noio`, and `effects(...)` bound inferred effects.
@@ -267,8 +267,8 @@ Read results report length/EOF and update only the successful prefix, retaining
 array snapshots and untouched bytes. Writes send exactly the chosen range. Lease
 checks apply to fixed arrays, initialized buffers, parameters, and returned views.
 See [resource slice I/O](experiments/resource-slices.md) for staging costs and failure
-semantics. Source pool/arena scopes remain pending; backend pools and execution
-arenas are tracked in the experiment roadmap.
+semantics. Source pools are described below. Nested source arena scopes remain
+pending; execution-lifetime arenas are tracked in the experiment roadmap.
 
 
 `take_field(owner, field)` transfers a field from an owned/result-bearing record
@@ -278,3 +278,13 @@ of a partial record are rejected. Untouched copyable fields remain readable thro
 field availability; remaining result fields still require handling. Complete binding
 replacement restores fields after any remaining obligations are satisfied. Cleanup
 releases only remaining fields; see [partial field moves](experiments/partial-fields.md).
+
+
+## Source pools and nominal handles
+
+`pool Nodes(NodeId): Node;` introduces a move-only owner and copyable inert IDs.
+Allocator-authorized acquisition reserves capacity; typed result operations insert,
+read snapshots, replace, and remove nodes. Clear invalidates IDs while retaining
+capacity. IDs compare by pool/slot/generation; stale and foreign access returns
+typed errors. [Source-pool semantics](experiments/source-pools.md) specifies quotas,
+effects, cleanup, errors, and the current parent-allocator backing restriction.

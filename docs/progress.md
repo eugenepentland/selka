@@ -1077,3 +1077,35 @@ unsupported-feature behavior. Source pool/arena integration, generics, modules,
 compile-time/schema/incremental work, and every other unfinished roadmap requirement
 remain in scope. C/D are not complete. Guardian was not exercised; hosted CI has not
 run. The full roadmap goal remains active.
+
+
+## 2026-09-05: C/D source pools and nominal graph handles
+
+Implemented `pool Nodes(NodeId): Node;` declarations, allocator-authorized acquisition,
+owned pool transfers/cleanup, length/capacity queries, insert/read/replace/remove/clear,
+and nominal handle equality. Handle types break by-value graph cycles without owning
+nodes; reads preserve independent snapshots. Pool/slot/generation identities reject
+stale and foreign access through typed results. Acquisition reserves registry storage
+and contributes allocation effects; reserved operations satisfy the existing noalloc
+contract. Independent per-execution pool quotas are shared across allocator copies,
+returned on owner destruction, and observable through embedding statistics.
+
+426 Zig/core-and-CLI tests pass in Debug and ReleaseFast (382 core, 44 CLI), plus
+eight verification-driver tests and the unchanged 23-fixture/182-comparison native
+suite per host mode. New acceptance includes cyclic graphs, replacement snapshots,
+slot reuse/clear, all host allocation failures, every instruction budget through
+completion on both buffer memory backends, forged/wrong-category ID rejection,
+quota sharing/recovery, owner-death and generation-aware equality, effect bounds,
+partial construction/field moves, malformed bytecode, and duplicate discovery.
+10,000 aggregate insert/read/remove cycles stay within 16 KiB live runtime storage
+with zero bytes remaining afterward. Actual CLI graph execution returns 52 in both
+memory modes. Formatter coverage grows to 30 valid fixtures; formatting and whitespace
+checks pass. Exact discovery advances to exact-v26; near-v1 and quality-v1 remain.
+
+[Source-pool semantics](experiments/source-pools.md) records syntax, error codes,
+logical quotas, parent-allocator backing, snapshot/ID rules, and native limitations.
+Pool registries currently use the VM parent allocator even with arena buffer backing.
+Nested source arena scopes/escape checking and arena-backed pools, generics, modules,
+compile-time/schema/incremental work, broader native support, and every other unfinished
+roadmap requirement remain in scope. C/D and the full roadmap are not complete.
+Guardian was not exercised; hosted CI has not run. The full roadmap goal remains active.

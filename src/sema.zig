@@ -220,6 +220,15 @@ const Checker = struct {
             const minimum_literal = try self.minimum(node);
             if (!task.emit and minimum_literal == null) {
                 switch (node.data) {
+                    .pool_operation => |operation| {
+                        try work.append(self.allocator, .{ .id = task.id, .emit = true });
+                        var i = operation.arguments.len;
+                        while (i > 0) {
+                            i -= 1;
+                            try work.append(self.allocator, .{ .id = operation.arguments[i] });
+                        }
+                        continue;
+                    },
                     .buffer_operation => |operation| {
                         try work.append(self.allocator, .{ .id = task.id, .emit = true });
                         var i = operation.arguments.len;
@@ -295,7 +304,7 @@ const Checker = struct {
                         try work.append(self.allocator, .{ .id = read.capability });
                         continue;
                     },
-                    .acquire_buffer => |acquire| {
+                    .acquire_buffer, .acquire_pool => |acquire| {
                         try work.append(self.allocator, .{ .id = task.id, .emit = true });
                         try work.append(self.allocator, .{ .id = acquire.value });
                         try work.append(self.allocator, .{ .id = acquire.allocator });
@@ -383,6 +392,30 @@ const Checker = struct {
                         if (@backingInt(owner) == 0) seen[field] = true;
                     }
                     out.data = if (taking) .{ .take_field = .{ .owner = owner, .field = field } } else .{ .read_field = .{ .owner = owner, .field = field } };
+                },
+                .pool_operation => |operation| {
+                    const owner = try self.resolve(operation.owner);
+                    const local = &self.locals.items[@backingInt(owner)];
+                    if (local.reference_parameter != null or !local.ty.isAggregate()) return self.sink.fail("E_POOL_TYPE", operation.owner, "operation requires an owned pool binding");
+                    const pool = self.catalog.records[local.ty.recordIndex()].pool orelse return self.sink.fail("E_POOL_TYPE", operation.owner, "operation requires an owned pool binding");
+                    if (!local.transfer_available) return self.sink.fail("E_OWNED_CONSUMED", operation.owner, "pool has already been transferred");
+                    if (operation.kind.mutates() and !local.mutable) return self.sink.fail("E_IMMUTABLE", operation.owner, "pool mutation requires a let mut binding");
+                    try self.ownerAccess(owner, operation.kind.mutates(), operation.owner);
+                    local.reads += 1;
+                    if (operation.kind.mutates()) local.writes += 1;
+                    const arguments = try self.allocator.alloc(typed.NodeId, operation.arguments.len);
+                    for (operation.arguments, arguments, 0..) |input, *argument, argument_index| {
+                        argument.* = self.resolved[@backingInt(input)].?;
+                        try self.require(self.nodes.items[@backingInt(argument.*)].ty, if (operation.kind == .insert or argument_index == 1) pool.element else pool.handle, self.syntax.nodes.items[@backingInt(input)].span);
+                    }
+                    out.ty = operation.kind.output(pool);
+                    if (operation.result) |result_type| {
+                        const result = try self.ty(result_type);
+                        const shape = typed.resultShape(result, self.catalog.records) orelse return self.sink.fail("E_POOL_RESULT", result_type, "pool operation requires a result with the operation's success type and i64 error");
+                        if (shape.ok_type != out.ty or shape.error_type != .i64) return self.sink.fail("E_POOL_RESULT", result_type, "pool operation requires a result with the operation's success type and i64 error");
+                        out.ty = result;
+                    }
+                    out.data = .{ .pool_operation = .{ .kind = operation.kind, .owner = owner, .arguments = arguments } };
                 },
                 .buffer_operation => |operation| {
                     const owner = try self.resolve(operation.owner);
@@ -480,15 +513,20 @@ const Checker = struct {
                     try self.require(self.nodes.items[@backingInt(capability)].ty, if (read.kind == .clock) .clock_cap else .random_cap, self.syntax.nodes.items[@backingInt(read.capability)].span);
                     out.data = .{ .external_read = .{ .kind = read.kind, .capability = capability } };
                 },
-                .acquire_buffer => |acquire| {
+                .acquire_buffer, .acquire_pool => |acquire| {
                     out.ty = try self.ty(acquire.ty);
-                    const shape = typed.resultShape(out.ty, self.catalog.records) orelse return self.sink.fail("E_BUFFER_RESULT", acquire.ty, "buffer acquisition requires a result with a buffer success payload and i64 error payload");
-                    if (!shape.ok_type.isAggregate() or self.catalog.records[shape.ok_type.recordIndex()].buffer == null or shape.error_type != .i64) return self.sink.fail("E_BUFFER_RESULT", acquire.ty, "buffer acquisition requires a result with a buffer success payload and i64 error payload");
+                    const is_pool = node.data == .acquire_pool;
+                    const code: []const u8 = if (is_pool) "E_POOL_RESULT" else "E_BUFFER_RESULT";
+                    const message: []const u8 = if (is_pool) "pool acquisition requires a pool success and i64 error result" else "buffer acquisition requires a buffer success and i64 error result";
+                    const shape = typed.resultShape(out.ty, self.catalog.records) orelse return self.sink.fail(code, acquire.ty, message);
+                    if (!shape.ok_type.isAggregate() or shape.error_type != .i64) return self.sink.fail(code, acquire.ty, message);
+                    const schema = self.catalog.records[shape.ok_type.recordIndex()];
+                    if (if (is_pool) schema.pool == null else schema.buffer == null) return self.sink.fail(code, acquire.ty, message);
                     const capacity = self.resolved[@backingInt(acquire.value)].?;
                     try self.requireInteger(self.nodes.items[@backingInt(capacity)].ty, node.span);
                     const authority = self.resolved[@backingInt(acquire.allocator)].?;
                     try self.require(self.nodes.items[@backingInt(authority)].ty, .allocator, self.syntax.nodes.items[@backingInt(acquire.allocator)].span);
-                    out.data = .{ .acquire_buffer = .{ .allocator = authority, .capacity = capacity } };
+                    out.data = if (is_pool) .{ .acquire_pool = .{ .allocator = authority, .capacity = capacity } } else .{ .acquire_buffer = .{ .allocator = authority, .capacity = capacity } };
                 },
                 .propagate => |operand| {
                     const value = self.resolved[@backingInt(operand)].?;
@@ -682,7 +720,7 @@ const Checker = struct {
                             out.ty = .bool;
                         },
                         .eq, .ne => {
-                            if (!lt.isInteger() and lt != .bool and !(lt.isAggregate() and self.catalog.records[lt.recordIndex()].isEnum())) return self.sink.fail("E_TYPE", b.op_span, "aggregate equality is not defined; compare the relevant elements explicitly");
+                            if (!lt.isInteger() and lt != .bool and !(lt.isAggregate() and (self.catalog.records[lt.recordIndex()].isEnum() or self.catalog.records[lt.recordIndex()].handle_pool != null))) return self.sink.fail("E_TYPE", b.op_span, "aggregate equality is not defined; compare the relevant elements explicitly");
                             out.ty = .bool;
                         },
                         .lt, .le, .gt, .ge => {
@@ -705,7 +743,7 @@ const Checker = struct {
             const consumed: usize = switch (out.data) {
                 .integer, .boolean, .local, .read_ref, .read_field, .take_field, .len_slice => 0,
                 .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .external_read, .complete_resource, .restrict_resource => 1,
-                .acquire_buffer, .acquire_resource, .environment_get => 2,
+                .acquire_buffer, .acquire_pool, .acquire_resource, .environment_get => 2,
                 .index, .binary => 2,
                 .replace => 3,
                 .variant => |variant| if (variant.value != null) 1 else 0,
@@ -713,6 +751,7 @@ const Checker = struct {
                 .record => |initializers| initializers.len,
                 .update => |update| update.fields.len + 1,
                 .call => |call| call.arguments.len,
+                .pool_operation => |operation| operation.arguments.len,
                 .buffer_operation => |operation| operation.arguments.len,
                 .resource_io => |io| if (io.value != null) 1 else 0,
             };
@@ -999,7 +1038,7 @@ fn warningLess(_: void, a: diagnostic.Diagnostic, b: diagnostic.Diagnostic) bool
 pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!typed.Program {
     const resolved = try allocator.alloc(?typed.NodeId, program.nodes.items.len);
     @memset(resolved, null);
-    const catalog = try records.collect(allocator, src, program.records, program.domains, program.variants, program.array_types, program.buffers, program.resources, sink);
+    const catalog = try records.collect(allocator, src, program.records, program.domains, program.variants, program.array_types, program.buffers, program.resources, program.pools, sink);
     var checker: Checker = .{ .allocator = allocator, .src = src, .syntax = program, .sink = sink, .resolved = resolved, .catalog = catalog };
     for (program.functions, 0..) |function, i| {
         const name = try functionName(allocator, src, function.owner, function.name);

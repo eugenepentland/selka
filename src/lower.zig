@@ -213,6 +213,14 @@ const Emitter = struct {
             },
             .len_slice => |reference| try self.instruction(node.span, .{ .len_slice = reference }),
             .read_ref => |reference| try self.instruction(node.span, .{ .read_ref = reference }),
+            .pool_operation => |operation| {
+                try self.instruction(node.span, .{ .pool_operation = .{ .kind = operation.kind, .owner = operation.owner, .output = node.ty } });
+                var i = operation.arguments.len;
+                while (i > 0) {
+                    i -= 1;
+                    try self.push(.{ .expression = operation.arguments[i] });
+                }
+            },
             .buffer_operation => |operation| {
                 try self.instruction(node.span, .{ .buffer_operation = .{ .kind = operation.kind, .owner = operation.owner, .output = node.ty } });
                 var i = operation.arguments.len;
@@ -249,8 +257,8 @@ const Emitter = struct {
                 try self.instruction(node.span, .{ .external_read = .{ .kind = read.kind, .output = node.ty } });
                 try self.push(.{ .expression = read.capability });
             },
-            .acquire_buffer => |acquire| {
-                try self.instruction(node.span, .{ .acquire_buffer = node.ty });
+            .acquire_buffer, .acquire_pool => |acquire| {
+                try self.instruction(node.span, if (node.data == .acquire_pool) .{ .acquire_pool = node.ty } else .{ .acquire_buffer = node.ty });
                 try self.push(.{ .expression = acquire.capacity });
                 try self.push(.{ .expression = acquire.allocator });
             },
@@ -279,7 +287,7 @@ const Emitter = struct {
                     try self.push(.{ .jump = .{ .target = alternate, .conditional = true, .span = b.op_span } });
                     try self.push(.{ .expression = b.left });
                 } else {
-                    try self.push(.{ .instruction = binaryInstruction(b, self.program.nodes) });
+                    try self.push(.{ .instruction = binaryInstruction(b, self.program.nodes, self.program.records) });
                     try self.push(.{ .expression = b.right });
                     try self.push(.{ .expression = b.left });
                 }
@@ -329,8 +337,9 @@ const Emitter = struct {
         return self.code.toOwnedSlice(self.allocator);
     }
 };
-fn binaryInstruction(binary: anytype, nodes: []const typed.Node) bc.Instruction {
+fn binaryInstruction(binary: anytype, nodes: []const typed.Node, records: []const typed.Record) bc.Instruction {
     const operand_type = nodes[@backingInt(binary.left)].ty;
+    if (operand_type.isAggregate() and records[operand_type.recordIndex()].handle_pool != null) return .{ .span = binary.op_span, .op = .{ .cmp_handle = .{ .ty = operand_type, .predicate = if (binary.op == .eq) .eq else .ne } } };
     if (operand_type.isAggregate()) return .{ .span = binary.op_span, .op = .{ .cmp_enum = .{ .ty = operand_type, .predicate = if (binary.op == .eq) .eq else .ne } } };
     if (operand_type.isInteger() and operand_type != .i64)
         return .{ .span = binary.op_span, .op = .{ .binary_integer = .{ .ty = operand_type, .op = binary.op } } };

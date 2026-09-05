@@ -1,5 +1,6 @@
 //! Checked nodes use declaration identities, concrete types, and local slots.
 const std = @import("std");
+const Acquisition = struct { allocator: NodeId, capacity: NodeId };
 const FieldAccess = struct { owner: LocalId, field: usize };
 const Span = @import("source.zig").Span;
 pub const NodeId = enum(usize) { _ };
@@ -26,13 +27,15 @@ pub const Node = struct {
         read_slice: struct { reference: ReferenceId, index: NodeId },
         len_slice: ReferenceId,
         buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: LocalId, arguments: []const NodeId },
+        pool_operation: struct { kind: @import("pool_operations.zig").Kind, owner: LocalId, arguments: []const NodeId },
         acquire_resource: struct { capability: NodeId, request: NodeId },
         complete_resource: NodeId,
         resource_io: struct { reference: ?ReferenceId = null, kind: @import("external_resources.zig").IoKind, owner: LocalId, value: ?NodeId },
         restrict_resource: struct { permissions: @import("external_resources.zig").Permissions, value: NodeId },
         environment_get: struct { capability: NodeId, name: NodeId },
         external_read: struct { kind: @import("external_capabilities.zig").Kind, capability: NodeId },
-        acquire_buffer: struct { allocator: NodeId, capacity: NodeId },
+        acquire_pool: Acquisition,
+        acquire_buffer: Acquisition,
         cast: NodeId,
         wrap: NodeId,
         variant: struct { tag: usize, value: ?NodeId },
@@ -55,7 +58,10 @@ pub const Variant = struct { name: []const u8, declaration: Span, payload: ?Type
 pub const Variants = struct { fallible: bool = false, is_union: bool, cases: []const Variant };
 pub const Array = struct { element: Type, length: usize, key: ?Type = null };
 // Aggregate schemas retain nominal record identities and intern structural arrays.
+pub const Pool = struct { element: Type, handle: Type };
 pub const Record = struct {
+    pool: ?Pool = null,
+    handle_pool: ?Type = null,
     buffer: ?Type = null,
     resource: ?@import("external_resources.zig").Kind = null,
     move_only: bool = false,
@@ -71,7 +77,7 @@ pub const Record = struct {
         return if (self.array) |a| a.key else null;
     }
     pub fn isRecord(self: Record) bool {
-        return self.resource == null and self.buffer == null and self.array == null and self.domain == null and self.variants == null;
+        return self.pool == null and self.handle_pool == null and self.resource == null and self.buffer == null and self.array == null and self.domain == null and self.variants == null;
     }
     pub fn isEnum(self: Record) bool {
         return if (self.variants) |v| !v.is_union else false;

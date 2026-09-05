@@ -1,0 +1,32 @@
+pool Nodes(NodeId): Node;
+union Link { none, some: NodeId }
+struct Node { value: i64, next: Link }
+result Open { ok: Nodes, err: i64 }
+result Insert { ok: NodeId, err: i64 }
+result Read { ok: Node, err: i64 }
+result Change { ok: bool, err: i64 }
+result Work { ok: i64, err: i64 }
+fn work(heap: allocator) -> Work {
+    let mut nodes = try acquire_pool<Open>(heap, 2);
+    let a = try insert_pool<Insert>(nodes, new Node { value: 10, next: new Link.none });
+    let b = try insert_pool<Insert>(nodes, new Node { value: 20, next: new Link.some(a) });
+    let before = try read_pool<Read>(nodes, a);
+    discard try replace_pool<Change>(nodes, a, new Node { value: 30, next: new Link.some(b) });
+    let current = try read_pool<Read>(nodes, a);
+    match current.next { Link.none => { return new Work.err(90); }, Link.some(edge) => {
+        let neighbor = try read_pool<Read>(nodes, edge);
+        if neighbor.value != 20 { return new Work.err(91); }
+    } }
+    discard try remove_pool<Change>(nodes, b);
+    let replacement = try insert_pool<Insert>(nodes, new Node { value: 40, next: new Link.none });
+    match read_pool<Read>(nodes, b) { Read.ok(discard) => { return new Work.err(92); }, Read.err(code) => { if code != 1 { return new Work.err(93); } } }
+    let other = try acquire_pool<Open>(heap, 0);
+    match read_pool<Read>(other, a) { Read.ok(discard) => { return new Work.err(94); }, Read.err(code) => { if code != 2 { return new Work.err(95); } } }
+    let last = try read_pool<Read>(nodes, replacement);
+    discard clear_pool(nodes);
+    match read_pool<Read>(nodes, a) { Read.ok(discard) => { return new Work.err(96); }, Read.err(code) => { if code != 1 { return new Work.err(97); } } }
+    return new Work.ok(before.value + last.value + cast<i64>(len_pool(nodes)) + cast<i64>(capacity_pool(nodes)));
+}
+fn main(heap: allocator) -> i64 {
+    match work(heap) { Work.ok(value) => { return value; }, Work.err(code) => { return code; } }
+}
