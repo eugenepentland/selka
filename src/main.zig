@@ -1,7 +1,7 @@
 //! Host I/O and process policy stay outside the compiler and VM.
 const std = @import("std");
 const language = @import("mylang");
-const usage = "usage: mylang <schema-project|input-module|check|run|dump-bytecode|discover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fmt-module|fmt-project|emit-c|emit-project-c|eval-project|list-modules|list-interfaces|check-project|run-project|check-policy> <file.my>\n  input-module: reads a typed JSON manifest and writes generated module source\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena\n  eval-project: --max-steps=N --max-frames=N --max-eval-bytes=N --evaluation-report|--evaluation-request --inputs=manifest.json (repeat for up to 16 modules; effect-free, parameter-free entry)\n  discover-duplicates/discover-project-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality/report-project-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: --check (otherwise writes formatted source to stdout)\n";
+const usage = "usage: mylang <check-value-project|schema-project|input-module|check|run|dump-bytecode|discover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fmt-module|fmt-project|emit-c|emit-project-c|eval-project|list-modules|list-interfaces|check-project|run-project|check-policy> <file.my>\n  check-value-project: --value=path.json (required; validates and writes canonical typed-json-v1)\n  input-module: reads a typed JSON manifest and writes generated module source\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena\n  eval-project: --max-steps=N --max-frames=N --max-eval-bytes=N --evaluation-report|--evaluation-request --inputs=manifest.json (repeat for up to 16 modules; effect-free, parameter-free entry)\n  discover-duplicates/discover-project-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality/report-project-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: --check (otherwise writes formatted source to stdout)\n";
 
 pub fn main(init: std.process.Init) void {
     const status = dispatch(init) catch |err| status: {
@@ -20,7 +20,7 @@ fn dispatch(init: std.process.Init) !u8 {
         try std.Io.File.stderr().writeStreamingAll(init.io, usage);
         return 2;
     };
-    if (parsed.command == .@"schema-project" or parsed.command == .@"eval-project" or parsed.command == .@"list-modules" or parsed.command == .@"list-interfaces" or parsed.command == .@"check-project" or parsed.command == .@"run-project" or parsed.command == .@"check-policy" or parsed.command == .@"discover-project-duplicates" or parsed.command == .@"report-project-quality" or parsed.command == .@"fmt-project" or parsed.command == .@"emit-project-c") return listModules(init, parsed);
+    if (parsed.command == .@"check-value-project" or parsed.command == .@"schema-project" or parsed.command == .@"eval-project" or parsed.command == .@"list-modules" or parsed.command == .@"list-interfaces" or parsed.command == .@"check-project" or parsed.command == .@"run-project" or parsed.command == .@"check-policy" or parsed.command == .@"discover-project-duplicates" or parsed.command == .@"report-project-quality" or parsed.command == .@"fmt-project" or parsed.command == .@"emit-project-c") return listModules(init, parsed);
     const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, parsed.path, allocator, .limited(16 * 1024 * 1024));
     defer allocator.free(bytes);
     if (parsed.command == .@"input-module") {
@@ -61,7 +61,7 @@ fn dispatch(init: std.process.Init) !u8 {
     const check_ns = if (parsed.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
     if (parsed.command != .@"emit-c") try report(init, &compilation);
     switch (parsed.command) {
-        .@"schema-project", .@"input-module", .@"eval-project", .fmt, .@"fmt-module", .@"fmt-project", .@"emit-project-c", .@"list-modules", .@"list-interfaces", .@"check-project", .@"run-project", .@"check-policy", .@"discover-project-duplicates", .@"report-project-quality" => unreachable,
+        .@"check-value-project", .@"schema-project", .@"input-module", .@"eval-project", .fmt, .@"fmt-module", .@"fmt-project", .@"emit-project-c", .@"list-modules", .@"list-interfaces", .@"check-project", .@"run-project", .@"check-policy", .@"discover-project-duplicates", .@"report-project-quality" => unreachable,
         .@"emit-c" => {
             const generated = compilation.emitC(allocator) catch |err| switch (err) {
                 error.SourceError => {
@@ -126,11 +126,12 @@ fn report(init: std.process.Init, compilation: *const language.Compilation) !voi
     }
 }
 
-const Command = enum { @"schema-project", @"input-module", @"eval-project", @"emit-project-c", @"fmt-project", @"fmt-module", @"report-project-quality", @"discover-project-duplicates", @"check-policy", @"check-project", @"run-project", @"list-interfaces", @"list-modules", @"emit-c", fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
-const Parsed = struct { inputs: [16][]const u8, input_count: usize, evaluation_request: bool, evaluation_report: bool, evaluation: language.evaluation.Options, policy: ?[]const u8, format_check: bool, quality: language.quality.Options, command: Command, path: []const u8, options: language.vm.Options, discovery: language.duplicates.Options, timings: bool };
+const Command = enum { @"check-value-project", @"schema-project", @"input-module", @"eval-project", @"emit-project-c", @"fmt-project", @"fmt-module", @"report-project-quality", @"discover-project-duplicates", @"check-policy", @"check-project", @"run-project", @"list-interfaces", @"list-modules", @"emit-c", fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
+const Parsed = struct { value_path: ?[]const u8, inputs: [16][]const u8, input_count: usize, evaluation_request: bool, evaluation_report: bool, evaluation: language.evaluation.Options, policy: ?[]const u8, format_check: bool, quality: language.quality.Options, command: Command, path: []const u8, options: language.vm.Options, discovery: language.duplicates.Options, timings: bool };
 fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (args.len < 2) return error.Usage;
     const command = std.meta.stringToEnum(Command, args[0]) orelse return error.Usage;
+    var value_path: ?[]const u8 = null;
     var evaluation: language.evaluation.Options = .{};
     var saw_eval_bytes = false;
     var evaluation_report = false;
@@ -156,6 +157,11 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     var saw_population = false;
     var saw_work = false;
     argument: for (args[1..]) |arg| {
+        if (std.mem.startsWith(u8, arg, "--value=")) {
+            if (command != .@"check-value-project" or value_path != null or arg.len == "--value=".len) return error.Usage;
+            value_path = arg["--value=".len..];
+            continue;
+        }
         if (std.mem.startsWith(u8, arg, "--inputs=")) {
             if (command != .@"eval-project" or input_count == inputs.len or arg.len == "--inputs=".len) return error.Usage;
             const input = arg["--inputs=".len..];
@@ -252,7 +258,8 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (saw_work and !discovery.approximate) return error.Usage;
     if (command == .@"fmt-project" and !format_check) return error.Usage;
     if (command == .@"check-policy" and policy == null) return error.Usage;
-    return .{ .inputs = inputs, .input_count = input_count, .evaluation_request = evaluation_request, .evaluation_report = evaluation_report, .evaluation = .{ .max_steps = options.max_steps, .max_frames = options.max_frames, .max_bytes = evaluation.max_bytes }, .policy = policy, .format_check = format_check, .quality = quality, .command = command, .path = path orelse return error.Usage, .options = options, .discovery = discovery, .timings = timings };
+    if (command == .@"check-value-project" and value_path == null) return error.Usage;
+    return .{ .value_path = value_path, .inputs = inputs, .input_count = input_count, .evaluation_request = evaluation_request, .evaluation_report = evaluation_report, .evaluation = .{ .max_steps = options.max_steps, .max_frames = options.max_frames, .max_bytes = evaluation.max_bytes }, .policy = policy, .format_check = format_check, .quality = quality, .command = command, .path = path orelse return error.Usage, .options = options, .discovery = discovery, .timings = timings };
 }
 
 fn positive(digits: []const u8) error{Usage}!u64 {
@@ -401,6 +408,7 @@ fn listModules(init: std.process.Init, parsed: Parsed) !u8 {
         }
         if (parsed.command != .@"eval-project") try reportProject(init, &compilation);
         if (parsed.command == .@"check-project") return 0;
+        if (parsed.command == .@"check-value-project") break :result (try checkValue(init, &compilation, parsed.value_path.?)) orelse return 1;
         if (parsed.command == .@"schema-project") break :result try language.schema.render(init.gpa, &compilation);
         if (parsed.command == .@"report-project-quality") {
             const roots = try compilation.exportRoots(init.gpa);
@@ -520,4 +528,31 @@ fn parseInputManifest(init: std.process.Init, path: []const u8, bytes: []const u
         try std.Io.File.stderr().writeStreamingAll(init.io, message);
         return null;
     };
+}
+
+fn valueFailure(init: std.process.Init, path: []const u8, err: anyerror) !?[]u8 {
+    const message = try std.fmt.allocPrint(init.gpa, "{s}: invalid typed JSON: {s}\n", .{ path, @errorName(err) });
+    defer init.gpa.free(message);
+    try std.Io.File.stderr().writeStreamingAll(init.io, message);
+    return null;
+}
+fn checkValue(init: std.process.Init, compilation: *language.project_compile.Compilation, path: []const u8) !?[]u8 {
+    const limits: language.typed_json.Limits = .{};
+    const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, path, init.gpa, .limited(limits.max_bytes + 1)) catch |err| {
+        if (err == error.StreamTooLong) return valueFailure(init, path, error.CodecByteLimit);
+        return err;
+    };
+    defer init.gpa.free(bytes);
+    return canonicalValue(init.gpa, compilation, bytes, limits) catch |err| {
+        if (err == error.OutOfMemory) return err;
+        return valueFailure(init, path, err);
+    };
+}
+fn canonicalValue(allocator: std.mem.Allocator, compilation: *language.project_compile.Compilation, bytes: []const u8, limits: language.typed_json.Limits) ![]u8 {
+    var document = try language.typed_json.Document.parse(allocator, bytes, limits);
+    defer document.deinit();
+    const ty = try compilation.publicValueType(document.parsed.value.type);
+    const value = try document.decode(allocator, compilation.program.?.records, ty);
+    defer value.release(allocator);
+    return language.typed_json.encode(allocator, compilation.program.?.records, ty, value, limits);
 }

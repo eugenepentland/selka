@@ -287,3 +287,16 @@ and inferred effects. Private declarations remain excluded; domains and runtime
 owners/capabilities retain opaque reconstruction boundaries. This establishes
 [schema derivation](docs/experiments/schemas.md); serialization, foreign bindings,
 and generation receipt/budget integration remain pending.
+
+Ordinary typed values now have a bounded JSON codec:
+
+```sh
+zig-out/bin/mylang check-value-project examples/schema/main.my \
+  --value=examples/schema/message-value.json
+```
+
+The command checks source and data, materializes owned compiler values, and writes
+canonical `typed-json-v1`. It supports integer/boolean values, records, arrays,
+enum tables, enums, unions, and results. Duplicate/unknown keys and invalid values
+reject; opaque types require future explicit codecs. See the
+[wire contract, limits, and remaining integration](docs/experiments/typed-json.md).

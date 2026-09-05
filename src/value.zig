@@ -78,6 +78,18 @@ pub const Type = enum(usize) {
     pub fn fits(self: Type, value: i128) bool {
         return value >= self.min() and value <= self.max();
     }
+    /// Canonical external decimal spelling shared by manifests and codecs.
+    /// Language source literals have their own lexer and may use width suffixes.
+    pub fn parseDecimal(self: Type, text: []const u8) error{ InvalidInteger, IntegerOutOfRange }!i128 {
+        if (!self.isInteger() or text.len == 0 or text.len > 20) return error.InvalidInteger;
+        const negative = text[0] == '-';
+        const digits = text[@intFromBool(negative)..];
+        if (digits.len == 0 or (digits[0] == '0' and (digits.len != 1 or negative))) return error.InvalidInteger;
+        for (digits) |digit| if (!std.ascii.isDigit(digit)) return error.InvalidInteger;
+        const value = std.fmt.parseInt(i128, text, 10) catch return error.InvalidInteger;
+        if (!self.fits(value)) return error.IntegerOutOfRange;
+        return value;
+    }
     pub fn fromName(name: []const u8) ?Type {
         return std.meta.stringToEnum(Type, name);
     }

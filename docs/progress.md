@@ -1915,3 +1915,48 @@ generated bindings, generation receipt/budget integration, finer incremental
 compilation, generics, wider native support, ordinary-program review, and all other
 unfinished roadmap work remain pending. Guardian was not exercised; hosted CI has not
 run. The full roadmap goal remains active.
+
+## 2026-09-05: Bounded ordinary typed JSON serialization and validation
+
+Added typed_json.Document.parse/decode and typed_json.encode for checked ordinary
+values, plus check-value-project --value=path.json. The CLI checks every source body,
+selects an explicitly exported nominal or built-in type, materializes independently
+owned compiler values, and emits canonical typed-json-v1. Private/unknown root names
+reject. Source/data failures exit 1 with empty stdout; usage and host failures exit 2.
+No source execution, provider invocation, or filesystem output is implicit.
+
+The wire format uses decimal strings for all integer widths, booleans, complete
+record objects, fixed arrays, enum-keyed table objects, case-name enums, and explicit
+case/value objects for unions/results. Decoded duplicate keys, unknown keys/cases,
+missing fields, incorrect shapes/types/ranges, and unsupported versions reject.
+Encoding preserves nominal identities and declaration order. Complete type-graph
+preflight rejects opaque domain/authority/owner dependencies even in an unselected
+union arm or zero-length array. Domain codecs remain explicit future work.
+
+A preliminary JSON scan bounds syntax before DOM allocation; decode/encode bound
+value count and depth. Defaults are 1 MiB inclusive bytes, 65,536 value nodes,
+262,144 scanner tokens/fragments, and 64 typed value levels. Encoding counts output
+bytes before allocating the final output string. Intermediate storage remains host
+allocated, with all allocation failures propagated. Partial aggregate decode failures
+release acquired values, and encoding borrows without consuming its input. Canonical
+decimal validation is shared with scalar input manifests through Type.parseDecimal,
+preserving their existing error categories.
+
+All 16 build steps pass in Debug and ReleaseFast: 525 Zig tests (468 core, 57 CLI),
+eight verification-driver tests, the new typed JSON CLI driver, existing schema/
+input/receipt/cache/module/duplicate drivers, and 392 native comparisons per host
+mode. Unit evidence includes independent compiler-value inspection/construction,
+every allocation failure, retained ownership, malformed host values, custom budgets,
+and partial semantic-failure cleanup. CLI evidence includes all integer ranges,
+aggregate/variant/table round trips, privacy/opaque rejection, escaped duplicate keys,
+schema changes, invalid private bodies, host/flag failures, and exact byte/value/depth
+boundaries. The message-value example validates canonically; formatting and whitespace
+checks pass. README, roadmap, and both plan copies are synchronized.
+
+Ordinary typed serialization/deserialization is implemented. Explicit domain codecs,
+generated bindings, source-level codec operations, richer declared-input integration,
+generation budget/receipt/cache integration, finer incremental compilation, generics,
+wider native support, ordinary-program review, and all other unfinished roadmap work
+remain pending. Diagnostics currently identify the input file and error category,
+without a nested JSON path. Guardian was not exercised; hosted CI has not run. The
+full roadmap goal remains active.

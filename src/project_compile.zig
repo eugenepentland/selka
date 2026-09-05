@@ -38,6 +38,20 @@ pub const Compilation = struct {
         }
         return roots.toOwnedSlice(allocator);
     }
+    /// Select an explicitly exported nominal type, or a built-in type.
+    pub fn publicValueType(self: *Compilation, name: []const u8) !typed.Type {
+        try self.check();
+        if (typed.Type.fromName(name)) |ty| return ty;
+        for (self.program.?.records) |record| {
+            if (!@import("std").mem.eql(u8, name, record.name) or record.array != null) continue;
+            const original = self.src.originalSpan(record.declaration) catch return error.UnknownPublicValueType;
+            const unit = self.index.units[original.input];
+            const prefix_len = self.index.project.modules.items[original.input].name.len + 2;
+            const symbol = unit.symbols.items[unit.names.get(record.name[prefix_len..]) orelse return error.UnknownPublicValueType];
+            if (symbol.exported and symbol.kind == .type) return record.id;
+        }
+        return error.UnknownPublicValueType;
+    }
     pub fn emit(self: *Compilation) !void {
         try self.check();
         if (self.code == null) self.code = try @import("lower.zig").lower(self.index.project.arena.allocator(), self.program.?);

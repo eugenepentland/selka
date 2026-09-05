@@ -57,11 +57,8 @@ fn validateValue(entry: Entry) !void {
         return;
     }
     if (!ty.isInteger()) return error.InvalidInputType;
-    if (entry.value.len == 0 or entry.value.len > 20) return error.InvalidInputValue;
-    const negative = entry.value[0] == '-';
-    const digits = entry.value[@intFromBool(negative)..];
-    if (digits.len == 0 or (digits[0] == '0' and (digits.len != 1 or negative))) return error.InvalidInputValue;
-    for (digits) |digit| if (!std.ascii.isDigit(digit)) return error.InvalidInputValue;
-    const value = std.fmt.parseInt(i128, entry.value, 10) catch return error.InvalidInputValue;
-    if (!ty.fits(value)) return error.InputValueOutOfRange;
+    _ = ty.parseDecimal(entry.value) catch |err| return switch (err) {
+        error.InvalidInteger => error.InvalidInputValue,
+        error.IntegerOutOfRange => error.InputValueOutOfRange,
+    };
 }

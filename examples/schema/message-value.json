@@ -1,0 +1,11 @@
+{
+  "version": "typed-json-v1",
+  "type": "message::Message",
+  "value": {
+    "case": "reading",
+    "value": {
+      "status": "ready",
+      "sequence": "18446744073709551615"
+    }
+  }
+}
