@@ -1,7 +1,7 @@
 //! Bounded, deterministic edit-distance review of checked canonical body lines.
 const std = @import("std");
 const typed = @import("typed.zig");
-pub const version = "near-v2";
+pub const version = "near-v3";
 pub const Input = struct { function: typed.FunctionId, bytes: []const u8 };
 pub const Change = struct { before: ?[]const u8, after: ?[]const u8 };
 pub const Pair = struct { left: typed.FunctionId, right: typed.FunctionId, distance: usize, lines: usize, changes: []const Change };
@@ -77,6 +77,25 @@ fn indexHeaders(allocator: std.mem.Allocator, bodies: []const Body, remaining: *
     }
     return next;
 }
+// An accepted alignment cannot leave the allowance-wide diagonal band: reaching
+// an offset of k requires at least k insertions/deletions. Keep the band for exact
+// traceback; values outside it are above the acceptance threshold.
+const Matrix = struct {
+    cells: []usize,
+    width: usize,
+    allowance: usize,
+    columns: usize,
+    fn start(self: Matrix, row: usize) usize {
+        return row -| self.allowance;
+    }
+    fn get(self: Matrix, row: usize, column: usize) usize {
+        if (column >= self.columns or column < self.start(row) or column > row +| self.allowance) return self.allowance + 1;
+        return self.cells[row * self.width + column - self.start(row)];
+    }
+    fn set(self: Matrix, row: usize, column: usize, value: usize) void {
+        self.cells[row * self.width + column - self.start(row)] = @min(value, self.allowance + 1);
+    }
+};
 /// Output storage belongs to output_allocator; pairwise matrices are freed promptly.
 /// Inputs are representatives of exact groups, in first-declaration order.
 pub fn discover(output_allocator: std.mem.Allocator, temporary: std.mem.Allocator, inputs: []const Input, options: Options) !Result {
@@ -109,38 +128,47 @@ pub fn discover(output_allocator: std.mem.Allocator, temporary: std.mem.Allocato
             for (right.lines) |line| right_bytes +|= line.len;
             const rows = left.lines.len +| 1;
             const cols = right.lines.len +| 1;
-            const cells = rows *| cols;
-            const cost = cells +| left_bytes *| right.lines.len +| right_bytes *| left.lines.len;
+            const band = allowance *| 2 +| 1;
+            const width = @min(cols, band);
+            const cells = rows *| width;
+            const cost = cells +| left_bytes *| @min(right.lines.len, band) +| right_bytes *| @min(left.lines.len, band);
             if (cost > remaining) {
                 truncated = true;
                 break :outer;
             }
             remaining -= cost;
-            const matrix = try temporary.alloc(usize, cells);
-            defer temporary.free(matrix);
-            for (0..rows) |r| matrix[r * cols] = r;
-            for (0..cols) |c| matrix[c] = c;
-            for (left.lines, 1..) |a, r| {
-                for (right.lines, 1..) |b, c| {
-                    const substitution: usize = if (std.mem.eql(u8, a, b)) 0 else 1;
-                    matrix[r * cols + c] = @min(matrix[(r - 1) * cols + c - 1] + substitution, @min(matrix[(r - 1) * cols + c] + 1, matrix[r * cols + c - 1] + 1));
+            const storage = try temporary.alloc(usize, cells);
+            defer temporary.free(storage);
+            @memset(storage, allowance + 1);
+            const matrix: Matrix = .{ .cells = storage, .width = width, .allowance = allowance, .columns = cols };
+            for (0..rows) |r| {
+                const end = @min(cols, r +| allowance +| 1);
+                for (matrix.start(r)..end) |c| {
+                    if (r == 0) {
+                        matrix.set(r, c, c);
+                    } else if (c == 0) {
+                        matrix.set(r, c, r);
+                    } else {
+                        const substitution: usize = if (std.mem.eql(u8, left.lines[r - 1], right.lines[c - 1])) 0 else 1;
+                        matrix.set(r, c, @min(matrix.get(r - 1, c - 1) + substitution, @min(matrix.get(r - 1, c) + 1, matrix.get(r, c - 1) + 1)));
+                    }
                 }
             }
-            const distance = matrix[cells - 1];
+            const distance = matrix.get(left.lines.len, right.lines.len);
             if (distance == 0 or distance > allowance) continue;
             var changes: std.ArrayList(Change) = .empty;
             var r = left.lines.len;
             var c = right.lines.len;
             while (r != 0 or c != 0) {
-                const current = matrix[r * cols + c];
-                if (r != 0 and c != 0 and std.mem.eql(u8, left.lines[r - 1], right.lines[c - 1]) and current == matrix[(r - 1) * cols + c - 1]) {
+                const current = matrix.get(r, c);
+                if (r != 0 and c != 0 and std.mem.eql(u8, left.lines[r - 1], right.lines[c - 1]) and current == matrix.get(r - 1, c - 1)) {
                     r -= 1;
                     c -= 1;
-                } else if (r != 0 and c != 0 and current == matrix[(r - 1) * cols + c - 1] + 1) {
+                } else if (r != 0 and c != 0 and current == matrix.get(r - 1, c - 1) + 1) {
                     try changes.append(output_allocator, .{ .before = left.lines[r - 1], .after = right.lines[c - 1] });
                     r -= 1;
                     c -= 1;
-                } else if (r != 0 and current == matrix[(r - 1) * cols + c] + 1) {
+                } else if (r != 0 and current == matrix.get(r - 1, c) + 1) {
                     try changes.append(output_allocator, .{ .before = left.lines[r - 1], .after = null });
                     r -= 1;
                 } else {

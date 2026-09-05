@@ -32,10 +32,28 @@ def main():
             second = subprocess.run(command, capture_output=True, text=True, timeout=90)
             assert second.returncode == 0, (size, second.stderr)
             assert first.stdout == second.stdout, (size, 'nondeterministic report')
-            work = re.search(r'approximate near-v2:.*work=(\d+)/4000000;', first.stdout)
+            work = re.search(r'approximate near-v3:.*work=(\d+)/4000000;', first.stdout)
             assert work is not None, first.stdout
             print(f'duplicate header index: {size} functions, work={work.group(1)}, '
                   f'one distant pair, deterministic; two-run elapsed={time.monotonic() - start:.3f}s')
+
+        for statements in (50, 100, 200):
+            body = 'discard x;' * statements
+            source.write_text(f'fn a(x:i64)->i64{{{body}return x*2+1;}} '
+                              f'fn b(x:i64)->i64{{{body}return x*2+3;}} '
+                              'fn main()->i64{return 0;}', encoding='utf-8')
+            command = [args.compiler, 'discover-duplicates', str(source), '--approximate',
+                       '--min-nodes=1', '--max-work=4100000']
+            result = subprocess.run(command, capture_output=True, text=True, timeout=90)
+            assert result.returncode == 0, (statements, result.stderr)
+            assert '1 approximate pairs;' in result.stdout, result.stdout
+            assert 'truncated=false' in result.stdout, result.stdout
+            assert '1 canonical-line edits' in result.stdout, result.stdout
+            assert '- 1' in result.stdout and '+ 3' in result.stdout, result.stdout
+            work = re.search(r'approximate near-v3:.*work=(\d+)/4100000;', result.stdout)
+            assert work is not None, result.stdout
+            print(f'duplicate banded distance: {statements} repeated statements, '
+                  f'work={work.group(1)}, literal drift retained')
 
 
 if __name__ == '__main__':

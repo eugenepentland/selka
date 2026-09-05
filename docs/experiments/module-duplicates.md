@@ -53,5 +53,5 @@ Remaining tooling work includes module formatting, broader candidate-index/corpu
 scaling review, project native parity, and schema/incremental integration. Generics and the other unfinished roadmap tracks
 remain pending.
 
-Approximate search now uses the [near-v2 header index](approximate-discovery.md).
+Approximate search now uses the [near-v3 indexed and banded search](approximate-discovery.md).
 This changes budget accounting while preserving header eligibility and similarity.

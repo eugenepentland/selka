@@ -1,7 +1,7 @@
 # T: bounded approximate duplicate discovery
 
 Status: implemented as opt-in `discover-duplicates --approximate`. Exact discovery
-remains `exact-v28`; approximate scoring/reporting is separately versioned `near-v2`.
+remains `exact-v28`; approximate scoring/reporting is separately versioned `near-v3`.
 Reports are advisory, never rewrite code, and do not change source validity.
 
 ```sh
@@ -43,7 +43,7 @@ Search builds a stable header index, then visits only compatible unique-group pa
 in first-declaration order. The default work budget is 1,000,000 and the output limit
 is 100 pairs. `--max-work=N` requires `--approximate` and a positive value. Embedders
 can also set the pair limit. Index initialization, merge-sort entries/copies, header
-comparison bytes, compatible pair visits, matrix cells, and a conservative bound on
+comparison bytes, compatible pair visits, matrix band cells, and a conservative bound on
 compared body-line bytes are charged. Exhaustion during index construction reports
 an incomplete search with no near pairs; exact findings remain available.
 
@@ -51,16 +51,20 @@ Stable merge sorting uses O(n log n) header comparisons and O(n) temporary index
 storage. Adjacent equal headers form source-ordered chains; discovery follows those
 chains while retaining global first-declaration pair order. Header equality is full
 byte equality, with no probabilistic filter. Length difference still filters
-impossible matches before matrix allocation. Pairwise matrices use temporary storage
-and are freed after each comparison.
+impossible matches before matrix allocation. Pairwise matrices retain only the
+diagonal band within the permitted edit distance,
+use temporary storage, and are freed after each comparison. An accepted alignment
+cannot leave this band because an offset of k already requires at least k insertions
+or deletions. Traceback retains the same deterministic edit choices as a full matrix.
 
 The budget bounds indexing and comparison, not frontend checking, canonicalization,
 line splitting, rendering, or wall-clock time. Matrix memory is proportional to the
 charged cell count. Compatible pairs within a common header bucket and their edit
 matrices can still be quadratic. This is not a global nearest-neighbor ranking or
 a whole-compiler scaling guarantee. Exact discovery finishes independently of this
-budget. The near-v2 version records changed work accounting and budget-limited search
-behavior; header eligibility, line similarity, and edit explanations are unchanged.
+budget. The near-v3 version records banded matrix work accounting after near-v2
+introduced the header index; header eligibility, line similarity, and edit
+explanations are unchanged.
 
 Work or pair exhaustion stops search and emits `truncated=true` plus an explicit
 incomplete-search message. An absent candidate is never a proof of no duplication,
@@ -90,7 +94,7 @@ performance statistics. Wider ordinary-program review remains ongoing tooling wo
 generates 128, 512, and 1,024 functions with distinct nominal parameter types except
 for a compatible first/last pair. Every run must find exactly that pair without
 truncation under four million work units and repeat the same report byte for byte.
-Observed work is 150,889 / 621,084 / 1,361,230 units respectively. These are generated
+Observed work is 139,187 / 609,382 / 1,349,511 units respectively. These are generated
 stress fixtures, not ordinary-program usefulness evidence. The default one-million
 budget can still truncate the largest case; increasing it is explicit.
 
@@ -98,3 +102,19 @@ A separate unit fixture with 1,024 canonical inputs finds the first/last compati
 pair below 250,000 units. Interleaved buckets verify global pair order and output
 limits. Existing allocation-failure sweeps now include index allocations. Broader
 ordinary-program review and scaling within large compatible buckets remain pending.
+
+## Banded comparison acceptance
+
+The full-matrix reference test exhausts binary body sequences of length zero through
+four (plus a shared statement line) at 1%, 50%, 80%, 90%, and 99% similarity. All
+4,805 combinations must agree on acceptance, distance, and each edit explanation,
+including insertion/deletion ties. A 1,000-line canonical pair with one changed line
+now completes within the default one-million-unit budget.
+
+The actual CLI scaling driver also compares checked functions with 50, 100, and 200
+repeated discard statements and one changed return literal. They retain the same
+single-edit explanation at 287,261 / 1,060,407 / 4,070,527 work units under an explicit
+4.1-million budget. Source types and repeated canonical metadata cost more than the
+short canonical-line unit fixture. These are generated stress cases, not suggestions
+to write repeated discards. The band reduces matrix work/storage; fixed-percentage
+allowances and compatible pair enumeration still have quadratic worst cases.

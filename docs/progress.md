@@ -1586,3 +1586,32 @@ record this progress; broader ordinary-program review, compatible-bucket scaling
 module corpus acceptance, generics, compile-time/schema/incremental work, and wider
 native operations remain pending. Guardian was not exercised; hosted CI has not run.
 The full roadmap goal remains active.
+
+## 2026-09-05: Banded approximate edit-distance comparisons
+
+Approximate discovery now stores and computes only the diagonal band that can
+contain an accepted edit alignment. It preserves full-matrix deterministic edit
+explanations and acceptance thresholds while charging the smaller matrix and
+conservative compared-line byte bound. Near-v3 records this budget-accounting change;
+exact-v28 and header eligibility remain unchanged. Compatible pair enumeration and
+fixed-percentage edit bands still have quadratic worst cases.
+
+508 Zig tests pass in Debug and ReleaseFast (453 core, 55 CLI). A full-matrix oracle
+checks all 4,805 short binary sequence/threshold combinations for acceptance,
+distance, and complete edit explanations. A 1,000-line canonical drift pair now
+completes within the default one-million-unit budget. Existing deterministic,
+nominal boundary, truncation, and allocation-failure tests pass.
+
+The CLI scaling driver now checks longer compatible source functions with 50/100/200
+repeated statements: one changed return literal remains a single explained edit,
+using 287,261 / 1,060,407 / 4,070,527 work units under an explicit 4.1-million budget.
+Header-index corpus work is now 139,187 / 609,382 / 1,349,511 for 128/512/1,024
+functions. These are generated acceptance fixtures, not production-usefulness or
+whole-compiler performance claims. All scaling cases pass in both host build modes.
+Eight verification-driver tests and 392 native parity comparisons per host build
+mode also pass, along with formatting and whitespace checks.
+
+The roadmap and attached plan record banded comparison progress. Ordinary-program
+review, wider module/corpus acceptance, generics, compile-time/schema/incremental
+work, wider native operations, and other outstanding requirements remain pending.
+Guardian was not exercised; hosted CI has not run. The full roadmap goal remains active.

@@ -152,3 +152,89 @@ test "header index discovers distant compatible functions within a subquadratic 
     try t.expect(short.work <= 2000);
     try t.expectEqual(@as(usize, 0), short.pairs.len);
 }
+
+// A deliberately full, small matrix is the independent oracle for the bounded
+// representation. Exhaust all short binary sequences, including unequal lengths.
+fn compareWithFullMatrix(left: []const []const u8, right: []const []const u8, percent: u8) !void {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    var inputs: [2]near.Input = undefined;
+    for ([_][]const []const u8{ left, right }, &inputs, 0..) |lines, *input, id| {
+        const bytes = try std.mem.join(allocator, "\n", lines);
+        input.* = .{ .function = @fromBackingInt(id), .bytes = bytes };
+    }
+    var full: [6][6]usize = undefined;
+    for (0..left.len + 1) |r| full[r][0] = r;
+    for (0..right.len + 1) |c| full[0][c] = c;
+    for (left, 1..) |a, r| for (right, 1..) |b, c| {
+        full[r][c] = @min(full[r - 1][c - 1] + @as(usize, if (std.mem.eql(u8, a, b)) 0 else 1), @min(full[r - 1][c] + 1, full[r][c - 1] + 1));
+    };
+    const distance = full[left.len][right.len];
+    const result = try near.discover(allocator, t.allocator, &inputs, .{ .similarity_percent = percent });
+    try t.expect(!result.truncated);
+    if (distance == 0 or distance > @max(left.len, right.len) * (100 - @as(usize, percent)) / 100) {
+        try t.expectEqual(@as(usize, 0), result.pairs.len);
+        return;
+    }
+    try t.expectEqual(@as(usize, 1), result.pairs.len);
+    try t.expectEqual(distance, result.pairs[0].distance);
+    var changes: [10]near.Change = undefined;
+    var count: usize = 0;
+    var r = left.len;
+    var c = right.len;
+    while (r != 0 or c != 0) {
+        if (r > 0 and c > 0 and std.mem.eql(u8, left[r - 1], right[c - 1]) and full[r][c] == full[r - 1][c - 1]) {
+            r -= 1;
+            c -= 1;
+            continue;
+        }
+        if (r > 0 and c > 0 and full[r][c] == full[r - 1][c - 1] + 1) {
+            changes[count] = .{ .before = left[r - 1], .after = right[c - 1] };
+            r -= 1;
+            c -= 1;
+        } else if (r > 0 and full[r][c] == full[r - 1][c] + 1) {
+            changes[count] = .{ .before = left[r - 1], .after = null };
+            r -= 1;
+        } else {
+            changes[count] = .{ .before = null, .after = right[c - 1] };
+            c -= 1;
+        }
+        count += 1;
+    }
+    std.mem.reverse(near.Change, changes[0..count]);
+    try t.expectEqualDeep(@as([]const near.Change, changes[0..count]), result.pairs[0].changes);
+}
+test "banded distance and edit explanations agree with a full matrix over short sequences" {
+    for (0..5) |left_length| for (0..5) |right_length| {
+        for (0..@as(usize, 1) << @intCast(left_length)) |a| for (0..@as(usize, 1) << @intCast(right_length)) |b| {
+            var left: [5][]const u8 = undefined;
+            var right: [5][]const u8 = undefined;
+            left[0] = "stmt block";
+            right[0] = "stmt block";
+            for (left[1 .. left_length + 1], 0..) |*line, bit| line.* = if (a & (@as(usize, 1) << @intCast(bit)) == 0) "a" else "b";
+            for (right[1 .. right_length + 1], 0..) |*line, bit| line.* = if (b & (@as(usize, 1) << @intCast(bit)) == 0) "a" else "b";
+            for ([_]u8{ 1, 50, 80, 90, 99 }) |percent| try compareWithFullMatrix(left[0 .. left_length + 1], right[0 .. right_length + 1], percent);
+        };
+    };
+}
+test "banded comparison finds long literal drift within the default work budget" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    var left: [1000][]const u8 = @splat("a");
+    left[0] = "stmt block";
+    var right = left;
+    right[999] = "b";
+    const inputs = [_]near.Input{
+        .{ .function = @fromBackingInt(0), .bytes = try std.mem.join(allocator, "\n", &left) },
+        .{ .function = @fromBackingInt(1), .bytes = try std.mem.join(allocator, "\n", &right) },
+    };
+    const result = try near.discover(allocator, t.allocator, &inputs, .{});
+    try t.expect(!result.truncated);
+    try t.expect(result.work < 1_000_000);
+    try t.expectEqual(@as(usize, 1), result.pairs.len);
+    try t.expectEqual(@as(usize, 1), result.pairs[0].distance);
+    try t.expectEqualStrings("a", result.pairs[0].changes[0].before.?);
+    try t.expectEqualStrings("b", result.pairs[0].changes[0].after.?);
+}

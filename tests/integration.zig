@@ -514,7 +514,7 @@ test "CLI approximate discovery is advisory explains drift and reports budget ex
     defer testing.allocator.free(outcome.stdout);
     defer testing.allocator.free(outcome.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
-    for ([_][]const u8{ "near-v2", "near candidate:", "- 1", "+ 3", "Advisory only" }) |part| try testing.expect(std.mem.indexOf(u8, outcome.stdout, part) != null);
+    for ([_][]const u8{ "near-v3", "near candidate:", "- 1", "+ 3", "Advisory only" }) |part| try testing.expect(std.mem.indexOf(u8, outcome.stdout, part) != null);
     const limited = try runFixture("discover-duplicates", source, &.{ "--approximate", "--min-nodes=1", "--max-work=1" });
     defer testing.allocator.free(limited.stdout);
     defer testing.allocator.free(limited.stderr);
@@ -825,7 +825,7 @@ test "CLI discovers cross module duplicates with options and rejects invalid dep
     defer testing.allocator.free(result.stdout);
     defer testing.allocator.free(result.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
-    for ([_][]const u8{ "scope: reachable module graph", "population=reference", "input::twice", "helper::copy", "input.my:1:", "helper.my:1:", "approximate near-v2", "truncated=true" }) |part| try testing.expect(std.mem.indexOf(u8, result.stdout, part) != null);
+    for ([_][]const u8{ "scope: reachable module graph", "population=reference", "input::twice", "helper::copy", "input.my:1:", "helper.my:1:", "approximate near-v3", "truncated=true" }) |part| try testing.expect(std.mem.indexOf(u8, result.stdout, part) != null);
     try testing.expect(std.mem.indexOf(u8, result.stderr, "project_frontend_ns=") != null);
     try testing.expect(std.mem.indexOf(u8, result.stderr, "modules=2") != null);
     try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper; fn copy(x: i64) -> i64 { return true; }" });
