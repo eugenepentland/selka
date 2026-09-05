@@ -221,9 +221,10 @@ const Emitter = struct {
                     try self.push(.{ .expression = operation.arguments[i] });
                 }
             },
-            .acquire_buffer => |capacity| {
+            .acquire_buffer => |acquire| {
                 try self.instruction(node.span, .{ .acquire_buffer = node.ty });
-                try self.push(.{ .expression = capacity });
+                try self.push(.{ .expression = acquire.capacity });
+                try self.push(.{ .expression = acquire.allocator });
             },
             .local => |slot| try self.instruction(node.span, if (typed.moveOnly(node.ty, self.program.records) or typed.requiresHandling(node.ty, self.program.records)) .{ .move_local = slot } else .{ .load_local = slot }),
             .call => |call| {

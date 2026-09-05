@@ -3,7 +3,8 @@
 Status: M0–M5 complete, 2026-09-05. This file describes implemented behavior, while
 [plan.md](plan.md) describes the complete target and future experiments.
 
-- A source file contains named functions and exactly one `fn main() -> i64`.
+- A source file contains named functions and exactly one `main` returning i64.
+  It accepts no parameters or one explicit `allocator` capability parameter.
   Statements include `let`, `let mut`, assignment (`=`, `+=`, `-=`), nested
   blocks, `if`/`else`, `while`, `discard`, and explicit `return`. A function must structurally return; statements after
   a terminating return or block are rejected.
@@ -87,7 +88,7 @@ The [MVP acceptance audit](mvp-audit.md) records the verification evidence.
 Post-MVP feature syntax is not accepted as a placeholder with invented semantics.
 
 
-The guest has no strings, floats, raw pointers, general allocator capabilities,
+The guest has no strings, floats, raw pointers, allocator attenuation,
 generics, compile-time execution, modules, globals, closures,
 function values, standard library, FFI, exceptions, concurrency,
 optimizer, native backend, or self-hosting. The host compiler and VM allocate.
@@ -184,7 +185,7 @@ See [propagation semantics](experiments/propagation.md). Arithmetic traps remain
 separate from recoverable errors.
 
 
-`buffer Name: Element;` declares a nominal owned buffer. `acquire_buffer<Result>(n)`
+`buffer Name: Element;` declares a nominal owned buffer. `acquire_buffer<Result>(heap, n)`
 returns an empty buffer or a capacity error through a declared result. Buffers and
 wrappers containing them transfer on use and reject reuse; ordinary owned values
 clean up at block/match exits, return, and propagated failure. Results retain their
@@ -202,3 +203,11 @@ cleanup do not. Calls propagate effects to a fixed point, including recursion.
 `noio` excludes filesystem/network access without promising determinism.
 [Effect semantics and limits](experiments/effects.md) define the complete current
 contract. External capability operations and their cleanup effects remain pending.
+
+
+The opaque `allocator` capability is supplied only to a requesting entry parameter.
+Helpers receive it explicitly; acquisition and reserve require it, and copies share
+the same execution quotas. Numeric casts and effect declarations cannot manufacture
+capabilities. The embedding runtime can deny provisioning. See [allocator authority
+semantics](experiments/allocator-capabilities.md). External capabilities and resource
+completion/cleanup effects remain pending.

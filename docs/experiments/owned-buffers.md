@@ -15,9 +15,9 @@ fn forward(values: Numbers) -> Numbers {
     return values;
 }
 
-fn allocate() -> Acquired {
-    let first = try acquire_buffer<Acquired>(4);
-    let second = try acquire_buffer<Acquired>(8);
+fn allocate(heap: allocator) -> Acquired {
+    let first = try acquire_buffer<Acquired>(heap, 4);
+    let second = try acquire_buffer<Acquired>(heap, 8);
     discard first;
     return new Acquired.ok(forward(second));
 }
@@ -29,14 +29,14 @@ type. Elements must be ordinary copyable values with no result obligations or
 owned resources, including transitively through wrappers. Recursive element/type
 cycles are rejected. Ordinary record construction cannot manufacture a buffer.
 
-`acquire_buffer<ResultType>(capacity)` evaluates an integer capacity once and
+`acquire_buffer<ResultType>(capability, capacity)` checks explicit allocator authority, evaluates an integer capacity once, and
 returns the declared result. Its success payload must be a buffer; the initial
 error contract is `i64`. Success creates an empty buffer with the requested reserved
 capacity. The recoverable error code `1` means a negative/unrepresentable capacity,
 a buffer/total-capacity quota violation, or exhaustion of the live-allocation quota.
 It does not convert host allocation failure or guest arithmetic traps into errors.
-The `i64` error contract is provisional; named errors and explicit allocator
-capabilities belong to the remaining resource/effect work.
+The `i64` error contract is provisional; named errors belong to the remaining error abstraction work.
+[Explicit allocator capabilities](allocator-capabilities.md) are now required.
 
 The embedding VM accepts `Options.memory_limits` with the existing backend quotas.
 The CLI currently uses defaults. Quotas count reserved element slots and live
@@ -114,5 +114,6 @@ Exact duplicate discovery is `exact-v14`, retaining acquisition structure and
 move-only type behavior.
 
 [Buffer operations and checked borrowed views](buffer-operations.md) are now implemented.
-Next: allocator/external capabilities and transitive effect checks, including cleanup. External-resource
+[Allocator capabilities](allocator-capabilities.md) and transitive allocation bounds
+are now implemented. External capabilities and cleanup effects remain next. External-resource
 handling, arenas/pools, generics/handles, and other roadmap tracks remain in scope.

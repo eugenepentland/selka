@@ -194,3 +194,9 @@ Effect contracts advance discovery to `exact-v16`. Canonical functions retain
 inferred effect sets and normalized optional allowed sets; source annotation spans
 and list ordering do not participate. Equal bodies with different declared bounds
 remain separate. Renamed helpers with reordered but equal allowed sets group.
+
+
+Explicit allocator authority advances discovery to `exact-v17`. Acquisition retains
+its capability expression before capacity, reserve retains its additional capability
+operand, and function signatures retain the allocator type. Removing or changing
+explicit delegation is therefore a structural difference.

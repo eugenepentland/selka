@@ -3,7 +3,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 
-pub const version = "exact-v16";
+pub const version = "exact-v17";
 pub const Population = enum { production, tests, generated, reference, intentional };
 pub const Options = struct { min_nodes: usize = 8, population: Population = .production };
 pub const Group = struct { members: []const typed.FunctionId, nodes: usize };
@@ -82,7 +82,11 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                         try work.append(allocator, .{ .expression = replace.base });
                     },
                     .length => |base| try work.append(allocator, .{ .expression = base }),
-                    .cast, .wrap, .unwrap, .acquire_buffer => |operand| try work.append(allocator, .{ .expression = operand }),
+                    .acquire_buffer => |acquire| {
+                        try work.append(allocator, .{ .expression = acquire.capacity });
+                        try work.append(allocator, .{ .expression = acquire.allocator });
+                    },
+                    .cast, .wrap, .unwrap => |operand| try work.append(allocator, .{ .expression = operand }),
                     .record => |fields| {
                         try recordFields(allocator, writer, &work, program, node.ty, fields);
                     },

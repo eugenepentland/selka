@@ -43,7 +43,7 @@ pub const Parser = struct {
             try self.array_types.append(self.allocator, .{ .span = span, .index = index, .element = element });
             return span;
         }
-        if (self.take(.kw_i64) or self.take(.kw_bool) or self.take(.kw_i8) or self.take(.kw_i16) or self.take(.kw_i32) or self.take(.kw_u8) or self.take(.kw_u16) or self.take(.kw_u32) or self.take(.kw_u64) or self.take(.ident)) return token.span;
+        if (self.take(.kw_i64) or self.take(.kw_bool) or self.take(.kw_i8) or self.take(.kw_i16) or self.take(.kw_i32) or self.take(.kw_u8) or self.take(.kw_u16) or self.take(.kw_u32) or self.take(.kw_u64) or self.take(.kw_allocator) or self.take(.ident)) return token.span;
         return self.sink.fail("E_TYPE", token.span, "expected a built-in, declared, fixed array, or enum-indexed table type");
     }
     pub fn parse(self: *Parser) diagnostic.Error!ast.Program {
@@ -391,9 +391,13 @@ pub const Parser = struct {
                 const ty = try self.typeName();
                 _ = try self.expect(.gt);
                 _ = try self.expect(.lparen);
-                const value = try self.expression(0);
+                const first = try self.expression(0);
+                const value = if (token.tag == .kw_acquire_buffer) value: {
+                    _ = try self.expect(.comma);
+                    break :value try self.expression(0);
+                } else first;
                 const close = try self.expect(.rparen);
-                break :cast try self.append(.{ .span = .join(token.span, close.span), .data = if (token.tag == .kw_acquire_buffer) .{ .acquire_buffer = .{ .ty = ty, .value = value } } else if (token.tag == .kw_cast) .{ .cast = .{ .ty = ty, .value = value } } else .{ .wrap = .{ .ty = ty, .value = value } } });
+                break :cast try self.append(.{ .span = .join(token.span, close.span), .data = if (token.tag == .kw_acquire_buffer) .{ .acquire_buffer = .{ .ty = ty, .allocator = first, .value = value } } else if (token.tag == .kw_cast) .{ .cast = .{ .ty = ty, .value = value } } else .{ .wrap = .{ .ty = ty, .value = value } } });
             },
             .kw_new => record: {
                 self.pos += 1;

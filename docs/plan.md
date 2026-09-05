@@ -630,7 +630,7 @@ implemented. [Returned-reference lifetime contracts](experiments/returned-refere
 complete B; see [the acceptance audit](experiments/b-audit.md). C/D now have
 [typed recoverable results and checked handling obligations](experiments/results.md).
 [Explicit propagation](experiments/propagation.md) now preserves error obligations
-and borrow cleanup. [Owned-buffer transfers and partial-acquisition cleanup](experiments/ownership.md) now have backend acceptance evidence. [Source buffer acquisition, moves, wrappers, and partial-construction cleanup](experiments/owned-buffers.md) are also implemented. [Buffer queries, mutations, and checked borrowed views](experiments/buffer-operations.md) are also implemented. [Transitive allocation bounds and inference](experiments/effects.md) are implemented. Explicit capabilities, external operations/resources and their effects, arenas/pools, and the other unfinished work below remain pending.
+and borrow cleanup. [Owned-buffer transfers and partial-acquisition cleanup](experiments/ownership.md) now have backend acceptance evidence. [Source buffer acquisition, moves, wrappers, and partial-construction cleanup](experiments/owned-buffers.md) are also implemented. [Buffer queries, mutations, and checked borrowed views](experiments/buffer-operations.md) are also implemented. [Transitive allocation bounds and inference](experiments/effects.md) are implemented. [Explicit allocator capabilities](experiments/allocator-capabilities.md) are now required for acquisition and growth. External capabilities, operations/resources and their effects, arenas/pools, and the other unfinished work below remain pending.
 
 | Stage | Scope | Question to answer before proceeding |
 | --- | --- | --- |

@@ -609,3 +609,27 @@ cleanup are pending. Current allocation still uses the implicit execution memory
 store. This is a foundation, not completion of C or capability security. Arenas/pools,
 abstraction work, and every other unfinished track retain their scope. Guardian
 gates were not exercised; hosted CI has not run. The full roadmap goal remains active.
+
+
+## 2026-09-05: C explicit allocator capability boundary
+
+Added the opaque allocator capability type and an optional requesting entry
+parameter. Helpers explicitly receive/forward authority; acquire and reserve reject
+old implicit forms or wrong-typed operands. Runtime capabilities identify one live
+execution store and share its quota ceilings. Copies and wrappers do not amplify
+authority. The embedding runtime can deny the entry grant. Noalloc remains enforced
+independently of capability possession.
+
+Migrated the executable ownership/effect examples and fixtures to explicit authority.
+260 tests pass in Debug and ReleaseFast (231 core, 29 actual CLI; unchanged core
+results were cached in the final Debug check). New tests cover forwarding, quotas,
+denied grants, fabrication, omitted parameters, stale/foreign identities, emission
+and VM operand checks, and every allocation failure. Existing partial-acquisition,
+trap, and bounded-storage tests pass with the new arguments. The allocator-capability
+example returns 3. Formatting/whitespace checks pass; discovery is exact-v17.
+
+[Allocator capability semantics](experiments/allocator-capabilities.md) defines the
+trusted entry boundary and current single-store limit. External capabilities and
+operations/resources, cleanup/completion effects, attenuation, arenas/pools, and all
+other unfinished roadmap work remain pending. C is not complete. Guardian gates
+were not exercised; hosted CI has not run. The full roadmap goal remains active.

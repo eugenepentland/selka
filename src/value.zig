@@ -10,8 +10,9 @@ pub const Type = enum(usize) {
     u16,
     u32,
     u64,
+    allocator,
     _,
-    pub const record_base: usize = 9;
+    pub const record_base: usize = 10;
     pub const Integer = struct { bits: u7, signed: bool };
     pub fn integer(self: Type) ?Integer {
         return switch (self) {
@@ -60,9 +61,11 @@ pub const Value = union(enum) {
     integer: struct { ty: Type, value: i128 },
     aggregate: *Aggregate,
     resource: *Resource,
+    allocator: @import("memory.zig").AllocatorCapability,
 
     pub fn typeOf(self: Value) Type {
         return switch (self) {
+            .allocator => .allocator,
             .i64 => .i64,
             .bool => .bool,
             .integer => |n| n.ty,

@@ -10,8 +10,8 @@ pub const Kind = enum {
     pub fn arity(self: Kind) usize {
         return switch (self) {
             .length, .capacity => 0,
-            .read, .append, .reserve => 1,
-            .write, .resize => 2,
+            .read, .append => 1,
+            .write, .resize, .reserve => 2,
         };
     }
     pub fn mutates(self: Kind) bool {

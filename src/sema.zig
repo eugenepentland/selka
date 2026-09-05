@@ -251,7 +251,13 @@ const Checker = struct {
                         try work.append(self.allocator, .{ .id = base });
                         continue;
                     },
-                    .cast, .wrap, .acquire_buffer => |cast| {
+                    .acquire_buffer => |acquire| {
+                        try work.append(self.allocator, .{ .id = task.id, .emit = true });
+                        try work.append(self.allocator, .{ .id = acquire.value });
+                        try work.append(self.allocator, .{ .id = acquire.allocator });
+                        continue;
+                    },
+                    .cast, .wrap => |cast| {
                         try work.append(self.allocator, .{ .id = task.id, .emit = true });
                         try work.append(self.allocator, .{ .id = cast.value });
                         continue;
@@ -322,7 +328,7 @@ const Checker = struct {
                     for (operation.arguments, arguments, 0..) |input, *argument, argument_index| {
                         argument.* = self.resolved[@backingInt(input)].?;
                         const actual = self.nodes.items[@backingInt(argument.*)].ty;
-                        if (operation.kind == .append or (argument_index == 1 and (operation.kind == .write or operation.kind == .resize))) try self.require(actual, element, self.syntax.nodes.items[@backingInt(input)].span) else try self.requireInteger(actual, self.syntax.nodes.items[@backingInt(input)].span);
+                        if (operation.kind == .reserve and argument_index == 0) try self.require(actual, .allocator, self.syntax.nodes.items[@backingInt(input)].span) else if (operation.kind == .append or (argument_index == 1 and (operation.kind == .write or operation.kind == .resize))) try self.require(actual, element, self.syntax.nodes.items[@backingInt(input)].span) else try self.requireInteger(actual, self.syntax.nodes.items[@backingInt(input)].span);
                     }
                     if (operation.result) |result_type| {
                         out.ty = try self.ty(result_type);
@@ -337,7 +343,9 @@ const Checker = struct {
                     if (!shape.ok_type.isAggregate() or self.catalog.records[shape.ok_type.recordIndex()].buffer == null or shape.error_type != .i64) return self.sink.fail("E_BUFFER_RESULT", acquire.ty, "buffer acquisition requires a result with a buffer success payload and i64 error payload");
                     const capacity = self.resolved[@backingInt(acquire.value)].?;
                     try self.requireInteger(self.nodes.items[@backingInt(capacity)].ty, node.span);
-                    out.data = .{ .acquire_buffer = capacity };
+                    const authority = self.resolved[@backingInt(acquire.allocator)].?;
+                    try self.require(self.nodes.items[@backingInt(authority)].ty, .allocator, self.syntax.nodes.items[@backingInt(acquire.allocator)].span);
+                    out.data = .{ .acquire_buffer = .{ .allocator = authority, .capacity = capacity } };
                 },
                 .propagate => |operand| {
                     const value = self.resolved[@backingInt(operand)].?;
@@ -552,7 +560,8 @@ const Checker = struct {
             }
             const consumed: usize = switch (out.data) {
                 .integer, .boolean, .local, .read_ref, .len_slice => 0,
-                .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .acquire_buffer => 1,
+                .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate => 1,
+                .acquire_buffer => 2,
                 .index, .binary => 2,
                 .replace => 3,
                 .variant => |variant| if (variant.value != null) 1 else 0,
@@ -854,7 +863,8 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     }
     const main = checker.functions.get("main") orelse return sink.fail("E_MAIN", .{ .start = 0, .end = 0 }, "the program requires fn main() -> i64");
     const entry = program.functions[@backingInt(main)];
-    if (entry.parameters.len != 0 or entry.return_reference != null) return sink.fail("E_MAIN", entry.name, "main must have no parameters");
+    if (entry.parameters.len > 1 or entry.return_reference != null) return sink.fail("E_MAIN", entry.name, "main accepts no parameters or one allocator capability");
+    if (entry.parameters.len == 1 and (try checker.ty(entry.parameters[0].ty) != .allocator or entry.parameters[0].reference != null)) return sink.fail("E_MAIN", entry.name, "main accepts no parameters or one allocator capability");
     if (try checker.ty(entry.return_type) != .i64) return sink.fail("E_TYPE", entry.return_type, "main must return i64");
     const functions = try allocator.alloc(typed.Function, program.functions.len);
     for (program.functions, functions, 0..) |function, *out, i| {

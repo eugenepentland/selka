@@ -1,10 +1,10 @@
 # C: transitive effect-bound foundation
 
 Status: effect inference, explicit bounds, allocation checking through calls, witness
-diagnostics, and independent emission validation are implemented. Explicit capability
-parameters, external operations/resources, their cleanup effects, and arenas/pools
-remain pending. C is not complete, and current allocation still uses the execution's
-implicit memory store until allocator capabilities are integrated.
+diagnostics, and independent emission validation are implemented. [Explicit allocator
+capabilities](allocator-capabilities.md) now replace implicit allocation access.
+External capability operations/resources, their cleanup effects, and arenas/pools
+remain pending. C is not complete.
 
 ## Contracts
 
@@ -106,6 +106,7 @@ execution, dumps, and discovery. Debug and ReleaseFast pass 251 tests (223 core,
 28 actual CLI). The effects example returns 14; every checking command rejects
 transitive allocation under noalloc. Formatting and whitespace checks pass.
 
-Next: introduce entry-provided allocator/external capability parameters, wire
+Allocator capabilities are now entry-provided and explicitly forwarded.
+Next: introduce external capability parameters and wire
 external operations and cleanup to their effects, and test restricted authority
 with fake implementations. Arenas/pools and all remaining roadmap tracks stay in scope.

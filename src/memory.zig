@@ -19,6 +19,7 @@ pub const Error = std.mem.Allocator.Error || error{
     TypeMismatch,
     CapacityLimit,
     NoCapacity,
+    InvalidCapability,
 };
 pub const Limits = struct {
     max_buffer_capacity: usize = std.math.maxInt(usize) / @sizeOf(Value),
@@ -30,6 +31,7 @@ pub const BufferInfo = struct { element_type: Type, length: usize, capacity: usi
 pub const Growth = enum { unchanged, allocated };
 pub const Kind = enum { shared, exclusive };
 pub const Token = struct { index: usize, generation: u64 };
+pub const AllocatorCapability = struct { memory: u64 };
 pub const Allocation = struct { memory: u64, token: Token };
 pub const Borrow = struct { memory: u64, token: Token };
 pub const View = struct { allocation: Allocation, start: usize, length: usize, kind: Kind, element_type: Type };
@@ -107,6 +109,14 @@ pub const Store = struct {
 
     pub fn init(allocator: std.mem.Allocator) Error!Store {
         return .{ .allocator = allocator, .identity = try nextIdentity(&identities) };
+    }
+    /// Called only by the embedding runtime; guest code cannot mint this value.
+    pub fn allocatorCapability(self: *Store) Error!AllocatorCapability {
+        try self.checkMemory(self.identity);
+        return .{ .memory = self.identity };
+    }
+    pub fn checkAllocator(self: *Store, capability: AllocatorCapability) Error!void {
+        if (self.identity == 0 or capability.memory != self.identity) return error.InvalidCapability;
     }
     pub fn initWithLimits(allocator: std.mem.Allocator, limits: Limits) Error!Store {
         var store = try init(allocator);

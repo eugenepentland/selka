@@ -5,19 +5,19 @@ fn forward(values: Numbers) -> Numbers {
     return values;
 }
 
-fn acquire_pair() -> Acquired {
-    let first = try acquire_buffer<Acquired>(4);
+fn acquire_pair(alloc: allocator) -> Acquired {
+    let first = try acquire_buffer<Acquired>(alloc, 4);
     // Failing the second acquisition releases first on the propagated return.
-    let second = try acquire_buffer<Acquired>(-1);
+    let second = try acquire_buffer<Acquired>(alloc, -1);
     discard first;
     return new Acquired.ok(second);
 }
 
-fn main() -> i64 {
-    match acquire_pair() {
+fn main(alloc: allocator) -> i64 {
+    match acquire_pair(alloc) {
         Acquired.ok(discard) => { return 0; },
         Acquired.err(error_code) => {
-            match acquire_buffer<Acquired>(8) {
+            match acquire_buffer<Acquired>(alloc, 8) {
                 Acquired.ok(values) => {
                     discard forward(values);
                     return error_code + 20;

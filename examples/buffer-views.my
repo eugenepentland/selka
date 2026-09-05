@@ -8,20 +8,20 @@ fn tail(values: &mut []i64) -> &mut []i64 from values {
     }
 }
 
-fn make() -> Acquired {
-    let mut values = try acquire_buffer<Acquired>(3);
+fn make(alloc: allocator) -> Acquired {
+    let mut values = try acquire_buffer<Acquired>(alloc, 3);
     discard try resize_buffer<Status>(values, 3, 7);
     borrow mut values[0..3] as whole {
         borrow mut tail(whole) as part {
             write_slice(part, 0, 11);
         }
     }
-    discard try reserve_buffer<Status>(values, 8);
+    discard try reserve_buffer<Status>(values, alloc, 8);
     return new Acquired.ok(values);
 }
 
-fn main() -> i64 {
-    match make() {
+fn main(alloc: allocator) -> i64 {
+    match make(alloc) {
         Acquired.ok(values) => {
             return read_buffer(values, 1) + cast<i64>(capacity_buffer(values));
         },

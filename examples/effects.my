@@ -16,8 +16,8 @@ fn release(values: Numbers) -> i64 effects() {
     return 3;
 }
 
-fn main() -> i64 effects(allocation) {
-    match acquire_buffer<Acquired>(2) {
+fn main(alloc: allocator) -> i64 effects(allocation) {
+    match acquire_buffer<Acquired>(alloc, 2) {
         Acquired.ok(values) => {
             match fill(values) {
                 Acquired.ok(filled) => {

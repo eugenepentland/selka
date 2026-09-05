@@ -72,7 +72,7 @@ zig build run -- discover-duplicates examples/duplicates.my --timings
 It reports exact checked-function candidates after normalizing bound names,
 with source locations and advisory explanations. Ordinary compilation does not
 run it. See the [comparison contract and review](docs/experiments/duplicate-discovery.md).
-All 251 tests pass in Debug and ReleaseFast.
+All 260 tests pass in Debug and ReleaseFast.
 
 [Post-MVP tracking](docs/experiments/roadmap.md) records the remaining experiments.
 Records, complete construction, field access, preserving updates, and declarative
@@ -115,5 +115,7 @@ returns 21. [Buffer operations and views](docs/experiments/buffer-operations.md)
 include checked mutations, queries, slices, and returned-view helpers;
 `examples/buffer-views.my` returns 19. [Transitive effect bounds](docs/experiments/effects.md)
 now reject direct or indirect guest allocation under `noalloc`; `examples/effects.my`
-returns 14. Explicit capabilities, external operations/resources and their effects,
-and arenas/pools remain pending.
+returns 14. [Explicit allocator capabilities](docs/experiments/allocator-capabilities.md)
+now flow from the entry point through helper parameters; acquisition and reserve
+require them. `examples/allocator-capabilities.my` returns 3. External capabilities,
+operations/resources and their effects, and arenas/pools remain pending.

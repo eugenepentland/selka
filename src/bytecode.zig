@@ -125,7 +125,8 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
         };
     }
     const main = program.functions[@backingInt(program.main)];
-    if (main.return_reference != null or main.parameter_count != 0 or main.return_type != .i64 or main.owner != null or main.restricted) return error.InternalError;
+    if (main.return_reference != null or main.parameter_count > 1 or main.return_type != .i64 or main.owner != null or main.restricted) return error.InternalError;
+    if (main.parameter_count == 1 and (main.locals.len == 0 or main.locals[0].ty != .allocator or main.locals[0].reference_parameter != null)) return error.InternalError;
     for (program.functions, 0..) |function, i| {
         if (@backingInt(function.id) != i or function.instructions.len == 0) return error.InternalError;
         if (function.owner) |owner| {
@@ -382,7 +383,11 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (height < 2) return error.InternalError;
                     height -= 2;
                 },
-                .acquire_buffer, .read_slice, .neg_i64_checked, .not_bool, .get_field, .cast_integer, .neg_integer, .array_length, .wrap_domain, .unwrap_domain => if (height == 0) {
+                .acquire_buffer => {
+                    if (height < 2) return error.InternalError;
+                    height -= 1;
+                },
+                .read_slice, .neg_i64_checked, .not_bool, .get_field, .cast_integer, .neg_integer, .array_length, .wrap_domain, .unwrap_domain => if (height == 0) {
                     return error.InternalError;
                 },
                 .call, .call_refs, .call_borrow => {
@@ -432,7 +437,7 @@ fn validateIndices(allocator: std.mem.Allocator, indices: []const usize, count: 
 }
 
 fn validType(ty: typed.Type, program: Program) bool {
-    return ty.isInteger() or ty == .bool or (ty.isAggregate() and ty.recordIndex() < program.records.len);
+    return ty.isInteger() or ty == .bool or ty == .allocator or (ty.isAggregate() and ty.recordIndex() < program.records.len);
 }
 
 fn variantSchema(ty: typed.Type, program: Program) Error!typed.Variants {

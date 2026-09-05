@@ -5,7 +5,7 @@ const integers = @import("integers.zig");
 const typed = @import("typed.zig");
 const memory = @import("memory.zig");
 const Diagnostic = @import("diagnostic.zig").Diagnostic;
-pub const Options = struct { memory_statistics: ?*memory.Statistics = null, memory_limits: memory.Limits = .{}, max_steps: u64 = 10_000_000, max_frames: u64 = 1024 };
+pub const Options = struct { provide_allocator: bool = true, memory_statistics: ?*memory.Statistics = null, memory_limits: memory.Limits = .{}, max_steps: u64 = 10_000_000, max_frames: u64 = 1024 };
 pub const Result = union(enum) { value: i64, trap: Diagnostic };
 fn integer(value: typed.Value, allocator: std.mem.Allocator) error{InternalError}!i64 {
     defer value.release(allocator);
@@ -101,6 +101,10 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
     defer frames.deinit(allocator);
     try locals.resize(allocator, program.functions[@backingInt(program.main)].locals.len);
     @memset(locals.items, null);
+    if (program.functions[@backingInt(program.main)].parameter_count != 0) {
+        if (!options.provide_allocator) return error.CapabilityUnavailable;
+        locals.items[0] = .{ .allocator = try storage.allocatorCapability() };
+    }
     try references.resize(allocator, program.functions[@backingInt(program.main)].references.len);
     @memset(references.items, null);
     try frames.append(allocator, .{ .function = program.main, .local_base = 0, .operand_base = 0, .call_span = .{ .start = 0, .end = 0 } });
@@ -419,7 +423,11 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 if (local != .resource or local.resource.store != &storage) return error.InternalError;
                 const owner = local.resource.owner;
                 const info = storage.info(owner) catch |err| return memoryFailure(err, instruction, frames.items, program);
-                const number: i128 = if (count != 0 and operation.kind != .append) try arguments[0].asInteger() else 0;
+                const number: i128 = if (count != 0 and operation.kind != .append) try arguments[if (operation.kind == .reserve) 1 else 0].asInteger() else 0;
+                if (operation.kind == .reserve) {
+                    if (arguments[0] != .allocator) return error.InternalError;
+                    storage.checkAllocator(arguments[0].allocator) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                }
                 var status: i64 = 0;
                 const output: typed.Value = switch (operation.kind) {
                     .length => typed.Value.number(.u64, info.length),
@@ -460,6 +468,10 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
             },
             .acquire_buffer => |ty| {
                 const capacity = try numeric(&stack, frame.operand_base, null, allocator);
+                const authority = try pop(&stack, frame.operand_base);
+                defer authority.release(allocator);
+                if (authority != .allocator) return error.InternalError;
+                storage.checkAllocator(authority.allocator) catch |err| return memoryFailure(err, instruction, frames.items, program);
                 const shape = typed.resultShape(ty, program.records).?;
                 const element = program.records[shape.ok_type.recordIndex()].buffer.?;
                 const owner: ?memory.Allocation = if (capacity < 0 or capacity > std.math.maxInt(usize)) null else storage.createWithCapacity(element, &.{}, @intCast(capacity)) catch |err| switch (err) {
@@ -664,6 +676,7 @@ fn arrayIndex(value: typed.Value, schema: typed.Array) error{InternalError}!i128
 
 fn memoryFailure(err: memory.Error, instruction: bc.Instruction, frames: []const Frame, program: bc.Program) error{ OutOfMemory, IdentityExhausted }!Result {
     return switch (err) {
+        error.InvalidCapability => trap("R_CAPABILITY", "allocator capability is not valid for this execution", instruction.span, frames, program),
         error.OutOfMemory => error.OutOfMemory,
         error.IdentityExhausted => error.IdentityExhausted,
         error.BorrowConflict => trap("R_BORROW_CONFLICT", "access conflicts with an active borrow", instruction.span, frames, program),

@@ -39,7 +39,11 @@ pub const Walker = struct {
         switch (item) {
             .expression => |id| switch (self.program.nodes[@backingInt(id)].data) {
                 .integer, .boolean, .local, .read_ref, .len_slice => {},
-                .acquire_buffer, .cast, .wrap, .unwrap, .length => |value| try self.expr(value),
+                .acquire_buffer => |acquire| {
+                    try self.expr(acquire.capacity);
+                    try self.expr(acquire.allocator);
+                },
+                .cast, .wrap, .unwrap, .length => |value| try self.expr(value),
                 .propagate => |p| try self.expr(p.value),
                 .read_slice => |r| try self.expr(r.index),
                 .variant => |v| if (v.value) |value| try self.expr(value),

@@ -388,7 +388,20 @@ test "CLI enforces transitive allocation bounds and exposes inferred effects" {
     defer testing.allocator.free(dumped.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
     try testing.expect(std.mem.indexOf(u8, dumped.stdout, "effects {allocation} allowed {allocation}") != null);
-    const invalid = "buffer B: i64; result R { ok: B, err: i64 } fn helper() -> R { return acquire_buffer<R>(1); } fn main() -> i64 noalloc { acknowledge helper(); return 0; }";
+    const invalid = "buffer B: i64; result R { ok: B, err: i64 } fn helper(alloc: allocator) -> R { return acquire_buffer<R>(alloc, 1); } fn main(alloc: allocator) -> i64 noalloc { acknowledge helper(alloc); return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_EFFECT_BOUND]");
     try invoke("check", invalid, 1, "", "main -> helper");
+}
+
+test "CLI exposes explicit allocator parameters and rejects fabricated authority" {
+    const source = @embedFile("fixtures/allocator-capabilities.my");
+    try invoke("run", source, 0, "3\n", "");
+    try invoke("check", source, 0, "", "");
+    const dumped = try runFixture("dump-bytecode", source, &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "function make(heap: allocator)") != null);
+    const invalid = "buffer B: i64; result R { ok: B, err: i64 } fn main() -> i64 { acknowledge acquire_buffer<R>(0, 1); return 0; }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "expected allocator, found i64");
 }

@@ -18,21 +18,21 @@ fn result(source: []const u8, expected: i64) !void {
 }
 
 test "direct and transitive allocation violate explicit bounds with witness paths" {
-    try reject(declarations ++ "fn main() -> i64 noalloc { acknowledge acquire_buffer<R>(1); return 0; }", "E_EFFECT_BOUND", "allocation");
-    try reject(declarations ++ "fn allocate() -> R { return acquire_buffer<R>(1); } fn helper() -> R { return allocate(); } fn main() -> i64 noalloc { acknowledge helper(); return 0; }", "E_EFFECT_BOUND", "main -> helper -> allocate");
-    try reject(declarations ++ "fn unused() -> R effects() { return acquire_buffer<R>(1); } fn main() -> i64 { return 0; }", "E_EFFECT_BOUND", "unused");
-    try reject(declarations ++ "fn grow(input: B) -> R noalloc { let mut b = input; acknowledge reserve_buffer<Status>(b, 0); return new R.ok(b); } fn main() -> i64 { return 0; }", "E_EFFECT_BOUND", "grow");
+    try reject(declarations ++ "fn main(alloc: allocator) -> i64 noalloc { acknowledge acquire_buffer<R>(alloc, 1); return 0; }", "E_EFFECT_BOUND", "allocation");
+    try reject(declarations ++ "fn allocate(alloc: allocator) -> R { return acquire_buffer<R>(alloc, 1); } fn helper(alloc: allocator) -> R { return allocate(alloc); } fn main(alloc: allocator) -> i64 noalloc { acknowledge helper(alloc); return 0; }", "E_EFFECT_BOUND", "main -> helper -> allocate");
+    try reject(declarations ++ "fn unused(alloc: allocator) -> R effects() { return acquire_buffer<R>(alloc, 1); } fn main() -> i64 { return 0; }", "E_EFFECT_BOUND", "unused");
+    try reject(declarations ++ "fn grow(alloc: allocator, input: B) -> R noalloc { let mut b = input; acknowledge reserve_buffer<Status>(b, alloc, 0); return new R.ok(b); } fn main() -> i64 { return 0; }", "E_EFFECT_BOUND", "grow");
 }
 
 test "recursive effect summaries reach fixed points independent of declaration order" {
-    const a = "fn a(n: i64) -> R { if n == 0 { return acquire_buffer<R>(1); } return b(n - 1); } ";
-    const b = "fn b(n: i64) -> R { return a(n); } ";
-    try reject(declarations ++ a ++ b ++ "fn main() -> i64 noalloc { acknowledge b(0); return 0; }", "E_EFFECT_BOUND", "main -> b -> a");
-    try reject(declarations ++ b ++ a ++ "fn main() -> i64 noalloc { acknowledge b(0); return 0; }", "E_EFFECT_BOUND", "main -> b -> a");
-    try result("fn a(n: i64) -> i64 noalloc { if n == 0 { return 7; } return b(n - 1); } fn b(n: i64) -> i64 effects() { return a(n); } fn main() -> i64 noalloc { return b(3); }", 7);
+    const a = "fn a(alloc: allocator, n: i64) -> R { if n == 0 { return acquire_buffer<R>(alloc, 1); } return b(alloc, n - 1); } ";
+    const b = "fn b(alloc: allocator, n: i64) -> R { return a(alloc, n); } ";
+    try reject(declarations ++ a ++ b ++ "fn main(alloc: allocator) -> i64 noalloc { acknowledge b(alloc, 0); return 0; }", "E_EFFECT_BOUND", "main -> b -> a");
+    try reject(declarations ++ b ++ a ++ "fn main(alloc: allocator) -> i64 noalloc { acknowledge b(alloc, 0); return 0; }", "E_EFFECT_BOUND", "main -> b -> a");
+    try result("fn a(alloc: allocator, n: i64) -> i64 noalloc { if n == 0 { return 7; } return b(alloc, n - 1); } fn b(alloc: allocator, n: i64) -> i64 effects() { return a(alloc, n); } fn main(alloc: allocator) -> i64 noalloc { return b(alloc, 3); }", 7);
 }
 
-const accepted = declarations ++ "fn edit(input: B) -> R noalloc { let mut b = input; discard try append_buffer<Status>(b, 7); discard try resize_buffer<Status>(b, 2, 9); borrow mut b[0..2] as s { write_slice(s, 1, 11); } return new R.ok(b); } fn release(input: B) -> i64 effects() { discard input; return 3; } fn main() -> i64 effects(allocation) { match acquire_buffer<R>(2) { R.ok(b) => { match edit(b) { R.ok(updated) => { let n = read_buffer(updated, 1); return n + release(updated); }, R.err(e) => { return e; } } }, R.err(e) => { return e; } } }";
+const accepted = declarations ++ "fn edit(input: B) -> R noalloc { let mut b = input; discard try append_buffer<Status>(b, 7); discard try resize_buffer<Status>(b, 2, 9); borrow mut b[0..2] as s { write_slice(s, 1, 11); } return new R.ok(b); } fn release(input: B) -> i64 effects() { discard input; return 3; } fn main(alloc: allocator) -> i64 effects(allocation) { match acquire_buffer<R>(alloc, 2) { R.ok(b) => { match edit(b) { R.ok(updated) => { let n = read_buffer(updated, 1); return n + release(updated); }, R.err(e) => { return e; } } }, R.err(e) => { return e; } } }";
 test "noalloc permits reserved edits borrowed writes owned transfer and buffer cleanup" {
     try result(accepted, 14);
     var c = try language.Compilation.init(t.allocator, "effects.my", accepted);
@@ -46,19 +46,19 @@ test "noalloc permits reserved edits borrowed writes owned transfer and buffer c
 }
 
 test "effect scanning includes untaken branches short circuit operands constructors and reference calls" {
-    try reject(declarations ++ "fn main() -> i64 noalloc { if false { acknowledge acquire_buffer<R>(1); } return 0; }", "E_EFFECT_BOUND", "main");
-    try reject(declarations ++ "fn allocate() -> bool { acknowledge acquire_buffer<R>(1); return true; } fn main() -> i64 noalloc { discard false && allocate(); return 0; }", "E_EFFECT_BOUND", "main -> allocate");
-    try reject(declarations ++ "struct Box { result: R } fn main() -> i64 noalloc { acknowledge new Box { result: acquire_buffer<R>(1) }; return 0; }", "E_EFFECT_BOUND", "main");
-    try reject(declarations ++ "fn helper(s: &[]i64) -> u64 { acknowledge acquire_buffer<R>(1); return len_slice(s); } fn main() -> i64 noalloc { let a = new [1]i64[7]; borrow a[0..1] as s { return cast<i64>(helper(s)); } }", "E_EFFECT_BOUND", "main -> helper");
-    try reject(declarations ++ "fn helper(s: &[]i64) -> &[]i64 from s { acknowledge acquire_buffer<R>(1); return s; } fn main() -> i64 noalloc { let a = new [1]i64[7]; borrow a[0..1] as s { borrow helper(s) as output { return read_slice(output, 0); } } }", "E_EFFECT_BOUND", "main -> helper");
+    try reject(declarations ++ "fn main(alloc: allocator) -> i64 noalloc { if false { acknowledge acquire_buffer<R>(alloc, 1); } return 0; }", "E_EFFECT_BOUND", "main");
+    try reject(declarations ++ "fn allocate(alloc: allocator) -> bool { acknowledge acquire_buffer<R>(alloc, 1); return true; } fn main(alloc: allocator) -> i64 noalloc { discard false && allocate(alloc); return 0; }", "E_EFFECT_BOUND", "main -> allocate");
+    try reject(declarations ++ "struct Box { result: R } fn main(alloc: allocator) -> i64 noalloc { acknowledge new Box { result: acquire_buffer<R>(alloc, 1) }; return 0; }", "E_EFFECT_BOUND", "main");
+    try reject(declarations ++ "fn helper(alloc: allocator, s: &[]i64) -> u64 { acknowledge acquire_buffer<R>(alloc, 1); return len_slice(s); } fn main(alloc: allocator) -> i64 noalloc { let a = new [1]i64[7]; borrow a[0..1] as s { return cast<i64>(helper(alloc, s)); } }", "E_EFFECT_BOUND", "main -> helper");
+    try reject(declarations ++ "fn helper(alloc: allocator, s: &[]i64) -> &[]i64 from s { acknowledge acquire_buffer<R>(alloc, 1); return s; } fn main(alloc: allocator) -> i64 noalloc { let a = new [1]i64[7]; borrow a[0..1] as s { borrow helper(alloc, s) as output { return read_slice(output, 0); } } }", "E_EFFECT_BOUND", "main -> helper");
 }
 
 test "effect bounds reject unknown and duplicate names and noio permits allocation" {
-    try reject("fn main() -> i64 effects(magic) { return 0; }", "E_UNKNOWN_EFFECT", "unknown effect");
-    try reject("fn main() -> i64 effects(clock, clock) { return 0; }", "E_DUPLICATE_EFFECT", "more than once");
-    try result(declarations ++ "fn main() -> i64 noio { acknowledge acquire_buffer<R>(1); return 9; }", 9);
-    try result("fn main() -> i64 effects(filesystem, network, clock, random, environment) { let mut x = 1; x += 2; return x; }", 3);
-    try result("fn noalloc() -> i64 { let effects = 2; let noio = 3; return effects + noio; } fn main() -> i64 { return noalloc(); }", 5);
+    try reject("fn main(alloc: allocator) -> i64 effects(magic) { return 0; }", "E_UNKNOWN_EFFECT", "unknown effect");
+    try reject("fn main(alloc: allocator) -> i64 effects(clock, clock) { return 0; }", "E_DUPLICATE_EFFECT", "more than once");
+    try result(declarations ++ "fn main(alloc: allocator) -> i64 noio { acknowledge acquire_buffer<R>(alloc, 1); return 9; }", 9);
+    try result("fn main(alloc: allocator) -> i64 effects(filesystem, network, clock, random, environment) { let mut x = 1; x += 2; return x; }", 3);
+    try result("fn noalloc() -> i64 { let effects = 2; let noio = 3; return effects + noio; } fn main(alloc: allocator) -> i64 { return noalloc(); }", 5);
 }
 
 fn allocationScenario(allocator: std.mem.Allocator) !void {
@@ -71,7 +71,7 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
     defer found.deinit();
 }
 fn rejectionScenario(allocator: std.mem.Allocator) !void {
-    var c = try language.Compilation.init(allocator, "effects.my", declarations ++ "fn helper() -> R { return acquire_buffer<R>(1); } fn main() -> i64 noalloc { acknowledge helper(); return 0; }");
+    var c = try language.Compilation.init(allocator, "effects.my", declarations ++ "fn helper(alloc: allocator) -> R { return acquire_buffer<R>(alloc, 1); } fn main(alloc: allocator) -> i64 noalloc { acknowledge helper(alloc); return 0; }");
     defer c.deinit();
     c.check() catch |err| switch (err) {
         error.SourceError => {
@@ -90,7 +90,7 @@ test "effect graph inference witnesses emission and rendering release every fail
 }
 
 test "bytecode independently rejects forged summaries and violated bounds" {
-    var c = try language.Compilation.init(t.allocator, "effects.my", declarations ++ "fn helper() -> R { return acquire_buffer<R>(1); } fn main() -> i64 { acknowledge helper(); return 0; }");
+    var c = try language.Compilation.init(t.allocator, "effects.my", declarations ++ "fn helper(alloc: allocator) -> R { return acquire_buffer<R>(alloc, 1); } fn main(alloc: allocator) -> i64 { acknowledge helper(alloc); return 0; }");
     defer c.deinit();
     try c.emit();
     const functions = @constCast(c.code.?.functions);
@@ -119,10 +119,10 @@ test "long recursive call graphs infer allocation without recursive host travers
     defer source.deinit();
     try source.writer.writeAll(declarations);
     for (0..512) |index| {
-        try source.writer.print("fn f{d}() -> R {{ ", .{index});
-        if (index == 511) try source.writer.writeAll("acknowledge acquire_buffer<R>(1); ");
-        try source.writer.print("return f{d}(); }} ", .{(index + 1) % 512});
+        try source.writer.print("fn f{d}(alloc: allocator) -> R {{ ", .{index});
+        if (index == 511) try source.writer.writeAll("acknowledge acquire_buffer<R>(alloc, 1); ");
+        try source.writer.print("return f{d}(alloc); }} ", .{(index + 1) % 512});
     }
-    try source.writer.writeAll("fn main() -> i64 noalloc { acknowledge f0(); return 0; }");
+    try source.writer.writeAll("fn main(alloc: allocator) -> i64 noalloc { acknowledge f0(alloc); return 0; }");
     try reject(source.written(), "E_EFFECT_BOUND", "f510 -> f511");
 }
