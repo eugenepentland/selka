@@ -54,10 +54,30 @@ Evidence:
 - The testing allocator covers allocation failures through scope checking,
   warning rendering, and local-value execution, as well as the original pipeline.
 
+## 2026-09-05: M3
+
+Implemented branches, loops, compound assignment, signed division/remainder,
+explicit discard, short-circuit logical operators, conservative return analysis,
+and configurable instruction budgets. Lowering patches symbolic jump labels;
+emission validation checks jump bounds and consistent operand-stack heights.
+The VM counts instructions before dispatch and reports budget exhaustion at the
+next instruction's source span. The CLI rejects malformed, duplicate, zero,
+overflowing, and non-run budget options.
+
+Evidence:
+
+- Debug: 23 core tests and 7 CLI tests pass (30 total; unchanged core tests
+  were cached on the final invocation).
+- ReleaseFast: all 30 tests pass in a fresh mode build.
+- Formatting check passes on Guardian's `0.17.0-dev.1683+5ceec001b` snapshot.
+- Inline sum and GCD examples print `4950` and `6` respectively.
+- Tests cover logical truth tables, skipped traps, discarded traps, signed
+  arithmetic boundaries, condition types, conservative returns, unreachable
+  code, warning use counts, and allocation failures through jump lowering.
+- Guardian gates were not exercised.
+
 ## Remaining milestones
 
-- M3: branches, loops, signed division/remainder, explicit discard, short-circuit
-  lowering, return analysis, and instruction budgets.
 - M4: signature collection, direct/recursive calls, explicit VM frames, frame
   budgets, and guest call traces.
 - M5: complete fixture matrix, parser/host-failure robustness, documentation,

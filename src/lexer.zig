@@ -28,6 +28,12 @@ pub const Tag = enum {
     plus,
     minus,
     star,
+    slash,
+    percent,
+    and_and,
+    or_or,
+    plus_equal,
+    minus_equal,
     equal,
     eq_eq,
     bang,
@@ -73,7 +79,10 @@ pub fn lex(allocator: std.mem.Allocator, bytes: []const u8, sink: *diagnostic.Si
             i += 1;
             const next = if (i < bytes.len) bytes[i] else 0;
             const pair: ?Tag = switch (ch) {
-                '-' => if (next == '>') .arrow else null,
+                '-' => if (next == '>') .arrow else if (next == '=') .minus_equal else null,
+                '+' => if (next == '=') .plus_equal else null,
+                '&' => if (next == '&') .and_and else null,
+                '|' => if (next == '|') .or_or else null,
                 '=' => if (next == '=') .eq_eq else null,
                 '!' => if (next == '=') .bang_eq else null,
                 '<' => if (next == '=') .le else null,
@@ -93,6 +102,8 @@ pub fn lex(allocator: std.mem.Allocator, bytes: []const u8, sink: *diagnostic.Si
                 ':' => .colon,
                 '+' => .plus,
                 '*' => .star,
+                '/' => .slash,
+                '%' => .percent,
                 '-' => .minus,
                 '=' => .equal,
                 '!' => .bang,

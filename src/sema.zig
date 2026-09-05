@@ -89,6 +89,10 @@ const Checker = struct {
                     const rt = self.nodes.items[@backingInt(right)].ty;
                     try self.require(rt, lt, b.op_span);
                     switch (b.op) {
+                        .logical_and, .logical_or => {
+                            try self.require(lt, .bool, b.op_span);
+                            out.ty = .bool;
+                        },
                         .eq, .ne => out.ty = .bool,
                         .lt, .le, .gt, .ge => {
                             try self.require(lt, .i64, b.op_span);
@@ -127,6 +131,21 @@ const Checker = struct {
                 }
                 break :block .{ .block = try checked.toOwnedSlice(self.allocator) };
             },
+            .discard => |expr| .{ .discard = try self.expression(expr) },
+            .branch => |branch| branch: {
+                const condition = try self.expression(branch.condition);
+                try self.require(self.nodes.items[@backingInt(condition)].ty, .bool, self.syntax.nodes.items[@backingInt(branch.condition)].span);
+                const then_body = try self.statement(branch.then_body);
+                const else_body = if (branch.else_body) |other| try self.statement(other) else null;
+                terminates = then_body.terminates and if (else_body) |other| other.terminates else false;
+                break :branch .{ .branch = .{ .condition = condition, .then_body = then_body.id, .else_body = if (else_body) |other| other.id else null } };
+            },
+            .loop => |loop| loop: {
+                const condition = try self.expression(loop.condition);
+                try self.require(self.nodes.items[@backingInt(condition)].ty, .bool, self.syntax.nodes.items[@backingInt(loop.condition)].span);
+                const body = try self.statement(loop.body);
+                break :loop .{ .loop = .{ .condition = condition, .body = body.id } };
+            },
             .ret => |expr| ret: {
                 const value = try self.expression(expr);
                 try self.require(self.nodes.items[@backingInt(value)].ty, .i64, stmt.span);
@@ -149,14 +168,29 @@ const Checker = struct {
                 const slot = try self.resolve(a.name);
                 if (!self.locals.items[@backingInt(slot)].mutable)
                     return self.sink.fail("E_IMMUTABLE", a.name, "assignment requires a let mut binding");
-                const value = try self.expression(a.value);
+                var value = try self.expression(a.value);
+                if (a.op != .set) {
+                    try self.require(self.locals.items[@backingInt(slot)].ty, .i64, a.op_span);
+                    try self.require(self.nodes.items[@backingInt(value)].ty, .i64, a.op_span);
+                    self.locals.items[@backingInt(slot)].reads += 1;
+                    const read: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+                    try self.nodes.append(self.allocator, .{ .ty = .i64, .span = a.name, .data = .{ .local = slot } });
+                    const combined: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+                    try self.nodes.append(self.allocator, .{ .ty = .i64, .span = stmt.span, .data = .{ .binary = .{
+                        .op = if (a.op == .add) .add else .sub,
+                        .left = read,
+                        .right = value,
+                        .op_span = a.op_span,
+                    } } });
+                    value = combined;
+                }
                 try self.require(self.nodes.items[@backingInt(value)].ty, self.locals.items[@backingInt(slot)].ty, stmt.span);
                 self.locals.items[@backingInt(slot)].writes += 1;
                 break :assignment .{ .assign = .{ .slot = slot, .value = value } };
             },
         };
         const result: typed.StatementId = @fromBackingInt(self.statements.items.len);
-        try self.statements.append(self.allocator, .{ .span = stmt.span, .data = data });
+        try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = terminates, .data = data });
         return .{ .id = result, .terminates = terminates };
     }
 };
@@ -171,7 +205,7 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     @memset(resolved, null);
     var checker: Checker = .{ .allocator = allocator, .src = src, .syntax = program, .sink = sink, .resolved = resolved };
     const body = try checker.statement(program.body);
-    if (!body.terminates) return sink.fail("E_MISSING_RETURN", program.name, "function may fall through without returning i64");
+    if (!body.terminates) return sink.fail("E_MISSING_RETURN", program.name, "function may fall through without returning i64; loops are conservatively treated as falling through, even while true");
     for (checker.locals.items) |local| {
         if (local.reads == 0) try sink.items.append(allocator, .{
             .severity = .warning,

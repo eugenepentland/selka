@@ -63,9 +63,34 @@ pub const Parser = struct {
         return self.addStatement(.{ .span = .join(open.span, close.span), .data = .{ .block = try statements.toOwnedSlice(self.allocator) } });
     }
     fn statement(self: *Parser) diagnostic.Error!ast.StatementId {
+        try self.enter();
+        defer self.depth -= 1;
         const first = self.current();
         if (first.tag == .lbrace) return self.block();
+        if (self.take(.kw_if)) {
+            const condition = try self.expression(0);
+            const then_body = try self.block();
+            const else_body = if (self.take(.kw_else))
+                if (self.current().tag == .kw_if) try self.statement() else try self.block()
+            else
+                null;
+            const last = else_body orelse then_body;
+            return self.addStatement(.{ .span = .join(first.span, self.statements.items[@backingInt(last)].span), .data = .{ .branch = .{
+                .condition = condition,
+                .then_body = then_body,
+                .else_body = else_body,
+            } } });
+        }
+        if (self.take(.kw_while)) {
+            const condition = try self.expression(0);
+            const body = try self.block();
+            return self.addStatement(.{ .span = .join(first.span, self.statements.items[@backingInt(body)].span), .data = .{ .loop = .{ .condition = condition, .body = body } } });
+        }
         const data: @FieldType(ast.Statement, "data") = switch (first.tag) {
+            .kw_discard => discard: {
+                self.pos += 1;
+                break :discard .{ .discard = try self.expression(0) };
+            },
             .kw_return => ret: {
                 self.pos += 1;
                 break :ret .{ .ret = try self.expression(0) };
@@ -79,10 +104,15 @@ pub const Parser = struct {
                 break :binding .{ .binding = .{ .name = name.span, .mutable = mutable, .annotation = annotation, .value = try self.expression(0) } };
             },
             .ident => assignment: {
-                if (self.tokens[self.pos + 1].tag != .equal)
-                    return self.sink.fail("E_EXPLICIT_DISCARD_REQUIRED", first.span, "a standalone value requires explicit discard");
+                const operator = self.tokens[self.pos + 1];
+                const op: ast.AssignmentOp = switch (operator.tag) {
+                    .equal => .set,
+                    .plus_equal => .add,
+                    .minus_equal => .sub,
+                    else => return self.sink.fail("E_EXPLICIT_DISCARD_REQUIRED", first.span, "a standalone value requires explicit discard"),
+                };
                 self.pos += 2;
-                break :assignment .{ .assignment = .{ .name = first.span, .value = try self.expression(0) } };
+                break :assignment .{ .assignment = .{ .name = first.span, .value = try self.expression(0), .op = op, .op_span = operator.span } };
             },
             else => return self.sink.fail("E_EXPLICIT_DISCARD_REQUIRED", first.span, "expected a statement; a standalone value requires explicit discard"),
         };
@@ -109,7 +139,7 @@ pub const Parser = struct {
             },
             .minus, .bang => unary: {
                 self.pos += 1;
-                const operand = try self.expression(5);
+                const operand = try self.expression(7);
                 break :unary try self.append(.{ .span = .join(token.span, self.nodes.items[@backingInt(operand)].span), .data = .{ .unary = .{ .op = if (token.tag == .minus) .neg else .not, .operand = operand, .op_span = token.span } } });
             },
             .lparen => group: {
@@ -124,10 +154,12 @@ pub const Parser = struct {
         while (true) {
             const op = self.current();
             const precedence: u8 = switch (op.tag) {
-                .eq_eq, .bang_eq => 1,
-                .lt, .le, .gt, .ge => 2,
-                .plus, .minus => 3,
-                .star => 4,
+                .or_or => 1,
+                .and_and => 2,
+                .eq_eq, .bang_eq => 3,
+                .lt, .le, .gt, .ge => 4,
+                .plus, .minus => 5,
+                .star, .slash, .percent => 6,
                 else => break,
             };
             if (precedence < min_precedence) break;
@@ -138,6 +170,10 @@ pub const Parser = struct {
                     .plus => .add,
                     .minus => .sub,
                     .star => .mul,
+                    .slash => .div,
+                    .percent => .rem,
+                    .and_and => .logical_and,
+                    .or_or => .logical_or,
                     .eq_eq => .eq,
                     .bang_eq => .ne,
                     .lt => .lt,

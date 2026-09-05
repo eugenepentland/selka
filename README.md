@@ -40,21 +40,22 @@ are currently limited to 16 MiB; excessive expression nesting is diagnosed.
 
 ## Current implementation
 
-M0 through M2 are implemented: owned source buffers, source locations, lexer,
+M0 through M3 are implemented: owned source buffers, source locations, lexer,
 parser, separate untyped/typed representations, per-function instructions,
-an iterative expression VM with typed locals, deterministic dumps, binding diagnostics, and actual-CLI tests.
+an iterative VM with typed locals and jumps, deterministic dumps, binding diagnostics, and actual-CLI tests.
 
 The accepted subset is one `fn main() -> i64` with local bindings, assignment,
-nested blocks, and explicit returns. It supports integer and boolean values,
-optional local type annotations, unary `-` and `!`, binary `+`, `-`, `*`,
+nested blocks, branches, loops, explicit discard, and explicit returns. It supports integer and boolean values,
+optional local type annotations, unary `-` and `!`, binary `+`, `-`, `*`, `/`, `%`, short-circuit `&&` and `||`,
 comparisons, parentheses, whitespace, and `//` comments. Active shadowing,
 use outside scope, mutation of immutable bindings, and type mismatches are
 rejected. Unused bindings and unnecessary `mut` produce advisory warnings.
 Arithmetic traps on overflow in every host optimization mode; checking does
 not evaluate arithmetic. `examples/locals.my` returns `21`.
 
-Division/remainder, discard, branches, loops, and helper calls are the next MVP
-milestones; they are not implemented yet. Ownership, modules, native guest
+Run supports `--max-steps=N` (default 10,000,000) to bound execution.
+`examples/sum_inline.my` returns `4950`; `examples/gcd_inline.my` returns `6`.
+Helper calls, explicit call frames, and the final contract audit remain. Ownership, modules, native guest
 code, and the later quality contracts remain post-MVP experiments.
 
 See [implemented semantics](docs/semantics.md) and [verification/progress](docs/progress.md).

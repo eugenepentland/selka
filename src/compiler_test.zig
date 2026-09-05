@@ -221,3 +221,136 @@ test "long left-associative expressions do not recursively traverse host stacks"
     try text.writer.writeAll("; }");
     try programResult(text.written(), 4096);
 }
+
+test "branches and loops execute both outcomes with balanced statements" {
+    try programResult("fn main() -> i64 { let mut total = 0; let mut i = 0; while i < 100 { total += i; i += 1; } return total; }", 4950);
+    try programResult("fn main() -> i64 { let mut x = 48; let mut y = 18; while y != 0 { let remainder = x % y; x = y; y = remainder; } return x; }", 6);
+    try programResult("fn main() -> i64 { let mut x = 3; while false { x = 100; } if x < 2 { return 8; } else if x == 3 { return 9; } else { return 10; } }", 9);
+    try programResult("fn main() -> i64 { let mut x = 0; if true { x = 4; } else { x = 9; } if false { return 6; } return x; }", 4);
+    try programResult("fn main() -> i64 { while true { return 5; } return 6; }", 5);
+    try programResult("fn main() -> i64 { let mut x = 5; x -= 2; return x; }", 3);
+    try programResult("fn main() -> i64 { let mut i = 0; while i < 5000 { let local = i; discard local * 2; i += 1; } return i; }", 5000);
+}
+
+fn booleanResult(expression: []const u8, expected: bool) !void {
+    const text = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ if {s} {{ return 1; }} else {{ return 0; }} }}", .{expression});
+    defer testing.allocator.free(text);
+    try programResult(text, if (expected) 1 else 0);
+}
+
+test "all comparisons boolean operations and logical precedence have observable results" {
+    try booleanResult("1 < 2", true);
+    try booleanResult("2 < 2", false);
+    try booleanResult("2 <= 2", true);
+    try booleanResult("3 > 2", true);
+    try booleanResult("2 >= 2", true);
+    try booleanResult("2 >= 3", false);
+    try booleanResult("2 == 2", true);
+    try booleanResult("2 != 2", false);
+    try booleanResult("true == false", false);
+    try booleanResult("true != false", true);
+    try booleanResult("!false", true);
+    try booleanResult("!true", false);
+    try booleanResult("false || true && false", false);
+    try booleanResult("true || false && false", true);
+    try booleanResult("1 + 2 * 3 == 7 && 4 >= 3", true);
+    const operands = [_][]const u8{ "false", "true" };
+    for (operands, 0..) |left, a| for (operands, 0..) |right, b| {
+        const conjunction = try std.fmt.allocPrint(testing.allocator, "{s} && {s}", .{ left, right });
+        defer testing.allocator.free(conjunction);
+        const disjunction = try std.fmt.allocPrint(testing.allocator, "{s} || {s}", .{ left, right });
+        defer testing.allocator.free(disjunction);
+        try booleanResult(conjunction, a == 1 and b == 1);
+        try booleanResult(disjunction, a == 1 or b == 1);
+    };
+}
+
+test "short circuit skips traps while explicit discard retains evaluation" {
+    try booleanResult("false && (1 / 0 == 0)", false);
+    try booleanResult("true || (1 / 0 == 0)", true);
+    try programResult("fn main() -> i64 { discard false && (1 / 0 == 0); discard true || (1 / 0 == 0); discard 1 + 2; return 7; }", 7);
+    try programResult("fn main() -> i64 { let mut flag = false; flag = true && !flag; if flag { return 4; } else { return 9; } }", 4);
+    const cases = [_]struct { expression: []const u8, code: []const u8 }{
+        .{ .expression = "true && (1 / 0 == 0)", .code = "R_DIVISION_BY_ZERO" },
+        .{ .expression = "false || (1 / 0 == 0)", .code = "R_DIVISION_BY_ZERO" },
+        .{ .expression = "1 / 0", .code = "R_DIVISION_BY_ZERO" },
+        .{ .expression = "1 % 0", .code = "R_DIVISION_BY_ZERO" },
+        .{ .expression = "-9223372036854775808 / -1", .code = "R_OVERFLOW" },
+        .{ .expression = "(9223372036854775807 + 1) + (1 / 0)", .code = "R_OVERFLOW" },
+        .{ .expression = "(1 / 0) + (9223372036854775807 + 1)", .code = "R_DIVISION_BY_ZERO" },
+    };
+    for (cases) |case| {
+        const text = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ discard {s}; return 0; }}", .{case.expression});
+        defer testing.allocator.free(text);
+        var compilation = try language.Compilation.init(testing.allocator, "trap.my", text);
+        defer compilation.deinit();
+        try compilation.check();
+        try testing.expectEqualStrings(case.code, (try compilation.execute(testing.allocator)).trap.code);
+    }
+}
+
+test "signed division and remainder implement truncation toward zero" {
+    try result("-7 / 3", -2);
+    try result("7 / -3", -2);
+    try result("-7 / -3", 2);
+    try result("-7 % 3", -1);
+    try result("7 % -3", 1);
+    try result("-7 % -3", -1);
+    try result("-9223372036854775808 % -1", 0);
+    try result("20 - 6 / 2", 17);
+}
+
+test "control flow requires boolean conditions and conservative complete returns" {
+    const cases = [_]struct { body: []const u8, code: []const u8 }{
+        .{ .body = "if 1 { return 1; } else { return 0; }", .code = "E_TYPE" },
+        .{ .body = "while 0 {} return 0;", .code = "E_TYPE" },
+        .{ .body = "if true { return 1; }", .code = "E_MISSING_RETURN" },
+        .{ .body = "while true { return 1; }", .code = "E_MISSING_RETURN" },
+        .{ .body = "if true { return 1; } else { return 2; } return 3;", .code = "E_UNREACHABLE" },
+        .{ .body = "if true { return 1; } else { return true; }", .code = "E_TYPE" },
+        .{ .body = "discard false && unknown; return 0;", .code = "E_UNKNOWN_NAME" },
+        .{ .body = "discard 1 && true; return 0;", .code = "E_TYPE" },
+        .{ .body = "let mut x = true; x += false; return 0;", .code = "E_TYPE" },
+        .{ .body = "1 + 2; return 0;", .code = "E_EXPLICIT_DISCARD_REQUIRED" },
+        .{ .body = "if true { let local = 1; } return local;", .code = "E_UNKNOWN_NAME" },
+    };
+    for (cases) |case| {
+        const text = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ {s} }}", .{case.body});
+        defer testing.allocator.free(text);
+        var compilation = try language.Compilation.init(testing.allocator, "bad.my", text);
+        defer compilation.deinit();
+        try testing.expectError(error.SourceError, compilation.check());
+        try testing.expectEqualStrings(case.code, compilation.diagnostics.items[0].code);
+    }
+}
+
+test "instruction limit is checked before the next dispatch" {
+    var compilation = try language.Compilation.init(testing.allocator, "budget.my", "fn main() -> i64 { return 1; }");
+    defer compilation.deinit();
+    try testing.expectEqualStrings("R_STEP_LIMIT", (try compilation.executeWithOptions(testing.allocator, .{ .max_steps = 1 })).trap.code);
+    try testing.expectEqual(@as(i64, 1), (try compilation.executeWithOptions(testing.allocator, .{ .max_steps = 2 })).value);
+    try testing.expectError(error.InvalidBudget, compilation.executeWithOptions(testing.allocator, .{ .max_steps = 0 }));
+    var infinite = try language.Compilation.init(testing.allocator, "loop.my", "fn main() -> i64 { while true {} return 0; }");
+    defer infinite.deinit();
+    const outcome = try infinite.executeWithOptions(testing.allocator, .{ .max_steps = 123 });
+    try testing.expectEqualStrings("R_STEP_LIMIT", outcome.trap.code);
+    try testing.expect(outcome.trap.span.start < infinite.src.bytes.len);
+}
+
+test "discard and compound assignment count as reads and skipped branches count syntactically" {
+    const text = "fn main() -> i64 { let x = 1; discard x; let mut y = 0; y += 1; let mut z = 0; if false { z = 1; } discard z; return 0; }";
+    var compilation = try language.Compilation.init(testing.allocator, "warnings.my", text);
+    defer compilation.deinit();
+    try compilation.check();
+    try testing.expectEqual(@as(usize, 0), compilation.diagnostics.items.len);
+}
+
+fn flowAllocationScenario(allocator: std.mem.Allocator) !void {
+    var compilation = try language.Compilation.init(allocator, "flow.my", "fn main() -> i64 { let mut i = 0; while i < 5 { if i % 2 == 0 { discard true || (1 / 0 == 0); } i += 1; } return i; }");
+    defer compilation.deinit();
+    try testing.expectEqual(@as(i64, 5), (try compilation.execute(allocator)).value);
+}
+
+test "allocation failures during label patching and control-flow validation release storage" {
+    try testing.checkAllAllocationFailures(testing.allocator, flowAllocationScenario, .{});
+}

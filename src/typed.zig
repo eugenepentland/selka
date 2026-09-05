@@ -6,7 +6,7 @@ pub const FunctionId = enum(usize) { _ };
 pub const LocalId = enum(usize) { _ };
 pub const Type = enum { i64, bool };
 pub const Value = union(Type) { i64: i64, bool: bool };
-pub const BinaryOp = enum { add, sub, mul, eq, ne, lt, le, gt, ge };
+pub const BinaryOp = enum { add, sub, mul, div, rem, logical_and, logical_or, eq, ne, lt, le, gt, ge };
 pub const UnaryOp = enum { neg, not };
 pub const Node = struct {
     ty: Type,
@@ -22,9 +22,13 @@ pub const Node = struct {
 pub const Store = struct { slot: LocalId, value: NodeId };
 pub const Statement = struct {
     span: Span,
+    terminates: bool,
     data: union(enum) {
         block: []const StatementId,
         ret: NodeId,
+        discard: NodeId,
+        branch: struct { condition: NodeId, then_body: StatementId, else_body: ?StatementId },
+        loop: struct { condition: NodeId, body: StatementId },
         initialize: Store,
         assign: Store,
     },

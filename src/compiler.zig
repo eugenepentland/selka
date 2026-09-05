@@ -47,8 +47,12 @@ pub const Compilation = struct {
     }
 
     pub fn execute(self: *Compilation, allocator: std.mem.Allocator) !vm.Result {
+        return self.executeWithOptions(allocator, .{});
+    }
+
+    pub fn executeWithOptions(self: *Compilation, allocator: std.mem.Allocator, options: vm.Options) !vm.Result {
         try self.emit();
-        return vm.run(allocator, self.code.?);
+        return vm.runWithOptions(allocator, self.code.?, options);
     }
 
     pub fn dump(self: *Compilation, allocator: std.mem.Allocator) ![]u8 {

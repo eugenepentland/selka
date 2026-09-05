@@ -510,13 +510,13 @@ Acceptance: a mutable counter program works; assignment to `let`, use outside a 
 
 ### M3 — Branches, loops, and complete scalar operators
 
-- [ ] Add `if`/`else`, `while`, assignment shorthand, and explicit `discard` statements; reject bare expression statements.
-- [ ] Implement all arithmetic rules, including signed division/remainder.
-- [ ] Lower `&&` and `||` with actual short-circuiting.
-- [ ] Patch jumps and preserve operand-stack balance.
-- [ ] Add the conservative return analysis.
-- [ ] Introduce the instruction budget as soon as loops are executable.
-- [ ] Preserve operand evaluation, traps, and short-circuiting inside `discard`.
+- [x] Add `if`/`else`, `while`, assignment shorthand, and explicit `discard` statements; reject bare expression statements.
+- [x] Implement all arithmetic rules, including signed division/remainder.
+- [x] Lower `&&` and `||` with actual short-circuiting.
+- [x] Patch jumps and preserve operand-stack balance.
+- [x] Add the conservative return analysis.
+- [x] Introduce the instruction budget as soon as loops are executable.
+- [x] Preserve operand evaluation, traps, and short-circuiting inside `discard`.
 
 Acceptance: an inline sum loop returns `4950`; short-circuit expressions skip division by zero, including under `discard`; discarded division by zero still traps; a bare expression statement is rejected; an infinite loop stops at its configured budget.
 

@@ -3,7 +3,8 @@ const std = @import("std");
 const Span = @import("source.zig").Span;
 pub const NodeId = enum(usize) { _ };
 pub const StatementId = enum(usize) { _ };
-pub const BinaryOp = enum { add, sub, mul, eq, ne, lt, le, gt, ge };
+pub const BinaryOp = enum { add, sub, mul, div, rem, logical_and, logical_or, eq, ne, lt, le, gt, ge };
+pub const AssignmentOp = enum { set, add, sub };
 pub const UnaryOp = enum { neg, not };
 pub const Node = struct {
     span: Span,
@@ -20,8 +21,11 @@ pub const Statement = struct {
     data: union(enum) {
         block: []const StatementId,
         ret: NodeId,
+        discard: NodeId,
+        branch: struct { condition: NodeId, then_body: StatementId, else_body: ?StatementId },
+        loop: struct { condition: NodeId, body: StatementId },
         binding: struct { name: Span, annotation: ?Span, mutable: bool, value: NodeId },
-        assignment: struct { name: Span, value: NodeId },
+        assignment: struct { name: Span, value: NodeId, op: AssignmentOp, op_span: Span },
     },
 };
 pub const Program = struct {

@@ -1,7 +1,7 @@
 //! Host I/O and process policy stay outside the compiler and VM.
 const std = @import("std");
 const language = @import("mylang");
-const usage = "usage: mylang <check|run|dump-bytecode> <file.my>\n";
+const usage = "usage: mylang <check|run|dump-bytecode> <file.my> [--max-steps=N (run only)]\n";
 
 pub fn main(init: std.process.Init) void {
     const status = dispatch(init) catch |err| status: {
@@ -16,17 +16,13 @@ pub fn main(init: std.process.Init) void {
 fn dispatch(init: std.process.Init) !u8 {
     const allocator = init.gpa;
     const args = try init.minimal.args.toSlice(init.arena.allocator());
-    if (args.len != 3) {
-        try std.Io.File.stderr().writeStreamingAll(init.io, usage);
-        return 2;
-    }
-    const command = std.meta.stringToEnum(enum { check, run, @"dump-bytecode" }, args[1]) orelse {
+    const parsed = parseArgs(args[1..]) catch {
         try std.Io.File.stderr().writeStreamingAll(init.io, usage);
         return 2;
     };
-    const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, args[2], allocator, .limited(16 * 1024 * 1024));
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, parsed.path, allocator, .limited(16 * 1024 * 1024));
     defer allocator.free(bytes);
-    var compilation = try language.Compilation.init(allocator, args[2], bytes);
+    var compilation = try language.Compilation.init(allocator, parsed.path, bytes);
     defer compilation.deinit();
     compilation.check() catch |err| switch (err) {
         error.SourceError => {
@@ -36,14 +32,14 @@ fn dispatch(init: std.process.Init) !u8 {
         else => return err,
     };
     try report(init, &compilation);
-    switch (command) {
+    switch (parsed.command) {
         .check => return 0,
         .@"dump-bytecode" => {
             const text = try compilation.dump(allocator);
             defer allocator.free(text);
             try std.Io.File.stdout().writeStreamingAll(init.io, text);
         },
-        .run => switch (try compilation.execute(allocator)) {
+        .run => switch (try compilation.executeWithOptions(allocator, parsed.options)) {
             .value => |value| {
                 var buffer: [32]u8 = undefined;
                 const text = try std.fmt.bufPrint(&buffer, "{d}\n", .{value});
@@ -66,4 +62,31 @@ fn report(init: std.process.Init, compilation: *const language.Compilation) !voi
         defer init.gpa.free(rendered);
         try std.Io.File.stderr().writeStreamingAll(init.io, rendered);
     }
+}
+
+const Command = enum { check, run, @"dump-bytecode" };
+const Parsed = struct { command: Command, path: []const u8, options: language.vm.Options };
+fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
+    if (args.len < 2) return error.Usage;
+    const command = std.meta.stringToEnum(Command, args[0]) orelse return error.Usage;
+    var path: ?[]const u8 = null;
+    var options: language.vm.Options = .{};
+    var saw_steps = false;
+    for (args[1..]) |arg| {
+        if (std.mem.startsWith(u8, arg, "--max-steps=")) {
+            if (command != .run or saw_steps) return error.Usage;
+            saw_steps = true;
+            const digits = arg["--max-steps=".len..];
+            if (digits.len == 0) return error.Usage;
+            for (digits) |ch| if (!std.ascii.isDigit(ch)) {
+                return error.Usage;
+            };
+            options.max_steps = std.fmt.parseUnsigned(u64, digits, 10) catch return error.Usage;
+            if (options.max_steps == 0) return error.Usage;
+        } else {
+            if (std.mem.startsWith(u8, arg, "--") or path != null) return error.Usage;
+            path = arg;
+        }
+    }
+    return .{ .command = command, .path = path orelse return error.Usage, .options = options };
 }

@@ -1,80 +1,153 @@
-//! Iterative lowering preserves source evaluation order without recursive host expression walks.
+//! Iterative lowering with symbolic labels preserves stack shape and source evaluation order.
 const std = @import("std");
 const typed = @import("typed.zig");
 const bc = @import("bytecode.zig");
+const Span = @import("source.zig").Span;
+const Label = enum(usize) { _ };
 const Work = union(enum) {
-    expression: struct { id: typed.NodeId, emit: bool = false },
+    expression: typed.NodeId,
     statement: typed.StatementId,
     instruction: bc.Instruction,
+    mark: Label,
+    jump: struct { target: Label, conditional: bool = false, span: Span },
+};
+const Fixup = struct { instruction: usize, label: Label };
+const Emitter = struct {
+    allocator: std.mem.Allocator,
+    program: typed.Program,
+    code: std.ArrayList(bc.Instruction) = .empty,
+    work: std.ArrayList(Work) = .empty,
+    labels: std.ArrayList(?usize) = .empty,
+    fixups: std.ArrayList(Fixup) = .empty,
+
+    fn push(self: *Emitter, task: Work) !void {
+        try self.work.append(self.allocator, task);
+    }
+    fn label(self: *Emitter) !Label {
+        const id: Label = @fromBackingInt(self.labels.items.len);
+        try self.labels.append(self.allocator, null);
+        return id;
+    }
+    fn instruction(self: *Emitter, span: Span, op: @FieldType(bc.Instruction, "op")) !void {
+        try self.push(.{ .instruction = .{ .span = span, .op = op } });
+    }
+    fn emitStatement(self: *Emitter, id: typed.StatementId) !void {
+        const stmt = self.program.statements[@backingInt(id)];
+        switch (stmt.data) {
+            .block => |children| {
+                var i = children.len;
+                while (i > 0) {
+                    i -= 1;
+                    try self.push(.{ .statement = children[i] });
+                }
+            },
+            .ret, .discard => |value| {
+                try self.instruction(stmt.span, if (stmt.data == .ret) .ret else .pop);
+                try self.push(.{ .expression = value });
+            },
+            .initialize, .assign => |store| {
+                try self.instruction(stmt.span, .{ .store_local = store.slot });
+                try self.push(.{ .expression = store.value });
+            },
+            .branch => |branch| {
+                const otherwise = try self.label();
+                const end = try self.label();
+                try self.push(.{ .mark = end });
+                if (branch.else_body) |body| try self.push(.{ .statement = body });
+                try self.push(.{ .mark = otherwise });
+                if (branch.else_body != null and !self.program.statements[@backingInt(branch.then_body)].terminates)
+                    try self.push(.{ .jump = .{ .target = end, .span = stmt.span } });
+                try self.push(.{ .statement = branch.then_body });
+                try self.push(.{ .jump = .{ .target = otherwise, .conditional = true, .span = self.program.nodes[@backingInt(branch.condition)].span } });
+                try self.push(.{ .expression = branch.condition });
+            },
+            .loop => |loop| {
+                const start = try self.label();
+                const end = try self.label();
+                try self.push(.{ .mark = end });
+                if (!self.program.statements[@backingInt(loop.body)].terminates)
+                    try self.push(.{ .jump = .{ .target = start, .span = stmt.span } });
+                try self.push(.{ .statement = loop.body });
+                try self.push(.{ .jump = .{ .target = end, .conditional = true, .span = self.program.nodes[@backingInt(loop.condition)].span } });
+                try self.push(.{ .expression = loop.condition });
+                try self.push(.{ .mark = start });
+            },
+        }
+    }
+    fn emitExpression(self: *Emitter, id: typed.NodeId) !void {
+        const node = self.program.nodes[@backingInt(id)];
+        switch (node.data) {
+            .integer => |value| try self.instruction(node.span, .{ .push_i64 = value }),
+            .boolean => |value| try self.instruction(node.span, .{ .push_bool = value }),
+            .local => |slot| try self.instruction(node.span, .{ .load_local = slot }),
+            .unary => |u| {
+                try self.instruction(u.op_span, if (u.op == .neg) .neg_i64_checked else .not_bool);
+                try self.push(.{ .expression = u.operand });
+            },
+            .binary => |b| {
+                if (b.op == .logical_and or b.op == .logical_or) {
+                    const alternate = try self.label();
+                    const end = try self.label();
+                    try self.push(.{ .mark = end });
+                    if (b.op == .logical_and) try self.instruction(b.op_span, .{ .push_bool = false }) else try self.push(.{ .expression = b.right });
+                    try self.push(.{ .mark = alternate });
+                    try self.push(.{ .jump = .{ .target = end, .span = b.op_span } });
+                    if (b.op == .logical_and) try self.push(.{ .expression = b.right }) else try self.instruction(b.op_span, .{ .push_bool = true });
+                    try self.push(.{ .jump = .{ .target = alternate, .conditional = true, .span = b.op_span } });
+                    try self.push(.{ .expression = b.left });
+                } else {
+                    try self.push(.{ .instruction = binaryInstruction(b, self.program.nodes) });
+                    try self.push(.{ .expression = b.right });
+                    try self.push(.{ .expression = b.left });
+                }
+            },
+        }
+    }
+    fn finish(self: *Emitter, body: typed.StatementId) ![]const bc.Instruction {
+        defer self.work.deinit(self.allocator);
+        defer self.labels.deinit(self.allocator);
+        defer self.fixups.deinit(self.allocator);
+        try self.push(.{ .statement = body });
+        while (self.work.pop()) |task| switch (task) {
+            .instruction => |inst| try self.code.append(self.allocator, inst),
+            .statement => |id| try self.emitStatement(id),
+            .expression => |id| try self.emitExpression(id),
+            .mark => |id| self.labels.items[@backingInt(id)] = self.code.items.len,
+            .jump => |jump| {
+                try self.fixups.append(self.allocator, .{ .instruction = self.code.items.len, .label = jump.target });
+                try self.code.append(self.allocator, .{ .span = jump.span, .op = if (jump.conditional) .{ .jump_if_false = 0 } else .{ .jump = 0 } });
+            },
+        };
+        for (self.fixups.items) |fixup| {
+            const target = self.labels.items[@backingInt(fixup.label)] orelse return error.InternalError;
+            const inst = &self.code.items[fixup.instruction];
+            if (inst.op == .jump) inst.op.jump = target else inst.op.jump_if_false = target;
+        }
+        return self.code.toOwnedSlice(self.allocator);
+    }
 };
 fn binaryInstruction(binary: anytype, nodes: []const typed.Node) bc.Instruction {
     return .{ .span = binary.op_span, .op = switch (binary.op) {
         .add => .add_i64_checked,
         .sub => .sub_i64_checked,
         .mul => .mul_i64_checked,
+        .div => .div_i64_checked,
+        .rem => .rem_i64_checked,
         .eq, .ne => if (nodes[@backingInt(binary.left)].ty == .bool)
             .{ .cmp_bool = if (binary.op == .eq) .eq else .ne }
         else
             .{ .cmp_i64 = if (binary.op == .eq) .eq else .ne },
         .lt, .le, .gt, .ge => .{ .cmp_i64 = std.meta.stringToEnum(bc.Predicate, @tagName(binary.op)).? },
+        .logical_and, .logical_or => unreachable,
     } };
 }
 pub fn lower(allocator: std.mem.Allocator, program: typed.Program) !bc.Program {
     const functions = try allocator.alloc(bc.Function, program.functions.len);
     for (program.functions, functions) |function, *out| {
-        var code: std.ArrayList(bc.Instruction) = .empty;
-        var work: std.ArrayList(Work) = .empty;
-        defer work.deinit(allocator);
-        try work.append(allocator, .{ .statement = function.body });
-        while (work.pop()) |task| switch (task) {
-            .instruction => |instruction| try code.append(allocator, instruction),
-            .statement => |id| {
-                const stmt = program.statements[@backingInt(id)];
-                switch (stmt.data) {
-                    .block => |children| {
-                        var i = children.len;
-                        while (i > 0) {
-                            i -= 1;
-                            try work.append(allocator, .{ .statement = children[i] });
-                        }
-                    },
-                    .ret => |value| {
-                        try work.append(allocator, .{ .instruction = .{ .span = stmt.span, .op = .ret } });
-                        try work.append(allocator, .{ .expression = .{ .id = value } });
-                    },
-                    .initialize, .assign => |store| {
-                        try work.append(allocator, .{ .instruction = .{ .span = stmt.span, .op = .{ .store_local = store.slot } } });
-                        try work.append(allocator, .{ .expression = .{ .id = store.value } });
-                    },
-                }
-            },
-            .expression => |expr| {
-                const index = @backingInt(expr.id);
-                if (index >= program.nodes.len) return error.InternalError;
-                const node = program.nodes[index];
-                switch (node.data) {
-                    .integer => |value| try code.append(allocator, .{ .span = node.span, .op = .{ .push_i64 = value } }),
-                    .boolean => |value| try code.append(allocator, .{ .span = node.span, .op = .{ .push_bool = value } }),
-                    .local => |slot| try code.append(allocator, .{ .span = node.span, .op = .{ .load_local = slot } }),
-                    .unary => |u| {
-                        try work.append(allocator, .{ .instruction = .{ .span = u.op_span, .op = if (u.op == .neg) .neg_i64_checked else .not_bool } });
-                        try work.append(allocator, .{ .expression = .{ .id = u.operand } });
-                    },
-                    .binary => |b| {
-                        if (expr.emit) {
-                            try code.append(allocator, binaryInstruction(b, program.nodes));
-                        } else {
-                            try work.append(allocator, .{ .expression = .{ .id = expr.id, .emit = true } });
-                            try work.append(allocator, .{ .expression = .{ .id = b.right } });
-                            try work.append(allocator, .{ .expression = .{ .id = b.left } });
-                        }
-                    },
-                }
-            },
-        };
-        out.* = .{ .id = function.id, .name = function.name, .locals = function.locals, .instructions = try code.toOwnedSlice(allocator) };
+        var emitter: Emitter = .{ .allocator = allocator, .program = program };
+        out.* = .{ .id = function.id, .name = function.name, .locals = function.locals, .instructions = try emitter.finish(function.body) };
     }
     const result: bc.Program = .{ .functions = functions };
-    try bc.validate(result);
+    try bc.validate(allocator, result);
     return result;
 }
