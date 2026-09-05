@@ -239,3 +239,7 @@ Neither command writes source files; see [module formatting](docs/experiments/mo
 Scalar module projects support `emit-project-c` and `scripts/native.py --project`.
 Try the [module-native example](docs/experiments/module-native.md); aggregates and
 resource operations still require broader native implementation.
+
+Native code now supports [nominal scalar domains](docs/experiments/native-domains.md),
+including `examples/modules/domain_main.my` (12), while preserving checked private
+construction and explicit accessors. Wider native aggregates/resources remain pending.

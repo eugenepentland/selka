@@ -21,9 +21,9 @@ native executable retains step/frame options and per-instruction source paths;
 traces identify both a failing dependency and its callers. These are executable
 programs with direct C labels and explicit frames, not a bytecode interpreter wrapper.
 
-The supported operations are still the scalar native subset. Module packaging does
-not add native aggregate, nominal-domain, borrowing, allocator, resource, pool, or
-arena operations. Unsupported signatures or instructions, including those in
+The supported operations include the scalar subset and [nominal scalar domains](native-domains.md).
+Module packaging does not add native record/array/variant, borrowing, allocator,
+resource, pool, or arena operations. Unsupported signatures or instructions, including those in
 uncalled dependencies, reject with E_NATIVE_FEATURE before any generated C reaches
 stdout. A private cross-file call rejects at semantic checking. The builder preserves
 an existing output when frontend rejection prevents invoking the C compiler. Import

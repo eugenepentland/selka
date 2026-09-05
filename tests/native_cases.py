@@ -59,6 +59,10 @@ def project_cases(compiler, zig, root, temp):
             "helper.my": "module helper; export widen; fn widen(x: u8) -> u64 { return cast<u64>(x); }",
         }),
     ]
+    fixtures.append(("domains", {
+        "main.my": "module main; import shared.units as u; fn forward(x:u::Distance)->u::Distance{return x;} fn main()->i64{return u::Distance.number(forward(u::Distance.make(12)));}",
+        "shared/units.my": "module shared.units; export Distance; domain Distance:i64 { private fn raw(x:i64)->Distance{return wrap<Distance>(x);} fn make(x:i64)->Distance{if x<0{return Distance.raw(0);}return Distance.raw(x);} fn number(x:Distance)->i64{return unwrap(x);} }",
+    }))
     pairs = 0
     for name, files in fixtures:
         directory = temp / ("module case " + name)
@@ -80,7 +84,7 @@ def project_cases(compiler, zig, root, temp):
                 native = invoke([executable, *options])
                 assert project_signature(vm) == project_signature(native), (name, mode, options, vm.stderr, native.stderr)
                 pairs += 1
-            if name == "calls":
+            if name in ("calls", "domains"):
                 for budget in range(1, 100):
                     options = [f"--max-steps={budget}"]
                     vm = invoke([compiler, "run-project", entry, *options])
@@ -126,6 +130,12 @@ def main():
         ("boolean", "fn invert(x: bool) -> bool { return !x; } fn main() -> i64 { if invert(false) == true { return 1; } return 0; }"),
         ("mutual", "fn even(n: i64) -> bool { if n == 0 { return true; } return odd(n - 1); } fn odd(n: i64) -> bool { if n == 0 { return false; } return even(n - 1); } fn main() -> i64 { if even(100) { return 1; } return 0; }"),
         ("recursive", "fn descend(n: i64) -> i64 { if n == 0 { return 0; } return descend(n - 1) + 1; } fn main() -> i64 { return descend(20000); }"),
+    ]
+    fixtures += [
+        ("domain-copy", "domain D:i64 { private fn raw(x:i64)->D{return wrap<D>(x);} fn make(x:i64)->D{return D.raw(x);} fn value(x:D)->i64{return unwrap(x);} fn add(x:D,y:D)->D{return D.make(unwrap(x)+unwrap(y));} } fn pass(x:D)->D{return x;} fn main()->i64{let mut d=D.make(2);let old=d;let mut i=0;while i<5{d=D.add(pass(d),old);i+=1;}return D.value(d);}"),
+        ("domain-bool", "domain Flag:bool { fn make(x:bool)->Flag{return wrap<Flag>(x);} fn invert(x:Flag)->Flag{return wrap<Flag>(!unwrap(x));} fn value(x:Flag)->bool{return unwrap(x);} } fn main()->i64{let x=Flag.invert(Flag.make(false));if Flag.value(x){return 7;}return 0;}"),
+        ("domain-u64-cast", "domain Id:u64 { fn make(x:u64)->Id{return wrap<Id>(x);} fn value(x:Id)->u64{return unwrap(x);} } fn main()->i64{return cast<i64>(Id.value(Id.make(18446744073709551615u64)));}"),
+        ("domain-u8-overflow", "domain Count:u8 { fn make(x:u8)->Count{return wrap<Count>(x);} fn increment(x:Count)->Count{return wrap<Count>(unwrap(x)+1u8);} fn value(x:Count)->u8{return unwrap(x);} } fn main()->i64{return cast<i64>(Count.value(Count.increment(Count.make(255u8))));}"),
     ]
     pairs = 0
     with tempfile.TemporaryDirectory(prefix="mylang-native-parity-") as temp:

@@ -4,8 +4,8 @@ const bc = @import("bytecode.zig");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 const diagnostic = @import("diagnostic.zig");
-fn scalar(ty: typed.Type) bool {
-    return ty == .bool or ty.isInteger();
+fn scalar(ty: typed.Type, records: []const typed.Record) bool {
+    return ty == .bool or ty.isInteger() or (ty.isAggregate() and records[ty.recordIndex()].domain != null);
 }
 fn literal(w: *std.Io.Writer, value: i128) !void {
     try w.print("({s}(V)UINT64_C({d}))", .{ if (value < 0) "-" else "", @abs(value) });
@@ -45,10 +45,10 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     for (program.functions, offsets) |function, *offset| {
         offset.* = count;
         count += function.instructions.len;
-        if (!scalar(function.return_type) or function.references.len != 0 or function.return_reference != null) return sink.fail("E_NATIVE_FEATURE", function.instructions[0].span, "native scalar execution does not yet support this signature");
-        for (function.locals) |local| if (!scalar(local.ty) or local.reference_parameter != null) return sink.fail("E_NATIVE_FEATURE", local.declaration, "native scalar execution requires integer or boolean locals and parameters");
+        if (!scalar(function.return_type, program.records) or function.references.len != 0 or function.return_reference != null) return sink.fail("E_NATIVE_FEATURE", function.instructions[0].span, "native scalar execution does not yet support this signature");
+        for (function.locals) |local| if (!scalar(local.ty, program.records) or local.reference_parameter != null) return sink.fail("E_NATIVE_FEATURE", local.declaration, "native scalar execution requires primitive scalar or nominal scalar domain locals and parameters");
         for (function.instructions) |instruction| switch (instruction.op) {
-            .push_i64, .push_bool, .push_integer, .cast_integer, .neg_integer, .binary_integer, .drop_local, .load_local, .store_local, .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .neg_i64_checked, .cmp_i64, .cmp_bool, .not_bool, .pop, .jump, .jump_if_false, .call, .ret => {},
+            .wrap_domain, .unwrap_domain, .push_i64, .push_bool, .push_integer, .cast_integer, .neg_integer, .binary_integer, .drop_local, .load_local, .store_local, .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .neg_i64_checked, .cmp_i64, .cmp_bool, .not_bool, .pop, .jump, .jump_if_false, .call, .ret => {},
             else => return sink.fail("E_NATIVE_FEATURE", instruction.span, "this operation is not yet supported by native scalar execution"),
         };
     }
@@ -89,6 +89,10 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
                     try literal(w, number.value);
                     try w.writeAll(");\n");
                 },
+                // Nominal identity and representation access are checked before
+                // emission. Domains carry their scalar backing without host boxes.
+                // The surrounding instruction tick still counts wrap/unwrap steps.
+                .wrap_domain, .unwrap_domain => {},
                 .push_bool => |value| try w.print("push({d});\n", .{@intFromBool(value)}),
                 .drop_local => |slot| try w.print("frames[nf-1].locals[{d}] = 0;\n", .{@backingInt(slot)}),
                 .load_local => |slot| try w.print("push(frames[nf-1].locals[{d}]);\n", .{@backingInt(slot)}),

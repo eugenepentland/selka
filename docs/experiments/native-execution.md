@@ -24,7 +24,8 @@ Supported functions use signed/unsigned 8/16/32/64-bit integers and booleans,
 initialized locals, assignment, scalar operators and casts, blocks, branches,
 loops, short-circuiting, direct calls, forward/mutual recursion, discard, and returns.
 All checked function signatures and instructions are inspected, including uncalled
-functions. Unsupported aggregate/domain/variant/resource/capability/borrowing
+functions. [Nominal scalar domains](native-domains.md) now also use scalar backing
+with checked privacy and instruction-budget parity. Unsupported record/array/variant/resource/capability/borrowing
 operations fail explicitly with E_NATIVE_FEATURE before any generated C is printed.
 Source type errors still use ordinary semantic diagnostics. There is no VM fallback.
 

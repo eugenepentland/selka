@@ -1505,3 +1505,31 @@ Broader module/candidate corpus and scaling acceptance, generics, compile-time/s
 incremental work, wider native operations, and other unfinished roadmap requirements
 remain pending. Guardian was not exercised; hosted CI has not run. The full roadmap
 goal remains active.
+
+## 2026-09-05: E native nominal scalar domains
+
+Extended native signatures, locals, parameters, and returns to nominal domains backed
+by integers or bool. Wrap/unwrap preserve scalar backing directly without VM host
+aggregate allocation, while retaining their instruction ticks. Frontend nominal
+identity, private representation access, private methods, and backing-width checks
+remain mandatory. Domain arithmetic/equality syntax was not added. The new module
+domain example builds natively, passes formatting checks, and returns 12.
+
+502 Zig tests pass in Debug and ReleaseFast (447 core, 55 CLI), plus eight
+verification-driver tests. Native acceptance now includes 27 single-file fixtures
+with 206 executed comparisons and six module fixtures with 114 comparisons per host
+build mode (320 combined). New cases cover domain copies/mutation, boolean backing,
+u64 cast rejection, u8 overflow after unwrapping, private factory helpers, nominal
+parameter/return forwarding, and every instruction budget through completion of the
+module domain case at C O0/O2 with undefined-behavior sanitization. Module results
+also compare original file locations and call frames.
+
+Zig tests retain private-constructor and nominal mismatch rejection and sweep every
+host allocation failure through native domain emission and VM execution. Formatting
+and whitespace checks pass. [Native domain semantics](experiments/native-domains.md)
+describes representation, privacy, logical instruction counts, and host-allocation
+limits. Records/arrays/variants, references, owned buffers/resources, pools, arenas,
+and other wider native operations remain pending, alongside generics, compile-time/
+schema/incremental work, remaining corpus/scaling acceptance, and every other
+unfinished roadmap requirement. Guardian was not exercised; hosted CI has not run.
+The full roadmap goal remains active.

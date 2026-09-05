@@ -1,0 +1,5 @@
+module domain_main;
+import shared.units;
+fn main() -> i64 {
+    return units::Distance.number(units::Distance.make(12));
+}
