@@ -370,3 +370,31 @@ indices stay deterministic, while ordinary tests retain the normal allocator.
 B remains in progress: reference parameters/types, bounded slices, and their
 lifetime acceptance tests remain pending. All other unfinished roadmap tracks
 remain in scope. Guardian gates were not exercised; hosted CI has not run.
+
+
+## 2026-09-05: B reference parameters and checked call reborrowing
+
+Implemented `&T` and `&mut T` function parameters accepting active references.
+Calls evaluate their value arguments in source order, then acquire temporary
+parameter reborrows. Mixed parameter positions, shared fan-out, exclusive
+mutation, multiple owners, recursive forwarding, and early returns are supported.
+The checker rejects permission escalation, wrong underlying types, suspended
+references, overlapping exclusive call arguments, and reference escape/copy.
+Unused reference parameters retain binding warnings; forwarding counts as use.
+
+The VM separates reference loans from value arguments, restores parent access
+on return, and releases storage after partially failed call setup. Bytecode
+validation checks parameter metadata and prevents reference parameters from being
+loaded as value locals. Exact discovery is now `exact-v9` and preserves parameter
+modes and ordered reference arguments. The parameter example returns 19.
+
+155/155 tests pass in Debug and ReleaseFast (134 core, 21 actual CLI), including
+allocation-failure sweeps, instruction and frame budget traps, malformed calls,
+and 10,000 mutating helper calls within 16 KiB live runtime allocation. Existing
+domain tests exposed a diagnostic-order regression during signature lookup; the
+shared call resolver now preserves domain/privacy checks. Formatting and whitespace
+checks pass on Guardian's exact pinned Zig snapshot.
+
+B remains in progress: bounded slices and returned-reference lifetime contracts
+are pending. The full roadmap remains in scope. Guardian gates were not exercised;
+hosted CI has not run.

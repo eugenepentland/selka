@@ -146,5 +146,6 @@ Scoped borrowing is implemented as `borrow [mut] owner as name { ... }`, with
 `read_ref(name)` and `write_ref(name, value);`. References have lexical scope,
 whole-local access, and checked shared/exclusive permissions. Reads preserve
 value snapshots; return cleanup ends child leases before parents. References
-cannot yet be passed, copied, stored, or returned. Reference parameters and
-slices remain pending. See [the borrowing contract](experiments/borrowing.md).
+cannot be copied, stored, or returned. `&T` and `&mut T` parameters accept
+active references through temporary call reborrows; value arguments evaluate
+before those loans begin. Slices and returned-reference contracts remain pending. See [the borrowing contract](experiments/borrowing.md).

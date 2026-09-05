@@ -624,8 +624,8 @@ A2 now includes [nominal scalar domains and private construction](experiments/do
 [closed variants and exhaustive matching](experiments/variants.md) are also implemented.
 [Complete enum-indexed tables](experiments/tables.md) finish A2. Borrowing and
 slices are in progress: [B has a tested memory/lease registry and scoped source references](experiments/borrowing.md),
-including static access checking and VM cleanup. Reference parameters and slices
-remain pending. Other tracks
+including static access checking, VM cleanup, and shared/exclusive reference
+parameters. Bounded slices and returned-reference lifetime contracts remain pending. Other tracks
 below remain pending.
 
 | Stage | Scope | Question to answer before proceeding |

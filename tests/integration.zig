@@ -280,3 +280,18 @@ test "CLI checks scoped borrows runs early cleanup and locates alias errors" {
     try invoke("check", "fn main() -> i64 { let x = 1; borrow x as r {} return read_ref(r); }", 1, "", "error[E_REFERENCE_SCOPE]");
     try invoke("run", "fn main() -> i64 { let mut x = 1; borrow mut x as r { write_ref(r, 1 / 0); } return x; }", 1, "", "error[R_DIVISION_BY_ZERO]");
 }
+
+test "CLI runs reference parameter helpers and rejects invalid call loans" {
+    const source = @embedFile("fixtures/reference-parameters.my");
+    try invoke("run", source, 0, "19\n", "");
+    try invoke("check", source, 0, "", "");
+    const dumped = try runFixture("dump-bytecode", source, &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "CALL_REFS") != null);
+    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "counter: &mut Counter") != null);
+    const conflict = "fn f(a: &mut i64, b: &mut i64) -> i64 { return read_ref(a) + read_ref(b); } fn main() -> i64 { let mut x = 0; borrow mut x as r { return f(r, r); } }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, conflict, 1, "", "error[E_BORROW_CONFLICT]");
+    try invoke("run", "fn fail(r: &mut i64) -> i64 { write_ref(r, 1 / 0); return 0; } fn main() -> i64 { let mut x = 0; borrow mut x as r { return fail(r); } }", 1, "", "error[R_DIVISION_BY_ZERO]");
+}

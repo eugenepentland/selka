@@ -1,8 +1,8 @@
 # B: guest memory identity and borrowing
 
 Status: the memory registry, scoped source references, static access checking,
-and VM borrow instructions are implemented. Reference parameters, reference type
-syntax, and slices remain pending. B is not complete. A1/A2 value semantics remain intact.
+and VM borrow instructions are implemented. Shared/exclusive reference parameters are also implemented. Bounded slices and
+returned-reference lifetime contracts remain pending. B is not complete. A1/A2 value semantics remain intact.
 
 ## Implemented memory model
 
@@ -55,7 +55,8 @@ borrows. Final store cleanup releases all remaining buffers and lease metadata
 even when execution aborts with outstanding leases.
 
 Copying a backend token does not acquire an independent loan. Scoped source
-references cannot be copied, stored, passed, or returned. The checker resolves
+references cannot be copied, stored, or returned; calls may explicitly reborrow
+them into reference parameters. The checker resolves
 reference names separately from ordinary values and enforces lexical scope. Allocation-owner uniqueness and general
 resource transfer remain later work; runtime stale-handle checks alone are not
 an ownership type system.
@@ -132,15 +133,69 @@ boundary in a nested aggregate/call example releases all storage. Mutated intern
 bytecode checks missing/repeated borrow operations and conflicting owner reads;
 these failures produce guest traps and release storage.
 
-The full suite passes 145/145 tests in Debug and ReleaseFast (125 core, 20 CLI)
+The full suite passes 155/155 tests in Debug and ReleaseFast (134 core, 21 CLI)
 on Guardian's `0.17.0-dev.1683+5ceec001b` snapshot. The editable
 `examples/references.my` program returns 23. Guardian gates were not exercised.
 
+## Reference parameters and call lifetimes
+
+```text
+fn add(target: &mut i64, amount: i64) -> i64 {
+    write_ref(target, read_ref(target) + amount);
+    return read_ref(target);
+}
+
+fn inspect(target: &i64) -> i64 {
+    return read_ref(target);
+}
+```
+
+A parameter may be `&T` (shared) or `&mut T` (exclusive). Its argument must be an
+active scoped reference or another reference parameter, with exactly matching
+underlying type. Ordinary locals require an explicit surrounding `borrow` scope.
+Reference and value parameters may interleave. References remain separate from
+ordinary values and cannot be placed in records, arrays, or value locals.
+
+Value arguments evaluate in source order before the call acquires its temporary
+reference loans. A nested helper in a value argument therefore finishes and
+restores the caller's reference before the outer helper begins. Reference names
+do not evaluate a value or acquire a loan at their textual argument position.
+The call then reborrows its reference arguments in parameter order. An exclusive
+caller reference suspends for the duration of the callee; callee cleanup ends all
+parameter loans before returning. Forwarding, recursion, early returns, and
+nested scoped reborrows use the same child-before-parent ordering.
+
+Shared references can supply shared parameters multiple times. The conservative
+single-child rule for an exclusive reference also applies to calls: it cannot
+supply two simultaneous parameter loans, even when both parameters are shared.
+Create a scoped shared child first to obtain shared fan-out. Two distinct owners
+can supply two exclusive parameters. Shared references cannot supply exclusive
+parameters. Conflicts identify the earlier reference declaration.
+
+Parameters may read or replace whole records, arrays, variants, or domains while
+preserving value snapshots and private representation checks. A reference to an
+array is currently a reference to its entire fixed-size value, not a slice.
+Complete declarative conversions retain their single value-parameter contract.
+Unused reference parameters get ordinary unused-binding warnings; reads, writes,
+reborrows, and forwarding count as uses.
+
+VM calls transfer ordinary values into their declared local slots and acquire
+reference parameters separately. Bytecode validation checks parameter modes,
+reference metadata, call arity/types/permissions, and prevents treating a
+reference parameter as a value local. The runtime independently rejects inactive
+or conflicting loans. Failed call setup, including failure after acquiring an
+earlier parameter loan, is terminal and releases all execution storage.
+
+Tests cover mixed arguments, multiple owners, shared fan-out, recursive forwarding,
+value argument evaluation order, permissions/alias errors, nominal privacy,
+unused-parameter warnings, malformed bytecode, and allocation failures. A loop
+makes 10,000 mutating helper calls within 16 KiB live runtime allocation; instruction
+and frame budget traps release every allocation. The editable
+`examples/reference-parameters.my` example returns 19.
+
 ## Remaining B acceptance
 
-Add reference parameters and source reference types so common read/mutate helpers
-can operate on caller storage, with explicit call-lifetime and alias rules. Add
-bounded slices, indexing, and narrowed reborrows while preserving immutable
+Add bounded slices, indexing, and narrowed reborrows while preserving immutable
 aggregate snapshots. Returned references require an explicit restricted lifetime
 contract; local references must never escape. Test these through actual CLI
 programs, allocation failures, normal returns, and traps before marking B complete.

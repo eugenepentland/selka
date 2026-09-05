@@ -60,6 +60,7 @@ pub const Tag = enum {
     star,
     slash,
     percent,
+    ampersand,
     and_and,
     or_or,
     plus_equal,
@@ -124,6 +125,7 @@ pub fn lex(allocator: std.mem.Allocator, bytes: []const u8, sink: *diagnostic.Si
                 break :blk p;
             }
             break :blk switch (ch) {
+                '&' => .ampersand,
                 '(' => .lparen,
                 ')' => .rparen,
                 '[' => .lbracket,

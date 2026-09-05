@@ -50,7 +50,7 @@ pub const Variant = struct { name: Span, payload: ?Span };
 pub const Variants = struct { name: Span, is_union: bool, cases: []const Variant };
 pub const FieldInit = struct { name: Span, value: NodeId };
 pub const Record = struct { name: Span, fields: []const Parameter };
-pub const Parameter = struct { name: Span, ty: Span };
+pub const Parameter = struct { name: Span, ty: Span, reference: ?bool = null };
 pub const Domain = struct { name: Span, backing: Span };
 pub const Function = struct { owner: ?Span = null, restricted: bool = false, conversion: bool = false, name: Span, parameters: []const Parameter, return_type: Span, body: StatementId };
 pub const ArrayIndex = union(enum) { length: Span, enum_type: Span };

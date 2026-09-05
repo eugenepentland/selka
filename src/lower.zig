@@ -167,7 +167,7 @@ const Emitter = struct {
             .read_ref => |reference| try self.instruction(node.span, .{ .read_ref = reference }),
             .local => |slot| try self.instruction(node.span, .{ .load_local = slot }),
             .call => |call| {
-                try self.instruction(node.span, .{ .call = call.function });
+                try self.instruction(node.span, if (call.references.len == 0) .{ .call = call.function } else .{ .call_refs = .{ .function = call.function, .references = call.references } });
                 var i = call.arguments.len;
                 while (i > 0) {
                     i -= 1;

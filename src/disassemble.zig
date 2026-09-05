@@ -29,7 +29,7 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
         try writer.print("function {s}(", .{function.name});
         for (function.locals[0..function.parameter_count], 0..) |parameter, i| {
             if (i != 0) try writer.writeAll(", ");
-            try writer.print("{s}: {s}", .{ parameter.name, typed.typeName(parameter.ty, program.records) });
+            try writer.print("{s}: {s}{s}", .{ parameter.name, if (parameter.reference_parameter) |mutable| (if (mutable) "&mut " else "&") else "", typed.typeName(parameter.ty, program.records) });
         }
         try writer.print(") -> {s}\n", .{typed.typeName(function.return_type, program.records)});
         for (function.references, 0..) |reference, i| try writer.print("  reference {d}: {s}: {s} owner={d} parent={?d} mutable={}\n", .{ i, reference.name, typed.typeName(reference.ty, program.records), @backingInt(reference.owner), if (reference.parent) |parent| @as(?usize, @backingInt(parent)) else null, reference.mutable });
@@ -74,6 +74,7 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
                 .add_i64_checked => try writer.writeAll("ADD_I64_CHECKED"),
                 .sub_i64_checked => try writer.writeAll("SUB_I64_CHECKED"),
                 .mul_i64_checked => try writer.writeAll("MUL_I64_CHECKED"),
+                .call_refs => |call| try writer.print("CALL_REFS {d} ({s}) refs={any}", .{ @backingInt(call.function), program.functions[@backingInt(call.function)].name, call.references }),
                 .call => |id| try writer.print("CALL {d} ({s})", .{ @backingInt(id), program.functions[@backingInt(id)].name }),
                 .ret => try writer.writeAll("RET"),
             }

@@ -30,9 +30,20 @@ const Checker = struct {
     fn ty(self: *Checker, span: source.Span) Error!typed.Type {
         return self.catalog.resolve(self.src, span, self.sink);
     }
+    fn callTarget(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span) Error!typed.FunctionId {
+        const owner = if (call.owner) |name| try self.ty(name) else null;
+        if (owner) |domain_type| _ = try self.catalog.domain(domain_type, call.owner.?, self.sink);
+        const name = try functionName(self.allocator, self.src, call.owner, call.name);
+        const function = self.functions.get(name) orelse return self.sink.fail("E_UNKNOWN_FUNCTION", call.name, "no function has this qualified name");
+        const signature = self.syntax.functions[@backingInt(function)];
+        if (signature.restricted and self.owner != owner) return self.sink.failRelated("E_PRIVATE_FUNCTION", call.name, "private domain function is only callable from the same domain", .{ .span = signature.name, .message = "private function declared here" });
+        if (signature.parameters.len != call.arguments.len) return self.sink.fail("E_ARITY", span, "argument count does not match function parameters");
+        return function;
+    }
     fn reference(self: *Checker, span: source.Span) Error!typed.ReferenceId {
         const id = self.active_refs.get(self.src.text(span)) orelse return self.sink.fail("E_REFERENCE_SCOPE", span, "reference is not active in this scope");
         const ref = self.references.items[@backingInt(id)];
+        if (self.locals.items[@backingInt(ref.owner)].reference_parameter != null) self.locals.items[@backingInt(ref.owner)].reads += 1;
         if (ref.mutable) {
             var entries = self.active_refs.valueIterator();
             while (entries.next()) |child| if (self.references.items[@backingInt(child.*)].parent == id) return self.sink.failRelated("E_BORROW_SUSPENDED", span, "exclusive reference is suspended by an active child borrow", .{ .span = self.references.items[@backingInt(child.*)].declaration, .message = "child borrow starts here" });
@@ -184,10 +195,12 @@ const Checker = struct {
                     },
                     .call => |call| {
                         try work.append(self.allocator, .{ .id = task.id, .emit = true });
+                        const target = try self.callTarget(call, node.span);
+                        const signature = self.syntax.functions[@backingInt(target)];
                         var i = call.arguments.len;
                         while (i > 0) {
                             i -= 1;
-                            try work.append(self.allocator, .{ .id = call.arguments[i] });
+                            if (signature.parameters[i].reference == null) try work.append(self.allocator, .{ .id = call.arguments[i] });
                         }
                         continue;
                     },
@@ -312,7 +325,7 @@ const Checker = struct {
                     out.data = .{ .read_ref = id };
                 },
                 .name => |name| {
-                    if (self.active_refs.contains(self.src.text(name))) return self.sink.fail("E_REFERENCE_VALUE", name, "scoped references cannot be copied, stored, passed, or returned; use read_ref to copy the referenced value");
+                    if (self.active_refs.contains(self.src.text(name))) return self.sink.fail("E_REFERENCE_VALUE", name, "references cannot be copied, stored, returned, or passed to value parameters; use read_ref to copy the referenced value");
                     const slot = try self.resolve(name);
                     try self.ownerAccess(slot, false, name);
                     self.locals.items[@backingInt(slot)].reads += 1;
@@ -320,22 +333,31 @@ const Checker = struct {
                     out.data = .{ .local = slot };
                 },
                 .call => |call| {
-                    const owner = if (call.owner) |name| try self.ty(name) else null;
-                    if (owner) |domain_type| _ = try self.catalog.domain(domain_type, call.owner.?, self.sink);
-                    const name = try functionName(self.allocator, self.src, call.owner, call.name);
-                    const function = self.functions.get(name) orelse
-                        return self.sink.fail("E_UNKNOWN_FUNCTION", call.name, "no function has this qualified name");
+                    const function = try self.callTarget(call, node.span);
                     const signature = self.syntax.functions[@backingInt(function)];
-                    if (signature.restricted and self.owner != owner) return self.sink.failRelated("E_PRIVATE_FUNCTION", call.name, "private domain function is only callable from the same domain", .{ .span = signature.name, .message = "private function declared here" });
-                    if (signature.parameters.len != call.arguments.len)
-                        return self.sink.fail("E_ARITY", node.span, "argument count does not match function parameters");
-                    const arguments = try self.allocator.alloc(typed.NodeId, call.arguments.len);
-                    for (call.arguments, signature.parameters, arguments) |arg, parameter, *out_arg| {
-                        out_arg.* = self.resolved[@backingInt(arg)].?;
-                        try self.require(self.nodes.items[@backingInt(out_arg.*)].ty, try self.ty(parameter.ty), self.syntax.nodes.items[@backingInt(arg)].span);
+                    var arguments: std.ArrayList(typed.NodeId) = .empty;
+                    var loans: std.ArrayList(typed.ReferenceId) = .empty;
+                    for (call.arguments, signature.parameters) |arg, parameter| {
+                        const argument = self.syntax.nodes.items[@backingInt(arg)];
+                        if (parameter.reference) |mutable| {
+                            if (argument.data != .name) return self.sink.fail("E_REFERENCE_ARGUMENT", argument.span, "reference parameter requires an active reference name");
+                            const id = try self.reference(argument.data.name);
+                            const ref = self.references.items[@backingInt(id)];
+                            if (mutable and !ref.mutable) return self.sink.fail("E_REFERENCE_READ_ONLY", argument.span, "exclusive parameter requires an exclusive reference");
+                            try self.require(ref.ty, try self.ty(parameter.ty), argument.span);
+                            for (loans.items) |previous_id| {
+                                const previous = self.references.items[@backingInt(previous_id)];
+                                if (previous.owner == ref.owner and (previous.mutable or ref.mutable)) return self.sink.failRelated("E_BORROW_CONFLICT", argument.span, "call arguments cannot reborrow overlapping exclusive access", .{ .span = previous.declaration, .message = "conflicting reference declared here" });
+                            }
+                            try loans.append(self.allocator, id);
+                        } else {
+                            const value = self.resolved[@backingInt(arg)].?;
+                            try self.require(self.nodes.items[@backingInt(value)].ty, try self.ty(parameter.ty), argument.span);
+                            try arguments.append(self.allocator, value);
+                        }
                     }
                     out.ty = try self.ty(signature.return_type);
-                    out.data = .{ .call = .{ .function = function, .arguments = arguments } };
+                    out.data = .{ .call = .{ .function = function, .arguments = try arguments.toOwnedSlice(self.allocator), .references = try loans.toOwnedSlice(self.allocator) } };
                 },
                 .unary => |u| {
                     const operand = self.resolved[@backingInt(u.operand)].?;
@@ -570,14 +592,20 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
         for (function.parameters) |parameter| {
             const name = src.text(parameter.name);
             if (checker.active.get(name)) |previous| return sink.failRelated("E_DUPLICATE_PARAMETER", parameter.name, "parameter name is already declared", .{ .span = checker.locals.items[@backingInt(previous)].declaration, .message = "previous parameter declaration" });
+            if (checker.active_refs.get(name)) |previous| return sink.failRelated("E_DUPLICATE_PARAMETER", parameter.name, "parameter name is already declared", .{ .span = checker.references.items[@backingInt(previous)].declaration, .message = "previous parameter declaration" });
             if (checker.functions.contains(name) or checker.catalog.names.contains(name)) return sink.fail("E_SHADOWING", parameter.name, "parameter shadows a top-level function");
             const slot: typed.LocalId = @fromBackingInt(checker.locals.items.len);
-            try checker.locals.append(allocator, .{ .name = name, .declaration = parameter.name, .ty = try checker.ty(parameter.ty), .mutable = false });
-            try checker.active.put(allocator, name, slot);
+            const parameter_type = try checker.ty(parameter.ty);
+            try checker.locals.append(allocator, .{ .name = name, .declaration = parameter.name, .ty = parameter_type, .mutable = false, .reference_parameter = parameter.reference });
+            if (parameter.reference) |mutable| {
+                const reference: typed.ReferenceId = @fromBackingInt(checker.references.items.len);
+                try checker.references.append(allocator, .{ .parameter = true, .name = name, .declaration = parameter.name, .owner = slot, .parent = null, .ty = parameter_type, .mutable = mutable });
+                try checker.active_refs.put(allocator, name, reference);
+            } else try checker.active.put(allocator, name, slot);
         }
         checker.conversion_fields = null;
         if (function.conversion) {
-            if (function.parameters.len != 1) return sink.fail("E_CONVERSION_SIGNATURE", function.name, "a complete conversion requires one source record parameter");
+            if (function.parameters.len != 1 or function.parameters[0].reference != null) return sink.fail("E_CONVERSION_SIGNATURE", function.name, "a complete conversion requires one source record parameter");
             const source_record = try catalog.record(checker.locals.items[0].ty, function.parameters[0].ty, sink);
             _ = try catalog.record(checker.return_type, function.return_type, sink);
             try conversionBody(src, program, function, sink);

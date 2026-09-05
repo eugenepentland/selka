@@ -1,0 +1,20 @@
+struct Counter { value: i64 }
+
+fn add(counter: &mut Counter, amount: i64) -> i64 {
+    write_ref(counter, update(read_ref(counter)) { value: read_ref(counter).value + amount });
+    return read_ref(counter).value;
+}
+
+fn inspect(counter: &Counter) -> i64 {
+    return read_ref(counter).value;
+}
+
+fn main() -> i64 {
+    let mut counter = new Counter { value: 7 };
+    let snapshot = counter;
+    borrow mut counter as edit {
+        discard add(edit, 5);
+        discard inspect(edit);
+    }
+    return snapshot.value + counter.value;
+}

@@ -108,7 +108,8 @@ pub const Parser = struct {
         if (self.current().tag != .rparen) while (true) {
             const parameter = try self.expect(.ident);
             _ = try self.expect(.colon);
-            try parameters.append(self.allocator, .{ .name = parameter.span, .ty = try self.typeName() });
+            const reference: ?bool = if (self.take(.ampersand)) self.take(.kw_mut) else null;
+            try parameters.append(self.allocator, .{ .name = parameter.span, .ty = try self.typeName(), .reference = reference });
             if (!self.take(.comma)) break;
         };
         _ = try self.expect(.rparen);

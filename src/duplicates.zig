@@ -3,7 +3,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 
-pub const version = "exact-v8";
+pub const version = "exact-v9";
 pub const Population = enum { production, tests, generated, reference, intentional };
 pub const Options = struct { min_nodes: usize = 8, population: Population = .production };
 pub const Group = struct { members: []const typed.FunctionId, nodes: usize };
@@ -35,8 +35,8 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
     writer.print("private {}\n", .{function.restricted}) catch return error.OutOfMemory;
     // Slot identities are declaration order within a function, including parameters.
     // Names, spans, and advisory use counters have no role in structural equality.
-    for (function.locals) |local| writer.print("local {s} {}\n", .{ typed.typeName(local.ty, program.records), local.mutable }) catch return error.OutOfMemory;
-    for (function.references) |reference| writer.print("reference {s} owner {d} parent {?d} mutable {}\n", .{ typed.typeName(reference.ty, program.records), @backingInt(reference.owner), if (reference.parent) |parent| @as(?usize, @backingInt(parent)) else null, reference.mutable }) catch return error.OutOfMemory;
+    for (function.locals) |local| writer.print("local {s} {} reference {?}\n", .{ typed.typeName(local.ty, program.records), local.mutable, local.reference_parameter }) catch return error.OutOfMemory;
+    for (function.references) |reference| writer.print("reference {s} owner {d} parent {?d} mutable {} parameter {}\n", .{ typed.typeName(reference.ty, program.records), @backingInt(reference.owner), if (reference.parent) |parent| @as(?usize, @backingInt(parent)) else null, reference.mutable, reference.parameter }) catch return error.OutOfMemory;
     try work.append(allocator, .{ .statement = function.body });
     while (work.pop()) |task| {
         nodes += 1;
@@ -103,7 +103,7 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                             const callee = program.functions[@backingInt(call.function)].name;
                             writer.print("callee {d}:{s}\n", .{ callee.len, callee }) catch return error.OutOfMemory;
                         }
-                        writer.print("args {d}\n", .{call.arguments.len}) catch return error.OutOfMemory;
+                        writer.print("args {d} references {any}\n", .{ call.arguments.len, call.references }) catch return error.OutOfMemory;
                         var i = call.arguments.len;
                         while (i > 0) {
                             i -= 1;

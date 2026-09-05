@@ -145,3 +145,10 @@ Scoped references advance the version to `exact-v8`. Canonical identity retains
 owner slots, underlying types, permissions, parent reference IDs, borrow scope,
 and read/write operations. Renamed bound reference names normalize away;
 reborrowing and changed permissions remain distinct.
+
+
+Reference parameters advance the version to `exact-v9`. Function identity retains
+parameter passing modes, parameter lease identity, and ordered reference arguments
+at calls. Bound parameter spelling still normalizes away. Value arguments retain
+their evaluation order; changed reference argument order or permissions remain
+distinct even when value bodies otherwise match.

@@ -4,7 +4,7 @@ pub const NodeId = enum(usize) { _ };
 pub const StatementId = enum(usize) { _ };
 pub const FunctionId = enum(usize) { _ };
 pub const ReferenceId = enum(usize) { _ };
-pub const Reference = struct { name: []const u8, declaration: Span, owner: LocalId, parent: ?ReferenceId, ty: Type, mutable: bool };
+pub const Reference = struct { parameter: bool = false, name: []const u8, declaration: Span, owner: LocalId, parent: ?ReferenceId, ty: Type, mutable: bool };
 pub const LocalId = enum(usize) { _ };
 pub const Type = @import("value.zig").Type;
 pub const Value = @import("value.zig").Value;
@@ -29,7 +29,7 @@ pub const Node = struct {
         record: []const FieldInit,
         update: struct { base: NodeId, fields: []const FieldInit },
         field: struct { base: NodeId, index: usize },
-        call: struct { function: FunctionId, arguments: []const NodeId },
+        call: struct { function: FunctionId, arguments: []const NodeId, references: []const ReferenceId = &.{} },
         unary: struct { op: UnaryOp, operand: NodeId, op_span: Span },
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
     },
@@ -86,7 +86,7 @@ pub const Statement = struct {
     },
 };
 pub const MatchArm = struct { tag: usize, slot: ?LocalId, body: StatementId };
-pub const Local = struct { name: []const u8, declaration: Span, ty: Type, mutable: bool, mutable_borrow: bool = false, reads: usize = 0, writes: usize = 0 };
+pub const Local = struct { reference_parameter: ?bool = null, name: []const u8, declaration: Span, ty: Type, mutable: bool, mutable_borrow: bool = false, reads: usize = 0, writes: usize = 0 };
 pub const Function = struct {
     references: []const Reference = &.{},
     owner: ?Type = null,

@@ -311,24 +311,41 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                     transferred = true;
                 }
             },
-            .call => |id| {
+            .call, .call_refs => {
+                const id = if (instruction.op == .call) instruction.op.call else instruction.op.call_refs.function;
+                const loan_arguments: []const typed.ReferenceId = if (instruction.op == .call_refs) instruction.op.call_refs.references else &.{};
                 const callee = program.functions[@backingInt(id)];
-                if (stack.items.len < frame.operand_base or stack.items.len - frame.operand_base < callee.parameter_count) return error.InternalError;
+                const value_count = bc.valueParameterCount(callee);
+                if (stack.items.len < frame.operand_base or stack.items.len - frame.operand_base < value_count) return error.InternalError;
                 if (frames.items.len >= options.max_frames) return trap("R_FRAME_LIMIT", "active frame budget exhausted", instruction.span, frames.items, program);
-                const argument_base = stack.items.len - callee.parameter_count;
-                for (stack.items[argument_base..], 0..) |argument, i| {
-                    if (argument.typeOf() != callee.locals[i].ty) return error.InternalError;
+                const argument_base = stack.items.len - value_count;
+                var argument_index = argument_base;
+                for (callee.locals[0..callee.parameter_count]) |parameter| {
+                    if (parameter.reference_parameter != null) continue;
+                    if (stack.items[argument_index].typeOf() != parameter.ty) return error.InternalError;
+                    argument_index += 1;
                 }
                 const reference_base = references.items.len;
                 const reference_end = std.math.add(usize, reference_base, callee.references.len) catch return error.OutOfMemory;
                 try references.resize(allocator, reference_end);
                 @memset(references.items[reference_base..], null);
+                var loan_index: usize = 0;
+                for (callee.references, 0..) |parameter, index| {
+                    if (!parameter.parameter) continue;
+                    const parent = references.items[frame.reference_base + @backingInt(loan_arguments[loan_index])] orelse return trap("R_REFERENCE_LIFETIME", "reference argument is not active", instruction.span, frames.items, program);
+                    loan_index += 1;
+                    const child = storage.reborrow(parent, 0, 1, if (parameter.mutable) .exclusive else .shared) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                    references.items[reference_base + index] = child;
+                }
                 const local_base = locals.items.len;
                 const local_end = std.math.add(usize, local_base, callee.locals.len) catch return error.OutOfMemory;
                 try locals.resize(allocator, local_end);
                 @memset(locals.items[local_base..], null);
-                for (stack.items[argument_base..], 0..) |argument, i| {
-                    locals.items[local_base + i] = argument;
+                argument_index = argument_base;
+                for (callee.locals[0..callee.parameter_count], 0..) |parameter, index| {
+                    if (parameter.reference_parameter != null) continue;
+                    locals.items[local_base + index] = stack.items[argument_index];
+                    argument_index += 1;
                 }
                 stack.shrinkRetainingCapacity(argument_base);
                 try frames.append(allocator, .{ .reference_base = reference_base, .function = id, .local_base = local_base, .operand_base = argument_base, .call_span = instruction.span });
