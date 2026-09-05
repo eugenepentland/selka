@@ -218,3 +218,7 @@ and [module interfaces](docs/experiments/module-interfaces.md).
 shared domain factory. `check-project` validates all imported bodies with nominal
 types, private boundaries, ownership, borrowing, and effects. See
 [module execution](docs/experiments/module-execution.md) for scope and remaining work.
+
+Optional dependency policy is available through `check-policy <entry.my> --policy=<rules.json>`.
+It checks the language first and exits 3 for a separate policy failure. See
+[import policy](docs/experiments/import-policy.md); ordinary project commands do not load it.

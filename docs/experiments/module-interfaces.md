@@ -62,5 +62,6 @@ baseline.
 [Source maps and AST relocation](module-source-mapping.md) provide combined tables
 with original locations and module ownership. [Cross-file checking/execution](module-execution.md)
 now integrates the index with the type catalog and function checker. The interface
-command remains a narrower inspection tool. Optional dependency-direction policy
-and module-aware quality, formatting, native, and incremental work remain pending.
+command remains a narrower inspection tool. [Optional direction policy](import-policy.md)
+is now implemented separately; module-aware quality, formatting, native, and
+incremental work remain pending.

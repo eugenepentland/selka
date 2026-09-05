@@ -765,3 +765,51 @@ test "CLI checks and runs module programs with private boundaries and cross-file
     try invokeOptions("run-project", "module input; fn main() -> i64 { return 7; }", &.{"--memory=arena"}, 0, "7\n", "");
     try invokeOptions("check-project", "module input; fn main() -> i64 { return 7; }", &.{"--max-steps=1"}, 2, "", "usage:");
 }
+
+test "CLI import policy distinguishes language failures policy failures and configuration failures" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input; import core; fn main() -> i64 { return core::value(); }" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "core.my", .data = "module core; export value; fn value() -> i64 { return 7; }" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "rules file.json", .data = "{\"version\":1,\"default_action\":\"deny\",\"rules\":[]}" });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const policy_path = try temp.dir.realPathFileAlloc(testing.io, "rules file.json", testing.allocator);
+    defer testing.allocator.free(policy_path);
+    const option = try std.fmt.allocPrint(testing.allocator, "--policy={s}", .{policy_path});
+    defer testing.allocator.free(option);
+    const denied = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-policy", path, option } });
+    defer testing.allocator.free(denied.stdout);
+    defer testing.allocator.free(denied.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, denied.term);
+    try testing.expectEqualStrings("", denied.stderr);
+    for ([_][]const u8{ "language: valid", "import-direction-v1: failed", "edges=1; denied=1", "input -> core: deny; rule=default" }) |part| try testing.expect(std.mem.indexOf(u8, denied.stdout, part) != null);
+    const ordinary = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path } });
+    defer testing.allocator.free(ordinary.stdout);
+    defer testing.allocator.free(ordinary.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, ordinary.term);
+    try testing.expectEqualStrings("7\n", ordinary.stdout);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "rules file.json", .data = "{\"version\":1,\"default_action\":\"allow\",\"rules\":[]}" });
+    const allowed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-policy", path, option } });
+    defer testing.allocator.free(allowed.stdout);
+    defer testing.allocator.free(allowed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, allowed.term);
+    try testing.expect(std.mem.indexOf(u8, allowed.stdout, "import-direction-v1: passed") != null);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "rules file.json", .data = "{\"version\":99,\"default_action\":\"allow\",\"rules\":[]}" });
+    const config_error = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-policy", path, option } });
+    defer testing.allocator.free(config_error.stdout);
+    defer testing.allocator.free(config_error.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, config_error.term);
+    try testing.expectEqualStrings("", config_error.stdout);
+    try testing.expect(std.mem.indexOf(u8, config_error.stderr, "UnsupportedPolicyVersion") != null);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "core.my", .data = "module core; export value; fn value() -> i64 { return true; }" });
+    const invalid = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-policy", path, option } });
+    defer testing.allocator.free(invalid.stdout);
+    defer testing.allocator.free(invalid.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, invalid.term);
+    try testing.expectEqualStrings("", invalid.stdout);
+    try testing.expect(std.mem.indexOf(u8, invalid.stderr, "E_TYPE") != null);
+    try invoke("check-policy", "module input; fn main() -> i64 { return 0; }", 2, "", "usage:");
+    try invokeOptions("check-project", "module input; fn main() -> i64 { return 0; }", &.{"--policy=some.json"}, 2, "", "usage:");
+    try invokeOptions("check-policy", "module input; fn main() -> i64 { return 0; }", &.{ "--policy=a", "--policy=b" }, 2, "", "usage:");
+}

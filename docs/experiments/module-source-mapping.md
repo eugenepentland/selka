@@ -44,5 +44,6 @@ fragments to test provenance; it is not evidence of module name resolution.
 
 [Cross-file checking/execution](module-execution.md) now connects the relocated
 declarations to the type catalog and function checker using interface identities
-and original module context. Optional dependency-direction policy, generics, schema
-and incremental work, native expansion, and other unfinished roadmap work remain pending.
+and original module context. [Optional direction policy](import-policy.md) is also
+implemented. Generics, schema and incremental work, native expansion, and other
+unfinished roadmap work remain pending.

@@ -1,7 +1,7 @@
 //! Host I/O and process policy stay outside the compiler and VM.
 const std = @import("std");
 const language = @import("mylang");
-const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates|report-quality|fmt|emit-c|list-modules|list-interfaces|check-project|run-project> <file.my>\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena\n  discover-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  fmt: --check (otherwise writes formatted source to stdout)\n";
+const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates|report-quality|fmt|emit-c|list-modules|list-interfaces|check-project|run-project|check-policy> <file.my>\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena\n  discover-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  fmt: --check (otherwise writes formatted source to stdout)\n";
 
 pub fn main(init: std.process.Init) void {
     const status = dispatch(init) catch |err| status: {
@@ -20,7 +20,7 @@ fn dispatch(init: std.process.Init) !u8 {
         try std.Io.File.stderr().writeStreamingAll(init.io, usage);
         return 2;
     };
-    if (parsed.command == .@"list-modules" or parsed.command == .@"list-interfaces" or parsed.command == .@"check-project" or parsed.command == .@"run-project") return listModules(init, parsed);
+    if (parsed.command == .@"list-modules" or parsed.command == .@"list-interfaces" or parsed.command == .@"check-project" or parsed.command == .@"run-project" or parsed.command == .@"check-policy") return listModules(init, parsed);
     const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, parsed.path, allocator, .limited(16 * 1024 * 1024));
     defer allocator.free(bytes);
     var compilation = try language.Compilation.init(allocator, parsed.path, bytes);
@@ -53,7 +53,7 @@ fn dispatch(init: std.process.Init) !u8 {
     const check_ns = if (parsed.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
     if (parsed.command != .@"emit-c") try report(init, &compilation);
     switch (parsed.command) {
-        .fmt, .@"list-modules", .@"list-interfaces", .@"check-project", .@"run-project" => unreachable,
+        .fmt, .@"list-modules", .@"list-interfaces", .@"check-project", .@"run-project", .@"check-policy" => unreachable,
         .@"emit-c" => {
             const generated = compilation.emitC(allocator) catch |err| switch (err) {
                 error.SourceError => {
@@ -118,8 +118,8 @@ fn report(init: std.process.Init, compilation: *const language.Compilation) !voi
     }
 }
 
-const Command = enum { @"check-project", @"run-project", @"list-interfaces", @"list-modules", @"emit-c", fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
-const Parsed = struct { format_check: bool, quality: language.quality.Options, command: Command, path: []const u8, options: language.vm.Options, discovery: language.duplicates.Options, timings: bool };
+const Command = enum { @"check-policy", @"check-project", @"run-project", @"list-interfaces", @"list-modules", @"emit-c", fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
+const Parsed = struct { policy: ?[]const u8, format_check: bool, quality: language.quality.Options, command: Command, path: []const u8, options: language.vm.Options, discovery: language.duplicates.Options, timings: bool };
 fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (args.len < 2) return error.Usage;
     const command = std.meta.stringToEnum(Command, args[0]) orelse return error.Usage;
@@ -127,6 +127,7 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     var quality_seen: u8 = 0;
     var format_check = false;
     var path: ?[]const u8 = null;
+    var policy: ?[]const u8 = null;
     var options: language.vm.Options = .{};
     var saw_steps = false;
     var saw_frames = false;
@@ -137,6 +138,11 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     var saw_population = false;
     var saw_work = false;
     argument: for (args[1..]) |arg| {
+        if (std.mem.startsWith(u8, arg, "--policy=")) {
+            if (command != .@"check-policy" or policy != null or arg.len == "--policy=".len) return error.Usage;
+            policy = arg["--policy=".len..];
+            continue;
+        }
         inline for (.{ "max_function_lines", "max_parameters", "max_nesting", "max_decisions", "max_line_bytes" }, .{ "--max-function-lines=", "--max-parameters=", "--max-nesting=", "--max-decisions=", "--max-line-bytes=" }, 0..) |field, prefix, index| {
             if (std.mem.startsWith(u8, arg, prefix)) {
                 const bit: u8 = 1 << index;
@@ -202,7 +208,8 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
         }
     }
     if (saw_work and !discovery.approximate) return error.Usage;
-    return .{ .format_check = format_check, .quality = quality, .command = command, .path = path orelse return error.Usage, .options = options, .discovery = discovery, .timings = timings };
+    if (command == .@"check-policy" and policy == null) return error.Usage;
+    return .{ .policy = policy, .format_check = format_check, .quality = quality, .command = command, .path = path orelse return error.Usage, .options = options, .discovery = discovery, .timings = timings };
 }
 
 fn positive(digits: []const u8) error{Usage}!u64 {
@@ -270,6 +277,25 @@ fn listModules(init: std.process.Init, parsed: Parsed) !u8 {
         };
         try reportProject(init, &compilation);
         if (parsed.command == .@"check-project") return 0;
+        if (parsed.command == .@"check-policy") {
+            const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, parsed.policy.?, init.gpa, .limited(1024 * 1024));
+            defer init.gpa.free(bytes);
+            var policy = language.import_policy.Policy.parse(init.gpa, bytes) catch |err| {
+                if (err == error.OutOfMemory) return err;
+                const message = try std.fmt.allocPrint(init.gpa, "{s}: invalid import policy: {s}\n", .{ parsed.policy.?, @errorName(err) });
+                defer init.gpa.free(message);
+                try std.Io.File.stderr().writeStreamingAll(init.io, message);
+                return 2;
+            };
+            defer policy.deinit();
+            var policy_report = try language.import_policy.evaluate(init.gpa, &project, policy);
+            defer policy_report.deinit();
+            const text = try language.import_policy.render(init.gpa, policy_report, &project, policy);
+            defer init.gpa.free(text);
+            try std.Io.File.stdout().writeStreamingAll(init.io, "language: valid\n");
+            try std.Io.File.stdout().writeStreamingAll(init.io, text);
+            return if (policy_report.denied == 0) 0 else 3;
+        }
         try compilation.emit();
         const outcome = try language.vm.runWithOptions(init.gpa, compilation.code.?, parsed.options);
         switch (outcome) {

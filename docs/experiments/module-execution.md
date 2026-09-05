@@ -52,8 +52,8 @@ cross-file trap traces, VM limits, and exhaustive allocation failures through
 checking/lowering/executing a shared-domain program. Existing single-file and scalar
 native parity fixtures remain regression coverage.
 
-Remaining module work includes the optional dependency-direction policy and broader
-module corpus/scaling review. Module-aware formatter, duplicate/reference entry
+[Optional dependency-direction policy](import-policy.md) is implemented as a
+separate check. Broader module corpus/scaling review remains. Module-aware formatter, duplicate/reference entry
 roots, project native commands/parity, and schema/incremental identities remain in
 their respective tracks. Generics, schema/compile-time/incremental work, and broader
 native operations remain pending. This milestone does not complete the full roadmap.

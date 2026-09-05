@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "default_action": "deny",
+  "rules": [
+    {
+      "from": "main",
+      "to": "shared.*",
+      "action": "allow",
+      "reason": "The entry module assembles shared domain interfaces."
+    }
+  ]
+}

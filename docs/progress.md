@@ -1351,3 +1351,36 @@ policy and broader module acceptance remain pending, alongside module-aware tool
 project native commands/parity, generics, compile-time/schema/incremental work, native
 operation expansion, and all other unfinished roadmap requirements. Guardian was
 not exercised; hosted CI has not run. The full roadmap goal remains active.
+
+## 2026-09-05: M optional dependency-direction policy
+
+Implemented `check-policy <entry.my> --policy=<rules.json>` with strict versioned
+JSON, required defaults and rule reasons, ordered allow/deny rules, exact module
+names and namespace patterns, and bounded configuration/rule sizes. Evaluation uses
+resolved direct imports and reports deterministic edge decisions, selected rules,
+unused-rule match counts, reachable-graph scope, analysis version, and configuration
+SHA-256. It does not modify the graph or language diagnostics. Ordinary checking
+and execution do not load policy.
+
+The CLI checks language validity first. Exit 1 indicates an invalid program, exit 2
+configuration/usage/host failure, and exit 3 a policy failure on valid code; success
+is exit 0. The report makes that distinction explicit. The documented shared-domain
+policy passes with one allowed main -> shared.units edge.
+
+490 Zig tests pass in Debug and ReleaseFast (439 core, 51 CLI), plus eight
+verification-driver tests and the unchanged 23-fixture/182-comparison native suite
+per host mode. Acceptance covers directional/namespace matching, first-rule/default
+semantics, zero-match reporting, deterministic decisions, strict duplicate/unknown
+configuration rejection, byte/rule bounds, all host allocation failures through
+parsing/evaluation/rendering, and actual CLI separation of all four exit outcomes.
+A type-invalid dependency takes precedence over an invalid policy configuration;
+ordinary project execution succeeds despite a separately failing policy. Formatting
+and whitespace checks pass.
+
+[Import policy](experiments/import-policy.md) records syntax, matching semantics,
+limits, scope, and verdicts. Core module import/export/privacy, execution, and optional
+policy behavior are implemented. Broader module corpus/scaling acceptance and
+module-aware formatter/reference roots/duplicate identities, project native parity,
+generics, compile-time/schema/incremental work, native operation expansion, and other
+unfinished roadmap requirements remain pending. Guardian was not exercised; hosted
+CI has not run. The full roadmap goal remains active.
