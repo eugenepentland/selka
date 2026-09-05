@@ -1756,3 +1756,31 @@ Dependency-granular frontend/native rebuilds, field-level invalidation explanati
 measured rebuild savings, external data manifests, schemas/generation, generics,
 wider native operations, and all other unfinished roadmap work remain pending.
 Guardian was not exercised; hosted CI has not run. The full roadmap goal remains active.
+
+## 2026-09-05: Field-level evaluation request comparisons
+
+Added --compare-to and --max-changes to the evaluation cache driver. A chosen request
+document, evaluation report, or validated cache entry supplies the explicit baseline.
+The output reports deterministic added/removed/changed request fields, before/after
+values, both request identities, and explicit truncation. Sources are matched by
+logical module name, with dependency order compared separately. Budget/compiler
+metadata and ordered imports remain visible. JSON value types are preserved during
+comparison, and an encoding-only digest change is distinguished from field changes.
+Comparison does not alter lookup eligibility or claim that source changes altered
+runtime behavior or saved compilation time.
+
+Extended cache acceptance covers identical requests on real hits, budget and source
+changes on actual misses, implementation changes, source addition/removal/reordering,
+imports, typed JSON differences, deterministic output, and bounded/truncated reports.
+All 13 build steps pass in Debug and ReleaseFast, retaining the successful 516 Zig
+tests, eight verification-driver tests, receipt and cache drivers, module/duplicate
+scaling, and 392 VM/native comparisons per host mode. The manual CLI comparison
+reports exactly /budgets/max_steps changing from 1000000 to 1000001 while preserving
+the module example result 12. Formatting and whitespace checks pass.
+
+The cache contract, README, roadmap, and attached plan now document chosen-baseline
+invalidation explanations. Automatic baseline selection, frontend/native cache reuse,
+dependency-granular rebuilds, measured rebuild savings, external input manifests,
+schemas/generation, generics, broader native operations, and other unfinished roadmap
+requirements remain pending. Guardian was not exercised and hosted CI has not run.
+The full roadmap goal remains active.

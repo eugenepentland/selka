@@ -262,3 +262,6 @@ eligibility, without executing the entry or claiming a result.
 `python3 scripts/evaluate.py examples/modules/main.my --cache-dir .mylang-cache`
 provides [persistent evaluation reuse](docs/experiments/evaluation-cache.md). Hits
 still check the current project and explicitly report that VM execution was skipped.
+
+Add `--compare-to path.json` to the evaluation cache driver to explain changes against
+a saved request, evaluation report, or cache entry (`--max-changes` bounds the output).

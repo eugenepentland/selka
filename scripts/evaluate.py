@@ -69,6 +69,70 @@ def validate(document, request_only):
     return document
 
 
+def load_reference(path):
+    with path.open('rb') as stream:
+        document = decode(stream.read(MAX_DOCUMENT + 1))
+    if isinstance(document, dict) and document.get('version') == 'eval-cache-v1':
+        if set(document) != {'version', 'report', 'report_sha256'} or document['report_sha256'] != digest(document['report']):
+            raise ValueError('invalid reference cache checksum')
+        document = document['report']
+    request_only = isinstance(document, dict) and document.get('version') == 'eval-request-document-v1'
+    return validate(document, request_only)
+
+
+def request_view(request):
+    # Source membership is compared by logical identity, separately from load order.
+    view = dict(request)
+    sources = view.get('sources')
+    if not isinstance(sources, list) or 'source_order' in view:
+        raise ValueError('invalid comparison source list')
+    indexed = {}
+    for source in sources:
+        if not isinstance(source, dict) or not isinstance(source.get('module'), str) or source['module'] in indexed:
+            raise ValueError('invalid/duplicate comparison source identity')
+        indexed[source['module']] = source
+    view['sources'] = indexed
+    view['source_order'] = list(indexed)
+    return view
+
+
+def compare_requests(before, after, max_changes=100):
+    if type(max_changes) is not int or max_changes <= 0:
+        raise ValueError('comparison limit must be positive')
+    missing = object()
+    pending = [('', request_view(before['request']), request_view(after['request']))]
+    changes = []
+    truncated = False
+    while pending:
+        path, left, right = pending.pop()
+        if left is not missing and right is not missing and encode(left) == encode(right):
+            continue
+        if isinstance(left, dict) and isinstance(right, dict):
+            for key in sorted(left.keys() | right.keys(), reverse=True):
+                escaped = key.replace('~', '~0').replace('/', '~1')
+                pending.append((path + '/' + escaped, left.get(key, missing), right.get(key, missing)))
+            continue
+        if isinstance(left, list) and isinstance(right, list):
+            for index in reversed(range(max(len(left), len(right)))):
+                pending.append((path + '/' + str(index), left[index] if index < len(left) else missing,
+                                right[index] if index < len(right) else missing))
+            continue
+        if len(changes) == max_changes:
+            truncated = True
+            break
+        change = {'path': path or '/', 'kind': 'added' if left is missing else 'removed' if right is missing else 'changed'}
+        if left is not missing:
+            change['before'] = left
+        if right is not missing:
+            change['after'] = right
+        changes.append(change)
+    equal = before['request_sha256'] == after['request_sha256']
+    return {'version': 'eval-request-diff-v1', 'baseline_request_sha256': before['request_sha256'],
+            'current_request_sha256': after['request_sha256'], 'same_request': equal,
+            'encoding_only': not equal and not changes and not truncated,
+            'changes': changes, 'truncated': truncated}
+
+
 def load_cached(path, request):
     try:
         with path.open('rb') as stream:
@@ -124,10 +188,11 @@ def compiler_document(compiler, entry, options, request_only, timeout):
     return validate(decode(result.stdout), request_only), diagnostics
 
 
-def evaluate(compiler, entry, cache_dir, options=(), timeout=90):
+def evaluate(compiler, entry, cache_dir, options=(), timeout=90, compare_to=None, max_changes=100):
     request, warnings = compiler_document(compiler, entry, options, True, timeout)
     if warnings:
         sys.stderr.write(warnings)
+    comparison = compare_requests(load_reference(compare_to), request, max_changes) if compare_to is not None else None
     path = cache_dir / (request['request_sha256'] + '.json')
     report, reason = load_cached(path, request)
     executed = report is None
@@ -138,9 +203,12 @@ def evaluate(compiler, entry, cache_dir, options=(), timeout=90):
         if report['request_sha256'] != request['request_sha256'] or report['request'] != request['request']:
             raise ValueError('inputs or compiler changed between request and evaluation; retry')
         store_cached(path, report)
-    return {'version': 'eval-cache-run-v1', 'cache': 'miss' if executed else 'hit',
+    outcome = {'version': 'eval-cache-run-v1', 'cache': 'miss' if executed else 'hit',
             'reason': reason, 'frontend': 'checked', 'vm': 'executed' if executed else 'skipped',
             'request_sha256': request['request_sha256'], 'result': report['result']}
+    if comparison is not None:
+        outcome['comparison'] = comparison
+    return outcome
 
 
 def positive(value):
@@ -165,11 +233,13 @@ def main():
     parser.add_argument('--max-frames', type=positive)
     parser.add_argument('--max-eval-bytes', type=positive)
     parser.add_argument('--timeout', type=positive_timeout, default=90)
+    parser.add_argument('--compare-to', type=Path)
+    parser.add_argument('--max-changes', type=positive, default='100')
     args = parser.parse_args()
     options = [f'--{name.replace("_", "-")}={getattr(args, name)}'
                for name in ('max_steps', 'max_frames', 'max_eval_bytes') if getattr(args, name) is not None]
     try:
-        result = evaluate(args.compiler, args.entry, args.cache_dir, options, args.timeout)
+        result = evaluate(args.compiler, args.entry, args.cache_dir, options, args.timeout, args.compare_to, int(args.max_changes))
         print(encode(result).decode('utf-8'))
         return 0
     except CompilerFailure as error:

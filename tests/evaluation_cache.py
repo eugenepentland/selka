@@ -27,14 +27,48 @@ def main():
             assert first['cache'] == 'miss' and first['vm'] == 'executed', first
             assert [call.args[3] for call in calls.call_args_list] == [True, False]
             calls.reset_mock()
-            second = cache.evaluate(compiler, entry, directory)
+            second = cache.evaluate(compiler, entry, directory, compare_to=directory / (first["request_sha256"] + ".json"))
             assert second['cache'] == 'hit' and second['vm'] == 'skipped', second
             assert second['result'] == {'type': 'i64', 'decimal': '7'}
+            assert second['comparison']['same_request'] and second['comparison']['changes'] == []
             assert [call.args[3] for call in calls.call_args_list] == [True], 'cache hit invoked evaluation'
         path = directory / (first['request_sha256'] + '.json')
         original = path.read_bytes()
         stored = cache.decode(original)
         request = {'request_sha256': first['request_sha256'], 'request': stored['report']['request']}
+        def modified(change):
+            document = copy.deepcopy(stored['report'])
+            change(document['request'])
+            document['request_sha256'] = cache.digest(document['request'])
+            return document
+
+        implementation = modified(lambda r: r['implementation'].update(compiler_sha256='f' * 64))
+        comparison = cache.compare_requests(stored['report'], implementation)
+        assert [c['path'] for c in comparison['changes']] == ['/implementation/compiler_sha256']
+        changed_fields = modified(lambda r: (r['budgets'].update(max_steps=1), r['implementation'].update(compiler_sha256='f' * 64)))
+        limited = cache.compare_requests(stored['report'], changed_fields, 1)
+        assert limited['truncated'] and len(limited['changes']) == 1
+        assert cache.compare_requests(stored['report'], changed_fields) == cache.compare_requests(stored['report'], changed_fields)
+        added = modified(lambda r: r['sources'].append({'module': 'helper', 'path': 'helper.my', 'sha256': 'a' * 64, 'bytes': 1, 'imports': []}))
+        comparison = cache.compare_requests(stored['report'], added)
+        assert {c['path'] for c in comparison['changes']} == {'/sources/helper', '/source_order/1'}
+        reverse = copy.deepcopy(added)
+        reverse['request']['sources'].reverse()
+        reverse['request_sha256'] = cache.digest(reverse['request'])
+        assert all(c['path'].startswith('/source_order/') for c in cache.compare_requests(added, reverse)['changes'])
+        assert any(c['kind'] == 'removed' and c['path'] == '/sources/helper' for c in cache.compare_requests(added, stored['report'])['changes'])
+        aliased = modified(lambda r: r['sources'][0]['imports'].append({'module': 'helper', 'alias': 'h'}))
+        assert cache.compare_requests(stored['report'], aliased)['changes'][0]['path'] == '/sources/main/imports/0'
+        reordered = copy.deepcopy(stored['report'])
+        reordered['request'] = dict(reversed(list(reordered['request'].items())))
+        reordered['request_sha256'] = cache.digest(reordered['request'])
+        assert cache.compare_requests(stored['report'], reordered)['encoding_only']
+        typed = modified(lambda r: r['budgets'].update(max_frames=True))
+        numeric = copy.deepcopy(typed)
+        numeric['request']['budgets']['max_frames'] = 1
+        numeric['request_sha256'] = cache.digest(numeric['request'])
+        assert cache.compare_requests(typed, numeric)['changes'][0]['path'] == '/budgets/max_frames'
+        assert cache.load_reference(path)['request_sha256'] == request['request_sha256']
         corruptions = [b'not json', b'{"version":1,"version":2}', b'[]']
         for field, value in [('decimal', '9223372036854775808'), ('decimal', '-0'), ('type', 'u64')]:
             corrupt = copy.deepcopy(stored)
@@ -65,11 +99,13 @@ def main():
         repaired = cache.evaluate(compiler, entry, directory)
         assert repaired['cache'] == 'miss' and repaired['reason'] == 'invalid-cache', repaired
         assert repaired['result']['decimal'] == '7'
-        budget = cache.evaluate(compiler, entry, directory, ['--max-steps=1000001'])
+        budget = cache.evaluate(compiler, entry, directory, ['--max-steps=1000001'], compare_to=path)
         assert budget['cache'] == 'miss' and budget['request_sha256'] != first['request_sha256']
+        assert [c['path'] for c in budget['comparison']['changes']] == ['/budgets/max_steps']
         entry.write_text('module main; fn main()->i64{return 8;}')
-        changed = cache.evaluate(compiler, entry, directory)
+        changed = cache.evaluate(compiler, entry, directory, compare_to=path)
         assert changed['cache'] == 'miss' and changed['result']['decimal'] == '8'
+        assert [c['path'] for c in changed['comparison']['changes']] == ['/sources/main/sha256']
         existing = {file.name: file.read_bytes() for file in directory.iterdir()}
         entry.write_text('module main; fn main()->i64{return true;}')
         try:
