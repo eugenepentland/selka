@@ -251,6 +251,11 @@ const Checker = struct {
                         try work.append(self.allocator, .{ .id = base });
                         continue;
                     },
+                    .external_read => |read| {
+                        try work.append(self.allocator, .{ .id = task.id, .emit = true });
+                        try work.append(self.allocator, .{ .id = read.capability });
+                        continue;
+                    },
                     .acquire_buffer => |acquire| {
                         try work.append(self.allocator, .{ .id = task.id, .emit = true });
                         try work.append(self.allocator, .{ .id = acquire.value });
@@ -336,6 +341,15 @@ const Checker = struct {
                         if (shape.ok_type != .bool or shape.error_type != .i64) return self.sink.fail("E_BUFFER_RESULT", result_type, "buffer mutation requires a result with bool success and i64 error payloads");
                     } else out.ty = if (operation.kind == .read) element else .u64;
                     out.data = .{ .buffer_operation = .{ .kind = operation.kind, .owner = owner, .arguments = arguments } };
+                },
+                .external_read => |read| {
+                    out.ty = try self.ty(read.ty);
+                    const shape = typed.resultShape(out.ty, self.catalog.records) orelse return self.sink.fail("E_EXTERNAL_RESULT", read.ty, "external reads require a declared result type");
+                    const expected: typed.Type = if (read.kind == .clock) .i64 else .u64;
+                    if (shape.ok_type != expected or shape.error_type != .i64) return self.sink.fail("E_EXTERNAL_RESULT", read.ty, "clock success must be i64, random success u64, and the error payload i64");
+                    const capability = self.resolved[@backingInt(read.capability)].?;
+                    try self.require(self.nodes.items[@backingInt(capability)].ty, if (read.kind == .clock) .clock_cap else .random_cap, self.syntax.nodes.items[@backingInt(read.capability)].span);
+                    out.data = .{ .external_read = .{ .kind = read.kind, .capability = capability } };
                 },
                 .acquire_buffer => |acquire| {
                     out.ty = try self.ty(acquire.ty);
@@ -560,7 +574,7 @@ const Checker = struct {
             }
             const consumed: usize = switch (out.data) {
                 .integer, .boolean, .local, .read_ref, .len_slice => 0,
-                .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate => 1,
+                .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .external_read => 1,
                 .acquire_buffer => 2,
                 .index, .binary => 2,
                 .replace => 3,
@@ -863,8 +877,14 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     }
     const main = checker.functions.get("main") orelse return sink.fail("E_MAIN", .{ .start = 0, .end = 0 }, "the program requires fn main() -> i64");
     const entry = program.functions[@backingInt(main)];
-    if (entry.parameters.len > 1 or entry.return_reference != null) return sink.fail("E_MAIN", entry.name, "main accepts no parameters or one allocator capability");
-    if (entry.parameters.len == 1 and (try checker.ty(entry.parameters[0].ty) != .allocator or entry.parameters[0].reference != null)) return sink.fail("E_MAIN", entry.name, "main accepts no parameters or one allocator capability");
+    if (entry.return_reference != null) return sink.fail("E_MAIN", entry.name, "main must return an i64 value");
+    var entry_capabilities: u8 = 0;
+    for (entry.parameters) |parameter| {
+        const index = (try checker.ty(parameter.ty)).capabilityIndex() orelse return sink.fail("E_MAIN", parameter.ty, "entry parameters must be capabilities");
+        const bit = @as(u8, 1) << index;
+        if (parameter.reference != null or entry_capabilities & bit != 0) return sink.fail("E_MAIN", parameter.name, "entry requests at most one value parameter of each capability kind");
+        entry_capabilities |= bit;
+    }
     if (try checker.ty(entry.return_type) != .i64) return sink.fail("E_TYPE", entry.return_type, "main must return i64");
     const functions = try allocator.alloc(typed.Function, program.functions.len);
     for (program.functions, functions, 0..) |function, *out, i| {

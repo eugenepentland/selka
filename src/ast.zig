@@ -18,6 +18,7 @@ pub const Node = struct {
         read_slice: struct { name: Span, index: NodeId },
         len_slice: Span,
         buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: Span, result: ?Span, arguments: []const NodeId },
+        external_read: struct { kind: @import("external_capabilities.zig").Kind, ty: Span, capability: NodeId },
         acquire_buffer: struct { ty: Span, allocator: NodeId, value: NodeId },
         cast: TypedValue,
         wrap: TypedValue,

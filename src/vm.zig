@@ -4,8 +4,9 @@ const bc = @import("bytecode.zig");
 const integers = @import("integers.zig");
 const typed = @import("typed.zig");
 const memory = @import("memory.zig");
+const external = @import("external_capabilities.zig");
 const Diagnostic = @import("diagnostic.zig").Diagnostic;
-pub const Options = struct { provide_allocator: bool = true, memory_statistics: ?*memory.Statistics = null, memory_limits: memory.Limits = .{}, max_steps: u64 = 10_000_000, max_frames: u64 = 1024 };
+pub const Options = struct { external: external.Providers = .{}, provide_allocator: bool = true, memory_statistics: ?*memory.Statistics = null, memory_limits: memory.Limits = .{}, max_steps: u64 = 10_000_000, max_frames: u64 = 1024 };
 pub const Result = union(enum) { value: i64, trap: Diagnostic };
 fn integer(value: typed.Value, allocator: std.mem.Allocator) error{InternalError}!i64 {
     defer value.release(allocator);
@@ -79,6 +80,8 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
         storage.deinit();
         if (options.memory_statistics) |statistics| statistics.* = storage.statistics;
     }
+    var external_runtime = external.Runtime.init(storage.identity, options.external);
+    defer external_runtime.close();
     var owners: std.AutoHashMapUnmanaged(usize, memory.Allocation) = .empty;
     defer owners.deinit(allocator);
     var references: std.ArrayList(?Reference) = .empty;
@@ -101,9 +104,14 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
     defer frames.deinit(allocator);
     try locals.resize(allocator, program.functions[@backingInt(program.main)].locals.len);
     @memset(locals.items, null);
-    if (program.functions[@backingInt(program.main)].parameter_count != 0) {
-        if (!options.provide_allocator) return error.CapabilityUnavailable;
-        locals.items[0] = .{ .allocator = try storage.allocatorCapability() };
+    const entry = program.functions[@backingInt(program.main)];
+    for (entry.locals[0..entry.parameter_count], 0..) |parameter, index| {
+        if (parameter.ty == .allocator) {
+            if (!options.provide_allocator) return error.CapabilityUnavailable;
+            locals.items[index] = .{ .allocator = try storage.allocatorCapability() };
+        } else {
+            locals.items[index] = .{ .external = try external_runtime.grant(parameter.ty.externalKind().?) };
+        }
     }
     try references.resize(allocator, program.functions[@backingInt(program.main)].references.len);
     @memset(references.items, null);
@@ -465,6 +473,24 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 releaseValues(arguments, allocator);
                 stack.shrinkRetainingCapacity(start);
                 try pushOwned(&stack, allocator, output);
+            },
+            .external_read => |read| {
+                const capability = try pop(&stack, frame.operand_base);
+                defer capability.release(allocator);
+                if (capability != .external) return error.InternalError;
+                var status: i64 = 0;
+                const sample = external_runtime.read(read.kind, capability.external) catch |err| sample: {
+                    status = switch (err) {
+                        error.Unavailable => 1,
+                        error.Denied => 2,
+                        error.Failed => 3,
+                        error.OutOfMemory => return error.OutOfMemory,
+                        error.InvalidCapability => return trap("R_CAPABILITY", "external capability has the wrong kind or execution identity", instruction.span, frames.items, program),
+                    };
+                    break :sample 0;
+                };
+                const shape = typed.resultShape(read.output, program.records).?;
+                try pushOwned(&stack, allocator, try typed.Value.createVariant(allocator, read.output, if (status == 0) shape.ok_tag else shape.error_tag, if (status == 0) typed.Value.number(shape.ok_type, sample) else .{ .i64 = status }));
             },
             .acquire_buffer => |ty| {
                 const capacity = try numeric(&stack, frame.operand_base, null, allocator);

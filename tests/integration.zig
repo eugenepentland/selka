@@ -405,3 +405,16 @@ test "CLI exposes explicit allocator parameters and rejects fabricated authority
     const invalid = "buffer B: i64; result R { ok: B, err: i64 } fn main() -> i64 { acknowledge acquire_buffer<R>(0, 1); return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "expected allocator, found i64");
 }
+
+test "CLI checks external capabilities but cannot silently grant ambient providers" {
+    const source = @embedFile("fixtures/external-capabilities.my");
+    try invoke("check", source, 0, "", "");
+    try invoke("run", source, 2, "", "host failure: CapabilityUnavailable");
+    const dumped = try runFixture("dump-bytecode", source, &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    for ([_][]const u8{ "EXTERNAL_clock", "EXTERNAL_random", "effects {clock, random}" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
+    const invalid = "result T { ok: i64, err: i64 } fn main(c: clock_cap) -> i64 effects() { acknowledge clock_now<T>(c); return 0; }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_EFFECT_BOUND]");
+}

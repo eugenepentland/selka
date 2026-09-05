@@ -11,8 +11,25 @@ pub const Type = enum(usize) {
     u32,
     u64,
     allocator,
+    clock_cap,
+    random_cap,
     _,
-    pub const record_base: usize = 10;
+    pub const record_base: usize = 12;
+    pub fn capabilityIndex(self: Type) ?u3 {
+        return switch (self) {
+            .allocator => 0,
+            .clock_cap => 1,
+            .random_cap => 2,
+            else => null,
+        };
+    }
+    pub fn externalKind(self: Type) ?@import("external_capabilities.zig").Kind {
+        return switch (self) {
+            .clock_cap => .clock,
+            .random_cap => .random,
+            else => null,
+        };
+    }
     pub const Integer = struct { bits: u7, signed: bool };
     pub fn integer(self: Type) ?Integer {
         return switch (self) {
@@ -62,10 +79,15 @@ pub const Value = union(enum) {
     aggregate: *Aggregate,
     resource: *Resource,
     allocator: @import("memory.zig").AllocatorCapability,
+    external: @import("external_capabilities.zig").Capability,
 
     pub fn typeOf(self: Value) Type {
         return switch (self) {
             .allocator => .allocator,
+            .external => |capability| switch (capability.kind) {
+                .clock => .clock_cap,
+                .random => .random_cap,
+            },
             .i64 => .i64,
             .bool => .bool,
             .integer => |n| n.ty,

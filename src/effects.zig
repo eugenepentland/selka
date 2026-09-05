@@ -64,6 +64,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
         while (try walker.next()) |item| if (item == .expression) {
             const node = program.nodes[@backingInt(item.expression)];
             switch (node.data) {
+                .external_read => |read| graph.direct(index, read.kind.effect(), node.span),
                 .acquire_buffer => graph.direct(index, .allocation, node.span),
                 .buffer_operation => |op| if (bufferAllocates(op.kind)) {
                     graph.direct(index, .allocation, node.span);
@@ -109,6 +110,7 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode.zig").P
     defer graph.deinit();
     for (program.functions, 0..) |function, index| {
         for (function.instructions) |instruction| switch (instruction.op) {
+            .external_read => |read| graph.direct(index, read.kind.effect(), instruction.span),
             .acquire_buffer => graph.direct(index, .allocation, instruction.span),
             .buffer_operation => |op| if (bufferAllocates(op.kind)) {
                 graph.direct(index, .allocation, instruction.span);

@@ -72,7 +72,7 @@ zig build run -- discover-duplicates examples/duplicates.my --timings
 It reports exact checked-function candidates after normalizing bound names,
 with source locations and advisory explanations. Ordinary compilation does not
 run it. See the [comparison contract and review](docs/experiments/duplicate-discovery.md).
-All 260 tests pass in Debug and ReleaseFast.
+All 271 tests pass in Debug and ReleaseFast.
 
 [Post-MVP tracking](docs/experiments/roadmap.md) records the remaining experiments.
 Records, complete construction, field access, preserving updates, and declarative
@@ -117,5 +117,8 @@ include checked mutations, queries, slices, and returned-view helpers;
 now reject direct or indirect guest allocation under `noalloc`; `examples/effects.my`
 returns 14. [Explicit allocator capabilities](docs/experiments/allocator-capabilities.md)
 now flow from the entry point through helper parameters; acquisition and reserve
-require them. `examples/allocator-capabilities.my` returns 3. External capabilities,
-operations/resources and their effects, and arenas/pools remain pending.
+require them. `examples/allocator-capabilities.my` returns 3.
+[Clock and randomness capabilities](docs/experiments/external-capabilities.md) now
+require injected host providers and contribute distinct transitive effects. The
+CLI checks their example but cannot run it without providers. Filesystem/network/
+environment operations, external resources and cleanup, and arenas/pools remain pending.

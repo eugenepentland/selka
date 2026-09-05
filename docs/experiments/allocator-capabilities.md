@@ -95,3 +95,8 @@ the capability operand and capability-bearing function signatures.
 Next: external capability parameters and fake implementations for filesystem,
 network, clock, randomness, and environment effects; external resource cleanup and
 fallible completion. Arenas/pools and the remaining roadmap tracks stay in scope.
+
+Clock and randomness grants are now implemented separately; see [external capability
+semantics](external-capabilities.md). Entry parameters may request each supported
+capability kind once in any order. The 260-test count above is this allocator
+milestone’s historical checkpoint.

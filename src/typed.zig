@@ -23,6 +23,7 @@ pub const Node = struct {
         read_slice: struct { reference: ReferenceId, index: NodeId },
         len_slice: ReferenceId,
         buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: LocalId, arguments: []const NodeId },
+        external_read: struct { kind: @import("external_capabilities.zig").Kind, capability: NodeId },
         acquire_buffer: struct { allocator: NodeId, capacity: NodeId },
         cast: NodeId,
         wrap: NodeId,

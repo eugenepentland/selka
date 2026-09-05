@@ -35,6 +35,7 @@ pub const Instruction = struct {
         read_ref: typed.ReferenceId,
         write_ref: typed.ReferenceId,
         buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: typed.LocalId, output: typed.Type },
+        external_read: struct { kind: @import("external_capabilities.zig").Kind, output: typed.Type },
         acquire_buffer: typed.Type,
         move_local: typed.LocalId,
         drop_local: typed.LocalId,
@@ -125,8 +126,14 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
         };
     }
     const main = program.functions[@backingInt(program.main)];
-    if (main.return_reference != null or main.parameter_count > 1 or main.return_type != .i64 or main.owner != null or main.restricted) return error.InternalError;
-    if (main.parameter_count == 1 and (main.locals.len == 0 or main.locals[0].ty != .allocator or main.locals[0].reference_parameter != null)) return error.InternalError;
+    if (main.return_reference != null or main.parameter_count > main.locals.len or main.return_type != .i64 or main.owner != null or main.restricted) return error.InternalError;
+    var entry_capabilities: u8 = 0;
+    for (main.locals[0..main.parameter_count]) |parameter| {
+        const index = parameter.ty.capabilityIndex() orelse return error.InternalError;
+        const bit = @as(u8, 1) << index;
+        if (parameter.reference_parameter != null or entry_capabilities & bit != 0) return error.InternalError;
+        entry_capabilities |= bit;
+    }
     for (program.functions, 0..) |function, i| {
         if (@backingInt(function.id) != i or function.instructions.len == 0) return error.InternalError;
         if (function.owner) |owner| {
@@ -214,6 +221,10 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     const shape = typed.resultShape(operation.output, program.records) orelse return error.InternalError;
                     if (shape.ok_type != .bool or shape.error_type != .i64) return error.InternalError;
                 } else if (operation.output != (if (operation.kind == .read) element else typed.Type.u64)) return error.InternalError;
+            },
+            .external_read => |read| {
+                const shape = typed.resultShape(read.output, program.records) orelse return error.InternalError;
+                if (shape.ok_type != (if (read.kind == .clock) typed.Type.i64 else typed.Type.u64) or shape.error_type != .i64) return error.InternalError;
             },
             .acquire_buffer => |ty| {
                 const shape = typed.resultShape(ty, program.records) orelse return error.InternalError;
@@ -387,7 +398,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (height < 2) return error.InternalError;
                     height -= 1;
                 },
-                .read_slice, .neg_i64_checked, .not_bool, .get_field, .cast_integer, .neg_integer, .array_length, .wrap_domain, .unwrap_domain => if (height == 0) {
+                .external_read, .read_slice, .neg_i64_checked, .not_bool, .get_field, .cast_integer, .neg_integer, .array_length, .wrap_domain, .unwrap_domain => if (height == 0) {
                     return error.InternalError;
                 },
                 .call, .call_refs, .call_borrow => {
@@ -437,7 +448,7 @@ fn validateIndices(allocator: std.mem.Allocator, indices: []const usize, count: 
 }
 
 fn validType(ty: typed.Type, program: Program) bool {
-    return ty.isInteger() or ty == .bool or ty == .allocator or (ty.isAggregate() and ty.recordIndex() < program.records.len);
+    return ty.isInteger() or ty == .bool or ty.capabilityIndex() != null or (ty.isAggregate() and ty.recordIndex() < program.records.len);
 }
 
 fn variantSchema(ty: typed.Type, program: Program) Error!typed.Variants {

@@ -77,6 +77,7 @@ test {
     _ = @import("buffers_test.zig");
     _ = @import("effects_test.zig");
     _ = @import("allocator_capabilities_test.zig");
+    _ = @import("external_capabilities_test.zig");
     _ = @import("references_test.zig");
     _ = @import("slices_test.zig");
     _ = @import("returned_references_test.zig");

@@ -221,6 +221,10 @@ const Emitter = struct {
                     try self.push(.{ .expression = operation.arguments[i] });
                 }
             },
+            .external_read => |read| {
+                try self.instruction(node.span, .{ .external_read = .{ .kind = read.kind, .output = node.ty } });
+                try self.push(.{ .expression = read.capability });
+            },
             .acquire_buffer => |acquire| {
                 try self.instruction(node.span, .{ .acquire_buffer = node.ty });
                 try self.push(.{ .expression = acquire.capacity });

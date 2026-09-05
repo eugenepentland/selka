@@ -166,7 +166,7 @@ input values cannot escape. The VM captures a valid result view, ends callee loa
 and reborrows the caller input for the receiving scope. See
 [returned-reference semantics](experiments/returned-references.md) and
 [B acceptance](experiments/b-audit.md). This completes the restricted borrowing
-experiment; buffer acquisition/moves are now supported separately, while explicit capabilities and external effects remain pending.
+experiment; buffer acquisition/moves are now supported separately, with allocator and clock/random capabilities described below.
 
 
 Nominal `result Name { ok: T, err: E }` declarations and explicit `acknowledge`
@@ -192,8 +192,8 @@ clean up at block/match exits, return, and propagated failure. Results retain th
 explicit handling obligations. See [source ownership semantics and current limits](experiments/owned-buffers.md).
 [Buffer operations and views](experiments/buffer-operations.md) now provide length/capacity
 queries, retained reads, typed mutation statuses, and borrowed slices that work with
-existing slice helpers and returned-view contracts. Explicit capabilities/external
-effects and arenas/pools remain pending.
+existing slice helpers and returned-view contracts. Allocator and clock/random capabilities are described below; further external
+operations and arenas/pools remain pending.
 
 
 Function annotations `noalloc`, `noio`, and `effects(...)` bound inferred effects.
@@ -202,12 +202,18 @@ cleanup do not. Calls propagate effects to a fixed point, including recursion.
 `noalloc` constrains guest backing allocation rather than host VM bookkeeping;
 `noio` excludes filesystem/network access without promising determinism.
 [Effect semantics and limits](experiments/effects.md) define the complete current
-contract. External capability operations and their cleanup effects remain pending.
+contract. Clock/random operations are described below; external resource cleanup remains pending.
 
 
 The opaque `allocator` capability is supplied only to a requesting entry parameter.
 Helpers receive it explicitly; acquisition and reserve require it, and copies share
 the same execution quotas. Numeric casts and effect declarations cannot manufacture
 capabilities. The embedding runtime can deny provisioning. See [allocator authority
-semantics](experiments/allocator-capabilities.md). External capabilities and resource
-completion/cleanup effects remain pending.
+semantics](experiments/allocator-capabilities.md).
+
+Opaque `clock_cap` and `random_cap` entry grants authorize `clock_now<R>(cap)`
+and `random_u64<R>(cap)`. Their declared results carry i64/u64 success and i64
+errors. Grants require injected host providers; the CLI provides neither. Reads
+contribute distinct transitive effects, allowed under `noio` and `noalloc` without
+promising determinism. See [provider contracts and limits](experiments/external-capabilities.md).
+Filesystem/network/environment and external resource completion/cleanup remain pending.

@@ -633,3 +633,28 @@ trusted entry boundary and current single-store limit. External capabilities and
 operations/resources, cleanup/completion effects, attenuation, arenas/pools, and all
 other unfinished roadmap work remain pending. C is not complete. Guardian gates
 were not exercised; hosted CI has not run. The full roadmap goal remains active.
+
+
+## 2026-09-05: C injected clock and randomness capabilities
+
+Implemented opaque clock/random entry grants, explicit forwarding through ordinary
+values and wrappers, typed recoverable read results, and transitive external effect
+inference. Synchronous host providers are injected per execution; absent grants
+fail before guest code runs and never fall back to process-wide APIs. Capabilities
+retain kind and execution identity, and invalid grants cannot invoke callbacks.
+
+271 tests pass in Debug and ReleaseFast (241 core, 30 actual CLI). Acceptance covers
+full-width samples, signed boundaries, denied/unused grants, authority fabrication,
+effect bounds, malformed emission, short-circuit skipping, recoverable provider
+errors and host OOM with owned cleanup, allocation-failure sweeps, and 10,000 reads
+within 16 KiB live runtime storage. The CLI checks/dumps the external-capability
+fixture and explicitly denies execution without providers. Formatting/whitespace
+checks pass. Discovery is exact-v18.
+
+[External capability semantics](experiments/external-capabilities.md) documents the
+trusted host callback contract, error codes, wall-clock units, entropy quality,
+and nontransactional observations. Noio/noalloc do not imply determinism. Filesystem,
+network, environment, external resources and completion/cleanup, attenuation,
+arenas/pools, and every other unfinished roadmap track remain pending. C is not
+complete. Guardian gates were not exercised; hosted CI has not run. The full
+roadmap goal remains active.

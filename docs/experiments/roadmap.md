@@ -10,7 +10,7 @@ not a claim that the full future language has been delivered.
 | A1, aggregates and complete conversions | Implemented: records, construction, fields, preserving updates, complete conversions, integer widths/casts, fixed arrays, checked indexing | A1 acceptance passes; carry the immutable value semantics into A2. |
 | A2, nominal domains and exhaustive mappings | Implemented: domains/private construction, closed enums/tagged unions, exhaustive matching, and complete enum-indexed tables | A2 unit, privacy, added-variant match/table, and explicit unknown-code handling experiments pass. |
 | B, borrowing | Implemented: memory/lease registry, scoped references, reference/slice parameters, bounded views, and explicit returned-reference provenance | B acceptance passes; carry borrowing and snapshot rules into resource ownership. |
-| C, ownership/capabilities/effects | Owned buffers, queries/mutations, checked views, moves/wrappers, and partial-construction cleanup, and transitive allocation bounds, and explicit allocator capabilities implemented; external capabilities/effects and arenas/pools pending | Allocator authority and allocation bounds pass acceptance; add external capabilities and operations/cleanup effects. |
+| C, ownership/capabilities/effects | Owned buffers, queries/mutations, checked views, moves/wrappers, and partial-construction cleanup, and transitive allocation bounds, and explicit allocator capabilities implemented; clock/random capabilities and effects implemented; filesystem/network/environment, external resources, and arenas/pools pending | Allocator and clock/random authority/effects pass acceptance; add filesystem/network/environment and external resource completion/cleanup. |
 | D, errors and abstraction | In progress: typed results, checked handling/transfer, acknowledgement, and propagation implemented; generics/handles pending | Require handling/propagation/explicit acknowledgement without erasing evaluation or ownership obligations. |
 | M, modules/interfaces | Pending a multi-file domain program | Resolve imports/exports and private boundaries; distinguish optional direction policy from type validity. |
 | E, native execution | Pending one concrete backend choice | Run the same scalar semantic/trap fixtures through the VM and native route. |
@@ -39,7 +39,7 @@ transformed, or discarded by name. The check establishes accounting, not the
 correctness of the conversion's arithmetic.
 
 Record construction, update, declarative conversions, and fixed arrays are
-implemented. Scoped borrowing, reference parameters, and bounded slices are implemented; transitive allocation bounds now pass, while explicit capabilities/external effects remain pending.
+implemented. Scoped borrowing, reference parameters, and bounded slices are implemented; transitive allocation bounds now pass, while allocator and clock/random capabilities now pass; further external operations remain pending.
 
 The [A1 experiment record](aggregates.md) describes the implemented storage
 foundation, record frontend, integer widths, and completed array work.
@@ -65,4 +65,4 @@ lifetime contracts are implemented; [the B audit](b-audit.md) records acceptance
 minimal error-value foundation for C/D. They preserve obligations through binding,
 wrapping, and helper calls, with exhaustive handling or explicit acknowledgement.
 [Propagation](propagation.md) now checks early-return obligations and borrow
-cleanup. [Owned-buffer transfers and partial-acquisition cleanup](ownership.md) now have backend acceptance evidence. [Source ownership and recoverable acquisition](owned-buffers.md) now integrate that cleanup into the VM; [buffer operations/views](buffer-operations.md) now pass acceptance. [Transitive allocation bounds](effects.md) now pass acceptance. [Explicit allocator capabilities](allocator-capabilities.md) now pass acceptance. External capabilities and operations/cleanup effects are next.
+cleanup. [Owned-buffer transfers and partial-acquisition cleanup](ownership.md) now have backend acceptance evidence. [Source ownership and recoverable acquisition](owned-buffers.md) now integrate that cleanup into the VM; [buffer operations/views](buffer-operations.md) now pass acceptance. [Transitive allocation bounds](effects.md) now pass acceptance. [Explicit allocator capabilities](allocator-capabilities.md) now pass acceptance. [Clock/random capability operations](external-capabilities.md) now pass acceptance. Filesystem/network/environment and external resource completion/cleanup effects remain next.

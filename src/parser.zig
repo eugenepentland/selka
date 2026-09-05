@@ -43,7 +43,7 @@ pub const Parser = struct {
             try self.array_types.append(self.allocator, .{ .span = span, .index = index, .element = element });
             return span;
         }
-        if (self.take(.kw_i64) or self.take(.kw_bool) or self.take(.kw_i8) or self.take(.kw_i16) or self.take(.kw_i32) or self.take(.kw_u8) or self.take(.kw_u16) or self.take(.kw_u32) or self.take(.kw_u64) or self.take(.kw_allocator) or self.take(.ident)) return token.span;
+        if (self.take(.kw_i64) or self.take(.kw_bool) or self.take(.kw_i8) or self.take(.kw_i16) or self.take(.kw_i32) or self.take(.kw_u8) or self.take(.kw_u16) or self.take(.kw_u32) or self.take(.kw_u64) or self.take(.kw_allocator) or self.take(.kw_clock_cap) or self.take(.kw_random_cap) or self.take(.ident)) return token.span;
         return self.sink.fail("E_TYPE", token.span, "expected a built-in, declared, fixed array, or enum-indexed table type");
     }
     pub fn parse(self: *Parser) diagnostic.Error!ast.Program {
@@ -361,6 +361,16 @@ pub const Parser = struct {
                 }
                 const close = try self.expect(.rparen);
                 break :buffer try self.append(.{ .span = .join(token.span, close.span), .data = .{ .buffer_operation = .{ .kind = kind, .owner = owner.span, .result = result, .arguments = arguments } } });
+            },
+            .kw_clock_now, .kw_random_u64 => external: {
+                self.pos += 1;
+                _ = try self.expect(.lt);
+                const ty = try self.typeName();
+                _ = try self.expect(.gt);
+                _ = try self.expect(.lparen);
+                const capability = try self.expression(0);
+                const close = try self.expect(.rparen);
+                break :external try self.append(.{ .span = .join(token.span, close.span), .data = .{ .external_read = .{ .kind = if (token.tag == .kw_clock_now) .clock else .random, .ty = ty, .capability = capability } } });
             },
             .kw_read_slice => read: {
                 self.pos += 1;
