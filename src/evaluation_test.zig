@@ -57,8 +57,22 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
     defer c.deinit();
     try c.emit();
     try t.expectEqual(@as(i64, 7), (try evaluate(allocator, &c, .{})).value);
+    var sink: language.diagnostic.Sink = .{ .allocator = c.arena.allocator() };
+    try t.expectEqual(null, try eval.preflight(allocator, c.code.?, &sink, .{}));
 }
 test "restricted evaluator releases host storage through allocation failures" {
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), allocationScenario, .{});
+}
+
+test "evaluation preflight validates eligibility without executing traps or nontermination" {
+    for ([_][]const u8{ "fn main()->i64{return 1/0;}", "fn main()->i64{return main();}" }) |text| {
+        var c = try language.Compilation.init(t.allocator, "preflight.my", text);
+        defer c.deinit();
+        try c.emit();
+        var sink: language.diagnostic.Sink = .{ .allocator = c.arena.allocator() };
+        try t.expectEqual(null, try eval.preflight(t.allocator, c.code.?, &sink, .{ .max_steps = 1, .max_frames = 1 }));
+        const failure = (try eval.preflight(t.allocator, c.code.?, &sink, .{ .max_bytes = 1 })).?;
+        try t.expectEqualStrings("R_EVAL_MEMORY", failure.code);
+    }
 }

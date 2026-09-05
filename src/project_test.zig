@@ -175,8 +175,15 @@ fn reportScenario(allocator: std.mem.Allocator) !void {
     try project.load(files.provider(), "main", .{});
     const text = try receipts.render(allocator, &project, -9223372036854775808, .{}, report_identity);
     defer allocator.free(text);
+    const request = try receipts.renderRequest(allocator, &project, .{}, report_identity);
+    defer allocator.free(request);
+    const request_json = try std.json.parseFromSlice(std.json.Value, allocator, request, .{});
+    defer request_json.deinit();
+    try t.expectEqualStrings("not-executed", request_json.value.object.get("evaluation").?.string);
+    try t.expect(!request_json.value.object.contains("result"));
     const parsed = try std.json.parseFromSlice(std.json.Value, allocator, text, .{});
     defer parsed.deinit();
+    try t.expectEqualStrings(request_json.value.object.get("request_sha256").?.string, parsed.value.object.get("request_sha256").?.string);
     const sources = parsed.value.object.get("request").?.object.get("sources").?.array.items;
     try t.expectEqual(@as(usize, 4), sources.len);
     try t.expectEqualStrings("shared.data", sources[0].object.get("module").?.string);

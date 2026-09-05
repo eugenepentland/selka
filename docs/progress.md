@@ -1700,3 +1700,28 @@ incremental rebuild savings. External input manifests, schemas/generated binding
 invalidation/cache reuse, target layouts, generics, wider native support, ordinary
 program review, and all other unfinished roadmap work remain pending. Guardian was
 not exercised and hosted CI has not run. The full roadmap goal remains active.
+
+## 2026-09-05: Evaluation request identity before execution
+
+Added eval-project --evaluation-request and an embedding preflight API. The shared
+preparation path validates bytecode within the evaluation allocation quota and checks
+entry authority/effects, stopping before the VM runner. The output explicitly says
+not-executed, omits a result, and shares the request encoding/digest with successful
+evaluation receipts. Report/request flags are mutually exclusive in both orders.
+
+516 Zig tests pass in Debug and ReleaseFast (459 core, 57 CLI). Tests prove that
+trapping and recursive entries can produce eligible requests with one instruction
+and one frame, without claiming execution success. Type/authority/effect/quota
+rejections retain their diagnostics and empty stdout. Request/report identity parity,
+absence of fabricated results, shared dependency encoding, and allocation-failure
+cleanup pass. The independent Python receipt driver checks actual CLI parity and
+request generation for a trapping imported function.
+
+All 12 build steps pass in both modes, including eight verification-driver tests,
+module/duplicate scaling, and 392 VM/native comparisons per host mode. Formatting
+and whitespace checks pass. The report contract, README, roadmap, and attached plan
+now describe request-only eligibility and its limits. This provides the lookup input
+for cache reuse; persistent caching, invalidation/rebuild explanations, external
+input manifests, schemas/generation, generics, wider native operations, and other
+unfinished roadmap work remain pending. Guardian was not exercised; hosted CI has
+not run. The full roadmap goal remains active.

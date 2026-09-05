@@ -9,15 +9,18 @@ import subprocess
 import tempfile
 
 
-def invoke(compiler, entry, *options, status=0):
-    result = subprocess.run([compiler, 'eval-project', str(entry), '--evaluation-report', *options],
+def invoke(compiler, entry, *options, status=0, request=False):
+    flag = '--evaluation-request' if request else '--evaluation-report'
+    result = subprocess.run([compiler, 'eval-project', str(entry), flag, *options],
                             text=True, capture_output=True, timeout=90)
     assert result.returncode == status, (result.returncode, result.stderr)
     if status:
         assert result.stdout == '', result.stdout
         return result
     report = json.loads(result.stdout)
-    assert report['version'] == 'eval-report-v1', report
+    assert report['version'] == ('eval-request-document-v1' if request else 'eval-report-v1'), report
+    if request:
+        assert report['evaluation'] == 'not-executed' and 'result' not in report, report
     encoded = json.dumps(report['request'], ensure_ascii=False, separators=(',', ':')).encode()
     assert report['request_sha256'] == hashlib.sha256(encoded).hexdigest(), report
     return report
@@ -36,6 +39,9 @@ def main():
         helper.write_text('module helper; export value; fn value()->i64{return 9223372036854775807;}\n')
         first = invoke(compiler, entry)
         assert first == invoke(compiler, entry), 'nondeterministic report'
+        planned = invoke(compiler, entry, request=True)
+        assert planned['request'] == first['request']
+        assert planned['request_sha256'] == first['request_sha256']
         request = first['request']
         assert request['version'] == 'eval-request-v1'
         assert request['entry'] == 'main'
@@ -71,10 +77,12 @@ def main():
         assert aliased['result'] == first['result']
         assert aliased['request']['sources'][1]['imports'][0]['alias'] == 'other'
         helper.write_text('module helper; export value; fn value()->i64{return 1/0;}')
+        invoke(compiler, entry, '--max-steps=1', request=True)
         assert 'R_DIVISION_BY_ZERO' in invoke(compiler, entry, status=1).stderr
         assert 'R_EVAL_MEMORY' in invoke(compiler, entry, '--max-eval-bytes=1', status=1).stderr
         helper.write_text('module helper; export value; fn value()->i64{return true;}')
         invoke(compiler, entry, status=1)
+        invoke(compiler, entry, status=1, request=True)
         print('evaluation receipts: canonical request hash, executable/source identities, '
               'exact i64, relocation, dependency/budget mutations, and failure suppression passed')
 

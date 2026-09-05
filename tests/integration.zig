@@ -938,3 +938,20 @@ test "CLI restricted project evaluation preserves values and enforces budgets an
     try invokeOptions("run-project", "module input; fn main()->i64{return 7;}", &.{"--evaluation-report"}, 2, "", "usage:");
     try invokeOptions("eval-project", "module input; fn main()->i64{return 7;}", &.{ "--evaluation-report", "--evaluation-report" }, 2, "", "usage:");
 }
+
+test "CLI evaluation request checks eligibility without running the entry" {
+    const infinite = "module input; fn main()->i64{return main();}";
+    const result = try runFixture("eval-project", infinite, &.{ "--evaluation-request", "--max-steps=1", "--max-frames=1" });
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    const parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, result.stdout, .{});
+    defer parsed.deinit();
+    try testing.expectEqualStrings("not-executed", parsed.value.object.get("evaluation").?.string);
+    try testing.expect(!parsed.value.object.contains("result"));
+    try invokeOptions("eval-project", "module input; fn main(heap:allocator)->i64{discard heap;return 7;}", &.{"--evaluation-request"}, 1, "", "E_EVAL_INPUT");
+    try invokeOptions("eval-project", "module input; result T{ok:i64,err:i64} fn main(c:clock_cap)->i64{acknowledge clock_now<T>(c);return 7;}", &.{"--evaluation-request"}, 1, "", "E_EVAL_EFFECT");
+    try invokeOptions("eval-project", infinite, &.{ "--evaluation-request", "--max-eval-bytes=1" }, 1, "", "R_EVAL_MEMORY");
+    for ([_][]const []const u8{ &.{ "--evaluation-request", "--evaluation-report" }, &.{ "--evaluation-report", "--evaluation-request" }, &.{ "--evaluation-request", "--evaluation-request" } }) |options| try invokeOptions("eval-project", infinite, options, 2, "", "usage:");
+    try invokeOptions("run-project", infinite, &.{"--evaluation-request"}, 2, "", "usage:");
+}

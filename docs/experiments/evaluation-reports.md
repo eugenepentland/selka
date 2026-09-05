@@ -66,3 +66,30 @@ source-only edits, alias edits, and suppression of reports on source/runtime/mem
 failures. Unit tests cover shared dependency membership, minimum-i64 output, changed
 compiler identity, invalid inputs, and every allocation failure through rendering and
 parsing with cleanup. Both Debug and ReleaseFast run the driver in zig build test.
+
+## Request identity before execution
+
+`eval-project --evaluation-request` loads, checks, and lowers the project, validates
+bytecode within the evaluation allocation budget, and checks the same entry authority
+and transitive effect restrictions. It then emits eval-request-document-v1 with
+`evaluation: "not-executed"`, the request, and its digest. There is no result field.
+The request encoding and digest are identical to those in a successful evaluation
+receipt for the same sources, compiler executable, and budgets.
+
+This mode does not run the entry or establish that execution will terminate, fit its
+budgets, or avoid guest traps. A recursive entry or division by zero can produce an
+eligible request. Type errors, forbidden authority/effects, and insufficient bytecode
+validation allocation space still reject without partial JSON. Step/frame limits
+are recorded but not consumed by guest execution. Report and request flags are
+mutually exclusive, and duplicate/wrong-command flags reject as usage errors.
+
+The embedding `evaluation.preflight` returns null for eligibility or a validation
+budget diagnostic, with semantic and host errors retaining their existing channels.
+It shares the evaluator's preparation path, stopping before the VM runner. Request
+rendering and successful report rendering share their encoding implementation.
+
+Tests establish request/report digest equality, absence of a fabricated result,
+request generation for trapping/nonterminating programs even at one instruction and
+one frame, unchanged authority rejection, allocation-failure cleanup, and option
+exclusivity in both orders. This supplies the lookup input for future cache reuse;
+there is still no persistent cache or incremental compilation in this command.

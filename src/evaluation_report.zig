@@ -6,6 +6,12 @@ pub const Identity = struct { compiler_sha256: [32]u8, zig_version: []const u8, 
 const Import = struct { module: []const u8, alias: []const u8 };
 const Input = struct { module: []const u8, path: []const u8, sha256: []const u8, bytes: usize, imports: []const Import };
 pub fn render(allocator: std.mem.Allocator, graph: *const project.Project, value: i64, options: evaluation.Options, identity: Identity) ![]u8 {
+    return renderInner(allocator, graph, value, options, identity);
+}
+pub fn renderRequest(allocator: std.mem.Allocator, graph: *const project.Project, options: evaluation.Options, identity: Identity) ![]u8 {
+    return renderInner(allocator, graph, null, options, identity);
+}
+fn renderInner(allocator: std.mem.Allocator, graph: *const project.Project, value: ?i64, options: evaluation.Options, identity: Identity) ![]u8 {
     if (!graph.complete or graph.problem != null or graph.modules.items.len == 0) return error.IncompleteProject;
     if (options.max_steps == 0 or options.max_frames == 0 or options.max_bytes == 0) return error.InvalidBudget;
     var arena = std.heap.ArenaAllocator.init(allocator);
@@ -37,10 +43,16 @@ pub fn render(allocator: std.mem.Allocator, graph: *const project.Project, value
     const canonical = try std.json.Stringify.valueAlloc(scratch, request, .{});
     var digest: [32]u8 = undefined;
     std.crypto.hash.sha2.Sha256.hash(canonical, &digest, .{});
+    if (value == null) return std.json.Stringify.valueAlloc(allocator, .{
+        .version = "eval-request-document-v1",
+        .evaluation = "not-executed",
+        .request_sha256 = try std.fmt.allocPrint(scratch, "{s}", .{std.fmt.bytesToHex(digest, .lower)}),
+        .request = request,
+    }, .{});
     return std.json.Stringify.valueAlloc(allocator, .{
         .version = "eval-report-v1",
         .request_sha256 = try std.fmt.allocPrint(scratch, "{s}", .{std.fmt.bytesToHex(digest, .lower)}),
         .request = request,
-        .result = .{ .type = "i64", .decimal = try std.fmt.allocPrint(scratch, "{d}", .{value}) },
+        .result = .{ .type = "i64", .decimal = try std.fmt.allocPrint(scratch, "{d}", .{value.?}) },
     }, .{});
 }

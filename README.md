@@ -255,3 +255,6 @@ generation and incremental caching remain pending.
 
 Use `eval-project --evaluation-report` for a JSON [dependency receipt](docs/experiments/evaluation-reports.md)
 containing the exact result, source/import hashes, budgets, and running compiler identity.
+
+`eval-project --evaluation-request` computes the same request identity after checking
+eligibility, without executing the entry or claiming a result.
