@@ -125,5 +125,12 @@ Nominal scalar domains are implemented: `domain Name: Scalar { ... }`, qualified
 factory/accessor functions, `private fn`, and owner-restricted `wrap<Domain>` /
 `unwrap` operations. Domain values do not implicitly convert to their backing
 scalar or other domains. See [domain semantics](experiments/domains.md) for the
-representation boundary, visibility, and runtime costs. Enums, tagged unions,
-exhaustive matching, and enum-indexed tables remain pending A2 work.
+representation boundary, visibility, and runtime costs.
+
+
+Closed `enum` and tagged `union` declarations, explicit `new Type.variant`
+construction, and exhaustive `match` statements are implemented. Payload access
+requires a typed arm binding or explicit payload discard. Enum equality retains
+nominal identity. See [variant semantics](experiments/variants.md) for grammar,
+control flow, storage, and added-variant guarantees. Complete enum-indexed tables
+remain pending in A2.

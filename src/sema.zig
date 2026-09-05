@@ -105,6 +105,13 @@ const Checker = struct {
             const minimum_literal = try self.minimum(node);
             if (!task.emit and minimum_literal == null) {
                 switch (node.data) {
+                    .variant => |variant| {
+                        if (variant.value) |value| {
+                            try work.append(self.allocator, .{ .id = task.id, .emit = true });
+                            try work.append(self.allocator, .{ .id = value });
+                            continue;
+                        }
+                    },
                     .array => |array| {
                         try work.append(self.allocator, .{ .id = task.id, .emit = true });
                         var i = array.values.len;
@@ -181,6 +188,15 @@ const Checker = struct {
                 out.ty = parsed.ty;
                 out.data = .{ .integer = parsed.value };
             } else switch (node.data) {
+                .variant => |variant| {
+                    out.ty = try self.ty(variant.ty);
+                    const tag = try self.catalog.variant(out.ty, self.src, variant.name, self.sink);
+                    const schema = (try self.catalog.variants(out.ty, node.span, self.sink)).cases[tag];
+                    const value = if (variant.value) |input| self.resolved[@backingInt(input)].? else null;
+                    if ((schema.payload != null) != (value != null)) return self.sink.failRelated("E_VARIANT_PAYLOAD", node.span, "construction must supply exactly the payload declared for this variant", .{ .span = schema.declaration, .message = "variant declared here" });
+                    if (value) |input| try self.require(self.nodes.items[@backingInt(input)].ty, schema.payload.?, self.syntax.nodes.items[@backingInt(variant.value.?)].span);
+                    out.data = .{ .variant = .{ .tag = tag, .value = value } };
+                },
                 .array => |array| {
                     out.ty = try self.ty(array.ty);
                     const schema = try self.catalog.array(out.ty, array.ty, self.sink);
@@ -309,7 +325,7 @@ const Checker = struct {
                             out.ty = .bool;
                         },
                         .eq, .ne => {
-                            if (!lt.isInteger() and lt != .bool) return self.sink.fail("E_TYPE", b.op_span, "aggregate equality is not defined; compare the relevant elements explicitly");
+                            if (!lt.isInteger() and lt != .bool and !(lt.isAggregate() and self.catalog.records[lt.recordIndex()].isEnum())) return self.sink.fail("E_TYPE", b.op_span, "aggregate equality is not defined; compare the relevant elements explicitly");
                             out.ty = .bool;
                         },
                         .lt, .le, .gt, .ge => {
@@ -351,6 +367,43 @@ const Checker = struct {
                     try checked.append(self.allocator, result.id);
                 }
                 break :block .{ .block = try checked.toOwnedSlice(self.allocator) };
+            },
+            .match => |match| match: {
+                const value = try self.expression(match.value);
+                const value_type = self.nodes.items[@backingInt(value)].ty;
+                const variants = try self.catalog.variants(value_type, stmt.span, self.sink);
+                const seen = try self.allocator.alloc(?source.Span, variants.cases.len);
+                @memset(seen, null);
+                const arms = try self.allocator.alloc(typed.MatchArm, match.arms.len);
+                terminates = true;
+                for (match.arms, arms) |arm, *out_arm| {
+                    try self.require(try self.ty(arm.ty), value_type, arm.ty);
+                    const tag = try self.catalog.variant(value_type, self.src, arm.name, self.sink);
+                    if (seen[tag]) |previous| return self.sink.failRelated("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm", .{ .span = previous, .message = "previous arm" });
+                    seen[tag] = arm.name;
+                    const payload = variants.cases[tag].payload;
+                    if ((payload != null) != (arm.binding != null or arm.discard_payload)) return self.sink.failRelated("E_PATTERN_PAYLOAD", arm.name, "payload variants require a binding or (discard); empty variants take neither", .{ .span = variants.cases[tag].declaration, .message = "variant declared here" });
+                    const first_local = self.locals.items.len;
+                    defer for (self.locals.items[first_local..]) |local| {
+                        _ = self.active.remove(local.name);
+                    };
+                    var slot: ?typed.LocalId = null;
+                    if (arm.binding) |binding| {
+                        const name = self.src.text(binding);
+                        if (self.functions.contains(name) or self.catalog.names.contains(name) or self.active.contains(name)) return self.sink.fail("E_SHADOWING", binding, "payload binding shadows an active binding or top-level name");
+                        slot = @fromBackingInt(self.locals.items.len);
+                        try self.locals.append(self.allocator, .{ .name = name, .declaration = binding, .ty = payload.?, .mutable = false });
+                        try self.active.put(self.allocator, name, slot.?);
+                    }
+                    const body = try self.statement(arm.body);
+                    terminates = terminates and body.terminates;
+                    out_arm.* = .{ .tag = tag, .slot = slot, .body = body.id };
+                }
+                for (seen, variants.cases) |covered, variant| if (covered == null) {
+                    const message = try std.fmt.allocPrint(self.allocator, "match does not handle variant `{s}`; every variant requires an explicit arm", .{variant.name});
+                    return self.sink.failRelated("E_INCOMPLETE_MATCH", stmt.span, message, .{ .span = variant.declaration, .message = "unhandled variant declared here" });
+                };
+                break :match .{ .match = .{ .value = value, .arms = arms } };
             },
             .discard => |expr| .{ .discard = try self.expression(expr) },
             .branch => |branch| branch: {
@@ -422,7 +475,7 @@ fn warningLess(_: void, a: diagnostic.Diagnostic, b: diagnostic.Diagnostic) bool
 pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!typed.Program {
     const resolved = try allocator.alloc(?typed.NodeId, program.nodes.items.len);
     @memset(resolved, null);
-    const catalog = try records.collect(allocator, src, program.records, program.domains, program.array_types, sink);
+    const catalog = try records.collect(allocator, src, program.records, program.domains, program.variants, program.array_types, sink);
     var checker: Checker = .{ .allocator = allocator, .src = src, .syntax = program, .sink = sink, .resolved = resolved, .catalog = catalog };
     for (program.functions, 0..) |function, i| {
         const name = try functionName(allocator, src, function.owner, function.name);

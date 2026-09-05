@@ -1,8 +1,9 @@
 # A2: nominal scalar domains and private construction
 
 Status: domain types, qualified functions, private helpers, and representation
-access checks are implemented. Closed enums, tagged unions, exhaustive matching,
-and complete enum-indexed tables remain pending A2 work.
+access checks are implemented. [Closed enums, tagged unions, and exhaustive
+matching](variants.md) are also implemented. Complete enum-indexed tables remain
+pending A2 work.
 
 ## Syntax and access
 

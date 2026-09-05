@@ -3,7 +3,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 
-pub const version = "exact-v5";
+pub const version = "exact-v6";
 pub const Population = enum { production, tests, generated, reference, intentional };
 pub const Options = struct { min_nodes: usize = 8, population: Population = .production };
 pub const Group = struct { members: []const typed.FunctionId, nodes: usize };
@@ -44,6 +44,10 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                 const node = program.nodes[@backingInt(id)];
                 writer.print("expr {s} {s}\n", .{ typed.typeName(node.ty, program.records), @tagName(node.data) }) catch return error.OutOfMemory;
                 switch (node.data) {
+                    .variant => |variant| {
+                        writer.print("variant {s}\n", .{program.records[node.ty.recordIndex()].variants.?.cases[variant.tag].name}) catch return error.OutOfMemory;
+                        if (variant.value) |value| try work.append(allocator, .{ .expression = value });
+                    },
                     .array => |values| {
                         writer.print("elements {d}\n", .{values.len}) catch return error.OutOfMemory;
                         var i = values.len;
@@ -122,6 +126,18 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                     .initialize, .assign => |store| {
                         writer.print("slot {d}\n", .{@backingInt(store.slot)}) catch return error.OutOfMemory;
                         try work.append(allocator, .{ .expression = store.value });
+                    },
+                    .match => |match| {
+                        const ty = program.nodes[@backingInt(match.value)].ty;
+                        const variants = program.records[ty.recordIndex()].variants.?;
+                        writer.print("arms {d}\n", .{match.arms.len}) catch return error.OutOfMemory;
+                        for (match.arms) |arm| writer.print("case {s} slot {?d}\n", .{ variants.cases[arm.tag].name, if (arm.slot) |slot| @as(?usize, @backingInt(slot)) else null }) catch return error.OutOfMemory;
+                        var i = match.arms.len;
+                        while (i > 0) {
+                            i -= 1;
+                            try work.append(allocator, .{ .statement = match.arms[i].body });
+                        }
+                        try work.append(allocator, .{ .expression = match.value });
                     },
                     .branch => |branch| {
                         writer.print("else {}\n", .{branch.else_body != null}) catch return error.OutOfMemory;

@@ -159,6 +159,41 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 const schema = program.records[ty.recordIndex()].array orelse return error.InternalError;
                 try stack.append(allocator, typed.Value.number(.u64, schema.length));
             },
+            .make_variant => |variant| {
+                const schema = program.records[variant.ty.recordIndex()].variants.?.cases[variant.tag];
+                const payload: ?typed.Value = if (schema.payload != null) try pop(&stack, frame.operand_base) else null;
+                defer if (payload) |value| value.release(allocator);
+                if (payload) |value| if (value.typeOf() != schema.payload.?) return error.InternalError;
+                try pushOwned(&stack, allocator, try typed.Value.createVariant(allocator, variant.ty, variant.tag, payload));
+            },
+            .switch_variant => |dispatch| {
+                const input = try pop(&stack, frame.operand_base);
+                defer input.release(allocator);
+                if (input.typeOf() != dispatch.ty) return error.InternalError;
+                const tag = try input.variantTag();
+                if (tag >= dispatch.arms.len) return error.InternalError;
+                const arm = dispatch.arms[tag];
+                if (arm.slot) |slot| {
+                    const payload = try input.getField(0);
+                    if (payload.typeOf() != function.locals[@backingInt(slot)].ty) {
+                        payload.release(allocator);
+                        return error.InternalError;
+                    }
+                    const index = frame.local_base + @backingInt(slot);
+                    if (locals.items[index]) |old| old.release(allocator);
+                    locals.items[index] = payload;
+                }
+                frames.items[frame_index].pc = arm.target;
+            },
+            .cmp_enum => |comparison| {
+                const right = try pop(&stack, frame.operand_base);
+                defer right.release(allocator);
+                const left = try pop(&stack, frame.operand_base);
+                defer left.release(allocator);
+                if (left.typeOf() != comparison.ty or right.typeOf() != comparison.ty) return error.InternalError;
+                const equal = try left.variantTag() == try right.variantTag();
+                try stack.append(allocator, .{ .bool = if (comparison.predicate == .eq) equal else !equal });
+            },
             .wrap_domain => |ty| {
                 const input = try pop(&stack, frame.operand_base);
                 defer input.release(allocator);
@@ -175,7 +210,7 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
             .get_field => |index| {
                 const record = try pop(&stack, frame.operand_base);
                 defer record.release(allocator);
-                if (record.typeOf().isAggregate() and program.records[record.typeOf().recordIndex()].domain != null) return error.InternalError;
+                if (record.typeOf().isAggregate() and (program.records[record.typeOf().recordIndex()].domain != null or program.records[record.typeOf().recordIndex()].variants != null)) return error.InternalError;
                 try pushOwned(&stack, allocator, try record.getField(index));
             },
             .push_integer => |number| try stack.append(allocator, typed.Value.number(number.ty, number.value)),

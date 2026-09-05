@@ -14,7 +14,12 @@ pub fn dump(allocator: std.mem.Allocator, program: bc.Program, src: Source) ![]u
 
 fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer.Error!void {
     for (program.records) |record| {
-        try writer.print("{s} {s} type#{d}\n", .{ if (record.array != null) "array" else if (record.domain != null) "domain" else "record", record.name, @backingInt(record.id) });
+        try writer.print("{s} {s} type#{d}\n", .{ if (record.variants) |v| (if (v.is_union) "union" else "enum") else if (record.array != null) "array" else if (record.domain != null) "domain" else "record", record.name, @backingInt(record.id) });
+        if (record.variants) |v| for (v.cases, 0..) |variant, tag| {
+            try writer.print("  variant {d}: {s}", .{ tag, variant.name });
+            if (variant.payload) |ty| try writer.print(": {s}", .{typed.typeName(ty, program.records)});
+            try writer.writeByte('\n');
+        };
         if (record.domain) |backing| try writer.print("  backing {s} (private)\n", .{typed.typeName(backing, program.records)});
         for (record.fields, 0..) |field, i| try writer.print("  field {d}: {s}: {s}\n", .{ i, field.name, typed.typeName(field.ty, program.records) });
     }
@@ -38,6 +43,12 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
                 .array_length => |ty| try writer.print("ARRAY_LENGTH {s}", .{typed.typeName(ty, program.records)}),
                 .get_field => |index| try writer.print("GET_FIELD {d}", .{index}),
                 .push_integer => |number| try writer.print("PUSH_INT {f} {d}", .{ number.ty, number.value }),
+                .make_variant => |variant| try writer.print("MAKE_VARIANT {s}.{s}", .{ typed.typeName(variant.ty, program.records), program.records[variant.ty.recordIndex()].variants.?.cases[variant.tag].name }),
+                .switch_variant => |dispatch| {
+                    try writer.print("SWITCH_VARIANT {s}", .{typed.typeName(dispatch.ty, program.records)});
+                    for (dispatch.arms, program.records[dispatch.ty.recordIndex()].variants.?.cases) |arm, variant| try writer.print(" {s}:target={d},slot={?d}", .{ variant.name, arm.target, if (arm.slot) |slot| @as(?usize, @backingInt(slot)) else null });
+                },
+                .cmp_enum => |comparison| try writer.print("CMP_ENUM {s} {s}", .{ typed.typeName(comparison.ty, program.records), @tagName(comparison.predicate) }),
                 .wrap_domain => |ty| try writer.print("WRAP_DOMAIN {s}", .{typed.typeName(ty, program.records)}),
                 .unwrap_domain => |ty| try writer.print("UNWRAP_DOMAIN {s}", .{typed.typeName(ty, program.records)}),
                 .cast_integer => |ty| try writer.print("CAST_INT {f}", .{ty}),

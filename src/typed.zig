@@ -17,6 +17,7 @@ pub const Node = struct {
         local: LocalId,
         cast: NodeId,
         wrap: NodeId,
+        variant: struct { tag: usize, value: ?NodeId },
         unwrap: NodeId,
         array: []const NodeId,
         index: struct { base: NodeId, index: NodeId },
@@ -32,6 +33,8 @@ pub const Node = struct {
 };
 pub const FieldInit = struct { index: usize, value: NodeId };
 pub const Field = struct { name: []const u8, declaration: Span, ty: Type };
+pub const Variant = struct { name: []const u8, declaration: Span, payload: ?Type };
+pub const Variants = struct { is_union: bool, cases: []const Variant };
 pub const Array = struct { element: Type, length: usize };
 // Aggregate schemas retain nominal record identities and intern structural arrays.
 pub const Record = struct {
@@ -41,6 +44,13 @@ pub const Record = struct {
     fields: []const Field,
     array: ?Array = null,
     domain: ?Type = null,
+    variants: ?Variants = null,
+    pub fn isRecord(self: Record) bool {
+        return self.array == null and self.domain == null and self.variants == null;
+    }
+    pub fn isEnum(self: Record) bool {
+        return if (self.variants) |v| !v.is_union else false;
+    }
     pub fn count(self: Record) usize {
         return if (self.array) |a| a.length else if (self.domain != null) 1 else self.fields.len;
     }
@@ -60,11 +70,13 @@ pub const Statement = struct {
         ret: NodeId,
         discard: NodeId,
         branch: struct { condition: NodeId, then_body: StatementId, else_body: ?StatementId },
+        match: struct { value: NodeId, arms: []const MatchArm },
         loop: struct { condition: NodeId, body: StatementId },
         initialize: Store,
         assign: Store,
     },
 };
+pub const MatchArm = struct { tag: usize, slot: ?LocalId, body: StatementId };
 pub const Local = struct { name: []const u8, declaration: Span, ty: Type, mutable: bool, reads: usize = 0, writes: usize = 0 };
 pub const Function = struct {
     owner: ?Type = null,

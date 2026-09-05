@@ -10,8 +10,9 @@ const Work = union(enum) {
     instruction: bc.Instruction,
     mark: Label,
     jump: struct { target: Label, conditional: bool = false, span: Span },
+    dispatch: struct { ty: typed.Type, targets: []const Label, slots: []const ?typed.LocalId, span: Span },
 };
-const Fixup = struct { instruction: usize, label: Label };
+const Fixup = struct { instruction: usize, label: Label, arm: ?usize = null };
 const Emitter = struct {
     allocator: std.mem.Allocator,
     program: typed.Program,
@@ -49,6 +50,24 @@ const Emitter = struct {
                 try self.instruction(stmt.span, .{ .store_local = store.slot });
                 try self.push(.{ .expression = store.value });
             },
+            .match => |match| {
+                const end = try self.label();
+                const targets = try self.allocator.alloc(Label, match.arms.len);
+                const slots = try self.allocator.alloc(?typed.LocalId, match.arms.len);
+                try self.push(.{ .mark = end });
+                var i = match.arms.len;
+                while (i > 0) {
+                    i -= 1;
+                    const arm = match.arms[i];
+                    targets[arm.tag] = try self.label();
+                    slots[arm.tag] = arm.slot;
+                    if (!self.program.statements[@backingInt(arm.body)].terminates) try self.push(.{ .jump = .{ .target = end, .span = stmt.span } });
+                    try self.push(.{ .statement = arm.body });
+                    try self.push(.{ .mark = targets[arm.tag] });
+                }
+                try self.push(.{ .dispatch = .{ .ty = self.program.nodes[@backingInt(match.value)].ty, .targets = targets, .slots = slots, .span = stmt.span } });
+                try self.push(.{ .expression = match.value });
+            },
             .branch => |branch| {
                 const otherwise = try self.label();
                 const end = try self.label();
@@ -77,6 +96,10 @@ const Emitter = struct {
     fn emitExpression(self: *Emitter, id: typed.NodeId) !void {
         const node = self.program.nodes[@backingInt(id)];
         switch (node.data) {
+            .variant => |variant| {
+                try self.instruction(node.span, .{ .make_variant = .{ .ty = node.ty, .tag = variant.tag } });
+                if (variant.value) |value| try self.push(.{ .expression = value });
+            },
             .array => |values| {
                 try self.instruction(node.span, .{ .make_record = .{ .ty = node.ty, .fields = values.len } });
                 var i = values.len;
@@ -179,6 +202,14 @@ const Emitter = struct {
             .instruction => |inst| try self.code.append(self.allocator, inst),
             .statement => |id| try self.emitStatement(id),
             .expression => |id| try self.emitExpression(id),
+            .dispatch => |dispatch| {
+                const arms = try self.allocator.alloc(bc.SwitchArm, dispatch.targets.len);
+                for (dispatch.targets, dispatch.slots, arms, 0..) |target, slot, *arm, i| {
+                    arm.* = .{ .target = 0, .slot = slot };
+                    try self.fixups.append(self.allocator, .{ .instruction = self.code.items.len, .label = target, .arm = i });
+                }
+                try self.code.append(self.allocator, .{ .span = dispatch.span, .op = .{ .switch_variant = .{ .ty = dispatch.ty, .arms = arms } } });
+            },
             .mark => |id| self.labels.items[@backingInt(id)] = self.code.items.len,
             .jump => |jump| {
                 try self.fixups.append(self.allocator, .{ .instruction = self.code.items.len, .label = jump.target });
@@ -188,13 +219,15 @@ const Emitter = struct {
         for (self.fixups.items) |fixup| {
             const target = self.labels.items[@backingInt(fixup.label)] orelse return error.InternalError;
             const inst = &self.code.items[fixup.instruction];
-            if (inst.op == .jump) inst.op.jump = target else inst.op.jump_if_false = target;
+            // Dispatch arms were allocated by this emitter and are not shared yet.
+            if (fixup.arm) |arm| @constCast(inst.op.switch_variant.arms)[arm].target = target else if (inst.op == .jump) inst.op.jump = target else inst.op.jump_if_false = target;
         }
         return self.code.toOwnedSlice(self.allocator);
     }
 };
 fn binaryInstruction(binary: anytype, nodes: []const typed.Node) bc.Instruction {
     const operand_type = nodes[@backingInt(binary.left)].ty;
+    if (operand_type.isAggregate()) return .{ .span = binary.op_span, .op = .{ .cmp_enum = .{ .ty = operand_type, .predicate = if (binary.op == .eq) .eq else .ne } } };
     if (operand_type.isInteger() and operand_type != .i64)
         return .{ .span = binary.op_span, .op = .{ .binary_integer = .{ .ty = operand_type, .op = binary.op } } };
     return .{ .span = binary.op_span, .op = switch (binary.op) {

@@ -49,7 +49,24 @@ pub const Parser = struct {
         var functions: std.ArrayList(ast.Function) = .empty;
         var records: std.ArrayList(ast.Record) = .empty;
         var domains: std.ArrayList(ast.Domain) = .empty;
+        var variants: std.ArrayList(ast.Variants) = .empty;
         while (self.current().tag != .eof) {
+            if (self.current().tag == .kw_enum or self.current().tag == .kw_union) {
+                const is_union = self.current().tag == .kw_union;
+                self.pos += 1;
+                const name = try self.expect(.ident);
+                _ = try self.expect(.lbrace);
+                var cases: std.ArrayList(ast.Variant) = .empty;
+                if (self.current().tag != .rbrace) while (true) {
+                    const tag = try self.expect(.ident);
+                    const payload = if (is_union and self.take(.colon)) try self.typeName() else null;
+                    try cases.append(self.allocator, .{ .name = tag.span, .payload = payload });
+                    if (!self.take(.comma)) break;
+                };
+                _ = try self.expect(.rbrace);
+                try variants.append(self.allocator, .{ .name = name.span, .is_union = is_union, .cases = try cases.toOwnedSlice(self.allocator) });
+                continue;
+            }
             if (self.take(.kw_domain)) {
                 const name = try self.expect(.ident);
                 _ = try self.expect(.colon);
@@ -78,7 +95,7 @@ pub const Parser = struct {
             }
             try functions.append(self.allocator, try self.function(null));
         }
-        return .{ .domains = try domains.toOwnedSlice(self.allocator), .array_types = try self.array_types.toOwnedSlice(self.allocator), .nodes = self.nodes, .statements = self.statements, .functions = try functions.toOwnedSlice(self.allocator), .records = try records.toOwnedSlice(self.allocator) };
+        return .{ .variants = try variants.toOwnedSlice(self.allocator), .domains = try domains.toOwnedSlice(self.allocator), .array_types = try self.array_types.toOwnedSlice(self.allocator), .nodes = self.nodes, .statements = self.statements, .functions = try functions.toOwnedSlice(self.allocator), .records = try records.toOwnedSlice(self.allocator) };
     }
     fn function(self: *Parser, owner: ?Span) diagnostic.Error!ast.Function {
         const restricted = self.take(.kw_private);
@@ -122,6 +139,28 @@ pub const Parser = struct {
         defer self.depth -= 1;
         const first = self.current();
         if (first.tag == .lbrace) return self.block();
+        if (self.take(.kw_match)) {
+            const value = try self.expression(0);
+            _ = try self.expect(.lbrace);
+            var arms: std.ArrayList(ast.MatchArm) = .empty;
+            if (self.current().tag != .rbrace) while (true) {
+                const ty = try self.expect(.ident);
+                _ = try self.expect(.dot);
+                const name = try self.expect(.ident);
+                var binding: ?Span = null;
+                var discard_payload = false;
+                if (self.take(.lparen)) {
+                    if (self.take(.kw_discard)) discard_payload = true else binding = (try self.expect(.ident)).span;
+                    _ = try self.expect(.rparen);
+                }
+                _ = try self.expect(.fat_arrow);
+                const body = try self.block();
+                try arms.append(self.allocator, .{ .ty = ty.span, .name = name.span, .binding = binding, .discard_payload = discard_payload, .body = body });
+                if (!self.take(.comma)) break;
+            };
+            const close = try self.expect(.rbrace);
+            return self.addStatement(.{ .span = .join(first.span, close.span), .data = .{ .match = .{ .value = value, .arms = try arms.toOwnedSlice(self.allocator) } } });
+        }
         if (self.take(.kw_if)) {
             const condition = try self.expression(0);
             const then_body = try self.block();
@@ -209,6 +248,15 @@ pub const Parser = struct {
             .kw_new => record: {
                 self.pos += 1;
                 const name = try self.typeName();
+                if (self.take(.dot)) {
+                    const tag = try self.expect(.ident);
+                    var value: ?ast.NodeId = null;
+                    if (self.take(.lparen)) {
+                        value = try self.expression(0);
+                        _ = try self.expect(.rparen);
+                    }
+                    break :record try self.append(.{ .span = .join(token.span, self.tokens[self.pos - 1].span), .data = .{ .variant = .{ .ty = name, .name = tag.span, .value = value } } });
+                }
                 if (self.take(.lbracket)) {
                     var values: std.ArrayList(ast.NodeId) = .empty;
                     if (self.current().tag != .rbracket) while (true) {

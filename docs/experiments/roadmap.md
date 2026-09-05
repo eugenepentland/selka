@@ -8,7 +8,7 @@ not a claim that the full future language has been delivered.
 | --- | --- | --- |
 | T, exact duplicate discovery | Implemented as separate `discover-duplicates` command; review and scaling corpus added | Collect ordinary-program findings before adding approximate matching; never merge automatically. |
 | A1, aggregates and complete conversions | Implemented: records, construction, fields, preserving updates, complete conversions, integer widths/casts, fixed arrays, checked indexing | A1 acceptance passes; carry the immutable value semantics into A2. |
-| A2, nominal domains and exhaustive mappings | In progress: nominal scalar domains, private construction/helpers, qualified factories/accessors implemented | Unit mismatch and constructor-bypass experiments pass; implement closed variants, exhaustive matching, and complete enum-indexed tables. |
+| A2, nominal domains and exhaustive mappings | In progress: domains/private construction, closed enums/tagged unions, and exhaustive matching implemented | Unit, privacy, and added-variant match experiments pass; implement complete enum-indexed tables. |
 | B, borrowing | Pending guest memory representation | Reject shared/exclusive conflicts and expired references with allocation/bounds/lifetime identity. |
 | C, ownership/capabilities/effects | Pending B and minimal recoverable errors | Acquire A, fail acquiring B, release A once; reject transitive forbidden effects including cleanup. |
 | D, errors and abstraction | Minimal recoverable errors needed with C; broader work pending | Require handling/propagation/explicit acknowledgement without erasing evaluation or ownership obligations. |
@@ -47,5 +47,6 @@ foundation, record frontend, integer widths, and completed array work.
 [Integer widths and checked casts](integers.md) complete the width portion of A1.
 
 [Fixed arrays and checked indexing](arrays.md) complete A1. A2 now includes
-[nominal domains and private construction](domains.md). Closed variants, exhaustive
-matching, and complete enum-indexed tables are the next unfinished A2 items.
+[nominal domains and private construction](domains.md). [Closed variants and exhaustive
+matching](variants.md) are also implemented. Complete enum-indexed tables are
+the remaining A2 item.

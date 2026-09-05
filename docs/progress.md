@@ -1,7 +1,7 @@
 # Implementation progress
 
 The complete scalar MVP in plan sections 4–13 is implemented and audited. Post-MVP A1 and exact duplicate discovery are also implemented. A2 has nominal
-scalar domains and private construction; the remaining
+scalar domains, private construction, closed variants, and exhaustive matching; the remaining
 tracks in sections 15 and 18 are still pending. Earlier entries below describe
 their historical milestone checkpoints.
 
@@ -268,3 +268,29 @@ whitespace checks pass. The domains example prints 1003.
 its limitations. A2 remains in progress: closed enums/tagged unions, exhaustive
 matching, and enum-indexed tables are next. The full roadmap goal remains active.
 Guardian gates were not exercised; hosted CI has not run.
+
+
+## 2026-09-05: A2 closed variants and exhaustive matching
+
+Implemented closed enums, tagged unions with optional typed payloads, explicit
+variant construction, same-enum equality, and exhaustive match statements. Every
+variant requires one explicit arm; payloads require a scoped immutable binding
+or explicit discard. Adding a variant breaks old matches, with diagnostics
+naming the missing case and pointing to its declaration. Invalid nominal types,
+payload shapes, duplicate arms, representation access, and by-value cycles fail.
+
+The VM dispatches once on the evaluated scrutinee, retains selected payloads,
+and preserves existing values across parent overwrite/calls. Emission validation
+checks variant tags, arm tables, labels, stack joins, and payload destinations.
+Exact duplicate discovery is now `exact-v6`, retaining variants, arm mappings,
+and binding identities. Source-arm order remains part of exact identity.
+
+All 112 tests pass in Debug and ReleaseFast (94 core, 18 actual CLI), including
+allocation-failure sweeps and a 10,000-update state-machine loop under 4 KiB live
+runtime storage. Traps at every boundary of a nested-payload execution release
+all runtime storage. Formatting and whitespace checks pass. The variants example
+prints 24. See [variant semantics](experiments/variants.md) for the full contract.
+
+A2 remains in progress: complete enum-indexed tables are next. The full pending
+roadmap goal remains active. Guardian gates were not exercised; hosted CI has
+not run.

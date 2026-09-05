@@ -15,6 +15,7 @@ pub const Node = struct {
         name: Span,
         cast: TypedValue,
         wrap: TypedValue,
+        variant: struct { ty: Span, name: Span, value: ?NodeId },
         unwrap: NodeId,
         array: struct { ty: Span, values: []const NodeId },
         index: struct { base: NodeId, index: NodeId },
@@ -35,11 +36,15 @@ pub const Statement = struct {
         ret: NodeId,
         discard: NodeId,
         branch: struct { condition: NodeId, then_body: StatementId, else_body: ?StatementId },
+        match: struct { value: NodeId, arms: []const MatchArm },
         loop: struct { condition: NodeId, body: StatementId },
         binding: struct { name: Span, annotation: ?Span, mutable: bool, value: NodeId },
         assignment: struct { name: Span, value: NodeId, op: AssignmentOp, op_span: Span },
     },
 };
+pub const MatchArm = struct { ty: Span, name: Span, binding: ?Span, discard_payload: bool, body: StatementId };
+pub const Variant = struct { name: Span, payload: ?Span };
+pub const Variants = struct { name: Span, is_union: bool, cases: []const Variant };
 pub const FieldInit = struct { name: Span, value: NodeId };
 pub const Record = struct { name: Span, fields: []const Parameter };
 pub const Parameter = struct { name: Span, ty: Span };
@@ -48,6 +53,7 @@ pub const Function = struct { owner: ?Span = null, restricted: bool = false, con
 pub const ArrayType = struct { span: Span, length: Span, element: Span };
 pub const Program = struct {
     domains: []const Domain = &.{},
+    variants: []const Variants = &.{},
     array_types: []const ArrayType = &.{},
     nodes: std.ArrayList(Node),
     statements: std.ArrayList(Statement),

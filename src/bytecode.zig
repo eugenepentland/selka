@@ -4,6 +4,7 @@ const Span = @import("source.zig").Span;
 const typed = @import("typed.zig");
 pub const Predicate = enum { eq, ne, lt, le, gt, ge };
 pub const Equality = enum { eq, ne };
+pub const SwitchArm = struct { target: usize, slot: ?typed.LocalId };
 pub const Instruction = struct {
     span: Span,
     op: union(enum) {
@@ -12,6 +13,9 @@ pub const Instruction = struct {
         push_integer: struct { ty: typed.Type, value: i128 },
         cast_integer: typed.Type,
         wrap_domain: typed.Type,
+        make_variant: struct { ty: typed.Type, tag: usize },
+        switch_variant: struct { ty: typed.Type, arms: []const SwitchArm },
+        cmp_enum: struct { ty: typed.Type, predicate: Equality },
         unwrap_domain: typed.Type,
         neg_integer: typed.Type,
         binary_integer: struct { ty: typed.Type, op: typed.BinaryOp },
@@ -59,6 +63,12 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
     if (@backingInt(program.main) >= program.functions.len) return error.InternalError;
     for (program.records, 0..) |record, i| {
         if (@backingInt(record.id) != i + typed.Type.record_base) return error.InternalError;
+        if (record.variants) |variants| {
+            if (record.array != null or record.domain != null or record.fields.len != 0 or variants.cases.len == 0) return error.InternalError;
+            for (variants.cases) |variant| if (variant.payload) |ty| {
+                if (!variants.is_union or !validType(ty, program)) return error.InternalError;
+            };
+        }
         if (record.domain) |backing| {
             if ((!backing.isInteger() and backing != .bool) or record.fields.len != 0 or record.array != null) return error.InternalError;
         }
@@ -81,6 +91,23 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             return error.InternalError;
         };
         for (function.instructions) |instruction| switch (instruction.op) {
+            .make_variant => |variant| {
+                const schema = try variantSchema(variant.ty, program);
+                if (variant.tag >= schema.cases.len) return error.InternalError;
+            },
+            .cmp_enum => |comparison| {
+                if ((try variantSchema(comparison.ty, program)).is_union) return error.InternalError;
+            },
+            .switch_variant => |dispatch| {
+                const schema = try variantSchema(dispatch.ty, program);
+                if (schema.cases.len != dispatch.arms.len) return error.InternalError;
+                for (dispatch.arms, schema.cases) |arm, variant| {
+                    if (arm.target >= function.instructions.len) return error.InternalError;
+                    if (arm.slot) |slot| {
+                        if (@backingInt(slot) >= function.locals.len or variant.payload == null or function.locals[@backingInt(slot)].ty != variant.payload.?) return error.InternalError;
+                    }
+                }
+            },
             .push_integer => |number| {
                 if (!number.ty.isInteger() or !number.ty.fits(number.value)) return error.InternalError;
             },
@@ -98,7 +125,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             },
             .make_record => |record| {
                 if (!record.ty.isAggregate() or !validType(record.ty, program)) return error.InternalError;
-                if (program.records[record.ty.recordIndex()].domain != null) return error.InternalError;
+                if (program.records[record.ty.recordIndex()].domain != null or program.records[record.ty.recordIndex()].variants != null) return error.InternalError;
                 if (record.fields != program.records[record.ty.recordIndex()].count()) return error.InternalError;
                 if (record.order.len != 0) {
                     if (record.order.len != record.fields) return error.InternalError;
@@ -110,7 +137,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             },
             .update_record => |update| {
                 if (!update.ty.isAggregate() or update.ty.recordIndex() >= program.records.len) return error.InternalError;
-                if (program.records[update.ty.recordIndex()].array != null or program.records[update.ty.recordIndex()].domain != null) return error.InternalError;
+                if (!program.records[update.ty.recordIndex()].isRecord()) return error.InternalError;
                 try validateIndices(allocator, update.indices, program.records[update.ty.recordIndex()].fields.len);
             },
             .call => |id| {
@@ -137,6 +164,17 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             var height = heights[pc].?;
             switch (instruction.op) {
                 .push_i64, .push_bool, .push_integer, .load_local => height += 1,
+                .make_variant => |variant| {
+                    const payload = (try variantSchema(variant.ty, program)).cases[variant.tag].payload;
+                    if (payload != null) {
+                        if (height == 0) return error.InternalError;
+                    } else height += 1;
+                },
+                .switch_variant => |dispatch| {
+                    if (height == 0) return error.InternalError;
+                    for (dispatch.arms) |arm| try enqueue(heights, pending, &len, arm.target, height - 1);
+                    continue;
+                },
                 .make_record => |record| {
                     if (height < record.fields) return error.InternalError;
                     height = height - record.fields + 1;
@@ -153,7 +191,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (height == 0) return error.InternalError;
                     height -= 1;
                 },
-                .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .cmp_i64, .cmp_bool, .binary_integer, .get_index => {
+                .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .cmp_i64, .cmp_bool, .binary_integer, .get_index, .cmp_enum => {
                     if (height < 2) return error.InternalError;
                     height -= 1;
                 },
@@ -193,4 +231,9 @@ fn validateIndices(allocator: std.mem.Allocator, indices: []const usize, count: 
 
 fn validType(ty: typed.Type, program: Program) bool {
     return ty.isInteger() or ty == .bool or (ty.isAggregate() and ty.recordIndex() < program.records.len);
+}
+
+fn variantSchema(ty: typed.Type, program: Program) Error!typed.Variants {
+    if (!ty.isAggregate() or !validType(ty, program)) return error.InternalError;
+    return program.records[ty.recordIndex()].variants orelse error.InternalError;
 }

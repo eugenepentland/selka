@@ -99,7 +99,7 @@ Distinguish language errors from advisory analysis and project verification. Pre
 | Advisory unused-binding and unnecessary-`mut` diagnostics | MVP commitment; precise rules in section 7 |
 | Structured error/warning diagnostics and resolved reference identities | MVP commitment; compilation-local identities only |
 | Complete record construction and declared complete conversions | Implemented in post-MVP experiment A1 |
-| Nominal domain types, exhaustive variants, and enum-indexed tables | A2 domains/private construction implemented; variants and tables pending |
+| Nominal domain types, exhaustive variants, and enum-indexed tables | A2 domains/private construction and exhaustive variants implemented; tables pending |
 | External capabilities and transitive effect contracts | Post-MVP proposal; experiment C |
 | Resource cleanup on recoverable errors and explicit fallible completion | Post-MVP proposal; experiment C |
 | Module interfaces, schema generation, and compiler-assisted duplicate discovery | Post-MVP tooling/design experiments; section 15 |
@@ -621,7 +621,8 @@ is now implemented as a separate advisory command. See
 updates, declarative complete conversions, checked integer widths/casts, and
 [fixed arrays with checked indexing](experiments/arrays.md). A1 is complete.
 A2 now includes [nominal scalar domains and private construction](experiments/domains.md);
-closed variants and exhaustive mappings remain pending. Other tracks below remain pending.
+[closed variants and exhaustive matching](experiments/variants.md) are also implemented.
+Complete enum-indexed tables remain pending in A2. Other tracks below remain pending.
 
 | Stage | Scope | Question to answer before proceeding |
 | --- | --- | --- |

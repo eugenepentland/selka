@@ -22,7 +22,7 @@ pub const Catalog = struct {
     pub fn record(self: Catalog, ty: typed.Type, span: Span, sink: *diagnostic.Sink) Error!typed.Record {
         if (!ty.isAggregate()) return sink.fail("E_TYPE", span, "operation requires a record value");
         const schema = self.records[ty.recordIndex()];
-        if (schema.array != null or schema.domain != null) return sink.fail("E_TYPE", span, "operation requires a record value");
+        if (!schema.isRecord()) return sink.fail("E_TYPE", span, "operation requires a record value");
         return schema;
     }
     pub fn array(self: Catalog, ty: typed.Type, span: Span, sink: *diagnostic.Sink) Error!typed.Array {
@@ -33,6 +33,14 @@ pub const Catalog = struct {
         if (!ty.isAggregate()) return sink.fail("E_TYPE", span, "operation requires a nominal scalar domain");
         return self.records[ty.recordIndex()].domain orelse sink.fail("E_TYPE", span, "operation requires a nominal scalar domain");
     }
+    pub fn variants(self: Catalog, ty: typed.Type, span: Span, sink: *diagnostic.Sink) Error!typed.Variants {
+        if (!ty.isAggregate()) return sink.fail("E_TYPE", span, "operation requires an enum or tagged union");
+        return self.records[ty.recordIndex()].variants orelse sink.fail("E_TYPE", span, "operation requires an enum or tagged union");
+    }
+    pub fn variant(self: Catalog, ty: typed.Type, src: Source, name: Span, sink: *diagnostic.Sink) Error!usize {
+        _ = try self.variants(ty, name, sink);
+        return self.field_names[ty.recordIndex()].get(src.text(name)) orelse sink.fail("E_UNKNOWN_VARIANT", name, "variant is not declared on this type");
+    }
     pub fn field(self: Catalog, ty: typed.Type, src: Source, name: Span, sink: *diagnostic.Sink) Error!usize {
         _ = try self.record(ty, name, sink);
         return self.field_names[ty.recordIndex()].get(src.text(name)) orelse sink.fail("E_UNKNOWN_FIELD", name, "field does not exist on this record type");
@@ -40,9 +48,9 @@ pub const Catalog = struct {
 };
 
 /// All storage is owned by the compilation arena.
-pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const ast.Record, domains: []const ast.Domain, arrays: []const ast.ArrayType, sink: *diagnostic.Sink) Error!Catalog {
-    const storage = try allocator.alloc(typed.Record, declarations.len + domains.len + arrays.len);
-    var catalog: Catalog = .{ .records = storage[0 .. declarations.len + domains.len], .names = .empty, .field_names = try allocator.alloc(std.StringHashMapUnmanaged(usize), declarations.len) };
+pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const ast.Record, domains: []const ast.Domain, variant_types: []const ast.Variants, arrays: []const ast.ArrayType, sink: *diagnostic.Sink) Error!Catalog {
+    const storage = try allocator.alloc(typed.Record, declarations.len + domains.len + variant_types.len + arrays.len);
+    var catalog: Catalog = .{ .records = storage[0 .. declarations.len + domains.len + variant_types.len], .names = .empty, .field_names = try allocator.alloc(std.StringHashMapUnmanaged(usize), declarations.len + domains.len + variant_types.len) };
     @memset(catalog.field_names, .empty);
     for (declarations, 0..) |declaration, i| {
         const name = src.text(declaration.name);
@@ -55,6 +63,15 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
         const name = src.text(declaration.name);
         if (catalog.names.get(name)) |previous| return sink.failRelated("E_DUPLICATE_TYPE", declaration.name, "type is already declared", .{ .span = storage[previous.recordIndex()].declaration, .message = "previous type declaration" });
         const index = declarations.len + offset;
+        const id: typed.Type = @fromBackingInt(index + typed.Type.record_base);
+        try catalog.names.put(allocator, name, id);
+        storage[index] = .{ .id = id, .name = name, .declaration = declaration.name, .fields = &.{} };
+    }
+    for (variant_types, 0..) |declaration, offset| {
+        const name = src.text(declaration.name);
+        if (catalog.names.get(name)) |previous| return sink.failRelated("E_DUPLICATE_TYPE", declaration.name, "type is already declared", .{ .span = storage[previous.recordIndex()].declaration, .message = "conflicting type declaration" });
+        if (declaration.cases.len == 0) return sink.fail("E_EMPTY_VARIANTS", declaration.name, "closed enum and union types require at least one variant");
+        const index = declarations.len + domains.len + offset;
         const id: typed.Type = @fromBackingInt(index + typed.Type.record_base);
         try catalog.names.put(allocator, name, id);
         storage[index] = .{ .id = id, .name = name, .declaration = declaration.name, .fields = &.{} };
@@ -94,6 +111,17 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
         if (!backing.isInteger() and backing != .bool) return sink.fail("E_DOMAIN_BASE", declaration.backing, "domain backing must be a built-in integer or bool");
         storage[declarations.len + offset].domain = backing;
     }
+    for (variant_types, 0..) |declaration, offset| {
+        const index = declarations.len + domains.len + offset;
+        const cases = try allocator.alloc(typed.Variant, declaration.cases.len);
+        for (declaration.cases, cases, 0..) |input, *output, tag| {
+            const name = src.text(input.name);
+            if (catalog.field_names[index].get(name)) |previous| return sink.failRelated("E_DUPLICATE_VARIANT", input.name, "variant is already declared", .{ .span = cases[previous].declaration, .message = "previous variant declaration" });
+            try catalog.field_names[index].put(allocator, name, tag);
+            output.* = .{ .name = name, .declaration = input.name, .payload = if (input.payload) |payload| try catalog.resolve(src, payload, sink) else null };
+        }
+        storage[index].variants = .{ .is_union = declaration.is_union, .cases = cases };
+    }
     // Iterative DFS rejects cycles without expanding records or recursing on the host.
     const State = enum { unseen, visiting, complete };
     const states = try allocator.alloc(State, catalog.records.len);
@@ -110,14 +138,14 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
             const last = work.items.len - 1;
             const visit = work.items[last];
             const schema = catalog.records[visit.record];
-            const edge_count = if (schema.array != null) @as(usize, 1) else schema.fields.len;
+            const edge_count = if (schema.variants) |v| v.cases.len else if (schema.array != null) @as(usize, 1) else schema.fields.len;
             if (visit.next_field == edge_count) {
                 states[visit.record] = .complete;
                 _ = work.pop();
                 continue;
             }
             work.items[last].next_field += 1;
-            const field: typed.Field = if (schema.array) |a| .{ .name = "element", .ty = a.element, .declaration = schema.declaration } else schema.fields[visit.next_field];
+            const field: typed.Field = if (schema.variants) |v| .{ .name = v.cases[visit.next_field].name, .ty = v.cases[visit.next_field].payload orelse continue, .declaration = v.cases[visit.next_field].declaration } else if (schema.array) |a| .{ .name = "element", .ty = a.element, .declaration = schema.declaration } else schema.fields[visit.next_field];
             if (!field.ty.isAggregate()) continue;
             const child = field.ty.recordIndex();
             if (states[child] == .visiting) return sink.fail("E_RECURSIVE_RECORD", field.declaration, "record fields must form a finite by-value layout; this field closes a cycle");

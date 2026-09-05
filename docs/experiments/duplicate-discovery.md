@@ -124,3 +124,10 @@ headers retain the owning domain and private/public visibility. Wrapping and
 unwrapping remain explicit nodes, and external calls retain qualified names.
 `src/domains_test.zig` checks identical bound-renamed methods in one domain and
 distinguishes other owners, access contracts, and qualified callees.
+
+
+Closed variants and matching advance the version to `exact-v6`. Constructors
+retain resolved variant names and payloads. Match statements retain source arm
+order, variant-to-body mappings, and payload local slots, while normalizing bound
+spelling. `src/variants_test.zig` verifies renamed equivalents and distinguishes
+changed constructors and arm bodies. This does not introduce approximate matching.

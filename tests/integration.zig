@@ -235,3 +235,18 @@ test "CLI checks domain privacy unit mismatches and qualified factory execution"
     try invoke("check", "domain D: i64 {} fn main() -> i64 { discard wrap<D>(1); return 0; }", 1, "", "error[E_PRIVATE_DOMAIN]");
     try invoke("check", "domain Seconds: i64 { fn from(n: i64) -> Seconds { return wrap<Seconds>(n); } } domain Millimeters: i64 {} fn distance(n: Millimeters) -> i64 { discard n; return 0; } fn main() -> i64 { return distance(Seconds.from(1)); }", 1, "", "expected Millimeters, found Seconds");
 }
+
+test "CLI executes variants dumps dispatch and rejects newly incomplete matches" {
+    try invoke("run", @embedFile("fixtures/variants.my"), 0, "24\n", "");
+    try invoke("check", @embedFile("fixtures/variants.my"), 0, "", "");
+    const dumped = try runFixture("dump-bytecode", @embedFile("fixtures/variants.my"), &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    try testing.expectEqualStrings("", dumped.stderr);
+    for ([_][]const u8{ "enum Color", "union Shape", "MAKE_VARIANT Shape.point", "SWITCH_VARIANT Shape" }) |instruction| try testing.expect(std.mem.indexOf(u8, dumped.stdout, instruction) != null);
+    const added = "enum Color { red, green, added } fn main() -> i64 { match new Color.red { Color.red => { return 1; }, Color.green => { return 2; } } }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, added, 1, "", "match does not handle variant `added`");
+    try invoke("check", "union U { value: i64, empty } fn main() -> i64 { discard new U.value(true); return 0; }", 1, "", "error[E_TYPE]");
+    try invoke("run", "union U { value: i64 } fn main() -> i64 { match new U.value(1 / 0) { U.value(discard) => { return 0; } } }", 1, "", "error[R_DIVISION_BY_ZERO]");
+}
