@@ -2,7 +2,8 @@
 
 Status: proposed design, revision 2, updated 2026-09-05 after a Guardian design review.
 
-Working executable name: `mylang`. Working source extension: `.my`.  
+Working executable name: `mylang`. Working source extension: `.my`.
+
 Purpose: a plan for an experimental implementation, not a finished language specification.
 
 Revision 2 adds explicit scalar-result discard and two advisory binding diagnostics to the MVP. It proposes complete record conversions, external capabilities, resource obligations, nominal domain types, exhaustive mappings, and compiler-assisted duplicate discovery for later experiments. Sections 3 and 15 distinguish the MVP commitments from those proposals; section 18 explains the Guardian-derived design and its limits. M0 and M1 remain the first implementation task.
