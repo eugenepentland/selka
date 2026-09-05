@@ -58,3 +58,6 @@ are implemented. [Module formatting](module-formatting.md) and [scalar native pr
 are also implemented. Broader native operations and schema/incremental identities
 remain in their respective tracks. Generics, schema/compile-time/incremental work, and broader
 native operations remain pending. This milestone does not complete the full roadmap.
+
+[Default-limit graph and tooling acceptance](module-scaling.md) now covers deep
+call chains and shared dense imports through checking, execution, and reports.

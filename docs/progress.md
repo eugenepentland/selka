@@ -1615,3 +1615,28 @@ The roadmap and attached plan record banded comparison progress. Ordinary-progra
 review, wider module/corpus acceptance, generics, compile-time/schema/incremental
 work, wider native operations, and other outstanding requirements remain pending.
 Guardian was not exercised; hosted CI has not run. The full roadmap goal remains active.
+
+## 2026-09-05: Integrated module graph boundary acceptance
+
+Added an actual-CLI module scaling driver to zig build test. A 256-module call chain
+passes checking, canonical formatting, execution at the exact frame boundary,
+deterministic dependency ordering, and quality/duplicate reporting. It verifies all
+256 functions' main reachability, 255 export roots, and 255 resolved calls. Deep leaf
+value edits change execution and exactly one source digest; type errors reject
+checking and advisory reports at the original file/line without partial stdout.
+Cycle diagnostics preserve both leaf and entry sites. The 257th module rejects
+with E_MODULE_LIMIT.
+
+A shared 92-module DAG at exactly 4,096 imports is counted once per module, reports
+deterministically, checks, and executes. The 4,097th import rejects with
+E_IMPORT_LIMIT. These acceptance cases use the default CLI limits and real files;
+they do not establish unbounded scaling, native support, or incremental caching.
+
+Debug and ReleaseFast full builds pass all 11 steps. The unchanged 508 Zig tests
+reuse successful cached results; the new module scaling driver, duplicate scaling
+driver, eight verification-driver tests, and 392 VM/native comparisons per host
+build mode execute successfully. Zig formatting and git diff whitespace checks
+pass. The plan and roadmap link the new module acceptance record. Ordinary-program
+review, generics, compile-time/schema/incremental work, wider native operations,
+and other unfinished requirements remain pending. Guardian was not exercised and
+hosted CI has not run. The full roadmap goal remains active.

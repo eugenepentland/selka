@@ -50,6 +50,10 @@ pub fn build(b: *std.Build) void {
     duplicate_scaling.addFileArg(exe.getEmittedBin());
     duplicate_scaling.setCwd(b.path("."));
     test_step.dependOn(&duplicate_scaling.step);
+    const module_scaling = b.addSystemCommand(&.{ "python3", "tests/module_scaling.py", "--compiler" });
+    module_scaling.addFileArg(exe.getEmittedBin());
+    module_scaling.setCwd(b.path("."));
+    test_step.dependOn(&module_scaling.step);
     const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("src"), b.path("tests") }, .check = true });
     b.step("fmt-check", "Check canonical Zig formatting").dependOn(&fmt.step);
 }
