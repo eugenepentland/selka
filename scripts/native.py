@@ -10,6 +10,7 @@ import tempfile
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("source", type=Path)
+    parser.add_argument("--project", action="store_true", help="compile a module entry and its reachable imports")
     parser.add_argument("-o", "--output", type=Path, required=True)
     parser.add_argument("--compiler", type=Path, default=Path("zig-out/bin/mylang"))
     parser.add_argument("--zig", default="zig")
@@ -20,7 +21,7 @@ def main():
         actual = subprocess.run([args.zig, "version"], check=True, capture_output=True, text=True, timeout=30).stdout.strip()
         if actual != expected:
             parser.error(f"native compilation requires Zig {expected}; found {actual}")
-        generated = subprocess.run([str(args.compiler.resolve()), "emit-c", str(args.source.resolve())], capture_output=True, timeout=60)
+        generated = subprocess.run([str(args.compiler.resolve()), "emit-project-c" if args.project else "emit-c", str(args.source.resolve())], capture_output=True, timeout=60)
         sys.stderr.buffer.write(generated.stderr)
         if generated.returncode:
             return generated.returncode if generated.returncode in (1, 2) else 2

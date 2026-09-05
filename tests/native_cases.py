@@ -19,6 +19,96 @@ def signature(result):
     return (1, match.groups(), result.stdout)
 
 
+def project_signature(result):
+    if result.returncode == 0:
+        return (0, result.stdout)
+    primary = re.search(rb"^(.+):(\d+):(\d+): error\[(R_[A-Z_]+)\]", result.stderr, re.M)
+    assert result.returncode == 1 and primary, result.stderr.decode(errors="replace")
+    frames = []
+    for line in result.stderr.splitlines():
+        match = re.match(rb"  in (\S+) at (.+):(\d+):(\d+)$", line)
+        if match is None:
+            match = re.match(rb"  at (\S+) \((.+):(\d+):(\d+)\)$", line)
+        if match:
+            frames.append(match.groups())
+    return (1, primary.groups(), tuple(frames), result.stdout)
+
+
+def project_cases(compiler, zig, root, temp):
+    fixtures = [
+        ("calls", {
+            "main.my": "module main; import left; import right; fn main() -> i64 { return left::work(3) + right::work(4); }",
+            "left.my": "module left; export work; fn work(x: i64) -> i64 { return helper(x) * 2; } fn helper(x: i64) -> i64 { return x + 1; }",
+            "right.my": "module right; export work; fn work(x: i64) -> i64 { return x + 3; }",
+        }),
+        ("overflow", {
+            "main.my": "module main; import facade; fn main() -> i64 { return facade::value(); }",
+            "facade.my": "module facade; import shared.math; export value; fn value() -> i64 { return math::overflow(); }",
+            "shared/math.my": "module shared.math; export overflow; fn overflow() -> i64 {\n return 9223372036854775807 + 1;\n}",
+        }),
+        ("recursive", {
+            "main.my": "module main; import helper; fn main() -> i64 { return helper::count(30); }",
+            "helper.my": "module helper; export count; fn count(x: i64) -> i64 { if x == 0 { return 0; } return count(x - 1) + 1; }",
+        }),
+        ("short-circuit", {
+            "main.my": "module main; import helper; fn main() -> i64 { if false && helper::bad() { return 0; } return 7; }",
+            "helper.my": "module helper; export bad; fn bad() -> bool { return 1 / 0 == 0; }",
+        }),
+        ("widths", {
+            "main.my": "module main; import helper as h; fn main() -> i64 { return cast<i64>(h::widen(255u8)); }",
+            "helper.my": "module helper; export widen; fn widen(x: u8) -> u64 { return cast<u64>(x); }",
+        }),
+    ]
+    pairs = 0
+    for name, files in fixtures:
+        directory = temp / ("module case " + name)
+        for relative, text in files.items():
+            path = directory / relative
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text)
+        entry = directory / "main.my"
+        generated = invoke([compiler, "emit-project-c", entry])
+        assert generated.returncode == 0, generated.stderr
+        source = directory / "program.c"
+        source.write_bytes(generated.stdout)
+        for mode in ("-O0", "-O2"):
+            executable = directory / "program"
+            built = invoke([zig, "cc", "-std=c11", mode, "-fsanitize=undefined", "-fno-sanitize-recover=undefined", source, "-o", executable])
+            assert built.returncode == 0, built.stderr
+            for options in ([], ["--max-steps=1"], ["--max-frames=1"]):
+                vm = invoke([compiler, "run-project", entry, *options])
+                native = invoke([executable, *options])
+                assert project_signature(vm) == project_signature(native), (name, mode, options, vm.stderr, native.stderr)
+                pairs += 1
+            if name == "calls":
+                for budget in range(1, 100):
+                    options = [f"--max-steps={budget}"]
+                    vm = invoke([compiler, "run-project", entry, *options])
+                    native = invoke([executable, *options])
+                    assert project_signature(vm) == project_signature(native), (name, mode, budget, vm.stderr, native.stderr)
+                    pairs += 1
+                    if vm.returncode == 0: break
+                else: raise AssertionError("module call case never completed")
+        if name == "calls":
+            for mode in ("Debug", "ReleaseFast"):
+                executable = directory / "user-built"
+                built = invoke([sys.executable, root / "scripts/native.py", entry, "--project", "--mode", mode, "-o", executable, "--compiler", compiler, "--zig", zig])
+                assert built.returncode == 0, built.stderr
+                assert invoke([executable]).stdout == b"15\n"
+    entry = temp / "unsupported" / "main.my"
+    entry.parent.mkdir()
+    entry.write_text("module main; import helper; fn main() -> i64 { return 0; }")
+    (entry.parent / "helper.my").write_text("module helper; fn unsupported() -> [1]i64 { return new [1]i64 [1]; }")
+    rejected = invoke([compiler, "emit-project-c", entry])
+    assert rejected.returncode == 1 and rejected.stdout == b"" and b"E_NATIVE_FEATURE" in rejected.stderr, rejected
+    assert b"helper.my:" in rejected.stderr, rejected.stderr
+    existing = entry.parent / "existing"
+    existing.write_bytes(b"preserve existing artifact")
+    rejected = invoke([sys.executable, root / "scripts/native.py", entry, "--project", "-o", existing, "--compiler", compiler, "--zig", zig])
+    assert rejected.returncode == 1 and existing.read_bytes() == b"preserve existing artifact", rejected.stderr
+    print(f"module native parity: {len(fixtures)} project fixtures, {pairs} executed comparisons including file paths/call frames across -O0/-O2; project builder and unsupported-feature checks passed")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--compiler", type=Path, required=True)
@@ -78,6 +168,7 @@ def main():
         wrong_zig.chmod(0o755)
         wrong = invoke([sys.executable, root / "scripts" / "native.py", source, "-o", temp / "must-not-exist", "--compiler", compiler, "--zig", wrong_zig])
         assert wrong.returncode == 2 and not (temp / "must-not-exist").exists(), wrong.stderr
+        project_cases(compiler, args.zig, root, temp)
         for bad in ("--max-steps=0", "--max-frames=-1", "--max-steps=18446744073709551616", "--unknown"):
             assert invoke([temp / "built", bad]).returncode == 2
     print(f"native parity: {len(fixtures)} scalar fixtures, {pairs} executed comparisons across -O0/-O2 with undefined-behavior sanitization; builder/budgets passed")

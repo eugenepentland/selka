@@ -908,3 +908,20 @@ test "CLI module formatting is syntax only and project checking reports every ch
     try invoke("fmt-project", "module input;", 2, "", "usage:");
     try invokeOptions("fmt-module", "module input;", &.{"--max-steps=1"}, 2, "", "usage:");
 }
+
+test "CLI native project emission rejects private calls and unsupported guest types before stdout" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input; import helper; fn main() -> i64 { return helper::hidden(); }" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper; fn hidden() -> i64 { return 7; }" });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const rejected = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "emit-project-c", path } });
+    defer testing.allocator.free(rejected.stdout);
+    defer testing.allocator.free(rejected.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
+    try testing.expectEqualStrings("", rejected.stdout);
+    try testing.expect(std.mem.indexOf(u8, rejected.stderr, "E_PRIVATE_SYMBOL") != null);
+    try invoke("emit-project-c", "module input; fn main() -> i64 { let a = new [1]i64 [7]; return a[0]; }", 1, "", "E_NATIVE_FEATURE");
+    try invokeOptions("emit-project-c", "module input; fn main() -> i64 { return 0; }", &.{"--max-steps=1"}, 2, "", "usage:");
+}

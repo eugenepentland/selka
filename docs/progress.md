@@ -1473,3 +1473,35 @@ review, project native parity, generics, compile-time/schema/incremental work, w
 native operations, and other unfinished roadmap requirements remain pending.
 Guardian was not exercised; hosted CI has not run. The full roadmap goal remains
 active.
+
+## 2026-09-05: E scalar module native execution and executable parity
+
+Added `emit-project-c` and `scripts/native.py --project`, retaining exact Zig
+verification, module semantic/privacy checks, original source maps, and the existing
+scalar native operation boundary. C emission rejects unsupported dependency signatures
+or instructions before stdout. The project builder runs in Debug/ReleaseFast modes;
+frontend rejection preserves an existing output artifact. The documented duplicate
+module example builds natively and returns 46, matching the VM.
+
+500 Zig tests pass in Debug and ReleaseFast (445 core, 55 CLI), plus eight
+verification-driver tests. The native harness now runs five project fixtures with
+68 executed VM/native comparisons in addition to the existing 23 scalar fixtures
+and 182 comparisons per host build mode. Project comparisons include source paths,
+line/column, trap codes, and normalized call-frame identities/paths at C O0/O2 with
+undefined-behavior sanitization. Cases cover nested cross-file calls, overflow through
+a facade, recursion, short-circuiting, width conversion, frame/step limits, and every
+step budget through nested-call completion. Public project builders run in both
+modes; unsupported uncalled dependencies and private-call rejection are checked.
+
+Zig acceptance also covers deterministic repeated native module emission and every
+host allocation failure through loading, indexing, checking, lowering, and emission.
+Actual CLI rejections have no partial generated stdout. Formatting and whitespace
+checks pass. [Module native semantics](experiments/module-native.md) records commands,
+parity scope, and limitations. Aggregates, nominal-domain operations, borrowing,
+capabilities/resources, pools, arenas, and other wider native operations remain
+unsupported; this milestone does not claim full-language native execution.
+
+Broader module/candidate corpus and scaling acceptance, generics, compile-time/schema/
+incremental work, wider native operations, and other unfinished roadmap requirements
+remain pending. Guardian was not exercised; hosted CI has not run. The full roadmap
+goal remains active.

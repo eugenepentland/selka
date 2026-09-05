@@ -21,6 +21,10 @@ pub const Compilation = struct {
         var names: Names = .{ .index = self.index, .src = self.src };
         self.program = try @import("sema.zig").checkWithNames(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names);
     }
+    pub fn emitC(self: *Compilation, allocator: @import("std").mem.Allocator) ![]u8 {
+        try self.emit();
+        return @import("native.zig").generate(allocator, self.code.?, self.src, &self.diagnostics);
+    }
     pub fn exportRoots(self: *Compilation, allocator: @import("std").mem.Allocator) ![]typed.FunctionId {
         try self.check();
         var roots: @import("std").ArrayList(typed.FunctionId) = .empty;

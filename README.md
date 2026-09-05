@@ -235,3 +235,7 @@ are accounted for explicitly; see [module quality reports](docs/experiments/modu
 `fmt-module <file.my>` formats a module draft without resolving imports.
 `fmt-project <entry.my> --check` checks formatting across its reachable graph.
 Neither command writes source files; see [module formatting](docs/experiments/module-formatting.md).
+
+Scalar module projects support `emit-project-c` and `scripts/native.py --project`.
+Try the [module-native example](docs/experiments/module-native.md); aggregates and
+resource operations still require broader native implementation.

@@ -320,3 +320,26 @@ test "module quality reports distinguish main export and private helper reachabi
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), qualityScenario, .{});
 }
+
+fn nativeModuleScenario(allocator: std.mem.Allocator) !void {
+    var files: Files = .{ .entries = &.{
+        .{ .path = "main.my", .bytes = "module main; import helper; fn main() -> i64 { return helper::twice(7); }" },
+        .{ .path = "helper.my", .bytes = "module helper; export twice; fn twice(x: i64) -> i64 { return x * 2; }" },
+    } };
+    var project = graph.Project.init(allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try @import("project_compile.zig").Compilation.init(&index);
+    const first = try compilation.emitC(allocator);
+    defer allocator.free(first);
+    const second = try compilation.emitC(allocator);
+    defer allocator.free(second);
+    try t.expectEqualStrings(first, second);
+    try t.expect(std.mem.indexOf(u8, first, "source_paths = paths") != null);
+}
+test "module native emission is deterministic and cleans all failed allocations" {
+    try nativeModuleScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), nativeModuleScenario, .{});
+}

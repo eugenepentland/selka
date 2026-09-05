@@ -1,7 +1,7 @@
 //! Host I/O and process policy stay outside the compiler and VM.
 const std = @import("std");
 const language = @import("mylang");
-const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fmt-module|fmt-project|emit-c|list-modules|list-interfaces|check-project|run-project|check-policy> <file.my>\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena\n  discover-duplicates/discover-project-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality/report-project-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: --check (otherwise writes formatted source to stdout)\n";
+const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fmt-module|fmt-project|emit-c|emit-project-c|list-modules|list-interfaces|check-project|run-project|check-policy> <file.my>\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena\n  discover-duplicates/discover-project-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality/report-project-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: --check (otherwise writes formatted source to stdout)\n";
 
 pub fn main(init: std.process.Init) void {
     const status = dispatch(init) catch |err| status: {
@@ -20,7 +20,7 @@ fn dispatch(init: std.process.Init) !u8 {
         try std.Io.File.stderr().writeStreamingAll(init.io, usage);
         return 2;
     };
-    if (parsed.command == .@"list-modules" or parsed.command == .@"list-interfaces" or parsed.command == .@"check-project" or parsed.command == .@"run-project" or parsed.command == .@"check-policy" or parsed.command == .@"discover-project-duplicates" or parsed.command == .@"report-project-quality" or parsed.command == .@"fmt-project") return listModules(init, parsed);
+    if (parsed.command == .@"list-modules" or parsed.command == .@"list-interfaces" or parsed.command == .@"check-project" or parsed.command == .@"run-project" or parsed.command == .@"check-policy" or parsed.command == .@"discover-project-duplicates" or parsed.command == .@"report-project-quality" or parsed.command == .@"fmt-project" or parsed.command == .@"emit-project-c") return listModules(init, parsed);
     const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, parsed.path, allocator, .limited(16 * 1024 * 1024));
     defer allocator.free(bytes);
     var compilation = try language.Compilation.init(allocator, parsed.path, bytes);
@@ -53,7 +53,7 @@ fn dispatch(init: std.process.Init) !u8 {
     const check_ns = if (parsed.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
     if (parsed.command != .@"emit-c") try report(init, &compilation);
     switch (parsed.command) {
-        .fmt, .@"fmt-module", .@"fmt-project", .@"list-modules", .@"list-interfaces", .@"check-project", .@"run-project", .@"check-policy", .@"discover-project-duplicates", .@"report-project-quality" => unreachable,
+        .fmt, .@"fmt-module", .@"fmt-project", .@"emit-project-c", .@"list-modules", .@"list-interfaces", .@"check-project", .@"run-project", .@"check-policy", .@"discover-project-duplicates", .@"report-project-quality" => unreachable,
         .@"emit-c" => {
             const generated = compilation.emitC(allocator) catch |err| switch (err) {
                 error.SourceError => {
@@ -118,7 +118,7 @@ fn report(init: std.process.Init, compilation: *const language.Compilation) !voi
     }
 }
 
-const Command = enum { @"fmt-project", @"fmt-module", @"report-project-quality", @"discover-project-duplicates", @"check-policy", @"check-project", @"run-project", @"list-interfaces", @"list-modules", @"emit-c", fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
+const Command = enum { @"emit-project-c", @"fmt-project", @"fmt-module", @"report-project-quality", @"discover-project-duplicates", @"check-policy", @"check-project", @"run-project", @"list-interfaces", @"list-modules", @"emit-c", fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
 const Parsed = struct { policy: ?[]const u8, format_check: bool, quality: language.quality.Options, command: Command, path: []const u8, options: language.vm.Options, discovery: language.duplicates.Options, timings: bool };
 fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (args.len < 2) return error.Usage;
@@ -301,6 +301,18 @@ fn listModules(init: std.process.Init, parsed: Parsed) !u8 {
             },
             else => return err,
         };
+        if (parsed.command == .@"emit-project-c") {
+            const generated = compilation.emitC(init.gpa) catch |err| switch (err) {
+                error.SourceError => {
+                    try reportProject(init, &compilation);
+                    return 1;
+                },
+                else => return err,
+            };
+            errdefer init.gpa.free(generated);
+            try reportProject(init, &compilation);
+            break :result generated;
+        }
         try reportProject(init, &compilation);
         if (parsed.command == .@"check-project") return 0;
         if (parsed.command == .@"report-project-quality") {
