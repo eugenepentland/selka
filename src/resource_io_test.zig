@@ -15,7 +15,7 @@ const Fake = struct {
     written: [8]u8 = @splat(0),
     failure: ?external.CallError = null,
     invalid_count: bool = false,
-    fn acquire(context: *anyopaque, _: []const u8) external.CallError!u64 {
+    fn acquire(context: *anyopaque, _: []const u8, _: resources.Permissions) external.CallError!u64 {
         const self: *Fake = @ptrCast(@alignCast(context));
         self.live += 1;
         return 1;

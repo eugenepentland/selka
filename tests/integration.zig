@@ -470,3 +470,16 @@ test "CLI checks resource data operations effects and required mutation without 
     const invalid = "resource File: filesystem; result Written { ok: u64, err: i64 } fn f(file: File) -> Written { return write_resource<Written>(file, new [0]u8 []); } fn main() -> i64 { return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_IMMUTABLE]");
 }
+
+test "CLI exposes resource permission attenuation and rejects malformed permission sets" {
+    const source = @embedFile("fixtures/attenuation.my");
+    try invoke("check", source, 0, "", "");
+    try invoke("run", source, 2, "", "host failure: CapabilityUnavailable");
+    const dumped = try runFixture("dump-bytecode", source, &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "RESTRICT_RESOURCE permissions=1 -> filesystem_cap") != null);
+    const invalid = "fn main(fs: filesystem_cap) -> i64 { discard restrict_resource<read, read>(fs); return 0; }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_PERMISSION]");
+}

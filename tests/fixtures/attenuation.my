@@ -1,0 +1,22 @@
+resource File: filesystem;
+result Open { ok: File, err: i64 }
+struct Chunk { bytes: [16]u8, length: u64, eof: bool }
+result Read { ok: Chunk, err: i64 }
+
+fn delegate(fs: filesystem_cap) -> filesystem_cap effects() {
+    return restrict_resource<read>(fs);
+}
+
+fn main(fs: filesystem_cap) -> i64 {
+    let reader = delegate(fs);
+    match acquire_resource<Open>(reader, new [1]u8 [42u8]) {
+        Open.ok(input) => {
+            let mut file = input;
+            match read_resource<Read>(file) {
+                Read.ok(chunk) => { return cast<i64>(chunk.length); },
+                Read.err(code) => { return -code; }
+            }
+        },
+        Open.err(code) => { return -code; }
+    }
+}

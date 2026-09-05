@@ -3,7 +3,8 @@
 Status: source and backend reads/writes are implemented for injected filesystem
 and network resource providers. Operations retain ownership and expose partial
 progress. Fixed byte arrays are supported; slice-based I/O, partial field moves,
-attenuation, arenas/pools, and other roadmap tracks remain pending. The CLI still
+arenas/pools, and other roadmap tracks remain pending. [Resource permission
+attenuation](attenuation.md) now limits acquisition and subsequent operations. The CLI still
 provides no operating-system resource adapter or ambient authority.
 
 ```text

@@ -5,15 +5,19 @@ const resources = @import("external_resources.zig");
 pub const Options = struct {
     filesystem: ?resources.Provider = null,
     network: ?resources.Provider = null,
+    filesystem_permissions: resources.Permissions = resources.all_permissions,
+    network_permissions: resources.Permissions = resources.all_permissions,
     max_live_per_kind: usize = 1024,
     statistics: ?*[2]resources.Statistics = null,
 };
 pub const Runtime = struct {
     allocator: std.mem.Allocator,
+    permissions: [2]resources.Permissions,
     stores: [2]?resources.Store = .{ null, null },
     statistics: ?*[2]resources.Statistics,
     pub fn init(allocator: std.mem.Allocator, options: Options) !Runtime {
-        var runtime: Runtime = .{ .allocator = allocator, .statistics = options.statistics };
+        if ((options.filesystem_permissions | options.network_permissions) & ~resources.all_permissions != 0) return error.InvalidCapability;
+        var runtime: Runtime = .{ .allocator = allocator, .statistics = options.statistics, .permissions = .{ options.filesystem_permissions, options.network_permissions } };
         errdefer runtime.deinit();
         for ([_]?resources.Provider{ options.filesystem, options.network }, 0..) |provider, index| {
             if (provider) |p| runtime.stores[index] = try resources.Store.init(allocator, if (index == 0) .filesystem else .network, p, options.max_live_per_kind);
@@ -34,7 +38,12 @@ pub const Runtime = struct {
         return if (self.stores[if (kind == .filesystem) @as(usize, 0) else 1]) |*store| store else error.CapabilityUnavailable;
     }
     pub fn grant(self: *Runtime, kind: resources.Kind) !typed.Value {
-        return .{ .resource_capability = try (try self.storeFor(kind)).grant() };
+        const store = try self.storeFor(kind);
+        return .{ .resource_capability = try store.restrict(try store.grant(), self.permissions[if (kind == .filesystem) @as(usize, 0) else 1]) };
+    }
+    pub fn restrict(self: *Runtime, value: typed.Value, permissions: resources.Permissions) !typed.Value {
+        if (value != .resource_capability) return error.InternalError;
+        return .{ .resource_capability = try (try self.storeFor(value.resource_capability.kind)).restrict(value.resource_capability, permissions) };
     }
     pub fn acquire(self: *Runtime, output: typed.Type, records: []const typed.Record, capability: typed.Value, request: typed.Value, request_type: typed.Type) !typed.Value {
         if (capability != .resource_capability or request != .aggregate or request.typeOf() != request_type) return error.InternalError;

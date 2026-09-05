@@ -252,3 +252,10 @@ snapshots, actual length, and explicit EOF; writes return accepted byte count. B
 make one provider call and expose partial progress. Source and emission checks retain
 filesystem/network effects and reject invalid mutable/owner/result/input metadata.
 See [resource I/O semantics](experiments/resource-io.md). Slice/range I/O remains pending.
+
+
+`restrict_resource<read, write, complete>(capability)` intersects filesystem/network
+operation permissions with a named subset. Copies cannot restore removed rights.
+Acquisition passes restrictions to the provider; owned reads/writes/completion check
+them before callbacks. Denied operations retain ownership and fallback release stays
+available. Provider scope and quotas remain shared. See [attenuation semantics](experiments/attenuation.md).

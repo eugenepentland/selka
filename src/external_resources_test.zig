@@ -11,7 +11,7 @@ const Fake = struct {
     fail_acquire: ?external.CallError = null,
     fail_complete: ?external.CallError = null,
     events: [16]u64 = @splat(0),
-    fn acquire(context: *anyopaque, request: []const u8) external.CallError!u64 {
+    fn acquire(context: *anyopaque, request: []const u8, _: resources.Permissions) external.CallError!u64 {
         const self: *Fake = @ptrCast(@alignCast(context));
         self.acquire_calls += 1;
         if (self.fail_acquire) |err| return err;

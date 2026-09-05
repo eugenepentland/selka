@@ -15,7 +15,13 @@ pub const Kind = enum {
 pub const Error = external.CallError || error{ Closed, InvalidCapability, InvalidOwner, IdentityExhausted, ResourceLimit, InvalidProvider };
 pub const IoKind = enum { read, write };
 pub const Read = struct { length: usize, eof: bool };
-pub const Capability = struct { store: u64, kind: Kind };
+pub const Permission = enum { read, write, complete };
+pub const Permissions = u8;
+pub const all_permissions: Permissions = 7;
+pub fn permissionBit(permission: Permission) Permissions {
+    return @as(Permissions, 1) << @intCast(@backingInt(permission));
+}
+pub const Capability = struct { store: u64, kind: Kind, permissions: Permissions = all_permissions };
 pub const Owner = struct { store: u64, index: usize, generation: u64 };
 /// Trusted synchronous callbacks. Context outlives the store. Acquire failures
 /// retain no resource; successful completion consumes the host handle, whereas
@@ -29,7 +35,9 @@ pub const Provider = struct {
     read: ?*const fn (*anyopaque, u64, []u8) external.CallError!Read = null,
     write: ?*const fn (*anyopaque, u64, []const u8) external.CallError!usize = null,
     context: *anyopaque,
-    acquire: *const fn (*anyopaque, []const u8) external.CallError!u64,
+    /// Acquisition must honor the requested permissions when choosing open modes
+    /// and interpreting requests. Deny requests that require excluded authority.
+    acquire: *const fn (*anyopaque, []const u8, Permissions) external.CallError!u64,
     complete: *const fn (*anyopaque, u64) external.CallError!void,
     release: *const fn (*anyopaque, u64) void,
 };
@@ -43,6 +51,7 @@ fn identity() Error!u64 {
     }
 }
 const Entry = struct {
+    permissions: Permissions = all_permissions,
     generation: u64 = 1,
     handle: ?u64 = null,
     previous: ?usize = null,
@@ -69,7 +78,16 @@ pub const Store = struct {
     }
     fn checkCapability(self: *Store, capability: Capability) Error!void {
         if (self.id == 0) return error.Closed;
-        if (capability.store != self.id or capability.kind != self.kind) return error.InvalidCapability;
+        if (capability.store != self.id or capability.kind != self.kind or capability.permissions & ~all_permissions != 0) return error.InvalidCapability;
+    }
+    /// Intersection cannot amplify authority, even when the caller requests more.
+    /// Existing grants/owners remain unchanged; copies share the original quotas.
+    pub fn restrict(self: *Store, capability: Capability, permissions: Permissions) Error!Capability {
+        try self.checkCapability(capability);
+        if (permissions & ~all_permissions != 0) return error.InvalidCapability;
+        var restricted = capability;
+        restricted.permissions &= permissions;
+        return restricted;
     }
     fn get(self: *Store, owner: Owner) Error!*Entry {
         if (self.id == 0) return error.Closed;
@@ -89,11 +107,12 @@ pub const Store = struct {
             self.free_head = index;
         }
         const index = self.free_head.?;
-        const handle = try self.provider.acquire(self.provider.context, request);
+        const handle = try self.provider.acquire(self.provider.context, request, capability.permissions);
         const entry = &self.entries.items[index];
         self.free_head = entry.free_next;
         entry.free_next = null;
         entry.handle = handle;
+        entry.permissions = capability.permissions;
         entry.previous = self.tail;
         entry.next = null;
         if (self.tail) |tail| self.entries.items[tail].next = index;
@@ -128,6 +147,7 @@ pub const Store = struct {
     }
     pub fn read(self: *Store, owner: Owner, output: []u8) Error!Read {
         const entry = try self.get(owner);
+        if (entry.permissions & permissionBit(.read) == 0) return error.Denied;
         const callback = self.provider.read orelse return error.Unavailable;
         @memset(output, 0);
         const result = try callback(self.provider.context, entry.handle.?, output);
@@ -137,6 +157,7 @@ pub const Store = struct {
     }
     pub fn write(self: *Store, owner: Owner, input: []const u8) Error!usize {
         const entry = try self.get(owner);
+        if (entry.permissions & permissionBit(.write) == 0) return error.Denied;
         const callback = self.provider.write orelse return error.Unavailable;
         const length = try callback(self.provider.context, entry.handle.?, input);
         if (length > input.len) return error.InvalidProvider;
@@ -144,6 +165,7 @@ pub const Store = struct {
     }
     pub fn complete(self: *Store, owner: Owner) Error!void {
         const entry = try self.get(owner);
+        if (entry.permissions & permissionBit(.complete) == 0) return error.Denied;
         try self.provider.complete(self.provider.context, entry.handle.?);
         self.remove(owner.index);
         self.statistics.completed +|= 1;

@@ -505,6 +505,16 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 };
                 try pushOwned(&stack, allocator, output);
             },
+            .restrict_resource => |restrict| {
+                const value = try pop(&stack, frame.operand_base);
+                defer value.release(allocator);
+                if (value.typeOf() != restrict.ty) return error.InternalError;
+                const restricted = resource_execution.restrict(value, restrict.permissions) catch |err| switch (err) {
+                    error.InvalidCapability, error.Closed => return trap("R_CAPABILITY", "resource capability is stale or invalid", instruction.span, frames.items, program),
+                    else => return err,
+                };
+                try pushOwned(&stack, allocator, restricted);
+            },
             .environment_get => |get| {
                 const name = try pop(&stack, frame.operand_base);
                 defer name.release(allocator);

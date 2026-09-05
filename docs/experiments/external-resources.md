@@ -16,7 +16,7 @@ or enlarge its authority. Host-side store construction is the trusted boundary.
 
 The synchronous provider API separates three operations:
 
-- `acquire(context, request)` returns a private host handle or a recoverable/host
+- `acquire(context, request, permissions)` returns a private host handle or a recoverable/host
   error. On error, it must retain no acquired resource.
 - `complete(context, handle)` performs the requested fallible completion. Success
   consumes the host handle. Failure leaves it valid for retry or fallback release.
@@ -101,3 +101,7 @@ filesystem/network correctness.
 this backend to nominal resources, explicit grants, acquisition, completion returning
 ownership on failure, VM cleanup, and transitive effect bounds. The backend-only
 status and 283-test count above describe the historical checkpoint.
+
+[Resource operation permissions](attenuation.md) now flow into acquisition and
+remain attached to owners through transfers. Providers must honor those restrictions
+when interpreting requests; runtime read/write/completion checks enforce them too.

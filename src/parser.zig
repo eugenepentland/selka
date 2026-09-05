@@ -372,6 +372,24 @@ pub const Parser = struct {
                 const close = try self.expect(.rparen);
                 break :buffer try self.append(.{ .span = .join(token.span, close.span), .data = .{ .buffer_operation = .{ .kind = kind, .owner = owner.span, .result = result, .arguments = arguments } } });
             },
+            .kw_restrict_resource => restrict: {
+                self.pos += 1;
+                _ = try self.expect(.lt);
+                var permissions: @import("external_resources.zig").Permissions = 0;
+                if (self.current().tag != .gt) while (true) {
+                    const name = try self.expect(.ident);
+                    const permission = std.meta.stringToEnum(@import("external_resources.zig").Permission, self.src.text(name.span)) orelse return self.sink.fail("E_PERMISSION", name.span, "permission must be read, write, or complete");
+                    const bit = @import("external_resources.zig").permissionBit(permission);
+                    if (permissions & bit != 0) return self.sink.fail("E_PERMISSION", name.span, "permission is repeated");
+                    permissions |= bit;
+                    if (!self.take(.comma)) break;
+                };
+                _ = try self.expect(.gt);
+                _ = try self.expect(.lparen);
+                const value = try self.expression(0);
+                const close = try self.expect(.rparen);
+                break :restrict try self.append(.{ .span = .join(token.span, close.span), .data = .{ .restrict_resource = .{ .permissions = permissions, .value = value } } });
+            },
             .kw_read_resource, .kw_write_resource => resource_io: {
                 self.pos += 1;
                 _ = try self.expect(.lt);

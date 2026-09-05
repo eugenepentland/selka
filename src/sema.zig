@@ -251,6 +251,11 @@ const Checker = struct {
                         try work.append(self.allocator, .{ .id = base });
                         continue;
                     },
+                    .restrict_resource => |restrict| {
+                        try work.append(self.allocator, .{ .id = task.id, .emit = true });
+                        try work.append(self.allocator, .{ .id = restrict.value });
+                        continue;
+                    },
                     .resource_io => |io| {
                         try work.append(self.allocator, .{ .id = task.id, .emit = true });
                         if (io.value) |value| try work.append(self.allocator, .{ .id = value });
@@ -391,6 +396,12 @@ const Checker = struct {
                     const request_type = self.nodes.items[@backingInt(request)].ty;
                     if (!typed.byteRequest(request_type, self.catalog.records)) return self.sink.fail("E_RESOURCE_REQUEST", self.syntax.nodes.items[@backingInt(acquire.request)].span, "request must be a fixed u8 array");
                     out.data = .{ .acquire_resource = .{ .capability = capability, .request = request } };
+                },
+                .restrict_resource => |restrict| {
+                    const value = self.resolved[@backingInt(restrict.value)].?;
+                    out.ty = self.nodes.items[@backingInt(value)].ty;
+                    if (out.ty.resourceKind() == null) return self.sink.fail("E_TYPE", node.span, "restrict_resource requires a filesystem or network capability");
+                    out.data = .{ .restrict_resource = .{ .permissions = restrict.permissions, .value = value } };
                 },
                 .resource_io => |io| {
                     const owner = try self.resolve(io.owner);
@@ -660,7 +671,7 @@ const Checker = struct {
             }
             const consumed: usize = switch (out.data) {
                 .integer, .boolean, .local, .read_ref, .read_field, .len_slice => 0,
-                .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .external_read, .complete_resource => 1,
+                .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .external_read, .complete_resource, .restrict_resource => 1,
                 .acquire_buffer, .acquire_resource, .environment_get => 2,
                 .index, .binary => 2,
                 .replace => 3,

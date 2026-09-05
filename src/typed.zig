@@ -27,6 +27,7 @@ pub const Node = struct {
         acquire_resource: struct { capability: NodeId, request: NodeId },
         complete_resource: NodeId,
         resource_io: struct { kind: @import("external_resources.zig").IoKind, owner: LocalId, value: ?NodeId },
+        restrict_resource: struct { permissions: @import("external_resources.zig").Permissions, value: NodeId },
         environment_get: struct { capability: NodeId, name: NodeId },
         external_read: struct { kind: @import("external_capabilities.zig").Kind, capability: NodeId },
         acquire_buffer: struct { allocator: NodeId, capacity: NodeId },

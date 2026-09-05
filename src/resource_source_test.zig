@@ -15,7 +15,7 @@ const Fake = struct {
     fail_complete_count: usize = 0,
     complete_error: external.CallError = error.Failed,
     order: [16]u64 = @splat(0),
-    fn acquire(context: *anyopaque, request: []const u8) external.CallError!u64 {
+    fn acquire(context: *anyopaque, request: []const u8, _: resources.Permissions) external.CallError!u64 {
         const self: *Fake = @ptrCast(@alignCast(context));
         self.acquire_calls += 1;
         if (self.acquire_calls == self.fail_acquire_at) return self.acquire_error;

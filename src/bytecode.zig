@@ -39,6 +39,7 @@ pub const Instruction = struct {
         complete_resource: typed.Type,
         acquire_resource: struct { output: typed.Type, request: typed.Type },
         resource_io: struct { kind: @import("external_resources.zig").IoKind, owner: typed.LocalId, output: typed.Type, input: ?typed.Type },
+        restrict_resource: struct { permissions: @import("external_resources.zig").Permissions, ty: typed.Type },
         environment_get: struct { output: typed.Type, name: typed.Type },
         external_read: struct { kind: @import("external_capabilities.zig").Kind, output: typed.Type },
         acquire_buffer: typed.Type,
@@ -248,6 +249,9 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (shape.ok_type != .u64 or shape.error_type != .i64 or !typed.byteRequest(io.input orelse return error.InternalError, program.records)) return error.InternalError;
                 }
             },
+            .restrict_resource => |restrict| {
+                if (restrict.ty.resourceKind() == null or restrict.permissions & ~@import("external_resources.zig").all_permissions != 0) return error.InternalError;
+            },
             .environment_get => |get| {
                 if (typed.environmentShape(get.output, program.records) == null or !typed.byteRequest(get.name, program.records)) return error.InternalError;
             },
@@ -439,7 +443,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (height < 2) return error.InternalError;
                     height -= 1;
                 },
-                .complete_resource, .external_read, .read_slice, .neg_i64_checked, .not_bool, .get_field, .cast_integer, .neg_integer, .array_length, .wrap_domain, .unwrap_domain => if (height == 0) {
+                .restrict_resource, .complete_resource, .external_read, .read_slice, .neg_i64_checked, .not_bool, .get_field, .cast_integer, .neg_integer, .array_length, .wrap_domain, .unwrap_domain => if (height == 0) {
                     return error.InternalError;
                 },
                 .call, .call_refs, .call_borrow => {

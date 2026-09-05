@@ -791,3 +791,28 @@ trusted provider contracts, and nontransactional effects. Fixed arrays are suppo
 slice/range I/O remains pending, along with partial field moves, attenuation,
 arenas/pools, and all other unfinished roadmap tracks. C is not complete. Guardian
 was not exercised; hosted CI has not run. The full roadmap goal remains active.
+
+
+## 2026-09-05: C resource operation permission attenuation
+
+Implemented `restrict_resource<permissions>(cap)` as monotone intersection of read,
+write, and complete permissions. Original grants and existing owners remain intact;
+copies and helper forwarding cannot restore removed rights or increase shared quotas.
+Embedding options cap entry grants. Provider acquisition now receives permissions
+and must honor them in open/request semantics; acquired owners retain restrictions
+through moves. Denied read/write/completion returns before callbacks, preserves the
+owner, and still permits fallback release. Restriction itself adds no effect.
+
+339 tests pass in Debug and ReleaseFast (304 core, 35 actual CLI). Acceptance covers
+wrapper/helper delegation, attempted re-expansion, provider-visible acquisition
+restrictions, embedding ceilings, operation denial, completion failure cleanup,
+parent authority, shared quotas, slot reuse, invalid/foreign/closed grants, malformed
+source/bytecode permissions, normalized discovery, and all allocation failures. CLI
+fixtures verify checking/dumps, absent-provider denial, and permission rejection.
+Formatting and whitespace checks pass. Discovery is exact-v23.
+
+[Attenuation semantics](experiments/attenuation.md) distinguishes resource operation
+permissions from acquisition/release authority, provider scope, revocation, and
+independent quotas. Slice I/O, partial field moves, arenas/pools, and every other
+unfinished roadmap track remain in scope. C is not complete. Guardian was not
+exercised; hosted CI has not run. The full roadmap goal remains active.

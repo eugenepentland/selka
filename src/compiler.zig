@@ -83,6 +83,7 @@ test {
     _ = @import("field_reads_test.zig");
     _ = @import("environment_test.zig");
     _ = @import("resource_io_test.zig");
+    _ = @import("attenuation_test.zig");
     _ = @import("references_test.zig");
     _ = @import("slices_test.zig");
     _ = @import("returned_references_test.zig");
