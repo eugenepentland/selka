@@ -1784,3 +1784,33 @@ dependency-granular rebuilds, measured rebuild savings, external input manifests
 schemas/generation, generics, broader native operations, and other unfinished roadmap
 requirements remain pending. Guardian was not exercised and hosted CI has not run.
 The full roadmap goal remains active.
+
+## 2026-09-05: Typed scalar input manifest validation and generation
+
+Added the input-module CLI and owned Manifest embedding API. Strict versioned JSON
+names a logical module and typed scalar inputs; duplicate names/keys, unknown fields,
+reserved identifiers, invalid paths/types/values, noncanonical literals, out-of-range
+integers, and explicit byte/count/name limits reject before source output. The lexer
+now exposes its identifier classification so manifest names share language keyword
+rules. All existing integer widths and bool are supported, with string-encoded values
+preserving full i64/u64 precision and preventing source-token injection.
+
+Generation emits ordinary exported parameter-free functions, width-correct literals,
+canonical source, and a SHA-256 provenance comment for the complete manifest bytes.
+The checked-in input-values example evaluates to 64 and passes project formatting.
+Generation writes stdout only. Evaluation currently imports the generated file;
+automatic JSON loading and regeneration/freshness checks remain pending.
+
+518 Zig tests pass in Debug and ReleaseFast (461 core, 57 CLI). All 14 build steps
+pass. Unit tests cover canonical generated formatting, allocation-failure cleanup,
+names/types/values/ranges/duplicates and versions. The actual CLI driver verifies
+manifest hashes, deterministic output, imported evaluation at every integer width's
+minimum/maximum and both bool values, strict JSON/path/value rejection, and manifest
+byte/input-count limits. Existing verification, receipt/cache, module/duplicate
+scaling, and 392 native parity comparisons per host mode also pass. Formatting and
+whitespace checks pass; roadmap, README, and attached plan are synchronized.
+
+Automatic external-input integration, stale-generation protection, schema derivation,
+general serialization/bindings, finer incremental compilation, generics, broader native
+support, and other unfinished roadmap work remain pending. Guardian was not exercised;
+hosted CI has not run. The full roadmap goal remains active.

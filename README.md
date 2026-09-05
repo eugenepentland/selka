@@ -265,3 +265,7 @@ still check the current project and explicitly report that VM execution was skip
 
 Add `--compare-to path.json` to the evaluation cache driver to explain changes against
 a saved request, evaluation report, or cache entry (`--max-changes` bounds the output).
+
+`input-module` validates [typed JSON input manifests](docs/experiments/input-manifests.md)
+and emits ordinary exported functions. The example at `examples/input-values/`
+evaluates to 64; automatic JSON loading during evaluation remains pending.

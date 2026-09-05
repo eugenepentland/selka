@@ -1,0 +1,8 @@
+module main;
+import config.values as inputs;
+fn main() -> i64 {
+    if inputs::enabled() {
+        return cast<i64>(inputs::batch_size());
+    }
+    return 0;
+}

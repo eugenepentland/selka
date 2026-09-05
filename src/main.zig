@@ -1,7 +1,7 @@
 //! Host I/O and process policy stay outside the compiler and VM.
 const std = @import("std");
 const language = @import("mylang");
-const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fmt-module|fmt-project|emit-c|emit-project-c|eval-project|list-modules|list-interfaces|check-project|run-project|check-policy> <file.my>\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena\n  eval-project: --max-steps=N --max-frames=N --max-eval-bytes=N --evaluation-report|--evaluation-request (effect-free, parameter-free entry)\n  discover-duplicates/discover-project-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality/report-project-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: --check (otherwise writes formatted source to stdout)\n";
+const usage = "usage: mylang <input-module|check|run|dump-bytecode|discover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fmt-module|fmt-project|emit-c|emit-project-c|eval-project|list-modules|list-interfaces|check-project|run-project|check-policy> <file.my>\n  input-module: reads a typed JSON manifest and writes generated module source\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena\n  eval-project: --max-steps=N --max-frames=N --max-eval-bytes=N --evaluation-report|--evaluation-request (effect-free, parameter-free entry)\n  discover-duplicates/discover-project-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality/report-project-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: --check (otherwise writes formatted source to stdout)\n";
 
 pub fn main(init: std.process.Init) void {
     const status = dispatch(init) catch |err| status: {
@@ -23,6 +23,20 @@ fn dispatch(init: std.process.Init) !u8 {
     if (parsed.command == .@"eval-project" or parsed.command == .@"list-modules" or parsed.command == .@"list-interfaces" or parsed.command == .@"check-project" or parsed.command == .@"run-project" or parsed.command == .@"check-policy" or parsed.command == .@"discover-project-duplicates" or parsed.command == .@"report-project-quality" or parsed.command == .@"fmt-project" or parsed.command == .@"emit-project-c") return listModules(init, parsed);
     const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, parsed.path, allocator, .limited(16 * 1024 * 1024));
     defer allocator.free(bytes);
+    if (parsed.command == .@"input-module") {
+        var manifest = language.input_manifest.Manifest.parse(allocator, bytes) catch |err| {
+            if (err == error.OutOfMemory) return err;
+            const message = try std.fmt.allocPrint(allocator, "{s}: invalid input manifest: {s}\n", .{ parsed.path, @errorName(err) });
+            defer allocator.free(message);
+            try std.Io.File.stderr().writeStreamingAll(init.io, message);
+            return 2;
+        };
+        defer manifest.deinit();
+        const generated = try manifest.generate(allocator);
+        defer allocator.free(generated);
+        try std.Io.File.stdout().writeStreamingAll(init.io, generated);
+        return 0;
+    }
     var compilation = try language.Compilation.init(allocator, parsed.path, bytes);
     defer compilation.deinit();
     if (parsed.command == .fmt or parsed.command == .@"fmt-module") {
@@ -53,7 +67,7 @@ fn dispatch(init: std.process.Init) !u8 {
     const check_ns = if (parsed.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
     if (parsed.command != .@"emit-c") try report(init, &compilation);
     switch (parsed.command) {
-        .@"eval-project", .fmt, .@"fmt-module", .@"fmt-project", .@"emit-project-c", .@"list-modules", .@"list-interfaces", .@"check-project", .@"run-project", .@"check-policy", .@"discover-project-duplicates", .@"report-project-quality" => unreachable,
+        .@"input-module", .@"eval-project", .fmt, .@"fmt-module", .@"fmt-project", .@"emit-project-c", .@"list-modules", .@"list-interfaces", .@"check-project", .@"run-project", .@"check-policy", .@"discover-project-duplicates", .@"report-project-quality" => unreachable,
         .@"emit-c" => {
             const generated = compilation.emitC(allocator) catch |err| switch (err) {
                 error.SourceError => {
@@ -118,7 +132,7 @@ fn report(init: std.process.Init, compilation: *const language.Compilation) !voi
     }
 }
 
-const Command = enum { @"eval-project", @"emit-project-c", @"fmt-project", @"fmt-module", @"report-project-quality", @"discover-project-duplicates", @"check-policy", @"check-project", @"run-project", @"list-interfaces", @"list-modules", @"emit-c", fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
+const Command = enum { @"input-module", @"eval-project", @"emit-project-c", @"fmt-project", @"fmt-module", @"report-project-quality", @"discover-project-duplicates", @"check-policy", @"check-project", @"run-project", @"list-interfaces", @"list-modules", @"emit-c", fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
 const Parsed = struct { evaluation_request: bool, evaluation_report: bool, evaluation: language.evaluation.Options, policy: ?[]const u8, format_check: bool, quality: language.quality.Options, command: Command, path: []const u8, options: language.vm.Options, discovery: language.duplicates.Options, timings: bool };
 fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (args.len < 2) return error.Usage;

@@ -124,6 +124,11 @@ fn keyword(word: []const u8) Tag {
     }
     return .ident;
 }
+pub fn isIdentifier(word: []const u8) bool {
+    if (word.len == 0 or !(std.ascii.isAlphabetic(word[0]) or word[0] == '_')) return false;
+    for (word[1..]) |byte| if (!(std.ascii.isAlphanumeric(byte) or byte == '_')) return false;
+    return keyword(word) == .ident;
+}
 pub fn lex(allocator: std.mem.Allocator, bytes: []const u8, sink: *diagnostic.Sink) diagnostic.Error![]Token {
     var tokens: std.ArrayList(Token) = .empty;
     var i: usize = 0;
