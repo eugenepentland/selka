@@ -9,7 +9,8 @@ pub const Instruction = struct {
     op: union(enum) {
         push_i64: i64,
         push_bool: bool,
-        make_record: struct { ty: typed.Type, fields: usize },
+        make_record: struct { ty: typed.Type, fields: usize, order: []const usize = &.{} },
+        update_record: struct { ty: typed.Type, indices: []const usize },
         get_field: usize,
         load_local: typed.LocalId,
         store_local: typed.LocalId,
@@ -29,8 +30,8 @@ pub const Instruction = struct {
         ret,
     },
 };
-pub const Function = struct { id: typed.FunctionId, name: []const u8, parameter_count: usize = 0, return_type: typed.Type = .i64, locals: []const typed.Local = &.{}, instructions: []const Instruction };
-pub const Program = struct { functions: []const Function, main: typed.FunctionId = @fromBackingInt(0) };
+pub const Function = struct { conversion: bool = false, id: typed.FunctionId, name: []const u8, parameter_count: usize = 0, return_type: typed.Type = .i64, locals: []const typed.Local = &.{}, instructions: []const Instruction };
+pub const Program = struct { functions: []const Function, main: typed.FunctionId = @fromBackingInt(0), records: []const typed.Record = &.{} };
 const Error = std.mem.Allocator.Error || error{InternalError};
 
 fn enqueue(heights: []?usize, pending: []usize, len: *usize, target: usize, height: usize) Error!void {
@@ -47,17 +48,35 @@ fn enqueue(heights: []?usize, pending: []usize, len: *usize, target: usize, heig
 /// Operand types and initialization remain checked by the VM; there is no untrusted loader.
 pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
     if (@backingInt(program.main) >= program.functions.len) return error.InternalError;
+    for (program.records, 0..) |record, i| {
+        if (@backingInt(record.id) != i + 2) return error.InternalError;
+        for (record.fields) |field| if (!validType(field.ty, program)) {
+            return error.InternalError;
+        };
+    }
     const main = program.functions[@backingInt(program.main)];
     if (main.parameter_count != 0 or main.return_type != .i64) return error.InternalError;
     for (program.functions, 0..) |function, i| {
         if (@backingInt(function.id) != i or function.instructions.len == 0) return error.InternalError;
-        if (function.parameter_count > function.locals.len) return error.InternalError;
+        if (function.parameter_count > function.locals.len or !validType(function.return_type, program)) return error.InternalError;
+        for (function.locals) |local| if (!validType(local.ty, program)) {
+            return error.InternalError;
+        };
         for (function.instructions) |instruction| switch (instruction.op) {
             .load_local, .store_local => |slot| if (@backingInt(slot) >= function.locals.len) {
                 return error.InternalError;
             },
-            .make_record => |record| if (record.ty == .i64 or record.ty == .bool) {
-                return error.InternalError;
+            .make_record => |record| {
+                if (record.ty == .i64 or record.ty == .bool or !validType(record.ty, program)) return error.InternalError;
+                if (record.fields != program.records[@backingInt(record.ty) - 2].fields.len) return error.InternalError;
+                if (record.order.len != 0) {
+                    if (record.order.len != record.fields) return error.InternalError;
+                    try validateIndices(allocator, record.order, record.fields);
+                }
+            },
+            .update_record => |update| {
+                if (update.ty == .i64 or update.ty == .bool or @backingInt(update.ty) - 2 >= program.records.len) return error.InternalError;
+                try validateIndices(allocator, update.indices, program.records[@backingInt(update.ty) - 2].fields.len);
             },
             .call => |id| if (@backingInt(id) >= program.functions.len) {
                 return error.InternalError;
@@ -84,6 +103,10 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                 .make_record => |record| {
                     if (height < record.fields) return error.InternalError;
                     height = height - record.fields + 1;
+                },
+                .update_record => |update| {
+                    if (height <= update.indices.len) return error.InternalError;
+                    height -= update.indices.len;
                 },
                 .store_local, .pop, .jump_if_false => {
                     if (height == 0) return error.InternalError;
@@ -115,4 +138,18 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             }
         }
     }
+}
+
+fn validateIndices(allocator: std.mem.Allocator, indices: []const usize, count: usize) Error!void {
+    const seen = try allocator.alloc(bool, count);
+    defer allocator.free(seen);
+    @memset(seen, false);
+    for (indices) |index| {
+        if (index >= count or seen[index]) return error.InternalError;
+        seen[index] = true;
+    }
+}
+
+fn validType(ty: typed.Type, program: Program) bool {
+    return ty == .i64 or ty == .bool or @backingInt(ty) - 2 < program.records.len;
 }

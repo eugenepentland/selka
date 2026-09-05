@@ -37,6 +37,33 @@ pub const Value = union(enum) {
         return .{ .aggregate = record };
     }
 
+    /// Input expressions are already evaluated in source order. Store in schema order.
+    /// The emitter validates that order is a permutation before dispatch.
+    pub fn createOrdered(allocator: std.mem.Allocator, ty: Type, fields: []const Value, order: []const usize) !Value {
+        if (order.len == 0) return create(allocator, ty, fields);
+        if (ty == .i64 or ty == .bool or order.len != fields.len) return error.InternalError;
+        const record = try allocator.create(Aggregate);
+        errdefer allocator.destroy(record);
+        const owned = try allocator.alloc(Value, fields.len);
+        for (fields, order) |field, index| owned[index] = field.retain();
+        record.* = .{ .ty = ty, .fields = owned };
+        return .{ .aggregate = record };
+    }
+
+    pub fn updated(self: Value, allocator: std.mem.Allocator, indices: []const usize, replacements: []const Value) !Value {
+        if (self != .aggregate or indices.len != replacements.len) return error.InternalError;
+        for (indices) |index| if (index >= self.aggregate.fields.len) {
+            return error.InternalError;
+        };
+        const out = try create(allocator, self.aggregate.ty, self.aggregate.fields);
+        const fields = @constCast(out.aggregate.fields);
+        for (indices, replacements) |index, replacement| {
+            fields[index].release(allocator);
+            fields[index] = replacement.retain();
+        }
+        return out;
+    }
+
     pub fn retain(self: Value) Value {
         if (self == .aggregate) self.aggregate.references += 1;
         return self;

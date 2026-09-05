@@ -7,7 +7,7 @@ not a claim that the full future language has been delivered.
 | Track | Current state | Next concrete acceptance experiment |
 | --- | --- | --- |
 | T, exact duplicate discovery | Implemented as separate `discover-duplicates` command; review and scaling corpus added | Collect ordinary-program findings before adding approximate matching; never merge automatically. |
-| A1, aggregates and complete conversions | In progress: immutable aggregate runtime storage and lifetime tests; frontend pending | Add a record field and demonstrate broken incomplete construction/conversion plus preserved updates. |
+| A1, aggregates and complete conversions | In progress: records, complete construction, field access, preserving updates, and declarative conversions implemented; arrays/widths pending | Record field-change experiments pass; implement fixed arrays, checked indexing, and additional integer widths. |
 | A2, nominal domains and exhaustive mappings | Pending A1 type-model decisions | Reject seconds passed as millimeters; expose a newly added variant in exhaustive mappings. |
 | B, borrowing | Pending guest memory representation | Reject shared/exclusive conflicts and expired references with allocation/bounds/lifetime identity. |
 | C, ownership/capabilities/effects | Pending B and minimal recoverable errors | Acquire A, fail acquiring B, release A once; reject transitive forbidden effects including cleanup. |
@@ -17,11 +17,10 @@ not a claim that the full future language has been delivered.
 | F, compile-time/schema/incremental work | Pending aggregates/variants/modules | Reject duplicate schema keys and undeclared inputs; explain invalidation and evaluation budgets. |
 | T, formatter/reference reports/verification | Exact discovery establishes the first command only | Preserve semantics/comments with one formatter; report resolved references separately from runtime test coverage. |
 
-## A1 design decisions and remaining frontend work
+## A1 design decisions and remaining work
 
-Records need nominal type identities, explicit field lists, field access, and
-complete literals. Decide copy/address/storage semantics before extending the
-VM's two-variant Value. The first restriction is immutable record values
+Records now have nominal type identities, explicit field lists, field access,
+and complete literals. The VM uses immutable aggregate storage. The first restriction is immutable record values
 containing only scalar or other finite record values; exclude recursive by-value
 types and resources. Updating creates a value of the same nominal type. This
 must not imply any policy for later owned records or references.
@@ -39,8 +38,8 @@ handled. Added fields must break old conversions until explicitly preserved,
 transformed, or discarded by name. The check establishes accounting, not the
 correctness of the conversion's arithmetic.
 
-These are design constraints for the next implementation milestone. No record,
-array, conversion, borrow, or effect syntax is accepted as an empty placeholder.
+Record construction, update, and declarative conversion syntax is implemented.
+Array, borrowing, and effect syntax is not accepted as an empty placeholder.
 
 The [A1 experiment record](aggregates.md) describes the implemented storage
-foundation and remaining frontend, array, and integer-width work.
+foundation, record frontend, and remaining array/integer-width work.

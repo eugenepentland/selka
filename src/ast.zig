@@ -12,6 +12,9 @@ pub const Node = struct {
         integer: Span,
         boolean: bool,
         name: Span,
+        record: struct { name: Span, fields: []const FieldInit },
+        update: struct { base: NodeId, fields: []const FieldInit },
+        field: struct { base: NodeId, name: Span },
         call: struct { name: Span, arguments: []const NodeId },
         unary: struct { op: UnaryOp, operand: NodeId, op_span: Span },
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
@@ -29,10 +32,13 @@ pub const Statement = struct {
         assignment: struct { name: Span, value: NodeId, op: AssignmentOp, op_span: Span },
     },
 };
+pub const FieldInit = struct { name: Span, value: NodeId };
+pub const Record = struct { name: Span, fields: []const Parameter };
 pub const Parameter = struct { name: Span, ty: Span };
-pub const Function = struct { name: Span, parameters: []const Parameter, return_type: Span, body: StatementId };
+pub const Function = struct { conversion: bool = false, name: Span, parameters: []const Parameter, return_type: Span, body: StatementId };
 pub const Program = struct {
     nodes: std.ArrayList(Node),
     statements: std.ArrayList(Statement),
     functions: []const Function,
+    records: []const Record,
 };

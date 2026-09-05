@@ -77,6 +77,23 @@ const Emitter = struct {
     fn emitExpression(self: *Emitter, id: typed.NodeId) !void {
         const node = self.program.nodes[@backingInt(id)];
         switch (node.data) {
+            .record => |fields| {
+                const order = try self.allocator.alloc(usize, fields.len);
+                for (fields, order) |field, *index| index.* = field.index;
+                try self.instruction(node.span, .{ .make_record = .{ .ty = node.ty, .fields = fields.len, .order = order } });
+                try self.pushFields(fields);
+            },
+            .update => |update| {
+                const indices = try self.allocator.alloc(usize, update.fields.len);
+                for (update.fields, indices) |field, *index| index.* = field.index;
+                try self.instruction(node.span, .{ .update_record = .{ .ty = node.ty, .indices = indices } });
+                try self.pushFields(update.fields);
+                try self.push(.{ .expression = update.base });
+            },
+            .field => |field| {
+                try self.instruction(node.span, .{ .get_field = field.index });
+                try self.push(.{ .expression = field.base });
+            },
             .integer => |value| try self.instruction(node.span, .{ .push_i64 = value }),
             .boolean => |value| try self.instruction(node.span, .{ .push_bool = value }),
             .local => |slot| try self.instruction(node.span, .{ .load_local = slot }),
@@ -109,6 +126,13 @@ const Emitter = struct {
                     try self.push(.{ .expression = b.left });
                 }
             },
+        }
+    }
+    fn pushFields(self: *Emitter, fields: []const typed.FieldInit) !void {
+        var i = fields.len;
+        while (i > 0) {
+            i -= 1;
+            try self.push(.{ .expression = fields[i].value });
         }
     }
     fn finish(self: *Emitter, body: typed.StatementId) ![]const bc.Instruction {
@@ -153,9 +177,9 @@ pub fn lower(allocator: std.mem.Allocator, program: typed.Program) !bc.Program {
     const functions = try allocator.alloc(bc.Function, program.functions.len);
     for (program.functions, functions) |function, *out| {
         var emitter: Emitter = .{ .allocator = allocator, .program = program };
-        out.* = .{ .id = function.id, .name = function.name, .locals = function.locals, .parameter_count = function.parameter_count, .return_type = function.return_type, .instructions = try emitter.finish(function.body) };
+        out.* = .{ .conversion = function.conversion, .id = function.id, .name = function.name, .locals = function.locals, .parameter_count = function.parameter_count, .return_type = function.return_type, .instructions = try emitter.finish(function.body) };
     }
-    const result: bc.Program = .{ .functions = functions, .main = program.main };
+    const result: bc.Program = .{ .functions = functions, .main = program.main, .records = program.records };
     try bc.validate(allocator, result);
     return result;
 }

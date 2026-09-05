@@ -163,3 +163,41 @@ Debug and ReleaseFast each pass 62/62 tests (49 core, 13 CLI); formatting passes
 See [the A1 record](experiments/aggregates.md). This is a storage checkpoint;
 A1 and the other pending roadmap tracks are not complete. Guardian gates were
 not exercised.
+
+
+## 2026-09-05: A1 record frontend and declarative conversions
+
+Implemented nominal record schemas, forward type references with cycle rejection,
+explicit complete construction, named field access, immutable preserving updates,
+and restricted declarative `conversion fn` bodies. Constructor/replacement
+expressions evaluate in source order before values are arranged in schema order.
+Complete conversions require a named use/discard decision for every source field;
+passing the whole source to an ordinary helper does not satisfy accounting.
+
+The conversion form permits direct source-field discards and an explicit complete
+destination construction. It intentionally does not claim arbitrary control/data
+flow proves completeness. Ordinary geometry/query functions remain unrestricted
+by conversion accounting. Type mismatch and missing-field diagnostics identify
+actual types/fields and retain declaration locations.
+
+Exact discovery is now `exact-v2`, preserving nominal record names, resolved field
+identities, initializer order, construction/update, and conversion contracts.
+VM validation checks record schemas and construction/update field types and
+indices. The lifetime foundation continues to own/release all values.
+
+Evidence:
+
+- Debug and ReleaseFast both pass 70/70 tests (56 core, 14 actual CLI).
+- Formatting and whitespace checks pass on the pinned Guardian Zig snapshot.
+- Editable records and conversions examples print 12 and 11 respectively.
+- Added-field construction/conversion failures, preserving updates, nested values,
+  nominal mismatches, helper-accounting limits, source evaluation order, and
+  duplicate identity are covered by semantic and actual-CLI fixtures.
+- Allocation-failure sweeps cover schema collection, construction/update, nested
+  projection, conversion checking, disassembly, and discovery. The ReleaseFast
+  sweep exposed heap-dependent resize success varying allocation counts; the
+  failure-injection fixture now forces allocation fallback for stable fail indices.
+  Ordinary success tests still exercise the normal allocator behavior.
+
+Arrays, checked indexing, and additional integer widths remain within A1. The
+full pending-roadmap goal remains active. Guardian gates were not exercised.

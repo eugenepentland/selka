@@ -6,6 +6,7 @@ const values = @import("value.zig");
 const Value = values.Value;
 const record_type: values.Type = @fromBackingInt(2);
 const span: language.source.Span = .{ .start = 0, .end = 0 };
+const schema: @import("typed.zig").Record = .{ .id = record_type, .name = "TestRecord", .declaration = span, .fields = &.{.{ .name = "value", .declaration = span, .ty = .i64 }} };
 const Op = @FieldType(language.bytecode.Instruction, "op");
 fn instruction(op: Op) language.bytecode.Instruction {
     return .{ .span = span, .op = op };
@@ -27,7 +28,7 @@ const code = [_]language.bytecode.Instruction{
     instruction(.pop),
     instruction(.ret),
 };
-const program: language.bytecode.Program = .{ .functions = &.{
+const program: language.bytecode.Program = .{ .records = &.{schema}, .functions = &.{
     .{ .id = @fromBackingInt(0), .name = "main", .locals = &.{.{ .name = "record", .declaration = span, .ty = record_type, .mutable = true }}, .instructions = &code },
     .{ .id = @fromBackingInt(1), .name = "identity", .parameter_count = 1, .return_type = record_type, .locals = &.{.{ .name = "argument", .declaration = span, .ty = record_type, .mutable = false }}, .instructions = &.{ instruction(.{ .load_local = @fromBackingInt(0) }), instruction(.ret) } },
 } };
@@ -77,7 +78,7 @@ test "deep aggregate release is iterative and needs no additional allocations" {
 test "internal field and scalar type errors release popped aggregate operands" {
     const variants = [_]Op{ .{ .get_field = 4 }, .neg_i64_checked, .not_bool };
     for (variants) |op| {
-        const bad: language.bytecode.Program = .{ .functions = &.{.{
+        const bad: language.bytecode.Program = .{ .records = &.{schema}, .functions = &.{.{
             .id = @fromBackingInt(0),
             .name = "main",
             .instructions = &.{ instruction(.{ .push_i64 = 7 }), instruction(.{ .make_record = .{ .ty = record_type, .fields = 1 } }), instruction(op), instruction(.ret) },
@@ -128,7 +129,7 @@ const LimitedLiveAllocator = struct {
 };
 
 test "VM loop construction and overwrite fit a fixed live byte budget" {
-    const loop: language.bytecode.Program = .{ .functions = &.{.{
+    const loop: language.bytecode.Program = .{ .records = &.{schema}, .functions = &.{.{
         .id = @fromBackingInt(0),
         .name = "main",
         .locals = &.{ .{ .name = "i", .declaration = span, .ty = .i64, .mutable = true }, .{ .name = "record", .declaration = span, .ty = record_type, .mutable = true } },

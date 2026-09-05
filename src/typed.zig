@@ -15,11 +15,24 @@ pub const Node = struct {
         integer: i64,
         boolean: bool,
         local: LocalId,
+        record: []const FieldInit,
+        update: struct { base: NodeId, fields: []const FieldInit },
+        field: struct { base: NodeId, index: usize },
         call: struct { function: FunctionId, arguments: []const NodeId },
         unary: struct { op: UnaryOp, operand: NodeId, op_span: Span },
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
     },
 };
+pub const FieldInit = struct { index: usize, value: NodeId };
+pub const Field = struct { name: []const u8, declaration: Span, ty: Type };
+pub const Record = struct { id: Type, name: []const u8, declaration: Span, fields: []const Field };
+pub fn typeName(ty: Type, records: []const Record) []const u8 {
+    return switch (ty) {
+        .i64 => "i64",
+        .bool => "bool",
+        else => records[@backingInt(ty) - 2].name,
+    };
+}
 pub const Store = struct { slot: LocalId, value: NodeId };
 pub const Statement = struct {
     span: Span,
@@ -36,6 +49,7 @@ pub const Statement = struct {
 };
 pub const Local = struct { name: []const u8, declaration: Span, ty: Type, mutable: bool, reads: usize = 0, writes: usize = 0 };
 pub const Function = struct {
+    conversion: bool = false,
     id: FunctionId,
     name: []const u8,
     declaration: Span,
@@ -44,4 +58,4 @@ pub const Function = struct {
     body: StatementId,
     locals: []const Local,
 };
-pub const Program = struct { nodes: []const Node, statements: []const Statement, functions: []const Function, main: FunctionId };
+pub const Program = struct { nodes: []const Node, statements: []const Statement, functions: []const Function, main: FunctionId, records: []const Record = &.{} };

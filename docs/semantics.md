@@ -87,7 +87,7 @@ The [MVP acceptance audit](mvp-audit.md) records the verification evidence.
 Post-MVP feature syntax is not accepted as a placeholder with invented semantics.
 
 
-The guest has no strings, floats, aggregates, pointers, heap allocation, borrowing,
+The guest has no strings, floats, arrays, pointers, heap allocation, borrowing,
 ownership transfer, generics, compile-time execution, modules, globals, closures,
 function values, standard library, FFI, exceptions, typed errors, concurrency,
 optimizer, native backend, or self-hosting. The host compiler and VM allocate.
@@ -101,3 +101,12 @@ language validity. It fully checks the input first, then reports exact candidate
 on stdout, and never lowers or executes the input. Its contract, thresholds,
 population labels, recursion normalization, and limits are specified in
 [the experiment record](experiments/duplicate-discovery.md).
+
+
+Record extensions are now implemented: nominal `struct` declarations, explicit
+complete `new Type { ... }` construction, `.field` access, preserving
+`update(value) { ... }`, and declarative `conversion fn` accounting. Definitions
+may refer forward but cannot form recursive by-value layouts. See
+[the A1 semantics and restrictions](experiments/aggregates.md) for the grammar,
+copy/storage behavior, conversion body restriction, and added-field guarantees.
+Fixed arrays, indexing, and additional integer widths remain pending.

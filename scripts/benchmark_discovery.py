@@ -27,7 +27,7 @@ def main():
     if not cpu and cpuinfo.exists():
         cpu = next((line.split(":", 1)[1].strip() for line in cpuinfo.read_text().splitlines() if line.startswith("model name")), "unknown")
     report = {
-        "experiment": "duplicate-discovery-exact-v1",
+        "experiment": "duplicate-discovery",
         "machine": platform.platform(),
         "processor": cpu,
         "captured_utc": datetime.now(timezone.utc).isoformat(),
@@ -52,6 +52,10 @@ def main():
                     [str(compiler), "discover-duplicates", str(source), "--population=generated", "--timings"],
                     check=True, text=True, capture_output=True,
                 )
+                analysis_version = re.search(r"^duplicate discovery ([^;]+);", outcome.stdout)
+                if not analysis_version:
+                    raise RuntimeError("missing analysis version")
+                report["analysis_version"] = analysis_version[1]
                 match = re.search(r"^timings: (.+)$", outcome.stderr, re.MULTILINE)
                 if not match:
                     raise RuntimeError("missing timing output")

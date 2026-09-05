@@ -3,7 +3,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 
-pub const version = "exact-v1";
+pub const version = "exact-v2";
 pub const Population = enum { production, tests, generated, reference, intentional };
 pub const Options = struct { min_nodes: usize = 8, population: Population = .production };
 pub const Group = struct { members: []const typed.FunctionId, nodes: usize };
@@ -29,18 +29,32 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
     defer work.deinit(allocator);
     const writer = &output.writer;
     var nodes: usize = 0;
-    writer.print("{s} fn {s} {d} {d}\n", .{ version, @tagName(function.return_type), function.parameter_count, function.locals.len }) catch return error.OutOfMemory;
+    writer.print("{s} fn {s} {d} {d}\n", .{ version, typed.typeName(function.return_type, program.records), function.parameter_count, function.locals.len }) catch return error.OutOfMemory;
+    writer.print("conversion {}\n", .{function.conversion}) catch return error.OutOfMemory;
     // Slot identities are declaration order within a function, including parameters.
     // Names, spans, and advisory use counters have no role in structural equality.
-    for (function.locals) |local| writer.print("local {s} {}\n", .{ @tagName(local.ty), local.mutable }) catch return error.OutOfMemory;
+    for (function.locals) |local| writer.print("local {s} {}\n", .{ typed.typeName(local.ty, program.records), local.mutable }) catch return error.OutOfMemory;
     try work.append(allocator, .{ .statement = function.body });
     while (work.pop()) |task| {
         nodes += 1;
         switch (task) {
             .expression => |id| {
                 const node = program.nodes[@backingInt(id)];
-                writer.print("expr {s} {s}\n", .{ @tagName(node.ty), @tagName(node.data) }) catch return error.OutOfMemory;
+                writer.print("expr {s} {s}\n", .{ typed.typeName(node.ty, program.records), @tagName(node.data) }) catch return error.OutOfMemory;
                 switch (node.data) {
+                    .record => |fields| {
+                        try recordFields(allocator, writer, &work, program, node.ty, fields);
+                    },
+                    .update => |update| {
+                        try recordFields(allocator, writer, &work, program, node.ty, update.fields);
+                        try work.append(allocator, .{ .expression = update.base });
+                    },
+                    .field => |field| {
+                        const base_type = program.nodes[@backingInt(field.base)].ty;
+                        const name = program.records[@backingInt(base_type) - 2].fields[field.index].name;
+                        writer.print("field {s}\n", .{name}) catch return error.OutOfMemory;
+                        try work.append(allocator, .{ .expression = field.base });
+                    },
                     .integer => |value| writer.print("{d}\n", .{value}) catch return error.OutOfMemory,
                     .boolean => |value| writer.print("{}\n", .{value}) catch return error.OutOfMemory,
                     .local => |slot| writer.print("{d}\n", .{@backingInt(slot)}) catch return error.OutOfMemory,
@@ -103,6 +117,16 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
         }
     }
     return .{ .bytes = try output.toOwnedSlice(), .nodes = nodes };
+}
+
+fn recordFields(allocator: std.mem.Allocator, writer: *std.Io.Writer, work: *std.ArrayList(Work), program: typed.Program, ty: typed.Type, fields: []const typed.FieldInit) !void {
+    writer.print("fields {d}\n", .{fields.len}) catch return error.OutOfMemory;
+    for (fields) |field| writer.print("field {s}\n", .{program.records[@backingInt(ty) - 2].fields[field.index].name}) catch return error.OutOfMemory;
+    var i = fields.len;
+    while (i > 0) {
+        i -= 1;
+        try work.append(allocator, .{ .expression = fields[i].value });
+    }
 }
 
 /// Keys include the complete canonical structure: the hash map compares bytes

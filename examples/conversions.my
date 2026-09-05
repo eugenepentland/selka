@@ -1,0 +1,16 @@
+struct Source { x: i64, y: i64, note: bool }
+struct View { distance: i64 }
+
+fn combine(x: i64, y: i64) -> i64 {
+    return x + y;
+}
+
+conversion fn to_view(source: Source) -> View {
+    discard source.note;
+    return new View { distance: combine(source.x, source.y) };
+}
+
+fn main() -> i64 {
+    let source = new Source { x: 4, y: 7, note: true };
+    return to_view(source).distance;
+}

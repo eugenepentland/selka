@@ -169,3 +169,20 @@ test "duplicate discovery is separate advisory analysis with explicit options" {
     try invokeOptions("discover-duplicates", source, &.{ "--min-nodes=1", "--min-nodes=2" }, 2, "", "usage:");
     try invokeOptions("check", source, &.{"--min-nodes=1"}, 2, "", "usage:");
 }
+
+test "CLI checks runs and dumps records and declared complete conversions" {
+    try invoke("run", @embedFile("fixtures/records.my"), 0, "12\n", "");
+    try invoke("run", @embedFile("fixtures/conversions.my"), 0, "11\n", "");
+    try invoke("check", @embedFile("fixtures/conversions.my"), 0, "", "");
+    const dumped = try runFixture("dump-bytecode", @embedFile("fixtures/conversions.my"), &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    try testing.expectEqualStrings("", dumped.stderr);
+    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "conversion function to_view(source: Source) -> View") != null);
+    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "MAKE_RECORD") != null);
+    const incomplete = "struct Source { x: i64, added: bool } struct View { y: i64 } conversion fn convert(src: Source) -> View { return new View { y: src.x }; } fn main() -> i64 { return 0; }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| {
+        try invoke(command, incomplete, 1, "", "error[E_INCOMPLETE_CONVERSION]");
+    }
+}

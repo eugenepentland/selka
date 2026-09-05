@@ -617,8 +617,9 @@ When advisory analysis is introduced, measure its incremental time separately fr
 Implementation update (2026-09-05): exact scalar duplicate discovery in track T
 is now implemented as a separate advisory command. See
 [the experiment record](experiments/duplicate-discovery.md) and
-[post-MVP tracking](experiments/roadmap.md). Other tracks below remain pending;
-aggregate values and complete conversions are next.
+[post-MVP tracking](experiments/roadmap.md). A1 now includes records, complete construction, field access, preserving
+updates, and declarative complete conversions; arrays and integer widths remain
+pending. Other tracks below remain pending.
 
 | Stage | Scope | Question to answer before proceeding |
 | --- | --- | --- |
@@ -656,7 +657,7 @@ After that works, proceed milestone by milestone. Keep any design change in `doc
 
 ## 17. Implementation references and status
 
-The scalar syntax, VM format, semantics, and budgets in sections 4–13 are implemented in the sibling `mylang` repository. See [mvp-audit.md](mvp-audit.md) for the requirement-by-requirement evidence and [progress.md](progress.md) for milestone verification. M0–M5 are complete. Later language features remain proposals; no performance claims are made.
+The scalar syntax, VM format, semantics, and budgets in sections 4–13 are implemented in the sibling `mylang` repository. See [mvp-audit.md](mvp-audit.md) for the requirement-by-requirement evidence and [progress.md](progress.md) for milestone verification. M0–M5 are complete. Post-MVP implementation progress is tracked in section 15 and the experiment records; other features remain proposals. No performance claims are made.
 
 Official Zig reference checked for the host arithmetic mechanisms:
 

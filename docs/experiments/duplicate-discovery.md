@@ -7,7 +7,7 @@ zig build run -- discover-duplicates examples/duplicates.my
 zig build run -- discover-duplicates examples/duplicates.my --min-nodes=8 --population=production --timings
 ```
 
-`exact-v1` runs after complete semantic checking and before lowering. It does
+`exact-v2` runs after complete semantic checking and before lowering. It does
 not execute guest code. Findings are advisory and exit 0; source errors still
 exit 1 and host/usage failures exit 2. Ordinary `check`, `run`, and
 `dump-bytecode` do not run discovery. Binding warnings retain their existing
@@ -51,9 +51,10 @@ It defaults to production. Inputs from different invocations are never combined.
 Separate mixed populations into review corpora; this flag does not classify
 individual functions or infer whether they are independent expectations.
 
-The scalar compiler has no nominal domains, fields, resources, or declared
-external effects yet. The algorithm cannot claim to preserve metadata that
-has not been implemented. New typed variants must extend serialization and
+Record support preserves nominal record names, resolved field names, field
+initializer order, construction versus update, and the conversion contract.
+The compiler still has no nominal scalar wrappers, resources, or declared
+external effects; analysis cannot claim to preserve absent metadata. New typed variants must extend serialization and
 negative fixtures before discovery supports those language features. Whole-
 function matching can miss useful repeated blocks and semantically equivalent
 implementations. Approximate matching is not implemented: changed constants,
@@ -97,3 +98,9 @@ The initial local ReleaseFast samples are checked in as
 and 10,000 helpers with five samples each. They demonstrate this generated
 workload only; they do not establish scalability for future aggregates,
 modules, or approximate analysis.
+
+
+`exact-v2` adds record/field identities and conversion contracts to canonical
+serialization. The checked-in baseline JSON remains historical `exact-v1`
+evidence; rerun the benchmark script to measure this version. Primitive
+normalization and recursion policy are unchanged.

@@ -94,8 +94,27 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
             .make_record => |record| {
                 if (stack.items.len - frame.operand_base < record.fields) return error.InternalError;
                 const start = stack.items.len - record.fields;
-                const value = try typed.Value.create(allocator, record.ty, stack.items[start..]);
+                const schema = program.records[@backingInt(record.ty) - 2];
+                for (stack.items[start..], 0..) |field, i| {
+                    const field_index = if (record.order.len == 0) i else record.order[i];
+                    if (field.typeOf() != schema.fields[field_index].ty) return error.InternalError;
+                }
+                const value = try typed.Value.createOrdered(allocator, record.ty, stack.items[start..], record.order);
                 for (stack.items[start..]) |field| field.release(allocator);
+                stack.shrinkRetainingCapacity(start);
+                try pushOwned(&stack, allocator, value);
+            },
+            .update_record => |update| {
+                if (stack.items.len - frame.operand_base <= update.indices.len) return error.InternalError;
+                const start = stack.items.len - update.indices.len - 1;
+                const base = stack.items[start];
+                if (base.typeOf() != update.ty) return error.InternalError;
+                const schema = program.records[@backingInt(update.ty) - 2];
+                for (stack.items[start + 1 ..], update.indices) |field, index| {
+                    if (field.typeOf() != schema.fields[index].ty) return error.InternalError;
+                }
+                const value = try base.updated(allocator, update.indices, stack.items[start + 1 ..]);
+                for (stack.items[start..]) |old| old.release(allocator);
                 stack.shrinkRetainingCapacity(start);
                 try pushOwned(&stack, allocator, value);
             },

@@ -31,12 +31,28 @@ pub const Parser = struct {
     }
     fn typeName(self: *Parser) diagnostic.Error!Span {
         const token = self.current();
-        if (self.take(.kw_i64) or self.take(.kw_bool)) return token.span;
-        return self.sink.fail("E_TYPE", token.span, "expected i64 or bool");
+        if (self.take(.kw_i64) or self.take(.kw_bool) or self.take(.ident)) return token.span;
+        return self.sink.fail("E_TYPE", token.span, "expected i64, bool, or a declared record type");
     }
     pub fn parse(self: *Parser) diagnostic.Error!ast.Program {
         var functions: std.ArrayList(ast.Function) = .empty;
+        var records: std.ArrayList(ast.Record) = .empty;
         while (self.current().tag != .eof) {
+            if (self.take(.kw_struct)) {
+                const name = try self.expect(.ident);
+                _ = try self.expect(.lbrace);
+                var fields: std.ArrayList(ast.Parameter) = .empty;
+                if (self.current().tag != .rbrace) while (true) {
+                    const field = try self.expect(.ident);
+                    _ = try self.expect(.colon);
+                    try fields.append(self.allocator, .{ .name = field.span, .ty = try self.typeName() });
+                    if (!self.take(.comma)) break;
+                };
+                _ = try self.expect(.rbrace);
+                try records.append(self.allocator, .{ .name = name.span, .fields = try fields.toOwnedSlice(self.allocator) });
+                continue;
+            }
+            const conversion = self.take(.kw_conversion);
             _ = try self.expect(.kw_fn);
             const name = try self.expect(.ident);
             _ = try self.expect(.lparen);
@@ -51,9 +67,9 @@ pub const Parser = struct {
             _ = try self.expect(.arrow);
             const return_type = try self.typeName();
             const body = try self.block();
-            try functions.append(self.allocator, .{ .name = name.span, .parameters = try parameters.toOwnedSlice(self.allocator), .return_type = return_type, .body = body });
+            try functions.append(self.allocator, .{ .conversion = conversion, .name = name.span, .parameters = try parameters.toOwnedSlice(self.allocator), .return_type = return_type, .body = body });
         }
-        return .{ .nodes = self.nodes, .statements = self.statements, .functions = try functions.toOwnedSlice(self.allocator) };
+        return .{ .nodes = self.nodes, .statements = self.statements, .functions = try functions.toOwnedSlice(self.allocator), .records = try records.toOwnedSlice(self.allocator) };
     }
     fn addStatement(self: *Parser, stmt: ast.Statement) diagnostic.Error!ast.StatementId {
         const id: ast.StatementId = @fromBackingInt(self.statements.items.len);
@@ -134,11 +150,37 @@ pub const Parser = struct {
         try self.nodes.append(self.allocator, node);
         return id;
     }
+    fn fieldInitializers(self: *Parser) diagnostic.Error![]const ast.FieldInit {
+        _ = try self.expect(.lbrace);
+        var fields: std.ArrayList(ast.FieldInit) = .empty;
+        if (self.current().tag != .rbrace) while (true) {
+            const name = try self.expect(.ident);
+            _ = try self.expect(.colon);
+            try fields.append(self.allocator, .{ .name = name.span, .value = try self.expression(0) });
+            if (!self.take(.comma)) break;
+        };
+        _ = try self.expect(.rbrace);
+        return fields.toOwnedSlice(self.allocator);
+    }
     fn expression(self: *Parser, min_precedence: u8) diagnostic.Error!ast.NodeId {
         try self.enter();
         defer self.depth -= 1;
         const token = self.current();
         var left: ast.NodeId = switch (token.tag) {
+            .kw_new => record: {
+                self.pos += 1;
+                const name = try self.expect(.ident);
+                const fields = try self.fieldInitializers();
+                break :record try self.append(.{ .span = .join(token.span, self.tokens[self.pos - 1].span), .data = .{ .record = .{ .name = name.span, .fields = fields } } });
+            },
+            .kw_update => update: {
+                self.pos += 1;
+                _ = try self.expect(.lparen);
+                const base = try self.expression(0);
+                _ = try self.expect(.rparen);
+                const fields = try self.fieldInitializers();
+                break :update try self.append(.{ .span = .join(token.span, self.tokens[self.pos - 1].span), .data = .{ .update = .{ .base = base, .fields = fields } } });
+            },
             .integer, .ident, .kw_true, .kw_false => leaf: {
                 self.pos += 1;
                 if (token.tag == .ident and self.take(.lparen)) {
@@ -171,6 +213,11 @@ pub const Parser = struct {
             else => return self.sink.fail("E_EXPRESSION", token.span, "expected an expression"),
         };
         while (true) {
+            if (self.take(.dot)) {
+                const name = try self.expect(.ident);
+                left = try self.append(.{ .span = .join(self.nodes.items[@backingInt(left)].span, name.span), .data = .{ .field = .{ .base = left, .name = name.span } } });
+                continue;
+            }
             const op = self.current();
             const precedence: u8 = switch (op.tag) {
                 .or_or => 1,
