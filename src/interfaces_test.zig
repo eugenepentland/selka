@@ -244,3 +244,45 @@ test "cross module returned slice references preserve caller mutation and snapsh
     const result = try @import("vm.zig").runWithOptions(t.allocator, compilation.code.?, .{});
     try t.expectEqual(@as(i64, 11), result.value);
 }
+
+fn grouped(analysis: @import("duplicates.zig").Analysis, program: @import("typed.zig").Program, left: []const u8, right: []const u8) bool {
+    for (analysis.groups) |group| {
+        var found_left = false;
+        var found_right = false;
+        for (group.members) |id| {
+            const name = program.functions[@backingInt(id)].name;
+            found_left = found_left or std.mem.eql(u8, name, left);
+            found_right = found_right or std.mem.eql(u8, name, right);
+        }
+        if (found_left and found_right) return true;
+    }
+    return false;
+}
+fn discoveryScenario(allocator: std.mem.Allocator) !void {
+    var files: Files = .{ .entries = &.{
+        .{ .path = "main.my", .bytes = "module main; import left; import right; fn main() -> i64 { return 0; }" },
+        .{ .path = "left.my", .bytes = "module left; import shared as s; struct Box { n: i64 } fn pure(x: i64) -> i64 { return x * 2 + 3; } fn nominal(x: Box) -> Box { return x; } fn helper(x: i64) -> i64 { return x + 1; } fn wrapper(x: i64) -> i64 { return helper(x); } fn shared_use(x: s::Box) -> i64 { return s::number(x); }" },
+        .{ .path = "right.my", .bytes = "module right; import shared as q; struct Box { n: i64 } fn pure(value: i64) -> i64 { return value * 2 + 3; } fn nominal(value: Box) -> Box { return value; } fn helper(value: i64) -> i64 { return value + 1; } fn wrapper(value: i64) -> i64 { return helper(value); } fn shared_use(value: q::Box) -> i64 { return q::number(value); }" },
+        .{ .path = "shared.my", .bytes = "module shared; export Box; export number; struct Box { n: i64 } fn number(x: Box) -> i64 { return x.n; }" },
+    } };
+    var project = graph.Project.init(allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try @import("project_compile.zig").Compilation.init(&index);
+    try compilation.check();
+    var analysis = try @import("duplicates.zig").discover(allocator, compilation.program.?, .{ .min_nodes = 1, .approximate = true, .near_options = .{ .max_work = 10000 } });
+    defer analysis.deinit();
+    try t.expect(grouped(analysis, compilation.program.?, "left::pure", "right::pure"));
+    try t.expect(grouped(analysis, compilation.program.?, "left::shared_use", "right::shared_use"));
+    try t.expect(!grouped(analysis, compilation.program.?, "left::nominal", "right::nominal"));
+    try t.expect(!grouped(analysis, compilation.program.?, "left::wrapper", "right::wrapper"));
+    const text = try @import("duplicates.zig").render(allocator, analysis, compilation.program.?, compilation.src);
+    defer allocator.free(text);
+    for ([_][]const u8{ "left.my:1:", "right.my:1:", "left::pure", "right::pure", "approximate near-v1" }) |part| try t.expect(std.mem.indexOf(u8, text, part) != null);
+}
+test "module duplicate discovery preserves nominal types and callees while normalizing shared import aliases" {
+    try discoveryScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), discoveryScenario, .{});
+}

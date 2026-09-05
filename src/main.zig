@@ -1,7 +1,7 @@
 //! Host I/O and process policy stay outside the compiler and VM.
 const std = @import("std");
 const language = @import("mylang");
-const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates|report-quality|fmt|emit-c|list-modules|list-interfaces|check-project|run-project|check-policy> <file.my>\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena\n  discover-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  fmt: --check (otherwise writes formatted source to stdout)\n";
+const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates|discover-project-duplicates|report-quality|fmt|emit-c|list-modules|list-interfaces|check-project|run-project|check-policy> <file.my>\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena\n  discover-duplicates/discover-project-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  fmt: --check (otherwise writes formatted source to stdout)\n";
 
 pub fn main(init: std.process.Init) void {
     const status = dispatch(init) catch |err| status: {
@@ -20,7 +20,7 @@ fn dispatch(init: std.process.Init) !u8 {
         try std.Io.File.stderr().writeStreamingAll(init.io, usage);
         return 2;
     };
-    if (parsed.command == .@"list-modules" or parsed.command == .@"list-interfaces" or parsed.command == .@"check-project" or parsed.command == .@"run-project" or parsed.command == .@"check-policy") return listModules(init, parsed);
+    if (parsed.command == .@"list-modules" or parsed.command == .@"list-interfaces" or parsed.command == .@"check-project" or parsed.command == .@"run-project" or parsed.command == .@"check-policy" or parsed.command == .@"discover-project-duplicates") return listModules(init, parsed);
     const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, parsed.path, allocator, .limited(16 * 1024 * 1024));
     defer allocator.free(bytes);
     var compilation = try language.Compilation.init(allocator, parsed.path, bytes);
@@ -53,7 +53,7 @@ fn dispatch(init: std.process.Init) !u8 {
     const check_ns = if (parsed.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
     if (parsed.command != .@"emit-c") try report(init, &compilation);
     switch (parsed.command) {
-        .fmt, .@"list-modules", .@"list-interfaces", .@"check-project", .@"run-project", .@"check-policy" => unreachable,
+        .fmt, .@"list-modules", .@"list-interfaces", .@"check-project", .@"run-project", .@"check-policy", .@"discover-project-duplicates" => unreachable,
         .@"emit-c" => {
             const generated = compilation.emitC(allocator) catch |err| switch (err) {
                 error.SourceError => {
@@ -118,7 +118,7 @@ fn report(init: std.process.Init, compilation: *const language.Compilation) !voi
     }
 }
 
-const Command = enum { @"check-policy", @"check-project", @"run-project", @"list-interfaces", @"list-modules", @"emit-c", fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
+const Command = enum { @"discover-project-duplicates", @"check-policy", @"check-project", @"run-project", @"list-interfaces", @"list-modules", @"emit-c", fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
 const Parsed = struct { policy: ?[]const u8, format_check: bool, quality: language.quality.Options, command: Command, path: []const u8, options: language.vm.Options, discovery: language.duplicates.Options, timings: bool };
 fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (args.len < 2) return error.Usage;
@@ -185,22 +185,22 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
             saw_memory = true;
             options.memory_backing = std.meta.stringToEnum(language.vm.MemoryBacking, arg["--memory=".len..]) orelse return error.Usage;
         } else if (std.mem.startsWith(u8, arg, "--min-nodes=")) {
-            if (command != .@"discover-duplicates" or saw_min) return error.Usage;
+            if ((command != .@"discover-duplicates" and command != .@"discover-project-duplicates") or saw_min) return error.Usage;
             saw_min = true;
             discovery.min_nodes = std.math.cast(usize, try positive(arg["--min-nodes=".len..])) orelse return error.Usage;
         } else if (std.mem.startsWith(u8, arg, "--population=")) {
-            if (command != .@"discover-duplicates" or saw_population) return error.Usage;
+            if ((command != .@"discover-duplicates" and command != .@"discover-project-duplicates") or saw_population) return error.Usage;
             saw_population = true;
             discovery.population = std.meta.stringToEnum(language.duplicates.Population, arg["--population=".len..]) orelse return error.Usage;
         } else if (std.mem.eql(u8, arg, "--approximate")) {
-            if (command != .@"discover-duplicates" or discovery.approximate) return error.Usage;
+            if ((command != .@"discover-duplicates" and command != .@"discover-project-duplicates") or discovery.approximate) return error.Usage;
             discovery.approximate = true;
         } else if (std.mem.startsWith(u8, arg, "--max-work=")) {
-            if (command != .@"discover-duplicates" or saw_work) return error.Usage;
+            if ((command != .@"discover-duplicates" and command != .@"discover-project-duplicates") or saw_work) return error.Usage;
             saw_work = true;
             discovery.near_options.max_work = std.math.cast(usize, try positive(arg["--max-work=".len..])) orelse return error.Usage;
         } else if (std.mem.eql(u8, arg, "--timings")) {
-            if (command != .@"discover-duplicates" or timings) return error.Usage;
+            if ((command != .@"discover-duplicates" and command != .@"discover-project-duplicates") or timings) return error.Usage;
             timings = true;
         } else {
             if (std.mem.startsWith(u8, arg, "--") or path != null) return error.Usage;
@@ -238,6 +238,7 @@ const ModuleFiles = struct {
     }
 };
 fn listModules(init: std.process.Init, parsed: Parsed) !u8 {
+    const frontend_start = if (parsed.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
     const path = parsed.path;
     const basename = std.fs.path.basename(path);
     if (!std.mem.endsWith(u8, basename, ".my") or !language.project.validName(basename[0 .. basename.len - 3]) or std.mem.indexOfScalar(u8, basename[0 .. basename.len - 3], '.') != null) {
@@ -277,6 +278,22 @@ fn listModules(init: std.process.Init, parsed: Parsed) !u8 {
         };
         try reportProject(init, &compilation);
         if (parsed.command == .@"check-project") return 0;
+        if (parsed.command == .@"discover-project-duplicates") {
+            const start = std.Io.Timestamp.now(init.io, .awake);
+            var analysis = try language.duplicates.discover(init.gpa, compilation.program.?, parsed.discovery);
+            defer analysis.deinit();
+            const discovery_ns = start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds;
+            const text = try language.duplicates.render(init.gpa, analysis, compilation.program.?, compilation.src);
+            defer init.gpa.free(text);
+            try std.Io.File.stdout().writeStreamingAll(init.io, "scope: reachable module graph; declaration visibility and dependency policy require separate review\n");
+            try std.Io.File.stdout().writeStreamingAll(init.io, text);
+            if (parsed.timings) {
+                const counts = try std.fmt.allocPrint(init.gpa, "timings: project_frontend_ns={d} discovery_ns={d} modules={d} source_bytes={d} ast_nodes={d} typed_nodes={d} canonical_bytes={d} functions={d}\n", .{ frontend_start.durationTo(start).nanoseconds, discovery_ns, project.modules.items.len, project.total_bytes, compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len, compilation.program.?.nodes.len + compilation.program.?.statements.len, analysis.canonical_bytes, analysis.functions_examined });
+                defer init.gpa.free(counts);
+                try std.Io.File.stderr().writeStreamingAll(init.io, counts);
+            }
+            return 0;
+        }
         if (parsed.command == .@"check-policy") {
             const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, parsed.policy.?, init.gpa, .limited(1024 * 1024));
             defer init.gpa.free(bytes);

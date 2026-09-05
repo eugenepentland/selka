@@ -813,3 +813,28 @@ test "CLI import policy distinguishes language failures policy failures and conf
     try invokeOptions("check-project", "module input; fn main() -> i64 { return 0; }", &.{"--policy=some.json"}, 2, "", "usage:");
     try invokeOptions("check-policy", "module input; fn main() -> i64 { return 0; }", &.{ "--policy=a", "--policy=b" }, 2, "", "usage:");
 }
+
+test "CLI discovers cross module duplicates with options and rejects invalid dependencies" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input; import helper; fn twice(value: i64) -> i64 { return value * 2 + 3; } fn main() -> i64 { return 0; }" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper; fn copy(x: i64) -> i64 { return x * 2 + 3; }" });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "discover-project-duplicates", path, "--min-nodes=1", "--approximate", "--max-work=1", "--population=reference", "--timings" } });
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    for ([_][]const u8{ "scope: reachable module graph", "population=reference", "input::twice", "helper::copy", "input.my:1:", "helper.my:1:", "approximate near-v1", "truncated=true" }) |part| try testing.expect(std.mem.indexOf(u8, result.stdout, part) != null);
+    try testing.expect(std.mem.indexOf(u8, result.stderr, "project_frontend_ns=") != null);
+    try testing.expect(std.mem.indexOf(u8, result.stderr, "modules=2") != null);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper; fn copy(x: i64) -> i64 { return true; }" });
+    const invalid = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "discover-project-duplicates", path } });
+    defer testing.allocator.free(invalid.stdout);
+    defer testing.allocator.free(invalid.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, invalid.term);
+    try testing.expectEqualStrings("", invalid.stdout);
+    try testing.expect(std.mem.indexOf(u8, invalid.stderr, "E_TYPE") != null);
+    try invokeOptions("discover-project-duplicates", "module input; fn main() -> i64 { return 0; }", &.{"--max-work=1"}, 2, "", "usage:");
+    try invokeOptions("discover-project-duplicates", "module input; fn main() -> i64 { return 0; }", &.{"--max-steps=1"}, 2, "", "usage:");
+}

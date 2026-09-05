@@ -1384,3 +1384,36 @@ module-aware formatter/reference roots/duplicate identities, project native pari
 generics, compile-time/schema/incremental work, native operation expansion, and other
 unfinished roadmap requirements remain pending. Guardian was not exercised; hosted
 CI has not run. The full roadmap goal remains active.
+
+## 2026-09-05: T duplicate discovery over checked module graphs
+
+Added `discover-project-duplicates` with the existing exact/approximate thresholds,
+population labels, bounded work, and timing options. It checks all reachable module
+bodies before discovery and renders original source paths and qualified function
+names. Reports explicitly distinguish structural candidates from export visibility
+and dependency-policy review. Project timings include loading/semantic work and
+report original source bytes without source-map separators.
+
+492 Zig tests pass in Debug and ReleaseFast (440 core, 52 CLI), plus eight
+verification-driver tests and the unchanged 23-fixture/182-comparison native suite
+per host mode. Acceptance groups scalar functions across files and aliases of the
+same shared nominal type/callee, while keeping distinct module-local nominal types
+and callees separate. Allocation-failure sweeps cover project checking, exact/near
+discovery, and report rendering. Actual CLI tests cover population/timings, work-limit
+truncation, invalid flags, and invalid dependency rejection without partial output.
+Formatting and whitespace checks pass.
+
+The documented three-module example reports one exact price/quote group and one
+approximate alternate candidate, showing the literal edit 3 -> 4 with no truncation.
+Its initial tiny functions fell below the default eight-node discovery threshold;
+explicit subtotal bindings now make the reviewable example nine nodes without
+changing that threshold. No production code was refactored or merged. Existing
+exact-v28 and near-v1 formats remain unchanged because module-qualified nominal and
+callee names already feed the canonical serializer.
+
+[Module discovery semantics](experiments/module-duplicates.md) documents scope,
+visibility/policy limits, timing counts, and validation. Module-aware formatting and
+reference/quality roots, broader candidate-index/corpus scaling, project native
+parity, generics, compile-time/schema/incremental work, native expansion, and other
+unfinished roadmap work remain pending. Guardian was not exercised; hosted CI has
+not run. The full roadmap goal remains active.

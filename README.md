@@ -222,3 +222,8 @@ types, private boundaries, ownership, borrowing, and effects. See
 Optional dependency policy is available through `check-policy <entry.my> --policy=<rules.json>`.
 It checks the language first and exits 3 for a separate policy failure. See
 [import policy](docs/experiments/import-policy.md); ordinary project commands do not load it.
+
+Cross-file discovery is available through `discover-project-duplicates <entry.my>`,
+with the same exact/approximate options as single-file discovery. Try
+`zig build run -- discover-project-duplicates examples/module-duplicates/main.my --approximate`.
+See [module duplicate discovery](docs/experiments/module-duplicates.md).
