@@ -741,3 +741,28 @@ from ordinary consuming projection. Partial field moves and owned-wrapper borrow
 remain pending, along with environment/data operations, attenuation, arenas/pools,
 and all other unfinished roadmap tracks. Guardian was not exercised; hosted CI has
 not run. The full roadmap goal remains active.
+
+
+## 2026-09-05: C bounded environment capabilities and lookup
+
+Implemented explicit environment entry grants, fixed-byte-array lookup names,
+bounded typed results, and transitive environment effects. Injected providers return
+absent or a complete byte length; missing/empty remain distinct and oversized values
+produce recoverable NoCapacity. Returned tails and absent values are zeroed. Foreign/
+closed grants fail before callbacks, and the CLI cannot read ambient process state.
+Resource and environment operations now share checked byte-array conversion helpers.
+
+319 tests pass in Debug and ReleaseFast (286 core, 33 actual CLI). Acceptance covers
+explicit forwarding, denied/unused grants, raw bytes, all presence/capacity cases,
+all provider errors, host OOM, invalid returned lengths, type/authority rejection,
+transitive effects, malformed emission, and foreign/closed grants. Failure propagation
+ends active buffer borrows and releases owners. Allocation-failure sweeps cover the
+full lookup/reporting path. 10,000 lookups fit within 16 KiB live runtime allocation.
+Actual CLI tests cover checks, dumps, denied execution, and effect rejection across
+commands. Formatting and whitespace checks pass. Discovery is exact-v21.
+
+[Environment semantics](experiments/environment.md) defines read-only, provider-scoped
+byte lookup with no ambient fallback or mutation API. Resource data operations,
+partial field moves, attenuation, arenas/pools, and all other unfinished tracks
+remain in scope. C is not complete. Guardian was not exercised; hosted CI has not
+run. The full roadmap goal remains active.

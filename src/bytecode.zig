@@ -38,6 +38,7 @@ pub const Instruction = struct {
         buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: typed.LocalId, output: typed.Type },
         complete_resource: typed.Type,
         acquire_resource: struct { output: typed.Type, request: typed.Type },
+        environment_get: struct { output: typed.Type, name: typed.Type },
         external_read: struct { kind: @import("external_capabilities.zig").Kind, output: typed.Type },
         acquire_buffer: typed.Type,
         move_local: typed.LocalId,
@@ -235,6 +236,9 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (shape.ok_type != .bool or shape.error_type != .i64) return error.InternalError;
                 } else if (operation.output != (if (operation.kind == .read) element else typed.Type.u64)) return error.InternalError;
             },
+            .environment_get => |get| {
+                if (typed.environmentShape(get.output, program.records) == null or !typed.byteRequest(get.name, program.records)) return error.InternalError;
+            },
             .complete_resource => |output| {
                 if (typed.completionShape(output, program.records) == null) return error.InternalError;
             },
@@ -414,7 +418,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (height < 2) return error.InternalError;
                     height -= 2;
                 },
-                .acquire_buffer, .acquire_resource => {
+                .acquire_buffer, .acquire_resource, .environment_get => {
                     if (height < 2) return error.InternalError;
                     height -= 1;
                 },

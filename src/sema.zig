@@ -251,6 +251,12 @@ const Checker = struct {
                         try work.append(self.allocator, .{ .id = base });
                         continue;
                     },
+                    .environment_get => |get| {
+                        try work.append(self.allocator, .{ .id = task.id, .emit = true });
+                        try work.append(self.allocator, .{ .id = get.name });
+                        try work.append(self.allocator, .{ .id = get.capability });
+                        continue;
+                    },
                     .complete_resource => |complete| {
                         try work.append(self.allocator, .{ .id = task.id, .emit = true });
                         try work.append(self.allocator, .{ .id = complete.value });
@@ -380,6 +386,15 @@ const Checker = struct {
                     const request_type = self.nodes.items[@backingInt(request)].ty;
                     if (!typed.byteRequest(request_type, self.catalog.records)) return self.sink.fail("E_RESOURCE_REQUEST", self.syntax.nodes.items[@backingInt(acquire.request)].span, "request must be a fixed u8 array");
                     out.data = .{ .acquire_resource = .{ .capability = capability, .request = request } };
+                },
+                .environment_get => |get| {
+                    out.ty = try self.ty(get.ty);
+                    if (typed.environmentShape(out.ty, self.catalog.records) == null) return self.sink.fail("E_ENVIRONMENT_RESULT", get.ty, "environment result requires i64 error and a record success with bytes: [N]u8, length: u64, present: bool");
+                    const capability = self.resolved[@backingInt(get.capability)].?;
+                    const name = self.resolved[@backingInt(get.name)].?;
+                    try self.require(self.nodes.items[@backingInt(capability)].ty, .environment_cap, self.syntax.nodes.items[@backingInt(get.capability)].span);
+                    if (!typed.byteRequest(self.nodes.items[@backingInt(name)].ty, self.catalog.records)) return self.sink.fail("E_ENVIRONMENT_NAME", self.syntax.nodes.items[@backingInt(get.name)].span, "environment name must be a fixed u8 array");
+                    out.data = .{ .environment_get = .{ .capability = capability, .name = name } };
                 },
                 .complete_resource => |complete| {
                     out.ty = try self.ty(complete.ty);
@@ -621,7 +636,7 @@ const Checker = struct {
             const consumed: usize = switch (out.data) {
                 .integer, .boolean, .local, .read_ref, .read_field, .len_slice => 0,
                 .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .external_read, .complete_resource => 1,
-                .acquire_buffer, .acquire_resource => 2,
+                .acquire_buffer, .acquire_resource, .environment_get => 2,
                 .index, .binary => 2,
                 .replace => 3,
                 .variant => |variant| if (variant.value != null) 1 else 0,

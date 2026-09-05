@@ -41,14 +41,8 @@ pub const Runtime = struct {
         const shape = typed.resultShape(output, records).?;
         const kind = typed.resourceKind(shape.ok_type, records).?;
         const store = try self.storeFor(kind);
-        const array = records[request_type.recordIndex()].array.?;
-        if (request.aggregate.fields.len != array.length) return error.InternalError;
-        const bytes = try self.allocator.alloc(u8, array.length);
+        const bytes = try @import("byte_values.zig").toOwnedBytes(self.allocator, request, request_type, records);
         defer self.allocator.free(bytes);
-        for (request.aggregate.fields, bytes) |value, *byte| {
-            if (value.typeOf() != .u8) return error.InternalError;
-            byte.* = std.math.cast(u8, try value.asInteger()) orelse return error.InternalError;
-        }
         const owner = store.acquire(capability.resource_capability, bytes) catch |err| {
             const code = recoverable(err) orelse return err;
             return typed.Value.createVariant(self.allocator, output, shape.error_tag, .{ .i64 = code });

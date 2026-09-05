@@ -1,0 +1,17 @@
+struct Entry { bytes: [64]u8, length: u64, present: bool }
+result Lookup { ok: Entry, err: i64 }
+
+fn lookup(env: environment_cap) -> Lookup effects(environment) {
+    // The injected provider defines which names it permits; these bytes spell K.
+    return environment_get<Lookup>(env, new [1]u8 [75u8]);
+}
+
+fn main(env: environment_cap) -> i64 noio {
+    match lookup(env) {
+        Lookup.ok(entry) => {
+            if entry.present { return cast<i64>(entry.length); }
+            return -1;
+        },
+        Lookup.err(code) => { return -code - 1; }
+    }
+}

@@ -15,8 +15,9 @@ pub const Type = enum(usize) {
     random_cap,
     filesystem_cap,
     network_cap,
+    environment_cap,
     _,
-    pub const record_base: usize = 14;
+    pub const record_base: usize = 15;
     pub fn capabilityIndex(self: Type) ?u3 {
         return switch (self) {
             .allocator => 0,
@@ -24,6 +25,7 @@ pub const Type = enum(usize) {
             .random_cap => 2,
             .filesystem_cap => 3,
             .network_cap => 4,
+            .environment_cap => 5,
             else => null,
         };
     }
@@ -90,6 +92,7 @@ pub const Value = union(enum) {
     aggregate: *Aggregate,
     resource: *Resource,
     external_resource: *ExternalResource,
+    environment_capability: @import("environment.zig").Capability,
     resource_capability: @import("external_resources.zig").Capability,
     allocator: @import("memory.zig").AllocatorCapability,
     external: @import("external_capabilities.zig").Capability,
@@ -97,6 +100,7 @@ pub const Value = union(enum) {
     pub fn typeOf(self: Value) Type {
         return switch (self) {
             .allocator => .allocator,
+            .environment_capability => .environment_cap,
             .external_resource => |resource| resource.ty,
             .resource_capability => |cap| if (cap.kind == .filesystem) .filesystem_cap else .network_cap,
             .external => |capability| switch (capability.kind) {

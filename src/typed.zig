@@ -26,6 +26,7 @@ pub const Node = struct {
         buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: LocalId, arguments: []const NodeId },
         acquire_resource: struct { capability: NodeId, request: NodeId },
         complete_resource: NodeId,
+        environment_get: struct { capability: NodeId, name: NodeId },
         external_read: struct { kind: @import("external_capabilities.zig").Kind, capability: NodeId },
         acquire_buffer: struct { allocator: NodeId, capacity: NodeId },
         cast: NodeId,
@@ -169,4 +170,22 @@ pub fn completionShape(ty: Type, records: []const Record) ?CompletionShape {
     }
     const resource = resource_field orelse return null;
     return .{ .result = result, .resource_type = schema.fields[resource].ty, .resource_field = resource, .code_field = code_field orelse return null };
+}
+
+pub const EnvironmentShape = struct { result: ResultShape, bytes_type: Type, bytes_field: usize, length_field: usize, present_field: usize };
+pub fn environmentShape(ty: Type, records: []const Record) ?EnvironmentShape {
+    const result = resultShape(ty, records) orelse return null;
+    if (result.error_type != .i64 or !result.ok_type.isAggregate() or result.ok_type.recordIndex() >= records.len) return null;
+    const schema = records[result.ok_type.recordIndex()];
+    if (!schema.isRecord() or schema.fields.len != 3) return null;
+    var bytes: ?usize = null;
+    var length: ?usize = null;
+    var present: ?usize = null;
+    for (schema.fields, 0..) |field, index| {
+        if (std.mem.eql(u8, field.name, "bytes") and byteRequest(field.ty, records)) bytes = index;
+        if (std.mem.eql(u8, field.name, "length") and field.ty == .u64) length = index;
+        if (std.mem.eql(u8, field.name, "present") and field.ty == .bool) present = index;
+    }
+    const byte_field = bytes orelse return null;
+    return .{ .result = result, .bytes_type = schema.fields[byte_field].ty, .bytes_field = byte_field, .length_field = length orelse return null, .present_field = present orelse return null };
 }

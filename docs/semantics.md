@@ -236,3 +236,11 @@ live owner or satisfying pending result obligations. This supports error-code
 inspection before retrying with an owned completion failure. Owned/result fields
 cannot be copied; shared/exclusive access rules still apply. Ordinary projection
 keeps its existing consuming behavior. See [field-read semantics](experiments/owned-field-reads.md).
+
+
+`environment_get<Result>(env, name)` uses an explicit `environment_cap` and fixed
+byte-array name. Its result contains a bounded byte-array snapshot, present flag,
+and actual length, or i64 error. Missing and empty are distinct; oversized values
+fail without truncation. Entry grants require an injected provider. Lookup adds
+an environment effect, allowed under noio/noalloc without implying determinism.
+See [environment semantics](experiments/environment.md).

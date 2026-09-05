@@ -72,7 +72,7 @@ zig build run -- discover-duplicates examples/duplicates.my --timings
 It reports exact checked-function candidates after normalizing bound names,
 with source locations and advisory explanations. Ordinary compilation does not
 run it. See the [comparison contract and review](docs/experiments/duplicate-discovery.md).
-All 306 tests pass in Debug and ReleaseFast.
+All 319 tests pass in Debug and ReleaseFast.
 
 [Post-MVP tracking](docs/experiments/roadmap.md) records the remaining experiments.
 Records, complete construction, field access, preserving updates, and declarative
@@ -133,3 +133,7 @@ checks the example but denies execution without providers.
 [Non-consuming field reads](docs/experiments/owned-field-reads.md) now let completion
 handlers inspect error codes before transferring or retrying the owned resource.
 Partial field moves remain pending.
+
+[Bounded environment lookup](docs/experiments/environment.md) now uses explicit
+entry grants and injected providers, preserving missing/empty distinctions and
+rejecting oversized values without truncation.

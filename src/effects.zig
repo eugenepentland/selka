@@ -72,6 +72,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
             switch (node.data) {
                 .acquire_resource => graph.direct(index, typed.resourceKind(typed.resultShape(node.ty, program.records).?.ok_type, program.records).?.effect(), node.span),
                 .complete_resource => graph.direct(index, typed.resourceKind(typed.completionShape(node.ty, program.records).?.resource_type, program.records).?.effect(), node.span),
+                .environment_get => graph.direct(index, .environment, node.span),
                 .external_read => |read| graph.direct(index, read.kind.effect(), node.span),
                 .acquire_buffer => graph.direct(index, .allocation, node.span),
                 .buffer_operation => |op| if (bufferAllocates(op.kind)) {
@@ -130,6 +131,7 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode.zig").P
                 const shape = typed.completionShape(output, program.records) orelse return error.InternalError;
                 graph.direct(index, typed.resourceKind(shape.resource_type, program.records).?.effect(), instruction.span);
             },
+            .environment_get => graph.direct(index, .environment, instruction.span),
             .external_read => |read| graph.direct(index, read.kind.effect(), instruction.span),
             .acquire_buffer => graph.direct(index, .allocation, instruction.span),
             .buffer_operation => |op| if (bufferAllocates(op.kind)) {

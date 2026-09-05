@@ -222,6 +222,11 @@ const Emitter = struct {
                 }
             },
             .read_field => |read| try self.instruction(node.span, .{ .read_field = .{ .owner = read.owner, .field = read.field, .output = node.ty } }),
+            .environment_get => |get| {
+                try self.instruction(node.span, .{ .environment_get = .{ .output = node.ty, .name = self.program.nodes[@backingInt(get.name)].ty } });
+                try self.push(.{ .expression = get.name });
+                try self.push(.{ .expression = get.capability });
+            },
             .complete_resource => |value| {
                 try self.instruction(node.span, .{ .complete_resource = node.ty });
                 try self.push(.{ .expression = value });
