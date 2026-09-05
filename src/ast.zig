@@ -1,5 +1,6 @@
 //! Untyped expression and statement tables preserve source spelling and locations.
 const std = @import("std");
+const FieldAccess = struct { owner: Span, field: Span };
 const Span = @import("source.zig").Span;
 pub const NodeId = enum(usize) { _ };
 pub const StatementId = enum(usize) { _ };
@@ -14,7 +15,8 @@ pub const Node = struct {
         boolean: bool,
         name: Span,
         read_ref: Span,
-        read_field: struct { owner: Span, field: Span },
+        read_field: FieldAccess,
+        take_field: FieldAccess,
         propagate: NodeId,
         read_slice: struct { name: Span, index: NodeId },
         len_slice: Span,

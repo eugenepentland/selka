@@ -4,7 +4,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 
-pub const version = "exact-v24";
+pub const version = "exact-v25";
 pub const Population = enum { production, tests, generated, reference, intentional };
 pub const near = @import("near_duplicates.zig");
 pub const Options = struct { min_nodes: usize = 8, population: Population = .production, approximate: bool = false, near_options: near.Options = .{} };
@@ -85,7 +85,7 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                         try work.append(allocator, .{ .expression = replace.base });
                     },
                     .length => |base| try work.append(allocator, .{ .expression = base }),
-                    .read_field => |read| writer.print("read field owner={d} field={d}\n", .{ @backingInt(read.owner), read.field }) catch return error.OutOfMemory,
+                    .read_field, .take_field => |read| writer.print("{s} owner={d} field={d}\n", .{ @tagName(node.data), @backingInt(read.owner), read.field }) catch return error.OutOfMemory,
                     .resource_io => |io| {
                         writer.print("resource {s} owner={d} reference={?d}\n", .{ @tagName(io.kind), @backingInt(io.owner), if (io.reference) |ref_id| @as(?usize, @backingInt(ref_id)) else null }) catch return error.OutOfMemory;
                         if (io.value) |value| try work.append(allocator, .{ .expression = value });

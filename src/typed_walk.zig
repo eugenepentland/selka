@@ -38,7 +38,7 @@ pub const Walker = struct {
         const item = self.pending.pop() orelse return null;
         switch (item) {
             .expression => |id| switch (self.program.nodes[@backingInt(id)].data) {
-                .integer, .boolean, .local, .read_ref, .read_field, .len_slice => {},
+                .integer, .boolean, .local, .read_ref, .read_field, .take_field, .len_slice => {},
                 .restrict_resource => |restrict| try self.expr(restrict.value),
                 .resource_io => |io| if (io.value) |value| try self.expr(value),
                 .environment_get => |get| {

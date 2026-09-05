@@ -428,14 +428,14 @@ pub const Parser = struct {
                 const close = try self.expect(.rparen);
                 break :environment try self.append(.{ .span = .join(token.span, close.span), .data = .{ .environment_get = .{ .ty = ty, .capability = capability, .name = name } } });
             },
-            .kw_read_field => read: {
+            .kw_read_field, .kw_take_field => read: {
                 self.pos += 1;
                 _ = try self.expect(.lparen);
                 const owner = try self.expect(.ident);
                 _ = try self.expect(.comma);
                 const field = try self.expect(.ident);
                 const close = try self.expect(.rparen);
-                break :read try self.append(.{ .span = .join(token.span, close.span), .data = .{ .read_field = .{ .owner = owner.span, .field = field.span } } });
+                break :read try self.append(.{ .span = .join(token.span, close.span), .data = if (token.tag == .kw_take_field) .{ .take_field = .{ .owner = owner.span, .field = field.span } } else .{ .read_field = .{ .owner = owner.span, .field = field.span } } });
             },
             .kw_acquire_resource, .kw_complete_resource => resource: {
                 self.pos += 1;

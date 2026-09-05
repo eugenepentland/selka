@@ -267,4 +267,14 @@ Read results report length/EOF and update only the successful prefix, retaining
 array snapshots and untouched bytes. Writes send exactly the chosen range. Lease
 checks apply to fixed arrays, initialized buffers, parameters, and returned views.
 See [resource slice I/O](experiments/resource-slices.md) for staging costs and failure
-semantics. Partial field moves and arenas/pools remain pending.
+semantics. Source pool/arena scopes remain pending; backend pools and execution
+arenas are tracked in the experiment roadmap.
+
+
+`take_field(owner, field)` transfers a field from an owned/result-bearing record
+binding without retaining a copy in the parent. Missing fields and whole-value use
+of a partial record are rejected. Untouched copyable fields remain readable through
+`read_field`, and other fields can be taken independently. Branch/loop states track
+field availability; remaining result fields still require handling. Complete binding
+replacement restores fields after any remaining obligations are satisfied. Cleanup
+releases only remaining fields; see [partial field moves](experiments/partial-fields.md).

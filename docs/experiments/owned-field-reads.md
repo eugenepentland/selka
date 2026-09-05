@@ -57,3 +57,6 @@ and allocation-failure cleanup. The external-resource failure-injection suite no
 uses code-dependent retry through `read_field`; all resource cleanup/trap tests
 continue to pass. Actual CLI tests cover execution, checking, dumps, and rejection
 across commands. Formatting and whitespace checks pass on the pinned Zig snapshot.
+
+[Partial field moves](partial-fields.md) now complement copyable field inspection
+with immediate ownership transfer and checked access to remaining fields.

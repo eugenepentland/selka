@@ -221,6 +221,7 @@ const Emitter = struct {
                     try self.push(.{ .expression = operation.arguments[i] });
                 }
             },
+            .take_field => |read| try self.instruction(node.span, .{ .take_field = .{ .owner = read.owner, .field = read.field, .output = node.ty } }),
             .read_field => |read| try self.instruction(node.span, .{ .read_field = .{ .owner = read.owner, .field = read.field, .output = node.ty } }),
             .restrict_resource => |restrict| {
                 try self.instruction(node.span, .{ .restrict_resource = .{ .permissions = restrict.permissions, .ty = node.ty } });

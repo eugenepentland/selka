@@ -83,7 +83,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
                     error.OutOfMemory => return error.OutOfMemory,
                     error.InternalError => unreachable, // Resolved typed function identity.
                 },
-                .restrict_resource, .integer, .boolean, .local, .read_ref, .read_field, .propagate, .read_slice, .len_slice, .cast, .wrap, .variant, .unwrap, .array, .index, .replace, .length, .record, .update, .field, .unary, .binary => {},
+                .restrict_resource, .integer, .boolean, .local, .read_ref, .read_field, .take_field, .propagate, .read_slice, .len_slice, .cast, .wrap, .variant, .unwrap, .array, .index, .replace, .length, .record, .update, .field, .unary, .binary => {},
             }
         };
         // Ownership-bearing signatures and locals conservatively include their
@@ -146,7 +146,7 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode.zig").P
             .call => |callee| try graph.call(index, @backingInt(callee), instruction.span),
             .call_refs => |call| try graph.call(index, @backingInt(call.function), instruction.span),
             .call_borrow => |call| try graph.call(index, @backingInt(call.function), instruction.span),
-            .restrict_resource, .push_i64, .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .neg_i64_checked, .cmp_i64, .try_result, .push_bool, .push_integer, .cast_integer, .wrap_domain, .make_variant, .switch_variant, .cmp_enum, .unwrap_domain, .neg_integer, .binary_integer, .make_record, .update_record, .get_field, .get_index, .replace_index, .array_length, .begin_borrow, .begin_slice, .read_slice, .write_slice, .len_slice, .end_borrow, .read_ref, .read_field, .write_ref, .move_local, .drop_local, .load_local, .store_local, .cmp_bool, .not_bool, .pop, .acknowledge, .jump, .jump_if_false, .ret, .ret_ref, .capture_ref => {},
+            .restrict_resource, .push_i64, .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .neg_i64_checked, .cmp_i64, .try_result, .push_bool, .push_integer, .cast_integer, .wrap_domain, .make_variant, .switch_variant, .cmp_enum, .unwrap_domain, .neg_integer, .binary_integer, .make_record, .update_record, .get_field, .get_index, .replace_index, .array_length, .begin_borrow, .begin_slice, .read_slice, .write_slice, .len_slice, .end_borrow, .read_ref, .read_field, .take_field, .write_ref, .move_local, .drop_local, .load_local, .store_local, .cmp_bool, .not_bool, .pop, .acknowledge, .jump, .jump_if_false, .ret, .ret_ref, .capture_ref => {},
         };
     }
     try graph.infer();

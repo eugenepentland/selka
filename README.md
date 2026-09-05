@@ -72,7 +72,7 @@ zig build run -- discover-duplicates examples/duplicates.my --timings
 It reports exact checked-function candidates after normalizing bound names,
 with source locations and advisory explanations. Ordinary compilation does not
 run it. See the [comparison contract and review](docs/experiments/duplicate-discovery.md).
-All 399 tests pass in Debug and ReleaseFast.
+All 413 tests pass in Debug and ReleaseFast.
 
 [Post-MVP tracking](docs/experiments/roadmap.md) records the remaining experiments.
 Records, complete construction, field access, preserving updates, and declarative
@@ -132,7 +132,7 @@ checks the example but denies execution without providers.
 
 [Non-consuming field reads](docs/experiments/owned-field-reads.md) now let completion
 handlers inspect error codes before transferring or retrying the owned resource.
-Partial field moves remain pending.
+[Partial field moves](docs/experiments/partial-fields.md) are now implemented.
 
 [Bounded environment lookup](docs/experiments/environment.md) now uses explicit
 entry grants and injected providers, preserving missing/empty distinctions and
@@ -180,10 +180,14 @@ syntactically valid code without requiring completed type checking.
 `python3 scripts/verify.py verify.json`. Filters select explicit steps and their
 dependencies; reports distinguish selected success from full-manifest success.
 The eight Python driver tests also run under `zig build test`, alongside the
-399 Zig/core-and-CLI tests.
+413 Zig/core-and-CLI tests.
 
 [Scalar native execution](docs/experiments/native-execution.md) is available with
 `emit-c` and `python3 scripts/native.py examples/sum.my -o /tmp/native-sum`.
 The pinned Zig compiles direct C branches and explicit frames. Native tests execute
 23 scalar fixtures across -O0/-O2 with undefined-behavior checks; aggregate/resource/
 borrowing operations are explicitly unsupported by this backend.
+
+[Partial record field moves](docs/experiments/partial-fields.md) use
+`take_field(owner, field)` to transfer individual fields immediately while preserving
+access to the remainder and enforcing result obligations and branch consistency.

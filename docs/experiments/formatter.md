@@ -59,7 +59,7 @@ reported as OutOfMemory, with request and output storage released.
 
 Actual CLI tests verify stdout/check behavior, unchanged-file check success,
 formatting differences, duplicate/wrong-command options, and syntax diagnostics.
-All 28 semantically valid language CLI fixtures are formatted, checked again, and
+All 29 semantically valid language CLI fixtures are formatted, checked again, and
 verified idempotent, covering aggregates/domains/variants/tables, results, borrowing,
 owned buffers, effects/capabilities, and resource array/slice I/O.
 

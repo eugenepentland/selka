@@ -564,6 +564,7 @@ test "CLI formatter preserves checking and is idempotent across the language fix
         @embedFile("fixtures/gcd.my"),
         @embedFile("fixtures/integers.my"),
         @embedFile("fixtures/propagation.my"),
+        @embedFile("fixtures/partial-fields.my"),
         @embedFile("fixtures/records.my"),
         @embedFile("fixtures/reference-parameters.my"),
         @embedFile("fixtures/references.my"),
@@ -602,4 +603,18 @@ test "CLI emits scalar C and diagnoses unsupported native features without parti
     try invoke("emit-c", "fn main() -> i64 { return false; }", 1, "", "error[E_TYPE]");
     try invoke("emit-c", "fn main() -> i64 { let a = new [1]i64 [7]; return a[0]; }", 1, "", "error[E_NATIVE_FEATURE]");
     try invokeOptions("emit-c", "fn main() -> i64 { return 7; }", &.{"--memory=arena"}, 2, "", "usage:");
+}
+
+test "CLI supports partial field moves while preserving remaining ownership checks" {
+    const source = @embedFile("fixtures/partial-fields.my");
+    try invoke("run", source, 0, "9\n", "");
+    try invokeOptions("run", source, &.{"--memory=arena"}, 0, "9\n", "");
+    try invoke("check", source, 0, "", "");
+    const dumped = try runFixture("dump-bytecode", source, &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "TAKE_FIELD") != null);
+    const invalid = "buffer B: i64; struct Pair { field: B } fn f(pair: Pair) -> Pair { discard take_field(pair, field); return pair; } fn main() -> i64 { return 0; }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates", "report-quality", "emit-c" }) |command| try invoke(command, invalid, 1, "", "error[E_PARTIAL_MOVE]");
 }

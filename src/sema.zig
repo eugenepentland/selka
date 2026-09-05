@@ -6,7 +6,8 @@ const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
 const records = @import("records.zig");
 const Error = diagnostic.Error;
-const Work = struct { id: ast.NodeId, emit: bool = false, checkpoint: bool = false, verify: ?[]const bool = null };
+const Pending = struct { available: bool, fields: []const bool };
+const Work = struct { id: ast.NodeId, emit: bool = false, checkpoint: bool = false, verify: ?[]const Pending = null };
 const CheckedStatement = struct { id: typed.StatementId, terminates: bool };
 
 const Checker = struct {
@@ -37,20 +38,31 @@ const Checker = struct {
     fn transfers(self: *Checker, value_type: typed.Type) bool {
         return self.requiresHandling(value_type) or typed.moveOnly(value_type, self.catalog.records);
     }
-    fn pendingState(self: *Checker, count: usize) Error![]bool {
-        const state = try self.allocator.alloc(bool, count);
-        for (self.locals.items[0..count], state) |local, *pending| pending.* = local.transfer_available;
+    fn pendingState(self: *Checker, count: usize) Error![]Pending {
+        const state = try self.allocator.alloc(Pending, count);
+        for (self.locals.items[0..count], state) |local, *pending| pending.* = .{ .available = local.transfer_available, .fields = local.partial_fields };
         return state;
     }
-    fn restorePending(self: *Checker, state: []const bool) void {
-        for (self.locals.items[0..state.len], state) |*local, pending| local.transfer_available = pending;
+    fn restorePending(self: *Checker, state: []const Pending) void {
+        for (self.locals.items[0..state.len], state) |*local, pending| {
+            local.transfer_available = pending.available;
+            local.partial_fields = pending.fields;
+        }
     }
-    fn samePending(self: *Checker, state: []const bool, span: source.Span, code: []const u8) Error!void {
-        for (self.locals.items[0..state.len], state) |local, pending| if (local.transfer_available != pending) return self.sink.failRelated(if (!self.requiresHandling(local.ty) and typed.moveOnly(local.ty, self.catalog.records)) (if (std.mem.eql(u8, code, "E_RESULT_LOOP")) "E_OWNED_LOOP" else "E_OWNED_PATH") else code, span, "ownership or result obligation must have the same state on every continuing path", .{ .span = local.declaration, .message = "binding declared here" });
+    fn samePending(self: *Checker, state: []const Pending, span: source.Span, code: []const u8) Error!void {
+        for (self.locals.items[0..state.len], state) |local, pending| if (local.transfer_available != pending.available or !std.mem.eql(bool, local.partial_fields, pending.fields)) return self.sink.failRelated(if (!self.requiresHandling(local.ty) and typed.moveOnly(local.ty, self.catalog.records)) (if (std.mem.eql(u8, code, "E_RESULT_LOOP")) "E_OWNED_LOOP" else "E_OWNED_PATH") else code, span, "ownership or result obligation must have the same state on every continuing path", .{ .span = local.declaration, .message = "binding declared here" });
+    }
+    fn pendingObligation(self: *Checker, local: typed.Local) bool {
+        if (!local.transfer_available or !self.requiresHandling(local.ty)) return false;
+        if (local.partial_fields.len == 0) return true;
+        for (self.catalog.records[local.ty.recordIndex()].fields, local.partial_fields) |field, moved| {
+            if (!moved and self.requiresHandling(field.ty)) return true;
+        }
+        return false;
     }
     fn requireHandled(self: *Checker, first: usize, span: source.Span) Error!void {
         for (self.locals.items[first..], first..) |local, index| {
-            if (self.requiresHandling(local.ty) and local.transfer_available and self.active.get(local.name) == @as(typed.LocalId, @fromBackingInt(index))) return self.sink.failRelated("E_RESULT_UNHANDLED", span, "result-bearing value leaves scope without being handled, returned, transferred, or explicitly acknowledged", .{ .span = local.declaration, .message = "unhandled result-bearing binding" });
+            if (self.pendingObligation(local) and self.active.get(local.name) == @as(typed.LocalId, @fromBackingInt(index))) return self.sink.failRelated("E_RESULT_UNHANDLED", span, "result-bearing value leaves scope without being handled, returned, transferred, or explicitly acknowledged", .{ .span = local.declaration, .message = "unhandled result-bearing binding" });
         }
     }
     fn activeCleanup(self: *Checker) Error![]const typed.ReferenceId {
@@ -346,21 +358,31 @@ const Checker = struct {
                 out.ty = parsed.ty;
                 out.data = .{ .integer = parsed.value };
             } else switch (node.data) {
-                .read_field => |read| {
+                .read_field, .take_field => |read| {
+                    const taking = node.data == .take_field;
                     if (self.active_refs.contains(self.src.text(read.owner))) return self.sink.fail("E_TYPE", read.owner, "read_field requires a value binding; use read_ref for a reference");
                     const owner = try self.resolve(read.owner);
                     const local = &self.locals.items[@backingInt(owner)];
                     if (local.reference_parameter != null) return self.sink.fail("E_TYPE", read.owner, "read_field requires a value binding, not a reference parameter");
                     const field = try self.catalog.field(local.ty, self.src, read.field, self.sink);
                     out.ty = self.catalog.records[local.ty.recordIndex()].fields[field].ty;
-                    if (self.transfers(out.ty)) return self.sink.fail("E_FIELD_COPY", read.field, "read_field cannot copy owned values or result obligations");
+                    if (!taking and self.transfers(out.ty)) return self.sink.fail("E_FIELD_COPY", read.field, "read_field cannot copy owned values or result obligations");
                     if (self.transfers(local.ty) and !local.transfer_available) return self.sink.failRelated("E_OWNED_CONSUMED", read.owner, "record has already been transferred", .{ .span = local.declaration, .message = "binding declared here" });
-                    try self.ownerAccess(owner, false, read.owner);
+                    if (taking and !self.transfers(local.ty)) return self.sink.fail("E_FIELD_TAKE", read.owner, "take_field requires an owned or result-bearing record; use read_field for copyable records");
+                    if (local.partial_fields.len != 0 and local.partial_fields[field]) return self.sink.fail("E_FIELD_MOVED", read.field, "field has already been transferred");
+                    try self.ownerAccess(owner, taking, read.owner);
+                    if (taking) {
+                        const moved = try self.allocator.alloc(bool, self.catalog.records[local.ty.recordIndex()].fields.len);
+                        @memset(moved, false);
+                        if (local.partial_fields.len != 0) @memcpy(moved, local.partial_fields);
+                        moved[field] = true;
+                        local.partial_fields = moved;
+                    }
                     local.reads += 1;
                     if (self.conversion_fields) |seen| {
                         if (@backingInt(owner) == 0) seen[field] = true;
                     }
-                    out.data = .{ .read_field = .{ .owner = owner, .field = field } };
+                    out.data = if (taking) .{ .take_field = .{ .owner = owner, .field = field } } else .{ .read_field = .{ .owner = owner, .field = field } };
                 },
                 .buffer_operation => |operation| {
                     const owner = try self.resolve(operation.owner);
@@ -604,6 +626,7 @@ const Checker = struct {
                 .name => |name| {
                     if (self.active_refs.contains(self.src.text(name))) return self.sink.fail("E_REFERENCE_VALUE", name, "references cannot be copied, stored, returned, or passed to value parameters; use read_ref to copy the referenced value");
                     const slot = try self.resolve(name);
+                    if (self.locals.items[@backingInt(slot)].partial_fields.len != 0) return self.sink.fail("E_PARTIAL_MOVE", name, "record has missing fields; access remaining fields individually or replace the binding");
                     if (self.transfers(self.locals.items[@backingInt(slot)].ty)) {
                         if (!self.locals.items[@backingInt(slot)].transfer_available) return self.sink.failRelated(if (typed.moveOnly(self.locals.items[@backingInt(slot)].ty, self.catalog.records)) "E_OWNED_CONSUMED" else "E_RESULT_CONSUMED", name, "value has already been transferred or handled", .{ .span = self.locals.items[@backingInt(slot)].declaration, .message = "binding declared here" });
                         self.locals.items[@backingInt(slot)].transfer_available = false;
@@ -680,7 +703,7 @@ const Checker = struct {
                 },
             }
             const consumed: usize = switch (out.data) {
-                .integer, .boolean, .local, .read_ref, .read_field, .len_slice => 0,
+                .integer, .boolean, .local, .read_ref, .read_field, .take_field, .len_slice => 0,
                 .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .external_read, .complete_resource, .restrict_resource => 1,
                 .acquire_buffer, .acquire_resource, .environment_get => 2,
                 .index, .binary => 2,
@@ -737,7 +760,7 @@ const Checker = struct {
                 @memset(seen, null);
                 const arms = try self.allocator.alloc(typed.MatchArm, match.arms.len);
                 const before = try self.pendingState(self.locals.items.len);
-                var continuation: ?[]bool = null;
+                var continuation: ?[]Pending = null;
                 terminates = true;
                 for (match.arms, arms) |arm, *out_arm| {
                     self.restorePending(before);
@@ -956,8 +979,9 @@ const Checker = struct {
                 }
                 try self.require(self.nodes.items[@backingInt(value)].ty, self.locals.items[@backingInt(slot)].ty, stmt.span);
                 if (self.transfers(self.locals.items[@backingInt(slot)].ty)) {
-                    if (self.requiresHandling(self.locals.items[@backingInt(slot)].ty) and self.locals.items[@backingInt(slot)].transfer_available) return self.sink.fail("E_RESULT_OVERWRITE", a.name, "assignment would overwrite an unhandled result-bearing value");
+                    if (self.pendingObligation(self.locals.items[@backingInt(slot)])) return self.sink.fail("E_RESULT_OVERWRITE", a.name, "assignment would overwrite an unhandled result-bearing value");
                     self.locals.items[@backingInt(slot)].transfer_available = true;
+                    self.locals.items[@backingInt(slot)].partial_fields = &.{};
                 }
                 self.locals.items[@backingInt(slot)].writes += 1;
                 break :assignment .{ .assign = .{ .slot = slot, .value = value } };

@@ -1,4 +1,5 @@
-//! Immutable aggregate storage. Every VM operand/local owns one retained value.
+//! Immutable ordinary aggregates and unique owned records with field transfer.
+//! Every VM operand/local owns one retained value.
 const std = @import("std");
 pub const Type = enum(usize) {
     i64,
@@ -161,7 +162,7 @@ pub const Value = union(enum) {
     }
 
     pub fn updated(self: Value, allocator: std.mem.Allocator, indices: []const usize, replacements: []const Value) !Value {
-        if (self != .aggregate or indices.len != replacements.len) return error.InternalError;
+        if (self != .aggregate or self.aggregate.moved_fields != null or indices.len != replacements.len) return error.InternalError;
         for (indices) |index| if (index >= self.aggregate.fields.len) {
             return error.InternalError;
         };
@@ -198,16 +199,17 @@ pub const Value = union(enum) {
     }
 
     /// Release without allocation or recursive host calls. Zero-reference nodes
-    /// temporarily form an intrusive work list; immutable live nodes never change.
+    /// temporarily form an intrusive work list; shared live nodes never change.
     pub fn release(self: Value, allocator: std.mem.Allocator) void {
         var pending: ?*Aggregate = null;
         enqueueRelease(self, &pending, allocator);
         while (pending) |record| {
             if (record.release_index != 0) {
                 record.release_index -= 1;
-                enqueueRelease(record.fields[record.release_index], &pending, allocator);
+                if (record.moved_fields == null or !record.moved_fields.?[record.release_index]) enqueueRelease(record.fields[record.release_index], &pending, allocator);
             } else {
                 pending = record.next;
+                if (record.moved_fields) |moved| allocator.free(moved);
                 allocator.free(record.fields);
                 allocator.destroy(record);
             }
@@ -246,13 +248,33 @@ pub const Value = union(enum) {
         }
     }
 
+    /// Transfer one field from a unique aggregate without retaining it. Missing
+    /// slots are tracked separately so cleanup never touches transferred values.
+    /// Allocate bookkeeping before transfer; failure leaves the aggregate intact.
+    pub fn takeField(self: Value, allocator: std.mem.Allocator, index: usize) !Value {
+        if (self != .aggregate or self.aggregate.references != 1 or self.aggregate.active_tag != null or index >= self.aggregate.fields.len) return error.InternalError;
+        const record = self.aggregate;
+        if (record.moved_fields == null) {
+            const moved = try allocator.alloc(bool, record.fields.len);
+            @memset(moved, false);
+            record.moved_fields = moved;
+        }
+        if (record.moved_fields.?[index]) return error.InternalError;
+        record.moved_fields.?[index] = true;
+        return record.fields[index];
+    }
+
     pub fn getField(self: Value, index: usize) error{InternalError}!Value {
         if (self != .aggregate or index >= self.aggregate.fields.len) return error.InternalError;
+        if (self.aggregate.moved_fields) |moved| if (moved[index]) return error.InternalError;
         return self.aggregate.fields[index].retain();
     }
 };
 
 pub const Aggregate = struct {
+    /// A moved slot contains a stale value representation and must never be read
+    /// or released. Only the separately transferred owner may access that value.
+    moved_fields: ?[]bool = null,
     active_tag: ?usize = null,
     ty: Type,
     fields: []const Value,

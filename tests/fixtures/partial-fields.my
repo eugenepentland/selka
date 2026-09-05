@@ -1,0 +1,14 @@
+buffer B: i64;
+result Open { ok: B, err: i64 }
+struct Pair { first: B, second: B, code: i64 }
+result Work { ok: i64, err: i64 }
+fn work(heap: allocator) -> Work {
+    let pair = new Pair { first: try acquire_buffer<Open>(heap, 1), second: try acquire_buffer<Open>(heap, 1), code: 7 };
+    discard take_field(pair, first);
+    let spare = try acquire_buffer<Open>(heap, 1);
+    let second = take_field(pair, second);
+    return new Work.ok(read_field(pair, code) + cast<i64>(capacity_buffer(second)) + cast<i64>(capacity_buffer(spare)));
+}
+fn main(heap: allocator) -> i64 {
+    match work(heap) { Work.ok(value) => { return value; }, Work.err(code) => { return code; } }
+}

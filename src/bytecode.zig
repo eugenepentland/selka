@@ -1,5 +1,6 @@
 //! In-memory instructions and a small emission-time stack-height/target check.
 const std = @import("std");
+const FieldAccess = struct { owner: typed.LocalId, field: usize, output: typed.Type };
 const Span = @import("source.zig").Span;
 const typed = @import("typed.zig");
 pub const Predicate = enum { eq, ne, lt, le, gt, ge };
@@ -33,7 +34,8 @@ pub const Instruction = struct {
         len_slice: typed.ReferenceId,
         end_borrow: typed.ReferenceId,
         read_ref: typed.ReferenceId,
-        read_field: struct { owner: typed.LocalId, field: usize, output: typed.Type },
+        read_field: FieldAccess,
+        take_field: FieldAccess,
         write_ref: typed.ReferenceId,
         buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: typed.LocalId, output: typed.Type },
         complete_resource: typed.Type,
@@ -221,12 +223,12 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             .push_integer => |number| {
                 if (!number.ty.isInteger() or !number.ty.fits(number.value)) return error.InternalError;
             },
-            .read_field => |read| {
+            .read_field, .take_field => |read| {
                 if (@backingInt(read.owner) >= function.locals.len or !validType(read.output, program)) return error.InternalError;
                 const local = function.locals[@backingInt(read.owner)];
                 if (local.reference_parameter != null or !validType(local.ty, program) or !local.ty.isAggregate()) return error.InternalError;
                 const schema = program.records[local.ty.recordIndex()];
-                if (!schema.isRecord() or read.field >= schema.fields.len or schema.fields[read.field].ty != read.output or typed.moveOnly(read.output, program.records) or typed.requiresHandling(read.output, program.records)) return error.InternalError;
+                if (!schema.isRecord() or read.field >= schema.fields.len or schema.fields[read.field].ty != read.output or (instruction.op == .read_field and (typed.moveOnly(read.output, program.records) or typed.requiresHandling(read.output, program.records))) or (instruction.op == .take_field and !typed.moveOnly(local.ty, program.records) and !typed.requiresHandling(local.ty, program.records))) return error.InternalError;
             },
             .buffer_operation => |operation| {
                 if (@backingInt(operation.owner) >= function.locals.len or !validType(operation.output, program)) return error.InternalError;
@@ -399,7 +401,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             const instruction = function.instructions[pc];
             var height = heights[pc].?;
             switch (instruction.op) {
-                .push_i64, .push_bool, .push_integer, .load_local, .move_local, .read_ref, .read_field, .len_slice => height += 1,
+                .push_i64, .push_bool, .push_integer, .load_local, .move_local, .read_ref, .read_field, .take_field, .len_slice => height += 1,
                 .drop_local => {},
                 .resource_io => |io| {
                     if (io.kind == .write and io.reference == null) {

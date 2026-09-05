@@ -1,5 +1,6 @@
 //! Checked nodes use declaration identities, concrete types, and local slots.
 const std = @import("std");
+const FieldAccess = struct { owner: LocalId, field: usize };
 const Span = @import("source.zig").Span;
 pub const NodeId = enum(usize) { _ };
 pub const StatementId = enum(usize) { _ };
@@ -19,7 +20,8 @@ pub const Node = struct {
         boolean: bool,
         local: LocalId,
         read_ref: ReferenceId,
-        read_field: struct { owner: LocalId, field: usize },
+        read_field: FieldAccess,
+        take_field: FieldAccess,
         propagate: struct { value: NodeId, output: Type, cleanup: []const ReferenceId },
         read_slice: struct { reference: ReferenceId, index: NodeId },
         len_slice: ReferenceId,
@@ -129,7 +131,7 @@ pub const Statement = struct {
 };
 pub const MatchArm = struct { tag: usize, slot: ?LocalId, body: StatementId };
 pub const Range = struct { start: NodeId, end: NodeId };
-pub const Local = struct { transfer_available: bool = false, slice_parameter: bool = false, reference_parameter: ?bool = null, name: []const u8, declaration: Span, ty: Type, mutable: bool, mutable_borrow: bool = false, reads: usize = 0, writes: usize = 0 };
+pub const Local = struct { partial_fields: []const bool = &.{}, transfer_available: bool = false, slice_parameter: bool = false, reference_parameter: ?bool = null, name: []const u8, declaration: Span, ty: Type, mutable: bool, mutable_borrow: bool = false, reads: usize = 0, writes: usize = 0 };
 pub const ReturnReference = struct { parameter: LocalId, mutable: bool, slice: bool };
 pub const Function = struct {
     effect_bound: ?@import("effect_set.zig").Bound = null,

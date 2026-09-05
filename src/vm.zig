@@ -605,6 +605,13 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 if (locals.items[index]) |value| value.release(allocator);
                 locals.items[index] = null;
             },
+            .take_field => |take| {
+                const index = frame.local_base + @backingInt(take.owner);
+                if (owners.contains(index)) return error.InternalError;
+                const owner = locals.items[index] orelse return error.InternalError;
+                const value = try owner.takeField(allocator, take.field);
+                try pushOwned(&stack, allocator, value);
+            },
             .read_field => |read| {
                 const index = frame.local_base + @backingInt(read.owner);
                 const owner = if (owners.get(index)) |allocation| storage.readOwner(allocation, 0) catch |err| return memoryFailure(err, instruction, frames.items, program) else (locals.items[index] orelse return error.InternalError).retain();

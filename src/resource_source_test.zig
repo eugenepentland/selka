@@ -205,3 +205,20 @@ test "source frame traps release the resource moved through recursive calls" {
     try t.expectEqual(@as(usize, 1), fake.released);
     try t.expectEqual(@as(usize, 0), fake.live);
 }
+
+fn partialFieldResourceScenario(allocator: std.mem.Allocator) !void {
+    const text = declarations ++ "struct Pair { first: File, second: File, code: i64 } fn work(fs: filesystem_cap) -> Status { let pair = new Pair { first: try acquire_resource<Open>(fs, new [0]u8 []), second: try acquire_resource<Open>(fs, new [0]u8 []), code: 7 }; discard take_field(pair, first); let spare = try acquire_resource<Open>(fs, new [0]u8 []); return new Status.ok(read_field(pair, code) == 7); } fn main(fs: filesystem_cap) -> i64 { match work(fs) { Status.ok(done) => { if done { return 7; } return 0; }, Status.err(code) => { return -code; } } }";
+    var fake: Fake = .{};
+    defer std.debug.assert(fake.live == 0);
+    var c = try language.Compilation.init(allocator, "partial-resource.my", text);
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 7), (try c.executeWithOptions(allocator, .{ .resources = .{ .filesystem = fake.provider(), .max_live_per_kind = 2 } })).value);
+    try t.expectEqualSlices(u64, &.{ 1, 3, 2 }, fake.order[0..fake.released]);
+    try t.expectEqual(@as(usize, 3), fake.acquired);
+    try t.expectEqual(@as(usize, 0), fake.complete_calls);
+}
+test "partial record extraction releases external owners immediately and preserves remaining cleanup order" {
+    try partialFieldResourceScenario(t.allocator);
+    var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(no_resize.allocator(), partialFieldResourceScenario, .{});
+}

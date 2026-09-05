@@ -1048,3 +1048,32 @@ operations and corresponding parity cases. Source pool/arena scopes, partial fie
 moves, generics, modules/interfaces, compile-time/schema/incremental work, and all
 other unfinished roadmap requirements remain in scope. Guardian was not exercised;
 hosted CI has not run. The full roadmap goal remains active.
+
+
+## 2026-09-05: C/D partial record field moves and remaining obligations
+
+Implemented take_field across parsing, checking, lowering, VM, and tooling. Field
+transfers immediately remove parent ownership while preserving access to untouched
+fields. Immutable field-state snapshots participate in branch/loop/short-circuit
+checks. Missing fields and whole-value use of partial records reject; complete binding
+replacement restores availability. Remaining result-bearing fields stay obligations,
+while transferred fields carry their own obligations to their new expression/binding.
+
+Unique runtime aggregates allocate a moved-field bitmap before first transfer.
+Cleanup skips transferred slots, preserving immediate resource release and remainder
+order; shared aggregates reject destructive extraction. 413 Zig/core-and-CLI tests
+pass in Debug and ReleaseFast (370 core, 43 CLI), plus eight driver tests and the
+unchanged 23-fixture/182-comparison native suite per host mode. Acceptance covers
+quota reuse, metadata, nested moves, result/overwrite obligations, equal/different
+path states, recoverable propagation, every allocation failure, every instruction
+boundary on both memory backends, malformed bytecode, and external release order
+1,3,2. A 10,000-cycle fixture uses <=16 KiB live runtime allocation and releases all
+20,000 buffers. Formatter coverage grows to 29 valid CLI fixtures. Formatting and
+whitespace checks pass. Exact discovery advances to exact-v25 with read/take identity.
+
+[Partial-field semantics](experiments/partial-fields.md) documents runtime uniqueness,
+state-copy costs, result obligations, complete binding replacement, and native
+unsupported-feature behavior. Source pool/arena integration, generics, modules,
+compile-time/schema/incremental work, and every other unfinished roadmap requirement
+remain in scope. C/D are not complete. Guardian was not exercised; hosted CI has not
+run. The full roadmap goal remains active.
