@@ -1,0 +1,7 @@
+function main() -> i64
+  0000  PUSH_I64 1  ; 1:27
+  0001  PUSH_I64 2  ; 1:31
+  0002  PUSH_I64 3  ; 1:35
+  0003  MUL_I64_CHECKED  ; 1:33
+  0004  ADD_I64_CHECKED  ; 1:29
+  0005  RET  ; 1:20

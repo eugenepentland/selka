@@ -1,0 +1,9 @@
+fn main() -> i64 {
+    let factor: i64 = 7;
+    let mut total = 0;
+    {
+        let amount = 3;
+        total = factor * amount;
+    }
+    return total;
+}

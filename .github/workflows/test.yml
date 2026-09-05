@@ -1,0 +1,21 @@
+name: Test
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mode: [Debug, ReleaseFast]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      # With no version override, setup-zig reads minimum_zig_version from build.zig.zon.
+      - uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2
+        with:
+          cache-key: ${{ matrix.mode }}
+      - name: Verify exact toolchain
+        run: test "$(zig version)" = "$(cat .zigversion)"
+      - run: zig build fmt-check
+      - run: zig build test -Doptimize=${{ matrix.mode }} --summary all
+      - run: zig build -Doptimize=${{ matrix.mode }}
