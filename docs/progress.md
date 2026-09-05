@@ -658,3 +658,29 @@ network, environment, external resources and completion/cleanup, attenuation,
 arenas/pools, and every other unfinished roadmap track remain pending. C is not
 complete. Guardian gates were not exercised; hosted CI has not run. The full
 roadmap goal remains active.
+
+
+## 2026-09-05: C external resource completion and scoped cleanup backend
+
+Implemented provider-backed filesystem/network resource stores with explicit grants,
+non-reused identities, generation-checked moves, live-resource ceilings, and reserved
+bookkeeping before host acquisition. Fallible completion retains ownership on error
+and consumes it on success; fallback release never implies completion. Store teardown
+uses reverse acquisition order even after slot reuse. Lexical scopes support adoption,
+take, transfer, and reverse registration cleanup without losing owners on failed
+bookkeeping allocation.
+
+283 tests pass in Debug and ReleaseFast (253 core, 30 actual CLI). Acceptance covers
+partial acquisition, all provider completion errors including host OOM, successful
+retry, explicit fallback, stale/foreign/closed/wrong-kind tokens, quotas, slot reuse,
+generation retirement, nested scope moves, and every registration/transfer allocation
+failure. Registry moves/completion/release/unwind work with allocation disabled;
+10,000 acquisition/move/release cycles fit under 4 KiB and reuse one slot. Formatting
+and whitespace checks pass. Discovery remains exact-v18; guest semantics are unchanged.
+
+[The external resource record](experiments/external-resources.md) defines trusted
+callback contracts and cleanup order. This is backend evidence only: guest resource
+declarations, capability entry grants, acquisition/completion, VM cleanup, and source
+cleanup-effect inference are pending. Environment, attenuation, arenas/pools, and all
+other unfinished tracks remain in scope. C is not complete. Guardian was not exercised;
+hosted CI has not run. The full roadmap goal remains active.

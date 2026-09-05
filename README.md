@@ -72,7 +72,7 @@ zig build run -- discover-duplicates examples/duplicates.my --timings
 It reports exact checked-function candidates after normalizing bound names,
 with source locations and advisory explanations. Ordinary compilation does not
 run it. See the [comparison contract and review](docs/experiments/duplicate-discovery.md).
-All 271 tests pass in Debug and ReleaseFast.
+All 283 tests pass in Debug and ReleaseFast.
 
 [Post-MVP tracking](docs/experiments/roadmap.md) records the remaining experiments.
 Records, complete construction, field access, preserving updates, and declarative
@@ -122,3 +122,8 @@ require them. `examples/allocator-capabilities.my` returns 3.
 require injected host providers and contribute distinct transitive effects. The
 CLI checks their example but cannot run it without providers. Filesystem/network/
 environment operations, external resources and cleanup, and arenas/pools remain pending.
+
+The [external resource backend](docs/experiments/external-resources.md) now tracks
+fallible completion separately from fallback release, with scoped ownership moves
+and reverse cleanup. Guest external resource syntax and VM/effect integration
+remain pending.
