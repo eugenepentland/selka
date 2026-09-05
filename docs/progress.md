@@ -144,3 +144,22 @@ See [the experiment record](experiments/duplicate-discovery.md) and
 [the remaining post-MVP tracks](experiments/roadmap.md). This milestone does not
 claim that the aggregate, borrowing, ownership, effect, module, or native
 experiments are implemented. Guardian gates were not exercised.
+
+
+## 2026-09-05: full-roadmap goal — A1 storage foundation
+
+The user activated the goal to complete all pending roadmap items. The full
+scope is retained. A1 now has nominal runtime type IDs and immutable aggregate
+values with explicit VM ownership. Creation and field-projection instructions
+are internal backend operations while record frontend work remains pending.
+
+Value copies survive overwrites and function boundaries. Destruction is iterative
+and does not allocate. Tests cover nested sharing, deep chains, wrong-type and
+out-of-bounds internal operations, instruction-budget traps, all allocation
+failures, and 10,000 VM loop constructions under a 4 KiB live-byte cap.
+
+Debug and ReleaseFast each pass 62/62 tests (49 core, 13 CLI); formatting passes.
+
+See [the A1 record](experiments/aggregates.md). This is a storage checkpoint;
+A1 and the other pending roadmap tracks are not complete. Guardian gates were
+not exercised.

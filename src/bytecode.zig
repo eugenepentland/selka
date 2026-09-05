@@ -9,6 +9,8 @@ pub const Instruction = struct {
     op: union(enum) {
         push_i64: i64,
         push_bool: bool,
+        make_record: struct { ty: typed.Type, fields: usize },
+        get_field: usize,
         load_local: typed.LocalId,
         store_local: typed.LocalId,
         add_i64_checked,
@@ -54,6 +56,9 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             .load_local, .store_local => |slot| if (@backingInt(slot) >= function.locals.len) {
                 return error.InternalError;
             },
+            .make_record => |record| if (record.ty == .i64 or record.ty == .bool) {
+                return error.InternalError;
+            },
             .call => |id| if (@backingInt(id) >= program.functions.len) {
                 return error.InternalError;
             },
@@ -76,6 +81,10 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             var height = heights[pc].?;
             switch (instruction.op) {
                 .push_i64, .push_bool, .load_local => height += 1,
+                .make_record => |record| {
+                    if (height < record.fields) return error.InternalError;
+                    height = height - record.fields + 1;
+                },
                 .store_local, .pop, .jump_if_false => {
                     if (height == 0) return error.InternalError;
                     height -= 1;
@@ -84,7 +93,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (height < 2) return error.InternalError;
                     height -= 1;
                 },
-                .neg_i64_checked, .not_bool => if (height == 0) {
+                .neg_i64_checked, .not_bool, .get_field => if (height == 0) {
                     return error.InternalError;
                 },
                 .call => |id| {
