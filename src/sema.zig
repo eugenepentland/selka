@@ -330,6 +330,22 @@ const Checker = struct {
                 out.ty = parsed.ty;
                 out.data = .{ .integer = parsed.value };
             } else switch (node.data) {
+                .read_field => |read| {
+                    if (self.active_refs.contains(self.src.text(read.owner))) return self.sink.fail("E_TYPE", read.owner, "read_field requires a value binding; use read_ref for a reference");
+                    const owner = try self.resolve(read.owner);
+                    const local = &self.locals.items[@backingInt(owner)];
+                    if (local.reference_parameter != null) return self.sink.fail("E_TYPE", read.owner, "read_field requires a value binding, not a reference parameter");
+                    const field = try self.catalog.field(local.ty, self.src, read.field, self.sink);
+                    out.ty = self.catalog.records[local.ty.recordIndex()].fields[field].ty;
+                    if (self.transfers(out.ty)) return self.sink.fail("E_FIELD_COPY", read.field, "read_field cannot copy owned values or result obligations");
+                    if (self.transfers(local.ty) and !local.transfer_available) return self.sink.failRelated("E_OWNED_CONSUMED", read.owner, "record has already been transferred", .{ .span = local.declaration, .message = "binding declared here" });
+                    try self.ownerAccess(owner, false, read.owner);
+                    local.reads += 1;
+                    if (self.conversion_fields) |seen| {
+                        if (@backingInt(owner) == 0) seen[field] = true;
+                    }
+                    out.data = .{ .read_field = .{ .owner = owner, .field = field } };
+                },
                 .buffer_operation => |operation| {
                     const owner = try self.resolve(operation.owner);
                     const local = &self.locals.items[@backingInt(owner)];
@@ -603,7 +619,7 @@ const Checker = struct {
                 },
             }
             const consumed: usize = switch (out.data) {
-                .integer, .boolean, .local, .read_ref, .len_slice => 0,
+                .integer, .boolean, .local, .read_ref, .read_field, .len_slice => 0,
                 .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .external_read, .complete_resource => 1,
                 .acquire_buffer, .acquire_resource => 2,
                 .index, .binary => 2,

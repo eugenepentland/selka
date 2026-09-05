@@ -553,6 +553,18 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 if (locals.items[index]) |value| value.release(allocator);
                 locals.items[index] = null;
             },
+            .read_field => |read| {
+                const index = frame.local_base + @backingInt(read.owner);
+                const owner = if (owners.get(index)) |allocation| storage.readOwner(allocation, 0) catch |err| return memoryFailure(err, instruction, frames.items, program) else (locals.items[index] orelse return error.InternalError).retain();
+                defer owner.release(allocator);
+                if (owner.typeOf() != function.locals[@backingInt(read.owner)].ty) return error.InternalError;
+                const value = try owner.getField(read.field);
+                if (value.typeOf() != read.output) {
+                    value.release(allocator);
+                    return error.InternalError;
+                }
+                try pushOwned(&stack, allocator, value);
+            },
             .load_local => |slot| {
                 if (typed.moveOnly(function.locals[@backingInt(slot)].ty, program.records)) return error.InternalError;
                 const index = frame.local_base + @backingInt(slot);

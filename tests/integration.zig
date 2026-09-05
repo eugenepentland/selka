@@ -431,3 +431,16 @@ test "CLI checks resource ownership completion and implicit cleanup effects with
     const invalid = "resource File: filesystem; struct Wrapper { file: File } fn cleanup(input: Wrapper) -> i64 noio { return 0; } fn main() -> i64 { return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_EFFECT_BOUND]");
 }
+
+test "CLI reads record fields without consuming owners and preserves result obligations" {
+    const source = "struct Meta { code: i64 } fn main() -> i64 { let meta = new Meta { code: 7 }; return read_field(meta, code) + read_field(meta, code); }";
+    try invoke("run", source, 0, "14\n", "");
+    try invoke("check", source, 0, "", "");
+    const dumped = try runFixture("dump-bytecode", source, &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "READ_FIELD local=0 field=0 -> i64") != null);
+    const invalid = "resource File: filesystem; struct Owner { file: File } fn f(owner: Owner) -> i64 { discard read_field(owner, file); return 0; } fn main() -> i64 { return 0; }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_FIELD_COPY]");
+}

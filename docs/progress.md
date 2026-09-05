@@ -717,3 +717,27 @@ still consumes its owned wrapper. Environment, owned-field inspection/partial mo
 attenuation, arenas/pools, and all other unfinished tracks remain in scope. C is
 not complete. Guardian was not exercised; hosted CI has not run. The full roadmap
 goal remains active.
+
+
+## 2026-09-05: C non-consuming field inspection and code-dependent completion retry
+
+Implemented `read_field(owner, field)` for live record bindings and copyable fields.
+It preserves owner/result obligations, returns retained immutable snapshots, respects
+borrow conflicts, and rejects resource/result duplication. Direct reads participate
+in complete-conversion field accounting. Bytecode validates resolved owner/field/type
+metadata; exact-v20 discovery retains these identities. Completion examples and
+allocation-failure tests now choose retries by inspecting the code without losing
+the error record's resource.
+
+306 tests pass in Debug and ReleaseFast (274 core, 32 actual CLI). New tests cover
+snapshot survival across owner updates/transfers, moved/owned/result-copy rejection,
+unsatisfied handling obligations, shared/exclusive access, complete conversions,
+malformed emission, discovery identity, and allocation failures. Existing resource
+retry, trap, and bounded-memory tests pass with the non-consuming operation.
+Formatting and whitespace checks pass.
+
+[Field-read semantics](experiments/owned-field-reads.md) distinguishes inspection
+from ordinary consuming projection. Partial field moves and owned-wrapper borrowing
+remain pending, along with environment/data operations, attenuation, arenas/pools,
+and all other unfinished roadmap tracks. Guardian was not exercised; hosted CI has
+not run. The full roadmap goal remains active.

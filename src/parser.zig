@@ -372,6 +372,15 @@ pub const Parser = struct {
                 const close = try self.expect(.rparen);
                 break :buffer try self.append(.{ .span = .join(token.span, close.span), .data = .{ .buffer_operation = .{ .kind = kind, .owner = owner.span, .result = result, .arguments = arguments } } });
             },
+            .kw_read_field => read: {
+                self.pos += 1;
+                _ = try self.expect(.lparen);
+                const owner = try self.expect(.ident);
+                _ = try self.expect(.comma);
+                const field = try self.expect(.ident);
+                const close = try self.expect(.rparen);
+                break :read try self.append(.{ .span = .join(token.span, close.span), .data = .{ .read_field = .{ .owner = owner.span, .field = field.span } } });
+            },
             .kw_acquire_resource, .kw_complete_resource => resource: {
                 self.pos += 1;
                 _ = try self.expect(.lt);

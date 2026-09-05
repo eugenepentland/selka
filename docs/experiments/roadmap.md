@@ -70,4 +70,5 @@ cleanup. [Owned-buffer transfers and partial-acquisition cleanup](ownership.md) 
 [External resource backend acceptance](external-resources.md) now covers explicit
 fallible completion, fallback release, scoped transfers, and reverse cleanup.
 [Source and VM integration with cleanup-effect inference](source-resources.md) now
-pass acceptance. Owned-field inspection/partial moves remain restricted.
+pass acceptance. [Non-consuming copyable field inspection](owned-field-reads.md) now supports
+code-dependent retry; partial field moves remain pending.

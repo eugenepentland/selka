@@ -229,3 +229,10 @@ resource cleanup effects, so noio cannot silently release external resources.
 provider contracts, cleanup order, and the current whole-wrapper projection limit.
 Providers are injected; actual file/socket data operations and environment access
 remain pending.
+
+
+`read_field(owner, field)` retains a copyable record field without consuming its
+live owner or satisfying pending result obligations. This supports error-code
+inspection before retrying with an owned completion failure. Owned/result fields
+cannot be copied; shared/exclusive access rules still apply. Ordinary projection
+keeps its existing consuming behavior. See [field-read semantics](experiments/owned-field-reads.md).

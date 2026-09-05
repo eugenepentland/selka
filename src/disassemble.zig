@@ -78,6 +78,7 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
                 .read_ref => |id| try writer.print("READ_REF {d}", .{@backingInt(id)}),
                 .write_ref => |id| try writer.print("WRITE_REF {d}", .{@backingInt(id)}),
                 .buffer_operation => |operation| try writer.print("BUFFER_{s} local={d} -> {s}", .{ @tagName(operation.kind), @backingInt(operation.owner), typed.typeName(operation.output, program.records) }),
+                .read_field => |read| try writer.print("READ_FIELD local={d} field={d} -> {s}", .{ @backingInt(read.owner), read.field, typed.typeName(read.output, program.records) }),
                 .complete_resource => |output| try writer.print("COMPLETE_RESOURCE -> {s}", .{typed.typeName(output, program.records)}),
                 .acquire_resource => |acquire| try writer.print("ACQUIRE_RESOURCE -> {s}", .{typed.typeName(acquire.output, program.records)}),
                 .external_read => |read| try writer.print("EXTERNAL_{s} -> {s}", .{ @tagName(read.kind), typed.typeName(read.output, program.records) }),

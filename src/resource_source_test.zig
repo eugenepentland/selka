@@ -49,7 +49,7 @@ fn reject(source: []const u8, code: []const u8) !void {
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
-const retry = declarations ++ "struct Authority { fs: filesystem_cap } fn open(auth: Authority) -> Open effects(filesystem) { return acquire_resource<Open>(auth.fs, new [1]u8 [42u8]); } fn retry(file: File) -> Finish { match complete_resource<Finish>(file) { Finish.ok(done) => { return new Finish.ok(done); }, Finish.err(failure) => { return complete_resource<Finish>(failure.resource); } } } fn main(fs: filesystem_cap) -> i64 noalloc { match open(new Authority { fs: fs }) { Open.ok(file) => { match retry(file) { Finish.ok(done) => { if done { return 7; } else { return 0; } }, Finish.err(failure) => { return failure.code; } } }, Open.err(e) => { return e; } } }";
+const retry = declarations ++ "struct Authority { fs: filesystem_cap } fn open(auth: Authority) -> Open effects(filesystem) { return acquire_resource<Open>(auth.fs, new [1]u8 [42u8]); } fn retry(file: File) -> Finish { match complete_resource<Finish>(file) { Finish.ok(done) => { return new Finish.ok(done); }, Finish.err(failure) => { if read_field(failure, code) == 3 { return complete_resource<Finish>(failure.resource); } else { return new Finish.err(failure); } } } } fn main(fs: filesystem_cap) -> i64 noalloc { match open(new Authority { fs: fs }) { Open.ok(file) => { match retry(file) { Finish.ok(done) => { if done { return 7; } else { return 0; } }, Finish.err(failure) => { return failure.code; } } }, Open.err(e) => { return e; } } }";
 fn retryScenario(allocator: std.mem.Allocator) !void {
     var fake: Fake = .{ .fail_complete_count = 1 };
     defer std.debug.assert(fake.live == 0);

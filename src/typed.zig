@@ -19,6 +19,7 @@ pub const Node = struct {
         boolean: bool,
         local: LocalId,
         read_ref: ReferenceId,
+        read_field: struct { owner: LocalId, field: usize },
         propagate: struct { value: NodeId, output: Type, cleanup: []const ReferenceId },
         read_slice: struct { reference: ReferenceId, index: NodeId },
         len_slice: ReferenceId,

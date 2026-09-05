@@ -221,6 +221,7 @@ const Emitter = struct {
                     try self.push(.{ .expression = operation.arguments[i] });
                 }
             },
+            .read_field => |read| try self.instruction(node.span, .{ .read_field = .{ .owner = read.owner, .field = read.field, .output = node.ty } }),
             .complete_resource => |value| {
                 try self.instruction(node.span, .{ .complete_resource = node.ty });
                 try self.push(.{ .expression = value });
