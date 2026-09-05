@@ -26,7 +26,7 @@ pub const Diagnostic = struct {
             if (ch == '\t') padding[i] = '\t';
         }
         const primary = try std.fmt.allocPrint(allocator, "{s}:{d}:{d}: {s}[{s}]: {s}\n  {s}\n  {s}^\n", .{
-            src.path,  loc.line,     loc.column, if (self.severity == .err) "error" else "warning",
+            loc.path,  loc.line,     loc.column, if (self.severity == .err) "error" else "warning",
             self.code, self.message, loc.text,   padding,
         });
         defer allocator.free(primary);
@@ -35,11 +35,11 @@ pub const Diagnostic = struct {
         output.writer.writeAll(primary) catch return error.OutOfMemory;
         if (self.related) |related| {
             const at = src.locate(related.span.start);
-            output.writer.print("  note: {s}:{d}:{d}: {s}\n", .{ src.path, at.line, at.column, related.message }) catch return error.OutOfMemory;
+            output.writer.print("  note: {s}:{d}:{d}: {s}\n", .{ at.path, at.line, at.column, related.message }) catch return error.OutOfMemory;
         }
         for (self.trace[0..self.trace_len]) |entry| {
             const at = src.locate(entry.span.start);
-            output.writer.print("  in {s} at {s}:{d}:{d}\n", .{ entry.function, src.path, at.line, at.column }) catch return error.OutOfMemory;
+            output.writer.print("  in {s} at {s}:{d}:{d}\n", .{ entry.function, at.path, at.line, at.column }) catch return error.OutOfMemory;
         }
         if (self.trace_omitted != 0) output.writer.print("  ... {d} older frames omitted\n", .{self.trace_omitted}) catch return error.OutOfMemory;
         return output.toOwnedSlice();

@@ -39,8 +39,8 @@ pub fn analyze(allocator: std.mem.Allocator, program: typed.Program, src: source
     for (program.functions, functions) |function, *metrics| {
         metrics.parameters = function.parameter_count;
         const body = program.statements[@backingInt(function.body)].span;
-        const first_line = src.locate(function.declaration.start).line - 1;
-        const last_line = src.locate(body.end - 1).line - 1;
+        const first_line = src.physicalLocation(function.declaration.start).line - 1;
+        const last_line = src.physicalLocation(body.end - 1).line - 1;
         metrics.lines = last_line - first_line + 1;
         for (line_lengths[first_line .. last_line + 1]) |length| metrics.longest_line = @max(metrics.longest_line, length);
         var walker = try walk.Walker.init(allocator, program, function.body);
@@ -114,12 +114,12 @@ pub fn render(allocator: std.mem.Allocator, analysis: Analysis, program: typed.P
     writer.writeAll("Reachability is from main over resolved calls, including untaken paths. Runtime coverage and assertions: not measured.\n") catch return error.OutOfMemory;
     for (program.functions, analysis.functions) |function, metrics| {
         const at = src.locate(function.declaration.start);
-        writer.print("{s}:{d}:{d}: {s}; private={}; reachable-from-main={}; incoming-call-sites={d}\n", .{ src.path, at.line, at.column, function.name, function.restricted, metrics.reachable, metrics.incoming_sites }) catch return error.OutOfMemory;
+        writer.print("{s}:{d}:{d}: {s}; private={}; reachable-from-main={}; incoming-call-sites={d}\n", .{ at.path, at.line, at.column, function.name, function.restricted, metrics.reachable, metrics.incoming_sites }) catch return error.OutOfMemory;
         writer.print("  nodes={d} function-lines={d} longest-line-bytes={d} parameters={d} control-nesting={d} decision-points={d}\n", .{ metrics.nodes, metrics.lines, metrics.longest_line, metrics.parameters, metrics.nesting, metrics.decisions }) catch return error.OutOfMemory;
         if (!metrics.reachable) writer.writeAll(if (function.restricted) "  review: private function has no call path from main in this compilation\n" else "  review: no call path from main; external entry policy must be considered before removal\n") catch return error.OutOfMemory;
         for (metrics.calls) |call| {
             const site = src.locate(call.span.start);
-            writer.print("  calls {s} at {s}:{d}:{d}\n", .{ program.functions[@backingInt(call.callee)].name, src.path, site.line, site.column }) catch return error.OutOfMemory;
+            writer.print("  calls {s} at {s}:{d}:{d}\n", .{ program.functions[@backingInt(call.callee)].name, site.path, site.line, site.column }) catch return error.OutOfMemory;
         }
         for (function.locals) |local| {
             const location = src.locate(local.declaration.start);

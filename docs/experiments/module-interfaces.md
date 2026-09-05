@@ -59,7 +59,9 @@ host allocation failure while loading, indexing, resolving, and rendering a vali
 interface graph. Existing single-file compiler/VM fixtures remain the execution
 baseline.
 
-Next is integration with the type catalog and function checker: resolve all body
+[Source maps and AST relocation](module-source-mapping.md) now provide combined
+tables with original locations and module ownership. Next is integration with the
+type catalog and function checker: resolve all body
 references using these identities, preserve module source locations into typed IR,
 enforce private access at every reference, and execute the shared-domain example.
 Optional dependency-direction policy and module-aware quality, formatting, native,

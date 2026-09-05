@@ -1278,3 +1278,42 @@ optional dependency-direction policy, generics, compile-time/schema/incremental
 work, native expansion, and other unfinished roadmap requirements remain pending.
 Guardian was not exercised; hosted CI has not run. The full roadmap goal remains
 active.
+
+## 2026-09-05: M mapped sources and relocated module syntax
+
+Implemented checked forward/reverse source-span mapping with distinct per-file EOF
+locations, original path/line/column lookup, and separate combined-buffer line
+indices. Module AST relocation now combines parsed tables while preserving source
+spelling, expression/statement references, per-module ranges, and each function's
+owning module. All nested AST fields are handled through the pinned Zig reflection
+API; the original AST remains unchanged. The output remains a prerequisite for
+module-aware semantic resolution, not a replacement for it.
+
+Diagnostics preserve original file paths for errors, related notes, and VM traces.
+Mapped bytecode dumps include paths; quality line metrics use combined indices
+while displayed references use original locations; duplicate reports also resolve
+paths. Native scalar emission now uses per-instruction paths for traps/call traces.
+
+478 Zig tests pass in Debug and ReleaseFast (429 core, 49 CLI), plus eight
+verification-driver tests and the unchanged 23-fixture/182-comparison native suite
+per host mode. New acceptance covers empty files, EOF and reverse span boundaries,
+CRLF/tabs, related declarations across files, parser/checker/VM source provenance,
+unequal-file quality metrics, relocation of module functions/calls/fields, and all
+host allocation failures through mapped compilation/native emission and module AST
+relocation. A separately emitted scalar native probe was compiled with pinned Zig
+at O2 and undefined-behavior sanitization; it trapped at lib/helper.my:2:11 and
+reported the caller at entry.my:1:27. Formatting and whitespace checks pass.
+
+The pinned snapshot's reflection API uses field_names/field_types rather than the
+older fields interface. Compilation exposed that mismatch and the relocation code
+now uses the bundled API. A new native-emission assertion initially expected literal
+paths rather than the emitter's octal-escaped C strings; it was corrected, and the
+executed native probe confirmed displayed source paths.
+
+[Module source mapping](experiments/module-source-mapping.md) describes ownership,
+source-map boundaries, relocation, and validation limits. The trace probe uses
+fragments of one scalar program; full module body resolution/type checking and
+shared-domain execution remain pending. Optional dependency-direction policy,
+generics, compile-time/schema/incremental work, native expansion, and other unfinished
+roadmap requirements remain in scope. Guardian was not exercised; hosted CI has not
+run. The full roadmap goal remains active.

@@ -121,7 +121,7 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
                 .ret => try writer.writeAll("RET"),
             }
             const location = src.locate(instruction.span.start);
-            try writer.print("  ; {d}:{d}\n", .{ location.line, location.column });
+            if (src.origins.len != 0) try writer.print("  ; {s}:{d}:{d}\n", .{ location.path, location.line, location.column }) else try writer.print("  ; {d}:{d}\n", .{ location.line, location.column });
         }
     }
 }

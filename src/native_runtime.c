@@ -12,7 +12,7 @@ static V *values;
 static size_t nv, cv, nf, cf, site;
 static Frame *frames;
 static uint64_t steps, max_steps = 10000000, max_frames = 1024;
-static const char *source_path;
+static const char *const *source_paths;
 static const char *const *function_names;
 static const size_t *source_lines, *source_columns;
 static void cleanup(void) {
@@ -25,11 +25,11 @@ static void host_failure(const char *message) {
     cleanup(); exit(2);
 }
 static void trap(const char *code) {
-    fprintf(stderr, "%s:%zu:%zu: error[%s]\n", source_path, source_lines[site], source_columns[site], code);
+    fprintf(stderr, "%s:%zu:%zu: error[%s]\n", source_paths[site], source_lines[site], source_columns[site], code);
     size_t location = site, shown = 0;
     for (size_t i = nf; i && shown < 16; --i, ++shown) {
         Frame f = frames[i - 1];
-        fprintf(stderr, "  at %s (%s:%zu:%zu)\n", function_names[f.function], source_path, source_lines[location], source_columns[location]);
+        fprintf(stderr, "  at %s (%s:%zu:%zu)\n", function_names[f.function], source_paths[location], source_lines[location], source_columns[location]);
         location = f.call_site;
     }
     if (nf > shown) fprintf(stderr, "  ... %zu frames omitted\n", nf - shown);

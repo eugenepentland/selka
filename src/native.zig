@@ -65,9 +65,12 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     for (program.functions) |function| for (function.instructions) |ins| try w.print("{d},", .{src.locate(ins.span.start).line});
     try w.writeAll("};\nstatic const size_t columns[] = {");
     for (program.functions) |function| for (function.instructions) |ins| try w.print("{d},", .{src.locate(ins.span.start).column});
-    try w.writeAll("};\nint main(int argc, char **argv) {\nsource_path = ");
-    try string(w, src.path);
-    try w.writeAll("; function_names = names; source_lines = lines; source_columns = columns;\noptions(argc, argv); size_t return_target = 0;\n");
+    try w.writeAll("};\nstatic const char *const paths[] = {\n");
+    for (program.functions) |function| for (function.instructions) |ins| {
+        try string(w, src.locate(ins.span.start).path);
+        try w.writeAll(",\n");
+    };
+    try w.writeAll("};\nint main(int argc, char **argv) {\nsource_paths = paths; function_names = names; source_lines = lines; source_columns = columns;\noptions(argc, argv); size_t return_target = 0;\n");
     const main_index = @backingInt(program.main);
     try w.print("enter({d}, {d}, 0, 0); goto L{d};\n", .{ main_index, program.functions[main_index].locals.len, offsets[main_index] });
     for (program.functions, offsets) |function, offset| {

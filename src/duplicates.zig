@@ -300,7 +300,7 @@ pub fn render(allocator: std.mem.Allocator, analysis: Analysis, program: typed.P
         for (group.members) |id| {
             const function = program.functions[@backingInt(id)];
             const at = source.locate(function.declaration.start);
-            writer.print("  {s}:{d}:{d}: {s}\n", .{ source.path, at.line, at.column, function.name }) catch return error.OutOfMemory;
+            writer.print("  {s}:{d}:{d}: {s}\n", .{ at.path, at.line, at.column, function.name }) catch return error.OutOfMemory;
         }
         const representative = program.functions[@backingInt(group.members[0])];
         const body = source.text(program.statements[@backingInt(representative.body)].span);
@@ -325,7 +325,7 @@ pub fn render(allocator: std.mem.Allocator, analysis: Analysis, program: typed.P
             for ([_]typed.FunctionId{ pair.left, pair.right }) |id| {
                 const function = program.functions[@backingInt(id)];
                 const at = source.locate(function.declaration.start);
-                writer.print("  {s}:{d}:{d}: {s} (exact-group representative)\n", .{ source.path, at.line, at.column, function.name }) catch return error.OutOfMemory;
+                writer.print("  {s}:{d}:{d}: {s} (exact-group representative)\n", .{ at.path, at.line, at.column, function.name }) catch return error.OutOfMemory;
             }
             for (pair.changes[0..@min(pair.changes.len, 8)]) |change| {
                 if (change.before) |line| writer.print("    - {s}\n", .{line}) catch return error.OutOfMemory;

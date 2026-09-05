@@ -137,3 +137,34 @@ test "module grammar parses qualified variant match constructors and free calls"
     try t.expectEqual(@as(usize, 1), variants);
     try t.expectEqual(@as(usize, 1), matches);
 }
+
+fn mergedScenario(allocator: std.mem.Allocator) !void {
+    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = entry }, .{ .path = "units.my", .bytes = units } } };
+    var project = graph.Project.init(allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    const merged = try @import("project_syntax.zig").build(&index);
+    try t.expectEqual(index.units[0].syntax.functions.len + index.units[1].syntax.functions.len, merged.syntax.functions.len);
+    for (merged.syntax.functions, merged.function_modules) |function, module| {
+        const at = merged.src.locate(function.name.start);
+        try t.expectEqualStrings(project.modules.items[module].src.path, at.path);
+        const range = merged.modules[module];
+        try t.expect(@backingInt(function.body) >= range.statement_start and @backingInt(function.body) < range.statement_end);
+    }
+    for (merged.modules, index.units, 0..) |range, unit, module| {
+        for (merged.syntax.nodes.items[range.node_start..range.node_end], unit.syntax.nodes.items) |node, original| {
+            try t.expectEqualStrings(project.modules.items[module].src.text(original.span), merged.src.text(node.span));
+            if (node.data == .call) for (node.data.call.arguments) |argument| try t.expect(@backingInt(argument) >= range.node_start and @backingInt(argument) < range.node_end);
+        }
+    }
+    try t.expectEqualStrings("units::Distance", merged.src.text(merged.syntax.records[0].fields[0].ty));
+    const original_span = index.units[1].syntax.functions[0].name;
+    try t.expectEqualStrings("raw", project.modules.items[1].src.text(original_span));
+    try t.expect(original_span.start < merged.syntax.functions[2].name.start);
+}
+test "module AST relocation retains source spelling namespace ownership and node references under allocation failure" {
+    try mergedScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), mergedScenario, .{});
+}
