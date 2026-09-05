@@ -85,7 +85,7 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
             try catalog.field_names[index].put(allocator, variant_name, tag);
             output.* = .{ .name = variant_name, .declaration = input.name, .payload = null };
         }
-        storage[index] = .{ .id = id, .name = name, .declaration = declaration.name, .fields = &.{}, .variants = .{ .is_union = declaration.is_union, .cases = cases } };
+        storage[index] = .{ .id = id, .name = name, .declaration = declaration.name, .fields = &.{}, .variants = .{ .fallible = declaration.fallible, .is_union = declaration.is_union, .cases = cases } };
     }
     var interned: std.AutoHashMapUnmanaged(typed.Array, typed.Type) = .empty;
     for (arrays) |syntax| {
@@ -143,6 +143,10 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
         const index = declarations.len + domains.len + offset;
         const cases = @constCast(storage[index].variants.?.cases);
         for (declaration.cases, cases) |input, *output| output.payload = if (input.payload) |payload| try catalog.resolve(src, payload, sink) else null;
+        if (declaration.fallible) {
+            if (cases.len != 2 or !catalog.field_names[index].contains("ok") or !catalog.field_names[index].contains("err")) return sink.fail("E_RESULT_SCHEMA", declaration.name, "a result declares exactly `ok: Value` and `err: Error` payload cases");
+            for (cases) |case| if (case.payload == null) return sink.fail("E_RESULT_SCHEMA", case.declaration, "result cases require explicit payload types");
+        }
     }
     // Iterative DFS rejects cycles without expanding records or recursing on the host.
     const State = enum { unseen, visiting, complete };
@@ -162,6 +166,20 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
             const schema = catalog.records[visit.record];
             const edge_count = if (schema.variants) |v| v.cases.len else if (schema.array != null) @as(usize, 1) else schema.fields.len;
             if (visit.next_field == edge_count) {
+                var requires_handling = false;
+                if (schema.variants) |variants| {
+                    requires_handling = variants.fallible;
+                    for (variants.cases) |case| if (case.payload) |payload| {
+                        requires_handling = requires_handling or typed.requiresHandling(payload, catalog.records);
+                    };
+                } else if (schema.array) |array| {
+                    requires_handling = array.length != 0 and typed.requiresHandling(array.element, catalog.records);
+                } else {
+                    for (schema.fields) |field| {
+                        requires_handling = requires_handling or typed.requiresHandling(field.ty, catalog.records);
+                    }
+                }
+                catalog.records[visit.record].requires_handling = requires_handling;
                 states[visit.record] = .complete;
                 _ = work.pop();
                 continue;

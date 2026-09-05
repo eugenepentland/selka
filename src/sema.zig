@@ -6,7 +6,7 @@ const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
 const records = @import("records.zig");
 const Error = diagnostic.Error;
-const Work = struct { id: ast.NodeId, emit: bool = false };
+const Work = struct { id: ast.NodeId, emit: bool = false, checkpoint: bool = false, verify: ?[]const bool = null };
 const CheckedStatement = struct { id: typed.StatementId, terminates: bool };
 
 const Checker = struct {
@@ -30,6 +30,25 @@ const Checker = struct {
 
     fn ty(self: *Checker, span: source.Span) Error!typed.Type {
         return self.catalog.resolve(self.src, span, self.sink);
+    }
+    fn requiresHandling(self: *Checker, value_type: typed.Type) bool {
+        return typed.requiresHandling(value_type, self.catalog.records);
+    }
+    fn pendingState(self: *Checker, count: usize) Error![]bool {
+        const state = try self.allocator.alloc(bool, count);
+        for (self.locals.items[0..count], state) |local, *pending| pending.* = local.result_pending;
+        return state;
+    }
+    fn restorePending(self: *Checker, state: []const bool) void {
+        for (self.locals.items[0..state.len], state) |*local, pending| local.result_pending = pending;
+    }
+    fn samePending(self: *Checker, state: []const bool, span: source.Span, code: []const u8) Error!void {
+        for (self.locals.items[0..state.len], state) |local, pending| if (local.result_pending != pending) return self.sink.failRelated(code, span, "result obligation must have the same state on every continuing path", .{ .span = local.declaration, .message = "result-bearing binding declared here" });
+    }
+    fn requireHandled(self: *Checker, first: usize, span: source.Span) Error!void {
+        for (self.locals.items[first..], first..) |local, index| {
+            if (local.result_pending and self.active.get(local.name) == @as(typed.LocalId, @fromBackingInt(index))) return self.sink.failRelated("E_RESULT_UNHANDLED", span, "result-bearing value leaves scope without being handled, returned, transferred, or explicitly acknowledged", .{ .span = local.declaration, .message = "unhandled result-bearing binding" });
+        }
     }
     fn returnContract(self: *Checker, function: ast.Function) Error!?typed.ReturnReference {
         const contract = function.return_reference orelse return null;
@@ -159,6 +178,16 @@ const Checker = struct {
         defer work.deinit(self.allocator);
         try work.append(self.allocator, .{ .id = root });
         while (work.pop()) |task| {
+            if (task.verify) |state| {
+                try self.samePending(state, self.syntax.nodes.items[@backingInt(task.id)].span, "E_RESULT_PATH");
+                continue;
+            }
+            if (task.checkpoint) {
+                const state = try self.pendingState(self.locals.items.len);
+                try work.append(self.allocator, .{ .id = task.id, .verify = state });
+                try work.append(self.allocator, .{ .id = task.id });
+                continue;
+            }
             const index = @backingInt(task.id);
             if (self.resolved[index] != null) continue;
             const node = self.syntax.nodes.items[index];
@@ -244,7 +273,7 @@ const Checker = struct {
                     },
                     .binary => |b| {
                         try work.append(self.allocator, .{ .id = task.id, .emit = true });
-                        try work.append(self.allocator, .{ .id = b.right });
+                        try work.append(self.allocator, .{ .id = b.right, .checkpoint = b.op == .logical_and or b.op == .logical_or });
                         try work.append(self.allocator, .{ .id = b.left });
                         continue;
                     },
@@ -282,6 +311,7 @@ const Checker = struct {
                     const index_value = self.resolved[@backingInt(access.index)].?;
                     const schema = try self.catalog.array(self.nodes.items[@backingInt(base)].ty, node.span, self.sink);
                     try self.requireIndex(schema, self.nodes.items[@backingInt(index_value)].ty, self.syntax.nodes.items[@backingInt(access.index)].span);
+                    if (self.requiresHandling(schema.element) and schema.length != 1) return self.sink.fail("E_RESULT_OPERATION", node.span, "indexing would drop other result-bearing elements; handle or transfer the entire array");
                     out.ty = schema.element;
                     out.data = .{ .index = .{ .base = base, .index = index_value } };
                 },
@@ -291,6 +321,7 @@ const Checker = struct {
                     const value = self.resolved[@backingInt(replace.value)].?;
                     out.ty = self.nodes.items[@backingInt(base)].ty;
                     const schema = try self.catalog.array(out.ty, node.span, self.sink);
+                    if (self.requiresHandling(schema.element)) return self.sink.fail("E_RESULT_OPERATION", node.span, "replacement would drop an unhandled result-bearing element");
                     try self.requireIndex(schema, self.nodes.items[@backingInt(index_value)].ty, self.syntax.nodes.items[@backingInt(replace.index)].span);
                     try self.require(self.nodes.items[@backingInt(value)].ty, schema.element, self.syntax.nodes.items[@backingInt(replace.value)].span);
                     out.data = .{ .replace = .{ .base = base, .index = index_value, .value = value } };
@@ -298,6 +329,7 @@ const Checker = struct {
                 .length => |input| {
                     const base = self.resolved[@backingInt(input)].?;
                     _ = try self.catalog.array(self.nodes.items[@backingInt(base)].ty, node.span, self.sink);
+                    if (self.requiresHandling(self.nodes.items[@backingInt(base)].ty)) return self.sink.fail("E_RESULT_OPERATION", node.span, "length evaluation would drop result-bearing elements");
                     out.ty = .u64;
                     out.data = .{ .length = base };
                 },
@@ -308,12 +340,15 @@ const Checker = struct {
                 .update => |update| {
                     const base = self.resolved[@backingInt(update.base)].?;
                     out.ty = self.nodes.items[@backingInt(base)].ty;
-                    out.data = .{ .update = .{ .base = base, .fields = try self.fields(out.ty, update.fields, false, node.span) } };
+                    const replacements = try self.fields(out.ty, update.fields, false, node.span);
+                    for (replacements) |field| if (self.requiresHandling(self.catalog.records[out.ty.recordIndex()].fields[field.index].ty)) return self.sink.fail("E_RESULT_OPERATION", node.span, "update would drop a result-bearing field");
+                    out.data = .{ .update = .{ .base = base, .fields = replacements } };
                 },
                 .field => |field| {
                     const base = self.resolved[@backingInt(field.base)].?;
                     const record_type = self.nodes.items[@backingInt(base)].ty;
                     const field_index = try self.catalog.field(record_type, self.src, field.name, self.sink);
+                    for (self.catalog.records[record_type.recordIndex()].fields, 0..) |other, i| if (i != field_index and self.requiresHandling(other.ty)) return self.sink.fail("E_RESULT_OPERATION", node.span, "projection would drop another result-bearing field; transfer or acknowledge the whole record");
                     if (self.conversion_fields) |seen| {
                         const base_node = self.nodes.items[@backingInt(base)];
                         if (base_node.data == .local and @backingInt(base_node.data.local) == 0) seen[field_index] = true;
@@ -375,6 +410,10 @@ const Checker = struct {
                 .name => |name| {
                     if (self.active_refs.contains(self.src.text(name))) return self.sink.fail("E_REFERENCE_VALUE", name, "references cannot be copied, stored, returned, or passed to value parameters; use read_ref to copy the referenced value");
                     const slot = try self.resolve(name);
+                    if (self.requiresHandling(self.locals.items[@backingInt(slot)].ty)) {
+                        if (!self.locals.items[@backingInt(slot)].result_pending) return self.sink.failRelated("E_RESULT_CONSUMED", name, "result-bearing value has already been transferred or handled", .{ .span = self.locals.items[@backingInt(slot)].declaration, .message = "binding declared here" });
+                        self.locals.items[@backingInt(slot)].result_pending = false;
+                    }
                     try self.ownerAccess(slot, false, name);
                     self.locals.items[@backingInt(slot)].reads += 1;
                     out.ty = self.locals.items[@backingInt(slot)].ty;
@@ -468,6 +507,7 @@ const Checker = struct {
                     terminates = result.terminates;
                     try checked.append(self.allocator, result.id);
                 }
+                if (!terminates) try self.requireHandled(first_local, stmt.span);
                 break :block .{ .block = try checked.toOwnedSlice(self.allocator) };
             },
             .match => |match| match: {
@@ -477,13 +517,17 @@ const Checker = struct {
                 const seen = try self.allocator.alloc(?source.Span, variants.cases.len);
                 @memset(seen, null);
                 const arms = try self.allocator.alloc(typed.MatchArm, match.arms.len);
+                const before = try self.pendingState(self.locals.items.len);
+                var continuation: ?[]bool = null;
                 terminates = true;
                 for (match.arms, arms) |arm, *out_arm| {
+                    self.restorePending(before);
                     try self.require(try self.ty(arm.ty), value_type, arm.ty);
                     const tag = try self.catalog.variant(value_type, self.src, arm.name, self.sink);
                     if (seen[tag]) |previous| return self.sink.failRelated("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm", .{ .span = previous, .message = "previous arm" });
                     seen[tag] = arm.name;
                     const payload = variants.cases[tag].payload;
+                    if (arm.discard_payload and payload != null and self.requiresHandling(payload.?)) return self.sink.fail("E_RESULT_DISCARD", arm.name, "nested result payload requires a binding and explicit handling or acknowledgement");
                     if ((payload != null) != (arm.binding != null or arm.discard_payload)) return self.sink.failRelated("E_PATTERN_PAYLOAD", arm.name, "payload variants require a binding or (discard); empty variants take neither", .{ .span = variants.cases[tag].declaration, .message = "variant declared here" });
                     const first_local = self.locals.items.len;
                     defer for (self.locals.items[first_local..]) |local| {
@@ -494,10 +538,14 @@ const Checker = struct {
                         const name = self.src.text(binding);
                         if (self.functions.contains(name) or self.catalog.names.contains(name) or self.active.contains(name) or self.active_refs.contains(name)) return self.sink.fail("E_SHADOWING", binding, "payload binding shadows an active binding or top-level name");
                         slot = @fromBackingInt(self.locals.items.len);
-                        try self.locals.append(self.allocator, .{ .name = name, .declaration = binding, .ty = payload.?, .mutable = false });
+                        try self.locals.append(self.allocator, .{ .name = name, .declaration = binding, .ty = payload.?, .mutable = false, .result_pending = self.requiresHandling(payload.?) });
                         try self.active.put(self.allocator, name, slot.?);
                     }
                     const body = try self.statement(arm.body);
+                    if (!body.terminates) {
+                        try self.requireHandled(first_local, stmt.span);
+                        if (continuation) |state| try self.samePending(state, stmt.span, "E_RESULT_PATH") else continuation = try self.pendingState(before.len);
+                    }
                     terminates = terminates and body.terminates;
                     out_arm.* = .{ .tag = tag, .slot = slot, .body = body.id };
                 }
@@ -505,6 +553,7 @@ const Checker = struct {
                     const message = try std.fmt.allocPrint(self.allocator, "match does not handle variant `{s}`; every variant requires an explicit arm", .{variant.name});
                     return self.sink.failRelated("E_INCOMPLETE_MATCH", stmt.span, message, .{ .span = variant.declaration, .message = "unhandled variant declared here" });
                 };
+                if (continuation) |state| self.restorePending(state);
                 break :match .{ .match = .{ .value = value, .arms = arms } };
             },
             .borrow_call => |borrow| borrow: {
@@ -553,9 +602,11 @@ const Checker = struct {
                     self.locals.items[@backingInt(owner)].reads += 1;
                     if (borrow.mutable) self.locals.items[@backingInt(owner)].mutable_borrow = true;
                 }
+                if (self.requiresHandling(self.locals.items[@backingInt(owner)].ty)) return self.sink.fail("E_RESULT_BORROW", borrow.owner, "result-bearing values must be transferred by value; borrowing their obligations is not supported");
                 const source_type = if (parent) |id| self.references.items[@backingInt(id)].ty else self.locals.items[@backingInt(owner)].ty;
                 const parent_slice = if (parent) |id| self.references.items[@backingInt(id)].slice else false;
                 const element = if (range != null and !parent_slice) try self.sliceElement(source_type, borrow.owner) else source_type;
+                if (self.requiresHandling(element)) return self.sink.fail("E_RESULT_BORROW", borrow.owner, "result-bearing elements cannot be exposed through references");
                 const id: typed.ReferenceId = @fromBackingInt(self.references.items.len);
                 try self.references.append(self.allocator, .{ .slice = range != null or parent_slice, .name = name, .declaration = borrow.name, .owner = owner, .parent = parent, .ty = element, .mutable = borrow.mutable });
                 try self.active_refs.put(self.allocator, name, id);
@@ -586,19 +637,39 @@ const Checker = struct {
                 self.locals.items[@backingInt(ref.owner)].writes += 1;
                 break :write .{ .write_ref = .{ .reference = id, .value = value } };
             },
-            .discard => |expr| .{ .discard = try self.expression(expr) },
+            .acknowledge => |expr| acknowledged: {
+                const value = try self.expression(expr);
+                if (!self.requiresHandling(self.nodes.items[@backingInt(value)].ty)) return self.sink.fail("E_ACKNOWLEDGE_TYPE", stmt.span, "acknowledge requires a result-bearing value");
+                break :acknowledged .{ .acknowledge = value };
+            },
+            .discard => |expr| discard: {
+                const value = try self.expression(expr);
+                if (self.requiresHandling(self.nodes.items[@backingInt(value)].ty)) return self.sink.fail("E_RESULT_DISCARD", stmt.span, "discard cannot erase a fallible result; match, return, transfer, or explicitly acknowledge it");
+                break :discard .{ .discard = value };
+            },
             .branch => |branch| branch: {
                 const condition = try self.expression(branch.condition);
                 try self.require(self.nodes.items[@backingInt(condition)].ty, .bool, self.syntax.nodes.items[@backingInt(branch.condition)].span);
+                const before = try self.pendingState(self.locals.items.len);
                 const then_body = try self.statement(branch.then_body);
+                const then_state = try self.pendingState(before.len);
+                self.restorePending(before);
                 const else_body = if (branch.else_body) |other| try self.statement(other) else null;
+                if (!then_body.terminates) {
+                    if (else_body == null or !else_body.?.terminates) try self.samePending(then_state, stmt.span, "E_RESULT_PATH");
+                    self.restorePending(then_state);
+                }
                 terminates = then_body.terminates and if (else_body) |other| other.terminates else false;
                 break :branch .{ .branch = .{ .condition = condition, .then_body = then_body.id, .else_body = if (else_body) |other| other.id else null } };
             },
             .loop => |loop| loop: {
+                const before = try self.pendingState(self.locals.items.len);
                 const condition = try self.expression(loop.condition);
                 try self.require(self.nodes.items[@backingInt(condition)].ty, .bool, self.syntax.nodes.items[@backingInt(loop.condition)].span);
+                try self.samePending(before, stmt.span, "E_RESULT_LOOP");
                 const body = try self.statement(loop.body);
+                if (!body.terminates) try self.samePending(before, stmt.span, "E_RESULT_LOOP");
+                self.restorePending(before);
                 break :loop .{ .loop = .{ .condition = condition, .body = body.id } };
             },
             .ret => |expr| ret: {
@@ -617,6 +688,7 @@ const Checker = struct {
                     value = try self.expression(expr);
                     try self.require(self.nodes.items[@backingInt(value.?)].ty, self.return_type, stmt.span);
                 }
+                try self.requireHandled(0, stmt.span);
                 terminates = true;
                 var refs: std.ArrayList(typed.ReferenceId) = .empty;
                 for (self.references.items, 0..) |ref, i| {
@@ -634,7 +706,7 @@ const Checker = struct {
                 const value_type = self.nodes.items[@backingInt(value)].ty;
                 if (b.annotation) |annotation| try self.require(value_type, try self.ty(annotation), annotation);
                 const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
-                try self.locals.append(self.allocator, .{ .name = name, .declaration = b.name, .ty = value_type, .mutable = b.mutable });
+                try self.locals.append(self.allocator, .{ .name = name, .declaration = b.name, .ty = value_type, .mutable = b.mutable, .result_pending = self.requiresHandling(value_type) });
                 try self.active.put(self.allocator, name, slot);
                 break :binding .{ .initialize = .{ .slot = slot, .value = value } };
             },
@@ -660,6 +732,10 @@ const Checker = struct {
                     value = combined;
                 }
                 try self.require(self.nodes.items[@backingInt(value)].ty, self.locals.items[@backingInt(slot)].ty, stmt.span);
+                if (self.requiresHandling(self.locals.items[@backingInt(slot)].ty)) {
+                    if (self.locals.items[@backingInt(slot)].result_pending) return self.sink.fail("E_RESULT_OVERWRITE", a.name, "assignment would overwrite an unhandled result-bearing value");
+                    self.locals.items[@backingInt(slot)].result_pending = true;
+                }
                 self.locals.items[@backingInt(slot)].writes += 1;
                 break :assignment .{ .assign = .{ .slot = slot, .value = value } };
             },
@@ -704,7 +780,8 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
             if (checker.functions.contains(name) or checker.catalog.names.contains(name)) return sink.fail("E_SHADOWING", parameter.name, "parameter shadows a top-level function");
             const slot: typed.LocalId = @fromBackingInt(checker.locals.items.len);
             const parameter_type = try checker.ty(parameter.ty);
-            try checker.locals.append(allocator, .{ .name = name, .declaration = parameter.name, .ty = parameter_type, .mutable = false, .reference_parameter = parameter.reference, .slice_parameter = parameter.slice });
+            if (parameter.reference != null and checker.requiresHandling(parameter_type)) return sink.fail("E_RESULT_BORROW", parameter.ty, "result-bearing parameters must transfer by value");
+            try checker.locals.append(allocator, .{ .name = name, .declaration = parameter.name, .ty = parameter_type, .mutable = false, .reference_parameter = parameter.reference, .slice_parameter = parameter.slice, .result_pending = checker.requiresHandling(parameter_type) });
             if (parameter.reference) |mutable| {
                 const reference: typed.ReferenceId = @fromBackingInt(checker.references.items.len);
                 try checker.references.append(allocator, .{ .parameter = true, .slice = parameter.slice, .name = name, .declaration = parameter.name, .owner = slot, .parent = null, .ty = parameter_type, .mutable = mutable });

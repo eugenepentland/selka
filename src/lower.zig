@@ -59,6 +59,10 @@ const Emitter = struct {
                     try self.push(.{ .expression = call.arguments[i] });
                 }
             },
+            .acknowledge => |value| {
+                try self.instruction(stmt.span, .{ .acknowledge = self.program.nodes[@backingInt(value)].ty });
+                try self.push(.{ .expression = value });
+            },
             .ret, .discard => |value| {
                 try self.instruction(stmt.span, if (stmt.data == .ret) .ret else .pop);
                 for (stmt.cleanup) |reference| try self.instruction(stmt.span, .{ .end_borrow = reference });

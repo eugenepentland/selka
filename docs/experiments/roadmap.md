@@ -10,8 +10,8 @@ not a claim that the full future language has been delivered.
 | A1, aggregates and complete conversions | Implemented: records, construction, fields, preserving updates, complete conversions, integer widths/casts, fixed arrays, checked indexing | A1 acceptance passes; carry the immutable value semantics into A2. |
 | A2, nominal domains and exhaustive mappings | Implemented: domains/private construction, closed enums/tagged unions, exhaustive matching, and complete enum-indexed tables | A2 unit, privacy, added-variant match/table, and explicit unknown-code handling experiments pass. |
 | B, borrowing | Implemented: memory/lease registry, scoped references, reference/slice parameters, bounded views, and explicit returned-reference provenance | B acceptance passes; carry borrowing and snapshot rules into resource ownership. |
-| C, ownership/capabilities/effects | Pending resource ownership and minimal recoverable errors | Acquire A, fail acquiring B, release A once; reject transitive forbidden effects including cleanup. |
-| D, errors and abstraction | Minimal recoverable errors needed with C; broader work pending | Require handling/propagation/explicit acknowledgement without erasing evaluation or ownership obligations. |
+| C, ownership/capabilities/effects | Typed recoverable results now available; resource ownership/capabilities/effects pending | Acquire A, fail acquiring B, release A once; reject transitive forbidden effects including cleanup. |
+| D, errors and abstraction | In progress: typed results, checked handling/transfer, and acknowledgement implemented; propagation/generics/handles pending | Require handling/propagation/explicit acknowledgement without erasing evaluation or ownership obligations. |
 | M, modules/interfaces | Pending a multi-file domain program | Resolve imports/exports and private boundaries; distinguish optional direction policy from type validity. |
 | E, native execution | Pending one concrete backend choice | Run the same scalar semantic/trap fixtures through the VM and native route. |
 | F, compile-time/schema/incremental work | Pending aggregates/variants/modules | Reject duplicate schema keys and undeclared inputs; explain invalidation and evaluation budgets. |
@@ -59,3 +59,9 @@ references now use this registry through checked source and VM instructions.
 Reference parameters now support checked call reborrows. [Bounded slices](slices.md) now support
 checked narrowing, element access, and slice parameters. Returned-reference
 lifetime contracts are implemented; [the B audit](b-audit.md) records acceptance.
+
+
+[Typed recoverable results and handling obligations](results.md) establish the
+minimal error-value foundation for C/D. They preserve obligations through binding,
+wrapping, and helper calls, with exhaustive handling or explicit acknowledgement.
+Propagation syntax, resource ownership, and partial-construction cleanup are next.

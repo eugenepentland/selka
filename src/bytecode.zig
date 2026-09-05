@@ -45,6 +45,7 @@ pub const Instruction = struct {
         cmp_bool: Equality,
         not_bool,
         pop,
+        acknowledge: typed.Type,
         jump: usize,
         jump_if_false: usize,
         call: typed.FunctionId,
@@ -83,6 +84,17 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
     for (program.records, 0..) |record, i| {
         if (@backingInt(record.id) != i + typed.Type.record_base) return error.InternalError;
         if (record.variants) |variants| {
+            if (variants.fallible) {
+                if (!variants.is_union or variants.cases.len != 2 or !record.requires_handling) return error.InternalError;
+                var ok = false;
+                var err = false;
+                for (variants.cases) |case| {
+                    if (case.payload == null) return error.InternalError;
+                    ok = ok or std.mem.eql(u8, case.name, "ok");
+                    err = err or std.mem.eql(u8, case.name, "err");
+                }
+                if (!ok or !err) return error.InternalError;
+            }
             if (record.array != null or record.domain != null or record.fields.len != 0 or variants.cases.len == 0) return error.InternalError;
             for (variants.cases) |variant| if (variant.payload) |ty| {
                 if (!variants.is_union or !validType(ty, program)) return error.InternalError;
@@ -225,6 +237,9 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                 if (!program.records[update.ty.recordIndex()].isRecord()) return error.InternalError;
                 try validateIndices(allocator, update.indices, program.records[update.ty.recordIndex()].fields.len);
             },
+            .acknowledge => |ty| {
+                if (!validType(ty, program) or !typed.requiresHandling(ty, program.records)) return error.InternalError;
+            },
             .capture_ref => |id| {
                 const contract = function.return_reference orelse return error.InternalError;
                 if (@backingInt(id) >= function.references.len) return error.InternalError;
@@ -316,7 +331,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (height <= update.indices.len) return error.InternalError;
                     height -= update.indices.len;
                 },
-                .store_local, .pop, .jump_if_false, .write_ref => {
+                .store_local, .pop, .acknowledge, .jump_if_false, .write_ref => {
                     if (height == 0) return error.InternalError;
                     height -= 1;
                 },

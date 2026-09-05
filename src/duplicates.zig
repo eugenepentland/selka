@@ -3,7 +3,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 
-pub const version = "exact-v11";
+pub const version = "exact-v12";
 pub const Population = enum { production, tests, generated, reference, intentional };
 pub const Options = struct { min_nodes: usize = 8, population: Population = .production };
 pub const Group = struct { members: []const typed.FunctionId, nodes: usize };
@@ -44,7 +44,7 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
         switch (task) {
             .expression => |id| {
                 const node = program.nodes[@backingInt(id)];
-                writer.print("expr {s} {s}\n", .{ typed.typeName(node.ty, program.records), @tagName(node.data) }) catch return error.OutOfMemory;
+                writer.print("expr {s} {s} obligation {}\n", .{ typed.typeName(node.ty, program.records), @tagName(node.data), typed.requiresHandling(node.ty, program.records) }) catch return error.OutOfMemory;
                 switch (node.data) {
                     .variant => |variant| {
                         writer.print("variant {s}\n", .{program.records[node.ty.recordIndex()].variants.?.cases[variant.tag].name}) catch return error.OutOfMemory;
@@ -130,7 +130,7 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                             try work.append(allocator, .{ .statement = children[i] });
                         }
                     },
-                    .ret, .discard => |value| try work.append(allocator, .{ .expression = value }),
+                    .ret, .discard, .acknowledge => |value| try work.append(allocator, .{ .expression = value }),
                     .ret_ref => |reference| writer.print("reference {d}\n", .{@backingInt(reference)}) catch return error.OutOfMemory,
                     .borrow_call => |borrow| {
                         writer.print("reference {d}\n", .{@backingInt(borrow.reference)}) catch return error.OutOfMemory;

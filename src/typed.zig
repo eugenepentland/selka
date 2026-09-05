@@ -39,10 +39,11 @@ pub const Node = struct {
 pub const FieldInit = struct { index: usize, value: NodeId };
 pub const Field = struct { name: []const u8, declaration: Span, ty: Type };
 pub const Variant = struct { name: []const u8, declaration: Span, payload: ?Type };
-pub const Variants = struct { is_union: bool, cases: []const Variant };
+pub const Variants = struct { fallible: bool = false, is_union: bool, cases: []const Variant };
 pub const Array = struct { element: Type, length: usize, key: ?Type = null };
 // Aggregate schemas retain nominal record identities and intern structural arrays.
 pub const Record = struct {
+    requires_handling: bool = false,
     id: Type,
     name: []const u8,
     declaration: Span,
@@ -66,6 +67,9 @@ pub const Record = struct {
         return if (self.array) |a| a.element else self.domain orelse self.fields[index].ty;
     }
 };
+pub fn requiresHandling(ty: Type, records: []const Record) bool {
+    return ty.isAggregate() and records[ty.recordIndex()].requires_handling;
+}
 pub fn typeName(ty: Type, records: []const Record) []const u8 {
     return if (ty.isAggregate()) records[ty.recordIndex()].name else @tagName(ty);
 }
@@ -83,6 +87,7 @@ pub const Statement = struct {
         write_slice: struct { reference: ReferenceId, index: NodeId, value: NodeId },
         write_ref: struct { reference: ReferenceId, value: NodeId },
         discard: NodeId,
+        acknowledge: NodeId,
         branch: struct { condition: NodeId, then_body: StatementId, else_body: ?StatementId },
         match: struct { value: NodeId, arms: []const MatchArm },
         loop: struct { condition: NodeId, body: StatementId },
@@ -92,7 +97,7 @@ pub const Statement = struct {
 };
 pub const MatchArm = struct { tag: usize, slot: ?LocalId, body: StatementId };
 pub const Range = struct { start: NodeId, end: NodeId };
-pub const Local = struct { slice_parameter: bool = false, reference_parameter: ?bool = null, name: []const u8, declaration: Span, ty: Type, mutable: bool, mutable_borrow: bool = false, reads: usize = 0, writes: usize = 0 };
+pub const Local = struct { result_pending: bool = false, slice_parameter: bool = false, reference_parameter: ?bool = null, name: []const u8, declaration: Span, ty: Type, mutable: bool, mutable_borrow: bool = false, reads: usize = 0, writes: usize = 0 };
 pub const ReturnReference = struct { parameter: LocalId, mutable: bool, slice: bool };
 pub const Function = struct {
     return_reference: ?ReturnReference = null,

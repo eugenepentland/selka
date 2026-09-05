@@ -98,6 +98,11 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
         steps += 1;
         frames.items[frame_index].pc += 1;
         switch (instruction.op) {
+            .acknowledge => |ty| {
+                const value = try pop(&stack, frame.operand_base);
+                defer value.release(allocator);
+                if (value.typeOf() != ty) return error.InternalError;
+            },
             .pop => {
                 (try pop(&stack, frame.operand_base)).release(allocator);
             },

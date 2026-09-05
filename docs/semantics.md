@@ -89,7 +89,7 @@ Post-MVP feature syntax is not accepted as a placeholder with invented semantics
 
 The guest has no strings, floats, pointers, explicit heap allocation,
 ownership transfer, generics, compile-time execution, modules, globals, closures,
-function values, standard library, FFI, exceptions, typed errors, concurrency,
+function values, standard library, FFI, exceptions, concurrency,
 optimizer, native backend, or self-hosting. The host compiler and VM allocate.
 There is no REPL, guest printing, warning suppression, warning-as-error mode,
 or project policy file. The CLI prints only main's integer result. The scalar
@@ -166,3 +166,12 @@ and reborrows the caller input for the receiving scope. See
 [returned-reference semantics](experiments/returned-references.md) and
 [B acceptance](experiments/b-audit.md). This completes the restricted borrowing
 experiment; resource ownership and effects remain pending.
+
+
+Nominal `result Name { ok: T, err: E }` declarations and explicit `acknowledge`
+statements are implemented. Handling obligations transfer through value bindings,
+parameters, returns, and wrappers. Scope exits, overwrites, control-flow joins,
+loop back edges, and short-circuit paths cannot silently lose an obligation.
+Exhaustive matching handles outcomes explicitly. See [result semantics and current
+transfer restrictions](experiments/results.md). Dedicated propagation syntax and
+owned-resource cleanup remain pending.

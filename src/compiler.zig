@@ -76,4 +76,5 @@ test {
     _ = @import("references_test.zig");
     _ = @import("slices_test.zig");
     _ = @import("returned_references_test.zig");
+    _ = @import("results_test.zig");
 }

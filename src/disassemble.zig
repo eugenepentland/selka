@@ -14,7 +14,7 @@ pub fn dump(allocator: std.mem.Allocator, program: bc.Program, src: Source) ![]u
 
 fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer.Error!void {
     for (program.records) |record| {
-        try writer.print("{s} {s} type#{d}\n", .{ if (record.variants) |v| (if (v.is_union) "union" else "enum") else if (record.tableKey() != null) "table" else if (record.array != null) "array" else if (record.domain != null) "domain" else "record", record.name, @backingInt(record.id) });
+        try writer.print("{s} {s} type#{d}\n", .{ if (record.variants) |v| (if (v.fallible) "result" else if (v.is_union) "union" else "enum") else if (record.tableKey() != null) "table" else if (record.array != null) "array" else if (record.domain != null) "domain" else "record", record.name, @backingInt(record.id) });
         if (record.variants) |v| for (v.cases, 0..) |variant, tag| {
             try writer.print("  variant {d}: {s}", .{ tag, variant.name });
             if (variant.payload) |ty| try writer.print(": {s}", .{typed.typeName(ty, program.records)});
@@ -70,6 +70,7 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
                 .store_local => |slot| try writer.print("STORE_LOCAL {d}", .{@backingInt(slot)}),
                 .cmp_i64 => |predicate| try writer.print("CMP_I64 {s}", .{@tagName(predicate)}),
                 .cmp_bool => |predicate| try writer.print("CMP_BOOL {s}", .{@tagName(predicate)}),
+                .acknowledge => |ty| try writer.print("ACKNOWLEDGE {s}", .{typed.typeName(ty, program.records)}),
                 .pop => try writer.writeAll("POP"),
                 .jump => |target| try writer.print("JUMP {d}", .{target}),
                 .jump_if_false => |target| try writer.print("JUMP_IF_FALSE {d}", .{target}),

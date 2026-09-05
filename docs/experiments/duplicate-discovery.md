@@ -164,3 +164,9 @@ Returned references advance the version to `exact-v11`. Canonical function ident
 retains the declared originating parameter, result permissions and slice shape,
 returned reference identity, and the receiving borrow scope. Origin parameter names
 normalize to declaration positions; a different provenance contract remains distinct.
+
+
+Typed result obligations advance the version to `exact-v12`. Canonical expressions
+retain whether their type carries a result obligation; explicit acknowledgement
+remains distinct from ordinary discard and exhaustive matching. Bound spelling and
+flow-checking counters are not part of structural identity.

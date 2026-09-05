@@ -627,8 +627,9 @@ slices are in progress: [B has a tested memory/lease registry and scoped source 
 including static access checking, VM cleanup, and shared/exclusive reference
 parameters. [Bounded slices and checked narrowing](experiments/slices.md) are also
 implemented. [Returned-reference lifetime contracts](experiments/returned-references.md)
-complete B; see [the acceptance audit](experiments/b-audit.md). Other tracks below
-remain pending.
+complete B; see [the acceptance audit](experiments/b-audit.md). C/D now have
+[typed recoverable results and checked handling obligations](experiments/results.md).
+Propagation syntax, resource ownership, and the other unfinished work below remain pending.
 
 | Stage | Scope | Question to answer before proceeding |
 | --- | --- | --- |

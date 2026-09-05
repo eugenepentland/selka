@@ -1,0 +1,23 @@
+enum DivisionError { zero }
+result Quotient { ok: i64, err: DivisionError }
+
+fn divide(numerator: i64, denominator: i64) -> Quotient {
+    if denominator == 0 {
+        return new Quotient.err(new DivisionError.zero);
+    }
+    return new Quotient.ok(numerator / denominator);
+}
+
+fn value_or_zero(outcome: Quotient) -> i64 {
+    match outcome {
+        Quotient.ok(value) => { return value; },
+        Quotient.err(discard) => { return 0; }
+    }
+}
+
+fn main() -> i64 {
+    let first = divide(21, 3);
+    let total = value_or_zero(first) + value_or_zero(divide(21, 0));
+    acknowledge divide(1, 0);
+    return total;
+}

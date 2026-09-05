@@ -323,3 +323,17 @@ test "CLI runs returned views and rejects escaping local references" {
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, escape, 1, "", "error[E_RETURN_LIFETIME]");
     try invoke("run", "fn one(s: &[]i64) -> &[]i64 from s { borrow s[0..1] as r { return r; } } fn main() -> i64 { let a = new [2]i64 [1, 2]; borrow a[0..2] as s { borrow one(s) as r { return read_slice(r, 1); } } }", 1, "", "error[R_SLICE_BOUNDS]");
 }
+
+test "CLI handles recoverable results and rejects silent error loss" {
+    const source = @embedFile("fixtures/results.my");
+    try invoke("run", source, 0, "7\n", "");
+    try invoke("check", source, 0, "", "");
+    const dumped = try runFixture("dump-bytecode", source, &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    for ([_][]const u8{ "result Quotient", "ACKNOWLEDGE Quotient" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
+    const ignored = "result R { ok: i64, err: i64 } fn main() -> i64 { let r = new R.err(7); return 0; }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, ignored, 1, "", "error[E_RESULT_UNHANDLED]");
+    try invoke("check", "result R { ok: i64, err: i64 } fn main() -> i64 { discard new R.err(7); return 0; }", 1, "", "error[E_RESULT_DISCARD]");
+}

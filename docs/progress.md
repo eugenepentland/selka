@@ -452,3 +452,32 @@ B is complete within its declared restricted-lifetime experiment. C/D ownership,
 resources, recoverable errors, capabilities/effects, arenas/pools, and all other
 unfinished roadmap tracks remain pending. The full roadmap goal remains active.
 Guardian gates were not exercised; hosted CI has not run.
+
+
+## 2026-09-05: C/D typed recoverable results and handling obligations
+
+Implemented nominal result declarations with explicit success/error payloads,
+exhaustive handling, and dedicated `acknowledge` statements. Result obligations
+transfer through bindings, value parameters, returns, and wrapper types. Ordinary
+discard, unused bindings, overwrites, repeated reads, partial projections that
+would drop errors, and helpers that ignore result parameters are rejected.
+
+The checker tracks continuing branch/match states, loop back edges, short-circuit
+right operands, and every scope/return exit. Whole-value wrappers retain nested
+obligations. Partial field moves and borrowing result-bearing values remain
+restricted pending the ownership work. The VM reuses checked variants and adds an
+explicit acknowledgement instruction that preserves evaluation and cleanup.
+Exact duplicate discovery is now `exact-v12`.
+
+187/187 tests pass in Debug and ReleaseFast (163 core, 24 actual CLI). Tests cover
+recoverable errors through active borrow scopes, nested wrappers, path checks,
+allocation failures, every instruction-budget boundary of nested aggregate/result
+execution, and 10,000 acknowledged results under 16 KiB live runtime allocation.
+The results example prints 7. Existing tests caught a common-name regression;
+`result` is now contextual at declarations, preserving ordinary `result` bindings.
+Formatting and whitespace checks pass on the pinned Guardian Zig snapshot.
+
+This is a C/D foundation, not completion. Propagation syntax, resource ownership,
+partial-construction cleanup, capabilities/effects, generics, typed handles, and
+other unfinished roadmap tracks remain pending. The full goal remains active.
+Guardian gates were not exercised; hosted CI has not run.

@@ -52,8 +52,9 @@ pub const Parser = struct {
         var domains: std.ArrayList(ast.Domain) = .empty;
         var variants: std.ArrayList(ast.Variants) = .empty;
         while (self.current().tag != .eof) {
-            if (self.current().tag == .kw_enum or self.current().tag == .kw_union) {
-                const is_union = self.current().tag == .kw_union;
+            const fallible = self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "result");
+            if (self.current().tag == .kw_enum or self.current().tag == .kw_union or fallible) {
+                const is_union = self.current().tag != .kw_enum;
                 self.pos += 1;
                 const name = try self.expect(.ident);
                 _ = try self.expect(.lbrace);
@@ -65,7 +66,7 @@ pub const Parser = struct {
                     if (!self.take(.comma)) break;
                 };
                 _ = try self.expect(.rbrace);
-                try variants.append(self.allocator, .{ .name = name.span, .is_union = is_union, .cases = try cases.toOwnedSlice(self.allocator) });
+                try variants.append(self.allocator, .{ .name = name.span, .fallible = fallible, .is_union = is_union, .cases = try cases.toOwnedSlice(self.allocator) });
                 continue;
             }
             if (self.take(.kw_domain)) {
@@ -240,6 +241,10 @@ pub const Parser = struct {
                 const value = try self.expression(0);
                 _ = try self.expect(.rparen);
                 break :write .{ .write_ref = .{ .name = name.span, .value = value } };
+            },
+            .kw_acknowledge => acknowledged: {
+                self.pos += 1;
+                break :acknowledged .{ .acknowledge = try self.expression(0) };
             },
             .kw_discard => discard: {
                 self.pos += 1;

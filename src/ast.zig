@@ -42,6 +42,7 @@ pub const Statement = struct {
         write_slice: struct { name: Span, index: NodeId, value: NodeId },
         write_ref: struct { name: Span, value: NodeId },
         discard: NodeId,
+        acknowledge: NodeId,
         branch: struct { condition: NodeId, then_body: StatementId, else_body: ?StatementId },
         match: struct { value: NodeId, arms: []const MatchArm },
         loop: struct { condition: NodeId, body: StatementId },
@@ -51,7 +52,7 @@ pub const Statement = struct {
 };
 pub const MatchArm = struct { ty: Span, name: Span, binding: ?Span, discard_payload: bool, body: StatementId };
 pub const Variant = struct { name: Span, payload: ?Span };
-pub const Variants = struct { name: Span, is_union: bool, cases: []const Variant };
+pub const Variants = struct { fallible: bool = false, name: Span, is_union: bool, cases: []const Variant };
 pub const FieldInit = struct { name: Span, value: NodeId };
 pub const Record = struct { name: Span, fields: []const Parameter };
 pub const Range = struct { start: NodeId, end: NodeId };
