@@ -840,3 +840,27 @@ enforcement pass. Formatting and whitespace checks pass. Discovery is exact-v24.
 costs and trusted callback boundaries. Partial field moves, arenas/pools, and all
 other unfinished roadmap tracks remain in scope. C is not complete. Guardian was
 not exercised; hosted CI has not run. The full roadmap goal remains active.
+
+
+## 2026-09-05: C/D typed-handle pool backend
+
+Implemented host nominal handle categories independent of node layout, globally
+unique pool identities, reusable generational slots, retained snapshot reads,
+replacement, removal, bulk clearing, and bounded issued-slot quotas. Cyclic graph
+edges are inert IDs. Removed/cleared handles stay stale after reuse; exhausted
+slots retire instead of wrapping. Registry allocation precedes input retention,
+and replacement retains before releasing to preserve self-replacement safely.
+
+361 tests pass in Debug and ReleaseFast (325 core, 36 actual CLI). Acceptance covers
+cross-category/instance/layout identity, cyclic traversal and edge repair after
+reuse, repeated bulk clearing, reserved operations without allocation, failed
+registry growth, invalid mutations preserving payload ownership, immutable guest
+snapshots, all allocation failures, identity/generation exhaustion, and 10,000
+graph/reset cycles within 4 KiB live allocation. Formatting and whitespace checks
+pass. Discovery stays exact-v24 because no guest syntax or semantics changed.
+
+[Typed-pool semantics](experiments/typed-pools.md) records ownership hooks, storage
+costs, cleanup order, and backend limits. Source pool/handle integration, arenas,
+partial field moves, generics, and all other unfinished roadmap tracks remain in
+scope. C/D are not complete. Guardian was not exercised; hosted CI has not run.
+The full roadmap goal remains active.
