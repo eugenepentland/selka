@@ -34,6 +34,7 @@ pub const Instruction = struct {
         end_borrow: typed.ReferenceId,
         read_ref: typed.ReferenceId,
         write_ref: typed.ReferenceId,
+        buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: typed.LocalId, output: typed.Type },
         acquire_buffer: typed.Type,
         move_local: typed.LocalId,
         drop_local: typed.LocalId,
@@ -153,8 +154,13 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             }
             if (reference.slice and !source_slice) {
                 if (!source_type.isAggregate() or !validType(source_type, program)) return error.InternalError;
-                const array = program.records[source_type.recordIndex()].array orelse return error.InternalError;
-                if (array.key != null or array.element != reference.ty) return error.InternalError;
+                const schema = program.records[source_type.recordIndex()];
+                if (schema.buffer) |element| {
+                    if (element != reference.ty) return error.InternalError;
+                } else {
+                    const array = schema.array orelse return error.InternalError;
+                    if (array.key != null or array.element != reference.ty) return error.InternalError;
+                }
             } else if (reference.slice != source_slice or reference.ty != source_type) return error.InternalError;
             if (reference.parent) |parent| {
                 if (@backingInt(parent) >= index) return error.InternalError;
@@ -196,6 +202,16 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             },
             .push_integer => |number| {
                 if (!number.ty.isInteger() or !number.ty.fits(number.value)) return error.InternalError;
+            },
+            .buffer_operation => |operation| {
+                if (@backingInt(operation.owner) >= function.locals.len or !validType(operation.output, program)) return error.InternalError;
+                const local = function.locals[@backingInt(operation.owner)];
+                if (local.reference_parameter != null or !local.ty.isAggregate() or (operation.kind.mutates() and !local.mutable)) return error.InternalError;
+                const element = program.records[local.ty.recordIndex()].buffer orelse return error.InternalError;
+                if (operation.kind.mutates()) {
+                    const shape = typed.resultShape(operation.output, program.records) orelse return error.InternalError;
+                    if (shape.ok_type != .bool or shape.error_type != .i64) return error.InternalError;
+                } else if (operation.output != (if (operation.kind == .read) element else typed.Type.u64)) return error.InternalError;
             },
             .acquire_buffer => |ty| {
                 const shape = typed.resultShape(ty, program.records) orelse return error.InternalError;
@@ -325,6 +341,11 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             switch (instruction.op) {
                 .push_i64, .push_bool, .push_integer, .load_local, .move_local, .read_ref, .len_slice => height += 1,
                 .drop_local => {},
+                .buffer_operation => |operation| {
+                    const count = operation.kind.arity();
+                    if (height < count) return error.InternalError;
+                    height = height - count + 1;
+                },
                 .make_variant => |variant| {
                     const payload = (try variantSchema(variant.ty, program)).cases[variant.tag].payload;
                     if (payload != null) {

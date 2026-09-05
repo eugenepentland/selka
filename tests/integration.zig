@@ -365,3 +365,16 @@ test "CLI acquires owned buffers propagates acquisition errors and rejects use a
     const invalid = "buffer B: i64; fn f(b: B) -> i64 { let moved = b; discard b; return 0; } fn main() -> i64 { return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_OWNED_CONSUMED]");
 }
+
+test "CLI mutates buffers through returned slices and rejects moves under shared loans" {
+    const source = @embedFile("fixtures/buffer-views.my");
+    try invoke("run", source, 0, "19\n", "");
+    try invoke("check", source, 0, "", "");
+    const dumped = try runFixture("dump-bytecode", source, &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    for ([_][]const u8{ "BUFFER_resize", "BUFFER_reserve", "BUFFER_read", "CALL_BORROW", "WRITE_SLICE" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
+    const conflict = "buffer B: i64; fn f(b: B) -> i64 { borrow b[0..0] as s { discard b; } return 0; } fn main() -> i64 { return 0; }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, conflict, 1, "", "error[E_BORROW_CONFLICT]");
+}

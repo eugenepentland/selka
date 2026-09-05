@@ -557,3 +557,31 @@ are next. External resources, allocator/external capabilities, transitive effect
 arenas/pools, abstraction work, and every other unfinished track remain pending.
 C is not complete. Guardian gates were not exercised; hosted CI has not run.
 The full roadmap goal remains active.
+
+
+## 2026-09-05: C buffer operations and borrowed-view integration
+
+Implemented buffer length/capacity queries, retained reads, and typed status results
+for append, resize, write, and reserve. Value arguments evaluate before checked
+owner access. Mutations require a live mutable binding; recoverable failures retain
+contents/capacity. Reserve may grow backing storage; other edits stay within it.
+
+Buffers now support shared/exclusive slices, nested loans, common array/buffer
+slice helpers, and returned-view provenance. The VM carries direct element-storage
+metadata through calls and returned loans, including empty buffers. Buffer view
+writes update one element while preserving retained snapshots. Moving an owner
+with any active loan is rejected, including shared loans.
+
+240/240 tests pass in Debug and ReleaseFast (213 core, 27 actual CLI). Acceptance
+covers capacity/bounds errors, argument-consumption conflicts, immutable owners,
+aggregate snapshots, escape/suspension checks, allocation-failure sweeps, every
+instruction trap boundary of mutation/returned-view cases, and 10,000 returned-view
+writes within 16 KiB live runtime storage and a one-owner quota. The buffer-view
+example returns 19. Formatting and whitespace checks pass. Discovery is exact-v15.
+
+[Buffer semantics and costs](experiments/buffer-operations.md) distinguishes backing
+storage growth from result/VM allocation; no transitive effect guarantee is claimed.
+External resources, explicit capabilities, effects including cleanup, arenas/pools,
+abstractions, and every other unfinished roadmap track remain pending. C is not
+complete. Guardian gates were not exercised; hosted CI has not run.
+The full roadmap goal remains active.

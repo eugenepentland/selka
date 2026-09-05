@@ -182,3 +182,9 @@ Source buffer acquisition advances discovery to `exact-v14`. Canonical nodes ret
 acquisition result types/capacity expressions and move-only type behavior. Renaming
 bindings preserves exact identity; changed capacity arithmetic remains distinct.
 Source ownership cleanup is derived from checked structure and binding identities.
+
+
+Buffer operations advance discovery to `exact-v15`. Canonical nodes retain the
+operation kind, owner binding identity, result type, and ordered value arguments.
+Renamed length-query helpers group together; capacity queries remain distinct.
+Buffer slices retain the existing checked reference and provenance identities.

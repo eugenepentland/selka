@@ -99,10 +99,11 @@ const Checker = struct {
         if (self.references.items[@backingInt(id)].slice != slice) return self.sink.fail("E_REFERENCE_KIND", span, if (slice) "operation requires a slice" else "operation requires a whole-value reference");
     }
     fn sliceElement(self: *Checker, ty_id: typed.Type, span: source.Span) Error!typed.Type {
+        if (ty_id.isAggregate()) if (self.catalog.records[ty_id.recordIndex()].buffer) |element| return element;
         if (ty_id.isAggregate()) if (self.catalog.records[ty_id.recordIndex()].array) |array| {
             if (array.key == null) return array.element;
         };
-        return self.sink.fail("E_SLICE_TYPE", span, "slicing requires a fixed numeric array or an existing slice");
+        return self.sink.fail("E_SLICE_TYPE", span, "slicing requires a fixed numeric array, buffer, or existing slice");
     }
     fn ownerAccess(self: *Checker, slot: typed.LocalId, write: bool, span: source.Span) Error!void {
         var entries = self.active_refs.valueIterator();
@@ -207,6 +208,15 @@ const Checker = struct {
             const minimum_literal = try self.minimum(node);
             if (!task.emit and minimum_literal == null) {
                 switch (node.data) {
+                    .buffer_operation => |operation| {
+                        try work.append(self.allocator, .{ .id = task.id, .emit = true });
+                        var i = operation.arguments.len;
+                        while (i > 0) {
+                            i -= 1;
+                            try work.append(self.allocator, .{ .id = operation.arguments[i] });
+                        }
+                        continue;
+                    },
                     .variant => |variant| {
                         if (variant.value) |value| {
                             try work.append(self.allocator, .{ .id = task.id, .emit = true });
@@ -298,6 +308,29 @@ const Checker = struct {
                 out.ty = parsed.ty;
                 out.data = .{ .integer = parsed.value };
             } else switch (node.data) {
+                .buffer_operation => |operation| {
+                    const owner = try self.resolve(operation.owner);
+                    const local = &self.locals.items[@backingInt(owner)];
+                    if (!local.ty.isAggregate() or self.catalog.records[local.ty.recordIndex()].buffer == null) return self.sink.fail("E_BUFFER_TYPE", operation.owner, "operation requires an owned buffer binding");
+                    if (!local.transfer_available) return self.sink.failRelated("E_OWNED_CONSUMED", operation.owner, "buffer has already been transferred", .{ .span = local.declaration, .message = "binding declared here" });
+                    if (operation.kind.mutates() and !local.mutable) return self.sink.fail("E_IMMUTABLE", operation.owner, "buffer mutation requires a let mut binding");
+                    try self.ownerAccess(owner, operation.kind.mutates(), operation.owner);
+                    local.reads += 1;
+                    if (operation.kind.mutates()) local.writes += 1;
+                    const element = self.catalog.records[local.ty.recordIndex()].buffer.?;
+                    const arguments = try self.allocator.alloc(typed.NodeId, operation.arguments.len);
+                    for (operation.arguments, arguments, 0..) |input, *argument, argument_index| {
+                        argument.* = self.resolved[@backingInt(input)].?;
+                        const actual = self.nodes.items[@backingInt(argument.*)].ty;
+                        if (operation.kind == .append or (argument_index == 1 and (operation.kind == .write or operation.kind == .resize))) try self.require(actual, element, self.syntax.nodes.items[@backingInt(input)].span) else try self.requireInteger(actual, self.syntax.nodes.items[@backingInt(input)].span);
+                    }
+                    if (operation.result) |result_type| {
+                        out.ty = try self.ty(result_type);
+                        const shape = typed.resultShape(out.ty, self.catalog.records) orelse return self.sink.fail("E_BUFFER_RESULT", result_type, "buffer mutation requires a result with bool success and i64 error payloads");
+                        if (shape.ok_type != .bool or shape.error_type != .i64) return self.sink.fail("E_BUFFER_RESULT", result_type, "buffer mutation requires a result with bool success and i64 error payloads");
+                    } else out.ty = if (operation.kind == .read) element else .u64;
+                    out.data = .{ .buffer_operation = .{ .kind = operation.kind, .owner = owner, .arguments = arguments } };
+                },
                 .acquire_buffer => |acquire| {
                     out.ty = try self.ty(acquire.ty);
                     const shape = typed.resultShape(out.ty, self.catalog.records) orelse return self.sink.fail("E_BUFFER_RESULT", acquire.ty, "buffer acquisition requires a result with a buffer success payload and i64 error payload");
@@ -446,7 +479,7 @@ const Checker = struct {
                         if (!self.locals.items[@backingInt(slot)].transfer_available) return self.sink.failRelated(if (typed.moveOnly(self.locals.items[@backingInt(slot)].ty, self.catalog.records)) "E_OWNED_CONSUMED" else "E_RESULT_CONSUMED", name, "value has already been transferred or handled", .{ .span = self.locals.items[@backingInt(slot)].declaration, .message = "binding declared here" });
                         self.locals.items[@backingInt(slot)].transfer_available = false;
                     }
-                    try self.ownerAccess(slot, false, name);
+                    try self.ownerAccess(slot, self.transfers(self.locals.items[@backingInt(slot)].ty), name);
                     self.locals.items[@backingInt(slot)].reads += 1;
                     out.ty = self.locals.items[@backingInt(slot)].ty;
                     out.data = .{ .local = slot };
@@ -527,6 +560,7 @@ const Checker = struct {
                 .record => |initializers| initializers.len,
                 .update => |update| update.fields.len + 1,
                 .call => |call| call.arguments.len,
+                .buffer_operation => |operation| operation.arguments.len,
             };
             std.debug.assert(temporaries.items.len >= consumed);
             temporaries.shrinkRetainingCapacity(temporaries.items.len - consumed);
@@ -662,7 +696,10 @@ const Checker = struct {
                     self.locals.items[@backingInt(owner)].reads += 1;
                     if (borrow.mutable) self.locals.items[@backingInt(owner)].mutable_borrow = true;
                 }
-                if (self.transfers(self.locals.items[@backingInt(owner)].ty)) return self.sink.fail("E_RESULT_BORROW", borrow.owner, "owned and result-bearing values must currently transfer by value; borrowing these values is not supported");
+                const owner_type = self.locals.items[@backingInt(owner)].ty;
+                const buffer_owner = owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].buffer != null;
+                if (buffer_owner and !self.locals.items[@backingInt(owner)].transfer_available) return self.sink.fail("E_OWNED_CONSUMED", borrow.owner, "buffer has already been transferred");
+                if (self.transfers(owner_type) and !(buffer_owner and (range != null or parent != null))) return self.sink.fail("E_RESULT_BORROW", borrow.owner, "owned and result-bearing values must currently transfer by value; borrowing these values is not supported");
                 const source_type = if (parent) |id| self.references.items[@backingInt(id)].ty else self.locals.items[@backingInt(owner)].ty;
                 const parent_slice = if (parent) |id| self.references.items[@backingInt(id)].slice else false;
                 const element = if (range != null and !parent_slice) try self.sliceElement(source_type, borrow.owner) else source_type;

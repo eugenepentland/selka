@@ -1,9 +1,9 @@
 # C: source buffer acquisition and ownership
 
 Status: nominal buffer types, recoverable acquisition, move checking, wrapper
-ownership, and source/VM cleanup are implemented. Buffer mutation, capacity/length
-queries, borrowed buffer views, external resources, capabilities/effects, and
-arenas/pools remain pending. C is not complete.
+ownership, and source/VM cleanup are implemented. [Buffer operations and checked
+views](buffer-operations.md) now add mutation, queries, and borrowed slices. External
+resources, capabilities/effects, and arenas/pools remain pending. C is not complete.
 
 ## Syntax and acquisition
 
@@ -68,9 +68,9 @@ Projecting a field/element out of a move-only wrapper consumes the whole wrapper
 and releases the remaining contents. There is no independent partial-field binding
 state yet. Preserving updates consume the old wrapper and transfer preserved
 contents into the replacement. Existing result rules still reject projections or
-updates that would silently drop result obligations. Buffer/owned-wrapper borrowing
-and reference parameters are currently rejected until resource views are integrated;
-ordinary value borrowing retains the B contract.
+updates that would silently drop result obligations. Whole-buffer and owned-wrapper reference parameters remain unsupported;
+[buffer slices](buffer-operations.md) now support shared/exclusive views, slice
+parameters, and returned-view contracts. Ordinary value borrowing retains B.
 
 ## Runtime cleanup
 
@@ -113,6 +113,6 @@ Debug and ReleaseFast both pass 226 tests (200 core, 26 actual CLI). The editabl
 Exact duplicate discovery is `exact-v14`, retaining acquisition structure and
 move-only type behavior.
 
-Next: buffer operations and checked borrowed views, then allocator/external
-capabilities and transitive effect checks, including cleanup. External-resource
+[Buffer operations and checked borrowed views](buffer-operations.md) are now implemented.
+Next: allocator/external capabilities and transitive effect checks, including cleanup. External-resource
 handling, arenas/pools, generics/handles, and other roadmap tracks remain in scope.

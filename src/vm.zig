@@ -39,10 +39,14 @@ fn pushOwned(stack: *std.ArrayList(typed.Value), allocator: std.mem.Allocator, v
 }
 const Span = @import("source.zig").Span;
 const Slice = struct { start: usize, length: usize };
-const Reference = struct { lease: memory.Borrow, slice: ?Slice = null };
+const Reference = struct { direct: bool = false, lease: memory.Borrow, slice: ?Slice = null };
 const ReturnTarget = struct { destination: usize, parent: memory.Borrow, allocation: memory.Allocation, mutable: bool };
-const CapturedReference = struct { slice: ?Slice };
+const CapturedReference = struct { direct: bool = false, slice: ?Slice };
 const Frame = struct { return_target: ?ReturnTarget = null, captured: ?CapturedReference = null, reference_base: usize = 0, function: typed.FunctionId, pc: usize = 0, local_base: usize, operand_base: usize, call_span: Span };
+fn reborrowFull(store: *memory.Store, parent: memory.Borrow, kind: memory.Kind) memory.Error!memory.Borrow {
+    const view = try store.describe(parent);
+    return store.reborrow(parent, 0, view.length, kind);
+}
 fn trap(code: []const u8, message: []const u8, span: Span, frames: []const Frame, program: bc.Program) Result {
     var diagnostic: Diagnostic = .{ .code = code, .message = message, .span = span };
     var i = frames.len;
@@ -299,16 +303,25 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 if (references.items[index] != null) return trap("R_REFERENCE_LIFETIME", "reference is already active", instruction.span, frames.items, program);
                 const metadata = function.references[@backingInt(id)];
                 var slice: ?Slice = null;
+                var direct = false;
                 if (metadata.slice) {
                     if (metadata.parent) |parent| {
                         const previous = references.items[frame.reference_base + @backingInt(parent)] orelse return trap("R_REFERENCE_LIFETIME", "parent reference is not active", instruction.span, frames.items, program);
+                        direct = previous.direct;
                         if (previous.slice) |view| slice = view else {
                             const array_type = function.references[@backingInt(parent)].ty;
                             slice = .{ .start = 0, .length = program.records[array_type.recordIndex()].array.?.length };
                         }
                     } else {
-                        const array_type = function.locals[@backingInt(metadata.owner)].ty;
-                        slice = .{ .start = 0, .length = program.records[array_type.recordIndex()].array.?.length };
+                        const owner_type = function.locals[@backingInt(metadata.owner)].ty;
+                        const schema = program.records[owner_type.recordIndex()];
+                        if (schema.buffer != null) {
+                            const local = locals.items[frame.local_base + @backingInt(metadata.owner)] orelse return error.InternalError;
+                            if (local != .resource) return error.InternalError;
+                            const info = storage.info(local.resource.owner) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                            slice = .{ .start = 0, .length = info.length };
+                            direct = true;
+                        } else slice = .{ .start = 0, .length = schema.array.?.length };
                     }
                     if (instruction.op == .begin_slice) {
                         const end = try numeric(&stack, frame.operand_base, null, allocator);
@@ -320,9 +333,14 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 const kind: memory.Kind = if (metadata.mutable) .exclusive else .shared;
                 const reference = if (metadata.parent) |parent| child: {
                     const parent_reference = references.items[frame.reference_base + @backingInt(parent)] orelse return trap("R_REFERENCE_LIFETIME", "parent reference is not active", instruction.span, frames.items, program);
-                    break :child storage.reborrow(parent_reference.lease, 0, 1, kind) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                    break :child reborrowFull(&storage, parent_reference.lease, kind) catch |err| return memoryFailure(err, instruction, frames.items, program);
                 } else root: {
                     const local_index = frame.local_base + @backingInt(metadata.owner);
+                    if (direct) {
+                        const resource = locals.items[local_index].?.resource;
+                        const info = storage.info(resource.owner) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                        break :root storage.borrow(resource.owner, 0, info.length, kind) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                    }
                     var allocation = owners.get(local_index);
                     if (allocation == null) {
                         const old = locals.items[local_index] orelse return error.InternalError;
@@ -335,7 +353,7 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                     }
                     break :root storage.borrow(allocation.?, 0, 1, kind) catch |err| return memoryFailure(err, instruction, frames.items, program);
                 };
-                references.items[index] = .{ .lease = reference, .slice = slice };
+                references.items[index] = .{ .direct = direct, .lease = reference, .slice = slice };
             },
             .end_borrow => |id| {
                 const index = frame.reference_base + @backingInt(id);
@@ -354,6 +372,11 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 const reference = references.items[frame.reference_base + @backingInt(id)] orelse return trap("R_REFERENCE_LIFETIME", "slice is not active", instruction.span, frames.items, program);
                 const view = reference.slice orelse return error.InternalError;
                 if (index < 0 or index >= view.length) return trap("R_SLICE_BOUNDS", "slice index is outside its bounds", instruction.span, frames.items, program);
+                if (reference.direct) {
+                    const value = storage.read(reference.lease, view.start + @as(usize, @intCast(index))) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                    try pushOwned(&stack, allocator, value);
+                    continue;
+                }
                 const array = storage.read(reference.lease, 0) catch |err| return memoryFailure(err, instruction, frames.items, program);
                 defer array.release(allocator);
                 try pushOwned(&stack, allocator, try array.getField(view.start + @as(usize, @intCast(index))));
@@ -366,6 +389,10 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 const view = reference.slice orelse return error.InternalError;
                 if (index < 0 or index >= view.length) return trap("R_SLICE_BOUNDS", "slice index is outside its bounds", instruction.span, frames.items, program);
                 if (value.typeOf() != function.references[@backingInt(id)].ty) return trap("R_REFERENCE_TYPE", "slice write has the wrong element type", instruction.span, frames.items, program);
+                if (reference.direct) {
+                    storage.write(reference.lease, view.start + @as(usize, @intCast(index)), value) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                    continue;
+                }
                 const array = storage.read(reference.lease, 0) catch |err| return memoryFailure(err, instruction, frames.items, program);
                 defer array.release(allocator);
                 const updated = try array.updated(allocator, &.{view.start + @as(usize, @intCast(index))}, &.{value});
@@ -382,6 +409,54 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 defer value.release(allocator);
                 const reference = references.items[frame.reference_base + @backingInt(id)] orelse return trap("R_REFERENCE_LIFETIME", "reference is not active", instruction.span, frames.items, program);
                 storage.write(reference.lease, 0, value) catch |err| return memoryFailure(err, instruction, frames.items, program);
+            },
+            .buffer_operation => |operation| {
+                const count = operation.kind.arity();
+                if (stack.items.len - frame.operand_base < count) return error.InternalError;
+                const start = stack.items.len - count;
+                const arguments = stack.items[start..];
+                const local = locals.items[frame.local_base + @backingInt(operation.owner)] orelse return error.InternalError;
+                if (local != .resource or local.resource.store != &storage) return error.InternalError;
+                const owner = local.resource.owner;
+                const info = storage.info(owner) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                const number: i128 = if (count != 0 and operation.kind != .append) try arguments[0].asInteger() else 0;
+                var status: i64 = 0;
+                const output: typed.Value = switch (operation.kind) {
+                    .length => typed.Value.number(.u64, info.length),
+                    .capacity => typed.Value.number(.u64, info.capacity),
+                    .read => read: {
+                        if (number < 0 or number >= info.length) return trap("R_BUFFER_BOUNDS", "buffer index is outside initialized bounds", instruction.span, frames.items, program);
+                        break :read storage.readOwner(owner, @intCast(number)) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                    },
+                    else => mutation: {
+                        if (operation.kind != .append and (number < 0 or number > std.math.maxInt(usize))) {
+                            status = if (operation.kind == .reserve) 1 else 3;
+                        } else {
+                            const index: usize = @intCast(number);
+                            const result: memory.Error!void = switch (operation.kind) {
+                                .write => storage.writeOwner(owner, index, arguments[1]),
+                                .append => storage.appendWithinCapacity(owner, arguments[0]),
+                                .resize => storage.resizeWithinCapacity(owner, index, arguments[1]),
+                                .reserve => reserve: {
+                                    _ = storage.reserve(owner, index) catch |err| break :reserve err;
+                                    break :reserve {};
+                                },
+                                else => unreachable,
+                            };
+                            result catch |err| switch (err) {
+                                error.CapacityLimit => status = 1,
+                                error.NoCapacity => status = 2,
+                                error.Bounds => status = 3,
+                                else => return memoryFailure(err, instruction, frames.items, program),
+                            };
+                        }
+                        const shape = typed.resultShape(operation.output, program.records).?;
+                        break :mutation try typed.Value.createVariant(allocator, operation.output, if (status == 0) shape.ok_tag else shape.error_tag, if (status == 0) .{ .bool = true } else .{ .i64 = status });
+                    },
+                };
+                releaseValues(arguments, allocator);
+                stack.shrinkRetainingCapacity(start);
+                try pushOwned(&stack, allocator, output);
             },
             .acquire_buffer => |ty| {
                 const capacity = try numeric(&stack, frame.operand_base, null, allocator);
@@ -440,7 +515,7 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 const target = frame.return_target orelse return error.InternalError;
                 const view = storage.describe(reference.lease) catch |err| return memoryFailure(err, instruction, frames.items, program);
                 if (!std.meta.eql(view.allocation, target.allocation) or frame.captured != null) return trap("R_REFERENCE_LIFETIME", "returned reference does not belong to the declared input", instruction.span, frames.items, program);
-                frames.items[frame_index].captured = .{ .slice = reference.slice };
+                frames.items[frame_index].captured = .{ .direct = reference.direct, .slice = reference.slice };
             },
             .call, .call_refs, .call_borrow => {
                 const id = switch (instruction.op) {
@@ -485,8 +560,8 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                     if (!parameter.parameter) continue;
                     const parent = references.items[frame.reference_base + @backingInt(loan_arguments[loan_index])] orelse return trap("R_REFERENCE_LIFETIME", "reference argument is not active", instruction.span, frames.items, program);
                     loan_index += 1;
-                    const child = storage.reborrow(parent.lease, 0, 1, if (parameter.mutable) .exclusive else .shared) catch |err| return memoryFailure(err, instruction, frames.items, program);
-                    references.items[reference_base + index] = .{ .lease = child, .slice = parent.slice };
+                    const child = reborrowFull(&storage, parent.lease, if (parameter.mutable) .exclusive else .shared) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                    references.items[reference_base + index] = .{ .direct = parent.direct, .lease = child, .slice = parent.slice };
                 }
                 const local_base = locals.items.len;
                 const local_end = std.math.add(usize, local_base, callee.locals.len) catch return error.OutOfMemory;
@@ -533,8 +608,8 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                     try pushOwned(&stack, allocator, owned);
                 } else {
                     const target = frame.return_target.?;
-                    const lease = storage.reborrow(target.parent, 0, 1, if (target.mutable) .exclusive else .shared) catch |err| return memoryFailure(err, instruction, frames.items, program);
-                    references.items[target.destination] = .{ .lease = lease, .slice = frame.captured.?.slice };
+                    const lease = reborrowFull(&storage, target.parent, if (target.mutable) .exclusive else .shared) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                    references.items[target.destination] = .{ .direct = frame.captured.?.direct, .lease = lease, .slice = frame.captured.?.slice };
                 }
             },
             .not_bool => try stack.append(allocator, .{ .bool = !(try boolean(try pop(&stack, frame.operand_base), allocator)) }),

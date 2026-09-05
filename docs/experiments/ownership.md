@@ -2,7 +2,7 @@
 
 Status: backend implemented. [Source buffer acquisition and ownership](owned-buffers.md)
 now integrate move checking and partial-construction cleanup into the language.
-Buffer operations/views, external resources, capabilities/effects, and arenas/pools
+[Buffer operations/views](buffer-operations.md) are also implemented. External resources, capabilities/effects, and arenas/pools
 remain pending. C is not complete.
 
 ## Ownership and storage
@@ -81,5 +81,5 @@ The CLI count is unchanged because this checkpoint adds no source syntax.
 [Source ownership and acquisition](owned-buffers.md) now implement buffer types,
 move semantics, wrappers, fallible guest acquisition, and lexical/early-return
 cleanup through the typed representation and VM. The remaining integration adds
-buffer operations/views, allocator/external capabilities, transitive effects
+allocator/external capabilities, transitive effects
 including cleanup, and arenas/pools.

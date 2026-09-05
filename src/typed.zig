@@ -22,6 +22,7 @@ pub const Node = struct {
         propagate: struct { value: NodeId, output: Type, cleanup: []const ReferenceId },
         read_slice: struct { reference: ReferenceId, index: NodeId },
         len_slice: ReferenceId,
+        buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: LocalId, arguments: []const NodeId },
         acquire_buffer: NodeId,
         cast: NodeId,
         wrap: NodeId,

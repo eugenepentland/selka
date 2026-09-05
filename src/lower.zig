@@ -213,6 +213,14 @@ const Emitter = struct {
             },
             .len_slice => |reference| try self.instruction(node.span, .{ .len_slice = reference }),
             .read_ref => |reference| try self.instruction(node.span, .{ .read_ref = reference }),
+            .buffer_operation => |operation| {
+                try self.instruction(node.span, .{ .buffer_operation = .{ .kind = operation.kind, .owner = operation.owner, .output = node.ty } });
+                var i = operation.arguments.len;
+                while (i > 0) {
+                    i -= 1;
+                    try self.push(.{ .expression = operation.arguments[i] });
+                }
+            },
             .acquire_buffer => |capacity| {
                 try self.instruction(node.span, .{ .acquire_buffer = node.ty });
                 try self.push(.{ .expression = capacity });

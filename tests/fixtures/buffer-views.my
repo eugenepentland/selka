@@ -1,0 +1,30 @@
+buffer Numbers: i64;
+result Acquired { ok: Numbers, err: i64 }
+result Status { ok: bool, err: i64 }
+
+fn tail(values: &mut []i64) -> &mut []i64 from values {
+    borrow mut values[1..3] as part {
+        return part;
+    }
+}
+
+fn make() -> Acquired {
+    let mut values = try acquire_buffer<Acquired>(3);
+    discard try resize_buffer<Status>(values, 3, 7);
+    borrow mut values[0..3] as whole {
+        borrow mut tail(whole) as part {
+            write_slice(part, 0, 11);
+        }
+    }
+    discard try reserve_buffer<Status>(values, 8);
+    return new Acquired.ok(values);
+}
+
+fn main() -> i64 {
+    match make() {
+        Acquired.ok(values) => {
+            return read_buffer(values, 1) + cast<i64>(capacity_buffer(values));
+        },
+        Acquired.err(error_code) => { return error_code; }
+    }
+}

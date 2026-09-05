@@ -310,6 +310,34 @@ pub const Parser = struct {
         defer self.depth -= 1;
         const token = self.current();
         var left: ast.NodeId = switch (token.tag) {
+            .kw_len_buffer, .kw_capacity_buffer, .kw_read_buffer, .kw_write_buffer, .kw_append_buffer, .kw_resize_buffer, .kw_reserve_buffer => buffer: {
+                self.pos += 1;
+                const kind: @import("buffer_operations.zig").Kind = switch (token.tag) {
+                    .kw_len_buffer => .length,
+                    .kw_capacity_buffer => .capacity,
+                    .kw_read_buffer => .read,
+                    .kw_write_buffer => .write,
+                    .kw_append_buffer => .append,
+                    .kw_resize_buffer => .resize,
+                    .kw_reserve_buffer => .reserve,
+                    else => unreachable,
+                };
+                const result: ?Span = if (kind.mutates()) result: {
+                    _ = try self.expect(.lt);
+                    const ty = try self.typeName();
+                    _ = try self.expect(.gt);
+                    break :result ty;
+                } else null;
+                _ = try self.expect(.lparen);
+                const owner = try self.expect(.ident);
+                const arguments = try self.allocator.alloc(ast.NodeId, kind.arity());
+                for (arguments) |*argument| {
+                    _ = try self.expect(.comma);
+                    argument.* = try self.expression(0);
+                }
+                const close = try self.expect(.rparen);
+                break :buffer try self.append(.{ .span = .join(token.span, close.span), .data = .{ .buffer_operation = .{ .kind = kind, .owner = owner.span, .result = result, .arguments = arguments } } });
+            },
             .kw_read_slice => read: {
                 self.pos += 1;
                 _ = try self.expect(.lparen);

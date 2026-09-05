@@ -141,7 +141,7 @@ test "duplicate discovery preserves acquisition types capacities and ownership o
     defer found.deinit();
     try t.expectEqual(@as(usize, 1), found.groups.len);
     try t.expectEqual(@as(usize, 2), found.groups[0].members.len);
-    try t.expectEqualStrings("exact-v14", language.duplicates.version);
+    try t.expectEqualStrings("exact-v15", language.duplicates.version);
 }
 
 test "bytecode rejects buffer construction bypass and invalid acquisition contracts" {
@@ -178,4 +178,141 @@ test "runtime resource wrappers consume the external handle and retain a single 
     wrapper.release(t.allocator);
     try t.expectEqual(@as(u64, 1), store.statistics.released);
     try t.expectEqual(@as(usize, 0), store.statistics.live_allocations);
+}
+
+const operations = "result Status { ok: bool, err: i64 } ";
+
+test "buffer operations retain owners and distinguish initialized length from capacity" {
+    try run(operations ++ "fn work() -> R { let mut b = try acquire_buffer<R>(2); acknowledge append_buffer<Status>(b, 7); acknowledge append_buffer<Status>(b, 8); acknowledge reserve_buffer<Status>(b, 4); acknowledge resize_buffer<Status>(b, 3, 9); acknowledge write_buffer<Status>(b, 1, 10); return new R.ok(b); } fn main() -> i64 { match work() { R.ok(b) => { return read_buffer(b, 0) + read_buffer(b, 1) + read_buffer(b, 2) + cast<i64>(len_buffer(b)) + cast<i64>(capacity_buffer(b)); }, R.err(e) => { return e; } } }", 33, 1, .{});
+}
+
+test "failed buffer edits preserve existing contents length and capacity" {
+    try run(operations ++ "fn work() -> R { let mut b = try acquire_buffer<R>(1); acknowledge append_buffer<Status>(b, 7); match append_buffer<Status>(b, 8) { Status.ok(discard) => {}, Status.err(e) => { if e != 2 { return new R.err(10); } } } match reserve_buffer<Status>(b, 5) { Status.ok(discard) => {}, Status.err(e) => { if e != 1 { return new R.err(20); } } } match write_buffer<Status>(b, -1, 99) { Status.ok(discard) => {}, Status.err(e) => { if e != 3 { return new R.err(30); } } } acknowledge resize_buffer<Status>(b, 2, 99); return new R.ok(b); } fn main() -> i64 { match work() { R.ok(b) => { return read_buffer(b, 0) + cast<i64>(len_buffer(b)) + cast<i64>(capacity_buffer(b)); }, R.err(e) => { return e; } } }", 9, 1, .{ .max_buffer_capacity = 4 });
+}
+
+test "buffer operations require live mutable owners exact elements and handled status" {
+    try reject(operations ++ "fn f(b: B) -> i64 { acknowledge append_buffer<Status>(b, 1); return 0; } fn main() -> i64 { return 0; }", "E_IMMUTABLE");
+    try reject("fn f(b: B) -> u64 { discard b; return len_buffer(b); } fn main() -> i64 { return 0; }", "E_OWNED_CONSUMED");
+    try reject(operations ++ "fn f(input: B) -> i64 { let mut b = input; acknowledge append_buffer<Status>(b, true); return 0; } fn main() -> i64 { return 0; }", "E_TYPE");
+    try reject("fn main() -> i64 { let b = 1; return read_buffer(b, 0); }", "E_BUFFER_TYPE");
+    try reject(operations ++ "fn f(input: B) -> i64 { let mut b = input; discard append_buffer<Status>(b, 1); return 0; } fn main() -> i64 { return 0; }", "E_RESULT_DISCARD");
+    try reject("fn f(input: B) -> i64 { let mut b = input; acknowledge append_buffer<R>(b, 1); return 0; } fn main() -> i64 { return 0; }", "E_BUFFER_RESULT");
+    try reject("fn consume(b: B) -> i64 { return 0; } fn f(b: B) -> i64 { return read_buffer(b, consume(b)); } fn main() -> i64 { return 0; }", "E_OWNED_CONSUMED");
+}
+
+const mutation_program = declarations ++ operations ++ "fn work() -> R { let mut b = try acquire_buffer<R>(1); acknowledge append_buffer<Status>(b, 7); acknowledge reserve_buffer<Status>(b, 4); acknowledge resize_buffer<Status>(b, 4, 9); acknowledge write_buffer<Status>(b, 2, 12); acknowledge resize_buffer<Status>(b, 3, 0); return new R.ok(b); } fn main() -> i64 { match work() { R.ok(b) => { return read_buffer(b, 2); }, R.err(e) => { return e; } } }";
+fn mutationScenario(allocator: std.mem.Allocator) !void {
+    var c = try language.Compilation.init(allocator, "mutation.my", mutation_program);
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 12), (try c.execute(allocator)).value);
+}
+test "buffer mutations release storage on every allocation failure and instruction trap" {
+    var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(no_resize.allocator(), mutationScenario, .{});
+    var c = try language.Compilation.init(t.allocator, "mutation.my", mutation_program);
+    defer c.deinit();
+    var budget: u64 = 1;
+    while (budget < 150) : (budget += 1) {
+        var stats: memory.Statistics = .{};
+        const result = try c.executeWithOptions(t.allocator, .{ .max_steps = budget, .memory_statistics = &stats });
+        try t.expectEqual(stats.created, stats.released);
+        if (result == .value) break;
+        try t.expectEqualStrings("R_STEP_LIMIT", result.trap.code);
+    }
+    try t.expect(budget < 150);
+}
+
+test "buffer aggregate element reads survive later writes shrink and owner destruction" {
+    try run("struct Point { x: i64 } buffer Points: Point; result PointsResult { ok: Points, err: i64 } " ++ operations ++ "fn work() -> PointsResult { let mut p = try acquire_buffer<PointsResult>(2); acknowledge append_buffer<Status>(p, new Point { x: 7 }); let snapshot = read_buffer(p, 0); acknowledge write_buffer<Status>(p, 0, new Point { x: 99 }); acknowledge resize_buffer<Status>(p, 0, new Point { x: 0 }); acknowledge append_buffer<Status>(p, snapshot); return new PointsResult.ok(p); } fn main() -> i64 { match work() { PointsResult.ok(p) => { let saved = read_buffer(p, 0); discard p; return saved.x; }, PointsResult.err(e) => { return e; } } }", 7, 1, .{});
+}
+
+test "uninitialized buffer reads trap and oversized edit arguments remain recoverable" {
+    var c = try language.Compilation.init(t.allocator, "bounds.my", declarations ++ "fn main() -> i64 { match acquire_buffer<R>(4) { R.ok(b) => { return read_buffer(b, 0); }, R.err(e) => { return e; } } }");
+    defer c.deinit();
+    const result = try c.execute(t.allocator);
+    try t.expectEqualStrings("R_BUFFER_BOUNDS", result.trap.code);
+    try run(operations ++ "fn work() -> R { let mut b = try acquire_buffer<R>(1); acknowledge resize_buffer<Status>(b, -1, 0); acknowledge reserve_buffer<Status>(b, 18446744073709551615u64); acknowledge write_buffer<Status>(b, 18446744073709551615u64, 2); return new R.ok(b); } fn main() -> i64 { match work() { R.ok(b) => { return cast<i64>(len_buffer(b)) + cast<i64>(capacity_buffer(b)); }, R.err(e) => { return e; } } }", 1, 1, .{});
+}
+
+const view_program = declarations ++ operations ++ "fn tail(s: &mut []i64) -> &mut []i64 from s { borrow mut s[1..3] as part { return part; } } fn modify(s: &mut []i64) -> i64 { borrow mut tail(s) as part { write_slice(part, 0, 11); return read_slice(part, 1); } } fn work() -> R { let mut b = try acquire_buffer<R>(4); acknowledge resize_buffer<Status>(b, 4, 7); borrow mut b[0..4] as s { discard modify(s); } acknowledge reserve_buffer<Status>(b, 8); return new R.ok(b); } fn main() -> i64 { match work() { R.ok(b) => { return read_buffer(b, 1) + cast<i64>(capacity_buffer(b)); }, R.err(e) => { return e; } } }";
+fn viewScenario(allocator: std.mem.Allocator) !void {
+    var c = try language.Compilation.init(allocator, "views.my", view_program);
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 19), (try c.execute(allocator)).value);
+}
+test "buffer views preserve offsets through parameters nested reborrows and returned views" {
+    try viewScenario(t.allocator);
+    try run(operations ++ "fn size(s: &[]i64) -> u64 { borrow s as again { return len_slice(again); } } fn main() -> i64 { match acquire_buffer<R>(0) { R.ok(b) => { borrow b[0..0] as s { return cast<i64>(size(s)); } }, R.err(e) => { return e; } } }", 0, 1, .{});
+    try run(operations ++ "fn first(s: &[]i64) -> i64 { return read_slice(s, 0); } fn work() -> R { let mut b = try acquire_buffer<R>(1); acknowledge append_buffer<Status>(b, 7); return new R.ok(b); } fn main() -> i64 { let a = new [1]i64[2]; match work() { R.ok(b) => { borrow b[0..1] as s { borrow a[0..1] as t { return first(s) + first(t); } } }, R.err(e) => { return e; } } }", 9, 2, .{});
+}
+
+test "buffer views reject move mutation growth and escape while loans are active" {
+    try reject("fn f(b: B) -> i64 { borrow b[0..0] as s { discard b; } return 0; } fn main() -> i64 { return 0; }", "E_BORROW_CONFLICT");
+    try reject(operations ++ "fn f(input: B) -> i64 { let mut b = input; borrow b[0..0] as s { acknowledge reserve_buffer<Status>(b, 1); } return 0; } fn main() -> i64 { return 0; }", "E_BORROW_CONFLICT");
+    try reject("fn f(input: B) -> u64 { let mut b = input; borrow mut b[0..0] as s { return len_buffer(b); } } fn main() -> i64 { return 0; }", "E_BORROW_CONFLICT");
+    try reject("fn f(b: B) -> i64 { discard b; borrow b[0..0] as s {} return 0; } fn main() -> i64 { return 0; }", "E_OWNED_CONSUMED");
+    try reject("fn f(b: B, input: &[]i64) -> &[]i64 from input { borrow b[0..0] as s { return s; } } fn main() -> i64 { return 0; }", "E_RETURN_LIFETIME");
+    try reject(operations ++ "fn f(input: B) -> i64 { let mut b = input; borrow mut b[0..0] as s { borrow s as child { discard len_slice(s); } } return 0; } fn main() -> i64 { return 0; }", "E_BORROW_SUSPENDED");
+}
+
+test "buffer view allocation failures and every trap boundary clean nested loans and resources" {
+    var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(no_resize.allocator(), viewScenario, .{});
+    var c = try language.Compilation.init(t.allocator, "views.my", view_program);
+    defer c.deinit();
+    var budget: u64 = 1;
+    while (budget < 150) : (budget += 1) {
+        var stats: memory.Statistics = .{};
+        const result = try c.executeWithOptions(t.allocator, .{ .max_steps = budget, .memory_statistics = &stats });
+        try t.expectEqual(stats.created, stats.released);
+        if (result == .value) break;
+        try t.expectEqualStrings("R_STEP_LIMIT", result.trap.code);
+    }
+    try t.expect(budget < 150);
+}
+
+test "buffer slice writes preserve aggregate snapshots and trap on uninitialized ranges" {
+    try run("struct Point { x: i64 } buffer Points: Point; result PointsResult { ok: Points, err: i64 } " ++ operations ++ "fn work() -> PointsResult { let mut p = try acquire_buffer<PointsResult>(2); acknowledge resize_buffer<Status>(p, 2, new Point { x: 7 }); let snapshot = read_buffer(p, 0); borrow mut p[0..2] as s { write_slice(s, 0, new Point { x: 99 }); } acknowledge write_buffer<Status>(p, 1, snapshot); return new PointsResult.ok(p); } fn main() -> i64 { match work() { PointsResult.ok(p) => { borrow p[1..2] as s { return read_slice(s, 0).x; } }, PointsResult.err(e) => { return e; } } }", 7, 1, .{});
+    var c = try language.Compilation.init(t.allocator, "empty.my", declarations ++ "fn main() -> i64 { match acquire_buffer<R>(2) { R.ok(b) => { borrow b[0..1] as s { return read_slice(s, 0); } }, R.err(e) => { return e; } } }");
+    defer c.deinit();
+    try t.expectEqualStrings("R_SLICE_BOUNDS", (try c.execute(t.allocator)).trap.code);
+}
+
+test "ten thousand buffer writes through returned views use bounded live storage" {
+    var c = try language.Compilation.init(t.allocator, "loop.my", declarations ++ operations ++ "fn view(s: &mut []i64) -> &mut []i64 from s { return s; } fn work() -> R { let mut b = try acquire_buffer<R>(2); acknowledge resize_buffer<Status>(b, 2, 0); let mut i = 0; while i < 10000 { borrow mut b[0..2] as s { borrow mut view(s) as output { write_slice(output, 1, i); } } i += 1; } return new R.ok(b); } fn main() -> i64 { match work() { R.ok(b) => { return read_buffer(b, 1); }, R.err(e) => { return e; } } }");
+    defer c.deinit();
+    try c.emit();
+    var limiter = LimitedLiveAllocator{ .parent = t.allocator, .limit = 16384 };
+    var stats: memory.Statistics = .{};
+    try t.expectEqual(@as(i64, 9999), (try c.executeWithOptions(limiter.allocator(), .{ .memory_statistics = &stats, .memory_limits = .{ .max_allocations = 1 } })).value);
+    try t.expectEqual(@as(u64, 1), stats.created);
+    try t.expectEqual(stats.created, stats.released);
+    try t.expectEqual(@as(usize, 0), limiter.live);
+}
+
+test "propagating a failed buffer operation ends direct loans before owner cleanup" {
+    try run(operations ++ "fn work() -> R { let mut first = try acquire_buffer<R>(1); acknowledge append_buffer<Status>(first, 7); let mut second = try acquire_buffer<R>(0); borrow mut first[0..1] as s { discard try append_buffer<Status>(second, read_slice(s, 0)); } return new R.ok(first); } fn main() -> i64 { acknowledge work(); match acquire_buffer<R>(1) { R.ok(b) => { return cast<i64>(capacity_buffer(b)); }, R.err(e) => { return e; } } }", 1, 3, .{ .max_allocations = 2 });
+}
+
+test "discovery distinguishes buffer operations and emission rejects invalid operation metadata" {
+    var c = try language.Compilation.init(t.allocator, "operations.my", declarations ++ "fn a(b: B) -> u64 { return len_buffer(b); } fn duplicate(other: B) -> u64 { return len_buffer(other); } fn capacity(b: B) -> u64 { return capacity_buffer(b); } fn main() -> i64 { return 0; }");
+    defer c.deinit();
+    try c.emit();
+    var found = try language.duplicates.discover(t.allocator, c.program.?, .{ .min_nodes = 1 });
+    defer found.deinit();
+    try t.expectEqual(@as(usize, 1), found.groups.len);
+    try t.expectEqual(@as(usize, 2), found.groups[0].members.len);
+    for (@constCast(c.code.?.functions[0].instructions)) |*instruction| {
+        if (instruction.op == .buffer_operation) {
+            const original = instruction.*;
+            instruction.op.buffer_operation.owner = @fromBackingInt(9999);
+            try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
+            instruction.* = original;
+            instruction.op.buffer_operation.output = .bool;
+            try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
+            instruction.* = original;
+            return;
+        }
+    }
+    return error.TestUnexpectedResult;
 }

@@ -165,7 +165,7 @@ input values cannot escape. The VM captures a valid result view, ends callee loa
 and reborrows the caller input for the receiving scope. See
 [returned-reference semantics](experiments/returned-references.md) and
 [B acceptance](experiments/b-audit.md). This completes the restricted borrowing
-experiment; buffer acquisition/moves are now supported separately, while resource views and effects remain pending.
+experiment; buffer acquisition/moves are now supported separately, while effects remain pending.
 
 
 Nominal `result Name { ok: T, err: E }` declarations and explicit `acknowledge`
@@ -189,4 +189,7 @@ returns an empty buffer or a capacity error through a declared result. Buffers a
 wrappers containing them transfer on use and reject reuse; ordinary owned values
 clean up at block/match exits, return, and propagated failure. Results retain their
 explicit handling obligations. See [source ownership semantics and current limits](experiments/owned-buffers.md).
-Buffer operations/views, external capabilities/effects, and arenas/pools remain pending.
+[Buffer operations and views](experiments/buffer-operations.md) now provide length/capacity
+queries, retained reads, typed mutation statuses, and borrowed slices that work with
+existing slice helpers and returned-view contracts. External capabilities/effects
+and arenas/pools remain pending.
