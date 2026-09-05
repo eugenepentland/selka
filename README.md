@@ -175,3 +175,9 @@ explicitly unmeasured.
 [Canonical formatting](docs/experiments/formatter.md) is available with `fmt`
 (stdout) and `fmt --check`. It preserves token spellings and comments, and accepts
 syntactically valid code without requiring completed type checking.
+
+[Project verification](docs/experiments/verification-driver.md) uses
+`python3 scripts/verify.py verify.json`. Filters select explicit steps and their
+dependencies; reports distinguish selected success from full-manifest success.
+The eight Python driver tests also run under `zig build test`, alongside the
+396 Zig/core-and-CLI tests.

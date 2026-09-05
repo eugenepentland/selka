@@ -63,5 +63,5 @@ All 28 semantically valid language CLI fixtures are formatted, checked again, an
 verified idempotent, covering aggregates/domains/variants/tables, results, borrowing,
 owned buffers, effects/capabilities, and resource array/slice I/O.
 
-The project-verification driver remains pending. Formatter checks can participate
+[The project-verification driver](verification-driver.md) is now implemented. Formatter checks can participate
 in that driver without becoming source type-validity rules or runtime coverage.

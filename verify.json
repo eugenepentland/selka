@@ -1,0 +1,163 @@
+{
+  "version": 1,
+  "steps": [
+    {
+      "id": "build",
+      "kind": "build",
+      "commands": [
+        [
+          "zig",
+          "build"
+        ]
+      ],
+      "timeout": 180
+    },
+    {
+      "id": "format",
+      "kind": "format",
+      "depends_on": [
+        "build"
+      ],
+      "commands": [
+        [
+          "zig-out/bin/mylang",
+          "fmt",
+          "tests/verification/smoke.my",
+          "--check"
+        ]
+      ]
+    },
+    {
+      "id": "check",
+      "kind": "check",
+      "depends_on": [
+        "build"
+      ],
+      "commands": [
+        [
+          "zig-out/bin/mylang",
+          "check",
+          "tests/verification/smoke.my"
+        ]
+      ]
+    },
+    {
+      "id": "tests-debug",
+      "kind": "test",
+      "commands": [
+        [
+          "zig",
+          "build",
+          "test",
+          "--summary",
+          "all"
+        ]
+      ],
+      "timeout": 300
+    },
+    {
+      "id": "tests-release",
+      "kind": "test",
+      "commands": [
+        [
+          "zig",
+          "build",
+          "test",
+          "-Doptimize=ReleaseFast",
+          "--summary",
+          "all"
+        ]
+      ],
+      "timeout": 300
+    },
+    {
+      "id": "runtime",
+      "kind": "test",
+      "depends_on": [
+        "check"
+      ],
+      "commands": [
+        [
+          "zig-out/bin/mylang",
+          "run",
+          "tests/verification/smoke.my"
+        ]
+      ],
+      "expect_stdout": "7\n"
+    },
+    {
+      "id": "memory-parity",
+      "kind": "parity",
+      "depends_on": [
+        "build"
+      ],
+      "commands": [
+        [
+          "zig-out/bin/mylang",
+          "run",
+          "examples/buffer-views.my",
+          "--memory=general"
+        ],
+        [
+          "zig-out/bin/mylang",
+          "run",
+          "examples/buffer-views.my",
+          "--memory=arena"
+        ]
+      ],
+      "expect_stdout": "19\n"
+    },
+    {
+      "id": "immutable-mutation",
+      "kind": "mutation",
+      "depends_on": [
+        "build"
+      ],
+      "commands": [
+        [
+          "zig-out/bin/mylang",
+          "check",
+          "tests/verification/immutable.my"
+        ]
+      ],
+      "expect_exit": 1,
+      "expect_stderr_contains": "error[E_IMMUTABLE]"
+    },
+    {
+      "id": "semantics-link",
+      "kind": "spec",
+      "path": "docs/semantics.md",
+      "contains": "# Implemented semantics"
+    },
+    {
+      "id": "quality",
+      "kind": "advisory",
+      "depends_on": [
+        "build"
+      ],
+      "commands": [
+        [
+          "zig-out/bin/mylang",
+          "report-quality",
+          "tests/verification/smoke.my"
+        ]
+      ]
+    },
+    {
+      "id": "runtime-samples",
+      "kind": "benchmark",
+      "depends_on": [
+        "runtime"
+      ],
+      "commands": [
+        [
+          "zig-out/bin/mylang",
+          "run",
+          "tests/verification/smoke.my"
+        ]
+      ],
+      "expect_stdout": "7\n",
+      "repeats": 3
+    }
+  ]
+}

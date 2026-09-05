@@ -990,3 +990,32 @@ tokens/comment associations, syntax-only validation, and lack of automatic width
 reflow. The project-verification driver and all other unfinished roadmap tracks
 remain in scope. Guardian was not exercised; hosted CI has not run. The full roadmap
 goal remains active.
+
+
+## 2026-09-05: T separate manifest project-verification driver
+
+Implemented a Python standard-library driver with ordered, validated command/spec
+steps, explicit dependencies, step filters, and structured evidence. Reports retain
+requested/selected/unselected scope, manifest digest, definitions/expectations,
+executed commands, lossless output, exits, and monotonic durations. Dependency
+failures block dependent steps without hiding independent outcomes. Selected success
+is distinct from full-manifest success; runtime coverage remains unmeasured.
+
+All 11 repository manifest steps pass: build, format/check, Debug/ReleaseFast tests,
+expected runtime value, general/arena memory parity, immutable-assignment rejection,
+specification marker, advisory report, and three timing observations. The 396 Zig/
+CLI tests passed from cache in both modes; eight new driver tests executed in each
+mode via zig build test. Driver acceptance covers filtered dependencies, failures,
+parity including invalid UTF-8, mutation diagnostics, timeout/output/launch errors,
+spec/benchmark separation, strict manifests, and actual CLI/report statuses. The
+filtered parity run selects exactly build + memory-parity, with selected success true
+and full-manifest success false. Formatting and whitespace checks pass.
+
+[Verification-driver semantics](experiments/verification-driver.md) documents explicit
+scope and limits: the mutation sentinel is not a mutation score, spec-marker presence
+is not conformance, timings are not performance gates, and general/arena parity is
+not native execution parity. The initial verification manifest does not cover future
+language features. Modules, source pool/arena scopes, generics, partial field moves,
+native execution, compile-time/schema/incremental work, and every other unfinished
+roadmap requirement remain in scope. Guardian was not exercised; hosted CI has not
+run. The full roadmap goal remains active.

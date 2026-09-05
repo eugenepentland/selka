@@ -38,6 +38,9 @@ pub fn build(b: *std.Build) void {
     const test_step = b.step("test", "Run semantic and actual-CLI regression tests");
     test_step.dependOn(&b.addRunArtifact(unit).step);
     test_step.dependOn(&run_integration.step);
+    const driver_tests = b.addSystemCommand(&.{ "python3", "-m", "unittest", "discover", "-s", "tests/verification", "-p", "test_driver.py" });
+    driver_tests.setCwd(b.path("."));
+    test_step.dependOn(&driver_tests.step);
     const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("src"), b.path("tests") }, .check = true });
     b.step("fmt-check", "Check canonical Zig formatting").dependOn(&fmt.step);
 }

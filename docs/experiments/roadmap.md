@@ -15,7 +15,7 @@ not a claim that the full future language has been delivered.
 | M, modules/interfaces | Pending a multi-file domain program | Resolve imports/exports and private boundaries; distinguish optional direction policy from type validity. |
 | E, native execution | Pending one concrete backend choice | Run the same scalar semantic/trap fixtures through the VM and native route. |
 | F, compile-time/schema/incremental work | Pending aggregates/variants/modules | Reject duplicate schema keys and undeclared inputs; explain invalidation and evaluation budgets. |
-| T, formatter/reference reports/verification | Canonical syntax/comment-preserving formatter plus resolved function-call/binding reports and configurable structural metrics implemented | Project-verification driver remains pending; extend references/entry roots with modules and schemas. |
+| T, formatter/reference reports/verification | Canonical formatter, resolved function-call/binding reports, configurable structural metrics, and separate manifest verification driver implemented | Extend reference/specification identities and entry roots with modules/schemas, and parity fixtures with native execution. |
 
 ## A1 completed decisions
 
@@ -96,3 +96,7 @@ review thresholds.
 
 [Canonical formatting](formatter.md) now preserves tokens/comments and supports
 stdout output plus a syntax-only check mode. The verification driver remains pending.
+
+[Project verification](verification-driver.md) now runs explicit steps with truthful
+filtered/dependency reporting, executed parity, rejection sentinels, specification
+markers, and timing observations separate from performance gates.

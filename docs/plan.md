@@ -615,7 +615,7 @@ When advisory analysis is introduced, measure its incremental time separately fr
 ## 15. Next experiments after the MVP
 
 Implementation update (2026-09-05): exact scalar duplicate discovery in track T
-is now implemented as a separate advisory command. [Bounded approximate discovery](experiments/approximate-discovery.md) also reports near matches with canonical edits and explicit work limits. [Static quality reports](experiments/quality-reports.md) now expose resolved calls, binding counts, and configurable structural metrics separately from runtime coverage. [Canonical formatting](experiments/formatter.md) now preserves tokens/comments and supports syntax-only formatting checks. See
+is now implemented as a separate advisory command. [Bounded approximate discovery](experiments/approximate-discovery.md) also reports near matches with canonical edits and explicit work limits. [Static quality reports](experiments/quality-reports.md) now expose resolved calls, binding counts, and configurable structural metrics separately from runtime coverage. [Canonical formatting](experiments/formatter.md) now preserves tokens/comments and supports syntax-only formatting checks. [Project verification](experiments/verification-driver.md) now executes an explicit manifest with filtered-scope reporting and separate correctness/timing evidence. See
 [the experiment record](experiments/duplicate-discovery.md) and
 [post-MVP tracking](experiments/roadmap.md). A1 now includes records, complete construction, field access, preserving
 updates, declarative complete conversions, checked integer widths/casts, and

@@ -81,7 +81,6 @@ command options. Running the existing duplicate corpus reports one loop decision
 per sum helper and all three calls reachable from main. That agrees with inspection
 and does not establish execution coverage or general metric usefulness.
 
-[Canonical formatting](formatter.md) is now implemented; the project-verification
-driver remains pending. Future modules and schemas
+[Canonical formatting](formatter.md) is now implemented; [the project-verification driver](verification-driver.md) is now implemented. Future modules and schemas
 must extend reference coverage and entry-root policy. Production review outcomes
 remain necessary before treating these thresholds as evidence of useful policy.
