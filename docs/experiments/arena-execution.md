@@ -59,7 +59,7 @@ rejection in both host optimization modes.
 
 [Pools/handles](source-pools.md), allocator-region identities, and
 [lexical arena scopes with escape diagnostics](source-arenas.md) now integrate with
-the VM. Explicit source reset operations/results remain pending.
+the VM. [Explicit source reset operations/results](arena-reset.md) are also implemented.
 
 
 [Checked region backing](region-backing.md) extends execution arena selection to

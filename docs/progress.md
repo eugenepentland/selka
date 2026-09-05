@@ -1185,3 +1185,34 @@ modules, compile-time/schema/incremental work, broader native support, and every
 unfinished roadmap requirement. No general borrow-checker soundness or full-language
 native support is claimed. Guardian was not exercised; hosted CI has not run. The
 full roadmap goal remains active.
+
+
+## 2026-09-05: C explicit arena reset with recoverable results
+
+Implemented reset_arena<Result>(allocator) across parsing, checking, lowering, VM,
+and tooling. A bool/i64 result reports successful chunk reclamation or live backing,
+active-child, and invalid/root-capability errors. Reset preserves the region's scope
+and copied allocator authority. It preflights lifetime guards before changing storage,
+performs no guest backing allocation, and is allowed in noalloc helpers. Pool clear
+still pins registry backing until its owner releases; retained snapshots remain on
+the execution allocator and survive successful reset.
+
+457 Zig/core-and-CLI tests pass in Debug and ReleaseFast (411 core, 46 CLI), plus
+eight verification-driver tests and the unchanged 23-fixture/182-comparison native
+suite per host mode. Acceptance covers copied capability reuse, live buffer/borrow
+and child rejection, reset of an empty child while retaining its parent relationship,
+root/foreign/closed rejection, pool pinning and snapshots, physical chunk reclamation,
+every host allocation failure, every instruction budget on both memory backends,
+result obligations, noalloc helpers, duplicate identity, and malformed bytecode.
+10,000 resets and 20,000 buffer acquisitions within one source arena stay inside
+16 KiB live runtime allocation; a control program with reset removed exhausts that
+same bound. Both paths unwind to zero bytes. Actual CLI execution returns 3 and
+formatter coverage grows to 32 valid fixtures. Formatting and whitespace checks
+pass. Exact discovery advances to exact-v28; near-v1 and quality-v1 remain unchanged.
+
+[Arena reset semantics](experiments/arena-reset.md) records error codes, capability
+preservation, owner/child guards, snapshot behavior, and the distinction from the
+embedding root-reset API. Generics, modules/interfaces, compile-time/schema/incremental
+work, broader native support, and all other unfinished roadmap requirements remain
+in scope. Guardian was not exercised; hosted CI has not run. The full roadmap goal
+remains active.

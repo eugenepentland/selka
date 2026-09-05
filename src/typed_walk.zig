@@ -55,7 +55,7 @@ pub const Walker = struct {
                     try self.expr(acquire.capacity);
                     try self.expr(acquire.allocator);
                 },
-                .cast, .wrap, .unwrap, .length => |value| try self.expr(value),
+                .reset_arena, .cast, .wrap, .unwrap, .length => |value| try self.expr(value),
                 .propagate => |p| try self.expr(p.value),
                 .read_slice => |r| try self.expr(r.index),
                 .variant => |v| if (v.value) |value| try self.expr(value),

@@ -155,6 +155,10 @@ pub const Store = struct {
         try self.checkAllocator(parent);
         return .{ .memory = self.identity, .region = try self.regions.begin(parent.region) };
     }
+    pub fn resetRegion(self: *Store, capability: AllocatorCapability) Error!void {
+        try self.checkAllocator(capability);
+        try self.regions.reset(capability.region orelse return error.InvalidCapability);
+    }
     pub fn endRegion(self: *Store, capability: AllocatorCapability) Error!void {
         try self.checkAllocator(capability);
         try self.regions.end(capability.region orelse return error.InvalidCapability);

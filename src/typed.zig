@@ -36,6 +36,7 @@ pub const Node = struct {
         external_read: struct { kind: @import("external_capabilities.zig").Kind, capability: NodeId },
         acquire_pool: Acquisition,
         acquire_buffer: Acquisition,
+        reset_arena: NodeId,
         cast: NodeId,
         wrap: NodeId,
         variant: struct { tag: usize, value: ?NodeId },

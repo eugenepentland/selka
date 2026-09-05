@@ -204,3 +204,7 @@ Source arena scopes are implemented; generics remain pending.
 [Lexical arenas](docs/experiments/source-arenas.md) use `arena heap as scratch { ... }`
 with conservative escape checks and cleanup across returns/errors.
 `zig build run -- run examples/arenas.my` returns `50`.
+
+[Typed arena reset](docs/experiments/arena-reset.md) reclaims unused chunks inside
+a scope while preserving its allocator. `zig build run -- run examples/arena-reset.my`
+returns `3` after exercising guarded reset and reuse.

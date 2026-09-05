@@ -284,6 +284,22 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 }
                 frames.items[frame_index].pc = arm.target;
             },
+            .reset_arena => |output| {
+                const capability = try pop(&stack, frame.operand_base);
+                defer capability.release(allocator);
+                if (capability != .allocator) return error.InternalError;
+                var status: i64 = 0;
+                storage.resetRegion(capability.allocator) catch |err| {
+                    status = switch (err) {
+                        error.RegionInUse => 1,
+                        error.ChildrenActive => 2,
+                        error.InvalidCapability => 3,
+                        else => return error.InternalError,
+                    };
+                };
+                const shape = typed.resultShape(output, program.records).?;
+                try pushOwned(&stack, allocator, try typed.Value.createVariant(allocator, output, if (status == 0) shape.ok_tag else shape.error_tag, if (status == 0) .{ .bool = true } else .{ .i64 = status }));
+            },
             .begin_region => |slot| {
                 const parent = try pop(&stack, frame.operand_base);
                 defer parent.release(allocator);

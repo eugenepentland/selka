@@ -237,6 +237,10 @@ const Emitter = struct {
             },
             .take_field => |read| try self.instruction(node.span, .{ .take_field = .{ .owner = read.owner, .field = read.field, .output = node.ty } }),
             .read_field => |read| try self.instruction(node.span, .{ .read_field = .{ .owner = read.owner, .field = read.field, .output = node.ty } }),
+            .reset_arena => |value| {
+                try self.instruction(node.span, .{ .reset_arena = node.ty });
+                try self.push(.{ .expression = value });
+            },
             .restrict_resource => |restrict| {
                 try self.instruction(node.span, .{ .restrict_resource = .{ .permissions = restrict.permissions, .ty = node.ty } });
                 try self.push(.{ .expression = restrict.value });

@@ -1,7 +1,7 @@
 # T: bounded approximate duplicate discovery
 
 Status: implemented as opt-in `discover-duplicates --approximate`. Exact discovery
-remains `exact-v27`; approximate scoring/reporting is separately versioned `near-v1`.
+remains `exact-v28`; approximate scoring/reporting is separately versioned `near-v1`.
 Reports are advisory, never rewrite code, and do not change source validity.
 
 ```sh

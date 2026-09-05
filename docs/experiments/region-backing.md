@@ -69,3 +69,7 @@ existing actual CLI pool fixture runs in both general and arena modes.
 conservative allocator/owner dependencies through wrappers/helpers, outward escape
 rejection, and cleanup on normal exit, propagation, return, and traps. Dynamic
 lifetime checks remain necessary alongside those static rules.
+
+[Explicit source reset](arena-reset.md) now uses `Store.resetRegion` to free unused
+chunks without ending the region or invalidating its allocator copies. Live backing
+users and child regions reject before any change.

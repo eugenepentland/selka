@@ -299,3 +299,10 @@ snapshots and inert IDs may escape. Scope entry contributes allocation effects.
 Normal exits, returns, propagation, and traps clean up owners before backing.
 [Source arena semantics](experiments/source-arenas.md) records the conservative
 field/call/assignment rules, diagnostics, and runtime guards.
+
+
+`reset_arena<Status>(scratch)` requires a bool/i64 result declaration and returns
+true after freeing unused lexical-arena chunks. Live owners, active children, and
+invalid/root capabilities return typed errors without changing storage. Allocator
+copies remain valid after success. [Arena reset semantics](experiments/arena-reset.md)
+specifies error codes, ownership guards, noalloc behavior, and snapshot survival.

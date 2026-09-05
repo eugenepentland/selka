@@ -54,6 +54,16 @@ pub const Manager = struct {
         std.debug.assert(region.users != 0);
         region.users -= 1;
     }
+    /// Release unused chunks without closing the scope or changing its authority.
+    /// No owner/child may still depend on the backing; rejection changes nothing.
+    /// Retained snapshots use the execution allocator and remain independent.
+    pub fn reset(self: *Manager, id: Id) Error!void {
+        const region = try self.get(id);
+        if (region.children != 0) return error.ChildrenActive;
+        if (region.users != 0) return error.RegionInUse;
+        region.arena.deinit();
+        region.arena = .init(self.allocator);
+    }
     /// Preflight all lifetime constraints; rejection leaves authority and backing
     /// unchanged. Success invalidates the capability even if its slot is reused.
     pub fn end(self: *Manager, id: Id) Error!void {

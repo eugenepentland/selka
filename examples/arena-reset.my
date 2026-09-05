@@ -1,0 +1,38 @@
+buffer B: i64;
+result Open { ok: B, err: i64 }
+result Status { ok: bool, err: i64 }
+result Work { ok: i64, err: i64 }
+fn reset(region: allocator) -> Status noalloc {
+    return reset_arena<Status>(region);
+}
+fn work(heap: allocator) -> Work {
+    arena heap as scratch {
+        let copy = scratch;
+        let mut buffer = try acquire_buffer<Open>(scratch, 8);
+        discard try append_buffer<Status>(buffer, 7);
+        borrow buffer[0..1] as view {
+            match reset(copy) {
+                Status.ok(discard) => { return new Work.err(90); },
+                Status.err(code) => { if code != 1 { return new Work.err(91); } }
+            }
+            if read_slice(view, 0) != 7 { return new Work.err(92); }
+        }
+        discard buffer;
+        arena scratch as child {
+            discard try reset(child);
+            match reset(scratch) {
+                Status.ok(discard) => { return new Work.err(93); },
+                Status.err(code) => { if code != 2 { return new Work.err(94); } }
+            }
+        }
+        discard try reset(copy);
+        let replacement = try acquire_buffer<Open>(scratch, 3);
+        let value = cast<i64>(capacity_buffer(replacement));
+        discard replacement;
+        discard try reset(scratch);
+        return new Work.ok(value);
+    }
+}
+fn main(heap: allocator) -> i64 {
+    match work(heap) { Work.ok(value) => { return value; }, Work.err(code) => { return code; } }
+}

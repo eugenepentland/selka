@@ -311,7 +311,7 @@ const Checker = struct {
                         try work.append(self.allocator, .{ .id = acquire.allocator });
                         continue;
                     },
-                    .cast, .wrap => |cast| {
+                    .reset_arena, .cast, .wrap => |cast| {
                         try work.append(self.allocator, .{ .id = task.id, .emit = true });
                         try work.append(self.allocator, .{ .id = cast.value });
                         continue;
@@ -631,6 +631,14 @@ const Checker = struct {
                     try self.requireDomainAccess(domain_type, node.span);
                     out.data = .{ .unwrap = value };
                 },
+                .reset_arena => |reset| {
+                    out.ty = try self.ty(reset.ty);
+                    const shape = typed.resultShape(out.ty, self.catalog.records) orelse return self.sink.fail("E_ARENA_RESULT", reset.ty, "arena reset requires bool success and i64 error payloads");
+                    if (shape.ok_type != .bool or shape.error_type != .i64) return self.sink.fail("E_ARENA_RESULT", reset.ty, "arena reset requires bool success and i64 error payloads");
+                    const value = self.resolved[@backingInt(reset.value)].?;
+                    try self.require(self.nodes.items[@backingInt(value)].ty, .allocator, node.span);
+                    out.data = .{ .reset_arena = value };
+                },
                 .cast => |cast| {
                     const value = self.resolved[@backingInt(cast.value)].?;
                     out.ty = try self.ty(cast.ty);
@@ -743,7 +751,7 @@ const Checker = struct {
             }
             const consumed: usize = switch (out.data) {
                 .integer, .boolean, .local, .read_ref, .read_field, .take_field, .len_slice => 0,
-                .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .external_read, .complete_resource, .restrict_resource => 1,
+                .reset_arena, .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .external_read, .complete_resource, .restrict_resource => 1,
                 .acquire_buffer, .acquire_pool, .acquire_resource, .environment_get => 2,
                 .index, .binary => 2,
                 .replace => 3,

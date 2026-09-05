@@ -31,6 +31,7 @@ pub const Node = struct {
         external_read: struct { kind: @import("external_capabilities.zig").Kind, ty: Span, capability: NodeId },
         acquire_pool: Acquisition,
         acquire_buffer: Acquisition,
+        reset_arena: TypedValue,
         cast: TypedValue,
         wrap: TypedValue,
         variant: struct { ty: Span, name: Span, value: ?NodeId },

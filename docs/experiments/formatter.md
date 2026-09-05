@@ -59,9 +59,9 @@ reported as OutOfMemory, with request and output storage released.
 
 Actual CLI tests verify stdout/check behavior, unchanged-file check success,
 formatting differences, duplicate/wrong-command options, and syntax diagnostics.
-All 31 semantically valid language CLI fixtures are formatted, checked again, and
+All 32 semantically valid language CLI fixtures are formatted, checked again, and
 verified idempotent, covering aggregates/domains/variants/tables, results, borrowing,
-owned buffers, effects/capabilities, resource array/slice I/O, source pool graphs, and lexical arenas.
+owned buffers, effects/capabilities, resource array/slice I/O, source pool graphs, lexical arenas, and typed arena reset.
 
 [The project-verification driver](verification-driver.md) is now implemented. Formatter checks can participate
 in that driver without becoming source type-validity rules or runtime coverage.

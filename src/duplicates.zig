@@ -4,7 +4,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 
-pub const version = "exact-v27";
+pub const version = "exact-v28";
 pub const Population = enum { production, tests, generated, reference, intentional };
 pub const near = @import("near_duplicates.zig");
 pub const Options = struct { min_nodes: usize = 8, population: Population = .production, approximate: bool = false, near_options: near.Options = .{} };
@@ -119,7 +119,7 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                         try work.append(allocator, .{ .expression = acquire.capacity });
                         try work.append(allocator, .{ .expression = acquire.allocator });
                     },
-                    .cast, .wrap, .unwrap => |operand| try work.append(allocator, .{ .expression = operand }),
+                    .reset_arena, .cast, .wrap, .unwrap => |operand| try work.append(allocator, .{ .expression = operand }),
                     .record => |fields| {
                         try recordFields(allocator, writer, &work, program, node.ty, fields);
                     },

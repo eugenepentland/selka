@@ -532,7 +532,7 @@ pub const Parser = struct {
                 const close = try self.expect(.rparen);
                 break :read try self.append(.{ .span = .join(token.span, close.span), .data = .{ .read_ref = name.span } });
             },
-            .kw_cast, .kw_wrap, .kw_acquire_buffer, .kw_acquire_pool => cast: {
+            .kw_reset_arena, .kw_cast, .kw_wrap, .kw_acquire_buffer, .kw_acquire_pool => cast: {
                 self.pos += 1;
                 _ = try self.expect(.lt);
                 const ty = try self.typeName();
@@ -544,7 +544,7 @@ pub const Parser = struct {
                     break :value try self.expression(0);
                 } else first;
                 const close = try self.expect(.rparen);
-                break :cast try self.append(.{ .span = .join(token.span, close.span), .data = if (token.tag == .kw_acquire_pool) .{ .acquire_pool = .{ .ty = ty, .allocator = first, .value = value } } else if (token.tag == .kw_acquire_buffer) .{ .acquire_buffer = .{ .ty = ty, .allocator = first, .value = value } } else if (token.tag == .kw_cast) .{ .cast = .{ .ty = ty, .value = value } } else .{ .wrap = .{ .ty = ty, .value = value } } });
+                break :cast try self.append(.{ .span = .join(token.span, close.span), .data = if (token.tag == .kw_reset_arena) .{ .reset_arena = .{ .ty = ty, .value = value } } else if (token.tag == .kw_acquire_pool) .{ .acquire_pool = .{ .ty = ty, .allocator = first, .value = value } } else if (token.tag == .kw_acquire_buffer) .{ .acquire_buffer = .{ .ty = ty, .allocator = first, .value = value } } else if (token.tag == .kw_cast) .{ .cast = .{ .ty = ty, .value = value } } else .{ .wrap = .{ .ty = ty, .value = value } } });
             },
             .kw_new => record: {
                 self.pos += 1;

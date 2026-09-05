@@ -28,6 +28,7 @@ pub const Instruction = struct {
         get_index: typed.Type,
         replace_index: typed.Type,
         array_length: typed.Type,
+        reset_arena: typed.Type,
         begin_region: typed.LocalId,
         end_region: typed.LocalId,
         begin_borrow: typed.ReferenceId,
@@ -220,6 +221,10 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             .make_variant => |variant| {
                 const schema = try variantSchema(variant.ty, program);
                 if (variant.tag >= schema.cases.len) return error.InternalError;
+            },
+            .reset_arena => |output| {
+                const shape = typed.resultShape(output, program.records) orelse return error.InternalError;
+                if (shape.ok_type != .bool or shape.error_type != .i64) return error.InternalError;
             },
             .begin_region, .end_region => |slot| {
                 if (@backingInt(slot) >= function.locals.len) return error.InternalError;
@@ -494,7 +499,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (height < 2) return error.InternalError;
                     height -= 1;
                 },
-                .restrict_resource, .complete_resource, .external_read, .read_slice, .neg_i64_checked, .not_bool, .get_field, .cast_integer, .neg_integer, .array_length, .wrap_domain, .unwrap_domain => if (height == 0) {
+                .reset_arena, .restrict_resource, .complete_resource, .external_read, .read_slice, .neg_i64_checked, .not_bool, .get_field, .cast_integer, .neg_integer, .array_length, .wrap_domain, .unwrap_domain => if (height == 0) {
                     return error.InternalError;
                 },
                 .call, .call_refs, .call_borrow => {

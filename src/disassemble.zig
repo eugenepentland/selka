@@ -65,6 +65,7 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
                     for (dispatch.arms, program.records[dispatch.ty.recordIndex()].variants.?.cases) |arm, variant| try writer.print(" {s}:target={d},slot={?d}", .{ variant.name, arm.target, if (arm.slot) |slot| @as(?usize, @backingInt(slot)) else null });
                 },
                 .cmp_enum => |comparison| try writer.print("CMP_ENUM {s} {s}", .{ typed.typeName(comparison.ty, program.records), @tagName(comparison.predicate) }),
+                .reset_arena => |ty| try writer.print("RESET_ARENA {f}", .{ty}),
                 .begin_region => |slot| try writer.print("BEGIN_REGION local={d}", .{@backingInt(slot)}),
                 .end_region => |slot| try writer.print("END_REGION local={d}", .{@backingInt(slot)}),
                 .cmp_handle => |comparison| try writer.print("CMP_HANDLE {s} {s}", .{ typed.typeName(comparison.ty, program.records), @tagName(comparison.predicate) }),

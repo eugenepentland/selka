@@ -100,4 +100,4 @@ runtime storage. Backend tests separately cover identity/generation exhaustion.
 The actual CLI runs/checks/dumps the graph, validates formatting round trips, and
 rejects forged construction consistently across analysis commands. Scalar native
 emission reports `E_NATIVE_FEATURE` for pool programs. Exact discovery is
-`exact-v26`; pool operations and nominal handle types remain distinct checked facts.
+`exact-v28`; pool operations and nominal handle types remain distinct checked facts.

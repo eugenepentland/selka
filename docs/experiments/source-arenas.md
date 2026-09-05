@@ -23,8 +23,8 @@ an outer-lifetime owner, even inside an arena scope.
 A region-slot limit produces `R_REGION_LIMIT`, like other VM execution budgets.
 Host metadata/backing allocation failure remains `OutOfMemory` and unwinds the VM.
 Individual buffer/pool acquisition still reports its existing recoverable quota
-errors through typed results. Explicit source reset operations/results remain pending. For now, use a fresh
-lexical scope for each iteration rather than requesting a mid-scope reset.
+errors through typed results. [Explicit source reset](arena-reset.md) now reclaims unused chunks with typed
+results while preserving the scope and its allocator authority.
 
 ## Escape rules
 
@@ -98,6 +98,6 @@ exit, effect bounds, region limits, and malformed bytecode defenses.
 10,000 source scopes with pool and buffer allocation remain within 16 KiB live
 runtime storage on both execution backends. Actual CLI tests execute/check/dump the
 fixture and reject escapes across check/run/discovery/quality/native commands.
-Formatting round trips cover 31 valid fixtures. Exact discovery is `exact-v27` and
+Formatting round trips cover 32 valid fixtures. Exact discovery is `exact-v28` and
 retains arena boundary structure while normalizing bound allocator names. Native
 emission continues to reject these operations with `E_NATIVE_FEATURE`.
