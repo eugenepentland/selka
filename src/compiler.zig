@@ -1,5 +1,6 @@
 //! One request owns source, syntax, semantic nodes, and lowered instructions.
 const std = @import("std");
+pub const evaluation = @import("evaluation.zig");
 pub const import_policy = @import("import_policy.zig");
 pub const project_compile = @import("project_compile.zig");
 pub const project_syntax = @import("project_syntax.zig");
@@ -124,6 +125,7 @@ test {
     _ = @import("arena_source_test.zig");
     _ = @import("arena_reset_test.zig");
     _ = @import("effects_test.zig");
+    _ = @import("evaluation_test.zig");
     _ = @import("allocator_capabilities_test.zig");
     _ = @import("external_capabilities_test.zig");
     _ = @import("external_resources_test.zig");

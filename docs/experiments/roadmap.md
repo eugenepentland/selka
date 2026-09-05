@@ -14,7 +14,7 @@ not a claim that the full future language has been delivered.
 | D, errors and abstraction | In progress: typed results, checked handling/transfer, acknowledgement, and propagation implemented; typed-handle pool backend implemented; source handles implemented; generics pending | Require handling/propagation/explicit acknowledgement without erasing evaluation or ownership obligations. |
 | M, modules/interfaces | In progress: bounded import discovery, explicit exports/privacy, source maps, module-aware type checking, and VM execution implemented; optional direction policy and default-limit graph/tooling acceptance implemented; ordinary-program corpus review pending | Shared-domain execution, direction policy, and integrated 256-module/4096-import acceptance pass; extend ordinary-program corpus review. |
 | E, native execution | Scalar, nominal scalar domain, and closed enum C emission plus pinned-Zig native builder implemented for single-file and module projects; scalar semantic/trap/path/trace parity passes | Scalar acceptance complete; broader native support requires explicit operations and corresponding executable parity fixtures. |
-| F, compile-time/schema/incremental work | Pending; aggregate, variant, and module foundations are available | Reject duplicate schema keys and undeclared inputs; explain invalidation and evaluation budgets. |
+| F, compile-time/schema/incremental work | In progress: restricted effect-free project evaluation with step/frame/VM-memory budgets implemented; declared external inputs, schemas, generation, and incremental caching pending | Reject duplicate schema keys and undeclared inputs; explain invalidation and evaluation budgets. |
 | T, formatter/reference reports/verification | Canonical single-file/module formatter and reachable-project formatting checks, resolved function-call/binding reports including module main/export roots, configurable structural metrics, and separate manifest verification driver implemented | Extend reference/specification identities and entry roots with modules/schemas, and parity fixtures with native execution. |
 
 ## A1 completed decisions
@@ -162,3 +162,6 @@ mutation, and exhaustive dispatch with executed VM/native parity.
 [Module graph boundary acceptance](module-scaling.md) now checks execution, reports,
 formatting, source edits, diagnostics, cycles, and default module/import limits
 through the actual CLI.
+
+[Restricted project evaluation](restricted-evaluation.md) now establishes effect-free,
+parameter-free execution with explicit VM budgets as the first F foundation.

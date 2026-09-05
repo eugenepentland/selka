@@ -247,3 +247,8 @@ construction and explicit accessors. Wider native aggregates/resources remain pe
 Native [closed enums](docs/experiments/native-enums.md) now support construction,
 equality, calls, mutation, and exhaustive matches in single-file and module programs.
 Try `examples/native-enums.my` with the native builder.
+
+`eval-project` provides [restricted evaluation](docs/experiments/restricted-evaluation.md)
+for effect-free, parameter-free project entry points, with explicit step, frame,
+and VM-memory budgets. This is the compile-time evaluator foundation; schema
+generation and incremental caching remain pending.

@@ -1640,3 +1640,34 @@ pass. The plan and roadmap link the new module acceptance record. Ordinary-progr
 review, generics, compile-time/schema/incremental work, wider native operations,
 and other unfinished requirements remain pending. Guardian was not exercised and
 hosted CI has not run. The full roadmap goal remains active.
+
+## 2026-09-05: Restricted project evaluation foundation
+
+Added eval-project and the evaluation embedding API as the first F implementation.
+The command loads/checks the declared module graph, validates bytecode, requires a
+parameter-free entry with no inferred transitive effects, and supplies no guest
+allocator or external authority. It produces an i64 result under explicit instruction,
+frame, and fixed-buffer VM allocation budgets. Effect-free aggregates and calls retain
+VM semantics. Unused effectful helpers remain checked but need not be executed.
+
+Defaults are one million steps, 256 frames, and 16 MiB VM allocator storage. Guest
+quota exhaustion reports R_EVAL_MEMORY; host backing-buffer allocation failure remains
+OutOfMemory. Frontend/lowering/report storage is outside the VM quota, and fixed-buffer
+allocation order/fragmentation affects exhaustion. The experiment document records
+these limits without claiming whole-compiler memory bounds or cross-target layout.
+
+512 Zig tests pass in Debug and ReleaseFast (456 core, 56 CLI), including aggregate
+value/trace parity at 39 instruction budgets, frame and VM-memory exhaustion,
+recursive memory pressure, invalid budgets, unused capability rejection, transitive
+untaken effects, uncalled effectful helpers, host allocation-failure cleanup, imported
+evaluation, and CLI option rejection. A test initially compared uninitialized trace
+capacity; it was corrected to compare populated trace entries and lengths.
+Eight verification-driver tests, module/duplicate scaling drivers, and 392 VM/native
+comparisons per host mode also pass. Formatting and whitespace checks pass.
+
+The roadmap, README, and attached plan now describe this evaluator foundation.
+Compile-time source expressions, declared external input manifests, target layouts,
+schema derivation, generated bindings, dependency/cache identities, incremental
+invalidation, generics, wider native support, and ordinary-program review remain
+pending. Guardian was not exercised and hosted CI has not run. The full roadmap goal
+remains active.

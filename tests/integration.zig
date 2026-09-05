@@ -741,12 +741,12 @@ test "CLI checks and runs module programs with private boundaries and cross-file
     try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper; export value; fn value() -> i64 { return 42; }" });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
     defer testing.allocator.free(path);
-    for ([_][]const u8{ "check-project", "run-project" }) |command| {
+    for ([_][]const u8{ "check-project", "run-project", "eval-project" }) |command| {
         const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, command, path } });
         defer testing.allocator.free(result.stdout);
         defer testing.allocator.free(result.stderr);
         try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
-        try testing.expectEqualStrings(if (std.mem.eql(u8, command, "run-project")) "42\n" else "", result.stdout);
+        try testing.expectEqualStrings(if (std.mem.eql(u8, command, "check-project")) "" else "42\n", result.stdout);
         try testing.expectEqualStrings("", result.stderr);
     }
     try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper; export value; fn value() -> i64 { return 1 / 0; }" });
@@ -924,4 +924,15 @@ test "CLI native project emission rejects private calls and unsupported guest ty
     try testing.expect(std.mem.indexOf(u8, rejected.stderr, "E_PRIVATE_SYMBOL") != null);
     try invoke("emit-project-c", "module input; fn main() -> i64 { let a = new [1]i64 [7]; return a[0]; }", 1, "", "E_NATIVE_FEATURE");
     try invokeOptions("emit-project-c", "module input; fn main() -> i64 { return 0; }", &.{"--max-steps=1"}, 2, "", "usage:");
+}
+
+test "CLI restricted project evaluation preserves values and enforces budgets and authority" {
+    try invoke("eval-project", "module input; fn main()->i64{return 7;}", 0, "7\n", "");
+    try invokeOptions("eval-project", "module input; fn main()->i64{return 7;}", &.{"--max-eval-bytes=1"}, 1, "", "R_EVAL_MEMORY");
+    try invokeOptions("eval-project", "module input; fn main()->i64{while true{}return 0;}", &.{"--max-steps=10"}, 1, "", "R_STEP_LIMIT");
+    try invokeOptions("eval-project", "module input; fn main()->i64{return main();}", &.{"--max-frames=2"}, 1, "", "R_FRAME_LIMIT");
+    try invoke("eval-project", "module input; fn main(heap:allocator)->i64{discard heap;return 7;}", 1, "", "E_EVAL_INPUT");
+    try invoke("eval-project", "module input; result T{ok:i64,err:i64} fn main(c:clock_cap)->i64{acknowledge clock_now<T>(c);return 7;}", 1, "", "E_EVAL_EFFECT");
+    for ([_][]const u8{ "--memory=arena", "--max-eval-bytes=0", "--max-eval-bytes=-1", "--max-steps=0", "--check" }) |option| try invokeOptions("eval-project", "module input; fn main()->i64{return 7;}", &.{option}, 2, "", "usage:");
+    try invokeOptions("run-project", "module input; fn main()->i64{return 7;}", &.{"--max-eval-bytes=1000"}, 2, "", "usage:");
 }
