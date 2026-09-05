@@ -77,6 +77,8 @@ pub const Statement = struct {
     data: union(enum) {
         block: []const StatementId,
         ret: NodeId,
+        ret_ref: ReferenceId,
+        borrow_call: struct { call: NodeId, reference: ReferenceId, body: StatementId },
         borrow: struct { reference: ReferenceId, body: StatementId, range: ?Range = null },
         write_slice: struct { reference: ReferenceId, index: NodeId, value: NodeId },
         write_ref: struct { reference: ReferenceId, value: NodeId },
@@ -91,7 +93,9 @@ pub const Statement = struct {
 pub const MatchArm = struct { tag: usize, slot: ?LocalId, body: StatementId };
 pub const Range = struct { start: NodeId, end: NodeId };
 pub const Local = struct { slice_parameter: bool = false, reference_parameter: ?bool = null, name: []const u8, declaration: Span, ty: Type, mutable: bool, mutable_borrow: bool = false, reads: usize = 0, writes: usize = 0 };
+pub const ReturnReference = struct { parameter: LocalId, mutable: bool, slice: bool };
 pub const Function = struct {
+    return_reference: ?ReturnReference = null,
     references: []const Reference = &.{},
     owner: ?Type = null,
     restricted: bool = false,

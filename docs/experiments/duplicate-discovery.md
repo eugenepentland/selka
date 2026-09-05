@@ -158,3 +158,9 @@ Bounded slices advance the version to `exact-v10`. Canonical identity retains
 slice/whole-value reference distinctions, element types, explicit range endpoints,
 parameter modes, and slice read/write/length operations. Bound names normalize
 away; changed ranges and argument evaluation order remain distinct.
+
+
+Returned references advance the version to `exact-v11`. Canonical function identity
+retains the declared originating parameter, result permissions and slice shape,
+returned reference identity, and the receiving borrow scope. Origin parameter names
+normalize to declaration positions; a different provenance contract remains distinct.

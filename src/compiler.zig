@@ -37,7 +37,7 @@ pub const Compilation = struct {
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
         const tokens = try lexer.lex(sink.allocator, self.src.bytes, &sink);
-        var p: parser.Parser = .{ .allocator = sink.allocator, .tokens = tokens, .sink = &sink };
+        var p: parser.Parser = .{ .src = self.src, .allocator = sink.allocator, .tokens = tokens, .sink = &sink };
         self.syntax = try p.parse();
         self.program = try sema.check(sink.allocator, self.src, self.syntax.?, &sink);
     }
@@ -75,4 +75,5 @@ test {
     _ = @import("memory_test.zig");
     _ = @import("references_test.zig");
     _ = @import("slices_test.zig");
+    _ = @import("returned_references_test.zig");
 }

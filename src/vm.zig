@@ -33,7 +33,9 @@ fn pushOwned(stack: *std.ArrayList(typed.Value), allocator: std.mem.Allocator, v
 const Span = @import("source.zig").Span;
 const Slice = struct { start: usize, length: usize };
 const Reference = struct { lease: memory.Borrow, slice: ?Slice = null };
-const Frame = struct { reference_base: usize = 0, function: typed.FunctionId, pc: usize = 0, local_base: usize, operand_base: usize, call_span: Span };
+const ReturnTarget = struct { destination: usize, parent: memory.Borrow, allocation: memory.Allocation, mutable: bool };
+const CapturedReference = struct { slice: ?Slice };
+const Frame = struct { return_target: ?ReturnTarget = null, captured: ?CapturedReference = null, reference_base: usize = 0, function: typed.FunctionId, pc: usize = 0, local_base: usize, operand_base: usize, call_span: Span };
 fn trap(code: []const u8, message: []const u8, span: Span, frames: []const Frame, program: bc.Program) Result {
     var diagnostic: Diagnostic = .{ .code = code, .message = message, .span = span };
     var i = frames.len;
@@ -361,9 +363,26 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                     transferred = true;
                 }
             },
-            .call, .call_refs => {
-                const id = if (instruction.op == .call) instruction.op.call else instruction.op.call_refs.function;
-                const loan_arguments: []const typed.ReferenceId = if (instruction.op == .call_refs) instruction.op.call_refs.references else &.{};
+            .capture_ref => |id| {
+                const reference = references.items[frame.reference_base + @backingInt(id)] orelse return trap("R_REFERENCE_LIFETIME", "returned reference is not active", instruction.span, frames.items, program);
+                const target = frame.return_target orelse return error.InternalError;
+                const view = storage.describe(reference.lease) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                if (!std.meta.eql(view.allocation, target.allocation) or frame.captured != null) return trap("R_REFERENCE_LIFETIME", "returned reference does not belong to the declared input", instruction.span, frames.items, program);
+                frames.items[frame_index].captured = .{ .slice = reference.slice };
+            },
+            .call, .call_refs, .call_borrow => {
+                const id = switch (instruction.op) {
+                    .call => |id| id,
+                    .call_refs => |call| call.function,
+                    .call_borrow => |call| call.function,
+                    else => unreachable,
+                };
+                const loan_arguments: []const typed.ReferenceId = switch (instruction.op) {
+                    .call => &.{},
+                    .call_refs => |call| call.references,
+                    .call_borrow => |call| call.references,
+                    else => unreachable,
+                };
                 const callee = program.functions[@backingInt(id)];
                 const value_count = bc.valueParameterCount(callee);
                 if (stack.items.len < frame.operand_base or stack.items.len - frame.operand_base < value_count) return error.InternalError;
@@ -374,6 +393,16 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                     if (parameter.reference_parameter != null) continue;
                     if (stack.items[argument_index].typeOf() != parameter.ty) return error.InternalError;
                     argument_index += 1;
+                }
+                var return_target: ?ReturnTarget = null;
+                if (instruction.op == .call_borrow) {
+                    const destination = instruction.op.call_borrow.destination;
+                    const target_index = frame.reference_base + @backingInt(destination);
+                    if (references.items[target_index] != null) return trap("R_REFERENCE_LIFETIME", "result reference is already active", instruction.span, frames.items, program);
+                    const metadata = function.references[@backingInt(destination)];
+                    const parent = references.items[frame.reference_base + @backingInt(metadata.parent.?)] orelse return trap("R_REFERENCE_LIFETIME", "result input reference is not active", instruction.span, frames.items, program);
+                    const view = storage.describe(parent.lease) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                    return_target = .{ .destination = target_index, .parent = parent.lease, .allocation = view.allocation, .mutable = metadata.mutable };
                 }
                 const reference_base = references.items.len;
                 const reference_end = std.math.add(usize, reference_base, callee.references.len) catch return error.OutOfMemory;
@@ -398,13 +427,18 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                     argument_index += 1;
                 }
                 stack.shrinkRetainingCapacity(argument_base);
-                try frames.append(allocator, .{ .reference_base = reference_base, .function = id, .local_base = local_base, .operand_base = argument_base, .call_span = instruction.span });
+                try frames.append(allocator, .{ .return_target = return_target, .reference_base = reference_base, .function = id, .local_base = local_base, .operand_base = argument_base, .call_span = instruction.span });
             },
-            .ret => {
-                const value = try pop(&stack, frame.operand_base);
+            .ret, .ret_ref => {
+                const value: ?typed.Value = if (instruction.op == .ret) try pop(&stack, frame.operand_base) else null;
                 var transferred = false;
-                defer if (!transferred) value.release(allocator);
-                if (value.typeOf() != function.return_type or stack.items.len != frame.operand_base) return error.InternalError;
+                defer if (!transferred) {
+                    if (value) |owned| owned.release(allocator);
+                };
+                if (stack.items.len != frame.operand_base) return error.InternalError;
+                if (value) |owned| {
+                    if (owned.typeOf() != function.return_type) return error.InternalError;
+                } else if (frame.captured == null or frame.return_target == null) return trap("R_REFERENCE_LIFETIME", "reference return has no captured result", instruction.span, frames.items, program);
                 for (references.items[frame.reference_base..]) |reference| if (reference != null) return trap("R_REFERENCE_LIFETIME", "function returned with an active reference", instruction.span, frames.items, program);
                 references.shrinkRetainingCapacity(frame.reference_base);
                 for (locals.items[frame.local_base..], frame.local_base..) |*local, index| {
@@ -417,9 +451,15 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 }
                 locals.shrinkRetainingCapacity(frame.local_base);
                 _ = frames.pop();
-                transferred = true;
-                if (frames.items.len == 0) return .{ .value = try integer(value, allocator) };
-                try pushOwned(&stack, allocator, value);
+                if (value) |owned| {
+                    transferred = true;
+                    if (frames.items.len == 0) return .{ .value = try integer(owned, allocator) };
+                    try pushOwned(&stack, allocator, owned);
+                } else {
+                    const target = frame.return_target.?;
+                    const lease = storage.reborrow(target.parent, 0, 1, if (target.mutable) .exclusive else .shared) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                    references.items[target.destination] = .{ .lease = lease, .slice = frame.captured.?.slice };
+                }
             },
             .not_bool => try stack.append(allocator, .{ .bool = !(try boolean(try pop(&stack, frame.operand_base), allocator)) }),
             .neg_i64_checked => {

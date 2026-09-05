@@ -146,9 +146,10 @@ Scoped borrowing is implemented as `borrow [mut] owner as name { ... }`, with
 `read_ref(name)` and `write_ref(name, value);`. References have lexical scope,
 whole-local access, and checked shared/exclusive permissions. Reads preserve
 value snapshots; return cleanup ends child leases before parents. References
-cannot be copied, stored, or returned. `&T` and `&mut T` parameters accept
+cannot be copied or stored in values. `&T` and `&mut T` parameters accept
 active references through temporary call reborrows; value arguments evaluate
-before those loans begin. Returned-reference contracts remain pending. See [the borrowing contract](experiments/borrowing.md).
+before those loans begin. Returned-reference contracts name an input with `from parameter`; callers use
+`borrow [mut] helper(...) as result { ... }` to receive the view. See [the borrowing contract](experiments/borrowing.md).
 
 
 Bounded slices use `borrow [mut] owner[start..end] as name { ... }`, with
@@ -156,3 +157,12 @@ Bounded slices use `borrow [mut] owner[start..end] as name { ... }`, with
 accept varying lengths of the same element type. Bounds and exclusive suspension
 remain checked in both host modes; slice writes preserve existing value snapshots.
 See [slice semantics and costs](experiments/slices.md).
+
+
+Returned references must derive from the single declared reference input and
+preserve its type, slice shape, and permissions. Borrowed local storage and copied
+input values cannot escape. The VM captures a valid result view, ends callee loans,
+and reborrows the caller input for the receiving scope. See
+[returned-reference semantics](experiments/returned-references.md) and
+[B acceptance](experiments/b-audit.md). This completes the restricted borrowing
+experiment; resource ownership and effects remain pending.

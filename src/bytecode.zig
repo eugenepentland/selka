@@ -50,9 +50,12 @@ pub const Instruction = struct {
         call: typed.FunctionId,
         call_refs: struct { function: typed.FunctionId, references: []const typed.ReferenceId },
         ret,
+        ret_ref,
+        capture_ref: typed.ReferenceId,
+        call_borrow: struct { function: typed.FunctionId, references: []const typed.ReferenceId, destination: typed.ReferenceId },
     },
 };
-pub const Function = struct { references: []const typed.Reference = &.{}, owner: ?typed.Type = null, restricted: bool = false, conversion: bool = false, id: typed.FunctionId, name: []const u8, parameter_count: usize = 0, return_type: typed.Type = .i64, locals: []const typed.Local = &.{}, instructions: []const Instruction };
+pub const Function = struct { return_reference: ?typed.ReturnReference = null, references: []const typed.Reference = &.{}, owner: ?typed.Type = null, restricted: bool = false, conversion: bool = false, id: typed.FunctionId, name: []const u8, parameter_count: usize = 0, return_type: typed.Type = .i64, locals: []const typed.Local = &.{}, instructions: []const Instruction };
 pub const Program = struct { functions: []const Function, main: typed.FunctionId = @fromBackingInt(0), records: []const typed.Record = &.{} };
 pub fn valueParameterCount(function: Function) usize {
     var count: usize = 0;
@@ -101,13 +104,24 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
         };
     }
     const main = program.functions[@backingInt(program.main)];
-    if (main.parameter_count != 0 or main.return_type != .i64 or main.owner != null or main.restricted) return error.InternalError;
+    if (main.return_reference != null or main.parameter_count != 0 or main.return_type != .i64 or main.owner != null or main.restricted) return error.InternalError;
     for (program.functions, 0..) |function, i| {
         if (@backingInt(function.id) != i or function.instructions.len == 0) return error.InternalError;
         if (function.owner) |owner| {
             if (!owner.isAggregate() or !validType(owner, program) or program.records[owner.recordIndex()].domain == null) return error.InternalError;
         } else if (function.restricted) return error.InternalError;
         if (function.parameter_count > function.locals.len or !validType(function.return_type, program)) return error.InternalError;
+        if (function.return_reference) |contract| {
+            if (@backingInt(contract.parameter) >= function.parameter_count or function.conversion) return error.InternalError;
+            const parameter = function.locals[@backingInt(contract.parameter)];
+            const mutable = parameter.reference_parameter orelse return error.InternalError;
+            if (contract.mutable and !mutable) return error.InternalError;
+            if (contract.slice and !parameter.slice_parameter) {
+                if (!parameter.ty.isAggregate() or !validType(parameter.ty, program)) return error.InternalError;
+                const array = program.records[parameter.ty.recordIndex()].array orelse return error.InternalError;
+                if (array.key != null or array.element != function.return_type) return error.InternalError;
+            } else if (contract.slice != parameter.slice_parameter or function.return_type != parameter.ty) return error.InternalError;
+        }
         for (function.references, 0..) |reference, index| {
             if (@backingInt(reference.owner) >= function.locals.len or !validType(reference.ty, program)) return error.InternalError;
             const local = function.locals[@backingInt(reference.owner)];
@@ -211,14 +225,27 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                 if (!program.records[update.ty.recordIndex()].isRecord()) return error.InternalError;
                 try validateIndices(allocator, update.indices, program.records[update.ty.recordIndex()].fields.len);
             },
+            .capture_ref => |id| {
+                const contract = function.return_reference orelse return error.InternalError;
+                if (@backingInt(id) >= function.references.len) return error.InternalError;
+                const reference = function.references[@backingInt(id)];
+                if (reference.owner != contract.parameter or reference.ty != function.return_type or reference.slice != contract.slice or (contract.mutable and !reference.mutable)) return error.InternalError;
+            },
+            .ret => if (function.return_reference != null) {
+                return error.InternalError;
+            },
+            .ret_ref => if (function.return_reference == null) {
+                return error.InternalError;
+            },
             .call => |id| {
                 if (@backingInt(id) >= program.functions.len) return error.InternalError;
                 const callee = program.functions[@backingInt(id)];
                 if (callee.parameter_count > callee.locals.len) return error.InternalError;
                 if (callee.restricted and function.owner != callee.owner) return error.InternalError;
-                if (valueParameterCount(callee) != callee.parameter_count) return error.InternalError;
+                if (callee.return_reference != null or valueParameterCount(callee) != callee.parameter_count) return error.InternalError;
             },
-            .call_refs => |call| {
+            .call_refs, .call_borrow => {
+                const call: @FieldType(@FieldType(Instruction, "op"), "call_refs") = if (instruction.op == .call_refs) instruction.op.call_refs else .{ .function = instruction.op.call_borrow.function, .references = instruction.op.call_borrow.references };
                 if (@backingInt(call.function) >= program.functions.len) return error.InternalError;
                 const callee = program.functions[@backingInt(call.function)];
                 if (callee.parameter_count > callee.locals.len) return error.InternalError;
@@ -234,6 +261,18 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (argument.slice != parameter.slice or argument.ty != parameter.ty or (parameter.mutable and !argument.mutable)) return error.InternalError;
                 };
                 if (index != call.references.len) return error.InternalError;
+                if (instruction.op == .call_borrow) {
+                    const contract = callee.return_reference orelse return error.InternalError;
+                    if (@backingInt(contract.parameter) >= callee.parameter_count) return error.InternalError;
+                    const destination = instruction.op.call_borrow.destination;
+                    if (@backingInt(destination) >= function.references.len) return error.InternalError;
+                    const result = function.references[@backingInt(destination)];
+                    var origin_index: usize = 0;
+                    for (callee.locals[0..@backingInt(contract.parameter)]) |parameter| if (parameter.reference_parameter != null) {
+                        origin_index += 1;
+                    };
+                    if (origin_index >= call.references.len or result.parameter or result.parent != call.references[origin_index] or result.ty != callee.return_type or result.slice != contract.slice or (result.mutable and !contract.mutable)) return error.InternalError;
+                } else if (callee.return_reference != null) return error.InternalError;
             },
             .jump, .jump_if_false => |target| if (target >= function.instructions.len) {
                 return error.InternalError;
@@ -292,17 +331,26 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                 .read_slice, .neg_i64_checked, .not_bool, .get_field, .cast_integer, .neg_integer, .array_length, .wrap_domain, .unwrap_domain => if (height == 0) {
                     return error.InternalError;
                 },
-                .call, .call_refs => {
-                    const id = if (instruction.op == .call) instruction.op.call else instruction.op.call_refs.function;
+                .call, .call_refs, .call_borrow => {
+                    const id = switch (instruction.op) {
+                        .call => |id| id,
+                        .call_refs => |call| call.function,
+                        .call_borrow => |call| call.function,
+                        else => unreachable,
+                    };
                     const count = valueParameterCount(program.functions[@backingInt(id)]);
                     if (height < count) return error.InternalError;
-                    height = height - count + 1;
+                    height = height - count + @as(usize, if (instruction.op == .call_borrow) 0 else 1);
+                },
+                .ret_ref => {
+                    if (height != 0) return error.InternalError;
+                    continue;
                 },
                 .ret => {
                     if (height != 1) return error.InternalError;
                     continue;
                 },
-                .jump, .begin_borrow, .end_borrow => {},
+                .jump, .begin_borrow, .end_borrow, .capture_ref => {},
             }
             if (instruction.op == .jump) {
                 try enqueue(heights, pending, &len, instruction.op.jump, height);

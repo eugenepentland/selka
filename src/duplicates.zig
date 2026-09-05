@@ -3,7 +3,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 
-pub const version = "exact-v10";
+pub const version = "exact-v11";
 pub const Population = enum { production, tests, generated, reference, intentional };
 pub const Options = struct { min_nodes: usize = 8, population: Population = .production };
 pub const Group = struct { members: []const typed.FunctionId, nodes: usize };
@@ -30,6 +30,7 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
     const writer = &output.writer;
     var nodes: usize = 0;
     writer.print("{s} fn {s} {d} {d}\n", .{ version, typed.typeName(function.return_type, program.records), function.parameter_count, function.locals.len }) catch return error.OutOfMemory;
+    if (function.return_reference) |contract| writer.print("return reference from {d} mutable {} slice {}\n", .{ @backingInt(contract.parameter), contract.mutable, contract.slice }) catch return error.OutOfMemory else writer.writeAll("return value\n") catch return error.OutOfMemory;
     writer.print("conversion {}\n", .{function.conversion}) catch return error.OutOfMemory;
     if (function.owner) |owner| writer.print("owner domain {s}\n", .{typed.typeName(owner, program.records)}) catch return error.OutOfMemory else writer.writeAll("owner none\n") catch return error.OutOfMemory;
     writer.print("private {}\n", .{function.restricted}) catch return error.OutOfMemory;
@@ -130,6 +131,12 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                         }
                     },
                     .ret, .discard => |value| try work.append(allocator, .{ .expression = value }),
+                    .ret_ref => |reference| writer.print("reference {d}\n", .{@backingInt(reference)}) catch return error.OutOfMemory,
+                    .borrow_call => |borrow| {
+                        writer.print("reference {d}\n", .{@backingInt(borrow.reference)}) catch return error.OutOfMemory;
+                        try work.append(allocator, .{ .statement = borrow.body });
+                        try work.append(allocator, .{ .expression = borrow.call });
+                    },
                     .borrow => |borrow| {
                         writer.print("reference {d}\n", .{@backingInt(borrow.reference)}) catch return error.OutOfMemory;
                         try work.append(allocator, .{ .statement = borrow.body });

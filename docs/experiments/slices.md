@@ -1,8 +1,8 @@
 # B: bounded slices
 
 Status: scoped shared/exclusive slices, narrowed reborrows, indexing, and slice
-parameters are implemented. Returned-reference lifetime contracts remain pending;
-B is not complete. The whole-value reference contract is in [borrowing.md](borrowing.md).
+parameters are implemented. [Returned-reference contracts](returned-references.md)
+are also implemented and complete B. The whole-value reference contract is in [borrowing.md](borrowing.md).
 
 ## Syntax and types
 
@@ -41,8 +41,9 @@ A shared slice parameter is `&[]T`; an exclusive parameter is `&mut []T`.
 Parameters accept different lengths of the same element type. A whole-array
 reference such as `&[3]T` is distinct; form an explicit slice to pass it to a slice
 parameter. Whole-value `read_ref`/`write_ref` operations reject slices, and slice
-operations reject whole-value references. Slices remain scoped references and
-cannot be copied into value bindings, stored in aggregates, or returned.
+operations reject whole-value references. Slices remain scoped references and cannot be copied into value bindings or
+stored in aggregates. Returning a slice requires an explicit input-lifetime
+contract; see [returned references](returned-references.md).
 
 ## Bounds, evaluation, and reborrowing
 
@@ -94,7 +95,7 @@ kind, and stack effects. There is no loader for untrusted bytecode.
 
 ## Evidence and remaining work
 
-166/166 tests pass in Debug and ReleaseFast (144 core, 22 actual CLI), on Guardian's
+176/176 tests pass in Debug and ReleaseFast (153 core, 23 actual CLI), on Guardian's
 `0.17.0-dev.1683+5ceec001b` snapshot. Slice tests cover:
 
 - empty/full/narrowed ranges, mixed integer widths, negative/reversed/huge bounds;
@@ -109,5 +110,6 @@ kind, and stack effects. There is no loader for untrusted bytecode.
 
 `examples/slices.my` returns 13 and preserves the original array snapshot.
 Formatting and whitespace checks pass. Guardian gates were not exercised.
-Returned-reference contracts and their escape/cleanup acceptance tests remain
-pending; the other unfinished roadmap tracks retain their full scope.
+Returned-reference contracts and their escape/cleanup acceptance tests are now
+implemented. [B acceptance](b-audit.md) records the completed experiment; other
+unfinished roadmap tracks retain their full scope.

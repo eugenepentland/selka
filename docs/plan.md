@@ -626,8 +626,9 @@ A2 now includes [nominal scalar domains and private construction](experiments/do
 slices are in progress: [B has a tested memory/lease registry and scoped source references](experiments/borrowing.md),
 including static access checking, VM cleanup, and shared/exclusive reference
 parameters. [Bounded slices and checked narrowing](experiments/slices.md) are also
-implemented. Returned-reference lifetime contracts remain pending. Other tracks
-below remain pending.
+implemented. [Returned-reference lifetime contracts](experiments/returned-references.md)
+complete B; see [the acceptance audit](experiments/b-audit.md). Other tracks below
+remain pending.
 
 | Stage | Scope | Question to answer before proceeding |
 | --- | --- | --- |

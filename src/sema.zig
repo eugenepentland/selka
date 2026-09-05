@@ -24,11 +24,26 @@ const Checker = struct {
     catalog: records.Catalog,
     conversion_fields: ?[]bool = null,
     owner: ?typed.Type = null,
+    return_reference: ?typed.ReturnReference = null,
     references: std.ArrayList(typed.Reference) = .empty,
     active_refs: std.StringHashMapUnmanaged(typed.ReferenceId) = .empty,
 
     fn ty(self: *Checker, span: source.Span) Error!typed.Type {
         return self.catalog.resolve(self.src, span, self.sink);
+    }
+    fn returnContract(self: *Checker, function: ast.Function) Error!?typed.ReturnReference {
+        const contract = function.return_reference orelse return null;
+        for (function.parameters, 0..) |parameter, index| {
+            if (!std.mem.eql(u8, self.src.text(parameter.name), self.src.text(contract.source))) continue;
+            const mutable = parameter.reference orelse return self.sink.fail("E_RETURN_LIFETIME", contract.source, "reference result must borrow from a reference parameter");
+            if (contract.mutable and !mutable) return self.sink.fail("E_REFERENCE_READ_ONLY", contract.source, "shared parameter cannot supply an exclusive result");
+            const input_type = try self.ty(parameter.ty);
+            const expected = if (contract.slice and !parameter.slice) try self.sliceElement(input_type, contract.source) else input_type;
+            if (parameter.slice and !contract.slice) return self.sink.fail("E_REFERENCE_KIND", function.return_type, "a slice parameter cannot supply a whole-value reference result");
+            try self.require(try self.ty(function.return_type), expected, function.return_type);
+            return .{ .parameter = @fromBackingInt(index), .mutable = contract.mutable, .slice = contract.slice };
+        }
+        return self.sink.fail("E_RETURN_LIFETIME", contract.source, "result lifetime names no parameter");
     }
     fn callTarget(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span) Error!typed.FunctionId {
         const owner = if (call.owner) |name| try self.ty(name) else null;
@@ -137,6 +152,9 @@ const Checker = struct {
         if (!actual.isInteger()) return self.sink.fail("E_TYPE", span, "operation requires an integer type");
     }
     fn expression(self: *Checker, root: ast.NodeId) Error!typed.NodeId {
+        return self.expressionMode(root, false);
+    }
+    fn expressionMode(self: *Checker, root: ast.NodeId, reference_result: bool) Error!typed.NodeId {
         var work: std.ArrayList(Work) = .empty;
         defer work.deinit(self.allocator);
         try work.append(self.allocator, .{ .id = root });
@@ -211,6 +229,7 @@ const Checker = struct {
                         try work.append(self.allocator, .{ .id = task.id, .emit = true });
                         const target = try self.callTarget(call, node.span);
                         const signature = self.syntax.functions[@backingInt(target)];
+                        if (signature.return_reference != null and !(reference_result and task.id == root)) return self.sink.fail("E_REFERENCE_RESULT", node.span, "reference-returning calls require a borrow scope");
                         var i = call.arguments.len;
                         while (i > 0) {
                             i -= 1;
@@ -488,6 +507,27 @@ const Checker = struct {
                 };
                 break :match .{ .match = .{ .value = value, .arms = arms } };
             },
+            .borrow_call => |borrow| borrow: {
+                const call_node = self.syntax.nodes.items[@backingInt(borrow.call)];
+                if (call_node.data != .call) return self.sink.fail("E_REFERENCE_RESULT", call_node.span, "borrow result requires a direct function call");
+                const name = self.src.text(borrow.name);
+                if (self.active.contains(name) or self.active_refs.contains(name) or self.functions.contains(name) or self.catalog.names.contains(name)) return self.sink.fail("E_SHADOWING", borrow.name, "reference shadows an active binding or top-level name");
+                const call = try self.expressionMode(borrow.call, true);
+                const checked_call = self.nodes.items[@backingInt(call)].data.call;
+                const signature = self.syntax.functions[@backingInt(checked_call.function)];
+                const contract = (try self.returnContract(signature)) orelse return self.sink.fail("E_REFERENCE_RESULT", call_node.span, "borrow result requires a reference-returning function");
+                if (borrow.mutable and !contract.mutable) return self.sink.fail("E_REFERENCE_READ_ONLY", borrow.name, "shared function result cannot be borrowed exclusively");
+                const argument = self.syntax.nodes.items[@backingInt(call_node.data.call.arguments[@backingInt(contract.parameter)])];
+                const parent = try self.reference(argument.data.name);
+                const owner = self.references.items[@backingInt(parent)].owner;
+                const id: typed.ReferenceId = @fromBackingInt(self.references.items.len);
+                try self.references.append(self.allocator, .{ .slice = contract.slice, .name = name, .declaration = borrow.name, .owner = owner, .parent = parent, .ty = self.nodes.items[@backingInt(call)].ty, .mutable = borrow.mutable });
+                try self.active_refs.put(self.allocator, name, id);
+                defer _ = self.active_refs.remove(name);
+                const body = try self.statement(borrow.body);
+                terminates = body.terminates;
+                break :borrow .{ .borrow_call = .{ .call = call, .reference = id, .body = body.id } };
+            },
             .borrow => |borrow| borrow: {
                 const name = self.src.text(borrow.name);
                 if (self.active.contains(name) or self.active_refs.contains(name) or self.functions.contains(name) or self.catalog.names.contains(name)) return self.sink.fail("E_SHADOWING", borrow.name, "reference shadows an active binding or top-level name");
@@ -562,8 +602,21 @@ const Checker = struct {
                 break :loop .{ .loop = .{ .condition = condition, .body = body.id } };
             },
             .ret => |expr| ret: {
-                const value = try self.expression(expr);
-                try self.require(self.nodes.items[@backingInt(value)].ty, self.return_type, stmt.span);
+                var value: ?typed.NodeId = null;
+                var returned: ?typed.ReferenceId = null;
+                if (self.return_reference) |contract| {
+                    const expression_node = self.syntax.nodes.items[@backingInt(expr)];
+                    if (expression_node.data != .name) return self.sink.fail("E_REFERENCE_RESULT", expression_node.span, "reference return requires an active reference name");
+                    returned = try self.reference(expression_node.data.name);
+                    const ref = self.references.items[@backingInt(returned.?)];
+                    if (ref.owner != contract.parameter) return self.sink.failRelated("E_RETURN_LIFETIME", expression_node.span, "returned reference does not borrow from the declared input parameter", .{ .span = ref.declaration, .message = "returned borrow declared here" });
+                    try self.requireReferenceKind(returned.?, contract.slice, expression_node.span);
+                    if (contract.mutable and !ref.mutable) return self.sink.fail("E_REFERENCE_READ_ONLY", expression_node.span, "shared reference cannot supply an exclusive result");
+                    try self.require(ref.ty, self.return_type, stmt.span);
+                } else {
+                    value = try self.expression(expr);
+                    try self.require(self.nodes.items[@backingInt(value.?)].ty, self.return_type, stmt.span);
+                }
                 terminates = true;
                 var refs: std.ArrayList(typed.ReferenceId) = .empty;
                 for (self.references.items, 0..) |ref, i| {
@@ -571,7 +624,7 @@ const Checker = struct {
                     if (self.active_refs.get(ref.name) == ref_id) try refs.append(self.allocator, ref_id);
                 }
                 cleanup = try refs.toOwnedSlice(self.allocator);
-                break :ret .{ .ret = value };
+                break :ret if (returned) |id| .{ .ret_ref = id } else .{ .ret = value.? };
             },
             .binding => |b| binding: {
                 const name = self.src.text(b.name);
@@ -633,7 +686,7 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     }
     const main = checker.functions.get("main") orelse return sink.fail("E_MAIN", .{ .start = 0, .end = 0 }, "the program requires fn main() -> i64");
     const entry = program.functions[@backingInt(main)];
-    if (entry.parameters.len != 0) return sink.fail("E_MAIN", entry.name, "main must have no parameters");
+    if (entry.parameters.len != 0 or entry.return_reference != null) return sink.fail("E_MAIN", entry.name, "main must have no parameters");
     if (try checker.ty(entry.return_type) != .i64) return sink.fail("E_TYPE", entry.return_type, "main must return i64");
     const functions = try allocator.alloc(typed.Function, program.functions.len);
     for (program.functions, functions, 0..) |function, *out, i| {
@@ -643,6 +696,7 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
         checker.active.clearRetainingCapacity();
         checker.owner = if (function.owner) |owner| try checker.ty(owner) else null;
         checker.return_type = try checker.ty(function.return_type);
+        checker.return_reference = try checker.returnContract(function);
         for (function.parameters) |parameter| {
             const name = src.text(parameter.name);
             if (checker.active.get(name)) |previous| return sink.failRelated("E_DUPLICATE_PARAMETER", parameter.name, "parameter name is already declared", .{ .span = checker.locals.items[@backingInt(previous)].declaration, .message = "previous parameter declaration" });
@@ -659,7 +713,7 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
         }
         checker.conversion_fields = null;
         if (function.conversion) {
-            if (function.parameters.len != 1 or function.parameters[0].reference != null) return sink.fail("E_CONVERSION_SIGNATURE", function.name, "a complete conversion requires one source record parameter");
+            if (function.return_reference != null or function.parameters.len != 1 or function.parameters[0].reference != null) return sink.fail("E_CONVERSION_SIGNATURE", function.name, "a complete conversion requires one source record parameter");
             const source_record = try catalog.record(checker.locals.items[0].ty, function.parameters[0].ty, sink);
             _ = try catalog.record(checker.return_type, function.return_type, sink);
             try conversionBody(src, program, function, sink);
@@ -677,7 +731,7 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
             }
         }
         if (!body.terminates) return sink.fail("E_MISSING_RETURN", function.name, "function may fall through without returning its declared type; loops are conservatively treated as falling through, even while true");
-        out.* = .{ .references = try checker.references.toOwnedSlice(allocator), .owner = checker.owner, .restricted = function.restricted, .conversion = function.conversion, .id = @fromBackingInt(i), .name = try functionName(allocator, src, function.owner, function.name), .declaration = function.name, .return_type = checker.return_type, .parameter_count = function.parameters.len, .body = body.id, .locals = try checker.locals.toOwnedSlice(allocator) };
+        out.* = .{ .return_reference = checker.return_reference, .references = try checker.references.toOwnedSlice(allocator), .owner = checker.owner, .restricted = function.restricted, .conversion = function.conversion, .id = @fromBackingInt(i), .name = try functionName(allocator, src, function.owner, function.name), .declaration = function.name, .return_type = checker.return_type, .parameter_count = function.parameters.len, .body = body.id, .locals = try checker.locals.toOwnedSlice(allocator) };
     }
     for (functions) |function| {
         for (function.locals) |local| {

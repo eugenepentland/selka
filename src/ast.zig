@@ -37,6 +37,7 @@ pub const Statement = struct {
     data: union(enum) {
         block: []const StatementId,
         ret: NodeId,
+        borrow_call: struct { call: NodeId, name: Span, mutable: bool, body: StatementId },
         borrow: struct { owner: Span, name: Span, mutable: bool, body: StatementId, range: ?Range = null },
         write_slice: struct { name: Span, index: NodeId, value: NodeId },
         write_ref: struct { name: Span, value: NodeId },
@@ -56,7 +57,8 @@ pub const Record = struct { name: Span, fields: []const Parameter };
 pub const Range = struct { start: NodeId, end: NodeId };
 pub const Parameter = struct { name: Span, ty: Span, reference: ?bool = null, slice: bool = false };
 pub const Domain = struct { name: Span, backing: Span };
-pub const Function = struct { owner: ?Span = null, restricted: bool = false, conversion: bool = false, name: Span, parameters: []const Parameter, return_type: Span, body: StatementId };
+pub const ReturnReference = struct { source: Span, mutable: bool, slice: bool };
+pub const Function = struct { return_reference: ?ReturnReference = null, owner: ?Span = null, restricted: bool = false, conversion: bool = false, name: Span, parameters: []const Parameter, return_type: Span, body: StatementId };
 pub const ArrayIndex = union(enum) { length: Span, enum_type: Span };
 pub const ArrayType = struct { span: Span, index: ArrayIndex, element: Span };
 pub const Program = struct {

@@ -309,3 +309,17 @@ test "CLI runs bounded slice helpers and locates bounds and alias failures" {
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_BORROW_CONFLICT]");
     try invoke("run", "fn main() -> i64 { let a = new [1]i64 [1]; borrow a[0..1] as s { return read_slice(s, 1); } }", 1, "", "error[R_SLICE_BOUNDS]");
 }
+
+test "CLI runs returned views and rejects escaping local references" {
+    const source = @embedFile("fixtures/returned-references.my");
+    try invoke("run", source, 0, "20\n", "");
+    try invoke("check", source, 0, "", "");
+    const dumped = try runFixture("dump-bytecode", source, &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    for ([_][]const u8{ "CALL_BORROW", "CAPTURE_REF", "RETURN_REF", "from values" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
+    const escape = "fn bad(input: &i64) -> &i64 from input { let local = 7; borrow local as r { return r; } } fn main() -> i64 { return 0; }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, escape, 1, "", "error[E_RETURN_LIFETIME]");
+    try invoke("run", "fn one(s: &[]i64) -> &[]i64 from s { borrow s[0..1] as r { return r; } } fn main() -> i64 { let a = new [2]i64 [1, 2]; borrow a[0..2] as s { borrow one(s) as r { return read_slice(r, 1); } } }", 1, "", "error[R_SLICE_BOUNDS]");
+}

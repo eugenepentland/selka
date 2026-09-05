@@ -2,7 +2,8 @@
 
 Status: the memory registry, scoped source references, static access checking,
 and VM borrow instructions are implemented. Shared/exclusive reference parameters and [bounded slices](slices.md) are also
-implemented. Returned-reference lifetime contracts remain pending. B is not complete. A1/A2 value semantics remain intact.
+implemented. [Returned-reference contracts](returned-references.md) complete the
+restricted-lifetime B experiment; see [B acceptance](b-audit.md). A1/A2 value semantics remain intact.
 
 ## Implemented memory model
 
@@ -55,8 +56,8 @@ borrows. Final store cleanup releases all remaining buffers and lease metadata
 even when execution aborts with outstanding leases.
 
 Copying a backend token does not acquire an independent loan. Scoped source
-references cannot be copied, stored, or returned; calls may explicitly reborrow
-them into reference parameters. The checker resolves
+references cannot be copied or stored in values; calls may explicitly reborrow
+them into reference parameters, and result contracts name their originating input. The checker resolves
 reference names separately from ordinary values and enforces lexical scope. Allocation-owner uniqueness and general
 resource transfer remain later work; runtime stale-handle checks alone are not
 an ownership type system.
@@ -133,7 +134,7 @@ boundary in a nested aggregate/call example releases all storage. Mutated intern
 bytecode checks missing/repeated borrow operations and conflicting owner reads;
 these failures produce guest traps and release storage.
 
-The full suite passes 166/166 tests in Debug and ReleaseFast (144 core, 22 CLI)
+The full suite passes 176/176 tests in Debug and ReleaseFast (153 core, 23 CLI)
 on Guardian's `0.17.0-dev.1683+5ceec001b` snapshot. The editable
 `examples/references.my` program returns 23. Guardian gates were not exercised.
 
@@ -194,10 +195,9 @@ makes 10,000 mutating helper calls within 16 KiB live runtime allocation; instru
 and frame budget traps release every allocation. The editable
 `examples/reference-parameters.my` example returns 19.
 
-## Remaining B acceptance
+## B acceptance
 
-[Bounded slices](slices.md), indexing, narrowed reborrows, and slice parameters
-are implemented and preserve immutable aggregate snapshots. Returned references
-still require an explicit restricted lifetime contract; local references must
-never escape. Test that contract through actual CLI programs, allocation failures,
-normal returns, and traps before marking B complete.
+[Bounded slices](slices.md) and [returned-reference contracts](returned-references.md)
+complete the restricted-lifetime B experiment. [The acceptance audit](b-audit.md)
+maps its requirements to source, VM, and actual CLI evidence. C/D resource ownership,
+recoverable failures, capabilities/effects, and arenas/pools remain pending.

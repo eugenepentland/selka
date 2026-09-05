@@ -5,6 +5,7 @@ const lex = @import("lexer.zig");
 const Span = @import("source.zig").Span;
 const diagnostic = @import("diagnostic.zig");
 pub const Parser = struct {
+    src: @import("source.zig").Source,
     allocator: std.mem.Allocator,
     tokens: []const lex.Token,
     sink: *diagnostic.Sink,
@@ -118,9 +119,18 @@ pub const Parser = struct {
         };
         _ = try self.expect(.rparen);
         _ = try self.expect(.arrow);
+        const reference: ?bool = if (self.take(.ampersand)) self.take(.kw_mut) else null;
+        const slice = reference != null and self.current().tag == .lbracket and self.tokens[self.pos + 1].tag == .rbracket;
+        if (slice) self.pos += 2;
         const return_type = try self.typeName();
+        var return_reference: ?ast.ReturnReference = null;
+        if (reference) |mutable| {
+            const from = try self.expect(.ident);
+            if (!std.mem.eql(u8, self.src.text(from.span), "from")) return self.sink.fail("E_RETURN_LIFETIME", from.span, "reference result requires `from` followed by a reference parameter name");
+            return_reference = .{ .source = (try self.expect(.ident)).span, .mutable = mutable, .slice = slice };
+        }
         const body = try self.block();
-        return .{ .owner = owner, .restricted = restricted, .conversion = conversion, .name = name.span, .parameters = try parameters.toOwnedSlice(self.allocator), .return_type = return_type, .body = body };
+        return .{ .return_reference = return_reference, .owner = owner, .restricted = restricted, .conversion = conversion, .name = name.span, .parameters = try parameters.toOwnedSlice(self.allocator), .return_type = return_type, .body = body };
     }
     fn addStatement(self: *Parser, stmt: ast.Statement) diagnostic.Error!ast.StatementId {
         const id: ast.StatementId = @fromBackingInt(self.statements.items.len);
@@ -146,7 +156,16 @@ pub const Parser = struct {
         if (first.tag == .lbrace) return self.block();
         if (self.take(.kw_borrow)) {
             const mutable = self.take(.kw_mut);
+            const owner_position = self.pos;
             const owner = try self.expect(.ident);
+            if (self.current().tag == .lparen or self.current().tag == .dot) {
+                self.pos = owner_position;
+                const call = try self.expression(0);
+                _ = try self.expect(.kw_as);
+                const name = try self.expect(.ident);
+                const body = try self.block();
+                return self.addStatement(.{ .span = .join(first.span, self.statements.items[@backingInt(body)].span), .data = .{ .borrow_call = .{ .call = call, .name = name.span, .mutable = mutable, .body = body } } });
+            }
             var range: ?ast.Range = null;
             if (self.take(.lbracket)) {
                 const start = try self.expression(0);

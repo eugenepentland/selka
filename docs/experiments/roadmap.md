@@ -9,8 +9,8 @@ not a claim that the full future language has been delivered.
 | T, exact duplicate discovery | Implemented as separate `discover-duplicates` command; review and scaling corpus added | Collect ordinary-program findings before adding approximate matching; never merge automatically. |
 | A1, aggregates and complete conversions | Implemented: records, construction, fields, preserving updates, complete conversions, integer widths/casts, fixed arrays, checked indexing | A1 acceptance passes; carry the immutable value semantics into A2. |
 | A2, nominal domains and exhaustive mappings | Implemented: domains/private construction, closed enums/tagged unions, exhaustive matching, and complete enum-indexed tables | A2 unit, privacy, added-variant match/table, and explicit unknown-code handling experiments pass. |
-| B, borrowing | In progress: memory/lease registry, scoped source references, static access checks, and VM cleanup, reference/slice parameters, and bounded slices implemented; returned-reference contracts pending | Reject shared/exclusive conflicts and expired references with allocation/bounds/lifetime identity. |
-| C, ownership/capabilities/effects | Pending B and minimal recoverable errors | Acquire A, fail acquiring B, release A once; reject transitive forbidden effects including cleanup. |
+| B, borrowing | Implemented: memory/lease registry, scoped references, reference/slice parameters, bounded views, and explicit returned-reference provenance | B acceptance passes; carry borrowing and snapshot rules into resource ownership. |
+| C, ownership/capabilities/effects | Pending resource ownership and minimal recoverable errors | Acquire A, fail acquiring B, release A once; reject transitive forbidden effects including cleanup. |
 | D, errors and abstraction | Minimal recoverable errors needed with C; broader work pending | Require handling/propagation/explicit acknowledgement without erasing evaluation or ownership obligations. |
 | M, modules/interfaces | Pending a multi-file domain program | Resolve imports/exports and private boundaries; distinguish optional direction policy from type validity. |
 | E, native execution | Pending one concrete backend choice | Run the same scalar semantic/trap fixtures through the VM and native route. |
@@ -50,7 +50,7 @@ foundation, record frontend, integer widths, and completed array work.
 [nominal domains and private construction](domains.md). [Closed variants and exhaustive
 matching](variants.md) are also implemented. [Complete enum-indexed tables](tables.md) finish A2.
 Borrowing and slices now enforce allocation identity, bounds, and lifetime
-checks. Returned-reference contracts remain the next B acceptance work.
+checks. Returned-reference contracts now complete [B acceptance](b-audit.md).
 
 
 [B backend memory and lifetime rules](borrowing.md) now establish allocation,
@@ -58,4 +58,4 @@ lease, bounds, and store identity without guest host pointers. Scoped shared/exc
 references now use this registry through checked source and VM instructions.
 Reference parameters now support checked call reborrows. [Bounded slices](slices.md) now support
 checked narrowing, element access, and slice parameters. Returned-reference
-lifetime contracts are next.
+lifetime contracts are implemented; [the B audit](b-audit.md) records acceptance.

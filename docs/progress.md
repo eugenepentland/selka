@@ -1,7 +1,7 @@
 # Implementation progress
 
 The complete scalar MVP in plan sections 4–13 is implemented and audited.
-Post-MVP A1, A2, and exact duplicate discovery are also implemented. Remaining
+Post-MVP A1, A2, B, and exact duplicate discovery are also implemented. Remaining
 tracks in sections 15 and 18 are still pending. Earlier entries below describe
 their historical milestone checkpoints.
 
@@ -424,4 +424,31 @@ Formatting and whitespace checks pass on the pinned Guardian Zig snapshot.
 
 B remains in progress: returned-reference lifetime contracts and their acceptance
 tests remain pending. Other unfinished roadmap tracks retain their full scope.
+Guardian gates were not exercised; hosted CI has not run.
+
+
+## 2026-09-05: B complete — returned-reference provenance and acceptance audit
+
+Implemented reference/slice results with explicit `from parameter` contracts and
+scoped receiving calls. Results must derive from that input with matching type,
+shape, and permission. Returning borrowed local storage, a copied input, another
+parameter, or an inactive reference is rejected. Branches, narrowed slices,
+whole-array-to-slice results, mixed arguments, and recursive forwarding work.
+
+The VM captures a valid result view, ends callee leases, releases locals, and
+creates a result lease under the original caller input. Returned views preserve
+bounds and aggregate snapshots and keep exclusive inputs suspended until the
+receiving scope ends. Exact duplicate discovery is now `exact-v11`.
+
+176/176 tests pass in Debug and ReleaseFast (153 core, 23 actual CLI), including
+allocation failures, every instruction-budget boundary around capture/cleanup/
+return, invalid provenance metadata, and 10,000 returned-loan cycles within 16 KiB
+live runtime allocation. The returned-reference example prints 20. Formatting and
+whitespace checks pass on the pinned Guardian Zig snapshot.
+
+[B acceptance](experiments/b-audit.md) maps scoped references, common helpers,
+bounded slices, lifetime identity, returned provenance, and cleanup to code/tests.
+B is complete within its declared restricted-lifetime experiment. C/D ownership,
+resources, recoverable errors, capabilities/effects, arenas/pools, and all other
+unfinished roadmap tracks remain pending. The full roadmap goal remains active.
 Guardian gates were not exercised; hosted CI has not run.

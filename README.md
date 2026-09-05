@@ -72,7 +72,7 @@ zig build run -- discover-duplicates examples/duplicates.my --timings
 It reports exact checked-function candidates after normalizing bound names,
 with source locations and advisory explanations. Ordinary compilation does not
 run it. See the [comparison contract and review](docs/experiments/duplicate-discovery.md).
-All 166 tests pass in Debug and ReleaseFast.
+All 176 tests pass in Debug and ReleaseFast.
 
 [Post-MVP tracking](docs/experiments/roadmap.md) records the remaining experiments.
 Records, complete construction, field access, preserving updates, and declarative
@@ -87,12 +87,14 @@ Run `examples/arrays.my` (44). A2 now includes nominal scalar domains and privat
 ([variant semantics](docs/experiments/variants.md)); `examples/variants.my` returns
 24. Complete enum-indexed tables finish A2
 ([table semantics](docs/experiments/tables.md)); `examples/tables.my` returns 1407.
-Borrowing and slices are in progress: a [memory/lease backend](docs/experiments/borrowing.md)
+Borrowing and slices are implemented: a [memory/lease backend](docs/experiments/borrowing.md)
 and scoped source references are implemented, including static access checking and VM
 cleanup. `examples/references.my` returns 23. Shared/exclusive reference parameters
 also work; `examples/reference-parameters.my` returns 19. [Bounded slices](docs/experiments/slices.md),
 slice parameters, and checked narrowing are implemented; `examples/slices.my` returns 13.
-Returned-reference lifetime contracts remain pending. Approximate matching, ownership, effects, modules, native execution, and the other
+[Returned-reference contracts](docs/experiments/returned-references.md) complete B
+([acceptance audit](docs/experiments/b-audit.md)); `examples/returned-references.my` returns 20.
+Approximate matching, ownership, effects, modules, native execution, and the other
 pending tracks are not yet complete.
 
 See [implemented semantics](docs/semantics.md) and [verification/progress](docs/progress.md).

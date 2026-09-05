@@ -1,0 +1,23 @@
+fn middle(values: &mut []i64) -> &mut []i64 from values {
+    borrow mut values[1..len_slice(values) - 1u64] as selected {
+        return selected;
+    }
+}
+
+fn forward(values: &mut []i64) -> &mut []i64 from values {
+    borrow mut middle(values) as selected {
+        return selected;
+    }
+}
+
+fn main() -> i64 {
+    let mut values = new [4]i64 [2, 3, 5, 7];
+    let original = values;
+    borrow mut values[0..4] as all {
+        borrow mut forward(all) as selected {
+            write_slice(selected, 0, 9);
+        }
+        write_slice(all, 3, 8);
+    }
+    return original[1] + values[1] + values[3];
+}
