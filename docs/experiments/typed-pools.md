@@ -1,8 +1,8 @@
 # C/D: typed-handle pool foundation
 
 Status: backend implemented in `src/typed_pool.zig`; [source declarations and
-operations](source-pools.md) now integrate it with the compiler and VM. Arena-backed
-pools remain pending. This experiment does not complete C or D.
+operations](source-pools.md) now integrate it with the compiler and VM. [Checked arena backing](region-backing.md) also integrates with the runtime.
+Source arena scopes remain pending. This experiment does not complete C or D.
 
 ## Identity and storage
 
@@ -62,3 +62,7 @@ Cumulative insertion/removal counters saturate.
 recoverable pool errors, source ownership/effects, and graph programs through the CLI.
 Nested source arena experiments must still establish escape rules and backing
 allocation behavior. Host generic pool tests alone do not establish those language guarantees.
+
+`value_allocator` optionally selects the allocator passed to release hooks, separate
+from registry storage. Set it before insertion; release returned snapshots with that
+same value allocator. This supports parent-owned values in arena-backed registries.

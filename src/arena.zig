@@ -1,4 +1,4 @@
-//! Arena backing for checked guest buffers. The runtime allocator owns retained
+//! Arena backing for checked guest buffers and pools. The runtime allocator owns retained
 //! payloads and registries so independent snapshots can survive a region reset.
 const std = @import("std");
 const memory = @import("memory.zig");
@@ -20,7 +20,8 @@ pub const Arena = struct {
         try self.store.reset();
         return self.backing.reset(mode);
     }
-    /// Terminal cleanup invalidates outstanding borrows, then frees backing.
+    /// External pool owners/backing leases must release first. Terminal cleanup
+    /// invalidates outstanding buffer borrows, then frees backing.
     pub fn deinit(self: *Arena) void {
         if (self.store.identity == 0) return;
         self.store.deinit();

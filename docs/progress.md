@@ -1109,3 +1109,38 @@ Nested source arena scopes/escape checking and arena-backed pools, generics, mod
 compile-time/schema/incremental work, broader native support, and every other unfinished
 roadmap requirement remain in scope. C/D and the full roadmap are not complete.
 Guardian was not exercised; hosted CI has not run. The full roadmap goal remains active.
+
+
+## 2026-09-05: C checked shared region backing and arena-backed source pools
+
+Implemented a generational region manager with parent/child lifetime guards and
+retained backing leases shared by buffers and pools. Allocator capabilities can carry
+region identity; stale/foreign capabilities reject. Buffer cells retain their original
+backing allocator across growth and cleanup. Pool registry allocation is now separate
+from the allocator used to release retained node values. Source pool acquisition in
+VM arena mode now uses arena registry backing while snapshots remain parent-owned.
+Execution-arena reset preflights live root pool backing leases before changing buffers.
+
+434 Zig/core-and-CLI tests pass in Debug and ReleaseFast (390 core, 44 CLI), plus
+eight verification-driver tests and the unchanged 23-fixture/182-comparison native
+suite per host mode. Region acceptance covers mixed buffer/pool snapshots surviving
+region end, every allocation failure, nested/stale/foreign capability checks, slot
+limits/reuse, live-borrow and live-owner closure rejection, transactional root reset,
+parent-allocator node release during clear, and zero-capacity/failed-acquisition lease
+accounting. 10,000 mixed region/pool/buffer lifecycles stay within 16 KiB live runtime
+allocation and leave zero bytes. Formatting and whitespace checks pass. Exact-v26,
+near-v1, and quality-v1 remain unchanged.
+
+An existing reserve-failure test replaced Store.allocator after creating its buffers.
+That no longer targets buffer backing once cells preserve their allocator. The test
+now installs the failure allocator at Store creation and enables failure after setup,
+retaining its failed-growth/failed-transfer/noalloc assertions without changing allocator
+identity midway through live allocations.
+
+[Checked region backing](experiments/region-backing.md) documents the embedding API,
+quota/lease rules, independent arena chunks, reset preflight, and teardown ordering.
+This completes a runtime prerequisite, not the source arena experiment: lexical arena
+syntax, allocator/owner provenance, and static escape checking remain pending. Generics,
+modules, compile-time/schema/incremental work, broader native support, and all other
+unfinished roadmap requirements remain in scope. Guardian was not exercised; hosted
+CI has not run. The full roadmap goal remains active.

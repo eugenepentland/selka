@@ -120,7 +120,8 @@ test "terminal scope cleanup invalidates nested loans without disturbing other o
 }
 
 test "failed reserve and destination bookkeeping preserve ownership; reserved operations do not allocate" {
-    var store = try memory.Store.init(t.allocator);
+    var failing = t.FailingAllocator.init(t.allocator, .{});
+    var store = try memory.Store.init(failing.allocator());
     defer store.deinit();
     var source = Scope.init(&store);
     defer source.deinit();
@@ -128,9 +129,8 @@ test "failed reserve and destination bookkeeping preserve ownership; reserved op
     defer destination.deinit();
     const owner = try source.acquire(.i64, &.{.{ .i64 = 1 }}, 3);
     const cleanup = try source.acquire(.bool, &.{.{ .bool = true }}, 1);
-    var failing = t.FailingAllocator.init(t.allocator, .{ .fail_index = 0 });
-    store.allocator = failing.allocator();
-    defer store.allocator = t.allocator;
+    const allocations_before = failing.alloc_index;
+    failing.fail_index = allocations_before;
     try t.expectError(error.OutOfMemory, store.reserve(owner, 4));
     try t.expectError(error.OutOfMemory, source.moveTo(owner, &destination));
     try t.expectEqual(@as(usize, 3), (try store.info(owner)).capacity);
@@ -144,7 +144,7 @@ test "failed reserve and destination bookkeeping preserve ownership; reserved op
     try source.rollback();
     try t.expectError(error.InvalidAllocation, store.info(cleanup));
     try t.expectEqual(@as(u64, 2), store.statistics.released);
-    try t.expectEqual(@as(usize, 0), failing.alloc_index);
+    try t.expectEqual(allocations_before, failing.alloc_index);
 }
 
 fn acquisitionScenario(allocator: std.mem.Allocator) !void {

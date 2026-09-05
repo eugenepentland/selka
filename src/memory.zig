@@ -2,6 +2,7 @@
 //! No host address is exposed in a guest handle. Buffer backing may use a region
 //! allocator; retained payloads and registries always use the runtime allocator.
 const std = @import("std");
+const regions = @import("regions.zig");
 const values = @import("value.zig");
 const Value = values.Value;
 const Type = values.Type;
@@ -21,8 +22,10 @@ pub const Error = std.mem.Allocator.Error || error{
     CapacityLimit,
     NoCapacity,
     InvalidCapability,
+    RegionInUse,
 };
 pub const Limits = struct {
+    max_regions: usize = 256,
     max_buffer_capacity: usize = std.math.maxInt(usize) / @sizeOf(Value),
     max_total_capacity: usize = std.math.maxInt(usize) / @sizeOf(Value),
     max_allocations: usize = std.math.maxInt(usize),
@@ -32,7 +35,8 @@ pub const BufferInfo = struct { element_type: Type, length: usize, capacity: usi
 pub const Growth = enum { unchanged, allocated };
 pub const Kind = enum { shared, exclusive };
 pub const Token = struct { index: usize, generation: u64 };
-pub const AllocatorCapability = struct { memory: u64 };
+pub const AllocatorCapability = struct { memory: u64, region: ?regions.Id = null };
+pub const BackingLease = struct { allocator: std.mem.Allocator, region: ?regions.Id };
 pub const Allocation = struct { memory: u64, token: Token };
 pub const Borrow = struct { memory: u64, token: Token };
 pub const View = struct { allocation: Allocation, start: usize, length: usize, kind: Kind, element_type: Type };
@@ -94,12 +98,13 @@ fn Pool(comptime T: type) type {
         }
     };
 }
-const Cell = struct { element_type: Type, values: []Value, length: usize, shared: usize = 0, exclusive: bool = false };
+const Cell = struct { backing: BackingLease, element_type: Type, values: []Value, length: usize, shared: usize = 0, exclusive: bool = false };
 const Lease = struct { allocation: Token, start: usize, length: usize, kind: Kind, parent: ?Token = null, children: usize = 0 };
 
 /// Owns memory/lease registries. Do not copy an initialized Store. Values passed
 /// to it use the same runtime allocator; successful reads return retained values.
-/// A Store is used by one VM execution thread, and handles never outlive its ID.
+/// A Store is used by one VM execution thread. External pool owners and backing
+/// leases must release before deinit; their storage allocator points into the Store.
 pub const Store = struct {
     allocator: std.mem.Allocator,
     /// Set only before first allocation; must outlive all buffer storage.
@@ -107,11 +112,13 @@ pub const Store = struct {
     identity: u64,
     limits: Limits = .{},
     statistics: Statistics = .{},
+    regions: regions.Manager,
+    root_backing_users: usize = 0,
     cells: Pool(Cell) = .{},
     leases: Pool(Lease) = .{},
 
     pub fn init(allocator: std.mem.Allocator) Error!Store {
-        return .{ .allocator = allocator, .identity = try nextIdentity(&identities) };
+        return .{ .allocator = allocator, .identity = try nextIdentity(&identities), .regions = try regions.Manager.init(allocator, 256) };
     }
     /// Called only by the embedding runtime; guest code cannot mint this value.
     pub fn allocatorCapability(self: *Store) Error!AllocatorCapability {
@@ -120,10 +127,12 @@ pub const Store = struct {
     }
     pub fn checkAllocator(self: *Store, capability: AllocatorCapability) Error!void {
         if (self.identity == 0 or capability.memory != self.identity) return error.InvalidCapability;
+        if (capability.region) |region| try self.regions.check(region);
     }
     pub fn initWithLimits(allocator: std.mem.Allocator, limits: Limits) Error!Store {
         var store = try init(allocator);
         store.limits = limits;
+        store.regions.registry.max_slots = limits.max_regions;
         return store;
     }
     /// Final execution cleanup releases cells even when a trap leaves active
@@ -135,17 +144,52 @@ pub const Store = struct {
         self.leases.entries.deinit(self.allocator);
         self.cells = .{};
         self.leases = .{};
+        std.debug.assert(self.root_backing_users == 0);
+        self.regions.deinit();
         self.identity = 0;
     }
     fn backing(self: *Store) std.mem.Allocator {
         return self.backing_allocator orelse self.allocator;
+    }
+    pub fn beginRegion(self: *Store, parent: AllocatorCapability) Error!AllocatorCapability {
+        try self.checkAllocator(parent);
+        return .{ .memory = self.identity, .region = try self.regions.begin(parent.region) };
+    }
+    pub fn endRegion(self: *Store, capability: AllocatorCapability) Error!void {
+        try self.checkAllocator(capability);
+        try self.regions.end(capability.region orelse return error.InvalidCapability);
+    }
+    pub fn acquireBacking(self: *Store, capability: AllocatorCapability) Error!BackingLease {
+        try self.checkAllocator(capability);
+        if (capability.region) |region| return .{ .allocator = try self.regions.retain(region), .region = region };
+        if (self.root_backing_users == std.math.maxInt(usize)) return error.CapacityLimit;
+        self.root_backing_users += 1;
+        return .{ .allocator = self.backing(), .region = null };
+    }
+    pub fn releaseBacking(self: *Store, lease_backing: BackingLease) void {
+        if (lease_backing.region) |region| self.regions.release(region) else {
+            std.debug.assert(self.root_backing_users != 0);
+            self.root_backing_users -= 1;
+        }
+    }
+    pub fn checkAllocationAllocator(self: *Store, allocation: Allocation, capability: AllocatorCapability) Error!void {
+        try self.checkAllocator(capability);
+        const owned = try self.cell(allocation);
+        if (!std.meta.eql(owned.backing.region, capability.region)) return error.InvalidCapability;
     }
     /// Region boundary: reject every live borrow before changing any allocation.
     /// Retains registry capacity and allocator authority; old cell identities stay
     /// invalid across reuse. Payload snapshots use the runtime allocator and survive.
     pub fn reset(self: *Store) Error!void {
         try self.checkMemory(self.identity);
-        for (self.cells.entries.items) |entry| if (entry.value) |owned| try unborrowed(owned);
+        var root_cells: usize = 0;
+        for (self.cells.entries.items) |entry| if (entry.value) |owned| {
+            try unborrowed(owned);
+            if (owned.backing.region == null) root_cells += 1;
+        };
+        // A root pool or another externally retained backing lease must release
+        // before resetting the execution arena. Do not partially clear buffers.
+        if (self.root_backing_users != root_cells) return error.RegionInUse;
         var index = self.cells.entries.items.len;
         while (index != 0) {
             index -= 1;
@@ -173,7 +217,8 @@ pub const Store = struct {
             i -= 1;
             owned.values[i].release(self.allocator);
         }
-        self.backing().free(owned.values);
+        owned.backing.allocator.free(owned.values);
+        self.releaseBacking(owned.backing);
     }
     fn releaseOwned(self: *Store, owned: Cell) void {
         self.statistics.live_allocations -= 1;
@@ -192,14 +237,21 @@ pub const Store = struct {
         return self.createWithCapacity(element_type, inputs, inputs.len);
     }
     pub fn createWithCapacity(self: *Store, element_type: Type, inputs: []const Value, capacity: usize) Error!Allocation {
-        try self.checkMemory(self.identity);
+        return self.createAuthorized(try self.allocatorCapability(), element_type, inputs, capacity);
+    }
+    pub fn createAuthorized(self: *Store, capability: AllocatorCapability, element_type: Type, inputs: []const Value, capacity: usize) Error!Allocation {
+        try self.checkAllocator(capability);
         if (inputs.len > capacity) return error.Bounds;
         for (inputs) |input| if (input.typeOf() != element_type) return error.TypeMismatch;
         try self.capacityAllowed(capacity, capacity);
         if (self.statistics.live_allocations >= self.limits.max_allocations) return error.CapacityLimit;
-        const buffer = try self.backing().alloc(Value, capacity);
+        const lease_backing = try self.acquireBacking(capability);
+        const buffer = lease_backing.allocator.alloc(Value, capacity) catch |err| {
+            self.releaseBacking(lease_backing);
+            return err;
+        };
         for (inputs, buffer[0..inputs.len]) |input, *output| output.* = input.retain();
-        const owned: Cell = .{ .element_type = element_type, .values = buffer, .length = inputs.len };
+        const owned: Cell = .{ .backing = lease_backing, .element_type = element_type, .values = buffer, .length = inputs.len };
         errdefer self.freeCell(owned);
         const token = try self.cells.insert(self.allocator, owned);
         self.statistics.live_allocations += 1;
@@ -226,11 +278,11 @@ pub const Store = struct {
         if (capacity <= owned.values.len) return .unchanged;
         const increase = capacity - owned.values.len;
         try self.capacityAllowed(capacity, increase);
-        const grown = try self.backing().alloc(Value, capacity);
+        const grown = try owned.backing.allocator.alloc(Value, capacity);
         @memcpy(grown[0..owned.length], owned.values[0..owned.length]);
         // Transfer existing Value ownership; releasing the old elements here
         // would invalidate the moved snapshots in the new backing buffer.
-        self.backing().free(owned.values);
+        owned.backing.allocator.free(owned.values);
         owned.values = grown;
         self.statistics.total_capacity += increase;
         return .allocated;

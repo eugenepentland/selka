@@ -34,6 +34,8 @@ pub fn Pool(comptime Tag: type, comptime T: type) type {
         };
         const Entry = struct { generation: u64 = 1, value: ?T = null, next: ?usize = null };
         allocator: std.mem.Allocator,
+        /// Retained values can outlive arena-backed registry storage. Set before use.
+        value_allocator: ?std.mem.Allocator = null,
         identity: u64,
         max_slots: usize,
         hooks: Hooks,
@@ -88,12 +90,12 @@ pub fn Pool(comptime Tag: type, comptime T: type) type {
         pub fn replace(self: *Self, id: Id, value: T) Error!void {
             const found = try self.entry(id);
             const retained = self.hooks.retain(value);
-            self.hooks.release(found.value.?, self.allocator);
+            self.hooks.release(found.value.?, self.value_allocator orelse self.allocator);
             found.value = retained;
         }
         fn removeIndex(self: *Self, index: usize) void {
             const found = &self.entries.items[index];
-            self.hooks.release(found.value.?, self.allocator);
+            self.hooks.release(found.value.?, self.value_allocator orelse self.allocator);
             found.value = null;
             if (found.generation == std.math.maxInt(u64)) {
                 self.statistics.retired += 1;

@@ -492,7 +492,7 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 const number: i128 = if (count != 0 and operation.kind != .append) try arguments[if (operation.kind == .reserve) 1 else 0].asInteger() else 0;
                 if (operation.kind == .reserve) {
                     if (arguments[0] != .allocator) return error.InternalError;
-                    storage.checkAllocator(arguments[0].allocator) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                    storage.checkAllocationAllocator(owner, arguments[0].allocator) catch |err| return memoryFailure(err, instruction, frames.items, program);
                 }
                 var status: i64 = 0;
                 const output: typed.Value = switch (operation.kind) {
@@ -621,7 +621,7 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 storage.checkAllocator(authority.allocator) catch |err| return memoryFailure(err, instruction, frames.items, program);
                 const shape = typed.resultShape(ty, program.records).?;
                 var status: i64 = 1;
-                const owner: ?typed.Value = if (capacity < 0 or capacity > std.math.maxInt(usize)) null else pools.acquire(shape.ok_type, @intCast(capacity)) catch |err| switch (err) {
+                const owner: ?typed.Value = if (capacity < 0 or capacity > std.math.maxInt(usize)) null else pools.acquireAuthorized(shape.ok_type, @intCast(capacity), storage, authority.allocator) catch |err| switch (err) {
                     error.CapacityLimit => null,
                     error.IdentityExhausted => exhausted: {
                         status = 2;
@@ -645,7 +645,7 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 storage.checkAllocator(authority.allocator) catch |err| return memoryFailure(err, instruction, frames.items, program);
                 const shape = typed.resultShape(ty, program.records).?;
                 const element = program.records[shape.ok_type.recordIndex()].buffer.?;
-                const owner: ?memory.Allocation = if (capacity < 0 or capacity > std.math.maxInt(usize)) null else storage.createWithCapacity(element, &.{}, @intCast(capacity)) catch |err| switch (err) {
+                const owner: ?memory.Allocation = if (capacity < 0 or capacity > std.math.maxInt(usize)) null else storage.createAuthorized(authority.allocator, element, &.{}, @intCast(capacity)) catch |err| switch (err) {
                     error.CapacityLimit => null,
                     else => return memoryFailure(err, instruction, frames.items, program),
                 };
@@ -866,6 +866,7 @@ fn arrayIndex(value: typed.Value, schema: typed.Array) error{InternalError}!i128
 
 fn memoryFailure(err: memory.Error, instruction: bc.Instruction, frames: []const Frame, program: bc.Program) error{ OutOfMemory, IdentityExhausted }!Result {
     return switch (err) {
+        error.RegionInUse => trap("R_REGION_IN_USE", "arena backing still has live owners", instruction.span, frames, program),
         error.InvalidCapability => trap("R_CAPABILITY", "allocator capability is not valid for this execution", instruction.span, frames, program),
         error.OutOfMemory => error.OutOfMemory,
         error.IdentityExhausted => error.IdentityExhausted,

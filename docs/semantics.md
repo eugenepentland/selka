@@ -287,4 +287,6 @@ Allocator-authorized acquisition reserves capacity; typed result operations inse
 read snapshots, replace, and remove nodes. Clear invalidates IDs while retaining
 capacity. IDs compare by pool/slot/generation; stale and foreign access returns
 typed errors. [Source-pool semantics](experiments/source-pools.md) specifies quotas,
-effects, cleanup, errors, and the current parent-allocator backing restriction.
+effects, cleanup, and errors. [Checked region backing](experiments/region-backing.md)
+now allocates pool registries in execution arenas while preserving parent-owned
+snapshots; nested source scopes and static escape checking remain pending.

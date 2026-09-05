@@ -153,7 +153,8 @@ exclusive destinations, lifetime checks, and snapshot preservation.
 [Typed-handle pool backend](docs/experiments/typed-pools.md) now supports nominal
 ID categories, stale-handle rejection, cyclic graphs, slot reuse, retained snapshots,
 and bulk clearing. [Source pools](docs/experiments/source-pools.md) now expose these
-operations with allocator authority and quotas; arena-backed pools remain pending.
+operations with allocator authority and quotas; [checked region backing](docs/experiments/region-backing.md)
+also supports arena-backed pool registries.
 
 [Arena backing and checked region reset](docs/experiments/arenas.md) now separate
 buffer backing from retained snapshots, reject live borrows before reset, and reuse
@@ -163,6 +164,7 @@ backing/registries across cycles. Guest arena scopes remain pending.
 existing source programs with `run --memory=arena` or embedding option
 `memory_backing = .arena`. General allocation remains the default. Nested source
 arena scopes remain pending; arena backing can accumulate until execution ends.
+Pool registries now follow this selection; retained node snapshots use the parent allocator.
 
 [Approximate discovery](docs/experiments/approximate-discovery.md) is available with
 `discover-duplicates --approximate`. It reports canonical edits between near matches

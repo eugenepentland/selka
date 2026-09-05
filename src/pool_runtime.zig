@@ -1,8 +1,9 @@
-//! Source pool owners share per-execution quotas. Registry storage uses the VM
-//! parent allocator, independently of buffer arena selection. Limits count logical
-//! reserved slots, not physical allocator bytes or current live node counts.
+//! Source pool owners share per-execution quotas. Registry storage may use checked
+//! region backing; owner wrappers and retained values use the execution allocator.
+//! Limits count reserved slots, not physical bytes or current live node counts.
 const std = @import("std");
 const values = @import("value.zig");
+const memory = @import("memory.zig");
 const backend = @import("typed_pool.zig");
 const SourceTag = struct {};
 pub const Registry = backend.Pool(SourceTag, values.Value);
@@ -15,10 +16,19 @@ pub const Runtime = struct {
     statistics: Statistics = .{},
 
     pub fn acquire(self: *Runtime, ty: values.Type, capacity: usize) backend.Error!values.Value {
+        return self.acquireBacking(ty, capacity, self.allocator, null, null);
+    }
+    pub fn acquireAuthorized(self: *Runtime, ty: values.Type, capacity: usize, store: *memory.Store, capability: memory.AllocatorCapability) (memory.Error || backend.Error)!values.Value {
+        const backing = try store.acquireBacking(capability);
+        errdefer store.releaseBacking(backing);
+        return self.acquireBacking(ty, capacity, backing.allocator, store, backing);
+    }
+    fn acquireBacking(self: *Runtime, ty: values.Type, capacity: usize, backing_allocator: std.mem.Allocator, store: ?*memory.Store, backing: ?memory.BackingLease) backend.Error!values.Value {
         if (self.statistics.live_pools >= self.limits.max_pools or capacity > self.limits.max_pool_slots or capacity > self.limits.max_total_slots - self.statistics.reserved_slots) return error.CapacityLimit;
         const owner = try self.allocator.create(Owner);
         errdefer self.allocator.destroy(owner);
-        owner.* = .{ .ty = ty, .runtime = self, .registry = try Registry.init(self.allocator, capacity, .{ .retain = values.Value.retain, .release = values.Value.release }) };
+        owner.* = .{ .ty = ty, .runtime = self, .backing_store = store, .backing = backing, .registry = try Registry.init(backing_allocator, capacity, .{ .retain = values.Value.retain, .release = values.Value.release }) };
+        owner.registry.value_allocator = self.allocator;
         errdefer owner.registry.deinit();
         try owner.registry.reserve(capacity);
         self.statistics.live_pools += 1;
@@ -32,6 +42,8 @@ pub const Owner = struct {
     runtime: *Runtime,
     registry: Registry,
     references: usize = 1,
+    backing_store: ?*memory.Store = null,
+    backing: ?memory.BackingLease = null,
 
     /// Borrows arguments; success returns one owned snapshot or inert scalar/ID.
     pub fn perform(self: *Owner, kind: @import("pool_operations.zig").Kind, schema: @import("typed.zig").Pool, arguments: []const values.Value) (backend.Error || error{InternalError})!values.Value {
@@ -68,6 +80,7 @@ pub const Owner = struct {
         const runtime = self.runtime;
         const capacity = self.registry.max_slots;
         self.registry.deinit();
+        if (self.backing_store) |store| store.releaseBacking(self.backing.?);
         runtime.statistics.live_pools -= 1;
         runtime.statistics.reserved_slots -= capacity;
         runtime.statistics.released +|= 1;
