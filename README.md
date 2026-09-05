@@ -252,3 +252,6 @@ Try `examples/native-enums.my` with the native builder.
 for effect-free, parameter-free project entry points, with explicit step, frame,
 and VM-memory budgets. This is the compile-time evaluator foundation; schema
 generation and incremental caching remain pending.
+
+Use `eval-project --evaluation-report` for a JSON [dependency receipt](docs/experiments/evaluation-reports.md)
+containing the exact result, source/import hashes, budgets, and running compiler identity.

@@ -1,7 +1,7 @@
 //! Host I/O and process policy stay outside the compiler and VM.
 const std = @import("std");
 const language = @import("mylang");
-const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fmt-module|fmt-project|emit-c|emit-project-c|eval-project|list-modules|list-interfaces|check-project|run-project|check-policy> <file.my>\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena\n  eval-project: --max-steps=N --max-frames=N --max-eval-bytes=N (effect-free, parameter-free entry)\n  discover-duplicates/discover-project-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality/report-project-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: --check (otherwise writes formatted source to stdout)\n";
+const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fmt-module|fmt-project|emit-c|emit-project-c|eval-project|list-modules|list-interfaces|check-project|run-project|check-policy> <file.my>\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena\n  eval-project: --max-steps=N --max-frames=N --max-eval-bytes=N --evaluation-report (effect-free, parameter-free entry)\n  discover-duplicates/discover-project-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality/report-project-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: --check (otherwise writes formatted source to stdout)\n";
 
 pub fn main(init: std.process.Init) void {
     const status = dispatch(init) catch |err| status: {
@@ -119,12 +119,13 @@ fn report(init: std.process.Init, compilation: *const language.Compilation) !voi
 }
 
 const Command = enum { @"eval-project", @"emit-project-c", @"fmt-project", @"fmt-module", @"report-project-quality", @"discover-project-duplicates", @"check-policy", @"check-project", @"run-project", @"list-interfaces", @"list-modules", @"emit-c", fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
-const Parsed = struct { evaluation: language.evaluation.Options, policy: ?[]const u8, format_check: bool, quality: language.quality.Options, command: Command, path: []const u8, options: language.vm.Options, discovery: language.duplicates.Options, timings: bool };
+const Parsed = struct { evaluation_report: bool, evaluation: language.evaluation.Options, policy: ?[]const u8, format_check: bool, quality: language.quality.Options, command: Command, path: []const u8, options: language.vm.Options, discovery: language.duplicates.Options, timings: bool };
 fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (args.len < 2) return error.Usage;
     const command = std.meta.stringToEnum(Command, args[0]) orelse return error.Usage;
     var evaluation: language.evaluation.Options = .{};
     var saw_eval_bytes = false;
+    var evaluation_report = false;
     var quality: language.quality.Options = .{};
     var quality_seen: u8 = 0;
     var format_check = false;
@@ -144,6 +145,11 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     var saw_population = false;
     var saw_work = false;
     argument: for (args[1..]) |arg| {
+        if (std.mem.eql(u8, arg, "--evaluation-report")) {
+            if (command != .@"eval-project" or evaluation_report) return error.Usage;
+            evaluation_report = true;
+            continue;
+        }
         if (std.mem.startsWith(u8, arg, "--max-eval-bytes=")) {
             if (command != .@"eval-project" or saw_eval_bytes) return error.Usage;
             saw_eval_bytes = true;
@@ -222,7 +228,7 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (saw_work and !discovery.approximate) return error.Usage;
     if (command == .@"fmt-project" and !format_check) return error.Usage;
     if (command == .@"check-policy" and policy == null) return error.Usage;
-    return .{ .evaluation = .{ .max_steps = options.max_steps, .max_frames = options.max_frames, .max_bytes = evaluation.max_bytes }, .policy = policy, .format_check = format_check, .quality = quality, .command = command, .path = path orelse return error.Usage, .options = options, .discovery = discovery, .timings = timings };
+    return .{ .evaluation_report = evaluation_report, .evaluation = .{ .max_steps = options.max_steps, .max_frames = options.max_frames, .max_bytes = evaluation.max_bytes }, .policy = policy, .format_check = format_check, .quality = quality, .command = command, .path = path orelse return error.Usage, .options = options, .discovery = discovery, .timings = timings };
 }
 
 fn positive(digits: []const u8) error{Usage}!u64 {
@@ -379,7 +385,10 @@ fn listModules(init: std.process.Init, parsed: Parsed) !u8 {
         } else try language.vm.runWithOptions(init.gpa, compilation.code.?, parsed.options);
         if (parsed.command == .@"eval-project") try reportProject(init, &compilation);
         switch (outcome) {
-            .value => |value| break :result try std.fmt.allocPrint(init.gpa, "{d}\n", .{value}),
+            .value => |value| {
+                if (parsed.evaluation_report) break :result try language.evaluation_report.render(init.gpa, &project, value, parsed.evaluation, try evaluationIdentity(init.io));
+                break :result try std.fmt.allocPrint(init.gpa, "{d}\n", .{value});
+            },
             .trap => |trap| {
                 const message = try trap.render(init.gpa, compilation.src);
                 defer init.gpa.free(message);
@@ -399,4 +408,20 @@ fn reportProject(init: std.process.Init, compilation: *language.project_compile.
         defer init.gpa.free(message);
         try std.Io.File.stderr().writeStreamingAll(init.io, message);
     }
+}
+
+fn evaluationIdentity(io: std.Io) !language.evaluation_report.Identity {
+    const executable = try std.process.openExecutable(io, .{});
+    defer executable.close(io);
+    var hash = std.crypto.hash.sha2.Sha256.init(.{});
+    var buffer: [65536]u8 = undefined;
+    var offset: u64 = 0;
+    while (true) {
+        const count = try executable.readPositional(io, &.{&buffer}, offset);
+        if (count == 0) break;
+        hash.update(buffer[0..count]);
+        offset += count;
+    }
+    const builtin = @import("builtin");
+    return .{ .compiler_sha256 = hash.finalResult(), .zig_version = builtin.zig_version_string, .architecture = @tagName(builtin.cpu.arch), .os = @tagName(builtin.os.tag), .abi = @tagName(builtin.abi), .optimize = @tagName(builtin.mode) };
 }

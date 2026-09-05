@@ -935,4 +935,6 @@ test "CLI restricted project evaluation preserves values and enforces budgets an
     try invoke("eval-project", "module input; result T{ok:i64,err:i64} fn main(c:clock_cap)->i64{acknowledge clock_now<T>(c);return 7;}", 1, "", "E_EVAL_EFFECT");
     for ([_][]const u8{ "--memory=arena", "--max-eval-bytes=0", "--max-eval-bytes=-1", "--max-steps=0", "--check" }) |option| try invokeOptions("eval-project", "module input; fn main()->i64{return 7;}", &.{option}, 2, "", "usage:");
     try invokeOptions("run-project", "module input; fn main()->i64{return 7;}", &.{"--max-eval-bytes=1000"}, 2, "", "usage:");
+    try invokeOptions("run-project", "module input; fn main()->i64{return 7;}", &.{"--evaluation-report"}, 2, "", "usage:");
+    try invokeOptions("eval-project", "module input; fn main()->i64{return 7;}", &.{ "--evaluation-report", "--evaluation-report" }, 2, "", "usage:");
 }

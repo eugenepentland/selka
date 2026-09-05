@@ -165,3 +165,44 @@ test "module dependency traversal handles a long chain without recursive loading
     try t.expectEqual(entries.len, files.reads);
     for (project.order.items, 0..) |id, i| try t.expectEqual(entries.len - i - 1, id);
 }
+
+const receipts = @import("evaluation_report.zig");
+const report_identity: receipts.Identity = .{ .compiler_sha256 = @splat(1), .zig_version = "test", .architecture = "test", .os = "test", .abi = "test", .optimize = "test" };
+fn reportScenario(allocator: std.mem.Allocator) !void {
+    var files: Files = .{ .entries = &diamond };
+    var project = p.Project.init(allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    const text = try receipts.render(allocator, &project, -9223372036854775808, .{}, report_identity);
+    defer allocator.free(text);
+    const parsed = try std.json.parseFromSlice(std.json.Value, allocator, text, .{});
+    defer parsed.deinit();
+    const sources = parsed.value.object.get("request").?.object.get("sources").?.array.items;
+    try t.expectEqual(@as(usize, 4), sources.len);
+    try t.expectEqualStrings("shared.data", sources[0].object.get("module").?.string);
+    try t.expectEqualStrings("-9223372036854775808", parsed.value.object.get("result").?.object.get("decimal").?.string);
+}
+test "evaluation receipts retain shared dependencies and clean up allocation failures" {
+    try reportScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), reportScenario, .{});
+}
+test "evaluation receipt keys include implementation identity and reject incomplete graphs" {
+    var project = p.Project.init(t.allocator);
+    defer project.deinit();
+    try t.expectError(error.IncompleteProject, receipts.render(t.allocator, &project, 7, .{}, report_identity));
+    var files: Files = .{ .entries = &diamond };
+    try project.load(files.provider(), "main", .{});
+    try t.expectError(error.InvalidBudget, receipts.render(t.allocator, &project, 7, .{ .max_bytes = 0 }, report_identity));
+    const first = try receipts.render(t.allocator, &project, 7, .{}, report_identity);
+    defer t.allocator.free(first);
+    var identity = report_identity;
+    identity.compiler_sha256[0] = 2;
+    const second = try receipts.render(t.allocator, &project, 7, .{}, identity);
+    defer t.allocator.free(second);
+    const a = try std.json.parseFromSlice(std.json.Value, t.allocator, first, .{});
+    defer a.deinit();
+    const b = try std.json.parseFromSlice(std.json.Value, t.allocator, second, .{});
+    defer b.deinit();
+    try t.expect(!std.mem.eql(u8, a.value.object.get("request_sha256").?.string, b.value.object.get("request_sha256").?.string));
+}

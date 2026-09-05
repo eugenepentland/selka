@@ -69,3 +69,7 @@ budgets; reject authority and effects in untaken transitive calls; permit an unc
 effectful helper; and sweep host allocation failures with cleanup. Actual CLI tests
 cover imported function evaluation, values, nontermination, recursion, quota and
 authority errors, and option rejection. Debug and ReleaseFast run the same tests.
+
+[Evaluation dependency reports](evaluation-reports.md) now expose source snapshots,
+implementation identity, and budgets with `--evaluation-report`. This establishes
+request identity recording; caching and invalidation remain pending.

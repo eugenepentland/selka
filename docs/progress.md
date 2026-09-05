@@ -1671,3 +1671,32 @@ schema derivation, generated bindings, dependency/cache identities, incremental
 invalidation, generics, wider native support, and ordinary-program review remain
 pending. Guardian was not exercised and hosted CI has not run. The full roadmap goal
 remains active.
+
+## 2026-09-05: Evaluation dependency receipts and request identity
+
+Added eval-project --evaluation-report with versioned JSON request/result encoding.
+Successful reports retain every loaded source's exact content hash/byte count,
+relative module path, resolved imports/aliases, explicit budgets, and SHA-256 of the
+running compiler executable plus host build metadata. The canonical request digest
+excludes the result. Results use typed decimal strings to preserve all i64 values.
+The CLI reads its executable handle directly, with no filename/version-only fallback.
+
+The independent Python acceptance driver recomputes compiler/source/request hashes,
+checks exact maximum-i64 output, repeatability, relocation, unrelated-file exclusion,
+and budget/source/alias mutation identities. Source/runtime/quota failures emit no
+partial JSON. Unit tests cover shared dependencies, minimum-i64 output, changed
+implementation identity, invalid/incomplete inputs, and every allocation failure
+through report creation/parsing. Option rejection remains covered by CLI tests.
+
+514 Zig tests pass in Debug and ReleaseFast (458 core, 56 CLI). All 12 build steps
+pass; the final Debug run reused successful Zig test results and reran the drivers.
+The report driver passes in both modes, along with eight verification-driver tests,
+module and duplicate scaling acceptance, and 392 VM/native comparisons per host
+mode. Formatting and whitespace checks pass. The report contract and conservative
+identity behavior are documented; the roadmap and attached plan are synchronized.
+
+This establishes source dependency/request recording, not cached execution or
+incremental rebuild savings. External input manifests, schemas/generated bindings,
+invalidation/cache reuse, target layouts, generics, wider native support, ordinary
+program review, and all other unfinished roadmap work remain pending. Guardian was
+not exercised and hosted CI has not run. The full roadmap goal remains active.
