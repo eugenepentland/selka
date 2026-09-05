@@ -13,7 +13,12 @@ pub fn dump(allocator: std.mem.Allocator, program: bc.Program, src: Source) ![]u
 
 fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer.Error!void {
     for (program.functions) |function| {
-        try writer.print("function {s}() -> i64\n", .{function.name});
+        try writer.print("function {s}(", .{function.name});
+        for (function.locals[0..function.parameter_count], 0..) |parameter, i| {
+            if (i != 0) try writer.writeAll(", ");
+            try writer.print("{s}: {s}", .{ parameter.name, @tagName(parameter.ty) });
+        }
+        try writer.print(") -> {s}\n", .{@tagName(function.return_type)});
         for (function.instructions, 0..) |instruction, i| {
             try writer.print("  {d:0>4}  ", .{i});
             switch (instruction.op) {
@@ -33,6 +38,7 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
                 .add_i64_checked => try writer.writeAll("ADD_I64_CHECKED"),
                 .sub_i64_checked => try writer.writeAll("SUB_I64_CHECKED"),
                 .mul_i64_checked => try writer.writeAll("MUL_I64_CHECKED"),
+                .call => |id| try writer.print("CALL {d} ({s})", .{ @backingInt(id), program.functions[@backingInt(id)].name }),
                 .ret => try writer.writeAll("RET"),
             }
             const location = src.locate(instruction.span.start);

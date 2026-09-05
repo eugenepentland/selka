@@ -80,6 +80,14 @@ const Emitter = struct {
             .integer => |value| try self.instruction(node.span, .{ .push_i64 = value }),
             .boolean => |value| try self.instruction(node.span, .{ .push_bool = value }),
             .local => |slot| try self.instruction(node.span, .{ .load_local = slot }),
+            .call => |call| {
+                try self.instruction(node.span, .{ .call = call.function });
+                var i = call.arguments.len;
+                while (i > 0) {
+                    i -= 1;
+                    try self.push(.{ .expression = call.arguments[i] });
+                }
+            },
             .unary => |u| {
                 try self.instruction(u.op_span, if (u.op == .neg) .neg_i64_checked else .not_bool);
                 try self.push(.{ .expression = u.operand });
@@ -145,9 +153,9 @@ pub fn lower(allocator: std.mem.Allocator, program: typed.Program) !bc.Program {
     const functions = try allocator.alloc(bc.Function, program.functions.len);
     for (program.functions, functions) |function, *out| {
         var emitter: Emitter = .{ .allocator = allocator, .program = program };
-        out.* = .{ .id = function.id, .name = function.name, .locals = function.locals, .instructions = try emitter.finish(function.body) };
+        out.* = .{ .id = function.id, .name = function.name, .locals = function.locals, .parameter_count = function.parameter_count, .return_type = function.return_type, .instructions = try emitter.finish(function.body) };
     }
-    const result: bc.Program = .{ .functions = functions };
+    const result: bc.Program = .{ .functions = functions, .main = program.main };
     try bc.validate(allocator, result);
     return result;
 }

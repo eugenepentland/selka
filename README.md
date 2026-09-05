@@ -40,11 +40,12 @@ are currently limited to 16 MiB; excessive expression nesting is diagnosed.
 
 ## Current implementation
 
-M0 through M3 are implemented: owned source buffers, source locations, lexer,
+M0 through M4 are implemented: owned source buffers, source locations, lexer,
 parser, separate untyped/typed representations, per-function instructions,
-an iterative VM with typed locals and jumps, deterministic dumps, binding diagnostics, and actual-CLI tests.
+an iterative VM with typed locals, jumps, and explicit call frames, deterministic dumps, binding diagnostics, and actual-CLI tests.
 
-The accepted subset is one `fn main() -> i64` with local bindings, assignment,
+The accepted subset has one `fn main() -> i64` and typed helper functions, with
+local bindings, assignment,
 nested blocks, branches, loops, explicit discard, and explicit returns. It supports integer and boolean values,
 optional local type annotations, unary `-` and `!`, binary `+`, `-`, `*`, `/`, `%`, short-circuit `&&` and `||`,
 comparisons, parentheses, whitespace, and `//` comments. Active shadowing,
@@ -53,9 +54,13 @@ rejected. Unused bindings and unnecessary `mut` produce advisory warnings.
 Arithmetic traps on overflow in every host optimization mode; checking does
 not evaluate arithmetic. `examples/locals.my` returns `21`.
 
-Run supports `--max-steps=N` (default 10,000,000) to bound execution.
+Run supports `--max-steps=N` (default 10,000,000) and `--max-frames=N`
+(default 1,024, including main) to bound execution. Calls support forward
+references, mutual recursion, and boolean or integer parameters/results.
+Guest traps include source locations and a bounded call trace.
 `examples/sum_inline.my` returns `4950`; `examples/gcd_inline.my` returns `6`.
-Helper calls, explicit call frames, and the final contract audit remain. Ownership, modules, native guest
+`examples/sum.my` and `examples/gcd.my` are the plan's exact acceptance programs.
+The final fixture and contract audit remains. Ownership, modules, native guest
 code, and the later quality contracts remain post-MVP experiments.
 
 See [implemented semantics](docs/semantics.md) and [verification/progress](docs/progress.md).

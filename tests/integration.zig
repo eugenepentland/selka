@@ -90,3 +90,24 @@ test "CLI executes control flow and preserves discarded traps" {
     try invoke("run", "fn main() -> i64 { discard 1 / 0; return 7; }", 1, "", "error[R_DIVISION_BY_ZERO]");
     try invoke("check", "fn main() -> i64 { while true { return 7; } }", 1, "", "error[E_MISSING_RETURN]");
 }
+
+test "CLI executes the exact plan acceptance programs and recursive functions" {
+    try invoke("run", @embedFile("fixtures/sum.my"), 0, "4950\n", "");
+    try invoke("run", @embedFile("fixtures/gcd.my"), 0, "6\n", "");
+    try invoke("run", "fn fact(n: i64) -> i64 { if n <= 1 { return 1; } return n * fact(n - 1); } fn main() -> i64 { return fact(10); }", 0, "3628800\n", "");
+    try invoke("run", "fn main() -> i64 { return 1 + add(add(2, 3), add(4, 5)); } fn add(a: i64, b: i64) -> i64 { return a + b; }", 0, "15\n", "");
+    try invoke("run", "fn main() -> i64 { return bad(); } fn bad() -> i64 { return 1 / 0; }", 1, "", "in main at");
+}
+
+test "CLI frame budgets count main and reject invalid overrides" {
+    const text = "fn main() -> i64 { return f(); } fn f() -> i64 { return 7; }";
+    try invokeOptions("run", text, &.{"--max-frames=2"}, 0, "7\n", "");
+    try invokeOptions("run", text, &.{"--max-frames=1"}, 1, "", "error[R_FRAME_LIMIT]");
+    try invokeOptions("run", text, &.{ "--max-frames=2", "--max-steps=4" }, 0, "7\n", "");
+    for ([_][]const u8{ "--max-frames=0", "--max-frames=-1", "--max-frames=+1", "--max-frames=", "--max-frames=abc", "--max-frames=18446744073709551616" }) |option| {
+        try invokeOptions("run", text, &.{option}, 2, "", "usage:");
+    }
+    try invokeOptions("run", text, &.{ "--max-frames=2", "--max-frames=3" }, 2, "", "usage:");
+    try invokeOptions("check", text, &.{"--max-frames=2"}, 2, "", "usage:");
+    try invokeOptions("dump-bytecode", text, &.{"--max-frames=2"}, 2, "", "usage:");
+}

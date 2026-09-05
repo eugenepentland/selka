@@ -522,11 +522,11 @@ Acceptance: an inline sum loop returns `4950`; short-circuit expressions skip di
 
 ### M4 — Functions and explicit frames
 
-- [ ] Collect signatures before checking bodies.
-- [ ] Add arguments, forward calls, return-type checking, and recursion.
-- [ ] Extend unused-binding diagnostics to parameters and verify use counts remain separate across functions.
-- [ ] Implement the call/return contract from section 9.
-- [ ] Add frame limits and source-level call traces.
+- [x] Collect signatures before checking bodies.
+- [x] Add arguments, forward calls, return-type checking, and recursion.
+- [x] Extend unused-binding diagnostics to parameters and verify use counts remain separate across functions.
+- [x] Implement the call/return contract from section 9.
+- [x] Add frame limits and source-level call traces.
 
 Acceptance: the exact programs in section 5 run; recursive factorial and nested-call fixtures pass; excessive recursion produces a guest diagnostic instead of exhausting the Zig call stack.
 

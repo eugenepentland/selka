@@ -35,15 +35,25 @@ pub const Parser = struct {
         return self.sink.fail("E_TYPE", token.span, "expected i64 or bool");
     }
     pub fn parse(self: *Parser) diagnostic.Error!ast.Program {
-        _ = try self.expect(.kw_fn);
-        const name = try self.expect(.ident);
-        _ = try self.expect(.lparen);
-        _ = try self.expect(.rparen);
-        _ = try self.expect(.arrow);
-        const return_type = try self.typeName();
-        const body = try self.block();
-        _ = try self.expect(.eof);
-        return .{ .nodes = self.nodes, .statements = self.statements, .name = name.span, .return_type = return_type, .body = body };
+        var functions: std.ArrayList(ast.Function) = .empty;
+        while (self.current().tag != .eof) {
+            _ = try self.expect(.kw_fn);
+            const name = try self.expect(.ident);
+            _ = try self.expect(.lparen);
+            var parameters: std.ArrayList(ast.Parameter) = .empty;
+            if (self.current().tag != .rparen) while (true) {
+                const parameter = try self.expect(.ident);
+                _ = try self.expect(.colon);
+                try parameters.append(self.allocator, .{ .name = parameter.span, .ty = try self.typeName() });
+                if (!self.take(.comma)) break;
+            };
+            _ = try self.expect(.rparen);
+            _ = try self.expect(.arrow);
+            const return_type = try self.typeName();
+            const body = try self.block();
+            try functions.append(self.allocator, .{ .name = name.span, .parameters = try parameters.toOwnedSlice(self.allocator), .return_type = return_type, .body = body });
+        }
+        return .{ .nodes = self.nodes, .statements = self.statements, .functions = try functions.toOwnedSlice(self.allocator) };
     }
     fn addStatement(self: *Parser, stmt: ast.Statement) diagnostic.Error!ast.StatementId {
         const id: ast.StatementId = @fromBackingInt(self.statements.items.len);
@@ -131,6 +141,15 @@ pub const Parser = struct {
         var left: ast.NodeId = switch (token.tag) {
             .integer, .ident, .kw_true, .kw_false => leaf: {
                 self.pos += 1;
+                if (token.tag == .ident and self.take(.lparen)) {
+                    var arguments: std.ArrayList(ast.NodeId) = .empty;
+                    if (self.current().tag != .rparen) while (true) {
+                        try arguments.append(self.allocator, try self.expression(0));
+                        if (!self.take(.comma)) break;
+                    };
+                    const close = try self.expect(.rparen);
+                    break :leaf try self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{ .name = token.span, .arguments = try arguments.toOwnedSlice(self.allocator) } } });
+                }
                 break :leaf try self.append(.{ .span = token.span, .data = switch (token.tag) {
                     .integer => .{ .integer = token.span },
                     .ident => .{ .name = token.span },

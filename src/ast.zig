@@ -12,6 +12,7 @@ pub const Node = struct {
         integer: Span,
         boolean: bool,
         name: Span,
+        call: struct { name: Span, arguments: []const NodeId },
         unary: struct { op: UnaryOp, operand: NodeId, op_span: Span },
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
     },
@@ -28,10 +29,10 @@ pub const Statement = struct {
         assignment: struct { name: Span, value: NodeId, op: AssignmentOp, op_span: Span },
     },
 };
+pub const Parameter = struct { name: Span, ty: Span };
+pub const Function = struct { name: Span, parameters: []const Parameter, return_type: Span, body: StatementId };
 pub const Program = struct {
     nodes: std.ArrayList(Node),
     statements: std.ArrayList(Statement),
-    name: Span,
-    return_type: Span,
-    body: StatementId,
+    functions: []const Function,
 };

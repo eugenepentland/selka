@@ -23,11 +23,12 @@ pub const Instruction = struct {
         pop,
         jump: usize,
         jump_if_false: usize,
+        call: typed.FunctionId,
         ret,
     },
 };
-pub const Function = struct { id: typed.FunctionId, name: []const u8, locals: []const typed.Local = &.{}, instructions: []const Instruction };
-pub const Program = struct { functions: []const Function };
+pub const Function = struct { id: typed.FunctionId, name: []const u8, parameter_count: usize = 0, return_type: typed.Type = .i64, locals: []const typed.Local = &.{}, instructions: []const Instruction };
+pub const Program = struct { functions: []const Function, main: typed.FunctionId = @fromBackingInt(0) };
 const Error = std.mem.Allocator.Error || error{InternalError};
 
 fn enqueue(heights: []?usize, pending: []usize, len: *usize, target: usize, height: usize) Error!void {
@@ -43,11 +44,17 @@ fn enqueue(heights: []?usize, pending: []usize, len: *usize, target: usize, heig
 /// Validate generated IDs, targets, and stack heights at control-flow joins.
 /// Operand types and initialization remain checked by the VM; there is no untrusted loader.
 pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
-    if (program.functions.len != 1) return error.InternalError;
+    if (@backingInt(program.main) >= program.functions.len) return error.InternalError;
+    const main = program.functions[@backingInt(program.main)];
+    if (main.parameter_count != 0 or main.return_type != .i64) return error.InternalError;
     for (program.functions, 0..) |function, i| {
         if (@backingInt(function.id) != i or function.instructions.len == 0) return error.InternalError;
+        if (function.parameter_count > function.locals.len) return error.InternalError;
         for (function.instructions) |instruction| switch (instruction.op) {
             .load_local, .store_local => |slot| if (@backingInt(slot) >= function.locals.len) {
+                return error.InternalError;
+            },
+            .call => |id| if (@backingInt(id) >= program.functions.len) {
                 return error.InternalError;
             },
             .jump, .jump_if_false => |target| if (target >= function.instructions.len) {
@@ -79,6 +86,11 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                 },
                 .neg_i64_checked, .not_bool => if (height == 0) {
                     return error.InternalError;
+                },
+                .call => |id| {
+                    const count = program.functions[@backingInt(id)].parameter_count;
+                    if (height < count) return error.InternalError;
+                    height = height - count + 1;
                 },
                 .ret => {
                     if (height != 1) return error.InternalError;

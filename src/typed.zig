@@ -15,6 +15,7 @@ pub const Node = struct {
         integer: i64,
         boolean: bool,
         local: LocalId,
+        call: struct { function: FunctionId, arguments: []const NodeId },
         unary: struct { op: UnaryOp, operand: NodeId, op_span: Span },
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
     },
@@ -39,7 +40,8 @@ pub const Function = struct {
     name: []const u8,
     declaration: Span,
     return_type: Type,
+    parameter_count: usize,
     body: StatementId,
     locals: []const Local,
 };
-pub const Program = struct { nodes: []const Node, statements: []const Statement, functions: []const Function };
+pub const Program = struct { nodes: []const Node, statements: []const Statement, functions: []const Function, main: FunctionId };

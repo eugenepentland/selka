@@ -42,7 +42,7 @@ test "overflow traps at the responsible operator without folding during check" {
 
 test "malformed source and range errors are normal located diagnostics" {
     const cases = [_]struct { text: []const u8, code: []const u8 }{
-        .{ .text = "", .code = "E_SYNTAX" },
+        .{ .text = "", .code = "E_MAIN" },
         .{ .text = "fn main() -> i64 { return 1 + ; }", .code = "E_EXPRESSION" },
         .{ .text = "fn main() -> i64 { return 1;", .code = "E_SYNTAX" },
         .{ .text = "fn main() -> i64 { return 9223372036854775808; }", .code = "E_INTEGER_RANGE" },
@@ -353,4 +353,105 @@ fn flowAllocationScenario(allocator: std.mem.Allocator) !void {
 
 test "allocation failures during label patching and control-flow validation release storage" {
     try testing.checkAllAllocationFailures(testing.allocator, flowAllocationScenario, .{});
+}
+
+test "forward mutual recursive and nested calls preserve caller operands" {
+    try programResult("fn main() -> i64 { return 1 + add(add(2, 3), add(4, 5)); } fn add(a: i64, b: i64) -> i64 { return a + b; }", 15);
+    try programResult("fn fact(n: i64) -> i64 { if n <= 1 { return 1; } return n * fact(n - 1); } fn main() -> i64 { return fact(10); }", 3628800);
+    try programResult("fn even(n: i64) -> bool { if n == 0 { return true; } return odd(n - 1); } fn main() -> i64 { if even(100) && !odd(100) { return 7; } return 0; } fn odd(n: i64) -> bool { if n == 0 { return false; } return even(n - 1); }", 7);
+    try programResult("fn f(n: i64) -> i64 { let x = n + 2; discard g(x); return x; } fn g(x: i64) -> bool { return x > 0; } fn main() -> i64 { let mut n = 0; while n < 5000 { discard f(n); n += 1; } return 1 + f(2); }", 5);
+    try programResult("fn f(x: bool, y: i64) -> bool { return x && y > 0; } fn main() -> i64 { if f(true, 2) { return 8; } return 0; }", 8);
+}
+
+test "function signatures entry points and all uncalled bodies are checked" {
+    const cases = [_]struct { text: []const u8, code: []const u8 }{
+        .{ .text = "fn main() -> i64 { return 1; } fn main() -> i64 { return 2; }", .code = "E_DUPLICATE_FUNCTION" },
+        .{ .text = "fn f() -> i64 { return 1; } fn f() -> bool { return true; } fn main() -> i64 { return 0; }", .code = "E_DUPLICATE_FUNCTION" },
+        .{ .text = "fn main(n: i64) -> i64 { return n; }", .code = "E_MAIN" },
+        .{ .text = "fn main() -> i64 { return missing(); }", .code = "E_UNKNOWN_FUNCTION" },
+        .{ .text = "fn main() -> i64 { let f = 1; return f(); }", .code = "E_UNKNOWN_FUNCTION" },
+        .{ .text = "fn f(n: i64) -> i64 { return n; } fn main() -> i64 { return f(); }", .code = "E_ARITY" },
+        .{ .text = "fn f(n: i64) -> i64 { return n; } fn main() -> i64 { return f(1, 2); }", .code = "E_ARITY" },
+        .{ .text = "fn f(n: i64) -> i64 { return n; } fn main() -> i64 { return f(true); }", .code = "E_TYPE" },
+        .{ .text = "fn f(n: i64, n: bool) -> bool { return n; } fn main() -> i64 { return 0; }", .code = "E_DUPLICATE_PARAMETER" },
+        .{ .text = "fn f(main: i64) -> i64 { return main; } fn main() -> i64 { return 0; }", .code = "E_SHADOWING" },
+        .{ .text = "fn f(n: i64) -> i64 { let n = 2; return n; } fn main() -> i64 { return 0; }", .code = "E_SHADOWING" },
+        .{ .text = "fn main() -> i64 { let f = 2; return f; } fn f() -> i64 { return 0; }", .code = "E_SHADOWING" },
+        .{ .text = "fn f(n: i64) -> i64 { n = 2; return n; } fn main() -> i64 { return 0; }", .code = "E_IMMUTABLE" },
+        .{ .text = "fn f() -> bool { return 1; } fn main() -> i64 { return 0; }", .code = "E_TYPE" },
+        .{ .text = "fn f() -> bool {} fn main() -> i64 { return 0; }", .code = "E_MISSING_RETURN" },
+        .{ .text = "fn main() -> i64 { return 0; } fn f() -> i64 { return unknown; }", .code = "E_UNKNOWN_NAME" },
+        .{ .text = "fn main() -> i64 { f(); return 0; } fn f() -> i64 { return 1; }", .code = "E_EXPLICIT_DISCARD_REQUIRED" },
+        .{ .text = "fn main() -> i64 { return main(1,); }", .code = "E_EXPRESSION" },
+        .{ .text = "fn f(n: i64,) -> i64 { return n; } fn main() -> i64 { return 0; }", .code = "E_SYNTAX" },
+    };
+    for (cases) |case| {
+        var compilation = try language.Compilation.init(testing.allocator, "functions.my", case.text);
+        defer compilation.deinit();
+        try testing.expectError(error.SourceError, compilation.check());
+        try testing.expectEqualStrings(case.code, compilation.diagnostics.items[0].code);
+    }
+}
+
+test "parameter warnings remain separate between functions and are deferred until full success" {
+    var compilation = try language.Compilation.init(testing.allocator, "warnings.my", "fn f(x: i64) -> i64 { return 0; } fn g(x: i64) -> i64 { return x; } fn main() -> i64 { return 7; }");
+    defer compilation.deinit();
+    try compilation.check();
+    try testing.expectEqual(@as(usize, 1), compilation.diagnostics.items.len);
+    try testing.expectEqualStrings("W_UNUSED_BINDING", compilation.diagnostics.items[0].code);
+    try testing.expectEqual(@as(usize, 5), compilation.diagnostics.items[0].span.start);
+    var invalid = try language.Compilation.init(testing.allocator, "bad.my", "fn f(x: i64) -> i64 { return 0; } fn main() -> i64 { return false; }");
+    defer invalid.deinit();
+    try testing.expectError(error.SourceError, invalid.check());
+    try testing.expectEqual(@as(usize, 1), invalid.diagnostics.items.len);
+    try testing.expectEqualStrings("E_TYPE", invalid.diagnostics.items[0].code);
+}
+
+test "frame limits count main and guest recursion never consumes the host call stack" {
+    var compilation = try language.Compilation.init(testing.allocator, "frames.my", "fn main() -> i64 { return main(); }");
+    defer compilation.deinit();
+    try testing.expectError(error.InvalidBudget, compilation.executeWithOptions(testing.allocator, .{ .max_frames = 0 }));
+    const one = try compilation.executeWithOptions(testing.allocator, .{ .max_frames = 1 });
+    try testing.expectEqualStrings("R_FRAME_LIMIT", one.trap.code);
+    try testing.expectEqual(@as(usize, 1), one.trap.trace_len);
+    const deep = try compilation.executeWithOptions(testing.allocator, .{ .max_frames = 20_000 });
+    try testing.expectEqualStrings("R_FRAME_LIMIT", deep.trap.code);
+    try testing.expectEqual(@as(usize, 16), deep.trap.trace_len);
+    try testing.expectEqual(@as(usize, 19_984), deep.trap.trace_omitted);
+    const step = try compilation.executeWithOptions(testing.allocator, .{ .max_steps = 2 });
+    try testing.expectEqualStrings("R_STEP_LIMIT", step.trap.code);
+    try testing.expectEqual(@as(usize, 3), step.trap.trace_len);
+}
+
+test "call traces locate guest operators and callers and argument traps evaluate left to right" {
+    const text = "fn main() -> i64 { return outer(); }\nfn outer() -> i64 { return inner(); }\nfn inner() -> i64 { return 1 / 0; }";
+    var compilation = try language.Compilation.init(testing.allocator, "trace.my", text);
+    defer compilation.deinit();
+    const outcome = try compilation.execute(testing.allocator);
+    try testing.expectEqualStrings("R_DIVISION_BY_ZERO", outcome.trap.code);
+    try testing.expectEqual(@as(usize, 3), outcome.trap.trace_len);
+    for ([_][]const u8{ "inner", "outer", "main" }, 0..) |name, i| {
+        try testing.expectEqualStrings(name, outcome.trap.trace[i].function);
+        try testing.expectEqual(3 - i, compilation.src.locate(outcome.trap.trace[i].span.start).line);
+    }
+    const rendered = try outcome.trap.render(testing.allocator, compilation.src);
+    defer testing.allocator.free(rendered);
+    try testing.expect(std.mem.indexOf(u8, rendered, "in outer at trace.my:2:") != null);
+    var order = try language.Compilation.init(testing.allocator, "order.my", "fn f(a: i64, b: i64) -> i64 { return a + b; } fn main() -> i64 { return f(1 / 0, 9223372036854775807 + 1); }");
+    defer order.deinit();
+    try testing.expectEqualStrings("R_DIVISION_BY_ZERO", (try order.execute(testing.allocator)).trap.code);
+}
+
+fn callAllocationScenario(allocator: std.mem.Allocator) !void {
+    var compilation = try language.Compilation.init(allocator, "calls.my", "fn f(n: i64) -> i64 { if n == 0 { return 1 / 0; } return 1 + f(n - 1); } fn main() -> i64 { return f(50); }");
+    defer compilation.deinit();
+    const outcome = try compilation.execute(allocator);
+    const rendered = try outcome.trap.render(allocator, compilation.src);
+    defer allocator.free(rendered);
+    const dumped = try compilation.dump(allocator);
+    defer allocator.free(dumped);
+}
+
+test "allocation failures in signature collection calls frame growth and trace rendering release storage" {
+    try testing.checkAllAllocationFailures(testing.allocator, callAllocationScenario, .{});
 }

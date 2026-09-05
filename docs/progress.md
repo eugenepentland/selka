@@ -76,9 +76,32 @@ Evidence:
   code, warning use counts, and allocation failures through jump lowering.
 - Guardian gates were not exercised.
 
+## 2026-09-05: M4
+
+Implemented signature collection, typed parameters/results, direct calls,
+forward references, mutual recursion, per-function binding diagnostics, and
+explicit iterative VM frames. Calls preserve unfinished caller expressions and
+return exactly one value. Both runtime budgets are CLI-configurable. Guest
+traps include up to 16 source-level frames and count omitted older frames.
+
+Evidence:
+
+- Debug: 29 core and 9 CLI tests pass (38 total; unchanged core tests were
+  cached on the final invocation).
+- ReleaseFast: all 38 tests pass in a fresh mode build.
+- Formatting check passes on the exact Guardian Zig snapshot.
+- The plan's exact sum and GCD examples print `4950` and `6`; their copies are
+  exercised by actual CLI tests. Recursive factorial returns `3628800` and
+  nested calls preserve surrounding arithmetic operands.
+- Mutual recursion, boolean parameters/results, 5,000 discarded helper calls,
+  immutable parameters, uncalled invalid helpers, duplicate declarations,
+  argument ordering, warning identity, and readable guest traces are covered.
+- A 20,000-frame recursion test reaches the guest frame limit without host
+  recursion. Allocation-failure tests cover signature collection, growing VM
+  buffers, trap rendering, and disassembly.
+- Guardian gates were not exercised.
+
 ## Remaining milestones
 
-- M4: signature collection, direct/recursive calls, explicit VM frames, frame
-  budgets, and guest call traces.
 - M5: complete fixture matrix, parser/host-failure robustness, documentation,
   and a requirement-by-requirement audit of the full MVP in Debug/ReleaseFast.

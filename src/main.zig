@@ -1,7 +1,7 @@
 //! Host I/O and process policy stay outside the compiler and VM.
 const std = @import("std");
 const language = @import("mylang");
-const usage = "usage: mylang <check|run|dump-bytecode> <file.my> [--max-steps=N (run only)]\n";
+const usage = "usage: mylang <check|run|dump-bytecode> <file.my> [--max-steps=N] [--max-frames=N] (run only)\n";
 
 pub fn main(init: std.process.Init) void {
     const status = dispatch(init) catch |err| status: {
@@ -72,6 +72,7 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     var path: ?[]const u8 = null;
     var options: language.vm.Options = .{};
     var saw_steps = false;
+    var saw_frames = false;
     for (args[1..]) |arg| {
         if (std.mem.startsWith(u8, arg, "--max-steps=")) {
             if (command != .run or saw_steps) return error.Usage;
@@ -83,6 +84,16 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
             };
             options.max_steps = std.fmt.parseUnsigned(u64, digits, 10) catch return error.Usage;
             if (options.max_steps == 0) return error.Usage;
+        } else if (std.mem.startsWith(u8, arg, "--max-frames=")) {
+            if (command != .run or saw_frames) return error.Usage;
+            saw_frames = true;
+            const digits = arg["--max-frames=".len..];
+            if (digits.len == 0) return error.Usage;
+            for (digits) |ch| if (!std.ascii.isDigit(ch)) {
+                return error.Usage;
+            };
+            options.max_frames = std.fmt.parseUnsigned(u64, digits, 10) catch return error.Usage;
+            if (options.max_frames == 0) return error.Usage;
         } else {
             if (std.mem.startsWith(u8, arg, "--") or path != null) return error.Usage;
             path = arg;

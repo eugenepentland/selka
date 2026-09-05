@@ -1,9 +1,9 @@
 # Implemented semantics
 
-Status: M0–M3, 2026-09-05. This file describes implemented behavior, while
+Status: M0–M4, 2026-09-05. This file describes implemented behavior, while
 [plan.md](plan.md) describes the complete target and future experiments.
 
-- A source file contains exactly one `fn main() -> i64` with a block body.
+- A source file contains named functions and exactly one `fn main() -> i64`.
   Statements include `let`, `let mut`, assignment (`=`, `+=`, `-=`), nested
   blocks, `if`/`else`, `while`, `discard`, and explicit `return`. A function must structurally return; statements after
   a terminating return or block are rejected.
@@ -30,7 +30,7 @@ Status: M0–M3, 2026-09-05. This file describes implemented behavior, while
   Arithmetic pops the right operand before the left operand. Validation rejects
   malformed internal stack shapes as host/internal failures rather than guest traps.
 - One compilation request owns its copied source/path, line index, AST, typed
-  program, and instructions. Runtime operand storage is separately allocated
+  program, and instructions. Runtime operand, local, and frame buffers are separately allocated
   and released on both successful execution and traps.
 - `run` prints the integer result followed by a newline and exits 0. A source
   error or runtime trap prints no stdout result and exits 1. Usage, file I/O,
@@ -63,5 +63,25 @@ Status: M0–M3, 2026-09-05. This file describes implemented behavior, while
   reject execution options. Jump validation checks target bounds and matching
   stack heights at control-flow joins.
 
-Helper functions and call frames are not implemented yet. No future-feature
-syntax is accepted as a placeholder with invented semantics.
+- Collect signatures before checking any body. Forward calls and mutual
+  recursion are supported; every function is checked even when uncalled.
+  Functions accept and return `i64` or `bool`. Parameters are immutable, occupy
+  the first local slots, and receive the same unused-binding warning as locals.
+  Duplicate functions/parameters, function-name shadowing, wrong arity/types,
+  and a parameterized or boolean-returning entry point are rejected.
+- Calls target top-level names directly. Arguments evaluate left to right.
+  Function values, indirect calls, and trailing commas are not accepted.
+- The VM uses growable operand, local, and frame buffers. Each frame retains its
+  own instruction index, local base, operand base, and entering call span.
+  Calls copy arguments into parameter slots in source order; returns remove
+  callee locals and leave one value above the caller's existing operands.
+  Guest recursion is iterative at the host level.
+- `--max-frames=N` sets a positive decimal u64 active-frame limit, default 1,024,
+  counting main. The VM checks it at the call instruction after evaluating its
+  arguments. Limit exhaustion is a guest trap. Traces include the current
+  function and up to 15 callers, newest first, with source locations and an
+  explicit count of omitted older frames. Trace data borrows compilation-owned
+  function names and is stored by value, requiring no extra runtime cleanup.
+
+The full MVP acceptance audit remains. Post-MVP feature syntax is not accepted
+as a placeholder with invented semantics.
