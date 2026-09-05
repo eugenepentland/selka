@@ -509,3 +509,27 @@ cases now have implementation evidence. C/D remain incomplete: owned resources,
 partial-construction cleanup, capabilities/effects, arenas/pools, generics, and
 typed handles are still pending, along with the other unfinished roadmap tracks.
 Guardian gates were not exercised; hosted CI has not run. The full goal remains active.
+
+
+## 2026-09-05: C owned-buffer transfers and partial-acquisition cleanup backend
+
+Extended the existing memory registry with initialized length/reserved capacity,
+consuming owner-generation transfers, checked growth quotas, and allocation-free
+reserved edits. Failed growth preserves the buffer; active loans block structural
+changes. Added scopes that reserve cleanup bookkeeping before consuming owners,
+transfer between scopes, and release acquired buffers in reverse order. Terminal
+unwind invalidates nested views before releasing their owner.
+
+211/211 tests pass in Debug and ReleaseFast (186 core, 25 actual CLI). New tests
+cover generation exhaustion, stale/foreign owners, bounds/type/quota failures,
+failed destination bookkeeping, retry after blocked rollback, aggregate snapshots,
+all acquisition-path allocation failures, and 10,000 ownership cycles within
+16 KiB live runtime allocation. Reserved edits, moves, destruction, and nonempty
+rollback succeed with allocation disabled. Formatting and whitespace checks pass.
+
+[The ownership record](experiments/ownership.md) states API contracts and costs.
+This is a backend checkpoint: source ownership, resource VM integration, guest
+acquisition results, capabilities/effects, arenas/pools, and the other unfinished
+roadmap tracks remain pending. Exact discovery remains exact-v13 because no guest
+syntax was added. Guardian gates were not exercised; hosted CI has not run.
+The full roadmap goal remains active.

@@ -72,7 +72,7 @@ zig build run -- discover-duplicates examples/duplicates.my --timings
 It reports exact checked-function candidates after normalizing bound names,
 with source locations and advisory explanations. Ordinary compilation does not
 run it. See the [comparison contract and review](docs/experiments/duplicate-discovery.md).
-All 199 tests pass in Debug and ReleaseFast.
+All 211 tests pass in Debug and ReleaseFast.
 
 [Post-MVP tracking](docs/experiments/roadmap.md) records the remaining experiments.
 Records, complete construction, field access, preserving updates, and declarative
@@ -106,3 +106,7 @@ and explicit `acknowledge` handle them; ordinary discard and silent overwrite ar
 rejected. `examples/results.my` returns 7. [Explicit `try` propagation](docs/experiments/propagation.md)
 checks early-return obligations and cleans up active borrows; `examples/propagation.my`
 returns 20. C/D resource ownership and abstraction work remain pending.
+
+The [owned-buffer backend](docs/experiments/ownership.md) now supports consuming
+transfers, reserved-capacity edits, growth limits, and partial-acquisition cleanup.
+Source ownership syntax, VM resource integration, and effects remain pending.

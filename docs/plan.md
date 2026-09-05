@@ -630,7 +630,7 @@ implemented. [Returned-reference lifetime contracts](experiments/returned-refere
 complete B; see [the acceptance audit](experiments/b-audit.md). C/D now have
 [typed recoverable results and checked handling obligations](experiments/results.md).
 [Explicit propagation](experiments/propagation.md) now preserves error obligations
-and borrow cleanup. Resource ownership and the other unfinished work below remain pending.
+and borrow cleanup. [Owned-buffer transfers and partial-acquisition cleanup](experiments/ownership.md) now have backend acceptance evidence. Source resource ownership and the other unfinished work below remain pending.
 
 | Stage | Scope | Question to answer before proceeding |
 | --- | --- | --- |

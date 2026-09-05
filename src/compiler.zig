@@ -73,6 +73,7 @@ test {
     _ = @import("variants_test.zig");
     _ = @import("tables_test.zig");
     _ = @import("memory_test.zig");
+    _ = @import("owned_scope_test.zig");
     _ = @import("references_test.zig");
     _ = @import("slices_test.zig");
     _ = @import("returned_references_test.zig");

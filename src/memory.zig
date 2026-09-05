@@ -17,7 +17,17 @@ pub const Error = std.mem.Allocator.Error || error{
     ReadOnly,
     Bounds,
     TypeMismatch,
+    CapacityLimit,
+    NoCapacity,
 };
+pub const Limits = struct {
+    max_buffer_capacity: usize = std.math.maxInt(usize) / @sizeOf(Value),
+    max_total_capacity: usize = std.math.maxInt(usize) / @sizeOf(Value),
+    max_allocations: usize = std.math.maxInt(usize),
+};
+pub const Statistics = struct { live_allocations: usize = 0, total_capacity: usize = 0, created: u64 = 0, released: u64 = 0, transfers: u64 = 0 };
+pub const BufferInfo = struct { element_type: Type, length: usize, capacity: usize };
+pub const Growth = enum { unchanged, allocated };
 pub const Kind = enum { shared, exclusive };
 pub const Token = struct { index: usize, generation: u64 };
 pub const Allocation = struct { memory: u64, token: Token };
@@ -60,6 +70,13 @@ fn Pool(comptime T: type) type {
             if (entry.generation != token.generation) return null;
             return if (entry.value) |*value| value else null;
         }
+        fn rekey(self: *Self, token: Token) Error!Token {
+            const entry = &self.entries.items[token.index];
+            std.debug.assert(entry.generation == token.generation and entry.value != null);
+            if (entry.generation == std.math.maxInt(u64)) return error.IdentityExhausted;
+            entry.generation += 1;
+            return .{ .index = token.index, .generation = entry.generation };
+        }
         fn remove(self: *Self, token: Token) T {
             const entry = &self.entries.items[token.index];
             std.debug.assert(entry.generation == token.generation and entry.value != null);
@@ -74,7 +91,7 @@ fn Pool(comptime T: type) type {
         }
     };
 }
-const Cell = struct { element_type: Type, values: []Value, shared: usize = 0, exclusive: bool = false };
+const Cell = struct { element_type: Type, values: []Value, length: usize, shared: usize = 0, exclusive: bool = false };
 const Lease = struct { allocation: Token, start: usize, length: usize, kind: Kind, parent: ?Token = null, children: usize = 0 };
 
 /// Owns memory/lease registries. Do not copy an initialized Store. Values passed
@@ -83,17 +100,24 @@ const Lease = struct { allocation: Token, start: usize, length: usize, kind: Kin
 pub const Store = struct {
     allocator: std.mem.Allocator,
     identity: u64,
+    limits: Limits = .{},
+    statistics: Statistics = .{},
     cells: Pool(Cell) = .{},
     leases: Pool(Lease) = .{},
 
     pub fn init(allocator: std.mem.Allocator) Error!Store {
         return .{ .allocator = allocator, .identity = try nextIdentity(&identities) };
     }
+    pub fn initWithLimits(allocator: std.mem.Allocator, limits: Limits) Error!Store {
+        var store = try init(allocator);
+        store.limits = limits;
+        return store;
+    }
     /// Final execution cleanup releases cells even when a trap leaves active
     /// leases. Normal owner destruction uses destroy and refuses active borrows.
     pub fn deinit(self: *Store) void {
         if (self.identity == 0) return;
-        for (self.cells.entries.items) |entry| if (entry.value) |owned| self.freeCell(owned);
+        for (self.cells.entries.items) |entry| if (entry.value) |owned| self.releaseOwned(owned);
         self.cells.entries.deinit(self.allocator);
         self.leases.entries.deinit(self.allocator);
         self.cells = .{};
@@ -115,29 +139,113 @@ pub const Store = struct {
         return active;
     }
     fn freeCell(self: *Store, owned: Cell) void {
-        for (owned.values) |value| value.release(self.allocator);
+        var i = owned.length;
+        while (i != 0) {
+            i -= 1;
+            owned.values[i].release(self.allocator);
+        }
         self.allocator.free(owned.values);
     }
-    /// Retain a homogeneous buffer; input ownership stays with the caller.
+    fn releaseOwned(self: *Store, owned: Cell) void {
+        self.statistics.live_allocations -= 1;
+        self.statistics.total_capacity -= owned.values.len;
+        self.statistics.released +|= 1;
+        self.freeCell(owned);
+    }
+    fn capacityAllowed(self: *Store, capacity: usize, increase: usize) Error!void {
+        if (capacity > self.limits.max_buffer_capacity or capacity > std.math.maxInt(usize) / @sizeOf(Value) or self.statistics.total_capacity > self.limits.max_total_capacity or increase > self.limits.max_total_capacity - self.statistics.total_capacity) return error.CapacityLimit;
+    }
+    fn unborrowed(owned: Cell) Error!void {
+        if (owned.shared != 0 or owned.exclusive) return error.BorrowConflict;
+    }
+    /// Retain homogeneous ordinary values; input ownership stays with the caller.
     pub fn create(self: *Store, element_type: Type, inputs: []const Value) Error!Allocation {
+        return self.createWithCapacity(element_type, inputs, inputs.len);
+    }
+    pub fn createWithCapacity(self: *Store, element_type: Type, inputs: []const Value, capacity: usize) Error!Allocation {
         try self.checkMemory(self.identity);
+        if (inputs.len > capacity) return error.Bounds;
         for (inputs) |input| if (input.typeOf() != element_type) return error.TypeMismatch;
-        const buffer = try self.allocator.alloc(Value, inputs.len);
-        for (inputs, buffer) |input, *output| output.* = input.retain();
-        const owned: Cell = .{ .element_type = element_type, .values = buffer };
+        try self.capacityAllowed(capacity, capacity);
+        if (self.statistics.live_allocations >= self.limits.max_allocations) return error.CapacityLimit;
+        const buffer = try self.allocator.alloc(Value, capacity);
+        for (inputs, buffer[0..inputs.len]) |input, *output| output.* = input.retain();
+        const owned: Cell = .{ .element_type = element_type, .values = buffer, .length = inputs.len };
         errdefer self.freeCell(owned);
-        return .{ .memory = self.identity, .token = try self.cells.insert(self.allocator, owned) };
+        const token = try self.cells.insert(self.allocator, owned);
+        self.statistics.live_allocations += 1;
+        self.statistics.total_capacity += capacity;
+        self.statistics.created +|= 1;
+        return .{ .memory = self.identity, .token = token };
+    }
+    pub fn info(self: *Store, allocation: Allocation) Error!BufferInfo {
+        const owned = try self.cell(allocation);
+        if (owned.exclusive) return error.BorrowConflict;
+        return .{ .element_type = owned.element_type, .length = owned.length, .capacity = owned.values.len };
+    }
+    /// Consume the owner identity without allocating or copying buffer contents.
+    /// Active borrows prevent transfer. A failed transfer leaves the old owner valid.
+    pub fn transfer(self: *Store, allocation: Allocation) Error!Allocation {
+        try unborrowed((try self.cell(allocation)).*);
+        const token = try self.cells.rekey(allocation.token);
+        self.statistics.transfers +|= 1;
+        return .{ .memory = self.identity, .token = token };
+    }
+    pub fn reserve(self: *Store, allocation: Allocation, capacity: usize) Error!Growth {
+        const owned = try self.cell(allocation);
+        try unborrowed(owned.*);
+        if (capacity <= owned.values.len) return .unchanged;
+        const increase = capacity - owned.values.len;
+        try self.capacityAllowed(capacity, increase);
+        const grown = try self.allocator.alloc(Value, capacity);
+        @memcpy(grown[0..owned.length], owned.values[0..owned.length]);
+        // Transfer existing Value ownership; releasing the old elements here
+        // would invalidate the moved snapshots in the new backing buffer.
+        self.allocator.free(owned.values);
+        owned.values = grown;
+        self.statistics.total_capacity += increase;
+        return .allocated;
+    }
+    pub fn appendWithinCapacity(self: *Store, allocation: Allocation, value: Value) Error!void {
+        const owned = try self.cell(allocation);
+        try unborrowed(owned.*);
+        if (value.typeOf() != owned.element_type) return error.TypeMismatch;
+        if (owned.length == owned.values.len) return error.NoCapacity;
+        owned.values[owned.length] = value.retain();
+        owned.length += 1;
+    }
+    pub fn resizeWithinCapacity(self: *Store, allocation: Allocation, length: usize, fill: Value) Error!void {
+        const owned = try self.cell(allocation);
+        try unborrowed(owned.*);
+        if (length > owned.values.len) return error.NoCapacity;
+        if (length > owned.length and fill.typeOf() != owned.element_type) return error.TypeMismatch;
+        while (owned.length > length) {
+            owned.length -= 1;
+            owned.values[owned.length].release(self.allocator);
+        }
+        while (owned.length < length) {
+            owned.values[owned.length] = fill.retain();
+            owned.length += 1;
+        }
     }
     pub fn destroy(self: *Store, allocation: Allocation) Error!void {
-        const owned = try self.cell(allocation);
-        if (owned.shared != 0 or owned.exclusive) return error.BorrowConflict;
-        self.freeCell(self.cells.remove(allocation.token));
+        try unborrowed((try self.cell(allocation)).*);
+        self.releaseOwned(self.cells.remove(allocation.token));
+    }
+    /// Terminal unwind only: invalidate all views before releasing this owner.
+    /// Normal scope exit uses destroy and diagnoses outstanding borrows.
+    pub fn destroyForUnwind(self: *Store, allocation: Allocation) Error!void {
+        _ = try self.cell(allocation);
+        for (self.leases.entries.items, 0..) |entry, index| if (entry.value) |lease_value| {
+            if (std.meta.eql(lease_value.allocation, allocation.token)) _ = self.leases.remove(.{ .index = index, .generation = entry.generation });
+        };
+        self.releaseOwned(self.cells.remove(allocation.token));
     }
     /// Root borrows currently conflict over the whole allocation, even for
     /// disjoint or empty ranges. Bounds are still narrowed on each view.
     pub fn borrow(self: *Store, allocation: Allocation, start: usize, length: usize, kind: Kind) Error!Borrow {
         const owned = try self.cell(allocation);
-        try checkRange(owned.values.len, start, length);
+        try checkRange(owned.length, start, length);
         if (owned.exclusive or (kind == .exclusive and owned.shared != 0)) return error.BorrowConflict;
         if (kind == .shared and owned.shared == std.math.maxInt(usize)) return error.IdentityExhausted;
         const token = try self.leases.insert(self.allocator, .{ .allocation = allocation.token, .start = start, .length = length, .kind = kind });
@@ -190,13 +298,13 @@ pub const Store = struct {
     pub fn readOwner(self: *Store, allocation: Allocation, index: usize) Error!Value {
         const owned = try self.cell(allocation);
         if (owned.exclusive) return error.BorrowConflict;
-        if (index >= owned.values.len) return error.Bounds;
+        if (index >= owned.length) return error.Bounds;
         return owned.values[index].retain();
     }
     pub fn writeOwner(self: *Store, allocation: Allocation, index: usize, replacement: Value) Error!void {
         const owned = try self.cell(allocation);
         if (owned.exclusive or owned.shared != 0) return error.BorrowConflict;
-        if (index >= owned.values.len) return error.Bounds;
+        if (index >= owned.length) return error.Bounds;
         try self.replace(owned, index, replacement);
     }
     fn replace(self: *Store, owned: *Cell, index: usize, replacement: Value) Error!void {
@@ -227,4 +335,20 @@ test "memory identities and slot generations never wrap into stale handles" {
     const next = try pool.insert(std.testing.allocator, 9);
     try std.testing.expect(next.index != last.index);
     try std.testing.expect(pool.get(first) == null and pool.get(last) == null);
+}
+
+test "exhausted ownership generations fail transfer without losing the buffer" {
+    const t = std.testing;
+    var store = try Store.init(t.allocator);
+    defer store.deinit();
+    const first = try store.create(.i64, &.{.{ .i64 = 7 }});
+    store.cells.entries.items[first.token.index].generation = std.math.maxInt(u64);
+    const last: Allocation = .{ .memory = first.memory, .token = .{ .index = first.token.index, .generation = std.math.maxInt(u64) } };
+    try t.expectError(error.IdentityExhausted, store.transfer(last));
+    try t.expectEqual(@as(i64, 7), (try store.readOwner(last, 0)).i64);
+    try t.expectEqual(@as(u64, 0), store.statistics.transfers);
+    try store.destroy(last);
+    const next = try store.create(.i64, &.{});
+    try t.expect(next.token.index != last.token.index);
+    try t.expectError(error.InvalidAllocation, store.info(last));
 }
