@@ -1,0 +1,32 @@
+buffer Numbers: i64;
+result Acquired { ok: Numbers, err: i64 }
+result Status { ok: bool, err: i64 }
+
+fn fill(input: Numbers) -> Acquired noalloc {
+    let mut values = input;
+    discard try resize_buffer<Status>(values, 2, 7);
+    borrow mut values[0..2] as view {
+        write_slice(view, 1, 11);
+    }
+    return new Acquired.ok(values);
+}
+
+fn release(values: Numbers) -> i64 effects() {
+    discard values;
+    return 3;
+}
+
+fn main() -> i64 effects(allocation) {
+    match acquire_buffer<Acquired>(2) {
+        Acquired.ok(values) => {
+            match fill(values) {
+                Acquired.ok(filled) => {
+                    let value = read_buffer(filled, 1);
+                    return value + release(filled);
+                },
+                Acquired.err(error_code) => { return error_code; }
+            }
+        },
+        Acquired.err(error_code) => { return error_code; }
+    }
+}

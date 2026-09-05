@@ -585,3 +585,27 @@ External resources, explicit capabilities, effects including cleanup, arenas/poo
 abstractions, and every other unfinished roadmap track remain pending. C is not
 complete. Guardian gates were not exercised; hosted CI has not run.
 The full roadmap goal remains active.
+
+
+## 2026-09-05: C transitive allocation-effect bounds
+
+Implemented contextual function bounds (`noalloc`, `noio`, and explicit allowed
+sets), iterative checked-body traversal, finite effect-set propagation over resolved
+calls, and origin/call-path diagnostics. Owned acquisition and reserve contribute
+allocation; reserved edits, moves, and current buffer cleanup do not. Bytecode
+validation independently recomputes summaries and rejects forged bounds/summaries.
+Dumps and exact-v16 discovery retain effect contracts.
+
+251/251 tests pass in Debug and ReleaseFast (223 core, 28 actual CLI). Tests cover
+recursive/declaration-reordered graphs, uncalled helpers, short-circuit/branch and
+constructor operands, reference calls/results, cleanup under noalloc, malformed
+annotations, emission metadata, all allocation failures, and a 512-function cycle.
+The effects example returns 14. Formatting and whitespace checks pass.
+
+[Effect semantics](experiments/effects.md) defines allocation as owned guest backing
+storage, not physical host VM allocation. The vocabulary includes external effects,
+but their source operations, explicit capability parameters, and external-resource
+cleanup are pending. Current allocation still uses the implicit execution memory
+store. This is a foundation, not completion of C or capability security. Arenas/pools,
+abstraction work, and every other unfinished track retain their scope. Guardian
+gates were not exercised; hosted CI has not run. The full roadmap goal remains active.

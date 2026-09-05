@@ -900,8 +900,10 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
             }
         }
         if (!body.terminates) return sink.fail("E_MISSING_RETURN", function.name, "function may fall through without returning its declared type; loops are conservatively treated as falling through, even while true");
-        out.* = .{ .return_reference = checker.return_reference, .references = try checker.references.toOwnedSlice(allocator), .owner = checker.owner, .restricted = function.restricted, .conversion = function.conversion, .id = @fromBackingInt(i), .name = try functionName(allocator, src, function.owner, function.name), .declaration = function.name, .return_type = checker.return_type, .parameter_count = function.parameters.len, .body = body.id, .locals = try checker.locals.toOwnedSlice(allocator) };
+        out.* = .{ .effect_bound = function.effect_bound, .return_reference = checker.return_reference, .references = try checker.references.toOwnedSlice(allocator), .owner = checker.owner, .restricted = function.restricted, .conversion = function.conversion, .id = @fromBackingInt(i), .name = try functionName(allocator, src, function.owner, function.name), .declaration = function.name, .return_type = checker.return_type, .parameter_count = function.parameters.len, .body = body.id, .locals = try checker.locals.toOwnedSlice(allocator) };
     }
+    const checked: typed.Program = .{ .nodes = try checker.nodes.toOwnedSlice(allocator), .statements = try checker.statements.toOwnedSlice(allocator), .functions = functions, .main = main, .records = catalog.records };
+    try @import("effects.zig").check(allocator, checked, sink);
     for (functions) |function| {
         for (function.locals) |local| {
             if (local.reads == 0) try sink.items.append(allocator, .{
@@ -919,7 +921,7 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
         }
     }
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
-    return .{ .nodes = try checker.nodes.toOwnedSlice(allocator), .statements = try checker.statements.toOwnedSlice(allocator), .functions = functions, .main = main, .records = catalog.records };
+    return checked;
 }
 
 // This initial conversion form is declarative. Restricting its body avoids

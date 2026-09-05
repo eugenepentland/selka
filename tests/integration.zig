@@ -378,3 +378,17 @@ test "CLI mutates buffers through returned slices and rejects moves under shared
     const conflict = "buffer B: i64; fn f(b: B) -> i64 { borrow b[0..0] as s { discard b; } return 0; } fn main() -> i64 { return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, conflict, 1, "", "error[E_BORROW_CONFLICT]");
 }
+
+test "CLI enforces transitive allocation bounds and exposes inferred effects" {
+    const source = @embedFile("fixtures/effects.my");
+    try invoke("run", source, 0, "14\n", "");
+    try invoke("check", source, 0, "", "");
+    const dumped = try runFixture("dump-bytecode", source, &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "effects {allocation} allowed {allocation}") != null);
+    const invalid = "buffer B: i64; result R { ok: B, err: i64 } fn helper() -> R { return acquire_buffer<R>(1); } fn main() -> i64 noalloc { acknowledge helper(); return 0; }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_EFFECT_BOUND]");
+    try invoke("check", invalid, 1, "", "main -> helper");
+}

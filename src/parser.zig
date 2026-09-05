@@ -140,8 +140,32 @@ pub const Parser = struct {
             if (!std.mem.eql(u8, self.src.text(from.span), "from")) return self.sink.fail("E_RETURN_LIFETIME", from.span, "reference result requires `from` followed by a reference parameter name");
             return_reference = .{ .source = (try self.expect(.ident)).span, .mutable = mutable, .slice = slice };
         }
+        const effect_bound = try self.effectBound();
         const body = try self.block();
-        return .{ .return_reference = return_reference, .owner = owner, .restricted = restricted, .conversion = conversion, .name = name.span, .parameters = try parameters.toOwnedSlice(self.allocator), .return_type = return_type, .body = body };
+        return .{ .effect_bound = effect_bound, .return_reference = return_reference, .owner = owner, .restricted = restricted, .conversion = conversion, .name = name.span, .parameters = try parameters.toOwnedSlice(self.allocator), .return_type = return_type, .body = body };
+    }
+    fn effectBound(self: *Parser) diagnostic.Error!?@import("effect_set.zig").Bound {
+        const sets = @import("effect_set.zig");
+        const token = self.current();
+        if (token.tag != .ident) return null;
+        const spelling = self.src.text(token.span);
+        if (std.mem.eql(u8, spelling, "noalloc") or std.mem.eql(u8, spelling, "noio")) {
+            self.pos += 1;
+            return .{ .span = token.span, .allowed = sets.all & ~(if (std.mem.eql(u8, spelling, "noalloc")) sets.bit(.allocation) else sets.io) };
+        }
+        if (!std.mem.eql(u8, spelling, "effects")) return null;
+        self.pos += 1;
+        _ = try self.expect(.lparen);
+        var allowed: sets.Mask = 0;
+        if (self.current().tag != .rparen) while (true) {
+            const name = try self.expect(.ident);
+            const effect = std.meta.stringToEnum(sets.Effect, self.src.text(name.span)) orelse return self.sink.fail("E_UNKNOWN_EFFECT", name.span, "unknown effect; expected allocation, filesystem, network, clock, random, or environment");
+            if (allowed & sets.bit(effect) != 0) return self.sink.fail("E_DUPLICATE_EFFECT", name.span, "effect appears more than once in this bound");
+            allowed |= sets.bit(effect);
+            if (!self.take(.comma)) break;
+        };
+        const close = try self.expect(.rparen);
+        return .{ .span = .join(token.span, close.span), .allowed = allowed };
     }
     fn addStatement(self: *Parser, stmt: ast.Statement) diagnostic.Error!ast.StatementId {
         const id: ast.StatementId = @fromBackingInt(self.statements.items.len);

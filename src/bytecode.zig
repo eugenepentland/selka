@@ -61,7 +61,7 @@ pub const Instruction = struct {
         call_borrow: struct { function: typed.FunctionId, references: []const typed.ReferenceId, destination: typed.ReferenceId },
     },
 };
-pub const Function = struct { return_reference: ?typed.ReturnReference = null, references: []const typed.Reference = &.{}, owner: ?typed.Type = null, restricted: bool = false, conversion: bool = false, id: typed.FunctionId, name: []const u8, parameter_count: usize = 0, return_type: typed.Type = .i64, locals: []const typed.Local = &.{}, instructions: []const Instruction };
+pub const Function = struct { effects: @import("effect_set.zig").Mask = 0, effect_bound: ?@import("effect_set.zig").Bound = null, return_reference: ?typed.ReturnReference = null, references: []const typed.Reference = &.{}, owner: ?typed.Type = null, restricted: bool = false, conversion: bool = false, id: typed.FunctionId, name: []const u8, parameter_count: usize = 0, return_type: typed.Type = .i64, locals: []const typed.Local = &.{}, instructions: []const Instruction };
 pub const Program = struct { functions: []const Function, main: typed.FunctionId = @fromBackingInt(0), records: []const typed.Record = &.{} };
 pub fn valueParameterCount(function: Function) usize {
     var count: usize = 0;
@@ -86,6 +86,7 @@ fn enqueue(heights: []?usize, pending: []usize, len: *usize, target: usize, heig
 /// Operand types and initialization remain checked by the VM; there is no untrusted loader.
 pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
     if (@backingInt(program.main) >= program.functions.len) return error.InternalError;
+    try @import("effects.zig").validate(allocator, program);
     for (program.records, 0..) |record, i| {
         if (@backingInt(record.id) != i + typed.Type.record_base) return error.InternalError;
         if (record.buffer) |element| {

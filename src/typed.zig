@@ -124,6 +124,8 @@ pub const Range = struct { start: NodeId, end: NodeId };
 pub const Local = struct { transfer_available: bool = false, slice_parameter: bool = false, reference_parameter: ?bool = null, name: []const u8, declaration: Span, ty: Type, mutable: bool, mutable_borrow: bool = false, reads: usize = 0, writes: usize = 0 };
 pub const ReturnReference = struct { parameter: LocalId, mutable: bool, slice: bool };
 pub const Function = struct {
+    effect_bound: ?@import("effect_set.zig").Bound = null,
+    effects: @import("effect_set.zig").Mask = 0,
     return_reference: ?ReturnReference = null,
     references: []const Reference = &.{},
     owner: ?Type = null,

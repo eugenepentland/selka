@@ -35,6 +35,15 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
         if (function.return_reference) |contract| {
             try writer.print(") -> &{s}{s}{s} from {s}\n", .{ if (contract.mutable) "mut " else "", if (contract.slice) "[]" else "", typed.typeName(function.return_type, program.records), function.locals[@backingInt(contract.parameter)].name });
         } else try writer.print(") -> {s}\n", .{typed.typeName(function.return_type, program.records)});
+        if (function.effects != 0 or function.effect_bound != null) {
+            try writer.writeAll("  effects ");
+            try @import("effect_set.zig").write(writer, function.effects);
+            if (function.effect_bound) |bound| {
+                try writer.writeAll(" allowed ");
+                try @import("effect_set.zig").write(writer, bound.allowed);
+            }
+            try writer.writeByte('\n');
+        }
         for (function.references, 0..) |reference, i| try writer.print("  reference {d}: {s}: {s} owner={d} parent={?d} mutable={}\n", .{ i, reference.name, typed.typeName(reference.ty, program.records), @backingInt(reference.owner), if (reference.parent) |parent| @as(?usize, @backingInt(parent)) else null, reference.mutable });
         for (function.instructions, 0..) |instruction, i| {
             try writer.print("  {d:0>4}  ", .{i});

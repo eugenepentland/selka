@@ -165,7 +165,7 @@ input values cannot escape. The VM captures a valid result view, ends callee loa
 and reborrows the caller input for the receiving scope. See
 [returned-reference semantics](experiments/returned-references.md) and
 [B acceptance](experiments/b-audit.md). This completes the restricted borrowing
-experiment; buffer acquisition/moves are now supported separately, while effects remain pending.
+experiment; buffer acquisition/moves are now supported separately, while explicit capabilities and external effects remain pending.
 
 
 Nominal `result Name { ok: T, err: E }` declarations and explicit `acknowledge`
@@ -191,5 +191,14 @@ clean up at block/match exits, return, and propagated failure. Results retain th
 explicit handling obligations. See [source ownership semantics and current limits](experiments/owned-buffers.md).
 [Buffer operations and views](experiments/buffer-operations.md) now provide length/capacity
 queries, retained reads, typed mutation statuses, and borrowed slices that work with
-existing slice helpers and returned-view contracts. External capabilities/effects
-and arenas/pools remain pending.
+existing slice helpers and returned-view contracts. Explicit capabilities/external
+effects and arenas/pools remain pending.
+
+
+Function annotations `noalloc`, `noio`, and `effects(...)` bound inferred effects.
+Owned buffer acquisition/reserve contribute allocation; reserved edits and buffer
+cleanup do not. Calls propagate effects to a fixed point, including recursion.
+`noalloc` constrains guest backing allocation rather than host VM bookkeeping;
+`noio` excludes filesystem/network access without promising determinism.
+[Effect semantics and limits](experiments/effects.md) define the complete current
+contract. External capability operations and their cleanup effects remain pending.

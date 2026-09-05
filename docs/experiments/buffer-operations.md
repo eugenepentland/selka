@@ -49,8 +49,9 @@ arguments retain signedness and width until checked before host index conversion
 Reads preserve snapshots across later writes, resizing, growth, or owner destruction.
 
 The backing-storage distinction above is not a whole-VM no-allocation guarantee.
-Result wrappers, expression evaluation, and VM bookkeeping may allocate. Transitive
-language effect checking has not been implemented.
+Result wrappers, expression evaluation, and VM bookkeeping may allocate.
+[Transitive allocation bounds](effects.md) now enforce the guest backing-storage
+distinction; explicit capabilities and external effects remain pending.
 
 ## Borrowed views
 

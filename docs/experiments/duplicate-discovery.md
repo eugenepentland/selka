@@ -188,3 +188,9 @@ Buffer operations advance discovery to `exact-v15`. Canonical nodes retain the
 operation kind, owner binding identity, result type, and ordered value arguments.
 Renamed length-query helpers group together; capacity queries remain distinct.
 Buffer slices retain the existing checked reference and provenance identities.
+
+
+Effect contracts advance discovery to `exact-v16`. Canonical functions retain
+inferred effect sets and normalized optional allowed sets; source annotation spans
+and list ordering do not participate. Equal bodies with different declared bounds
+remain separate. Renamed helpers with reordered but equal allowed sets group.
