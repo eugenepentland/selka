@@ -1019,3 +1019,32 @@ language features. Modules, source pool/arena scopes, generics, partial field mo
 native execution, compile-time/schema/incremental work, and every other unfinished
 roadmap requirement remain in scope. Guardian was not exercised; hosted CI has not
 run. The full roadmap goal remains active.
+
+
+## 2026-09-05: E scalar native execution and shared executable parity
+
+Implemented C emission from checked/lowered scalar instructions and a builder that
+verifies Guardian's exact Zig before invoking zig cc. Generated programs use direct
+branches and explicit operand/call frames, checked width arithmetic, matching guest
+step/frame accounting, and trap codes/source locations. Unsupported post-MVP
+signatures and operations diagnose E_NATIVE_FEATURE without partial C output or a
+VM fallback. Native diagnostics use concise location/trace formatting.
+
+399 Zig/core-and-CLI tests pass in Debug and ReleaseFast (357 core, 42 actual CLI),
+plus eight verification-driver tests. Each host mode also passes 23 scalar fixtures
+and 182 executed VM/native comparisons across C -O0/-O2 with undefined-behavior
+sanitization. Cases cover widths/casts/overflow/division/remainder, booleans, skipped
+traps, branches/loops, caller operands, mutual recursion, 20,000 explicit frames,
+and call-program budget boundaries. The actual native builder, wrong-toolchain
+rejection, quoted paths, and malformed budgets pass. Generator determinism and all
+allocation failures pass; formatting and whitespace checks pass. Final repeats used
+cached Zig suites and executed the Python/native tests again.
+
+[Native execution semantics](experiments/native-execution.md) records the hosted C
+route, supported scalar subset, and limits. No speed claim, whole-language native
+support, or native allocator-fault-injection coverage is asserted. This satisfies
+the tracked scalar native acceptance experiment; native expansion requires its own
+operations and corresponding parity cases. Source pool/arena scopes, partial field
+moves, generics, modules/interfaces, compile-time/schema/incremental work, and all
+other unfinished roadmap requirements remain in scope. Guardian was not exercised;
+hosted CI has not run. The full roadmap goal remains active.

@@ -592,3 +592,14 @@ test "CLI formatter preserves checking and is idempotent across the language fix
         try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, checked.term);
     }
 }
+
+test "CLI emits scalar C and diagnoses unsupported native features without partial output" {
+    const generated = try runFixture("emit-c", "fn main() -> i64 { return 7; }", &.{});
+    defer testing.allocator.free(generated.stdout);
+    defer testing.allocator.free(generated.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, generated.term);
+    try testing.expect(std.mem.indexOf(u8, generated.stdout, "goto L") != null);
+    try invoke("emit-c", "fn main() -> i64 { return false; }", 1, "", "error[E_TYPE]");
+    try invoke("emit-c", "fn main() -> i64 { let a = new [1]i64 [7]; return a[0]; }", 1, "", "error[E_NATIVE_FEATURE]");
+    try invokeOptions("emit-c", "fn main() -> i64 { return 7; }", &.{"--memory=arena"}, 2, "", "usage:");
+}

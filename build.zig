@@ -41,6 +41,11 @@ pub fn build(b: *std.Build) void {
     const driver_tests = b.addSystemCommand(&.{ "python3", "-m", "unittest", "discover", "-s", "tests/verification", "-p", "test_driver.py" });
     driver_tests.setCwd(b.path("."));
     test_step.dependOn(&driver_tests.step);
+    const native_tests = b.addSystemCommand(&.{ "python3", "tests/native_cases.py", "--compiler" });
+    native_tests.addFileArg(exe.getEmittedBin());
+    native_tests.addArgs(&.{ "--zig", b.graph.zig_exe });
+    native_tests.setCwd(b.path("."));
+    test_step.dependOn(&native_tests.step);
     const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("src"), b.path("tests") }, .check = true });
     b.step("fmt-check", "Check canonical Zig formatting").dependOn(&fmt.step);
 }

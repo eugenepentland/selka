@@ -1,7 +1,7 @@
 //! Host I/O and process policy stay outside the compiler and VM.
 const std = @import("std");
 const language = @import("mylang");
-const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates|report-quality|fmt> <file.my>\n  run: --max-steps=N --max-frames=N --memory=general|arena\n  discover-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  fmt: --check (otherwise writes formatted source to stdout)\n";
+const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates|report-quality|fmt|emit-c> <file.my>\n  run: --max-steps=N --max-frames=N --memory=general|arena\n  discover-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  fmt: --check (otherwise writes formatted source to stdout)\n";
 
 pub fn main(init: std.process.Init) void {
     const status = dispatch(init) catch |err| status: {
@@ -50,9 +50,21 @@ fn dispatch(init: std.process.Init) !u8 {
         else => return err,
     };
     const check_ns = if (parsed.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
-    try report(init, &compilation);
+    if (parsed.command != .@"emit-c") try report(init, &compilation);
     switch (parsed.command) {
         .fmt => unreachable,
+        .@"emit-c" => {
+            const generated = compilation.emitC(allocator) catch |err| switch (err) {
+                error.SourceError => {
+                    try report(init, &compilation);
+                    return 1;
+                },
+                else => return err,
+            };
+            defer allocator.free(generated);
+            try report(init, &compilation);
+            try std.Io.File.stdout().writeStreamingAll(init.io, generated);
+        },
         .check => return 0,
         .@"report-quality" => {
             var analysis = try language.quality.analyze(allocator, compilation.program.?, compilation.src, parsed.quality);
@@ -105,7 +117,7 @@ fn report(init: std.process.Init, compilation: *const language.Compilation) !voi
     }
 }
 
-const Command = enum { fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
+const Command = enum { @"emit-c", fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
 const Parsed = struct { format_check: bool, quality: language.quality.Options, command: Command, path: []const u8, options: language.vm.Options, discovery: language.duplicates.Options, timings: bool };
 fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (args.len < 2) return error.Usage;

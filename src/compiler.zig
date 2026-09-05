@@ -70,6 +70,13 @@ pub const Compilation = struct {
         return vm.runWithOptions(allocator, self.code.?, options);
     }
 
+    pub fn emitC(self: *Compilation, allocator: std.mem.Allocator) ![]u8 {
+        try self.emit();
+        var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
+        defer self.diagnostics = sink.items;
+        return @import("native.zig").generate(allocator, self.code.?, self.src, &sink);
+    }
+
     pub fn dump(self: *Compilation, allocator: std.mem.Allocator) ![]u8 {
         try self.emit();
         return disassemble.dump(allocator, self.code.?, self.src);
@@ -82,6 +89,7 @@ test {
     _ = @import("near_duplicates_test.zig");
     _ = @import("quality_test.zig");
     _ = @import("formatter_test.zig");
+    _ = @import("native_test.zig");
     _ = @import("value_test.zig");
     _ = @import("records_test.zig");
     _ = @import("integers_test.zig");

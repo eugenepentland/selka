@@ -13,7 +13,7 @@ not a claim that the full future language has been delivered.
 | C, ownership/capabilities/effects | Owned buffers, queries/mutations, checked views, moves/wrappers, and partial-construction cleanup, and transitive allocation bounds, and explicit allocator capabilities implemented; clock/random capabilities and effects implemented; source filesystem/network resource acquisition/completion, owned error returns, and cleanup effects implemented; bounded environment lookup implemented; fixed-byte-array resource reads/writes implemented; resource permission attenuation implemented; borrowed slice I/O implemented; typed-handle pool and arena-reset backends plus execution-lifetime VM/CLI arena selection implemented; partial field moves and source pool/arena scopes pending | Allocator and clock/random authority/effects pass acceptance; source resource lifecycle and cleanup effects pass; bounded environment lookup passes; resource reads/writes pass; permission attenuation passes; borrowed slice I/O passes; continue source pool/arena integration and partial field moves. |
 | D, errors and abstraction | In progress: typed results, checked handling/transfer, acknowledgement, and propagation implemented; typed-handle pool backend implemented; generics/source handles pending | Require handling/propagation/explicit acknowledgement without erasing evaluation or ownership obligations. |
 | M, modules/interfaces | Pending a multi-file domain program | Resolve imports/exports and private boundaries; distinguish optional direction policy from type validity. |
-| E, native execution | Pending one concrete backend choice | Run the same scalar semantic/trap fixtures through the VM and native route. |
+| E, native execution | Scalar C emission and pinned-Zig native builder implemented; scalar semantic/trap parity passes | Scalar acceptance complete; broader native support requires explicit operations and corresponding executable parity fixtures. |
 | F, compile-time/schema/incremental work | Pending aggregates/variants/modules | Reject duplicate schema keys and undeclared inputs; explain invalidation and evaluation budgets. |
 | T, formatter/reference reports/verification | Canonical formatter, resolved function-call/binding reports, configurable structural metrics, and separate manifest verification driver implemented | Extend reference/specification identities and entry roots with modules/schemas, and parity fixtures with native execution. |
 
@@ -100,3 +100,7 @@ stdout output plus a syntax-only check mode. The verification driver remains pen
 [Project verification](verification-driver.md) now runs explicit steps with truthful
 filtered/dependency reporting, executed parity, rejection sentinels, specification
 markers, and timing observations separate from performance gates.
+
+[Scalar native execution](native-execution.md) now uses direct C branches and
+explicit frames, with executed VM/native parity and explicit unsupported-feature
+diagnostics.

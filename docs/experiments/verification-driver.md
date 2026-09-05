@@ -50,7 +50,8 @@ is retained, including cache hits and the subprocess's own test-selection eviden
 - Parity requires two or more actual commands, validates each expected result, then
   compares exit status and byte-identical stdout. Stderr remains diagnostic evidence,
   not parity output. The supplied fixture compares general/arena VM memory backends;
-  it does not stand in for the pending native backend experiment.
+  it remains separate from [scalar native parity](native-execution.md), which now runs
+  inside the compiler-test steps.
 - Mutation steps require a nonzero expected exit and a diagnostic marker. The
   supplied immutable-assignment sentinel verifies that a deliberate invalid change
   is rejected for the intended reason. This is not mutation generation, a mutation
@@ -94,7 +95,6 @@ reported selected success with full-manifest success false. Formatting checks,
 source checking, expected runtime values, the mutation sentinel, specification
 marker, and three timing samples passed. Hosted CI has not run.
 
-Modules/schemas will need richer reference and specification identities; native
-execution needs additional parity fixtures. These future language tracks remain
+Modules/schemas will need richer reference and specification identities; broader native execution needs additional parity fixtures. These future language tracks remain
 pending. The manifest is an explicit starting verification set, not an exhaustive
 claim about future features or all possible test inputs.
