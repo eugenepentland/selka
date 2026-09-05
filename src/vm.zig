@@ -6,7 +6,8 @@ const typed = @import("typed.zig");
 const memory = @import("memory.zig");
 const external = @import("external_capabilities.zig");
 const Diagnostic = @import("diagnostic.zig").Diagnostic;
-pub const Options = struct { external: external.Providers = .{}, provide_allocator: bool = true, memory_statistics: ?*memory.Statistics = null, memory_limits: memory.Limits = .{}, max_steps: u64 = 10_000_000, max_frames: u64 = 1024 };
+const resource_runtime = @import("resource_runtime.zig");
+pub const Options = struct { resources: resource_runtime.Options = .{}, external: external.Providers = .{}, provide_allocator: bool = true, memory_statistics: ?*memory.Statistics = null, memory_limits: memory.Limits = .{}, max_steps: u64 = 10_000_000, max_frames: u64 = 1024 };
 pub const Result = union(enum) { value: i64, trap: Diagnostic };
 fn integer(value: typed.Value, allocator: std.mem.Allocator) error{InternalError}!i64 {
     defer value.release(allocator);
@@ -80,6 +81,8 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
         storage.deinit();
         if (options.memory_statistics) |statistics| statistics.* = storage.statistics;
     }
+    var resource_execution = try resource_runtime.Runtime.init(allocator, options.resources);
+    defer resource_execution.deinit();
     var external_runtime = external.Runtime.init(storage.identity, options.external);
     defer external_runtime.close();
     var owners: std.AutoHashMapUnmanaged(usize, memory.Allocation) = .empty;
@@ -109,6 +112,8 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
         if (parameter.ty == .allocator) {
             if (!options.provide_allocator) return error.CapabilityUnavailable;
             locals.items[index] = .{ .allocator = try storage.allocatorCapability() };
+        } else if (parameter.ty.resourceKind()) |kind| {
+            locals.items[index] = try resource_execution.grant(kind);
         } else {
             locals.items[index] = .{ .external = try external_runtime.grant(parameter.ty.externalKind().?) };
         }
@@ -472,6 +477,26 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 };
                 releaseValues(arguments, allocator);
                 stack.shrinkRetainingCapacity(start);
+                try pushOwned(&stack, allocator, output);
+            },
+            .acquire_resource => |acquire| {
+                const request = try pop(&stack, frame.operand_base);
+                defer request.release(allocator);
+                const capability = try pop(&stack, frame.operand_base);
+                defer capability.release(allocator);
+                const output = resource_execution.acquire(acquire.output, program.records, capability, request, acquire.request) catch |err| switch (err) {
+                    error.InvalidCapability, error.InvalidOwner, error.Closed => return trap("R_CAPABILITY", "external resource authority is stale or invalid", instruction.span, frames.items, program),
+                    else => return err,
+                };
+                try pushOwned(&stack, allocator, output);
+            },
+            .complete_resource => |output_type| {
+                const value = try pop(&stack, frame.operand_base);
+                defer value.release(allocator);
+                const output = resource_execution.complete(output_type, program.records, value) catch |err| switch (err) {
+                    error.InvalidCapability, error.InvalidOwner, error.Closed => return trap("R_CAPABILITY", "external resource owner is stale or invalid", instruction.span, frames.items, program),
+                    else => return err,
+                };
                 try pushOwned(&stack, allocator, output);
             },
             .external_read => |read| {

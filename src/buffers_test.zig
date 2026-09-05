@@ -141,7 +141,7 @@ test "duplicate discovery preserves acquisition types capacities and ownership o
     defer found.deinit();
     try t.expectEqual(@as(usize, 1), found.groups.len);
     try t.expectEqual(@as(usize, 2), found.groups[0].members.len);
-    try t.expectEqualStrings("exact-v18", language.duplicates.version);
+    try t.expectEqualStrings("exact-v19", language.duplicates.version);
 }
 
 test "bytecode rejects buffer construction bypass and invalid acquisition contracts" {

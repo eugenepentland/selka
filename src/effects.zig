@@ -58,12 +58,20 @@ const Graph = struct {
 pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagnostic.Sink) diagnostic.Error!void {
     var graph = try Graph.init(allocator, program.functions.len);
     defer graph.deinit();
+    const cleanup_masks = cleanupMasks(allocator, program.records) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        error.InternalError => unreachable,
+    };
+    defer allocator.free(cleanup_masks);
     for (program.functions, 0..) |function, index| {
+        seedOwnership(&graph, index, function.return_type, function.locals, function.declaration, cleanup_masks) catch unreachable;
         var walker = try @import("typed_walk.zig").Walker.init(allocator, program, function.body);
         defer walker.deinit();
         while (try walker.next()) |item| if (item == .expression) {
             const node = program.nodes[@backingInt(item.expression)];
             switch (node.data) {
+                .acquire_resource => graph.direct(index, typed.resourceKind(typed.resultShape(node.ty, program.records).?.ok_type, program.records).?.effect(), node.span),
+                .complete_resource => graph.direct(index, typed.resourceKind(typed.completionShape(node.ty, program.records).?.resource_type, program.records).?.effect(), node.span),
                 .external_read => |read| graph.direct(index, read.kind.effect(), node.span),
                 .acquire_buffer => graph.direct(index, .allocation, node.span),
                 .buffer_operation => |op| if (bufferAllocates(op.kind)) {
@@ -76,8 +84,8 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
                 .integer, .boolean, .local, .read_ref, .propagate, .read_slice, .len_slice, .cast, .wrap, .variant, .unwrap, .array, .index, .replace, .length, .record, .update, .field, .unary, .binary => {},
             }
         };
-        // Current owned cleanup only releases buffers. It performs no external
-        // access or guest backing allocation; no user-defined cleanup exists yet.
+        // Ownership-bearing signatures and locals conservatively include their
+        // fallback cleanup effect, including on traps and propagated errors.
     }
     try graph.infer();
     for (@constCast(program.functions), 0..) |*function, index| {
@@ -99,7 +107,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
                 std.debug.assert(steps < program.functions.len);
             }
             const message = try allocator.dupe(u8, path.written());
-            return sink.failRelated("E_EFFECT_BOUND", bound.span, message, .{ .span = graph.states[cursor].witnesses[@backingInt(effect)].?.span, .message = "effect originates at this operation" });
+            return sink.failRelated("E_EFFECT_BOUND", bound.span, message, .{ .span = graph.states[cursor].witnesses[@backingInt(effect)].?.span, .message = "effect originates at this operation or owned type" });
         }
     }
 }
@@ -108,8 +116,20 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
 pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode.zig").Program) !void {
     var graph = try Graph.init(allocator, program.functions.len);
     defer graph.deinit();
+    const cleanup_masks = try cleanupMasks(allocator, program.records);
+    defer allocator.free(cleanup_masks);
     for (program.functions, 0..) |function, index| {
+        try seedOwnership(&graph, index, function.return_type, function.locals, .{ .start = 0, .end = 0 }, cleanup_masks);
         for (function.instructions) |instruction| switch (instruction.op) {
+            .acquire_resource => |acquire| {
+                const shape = typed.resultShape(acquire.output, program.records) orelse return error.InternalError;
+                const kind = typed.resourceKind(shape.ok_type, program.records) orelse return error.InternalError;
+                graph.direct(index, kind.effect(), instruction.span);
+            },
+            .complete_resource => |output| {
+                const shape = typed.completionShape(output, program.records) orelse return error.InternalError;
+                graph.direct(index, typed.resourceKind(shape.resource_type, program.records).?.effect(), instruction.span);
+            },
             .external_read => |read| graph.direct(index, read.kind.effect(), instruction.span),
             .acquire_buffer => graph.direct(index, .allocation, instruction.span),
             .buffer_operation => |op| if (bufferAllocates(op.kind)) {
@@ -149,4 +169,45 @@ test "effect lattice propagates independent effects through cycles without conta
     try t.expectEqual(sets.bit(.environment), graph.states[3].mask);
     try t.expectEqual(@as(?usize, 1), graph.states[0].witnesses[@backingInt(sets.Effect.allocation)].?.via);
     try t.expectEqual(@as(?usize, 2), graph.states[1].witnesses[@backingInt(sets.Effect.allocation)].?.via);
+}
+
+fn typeMask(ty: typed.Type, masks: []const sets.Mask) error{InternalError}!sets.Mask {
+    if (!ty.isAggregate()) return 0;
+    if (ty.recordIndex() >= masks.len) return error.InternalError;
+    return masks[ty.recordIndex()];
+}
+fn cleanupMasks(allocator: std.mem.Allocator, records: []const typed.Record) ![]sets.Mask {
+    const masks = try allocator.alloc(sets.Mask, records.len);
+    errdefer allocator.free(masks);
+    @memset(masks, 0);
+    var changed = true;
+    while (changed) {
+        changed = false;
+        for (records, 0..) |record, index| {
+            var mask: sets.Mask = if (record.resource) |kind| sets.bit(kind.effect()) else 0;
+            if (record.array) |array| {
+                if (array.length != 0) mask |= try typeMask(array.element, masks);
+            } else if (record.variants) |variants| {
+                for (variants.cases) |case| if (case.payload) |payload| {
+                    mask |= try typeMask(payload, masks);
+                };
+            } else {
+                for (record.fields) |field| {
+                    mask |= try typeMask(field.ty, masks);
+                }
+            }
+            if (mask != masks[index]) {
+                masks[index] = mask;
+                changed = true;
+            }
+        }
+    }
+    return masks;
+}
+fn seedOwnership(graph: *Graph, index: usize, result: typed.Type, locals: []const typed.Local, span: Span, masks: []const sets.Mask) !void {
+    var mask = try typeMask(result, masks);
+    for (locals) |local| mask |= try typeMask(local.ty, masks);
+    for (std.meta.tags(sets.Effect)) |effect| if (mask & sets.bit(effect) != 0) {
+        graph.direct(index, effect, span);
+    };
 }

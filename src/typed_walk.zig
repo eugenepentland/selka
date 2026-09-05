@@ -39,6 +39,11 @@ pub const Walker = struct {
         switch (item) {
             .expression => |id| switch (self.program.nodes[@backingInt(id)].data) {
                 .integer, .boolean, .local, .read_ref, .len_slice => {},
+                .complete_resource => |value| try self.expr(value),
+                .acquire_resource => |acquire| {
+                    try self.expr(acquire.request);
+                    try self.expr(acquire.capability);
+                },
                 .external_read => |read| try self.expr(read.capability),
                 .acquire_buffer => |acquire| {
                     try self.expr(acquire.capacity);

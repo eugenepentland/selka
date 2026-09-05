@@ -23,6 +23,8 @@ pub const Node = struct {
         read_slice: struct { reference: ReferenceId, index: NodeId },
         len_slice: ReferenceId,
         buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: LocalId, arguments: []const NodeId },
+        acquire_resource: struct { capability: NodeId, request: NodeId },
+        complete_resource: NodeId,
         external_read: struct { kind: @import("external_capabilities.zig").Kind, capability: NodeId },
         acquire_buffer: struct { allocator: NodeId, capacity: NodeId },
         cast: NodeId,
@@ -49,6 +51,7 @@ pub const Array = struct { element: Type, length: usize, key: ?Type = null };
 // Aggregate schemas retain nominal record identities and intern structural arrays.
 pub const Record = struct {
     buffer: ?Type = null,
+    resource: ?@import("external_resources.zig").Kind = null,
     move_only: bool = false,
     requires_handling: bool = false,
     id: Type,
@@ -62,7 +65,7 @@ pub const Record = struct {
         return if (self.array) |a| a.key else null;
     }
     pub fn isRecord(self: Record) bool {
-        return self.buffer == null and self.array == null and self.domain == null and self.variants == null;
+        return self.resource == null and self.buffer == null and self.array == null and self.domain == null and self.variants == null;
     }
     pub fn isEnum(self: Record) bool {
         return if (self.variants) |v| !v.is_union else false;
@@ -141,3 +144,28 @@ pub const Function = struct {
     locals: []const Local,
 };
 pub const Program = struct { nodes: []const Node, statements: []const Statement, functions: []const Function, main: FunctionId, records: []const Record = &.{} };
+
+pub fn resourceKind(ty: Type, records: []const Record) ?@import("external_resources.zig").Kind {
+    if (!ty.isAggregate() or ty.recordIndex() >= records.len) return null;
+    return records[ty.recordIndex()].resource;
+}
+pub fn byteRequest(ty: Type, records: []const Record) bool {
+    if (!ty.isAggregate() or ty.recordIndex() >= records.len) return false;
+    const array = records[ty.recordIndex()].array orelse return false;
+    return array.element == .u8 and array.key == null;
+}
+pub const CompletionShape = struct { result: ResultShape, resource_type: Type, resource_field: usize, code_field: usize };
+pub fn completionShape(ty: Type, records: []const Record) ?CompletionShape {
+    const result = resultShape(ty, records) orelse return null;
+    if (result.ok_type != .bool or !result.error_type.isAggregate() or result.error_type.recordIndex() >= records.len) return null;
+    const schema = records[result.error_type.recordIndex()];
+    if (!schema.isRecord() or schema.fields.len != 2) return null;
+    var resource_field: ?usize = null;
+    var code_field: ?usize = null;
+    for (schema.fields, 0..) |field, index| {
+        if (std.mem.eql(u8, field.name, "resource") and resourceKind(field.ty, records) != null) resource_field = index;
+        if (std.mem.eql(u8, field.name, "code") and field.ty == .i64) code_field = index;
+    }
+    const resource = resource_field orelse return null;
+    return .{ .result = result, .resource_type = schema.fields[resource].ty, .resource_field = resource, .code_field = code_field orelse return null };
+}

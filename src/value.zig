@@ -13,13 +13,24 @@ pub const Type = enum(usize) {
     allocator,
     clock_cap,
     random_cap,
+    filesystem_cap,
+    network_cap,
     _,
-    pub const record_base: usize = 12;
+    pub const record_base: usize = 14;
     pub fn capabilityIndex(self: Type) ?u3 {
         return switch (self) {
             .allocator => 0,
             .clock_cap => 1,
             .random_cap => 2,
+            .filesystem_cap => 3,
+            .network_cap => 4,
+            else => null,
+        };
+    }
+    pub fn resourceKind(self: Type) ?@import("external_resources.zig").Kind {
+        return switch (self) {
+            .filesystem_cap => .filesystem,
+            .network_cap => .network,
             else => null,
         };
     }
@@ -78,12 +89,16 @@ pub const Value = union(enum) {
     integer: struct { ty: Type, value: i128 },
     aggregate: *Aggregate,
     resource: *Resource,
+    external_resource: *ExternalResource,
+    resource_capability: @import("external_resources.zig").Capability,
     allocator: @import("memory.zig").AllocatorCapability,
     external: @import("external_capabilities.zig").Capability,
 
     pub fn typeOf(self: Value) Type {
         return switch (self) {
             .allocator => .allocator,
+            .external_resource => |resource| resource.ty,
+            .resource_capability => |cap| if (cap.kind == .filesystem) .filesystem_cap else .network_cap,
             .external => |capability| switch (capability.kind) {
                 .clock => .clock_cap,
                 .random => .random_cap,
@@ -164,7 +179,15 @@ pub const Value = union(enum) {
         resource.* = .{ .ty = ty, .store = store, .owner = moved };
         return .{ .resource = resource };
     }
+    pub fn ownExternal(allocator: std.mem.Allocator, ty: Type, store: *@import("external_resources.zig").Store, owner: @import("external_resources.zig").Owner) !Value {
+        const resource = try allocator.create(ExternalResource);
+        errdefer allocator.destroy(resource);
+        const moved = try store.transfer(owner);
+        resource.* = .{ .ty = ty, .store = store, .owner = moved };
+        return .{ .external_resource = resource };
+    }
     pub fn retain(self: Value) Value {
+        if (self == .external_resource) self.external_resource.references += 1;
         if (self == .resource) self.resource.references += 1;
         if (self == .aggregate) self.aggregate.references += 1;
         return self;
@@ -176,14 +199,28 @@ pub const Value = union(enum) {
         var pending: ?*Aggregate = null;
         enqueueRelease(self, &pending, allocator);
         while (pending) |record| {
-            pending = record.next;
-            for (record.fields) |field| enqueueRelease(field, &pending, allocator);
-            allocator.free(record.fields);
-            allocator.destroy(record);
+            if (record.release_index != 0) {
+                record.release_index -= 1;
+                enqueueRelease(record.fields[record.release_index], &pending, allocator);
+            } else {
+                pending = record.next;
+                allocator.free(record.fields);
+                allocator.destroy(record);
+            }
         }
     }
 
     fn enqueueRelease(value: Value, pending: *?*Aggregate, allocator: std.mem.Allocator) void {
+        if (value == .external_resource) {
+            const resource = value.external_resource;
+            std.debug.assert(resource.references != 0);
+            resource.references -= 1;
+            if (resource.references == 0) {
+                if (resource.owner) |owner| resource.store.release(owner) catch {};
+                allocator.destroy(resource);
+            }
+            return;
+        }
         if (value == .resource) {
             const resource = value.resource;
             std.debug.assert(resource.references != 0);
@@ -199,6 +236,7 @@ pub const Value = union(enum) {
         std.debug.assert(record.references != 0);
         record.references -= 1;
         if (record.references == 0) {
+            record.release_index = record.fields.len;
             record.next = pending.*;
             pending.* = record;
         }
@@ -216,6 +254,9 @@ pub const Aggregate = struct {
     fields: []const Value,
     references: usize = 1,
     next: ?*Aggregate = null,
+    release_index: usize = 0,
 };
 
 pub const Resource = struct { ty: Type, store: *@import("memory.zig").Store, owner: @import("memory.zig").Allocation, references: usize = 1 };
+
+pub const ExternalResource = struct { ty: Type, store: *@import("external_resources.zig").Store, owner: ?@import("external_resources.zig").Owner, references: usize = 1 };

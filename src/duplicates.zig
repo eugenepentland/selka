@@ -3,7 +3,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 
-pub const version = "exact-v18";
+pub const version = "exact-v19";
 pub const Population = enum { production, tests, generated, reference, intentional };
 pub const Options = struct { min_nodes: usize = 8, population: Population = .production };
 pub const Group = struct { members: []const typed.FunctionId, nodes: usize };
@@ -82,6 +82,11 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                         try work.append(allocator, .{ .expression = replace.base });
                     },
                     .length => |base| try work.append(allocator, .{ .expression = base }),
+                    .complete_resource => |value| try work.append(allocator, .{ .expression = value }),
+                    .acquire_resource => |acquire| {
+                        try work.append(allocator, .{ .expression = acquire.request });
+                        try work.append(allocator, .{ .expression = acquire.capability });
+                    },
                     .external_read => |read| {
                         writer.print("external {s}\n", .{@tagName(read.kind)}) catch return error.OutOfMemory;
                         try work.append(allocator, .{ .expression = read.capability });

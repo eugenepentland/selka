@@ -14,12 +14,13 @@ pub fn dump(allocator: std.mem.Allocator, program: bc.Program, src: Source) ![]u
 
 fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer.Error!void {
     for (program.records) |record| {
-        try writer.print("{s} {s} type#{d}\n", .{ if (record.variants) |v| (if (v.fallible) "result" else if (v.is_union) "union" else "enum") else if (record.buffer != null) "buffer" else if (record.tableKey() != null) "table" else if (record.array != null) "array" else if (record.domain != null) "domain" else "record", record.name, @backingInt(record.id) });
+        try writer.print("{s} {s} type#{d}\n", .{ if (record.variants) |v| (if (v.fallible) "result" else if (v.is_union) "union" else "enum") else if (record.resource != null) "resource" else if (record.buffer != null) "buffer" else if (record.tableKey() != null) "table" else if (record.array != null) "array" else if (record.domain != null) "domain" else "record", record.name, @backingInt(record.id) });
         if (record.variants) |v| for (v.cases, 0..) |variant, tag| {
             try writer.print("  variant {d}: {s}", .{ tag, variant.name });
             if (variant.payload) |ty| try writer.print(": {s}", .{typed.typeName(ty, program.records)});
             try writer.writeByte('\n');
         };
+        if (record.resource) |kind| try writer.print("  provider {s} (owned)\n", .{@tagName(kind)});
         if (record.buffer) |element| try writer.print("  element {s} (owned)\n", .{typed.typeName(element, program.records)});
         if (record.domain) |backing| try writer.print("  backing {s} (private)\n", .{typed.typeName(backing, program.records)});
         for (record.fields, 0..) |field, i| try writer.print("  field {d}: {s}: {s}\n", .{ i, field.name, typed.typeName(field.ty, program.records) });
@@ -77,6 +78,8 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
                 .read_ref => |id| try writer.print("READ_REF {d}", .{@backingInt(id)}),
                 .write_ref => |id| try writer.print("WRITE_REF {d}", .{@backingInt(id)}),
                 .buffer_operation => |operation| try writer.print("BUFFER_{s} local={d} -> {s}", .{ @tagName(operation.kind), @backingInt(operation.owner), typed.typeName(operation.output, program.records) }),
+                .complete_resource => |output| try writer.print("COMPLETE_RESOURCE -> {s}", .{typed.typeName(output, program.records)}),
+                .acquire_resource => |acquire| try writer.print("ACQUIRE_RESOURCE -> {s}", .{typed.typeName(acquire.output, program.records)}),
                 .external_read => |read| try writer.print("EXTERNAL_{s} -> {s}", .{ @tagName(read.kind), typed.typeName(read.output, program.records) }),
                 .acquire_buffer => |ty| try writer.print("ACQUIRE_BUFFER {f}", .{ty}),
                 .move_local => |slot| try writer.print("MOVE_LOCAL {d}", .{@backingInt(slot)}),

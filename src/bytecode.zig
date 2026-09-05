@@ -35,6 +35,8 @@ pub const Instruction = struct {
         read_ref: typed.ReferenceId,
         write_ref: typed.ReferenceId,
         buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: typed.LocalId, output: typed.Type },
+        complete_resource: typed.Type,
+        acquire_resource: struct { output: typed.Type, request: typed.Type },
         external_read: struct { kind: @import("external_capabilities.zig").Kind, output: typed.Type },
         acquire_buffer: typed.Type,
         move_local: typed.LocalId,
@@ -90,6 +92,9 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
     try @import("effects.zig").validate(allocator, program);
     for (program.records, 0..) |record, i| {
         if (@backingInt(record.id) != i + typed.Type.record_base) return error.InternalError;
+        if (record.resource != null) {
+            if (!record.move_only or record.requires_handling or record.buffer != null or record.array != null or record.domain != null or record.variants != null or record.fields.len != 0) return error.InternalError;
+        }
         if (record.buffer) |element| {
             if (!validType(element, program) or typed.moveOnly(element, program.records) or typed.requiresHandling(element, program.records) or !record.move_only or record.requires_handling or record.array != null or record.domain != null or record.variants != null or record.fields.len != 0) return error.InternalError;
         }
@@ -222,6 +227,13 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (shape.ok_type != .bool or shape.error_type != .i64) return error.InternalError;
                 } else if (operation.output != (if (operation.kind == .read) element else typed.Type.u64)) return error.InternalError;
             },
+            .complete_resource => |output| {
+                if (typed.completionShape(output, program.records) == null) return error.InternalError;
+            },
+            .acquire_resource => |acquire| {
+                const shape = typed.resultShape(acquire.output, program.records) orelse return error.InternalError;
+                if (typed.resourceKind(shape.ok_type, program.records) == null or shape.error_type != .i64 or !typed.byteRequest(acquire.request, program.records)) return error.InternalError;
+            },
             .external_read => |read| {
                 const shape = typed.resultShape(read.output, program.records) orelse return error.InternalError;
                 if (shape.ok_type != (if (read.kind == .clock) typed.Type.i64 else typed.Type.u64) or shape.error_type != .i64) return error.InternalError;
@@ -262,7 +274,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             },
             .make_record => |record| {
                 if (!record.ty.isAggregate() or !validType(record.ty, program)) return error.InternalError;
-                if (program.records[record.ty.recordIndex()].buffer != null or program.records[record.ty.recordIndex()].domain != null or program.records[record.ty.recordIndex()].variants != null) return error.InternalError;
+                if (program.records[record.ty.recordIndex()].resource != null or program.records[record.ty.recordIndex()].buffer != null or program.records[record.ty.recordIndex()].domain != null or program.records[record.ty.recordIndex()].variants != null) return error.InternalError;
                 if (record.fields != program.records[record.ty.recordIndex()].count()) return error.InternalError;
                 if (record.order.len != 0) {
                     if (record.order.len != record.fields) return error.InternalError;
@@ -394,11 +406,11 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (height < 2) return error.InternalError;
                     height -= 2;
                 },
-                .acquire_buffer => {
+                .acquire_buffer, .acquire_resource => {
                     if (height < 2) return error.InternalError;
                     height -= 1;
                 },
-                .external_read, .read_slice, .neg_i64_checked, .not_bool, .get_field, .cast_integer, .neg_integer, .array_length, .wrap_domain, .unwrap_domain => if (height == 0) {
+                .complete_resource, .external_read, .read_slice, .neg_i64_checked, .not_bool, .get_field, .cast_integer, .neg_integer, .array_length, .wrap_domain, .unwrap_domain => if (height == 0) {
                     return error.InternalError;
                 },
                 .call, .call_refs, .call_borrow => {

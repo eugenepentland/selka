@@ -418,3 +418,16 @@ test "CLI checks external capabilities but cannot silently grant ambient provide
     const invalid = "result T { ok: i64, err: i64 } fn main(c: clock_cap) -> i64 effects() { acknowledge clock_now<T>(c); return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_EFFECT_BOUND]");
 }
+
+test "CLI checks resource ownership completion and implicit cleanup effects without ambient access" {
+    const source = @embedFile("fixtures/resources.my");
+    try invoke("check", source, 0, "", "");
+    try invoke("run", source, 2, "", "host failure: CapabilityUnavailable");
+    const dumped = try runFixture("dump-bytecode", source, &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    for ([_][]const u8{ "ACQUIRE_RESOURCE", "COMPLETE_RESOURCE", "effects {filesystem}", "provider filesystem (owned)" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
+    const invalid = "resource File: filesystem; struct Wrapper { file: File } fn cleanup(input: Wrapper) -> i64 noio { return 0; } fn main() -> i64 { return 0; }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_EFFECT_BOUND]");
+}

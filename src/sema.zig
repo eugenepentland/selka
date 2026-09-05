@@ -251,6 +251,17 @@ const Checker = struct {
                         try work.append(self.allocator, .{ .id = base });
                         continue;
                     },
+                    .complete_resource => |complete| {
+                        try work.append(self.allocator, .{ .id = task.id, .emit = true });
+                        try work.append(self.allocator, .{ .id = complete.value });
+                        continue;
+                    },
+                    .acquire_resource => |acquire| {
+                        try work.append(self.allocator, .{ .id = task.id, .emit = true });
+                        try work.append(self.allocator, .{ .id = acquire.request });
+                        try work.append(self.allocator, .{ .id = acquire.capability });
+                        continue;
+                    },
                     .external_read => |read| {
                         try work.append(self.allocator, .{ .id = task.id, .emit = true });
                         try work.append(self.allocator, .{ .id = read.capability });
@@ -341,6 +352,25 @@ const Checker = struct {
                         if (shape.ok_type != .bool or shape.error_type != .i64) return self.sink.fail("E_BUFFER_RESULT", result_type, "buffer mutation requires a result with bool success and i64 error payloads");
                     } else out.ty = if (operation.kind == .read) element else .u64;
                     out.data = .{ .buffer_operation = .{ .kind = operation.kind, .owner = owner, .arguments = arguments } };
+                },
+                .acquire_resource => |acquire| {
+                    out.ty = try self.ty(acquire.ty);
+                    const shape = typed.resultShape(out.ty, self.catalog.records) orelse return self.sink.fail("E_RESOURCE_RESULT", acquire.ty, "acquisition requires a resource success and i64 error result");
+                    const kind = typed.resourceKind(shape.ok_type, self.catalog.records) orelse return self.sink.fail("E_RESOURCE_RESULT", acquire.ty, "acquisition success must be a resource");
+                    if (shape.error_type != .i64) return self.sink.fail("E_RESOURCE_RESULT", acquire.ty, "acquisition error must be i64");
+                    const capability = self.resolved[@backingInt(acquire.capability)].?;
+                    const request = self.resolved[@backingInt(acquire.request)].?;
+                    try self.require(self.nodes.items[@backingInt(capability)].ty, if (kind == .filesystem) .filesystem_cap else .network_cap, self.syntax.nodes.items[@backingInt(acquire.capability)].span);
+                    const request_type = self.nodes.items[@backingInt(request)].ty;
+                    if (!typed.byteRequest(request_type, self.catalog.records)) return self.sink.fail("E_RESOURCE_REQUEST", self.syntax.nodes.items[@backingInt(acquire.request)].span, "request must be a fixed u8 array");
+                    out.data = .{ .acquire_resource = .{ .capability = capability, .request = request } };
+                },
+                .complete_resource => |complete| {
+                    out.ty = try self.ty(complete.ty);
+                    const shape = typed.completionShape(out.ty, self.catalog.records) orelse return self.sink.fail("E_COMPLETION_RESULT", complete.ty, "completion requires bool success and an error record with resource and code: i64 fields");
+                    const value = self.resolved[@backingInt(complete.value)].?;
+                    try self.require(self.nodes.items[@backingInt(value)].ty, shape.resource_type, self.syntax.nodes.items[@backingInt(complete.value)].span);
+                    out.data = .{ .complete_resource = value };
                 },
                 .external_read => |read| {
                     out.ty = try self.ty(read.ty);
@@ -574,8 +604,8 @@ const Checker = struct {
             }
             const consumed: usize = switch (out.data) {
                 .integer, .boolean, .local, .read_ref, .len_slice => 0,
-                .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .external_read => 1,
-                .acquire_buffer => 2,
+                .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .external_read, .complete_resource => 1,
+                .acquire_buffer, .acquire_resource => 2,
                 .index, .binary => 2,
                 .replace => 3,
                 .variant => |variant| if (variant.value != null) 1 else 0,
@@ -867,7 +897,7 @@ fn warningLess(_: void, a: diagnostic.Diagnostic, b: diagnostic.Diagnostic) bool
 pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!typed.Program {
     const resolved = try allocator.alloc(?typed.NodeId, program.nodes.items.len);
     @memset(resolved, null);
-    const catalog = try records.collect(allocator, src, program.records, program.domains, program.variants, program.array_types, program.buffers, sink);
+    const catalog = try records.collect(allocator, src, program.records, program.domains, program.variants, program.array_types, program.buffers, program.resources, sink);
     var checker: Checker = .{ .allocator = allocator, .src = src, .syntax = program, .sink = sink, .resolved = resolved, .catalog = catalog };
     for (program.functions, 0..) |function, i| {
         const name = try functionName(allocator, src, function.owner, function.name);

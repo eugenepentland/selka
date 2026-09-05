@@ -221,6 +221,15 @@ const Emitter = struct {
                     try self.push(.{ .expression = operation.arguments[i] });
                 }
             },
+            .complete_resource => |value| {
+                try self.instruction(node.span, .{ .complete_resource = node.ty });
+                try self.push(.{ .expression = value });
+            },
+            .acquire_resource => |acquire| {
+                try self.instruction(node.span, .{ .acquire_resource = .{ .output = node.ty, .request = self.program.nodes[@backingInt(acquire.request)].ty } });
+                try self.push(.{ .expression = acquire.request });
+                try self.push(.{ .expression = acquire.capability });
+            },
             .external_read => |read| {
                 try self.instruction(node.span, .{ .external_read = .{ .kind = read.kind, .output = node.ty } });
                 try self.push(.{ .expression = read.capability });

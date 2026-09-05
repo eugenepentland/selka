@@ -43,6 +43,10 @@ pub const Tag = enum {
     kw_u32,
     kw_u64,
     kw_allocator,
+    kw_filesystem_cap,
+    kw_network_cap,
+    kw_acquire_resource,
+    kw_complete_resource,
     kw_clock_cap,
     kw_random_cap,
     kw_clock_now,
@@ -95,7 +99,7 @@ pub const Tag = enum {
 };
 pub const Token = struct { tag: Tag, span: Span };
 fn keyword(word: []const u8) Tag {
-    const words = .{ "fn", "return", "let", "mut", "true", "false", "i64", "bool", "if", "else", "while", "discard", "struct", "new", "update", "conversion", "i8", "i16", "i32", "u8", "u16", "u32", "u64", "allocator", "clock_cap", "random_cap", "clock_now", "random_u64", "len_buffer", "capacity_buffer", "read_buffer", "write_buffer", "append_buffer", "resize_buffer", "reserve_buffer", "acquire_buffer", "cast", "replace", "len", "domain", "private", "wrap", "unwrap", "enum", "union", "match", "borrow", "as", "read_ref", "write_ref", "read_slice", "write_slice", "len_slice", "acknowledge", "try" };
+    const words = .{ "fn", "return", "let", "mut", "true", "false", "i64", "bool", "if", "else", "while", "discard", "struct", "new", "update", "conversion", "i8", "i16", "i32", "u8", "u16", "u32", "u64", "allocator", "filesystem_cap", "network_cap", "acquire_resource", "complete_resource", "clock_cap", "random_cap", "clock_now", "random_u64", "len_buffer", "capacity_buffer", "read_buffer", "write_buffer", "append_buffer", "resize_buffer", "reserve_buffer", "acquire_buffer", "cast", "replace", "len", "domain", "private", "wrap", "unwrap", "enum", "union", "match", "borrow", "as", "read_ref", "write_ref", "read_slice", "write_slice", "len_slice", "acknowledge", "try" };
     inline for (words) |w| {
         if (std.mem.eql(u8, word, w)) return @field(Tag, "kw_" ++ w);
     }

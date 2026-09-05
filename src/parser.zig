@@ -43,7 +43,7 @@ pub const Parser = struct {
             try self.array_types.append(self.allocator, .{ .span = span, .index = index, .element = element });
             return span;
         }
-        if (self.take(.kw_i64) or self.take(.kw_bool) or self.take(.kw_i8) or self.take(.kw_i16) or self.take(.kw_i32) or self.take(.kw_u8) or self.take(.kw_u16) or self.take(.kw_u32) or self.take(.kw_u64) or self.take(.kw_allocator) or self.take(.kw_clock_cap) or self.take(.kw_random_cap) or self.take(.ident)) return token.span;
+        if (self.take(.kw_i64) or self.take(.kw_bool) or self.take(.kw_i8) or self.take(.kw_i16) or self.take(.kw_i32) or self.take(.kw_u8) or self.take(.kw_u16) or self.take(.kw_u32) or self.take(.kw_u64) or self.take(.kw_allocator) or self.take(.kw_filesystem_cap) or self.take(.kw_network_cap) or self.take(.kw_clock_cap) or self.take(.kw_random_cap) or self.take(.ident)) return token.span;
         return self.sink.fail("E_TYPE", token.span, "expected a built-in, declared, fixed array, or enum-indexed table type");
     }
     pub fn parse(self: *Parser) diagnostic.Error!ast.Program {
@@ -51,6 +51,7 @@ pub const Parser = struct {
         var records: std.ArrayList(ast.Record) = .empty;
         var domains: std.ArrayList(ast.Domain) = .empty;
         var buffers: std.ArrayList(ast.Domain) = .empty;
+        var resources: std.ArrayList(ast.Domain) = .empty;
         var variants: std.ArrayList(ast.Variants) = .empty;
         while (self.current().tag != .eof) {
             if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "buffer")) {
@@ -60,6 +61,15 @@ pub const Parser = struct {
                 const element = try self.typeName();
                 _ = try self.expect(.semicolon);
                 try buffers.append(self.allocator, .{ .name = name.span, .backing = element });
+                continue;
+            }
+            if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "resource")) {
+                self.pos += 1;
+                const name = try self.expect(.ident);
+                _ = try self.expect(.colon);
+                const kind = try self.expect(.ident);
+                _ = try self.expect(.semicolon);
+                try resources.append(self.allocator, .{ .name = name.span, .backing = kind.span });
                 continue;
             }
             const fallible = self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "result");
@@ -107,7 +117,7 @@ pub const Parser = struct {
             }
             try functions.append(self.allocator, try self.function(null));
         }
-        return .{ .buffers = try buffers.toOwnedSlice(self.allocator), .variants = try variants.toOwnedSlice(self.allocator), .domains = try domains.toOwnedSlice(self.allocator), .array_types = try self.array_types.toOwnedSlice(self.allocator), .nodes = self.nodes, .statements = self.statements, .functions = try functions.toOwnedSlice(self.allocator), .records = try records.toOwnedSlice(self.allocator) };
+        return .{ .resources = try resources.toOwnedSlice(self.allocator), .buffers = try buffers.toOwnedSlice(self.allocator), .variants = try variants.toOwnedSlice(self.allocator), .domains = try domains.toOwnedSlice(self.allocator), .array_types = try self.array_types.toOwnedSlice(self.allocator), .nodes = self.nodes, .statements = self.statements, .functions = try functions.toOwnedSlice(self.allocator), .records = try records.toOwnedSlice(self.allocator) };
     }
     fn function(self: *Parser, owner: ?Span) diagnostic.Error!ast.Function {
         const restricted = self.take(.kw_private);
@@ -361,6 +371,20 @@ pub const Parser = struct {
                 }
                 const close = try self.expect(.rparen);
                 break :buffer try self.append(.{ .span = .join(token.span, close.span), .data = .{ .buffer_operation = .{ .kind = kind, .owner = owner.span, .result = result, .arguments = arguments } } });
+            },
+            .kw_acquire_resource, .kw_complete_resource => resource: {
+                self.pos += 1;
+                _ = try self.expect(.lt);
+                const ty = try self.typeName();
+                _ = try self.expect(.gt);
+                _ = try self.expect(.lparen);
+                const first = try self.expression(0);
+                const request = if (token.tag == .kw_acquire_resource) request: {
+                    _ = try self.expect(.comma);
+                    break :request try self.expression(0);
+                } else first;
+                const close = try self.expect(.rparen);
+                break :resource try self.append(.{ .span = .join(token.span, close.span), .data = if (token.tag == .kw_acquire_resource) .{ .acquire_resource = .{ .ty = ty, .capability = first, .request = request } } else .{ .complete_resource = .{ .ty = ty, .value = first } } });
             },
             .kw_clock_now, .kw_random_u64 => external: {
                 self.pos += 1;

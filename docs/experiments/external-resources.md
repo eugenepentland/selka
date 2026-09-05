@@ -93,3 +93,11 @@ allocation disabled. 10,000 acquisition/move/release cycles reuse one slot under
 4 KiB live registry allocation and release all storage. Source/CLI behavior is
 unchanged, and these backend tests do not establish source integration or real
 filesystem/network correctness.
+
+
+## Subsequent source integration
+
+[Source resource lifecycle and cleanup effects](source-resources.md) now connect
+this backend to nominal resources, explicit grants, acquisition, completion returning
+ownership on failure, VM cleanup, and transitive effect bounds. The backend-only
+status and 283-test count above describe the historical checkpoint.

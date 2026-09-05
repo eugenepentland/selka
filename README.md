@@ -72,7 +72,7 @@ zig build run -- discover-duplicates examples/duplicates.my --timings
 It reports exact checked-function candidates after normalizing bound names,
 with source locations and advisory explanations. Ordinary compilation does not
 run it. See the [comparison contract and review](docs/experiments/duplicate-discovery.md).
-All 283 tests pass in Debug and ReleaseFast.
+All 297 tests pass in Debug and ReleaseFast.
 
 [Post-MVP tracking](docs/experiments/roadmap.md) records the remaining experiments.
 Records, complete construction, field access, preserving updates, and declarative
@@ -125,5 +125,7 @@ environment operations, external resources and cleanup, and arenas/pools remain 
 
 The [external resource backend](docs/experiments/external-resources.md) now tracks
 fallible completion separately from fallback release, with scoped ownership moves
-and reverse cleanup. Guest external resource syntax and VM/effect integration
-remain pending.
+and reverse cleanup. [Source resource acquisition/completion](docs/experiments/source-resources.md) now
+connects those rules to nominal types, explicit filesystem/network grants, owned
+error results, and transitive cleanup effects. Providers remain injected; the CLI
+checks the example but denies execution without providers.

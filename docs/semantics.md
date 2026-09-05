@@ -217,3 +217,15 @@ errors. Grants require injected host providers; the CLI provides neither. Reads
 contribute distinct transitive effects, allowed under `noio` and `noalloc` without
 promising determinism. See [provider contracts and limits](experiments/external-capabilities.md).
 Filesystem/network/environment and external resource completion/cleanup remain pending.
+
+
+`resource Name: filesystem;` and `resource Name: network;` declare move-only external
+resources. Explicit filesystem/network entry capabilities authorize acquisition
+from fixed byte-array requests. `complete_resource<Result>(owner)` consumes its
+input and returns the owner inside an error record on recoverable failure; automatic
+cleanup only releases. Owned signatures/locals conservatively contribute contained
+resource cleanup effects, so noio cannot silently release external resources.
+[Source resource semantics](experiments/source-resources.md) defines result shapes,
+provider contracts, cleanup order, and the current whole-wrapper projection limit.
+Providers are injected; actual file/socket data operations and environment access
+remain pending.

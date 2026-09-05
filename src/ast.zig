@@ -18,6 +18,8 @@ pub const Node = struct {
         read_slice: struct { name: Span, index: NodeId },
         len_slice: Span,
         buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: Span, result: ?Span, arguments: []const NodeId },
+        acquire_resource: struct { ty: Span, capability: NodeId, request: NodeId },
+        complete_resource: struct { ty: Span, value: NodeId },
         external_read: struct { kind: @import("external_capabilities.zig").Kind, ty: Span, capability: NodeId },
         acquire_buffer: struct { ty: Span, allocator: NodeId, value: NodeId },
         cast: TypedValue,
@@ -68,6 +70,7 @@ pub const ArrayIndex = union(enum) { length: Span, enum_type: Span };
 pub const ArrayType = struct { span: Span, index: ArrayIndex, element: Span };
 pub const Program = struct {
     buffers: []const Domain = &.{},
+    resources: []const Domain = &.{},
     domains: []const Domain = &.{},
     variants: []const Variants = &.{},
     array_types: []const ArrayType = &.{},

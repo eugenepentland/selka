@@ -684,3 +684,36 @@ declarations, capability entry grants, acquisition/completion, VM cleanup, and s
 cleanup-effect inference are pending. Environment, attenuation, arenas/pools, and all
 other unfinished tracks remain in scope. C is not complete. Guardian was not exercised;
 hosted CI has not run. The full roadmap goal remains active.
+
+
+## 2026-09-05: C source external resource lifecycle and cleanup effects
+
+Implemented nominal filesystem/network resource types, explicit entry grants,
+fixed-byte-array acquisition requests, and fallible completion that consumes its
+input and returns the still-owned resource in a typed error on failure. Existing
+moves, wrappers, results, and lexical/early-return cleanup now release provider
+resources. Successful completion cannot be retried through an obsolete binding and
+never triggers fallback release. Aggregate teardown is iterative, depth-first,
+and reverse schema order, making observable external cleanup deterministic.
+
+Owned signatures/locals conservatively contribute contained resource cleanup
+effects; direct operations and callees add effects independently. Bytecode validation
+recomputes both ownership and operation effects. Noio rejects implicit external
+cleanup as well as explicit access; noalloc retains its guest-buffer-backing meaning.
+
+297 tests pass in Debug and ReleaseFast (266 core, 31 actual CLI). Acceptance covers
+owned completion retry/fallback, all completion errors and host OOM, partial
+acquisition, quotas and restricted requests, independent entry grants, source move/
+schema errors, wrapper cleanup, every instruction-budget boundary, recursive frame
+traps, allocation-failure sweeps, malformed emission, and exact discovery identity.
+10,000 acquisition/completion cycles fit in 16 KiB live VM allocation with one live
+resource. The CLI checks/dumps the fixture and denies missing providers. Formatting
+and whitespace checks pass. Discovery is exact-v19.
+
+[Source resource semantics](experiments/source-resources.md) documents the trusted
+provider contract and remaining restrictions. Requests are fixed arrays, there are
+no actual file/socket data operations or OS adapters, and projecting an error code
+still consumes its owned wrapper. Environment, owned-field inspection/partial moves,
+attenuation, arenas/pools, and all other unfinished tracks remain in scope. C is
+not complete. Guardian was not exercised; hosted CI has not run. The full roadmap
+goal remains active.

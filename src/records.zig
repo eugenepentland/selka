@@ -52,9 +52,9 @@ pub const Catalog = struct {
 };
 
 /// All storage is owned by the compilation arena.
-pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const ast.Record, domains: []const ast.Domain, variant_types: []const ast.Variants, arrays: []const ast.ArrayType, buffers: []const ast.Domain, sink: *diagnostic.Sink) Error!Catalog {
-    const storage = try allocator.alloc(typed.Record, declarations.len + domains.len + variant_types.len + buffers.len + arrays.len);
-    var catalog: Catalog = .{ .records = storage[0 .. declarations.len + domains.len + variant_types.len + buffers.len], .names = .empty, .field_names = try allocator.alloc(std.StringHashMapUnmanaged(usize), declarations.len + domains.len + variant_types.len + buffers.len) };
+pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const ast.Record, domains: []const ast.Domain, variant_types: []const ast.Variants, arrays: []const ast.ArrayType, buffers: []const ast.Domain, resources: []const ast.Domain, sink: *diagnostic.Sink) Error!Catalog {
+    const storage = try allocator.alloc(typed.Record, declarations.len + domains.len + variant_types.len + buffers.len + resources.len + arrays.len);
+    var catalog: Catalog = .{ .records = storage[0 .. declarations.len + domains.len + variant_types.len + buffers.len + resources.len], .names = .empty, .field_names = try allocator.alloc(std.StringHashMapUnmanaged(usize), declarations.len + domains.len + variant_types.len + buffers.len + resources.len) };
     @memset(catalog.field_names, .empty);
     for (declarations, 0..) |declaration, i| {
         const name = src.text(declaration.name);
@@ -94,6 +94,15 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
         const id: typed.Type = @fromBackingInt(index + typed.Type.record_base);
         try catalog.names.put(allocator, name, id);
         storage[index] = .{ .id = id, .name = name, .declaration = declaration.name, .fields = &.{}, .move_only = true };
+    }
+    for (resources, 0..) |declaration, offset| {
+        const name = src.text(declaration.name);
+        if (catalog.names.get(name)) |previous| return sink.failRelated("E_DUPLICATE_TYPE", declaration.name, "type is already declared", .{ .span = storage[previous.recordIndex()].declaration, .message = "previous type declaration" });
+        const index = declarations.len + domains.len + variant_types.len + buffers.len + offset;
+        const id: typed.Type = @fromBackingInt(index + typed.Type.record_base);
+        const kind = std.meta.stringToEnum(@import("external_resources.zig").Kind, src.text(declaration.backing)) orelse return sink.fail("E_RESOURCE_KIND", declaration.backing, "resource kind must be filesystem or network");
+        try catalog.names.put(allocator, name, id);
+        storage[index] = .{ .id = id, .name = name, .declaration = declaration.name, .fields = &.{}, .resource = kind, .move_only = true };
     }
     var interned: std.AutoHashMapUnmanaged(typed.Array, typed.Type) = .empty;
     for (arrays) |syntax| {
@@ -178,7 +187,7 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
             const edge_count = if (schema.variants) |v| v.cases.len else if (schema.array != null or schema.buffer != null) @as(usize, 1) else schema.fields.len;
             if (visit.next_field == edge_count) {
                 var requires_handling = false;
-                var move_only = schema.buffer != null;
+                var move_only = schema.buffer != null or schema.resource != null;
                 if (schema.variants) |variants| {
                     requires_handling = variants.fallible;
                     for (variants.cases) |case| if (case.payload) |payload| {
