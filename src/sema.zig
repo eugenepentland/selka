@@ -229,7 +229,7 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     var checker: Checker = .{ .allocator = allocator, .src = src, .syntax = program, .sink = sink, .resolved = resolved };
     for (program.functions, 0..) |function, i| {
         const name = src.text(function.name);
-        if (checker.functions.contains(name)) return sink.fail("E_DUPLICATE_FUNCTION", function.name, "function name is already declared");
+        if (checker.functions.get(name)) |previous| return sink.failRelated("E_DUPLICATE_FUNCTION", function.name, "function name is already declared", .{ .span = program.functions[@backingInt(previous)].name, .message = "previous function declaration" });
         try checker.functions.put(allocator, name, @fromBackingInt(i));
     }
     const main = checker.functions.get("main") orelse return sink.fail("E_MAIN", .{ .start = 0, .end = 0 }, "the program requires fn main() -> i64");
@@ -243,7 +243,7 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
         checker.return_type = checker.ty(function.return_type);
         for (function.parameters) |parameter| {
             const name = src.text(parameter.name);
-            if (checker.active.contains(name)) return sink.fail("E_DUPLICATE_PARAMETER", parameter.name, "parameter name is already declared");
+            if (checker.active.get(name)) |previous| return sink.failRelated("E_DUPLICATE_PARAMETER", parameter.name, "parameter name is already declared", .{ .span = checker.locals.items[@backingInt(previous)].declaration, .message = "previous parameter declaration" });
             if (checker.functions.contains(name)) return sink.fail("E_SHADOWING", parameter.name, "parameter shadows a top-level function");
             const slot: typed.LocalId = @fromBackingInt(checker.locals.items.len);
             try checker.locals.append(allocator, .{ .name = name, .declaration = parameter.name, .ty = checker.ty(parameter.ty), .mutable = false });

@@ -3,12 +3,14 @@ const std = @import("std");
 const source = @import("source.zig");
 
 pub const Severity = enum { err, warning };
+pub const Related = struct { span: source.Span, message: []const u8 };
 pub const Trace = struct { function: []const u8, span: source.Span };
 pub const Diagnostic = struct {
     code: []const u8,
     severity: Severity = .err,
     span: source.Span,
     message: []const u8,
+    related: ?Related = null,
     // Bounded by-value guest trace needs no separate cleanup on trap paths.
     trace: [16]Trace = undefined,
     trace_len: usize = 0,
@@ -31,6 +33,10 @@ pub const Diagnostic = struct {
         var output: std.Io.Writer.Allocating = .init(allocator);
         errdefer output.deinit();
         output.writer.writeAll(primary) catch return error.OutOfMemory;
+        if (self.related) |related| {
+            const at = src.locate(related.span.start);
+            output.writer.print("  note: {s}:{d}:{d}: {s}\n", .{ src.path, at.line, at.column, related.message }) catch return error.OutOfMemory;
+        }
         for (self.trace[0..self.trace_len]) |entry| {
             const at = src.locate(entry.span.start);
             output.writer.print("  in {s} at {s}:{d}:{d}\n", .{ entry.function, src.path, at.line, at.column }) catch return error.OutOfMemory;
@@ -44,6 +50,11 @@ pub const Error = std.mem.Allocator.Error || error{SourceError};
 pub const Sink = struct {
     items: std.ArrayList(Diagnostic) = .empty,
     allocator: std.mem.Allocator,
+
+    pub fn failRelated(self: *Sink, code: []const u8, span: source.Span, message: []const u8, related: Related) Error {
+        self.items.append(self.allocator, .{ .code = code, .span = span, .message = message, .related = related }) catch return error.OutOfMemory;
+        return error.SourceError;
+    }
 
     pub fn fail(self: *Sink, code: []const u8, span: source.Span, message: []const u8) Error {
         self.items.append(self.allocator, .{ .code = code, .span = span, .message = message }) catch return error.OutOfMemory;

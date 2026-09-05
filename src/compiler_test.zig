@@ -455,3 +455,121 @@ fn callAllocationScenario(allocator: std.mem.Allocator) !void {
 test "allocation failures in signature collection calls frame growth and trace rendering release storage" {
     try testing.checkAllAllocationFailures(testing.allocator, callAllocationScenario, .{});
 }
+
+test "runtime storage remains bounded across many calls and loop declarations" {
+    var compilation = try language.Compilation.init(testing.allocator, "bounded.my", "fn f(n: i64) -> i64 { let local = n + 1; return local; } fn main() -> i64 { let mut n = 0; while n < 100000 { let local = 1 + f(n); discard local; n += 1; } return n; }");
+    defer compilation.deinit();
+    try compilation.emit();
+    // Includes validator scratch and all three VM buffers. Retaining abandoned
+    // values, locals, or frames for 100,000 iterations would exceed this buffer.
+    var storage: [16 * 1024]u8 = undefined;
+    var fixed = std.heap.FixedBufferAllocator.init(&storage);
+    const outcome = try compilation.execute(fixed.allocator());
+    try testing.expectEqual(@as(i64, 100000), outcome.value);
+    for (0..20) |_| {
+        try testing.expectEqual(@as(i64, 100000), (try compilation.execute(testing.allocator)).value);
+    }
+}
+
+test "malformed syntax smoke corpus keeps diagnostics inside owned source" {
+    const seed = "fn main() -> i64 { let mut x = 3; while x > 0 { x -= 1; } return x; }";
+    for (0..seed.len) |end| {
+        var compilation = try language.Compilation.init(testing.allocator, "prefix.my", seed[0..end]);
+        defer compilation.deinit();
+        compilation.check() catch |err| {
+            try testing.expectEqual(error.SourceError, err);
+            const diag = compilation.diagnostics.items[0];
+            try testing.expect(diag.span.start <= diag.span.end and diag.span.end <= end);
+        };
+    }
+    const bytes = [_]u8{ 0, 0xff, '\n', ')', '}', ',', ';', '!', '=', '/', '&', '|' };
+    for (bytes) |byte| for (0..seed.len) |at| {
+        var mutated: [seed.len]u8 = seed.*;
+        mutated[at] = byte;
+        var compilation = try language.Compilation.init(testing.allocator, "mutated.my", &mutated);
+        defer compilation.deinit();
+        compilation.check() catch |err| {
+            try testing.expectEqual(error.SourceError, err);
+            const diag = compilation.diagnostics.items[0];
+            try testing.expect(diag.span.start <= diag.span.end and diag.span.end <= mutated.len);
+        };
+    };
+}
+
+test "all recursive syntax forms obey the parser nesting budget" {
+    for ([_][]const u8{ "-", "id(", "{" }) |opening| {
+        var text: std.Io.Writer.Allocating = .init(testing.allocator);
+        defer text.deinit();
+        try text.writer.writeAll("fn main() -> i64 { ");
+        if (!std.mem.eql(u8, opening, "{")) try text.writer.writeAll("return ");
+        for (0..300) |_| try text.writer.writeAll(opening);
+        // Rejection occurs at the resource boundary before trailing syntax matters.
+        try text.writer.writeAll("1");
+        var compilation = try language.Compilation.init(testing.allocator, "nesting.my", text.written());
+        defer compilation.deinit();
+        try testing.expectError(error.SourceError, compilation.check());
+        try testing.expectEqualStrings("E_NESTING_LIMIT", compilation.diagnostics.items[0].code);
+    }
+}
+
+test "located source diagnostics include EOF discard and previous declarations" {
+    for ([_][]const u8{ "\n", "\r\n" }) |newline| {
+        const text = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{{s}return 1;{s}", .{ newline, newline });
+        defer testing.allocator.free(text);
+        var compilation = try language.Compilation.init(testing.allocator, "eof.my", text);
+        defer compilation.deinit();
+        try testing.expectError(error.SourceError, compilation.check());
+        const diag = compilation.diagnostics.items[0];
+        try testing.expectEqual(text.len, diag.span.start);
+        try testing.expectEqual(text.len, diag.span.end);
+        try testing.expectEqual(@as(usize, 3), compilation.src.locate(diag.span.start).line);
+        try testing.expectEqual(@as(usize, 1), compilation.src.locate(diag.span.start).column);
+    }
+    var duplicate = try language.Compilation.init(testing.allocator, "duplicate.my", "fn main() -> i64 { return 1; }\nfn main() -> i64 { return 2; }");
+    defer duplicate.deinit();
+    try testing.expectError(error.SourceError, duplicate.check());
+    const diag = duplicate.diagnostics.items[0];
+    try testing.expectEqualStrings("main", duplicate.src.text(diag.span));
+    try testing.expectEqual(@as(usize, 3), diag.related.?.span.start);
+    const rendered = try diag.render(testing.allocator, duplicate.src);
+    defer testing.allocator.free(rendered);
+    try testing.expect(std.mem.indexOf(u8, rendered, "note: duplicate.my:1:4: previous function declaration") != null);
+    var discard = try language.Compilation.init(testing.allocator, "discard.my", "fn main() -> i64 {\n  1 + 2;\n  return 7;\n}");
+    defer discard.deinit();
+    try testing.expectError(error.SourceError, discard.check());
+    try testing.expectEqualStrings("E_EXPLICIT_DISCARD_REQUIRED", discard.diagnostics.items[0].code);
+    try testing.expectEqualStrings("1", discard.src.text(discard.diagnostics.items[0].span));
+}
+
+test "emission validation rejects invalid references jumps and inconsistent joins" {
+    const bc = language.bytecode;
+    const span: language.source.Span = .{ .start = 0, .end = 0 };
+    const variants = [_][]const bc.Instruction{
+        &.{.{ .span = span, .op = .{ .jump = 1 } }},
+        &.{.{ .span = span, .op = .{ .call = @fromBackingInt(1) } }},
+        &.{.{ .span = span, .op = .{ .load_local = @fromBackingInt(0) } }},
+        &.{ .{ .span = span, .op = .{ .push_bool = true } }, .{ .span = span, .op = .{ .jump_if_false = 3 } }, .{ .span = span, .op = .{ .push_i64 = 1 } }, .{ .span = span, .op = .{ .jump = 3 } } },
+    };
+    for (variants) |instructions| {
+        const program: bc.Program = .{ .functions = &.{.{ .id = @fromBackingInt(0), .name = "main", .instructions = instructions }} };
+        try testing.expectError(error.InternalError, language.vm.run(testing.allocator, program));
+    }
+}
+
+fn rejectedAllocationScenario(allocator: std.mem.Allocator) !void {
+    var compilation = try language.Compilation.init(allocator, "rejected.my", "fn main() -> i64 { return 0; } fn main() -> i64 { return 1; }");
+    defer compilation.deinit();
+    compilation.check() catch |err| switch (err) {
+        error.SourceError => {
+            const text = try compilation.diagnostics.items[0].render(allocator, compilation.src);
+            defer allocator.free(text);
+            return;
+        },
+        else => return err,
+    };
+    return error.ExpectedSourceError;
+}
+
+test "allocation failures while producing source errors remain host failures and release storage" {
+    try testing.checkAllAllocationFailures(testing.allocator, rejectedAllocationScenario, .{});
+}

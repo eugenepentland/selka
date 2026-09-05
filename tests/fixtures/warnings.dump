@@ -1,0 +1,5 @@
+function main() -> i64
+  0000  PUSH_I64 3  ; 2:22
+  0001  STORE_LOCAL 0  ; 2:5
+  0002  PUSH_I64 7  ; 3:12
+  0003  RET  ; 3:5

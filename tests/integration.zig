@@ -8,6 +8,15 @@ fn invoke(command: []const u8, text: []const u8, expected_status: u8, expected_s
 }
 
 fn invokeOptions(command: []const u8, text: []const u8, options: []const []const u8, expected_status: u8, expected_stdout: []const u8, stderr_part: []const u8) !void {
+    const outcome = try runFixture(command, text, options);
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = expected_status }, outcome.term);
+    try testing.expectEqualStrings(expected_stdout, outcome.stdout);
+    if (stderr_part.len == 0) try testing.expectEqualStrings("", outcome.stderr) else try testing.expect(std.mem.indexOf(u8, outcome.stderr, stderr_part) != null);
+}
+
+fn runFixture(command: []const u8, text: []const u8, options: []const []const u8) !std.process.RunResult {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = text });
@@ -17,12 +26,7 @@ fn invokeOptions(command: []const u8, text: []const u8, options: []const []const
     defer args.deinit(testing.allocator);
     try args.appendSlice(testing.allocator, &.{ compiler_path, command, path });
     try args.appendSlice(testing.allocator, options);
-    const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
-    defer testing.allocator.free(outcome.stdout);
-    defer testing.allocator.free(outcome.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = expected_status }, outcome.term);
-    try testing.expectEqualStrings(expected_stdout, outcome.stdout);
-    if (stderr_part.len == 0) try testing.expectEqualStrings("", outcome.stderr) else try testing.expect(std.mem.indexOf(u8, outcome.stderr, stderr_part) != null);
+    return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
 }
 
 test "CLI run and check success" {
@@ -110,4 +114,39 @@ test "CLI frame budgets count main and reject invalid overrides" {
     try invokeOptions("run", text, &.{ "--max-frames=2", "--max-frames=3" }, 2, "", "usage:");
     try invokeOptions("check", text, &.{"--max-frames=2"}, 2, "", "usage:");
     try invokeOptions("dump-bytecode", text, &.{"--max-frames=2"}, 2, "", "usage:");
+}
+
+test "all commands preserve stdout and deterministic advisory stderr" {
+    const source = @embedFile("fixtures/warnings.my");
+    const commands = [_][]const u8{ "check", "run", "dump-bytecode" };
+    const outputs = [_][]const u8{ "", "7\n", @embedFile("fixtures/warnings.dump") };
+    for (commands, outputs) |command, expected| {
+        const outcome = try runFixture(command, source, &.{});
+        defer testing.allocator.free(outcome.stdout);
+        defer testing.allocator.free(outcome.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+        try testing.expectEqualStrings(expected, outcome.stdout);
+        const first = std.mem.indexOf(u8, outcome.stderr, ":2:13: warning[W_UNNECESSARY_MUT]") orelse return error.MissingWarning;
+        const second = std.mem.indexOf(u8, outcome.stderr, ":2:13: warning[W_UNUSED_BINDING]") orelse return error.MissingWarning;
+        try testing.expect(first < second);
+        try testing.expectEqual(@as(usize, 2), std.mem.count(u8, outcome.stderr, "warning["));
+        try testing.expect(std.mem.indexOf(u8, outcome.stderr, "discard") != null);
+    }
+}
+
+test "all commands reject invalid programs before execution and locate runtime traps" {
+    for ([_][]const u8{ "check", "run", "dump-bytecode" }) |command| {
+        try invoke(command, @embedFile("fixtures/rejected.my"), 1, "", ":2:12: error[E_UNKNOWN_NAME]");
+        try invoke(command, "", 1, "", "error[E_MAIN]");
+        try invoke(command, "fn main() -> bool { return true; }", 1, "", "error[E_TYPE]");
+    }
+    try invoke("check", @embedFile("fixtures/trap.my"), 0, "", "");
+    try invoke("run", @embedFile("fixtures/trap.my"), 1, "", ":2:15: error[R_DIVISION_BY_ZERO]");
+}
+
+test "oversized source is a host resource failure with no result output" {
+    const text = try testing.allocator.alloc(u8, 16 * 1024 * 1024 + 1);
+    defer testing.allocator.free(text);
+    @memset(text, ' ');
+    try invoke("run", text, 2, "", "host failure:");
 }

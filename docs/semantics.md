@@ -85,3 +85,12 @@ Status: M0–M4, 2026-09-05. This file describes implemented behavior, while
 
 The full MVP acceptance audit remains. Post-MVP feature syntax is not accepted
 as a placeholder with invented semantics.
+
+
+The guest has no strings, floats, aggregates, pointers, heap allocation, borrowing,
+ownership transfer, generics, compile-time execution, modules, globals, closures,
+function values, standard library, FFI, exceptions, typed errors, concurrency,
+optimizer, native backend, or self-hosting. The host compiler and VM allocate.
+There is no REPL, guest printing, warning suppression, warning-as-error mode,
+or project policy file. The CLI prints only main's integer result. The full
+accepted grammar is in plan section 6; later experiments do not extend it.
