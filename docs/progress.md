@@ -1533,3 +1533,30 @@ and other wider native operations remain pending, alongside generics, compile-ti
 schema/incremental work, remaining corpus/scaling acceptance, and every other
 unfinished roadmap requirement. Guardian was not exercised; hosted CI has not run.
 The full roadmap goal remains active.
+
+## 2026-09-05: Native closed enums
+
+Extended native scalar slots to carry closed enum tags through parameters, returns,
+locals, copies, and mutation. Equality/inequality use checked nominal enum identity;
+exhaustive matching emits direct C switch branches indexed by resolved variant tag.
+Instruction ticks retain VM budget behavior. Tagged unions, including payloadless
+unions, remain explicitly unsupported by native emission.
+
+Debug and ReleaseFast validation pass: 504 Zig tests (449 core, 55 CLI; the Debug
+Zig test steps reused successful cached results), eight verification-driver tests,
+and 392 executed VM/native comparisons per host build mode. The native harness
+includes 32 single-file fixtures/236 comparisons and seven module fixtures/156
+comparisons, compiled at C O0/O2 with undefined-behavior sanitization. New evidence
+covers weighted all-tag dispatch with reordered arms, equality/copies/mutation,
+loop continuation, singleton enums, traps, cross-file enum calls, and every step
+budget through completion of the module enum fixture. Allocation-failure sweeps
+cover emission and VM execution; semantic rejection tests preserve exhaustiveness
+and nominal identity checks.
+
+The new examples/native-enums.my builds with the pinned Zig toolchain and prints 7.
+Canonical Zig/source formatting and git diff whitespace checks pass. The roadmap
+and plan now link the enum experiment, and stale module milestone descriptions
+point to their completed follow-on implementations. Generics, compile-time/schema/
+incremental work, wider native types/resources, and remaining corpus/scaling
+acceptance are still pending. Guardian was not exercised and hosted CI has not run.
+The full roadmap goal remains active.

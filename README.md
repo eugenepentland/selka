@@ -243,3 +243,7 @@ resource operations still require broader native implementation.
 Native code now supports [nominal scalar domains](docs/experiments/native-domains.md),
 including `examples/modules/domain_main.my` (12), while preserving checked private
 construction and explicit accessors. Wider native aggregates/resources remain pending.
+
+Native [closed enums](docs/experiments/native-enums.md) now support construction,
+equality, calls, mutation, and exhaustive matches in single-file and module programs.
+Try `examples/native-enums.my` with the native builder.

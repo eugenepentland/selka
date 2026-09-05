@@ -63,6 +63,10 @@ def project_cases(compiler, zig, root, temp):
         "main.my": "module main; import shared.units as u; fn forward(x:u::Distance)->u::Distance{return x;} fn main()->i64{return u::Distance.number(forward(u::Distance.make(12)));}",
         "shared/units.my": "module shared.units; export Distance; domain Distance:i64 { private fn raw(x:i64)->Distance{return wrap<Distance>(x);} fn make(x:i64)->Distance{if x<0{return Distance.raw(0);}return Distance.raw(x);} fn number(x:Distance)->i64{return unwrap(x);} }",
     }))
+    fixtures.append(("enums", {
+        "main.my": "module main; import shared.colors as c; fn main()->i64 { let x=c::choose(true);match x { c::Color.blue=>{return c::score(x);},c::Color.red=>{return 0;} } }",
+        "shared/colors.my": "module shared.colors; export Color;export choose;export score;enum Color{red,blue} fn choose(x:bool)->Color{if x{return new Color.blue;}return new Color.red;} fn score(x:Color)->i64{if x==new Color.blue{return 12;}return 1;}",
+    }))
     pairs = 0
     for name, files in fixtures:
         directory = temp / ("module case " + name)
@@ -84,7 +88,7 @@ def project_cases(compiler, zig, root, temp):
                 native = invoke([executable, *options])
                 assert project_signature(vm) == project_signature(native), (name, mode, options, vm.stderr, native.stderr)
                 pairs += 1
-            if name in ("calls", "domains"):
+            if name in ("calls", "domains", "enums"):
                 for budget in range(1, 100):
                     options = [f"--max-steps={budget}"]
                     vm = invoke([compiler, "run-project", entry, *options])
@@ -136,6 +140,13 @@ def main():
         ("domain-bool", "domain Flag:bool { fn make(x:bool)->Flag{return wrap<Flag>(x);} fn invert(x:Flag)->Flag{return wrap<Flag>(!unwrap(x));} fn value(x:Flag)->bool{return unwrap(x);} } fn main()->i64{let x=Flag.invert(Flag.make(false));if Flag.value(x){return 7;}return 0;}"),
         ("domain-u64-cast", "domain Id:u64 { fn make(x:u64)->Id{return wrap<Id>(x);} fn value(x:Id)->u64{return unwrap(x);} } fn main()->i64{return cast<i64>(Id.value(Id.make(18446744073709551615u64)));}"),
         ("domain-u8-overflow", "domain Count:u8 { fn make(x:u8)->Count{return wrap<Count>(x);} fn increment(x:Count)->Count{return wrap<Count>(unwrap(x)+1u8);} fn value(x:Count)->u8{return unwrap(x);} } fn main()->i64{return cast<i64>(Count.value(Count.increment(Count.make(255u8))));}"),
+    ]
+    fixtures += [
+        ("enum-match", "enum Color { red, green, blue } fn score(x:Color)->i64 { match x { Color.blue=>{return 3;},Color.red=>{return 1;},Color.green=>{return 2;} } } fn main()->i64{return score(new Color.red)*100+score(new Color.green)*10+score(new Color.blue);}"),
+        ("enum-copy", "enum State { idle, active } fn toggle(x:State)->State{if x==new State.idle{return new State.active;}return new State.idle;} fn main()->i64{let mut x=new State.idle;let old=x;let mut i=0;while i<11{x=toggle(x);i+=1;}if x!=old{return 7;}return 0;}"),
+        ("enum-trap", "enum Choice { safe, fail } fn main()->i64 { let x=new Choice.fail; match x { Choice.safe=>{return 7;},Choice.fail=>{return 1/0;} } }"),
+        ("enum-continuation", "enum State{a,b} fn main()->i64{let mut total=0;let mut state=new State.a;let mut i=0;while i<4{match state{State.b=>{total+=3;state=new State.a;},State.a=>{total+=1;state=new State.b;}}i+=1;}return total;}"),
+        ("enum-single", "enum Only { value } fn pass(x:Only)->Only{return x;} fn main()->i64{match pass(new Only.value){Only.value=>{return 9;}}}"),
     ]
     pairs = 0
     with tempfile.TemporaryDirectory(prefix="mylang-native-parity-") as temp:

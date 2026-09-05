@@ -13,8 +13,8 @@ not a claim that the full future language has been delivered.
 | C, ownership/capabilities/effects | Owned buffers, queries/mutations, checked views, moves/wrappers, and partial-construction cleanup, and transitive allocation bounds, and explicit allocator capabilities implemented; clock/random capabilities and effects implemented; source filesystem/network resource acquisition/completion, owned error returns, and cleanup effects implemented; bounded environment lookup implemented; fixed-byte-array resource reads/writes implemented; resource permission attenuation implemented; borrowed slice I/O implemented; typed-handle pool and arena-reset backends plus execution-lifetime VM/CLI arena selection implemented; partial field moves implemented; source pools/handles, checked shared region backing, lexical source arenas, and conservative escape checking implemented; explicit source reset results implemented | Allocator and clock/random authority/effects pass acceptance; source resource lifecycle and cleanup effects pass; bounded environment lookup passes; resource reads/writes pass; permission attenuation passes; borrowed slice I/O passes; lexical arena acceptance passes under the documented conservative lifetime rules; explicit reset result acceptance passes. |
 | D, errors and abstraction | In progress: typed results, checked handling/transfer, acknowledgement, and propagation implemented; typed-handle pool backend implemented; source handles implemented; generics pending | Require handling/propagation/explicit acknowledgement without erasing evaluation or ownership obligations. |
 | M, modules/interfaces | In progress: bounded import discovery, explicit exports/privacy, source maps, module-aware type checking, and VM execution implemented; optional direction policy implemented; broader module acceptance pending | Shared-domain execution and separate optional direction policy pass; extend module corpus/scaling and tooling acceptance. |
-| E, native execution | Scalar and nominal scalar domain C emission plus pinned-Zig native builder implemented for single-file and module projects; scalar semantic/trap/path/trace parity passes | Scalar acceptance complete; broader native support requires explicit operations and corresponding executable parity fixtures. |
-| F, compile-time/schema/incremental work | Pending aggregates/variants/modules | Reject duplicate schema keys and undeclared inputs; explain invalidation and evaluation budgets. |
+| E, native execution | Scalar, nominal scalar domain, and closed enum C emission plus pinned-Zig native builder implemented for single-file and module projects; scalar semantic/trap/path/trace parity passes | Scalar acceptance complete; broader native support requires explicit operations and corresponding executable parity fixtures. |
+| F, compile-time/schema/incremental work | Pending; aggregate, variant, and module foundations are available | Reject duplicate schema keys and undeclared inputs; explain invalidation and evaluation budgets. |
 | T, formatter/reference reports/verification | Canonical single-file/module formatter and reachable-project formatting checks, resolved function-call/binding reports including module main/export roots, configurable structural metrics, and separate manifest verification driver implemented | Extend reference/specification identities and entry roots with modules/schemas, and parity fixtures with native execution. |
 
 ## A1 completed decisions
@@ -118,11 +118,11 @@ results, stable allocator authority, and live-owner/child guards.
 
 [Module header discovery](module-discovery.md) now loads shared dependencies once,
 reports cycles across files, and emits deterministic content fingerprints. Export,
-privacy, and cross-file type resolution remain pending.
+privacy, and cross-file type resolution were added in the subsequent milestones below.
 
 [Module interface indexing](module-interfaces.md) now parses module bodies and checks
-explicit exports and signature visibility. Full body resolution/type checking and
-shared-domain execution remain pending.
+explicit exports and signature visibility. Body resolution/type checking and
+shared-domain execution are covered by the subsequent execution milestone below.
 
 [Module source maps and AST relocation](module-source-mapping.md) now preserve
 original locations through diagnostics/VM/native traces and prepare combined AST
@@ -130,12 +130,13 @@ tables with explicit module ownership for semantic integration.
 
 [Cross-file type checking and VM execution](module-execution.md) now run the shared
 domain example with private boundaries, nominal identities, borrowing, result
-obligations, and transitive effects. Optional direction policy and tooling extensions
-remain pending.
+obligations, and transitive effects. Optional direction policy and module tooling
+were added in the subsequent milestones below.
 
 [Optional import-direction policy](import-policy.md) now evaluates ordered, explained
 rules against resolved imports with a verdict separate from language validity.
-Broader module acceptance and tooling integration remain pending.
+Broader module corpus/scaling acceptance remains pending; duplicate, quality,
+and formatting integrations are recorded below.
 
 [Module duplicate discovery](module-duplicates.md) now reports exact and approximate
 candidates across checked imports while preserving qualified nominal/callee
@@ -143,7 +144,8 @@ identities and original source paths.
 
 [Module quality reports](module-quality.md) now distinguish main reachability from
 exported interface roots and retain qualified calls and original file locations.
-Module formatting and schema/generated-root integration remain pending.
+Module formatting is now available as described below. Schema/generated-root
+integration remains pending.
 
 [Module formatting](module-formatting.md) now preserves headers, qualified names, and
 comment gaps, with syntax-only per-file output and reachable-project check mode.
@@ -153,3 +155,6 @@ with executed VM/native path/trace parity; broader native operations remain pend
 
 [Native nominal scalar domains](native-domains.md) now retain frontend privacy/type
 checks and VM instruction-budget parity with scalar backing representation.
+
+[Native closed enums](native-enums.md) now support construction, equality, calls,
+mutation, and exhaustive dispatch with executed VM/native parity.

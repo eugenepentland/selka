@@ -42,6 +42,6 @@ fixtures/114 comparisons per host build mode. Those numbers include the earlier
 scalar cases; they are not all new tests. Existing unsupported aggregate signatures
 and reference/resource operations continue to reject before C output.
 
-Records, arrays, variants, borrowing, owned buffers/resources, pools, arenas, and
+[Closed enums](native-enums.md) are now also supported. Records, arrays, tagged unions, borrowing, owned buffers/resources, pools, arenas, and
 other wider native operations remain pending. Generics, compile-time/schema/
 incremental work, and remaining corpus/scaling acceptance are also unfinished.
