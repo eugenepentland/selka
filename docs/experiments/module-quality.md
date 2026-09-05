@@ -42,7 +42,8 @@ root lists; qualified cross-file calls; threshold advisories; original source lo
 all allocation failures through compilation/root extraction/analysis/rendering; and
 real CLI rejection of invalid dependency bodies without partial reports.
 
-Module formatting, broader corpus/scaling review, project native parity, generics,
+[Module formatting](module-formatting.md) is implemented. Broader corpus/scaling
+review, project native parity, generics,
 compile-time/schema/incremental work, and wider native operations remain pending.
 Future generated/schema entry points will require explicit roots when those features
 are introduced; this report does not invent them.

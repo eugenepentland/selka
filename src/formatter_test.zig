@@ -81,3 +81,67 @@ test "formatter parser comments output and idempotence release every failed allo
     var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(no_resize.allocator(), failureScenario, .{});
 }
+
+fn moduleRoundTrip(allocator: std.mem.Allocator) !void {
+    const text = "// header\r\nmodule app . main ;import missing . units as u;export Example;struct Example{value:u :: Value}\nfn unfinished(x:u // qualifier comment\n: // between colons\n:Value)->[2]u::Value{return missing(x);}";
+    var before = try language.Compilation.init(allocator, "draft.my", text);
+    defer before.deinit();
+    const formatted = try before.formatModule(allocator);
+    defer allocator.free(formatted);
+    var after = try language.Compilation.init(allocator, "draft.my", formatted);
+    defer after.deinit();
+    const twice = try after.formatModule(allocator);
+    defer allocator.free(twice);
+    try t.expectEqualStrings(formatted, twice);
+    try t.expect(std.mem.indexOf(u8, formatted, "module app.main;\nimport missing.units as u;\nexport Example;") != null);
+    try t.expect(std.mem.indexOf(u8, formatted, "value: u::Value") != null);
+    try t.expect(std.mem.indexOf(u8, formatted, "-> [2]u::Value") != null);
+    var sink_a: diagnostic.Sink = .{ .allocator = before.arena.allocator() };
+    var sink_b: diagnostic.Sink = .{ .allocator = after.arena.allocator() };
+    const a = try lexer.lex(sink_a.allocator, text, &sink_a);
+    const b = try lexer.lex(sink_b.allocator, formatted, &sink_b);
+    try t.expectEqual(a.len, b.len);
+    for (a, b, 0..) |first, second, i| {
+        try t.expectEqual(first.tag, second.tag);
+        try t.expectEqualStrings(before.src.text(first.span), after.src.text(second.span));
+        const a_start = if (i == 0) 0 else a[i - 1].span.end;
+        const b_start = if (i == 0) 0 else b[i - 1].span.end;
+        var old_lines = std.mem.splitScalar(u8, text[a_start..first.span.start], '\n');
+        var new_lines = std.mem.splitScalar(u8, formatted[b_start..second.span.start], '\n');
+        while (old_lines.next()) |line| {
+            const comment = std.mem.indexOf(u8, line, "//") orelse continue;
+            var found = false;
+            while (new_lines.next()) |next| {
+                const next_comment = std.mem.indexOf(u8, next, "//") orelse continue;
+                try t.expectEqualStrings(std.mem.trimEnd(u8, line[comment..], "\r"), next[next_comment..]);
+                found = true;
+                break;
+            }
+            try t.expect(found);
+        }
+        while (new_lines.next()) |line| try t.expect(std.mem.indexOf(u8, line, "//") == null);
+    }
+    // Module formatting must not populate the single-file parser cache and bypass imports.
+    before.check() catch |err| {
+        if (err == error.OutOfMemory) return err;
+        return t.expectEqual(error.SourceError, err);
+    };
+    return error.ExpectedSingleFileRejection;
+}
+test "module formatting preserves qualified names header order and comment gaps under allocation failure" {
+    try moduleRoundTrip(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), moduleRoundTrip, .{});
+}
+test "module formatter rejects malformed headers and bodies but permits unresolved draft declarations" {
+    for ([_][]const u8{ "module ;", "module main; import a..b;", "module main; export a; import b;", "module main; fn broken( ;", "module main; fn f(x:a:Type)->i64{return 0;}" }) |text| {
+        var c = try language.Compilation.init(t.allocator, "bad.my", text);
+        defer c.deinit();
+        try t.expectError(error.SourceError, c.formatModule(t.allocator));
+    }
+    var c = try language.Compilation.init(t.allocator, "draft.my", "module differently_named; import absent as x; import other as x; export Missing; fn draft()->Unknown{return absent();}");
+    defer c.deinit();
+    const text = try c.formatModule(t.allocator);
+    defer t.allocator.free(text);
+    try t.expect(std.mem.indexOf(u8, text, "export Missing;") != null);
+}

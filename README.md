@@ -231,3 +231,7 @@ See [module duplicate discovery](docs/experiments/module-duplicates.md).
 `report-project-quality <entry.my>` reports resolved calls and structural metrics
 with separate main/export reachability. Exported interfaces and their private helpers
 are accounted for explicitly; see [module quality reports](docs/experiments/module-quality.md).
+
+`fmt-module <file.my>` formats a module draft without resolving imports.
+`fmt-project <entry.my> --check` checks formatting across its reachable graph.
+Neither command writes source files; see [module formatting](docs/experiments/module-formatting.md).

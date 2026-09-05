@@ -1,11 +1,9 @@
 module right;
 export quote;
-
 fn quote(count: i64) -> i64 {
     let subtotal = count * 2;
     return subtotal + 3;
 }
-
 fn alternate(count: i64) -> i64 {
     let subtotal = count * 2;
     return subtotal + 4;

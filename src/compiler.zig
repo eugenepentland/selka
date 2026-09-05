@@ -53,6 +53,15 @@ pub const Compilation = struct {
         return @import("formatter.zig").format(allocator, self.src.bytes, self.tokens.?);
     }
 
+    pub fn formatModule(self: *Compilation, allocator: std.mem.Allocator) ![]u8 {
+        var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
+        defer self.diagnostics = sink.items;
+        const tokens = try lexer.lex(sink.allocator, self.src.bytes, &sink);
+        var p: parser.Parser = .{ .src = self.src, .allocator = sink.allocator, .tokens = tokens, .sink = &sink };
+        _ = try p.parseModule();
+        return @import("formatter.zig").format(allocator, self.src.bytes, tokens);
+    }
+
     pub fn check(self: *Compilation) diagnostic.Error!void {
         if (self.program != null) return;
         try self.parse();

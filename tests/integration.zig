@@ -862,3 +862,49 @@ test "CLI module quality reports preserve export roots and advisory thresholds" 
     try testing.expect(std.mem.indexOf(u8, invalid.stderr, "E_TYPE") != null);
     try invokeOptions("report-project-quality", "module input; fn main() -> i64 { return 0; }", &.{"--approximate"}, 2, "", "usage:");
 }
+
+test "CLI module formatting is syntax only and project checking reports every changed file" {
+    const draft = "module input;import absent as a;export Missing;fn f(x:a :: T)->a::T{return x;}";
+    const formatted = "module input;\nimport absent as a;\nexport Missing;\nfn f(x: a::T) -> a::T {\n    return x;\n}\n";
+    try invoke("fmt-module", draft, 0, formatted, "");
+    try invokeOptions("fmt-module", draft, &.{"--check"}, 1, "", "formatting differs");
+    try invokeOptions("fmt-module", formatted, &.{"--check"}, 0, "", "");
+    try invoke("fmt-module", "module input; fn broken( ;", 1, "", "E_SYNTAX");
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input;import child;fn main()->i64{return unknown();}" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "child.my", .data = "module child;fn f()->Missing{return unknown();}" });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const changed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fmt-project", path, "--check" } });
+    defer testing.allocator.free(changed.stdout);
+    defer testing.allocator.free(changed.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, changed.term);
+    try testing.expectEqualStrings("", changed.stdout);
+    try testing.expectEqualStrings("child.my: formatting differs\ninput.my: formatting differs\n", changed.stderr);
+    // Apply each formatter's stdout explicitly in this fixture, then check the graph.
+    for ([_][]const u8{ "input.my", "child.my" }) |name| {
+        const absolute = try temp.dir.realPathFileAlloc(testing.io, name, testing.allocator);
+        defer testing.allocator.free(absolute);
+        const output = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fmt-module", absolute } });
+        defer testing.allocator.free(output.stdout);
+        defer testing.allocator.free(output.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, output.term);
+        try temp.dir.writeFile(testing.io, .{ .sub_path = name, .data = output.stdout });
+    }
+    const clean = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fmt-project", path, "--check" } });
+    defer testing.allocator.free(clean.stdout);
+    defer testing.allocator.free(clean.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, clean.term);
+    try testing.expectEqualStrings("", clean.stdout);
+    try testing.expectEqualStrings("", clean.stderr);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "child.my", .data = "module child; fn broken( ;" });
+    const invalid = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fmt-project", path, "--check" } });
+    defer testing.allocator.free(invalid.stdout);
+    defer testing.allocator.free(invalid.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, invalid.term);
+    try testing.expect(std.mem.indexOf(u8, invalid.stderr, "E_SYNTAX") != null);
+    try testing.expect(std.mem.indexOf(u8, invalid.stderr, "formatting differs") == null);
+    try invoke("fmt-project", "module input;", 2, "", "usage:");
+    try invokeOptions("fmt-module", "module input;", &.{"--max-steps=1"}, 2, "", "usage:");
+}

@@ -1444,3 +1444,32 @@ Module formatting, broader corpus/scaling review, project native parity, generic
 compile-time/schema/incremental work, wider native operations, and all other
 unfinished roadmap requirements remain pending. Guardian was not exercised; hosted
 CI has not run. The full roadmap goal remains active.
+
+## 2026-09-05: T canonical module and project formatting checks
+
+Added `fmt-module` stdout/check modes and `fmt-project --check`. The per-file mode
+parses headers and bodies without import loading or semantic validation. The project
+mode uses the reachable graph's loader rules, then formats every body without type
+checking, reporting all differing paths only after syntax validation succeeds.
+Neither command writes source files. The common formatter now handles qualifier
+colons while preserving token spelling and comment gaps. Module formatting does not
+populate the single-file parser cache or allow a later check to ignore imports.
+
+498 Zig tests pass in Debug and ReleaseFast (444 core, 54 CLI), plus eight
+verification-driver tests and the unchanged 23-fixture/182-comparison native suite
+per host mode. Acceptance covers idempotence, token/gap-comment preservation, CRLF,
+qualified arrays/types/calls, malformed headers/bodies, unresolved drafts, parser-cache
+isolation, every host allocation failure, CLI stdout/check behavior, and reachable
+multi-file checks. An allocation-failure assertion initially expected SourceError
+at a point that could also allocate; it now propagates OutOfMemory to the exhaustive
+sweep, which passes. Formatting and whitespace checks pass.
+
+Both existing module example graphs were canonicalized using formatter stdout and
+pass `fmt-project --check`; execution still returns 12 and 46. Formatting changed
+only whitespace, including expanding inline records/branches and removing blank gaps.
+[Module formatting](experiments/module-formatting.md) records syntax-vs-graph scope,
+output behavior, and validation limits. Broader module/candidate corpus and scaling
+review, project native parity, generics, compile-time/schema/incremental work, wider
+native operations, and other unfinished roadmap requirements remain pending.
+Guardian was not exercised; hosted CI has not run. The full roadmap goal remains
+active.

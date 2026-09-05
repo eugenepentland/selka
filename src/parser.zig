@@ -54,6 +54,30 @@ pub const Parser = struct {
         if (self.take(.ident)) return self.qualifiedTail(token.span);
         return self.sink.fail("E_TYPE", token.span, "expected a built-in, declared, fixed array, or enum-indexed table type");
     }
+    /// Parse module headers and bodies without loading imports or checking names.
+    pub fn parseModule(self: *Parser) diagnostic.Error!ast.Program {
+        self.module_syntax = true;
+        const first = try self.expect(.ident);
+        if (!std.mem.eql(u8, self.src.text(first.span), "module")) return self.sink.fail("E_MODULE_HEADER", first.span, "file must begin with a module declaration");
+        try self.moduleName();
+        _ = try self.expect(.semicolon);
+        while (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "import")) {
+            self.pos += 1;
+            try self.moduleName();
+            if (self.take(.kw_as)) _ = try self.expect(.ident);
+            _ = try self.expect(.semicolon);
+        }
+        while (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "export")) {
+            self.pos += 1;
+            _ = try self.expect(.ident);
+            _ = try self.expect(.semicolon);
+        }
+        return self.parse();
+    }
+    fn moduleName(self: *Parser) diagnostic.Error!void {
+        _ = try self.expect(.ident);
+        while (self.take(.dot)) _ = try self.expect(.ident);
+    }
     pub fn parse(self: *Parser) diagnostic.Error!ast.Program {
         var functions: std.ArrayList(ast.Function) = .empty;
         var records: std.ArrayList(ast.Record) = .empty;

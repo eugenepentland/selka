@@ -1,6 +1,5 @@
 module left;
 export price;
-
 fn price(quantity: i64) -> i64 {
     let subtotal = quantity * 2;
     return subtotal + 3;

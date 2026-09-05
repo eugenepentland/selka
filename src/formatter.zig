@@ -71,17 +71,20 @@ pub fn format(allocator: std.mem.Allocator, bytes: []const u8, tokens: []const l
     var previous: Tag = .eof;
     var previous_generic = false;
     var end: usize = 0;
-    for (tokens) |token| {
+    for (tokens, 0..) |token, index| {
         try out.comments(bytes[end..token.span.start]);
         if (token.tag == .eof) break;
         const top: Tag = if (delimiters.items.len == 0) .eof else delimiters.items[delimiters.items.len - 1];
         const generic_open = token.tag == .lt and genericHead(previous);
         const generic_close = token.tag == .gt and top == .lt;
+        // Two colon tokens qualify a module name. Preserve comments between them
+        // while avoiding the ordinary annotation space after the second colon.
+        const after_qualifier = previous == .colon and index >= 2 and tokens[index - 2].tag == .colon;
         if (token.tag == .rbrace) out.indent -= 1;
         const break_before = (token.tag == .rbrace and previous != .lbrace) or previous == .semicolon or
             (previous == .lbrace and token.tag != .rbrace) or (previous == .comma and top == .lbrace) or
             (previous == .rbrace and !joinsClose(token.tag));
-        if (break_before) try out.newline() else if (previous != .eof and !(previous == .lbrace and token.tag == .rbrace) and !generic_close and spaceBetween(previous, token.tag, generic_open, previous_generic)) try out.space();
+        if (break_before) try out.newline() else if (previous != .eof and !(previous == .lbrace and token.tag == .rbrace) and !generic_close and !after_qualifier and spaceBetween(previous, token.tag, generic_open, previous_generic)) try out.space();
         try out.text(bytes[token.span.start..token.span.end]);
         if (token.tag == .lbrace or token.tag == .lparen or token.tag == .lbracket or generic_open) try delimiters.append(allocator, token.tag) else if (closes(token.tag) and (token.tag != .gt or generic_close)) _ = delimiters.pop();
         if (token.tag == .lbrace) out.indent += 1;
