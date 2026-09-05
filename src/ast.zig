@@ -12,6 +12,7 @@ pub const Node = struct {
         integer: Span,
         boolean: bool,
         name: Span,
+        cast: struct { ty: Span, value: NodeId },
         record: struct { name: Span, fields: []const FieldInit },
         update: struct { base: NodeId, fields: []const FieldInit },
         field: struct { base: NodeId, name: Span },

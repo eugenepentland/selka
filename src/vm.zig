@@ -1,6 +1,7 @@
 //! Typed local/operand storage and explicitly checked guest arithmetic in every host mode.
 const std = @import("std");
 const bc = @import("bytecode.zig");
+const integers = @import("integers.zig");
 const typed = @import("typed.zig");
 const Diagnostic = @import("diagnostic.zig").Diagnostic;
 pub const Options = struct { max_steps: u64 = 10_000_000, max_frames: u64 = 1024 };
@@ -9,6 +10,15 @@ fn integer(value: typed.Value, allocator: std.mem.Allocator) error{InternalError
     defer value.release(allocator);
     if (value != .i64) return error.InternalError;
     return value.i64;
+}
+fn numeric(stack: *std.ArrayList(typed.Value), base: usize, expected: ?typed.Type, allocator: std.mem.Allocator) !i128 {
+    const value = try pop(stack, base);
+    defer value.release(allocator);
+    if (!value.typeOf().isInteger()) return error.InternalError;
+    if (expected) |ty| if (value.typeOf() != ty) {
+        return error.InternalError;
+    };
+    return value.asInteger();
 }
 fn boolean(value: typed.Value, allocator: std.mem.Allocator) error{InternalError}!bool {
     defer value.release(allocator);
@@ -94,7 +104,7 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
             .make_record => |record| {
                 if (stack.items.len - frame.operand_base < record.fields) return error.InternalError;
                 const start = stack.items.len - record.fields;
-                const schema = program.records[@backingInt(record.ty) - 2];
+                const schema = program.records[record.ty.recordIndex()];
                 for (stack.items[start..], 0..) |field, i| {
                     const field_index = if (record.order.len == 0) i else record.order[i];
                     if (field.typeOf() != schema.fields[field_index].ty) return error.InternalError;
@@ -109,7 +119,7 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 const start = stack.items.len - update.indices.len - 1;
                 const base = stack.items[start];
                 if (base.typeOf() != update.ty) return error.InternalError;
-                const schema = program.records[@backingInt(update.ty) - 2];
+                const schema = program.records[update.ty.recordIndex()];
                 for (stack.items[start + 1 ..], update.indices) |field, index| {
                     if (field.typeOf() != schema.fields[index].ty) return error.InternalError;
                 }
@@ -122,6 +132,25 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 const record = try pop(&stack, frame.operand_base);
                 defer record.release(allocator);
                 try pushOwned(&stack, allocator, try record.getField(index));
+            },
+            .push_integer => |number| try stack.append(allocator, typed.Value.number(number.ty, number.value)),
+            .cast_integer, .neg_integer => |ty| {
+                const operand = try numeric(&stack, frame.operand_base, if (instruction.op == .neg_integer) ty else null, allocator);
+                const value = integers.cast(ty, if (instruction.op == .neg_integer) -operand else operand) catch |err| switch (err) {
+                    error.Overflow => return trap("R_OVERFLOW", "integer conversion or negation exceeds the destination width", instruction.span, frames.items, program),
+                    else => return error.InternalError,
+                };
+                try stack.append(allocator, value);
+            },
+            .binary_integer => |binary| {
+                const right = try numeric(&stack, frame.operand_base, binary.ty, allocator);
+                const left = try numeric(&stack, frame.operand_base, binary.ty, allocator);
+                const value = integers.binary(binary.ty, binary.op, left, right) catch |err| switch (err) {
+                    error.Overflow => return trap("R_OVERFLOW", "integer arithmetic exceeds its declared width", instruction.span, frames.items, program),
+                    error.DivisionByZero => return trap("R_DIVISION_BY_ZERO", "division or remainder by zero", instruction.span, frames.items, program),
+                    else => return error.InternalError,
+                };
+                try stack.append(allocator, value);
             },
             .push_i64 => |value| try stack.append(allocator, .{ .i64 = value }),
             .push_bool => |value| try stack.append(allocator, .{ .bool = value }),

@@ -109,4 +109,11 @@ complete `new Type { ... }` construction, `.field` access, preserving
 may refer forward but cannot form recursive by-value layouts. See
 [the A1 semantics and restrictions](experiments/aggregates.md) for the grammar,
 copy/storage behavior, conversion body restriction, and added-field guarantees.
-Fixed arrays, indexing, and additional integer widths remain pending.
+Fixed arrays and indexing remain pending. Additional integer widths and
+checked casts are implemented; see [integer semantics](experiments/integers.md).
+
+
+The integer extension adds signed/unsigned 8/16/32/64-bit types, suffixed decimal
+literals, and `cast<T>(expression)`. Unsuffixed literals retain `i64` semantics.
+Operations require matching widths; bounds and signedness conversions are
+checked in every host mode. Boolean and record conversions remain separate.

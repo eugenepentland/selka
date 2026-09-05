@@ -17,6 +17,14 @@ pub const Tag = enum {
     kw_true,
     kw_false,
     kw_i64,
+    kw_i8,
+    kw_i16,
+    kw_i32,
+    kw_u8,
+    kw_u16,
+    kw_u32,
+    kw_u64,
+    kw_cast,
     kw_bool,
     kw_if,
     kw_else,
@@ -51,7 +59,7 @@ pub const Tag = enum {
 };
 pub const Token = struct { tag: Tag, span: Span };
 fn keyword(word: []const u8) Tag {
-    const words = .{ "fn", "return", "let", "mut", "true", "false", "i64", "bool", "if", "else", "while", "discard", "struct", "new", "update", "conversion" };
+    const words = .{ "fn", "return", "let", "mut", "true", "false", "i64", "bool", "if", "else", "while", "discard", "struct", "new", "update", "conversion", "i8", "i16", "i32", "u8", "u16", "u32", "u64", "cast" };
     inline for (words) |w| {
         if (std.mem.eql(u8, word, w)) return @field(Tag, "kw_" ++ w);
     }
@@ -79,7 +87,7 @@ pub fn lex(allocator: std.mem.Allocator, bytes: []const u8, sink: *diagnostic.Si
             }
             if (std.ascii.isDigit(ch)) {
                 i += 1;
-                while (i < bytes.len and std.ascii.isDigit(bytes[i])) i += 1;
+                while (i < bytes.len and std.ascii.isAlphanumeric(bytes[i])) i += 1;
                 break :blk .integer;
             }
             i += 1;

@@ -7,7 +7,7 @@ zig build run -- discover-duplicates examples/duplicates.my
 zig build run -- discover-duplicates examples/duplicates.my --min-nodes=8 --population=production --timings
 ```
 
-`exact-v2` runs after complete semantic checking and before lowering. It does
+`exact-v3` runs after complete semantic checking and before lowering. It does
 not execute guest code. Findings are advisory and exit 0; source errors still
 exit 1 and host/usage failures exit 2. Ordinary `check`, `run`, and
 `dump-bytecode` do not run discovery. Binding warnings retain their existing
@@ -104,3 +104,8 @@ modules, or approximate analysis.
 serialization. The checked-in baseline JSON remains historical `exact-v1`
 evidence; rerun the benchmark script to measure this version. Primitive
 normalization and recursion policy are unchanged.
+
+
+`exact-v3` adds explicit integer casts and preserves signedness/width identities.
+Record IDs remain internal compilation identities; comparison uses resolved
+names, so inserting built-in types does not conflate unrelated records.

@@ -14,17 +14,16 @@ pub const Catalog = struct {
 
     pub fn resolve(self: Catalog, src: Source, span: Span, sink: *diagnostic.Sink) Error!typed.Type {
         const name = src.text(span);
-        if (std.mem.eql(u8, name, "i64")) return .i64;
-        if (std.mem.eql(u8, name, "bool")) return .bool;
+        if (typed.Type.fromName(name)) |builtin| return builtin;
         return self.names.get(name) orelse sink.fail("E_UNKNOWN_TYPE", span, "type is not declared");
     }
     pub fn record(self: Catalog, ty: typed.Type, span: Span, sink: *diagnostic.Sink) Error!typed.Record {
-        if (ty == .i64 or ty == .bool) return sink.fail("E_TYPE", span, "operation requires a record value");
-        return self.records[@backingInt(ty) - 2];
+        if (!ty.isRecord()) return sink.fail("E_TYPE", span, "operation requires a record value");
+        return self.records[ty.recordIndex()];
     }
     pub fn field(self: Catalog, ty: typed.Type, src: Source, name: Span, sink: *diagnostic.Sink) Error!usize {
         _ = try self.record(ty, name, sink);
-        return self.field_names[@backingInt(ty) - 2].get(src.text(name)) orelse sink.fail("E_UNKNOWN_FIELD", name, "field does not exist on this record type");
+        return self.field_names[ty.recordIndex()].get(src.text(name)) orelse sink.fail("E_UNKNOWN_FIELD", name, "field does not exist on this record type");
     }
 };
 
@@ -34,8 +33,8 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
     @memset(catalog.field_names, .empty);
     for (declarations, 0..) |declaration, i| {
         const name = src.text(declaration.name);
-        if (catalog.names.get(name)) |previous| return sink.failRelated("E_DUPLICATE_TYPE", declaration.name, "record type is already declared", .{ .span = declarations[@backingInt(previous) - 2].name, .message = "previous record declaration" });
-        try catalog.names.put(allocator, name, @fromBackingInt(i + 2));
+        if (catalog.names.get(name)) |previous| return sink.failRelated("E_DUPLICATE_TYPE", declaration.name, "record type is already declared", .{ .span = declarations[previous.recordIndex()].name, .message = "previous record declaration" });
+        try catalog.names.put(allocator, name, @fromBackingInt(i + typed.Type.record_base));
     }
     for (declarations, catalog.records, 0..) |declaration, *out, i| {
         const fields = try allocator.alloc(typed.Field, declaration.fields.len);
@@ -45,7 +44,7 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
             try catalog.field_names[i].put(allocator, name, j);
             resolved.* = .{ .name = name, .declaration = field.name, .ty = try catalog.resolve(src, field.ty, sink) };
         }
-        out.* = .{ .id = @fromBackingInt(i + 2), .name = src.text(declaration.name), .declaration = declaration.name, .fields = fields };
+        out.* = .{ .id = @fromBackingInt(i + typed.Type.record_base), .name = src.text(declaration.name), .declaration = declaration.name, .fields = fields };
     }
     // Iterative DFS rejects cycles without expanding records or recursing on the host.
     const State = enum { unseen, visiting, complete };
@@ -70,8 +69,8 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
             }
             work.items[last].next_field += 1;
             const field = fields[visit.next_field];
-            if (field.ty == .i64 or field.ty == .bool) continue;
-            const child = @backingInt(field.ty) - 2;
+            if (!field.ty.isRecord()) continue;
+            const child = field.ty.recordIndex();
             if (states[child] == .visiting) return sink.fail("E_RECURSIVE_RECORD", field.declaration, "record fields must form a finite by-value layout; this field closes a cycle");
             if (states[child] == .unseen) {
                 states[child] = .visiting;

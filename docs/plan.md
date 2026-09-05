@@ -618,8 +618,8 @@ Implementation update (2026-09-05): exact scalar duplicate discovery in track T
 is now implemented as a separate advisory command. See
 [the experiment record](experiments/duplicate-discovery.md) and
 [post-MVP tracking](experiments/roadmap.md). A1 now includes records, complete construction, field access, preserving
-updates, and declarative complete conversions; arrays and integer widths remain
-pending. Other tracks below remain pending.
+updates, declarative complete conversions, and checked integer widths/casts;
+fixed arrays and indexing remain pending. Other tracks below remain pending.
 
 | Stage | Scope | Question to answer before proceeding |
 | --- | --- | --- |

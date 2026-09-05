@@ -2,8 +2,9 @@
 
 Status: nominal record declarations, complete construction, field access,
 preserving updates, and declarative complete conversions are implemented.
-Fixed arrays, checked indexing, and additional integer widths remain pending A1
-work. The later borrowing/resource/effect tracks remain pending.
+Integer widths and explicit checked casts are also implemented; see
+[integer semantics](integers.md). Fixed arrays and checked indexing remain
+pending A1 work. The later borrowing/resource/effect tracks remain pending.
 
 ## Implemented syntax and checking
 
@@ -107,7 +108,7 @@ verify that every command rejects incomplete conversions before execution.
 
 ## Remaining A1 acceptance
 
-Fixed arrays, checked indexing, and additional integer widths from plan A1 are
-still pending, including checked conversion and overflow/bounds fixtures.
+Fixed arrays and checked indexing from plan A1 are still pending. Additional
+integer widths and checked casts are implemented and tested.
 Record-specific acceptance is covered, but A1 as a whole is not complete.
 Examples are in `examples/records.my` and `examples/conversions.my`.

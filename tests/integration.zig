@@ -186,3 +186,12 @@ test "CLI checks runs and dumps records and declared complete conversions" {
         try invoke(command, incomplete, 1, "", "error[E_INCOMPLETE_CONVERSION]");
     }
 }
+
+test "CLI preserves integer width bounds and explicit casts" {
+    try invoke("run", @embedFile("fixtures/integers.my"), 0, "6148914691236516950\n", "");
+    try invoke("check", "fn main() -> i64 { discard cast<u8>(256); return 0; }", 0, "", "");
+    try invoke("run", "fn main() -> i64 { discard cast<u8>(256); return 0; }", 1, "", "error[R_OVERFLOW]");
+    try invoke("run", "fn main() -> i64 { discard 255u8 + 1u8; return 0; }", 1, "", "error[R_OVERFLOW]");
+    try invoke("check", "fn main() -> i64 { discard 256u8; return 0; }", 1, "", "error[E_INTEGER_RANGE]");
+    try invoke("check", "fn main() -> u8 { return 0u8; }", 1, "", "error[E_TYPE]");
+}

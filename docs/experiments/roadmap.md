@@ -7,7 +7,7 @@ not a claim that the full future language has been delivered.
 | Track | Current state | Next concrete acceptance experiment |
 | --- | --- | --- |
 | T, exact duplicate discovery | Implemented as separate `discover-duplicates` command; review and scaling corpus added | Collect ordinary-program findings before adding approximate matching; never merge automatically. |
-| A1, aggregates and complete conversions | In progress: records, complete construction, field access, preserving updates, and declarative conversions implemented; arrays/widths pending | Record field-change experiments pass; implement fixed arrays, checked indexing, and additional integer widths. |
+| A1, aggregates and complete conversions | In progress: records, complete construction, field access, preserving updates, and declarative conversions implemented; integer widths/casts implemented; arrays pending | Record field-change experiments pass; implement fixed arrays and checked indexing. |
 | A2, nominal domains and exhaustive mappings | Pending A1 type-model decisions | Reject seconds passed as millimeters; expose a newly added variant in exhaustive mappings. |
 | B, borrowing | Pending guest memory representation | Reject shared/exclusive conflicts and expired references with allocation/bounds/lifetime identity. |
 | C, ownership/capabilities/effects | Pending B and minimal recoverable errors | Acquire A, fail acquiring B, release A once; reject transitive forbidden effects including cleanup. |
@@ -42,4 +42,6 @@ Record construction, update, and declarative conversion syntax is implemented.
 Array, borrowing, and effect syntax is not accepted as an empty placeholder.
 
 The [A1 experiment record](aggregates.md) describes the implemented storage
-foundation, record frontend, and remaining array/integer-width work.
+foundation, record frontend, integer widths, and remaining array work.
+
+[Integer widths and checked casts](integers.md) complete the width portion of A1.

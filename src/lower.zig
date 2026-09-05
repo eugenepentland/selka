@@ -94,7 +94,11 @@ const Emitter = struct {
                 try self.instruction(node.span, .{ .get_field = field.index });
                 try self.push(.{ .expression = field.base });
             },
-            .integer => |value| try self.instruction(node.span, .{ .push_i64 = value }),
+            .integer => |value| try self.instruction(node.span, if (node.ty == .i64) .{ .push_i64 = @intCast(value) } else .{ .push_integer = .{ .ty = node.ty, .value = value } }),
+            .cast => |value| {
+                try self.instruction(node.span, .{ .cast_integer = node.ty });
+                try self.push(.{ .expression = value });
+            },
             .boolean => |value| try self.instruction(node.span, .{ .push_bool = value }),
             .local => |slot| try self.instruction(node.span, .{ .load_local = slot }),
             .call => |call| {
@@ -106,7 +110,7 @@ const Emitter = struct {
                 }
             },
             .unary => |u| {
-                try self.instruction(u.op_span, if (u.op == .neg) .neg_i64_checked else .not_bool);
+                try self.instruction(u.op_span, if (u.op == .not) .not_bool else if (node.ty == .i64) .neg_i64_checked else .{ .neg_integer = node.ty });
                 try self.push(.{ .expression = u.operand });
             },
             .binary => |b| {
@@ -159,6 +163,9 @@ const Emitter = struct {
     }
 };
 fn binaryInstruction(binary: anytype, nodes: []const typed.Node) bc.Instruction {
+    const operand_type = nodes[@backingInt(binary.left)].ty;
+    if (operand_type.isInteger() and operand_type != .i64)
+        return .{ .span = binary.op_span, .op = .{ .binary_integer = .{ .ty = operand_type, .op = binary.op } } };
     return .{ .span = binary.op_span, .op = switch (binary.op) {
         .add => .add_i64_checked,
         .sub => .sub_i64_checked,

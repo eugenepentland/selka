@@ -72,13 +72,15 @@ zig build run -- discover-duplicates examples/duplicates.my --timings
 It reports exact checked-function candidates after normalizing bound names,
 with source locations and advisory explanations. Ordinary compilation does not
 run it. See the [comparison contract and review](docs/experiments/duplicate-discovery.md).
-The scalar and record suites are verified in Debug and ReleaseFast.
+All 79 tests pass in Debug and ReleaseFast.
 
 [Post-MVP tracking](docs/experiments/roadmap.md) records the remaining experiments.
 Records, complete construction, field access, preserving updates, and declarative
 complete conversions are now implemented; see [A1 semantics](docs/experiments/aggregates.md).
 Run `examples/records.my` (12) or `examples/conversions.my` (11).
-Fixed arrays and additional integer widths are next within A1. Approximate
+Signed/unsigned 8/16/32/64-bit integers and checked casts are implemented
+([integer semantics](docs/experiments/integers.md)). Fixed arrays and indexing
+are next within A1. Approximate
 matching, borrowing, ownership, effects, modules, native execution, and the other
 pending tracks are not yet complete.
 

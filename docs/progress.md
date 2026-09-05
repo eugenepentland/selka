@@ -201,3 +201,23 @@ Evidence:
 
 Arrays, checked indexing, and additional integer widths remain within A1. The
 full pending-roadmap goal remains active. Guardian gates were not exercised.
+
+
+## 2026-09-05: A1 checked integer widths and casts
+
+Implemented signed and unsigned 8/16/32/64-bit types, suffixed literals,
+per-width signed-minimum handling, and explicit range-checked casts. Operations
+retain width and reject mixed types. The original unsuffixed `i64` and main
+entry rules are unchanged. The VM handles full-range unsigned values and detects
+intermediate overflow explicitly in both host modes.
+
+Aggregate type IDs now start after the built-in types and use a named boundary;
+record/field identities and conversion checking remain intact. Exact discovery
+is `exact-v3`, preserving widths and cast targets. Examples and semantics are
+in [the integer experiment record](experiments/integers.md).
+
+Evidence: 79/79 tests pass in Debug and ReleaseFast (64 core, 15 actual CLI),
+including all width limits, exhaustive byte addition/multiplication pairs,
+unsigned 64-bit arithmetic, casts, nominal records, complete conversions, and
+allocation-failure cleanup. Fixed arrays/indexing remain within A1. All other
+pending roadmap tracks remain in scope. Guardian gates were not exercised.

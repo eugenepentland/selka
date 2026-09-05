@@ -1,0 +1,13 @@
+struct Sample { value: u8 }
+struct WideSample { value: u64 }
+
+conversion fn widen(sample: Sample) -> WideSample {
+    return new WideSample { value: cast<u64>(sample.value) };
+}
+
+fn main() -> i64 {
+    let small = new Sample { value: 255u8 };
+    let wide = widen(small);
+    let quotient = 18446744073709551615u64 / 3u64;
+    return cast<i64>(quotient - wide.value);
+}

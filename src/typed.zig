@@ -12,9 +12,10 @@ pub const Node = struct {
     ty: Type,
     span: Span,
     data: union(enum) {
-        integer: i64,
+        integer: i128,
         boolean: bool,
         local: LocalId,
+        cast: NodeId,
         record: []const FieldInit,
         update: struct { base: NodeId, fields: []const FieldInit },
         field: struct { base: NodeId, index: usize },
@@ -27,11 +28,7 @@ pub const FieldInit = struct { index: usize, value: NodeId };
 pub const Field = struct { name: []const u8, declaration: Span, ty: Type };
 pub const Record = struct { id: Type, name: []const u8, declaration: Span, fields: []const Field };
 pub fn typeName(ty: Type, records: []const Record) []const u8 {
-    return switch (ty) {
-        .i64 => "i64",
-        .bool => "bool",
-        else => records[@backingInt(ty) - 2].name,
-    };
+    return if (ty.isRecord()) records[ty.recordIndex()].name else @tagName(ty);
 }
 pub const Store = struct { slot: LocalId, value: NodeId };
 pub const Statement = struct {

@@ -31,7 +31,7 @@ pub const Parser = struct {
     }
     fn typeName(self: *Parser) diagnostic.Error!Span {
         const token = self.current();
-        if (self.take(.kw_i64) or self.take(.kw_bool) or self.take(.ident)) return token.span;
+        if (self.take(.kw_i64) or self.take(.kw_bool) or self.take(.kw_i8) or self.take(.kw_i16) or self.take(.kw_i32) or self.take(.kw_u8) or self.take(.kw_u16) or self.take(.kw_u32) or self.take(.kw_u64) or self.take(.ident)) return token.span;
         return self.sink.fail("E_TYPE", token.span, "expected i64, bool, or a declared record type");
     }
     pub fn parse(self: *Parser) diagnostic.Error!ast.Program {
@@ -167,6 +167,16 @@ pub const Parser = struct {
         defer self.depth -= 1;
         const token = self.current();
         var left: ast.NodeId = switch (token.tag) {
+            .kw_cast => cast: {
+                self.pos += 1;
+                _ = try self.expect(.lt);
+                const ty = try self.typeName();
+                _ = try self.expect(.gt);
+                _ = try self.expect(.lparen);
+                const value = try self.expression(0);
+                const close = try self.expect(.rparen);
+                break :cast try self.append(.{ .span = .join(token.span, close.span), .data = .{ .cast = .{ .ty = ty, .value = value } } });
+            },
             .kw_new => record: {
                 self.pos += 1;
                 const name = try self.expect(.ident);

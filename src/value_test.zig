@@ -4,7 +4,7 @@ const testing = std.testing;
 const language = @import("compiler.zig");
 const values = @import("value.zig");
 const Value = values.Value;
-const record_type: values.Type = @fromBackingInt(2);
+const record_type: values.Type = @fromBackingInt(values.Type.record_base);
 const span: language.source.Span = .{ .start = 0, .end = 0 };
 const schema: @import("typed.zig").Record = .{ .id = record_type, .name = "TestRecord", .declaration = span, .fields = &.{.{ .name = "value", .declaration = span, .ty = .i64 }} };
 const Op = @FieldType(language.bytecode.Instruction, "op");
@@ -56,7 +56,7 @@ test "step traps at each ownership boundary release aggregate storage" {
 test "nested immutable fields remain alive independently of their containing value" {
     const inner = try Value.create(testing.allocator, record_type, &.{.{ .i64 = 7 }});
     defer inner.release(testing.allocator);
-    const outer = try Value.create(testing.allocator, @fromBackingInt(3), &.{ inner, inner, .{ .bool = true } });
+    const outer = try Value.create(testing.allocator, @fromBackingInt(values.Type.record_base + 1), &.{ inner, inner, .{ .bool = true } });
     const copy = try outer.getField(1);
     defer copy.release(testing.allocator);
     outer.release(testing.allocator);

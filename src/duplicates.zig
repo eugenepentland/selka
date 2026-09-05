@@ -3,7 +3,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 
-pub const version = "exact-v2";
+pub const version = "exact-v3";
 pub const Population = enum { production, tests, generated, reference, intentional };
 pub const Options = struct { min_nodes: usize = 8, population: Population = .production };
 pub const Group = struct { members: []const typed.FunctionId, nodes: usize };
@@ -42,6 +42,7 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                 const node = program.nodes[@backingInt(id)];
                 writer.print("expr {s} {s}\n", .{ typed.typeName(node.ty, program.records), @tagName(node.data) }) catch return error.OutOfMemory;
                 switch (node.data) {
+                    .cast => |operand| try work.append(allocator, .{ .expression = operand }),
                     .record => |fields| {
                         try recordFields(allocator, writer, &work, program, node.ty, fields);
                     },
@@ -51,7 +52,7 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                     },
                     .field => |field| {
                         const base_type = program.nodes[@backingInt(field.base)].ty;
-                        const name = program.records[@backingInt(base_type) - 2].fields[field.index].name;
+                        const name = program.records[base_type.recordIndex()].fields[field.index].name;
                         writer.print("field {s}\n", .{name}) catch return error.OutOfMemory;
                         try work.append(allocator, .{ .expression = field.base });
                     },
@@ -121,7 +122,7 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
 
 fn recordFields(allocator: std.mem.Allocator, writer: *std.Io.Writer, work: *std.ArrayList(Work), program: typed.Program, ty: typed.Type, fields: []const typed.FieldInit) !void {
     writer.print("fields {d}\n", .{fields.len}) catch return error.OutOfMemory;
-    for (fields) |field| writer.print("field {s}\n", .{program.records[@backingInt(ty) - 2].fields[field.index].name}) catch return error.OutOfMemory;
+    for (fields) |field| writer.print("field {s}\n", .{program.records[ty.recordIndex()].fields[field.index].name}) catch return error.OutOfMemory;
     var i = fields.len;
     while (i > 0) {
         i -= 1;

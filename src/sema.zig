@@ -65,12 +65,30 @@ const Checker = struct {
     fn resolve(self: *Checker, name: source.Span) Error!typed.LocalId {
         return self.active.get(self.src.text(name)) orelse self.sink.fail("E_UNKNOWN_NAME", name, "name is not defined in this scope");
     }
-    fn minimum(self: *Checker, node: ast.Node) bool {
-        if (node.data != .unary or node.data.unary.op != .neg) return false;
+    const Literal = struct { ty: typed.Type, value: i128 };
+    fn literal(self: *Checker, span: source.Span, allow_minimum: bool) Error!Literal {
+        const text = self.src.text(span);
+        var digits: usize = 0;
+        while (digits < text.len and std.ascii.isDigit(text[digits])) digits += 1;
+        const literal_type: typed.Type = if (digits == text.len) .i64 else typed.Type.fromName(text[digits..]) orelse
+            return self.sink.fail("E_INTEGER_SUFFIX", span, "unknown integer suffix; use i8/i16/i32/i64 or u8/u16/u32/u64");
+        if (!literal_type.isInteger()) return self.sink.fail("E_INTEGER_SUFFIX", span, "integer suffix must name an integer type");
+        const magnitude = std.fmt.parseUnsigned(u128, text[0..digits], 10) catch
+            return self.sink.fail("E_INTEGER_RANGE", span, "integer literal magnitude is too large");
+        const maximum: u128 = @intCast(literal_type.max() + @as(i128, if (allow_minimum and literal_type.integer().?.signed) 1 else 0));
+        if (magnitude > maximum) return self.sink.fail("E_INTEGER_RANGE", span, "integer literal does not fit its type; signed minimum magnitudes must be directly negated");
+        return .{ .ty = literal_type, .value = @intCast(magnitude) };
+    }
+    fn minimum(self: *Checker, node: ast.Node) Error!?Literal {
+        if (node.data != .unary or node.data.unary.op != .neg) return null;
         const child = self.syntax.nodes.items[@backingInt(node.data.unary.operand)];
-        if (child.data != .integer) return false;
-        const magnitude = std.fmt.parseUnsigned(u64, self.src.text(child.data.integer), 10) catch return false;
-        return magnitude == (@as(u64, 1) << 63);
+        if (child.data != .integer) return null;
+        const parsed = try self.literal(child.data.integer, true);
+        if (parsed.ty.integer().?.signed and parsed.value == -parsed.ty.min()) return .{ .ty = parsed.ty, .value = -parsed.value };
+        return null;
+    }
+    fn requireInteger(self: *Checker, actual: typed.Type, span: source.Span) Error!void {
+        if (!actual.isInteger()) return self.sink.fail("E_TYPE", span, "operation requires an integer type");
     }
     fn expression(self: *Checker, root: ast.NodeId) Error!typed.NodeId {
         var work: std.ArrayList(Work) = .empty;
@@ -80,9 +98,14 @@ const Checker = struct {
             const index = @backingInt(task.id);
             if (self.resolved[index] != null) continue;
             const node = self.syntax.nodes.items[index];
-            const is_minimum = self.minimum(node);
-            if (!task.emit and !is_minimum) {
+            const minimum_literal = try self.minimum(node);
+            if (!task.emit and minimum_literal == null) {
                 switch (node.data) {
+                    .cast => |cast| {
+                        try work.append(self.allocator, .{ .id = task.id, .emit = true });
+                        try work.append(self.allocator, .{ .id = cast.value });
+                        continue;
+                    },
                     .record => |record| {
                         try work.append(self.allocator, .{ .id = task.id, .emit = true });
                         try self.queueFields(&work, record.fields);
@@ -123,8 +146,9 @@ const Checker = struct {
                 }
             }
             var out: typed.Node = .{ .span = node.span, .ty = .i64, .data = undefined };
-            if (is_minimum) {
-                out.data = .{ .integer = std.math.minInt(i64) };
+            if (minimum_literal) |parsed| {
+                out.ty = parsed.ty;
+                out.data = .{ .integer = parsed.value };
             } else switch (node.data) {
                 .record => |record| {
                     out.ty = try self.ty(record.name);
@@ -143,11 +167,21 @@ const Checker = struct {
                         const base_node = self.nodes.items[@backingInt(base)];
                         if (base_node.data == .local and @backingInt(base_node.data.local) == 0) seen[field_index] = true;
                     }
-                    out.ty = self.catalog.records[@backingInt(record_type) - 2].fields[field_index].ty;
+                    out.ty = self.catalog.records[record_type.recordIndex()].fields[field_index].ty;
                     out.data = .{ .field = .{ .base = base, .index = field_index } };
                 },
-                .integer => |token| out.data = .{ .integer = std.fmt.parseInt(i64, self.src.text(token), 10) catch
-                    return self.sink.fail("E_INTEGER_RANGE", token, "integer literal does not fit i64; the minimum magnitude must be directly negated") },
+                .integer => |token| {
+                    const parsed = try self.literal(token, false);
+                    out.ty = parsed.ty;
+                    out.data = .{ .integer = parsed.value };
+                },
+                .cast => |cast| {
+                    const value = self.resolved[@backingInt(cast.value)].?;
+                    out.ty = try self.ty(cast.ty);
+                    try self.requireInteger(out.ty, cast.ty);
+                    try self.requireInteger(self.nodes.items[@backingInt(value)].ty, node.span);
+                    out.data = .{ .cast = value };
+                },
                 .boolean => |value| {
                     out.ty = .bool;
                     out.data = .{ .boolean = value };
@@ -174,8 +208,8 @@ const Checker = struct {
                 },
                 .unary => |u| {
                     const operand = self.resolved[@backingInt(u.operand)].?;
-                    out.ty = if (u.op == .neg) .i64 else .bool;
-                    try self.require(self.nodes.items[@backingInt(operand)].ty, out.ty, u.op_span);
+                    out.ty = if (u.op == .neg) self.nodes.items[@backingInt(operand)].ty else .bool;
+                    if (u.op == .neg) try self.requireInteger(out.ty, u.op_span) else try self.require(self.nodes.items[@backingInt(operand)].ty, .bool, u.op_span);
                     out.data = .{ .unary = .{ .op = if (u.op == .neg) .neg else .not, .operand = operand, .op_span = u.op_span } };
                 },
                 .binary => |b| {
@@ -190,14 +224,17 @@ const Checker = struct {
                             out.ty = .bool;
                         },
                         .eq, .ne => {
-                            if (lt != .i64 and lt != .bool) return self.sink.fail("E_TYPE", b.op_span, "record equality is not defined; compare the relevant fields explicitly");
+                            if (!lt.isInteger() and lt != .bool) return self.sink.fail("E_TYPE", b.op_span, "record equality is not defined; compare the relevant fields explicitly");
                             out.ty = .bool;
                         },
                         .lt, .le, .gt, .ge => {
-                            try self.require(lt, .i64, b.op_span);
+                            try self.requireInteger(lt, b.op_span);
                             out.ty = .bool;
                         },
-                        else => try self.require(lt, .i64, b.op_span),
+                        else => {
+                            try self.requireInteger(lt, b.op_span);
+                            out.ty = lt;
+                        },
                     }
                     out.data = .{ .binary = .{
                         .op = std.meta.stringToEnum(typed.BinaryOp, @tagName(b.op)).?,
@@ -269,13 +306,13 @@ const Checker = struct {
                     return self.sink.fail("E_IMMUTABLE", a.name, "assignment requires a let mut binding");
                 var value = try self.expression(a.value);
                 if (a.op != .set) {
-                    try self.require(self.locals.items[@backingInt(slot)].ty, .i64, a.op_span);
-                    try self.require(self.nodes.items[@backingInt(value)].ty, .i64, a.op_span);
+                    try self.requireInteger(self.locals.items[@backingInt(slot)].ty, a.op_span);
+                    try self.require(self.nodes.items[@backingInt(value)].ty, self.locals.items[@backingInt(slot)].ty, a.op_span);
                     self.locals.items[@backingInt(slot)].reads += 1;
                     const read: typed.NodeId = @fromBackingInt(self.nodes.items.len);
-                    try self.nodes.append(self.allocator, .{ .ty = .i64, .span = a.name, .data = .{ .local = slot } });
+                    try self.nodes.append(self.allocator, .{ .ty = self.locals.items[@backingInt(slot)].ty, .span = a.name, .data = .{ .local = slot } });
                     const combined: typed.NodeId = @fromBackingInt(self.nodes.items.len);
-                    try self.nodes.append(self.allocator, .{ .ty = .i64, .span = stmt.span, .data = .{ .binary = .{
+                    try self.nodes.append(self.allocator, .{ .ty = self.locals.items[@backingInt(slot)].ty, .span = stmt.span, .data = .{ .binary = .{
                         .op = if (a.op == .add) .add else .sub,
                         .left = read,
                         .right = value,
@@ -336,7 +373,7 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
         }
         const body = try checker.statement(function.body);
         if (checker.conversion_fields) |seen| {
-            const source_record = catalog.records[@backingInt(checker.locals.items[0].ty) - 2];
+            const source_record = catalog.records[checker.locals.items[0].ty.recordIndex()];
             for (seen, source_record.fields) |accounted, field| {
                 if (!accounted) {
                     const message = try std.fmt.allocPrint(allocator, "source field `{s}` is not accounted for; use it in the destination or explicitly discard that named field", .{field.name});
