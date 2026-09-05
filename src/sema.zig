@@ -50,6 +50,15 @@ const Checker = struct {
         }
         return id;
     }
+    fn requireReferenceKind(self: *Checker, id: typed.ReferenceId, slice: bool, span: source.Span) Error!void {
+        if (self.references.items[@backingInt(id)].slice != slice) return self.sink.fail("E_REFERENCE_KIND", span, if (slice) "operation requires a slice" else "operation requires a whole-value reference");
+    }
+    fn sliceElement(self: *Checker, ty_id: typed.Type, span: source.Span) Error!typed.Type {
+        if (ty_id.isAggregate()) if (self.catalog.records[ty_id.recordIndex()].array) |array| {
+            if (array.key == null) return array.element;
+        };
+        return self.sink.fail("E_SLICE_TYPE", span, "slicing requires a fixed numeric array or an existing slice");
+    }
     fn ownerAccess(self: *Checker, slot: typed.LocalId, write: bool, span: source.Span) Error!void {
         var entries = self.active_refs.valueIterator();
         while (entries.next()) |id| {
@@ -193,6 +202,11 @@ const Checker = struct {
                         try work.append(self.allocator, .{ .id = field.base });
                         continue;
                     },
+                    .read_slice => |read| {
+                        try work.append(self.allocator, .{ .id = task.id, .emit = true });
+                        try work.append(self.allocator, .{ .id = read.index });
+                        continue;
+                    },
                     .call => |call| {
                         try work.append(self.allocator, .{ .id = task.id, .emit = true });
                         const target = try self.callTarget(call, node.span);
@@ -319,8 +333,23 @@ const Checker = struct {
                     out.ty = .bool;
                     out.data = .{ .boolean = value };
                 },
+                .read_slice => |read| {
+                    const id = try self.reference(read.name);
+                    try self.requireReferenceKind(id, true, read.name);
+                    const element_index = self.resolved[@backingInt(read.index)].?;
+                    try self.requireInteger(self.nodes.items[@backingInt(element_index)].ty, self.nodes.items[@backingInt(element_index)].span);
+                    out.ty = self.references.items[@backingInt(id)].ty;
+                    out.data = .{ .read_slice = .{ .reference = id, .index = element_index } };
+                },
+                .len_slice => |name| {
+                    const id = try self.reference(name);
+                    try self.requireReferenceKind(id, true, name);
+                    out.ty = .u64;
+                    out.data = .{ .len_slice = id };
+                },
                 .read_ref => |name| {
                     const id = try self.reference(name);
+                    try self.requireReferenceKind(id, false, name);
                     out.ty = self.references.items[@backingInt(id)].ty;
                     out.data = .{ .read_ref = id };
                 },
@@ -343,6 +372,7 @@ const Checker = struct {
                             if (argument.data != .name) return self.sink.fail("E_REFERENCE_ARGUMENT", argument.span, "reference parameter requires an active reference name");
                             const id = try self.reference(argument.data.name);
                             const ref = self.references.items[@backingInt(id)];
+                            try self.requireReferenceKind(id, parameter.slice, argument.span);
                             if (mutable and !ref.mutable) return self.sink.fail("E_REFERENCE_READ_ONLY", argument.span, "exclusive parameter requires an exclusive reference");
                             try self.require(ref.ty, try self.ty(parameter.ty), argument.span);
                             for (loans.items) |previous_id| {
@@ -461,6 +491,14 @@ const Checker = struct {
             .borrow => |borrow| borrow: {
                 const name = self.src.text(borrow.name);
                 if (self.active.contains(name) or self.active_refs.contains(name) or self.functions.contains(name) or self.catalog.names.contains(name)) return self.sink.fail("E_SHADOWING", borrow.name, "reference shadows an active binding or top-level name");
+                var range: ?typed.Range = null;
+                if (borrow.range) |bounds| {
+                    const start = try self.expression(bounds.start);
+                    const end = try self.expression(bounds.end);
+                    try self.requireInteger(self.nodes.items[@backingInt(start)].ty, self.nodes.items[@backingInt(start)].span);
+                    try self.requireInteger(self.nodes.items[@backingInt(end)].ty, self.nodes.items[@backingInt(end)].span);
+                    range = .{ .start = start, .end = end };
+                }
                 var parent: ?typed.ReferenceId = null;
                 var owner: typed.LocalId = undefined;
                 if (self.active_refs.contains(self.src.text(borrow.owner))) {
@@ -475,16 +513,32 @@ const Checker = struct {
                     self.locals.items[@backingInt(owner)].reads += 1;
                     if (borrow.mutable) self.locals.items[@backingInt(owner)].mutable_borrow = true;
                 }
+                const source_type = if (parent) |id| self.references.items[@backingInt(id)].ty else self.locals.items[@backingInt(owner)].ty;
+                const parent_slice = if (parent) |id| self.references.items[@backingInt(id)].slice else false;
+                const element = if (range != null and !parent_slice) try self.sliceElement(source_type, borrow.owner) else source_type;
                 const id: typed.ReferenceId = @fromBackingInt(self.references.items.len);
-                try self.references.append(self.allocator, .{ .name = name, .declaration = borrow.name, .owner = owner, .parent = parent, .ty = self.locals.items[@backingInt(owner)].ty, .mutable = borrow.mutable });
+                try self.references.append(self.allocator, .{ .slice = range != null or parent_slice, .name = name, .declaration = borrow.name, .owner = owner, .parent = parent, .ty = element, .mutable = borrow.mutable });
                 try self.active_refs.put(self.allocator, name, id);
                 defer _ = self.active_refs.remove(name);
                 const body = try self.statement(borrow.body);
                 terminates = body.terminates;
-                break :borrow .{ .borrow = .{ .reference = id, .body = body.id } };
+                break :borrow .{ .borrow = .{ .reference = id, .body = body.id, .range = range } };
+            },
+            .write_slice => |write| write: {
+                const id = try self.reference(write.name);
+                try self.requireReferenceKind(id, true, write.name);
+                const ref = self.references.items[@backingInt(id)];
+                if (!ref.mutable) return self.sink.fail("E_REFERENCE_READ_ONLY", write.name, "writing requires an exclusive slice");
+                const index = try self.expression(write.index);
+                try self.requireInteger(self.nodes.items[@backingInt(index)].ty, self.nodes.items[@backingInt(index)].span);
+                const value = try self.expression(write.value);
+                try self.require(self.nodes.items[@backingInt(value)].ty, ref.ty, stmt.span);
+                self.locals.items[@backingInt(ref.owner)].writes += 1;
+                break :write .{ .write_slice = .{ .reference = id, .index = index, .value = value } };
             },
             .write_ref => |write| write: {
                 const id = try self.reference(write.name);
+                try self.requireReferenceKind(id, false, write.name);
                 const ref = self.references.items[@backingInt(id)];
                 if (!ref.mutable) return self.sink.fail("E_REFERENCE_READ_ONLY", write.name, "writing requires an exclusive reference");
                 const value = try self.expression(write.value);
@@ -596,10 +650,10 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
             if (checker.functions.contains(name) or checker.catalog.names.contains(name)) return sink.fail("E_SHADOWING", parameter.name, "parameter shadows a top-level function");
             const slot: typed.LocalId = @fromBackingInt(checker.locals.items.len);
             const parameter_type = try checker.ty(parameter.ty);
-            try checker.locals.append(allocator, .{ .name = name, .declaration = parameter.name, .ty = parameter_type, .mutable = false, .reference_parameter = parameter.reference });
+            try checker.locals.append(allocator, .{ .name = name, .declaration = parameter.name, .ty = parameter_type, .mutable = false, .reference_parameter = parameter.reference, .slice_parameter = parameter.slice });
             if (parameter.reference) |mutable| {
                 const reference: typed.ReferenceId = @fromBackingInt(checker.references.items.len);
-                try checker.references.append(allocator, .{ .parameter = true, .name = name, .declaration = parameter.name, .owner = slot, .parent = null, .ty = parameter_type, .mutable = mutable });
+                try checker.references.append(allocator, .{ .parameter = true, .slice = parameter.slice, .name = name, .declaration = parameter.name, .owner = slot, .parent = null, .ty = parameter_type, .mutable = mutable });
                 try checker.active_refs.put(allocator, name, reference);
             } else try checker.active.put(allocator, name, slot);
         }

@@ -4,7 +4,7 @@ pub const NodeId = enum(usize) { _ };
 pub const StatementId = enum(usize) { _ };
 pub const FunctionId = enum(usize) { _ };
 pub const ReferenceId = enum(usize) { _ };
-pub const Reference = struct { parameter: bool = false, name: []const u8, declaration: Span, owner: LocalId, parent: ?ReferenceId, ty: Type, mutable: bool };
+pub const Reference = struct { slice: bool = false, parameter: bool = false, name: []const u8, declaration: Span, owner: LocalId, parent: ?ReferenceId, ty: Type, mutable: bool };
 pub const LocalId = enum(usize) { _ };
 pub const Type = @import("value.zig").Type;
 pub const Value = @import("value.zig").Value;
@@ -18,6 +18,8 @@ pub const Node = struct {
         boolean: bool,
         local: LocalId,
         read_ref: ReferenceId,
+        read_slice: struct { reference: ReferenceId, index: NodeId },
+        len_slice: ReferenceId,
         cast: NodeId,
         wrap: NodeId,
         variant: struct { tag: usize, value: ?NodeId },
@@ -75,7 +77,8 @@ pub const Statement = struct {
     data: union(enum) {
         block: []const StatementId,
         ret: NodeId,
-        borrow: struct { reference: ReferenceId, body: StatementId },
+        borrow: struct { reference: ReferenceId, body: StatementId, range: ?Range = null },
+        write_slice: struct { reference: ReferenceId, index: NodeId, value: NodeId },
         write_ref: struct { reference: ReferenceId, value: NodeId },
         discard: NodeId,
         branch: struct { condition: NodeId, then_body: StatementId, else_body: ?StatementId },
@@ -86,7 +89,8 @@ pub const Statement = struct {
     },
 };
 pub const MatchArm = struct { tag: usize, slot: ?LocalId, body: StatementId };
-pub const Local = struct { reference_parameter: ?bool = null, name: []const u8, declaration: Span, ty: Type, mutable: bool, mutable_borrow: bool = false, reads: usize = 0, writes: usize = 0 };
+pub const Range = struct { start: NodeId, end: NodeId };
+pub const Local = struct { slice_parameter: bool = false, reference_parameter: ?bool = null, name: []const u8, declaration: Span, ty: Type, mutable: bool, mutable_borrow: bool = false, reads: usize = 0, writes: usize = 0 };
 pub const Function = struct {
     references: []const Reference = &.{},
     owner: ?Type = null,

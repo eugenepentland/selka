@@ -3,7 +3,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 
-pub const version = "exact-v9";
+pub const version = "exact-v10";
 pub const Population = enum { production, tests, generated, reference, intentional };
 pub const Options = struct { min_nodes: usize = 8, population: Population = .production };
 pub const Group = struct { members: []const typed.FunctionId, nodes: usize };
@@ -35,8 +35,8 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
     writer.print("private {}\n", .{function.restricted}) catch return error.OutOfMemory;
     // Slot identities are declaration order within a function, including parameters.
     // Names, spans, and advisory use counters have no role in structural equality.
-    for (function.locals) |local| writer.print("local {s} {} reference {?}\n", .{ typed.typeName(local.ty, program.records), local.mutable, local.reference_parameter }) catch return error.OutOfMemory;
-    for (function.references) |reference| writer.print("reference {s} owner {d} parent {?d} mutable {} parameter {}\n", .{ typed.typeName(reference.ty, program.records), @backingInt(reference.owner), if (reference.parent) |parent| @as(?usize, @backingInt(parent)) else null, reference.mutable, reference.parameter }) catch return error.OutOfMemory;
+    for (function.locals) |local| writer.print("local {s} {} reference {?} slice {}\n", .{ typed.typeName(local.ty, program.records), local.mutable, local.reference_parameter, local.slice_parameter }) catch return error.OutOfMemory;
+    for (function.references) |reference| writer.print("reference {s} owner {d} parent {?d} mutable {} parameter {} slice {}\n", .{ typed.typeName(reference.ty, program.records), @backingInt(reference.owner), if (reference.parent) |parent| @as(?usize, @backingInt(parent)) else null, reference.mutable, reference.parameter, reference.slice }) catch return error.OutOfMemory;
     try work.append(allocator, .{ .statement = function.body });
     while (work.pop()) |task| {
         nodes += 1;
@@ -83,6 +83,11 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                     },
                     .integer => |value| writer.print("{d}\n", .{value}) catch return error.OutOfMemory,
                     .boolean => |value| writer.print("{}\n", .{value}) catch return error.OutOfMemory,
+                    .read_slice => |read| {
+                        writer.print("reference {d}\n", .{@backingInt(read.reference)}) catch return error.OutOfMemory;
+                        try work.append(allocator, .{ .expression = read.index });
+                    },
+                    .len_slice => |reference| writer.print("reference {d}\n", .{@backingInt(reference)}) catch return error.OutOfMemory,
                     .read_ref => |reference_id| writer.print("reference {d}\n", .{@backingInt(reference_id)}) catch return error.OutOfMemory,
                     .local => |slot| writer.print("{d}\n", .{@backingInt(slot)}) catch return error.OutOfMemory,
                     .unary => |unary| {
@@ -128,6 +133,16 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                     .borrow => |borrow| {
                         writer.print("reference {d}\n", .{@backingInt(borrow.reference)}) catch return error.OutOfMemory;
                         try work.append(allocator, .{ .statement = borrow.body });
+                        writer.print("range {}\n", .{borrow.range != null}) catch return error.OutOfMemory;
+                        if (borrow.range) |range| {
+                            try work.append(allocator, .{ .expression = range.end });
+                            try work.append(allocator, .{ .expression = range.start });
+                        }
+                    },
+                    .write_slice => |write| {
+                        writer.print("reference {d}\n", .{@backingInt(write.reference)}) catch return error.OutOfMemory;
+                        try work.append(allocator, .{ .expression = write.value });
+                        try work.append(allocator, .{ .expression = write.index });
                     },
                     .write_ref => |write| {
                         writer.print("reference {d}\n", .{@backingInt(write.reference)}) catch return error.OutOfMemory;

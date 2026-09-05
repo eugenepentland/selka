@@ -26,6 +26,10 @@ pub const Instruction = struct {
         replace_index: typed.Type,
         array_length: typed.Type,
         begin_borrow: typed.ReferenceId,
+        begin_slice: typed.ReferenceId,
+        read_slice: typed.ReferenceId,
+        write_slice: typed.ReferenceId,
+        len_slice: typed.ReferenceId,
         end_borrow: typed.ReferenceId,
         read_ref: typed.ReferenceId,
         write_ref: typed.ReferenceId,
@@ -105,7 +109,20 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
         } else if (function.restricted) return error.InternalError;
         if (function.parameter_count > function.locals.len or !validType(function.return_type, program)) return error.InternalError;
         for (function.references, 0..) |reference, index| {
-            if (@backingInt(reference.owner) >= function.locals.len or reference.ty != function.locals[@backingInt(reference.owner)].ty) return error.InternalError;
+            if (@backingInt(reference.owner) >= function.locals.len or !validType(reference.ty, program)) return error.InternalError;
+            const local = function.locals[@backingInt(reference.owner)];
+            var source_type = local.ty;
+            var source_slice = local.slice_parameter;
+            if (reference.parent) |parent| {
+                if (@backingInt(parent) >= index) return error.InternalError;
+                source_type = function.references[@backingInt(parent)].ty;
+                source_slice = function.references[@backingInt(parent)].slice;
+            }
+            if (reference.slice and !source_slice) {
+                if (!source_type.isAggregate() or !validType(source_type, program)) return error.InternalError;
+                const array = program.records[source_type.recordIndex()].array orelse return error.InternalError;
+                if (array.key != null or array.element != reference.ty) return error.InternalError;
+            } else if (reference.slice != source_slice or reference.ty != source_type) return error.InternalError;
             if (reference.parent) |parent| {
                 if (@backingInt(parent) >= index) return error.InternalError;
                 const previous = function.references[@backingInt(parent)];
@@ -113,10 +130,10 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             } else if (!reference.parameter and reference.mutable and !function.locals[@backingInt(reference.owner)].mutable) return error.InternalError;
             if (!reference.parameter and reference.parent == null and function.locals[@backingInt(reference.owner)].reference_parameter != null) return error.InternalError;
             if (reference.parameter and index > 0 and (!function.references[index - 1].parameter or @backingInt(function.references[index - 1].owner) >= @backingInt(reference.owner))) return error.InternalError;
-            if (reference.parameter and (reference.parent != null or @backingInt(reference.owner) >= function.parameter_count or function.locals[@backingInt(reference.owner)].reference_parameter != reference.mutable)) return error.InternalError;
+            if (reference.parameter and (reference.parent != null or @backingInt(reference.owner) >= function.parameter_count or function.locals[@backingInt(reference.owner)].reference_parameter != reference.mutable or function.locals[@backingInt(reference.owner)].slice_parameter != reference.slice)) return error.InternalError;
         }
         for (function.locals, 0..) |local, slot| {
-            if (!validType(local.ty, program)) return error.InternalError;
+            if (!validType(local.ty, program) or (local.slice_parameter and local.reference_parameter == null)) return error.InternalError;
             if (local.reference_parameter != null) {
                 if (slot >= function.parameter_count) return error.InternalError;
                 var count: usize = 0;
@@ -153,10 +170,23 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             .binary_integer => |binary| {
                 if (!binary.ty.isInteger() or binary.op == .logical_and or binary.op == .logical_or) return error.InternalError;
             },
-            .begin_borrow, .end_borrow, .read_ref, .write_ref => |id| {
+            .begin_borrow, .begin_slice, .end_borrow, .read_ref, .write_ref, .read_slice, .write_slice, .len_slice => |id| {
                 if (@backingInt(id) >= function.references.len) return error.InternalError;
-                if (instruction.op == .begin_borrow and function.references[@backingInt(id)].parameter) return error.InternalError;
-                if (instruction.op == .write_ref and !function.references[@backingInt(id)].mutable) return error.InternalError;
+                const reference = function.references[@backingInt(id)];
+                if ((instruction.op == .begin_borrow or instruction.op == .begin_slice) and reference.parameter) return error.InternalError;
+                if ((instruction.op == .write_ref or instruction.op == .write_slice) and !reference.mutable) return error.InternalError;
+                switch (instruction.op) {
+                    .read_slice, .write_slice, .len_slice, .begin_slice => if (!reference.slice) {
+                        return error.InternalError;
+                    },
+                    .read_ref, .write_ref => if (reference.slice) {
+                        return error.InternalError;
+                    },
+                    .begin_borrow => if (reference.slice and (reference.parent == null or !function.references[@backingInt(reference.parent.?)].slice)) {
+                        return error.InternalError;
+                    },
+                    else => {},
+                }
             },
             .load_local, .store_local => |slot| if (@backingInt(slot) >= function.locals.len or function.locals[@backingInt(slot)].reference_parameter != null) {
                 return error.InternalError;
@@ -201,7 +231,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     index += 1;
                     if (@backingInt(id) >= function.references.len) return error.InternalError;
                     const argument = function.references[@backingInt(id)];
-                    if (argument.ty != parameter.ty or (parameter.mutable and !argument.mutable)) return error.InternalError;
+                    if (argument.slice != parameter.slice or argument.ty != parameter.ty or (parameter.mutable and !argument.mutable)) return error.InternalError;
                 };
                 if (index != call.references.len) return error.InternalError;
             },
@@ -223,7 +253,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             const instruction = function.instructions[pc];
             var height = heights[pc].?;
             switch (instruction.op) {
-                .push_i64, .push_bool, .push_integer, .load_local, .read_ref => height += 1,
+                .push_i64, .push_bool, .push_integer, .load_local, .read_ref, .len_slice => height += 1,
                 .make_variant => |variant| {
                     const payload = (try variantSchema(variant.ty, program)).cases[variant.tag].payload;
                     if (payload != null) {
@@ -255,7 +285,11 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (height < 2) return error.InternalError;
                     height -= 1;
                 },
-                .neg_i64_checked, .not_bool, .get_field, .cast_integer, .neg_integer, .array_length, .wrap_domain, .unwrap_domain => if (height == 0) {
+                .begin_slice, .write_slice => {
+                    if (height < 2) return error.InternalError;
+                    height -= 2;
+                },
+                .read_slice, .neg_i64_checked, .not_bool, .get_field, .cast_integer, .neg_integer, .array_length, .wrap_domain, .unwrap_domain => if (height == 0) {
                     return error.InternalError;
                 },
                 .call, .call_refs => {

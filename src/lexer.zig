@@ -10,6 +10,9 @@ pub const Tag = enum {
     kw_borrow,
     kw_as,
     kw_read_ref,
+    kw_read_slice,
+    kw_write_slice,
+    kw_len_slice,
     kw_write_ref,
     kw_enum,
     kw_union,
@@ -55,6 +58,7 @@ pub const Tag = enum {
     colon,
     comma,
     dot,
+    dot_dot,
     plus,
     minus,
     star,
@@ -76,7 +80,7 @@ pub const Tag = enum {
 };
 pub const Token = struct { tag: Tag, span: Span };
 fn keyword(word: []const u8) Tag {
-    const words = .{ "fn", "return", "let", "mut", "true", "false", "i64", "bool", "if", "else", "while", "discard", "struct", "new", "update", "conversion", "i8", "i16", "i32", "u8", "u16", "u32", "u64", "cast", "replace", "len", "domain", "private", "wrap", "unwrap", "enum", "union", "match", "borrow", "as", "read_ref", "write_ref" };
+    const words = .{ "fn", "return", "let", "mut", "true", "false", "i64", "bool", "if", "else", "while", "discard", "struct", "new", "update", "conversion", "i8", "i16", "i32", "u8", "u16", "u32", "u64", "cast", "replace", "len", "domain", "private", "wrap", "unwrap", "enum", "union", "match", "borrow", "as", "read_ref", "write_ref", "read_slice", "write_slice", "len_slice" };
     inline for (words) |w| {
         if (std.mem.eql(u8, word, w)) return @field(Tag, "kw_" ++ w);
     }
@@ -110,6 +114,7 @@ pub fn lex(allocator: std.mem.Allocator, bytes: []const u8, sink: *diagnostic.Si
             i += 1;
             const next = if (i < bytes.len) bytes[i] else 0;
             const pair: ?Tag = switch (ch) {
+                '.' => if (next == '.') .dot_dot else null,
                 '-' => if (next == '>') .arrow else if (next == '=') .minus_equal else null,
                 '+' => if (next == '=') .plus_equal else null,
                 '&' => if (next == '&') .and_and else null,

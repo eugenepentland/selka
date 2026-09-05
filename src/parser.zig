@@ -109,7 +109,11 @@ pub const Parser = struct {
             const parameter = try self.expect(.ident);
             _ = try self.expect(.colon);
             const reference: ?bool = if (self.take(.ampersand)) self.take(.kw_mut) else null;
-            try parameters.append(self.allocator, .{ .name = parameter.span, .ty = try self.typeName(), .reference = reference });
+            const slice = reference != null and self.current().tag == .lbracket and self.tokens[self.pos + 1].tag == .rbracket;
+            if (slice) {
+                self.pos += 2;
+            }
+            try parameters.append(self.allocator, .{ .name = parameter.span, .ty = try self.typeName(), .reference = reference, .slice = slice });
             if (!self.take(.comma)) break;
         };
         _ = try self.expect(.rparen);
@@ -143,10 +147,18 @@ pub const Parser = struct {
         if (self.take(.kw_borrow)) {
             const mutable = self.take(.kw_mut);
             const owner = try self.expect(.ident);
+            var range: ?ast.Range = null;
+            if (self.take(.lbracket)) {
+                const start = try self.expression(0);
+                _ = try self.expect(.dot_dot);
+                const end = try self.expression(0);
+                _ = try self.expect(.rbracket);
+                range = .{ .start = start, .end = end };
+            }
             _ = try self.expect(.kw_as);
             const name = try self.expect(.ident);
             const body = try self.block();
-            return self.addStatement(.{ .span = .join(first.span, self.statements.items[@backingInt(body)].span), .data = .{ .borrow = .{ .owner = owner.span, .name = name.span, .mutable = mutable, .body = body } } });
+            return self.addStatement(.{ .span = .join(first.span, self.statements.items[@backingInt(body)].span), .data = .{ .borrow = .{ .owner = owner.span, .name = name.span, .mutable = mutable, .body = body, .range = range } } });
         }
         if (self.take(.kw_match)) {
             const value = try self.expression(0);
@@ -190,6 +202,17 @@ pub const Parser = struct {
             return self.addStatement(.{ .span = .join(first.span, self.statements.items[@backingInt(body)].span), .data = .{ .loop = .{ .condition = condition, .body = body } } });
         }
         const data: @FieldType(ast.Statement, "data") = switch (first.tag) {
+            .kw_write_slice => write: {
+                self.pos += 1;
+                _ = try self.expect(.lparen);
+                const name = try self.expect(.ident);
+                _ = try self.expect(.comma);
+                const index = try self.expression(0);
+                _ = try self.expect(.comma);
+                const value = try self.expression(0);
+                _ = try self.expect(.rparen);
+                break :write .{ .write_slice = .{ .name = name.span, .index = index, .value = value } };
+            },
             .kw_write_ref => write: {
                 self.pos += 1;
                 _ = try self.expect(.lparen);
@@ -253,6 +276,22 @@ pub const Parser = struct {
         defer self.depth -= 1;
         const token = self.current();
         var left: ast.NodeId = switch (token.tag) {
+            .kw_read_slice => read: {
+                self.pos += 1;
+                _ = try self.expect(.lparen);
+                const name = try self.expect(.ident);
+                _ = try self.expect(.comma);
+                const index = try self.expression(0);
+                const close = try self.expect(.rparen);
+                break :read try self.append(.{ .span = .join(token.span, close.span), .data = .{ .read_slice = .{ .name = name.span, .index = index } } });
+            },
+            .kw_len_slice => length: {
+                self.pos += 1;
+                _ = try self.expect(.lparen);
+                const name = try self.expect(.ident);
+                const close = try self.expect(.rparen);
+                break :length try self.append(.{ .span = .join(token.span, close.span), .data = .{ .len_slice = name.span } });
+            },
             .kw_read_ref => read: {
                 self.pos += 1;
                 _ = try self.expect(.lparen);

@@ -148,4 +148,11 @@ whole-local access, and checked shared/exclusive permissions. Reads preserve
 value snapshots; return cleanup ends child leases before parents. References
 cannot be copied, stored, or returned. `&T` and `&mut T` parameters accept
 active references through temporary call reborrows; value arguments evaluate
-before those loans begin. Slices and returned-reference contracts remain pending. See [the borrowing contract](experiments/borrowing.md).
+before those loans begin. Returned-reference contracts remain pending. See [the borrowing contract](experiments/borrowing.md).
+
+
+Bounded slices use `borrow [mut] owner[start..end] as name { ... }`, with
+`read_slice`, `write_slice`, and `len_slice`. `&[]T` and `&mut []T` parameters
+accept varying lengths of the same element type. Bounds and exclusive suspension
+remain checked in both host modes; slice writes preserve existing value snapshots.
+See [slice semantics and costs](experiments/slices.md).

@@ -398,3 +398,30 @@ checks pass on Guardian's exact pinned Zig snapshot.
 B remains in progress: bounded slices and returned-reference lifetime contracts
 are pending. The full roadmap remains in scope. Guardian gates were not exercised;
 hosted CI has not run.
+
+
+## 2026-09-05: B bounded slices and slice parameters
+
+Implemented explicit half-open slice borrows, checked reads/writes/length,
+shared/exclusive slice parameters, and narrowed reborrows. Helpers accept different
+array lengths with the same element type. Ranges and indices accept integer widths
+with negative, reversed, overflowing, and out-of-range checks before host casts.
+Whole-array locks preserve the existing conservative alias rules. Slice writes
+preserve array/element snapshots by replacing the whole immutable array value;
+[slice semantics](experiments/slices.md) records the linear immediate-copy cost.
+
+The VM carries private offset/length metadata alongside generation-checked leases.
+Call forwarding, recursive narrowing, normal exits, and early returns retain
+child-before-parent cleanup. Exact duplicate discovery is now `exact-v10`.
+
+166/166 tests pass in Debug and ReleaseFast (144 core, 22 actual CLI), including
+allocation failures, every instruction-budget trap boundary of nested aggregate
+slice calls, malformed metadata, suspended runtime access, and 10,000 slice writes
+through helpers under 16 KiB live runtime allocation. The slice example returns 13.
+A malformed-bytecode test initially changed a Zig union tag while reading its old
+payload; copying the payload before replacement fixed the test fixture.
+Formatting and whitespace checks pass on the pinned Guardian Zig snapshot.
+
+B remains in progress: returned-reference lifetime contracts and their acceptance
+tests remain pending. Other unfinished roadmap tracks retain their full scope.
+Guardian gates were not exercised; hosted CI has not run.

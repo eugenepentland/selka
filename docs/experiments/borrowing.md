@@ -1,8 +1,8 @@
 # B: guest memory identity and borrowing
 
 Status: the memory registry, scoped source references, static access checking,
-and VM borrow instructions are implemented. Shared/exclusive reference parameters are also implemented. Bounded slices and
-returned-reference lifetime contracts remain pending. B is not complete. A1/A2 value semantics remain intact.
+and VM borrow instructions are implemented. Shared/exclusive reference parameters and [bounded slices](slices.md) are also
+implemented. Returned-reference lifetime contracts remain pending. B is not complete. A1/A2 value semantics remain intact.
 
 ## Implemented memory model
 
@@ -38,8 +38,8 @@ owner reads. Writes require exact element type and live exclusive access.
 Views have half-open bounds represented by start and length. Bounds checks use
 subtraction to avoid overflow. Empty views may begin at the allocation's end,
 but have no valid element access. Maximum host indices and overflowing requested
-ranges fail before accessing storage. Future VM instructions must also reject
-negative guest indices before converting them to the unsigned backend index.
+ranges fail before accessing storage. VM slice instructions also reject negative guest indices before converting
+them to a host index.
 
 A reborrow narrows a live parent's bounds and cannot increase permissions.
 Shared parents can have multiple shared children and remain readable. An exclusive
@@ -133,7 +133,7 @@ boundary in a nested aggregate/call example releases all storage. Mutated intern
 bytecode checks missing/repeated borrow operations and conflicting owner reads;
 these failures produce guest traps and release storage.
 
-The full suite passes 155/155 tests in Debug and ReleaseFast (134 core, 21 CLI)
+The full suite passes 166/166 tests in Debug and ReleaseFast (144 core, 22 CLI)
 on Guardian's `0.17.0-dev.1683+5ceec001b` snapshot. The editable
 `examples/references.my` program returns 23. Guardian gates were not exercised.
 
@@ -174,7 +174,8 @@ parameters. Conflicts identify the earlier reference declaration.
 
 Parameters may read or replace whole records, arrays, variants, or domains while
 preserving value snapshots and private representation checks. A reference to an
-array is currently a reference to its entire fixed-size value, not a slice.
+array is a reference to its entire fixed-size value. Explicit bounded slices
+use separate `&[]T` or `&mut []T` parameters; see [slice semantics](slices.md).
 Complete declarative conversions retain their single value-parameter contract.
 Unused reference parameters get ordinary unused-binding warnings; reads, writes,
 reborrows, and forwarding count as uses.
@@ -195,7 +196,8 @@ and frame budget traps release every allocation. The editable
 
 ## Remaining B acceptance
 
-Add bounded slices, indexing, and narrowed reborrows while preserving immutable
-aggregate snapshots. Returned references require an explicit restricted lifetime
-contract; local references must never escape. Test these through actual CLI
-programs, allocation failures, normal returns, and traps before marking B complete.
+[Bounded slices](slices.md), indexing, narrowed reborrows, and slice parameters
+are implemented and preserve immutable aggregate snapshots. Returned references
+still require an explicit restricted lifetime contract; local references must
+never escape. Test that contract through actual CLI programs, allocation failures,
+normal returns, and traps before marking B complete.

@@ -295,3 +295,17 @@ test "CLI runs reference parameter helpers and rejects invalid call loans" {
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, conflict, 1, "", "error[E_BORROW_CONFLICT]");
     try invoke("run", "fn fail(r: &mut i64) -> i64 { write_ref(r, 1 / 0); return 0; } fn main() -> i64 { let mut x = 0; borrow mut x as r { return fail(r); } }", 1, "", "error[R_DIVISION_BY_ZERO]");
 }
+
+test "CLI runs bounded slice helpers and locates bounds and alias failures" {
+    const source = @embedFile("fixtures/slices.my");
+    try invoke("run", source, 0, "13\n", "");
+    try invoke("check", source, 0, "", "");
+    const dumped = try runFixture("dump-bytecode", source, &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    for ([_][]const u8{ "BEGIN_SLICE", "READ_SLICE", "WRITE_SLICE", "LEN_SLICE", "values: &mut []i64" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
+    const invalid = "fn main() -> i64 { let mut a = new [1]i64 [1]; borrow mut a[0..1] as s { return a[0]; } }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_BORROW_CONFLICT]");
+    try invoke("run", "fn main() -> i64 { let a = new [1]i64 [1]; borrow a[0..1] as s { return read_slice(s, 1); } }", 1, "", "error[R_SLICE_BOUNDS]");
+}

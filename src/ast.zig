@@ -14,6 +14,8 @@ pub const Node = struct {
         boolean: bool,
         name: Span,
         read_ref: Span,
+        read_slice: struct { name: Span, index: NodeId },
+        len_slice: Span,
         cast: TypedValue,
         wrap: TypedValue,
         variant: struct { ty: Span, name: Span, value: ?NodeId },
@@ -35,7 +37,8 @@ pub const Statement = struct {
     data: union(enum) {
         block: []const StatementId,
         ret: NodeId,
-        borrow: struct { owner: Span, name: Span, mutable: bool, body: StatementId },
+        borrow: struct { owner: Span, name: Span, mutable: bool, body: StatementId, range: ?Range = null },
+        write_slice: struct { name: Span, index: NodeId, value: NodeId },
         write_ref: struct { name: Span, value: NodeId },
         discard: NodeId,
         branch: struct { condition: NodeId, then_body: StatementId, else_body: ?StatementId },
@@ -50,7 +53,8 @@ pub const Variant = struct { name: Span, payload: ?Span };
 pub const Variants = struct { name: Span, is_union: bool, cases: []const Variant };
 pub const FieldInit = struct { name: Span, value: NodeId };
 pub const Record = struct { name: Span, fields: []const Parameter };
-pub const Parameter = struct { name: Span, ty: Span, reference: ?bool = null };
+pub const Range = struct { start: NodeId, end: NodeId };
+pub const Parameter = struct { name: Span, ty: Span, reference: ?bool = null, slice: bool = false };
 pub const Domain = struct { name: Span, backing: Span };
 pub const Function = struct { owner: ?Span = null, restricted: bool = false, conversion: bool = false, name: Span, parameters: []const Parameter, return_type: Span, body: StatementId };
 pub const ArrayIndex = union(enum) { length: Span, enum_type: Span };

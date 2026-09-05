@@ -50,7 +50,16 @@ const Emitter = struct {
             .borrow => |borrow| {
                 if (!self.program.statements[@backingInt(borrow.body)].terminates) try self.instruction(stmt.span, .{ .end_borrow = borrow.reference });
                 try self.push(.{ .statement = borrow.body });
-                try self.instruction(stmt.span, .{ .begin_borrow = borrow.reference });
+                try self.instruction(stmt.span, if (borrow.range != null) .{ .begin_slice = borrow.reference } else .{ .begin_borrow = borrow.reference });
+                if (borrow.range) |range| {
+                    try self.push(.{ .expression = range.end });
+                    try self.push(.{ .expression = range.start });
+                }
+            },
+            .write_slice => |write| {
+                try self.instruction(stmt.span, .{ .write_slice = write.reference });
+                try self.push(.{ .expression = write.value });
+                try self.push(.{ .expression = write.index });
             },
             .write_ref => |write| {
                 try self.instruction(stmt.span, .{ .write_ref = write.reference });
@@ -164,6 +173,11 @@ const Emitter = struct {
                 try self.push(.{ .expression = value });
             },
             .boolean => |value| try self.instruction(node.span, .{ .push_bool = value }),
+            .read_slice => |read| {
+                try self.instruction(node.span, .{ .read_slice = read.reference });
+                try self.push(.{ .expression = read.index });
+            },
+            .len_slice => |reference| try self.instruction(node.span, .{ .len_slice = reference }),
             .read_ref => |reference| try self.instruction(node.span, .{ .read_ref = reference }),
             .local => |slot| try self.instruction(node.span, .{ .load_local = slot }),
             .call => |call| {

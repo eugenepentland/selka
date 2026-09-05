@@ -29,7 +29,7 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
         try writer.print("function {s}(", .{function.name});
         for (function.locals[0..function.parameter_count], 0..) |parameter, i| {
             if (i != 0) try writer.writeAll(", ");
-            try writer.print("{s}: {s}{s}", .{ parameter.name, if (parameter.reference_parameter) |mutable| (if (mutable) "&mut " else "&") else "", typed.typeName(parameter.ty, program.records) });
+            try writer.print("{s}: {s}{s}{s}", .{ parameter.name, if (parameter.reference_parameter) |mutable| (if (mutable) "&mut " else "&") else "", if (parameter.slice_parameter) "[]" else "", typed.typeName(parameter.ty, program.records) });
         }
         try writer.print(") -> {s}\n", .{typed.typeName(function.return_type, program.records)});
         for (function.references, 0..) |reference, i| try writer.print("  reference {d}: {s}: {s} owner={d} parent={?d} mutable={}\n", .{ i, reference.name, typed.typeName(reference.ty, program.records), @backingInt(reference.owner), if (reference.parent) |parent| @as(?usize, @backingInt(parent)) else null, reference.mutable });
@@ -56,6 +56,10 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
                 .neg_integer => |ty| try writer.print("NEG_INT_CHECKED {f}", .{ty}),
                 .binary_integer => |binary| try writer.print("INT_BINARY {f} {s}", .{ binary.ty, @tagName(binary.op) }),
                 .push_bool => |value| try writer.print("PUSH_BOOL {}", .{value}),
+                .begin_slice => |id| try writer.print("BEGIN_SLICE {d}", .{@backingInt(id)}),
+                .read_slice => |id| try writer.print("READ_SLICE {d}", .{@backingInt(id)}),
+                .write_slice => |id| try writer.print("WRITE_SLICE {d}", .{@backingInt(id)}),
+                .len_slice => |id| try writer.print("LEN_SLICE {d}", .{@backingInt(id)}),
                 .begin_borrow => |id| try writer.print("BEGIN_BORROW {d}", .{@backingInt(id)}),
                 .end_borrow => |id| try writer.print("END_BORROW {d}", .{@backingInt(id)}),
                 .read_ref => |id| try writer.print("READ_REF {d}", .{@backingInt(id)}),

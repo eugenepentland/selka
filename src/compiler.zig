@@ -74,4 +74,5 @@ test {
     _ = @import("tables_test.zig");
     _ = @import("memory_test.zig");
     _ = @import("references_test.zig");
+    _ = @import("slices_test.zig");
 }

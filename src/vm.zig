@@ -31,6 +31,8 @@ fn pushOwned(stack: *std.ArrayList(typed.Value), allocator: std.mem.Allocator, v
     try stack.append(allocator, value);
 }
 const Span = @import("source.zig").Span;
+const Slice = struct { start: usize, length: usize };
+const Reference = struct { lease: memory.Borrow, slice: ?Slice = null };
 const Frame = struct { reference_base: usize = 0, function: typed.FunctionId, pc: usize = 0, local_base: usize, operand_base: usize, call_span: Span };
 fn trap(code: []const u8, message: []const u8, span: Span, frames: []const Frame, program: bc.Program) Result {
     var diagnostic: Diagnostic = .{ .code = code, .message = message, .span = span };
@@ -63,7 +65,7 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
     defer storage.deinit();
     var owners: std.AutoHashMapUnmanaged(usize, memory.Allocation) = .empty;
     defer owners.deinit(allocator);
-    var references: std.ArrayList(?memory.Borrow) = .empty;
+    var references: std.ArrayList(?Reference) = .empty;
     defer references.deinit(allocator);
     var stack: std.ArrayList(typed.Value) = .empty;
     defer {
@@ -251,20 +253,39 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
             },
             .push_i64 => |value| try stack.append(allocator, .{ .i64 = value }),
             .push_bool => |value| try stack.append(allocator, .{ .bool = value }),
-            .begin_borrow => |id| {
+            .begin_borrow, .begin_slice => |id| {
                 const index = frame.reference_base + @backingInt(id);
                 if (references.items[index] != null) return trap("R_REFERENCE_LIFETIME", "reference is already active", instruction.span, frames.items, program);
                 const metadata = function.references[@backingInt(id)];
+                var slice: ?Slice = null;
+                if (metadata.slice) {
+                    if (metadata.parent) |parent| {
+                        const previous = references.items[frame.reference_base + @backingInt(parent)] orelse return trap("R_REFERENCE_LIFETIME", "parent reference is not active", instruction.span, frames.items, program);
+                        if (previous.slice) |view| slice = view else {
+                            const array_type = function.references[@backingInt(parent)].ty;
+                            slice = .{ .start = 0, .length = program.records[array_type.recordIndex()].array.?.length };
+                        }
+                    } else {
+                        const array_type = function.locals[@backingInt(metadata.owner)].ty;
+                        slice = .{ .start = 0, .length = program.records[array_type.recordIndex()].array.?.length };
+                    }
+                    if (instruction.op == .begin_slice) {
+                        const end = try numeric(&stack, frame.operand_base, null, allocator);
+                        const start = try numeric(&stack, frame.operand_base, null, allocator);
+                        if (start < 0 or end < start or end > slice.?.length) return trap("R_SLICE_BOUNDS", "slice range is outside its source bounds", instruction.span, frames.items, program);
+                        slice = .{ .start = slice.?.start + @as(usize, @intCast(start)), .length = @intCast(end - start) };
+                    }
+                }
                 const kind: memory.Kind = if (metadata.mutable) .exclusive else .shared;
                 const reference = if (metadata.parent) |parent| child: {
                     const parent_reference = references.items[frame.reference_base + @backingInt(parent)] orelse return trap("R_REFERENCE_LIFETIME", "parent reference is not active", instruction.span, frames.items, program);
-                    break :child storage.reborrow(parent_reference, 0, 1, kind) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                    break :child storage.reborrow(parent_reference.lease, 0, 1, kind) catch |err| return memoryFailure(err, instruction, frames.items, program);
                 } else root: {
                     const local_index = frame.local_base + @backingInt(metadata.owner);
                     var allocation = owners.get(local_index);
                     if (allocation == null) {
                         const old = locals.items[local_index] orelse return error.InternalError;
-                        const created = try storage.create(metadata.ty, &.{old});
+                        const created = try storage.create(function.locals[@backingInt(metadata.owner)].ty, &.{old});
                         // The store owns created memory if inserting the owner map fails.
                         try owners.put(allocator, local_index, created);
                         locals.items[local_index] = null;
@@ -273,24 +294,53 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                     }
                     break :root storage.borrow(allocation.?, 0, 1, kind) catch |err| return memoryFailure(err, instruction, frames.items, program);
                 };
-                references.items[index] = reference;
+                references.items[index] = .{ .lease = reference, .slice = slice };
             },
             .end_borrow => |id| {
                 const index = frame.reference_base + @backingInt(id);
                 const reference = references.items[index] orelse return trap("R_REFERENCE_LIFETIME", "reference is not active", instruction.span, frames.items, program);
-                storage.end(reference) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                storage.end(reference.lease) catch |err| return memoryFailure(err, instruction, frames.items, program);
                 references.items[index] = null;
+            },
+            .len_slice => |id| {
+                const reference = references.items[frame.reference_base + @backingInt(id)] orelse return trap("R_REFERENCE_LIFETIME", "slice is not active", instruction.span, frames.items, program);
+                _ = storage.describe(reference.lease) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                const view = reference.slice orelse return error.InternalError;
+                try stack.append(allocator, typed.Value.number(.u64, view.length));
+            },
+            .read_slice => |id| {
+                const index = try numeric(&stack, frame.operand_base, null, allocator);
+                const reference = references.items[frame.reference_base + @backingInt(id)] orelse return trap("R_REFERENCE_LIFETIME", "slice is not active", instruction.span, frames.items, program);
+                const view = reference.slice orelse return error.InternalError;
+                if (index < 0 or index >= view.length) return trap("R_SLICE_BOUNDS", "slice index is outside its bounds", instruction.span, frames.items, program);
+                const array = storage.read(reference.lease, 0) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                defer array.release(allocator);
+                try pushOwned(&stack, allocator, try array.getField(view.start + @as(usize, @intCast(index))));
+            },
+            .write_slice => |id| {
+                const value = try pop(&stack, frame.operand_base);
+                defer value.release(allocator);
+                const index = try numeric(&stack, frame.operand_base, null, allocator);
+                const reference = references.items[frame.reference_base + @backingInt(id)] orelse return trap("R_REFERENCE_LIFETIME", "slice is not active", instruction.span, frames.items, program);
+                const view = reference.slice orelse return error.InternalError;
+                if (index < 0 or index >= view.length) return trap("R_SLICE_BOUNDS", "slice index is outside its bounds", instruction.span, frames.items, program);
+                if (value.typeOf() != function.references[@backingInt(id)].ty) return trap("R_REFERENCE_TYPE", "slice write has the wrong element type", instruction.span, frames.items, program);
+                const array = storage.read(reference.lease, 0) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                defer array.release(allocator);
+                const updated = try array.updated(allocator, &.{view.start + @as(usize, @intCast(index))}, &.{value});
+                defer updated.release(allocator);
+                storage.write(reference.lease, 0, updated) catch |err| return memoryFailure(err, instruction, frames.items, program);
             },
             .read_ref => |id| {
                 const reference = references.items[frame.reference_base + @backingInt(id)] orelse return trap("R_REFERENCE_LIFETIME", "reference is not active", instruction.span, frames.items, program);
-                const value = storage.read(reference, 0) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                const value = storage.read(reference.lease, 0) catch |err| return memoryFailure(err, instruction, frames.items, program);
                 try pushOwned(&stack, allocator, value);
             },
             .write_ref => |id| {
                 const value = try pop(&stack, frame.operand_base);
                 defer value.release(allocator);
                 const reference = references.items[frame.reference_base + @backingInt(id)] orelse return trap("R_REFERENCE_LIFETIME", "reference is not active", instruction.span, frames.items, program);
-                storage.write(reference, 0, value) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                storage.write(reference.lease, 0, value) catch |err| return memoryFailure(err, instruction, frames.items, program);
             },
             .load_local => |slot| {
                 const index = frame.local_base + @backingInt(slot);
@@ -334,8 +384,8 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                     if (!parameter.parameter) continue;
                     const parent = references.items[frame.reference_base + @backingInt(loan_arguments[loan_index])] orelse return trap("R_REFERENCE_LIFETIME", "reference argument is not active", instruction.span, frames.items, program);
                     loan_index += 1;
-                    const child = storage.reborrow(parent, 0, 1, if (parameter.mutable) .exclusive else .shared) catch |err| return memoryFailure(err, instruction, frames.items, program);
-                    references.items[reference_base + index] = child;
+                    const child = storage.reborrow(parent.lease, 0, 1, if (parameter.mutable) .exclusive else .shared) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                    references.items[reference_base + index] = .{ .lease = child, .slice = parent.slice };
                 }
                 const local_base = locals.items.len;
                 const local_end = std.math.add(usize, local_base, callee.locals.len) catch return error.OutOfMemory;

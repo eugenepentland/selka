@@ -152,3 +152,9 @@ parameter passing modes, parameter lease identity, and ordered reference argumen
 at calls. Bound parameter spelling still normalizes away. Value arguments retain
 their evaluation order; changed reference argument order or permissions remain
 distinct even when value bodies otherwise match.
+
+
+Bounded slices advance the version to `exact-v10`. Canonical identity retains
+slice/whole-value reference distinctions, element types, explicit range endpoints,
+parameter modes, and slice read/write/length operations. Bound names normalize
+away; changed ranges and argument evaluation order remain distinct.
