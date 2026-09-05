@@ -72,7 +72,7 @@ zig build run -- discover-duplicates examples/duplicates.my --timings
 It reports exact checked-function candidates after normalizing bound names,
 with source locations and advisory explanations. Ordinary compilation does not
 run it. See the [comparison contract and review](docs/experiments/duplicate-discovery.md).
-All 389 tests pass in Debug and ReleaseFast.
+All 396 tests pass in Debug and ReleaseFast.
 
 [Post-MVP tracking](docs/experiments/roadmap.md) records the remaining experiments.
 Records, complete construction, field access, preserving updates, and declarative
@@ -171,3 +171,7 @@ and explicitly flags an incomplete search when work or output limits are reached
 `report-quality`. They show resolved calls, reachability from main, binding counts,
 and structural metrics with configurable review thresholds. Runtime coverage is
 explicitly unmeasured.
+
+[Canonical formatting](docs/experiments/formatter.md) is available with `fmt`
+(stdout) and `fmt --check`. It preserves token spellings and comments, and accepts
+syntactically valid code without requiring completed type checking.

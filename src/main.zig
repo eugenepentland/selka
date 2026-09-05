@@ -1,7 +1,7 @@
 //! Host I/O and process policy stay outside the compiler and VM.
 const std = @import("std");
 const language = @import("mylang");
-const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates|report-quality> <file.my>\n  run: --max-steps=N --max-frames=N --memory=general|arena\n  discover-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n";
+const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates|report-quality|fmt> <file.my>\n  run: --max-steps=N --max-frames=N --memory=general|arena\n  discover-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  fmt: --check (otherwise writes formatted source to stdout)\n";
 
 pub fn main(init: std.process.Init) void {
     const status = dispatch(init) catch |err| status: {
@@ -24,6 +24,23 @@ fn dispatch(init: std.process.Init) !u8 {
     defer allocator.free(bytes);
     var compilation = try language.Compilation.init(allocator, parsed.path, bytes);
     defer compilation.deinit();
+    if (parsed.command == .fmt) {
+        const formatted = compilation.format(allocator) catch |err| switch (err) {
+            error.SourceError => {
+                try report(init, &compilation);
+                return 1;
+            },
+            else => return err,
+        };
+        defer allocator.free(formatted);
+        if (parsed.format_check) {
+            if (std.mem.eql(u8, formatted, bytes)) return 0;
+            try std.Io.File.stderr().writeStreamingAll(init.io, "formatting differs\n");
+            return 1;
+        }
+        try std.Io.File.stdout().writeStreamingAll(init.io, formatted);
+        return 0;
+    }
     const check_start = if (parsed.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
     compilation.check() catch |err| switch (err) {
         error.SourceError => {
@@ -35,6 +52,7 @@ fn dispatch(init: std.process.Init) !u8 {
     const check_ns = if (parsed.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
     try report(init, &compilation);
     switch (parsed.command) {
+        .fmt => unreachable,
         .check => return 0,
         .@"report-quality" => {
             var analysis = try language.quality.analyze(allocator, compilation.program.?, compilation.src, parsed.quality);
@@ -87,13 +105,14 @@ fn report(init: std.process.Init, compilation: *const language.Compilation) !voi
     }
 }
 
-const Command = enum { check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
-const Parsed = struct { quality: language.quality.Options, command: Command, path: []const u8, options: language.vm.Options, discovery: language.duplicates.Options, timings: bool };
+const Command = enum { fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
+const Parsed = struct { format_check: bool, quality: language.quality.Options, command: Command, path: []const u8, options: language.vm.Options, discovery: language.duplicates.Options, timings: bool };
 fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (args.len < 2) return error.Usage;
     const command = std.meta.stringToEnum(Command, args[0]) orelse return error.Usage;
     var quality: language.quality.Options = .{};
     var quality_seen: u8 = 0;
+    var format_check = false;
     var path: ?[]const u8 = null;
     var options: language.vm.Options = .{};
     var saw_steps = false;
@@ -119,7 +138,10 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
                 continue :argument;
             }
         }
-        if (std.mem.startsWith(u8, arg, "--max-steps=")) {
+        if (std.mem.eql(u8, arg, "--check")) {
+            if (command != .fmt or format_check) return error.Usage;
+            format_check = true;
+        } else if (std.mem.startsWith(u8, arg, "--max-steps=")) {
             if (command != .run or saw_steps) return error.Usage;
             saw_steps = true;
             const digits = arg["--max-steps=".len..];
@@ -167,7 +189,7 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
         }
     }
     if (saw_work and !discovery.approximate) return error.Usage;
-    return .{ .quality = quality, .command = command, .path = path orelse return error.Usage, .options = options, .discovery = discovery, .timings = timings };
+    return .{ .format_check = format_check, .quality = quality, .command = command, .path = path orelse return error.Usage, .options = options, .discovery = discovery, .timings = timings };
 }
 
 fn positive(digits: []const u8) error{Usage}!u64 {

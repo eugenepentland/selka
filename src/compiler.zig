@@ -18,6 +18,7 @@ pub const Compilation = struct {
     arena: std.heap.ArenaAllocator,
     src: source.Source,
     diagnostics: std.ArrayList(diagnostic.Diagnostic) = .empty,
+    tokens: ?[]const lexer.Token = null,
     syntax: ?ast.Program = null,
     program: ?typed.Program = null,
     code: ?bytecode.Program = null,
@@ -33,13 +34,25 @@ pub const Compilation = struct {
         self.arena.deinit();
     }
 
-    pub fn check(self: *Compilation) diagnostic.Error!void {
-        if (self.program != null) return;
+    pub fn parse(self: *Compilation) diagnostic.Error!void {
+        if (self.syntax != null) return;
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
-        const tokens = try lexer.lex(sink.allocator, self.src.bytes, &sink);
-        var p: parser.Parser = .{ .src = self.src, .allocator = sink.allocator, .tokens = tokens, .sink = &sink };
+        self.tokens = try lexer.lex(sink.allocator, self.src.bytes, &sink);
+        var p: parser.Parser = .{ .src = self.src, .allocator = sink.allocator, .tokens = self.tokens.?, .sink = &sink };
         self.syntax = try p.parse();
+    }
+
+    pub fn format(self: *Compilation, allocator: std.mem.Allocator) ![]u8 {
+        try self.parse();
+        return @import("formatter.zig").format(allocator, self.src.bytes, self.tokens.?);
+    }
+
+    pub fn check(self: *Compilation) diagnostic.Error!void {
+        if (self.program != null) return;
+        try self.parse();
+        var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
+        defer self.diagnostics = sink.items;
         self.program = try sema.check(sink.allocator, self.src, self.syntax.?, &sink);
     }
 
@@ -68,6 +81,7 @@ test {
     _ = @import("duplicates_test.zig");
     _ = @import("near_duplicates_test.zig");
     _ = @import("quality_test.zig");
+    _ = @import("formatter_test.zig");
     _ = @import("value_test.zig");
     _ = @import("records_test.zig");
     _ = @import("integers_test.zig");

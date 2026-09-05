@@ -535,3 +535,60 @@ test "CLI static quality report uses advisory thresholds and rejects invalid opt
     try invokeOptions("run", source, &.{"--max-nesting=1"}, 2, "", "usage:");
     try invoke("report-quality", "fn main() -> i64 { return false; }", 1, "", "error[E_TYPE]");
 }
+
+test "CLI formatter supports stdout check mode and syntax-only formatting" {
+    const compact = "fn main()->i64{return 7;}";
+    const formatted = "fn main() -> i64 {\n    return 7;\n}\n";
+    try invoke("fmt", compact, 0, formatted, "");
+    try invokeOptions("fmt", compact, &.{"--check"}, 1, "", "formatting differs");
+    try invokeOptions("fmt", formatted, &.{"--check"}, 0, "", "");
+    try invoke("fmt", "fn main()->i64{return false;}", 0, "fn main() -> i64 {\n    return false;\n}\n", "");
+    try invoke("fmt", "fn main()->i64{return ;}", 1, "", "error[E_EXPRESSION]");
+    try invokeOptions("fmt", compact, &.{ "--check", "--check" }, 2, "", "usage:");
+    try invokeOptions("check", compact, &.{"--check"}, 2, "", "usage:");
+}
+
+test "CLI formatter preserves checking and is idempotent across the language fixture corpus" {
+    const fixtures = [_][]const u8{
+        @embedFile("fixtures/allocator-capabilities.my"),
+        @embedFile("fixtures/arithmetic.my"),
+        @embedFile("fixtures/arrays.my"),
+        @embedFile("fixtures/attenuation.my"),
+        @embedFile("fixtures/buffer-views.my"),
+        @embedFile("fixtures/buffers.my"),
+        @embedFile("fixtures/conversions.my"),
+        @embedFile("fixtures/domains.my"),
+        @embedFile("fixtures/effects.my"),
+        @embedFile("fixtures/environment.my"),
+        @embedFile("fixtures/external-capabilities.my"),
+        @embedFile("fixtures/gcd.my"),
+        @embedFile("fixtures/integers.my"),
+        @embedFile("fixtures/propagation.my"),
+        @embedFile("fixtures/records.my"),
+        @embedFile("fixtures/reference-parameters.my"),
+        @embedFile("fixtures/references.my"),
+        @embedFile("fixtures/resource-io.my"),
+        @embedFile("fixtures/resource-slices.my"),
+        @embedFile("fixtures/resources.my"),
+        @embedFile("fixtures/results.my"),
+        @embedFile("fixtures/returned-references.my"),
+        @embedFile("fixtures/slices.my"),
+        @embedFile("fixtures/sum.my"),
+        @embedFile("fixtures/tables.my"),
+        @embedFile("fixtures/trap.my"),
+        @embedFile("fixtures/variants.my"),
+        @embedFile("fixtures/warnings.my"),
+    };
+    for (fixtures) |source| {
+        const formatted = try runFixture("fmt", source, &.{});
+        defer testing.allocator.free(formatted.stdout);
+        defer testing.allocator.free(formatted.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, formatted.term);
+        try testing.expectEqualStrings("", formatted.stderr);
+        try invokeOptions("fmt", formatted.stdout, &.{"--check"}, 0, "", "");
+        const checked = try runFixture("check", formatted.stdout, &.{});
+        defer testing.allocator.free(checked.stdout);
+        defer testing.allocator.free(checked.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, checked.term);
+    }
+}

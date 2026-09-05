@@ -966,3 +966,27 @@ Formatter and verification-driver work remain pending; modules/schemas must exte
 reference coverage and entry-root policy. All other unfinished roadmap tracks remain
 in scope. Guardian was not exercised; hosted CI has not run. The full roadmap goal
 remains active.
+
+
+## 2026-09-05: T canonical syntax and comment-preserving formatting
+
+Implemented `fmt` stdout output and `fmt --check` verification. The formatter reuses
+cached parsing/tokens, preserves token spellings and comment gaps, and normalizes
+spacing/indentation/line endings. Syntax-valid code can be formatted without finished
+name/type/ownership checking. Files are not rewritten by the command. Formatting
+checks remain distinct from semantic validity and advisory structural thresholds.
+
+396 tests pass in Debug and ReleaseFast (355 core, 41 actual CLI). Acceptance covers
+exact comment layout, token/comment round trips, idempotence, CRLF, arrays/generics/
+operators, syntax-only behavior, empty/comment-only source, syntax rejection, and
+every allocation failure. The failure sweep exposed WriteFailed escaping from the
+allocating writer; it now consistently reports OutOfMemory. All 28 valid CLI fixtures
+format, type-check again, and pass idempotence checks in both host modes. CLI stdout,
+check differences, canonical success, and malformed options pass. Formatting and
+whitespace checks pass; exact-v24, near-v1, and quality-v1 are unchanged.
+
+[Formatter semantics](experiments/formatter.md) records the single style, unchanged
+tokens/comment associations, syntax-only validation, and lack of automatic width
+reflow. The project-verification driver and all other unfinished roadmap tracks
+remain in scope. Guardian was not exercised; hosted CI has not run. The full roadmap
+goal remains active.
