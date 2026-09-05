@@ -72,7 +72,7 @@ zig build run -- discover-duplicates examples/duplicates.my --timings
 It reports exact checked-function candidates after normalizing bound names,
 with source locations and advisory explanations. Ordinary compilation does not
 run it. See the [comparison contract and review](docs/experiments/duplicate-discovery.md).
-All 211 tests pass in Debug and ReleaseFast.
+All 226 tests pass in Debug and ReleaseFast.
 
 [Post-MVP tracking](docs/experiments/roadmap.md) records the remaining experiments.
 Records, complete construction, field access, preserving updates, and declarative
@@ -94,7 +94,7 @@ also work; `examples/reference-parameters.my` returns 19. [Bounded slices](docs/
 slice parameters, and checked narrowing are implemented; `examples/slices.my` returns 13.
 [Returned-reference contracts](docs/experiments/returned-references.md) complete B
 ([acceptance audit](docs/experiments/b-audit.md)); `examples/returned-references.my` returns 20.
-Approximate matching, ownership, effects, modules, native execution, and the other
+Approximate matching, the full resource/effect system, modules, native execution, and the other
 pending tracks are not yet complete.
 
 See [implemented semantics](docs/semantics.md) and [verification/progress](docs/progress.md).
@@ -105,8 +105,10 @@ obligations through bindings, helpers, and wrappers. Exhaustive matches, returns
 and explicit `acknowledge` handle them; ordinary discard and silent overwrite are
 rejected. `examples/results.my` returns 7. [Explicit `try` propagation](docs/experiments/propagation.md)
 checks early-return obligations and cleans up active borrows; `examples/propagation.my`
-returns 20. C/D resource ownership and abstraction work remain pending.
+returns 20. C/D remain in progress.
 
 The [owned-buffer backend](docs/experiments/ownership.md) now supports consuming
 transfers, reserved-capacity edits, growth limits, and partial-acquisition cleanup.
-Source ownership syntax, VM resource integration, and effects remain pending.
+[Source acquisition and moves](docs/experiments/owned-buffers.md) now support buffer
+results, owned wrappers, and lexical/early-return cleanup; `examples/buffers.my`
+returns 21. Buffer operations/views, external resources, and effects remain pending.

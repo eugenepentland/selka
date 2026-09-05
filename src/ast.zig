@@ -17,6 +17,7 @@ pub const Node = struct {
         propagate: NodeId,
         read_slice: struct { name: Span, index: NodeId },
         len_slice: Span,
+        acquire_buffer: TypedValue,
         cast: TypedValue,
         wrap: TypedValue,
         variant: struct { ty: Span, name: Span, value: ?NodeId },
@@ -64,6 +65,7 @@ pub const Function = struct { return_reference: ?ReturnReference = null, owner: 
 pub const ArrayIndex = union(enum) { length: Span, enum_type: Span };
 pub const ArrayType = struct { span: Span, index: ArrayIndex, element: Span };
 pub const Program = struct {
+    buffers: []const Domain = &.{},
     domains: []const Domain = &.{},
     variants: []const Variants = &.{},
     array_types: []const ArrayType = &.{},

@@ -52,9 +52,9 @@ pub const Catalog = struct {
 };
 
 /// All storage is owned by the compilation arena.
-pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const ast.Record, domains: []const ast.Domain, variant_types: []const ast.Variants, arrays: []const ast.ArrayType, sink: *diagnostic.Sink) Error!Catalog {
-    const storage = try allocator.alloc(typed.Record, declarations.len + domains.len + variant_types.len + arrays.len);
-    var catalog: Catalog = .{ .records = storage[0 .. declarations.len + domains.len + variant_types.len], .names = .empty, .field_names = try allocator.alloc(std.StringHashMapUnmanaged(usize), declarations.len + domains.len + variant_types.len) };
+pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const ast.Record, domains: []const ast.Domain, variant_types: []const ast.Variants, arrays: []const ast.ArrayType, buffers: []const ast.Domain, sink: *diagnostic.Sink) Error!Catalog {
+    const storage = try allocator.alloc(typed.Record, declarations.len + domains.len + variant_types.len + buffers.len + arrays.len);
+    var catalog: Catalog = .{ .records = storage[0 .. declarations.len + domains.len + variant_types.len + buffers.len], .names = .empty, .field_names = try allocator.alloc(std.StringHashMapUnmanaged(usize), declarations.len + domains.len + variant_types.len + buffers.len) };
     @memset(catalog.field_names, .empty);
     for (declarations, 0..) |declaration, i| {
         const name = src.text(declaration.name);
@@ -86,6 +86,14 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
             output.* = .{ .name = variant_name, .declaration = input.name, .payload = null };
         }
         storage[index] = .{ .id = id, .name = name, .declaration = declaration.name, .fields = &.{}, .variants = .{ .fallible = declaration.fallible, .is_union = declaration.is_union, .cases = cases } };
+    }
+    for (buffers, 0..) |declaration, offset| {
+        const name = src.text(declaration.name);
+        if (catalog.names.get(name)) |previous| return sink.failRelated("E_DUPLICATE_TYPE", declaration.name, "type is already declared", .{ .span = storage[previous.recordIndex()].declaration, .message = "previous type declaration" });
+        const index = declarations.len + domains.len + variant_types.len + offset;
+        const id: typed.Type = @fromBackingInt(index + typed.Type.record_base);
+        try catalog.names.put(allocator, name, id);
+        storage[index] = .{ .id = id, .name = name, .declaration = declaration.name, .fields = &.{}, .move_only = true };
     }
     var interned: std.AutoHashMapUnmanaged(typed.Array, typed.Type) = .empty;
     for (arrays) |syntax| {
@@ -148,6 +156,9 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
             for (cases) |case| if (case.payload == null) return sink.fail("E_RESULT_SCHEMA", case.declaration, "result cases require explicit payload types");
         }
     }
+    for (buffers, 0..) |declaration, offset| {
+        storage[declarations.len + domains.len + variant_types.len + offset].buffer = try catalog.resolve(src, declaration.backing, sink);
+    }
     // Iterative DFS rejects cycles without expanding records or recursing on the host.
     const State = enum { unseen, visiting, complete };
     const states = try allocator.alloc(State, catalog.records.len);
@@ -164,28 +175,36 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
             const last = work.items.len - 1;
             const visit = work.items[last];
             const schema = catalog.records[visit.record];
-            const edge_count = if (schema.variants) |v| v.cases.len else if (schema.array != null) @as(usize, 1) else schema.fields.len;
+            const edge_count = if (schema.variants) |v| v.cases.len else if (schema.array != null or schema.buffer != null) @as(usize, 1) else schema.fields.len;
             if (visit.next_field == edge_count) {
                 var requires_handling = false;
+                var move_only = schema.buffer != null;
                 if (schema.variants) |variants| {
                     requires_handling = variants.fallible;
                     for (variants.cases) |case| if (case.payload) |payload| {
                         requires_handling = requires_handling or typed.requiresHandling(payload, catalog.records);
+                        move_only = move_only or typed.moveOnly(payload, catalog.records);
                     };
                 } else if (schema.array) |array| {
                     requires_handling = array.length != 0 and typed.requiresHandling(array.element, catalog.records);
+                    move_only = array.length != 0 and typed.moveOnly(array.element, catalog.records);
                 } else {
                     for (schema.fields) |field| {
                         requires_handling = requires_handling or typed.requiresHandling(field.ty, catalog.records);
+                        move_only = move_only or typed.moveOnly(field.ty, catalog.records);
                     }
                 }
+                if (schema.buffer) |element| {
+                    if (typed.moveOnly(element, catalog.records) or typed.requiresHandling(element, catalog.records)) return sink.fail("E_BUFFER_ELEMENT", schema.declaration, "buffer elements must be ordinary copyable values without result obligations");
+                }
+                catalog.records[visit.record].move_only = move_only;
                 catalog.records[visit.record].requires_handling = requires_handling;
                 states[visit.record] = .complete;
                 _ = work.pop();
                 continue;
             }
             work.items[last].next_field += 1;
-            const field: typed.Field = if (schema.variants) |v| .{ .name = v.cases[visit.next_field].name, .ty = v.cases[visit.next_field].payload orelse continue, .declaration = v.cases[visit.next_field].declaration } else if (schema.array) |a| .{ .name = "element", .ty = a.element, .declaration = schema.declaration } else schema.fields[visit.next_field];
+            const field: typed.Field = if (schema.variants) |v| .{ .name = v.cases[visit.next_field].name, .ty = v.cases[visit.next_field].payload orelse continue, .declaration = v.cases[visit.next_field].declaration } else if (schema.array) |a| .{ .name = "element", .ty = a.element, .declaration = schema.declaration } else if (schema.buffer) |element| .{ .name = "element", .ty = element, .declaration = schema.declaration } else schema.fields[visit.next_field];
             if (!field.ty.isAggregate()) continue;
             const child = field.ty.recordIndex();
             if (states[child] == .visiting) return sink.fail("E_RECURSIVE_RECORD", field.declaration, "record fields must form a finite by-value layout; this field closes a cycle");

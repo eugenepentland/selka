@@ -5,7 +5,7 @@ const integers = @import("integers.zig");
 const typed = @import("typed.zig");
 const memory = @import("memory.zig");
 const Diagnostic = @import("diagnostic.zig").Diagnostic;
-pub const Options = struct { max_steps: u64 = 10_000_000, max_frames: u64 = 1024 };
+pub const Options = struct { memory_statistics: ?*memory.Statistics = null, memory_limits: memory.Limits = .{}, max_steps: u64 = 10_000_000, max_frames: u64 = 1024 };
 pub const Result = union(enum) { value: i64, trap: Diagnostic };
 fn integer(value: typed.Value, allocator: std.mem.Allocator) error{InternalError}!i64 {
     defer value.release(allocator);
@@ -25,6 +25,13 @@ fn boolean(value: typed.Value, allocator: std.mem.Allocator) error{InternalError
     defer value.release(allocator);
     if (value != .bool) return error.InternalError;
     return value.bool;
+}
+fn releaseValues(values: []const typed.Value, allocator: std.mem.Allocator) void {
+    var i = values.len;
+    while (i != 0) {
+        i -= 1;
+        values[i].release(allocator);
+    }
 }
 fn pushOwned(stack: *std.ArrayList(typed.Value), allocator: std.mem.Allocator, value: typed.Value) !void {
     errdefer value.release(allocator);
@@ -63,21 +70,28 @@ pub fn run(allocator: std.mem.Allocator, program: bc.Program) !Result {
 pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options: Options) !Result {
     if (options.max_steps == 0 or options.max_frames == 0) return error.InvalidBudget;
     try bc.validate(allocator, program);
-    var storage = try memory.Store.init(allocator);
-    defer storage.deinit();
+    var storage = try memory.Store.initWithLimits(allocator, options.memory_limits);
+    defer {
+        storage.deinit();
+        if (options.memory_statistics) |statistics| statistics.* = storage.statistics;
+    }
     var owners: std.AutoHashMapUnmanaged(usize, memory.Allocation) = .empty;
     defer owners.deinit(allocator);
     var references: std.ArrayList(?Reference) = .empty;
     defer references.deinit(allocator);
     var stack: std.ArrayList(typed.Value) = .empty;
-    defer {
-        for (stack.items) |value| value.release(allocator);
-        stack.deinit(allocator);
-    }
     var locals: std.ArrayList(?typed.Value) = .empty;
     defer {
-        for (locals.items) |value| if (value) |owned| owned.release(allocator);
+        var i = locals.items.len;
+        while (i != 0) {
+            i -= 1;
+            if (locals.items[i]) |owned| owned.release(allocator);
+        }
         locals.deinit(allocator);
+    }
+    defer {
+        releaseValues(stack.items, allocator);
+        stack.deinit(allocator);
     }
     var frames: std.ArrayList(Frame) = .empty;
     defer frames.deinit(allocator);
@@ -112,7 +126,7 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                     if (tag != input.error_tag) return error.InternalError;
                     const output = typed.resultShape(propagate.output, program.records).?;
                     const error_result = try typed.Value.createVariant(allocator, propagate.output, output.error_tag, payload);
-                    for (stack.items[frame.operand_base..]) |temporary| temporary.release(allocator);
+                    releaseValues(stack.items[frame.operand_base..], allocator);
                     stack.shrinkRetainingCapacity(frame.operand_base);
                     try pushOwned(&stack, allocator, error_result);
                     frames.items[frame_index].pc = propagate.error_target;
@@ -148,7 +162,7 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                     if (field.typeOf() != schema.elementType(field_index)) return error.InternalError;
                 }
                 const value = try typed.Value.createOrdered(allocator, record.ty, stack.items[start..], record.order);
-                for (stack.items[start..]) |field| field.release(allocator);
+                releaseValues(stack.items[start..], allocator);
                 stack.shrinkRetainingCapacity(start);
                 try pushOwned(&stack, allocator, value);
             },
@@ -162,7 +176,7 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                     if (field.typeOf() != schema.fields[index].ty) return error.InternalError;
                 }
                 const value = try base.updated(allocator, update.indices, stack.items[start + 1 ..]);
-                for (stack.items[start..]) |old| old.release(allocator);
+                releaseValues(stack.items[start..], allocator);
                 stack.shrinkRetainingCapacity(start);
                 try pushOwned(&stack, allocator, value);
             },
@@ -189,7 +203,7 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 const index = try arrayIndex(key, schema);
                 if (index < 0 or index >= schema.length) return trap("R_INDEX_BOUNDS", "array replacement index is outside its declared bounds", instruction.span, frames.items, program);
                 const result = try base.updated(allocator, &.{@intCast(index)}, &.{replacement});
-                for (stack.items[start..]) |old| old.release(allocator);
+                releaseValues(stack.items[start..], allocator);
                 stack.shrinkRetainingCapacity(start);
                 try pushOwned(&stack, allocator, result);
             },
@@ -369,7 +383,40 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 const reference = references.items[frame.reference_base + @backingInt(id)] orelse return trap("R_REFERENCE_LIFETIME", "reference is not active", instruction.span, frames.items, program);
                 storage.write(reference.lease, 0, value) catch |err| return memoryFailure(err, instruction, frames.items, program);
             },
+            .acquire_buffer => |ty| {
+                const capacity = try numeric(&stack, frame.operand_base, null, allocator);
+                const shape = typed.resultShape(ty, program.records).?;
+                const element = program.records[shape.ok_type.recordIndex()].buffer.?;
+                const owner: ?memory.Allocation = if (capacity < 0 or capacity > std.math.maxInt(usize)) null else storage.createWithCapacity(element, &.{}, @intCast(capacity)) catch |err| switch (err) {
+                    error.CapacityLimit => null,
+                    else => return memoryFailure(err, instruction, frames.items, program),
+                };
+                if (owner) |allocation| {
+                    const resource = typed.Value.ownBuffer(allocator, shape.ok_type, &storage, allocation) catch |err| {
+                        try storage.destroy(allocation);
+                        return err;
+                    };
+                    defer resource.release(allocator);
+                    try pushOwned(&stack, allocator, try typed.Value.createVariant(allocator, ty, shape.ok_tag, resource));
+                } else {
+                    try pushOwned(&stack, allocator, try typed.Value.createVariant(allocator, ty, shape.error_tag, .{ .i64 = 1 }));
+                }
+            },
+            .move_local => |slot| {
+                const index = frame.local_base + @backingInt(slot);
+                if (owners.contains(index)) return error.InternalError;
+                const value = locals.items[index] orelse return error.InternalError;
+                locals.items[index] = null;
+                try pushOwned(&stack, allocator, value);
+            },
+            .drop_local => |slot| {
+                const index = frame.local_base + @backingInt(slot);
+                if (owners.contains(index)) return error.InternalError;
+                if (locals.items[index]) |value| value.release(allocator);
+                locals.items[index] = null;
+            },
             .load_local => |slot| {
+                if (typed.moveOnly(function.locals[@backingInt(slot)].ty, program.records)) return error.InternalError;
                 const index = frame.local_base + @backingInt(slot);
                 const value = if (owners.get(index)) |owner| storage.readOwner(owner, 0) catch |err| return memoryFailure(err, instruction, frames.items, program) else (locals.items[index] orelse return error.InternalError).retain();
                 try pushOwned(&stack, allocator, value);
@@ -466,7 +513,11 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 } else if (frame.captured == null or frame.return_target == null) return trap("R_REFERENCE_LIFETIME", "reference return has no captured result", instruction.span, frames.items, program);
                 for (references.items[frame.reference_base..]) |reference| if (reference != null) return trap("R_REFERENCE_LIFETIME", "function returned with an active reference", instruction.span, frames.items, program);
                 references.shrinkRetainingCapacity(frame.reference_base);
-                for (locals.items[frame.local_base..], frame.local_base..) |*local, index| {
+                var cleanup_index = locals.items.len;
+                while (cleanup_index > frame.local_base) {
+                    cleanup_index -= 1;
+                    const index = cleanup_index;
+                    const local = &locals.items[index];
                     if (owners.get(index)) |owner| {
                         storage.destroy(owner) catch |err| return memoryFailure(err, instruction, frames.items, program);
                         _ = owners.remove(index);

@@ -50,8 +50,18 @@ pub const Parser = struct {
         var functions: std.ArrayList(ast.Function) = .empty;
         var records: std.ArrayList(ast.Record) = .empty;
         var domains: std.ArrayList(ast.Domain) = .empty;
+        var buffers: std.ArrayList(ast.Domain) = .empty;
         var variants: std.ArrayList(ast.Variants) = .empty;
         while (self.current().tag != .eof) {
+            if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "buffer")) {
+                self.pos += 1;
+                const name = try self.expect(.ident);
+                _ = try self.expect(.colon);
+                const element = try self.typeName();
+                _ = try self.expect(.semicolon);
+                try buffers.append(self.allocator, .{ .name = name.span, .backing = element });
+                continue;
+            }
             const fallible = self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "result");
             if (self.current().tag == .kw_enum or self.current().tag == .kw_union or fallible) {
                 const is_union = self.current().tag != .kw_enum;
@@ -97,7 +107,7 @@ pub const Parser = struct {
             }
             try functions.append(self.allocator, try self.function(null));
         }
-        return .{ .variants = try variants.toOwnedSlice(self.allocator), .domains = try domains.toOwnedSlice(self.allocator), .array_types = try self.array_types.toOwnedSlice(self.allocator), .nodes = self.nodes, .statements = self.statements, .functions = try functions.toOwnedSlice(self.allocator), .records = try records.toOwnedSlice(self.allocator) };
+        return .{ .buffers = try buffers.toOwnedSlice(self.allocator), .variants = try variants.toOwnedSlice(self.allocator), .domains = try domains.toOwnedSlice(self.allocator), .array_types = try self.array_types.toOwnedSlice(self.allocator), .nodes = self.nodes, .statements = self.statements, .functions = try functions.toOwnedSlice(self.allocator), .records = try records.toOwnedSlice(self.allocator) };
     }
     fn function(self: *Parser, owner: ?Span) diagnostic.Error!ast.Function {
         const restricted = self.take(.kw_private);
@@ -323,7 +333,7 @@ pub const Parser = struct {
                 const close = try self.expect(.rparen);
                 break :read try self.append(.{ .span = .join(token.span, close.span), .data = .{ .read_ref = name.span } });
             },
-            .kw_cast, .kw_wrap => cast: {
+            .kw_cast, .kw_wrap, .kw_acquire_buffer => cast: {
                 self.pos += 1;
                 _ = try self.expect(.lt);
                 const ty = try self.typeName();
@@ -331,7 +341,7 @@ pub const Parser = struct {
                 _ = try self.expect(.lparen);
                 const value = try self.expression(0);
                 const close = try self.expect(.rparen);
-                break :cast try self.append(.{ .span = .join(token.span, close.span), .data = if (token.tag == .kw_cast) .{ .cast = .{ .ty = ty, .value = value } } else .{ .wrap = .{ .ty = ty, .value = value } } });
+                break :cast try self.append(.{ .span = .join(token.span, close.span), .data = if (token.tag == .kw_acquire_buffer) .{ .acquire_buffer = .{ .ty = ty, .value = value } } else if (token.tag == .kw_cast) .{ .cast = .{ .ty = ty, .value = value } } else .{ .wrap = .{ .ty = ty, .value = value } } });
             },
             .kw_new => record: {
                 self.pos += 1;

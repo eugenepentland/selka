@@ -14,12 +14,13 @@ pub fn dump(allocator: std.mem.Allocator, program: bc.Program, src: Source) ![]u
 
 fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer.Error!void {
     for (program.records) |record| {
-        try writer.print("{s} {s} type#{d}\n", .{ if (record.variants) |v| (if (v.fallible) "result" else if (v.is_union) "union" else "enum") else if (record.tableKey() != null) "table" else if (record.array != null) "array" else if (record.domain != null) "domain" else "record", record.name, @backingInt(record.id) });
+        try writer.print("{s} {s} type#{d}\n", .{ if (record.variants) |v| (if (v.fallible) "result" else if (v.is_union) "union" else "enum") else if (record.buffer != null) "buffer" else if (record.tableKey() != null) "table" else if (record.array != null) "array" else if (record.domain != null) "domain" else "record", record.name, @backingInt(record.id) });
         if (record.variants) |v| for (v.cases, 0..) |variant, tag| {
             try writer.print("  variant {d}: {s}", .{ tag, variant.name });
             if (variant.payload) |ty| try writer.print(": {s}", .{typed.typeName(ty, program.records)});
             try writer.writeByte('\n');
         };
+        if (record.buffer) |element| try writer.print("  element {s} (owned)\n", .{typed.typeName(element, program.records)});
         if (record.domain) |backing| try writer.print("  backing {s} (private)\n", .{typed.typeName(backing, program.records)});
         for (record.fields, 0..) |field, i| try writer.print("  field {d}: {s}: {s}\n", .{ i, field.name, typed.typeName(field.ty, program.records) });
     }
@@ -66,6 +67,9 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
                 .end_borrow => |id| try writer.print("END_BORROW {d}", .{@backingInt(id)}),
                 .read_ref => |id| try writer.print("READ_REF {d}", .{@backingInt(id)}),
                 .write_ref => |id| try writer.print("WRITE_REF {d}", .{@backingInt(id)}),
+                .acquire_buffer => |ty| try writer.print("ACQUIRE_BUFFER {f}", .{ty}),
+                .move_local => |slot| try writer.print("MOVE_LOCAL {d}", .{@backingInt(slot)}),
+                .drop_local => |slot| try writer.print("DROP_LOCAL {d}", .{@backingInt(slot)}),
                 .load_local => |slot| try writer.print("LOAD_LOCAL {d}", .{@backingInt(slot)}),
                 .store_local => |slot| try writer.print("STORE_LOCAL {d}", .{@backingInt(slot)}),
                 .cmp_i64 => |predicate| try writer.print("CMP_I64 {s}", .{@tagName(predicate)}),

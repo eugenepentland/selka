@@ -3,7 +3,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 
-pub const version = "exact-v13";
+pub const version = "exact-v14";
 pub const Population = enum { production, tests, generated, reference, intentional };
 pub const Options = struct { min_nodes: usize = 8, population: Population = .production };
 pub const Group = struct { members: []const typed.FunctionId, nodes: usize };
@@ -45,6 +45,7 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
             .expression => |id| {
                 const node = program.nodes[@backingInt(id)];
                 writer.print("expr {s} {s} obligation {}\n", .{ typed.typeName(node.ty, program.records), @tagName(node.data), typed.requiresHandling(node.ty, program.records) }) catch return error.OutOfMemory;
+                writer.print("move-only {}\n", .{typed.moveOnly(node.ty, program.records)}) catch return error.OutOfMemory;
                 switch (node.data) {
                     .propagate => |propagate| {
                         writer.print("propagate to {s}\n", .{typed.typeName(propagate.output, program.records)}) catch return error.OutOfMemory;
@@ -72,7 +73,7 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                         try work.append(allocator, .{ .expression = replace.base });
                     },
                     .length => |base| try work.append(allocator, .{ .expression = base }),
-                    .cast, .wrap, .unwrap => |operand| try work.append(allocator, .{ .expression = operand }),
+                    .cast, .wrap, .unwrap, .acquire_buffer => |operand| try work.append(allocator, .{ .expression = operand }),
                     .record => |fields| {
                         try recordFields(allocator, writer, &work, program, node.ty, fields);
                     },

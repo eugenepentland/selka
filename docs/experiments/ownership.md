@@ -1,8 +1,9 @@
 # C: owned-buffer runtime foundation
 
-Status: backend implemented. Source resource declarations, move checking, VM
-resource instructions, recoverable acquisition results, capabilities/effects,
-and arenas/pools remain pending. This record does not mark C complete.
+Status: backend implemented. [Source buffer acquisition and ownership](owned-buffers.md)
+now integrate move checking and partial-construction cleanup into the language.
+Buffer operations/views, external resources, capabilities/effects, and arenas/pools
+remain pending. C is not complete.
 
 ## Ownership and storage
 
@@ -75,11 +76,10 @@ external-resource cleanup effects exist at this checkpoint.
 The full Debug and ReleaseFast suites pass 211 tests (186 core, 25 actual CLI).
 The CLI count is unchanged because this checkpoint adds no source syntax.
 
-## Next integration
+## Integration progress
 
-Add explicit owned buffer/resource types and move semantics through the typed
-representation, bytecode, and VM. Check every branch, loop, call, and early return
-for ownership transfer/cleanup. Expose fallible acquisitions through typed guest
-results. Then attach allocator/external capabilities and transitive effects,
-including cleanup effects, and exercise arenas/pools. Backend tests alone do not
-prove those source-level acceptance cases.
+[Source ownership and acquisition](owned-buffers.md) now implement buffer types,
+move semantics, wrappers, fallible guest acquisition, and lexical/early-return
+cleanup through the typed representation and VM. The remaining integration adds
+buffer operations/views, allocator/external capabilities, transitive effects
+including cleanup, and arenas/pools.

@@ -10,7 +10,7 @@ not a claim that the full future language has been delivered.
 | A1, aggregates and complete conversions | Implemented: records, construction, fields, preserving updates, complete conversions, integer widths/casts, fixed arrays, checked indexing | A1 acceptance passes; carry the immutable value semantics into A2. |
 | A2, nominal domains and exhaustive mappings | Implemented: domains/private construction, closed enums/tagged unions, exhaustive matching, and complete enum-indexed tables | A2 unit, privacy, added-variant match/table, and explicit unknown-code handling experiments pass. |
 | B, borrowing | Implemented: memory/lease registry, scoped references, reference/slice parameters, bounded views, and explicit returned-reference provenance | B acceptance passes; carry borrowing and snapshot rules into resource ownership. |
-| C, ownership/capabilities/effects | Typed results and owned-buffer/cleanup backend implemented; source resource ownership/capabilities/effects pending | Acquire A, fail acquiring B, release A once; reject transitive forbidden effects including cleanup. |
+| C, ownership/capabilities/effects | Buffer acquisition, source moves/wrappers, and partial-construction cleanup implemented; buffer operations/views and capabilities/effects pending | Source acquire-A/fail-B acceptance passes; integrate buffer operations/views and reject transitive forbidden effects including cleanup. |
 | D, errors and abstraction | In progress: typed results, checked handling/transfer, acknowledgement, and propagation implemented; generics/handles pending | Require handling/propagation/explicit acknowledgement without erasing evaluation or ownership obligations. |
 | M, modules/interfaces | Pending a multi-file domain program | Resolve imports/exports and private boundaries; distinguish optional direction policy from type validity. |
 | E, native execution | Pending one concrete backend choice | Run the same scalar semantic/trap fixtures through the VM and native route. |
@@ -65,4 +65,4 @@ lifetime contracts are implemented; [the B audit](b-audit.md) records acceptance
 minimal error-value foundation for C/D. They preserve obligations through binding,
 wrapping, and helper calls, with exhaustive handling or explicit acknowledgement.
 [Propagation](propagation.md) now checks early-return obligations and borrow
-cleanup. [Owned-buffer transfers and partial-acquisition cleanup](ownership.md) now have backend acceptance evidence. Source ownership and resource integration are next.
+cleanup. [Owned-buffer transfers and partial-acquisition cleanup](ownership.md) now have backend acceptance evidence. [Source ownership and recoverable acquisition](owned-buffers.md) now integrate that cleanup into the VM; buffer operations/views and effects are next.

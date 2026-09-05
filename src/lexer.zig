@@ -42,6 +42,7 @@ pub const Tag = enum {
     kw_u16,
     kw_u32,
     kw_u64,
+    kw_acquire_buffer,
     kw_cast,
     kw_bool,
     kw_if,
@@ -82,7 +83,7 @@ pub const Tag = enum {
 };
 pub const Token = struct { tag: Tag, span: Span };
 fn keyword(word: []const u8) Tag {
-    const words = .{ "fn", "return", "let", "mut", "true", "false", "i64", "bool", "if", "else", "while", "discard", "struct", "new", "update", "conversion", "i8", "i16", "i32", "u8", "u16", "u32", "u64", "cast", "replace", "len", "domain", "private", "wrap", "unwrap", "enum", "union", "match", "borrow", "as", "read_ref", "write_ref", "read_slice", "write_slice", "len_slice", "acknowledge", "try" };
+    const words = .{ "fn", "return", "let", "mut", "true", "false", "i64", "bool", "if", "else", "while", "discard", "struct", "new", "update", "conversion", "i8", "i16", "i32", "u8", "u16", "u32", "u64", "acquire_buffer", "cast", "replace", "len", "domain", "private", "wrap", "unwrap", "enum", "union", "match", "borrow", "as", "read_ref", "write_ref", "read_slice", "write_slice", "len_slice", "acknowledge", "try" };
     inline for (words) |w| {
         if (std.mem.eql(u8, word, w)) return @field(Tag, "kw_" ++ w);
     }

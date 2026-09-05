@@ -59,6 +59,7 @@ pub const Value = union(enum) {
     bool: bool,
     integer: struct { ty: Type, value: i128 },
     aggregate: *Aggregate,
+    resource: *Resource,
 
     pub fn typeOf(self: Value) Type {
         return switch (self) {
@@ -66,6 +67,7 @@ pub const Value = union(enum) {
             .bool => .bool,
             .integer => |n| n.ty,
             .aggregate => |record| record.ty,
+            .resource => |resource| resource.ty,
         };
     }
 
@@ -128,7 +130,17 @@ pub const Value = union(enum) {
         return out;
     }
 
+    /// Success consumes the external allocation handle; failure leaves it owned
+    /// by the caller. Internal retained temporaries share one cleanup record.
+    pub fn ownBuffer(allocator: std.mem.Allocator, ty: Type, store: *@import("memory.zig").Store, owner: @import("memory.zig").Allocation) !Value {
+        const resource = try allocator.create(Resource);
+        errdefer allocator.destroy(resource);
+        const moved = try store.transfer(owner);
+        resource.* = .{ .ty = ty, .store = store, .owner = moved };
+        return .{ .resource = resource };
+    }
     pub fn retain(self: Value) Value {
+        if (self == .resource) self.resource.references += 1;
         if (self == .aggregate) self.aggregate.references += 1;
         return self;
     }
@@ -137,16 +149,26 @@ pub const Value = union(enum) {
     /// temporarily form an intrusive work list; immutable live nodes never change.
     pub fn release(self: Value, allocator: std.mem.Allocator) void {
         var pending: ?*Aggregate = null;
-        enqueueRelease(self, &pending);
+        enqueueRelease(self, &pending, allocator);
         while (pending) |record| {
             pending = record.next;
-            for (record.fields) |field| enqueueRelease(field, &pending);
+            for (record.fields) |field| enqueueRelease(field, &pending, allocator);
             allocator.free(record.fields);
             allocator.destroy(record);
         }
     }
 
-    fn enqueueRelease(value: Value, pending: *?*Aggregate) void {
+    fn enqueueRelease(value: Value, pending: *?*Aggregate, allocator: std.mem.Allocator) void {
+        if (value == .resource) {
+            const resource = value.resource;
+            std.debug.assert(resource.references != 0);
+            resource.references -= 1;
+            if (resource.references == 0) {
+                resource.store.destroyForUnwind(resource.owner) catch {};
+                allocator.destroy(resource);
+            }
+            return;
+        }
         if (value != .aggregate) return;
         const record = value.aggregate;
         std.debug.assert(record.references != 0);
@@ -170,3 +192,5 @@ pub const Aggregate = struct {
     references: usize = 1,
     next: ?*Aggregate = null,
 };
+
+pub const Resource = struct { ty: Type, store: *@import("memory.zig").Store, owner: @import("memory.zig").Allocation, references: usize = 1 };

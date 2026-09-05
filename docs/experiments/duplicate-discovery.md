@@ -176,3 +176,9 @@ Explicit propagation advances the version to `exact-v13`. Canonical expressions
 retain the `try` operation and its output result identity, in addition to the input
 value's type and structure. Manual matching and propagation remain structurally
 distinct; changed nominal output contracts cannot normalize away.
+
+
+Source buffer acquisition advances discovery to `exact-v14`. Canonical nodes retain
+acquisition result types/capacity expressions and move-only type behavior. Renaming
+bindings preserves exact identity; changed capacity arithmetic remains distinct.
+Source ownership cleanup is derived from checked structure and binding identities.

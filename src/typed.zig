@@ -22,6 +22,7 @@ pub const Node = struct {
         propagate: struct { value: NodeId, output: Type, cleanup: []const ReferenceId },
         read_slice: struct { reference: ReferenceId, index: NodeId },
         len_slice: ReferenceId,
+        acquire_buffer: NodeId,
         cast: NodeId,
         wrap: NodeId,
         variant: struct { tag: usize, value: ?NodeId },
@@ -45,6 +46,8 @@ pub const Variants = struct { fallible: bool = false, is_union: bool, cases: []c
 pub const Array = struct { element: Type, length: usize, key: ?Type = null };
 // Aggregate schemas retain nominal record identities and intern structural arrays.
 pub const Record = struct {
+    buffer: ?Type = null,
+    move_only: bool = false,
     requires_handling: bool = false,
     id: Type,
     name: []const u8,
@@ -57,7 +60,7 @@ pub const Record = struct {
         return if (self.array) |a| a.key else null;
     }
     pub fn isRecord(self: Record) bool {
-        return self.array == null and self.domain == null and self.variants == null;
+        return self.buffer == null and self.array == null and self.domain == null and self.variants == null;
     }
     pub fn isEnum(self: Record) bool {
         return if (self.variants) |v| !v.is_union else false;
@@ -83,6 +86,9 @@ pub fn resultShape(ty: Type, records: []const Record) ?ResultShape {
     }
     return .{ .ok_type = variants.cases[ok orelse return null].payload.?, .error_type = variants.cases[err orelse return null].payload.?, .ok_tag = ok.?, .error_tag = err.? };
 }
+pub fn moveOnly(ty: Type, records: []const Record) bool {
+    return ty.isAggregate() and records[ty.recordIndex()].move_only;
+}
 pub fn requiresHandling(ty: Type, records: []const Record) bool {
     return ty.isAggregate() and records[ty.recordIndex()].requires_handling;
 }
@@ -93,6 +99,7 @@ pub const Store = struct { slot: LocalId, value: NodeId };
 pub const Statement = struct {
     span: Span,
     terminates: bool,
+    owned_cleanup: []const LocalId = &.{},
     cleanup: []const ReferenceId = &.{},
     data: union(enum) {
         block: []const StatementId,
@@ -113,7 +120,7 @@ pub const Statement = struct {
 };
 pub const MatchArm = struct { tag: usize, slot: ?LocalId, body: StatementId };
 pub const Range = struct { start: NodeId, end: NodeId };
-pub const Local = struct { result_pending: bool = false, slice_parameter: bool = false, reference_parameter: ?bool = null, name: []const u8, declaration: Span, ty: Type, mutable: bool, mutable_borrow: bool = false, reads: usize = 0, writes: usize = 0 };
+pub const Local = struct { transfer_available: bool = false, slice_parameter: bool = false, reference_parameter: ?bool = null, name: []const u8, declaration: Span, ty: Type, mutable: bool, mutable_borrow: bool = false, reads: usize = 0, writes: usize = 0 };
 pub const ReturnReference = struct { parameter: LocalId, mutable: bool, slice: bool };
 pub const Function = struct {
     return_reference: ?ReturnReference = null,

@@ -87,8 +87,8 @@ The [MVP acceptance audit](mvp-audit.md) records the verification evidence.
 Post-MVP feature syntax is not accepted as a placeholder with invented semantics.
 
 
-The guest has no strings, floats, pointers, explicit heap allocation,
-ownership transfer, generics, compile-time execution, modules, globals, closures,
+The guest has no strings, floats, raw pointers, general allocator capabilities,
+generics, compile-time execution, modules, globals, closures,
 function values, standard library, FFI, exceptions, concurrency,
 optimizer, native backend, or self-hosting. The host compiler and VM allocate.
 There is no REPL, guest printing, warning suppression, warning-as-error mode,
@@ -165,7 +165,7 @@ input values cannot escape. The VM captures a valid result view, ends callee loa
 and reborrows the caller input for the receiving scope. See
 [returned-reference semantics](experiments/returned-references.md) and
 [B acceptance](experiments/b-audit.md). This completes the restricted borrowing
-experiment; resource ownership and effects remain pending.
+experiment; buffer acquisition/moves are now supported separately, while resource views and effects remain pending.
 
 
 Nominal `result Name { ok: T, err: E }` declarations and explicit `acknowledge`
@@ -173,7 +173,7 @@ statements are implemented. Handling obligations transfer through value bindings
 parameters, returns, and wrappers. Scope exits, overwrites, control-flow joins,
 loop back edges, and short-circuit paths cannot silently lose an obligation.
 Exhaustive matching handles outcomes explicitly. See [result semantics and current
-transfer restrictions](experiments/results.md). Owned-resource cleanup remains pending.
+transfer restrictions](experiments/results.md). Owned buffers now participate in cleanup as described below.
 
 
 `try expression` unwraps a success payload or propagates an exactly matching error
@@ -182,3 +182,11 @@ abandon pending result bindings or unfinished result-bearing expression operands
 Failure releases ordinary temporaries and ends active borrows before returning.
 See [propagation semantics](experiments/propagation.md). Arithmetic traps remain
 separate from recoverable errors.
+
+
+`buffer Name: Element;` declares a nominal owned buffer. `acquire_buffer<Result>(n)`
+returns an empty buffer or a capacity error through a declared result. Buffers and
+wrappers containing them transfer on use and reject reuse; ordinary owned values
+clean up at block/match exits, return, and propagated failure. Results retain their
+explicit handling obligations. See [source ownership semantics and current limits](experiments/owned-buffers.md).
+Buffer operations/views, external capabilities/effects, and arenas/pools remain pending.

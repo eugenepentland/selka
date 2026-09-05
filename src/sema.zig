@@ -34,20 +34,23 @@ const Checker = struct {
     fn requiresHandling(self: *Checker, value_type: typed.Type) bool {
         return typed.requiresHandling(value_type, self.catalog.records);
     }
+    fn transfers(self: *Checker, value_type: typed.Type) bool {
+        return self.requiresHandling(value_type) or typed.moveOnly(value_type, self.catalog.records);
+    }
     fn pendingState(self: *Checker, count: usize) Error![]bool {
         const state = try self.allocator.alloc(bool, count);
-        for (self.locals.items[0..count], state) |local, *pending| pending.* = local.result_pending;
+        for (self.locals.items[0..count], state) |local, *pending| pending.* = local.transfer_available;
         return state;
     }
     fn restorePending(self: *Checker, state: []const bool) void {
-        for (self.locals.items[0..state.len], state) |*local, pending| local.result_pending = pending;
+        for (self.locals.items[0..state.len], state) |*local, pending| local.transfer_available = pending;
     }
     fn samePending(self: *Checker, state: []const bool, span: source.Span, code: []const u8) Error!void {
-        for (self.locals.items[0..state.len], state) |local, pending| if (local.result_pending != pending) return self.sink.failRelated(code, span, "result obligation must have the same state on every continuing path", .{ .span = local.declaration, .message = "result-bearing binding declared here" });
+        for (self.locals.items[0..state.len], state) |local, pending| if (local.transfer_available != pending) return self.sink.failRelated(if (!self.requiresHandling(local.ty) and typed.moveOnly(local.ty, self.catalog.records)) (if (std.mem.eql(u8, code, "E_RESULT_LOOP")) "E_OWNED_LOOP" else "E_OWNED_PATH") else code, span, "ownership or result obligation must have the same state on every continuing path", .{ .span = local.declaration, .message = "binding declared here" });
     }
     fn requireHandled(self: *Checker, first: usize, span: source.Span) Error!void {
         for (self.locals.items[first..], first..) |local, index| {
-            if (local.result_pending and self.active.get(local.name) == @as(typed.LocalId, @fromBackingInt(index))) return self.sink.failRelated("E_RESULT_UNHANDLED", span, "result-bearing value leaves scope without being handled, returned, transferred, or explicitly acknowledged", .{ .span = local.declaration, .message = "unhandled result-bearing binding" });
+            if (self.requiresHandling(local.ty) and local.transfer_available and self.active.get(local.name) == @as(typed.LocalId, @fromBackingInt(index))) return self.sink.failRelated("E_RESULT_UNHANDLED", span, "result-bearing value leaves scope without being handled, returned, transferred, or explicitly acknowledged", .{ .span = local.declaration, .message = "unhandled result-bearing binding" });
         }
     }
     fn activeCleanup(self: *Checker) Error![]const typed.ReferenceId {
@@ -238,7 +241,7 @@ const Checker = struct {
                         try work.append(self.allocator, .{ .id = base });
                         continue;
                     },
-                    .cast, .wrap => |cast| {
+                    .cast, .wrap, .acquire_buffer => |cast| {
                         try work.append(self.allocator, .{ .id = task.id, .emit = true });
                         try work.append(self.allocator, .{ .id = cast.value });
                         continue;
@@ -295,6 +298,14 @@ const Checker = struct {
                 out.ty = parsed.ty;
                 out.data = .{ .integer = parsed.value };
             } else switch (node.data) {
+                .acquire_buffer => |acquire| {
+                    out.ty = try self.ty(acquire.ty);
+                    const shape = typed.resultShape(out.ty, self.catalog.records) orelse return self.sink.fail("E_BUFFER_RESULT", acquire.ty, "buffer acquisition requires a result with a buffer success payload and i64 error payload");
+                    if (!shape.ok_type.isAggregate() or self.catalog.records[shape.ok_type.recordIndex()].buffer == null or shape.error_type != .i64) return self.sink.fail("E_BUFFER_RESULT", acquire.ty, "buffer acquisition requires a result with a buffer success payload and i64 error payload");
+                    const capacity = self.resolved[@backingInt(acquire.value)].?;
+                    try self.requireInteger(self.nodes.items[@backingInt(capacity)].ty, node.span);
+                    out.data = .{ .acquire_buffer = capacity };
+                },
                 .propagate => |operand| {
                     const value = self.resolved[@backingInt(operand)].?;
                     const input = typed.resultShape(self.nodes.items[@backingInt(value)].ty, self.catalog.records) orelse return self.sink.fail("E_TRY_TYPE", node.span, "try requires a declared fallible result");
@@ -431,9 +442,9 @@ const Checker = struct {
                 .name => |name| {
                     if (self.active_refs.contains(self.src.text(name))) return self.sink.fail("E_REFERENCE_VALUE", name, "references cannot be copied, stored, returned, or passed to value parameters; use read_ref to copy the referenced value");
                     const slot = try self.resolve(name);
-                    if (self.requiresHandling(self.locals.items[@backingInt(slot)].ty)) {
-                        if (!self.locals.items[@backingInt(slot)].result_pending) return self.sink.failRelated("E_RESULT_CONSUMED", name, "result-bearing value has already been transferred or handled", .{ .span = self.locals.items[@backingInt(slot)].declaration, .message = "binding declared here" });
-                        self.locals.items[@backingInt(slot)].result_pending = false;
+                    if (self.transfers(self.locals.items[@backingInt(slot)].ty)) {
+                        if (!self.locals.items[@backingInt(slot)].transfer_available) return self.sink.failRelated(if (typed.moveOnly(self.locals.items[@backingInt(slot)].ty, self.catalog.records)) "E_OWNED_CONSUMED" else "E_RESULT_CONSUMED", name, "value has already been transferred or handled", .{ .span = self.locals.items[@backingInt(slot)].declaration, .message = "binding declared here" });
+                        self.locals.items[@backingInt(slot)].transfer_available = false;
                     }
                     try self.ownerAccess(slot, false, name);
                     self.locals.items[@backingInt(slot)].reads += 1;
@@ -508,7 +519,7 @@ const Checker = struct {
             }
             const consumed: usize = switch (out.data) {
                 .integer, .boolean, .local, .read_ref, .len_slice => 0,
-                .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate => 1,
+                .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .acquire_buffer => 1,
                 .index, .binary => 2,
                 .replace => 3,
                 .variant => |variant| if (variant.value != null) 1 else 0,
@@ -529,6 +540,7 @@ const Checker = struct {
         const stmt = self.syntax.statements.items[@backingInt(statement_id)];
         var terminates = false;
         var cleanup: []const typed.ReferenceId = &.{};
+        var owned_cleanup: []const typed.LocalId = &.{};
         const data: @FieldType(typed.Statement, "data") = switch (stmt.data) {
             .block => |children| block: {
                 const first_local = self.locals.items.len;
@@ -542,7 +554,14 @@ const Checker = struct {
                     terminates = result.terminates;
                     try checked.append(self.allocator, result.id);
                 }
-                if (!terminates) try self.requireHandled(first_local, stmt.span);
+                if (!terminates) {
+                    try self.requireHandled(first_local, stmt.span);
+                    var owned: std.ArrayList(typed.LocalId) = .empty;
+                    for (self.locals.items[first_local..], first_local..) |local, index| {
+                        if (typed.moveOnly(local.ty, self.catalog.records)) try owned.append(self.allocator, @fromBackingInt(index));
+                    }
+                    owned_cleanup = try owned.toOwnedSlice(self.allocator);
+                }
                 break :block .{ .block = try checked.toOwnedSlice(self.allocator) };
             },
             .match => |match| match: {
@@ -573,12 +592,18 @@ const Checker = struct {
                         const name = self.src.text(binding);
                         if (self.functions.contains(name) or self.catalog.names.contains(name) or self.active.contains(name) or self.active_refs.contains(name)) return self.sink.fail("E_SHADOWING", binding, "payload binding shadows an active binding or top-level name");
                         slot = @fromBackingInt(self.locals.items.len);
-                        try self.locals.append(self.allocator, .{ .name = name, .declaration = binding, .ty = payload.?, .mutable = false, .result_pending = self.requiresHandling(payload.?) });
+                        try self.locals.append(self.allocator, .{ .name = name, .declaration = binding, .ty = payload.?, .mutable = false, .transfer_available = self.transfers(payload.?) });
                         try self.active.put(self.allocator, name, slot.?);
                     }
-                    const body = try self.statement(arm.body);
+                    var body = try self.statement(arm.body);
                     if (!body.terminates) {
                         try self.requireHandled(first_local, stmt.span);
+                        if (slot) |payload_slot| if (typed.moveOnly(payload.?, self.catalog.records)) {
+                            const children = try self.allocator.dupe(typed.StatementId, &.{body.id});
+                            const cleanup_slots = try self.allocator.dupe(typed.LocalId, &.{payload_slot});
+                            body.id = @fromBackingInt(self.statements.items.len);
+                            try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = false, .owned_cleanup = cleanup_slots, .data = .{ .block = children } });
+                        };
                         if (continuation) |state| try self.samePending(state, stmt.span, "E_RESULT_PATH") else continuation = try self.pendingState(before.len);
                     }
                     terminates = terminates and body.terminates;
@@ -637,11 +662,11 @@ const Checker = struct {
                     self.locals.items[@backingInt(owner)].reads += 1;
                     if (borrow.mutable) self.locals.items[@backingInt(owner)].mutable_borrow = true;
                 }
-                if (self.requiresHandling(self.locals.items[@backingInt(owner)].ty)) return self.sink.fail("E_RESULT_BORROW", borrow.owner, "result-bearing values must be transferred by value; borrowing their obligations is not supported");
+                if (self.transfers(self.locals.items[@backingInt(owner)].ty)) return self.sink.fail("E_RESULT_BORROW", borrow.owner, "owned and result-bearing values must currently transfer by value; borrowing these values is not supported");
                 const source_type = if (parent) |id| self.references.items[@backingInt(id)].ty else self.locals.items[@backingInt(owner)].ty;
                 const parent_slice = if (parent) |id| self.references.items[@backingInt(id)].slice else false;
                 const element = if (range != null and !parent_slice) try self.sliceElement(source_type, borrow.owner) else source_type;
-                if (self.requiresHandling(element)) return self.sink.fail("E_RESULT_BORROW", borrow.owner, "result-bearing elements cannot be exposed through references");
+                if (self.transfers(element)) return self.sink.fail("E_RESULT_BORROW", borrow.owner, "result-bearing elements cannot be exposed through references");
                 const id: typed.ReferenceId = @fromBackingInt(self.references.items.len);
                 try self.references.append(self.allocator, .{ .slice = range != null or parent_slice, .name = name, .declaration = borrow.name, .owner = owner, .parent = parent, .ty = element, .mutable = borrow.mutable });
                 try self.active_refs.put(self.allocator, name, id);
@@ -736,7 +761,7 @@ const Checker = struct {
                 const value_type = self.nodes.items[@backingInt(value)].ty;
                 if (b.annotation) |annotation| try self.require(value_type, try self.ty(annotation), annotation);
                 const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
-                try self.locals.append(self.allocator, .{ .name = name, .declaration = b.name, .ty = value_type, .mutable = b.mutable, .result_pending = self.requiresHandling(value_type) });
+                try self.locals.append(self.allocator, .{ .name = name, .declaration = b.name, .ty = value_type, .mutable = b.mutable, .transfer_available = self.transfers(value_type) });
                 try self.active.put(self.allocator, name, slot);
                 break :binding .{ .initialize = .{ .slot = slot, .value = value } };
             },
@@ -762,16 +787,16 @@ const Checker = struct {
                     value = combined;
                 }
                 try self.require(self.nodes.items[@backingInt(value)].ty, self.locals.items[@backingInt(slot)].ty, stmt.span);
-                if (self.requiresHandling(self.locals.items[@backingInt(slot)].ty)) {
-                    if (self.locals.items[@backingInt(slot)].result_pending) return self.sink.fail("E_RESULT_OVERWRITE", a.name, "assignment would overwrite an unhandled result-bearing value");
-                    self.locals.items[@backingInt(slot)].result_pending = true;
+                if (self.transfers(self.locals.items[@backingInt(slot)].ty)) {
+                    if (self.requiresHandling(self.locals.items[@backingInt(slot)].ty) and self.locals.items[@backingInt(slot)].transfer_available) return self.sink.fail("E_RESULT_OVERWRITE", a.name, "assignment would overwrite an unhandled result-bearing value");
+                    self.locals.items[@backingInt(slot)].transfer_available = true;
                 }
                 self.locals.items[@backingInt(slot)].writes += 1;
                 break :assignment .{ .assign = .{ .slot = slot, .value = value } };
             },
         };
         const result: typed.StatementId = @fromBackingInt(self.statements.items.len);
-        try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = terminates, .cleanup = cleanup, .data = data });
+        try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = terminates, .owned_cleanup = owned_cleanup, .cleanup = cleanup, .data = data });
         return .{ .id = result, .terminates = terminates };
     }
 };
@@ -782,7 +807,7 @@ fn warningLess(_: void, a: diagnostic.Diagnostic, b: diagnostic.Diagnostic) bool
 pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!typed.Program {
     const resolved = try allocator.alloc(?typed.NodeId, program.nodes.items.len);
     @memset(resolved, null);
-    const catalog = try records.collect(allocator, src, program.records, program.domains, program.variants, program.array_types, sink);
+    const catalog = try records.collect(allocator, src, program.records, program.domains, program.variants, program.array_types, program.buffers, sink);
     var checker: Checker = .{ .allocator = allocator, .src = src, .syntax = program, .sink = sink, .resolved = resolved, .catalog = catalog };
     for (program.functions, 0..) |function, i| {
         const name = try functionName(allocator, src, function.owner, function.name);
@@ -810,8 +835,8 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
             if (checker.functions.contains(name) or checker.catalog.names.contains(name)) return sink.fail("E_SHADOWING", parameter.name, "parameter shadows a top-level function");
             const slot: typed.LocalId = @fromBackingInt(checker.locals.items.len);
             const parameter_type = try checker.ty(parameter.ty);
-            if (parameter.reference != null and checker.requiresHandling(parameter_type)) return sink.fail("E_RESULT_BORROW", parameter.ty, "result-bearing parameters must transfer by value");
-            try checker.locals.append(allocator, .{ .name = name, .declaration = parameter.name, .ty = parameter_type, .mutable = false, .reference_parameter = parameter.reference, .slice_parameter = parameter.slice, .result_pending = checker.requiresHandling(parameter_type) });
+            if (parameter.reference != null and checker.transfers(parameter_type)) return sink.fail("E_RESULT_BORROW", parameter.ty, "owned and result-bearing parameters must currently transfer by value");
+            try checker.locals.append(allocator, .{ .name = name, .declaration = parameter.name, .ty = parameter_type, .mutable = false, .reference_parameter = parameter.reference, .slice_parameter = parameter.slice, .transfer_available = checker.transfers(parameter_type) });
             if (parameter.reference) |mutable| {
                 const reference: typed.ReferenceId = @fromBackingInt(checker.references.items.len);
                 try checker.references.append(allocator, .{ .parameter = true, .slice = parameter.slice, .name = name, .declaration = parameter.name, .owner = slot, .parent = null, .ty = parameter_type, .mutable = mutable });

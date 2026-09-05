@@ -37,6 +37,7 @@ const Emitter = struct {
         const stmt = self.program.statements[@backingInt(id)];
         switch (stmt.data) {
             .block => |children| {
+                for (stmt.owned_cleanup) |slot| try self.instruction(stmt.span, .{ .drop_local = slot });
                 var i = children.len;
                 while (i > 0) {
                     i -= 1;
@@ -212,7 +213,11 @@ const Emitter = struct {
             },
             .len_slice => |reference| try self.instruction(node.span, .{ .len_slice = reference }),
             .read_ref => |reference| try self.instruction(node.span, .{ .read_ref = reference }),
-            .local => |slot| try self.instruction(node.span, .{ .load_local = slot }),
+            .acquire_buffer => |capacity| {
+                try self.instruction(node.span, .{ .acquire_buffer = node.ty });
+                try self.push(.{ .expression = capacity });
+            },
+            .local => |slot| try self.instruction(node.span, if (typed.moveOnly(node.ty, self.program.records) or typed.requiresHandling(node.ty, self.program.records)) .{ .move_local = slot } else .{ .load_local = slot }),
             .call => |call| {
                 try self.instruction(node.span, if (call.references.len == 0) .{ .call = call.function } else .{ .call_refs = .{ .function = call.function, .references = call.references } });
                 var i = call.arguments.len;

@@ -34,6 +34,9 @@ pub const Instruction = struct {
         end_borrow: typed.ReferenceId,
         read_ref: typed.ReferenceId,
         write_ref: typed.ReferenceId,
+        acquire_buffer: typed.Type,
+        move_local: typed.LocalId,
+        drop_local: typed.LocalId,
         load_local: typed.LocalId,
         store_local: typed.LocalId,
         add_i64_checked,
@@ -84,6 +87,9 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
     if (@backingInt(program.main) >= program.functions.len) return error.InternalError;
     for (program.records, 0..) |record, i| {
         if (@backingInt(record.id) != i + typed.Type.record_base) return error.InternalError;
+        if (record.buffer) |element| {
+            if (!validType(element, program) or typed.moveOnly(element, program.records) or typed.requiresHandling(element, program.records) or !record.move_only or record.requires_handling or record.array != null or record.domain != null or record.variants != null or record.fields.len != 0) return error.InternalError;
+        }
         if (record.variants) |variants| {
             if (variants.fallible) {
                 if (!variants.is_union or variants.cases.len != 2 or !record.requires_handling) return error.InternalError;
@@ -191,6 +197,10 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             .push_integer => |number| {
                 if (!number.ty.isInteger() or !number.ty.fits(number.value)) return error.InternalError;
             },
+            .acquire_buffer => |ty| {
+                const shape = typed.resultShape(ty, program.records) orelse return error.InternalError;
+                if (!validType(shape.ok_type, program) or !shape.ok_type.isAggregate() or program.records[shape.ok_type.recordIndex()].buffer == null or shape.error_type != .i64) return error.InternalError;
+            },
             .cast_integer, .neg_integer => |ty| if (!ty.isInteger()) {
                 return error.InternalError;
             },
@@ -215,7 +225,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     else => {},
                 }
             },
-            .load_local, .store_local => |slot| if (@backingInt(slot) >= function.locals.len or function.locals[@backingInt(slot)].reference_parameter != null) {
+            .load_local, .store_local, .move_local, .drop_local => |slot| if (@backingInt(slot) >= function.locals.len or function.locals[@backingInt(slot)].reference_parameter != null) {
                 return error.InternalError;
             },
             .wrap_domain, .unwrap_domain => |ty| {
@@ -223,7 +233,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             },
             .make_record => |record| {
                 if (!record.ty.isAggregate() or !validType(record.ty, program)) return error.InternalError;
-                if (program.records[record.ty.recordIndex()].domain != null or program.records[record.ty.recordIndex()].variants != null) return error.InternalError;
+                if (program.records[record.ty.recordIndex()].buffer != null or program.records[record.ty.recordIndex()].domain != null or program.records[record.ty.recordIndex()].variants != null) return error.InternalError;
                 if (record.fields != program.records[record.ty.recordIndex()].count()) return error.InternalError;
                 if (record.order.len != 0) {
                     if (record.order.len != record.fields) return error.InternalError;
@@ -313,7 +323,8 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             const instruction = function.instructions[pc];
             var height = heights[pc].?;
             switch (instruction.op) {
-                .push_i64, .push_bool, .push_integer, .load_local, .read_ref, .len_slice => height += 1,
+                .push_i64, .push_bool, .push_integer, .load_local, .move_local, .read_ref, .len_slice => height += 1,
+                .drop_local => {},
                 .make_variant => |variant| {
                     const payload = (try variantSchema(variant.ty, program)).cases[variant.tag].payload;
                     if (payload != null) {
@@ -349,7 +360,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (height < 2) return error.InternalError;
                     height -= 2;
                 },
-                .read_slice, .neg_i64_checked, .not_bool, .get_field, .cast_integer, .neg_integer, .array_length, .wrap_domain, .unwrap_domain => if (height == 0) {
+                .acquire_buffer, .read_slice, .neg_i64_checked, .not_bool, .get_field, .cast_integer, .neg_integer, .array_length, .wrap_domain, .unwrap_domain => if (height == 0) {
                     return error.InternalError;
                 },
                 .call, .call_refs, .call_borrow => {

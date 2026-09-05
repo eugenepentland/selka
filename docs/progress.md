@@ -533,3 +533,27 @@ acquisition results, capabilities/effects, arenas/pools, and the other unfinishe
 roadmap tracks remain pending. Exact discovery remains exact-v13 because no guest
 syntax was added. Guardian gates were not exercised; hosted CI has not run.
 The full roadmap goal remains active.
+
+
+## 2026-09-05: C source buffer acquisition, moves, and cleanup integration
+
+Implemented nominal buffer declarations and fallible `acquire_buffer<Result>(n)`.
+Buffers and containing wrappers transfer through locals, calls, parameters, and
+returns; reuse and inconsistent continuing-path availability are rejected. Owned
+lexical bindings and match payloads release at scope exit. Result transfers now
+consume VM local slots, and `try` releases acquired local/temporary resources on
+failure while preserving caller operands.
+
+226/226 tests pass in Debug and ReleaseFast (200 core, 26 actual CLI). Source
+acceptance covers acquire A/fail B/release A once, successful wrapper transfer,
+subsequent acquisition under the same quota, every host allocation failure,
+instruction/frame traps, malformed bytecode, and 10,000 source ownership cycles
+under a one-owner quota and 16 KiB live runtime allocation. The buffers example
+returns 21. Formatting and whitespace checks pass. Discovery is exact-v14.
+
+[Source ownership semantics](experiments/owned-buffers.md) documents restrictions:
+acquisition currently creates empty buffers; buffer operations and borrowed views
+are next. External resources, allocator/external capabilities, transitive effects,
+arenas/pools, abstraction work, and every other unfinished track remain pending.
+C is not complete. Guardian gates were not exercised; hosted CI has not run.
+The full roadmap goal remains active.
