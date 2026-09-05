@@ -390,6 +390,18 @@ pub const Parser = struct {
                 const close = try self.expect(.rparen);
                 break :restrict try self.append(.{ .span = .join(token.span, close.span), .data = .{ .restrict_resource = .{ .permissions = permissions, .value = value } } });
             },
+            .kw_read_resource_slice, .kw_write_resource_slice => slice_io: {
+                self.pos += 1;
+                _ = try self.expect(.lt);
+                const ty = try self.typeName();
+                _ = try self.expect(.gt);
+                _ = try self.expect(.lparen);
+                const owner = try self.expect(.ident);
+                _ = try self.expect(.comma);
+                const reference = try self.expect(.ident);
+                const close = try self.expect(.rparen);
+                break :slice_io try self.append(.{ .span = .join(token.span, close.span), .data = .{ .resource_io = .{ .kind = if (token.tag == .kw_read_resource_slice) .read else .write, .owner = owner.span, .ty = ty, .value = null, .reference = reference.span } } });
+            },
             .kw_read_resource, .kw_write_resource => resource_io: {
                 self.pos += 1;
                 _ = try self.expect(.lt);

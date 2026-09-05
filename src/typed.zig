@@ -26,7 +26,7 @@ pub const Node = struct {
         buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: LocalId, arguments: []const NodeId },
         acquire_resource: struct { capability: NodeId, request: NodeId },
         complete_resource: NodeId,
-        resource_io: struct { kind: @import("external_resources.zig").IoKind, owner: LocalId, value: ?NodeId },
+        resource_io: struct { reference: ?ReferenceId = null, kind: @import("external_resources.zig").IoKind, owner: LocalId, value: ?NodeId },
         restrict_resource: struct { permissions: @import("external_resources.zig").Permissions, value: NodeId },
         environment_get: struct { capability: NodeId, name: NodeId },
         external_read: struct { kind: @import("external_capabilities.zig").Kind, capability: NodeId },
@@ -196,4 +196,19 @@ fn byteResultShape(ty: Type, records: []const Record, flag_name: []const u8) ?By
     }
     const byte_field = bytes orelse return null;
     return .{ .result = result, .bytes_type = schema.fields[byte_field].ty, .bytes_field = byte_field, .length_field = length orelse return null, .flag_field = present orelse return null };
+}
+
+pub const SliceReadShape = struct { result: ResultShape, length_field: usize, eof_field: usize };
+pub fn resourceSliceReadShape(ty: Type, records: []const Record) ?SliceReadShape {
+    const result = resultShape(ty, records) orelse return null;
+    if (result.error_type != .i64 or !result.ok_type.isAggregate() or result.ok_type.recordIndex() >= records.len) return null;
+    const schema = records[result.ok_type.recordIndex()];
+    if (!schema.isRecord() or schema.fields.len != 2) return null;
+    var length: ?usize = null;
+    var eof: ?usize = null;
+    for (schema.fields, 0..) |field, index| {
+        if (std.mem.eql(u8, field.name, "length") and field.ty == .u64) length = index;
+        if (std.mem.eql(u8, field.name, "eof") and field.ty == .bool) eof = index;
+    }
+    return .{ .result = result, .length_field = length orelse return null, .eof_field = eof orelse return null };
 }

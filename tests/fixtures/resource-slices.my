@@ -1,0 +1,27 @@
+resource File: filesystem;
+result Open { ok: File, err: i64 }
+struct Progress { length: u64, eof: bool }
+result Read { ok: Progress, err: i64 }
+result Written { ok: u64, err: i64 }
+result Status { ok: i64, err: i64 }
+
+fn work(fs: filesystem_cap) -> Status effects(filesystem) {
+    let mut file = try acquire_resource<Open>(fs, new [1]u8 [42u8]);
+    let mut bytes = new [4]u8 [0u8, 0u8, 0u8, 0u8];
+    let mut count = 0u64;
+    borrow mut bytes[0..4] as destination {
+        let progress = try read_resource_slice<Read>(file, destination);
+        count = progress.length;
+    }
+    borrow bytes[0..count] as input {
+        let written = try write_resource_slice<Written>(file, input);
+        return new Status.ok(cast<i64>(written));
+    }
+}
+
+fn main(fs: filesystem_cap) -> i64 {
+    match work(fs) {
+        Status.ok(value) => { return value; },
+        Status.err(code) => { return -code; }
+    }
+}

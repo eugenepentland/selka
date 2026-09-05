@@ -816,3 +816,27 @@ permissions from acquisition/release authority, provider scope, revocation, and
 independent quotas. Slice I/O, partial field moves, arenas/pools, and every other
 unfinished roadmap track remain in scope. C is not complete. Guardian was not
 exercised; hosted CI has not run. The full roadmap goal remains active.
+
+
+## 2026-09-05: C borrowed resource slice I/O
+
+Implemented resource reads into exclusive u8 slices and writes from shared/exclusive
+u8 slices, preserving resource ownership and existing lifetime/permission checks.
+Reads report length/EOF and modify only their successful prefix; writes send exactly
+the selected range. Fixed-array replacements are prepared before provider calls and
+committed once, retaining immutable snapshots. Initialized owned buffers update in
+place after staging. Provider errors discard scratch writes and leave destinations
+unchanged; terminal failures after successful I/O do not promise rollback.
+
+351 tests pass in Debug and ReleaseFast (315 core, 36 actual CLI). Acceptance covers
+array snapshots, buffer views, untouched bytes, populated ranges, permissions/types,
+suspended parents, returned narrowed views through parameters, empty ranges and EOF,
+provider-error isolation, malformed emission, all allocation failures, and every
+instruction-budget boundary for both storage routes. 10,000 slice read/write cycles
+fit within 16 KiB live VM storage. CLI checks/dumps/denied execution and exclusive-destination
+enforcement pass. Formatting and whitespace checks pass. Discovery is exact-v24.
+
+[Resource slice semantics](experiments/resource-slices.md) documents staging/copy
+costs and trusted callback boundaries. Partial field moves, arenas/pools, and all
+other unfinished roadmap tracks remain in scope. C is not complete. Guardian was
+not exercised; hosted CI has not run. The full roadmap goal remains active.

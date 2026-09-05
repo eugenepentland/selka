@@ -72,7 +72,7 @@ zig build run -- discover-duplicates examples/duplicates.my --timings
 It reports exact checked-function candidates after normalizing bound names,
 with source locations and advisory explanations. Ordinary compilation does not
 run it. See the [comparison contract and review](docs/experiments/duplicate-discovery.md).
-All 339 tests pass in Debug and ReleaseFast.
+All 351 tests pass in Debug and ReleaseFast.
 
 [Post-MVP tracking](docs/experiments/roadmap.md) records the remaining experiments.
 Records, complete construction, field access, preserving updates, and declarative
@@ -139,9 +139,13 @@ entry grants and injected providers, preserving missing/empty distinctions and
 rejecting oversized values without truncation.
 
 [Resource reads/writes](docs/experiments/resource-io.md) now expose bounded byte
-snapshots, explicit EOF, and actual write counts while retaining ownership. Slice
-I/O and operating-system adapters remain separate work.
+snapshots, explicit EOF, and actual write counts while retaining ownership. Borrowed slice
+I/O is described below; operating-system adapters remain separate work.
 
 [Resource permission attenuation](docs/experiments/attenuation.md) now lets helpers
 receive reduced read/write/complete authority. Acquisition receives those permissions,
 and copies cannot restore removed rights or increase the shared quota.
+
+[Borrowed resource slice I/O](docs/experiments/resource-slices.md) now reads into
+existing array/buffer ranges and writes exact populated ranges while enforcing
+exclusive destinations, lifetime checks, and snapshot preservation.

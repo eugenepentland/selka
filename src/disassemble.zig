@@ -79,7 +79,7 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
                 .write_ref => |id| try writer.print("WRITE_REF {d}", .{@backingInt(id)}),
                 .buffer_operation => |operation| try writer.print("BUFFER_{s} local={d} -> {s}", .{ @tagName(operation.kind), @backingInt(operation.owner), typed.typeName(operation.output, program.records) }),
                 .read_field => |read| try writer.print("READ_FIELD local={d} field={d} -> {s}", .{ @backingInt(read.owner), read.field, typed.typeName(read.output, program.records) }),
-                .resource_io => |io| try writer.print("RESOURCE_{s} local={d} -> {s}", .{ @tagName(io.kind), @backingInt(io.owner), typed.typeName(io.output, program.records) }),
+                .resource_io => |io| try writer.print("RESOURCE_{s} local={d} -> {s}", .{ if (io.reference != null) (if (io.kind == .read) "read_slice" else "write_slice") else @tagName(io.kind), @backingInt(io.owner), typed.typeName(io.output, program.records) }),
                 .restrict_resource => |restrict| try writer.print("RESTRICT_RESOURCE permissions={d} -> {s}", .{ restrict.permissions, typed.typeName(restrict.ty, program.records) }),
                 .environment_get => |get| try writer.print("ENVIRONMENT_GET -> {s}", .{typed.typeName(get.output, program.records)}),
                 .complete_resource => |output| try writer.print("COMPLETE_RESOURCE -> {s}", .{typed.typeName(output, program.records)}),

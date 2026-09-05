@@ -483,3 +483,16 @@ test "CLI exposes resource permission attenuation and rejects malformed permissi
     const invalid = "fn main(fs: filesystem_cap) -> i64 { discard restrict_resource<read, read>(fs); return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_PERMISSION]");
 }
+
+test "CLI checks resource slice IO and exclusive destination requirements" {
+    const source = @embedFile("fixtures/resource-slices.my");
+    try invoke("check", source, 0, "", "");
+    try invoke("run", source, 2, "", "host failure: CapabilityUnavailable");
+    const dumped = try runFixture("dump-bytecode", source, &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    for ([_][]const u8{ "RESOURCE_read_slice", "RESOURCE_write_slice" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
+    const invalid = "resource File: filesystem; struct Progress { length: u64, eof: bool } result Read { ok: Progress, err: i64 } fn f(input: File, destination: &[]u8) -> i64 { let mut file = input; acknowledge read_resource_slice<Read>(file, destination); return 0; } fn main() -> i64 { return 0; }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_REFERENCE_READ_ONLY]");
+}

@@ -410,8 +410,18 @@ const Checker = struct {
                     if (!local.transfer_available) return self.sink.failRelated("E_OWNED_CONSUMED", io.owner, "resource has already been transferred", .{ .span = local.declaration, .message = "binding declared here" });
                     if (!local.mutable) return self.sink.fail("E_IMMUTABLE", io.owner, "resource I/O requires a let mut binding");
                     try self.ownerAccess(owner, true, io.owner);
+                    const slice_reference = if (io.reference) |name| try self.reference(name) else null;
+                    if (slice_reference) |id| {
+                        try self.requireReferenceKind(id, true, io.reference.?);
+                        const ref = self.references.items[@backingInt(id)];
+                        try self.require(ref.ty, .u8, io.reference.?);
+                        if (io.kind == .read and !ref.mutable) return self.sink.fail("E_REFERENCE_READ_ONLY", io.reference.?, "resource reads require an exclusive destination slice");
+                        if (io.kind == .read) self.locals.items[@backingInt(ref.owner)].writes += 1;
+                    }
                     out.ty = try self.ty(io.ty);
-                    if (io.kind == .read) {
+                    if (io.kind == .read and slice_reference != null) {
+                        if (typed.resourceSliceReadShape(out.ty, self.catalog.records) == null) return self.sink.fail("E_RESOURCE_IO_RESULT", io.ty, "slice read result requires i64 error and record success with length: u64, eof: bool");
+                    } else if (io.kind == .read) {
                         if (typed.resourceReadShape(out.ty, self.catalog.records) == null) return self.sink.fail("E_RESOURCE_IO_RESULT", io.ty, "read result requires i64 error and record success with bytes: [N]u8, length: u64, eof: bool");
                     } else {
                         const shape = typed.resultShape(out.ty, self.catalog.records) orelse return self.sink.fail("E_RESOURCE_IO_RESULT", io.ty, "write result requires u64 success and i64 error");
@@ -421,7 +431,7 @@ const Checker = struct {
                     if (value) |input| if (!typed.byteRequest(self.nodes.items[@backingInt(input)].ty, self.catalog.records)) return self.sink.fail("E_RESOURCE_BYTES", node.span, "write input must be a fixed u8 array");
                     local.reads += 1;
                     local.writes += 1;
-                    out.data = .{ .resource_io = .{ .kind = io.kind, .owner = owner, .value = value } };
+                    out.data = .{ .resource_io = .{ .kind = io.kind, .owner = owner, .value = value, .reference = slice_reference } };
                 },
                 .environment_get => |get| {
                     out.ty = try self.ty(get.ty);

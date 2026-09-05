@@ -82,3 +82,11 @@ Traps at every instruction boundary either release or complete the acquired reso
 once. 10,000 read/write cycles fit within 16 KiB live VM storage under one resource.
 CLI tests cover checking, dumps, denied execution without providers, and mutability
 rejection across commands. Formatting/whitespace checks pass on the pinned Zig.
+
+
+## Subsequent borrowed-slice integration
+
+[Resource slice I/O](resource-slices.md) now accepts shared/exclusive byte views for
+writes and exclusive destinations for reads. It supports fixed arrays, owned buffers,
+reference parameters, and returned/narrowed views, and can write only the populated
+range. The fixed-array-only restriction above describes this earlier checkpoint.

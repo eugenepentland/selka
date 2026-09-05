@@ -38,7 +38,7 @@ pub const Instruction = struct {
         buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: typed.LocalId, output: typed.Type },
         complete_resource: typed.Type,
         acquire_resource: struct { output: typed.Type, request: typed.Type },
-        resource_io: struct { kind: @import("external_resources.zig").IoKind, owner: typed.LocalId, output: typed.Type, input: ?typed.Type },
+        resource_io: struct { reference: ?typed.ReferenceId = null, kind: @import("external_resources.zig").IoKind, owner: typed.LocalId, output: typed.Type, input: ?typed.Type },
         restrict_resource: struct { permissions: @import("external_resources.zig").Permissions, ty: typed.Type },
         environment_get: struct { output: typed.Type, name: typed.Type },
         external_read: struct { kind: @import("external_capabilities.zig").Kind, output: typed.Type },
@@ -242,11 +242,18 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                 if (@backingInt(io.owner) >= function.locals.len) return error.InternalError;
                 const local = function.locals[@backingInt(io.owner)];
                 if (!local.mutable or local.reference_parameter != null or typed.resourceKind(local.ty, program.records) == null) return error.InternalError;
-                if (io.kind == .read) {
+                if (io.reference) |id| {
+                    if (@backingInt(id) >= function.references.len or io.input != null) return error.InternalError;
+                    const reference = function.references[@backingInt(id)];
+                    if (!reference.slice or reference.ty != .u8 or (io.kind == .read and !reference.mutable)) return error.InternalError;
+                }
+                if (io.kind == .read and io.reference != null) {
+                    if (typed.resourceSliceReadShape(io.output, program.records) == null) return error.InternalError;
+                } else if (io.kind == .read) {
                     if (io.input != null or typed.resourceReadShape(io.output, program.records) == null) return error.InternalError;
                 } else {
                     const shape = typed.resultShape(io.output, program.records) orelse return error.InternalError;
-                    if (shape.ok_type != .u64 or shape.error_type != .i64 or !typed.byteRequest(io.input orelse return error.InternalError, program.records)) return error.InternalError;
+                    if (shape.ok_type != .u64 or shape.error_type != .i64 or (io.reference == null and !typed.byteRequest(io.input orelse return error.InternalError, program.records))) return error.InternalError;
                 }
             },
             .restrict_resource => |restrict| {
@@ -395,7 +402,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                 .push_i64, .push_bool, .push_integer, .load_local, .move_local, .read_ref, .read_field, .len_slice => height += 1,
                 .drop_local => {},
                 .resource_io => |io| {
-                    if (io.kind == .write) {
+                    if (io.kind == .write and io.reference == null) {
                         if (height == 0) return error.InternalError;
                     } else height += 1;
                 },

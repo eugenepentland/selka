@@ -259,3 +259,12 @@ operation permissions with a named subset. Copies cannot restore removed rights.
 Acquisition passes restrictions to the provider; owned reads/writes/completion check
 them before callbacks. Denied operations retain ownership and fallback release stays
 available. Provider scope and quotas remain shared. See [attenuation semantics](experiments/attenuation.md).
+
+
+`read_resource_slice<Result>(owner, destination)` reads into an exclusive u8 slice;
+`write_resource_slice<Result>(owner, input)` accepts shared/exclusive u8 slices.
+Read results report length/EOF and update only the successful prefix, retaining
+array snapshots and untouched bytes. Writes send exactly the chosen range. Lease
+checks apply to fixed arrays, initialized buffers, parameters, and returned views.
+See [resource slice I/O](experiments/resource-slices.md) for staging costs and failure
+semantics. Partial field moves and arenas/pools remain pending.

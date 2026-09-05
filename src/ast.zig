@@ -21,7 +21,7 @@ pub const Node = struct {
         buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: Span, result: ?Span, arguments: []const NodeId },
         acquire_resource: struct { ty: Span, capability: NodeId, request: NodeId },
         complete_resource: struct { ty: Span, value: NodeId },
-        resource_io: struct { kind: @import("external_resources.zig").IoKind, owner: Span, ty: Span, value: ?NodeId },
+        resource_io: struct { reference: ?Span = null, kind: @import("external_resources.zig").IoKind, owner: Span, ty: Span, value: ?NodeId },
         restrict_resource: struct { permissions: @import("external_resources.zig").Permissions, value: NodeId },
         environment_get: struct { ty: Span, capability: NodeId, name: NodeId },
         external_read: struct { kind: @import("external_capabilities.zig").Kind, ty: Span, capability: NodeId },

@@ -496,6 +496,18 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 try pushOwned(&stack, allocator, output);
             },
             .resource_io => |io| {
+                if (io.reference) |id| {
+                    const reference = references.items[frame.reference_base + @backingInt(id)] orelse return trap("R_REFERENCE_LIFETIME", "resource I/O slice is not active", instruction.span, frames.items, program);
+                    const slice = reference.slice orelse return error.InternalError;
+                    const owner = locals.items[frame.local_base + @backingInt(io.owner)] orelse return error.InternalError;
+                    const output = resource_execution.ioSlice(io.kind, io.output, program.records, owner, &storage, .{ .lease = reference.lease, .direct = reference.direct, .start = slice.start, .length = slice.length }) catch |err| switch (err) {
+                        error.InvalidCapability, error.InvalidOwner, error.Closed => return trap("R_CAPABILITY", "resource I/O owner is stale or invalid", instruction.span, frames.items, program),
+                        error.IdentityExhausted, error.MemoryClosed, error.ForeignMemory, error.InvalidAllocation, error.ExpiredBorrow, error.BorrowConflict, error.BorrowSuspended, error.ChildrenActive, error.ReadOnly, error.Bounds, error.TypeMismatch, error.CapacityLimit, error.NoCapacity => return memoryFailure(@errorCast(err), instruction, frames.items, program),
+                        else => return err,
+                    };
+                    try pushOwned(&stack, allocator, output);
+                    continue;
+                }
                 const input = if (io.kind == .write) try pop(&stack, frame.operand_base) else null;
                 defer if (input) |value| value.release(allocator);
                 const owner = locals.items[frame.local_base + @backingInt(io.owner)] orelse return error.InternalError;
