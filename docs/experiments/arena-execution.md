@@ -57,10 +57,11 @@ I/O with snapshot preservation, partial progress, and exact external cleanup.
 Actual CLI tests exercise backend selection, matching output, traps, and usage
 rejection in both host optimization modes.
 
-Nested source arena scopes, allocator-region identities and escape diagnostics,
-source reset results, and pool/handle integration remain pending. C is incomplete.
+[Pools/handles](source-pools.md), allocator-region identities, and
+[lexical arena scopes with escape diagnostics](source-arenas.md) now integrate with
+the VM. Explicit source reset operations/results remain pending.
 
 
 [Checked region backing](region-backing.md) extends execution arena selection to
 pool registry storage. Owner wrappers and retained node snapshots stay on the parent
-allocator. Nested source arena scopes and static escape checks remain pending.
+allocator. [Nested source arena scopes and conservative escape checks](source-arenas.md) are implemented.

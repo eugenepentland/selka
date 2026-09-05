@@ -158,12 +158,13 @@ also supports arena-backed pool registries.
 
 [Arena backing and checked region reset](docs/experiments/arenas.md) now separate
 buffer backing from retained snapshots, reject live borrows before reset, and reuse
-backing/registries across cycles. Guest arena scopes remain pending.
+backing/registries across cycles. [Source arena scopes](docs/experiments/source-arenas.md) are implemented.
 
 [Execution-lifetime arena selection](docs/experiments/arena-execution.md) now runs
 existing source programs with `run --memory=arena` or embedding option
-`memory_backing = .arena`. General allocation remains the default. Nested source
-arena scopes remain pending; arena backing can accumulate until execution ends.
+`memory_backing = .arena`. General allocation remains the default. Explicit [source arena scopes](docs/experiments/source-arenas.md)
+now reclaim backing at lexical boundaries; execution-lifetime arena backing can
+accumulate until execution ends.
 Pool registries now follow this selection; retained node snapshots use the parent allocator.
 
 [Approximate discovery](docs/experiments/approximate-discovery.md) is available with
@@ -198,4 +199,8 @@ access to the remainder and enforcing result obligations and branch consistency.
 Source [pools and nominal handles](docs/experiments/source-pools.md) now support
 cyclic graphs, snapshot reads, checked IDs, and shared execution quotas. Run
 `zig build run -- run examples/pools.my` for the graph fixture (result `52`).
-Source arena scopes and generics remain pending.
+Source arena scopes are implemented; generics remain pending.
+
+[Lexical arenas](docs/experiments/source-arenas.md) use `arena heap as scratch { ... }`
+with conservative escape checks and cleanup across returns/errors.
+`zig build run -- run examples/arenas.my` returns `50`.

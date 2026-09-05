@@ -85,6 +85,10 @@ pub const Walker = struct {
                 },
             },
             .statement => |id| switch (self.program.statements[@backingInt(id)].data) {
+                .arena_scope => |scope| {
+                    try self.stmt(scope.body);
+                    try self.expr(scope.parent);
+                },
                 .block => |children| {
                     var i = children.len;
                     while (i != 0) {

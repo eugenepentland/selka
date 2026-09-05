@@ -454,7 +454,8 @@ fn callAllocationScenario(allocator: std.mem.Allocator) !void {
 }
 
 test "allocation failures in signature collection calls frame growth and trace rendering release storage" {
-    try testing.checkAllAllocationFailures(testing.allocator, callAllocationScenario, .{});
+    var no_resize = testing.FailingAllocator.init(testing.allocator, .{ .resize_fail_index = 0 });
+    try testing.checkAllAllocationFailures(no_resize.allocator(), callAllocationScenario, .{});
 }
 
 test "runtime storage remains bounded across many calls and loop declarations" {

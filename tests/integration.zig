@@ -566,6 +566,7 @@ test "CLI formatter preserves checking and is idempotent across the language fix
         @embedFile("fixtures/propagation.my"),
         @embedFile("fixtures/partial-fields.my"),
         @embedFile("fixtures/pools.my"),
+        @embedFile("fixtures/arenas.my"),
         @embedFile("fixtures/records.my"),
         @embedFile("fixtures/reference-parameters.my"),
         @embedFile("fixtures/references.my"),
@@ -634,4 +635,20 @@ test "CLI executes typed pool graphs and preserves diagnostics across analysis c
     try invoke("emit-c", source, 1, "", "error[E_NATIVE_FEATURE]");
     const invalid = "pool P(Id): i64; fn main() -> i64 { discard new Id {}; return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates", "report-quality", "emit-c" }) |command| try invoke(command, invalid, 1, "", "error[E_TYPE]");
+}
+
+test "CLI executes nested source arenas and rejects escapes across compiler commands" {
+    const source = @embedFile("fixtures/arenas.my");
+    try invoke("run", source, 0, "50\n", "");
+    try invokeOptions("run", source, &.{"--memory=arena"}, 0, "50\n", "");
+    try invoke("check", source, 0, "", "");
+    try invoke("emit-c", source, 1, "", "error[E_NATIVE_FEATURE]");
+    const invalid = "fn f(heap: allocator) -> allocator { arena heap as scratch { return scratch; } } fn main() -> i64 { return 0; }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates", "report-quality", "emit-c" }) |command| try invoke(command, invalid, 1, "", "error[E_ARENA_ESCAPE]");
+    const dumped = try runFixture("dump-bytecode", source, &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "BEGIN_REGION") != null);
+    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "END_REGION") != null);
 }

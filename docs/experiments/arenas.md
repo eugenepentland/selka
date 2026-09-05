@@ -1,7 +1,7 @@
 # C: arena backing and checked region reset
 
 Status: backend implemented in `src/arena.zig` and `src/memory.zig`. [Execution-lifetime VM/CLI integration](arena-execution.md) is also implemented.
-Guest arena syntax, scoped allocator grants, and source escape checks remain pending. This experiment does not complete the arena language feature or track C.
+[Source arena syntax, scoped allocator grants, and conservative escape checks](source-arenas.md) now integrate this backend. This backend record alone does not establish the source lifetime rules.
 
 ## Region lifetime
 

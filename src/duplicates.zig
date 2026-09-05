@@ -4,7 +4,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 
-pub const version = "exact-v26";
+pub const version = "exact-v27";
 pub const Population = enum { production, tests, generated, reference, intentional };
 pub const near = @import("near_duplicates.zig");
 pub const Options = struct { min_nodes: usize = 8, population: Population = .production, approximate: bool = false, near_options: near.Options = .{} };
@@ -173,6 +173,11 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                 const statement = program.statements[@backingInt(id)];
                 writer.print("stmt {s}\n", .{@tagName(statement.data)}) catch return error.OutOfMemory;
                 switch (statement.data) {
+                    .arena_scope => |scope| {
+                        writer.print("arena allocator={d}\n", .{@backingInt(scope.slot)}) catch return error.OutOfMemory;
+                        try work.append(allocator, .{ .statement = scope.body });
+                        try work.append(allocator, .{ .expression = scope.parent });
+                    },
                     .block => |children| {
                         writer.print("children {d}\n", .{children.len}) catch return error.OutOfMemory;
                         var i = children.len;

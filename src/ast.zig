@@ -50,6 +50,7 @@ pub const Node = struct {
 pub const Statement = struct {
     span: Span,
     data: union(enum) {
+        arena_scope: struct { parent: NodeId, name: Span, body: StatementId },
         block: []const StatementId,
         ret: NodeId,
         borrow_call: struct { call: NodeId, name: Span, mutable: bool, body: StatementId },

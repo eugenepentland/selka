@@ -1,0 +1,31 @@
+pool Nodes(NodeId): Node;
+struct Node { value: i64 }
+result OpenPool { ok: Nodes, err: i64 }
+result Insert { ok: NodeId, err: i64 }
+result Read { ok: Node, err: i64 }
+buffer B: i64;
+result OpenBuffer { ok: B, err: i64 }
+result Change { ok: bool, err: i64 }
+result Work { ok: i64, err: i64 }
+fn snapshot(heap: allocator) -> Read {
+    let mut nodes = try acquire_pool<OpenPool>(heap, 1);
+    let id = try insert_pool<Insert>(nodes, new Node { value: 42 });
+    return read_pool<Read>(nodes, id);
+}
+fn work(heap: allocator) -> Work {
+    let mut value = 0;
+    arena heap as outer {
+        arena outer as inner {
+            let retained = try snapshot(inner);
+            let mut buffer = try acquire_buffer<OpenBuffer>(inner, 2);
+            discard try append_buffer<Change>(buffer, 8);
+            borrow buffer[0..1] as view {
+                value = retained.value + read_slice(view, 0);
+            }
+        }
+    }
+    return new Work.ok(value);
+}
+fn main(heap: allocator) -> i64 {
+    match work(heap) { Work.ok(value) => { return value; }, Work.err(code) => { return code; } }
+}

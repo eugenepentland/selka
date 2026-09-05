@@ -10,7 +10,7 @@ not a claim that the full future language has been delivered.
 | A1, aggregates and complete conversions | Implemented: records, construction, fields, preserving updates, complete conversions, integer widths/casts, fixed arrays, checked indexing | A1 acceptance passes; carry the immutable value semantics into A2. |
 | A2, nominal domains and exhaustive mappings | Implemented: domains/private construction, closed enums/tagged unions, exhaustive matching, and complete enum-indexed tables | A2 unit, privacy, added-variant match/table, and explicit unknown-code handling experiments pass. |
 | B, borrowing | Implemented: memory/lease registry, scoped references, reference/slice parameters, bounded views, and explicit returned-reference provenance | B acceptance passes; carry borrowing and snapshot rules into resource ownership. |
-| C, ownership/capabilities/effects | Owned buffers, queries/mutations, checked views, moves/wrappers, and partial-construction cleanup, and transitive allocation bounds, and explicit allocator capabilities implemented; clock/random capabilities and effects implemented; source filesystem/network resource acquisition/completion, owned error returns, and cleanup effects implemented; bounded environment lookup implemented; fixed-byte-array resource reads/writes implemented; resource permission attenuation implemented; borrowed slice I/O implemented; typed-handle pool and arena-reset backends plus execution-lifetime VM/CLI arena selection implemented; partial field moves implemented; source pools/handles and checked shared region backing implemented; source arena scopes pending | Allocator and clock/random authority/effects pass acceptance; source resource lifecycle and cleanup effects pass; bounded environment lookup passes; resource reads/writes pass; permission attenuation passes; borrowed slice I/O passes; continue source arena integration. |
+| C, ownership/capabilities/effects | Owned buffers, queries/mutations, checked views, moves/wrappers, and partial-construction cleanup, and transitive allocation bounds, and explicit allocator capabilities implemented; clock/random capabilities and effects implemented; source filesystem/network resource acquisition/completion, owned error returns, and cleanup effects implemented; bounded environment lookup implemented; fixed-byte-array resource reads/writes implemented; resource permission attenuation implemented; borrowed slice I/O implemented; typed-handle pool and arena-reset backends plus execution-lifetime VM/CLI arena selection implemented; partial field moves implemented; source pools/handles, checked shared region backing, lexical source arenas, and conservative escape checking implemented; explicit source reset results pending | Allocator and clock/random authority/effects pass acceptance; source resource lifecycle and cleanup effects pass; bounded environment lookup passes; resource reads/writes pass; permission attenuation passes; borrowed slice I/O passes; lexical arena acceptance passes under the documented conservative lifetime rules; explicit reset results remain next. |
 | D, errors and abstraction | In progress: typed results, checked handling/transfer, acknowledgement, and propagation implemented; typed-handle pool backend implemented; source handles implemented; generics pending | Require handling/propagation/explicit acknowledgement without erasing evaluation or ownership obligations. |
 | M, modules/interfaces | Pending a multi-file domain program | Resolve imports/exports and private boundaries; distinguish optional direction policy from type validity. |
 | E, native execution | Scalar C emission and pinned-Zig native builder implemented; scalar semantic/trap parity passes | Scalar acceptance complete; broader native support requires explicit operations and corresponding executable parity fixtures. |
@@ -39,7 +39,7 @@ transformed, or discarded by name. The check establishes accounting, not the
 correctness of the conversion's arithmetic.
 
 Record construction, update, declarative conversions, and fixed arrays are
-implemented. Scoped borrowing, reference parameters, and bounded slices are implemented; transitive allocation bounds now pass, while allocator and clock/random capabilities now pass; further external operations remain pending.
+implemented. Scoped borrowing, reference parameters, and bounded slices are implemented; transitive allocation bounds now pass, while allocator, external capabilities, and the resource operations described below now pass.
 
 The [A1 experiment record](aggregates.md) describes the implemented storage
 foundation, record frontend, integer widths, and completed array work.
@@ -65,7 +65,7 @@ lifetime contracts are implemented; [the B audit](b-audit.md) records acceptance
 minimal error-value foundation for C/D. They preserve obligations through binding,
 wrapping, and helper calls, with exhaustive handling or explicit acknowledgement.
 [Propagation](propagation.md) now checks early-return obligations and borrow
-cleanup. [Owned-buffer transfers and partial-acquisition cleanup](ownership.md) now have backend acceptance evidence. [Source ownership and recoverable acquisition](owned-buffers.md) now integrate that cleanup into the VM; [buffer operations/views](buffer-operations.md) now pass acceptance. [Transitive allocation bounds](effects.md) now pass acceptance. [Explicit allocator capabilities](allocator-capabilities.md) now pass acceptance. [Clock/random capability operations](external-capabilities.md) now pass acceptance. [Source filesystem/network resource lifecycle and cleanup effects](source-resources.md) now pass; [bounded environment lookup](environment.md) now passes; [resource reads/writes](resource-io.md) now pass; [permission attenuation](attenuation.md) now passes; [borrowed slice I/O](resource-slices.md) now passes; [partial field moves](partial-fields.md) and [source pools/handles](source-pools.md) now pass; nested arena scopes remain next.
+cleanup. [Owned-buffer transfers and partial-acquisition cleanup](ownership.md) now have backend acceptance evidence. [Source ownership and recoverable acquisition](owned-buffers.md) now integrate that cleanup into the VM; [buffer operations/views](buffer-operations.md) now pass acceptance. [Transitive allocation bounds](effects.md) now pass acceptance. [Explicit allocator capabilities](allocator-capabilities.md) now pass acceptance. [Clock/random capability operations](external-capabilities.md) now pass acceptance. [Source filesystem/network resource lifecycle and cleanup effects](source-resources.md) now pass; [bounded environment lookup](environment.md) now passes; [resource reads/writes](resource-io.md) now pass; [permission attenuation](attenuation.md) now passes; [borrowed slice I/O](resource-slices.md) now passes; [partial field moves](partial-fields.md) and [source pools/handles](source-pools.md) now pass; [source arena scopes](source-arenas.md) now pass.
 
 [External resource backend acceptance](external-resources.md) now covers explicit
 fallible completion, fallback release, scoped transfers, and reverse cleanup.
@@ -77,14 +77,13 @@ code-dependent retry; [partial field moves](partial-fields.md) now pass.
 lookup, provider identity, missing/empty distinctions, and transitive effects.
 
 [Typed-handle pools](typed-pools.md) now provide backend graph, stale-ID, snapshot,
-slot-reuse, and bulk-clear acceptance. [Source pool/handle integration](source-pools.md) now passes; nested arena scopes remain pending.
+slot-reuse, and bulk-clear acceptance. [Source pool/handle integration](source-pools.md) now passes; [source arena scopes](source-arenas.md) now pass.
 
 [Arena backing and region reset](arenas.md) now have backend borrow, lifetime,
-snapshot, and storage-reuse acceptance. Source arena scopes and escape checks
-remain pending.
+snapshot, and storage-reuse acceptance. [Source arena scopes and escape checks](source-arenas.md) now pass.
 
 [Execution-lifetime arenas](arena-execution.md) now run source programs through
-the VM and CLI; nested source arena scopes and escape checking remain pending.
+the VM and CLI; [nested source arena scopes and escape checking](source-arenas.md) now pass.
 
 [Approximate discovery](approximate-discovery.md) now reports bounded near matches
 separately from exact groups, with changed facts and explicit incomplete-search status.
@@ -112,4 +111,4 @@ allocator authority, execution quotas, snapshots, and ownership cleanup.
 
 [Checked region backing](region-backing.md) now shares allocator authority and
 lifetime guards between buffers and pools, with independent retained snapshots.
-Lexical source arena scopes and static escape checking remain pending.
+[Lexical source arena scopes and conservative escape checking](source-arenas.md) now pass.

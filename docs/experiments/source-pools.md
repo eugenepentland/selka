@@ -4,7 +4,7 @@ Source pool declarations, allocator-authorized acquisition, owned transfers,
 queries, insertion, snapshot reads, replacement, removal, clear, and handle equality
 are implemented. This integrates the [typed-pool backend](typed-pools.md).
 [Checked region backing](region-backing.md) now supports arena-backed pools.
-Nested source arena scopes and generics remain pending.
+[Nested source arena scopes](source-arenas.md) are implemented; generics remain pending.
 
 ## Types and operations
 
@@ -79,7 +79,7 @@ live owners/reserved slots, including after runtime traps.
 Pool registries now follow `--memory=general` or `--memory=arena` alongside buffers.
 Owner wrappers and retained node snapshots continue using the VM parent allocator.
 [Checked region backing](region-backing.md) specifies separate allocator lifetimes
-and reset guards. Source arena scopes remain pending.
+and reset guards. [Source arena scopes](source-arenas.md) are implemented.
 
 Owner transfers, records, partial field moves, lexical cleanup, early propagation,
 and VM unwinding use the existing ownership machinery. Final owner release clears

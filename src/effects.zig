@@ -67,7 +67,10 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
         seedOwnership(&graph, index, function.return_type, function.locals, function.declaration, cleanup_masks) catch unreachable;
         var walker = try @import("typed_walk.zig").Walker.init(allocator, program, function.body);
         defer walker.deinit();
-        while (try walker.next()) |item| if (item == .expression) {
+        while (try walker.next()) |item| if (item == .statement) {
+            const statement = program.statements[@backingInt(item.statement)];
+            if (statement.data == .arena_scope) graph.direct(index, .allocation, statement.span);
+        } else if (item == .expression) {
             const node = program.nodes[@backingInt(item.expression)];
             switch (node.data) {
                 .acquire_resource => graph.direct(index, typed.resourceKind(typed.resultShape(node.ty, program.records).?.ok_type, program.records).?.effect(), node.span),
@@ -139,14 +142,14 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode.zig").P
             },
             .environment_get => graph.direct(index, .environment, instruction.span),
             .external_read => |read| graph.direct(index, read.kind.effect(), instruction.span),
-            .acquire_buffer, .acquire_pool => graph.direct(index, .allocation, instruction.span),
+            .begin_region, .acquire_buffer, .acquire_pool => graph.direct(index, .allocation, instruction.span),
             .buffer_operation => |op| if (bufferAllocates(op.kind)) {
                 graph.direct(index, .allocation, instruction.span);
             },
             .call => |callee| try graph.call(index, @backingInt(callee), instruction.span),
             .call_refs => |call| try graph.call(index, @backingInt(call.function), instruction.span),
             .call_borrow => |call| try graph.call(index, @backingInt(call.function), instruction.span),
-            .pool_operation, .restrict_resource, .push_i64, .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .neg_i64_checked, .cmp_i64, .try_result, .push_bool, .push_integer, .cast_integer, .wrap_domain, .make_variant, .switch_variant, .cmp_enum, .cmp_handle, .unwrap_domain, .neg_integer, .binary_integer, .make_record, .update_record, .get_field, .get_index, .replace_index, .array_length, .begin_borrow, .begin_slice, .read_slice, .write_slice, .len_slice, .end_borrow, .read_ref, .read_field, .take_field, .write_ref, .move_local, .drop_local, .load_local, .store_local, .cmp_bool, .not_bool, .pop, .acknowledge, .jump, .jump_if_false, .ret, .ret_ref, .capture_ref => {},
+            .end_region, .pool_operation, .restrict_resource, .push_i64, .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .neg_i64_checked, .cmp_i64, .try_result, .push_bool, .push_integer, .cast_integer, .wrap_domain, .make_variant, .switch_variant, .cmp_enum, .cmp_handle, .unwrap_domain, .neg_integer, .binary_integer, .make_record, .update_record, .get_field, .get_index, .replace_index, .array_length, .begin_borrow, .begin_slice, .read_slice, .write_slice, .len_slice, .end_borrow, .read_ref, .read_field, .take_field, .write_ref, .move_local, .drop_local, .load_local, .store_local, .cmp_bool, .not_bool, .pop, .acknowledge, .jump, .jump_if_false, .ret, .ret_ref, .capture_ref => {},
         };
     }
     try graph.infer();

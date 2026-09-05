@@ -28,6 +28,8 @@ pub const Instruction = struct {
         get_index: typed.Type,
         replace_index: typed.Type,
         array_length: typed.Type,
+        begin_region: typed.LocalId,
+        end_region: typed.LocalId,
         begin_borrow: typed.ReferenceId,
         begin_slice: typed.ReferenceId,
         read_slice: typed.ReferenceId,
@@ -218,6 +220,11 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             .make_variant => |variant| {
                 const schema = try variantSchema(variant.ty, program);
                 if (variant.tag >= schema.cases.len) return error.InternalError;
+            },
+            .begin_region, .end_region => |slot| {
+                if (@backingInt(slot) >= function.locals.len) return error.InternalError;
+                const local = function.locals[@backingInt(slot)];
+                if (local.ty != .allocator or local.mutable or local.reference_parameter != null or local.arena_depth == 0) return error.InternalError;
             },
             .cmp_handle => |comparison| {
                 if (!validType(comparison.ty, program) or !comparison.ty.isAggregate() or program.records[comparison.ty.recordIndex()].handle_pool == null) return error.InternalError;
@@ -432,7 +439,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             var height = heights[pc].?;
             switch (instruction.op) {
                 .push_i64, .push_bool, .push_integer, .load_local, .move_local, .read_ref, .read_field, .take_field, .len_slice => height += 1,
-                .drop_local => {},
+                .drop_local, .end_region => {},
                 .resource_io => |io| {
                     if (io.kind == .write and io.reference == null) {
                         if (height == 0) return error.InternalError;
@@ -471,7 +478,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (height <= update.indices.len) return error.InternalError;
                     height -= update.indices.len;
                 },
-                .store_local, .pop, .acknowledge, .jump_if_false, .write_ref => {
+                .begin_region, .store_local, .pop, .acknowledge, .jump_if_false, .write_ref => {
                     if (height == 0) return error.InternalError;
                     height -= 1;
                 },

@@ -193,7 +193,7 @@ explicit handling obligations. See [source ownership semantics and current limit
 [Buffer operations and views](experiments/buffer-operations.md) now provide length/capacity
 queries, retained reads, typed mutation statuses, and borrowed slices that work with
 existing slice helpers and returned-view contracts. Allocator/external capabilities,
-resource I/O, and source pools are described below; nested arena scopes remain pending.
+resource I/O, and source pools are described below; [nested arena scopes](experiments/source-arenas.md) are implemented.
 
 
 Function annotations `noalloc`, `noio`, and `effects(...)` bound inferred effects.
@@ -267,8 +267,8 @@ Read results report length/EOF and update only the successful prefix, retaining
 array snapshots and untouched bytes. Writes send exactly the chosen range. Lease
 checks apply to fixed arrays, initialized buffers, parameters, and returned views.
 See [resource slice I/O](experiments/resource-slices.md) for staging costs and failure
-semantics. Source pools are described below. Nested source arena scopes remain
-pending; execution-lifetime arenas are tracked in the experiment roadmap.
+semantics. Source pools are described below. [Nested source arena scopes](experiments/source-arenas.md) are implemented;
+execution-lifetime arenas are tracked in the experiment roadmap.
 
 
 `take_field(owner, field)` transfers a field from an owned/result-bearing record
@@ -289,4 +289,13 @@ capacity. IDs compare by pool/slot/generation; stale and foreign access returns
 typed errors. [Source-pool semantics](experiments/source-pools.md) specifies quotas,
 effects, cleanup, and errors. [Checked region backing](experiments/region-backing.md)
 now allocates pool registries in execution arenas while preserving parent-owned
-snapshots; nested source scopes and static escape checking remain pending.
+snapshots. [Lexical source scopes and conservative escape checking](experiments/source-arenas.md)
+now enforce lifetime boundaries through calls, wrappers, and mutation.
+
+
+`arena heap as scratch { ... }` introduces a lexical allocator lifetime. Regional
+capabilities and owners cannot escape to outer bindings or return values; plain
+snapshots and inert IDs may escape. Scope entry contributes allocation effects.
+Normal exits, returns, propagation, and traps clean up owners before backing.
+[Source arena semantics](experiments/source-arenas.md) records the conservative
+field/call/assignment rules, diagnostics, and runtime guards.

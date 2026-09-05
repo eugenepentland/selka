@@ -47,7 +47,8 @@ const Slice = struct { start: usize, length: usize };
 const Reference = struct { direct: bool = false, lease: memory.Borrow, slice: ?Slice = null };
 const ReturnTarget = struct { destination: usize, parent: memory.Borrow, allocation: memory.Allocation, mutable: bool };
 const CapturedReference = struct { direct: bool = false, slice: ?Slice };
-const Frame = struct { return_target: ?ReturnTarget = null, captured: ?CapturedReference = null, reference_base: usize = 0, function: typed.FunctionId, pc: usize = 0, local_base: usize, operand_base: usize, call_span: Span };
+const ActiveRegion = struct { capability: memory.AllocatorCapability, slot: typed.LocalId };
+const Frame = struct { region_base: usize = 0, return_target: ?ReturnTarget = null, captured: ?CapturedReference = null, reference_base: usize = 0, function: typed.FunctionId, pc: usize = 0, local_base: usize, operand_base: usize, call_span: Span };
 fn reborrowFull(store: *memory.Store, parent: memory.Borrow, kind: memory.Kind) memory.Error!memory.Borrow {
     const view = try store.describe(parent);
     return store.reborrow(parent, 0, view.length, kind);
@@ -116,6 +117,8 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
         releaseValues(stack.items, allocator);
         stack.deinit(allocator);
     }
+    var active_regions: std.ArrayList(ActiveRegion) = .empty;
+    defer active_regions.deinit(allocator);
     var frames: std.ArrayList(Frame) = .empty;
     defer frames.deinit(allocator);
     try locals.resize(allocator, program.functions[@backingInt(program.main)].locals.len);
@@ -280,6 +283,30 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                     }
                 }
                 frames.items[frame_index].pc = arm.target;
+            },
+            .begin_region => |slot| {
+                const parent = try pop(&stack, frame.operand_base);
+                defer parent.release(allocator);
+                if (parent != .allocator) return error.InternalError;
+                const capability = storage.beginRegion(parent.allocator) catch |err| switch (err) {
+                    error.CapacityLimit => return trap("R_REGION_LIMIT", "execution region limit exceeded", instruction.span, frames.items, program),
+                    else => return memoryFailure(err, instruction, frames.items, program),
+                };
+                active_regions.append(allocator, .{ .capability = capability, .slot = slot }) catch |err| {
+                    try storage.endRegion(capability);
+                    return err;
+                };
+                const index = frame.local_base + @backingInt(slot);
+                if (locals.items[index]) |old| old.release(allocator);
+                locals.items[index] = .{ .allocator = capability };
+            },
+            .end_region => |slot| {
+                if (active_regions.items.len <= frame.region_base) return error.InternalError;
+                const active_region = active_regions.items[active_regions.items.len - 1];
+                if (active_region.slot != slot) return error.InternalError;
+                storage.endRegion(active_region.capability) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                _ = active_regions.pop();
+                locals.items[frame.local_base + @backingInt(slot)] = null;
             },
             .cmp_handle => |comparison| {
                 const right = try pop(&stack, frame.operand_base);
@@ -776,7 +803,7 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                     argument_index += 1;
                 }
                 stack.shrinkRetainingCapacity(argument_base);
-                try frames.append(allocator, .{ .return_target = return_target, .reference_base = reference_base, .function = id, .local_base = local_base, .operand_base = argument_base, .call_span = instruction.span });
+                try frames.append(allocator, .{ .region_base = active_regions.items.len, .return_target = return_target, .reference_base = reference_base, .function = id, .local_base = local_base, .operand_base = argument_base, .call_span = instruction.span });
             },
             .ret, .ret_ref => {
                 const value: ?typed.Value = if (instruction.op == .ret) try pop(&stack, frame.operand_base) else null;
@@ -803,6 +830,11 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                     local.* = null;
                 }
                 locals.shrinkRetainingCapacity(frame.local_base);
+                while (active_regions.items.len > frame.region_base) {
+                    const active_region = active_regions.items[active_regions.items.len - 1];
+                    storage.endRegion(active_region.capability) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                    _ = active_regions.pop();
+                }
                 _ = frames.pop();
                 if (value) |owned| {
                     transferred = true;

@@ -1,7 +1,8 @@
 # C: checked region backing for buffers and pools
 
 Implemented the runtime storage and lifetime foundation for nested source arena
-scopes. Source `arena` syntax and static escape checking are **not implemented yet**.
+scopes. [Source `arena` syntax and conservative escape checking](source-arenas.md)
+now integrate this backend.
 This milestone also makes existing source pools use arena backing when executed
 with `run --memory=arena`, alongside buffers.
 
@@ -64,8 +65,7 @@ reset rejection, parent-only value release during clear, zero-capacity owners, a
 10,000 mixed buffer/pool region cycles under 16 KiB live runtime allocation. The
 existing actual CLI pool fixture runs in both general and arena modes.
 
-The next source step must express lexical arena boundaries, track allocator/owner
-provenance through wrappers and helpers, reject outward assignment/return/borrow
-escapes, and close regions after ownership cleanup on normal exit, propagation,
-return, and traps. Dynamic lifetime checks remain necessary alongside those static
-rules. No source-level arena acceptance or completion of track C is claimed here.
+[Source arena acceptance](source-arenas.md) now covers lexical boundaries,
+conservative allocator/owner dependencies through wrappers/helpers, outward escape
+rejection, and cleanup on normal exit, propagation, return, and traps. Dynamic
+lifetime checks remain necessary alongside those static rules.

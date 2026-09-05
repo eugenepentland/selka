@@ -22,6 +22,7 @@ const Checker = struct {
     resolved: []?typed.NodeId,
     functions: std.StringHashMapUnmanaged(typed.FunctionId) = .empty,
     return_type: typed.Type = .i64,
+    arena_depth: usize = 0,
     catalog: records.Catalog,
     conversion_fields: ?[]bool = null,
     owner: ?typed.Type = null,
@@ -769,6 +770,21 @@ const Checker = struct {
         var cleanup: []const typed.ReferenceId = &.{};
         var owned_cleanup: []const typed.LocalId = &.{};
         const data: @FieldType(typed.Statement, "data") = switch (stmt.data) {
+            .arena_scope => |scope| region: {
+                const parent = try self.expression(scope.parent);
+                try self.require(self.nodes.items[@backingInt(parent)].ty, .allocator, stmt.span);
+                const name = self.src.text(scope.name);
+                if (self.functions.contains(name) or self.catalog.names.contains(name) or self.active.contains(name) or self.active_refs.contains(name)) return self.sink.fail("E_SHADOWING", scope.name, "arena allocator shadows an active name");
+                self.arena_depth += 1;
+                defer self.arena_depth -= 1;
+                const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
+                try self.locals.append(self.allocator, .{ .arena_depth = self.arena_depth, .name = name, .declaration = scope.name, .ty = .allocator, .mutable = false });
+                try self.active.put(self.allocator, name, slot);
+                defer _ = self.active.remove(name);
+                const body = try self.statement(scope.body);
+                terminates = body.terminates;
+                break :region .{ .arena_scope = .{ .parent = parent, .slot = slot, .body = body.id } };
+            },
             .block => |children| block: {
                 const first_local = self.locals.items.len;
                 defer for (self.locals.items[first_local..]) |local| {
@@ -819,7 +835,7 @@ const Checker = struct {
                         const name = self.src.text(binding);
                         if (self.functions.contains(name) or self.catalog.names.contains(name) or self.active.contains(name) or self.active_refs.contains(name)) return self.sink.fail("E_SHADOWING", binding, "payload binding shadows an active binding or top-level name");
                         slot = @fromBackingInt(self.locals.items.len);
-                        try self.locals.append(self.allocator, .{ .name = name, .declaration = binding, .ty = payload.?, .mutable = false, .transfer_available = self.transfers(payload.?) });
+                        try self.locals.append(self.allocator, .{ .arena_depth = self.arena_depth, .name = name, .declaration = binding, .ty = payload.?, .mutable = false, .transfer_available = self.transfers(payload.?) });
                         try self.active.put(self.allocator, name, slot.?);
                     }
                     var body = try self.statement(arm.body);
@@ -991,7 +1007,7 @@ const Checker = struct {
                 const value_type = self.nodes.items[@backingInt(value)].ty;
                 if (b.annotation) |annotation| try self.require(value_type, try self.ty(annotation), annotation);
                 const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
-                try self.locals.append(self.allocator, .{ .name = name, .declaration = b.name, .ty = value_type, .mutable = b.mutable, .transfer_available = self.transfers(value_type) });
+                try self.locals.append(self.allocator, .{ .arena_depth = self.arena_depth, .name = name, .declaration = b.name, .ty = value_type, .mutable = b.mutable, .transfer_available = self.transfers(value_type) });
                 try self.active.put(self.allocator, name, slot);
                 break :binding .{ .initialize = .{ .slot = slot, .value = value } };
             },
@@ -1104,6 +1120,7 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
         out.* = .{ .effect_bound = function.effect_bound, .return_reference = checker.return_reference, .references = try checker.references.toOwnedSlice(allocator), .owner = checker.owner, .restricted = function.restricted, .conversion = function.conversion, .id = @fromBackingInt(i), .name = try functionName(allocator, src, function.owner, function.name), .declaration = function.name, .return_type = checker.return_type, .parameter_count = function.parameters.len, .body = body.id, .locals = try checker.locals.toOwnedSlice(allocator) };
     }
     const checked: typed.Program = .{ .nodes = try checker.nodes.toOwnedSlice(allocator), .statements = try checker.statements.toOwnedSlice(allocator), .functions = functions, .main = main, .records = catalog.records };
+    try @import("region_check.zig").check(allocator, checked, sink);
     try @import("effects.zig").check(allocator, checked, sink);
     for (functions) |function| {
         for (function.locals) |local| {

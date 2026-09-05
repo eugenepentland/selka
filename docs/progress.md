@@ -1144,3 +1144,44 @@ syntax, allocator/owner provenance, and static escape checking remain pending. G
 modules, compile-time/schema/incremental work, broader native support, and all other
 unfinished roadmap requirements remain in scope. Guardian was not exercised; hosted
 CI has not run. The full roadmap goal remains active.
+
+
+## 2026-09-05: C lexical arena scopes and conservative escape checking
+
+Implemented `arena heap as scratch { ... }` through parsing, checking, lowering, VM,
+and tooling. Scoped allocator bindings create checked regions. A separate monotone
+lifetime analysis propagates regional dependencies through assignments, wrappers,
+fields, calls, references, container mutation, and recoverable-error payloads. Outward
+regional escapes reject with E_ARENA_ESCAPE, while explicit heap owners, plain retained
+snapshots, and inert IDs can leave scopes. Calls respect the callee's reference
+mutability. Scope entry contributes allocation effects; exhausted region slots trap
+with R_REGION_LIMIT. Normal exits release body ownership before region closure;
+returns/propagation release frame ownership before closing that frame's regions.
+
+448 Zig/core-and-CLI tests pass in Debug and ReleaseFast (403 core, 45 CLI), plus
+eight verification-driver tests and the unchanged 23-fixture/182-comparison native
+suite per host mode. Acceptance covers nested pool/buffer/helper/view execution,
+every host allocation failure, every instruction budget to completion on both
+execution backends, return/propagation quota reuse, escaped snapshots/IDs, authority
+and effect checks, reference/helper/container escape rejection, legal arena-local
+capability containers, malformed bytecode defenses, and duplicate discovery.
+10,000 mixed source arena scopes fit within 16 KiB live runtime storage and leave
+zero bytes in both modes. Actual CLI execution returns 50; formatter coverage reaches
+31 valid fixtures. Formatting and whitespace checks pass. Exact discovery advances
+to exact-v27; near-v1 and quality-v1 remain unchanged.
+
+ReleaseFast exposed NondeterministicMemoryUsage in the existing call/frame/trace
+allocation-failure sweep, reproduced in an isolated test run. The sweep now disables
+in-place resize with the same failure-allocator pattern used by other exhaustive
+sweeps. The resulting complete Debug and ReleaseFast runs pass with all failure
+points exercised consistently.
+
+[Source arena semantics](experiments/source-arenas.md) documents field-insensitive,
+flow-insensitive, conservative call dependencies and their possible safe-program
+rejections. It also records runtime closure guards, snapshots, diagnostics, and
+teardown order. Functions without local arenas need no new relative-lifetime analysis.
+Explicit source arena reset operations/results remain pending, alongside generics,
+modules, compile-time/schema/incremental work, broader native support, and every other
+unfinished roadmap requirement. No general borrow-checker soundness or full-language
+native support is claimed. Guardian was not exercised; hosted CI has not run. The
+full roadmap goal remains active.

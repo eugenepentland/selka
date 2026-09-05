@@ -36,6 +36,12 @@ const Emitter = struct {
     fn emitStatement(self: *Emitter, id: typed.StatementId) !void {
         const stmt = self.program.statements[@backingInt(id)];
         switch (stmt.data) {
+            .arena_scope => |scope| {
+                if (!self.program.statements[@backingInt(scope.body)].terminates) try self.instruction(stmt.span, .{ .end_region = scope.slot });
+                try self.push(.{ .statement = scope.body });
+                try self.instruction(stmt.span, .{ .begin_region = scope.slot });
+                try self.push(.{ .expression = scope.parent });
+            },
             .block => |children| {
                 for (stmt.owned_cleanup) |slot| try self.instruction(stmt.span, .{ .drop_local = slot });
                 var i = children.len;

@@ -119,6 +119,7 @@ pub const Statement = struct {
     owned_cleanup: []const LocalId = &.{},
     cleanup: []const ReferenceId = &.{},
     data: union(enum) {
+        arena_scope: struct { parent: NodeId, slot: LocalId, body: StatementId },
         block: []const StatementId,
         ret: NodeId,
         ret_ref: ReferenceId,
@@ -137,7 +138,7 @@ pub const Statement = struct {
 };
 pub const MatchArm = struct { tag: usize, slot: ?LocalId, body: StatementId };
 pub const Range = struct { start: NodeId, end: NodeId };
-pub const Local = struct { partial_fields: []const bool = &.{}, transfer_available: bool = false, slice_parameter: bool = false, reference_parameter: ?bool = null, name: []const u8, declaration: Span, ty: Type, mutable: bool, mutable_borrow: bool = false, reads: usize = 0, writes: usize = 0 };
+pub const Local = struct { arena_depth: usize = 0, partial_fields: []const bool = &.{}, transfer_available: bool = false, slice_parameter: bool = false, reference_parameter: ?bool = null, name: []const u8, declaration: Span, ty: Type, mutable: bool, mutable_borrow: bool = false, reads: usize = 0, writes: usize = 0 };
 pub const ReturnReference = struct { parameter: LocalId, mutable: bool, slice: bool };
 pub const Function = struct {
     effect_bound: ?@import("effect_set.zig").Bound = null,

@@ -212,6 +212,13 @@ pub const Parser = struct {
         defer self.depth -= 1;
         const first = self.current();
         if (first.tag == .lbrace) return self.block();
+        if (self.take(.kw_arena)) {
+            const parent = try self.expression(0);
+            _ = try self.expect(.kw_as);
+            const name = try self.expect(.ident);
+            const body = try self.block();
+            return self.addStatement(.{ .span = .join(first.span, self.statements.items[@backingInt(body)].span), .data = .{ .arena_scope = .{ .parent = parent, .name = name.span, .body = body } } });
+        }
         if (self.take(.kw_borrow)) {
             const mutable = self.take(.kw_mut);
             const owner_position = self.pos;

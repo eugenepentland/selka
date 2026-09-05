@@ -2,7 +2,7 @@
 
 Status: backend implemented in `src/typed_pool.zig`; [source declarations and
 operations](source-pools.md) now integrate it with the compiler and VM. [Checked arena backing](region-backing.md) also integrates with the runtime.
-Source arena scopes remain pending. This experiment does not complete C or D.
+[Source arena scopes](source-arenas.md) are implemented. This experiment does not complete C or D.
 
 ## Identity and storage
 
@@ -60,8 +60,8 @@ Cumulative insertion/removal counters saturate.
 
 [Source acceptance](source-pools.md) now covers nominal guest handle diagnostics,
 recoverable pool errors, source ownership/effects, and graph programs through the CLI.
-Nested source arena experiments must still establish escape rules and backing
-allocation behavior. Host generic pool tests alone do not establish those language guarantees.
+[Source arena experiments](source-arenas.md) now establish conservative escape
+rules and backing allocation behavior. Host generic pool tests alone do not establish those language guarantees.
 
 `value_allocator` optionally selects the allocator passed to release hooks, separate
 from registry storage. Set it before insertion; release returned snapshots with that
