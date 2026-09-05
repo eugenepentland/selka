@@ -1,0 +1,168 @@
+{
+  "experiment": "duplicate-discovery-exact-v1",
+  "machine": "Linux-7.0.0-30-generic-x86_64-with-glibc2.43",
+  "processor": "12th Gen Intel(R) Core(TM) i7-12700H",
+  "captured_utc": "2026-09-05T04:28:24.405872+00:00",
+  "compiler_sha256": "8096f3350828b7397d8529caf8e240774f831a4734327ad20405ea898234ebc1",
+  "zig": "0.17.0-dev.1683+5ceec001b",
+  "host_mode_declared": "ReleaseFast",
+  "scope": "frontend=lex/parse/check; discovery=canonicalization/index; excludes host build, input I/O, source copying, rendering, lowering, VM execution",
+  "rows": [
+    {
+      "helpers": 100,
+      "samples": [
+        {
+          "frontend_ns": 321673,
+          "discovery_ns": 89929,
+          "source_bytes": 5588,
+          "ast_nodes": 904,
+          "typed_nodes": 904,
+          "canonical_bytes": 21966,
+          "functions": 101
+        },
+        {
+          "frontend_ns": 280892,
+          "discovery_ns": 94348,
+          "source_bytes": 5588,
+          "ast_nodes": 904,
+          "typed_nodes": 904,
+          "canonical_bytes": 21966,
+          "functions": 101
+        },
+        {
+          "frontend_ns": 335120,
+          "discovery_ns": 88968,
+          "source_bytes": 5588,
+          "ast_nodes": 904,
+          "typed_nodes": 904,
+          "canonical_bytes": 21966,
+          "functions": 101
+        },
+        {
+          "frontend_ns": 318410,
+          "discovery_ns": 93816,
+          "source_bytes": 5588,
+          "ast_nodes": 904,
+          "typed_nodes": 904,
+          "canonical_bytes": 21966,
+          "functions": 101
+        },
+        {
+          "frontend_ns": 287391,
+          "discovery_ns": 108928,
+          "source_bytes": 5588,
+          "ast_nodes": 904,
+          "typed_nodes": 904,
+          "canonical_bytes": 21966,
+          "functions": 101
+        }
+      ],
+      "median_frontend_ns": 318410,
+      "median_discovery_ns": 93816
+    },
+    {
+      "helpers": 1000,
+      "samples": [
+        {
+          "frontend_ns": 3197377,
+          "discovery_ns": 485252,
+          "source_bytes": 56597,
+          "ast_nodes": 9004,
+          "typed_nodes": 9004,
+          "canonical_bytes": 218775,
+          "functions": 1001
+        },
+        {
+          "frontend_ns": 2537411,
+          "discovery_ns": 505615,
+          "source_bytes": 56597,
+          "ast_nodes": 9004,
+          "typed_nodes": 9004,
+          "canonical_bytes": 218775,
+          "functions": 1001
+        },
+        {
+          "frontend_ns": 3391657,
+          "discovery_ns": 746203,
+          "source_bytes": 56597,
+          "ast_nodes": 9004,
+          "typed_nodes": 9004,
+          "canonical_bytes": 218775,
+          "functions": 1001
+        },
+        {
+          "frontend_ns": 3794234,
+          "discovery_ns": 634506,
+          "source_bytes": 56597,
+          "ast_nodes": 9004,
+          "typed_nodes": 9004,
+          "canonical_bytes": 218775,
+          "functions": 1001
+        },
+        {
+          "frontend_ns": 3278697,
+          "discovery_ns": 693851,
+          "source_bytes": 56597,
+          "ast_nodes": 9004,
+          "typed_nodes": 9004,
+          "canonical_bytes": 218775,
+          "functions": 1001
+        }
+      ],
+      "median_frontend_ns": 3278697,
+      "median_discovery_ns": 634506
+    },
+    {
+      "helpers": 10000,
+      "samples": [
+        {
+          "frontend_ns": 27365419,
+          "discovery_ns": 4239617,
+          "source_bytes": 575695,
+          "ast_nodes": 90004,
+          "typed_nodes": 90004,
+          "canonical_bytes": 2186873,
+          "functions": 10001
+        },
+        {
+          "frontend_ns": 24735201,
+          "discovery_ns": 4392635,
+          "source_bytes": 575695,
+          "ast_nodes": 90004,
+          "typed_nodes": 90004,
+          "canonical_bytes": 2186873,
+          "functions": 10001
+        },
+        {
+          "frontend_ns": 21920155,
+          "discovery_ns": 4329643,
+          "source_bytes": 575695,
+          "ast_nodes": 90004,
+          "typed_nodes": 90004,
+          "canonical_bytes": 2186873,
+          "functions": 10001
+        },
+        {
+          "frontend_ns": 22370722,
+          "discovery_ns": 4184383,
+          "source_bytes": 575695,
+          "ast_nodes": 90004,
+          "typed_nodes": 90004,
+          "canonical_bytes": 2186873,
+          "functions": 10001
+        },
+        {
+          "frontend_ns": 29536634,
+          "discovery_ns": 5001574,
+          "source_bytes": 575695,
+          "ast_nodes": 90004,
+          "typed_nodes": 90004,
+          "canonical_bytes": 2186873,
+          "functions": 10001
+        }
+      ],
+      "median_frontend_ns": 24735201,
+      "median_discovery_ns": 4329643
+    }
+  ]
+}

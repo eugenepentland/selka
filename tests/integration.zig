@@ -150,3 +150,22 @@ test "oversized source is a host resource failure with no result output" {
     @memset(text, ' ');
     try invoke("run", text, 2, "", "host failure:");
 }
+
+test "duplicate discovery is separate advisory analysis with explicit options" {
+    const source = "fn a(n: i64) -> i64 { return n * 2 + 1; } fn b(x: i64) -> i64 { return x * 2 + 1; } fn main() -> i64 { return 7; }";
+    const outcome = try runFixture("discover-duplicates", source, &.{ "--min-nodes=1", "--population=reference", "--timings" });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    try testing.expect(std.mem.indexOf(u8, outcome.stdout, "1 candidate groups") != null);
+    try testing.expect(std.mem.indexOf(u8, outcome.stdout, "population=reference") != null);
+    try testing.expect(std.mem.indexOf(u8, outcome.stderr, "discovery_ns=") != null);
+    try invoke("check", source, 0, "", "");
+    try invoke("run", source, 0, "7\n", "");
+    try invoke("discover-duplicates", "fn main() -> i64 { return unknown; }", 1, "", "error[E_UNKNOWN_NAME]");
+    for ([_][]const u8{ "--min-nodes=0", "--min-nodes=", "--min-nodes=-1", "--population=unknown", "--max-steps=10" }) |option| {
+        try invokeOptions("discover-duplicates", source, &.{option}, 2, "", "usage:");
+    }
+    try invokeOptions("discover-duplicates", source, &.{ "--min-nodes=1", "--min-nodes=2" }, 2, "", "usage:");
+    try invokeOptions("check", source, &.{"--min-nodes=1"}, 2, "", "usage:");
+}

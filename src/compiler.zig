@@ -9,6 +9,7 @@ const typed = @import("typed.zig");
 const sema = @import("sema.zig");
 const lower = @import("lower.zig");
 pub const bytecode = @import("bytecode.zig");
+pub const duplicates = @import("duplicates.zig");
 pub const vm = @import("vm.zig");
 const disassemble = @import("disassemble.zig");
 
@@ -63,4 +64,5 @@ pub const Compilation = struct {
 
 test {
     _ = @import("compiler_test.zig");
+    _ = @import("duplicates_test.zig");
 }

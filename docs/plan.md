@@ -614,6 +614,12 @@ When advisory analysis is introduced, measure its incremental time separately fr
 
 ## 15. Next experiments after the MVP
 
+Implementation update (2026-09-05): exact scalar duplicate discovery in track T
+is now implemented as a separate advisory command. See
+[the experiment record](experiments/duplicate-discovery.md) and
+[post-MVP tracking](experiments/roadmap.md). Other tracks below remain pending;
+aggregate values and complete conversions are next.
+
 | Stage | Scope | Question to answer before proceeding |
 | --- | --- | --- |
 | A1: aggregate values and complete conversions | Structs, fixed arrays, checked indexing, additional integer widths, complete construction, preserving updates, and declared complete conversions | Does adding a field identify incomplete constructions and conversions, including a newly ignored source field? |

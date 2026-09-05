@@ -123,3 +123,24 @@ Evidence:
 
 No MVP work remains. Hosted CI has not run and no remote was created. Guardian
 was not exercised. Later experiments remain deferred as the plan specifies.
+
+
+## 2026-09-05: first post-MVP experiment — exact duplicate discovery
+
+Added a separate advisory command over the checked function representation.
+It normalizes bound spelling and direct self-recursion, retains other resolved
+calls and scalar structure, and uses canonical-byte hash indexing with equality
+verification. Reports group members once, retain all source locations, and
+permit intentional independent implementations. No source code is merged.
+
+54 tests pass in Debug and ReleaseFast. New tests cover binding identity,
+changed constants/operators/types/callees, recursion, declaration reorder,
+thresholds, deterministic reports, CLI separation, and allocation-failure cleanup.
+The reviewed sum corpus finds the legacy copy and keeps the inclusive variant
+separate. A generated scaling benchmark records frontend and discovery time
+independently, with machine/toolchain/mode/input metadata.
+
+See [the experiment record](experiments/duplicate-discovery.md) and
+[the remaining post-MVP tracks](experiments/roadmap.md). This milestone does not
+claim that the aggregate, borrowing, ownership, effect, module, or native
+experiments are implemented. Guardian gates were not exercised.

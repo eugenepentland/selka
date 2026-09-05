@@ -94,3 +94,10 @@ optimizer, native backend, or self-hosting. The host compiler and VM allocate.
 There is no REPL, guest printing, warning suppression, warning-as-error mode,
 or project policy file. The CLI prints only main's integer result. The full
 accepted grammar is in plan section 6; later experiments do not extend it.
+
+
+`discover-duplicates` is an optional post-MVP analysis command, not part of
+language validity. It fully checks the input first, then reports exact candidates
+on stdout, and never lowers or executes the input. Its contract, thresholds,
+population labels, recursion normalization, and limits are specified in
+[the experiment record](experiments/duplicate-discovery.md).
