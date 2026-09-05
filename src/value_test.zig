@@ -101,32 +101,7 @@ test "repeated record allocation retains bounded live storage" {
     try testing.expectEqual(@as(i64, 9999), (try live.getField(0)).i64);
 }
 
-const LimitedLiveAllocator = struct {
-    parent: std.mem.Allocator,
-    limit: usize,
-    live: usize = 0,
-    fn allocator(self: *LimitedLiveAllocator) std.mem.Allocator {
-        return .{ .ptr = self, .vtable = &.{ .alloc = alloc, .resize = resize, .remap = remap, .free = free } };
-    }
-    fn alloc(context: *anyopaque, len: usize, alignment: std.mem.Alignment, ret_addr: usize) ?[*]u8 {
-        const self: *LimitedLiveAllocator = @ptrCast(@alignCast(context));
-        if (len > self.limit - self.live) return null;
-        const result = self.parent.rawAlloc(len, alignment, ret_addr) orelse return null;
-        self.live += len;
-        return result;
-    }
-    fn resize(_: *anyopaque, _: []u8, _: std.mem.Alignment, _: usize, _: usize) bool {
-        return false;
-    }
-    fn remap(_: *anyopaque, _: []u8, _: std.mem.Alignment, _: usize, _: usize) ?[*]u8 {
-        return null;
-    }
-    fn free(context: *anyopaque, memory: []u8, alignment: std.mem.Alignment, ret_addr: usize) void {
-        const self: *LimitedLiveAllocator = @ptrCast(@alignCast(context));
-        self.live -= memory.len;
-        self.parent.rawFree(memory, alignment, ret_addr);
-    }
-};
+const LimitedLiveAllocator = @import("test_support.zig").LimitedLiveAllocator;
 
 test "VM loop construction and overwrite fit a fixed live byte budget" {
     const loop: language.bytecode.Program = .{ .records = &.{schema}, .functions = &.{.{

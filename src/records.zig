@@ -10,16 +10,24 @@ const Error = diagnostic.Error;
 pub const Catalog = struct {
     records: []typed.Record,
     names: std.StringHashMapUnmanaged(typed.Type),
+    array_types: std.AutoHashMapUnmanaged(usize, typed.Type) = .empty,
     field_names: []std.StringHashMapUnmanaged(usize),
 
     pub fn resolve(self: Catalog, src: Source, span: Span, sink: *diagnostic.Sink) Error!typed.Type {
+        if (self.array_types.get(span.start)) |ty| return ty;
         const name = src.text(span);
         if (typed.Type.fromName(name)) |builtin| return builtin;
         return self.names.get(name) orelse sink.fail("E_UNKNOWN_TYPE", span, "type is not declared");
     }
     pub fn record(self: Catalog, ty: typed.Type, span: Span, sink: *diagnostic.Sink) Error!typed.Record {
-        if (!ty.isRecord()) return sink.fail("E_TYPE", span, "operation requires a record value");
-        return self.records[ty.recordIndex()];
+        if (!ty.isAggregate()) return sink.fail("E_TYPE", span, "operation requires a record value");
+        const schema = self.records[ty.recordIndex()];
+        if (schema.array != null) return sink.fail("E_TYPE", span, "operation requires a record value");
+        return schema;
+    }
+    pub fn array(self: Catalog, ty: typed.Type, span: Span, sink: *diagnostic.Sink) Error!typed.Array {
+        if (!ty.isAggregate()) return sink.fail("E_TYPE", span, "operation requires a fixed array value");
+        return self.records[ty.recordIndex()].array orelse sink.fail("E_TYPE", span, "operation requires a fixed array value");
     }
     pub fn field(self: Catalog, ty: typed.Type, src: Source, name: Span, sink: *diagnostic.Sink) Error!usize {
         _ = try self.record(ty, name, sink);
@@ -28,15 +36,38 @@ pub const Catalog = struct {
 };
 
 /// All storage is owned by the compilation arena.
-pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const ast.Record, sink: *diagnostic.Sink) Error!Catalog {
-    var catalog: Catalog = .{ .records = try allocator.alloc(typed.Record, declarations.len), .names = .empty, .field_names = try allocator.alloc(std.StringHashMapUnmanaged(usize), declarations.len) };
+pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const ast.Record, arrays: []const ast.ArrayType, sink: *diagnostic.Sink) Error!Catalog {
+    const storage = try allocator.alloc(typed.Record, declarations.len + arrays.len);
+    var catalog: Catalog = .{ .records = storage[0..declarations.len], .names = .empty, .field_names = try allocator.alloc(std.StringHashMapUnmanaged(usize), declarations.len) };
     @memset(catalog.field_names, .empty);
     for (declarations, 0..) |declaration, i| {
         const name = src.text(declaration.name);
         if (catalog.names.get(name)) |previous| return sink.failRelated("E_DUPLICATE_TYPE", declaration.name, "record type is already declared", .{ .span = declarations[previous.recordIndex()].name, .message = "previous record declaration" });
-        try catalog.names.put(allocator, name, @fromBackingInt(i + typed.Type.record_base));
+        const id: typed.Type = @fromBackingInt(i + typed.Type.record_base);
+        try catalog.names.put(allocator, name, id);
+        storage[i] = .{ .id = id, .name = name, .declaration = declaration.name, .fields = &.{} };
     }
-    for (declarations, catalog.records, 0..) |declaration, *out, i| {
+    var interned: std.AutoHashMapUnmanaged(typed.Array, typed.Type) = .empty;
+    for (arrays) |syntax| {
+        const digits = src.text(syntax.length);
+        for (digits) |c| if (!std.ascii.isDigit(c)) return sink.fail("E_ARRAY_LENGTH", syntax.length, "array length must be an unsuffixed decimal integer");
+        const length = std.fmt.parseInt(usize, digits, 10) catch return sink.fail("E_ARRAY_LENGTH", syntax.length, "array length exceeds the host index range");
+        // A value buffer must fit addressable storage; no element metadata is expanded here.
+        if (length > std.math.maxInt(usize) / @sizeOf(typed.Value)) return sink.fail("E_ARRAY_LENGTH", syntax.length, "array value storage exceeds the host address range");
+        const element = try catalog.resolve(src, syntax.element, sink);
+        const key: typed.Array = .{ .element = element, .length = length };
+        const entry = try interned.getOrPut(allocator, key);
+        if (!entry.found_existing) {
+            const index = catalog.records.len;
+            const id: typed.Type = @fromBackingInt(index + typed.Type.record_base);
+            const name = try std.fmt.allocPrint(allocator, "[{d}]{s}", .{ length, typed.typeName(element, catalog.records) });
+            storage[index] = .{ .id = id, .name = name, .declaration = syntax.span, .fields = &.{}, .array = key };
+            catalog.records = storage[0 .. index + 1];
+            entry.value_ptr.* = id;
+        }
+        try catalog.array_types.put(allocator, syntax.span.start, entry.value_ptr.*);
+    }
+    for (declarations, catalog.records[0..declarations.len], 0..) |declaration, *out, i| {
         const fields = try allocator.alloc(typed.Field, declaration.fields.len);
         for (declaration.fields, fields, 0..) |field, *resolved, j| {
             const name = src.text(field.name);
@@ -48,7 +79,7 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
     }
     // Iterative DFS rejects cycles without expanding records or recursing on the host.
     const State = enum { unseen, visiting, complete };
-    const states = try allocator.alloc(State, declarations.len);
+    const states = try allocator.alloc(State, catalog.records.len);
     defer allocator.free(states);
     @memset(states, .unseen);
     const Visit = struct { record: usize, next_field: usize = 0 };
@@ -61,15 +92,16 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
         while (work.items.len != 0) {
             const last = work.items.len - 1;
             const visit = work.items[last];
-            const fields = catalog.records[visit.record].fields;
-            if (visit.next_field == fields.len) {
+            const schema = catalog.records[visit.record];
+            const edge_count = if (schema.array != null) @as(usize, 1) else schema.fields.len;
+            if (visit.next_field == edge_count) {
                 states[visit.record] = .complete;
                 _ = work.pop();
                 continue;
             }
             work.items[last].next_field += 1;
-            const field = fields[visit.next_field];
-            if (!field.ty.isRecord()) continue;
+            const field: typed.Field = if (schema.array) |a| .{ .name = "element", .ty = a.element, .declaration = schema.declaration } else schema.fields[visit.next_field];
+            if (!field.ty.isAggregate()) continue;
             const child = field.ty.recordIndex();
             if (states[child] == .visiting) return sink.fail("E_RECURSIVE_RECORD", field.declaration, "record fields must form a finite by-value layout; this field closes a cycle");
             if (states[child] == .unseen) {

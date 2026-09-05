@@ -14,7 +14,7 @@ pub fn dump(allocator: std.mem.Allocator, program: bc.Program, src: Source) ![]u
 
 fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer.Error!void {
     for (program.records) |record| {
-        try writer.print("record {s} type#{d}\n", .{ record.name, @backingInt(record.id) });
+        try writer.print("{s} {s} type#{d}\n", .{ if (record.array != null) "array" else "record", record.name, @backingInt(record.id) });
         for (record.fields, 0..) |field, i| try writer.print("  field {d}: {s}: {s}\n", .{ i, field.name, typed.typeName(field.ty, program.records) });
     }
     for (program.functions) |function| {
@@ -31,6 +31,9 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
                 .push_i64 => |value| try writer.print("PUSH_I64 {d}", .{value}),
                 .make_record => |record| try writer.print("MAKE_RECORD type#{d} fields={d} order={any}", .{ @backingInt(record.ty), record.fields, record.order }),
                 .update_record => |update| try writer.print("UPDATE_RECORD type#{d} fields={any}", .{ @backingInt(update.ty), update.indices }),
+                .get_index => |ty| try writer.print("GET_INDEX {s}", .{typed.typeName(ty, program.records)}),
+                .replace_index => |ty| try writer.print("REPLACE_INDEX {s}", .{typed.typeName(ty, program.records)}),
+                .array_length => |ty| try writer.print("ARRAY_LENGTH {s}", .{typed.typeName(ty, program.records)}),
                 .get_field => |index| try writer.print("GET_FIELD {d}", .{index}),
                 .push_integer => |number| try writer.print("PUSH_INT {f} {d}", .{ number.ty, number.value }),
                 .cast_integer => |ty| try writer.print("CAST_INT {f}", .{ty}),

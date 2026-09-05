@@ -77,6 +77,29 @@ const Emitter = struct {
     fn emitExpression(self: *Emitter, id: typed.NodeId) !void {
         const node = self.program.nodes[@backingInt(id)];
         switch (node.data) {
+            .array => |values| {
+                try self.instruction(node.span, .{ .make_record = .{ .ty = node.ty, .fields = values.len } });
+                var i = values.len;
+                while (i > 0) {
+                    i -= 1;
+                    try self.push(.{ .expression = values[i] });
+                }
+            },
+            .index => |access| {
+                try self.instruction(node.span, .{ .get_index = self.program.nodes[@backingInt(access.base)].ty });
+                try self.push(.{ .expression = access.index });
+                try self.push(.{ .expression = access.base });
+            },
+            .replace => |replace| {
+                try self.instruction(node.span, .{ .replace_index = node.ty });
+                try self.push(.{ .expression = replace.value });
+                try self.push(.{ .expression = replace.index });
+                try self.push(.{ .expression = replace.base });
+            },
+            .length => |base| {
+                try self.instruction(node.span, .{ .array_length = self.program.nodes[@backingInt(base)].ty });
+                try self.push(.{ .expression = base });
+            },
             .record => |fields| {
                 const order = try self.allocator.alloc(usize, fields.len);
                 for (fields, order) |field, *index| index.* = field.index;

@@ -7,8 +7,8 @@ not a claim that the full future language has been delivered.
 | Track | Current state | Next concrete acceptance experiment |
 | --- | --- | --- |
 | T, exact duplicate discovery | Implemented as separate `discover-duplicates` command; review and scaling corpus added | Collect ordinary-program findings before adding approximate matching; never merge automatically. |
-| A1, aggregates and complete conversions | In progress: records, complete construction, field access, preserving updates, and declarative conversions implemented; integer widths/casts implemented; arrays pending | Record field-change experiments pass; implement fixed arrays and checked indexing. |
-| A2, nominal domains and exhaustive mappings | Pending A1 type-model decisions | Reject seconds passed as millimeters; expose a newly added variant in exhaustive mappings. |
+| A1, aggregates and complete conversions | Implemented: records, construction, fields, preserving updates, complete conversions, integer widths/casts, fixed arrays, checked indexing | A1 acceptance passes; carry the immutable value semantics into A2. |
+| A2, nominal domains and exhaustive mappings | Next: A1 type model established | Reject seconds passed as millimeters; expose a newly added variant in exhaustive mappings. |
 | B, borrowing | Pending guest memory representation | Reject shared/exclusive conflicts and expired references with allocation/bounds/lifetime identity. |
 | C, ownership/capabilities/effects | Pending B and minimal recoverable errors | Acquire A, fail acquiring B, release A once; reject transitive forbidden effects including cleanup. |
 | D, errors and abstraction | Minimal recoverable errors needed with C; broader work pending | Require handling/propagation/explicit acknowledgement without erasing evaluation or ownership obligations. |
@@ -17,15 +17,15 @@ not a claim that the full future language has been delivered.
 | F, compile-time/schema/incremental work | Pending aggregates/variants/modules | Reject duplicate schema keys and undeclared inputs; explain invalidation and evaluation budgets. |
 | T, formatter/reference reports/verification | Exact discovery establishes the first command only | Preserve semantics/comments with one formatter; report resolved references separately from runtime test coverage. |
 
-## A1 design decisions and remaining work
+## A1 completed decisions
 
 Records now have nominal type identities, explicit field lists, field access,
 and complete literals. The VM uses immutable aggregate storage. The first restriction is immutable record values
-containing only scalar or other finite record values; exclude recursive by-value
+containing scalars or finite record/array values; exclude recursive by-value
 types and resources. Updating creates a value of the same nominal type. This
 must not imply any policy for later owned records or references.
 
-Choose a VM representation whose lifetimes follow operand/local/frame ownership.
+The VM representation follows operand/local/frame ownership.
 A request-wide allocation arena for every runtime record expression could grow
 without bound inside loops; acceptance must include repeated construction and
 update under bounded live storage. Host pointers alone are insufficient for the
@@ -38,10 +38,14 @@ handled. Added fields must break old conversions until explicitly preserved,
 transformed, or discarded by name. The check establishes accounting, not the
 correctness of the conversion's arithmetic.
 
-Record construction, update, and declarative conversion syntax is implemented.
-Array, borrowing, and effect syntax is not accepted as an empty placeholder.
+Record construction, update, declarative conversions, and fixed arrays are
+implemented. Borrowing and effect syntax remain pending.
 
 The [A1 experiment record](aggregates.md) describes the implemented storage
-foundation, record frontend, integer widths, and remaining array work.
+foundation, record frontend, integer widths, and completed array work.
 
 [Integer widths and checked casts](integers.md) complete the width portion of A1.
+
+[Fixed arrays and checked indexing](arrays.md) complete A1. The next experiment
+is A2: nominal scalar domains, private constructors, closed variants, exhaustive
+matching, and complete enum-indexed tables.

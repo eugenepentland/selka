@@ -68,4 +68,5 @@ test {
     _ = @import("value_test.zig");
     _ = @import("records_test.zig");
     _ = @import("integers_test.zig");
+    _ = @import("arrays_test.zig");
 }

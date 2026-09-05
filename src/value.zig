@@ -29,7 +29,7 @@ pub const Type = enum(usize) {
     pub fn isInteger(self: Type) bool {
         return self.integer() != null;
     }
-    pub fn isRecord(self: Type) bool {
+    pub fn isAggregate(self: Type) bool {
         return @backingInt(self) >= record_base;
     }
     pub fn recordIndex(self: Type) usize {
@@ -50,7 +50,7 @@ pub const Type = enum(usize) {
         return std.meta.stringToEnum(Type, name);
     }
     pub fn format(self: Type, writer: *std.Io.Writer) std.Io.Writer.Error!void {
-        if (self.isRecord()) try writer.print("type#{d}", .{@backingInt(self)}) else try writer.writeAll(@tagName(self));
+        if (self.isAggregate()) try writer.print("type#{d}", .{@backingInt(self)}) else try writer.writeAll(@tagName(self));
     }
 };
 
@@ -82,7 +82,7 @@ pub const Value = union(enum) {
     }
     /// Borrow input fields; the returned value owns independent references.
     pub fn create(allocator: std.mem.Allocator, ty: Type, fields: []const Value) !Value {
-        if (!ty.isRecord()) return error.InvalidAggregateType;
+        if (!ty.isAggregate()) return error.InvalidAggregateType;
         const record = try allocator.create(Aggregate);
         errdefer allocator.destroy(record);
         const owned = try allocator.alloc(Value, fields.len);
@@ -95,7 +95,7 @@ pub const Value = union(enum) {
     /// The emitter validates that order is a permutation before dispatch.
     pub fn createOrdered(allocator: std.mem.Allocator, ty: Type, fields: []const Value, order: []const usize) !Value {
         if (order.len == 0) return create(allocator, ty, fields);
-        if (!ty.isRecord() or order.len != fields.len) return error.InternalError;
+        if (!ty.isAggregate() or order.len != fields.len) return error.InternalError;
         const record = try allocator.create(Aggregate);
         errdefer allocator.destroy(record);
         const owned = try allocator.alloc(Value, fields.len);

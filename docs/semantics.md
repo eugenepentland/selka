@@ -87,13 +87,14 @@ The [MVP acceptance audit](mvp-audit.md) records the verification evidence.
 Post-MVP feature syntax is not accepted as a placeholder with invented semantics.
 
 
-The guest has no strings, floats, arrays, pointers, heap allocation, borrowing,
+The guest has no strings, floats, pointers, explicit heap allocation, borrowing,
 ownership transfer, generics, compile-time execution, modules, globals, closures,
 function values, standard library, FFI, exceptions, typed errors, concurrency,
 optimizer, native backend, or self-hosting. The host compiler and VM allocate.
 There is no REPL, guest printing, warning suppression, warning-as-error mode,
-or project policy file. The CLI prints only main's integer result. The full
-accepted grammar is in plan section 6; later experiments do not extend it.
+or project policy file. The CLI prints only main's integer result. The scalar
+baseline grammar is in plan section 6; implemented extensions are specified in
+the experiment records linked below.
 
 
 `discover-duplicates` is an optional post-MVP analysis command, not part of
@@ -109,7 +110,8 @@ complete `new Type { ... }` construction, `.field` access, preserving
 may refer forward but cannot form recursive by-value layouts. See
 [the A1 semantics and restrictions](experiments/aggregates.md) for the grammar,
 copy/storage behavior, conversion body restriction, and added-field guarantees.
-Fixed arrays and indexing remain pending. Additional integer widths and
+Fixed arrays, checked indexing, `replace`, and `len` are implemented; see
+[array semantics](experiments/arrays.md). Additional integer widths and
 checked casts are implemented; see [integer semantics](experiments/integers.md).
 
 

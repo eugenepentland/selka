@@ -109,3 +109,11 @@ normalization and recursion policy are unchanged.
 `exact-v3` adds explicit integer casts and preserves signedness/width identities.
 Record IDs remain internal compilation identities; comparison uses resolved
 names, so inserting built-in types does not conflate unrelated records.
+
+
+The array extension advances the comparison version to `exact-v4`. Structural
+array type names encode length and resolved element identity. Canonical nodes
+retain ordered array construction, indexed reads, replacement arguments, and
+length operand evaluation. Array type whitespace/leading zeroes and bound names
+remain normalized. `src/arrays_test.zig` verifies these distinctions; historical
+benchmark files retain the version actually measured.

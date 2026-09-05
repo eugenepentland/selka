@@ -1,0 +1,17 @@
+struct Samples { values: [3]i64 }
+
+fn sum(values: [3]i64) -> i64 {
+    let mut index = 0u64;
+    let mut total = 0;
+    while index < len(values) {
+        total += values[index];
+        index += 1u64;
+    }
+    return total;
+}
+
+fn main() -> i64 {
+    let original = new Samples { values: new [3]i64 [4, 7, 9] };
+    let changed = update(original) { values: replace(original.values, 1, 11) };
+    return sum(original.values) + sum(changed.values);
+}

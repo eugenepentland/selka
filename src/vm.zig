@@ -107,7 +107,7 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 const schema = program.records[record.ty.recordIndex()];
                 for (stack.items[start..], 0..) |field, i| {
                     const field_index = if (record.order.len == 0) i else record.order[i];
-                    if (field.typeOf() != schema.fields[field_index].ty) return error.InternalError;
+                    if (field.typeOf() != schema.elementType(field_index)) return error.InternalError;
                 }
                 const value = try typed.Value.createOrdered(allocator, record.ty, stack.items[start..], record.order);
                 for (stack.items[start..]) |field| field.release(allocator);
@@ -127,6 +127,37 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 for (stack.items[start..]) |old| old.release(allocator);
                 stack.shrinkRetainingCapacity(start);
                 try pushOwned(&stack, allocator, value);
+            },
+            .get_index => |ty| {
+                const index = try numeric(&stack, frame.operand_base, null, allocator);
+                const base = try pop(&stack, frame.operand_base);
+                defer base.release(allocator);
+                if (base.typeOf() != ty) return error.InternalError;
+                const schema = program.records[ty.recordIndex()].array orelse return error.InternalError;
+                if (index < 0 or index >= schema.length) return trap("R_INDEX_BOUNDS", "array index is outside its declared bounds", instruction.span, frames.items, program);
+                try pushOwned(&stack, allocator, try base.getField(@intCast(index)));
+            },
+            .replace_index => |ty| {
+                if (stack.items.len - frame.operand_base < 3) return error.InternalError;
+                const start = stack.items.len - 3;
+                const base = stack.items[start];
+                const index = try stack.items[start + 1].asInteger();
+                const replacement = stack.items[start + 2];
+                if (base.typeOf() != ty) return error.InternalError;
+                const schema = program.records[ty.recordIndex()].array orelse return error.InternalError;
+                if (replacement.typeOf() != schema.element) return error.InternalError;
+                if (index < 0 or index >= schema.length) return trap("R_INDEX_BOUNDS", "array replacement index is outside its declared bounds", instruction.span, frames.items, program);
+                const result = try base.updated(allocator, &.{@intCast(index)}, &.{replacement});
+                for (stack.items[start..]) |old| old.release(allocator);
+                stack.shrinkRetainingCapacity(start);
+                try pushOwned(&stack, allocator, result);
+            },
+            .array_length => |ty| {
+                const base = try pop(&stack, frame.operand_base);
+                defer base.release(allocator);
+                if (base.typeOf() != ty) return error.InternalError;
+                const schema = program.records[ty.recordIndex()].array orelse return error.InternalError;
+                try stack.append(allocator, typed.Value.number(.u64, schema.length));
             },
             .get_field => |index| {
                 const record = try pop(&stack, frame.operand_base);

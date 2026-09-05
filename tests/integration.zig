@@ -195,3 +195,24 @@ test "CLI preserves integer width bounds and explicit casts" {
     try invoke("check", "fn main() -> i64 { discard 256u8; return 0; }", 1, "", "error[E_INTEGER_RANGE]");
     try invoke("check", "fn main() -> u8 { return 0u8; }", 1, "", "error[E_TYPE]");
 }
+
+test "CLI checks array schemas dumps indexing and reports bounds traps" {
+    try invoke("run", @embedFile("fixtures/arrays.my"), 0, "44\n", "");
+    try invoke("check", @embedFile("fixtures/arrays.my"), 0, "", "");
+    const dumped = try runFixture("dump-bytecode", @embedFile("fixtures/arrays.my"), &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    try testing.expectEqualStrings("", dumped.stderr);
+    for ([_][]const u8{ "array [3]i64", "GET_INDEX [3]i64", "REPLACE_INDEX [3]i64", "ARRAY_LENGTH [3]i64" }) |instruction| {
+        try testing.expect(std.mem.indexOf(u8, dumped.stdout, instruction) != null);
+    }
+    const invalid = "fn main() -> i64 { discard new [2]i64 [1]; return 0; }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| {
+        try invoke(command, invalid, 1, "", "error[E_ARRAY_ARITY]");
+    }
+    const bounds = "fn main() -> i64 {\n    return new [1]i64 [7][-1];\n}";
+    try invoke("check", bounds, 0, "", "");
+    try invoke("run", bounds, 1, "", ":2:12: error[R_INDEX_BOUNDS]");
+    try invoke("run", "fn main() -> i64 { discard replace(new [1]u8 [7u8], 18446744073709551615u64, 8u8); return 0; }", 1, "", "error[R_INDEX_BOUNDS]");
+}

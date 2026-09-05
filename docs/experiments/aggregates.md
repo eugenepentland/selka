@@ -3,8 +3,8 @@
 Status: nominal record declarations, complete construction, field access,
 preserving updates, and declarative complete conversions are implemented.
 Integer widths and explicit checked casts are also implemented; see
-[integer semantics](integers.md). Fixed arrays and checked indexing remain
-pending A1 work. The later borrowing/resource/effect tracks remain pending.
+[integer semantics](integers.md). [Fixed arrays and checked indexing](arrays.md)
+are implemented, completing A1. The later borrowing/resource/effect tracks remain pending.
 
 ## Implemented syntax and checking
 
@@ -60,7 +60,7 @@ incomplete constructions. Missing-field diagnostics point to the declaration.
 
 ## Chosen storage semantics
 
-The first records will be immutable values containing scalars and finite record
+Records and arrays are immutable values containing scalars and finite aggregate
 values. Nominal type identities are separate from runtime value tags: primitive
 IDs are reserved, and aggregate values carry their declared type ID. Frontend schemas retain record and field names/spans. Dumps show schemas,
 source names in signatures, and numeric type/field identities in instructions.
@@ -106,9 +106,9 @@ order, added fields, conversion accounting, and allocation failures throughout
 the complete pipeline. Actual CLI fixtures exercise records/conversions and
 verify that every command rejects incomplete conversions before execution.
 
-## Remaining A1 acceptance
+## Completed A1 acceptance
 
-Fixed arrays and checked indexing from plan A1 are still pending. Additional
-integer widths and checked casts are implemented and tested.
-Record-specific acceptance is covered, but A1 as a whole is not complete.
+Fixed arrays and checked indexing from plan A1 are implemented and tested, as
+are additional integer widths and checked casts. Added-field construction and
+conversion experiments pass. A1 is complete; later roadmap tracks remain pending.
 Examples are in `examples/records.my` and `examples/conversions.my`.

@@ -13,6 +13,10 @@ pub const Node = struct {
         boolean: bool,
         name: Span,
         cast: struct { ty: Span, value: NodeId },
+        array: struct { ty: Span, values: []const NodeId },
+        index: struct { base: NodeId, index: NodeId },
+        replace: struct { base: NodeId, index: NodeId, value: NodeId },
+        length: NodeId,
         record: struct { name: Span, fields: []const FieldInit },
         update: struct { base: NodeId, fields: []const FieldInit },
         field: struct { base: NodeId, name: Span },
@@ -37,7 +41,9 @@ pub const FieldInit = struct { name: Span, value: NodeId };
 pub const Record = struct { name: Span, fields: []const Parameter };
 pub const Parameter = struct { name: Span, ty: Span };
 pub const Function = struct { conversion: bool = false, name: Span, parameters: []const Parameter, return_type: Span, body: StatementId };
+pub const ArrayType = struct { span: Span, length: Span, element: Span };
 pub const Program = struct {
+    array_types: []const ArrayType = &.{},
     nodes: std.ArrayList(Node),
     statements: std.ArrayList(Statement),
     functions: []const Function,

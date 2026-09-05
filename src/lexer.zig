@@ -11,6 +11,8 @@ pub const Tag = enum {
     kw_conversion,
     kw_new,
     kw_update,
+    kw_replace,
+    kw_len,
     kw_return,
     kw_let,
     kw_mut,
@@ -32,6 +34,8 @@ pub const Tag = enum {
     kw_discard,
     lparen,
     rparen,
+    lbracket,
+    rbracket,
     lbrace,
     rbrace,
     arrow,
@@ -59,7 +63,7 @@ pub const Tag = enum {
 };
 pub const Token = struct { tag: Tag, span: Span };
 fn keyword(word: []const u8) Tag {
-    const words = .{ "fn", "return", "let", "mut", "true", "false", "i64", "bool", "if", "else", "while", "discard", "struct", "new", "update", "conversion", "i8", "i16", "i32", "u8", "u16", "u32", "u64", "cast" };
+    const words = .{ "fn", "return", "let", "mut", "true", "false", "i64", "bool", "if", "else", "while", "discard", "struct", "new", "update", "conversion", "i8", "i16", "i32", "u8", "u16", "u32", "u64", "cast", "replace", "len" };
     inline for (words) |w| {
         if (std.mem.eql(u8, word, w)) return @field(Tag, "kw_" ++ w);
     }
@@ -110,6 +114,8 @@ pub fn lex(allocator: std.mem.Allocator, bytes: []const u8, sink: *diagnostic.Si
             break :blk switch (ch) {
                 '(' => .lparen,
                 ')' => .rparen,
+                '[' => .lbracket,
+                ']' => .rbracket,
                 '{' => .lbrace,
                 '}' => .rbrace,
                 ';' => .semicolon,

@@ -16,6 +16,9 @@ pub const Instruction = struct {
         make_record: struct { ty: typed.Type, fields: usize, order: []const usize = &.{} },
         update_record: struct { ty: typed.Type, indices: []const usize },
         get_field: usize,
+        get_index: typed.Type,
+        replace_index: typed.Type,
+        array_length: typed.Type,
         load_local: typed.LocalId,
         store_local: typed.LocalId,
         add_i64_checked,
@@ -54,6 +57,9 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
     if (@backingInt(program.main) >= program.functions.len) return error.InternalError;
     for (program.records, 0..) |record, i| {
         if (@backingInt(record.id) != i + typed.Type.record_base) return error.InternalError;
+        if (record.array) |array| {
+            if (!validType(array.element, program) or record.fields.len != 0 or array.length > std.math.maxInt(usize) / @sizeOf(typed.Value)) return error.InternalError;
+        }
         for (record.fields) |field| if (!validType(field.ty, program)) {
             return error.InternalError;
         };
@@ -80,15 +86,19 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                 return error.InternalError;
             },
             .make_record => |record| {
-                if (!record.ty.isRecord() or !validType(record.ty, program)) return error.InternalError;
-                if (record.fields != program.records[record.ty.recordIndex()].fields.len) return error.InternalError;
+                if (!record.ty.isAggregate() or !validType(record.ty, program)) return error.InternalError;
+                if (record.fields != program.records[record.ty.recordIndex()].count()) return error.InternalError;
                 if (record.order.len != 0) {
                     if (record.order.len != record.fields) return error.InternalError;
                     try validateIndices(allocator, record.order, record.fields);
                 }
             },
+            .get_index, .replace_index, .array_length => |ty| {
+                if (!ty.isAggregate() or !validType(ty, program) or program.records[ty.recordIndex()].array == null) return error.InternalError;
+            },
             .update_record => |update| {
-                if (!update.ty.isRecord() or update.ty.recordIndex() >= program.records.len) return error.InternalError;
+                if (!update.ty.isAggregate() or update.ty.recordIndex() >= program.records.len) return error.InternalError;
+                if (program.records[update.ty.recordIndex()].array != null) return error.InternalError;
                 try validateIndices(allocator, update.indices, program.records[update.ty.recordIndex()].fields.len);
             },
             .call => |id| if (@backingInt(id) >= program.functions.len) {
@@ -117,6 +127,10 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (height < record.fields) return error.InternalError;
                     height = height - record.fields + 1;
                 },
+                .replace_index => {
+                    if (height < 3) return error.InternalError;
+                    height -= 2;
+                },
                 .update_record => |update| {
                     if (height <= update.indices.len) return error.InternalError;
                     height -= update.indices.len;
@@ -125,11 +139,11 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (height == 0) return error.InternalError;
                     height -= 1;
                 },
-                .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .cmp_i64, .cmp_bool, .binary_integer => {
+                .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .cmp_i64, .cmp_bool, .binary_integer, .get_index => {
                     if (height < 2) return error.InternalError;
                     height -= 1;
                 },
-                .neg_i64_checked, .not_bool, .get_field, .cast_integer, .neg_integer => if (height == 0) {
+                .neg_i64_checked, .not_bool, .get_field, .cast_integer, .neg_integer, .array_length => if (height == 0) {
                     return error.InternalError;
                 },
                 .call => |id| {
@@ -164,5 +178,5 @@ fn validateIndices(allocator: std.mem.Allocator, indices: []const usize, count: 
 }
 
 fn validType(ty: typed.Type, program: Program) bool {
-    return ty.isInteger() or ty == .bool or (ty.isRecord() and ty.recordIndex() < program.records.len);
+    return ty.isInteger() or ty == .bool or (ty.isAggregate() and ty.recordIndex() < program.records.len);
 }

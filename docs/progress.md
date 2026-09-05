@@ -1,8 +1,8 @@
 # Implementation progress
 
-The complete scalar MVP in plan sections 4–13 is implemented and audited. The
-later features in sections 15 and 18 remain proposed experiments, as specified
-by the plan. Earlier entries below describe their milestone checkpoints.
+The complete scalar MVP in plan sections 4–13 is implemented and audited. Post-MVP A1 and exact duplicate discovery are also implemented; the remaining
+tracks in sections 15 and 18 are still pending. Earlier entries below describe
+their historical milestone checkpoints.
 
 ## 2026-09-05: M0 and M1
 
@@ -221,3 +221,25 @@ including all width limits, exhaustive byte addition/multiplication pairs,
 unsigned 64-bit arithmetic, casts, nominal records, complete conversions, and
 allocation-failure cleanup. Fixed arrays/indexing remain within A1. All other
 pending roadmap tracks remain in scope. Guardian gates were not exercised.
+
+
+## 2026-09-05: A1 complete — fixed arrays and checked indexing
+
+Implemented structural `[N]T` types, explicit complete array construction,
+checked indexing for all integer widths, immutable single-element replacement,
+and evaluated `len` returning u64. Arrays compose with records and complete
+record conversions. Type interning preserves nominal element identities without
+expanding array metadata. The acyclic schema check includes array edges.
+
+All 90 tests pass in Debug and ReleaseFast (74 core, 16 actual CLI). Tests cover
+empty/nested arrays, bounds and source spans, full-range unsigned indices,
+evaluation order, rejected schemas, parser limits, allocation failures, and
+invalid internal bytecode. A source loop performs 10,000 replacements within
+4 KiB live runtime storage and releases all allocations, including on traps.
+Formatting and whitespace checks pass. The arrays example prints 44.
+
+Exact duplicate discovery is now `exact-v4`, retaining array structure and
+operations. [Array semantics](experiments/arrays.md) documents syntax, copy
+costs, and acceptance evidence. A1 is complete; the full roadmap goal remains
+active. A2 domain identity and exhaustive mappings are next. Guardian gates
+were not exercised; hosted CI has not run.

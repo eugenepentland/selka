@@ -101,6 +101,33 @@ const Checker = struct {
             const minimum_literal = try self.minimum(node);
             if (!task.emit and minimum_literal == null) {
                 switch (node.data) {
+                    .array => |array| {
+                        try work.append(self.allocator, .{ .id = task.id, .emit = true });
+                        var i = array.values.len;
+                        while (i > 0) {
+                            i -= 1;
+                            try work.append(self.allocator, .{ .id = array.values[i] });
+                        }
+                        continue;
+                    },
+                    .index => |access| {
+                        try work.append(self.allocator, .{ .id = task.id, .emit = true });
+                        try work.append(self.allocator, .{ .id = access.index });
+                        try work.append(self.allocator, .{ .id = access.base });
+                        continue;
+                    },
+                    .replace => |replace| {
+                        try work.append(self.allocator, .{ .id = task.id, .emit = true });
+                        try work.append(self.allocator, .{ .id = replace.value });
+                        try work.append(self.allocator, .{ .id = replace.index });
+                        try work.append(self.allocator, .{ .id = replace.base });
+                        continue;
+                    },
+                    .length => |base| {
+                        try work.append(self.allocator, .{ .id = task.id, .emit = true });
+                        try work.append(self.allocator, .{ .id = base });
+                        continue;
+                    },
                     .cast => |cast| {
                         try work.append(self.allocator, .{ .id = task.id, .emit = true });
                         try work.append(self.allocator, .{ .id = cast.value });
@@ -150,6 +177,41 @@ const Checker = struct {
                 out.ty = parsed.ty;
                 out.data = .{ .integer = parsed.value };
             } else switch (node.data) {
+                .array => |array| {
+                    out.ty = try self.ty(array.ty);
+                    const schema = try self.catalog.array(out.ty, array.ty, self.sink);
+                    if (array.values.len != schema.length) return self.sink.fail("E_ARRAY_ARITY", node.span, "array construction must initialize exactly its declared number of elements");
+                    const values = try self.allocator.alloc(typed.NodeId, array.values.len);
+                    for (array.values, values) |input, *value| {
+                        value.* = self.resolved[@backingInt(input)].?;
+                        try self.require(self.nodes.items[@backingInt(value.*)].ty, schema.element, self.syntax.nodes.items[@backingInt(input)].span);
+                    }
+                    out.data = .{ .array = values };
+                },
+                .index => |access| {
+                    const base = self.resolved[@backingInt(access.base)].?;
+                    const index_value = self.resolved[@backingInt(access.index)].?;
+                    const schema = try self.catalog.array(self.nodes.items[@backingInt(base)].ty, node.span, self.sink);
+                    try self.requireInteger(self.nodes.items[@backingInt(index_value)].ty, self.syntax.nodes.items[@backingInt(access.index)].span);
+                    out.ty = schema.element;
+                    out.data = .{ .index = .{ .base = base, .index = index_value } };
+                },
+                .replace => |replace| {
+                    const base = self.resolved[@backingInt(replace.base)].?;
+                    const index_value = self.resolved[@backingInt(replace.index)].?;
+                    const value = self.resolved[@backingInt(replace.value)].?;
+                    out.ty = self.nodes.items[@backingInt(base)].ty;
+                    const schema = try self.catalog.array(out.ty, node.span, self.sink);
+                    try self.requireInteger(self.nodes.items[@backingInt(index_value)].ty, self.syntax.nodes.items[@backingInt(replace.index)].span);
+                    try self.require(self.nodes.items[@backingInt(value)].ty, schema.element, self.syntax.nodes.items[@backingInt(replace.value)].span);
+                    out.data = .{ .replace = .{ .base = base, .index = index_value, .value = value } };
+                },
+                .length => |input| {
+                    const base = self.resolved[@backingInt(input)].?;
+                    _ = try self.catalog.array(self.nodes.items[@backingInt(base)].ty, node.span, self.sink);
+                    out.ty = .u64;
+                    out.data = .{ .length = base };
+                },
                 .record => |record| {
                     out.ty = try self.ty(record.name);
                     out.data = .{ .record = try self.fields(out.ty, record.fields, true, node.span) };
@@ -224,7 +286,7 @@ const Checker = struct {
                             out.ty = .bool;
                         },
                         .eq, .ne => {
-                            if (!lt.isInteger() and lt != .bool) return self.sink.fail("E_TYPE", b.op_span, "record equality is not defined; compare the relevant fields explicitly");
+                            if (!lt.isInteger() and lt != .bool) return self.sink.fail("E_TYPE", b.op_span, "aggregate equality is not defined; compare the relevant elements explicitly");
                             out.ty = .bool;
                         },
                         .lt, .le, .gt, .ge => {
@@ -337,7 +399,7 @@ fn warningLess(_: void, a: diagnostic.Diagnostic, b: diagnostic.Diagnostic) bool
 pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!typed.Program {
     const resolved = try allocator.alloc(?typed.NodeId, program.nodes.items.len);
     @memset(resolved, null);
-    const catalog = try records.collect(allocator, src, program.records, sink);
+    const catalog = try records.collect(allocator, src, program.records, program.array_types, sink);
     var checker: Checker = .{ .allocator = allocator, .src = src, .syntax = program, .sink = sink, .resolved = resolved, .catalog = catalog };
     for (program.functions, 0..) |function, i| {
         const name = src.text(function.name);

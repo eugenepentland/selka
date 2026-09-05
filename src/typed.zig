@@ -16,6 +16,10 @@ pub const Node = struct {
         boolean: bool,
         local: LocalId,
         cast: NodeId,
+        array: []const NodeId,
+        index: struct { base: NodeId, index: NodeId },
+        replace: struct { base: NodeId, index: NodeId, value: NodeId },
+        length: NodeId,
         record: []const FieldInit,
         update: struct { base: NodeId, fields: []const FieldInit },
         field: struct { base: NodeId, index: usize },
@@ -26,9 +30,23 @@ pub const Node = struct {
 };
 pub const FieldInit = struct { index: usize, value: NodeId };
 pub const Field = struct { name: []const u8, declaration: Span, ty: Type };
-pub const Record = struct { id: Type, name: []const u8, declaration: Span, fields: []const Field };
+pub const Array = struct { element: Type, length: usize };
+// Aggregate schemas retain nominal record identities and intern structural arrays.
+pub const Record = struct {
+    id: Type,
+    name: []const u8,
+    declaration: Span,
+    fields: []const Field,
+    array: ?Array = null,
+    pub fn count(self: Record) usize {
+        return if (self.array) |a| a.length else self.fields.len;
+    }
+    pub fn elementType(self: Record, index: usize) Type {
+        return if (self.array) |a| a.element else self.fields[index].ty;
+    }
+};
 pub fn typeName(ty: Type, records: []const Record) []const u8 {
-    return if (ty.isRecord()) records[ty.recordIndex()].name else @tagName(ty);
+    return if (ty.isAggregate()) records[ty.recordIndex()].name else @tagName(ty);
 }
 pub const Store = struct { slot: LocalId, value: NodeId };
 pub const Statement = struct {

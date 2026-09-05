@@ -98,7 +98,7 @@ Distinguish language errors from advisory analysis and project verification. Pre
 | Explicit `discard expression;` for unused scalar results; no bare expression statements | MVP commitment |
 | Advisory unused-binding and unnecessary-`mut` diagnostics | MVP commitment; precise rules in section 7 |
 | Structured error/warning diagnostics and resolved reference identities | MVP commitment; compilation-local identities only |
-| Complete record construction and declared complete conversions | Post-MVP proposal; experiment A1 |
+| Complete record construction and declared complete conversions | Implemented in post-MVP experiment A1 |
 | Nominal domain types, exhaustive variants, and enum-indexed tables | Post-MVP proposal; experiment A2 |
 | External capabilities and transitive effect contracts | Post-MVP proposal; experiment C |
 | Resource cleanup on recoverable errors and explicit fallible completion | Post-MVP proposal; experiment C |
@@ -618,8 +618,9 @@ Implementation update (2026-09-05): exact scalar duplicate discovery in track T
 is now implemented as a separate advisory command. See
 [the experiment record](experiments/duplicate-discovery.md) and
 [post-MVP tracking](experiments/roadmap.md). A1 now includes records, complete construction, field access, preserving
-updates, declarative complete conversions, and checked integer widths/casts;
-fixed arrays and indexing remain pending. Other tracks below remain pending.
+updates, declarative complete conversions, checked integer widths/casts, and
+[fixed arrays with checked indexing](experiments/arrays.md). A1 is complete.
+Other tracks below remain pending.
 
 | Stage | Scope | Question to answer before proceeding |
 | --- | --- | --- |

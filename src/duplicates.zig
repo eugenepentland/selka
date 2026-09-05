@@ -3,7 +3,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 
-pub const version = "exact-v3";
+pub const version = "exact-v4";
 pub const Population = enum { production, tests, generated, reference, intentional };
 pub const Options = struct { min_nodes: usize = 8, population: Population = .production };
 pub const Group = struct { members: []const typed.FunctionId, nodes: usize };
@@ -42,6 +42,24 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                 const node = program.nodes[@backingInt(id)];
                 writer.print("expr {s} {s}\n", .{ typed.typeName(node.ty, program.records), @tagName(node.data) }) catch return error.OutOfMemory;
                 switch (node.data) {
+                    .array => |values| {
+                        writer.print("elements {d}\n", .{values.len}) catch return error.OutOfMemory;
+                        var i = values.len;
+                        while (i > 0) {
+                            i -= 1;
+                            try work.append(allocator, .{ .expression = values[i] });
+                        }
+                    },
+                    .index => |access| {
+                        try work.append(allocator, .{ .expression = access.index });
+                        try work.append(allocator, .{ .expression = access.base });
+                    },
+                    .replace => |replace| {
+                        try work.append(allocator, .{ .expression = replace.value });
+                        try work.append(allocator, .{ .expression = replace.index });
+                        try work.append(allocator, .{ .expression = replace.base });
+                    },
+                    .length => |base| try work.append(allocator, .{ .expression = base }),
                     .cast => |operand| try work.append(allocator, .{ .expression = operand }),
                     .record => |fields| {
                         try recordFields(allocator, writer, &work, program, node.ty, fields);
