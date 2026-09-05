@@ -1,9 +1,8 @@
 # B: guest memory identity and borrowing
 
-Status: the memory registry and dynamic borrow rules are implemented and tested
-in `src/memory.zig`. Guest reference/slice syntax, static borrow/lifetime checking,
-and VM instruction integration remain pending. This is a backend foundation,
-not a completed language borrow checker. A1/A2 value semantics remain intact.
+Status: the memory registry, scoped source references, static access checking,
+and VM borrow instructions are implemented. Reference parameters, reference type
+syntax, and slices remain pending. B is not complete. A1/A2 value semantics remain intact.
 
 ## Implemented memory model
 
@@ -55,9 +54,9 @@ never becomes valid when its slot is reused. Normal destruction refuses active
 borrows. Final store cleanup releases all remaining buffers and lease metadata
 even when execution aborts with outstanding leases.
 
-Copying a backend token does not acquire an independent loan. The source checker
-and VM value representation still need to enforce exclusive-reference move/copy
-rules and lexical lifetime restrictions. Allocation-owner uniqueness and general
+Copying a backend token does not acquire an independent loan. Scoped source
+references cannot be copied, stored, passed, or returned. The checker resolves
+reference names separately from ordinary values and enforces lexical scope. Allocation-owner uniqueness and general
 resource transfer remain later work; runtime stale-handle checks alone are not
 an ownership type system.
 
@@ -88,17 +87,60 @@ destruction and on final cleanup. Lifetime operations and cleanup do not allocat
 - 10,000 allocation/reborrow cycles under a 4 KiB live allocation cap, using one
   allocation slot and two lease slots and ending with zero live bytes.
 
-The full suite passes 133/133 tests in Debug and ReleaseFast (114 core, 19 CLI)
-on Guardian's `0.17.0-dev.1683+5ceec001b` snapshot. These new tests exercise the
-backend API directly; existing CLI fixtures do not claim guest borrow coverage.
-Formatting and whitespace checks pass. Guardian gates were not exercised.
+## Scoped source references
+
+```text
+fn main() -> i64 {
+    let mut count = 1;
+    borrow mut count as edit {
+        write_ref(edit, read_ref(edit) + 2);
+        borrow edit as view {
+            return read_ref(view);
+        }
+    }
+}
+```
+
+`borrow owner as name { ... }` creates a shared reference; `borrow mut owner as
+name { ... }` creates an exclusive reference. The owner must be a named local or
+an active reference. Exclusive root borrowing requires a mutable local. Borrowing
+covers the whole local value. `read_ref(name)` returns a value snapshot;
+`write_ref(name, value);` replaces the whole value and requires exclusive access
+and an exact type match. Aggregate writes preserve previously copied snapshots.
+These operations preserve domain privacy and nominal type distinctions.
+
+The source checker rejects owner writes during any root borrow, owner reads
+during exclusive borrowing, conflicting roots, shared-to-exclusive escalation,
+use of suspended exclusive parents, escaping names, and reference copies. Borrow
+names cannot shadow active bindings. Sibling scopes may reuse a name. Shared
+parents remain readable while shared children are active. Diagnostics retain
+borrow declaration locations for conflicts.
+
+The VM promotes a borrowed local into a generation-checked one-element cell.
+Reads, assignments, and repeated match payload bindings subsequently use that
+cell. Promotion lasts until function return; registry slots are reused across
+calls. Normal scope exit ends a lease; early returns evaluate their result then
+end active leases from child to parent before releasing locals. Guest traps and
+host allocation failures release the entire execution store. References are
+frame metadata, not ordinary guest values.
+
+The scoped-reference tests cover scalar and aggregate access, nested reborrows,
+conditional returns, calls, loops, match payload reuse, duplicate identity, CLI
+diagnostics/disassembly, and allocation-failure cleanup. A 10,000-update source
+loop fits within 8 KiB of live runtime allocation. Every instruction-budget trap
+boundary in a nested aggregate/call example releases all storage. Mutated internal
+bytecode checks missing/repeated borrow operations and conflicting owner reads;
+these failures produce guest traps and release storage.
+
+The full suite passes 145/145 tests in Debug and ReleaseFast (125 core, 20 CLI)
+on Guardian's `0.17.0-dev.1683+5ceec001b` snapshot. The editable
+`examples/references.my` program returns 23. Guardian gates were not exercised.
 
 ## Remaining B acceptance
 
-Next, connect this registry to VM reference values/instructions and source
-shared/exclusive reference and slice types. Establish restricted lexical lifetime
-rules, checked reborrowing, parameter behavior, and diagnostics with declaration
-and use locations. Demonstrate common read/mutate helpers, reject escaping locals
-and conflicting accesses, and test actual CLI programs. Preserve cleanup on
-returns, loops, guest traps, and host allocation failures. Do not mark B complete
-until those end-to-end tests pass.
+Add reference parameters and source reference types so common read/mutate helpers
+can operate on caller storage, with explicit call-lifetime and alias rules. Add
+bounded slices, indexing, and narrowed reborrows while preserving immutable
+aggregate snapshots. Returned references require an explicit restricted lifetime
+contract; local references must never escape. Test these through actual CLI
+programs, allocation failures, normal returns, and traps before marking B complete.

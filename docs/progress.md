@@ -346,3 +346,27 @@ distinguishes this implementation from the remaining language work.
 B remains in progress: reference/slice syntax, static checks, VM integration, and
 end-to-end borrow programs are pending. The full roadmap goal remains active.
 Guardian gates were not exercised; hosted CI has not run.
+
+
+## 2026-09-05: B scoped source references and VM integration
+
+Implemented lexical `borrow` / `borrow mut` scopes, explicit `read_ref` and
+`write_ref`, static owner/alias conflict checks, nested reborrowing, and diagnostics
+for suspended, escaped, or read-only references. Reads retain value snapshots;
+whole-local replacement preserves aggregate copies and nominal domain privacy.
+
+The VM promotes borrowed locals into memory-registry cells, tracks leases per
+frame, ends nested leases on normal exits and early returns, and releases storage
+on guest traps or allocation failures. Repeated local and match payload bindings
+update promoted cells correctly. Exact duplicate discovery is now `exact-v8`.
+
+145/145 tests pass in Debug and ReleaseFast (125 core, 20 actual CLI), including
+allocation failures, a 10,000-update loop within 8 KiB live runtime allocation,
+every instruction-budget boundary of nested aggregate/call execution, and
+malformed internal borrow ordering. The references example returns 23. A legacy
+allocation-failure fixture now disables heap-dependent resize success so failure
+indices stay deterministic, while ordinary tests retain the normal allocator.
+
+B remains in progress: reference parameters/types, bounded slices, and their
+lifetime acceptance tests remain pending. All other unfinished roadmap tracks
+remain in scope. Guardian gates were not exercised; hosted CI has not run.

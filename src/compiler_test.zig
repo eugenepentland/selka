@@ -210,7 +210,8 @@ fn localAllocationScenario(allocator: std.mem.Allocator) !void {
 }
 
 test "allocation failure during scope checking warning rendering and locals execution releases storage" {
-    try testing.checkAllAllocationFailures(testing.allocator, localAllocationScenario, .{});
+    var no_resize = testing.FailingAllocator.init(testing.allocator, .{ .resize_fail_index = 0 });
+    try testing.checkAllAllocationFailures(no_resize.allocator(), localAllocationScenario, .{});
 }
 
 test "long left-associative expressions do not recursively traverse host stacks" {

@@ -139,6 +139,14 @@ pub const Parser = struct {
         defer self.depth -= 1;
         const first = self.current();
         if (first.tag == .lbrace) return self.block();
+        if (self.take(.kw_borrow)) {
+            const mutable = self.take(.kw_mut);
+            const owner = try self.expect(.ident);
+            _ = try self.expect(.kw_as);
+            const name = try self.expect(.ident);
+            const body = try self.block();
+            return self.addStatement(.{ .span = .join(first.span, self.statements.items[@backingInt(body)].span), .data = .{ .borrow = .{ .owner = owner.span, .name = name.span, .mutable = mutable, .body = body } } });
+        }
         if (self.take(.kw_match)) {
             const value = try self.expression(0);
             _ = try self.expect(.lbrace);
@@ -181,6 +189,15 @@ pub const Parser = struct {
             return self.addStatement(.{ .span = .join(first.span, self.statements.items[@backingInt(body)].span), .data = .{ .loop = .{ .condition = condition, .body = body } } });
         }
         const data: @FieldType(ast.Statement, "data") = switch (first.tag) {
+            .kw_write_ref => write: {
+                self.pos += 1;
+                _ = try self.expect(.lparen);
+                const name = try self.expect(.ident);
+                _ = try self.expect(.comma);
+                const value = try self.expression(0);
+                _ = try self.expect(.rparen);
+                break :write .{ .write_ref = .{ .name = name.span, .value = value } };
+            },
             .kw_discard => discard: {
                 self.pos += 1;
                 break :discard .{ .discard = try self.expression(0) };
@@ -235,6 +252,13 @@ pub const Parser = struct {
         defer self.depth -= 1;
         const token = self.current();
         var left: ast.NodeId = switch (token.tag) {
+            .kw_read_ref => read: {
+                self.pos += 1;
+                _ = try self.expect(.lparen);
+                const name = try self.expect(.ident);
+                const close = try self.expect(.rparen);
+                break :read try self.append(.{ .span = .join(token.span, close.span), .data = .{ .read_ref = name.span } });
+            },
             .kw_cast, .kw_wrap => cast: {
                 self.pos += 1;
                 _ = try self.expect(.lt);

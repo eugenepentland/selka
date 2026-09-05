@@ -44,7 +44,17 @@ const Emitter = struct {
             },
             .ret, .discard => |value| {
                 try self.instruction(stmt.span, if (stmt.data == .ret) .ret else .pop);
+                for (stmt.cleanup) |reference| try self.instruction(stmt.span, .{ .end_borrow = reference });
                 try self.push(.{ .expression = value });
+            },
+            .borrow => |borrow| {
+                if (!self.program.statements[@backingInt(borrow.body)].terminates) try self.instruction(stmt.span, .{ .end_borrow = borrow.reference });
+                try self.push(.{ .statement = borrow.body });
+                try self.instruction(stmt.span, .{ .begin_borrow = borrow.reference });
+            },
+            .write_ref => |write| {
+                try self.instruction(stmt.span, .{ .write_ref = write.reference });
+                try self.push(.{ .expression = write.value });
             },
             .initialize, .assign => |store| {
                 try self.instruction(stmt.span, .{ .store_local = store.slot });
@@ -154,6 +164,7 @@ const Emitter = struct {
                 try self.push(.{ .expression = value });
             },
             .boolean => |value| try self.instruction(node.span, .{ .push_bool = value }),
+            .read_ref => |reference| try self.instruction(node.span, .{ .read_ref = reference }),
             .local => |slot| try self.instruction(node.span, .{ .load_local = slot }),
             .call => |call| {
                 try self.instruction(node.span, .{ .call = call.function });
@@ -248,7 +259,7 @@ pub fn lower(allocator: std.mem.Allocator, program: typed.Program) !bc.Program {
     const functions = try allocator.alloc(bc.Function, program.functions.len);
     for (program.functions, functions) |function, *out| {
         var emitter: Emitter = .{ .allocator = allocator, .program = program };
-        out.* = .{ .owner = function.owner, .restricted = function.restricted, .conversion = function.conversion, .id = function.id, .name = function.name, .locals = function.locals, .parameter_count = function.parameter_count, .return_type = function.return_type, .instructions = try emitter.finish(function.body) };
+        out.* = .{ .references = function.references, .owner = function.owner, .restricted = function.restricted, .conversion = function.conversion, .id = function.id, .name = function.name, .locals = function.locals, .parameter_count = function.parameter_count, .return_type = function.return_type, .instructions = try emitter.finish(function.body) };
     }
     const result: bc.Program = .{ .functions = functions, .main = program.main, .records = program.records };
     try bc.validate(allocator, result);

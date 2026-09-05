@@ -3,6 +3,8 @@ const Span = @import("source.zig").Span;
 pub const NodeId = enum(usize) { _ };
 pub const StatementId = enum(usize) { _ };
 pub const FunctionId = enum(usize) { _ };
+pub const ReferenceId = enum(usize) { _ };
+pub const Reference = struct { name: []const u8, declaration: Span, owner: LocalId, parent: ?ReferenceId, ty: Type, mutable: bool };
 pub const LocalId = enum(usize) { _ };
 pub const Type = @import("value.zig").Type;
 pub const Value = @import("value.zig").Value;
@@ -15,6 +17,7 @@ pub const Node = struct {
         integer: i128,
         boolean: bool,
         local: LocalId,
+        read_ref: ReferenceId,
         cast: NodeId,
         wrap: NodeId,
         variant: struct { tag: usize, value: ?NodeId },
@@ -68,9 +71,12 @@ pub const Store = struct { slot: LocalId, value: NodeId };
 pub const Statement = struct {
     span: Span,
     terminates: bool,
+    cleanup: []const ReferenceId = &.{},
     data: union(enum) {
         block: []const StatementId,
         ret: NodeId,
+        borrow: struct { reference: ReferenceId, body: StatementId },
+        write_ref: struct { reference: ReferenceId, value: NodeId },
         discard: NodeId,
         branch: struct { condition: NodeId, then_body: StatementId, else_body: ?StatementId },
         match: struct { value: NodeId, arms: []const MatchArm },
@@ -80,8 +86,9 @@ pub const Statement = struct {
     },
 };
 pub const MatchArm = struct { tag: usize, slot: ?LocalId, body: StatementId };
-pub const Local = struct { name: []const u8, declaration: Span, ty: Type, mutable: bool, reads: usize = 0, writes: usize = 0 };
+pub const Local = struct { name: []const u8, declaration: Span, ty: Type, mutable: bool, mutable_borrow: bool = false, reads: usize = 0, writes: usize = 0 };
 pub const Function = struct {
+    references: []const Reference = &.{},
     owner: ?Type = null,
     restricted: bool = false,
     conversion: bool = false,

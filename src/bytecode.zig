@@ -25,6 +25,10 @@ pub const Instruction = struct {
         get_index: typed.Type,
         replace_index: typed.Type,
         array_length: typed.Type,
+        begin_borrow: typed.ReferenceId,
+        end_borrow: typed.ReferenceId,
+        read_ref: typed.ReferenceId,
+        write_ref: typed.ReferenceId,
         load_local: typed.LocalId,
         store_local: typed.LocalId,
         add_i64_checked,
@@ -43,7 +47,7 @@ pub const Instruction = struct {
         ret,
     },
 };
-pub const Function = struct { owner: ?typed.Type = null, restricted: bool = false, conversion: bool = false, id: typed.FunctionId, name: []const u8, parameter_count: usize = 0, return_type: typed.Type = .i64, locals: []const typed.Local = &.{}, instructions: []const Instruction };
+pub const Function = struct { references: []const typed.Reference = &.{}, owner: ?typed.Type = null, restricted: bool = false, conversion: bool = false, id: typed.FunctionId, name: []const u8, parameter_count: usize = 0, return_type: typed.Type = .i64, locals: []const typed.Local = &.{}, instructions: []const Instruction };
 pub const Program = struct { functions: []const Function, main: typed.FunctionId = @fromBackingInt(0), records: []const typed.Record = &.{} };
 const Error = std.mem.Allocator.Error || error{InternalError};
 
@@ -92,6 +96,14 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             if (!owner.isAggregate() or !validType(owner, program) or program.records[owner.recordIndex()].domain == null) return error.InternalError;
         } else if (function.restricted) return error.InternalError;
         if (function.parameter_count > function.locals.len or !validType(function.return_type, program)) return error.InternalError;
+        for (function.references, 0..) |reference, index| {
+            if (@backingInt(reference.owner) >= function.locals.len or reference.ty != function.locals[@backingInt(reference.owner)].ty) return error.InternalError;
+            if (reference.parent) |parent| {
+                if (@backingInt(parent) >= index) return error.InternalError;
+                const previous = function.references[@backingInt(parent)];
+                if (previous.owner != reference.owner or (reference.mutable and !previous.mutable)) return error.InternalError;
+            } else if (reference.mutable and !function.locals[@backingInt(reference.owner)].mutable) return error.InternalError;
+        }
         for (function.locals) |local| if (!validType(local.ty, program)) {
             return error.InternalError;
         };
@@ -121,6 +133,10 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             },
             .binary_integer => |binary| {
                 if (!binary.ty.isInteger() or binary.op == .logical_and or binary.op == .logical_or) return error.InternalError;
+            },
+            .begin_borrow, .end_borrow, .read_ref, .write_ref => |id| {
+                if (@backingInt(id) >= function.references.len) return error.InternalError;
+                if (instruction.op == .write_ref and !function.references[@backingInt(id)].mutable) return error.InternalError;
             },
             .load_local, .store_local => |slot| if (@backingInt(slot) >= function.locals.len) {
                 return error.InternalError;
@@ -168,7 +184,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             const instruction = function.instructions[pc];
             var height = heights[pc].?;
             switch (instruction.op) {
-                .push_i64, .push_bool, .push_integer, .load_local => height += 1,
+                .push_i64, .push_bool, .push_integer, .load_local, .read_ref => height += 1,
                 .make_variant => |variant| {
                     const payload = (try variantSchema(variant.ty, program)).cases[variant.tag].payload;
                     if (payload != null) {
@@ -192,7 +208,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (height <= update.indices.len) return error.InternalError;
                     height -= update.indices.len;
                 },
-                .store_local, .pop, .jump_if_false => {
+                .store_local, .pop, .jump_if_false, .write_ref => {
                     if (height == 0) return error.InternalError;
                     height -= 1;
                 },
@@ -212,7 +228,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (height != 1) return error.InternalError;
                     continue;
                 },
-                .jump => {},
+                .jump, .begin_borrow, .end_borrow => {},
             }
             if (instruction.op == .jump) {
                 try enqueue(heights, pending, &len, instruction.op.jump, height);

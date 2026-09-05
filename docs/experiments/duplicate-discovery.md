@@ -139,3 +139,9 @@ key names and written evaluation order through the existing canonical field
 encoding. Lookup/replacement retains enum expressions. `src/tables_test.zig`
 checks renamed equivalents and distinguishes foreign enums, changed mappings,
 reordered initializers, and positional numeric arrays.
+
+
+Scoped references advance the version to `exact-v8`. Canonical identity retains
+owner slots, underlying types, permissions, parent reference IDs, borrow scope,
+and read/write operations. Renamed bound reference names normalize away;
+reborrowing and changed permissions remain distinct.

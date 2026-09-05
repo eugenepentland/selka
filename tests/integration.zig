@@ -265,3 +265,18 @@ test "CLI executes complete enum tables and rejects missing mappings in every co
     try invoke("check", "enum Key { a } fn main() -> i64 { return new [Key]i64 { a: 7 }[0]; }", 1, "", "expected Key, found i64");
     try invoke("check", "enum Key { a } fn main() -> i64 { discard new [Key]i64 [7]; return 0; }", 1, "", "error[E_TABLE_CONSTRUCTION]");
 }
+
+test "CLI checks scoped borrows runs early cleanup and locates alias errors" {
+    try invoke("run", @embedFile("fixtures/references.my"), 0, "23\n", "");
+    try invoke("check", @embedFile("fixtures/references.my"), 0, "", "");
+    const dumped = try runFixture("dump-bytecode", @embedFile("fixtures/references.my"), &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    try testing.expectEqualStrings("", dumped.stderr);
+    for ([_][]const u8{ "BEGIN_BORROW", "END_BORROW", "READ_REF", "WRITE_REF" }) |instruction| try testing.expect(std.mem.indexOf(u8, dumped.stdout, instruction) != null);
+    const conflict = "fn main() -> i64 { let mut x = 1; borrow mut x as r { return x; } }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, conflict, 1, "", "error[E_BORROW_CONFLICT]");
+    try invoke("check", "fn main() -> i64 { let x = 1; borrow x as r {} return read_ref(r); }", 1, "", "error[E_REFERENCE_SCOPE]");
+    try invoke("run", "fn main() -> i64 { let mut x = 1; borrow mut x as r { write_ref(r, 1 / 0); } return x; }", 1, "", "error[R_DIVISION_BY_ZERO]");
+}

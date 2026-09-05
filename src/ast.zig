@@ -13,6 +13,7 @@ pub const Node = struct {
         integer: Span,
         boolean: bool,
         name: Span,
+        read_ref: Span,
         cast: TypedValue,
         wrap: TypedValue,
         variant: struct { ty: Span, name: Span, value: ?NodeId },
@@ -34,6 +35,8 @@ pub const Statement = struct {
     data: union(enum) {
         block: []const StatementId,
         ret: NodeId,
+        borrow: struct { owner: Span, name: Span, mutable: bool, body: StatementId },
+        write_ref: struct { name: Span, value: NodeId },
         discard: NodeId,
         branch: struct { condition: NodeId, then_body: StatementId, else_body: ?StatementId },
         match: struct { value: NodeId, arms: []const MatchArm },

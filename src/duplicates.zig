@@ -3,7 +3,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 
-pub const version = "exact-v7";
+pub const version = "exact-v8";
 pub const Population = enum { production, tests, generated, reference, intentional };
 pub const Options = struct { min_nodes: usize = 8, population: Population = .production };
 pub const Group = struct { members: []const typed.FunctionId, nodes: usize };
@@ -36,6 +36,7 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
     // Slot identities are declaration order within a function, including parameters.
     // Names, spans, and advisory use counters have no role in structural equality.
     for (function.locals) |local| writer.print("local {s} {}\n", .{ typed.typeName(local.ty, program.records), local.mutable }) catch return error.OutOfMemory;
+    for (function.references) |reference| writer.print("reference {s} owner {d} parent {?d} mutable {}\n", .{ typed.typeName(reference.ty, program.records), @backingInt(reference.owner), if (reference.parent) |parent| @as(?usize, @backingInt(parent)) else null, reference.mutable }) catch return error.OutOfMemory;
     try work.append(allocator, .{ .statement = function.body });
     while (work.pop()) |task| {
         nodes += 1;
@@ -82,6 +83,7 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                     },
                     .integer => |value| writer.print("{d}\n", .{value}) catch return error.OutOfMemory,
                     .boolean => |value| writer.print("{}\n", .{value}) catch return error.OutOfMemory,
+                    .read_ref => |reference_id| writer.print("reference {d}\n", .{@backingInt(reference_id)}) catch return error.OutOfMemory,
                     .local => |slot| writer.print("{d}\n", .{@backingInt(slot)}) catch return error.OutOfMemory,
                     .unary => |unary| {
                         writer.print("{s}\n", .{@tagName(unary.op)}) catch return error.OutOfMemory;
@@ -123,6 +125,14 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                         }
                     },
                     .ret, .discard => |value| try work.append(allocator, .{ .expression = value }),
+                    .borrow => |borrow| {
+                        writer.print("reference {d}\n", .{@backingInt(borrow.reference)}) catch return error.OutOfMemory;
+                        try work.append(allocator, .{ .statement = borrow.body });
+                    },
+                    .write_ref => |write| {
+                        writer.print("reference {d}\n", .{@backingInt(write.reference)}) catch return error.OutOfMemory;
+                        try work.append(allocator, .{ .expression = write.value });
+                    },
                     .initialize, .assign => |store| {
                         writer.print("slot {d}\n", .{@backingInt(store.slot)}) catch return error.OutOfMemory;
                         try work.append(allocator, .{ .expression = store.value });

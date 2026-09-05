@@ -87,7 +87,7 @@ The [MVP acceptance audit](mvp-audit.md) records the verification evidence.
 Post-MVP feature syntax is not accepted as a placeholder with invented semantics.
 
 
-The guest has no strings, floats, pointers, explicit heap allocation, borrowing,
+The guest has no strings, floats, pointers, explicit heap allocation,
 ownership transfer, generics, compile-time execution, modules, globals, closures,
 function values, standard library, FFI, exceptions, typed errors, concurrency,
 optimizer, native backend, or self-hosting. The host compiler and VM allocate.
@@ -139,5 +139,12 @@ Complete enum-indexed tables are implemented as `[Enum]Value`, with named
 construction requiring every enum case. Lookup/replacement requires the exact
 enum key type, and adding a case exposes incomplete constructors. See
 [table semantics](experiments/tables.md) for mapping identity, evaluation order,
-unknown-code boundaries, and storage costs. This completes A2; borrowing and
-slices remain pending.
+unknown-code boundaries, and storage costs. This completes A2.
+
+
+Scoped borrowing is implemented as `borrow [mut] owner as name { ... }`, with
+`read_ref(name)` and `write_ref(name, value);`. References have lexical scope,
+whole-local access, and checked shared/exclusive permissions. Reads preserve
+value snapshots; return cleanup ends child leases before parents. References
+cannot yet be passed, copied, stored, or returned. Reference parameters and
+slices remain pending. See [the borrowing contract](experiments/borrowing.md).

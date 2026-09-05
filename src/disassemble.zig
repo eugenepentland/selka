@@ -32,6 +32,7 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
             try writer.print("{s}: {s}", .{ parameter.name, typed.typeName(parameter.ty, program.records) });
         }
         try writer.print(") -> {s}\n", .{typed.typeName(function.return_type, program.records)});
+        for (function.references, 0..) |reference, i| try writer.print("  reference {d}: {s}: {s} owner={d} parent={?d} mutable={}\n", .{ i, reference.name, typed.typeName(reference.ty, program.records), @backingInt(reference.owner), if (reference.parent) |parent| @as(?usize, @backingInt(parent)) else null, reference.mutable });
         for (function.instructions, 0..) |instruction, i| {
             try writer.print("  {d:0>4}  ", .{i});
             switch (instruction.op) {
@@ -55,6 +56,10 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
                 .neg_integer => |ty| try writer.print("NEG_INT_CHECKED {f}", .{ty}),
                 .binary_integer => |binary| try writer.print("INT_BINARY {f} {s}", .{ binary.ty, @tagName(binary.op) }),
                 .push_bool => |value| try writer.print("PUSH_BOOL {}", .{value}),
+                .begin_borrow => |id| try writer.print("BEGIN_BORROW {d}", .{@backingInt(id)}),
+                .end_borrow => |id| try writer.print("END_BORROW {d}", .{@backingInt(id)}),
+                .read_ref => |id| try writer.print("READ_REF {d}", .{@backingInt(id)}),
+                .write_ref => |id| try writer.print("WRITE_REF {d}", .{@backingInt(id)}),
                 .load_local => |slot| try writer.print("LOAD_LOCAL {d}", .{@backingInt(slot)}),
                 .store_local => |slot| try writer.print("STORE_LOCAL {d}", .{@backingInt(slot)}),
                 .cmp_i64 => |predicate| try writer.print("CMP_I64 {s}", .{@tagName(predicate)}),

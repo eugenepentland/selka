@@ -72,7 +72,7 @@ zig build run -- discover-duplicates examples/duplicates.my --timings
 It reports exact checked-function candidates after normalizing bound names,
 with source locations and advisory explanations. Ordinary compilation does not
 run it. See the [comparison contract and review](docs/experiments/duplicate-discovery.md).
-All 133 tests pass in Debug and ReleaseFast.
+All 145 tests pass in Debug and ReleaseFast.
 
 [Post-MVP tracking](docs/experiments/roadmap.md) records the remaining experiments.
 Records, complete construction, field access, preserving updates, and declarative
@@ -88,8 +88,9 @@ Run `examples/arrays.my` (44). A2 now includes nominal scalar domains and privat
 24. Complete enum-indexed tables finish A2
 ([table semantics](docs/experiments/tables.md)); `examples/tables.my` returns 1407.
 Borrowing and slices are in progress: a [memory/lease backend](docs/experiments/borrowing.md)
-is tested, while guest syntax, static checking, and VM integration remain pending. Approximate
-matching, borrowing, ownership, effects, modules, native execution, and the other
+and scoped source references are implemented, including static access checking and VM
+cleanup. `examples/references.my` returns 23. Reference parameters and slices remain
+pending. Approximate matching, ownership, effects, modules, native execution, and the other
 pending tracks are not yet complete.
 
 See [implemented semantics](docs/semantics.md) and [verification/progress](docs/progress.md).
