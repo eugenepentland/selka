@@ -1,0 +1,16 @@
+module message;
+export Status;
+export Header;
+export Message;
+enum Status {
+    ready,
+    failed
+}
+struct Header {
+    sequence: u64,
+    status: Status
+}
+union Message {
+    heartbeat,
+    reading: Header
+}

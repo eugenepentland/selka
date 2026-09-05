@@ -213,3 +213,31 @@ test "evaluation receipt keys include implementation identity and reject incompl
     defer b.deinit();
     try t.expect(!std.mem.eql(u8, a.value.object.get("request_sha256").?.string, b.value.object.get("request_sha256").?.string));
 }
+
+fn schemaScenario(allocator: std.mem.Allocator) !void {
+    var files: Files = .{ .entries = &.{
+        .{ .path = "main.my", .bytes = "module main; import data; fn main() -> i64 { return 0; }" },
+        .{ .path = "data.my", .bytes = "module data; export Point; export Choice; export Identity; export select; struct Point { x: u64, y: [2]bool } union Choice { empty, point: Point } domain Identity: i16 { private fn raw(x: i16) -> Identity { return wrap<Identity>(x); } } fn select(x: &Choice) -> &Choice from x { return x; } struct Hidden { secret: i8 }" },
+    } };
+    var project = p.Project.init(allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try @import("interfaces.zig").build(&project);
+    var compilation = try @import("project_compile.zig").Compilation.init(&index);
+    const text = try @import("schema.zig").render(allocator, &compilation);
+    defer allocator.free(text);
+    const again = try @import("schema.zig").render(allocator, &compilation);
+    defer allocator.free(again);
+    try t.expectEqualStrings(text, again);
+    const parsed = try std.json.parseFromSlice(std.json.Value, allocator, text, .{});
+    defer parsed.deinit();
+    try t.expectEqualStrings("language-schema-v1", parsed.value.object.get("version").?.string);
+    for ([_][]const u8{ "Hidden", "secret", "raw", "i16", "type#" }) |hidden| try t.expect(std.mem.indexOf(u8, text, hidden) == null);
+    try t.expect(std.mem.indexOf(u8, text, "18446744073709551615") != null);
+    try t.expect(std.mem.indexOf(u8, text, "shared_reference") != null);
+}
+test "checked public schemas retain structure and privacy with allocation failure cleanup" {
+    try schemaScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), schemaScenario, .{});
+}

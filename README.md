@@ -274,3 +274,16 @@ fresh on every lookup.
 
 Repeat `--inputs` for multiple declared modules (up to 16 manifests and 8 MiB combined).
 Conflicting module bindings reject; flag order does not change the request identity.
+
+Public schemas can now be derived from checked module contracts:
+
+```sh
+zig-out/bin/mylang schema-project examples/schema/main.my
+```
+
+The deterministic JSON graph includes exported types and function signatures,
+qualified identities, field/variant structure, integer bounds, borrowing contracts,
+and inferred effects. Private declarations remain excluded; domains and runtime
+owners/capabilities retain opaque reconstruction boundaries. This establishes
+[schema derivation](docs/experiments/schemas.md); serialization, foreign bindings,
+and generation receipt/budget integration remain pending.

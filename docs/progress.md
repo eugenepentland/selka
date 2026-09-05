@@ -1879,3 +1879,39 @@ Broader input types, schema derivation, general serialization/bindings, finer
 incremental compilation, generics, wider native operations, ordinary-program review,
 and all other unfinished roadmap work remain pending. Guardian was not exercised;
 hosted CI has not run. The full roadmap goal remains active.
+
+## 2026-09-05: Checked public schema derivation
+
+Added schema-project and the schema.render embedding API. Derivation checks the
+complete reachable project before emitting a versioned JSON graph rooted in exported
+nominal types and function signatures. Qualified names replace compiler-local type
+IDs. Sorted definitions/functions/exports remain deterministic across import discovery
+order, aliases, comments, and private implementation changes. Fields and variant cases
+retain declaration order. Public shape changes alter the output.
+
+Schemas describe integer widths and lossless decimal bounds, record fields, arrays,
+enum-keyed tables, closed variants, result obligations, ownership flags, function
+parameter reference/slice modes, returned-reference source contracts, and inferred
+transitive effects. Domain backing/private factories remain excluded. Runtime owners,
+handles, and capabilities are explicitly opaque for reconstruction while retaining
+public element, authority, and pool/handle relationships. An iterative worklist handles
+cyclic pool/handle graphs without duplicate definitions. Private implementation-only
+types are not roots. Empty public interfaces yield empty graphs.
+
+All 15 build steps pass in Debug and ReleaseFast: 519 Zig tests (462 core, 57 CLI),
+eight verification-driver tests, the new actual-CLI schema acceptance driver, existing
+receipt/cache/input/module/duplicate drivers, and 392 native comparisons per host mode.
+The schema unit scenario checks all allocation failures with leak detection. Acceptance
+covers nominal identity, privacy, integer bounds, aggregate/variant structure, cyclic
+handle graphs, ownership/authority, borrowing/effects, determinism, public shape edits,
+duplicate fields, invalid private bodies, private interface leaks, and irrelevant flags.
+The checked-in message schema example passes project formatting and schema generation.
+Zig formatting and whitespace checks pass; README, roadmap, and attached plan are synced.
+
+The document is a language type graph, not a wire format, JSON Schema standard document,
+foreign ABI, or codec. Explicit effect bounds are not separately emitted. Typed
+serialization/deserialization, domain codec declarations, external key mappings,
+generated bindings, generation receipt/budget integration, finer incremental
+compilation, generics, wider native support, ordinary-program review, and all other
+unfinished roadmap work remain pending. Guardian was not exercised; hosted CI has not
+run. The full roadmap goal remains active.
