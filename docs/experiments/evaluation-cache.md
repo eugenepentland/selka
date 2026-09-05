@@ -11,7 +11,8 @@ python3 scripts/evaluate.py examples/modules/main.my --cache-dir .mylang-cache
 The first run reports a cache miss and VM execution; the second reports a hit and a
 skipped VM, both with the typed decimal result 12. The cache directory is explicit.
 `--compiler`, `--max-steps`, `--max-frames`, and `--max-eval-bytes` select the compiler
-and evaluation budgets. `--timeout` bounds each compiler subprocess (default 90 seconds).
+and evaluation budgets. `--inputs=manifest.json` supplies a freshly generated typed
+input module to both request and execution invocations. `--timeout` bounds each compiler subprocess (default 90 seconds).
 
 ## Lookup and execution
 

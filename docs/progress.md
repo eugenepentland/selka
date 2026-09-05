@@ -1814,3 +1814,38 @@ Automatic external-input integration, stale-generation protection, schema deriva
 general serialization/bindings, finer incremental compilation, generics, broader native
 support, and other unfinished roadmap work remain pending. Guardian was not exercised;
 hosted CI has not run. The full roadmap goal remains active.
+
+## 2026-09-05: Fresh declared inputs in evaluation and cache lookup
+
+Added eval-project --inputs=manifest.json, including request-only and successful
+report modes. The compiler reads/validates the manifest, generates its declared
+module in memory, and supplies it through the bounded module provider. The explicit
+binding takes precedence over a disk file at that logical module path without
+writing or modifying that file. Generated source is copied into the owned project
+snapshot. Entry-module replacement, unused manifests, and duplicate/empty or
+wrong-command bindings reject. Manifest diagnostic formatting is shared with the
+input-module command.
+
+The evaluation cache driver forwards --inputs to both lookup and execution. Current
+manifest bytes are therefore reread and regenerated before every lookup; edits change
+the generated source hash through both values and the exact manifest provenance hash.
+Receipts retain generated-source identity, and existing request/report comparison
+rejects differing snapshots on misses. Original JSON filesystem paths are not separate
+request fields; identical content supplying the same logical module can share a key.
+
+All 14 build steps pass in Debug and ReleaseFast. The unchanged 461 core Zig tests
+reuse successful cached results and all 57 actual-CLI tests pass (518 total). Extended
+input acceptance verifies stale invalid disk-file override without writes, missing
+files/directories, manifest value edits, generated-source receipt hashes, duplicate
+bindings, and unused/entry-module rejection. Cache acceptance verifies manifest-driven
+misses, refreshed values, and a warm hit while preserving stale disk contents. The
+manual cache-driver invocation with --inputs returns 64 for the example. Existing
+verification, receipt/cache, module/duplicate scaling, and 392 native comparisons per
+host mode also pass. Formatting and whitespace checks pass; documentation and both
+plan copies are synchronized.
+
+One manifest binding per evaluation is supported. Multiple simultaneous manifests,
+derived schemas, general serialization/bindings, finer incremental compilation,
+generics, wider native operations, ordinary-program review, and all other unfinished
+roadmap work remain pending. Guardian was not exercised; hosted CI has not run. The
+full roadmap goal remains active.

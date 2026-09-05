@@ -268,4 +268,6 @@ a saved request, evaluation report, or cache entry (`--max-changes` bounds the o
 
 `input-module` validates [typed JSON input manifests](docs/experiments/input-manifests.md)
 and emits ordinary exported functions. The example at `examples/input-values/`
-evaluates to 64; automatic JSON loading during evaluation remains pending.
+evaluates to 64. `eval-project --inputs=examples/input-values/inputs.json` generates
+the declared module in memory; the cache driver also accepts `--inputs` and reads it
+fresh on every lookup.

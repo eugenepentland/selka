@@ -141,6 +141,22 @@ def main():
             else:
                 raise AssertionError('mixed snapshots were cached')
         assert not race_directory.exists()
+        entry.write_text('module main; import config; fn main()->i64{return config::value();}')
+        manifest = root / 'inputs.json'
+        values = {'version': 1, 'module': 'config', 'values': [{'name': 'value', 'type': 'i64', 'value': '3'}]}
+        manifest.write_text(json.dumps(values))
+        stale = root / 'config.my'
+        stale.write_text('invalid stale source must not be loaded or overwritten')
+        input_options = [f'--inputs={manifest}']
+        generated = cache.evaluate(compiler, entry, directory, input_options)
+        assert generated['cache'] == 'miss' and generated['result']['decimal'] == '3'
+        values['values'][0]['value'] = '4'
+        manifest.write_text(json.dumps(values))
+        refreshed = cache.evaluate(compiler, entry, directory, input_options)
+        assert refreshed['cache'] == 'miss' and refreshed['result']['decimal'] == '4'
+        assert refreshed['request_sha256'] != generated['request_sha256']
+        assert cache.evaluate(compiler, entry, directory, input_options)['cache'] == 'hit'
+        assert stale.read_text() == 'invalid stale source must not be loaded or overwritten'
         print('evaluation cache: real cold/warm VM invocation counts, source/budget misses, '
               'corruption repair, atomic failure cleanup, rejected source/runtime failures, '
               'and changed-input race rejection passed')

@@ -50,6 +50,40 @@ def main():
         entry.write_text('module main; import config.values as v; fn main()->i64{if ' + '&&'.join(conditions) + '{return 7;}return 0;}')
         result = subprocess.run([compiler, 'eval-project', str(entry)], text=True, capture_output=True, timeout=90)
         assert result.returncode == 0 and result.stdout == '7\n', result.stderr
+        def evaluate_inputs(status=0, *extra):
+            result = subprocess.run([compiler, 'eval-project', str(entry), f'--inputs={manifest}', *extra],
+                                    text=True, capture_output=True, timeout=90)
+            assert result.returncode == status, (result.returncode, result.stderr)
+            if status:
+                assert result.stdout == ''
+            return result
+
+        source.write_text('deliberately stale invalid generated source')
+        assert evaluate_inputs().stdout == '7\n'
+        assert source.read_text() == 'deliberately stale invalid generated source'
+        source.unlink()
+        config.rmdir()
+        assert evaluate_inputs().stdout == '7\n'
+        assert not source.exists()
+        entries[0]['value'] = '-127'
+        manifest.write_text(json.dumps(document))
+        assert evaluate_inputs().stdout == '0\n'
+        entries[0]['value'] = '-128'
+        manifest.write_text(json.dumps(document))
+        receipt = json.loads(evaluate_inputs(0, '--evaluation-report').stdout)
+        generated_now = generate().stdout
+        generated_input = next(s for s in receipt['request']['sources'] if s['module'] == 'config.values')
+        assert generated_input['sha256'] == hashlib.sha256(generated_now.encode()).hexdigest()
+        assert evaluate_inputs(2, f'--inputs={manifest}').stdout == ''
+        original_entry = entry.read_text()
+        entry.write_text('module main; fn main()->i64{return 0;}')
+        assert 'not imported' in evaluate_inputs(2).stderr
+        entry.write_text(original_entry)
+        document['module'] = 'main'
+        manifest.write_text(json.dumps(document))
+        assert 'not the entry module' in evaluate_inputs(2).stderr
+        document['module'] = 'config.values'
+        manifest.write_text(json.dumps(document))
         for bad in ('{"version":1,"version":1,"module":"config","values":[]}',
                     '{"version":1,"module":"config","values":[],"extra":0}',
                     '{"version":1,"module":"../config","values":[]}',

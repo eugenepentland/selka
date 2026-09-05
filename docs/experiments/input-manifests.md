@@ -10,11 +10,10 @@ zig-out/bin/mylang eval-project examples/input-values/main.my
 ```
 
 The project returns 64 through config.values.batch_size and config.values.enabled.
-This establishes explicit input validation and generation. Evaluation does not yet
-load JSON manifests automatically: it reads the generated .my file as an ordinary
-import. Changing the JSON alone therefore does not update execution or cache identity;
-regeneration is required. Automatic manifest loading and stale-generation protection
-remain pending integration work.
+Use `eval-project --inputs=examples/input-values/inputs.json` to load the manifest
+and generate its module in memory for that invocation. The evaluation cache driver
+accepts the same `--inputs` option. Generated files on disk are no longer required
+for this workflow; the compiler does not write or update them.
 
 ## Format
 
@@ -46,9 +45,13 @@ nor its consumers need an untyped lookup dictionary or a runtime JSON parser.
 
 The first source comment records SHA-256 of the complete manifest bytes, including
 JSON formatting. After regeneration, even a manifest-only formatting edit changes
-the generated source digest. Current evaluation reports/caches record that generated
-source as a dependency. They do not yet record or reread the original JSON file;
-the embedded hash is provenance of generation, not proof that generation is fresh.
+the generated source digest. Evaluation reports/caches record that generated source as a dependency. With
+--inputs, every request/evaluation reads the manifest afresh and regenerates the
+source. The exact JSON content hash in its provenance comment therefore participates
+in the source/request identity. The JSON filesystem path is not separately included
+in the receipt; identical manifest content supplying the same logical module can
+share an identity across locations. Explicit disk generation still requires its
+caller to regenerate after edits.
 The embedding Manifest parser owns decoded strings and exposes caller-owned output.
 
 ## Acceptance
@@ -60,5 +63,34 @@ boolean values. It independently checks the embedded manifest hash and determini
 output, and rejects duplicate/unknown JSON fields, numeric JSON values, path traversal,
 duplicate names, excess input count, and excess manifest bytes. Debug and ReleaseFast
 run the driver in zig build test. Schema derivation from language records, general
-serialization/bindings, automatic declared-input loading, and finer incremental
+serialization/bindings, multiple simultaneous manifests, and finer incremental
 compilation remain pending.
+
+## Automatic evaluation inputs and freshness
+
+One --inputs=manifest.json binding is supported per eval-project invocation, including
+request-only and successful-report modes. Paths to manifests are interpreted from the
+working directory. The manifest supplies an imported logical module through the
+existing bounded module provider. That explicit binding takes precedence over a disk
+file at the same logical module path, including a stale or invalid generated file.
+No physical directory or generated file is required. The generated source retains
+normal module/type/effect checking and source-budget accounting.
+
+The entry module cannot be replaced by a manifest. A manifest whose module is absent
+from the reachable import graph is rejected as unused. Repeated/empty bindings and
+bindings supplied to other compiler commands reject as usage errors. Generation and
+manifest validation complete before loading the project; the retained in-memory
+snapshot remains owned through checking/evaluation. Source diagnostics for generated
+code use its logical .my path.
+
+The cache driver forwards --inputs to both request lookup and executed evaluation.
+Editing a manifest automatically changes its generated source identity and causes a
+miss; an unchanged manifest can hit. A change between those two snapshots is covered
+by the existing request/report identity comparison. Cache hits still read, validate,
+and generate the current declared inputs before lookup, preventing reuse based on a
+stale disk-generated copy.
+
+Acceptance now also exercises in-memory loading over invalid disk content, absent
+files/directories, manifest value edits, generated-source receipt hashes, duplicate
+bindings, entry replacement/unused-manifest rejection, and real cached input changes
+followed by a warm hit. Existing disk contents remain unchanged in these tests.
