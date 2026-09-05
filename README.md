@@ -72,7 +72,7 @@ zig build run -- discover-duplicates examples/duplicates.my --timings
 It reports exact checked-function candidates after normalizing bound names,
 with source locations and advisory explanations. Ordinary compilation does not
 run it. See the [comparison contract and review](docs/experiments/duplicate-discovery.md).
-All 367 tests pass in Debug and ReleaseFast.
+All 374 tests pass in Debug and ReleaseFast.
 
 [Post-MVP tracking](docs/experiments/roadmap.md) records the remaining experiments.
 Records, complete construction, field access, preserving updates, and declarative
@@ -157,3 +157,8 @@ and bulk clearing. Guest pool syntax and arena allocation remain pending.
 [Arena backing and checked region reset](docs/experiments/arenas.md) now separate
 buffer backing from retained snapshots, reject live borrows before reset, and reuse
 backing/registries across cycles. Guest arena scopes remain pending.
+
+[Execution-lifetime arena selection](docs/experiments/arena-execution.md) now runs
+existing source programs with `run --memory=arena` or embedding option
+`memory_backing = .arena`. General allocation remains the default. Nested source
+arena scopes remain pending; arena backing can accumulate until execution ends.

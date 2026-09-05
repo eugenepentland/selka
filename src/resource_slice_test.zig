@@ -180,3 +180,22 @@ test "emission rejects resource slice reference and result metadata corruption" 
     };
     return error.TestUnexpectedResult;
 }
+
+test "arena execution preserves resource slice snapshots partial IO and external cleanup" {
+    for ([_][]const u8{ fixed, buffer }, [_]i64{ 65, 141 }) |text, expected| {
+        var c = try language.Compilation.init(t.allocator, "arena-io.my", text);
+        defer c.deinit();
+        var fake: Fake = .{};
+        var stats: memory.Statistics = .{};
+        try t.expectEqual(expected, (try c.executeWithOptions(t.allocator, .{
+            .memory_backing = .arena,
+            .resources = .{ .filesystem = fake.provider() },
+            .memory_statistics = &stats,
+        })).value);
+        try t.expectEqualSlices(u8, &.{ 7, 8 }, fake.input[0..fake.input_length]);
+        try t.expectEqual(@as(usize, 0), fake.live);
+        try t.expectEqual(@as(usize, 1), fake.releases);
+        try t.expectEqual(stats.created, stats.released);
+        try t.expectEqual(@as(usize, 0), stats.live_allocations);
+    }
+}

@@ -87,6 +87,7 @@ test {
     _ = @import("resource_slice_test.zig");
     _ = @import("typed_pool_test.zig");
     _ = @import("arena_test.zig");
+    _ = @import("arena_execution_test.zig");
     _ = @import("references_test.zig");
     _ = @import("slices_test.zig");
     _ = @import("returned_references_test.zig");

@@ -496,3 +496,14 @@ test "CLI checks resource slice IO and exclusive destination requirements" {
     const invalid = "resource File: filesystem; struct Progress { length: u64, eof: bool } result Read { ok: Progress, err: i64 } fn f(input: File, destination: &[]u8) -> i64 { let mut file = input; acknowledge read_resource_slice<Read>(file, destination); return 0; } fn main() -> i64 { return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_REFERENCE_READ_ONLY]");
 }
+
+test "CLI selects arena execution and validates memory backend options" {
+    const source = @embedFile("fixtures/buffer-views.my");
+    for ([_][]const u8{ "--memory=general", "--memory=arena" }) |option| {
+        try invokeOptions("run", source, &.{option}, 0, "19\n", "");
+    }
+    try invokeOptions("run", source, &.{ "--memory=arena", "--max-steps=1" }, 1, "", "error[R_STEP_LIMIT]");
+    try invokeOptions("run", source, &.{ "--memory=arena", "--memory=general" }, 2, "", "usage:");
+    for ([_][]const u8{ "--memory=", "--memory=unknown" }) |option| try invokeOptions("run", source, &.{option}, 2, "", "usage:");
+    for ([_][]const u8{ "check", "dump-bytecode", "discover-duplicates" }) |command| try invokeOptions(command, source, &.{"--memory=arena"}, 2, "", "usage:");
+}

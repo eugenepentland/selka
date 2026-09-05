@@ -1,8 +1,7 @@
 # C: arena backing and checked region reset
 
-Status: backend implemented in `src/arena.zig` and `src/memory.zig`. Guest arena
-syntax, scoped allocator grants, source escape checks, and VM integration remain
-pending. This experiment does not complete the arena language feature or track C.
+Status: backend implemented in `src/arena.zig` and `src/memory.zig`. [Execution-lifetime VM/CLI integration](arena-execution.md) is also implemented.
+Guest arena syntax, scoped allocator grants, and source escape checks remain pending. This experiment does not complete the arena language feature or track C.
 
 ## Region lifetime
 

@@ -1,7 +1,7 @@
 //! Host I/O and process policy stay outside the compiler and VM.
 const std = @import("std");
 const language = @import("mylang");
-const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates> <file.my>\n  run: --max-steps=N --max-frames=N\n  discover-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings\n";
+const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates> <file.my>\n  run: --max-steps=N --max-frames=N --memory=general|arena\n  discover-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings\n";
 
 pub fn main(init: std.process.Init) void {
     const status = dispatch(init) catch |err| status: {
@@ -89,6 +89,7 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     var options: language.vm.Options = .{};
     var saw_steps = false;
     var saw_frames = false;
+    var saw_memory = false;
     var discovery: language.duplicates.Options = .{};
     var timings = false;
     var saw_min = false;
@@ -114,6 +115,10 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
             };
             options.max_frames = std.fmt.parseUnsigned(u64, digits, 10) catch return error.Usage;
             if (options.max_frames == 0) return error.Usage;
+        } else if (std.mem.startsWith(u8, arg, "--memory=")) {
+            if (command != .run or saw_memory) return error.Usage;
+            saw_memory = true;
+            options.memory_backing = std.meta.stringToEnum(language.vm.MemoryBacking, arg["--memory=".len..]) orelse return error.Usage;
         } else if (std.mem.startsWith(u8, arg, "--min-nodes=")) {
             if (command != .@"discover-duplicates" or saw_min) return error.Usage;
             saw_min = true;

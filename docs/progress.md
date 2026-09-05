@@ -889,3 +889,28 @@ Source arena scopes, escape checks, allocator forwarding, pool/handle integratio
 partial field moves, and every other unfinished track remain in scope. C is not
 complete. Guardian was not exercised; hosted CI has not run. The full roadmap goal
 remains active.
+
+
+## 2026-09-05: C execution-lifetime arena integration
+
+Integrated the arena backend into VM execution with explicit embedding selection
+and CLI `run --memory=general|arena`. General allocation remains the default.
+Execution owns stable-address arena storage; buffers and reference cells use the
+selected backing while snapshots, wrappers, registries, and VM metadata retain
+parent allocation. All exit routes reclaim backing after owner cleanup.
+
+374 tests pass in Debug and ReleaseFast (337 core, 37 actual CLI). Acceptance
+compares allocator forwarding, growth, returned slices, limits, and missing grants
+across backends. Arena execution covers every host allocation failure and every
+instruction budget boundary, immutable snapshots, partial-construction propagation,
+resource slice reads/writes and cleanup, and 1,000 separate executions within 32 KiB
+live runtime storage with zero live bytes between runs. CLI selection, matching
+output, traps, and invalid options pass. Formatting and whitespace checks pass.
+Discovery remains exact-v24: this changes runtime backing, not source semantics.
+
+[Execution arena semantics](experiments/arena-execution.md) documents one region per
+execution and accumulation until execution end; logical quotas are not physical
+arena byte bounds. Nested source arena scopes, escape checks, source reset, pool/
+handle integration, partial field moves, and all other unfinished roadmap tracks
+remain in scope. C is incomplete. Guardian was not exercised; hosted CI has not
+run. The full roadmap goal remains active.
