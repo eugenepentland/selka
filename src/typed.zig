@@ -1,4 +1,5 @@
 //! Checked nodes use declaration identities, concrete types, and local slots.
+const std = @import("std");
 const Span = @import("source.zig").Span;
 pub const NodeId = enum(usize) { _ };
 pub const StatementId = enum(usize) { _ };
@@ -18,6 +19,7 @@ pub const Node = struct {
         boolean: bool,
         local: LocalId,
         read_ref: ReferenceId,
+        propagate: struct { value: NodeId, output: Type, cleanup: []const ReferenceId },
         read_slice: struct { reference: ReferenceId, index: NodeId },
         len_slice: ReferenceId,
         cast: NodeId,
@@ -67,6 +69,20 @@ pub const Record = struct {
         return if (self.array) |a| a.element else self.domain orelse self.fields[index].ty;
     }
 };
+pub const ResultShape = struct { ok_type: Type, error_type: Type, ok_tag: usize, error_tag: usize };
+pub fn resultShape(ty: Type, records: []const Record) ?ResultShape {
+    if (!ty.isAggregate() or ty.recordIndex() >= records.len) return null;
+    const variants = records[ty.recordIndex()].variants orelse return null;
+    if (!variants.fallible or !variants.is_union or variants.cases.len != 2) return null;
+    var ok: ?usize = null;
+    var err: ?usize = null;
+    for (variants.cases, 0..) |case, tag| {
+        if (case.payload == null) return null;
+        if (std.mem.eql(u8, case.name, "ok")) ok = tag;
+        if (std.mem.eql(u8, case.name, "err")) err = tag;
+    }
+    return .{ .ok_type = variants.cases[ok orelse return null].payload.?, .error_type = variants.cases[err orelse return null].payload.?, .ok_tag = ok.?, .error_tag = err.? };
+}
 pub fn requiresHandling(ty: Type, records: []const Record) bool {
     return ty.isAggregate() and records[ty.recordIndex()].requires_handling;
 }

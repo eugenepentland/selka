@@ -1,8 +1,8 @@
 # C/D foundation: typed recoverable results and handling obligations
 
 Status: nominal result types, exhaustive handling, explicit acknowledgement, and
-transfer of result obligations are implemented. Dedicated propagation syntax,
-resource ownership, partial-construction cleanup, generics, and typed handles
+transfer of result obligations and [explicit propagation](propagation.md) are
+implemented. Resource ownership, partial-construction cleanup, generics, and typed handles
 remain pending. This is a foundation for C/D, not completion of either track.
 
 ## Result declarations and explicit handling
@@ -36,7 +36,8 @@ both outcomes and is an explicit decision about failure. An error arm may conver
 failure to a default or absence; the compiler does not infer that such a policy is
 correct. Returning a result forwards its obligation to the caller. Manual
 propagation can match an input and construct a declared error result on that path.
-There is no implicit error coercion or dedicated propagation operator yet.
+`try` now propagates compatible error payloads into the enclosing result type;
+see [propagation semantics](propagation.md). There is no implicit error coercion.
 
 `acknowledge expression;` explicitly accepts that the value may contain failure and
 discharges all result obligations carried by it. It evaluates its entire expression
@@ -103,7 +104,7 @@ overflow or host out-of-memory into its declared error payload.
 
 ## Evidence
 
-187/187 tests pass in Debug and ReleaseFast (163 core, 24 actual CLI) on Guardian's
+199/199 tests pass in Debug and ReleaseFast (174 core, 25 actual CLI) on Guardian's
 `0.17.0-dev.1683+5ceec001b` snapshot. The result tests cover:
 
 - success/failure payloads, nominal identity, schema errors, and exhaustive handling;
@@ -118,10 +119,10 @@ overflow or host out-of-memory into its declared error payload.
   live after success or each tested trap;
 - actual CLI handling, related unhandled-result diagnostics, and `ACKNOWLEDGE` dumps.
 
-`examples/results.my` returns 7. Exact duplicate discovery is `exact-v12`, retaining
+`examples/results.my` returns 7. Exact duplicate discovery is `exact-v13`, retaining
 result-bearing expression types and explicit acknowledgement. Formatting and
 whitespace checks pass. Guardian gates were not exercised; hosted CI has not run.
 
-Next: explicit propagation with obligation checks on its early-return path, followed
-by owned resources and partial-construction cleanup. C/D and the full roadmap remain
+Explicit propagation now checks obligations on its early-return path. Next: owned
+resources and partial-construction cleanup. C/D and the full roadmap remain
 in progress.

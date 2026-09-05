@@ -98,6 +98,26 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
         steps += 1;
         frames.items[frame_index].pc += 1;
         switch (instruction.op) {
+            .try_result => |propagate| {
+                const value = try pop(&stack, frame.operand_base);
+                defer value.release(allocator);
+                if (value.typeOf() != propagate.input) return error.InternalError;
+                const input = typed.resultShape(propagate.input, program.records).?;
+                const tag = try value.variantTag();
+                const payload = try value.getField(0);
+                if (tag == input.ok_tag) {
+                    try pushOwned(&stack, allocator, payload);
+                } else {
+                    defer payload.release(allocator);
+                    if (tag != input.error_tag) return error.InternalError;
+                    const output = typed.resultShape(propagate.output, program.records).?;
+                    const error_result = try typed.Value.createVariant(allocator, propagate.output, output.error_tag, payload);
+                    for (stack.items[frame.operand_base..]) |temporary| temporary.release(allocator);
+                    stack.shrinkRetainingCapacity(frame.operand_base);
+                    try pushOwned(&stack, allocator, error_result);
+                    frames.items[frame_index].pc = propagate.error_target;
+                }
+            },
             .acknowledge => |ty| {
                 const value = try pop(&stack, frame.operand_base);
                 defer value.release(allocator);

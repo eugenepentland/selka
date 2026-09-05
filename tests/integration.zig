@@ -337,3 +337,18 @@ test "CLI handles recoverable results and rejects silent error loss" {
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, ignored, 1, "", "error[E_RESULT_UNHANDLED]");
     try invoke("check", "result R { ok: i64, err: i64 } fn main() -> i64 { discard new R.err(7); return 0; }", 1, "", "error[E_RESULT_DISCARD]");
 }
+
+test "CLI propagates typed errors with borrow cleanup and rejects abandoned obligations" {
+    const source = @embedFile("fixtures/propagation.my");
+    try invoke("run", source, 0, "20\n", "");
+    try invoke("check", source, 0, "", "");
+    const dumped = try runFixture("dump-bytecode", source, &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "TRY_RESULT Quotient -> Total") != null);
+    const ignored = "result R { ok: i64, err: i64 } fn f(r: R, other: R) -> R { return new R.ok(try r); } fn main() -> i64 { return 0; }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, ignored, 1, "", "error[E_RESULT_UNHANDLED]");
+    try invoke("check", "result R { ok: i64, err: i64 } fn main() -> i64 { return try new R.ok(7); }", 1, "", "error[E_TRY_RETURN]");
+    try invoke("run", "result R { ok: i64, err: i64 } fn f() -> R { return new R.ok(try new R.ok(1 / 0)); } fn main() -> i64 { acknowledge f(); return 0; }", 1, "", "error[R_DIVISION_BY_ZERO]");
+}

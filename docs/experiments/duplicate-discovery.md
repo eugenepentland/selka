@@ -170,3 +170,9 @@ Typed result obligations advance the version to `exact-v12`. Canonical expressio
 retain whether their type carries a result obligation; explicit acknowledgement
 remains distinct from ordinary discard and exhaustive matching. Bound spelling and
 flow-checking counters are not part of structural identity.
+
+
+Explicit propagation advances the version to `exact-v13`. Canonical expressions
+retain the `try` operation and its output result identity, in addition to the input
+value's type and structure. Manual matching and propagation remain structurally
+distinct; changed nominal output contracts cannot normalize away.

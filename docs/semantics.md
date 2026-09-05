@@ -173,5 +173,12 @@ statements are implemented. Handling obligations transfer through value bindings
 parameters, returns, and wrappers. Scope exits, overwrites, control-flow joins,
 loop back edges, and short-circuit paths cannot silently lose an obligation.
 Exhaustive matching handles outcomes explicitly. See [result semantics and current
-transfer restrictions](experiments/results.md). Dedicated propagation syntax and
-owned-resource cleanup remain pending.
+transfer restrictions](experiments/results.md). Owned-resource cleanup remains pending.
+
+
+`try expression` unwraps a success payload or propagates an exactly matching error
+payload into the enclosing declared result type. Its early-return path must not
+abandon pending result bindings or unfinished result-bearing expression operands.
+Failure releases ordinary temporaries and ends active borrows before returning.
+See [propagation semantics](experiments/propagation.md). Arithmetic traps remain
+separate from recoverable errors.

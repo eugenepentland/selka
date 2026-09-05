@@ -14,6 +14,7 @@ pub const Node = struct {
         boolean: bool,
         name: Span,
         read_ref: Span,
+        propagate: NodeId,
         read_slice: struct { name: Span, index: NodeId },
         len_slice: Span,
         cast: TypedValue,

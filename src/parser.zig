@@ -404,6 +404,11 @@ pub const Parser = struct {
                     else => .{ .boolean = token.tag == .kw_true },
                 } });
             },
+            .kw_try => propagated: {
+                self.pos += 1;
+                const value = try self.expression(7);
+                break :propagated try self.append(.{ .span = .join(token.span, self.nodes.items[@backingInt(value)].span), .data = .{ .propagate = value } });
+            },
             .minus, .bang => unary: {
                 self.pos += 1;
                 const operand = try self.expression(7);

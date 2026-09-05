@@ -11,7 +11,7 @@ not a claim that the full future language has been delivered.
 | A2, nominal domains and exhaustive mappings | Implemented: domains/private construction, closed enums/tagged unions, exhaustive matching, and complete enum-indexed tables | A2 unit, privacy, added-variant match/table, and explicit unknown-code handling experiments pass. |
 | B, borrowing | Implemented: memory/lease registry, scoped references, reference/slice parameters, bounded views, and explicit returned-reference provenance | B acceptance passes; carry borrowing and snapshot rules into resource ownership. |
 | C, ownership/capabilities/effects | Typed recoverable results now available; resource ownership/capabilities/effects pending | Acquire A, fail acquiring B, release A once; reject transitive forbidden effects including cleanup. |
-| D, errors and abstraction | In progress: typed results, checked handling/transfer, and acknowledgement implemented; propagation/generics/handles pending | Require handling/propagation/explicit acknowledgement without erasing evaluation or ownership obligations. |
+| D, errors and abstraction | In progress: typed results, checked handling/transfer, acknowledgement, and propagation implemented; generics/handles pending | Require handling/propagation/explicit acknowledgement without erasing evaluation or ownership obligations. |
 | M, modules/interfaces | Pending a multi-file domain program | Resolve imports/exports and private boundaries; distinguish optional direction policy from type validity. |
 | E, native execution | Pending one concrete backend choice | Run the same scalar semantic/trap fixtures through the VM and native route. |
 | F, compile-time/schema/incremental work | Pending aggregates/variants/modules | Reject duplicate schema keys and undeclared inputs; explain invalidation and evaluation budgets. |
@@ -64,4 +64,5 @@ lifetime contracts are implemented; [the B audit](b-audit.md) records acceptance
 [Typed recoverable results and handling obligations](results.md) establish the
 minimal error-value foundation for C/D. They preserve obligations through binding,
 wrapping, and helper calls, with exhaustive handling or explicit acknowledgement.
-Propagation syntax, resource ownership, and partial-construction cleanup are next.
+[Propagation](propagation.md) now checks early-return obligations and borrow
+cleanup. Resource ownership and partial-construction cleanup are next.

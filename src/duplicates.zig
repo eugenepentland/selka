@@ -3,7 +3,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 
-pub const version = "exact-v12";
+pub const version = "exact-v13";
 pub const Population = enum { production, tests, generated, reference, intentional };
 pub const Options = struct { min_nodes: usize = 8, population: Population = .production };
 pub const Group = struct { members: []const typed.FunctionId, nodes: usize };
@@ -46,6 +46,10 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                 const node = program.nodes[@backingInt(id)];
                 writer.print("expr {s} {s} obligation {}\n", .{ typed.typeName(node.ty, program.records), @tagName(node.data), typed.requiresHandling(node.ty, program.records) }) catch return error.OutOfMemory;
                 switch (node.data) {
+                    .propagate => |propagate| {
+                        writer.print("propagate to {s}\n", .{typed.typeName(propagate.output, program.records)}) catch return error.OutOfMemory;
+                        try work.append(allocator, .{ .expression = propagate.value });
+                    },
                     .variant => |variant| {
                         writer.print("variant {s}\n", .{program.records[node.ty.recordIndex()].variants.?.cases[variant.tag].name}) catch return error.OutOfMemory;
                         if (variant.value) |value| try work.append(allocator, .{ .expression = value });

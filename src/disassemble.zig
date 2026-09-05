@@ -70,6 +70,7 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
                 .store_local => |slot| try writer.print("STORE_LOCAL {d}", .{@backingInt(slot)}),
                 .cmp_i64 => |predicate| try writer.print("CMP_I64 {s}", .{@tagName(predicate)}),
                 .cmp_bool => |predicate| try writer.print("CMP_BOOL {s}", .{@tagName(predicate)}),
+                .try_result => |propagate| try writer.print("TRY_RESULT {s} -> {s} error={d}", .{ typed.typeName(propagate.input, program.records), typed.typeName(propagate.output, program.records), propagate.error_target }),
                 .acknowledge => |ty| try writer.print("ACKNOWLEDGE {s}", .{typed.typeName(ty, program.records)}),
                 .pop => try writer.writeAll("POP"),
                 .jump => |target| try writer.print("JUMP {d}", .{target}),

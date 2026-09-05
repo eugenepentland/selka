@@ -50,6 +50,14 @@ const Checker = struct {
             if (local.result_pending and self.active.get(local.name) == @as(typed.LocalId, @fromBackingInt(index))) return self.sink.failRelated("E_RESULT_UNHANDLED", span, "result-bearing value leaves scope without being handled, returned, transferred, or explicitly acknowledged", .{ .span = local.declaration, .message = "unhandled result-bearing binding" });
         }
     }
+    fn activeCleanup(self: *Checker) Error![]const typed.ReferenceId {
+        var refs: std.ArrayList(typed.ReferenceId) = .empty;
+        for (self.references.items, 0..) |ref, i| {
+            const id: typed.ReferenceId = @fromBackingInt(i);
+            if (self.active_refs.get(ref.name) == id) try refs.append(self.allocator, id);
+        }
+        return refs.toOwnedSlice(self.allocator);
+    }
     fn returnContract(self: *Checker, function: ast.Function) Error!?typed.ReturnReference {
         const contract = function.return_reference orelse return null;
         for (function.parameters, 0..) |parameter, index| {
@@ -176,6 +184,8 @@ const Checker = struct {
     fn expressionMode(self: *Checker, root: ast.NodeId, reference_result: bool) Error!typed.NodeId {
         var work: std.ArrayList(Work) = .empty;
         defer work.deinit(self.allocator);
+        var temporaries: std.ArrayList(typed.Type) = .empty;
+        defer temporaries.deinit(self.allocator);
         try work.append(self.allocator, .{ .id = root });
         while (work.pop()) |task| {
             if (task.verify) |state| {
@@ -223,7 +233,7 @@ const Checker = struct {
                         try work.append(self.allocator, .{ .id = replace.base });
                         continue;
                     },
-                    .length, .unwrap => |base| {
+                    .length, .unwrap, .propagate => |base| {
                         try work.append(self.allocator, .{ .id = task.id, .emit = true });
                         try work.append(self.allocator, .{ .id = base });
                         continue;
@@ -285,6 +295,17 @@ const Checker = struct {
                 out.ty = parsed.ty;
                 out.data = .{ .integer = parsed.value };
             } else switch (node.data) {
+                .propagate => |operand| {
+                    const value = self.resolved[@backingInt(operand)].?;
+                    const input = typed.resultShape(self.nodes.items[@backingInt(value)].ty, self.catalog.records) orelse return self.sink.fail("E_TRY_TYPE", node.span, "try requires a declared fallible result");
+                    const output = typed.resultShape(self.return_type, self.catalog.records) orelse return self.sink.fail("E_TRY_RETURN", node.span, "try requires a function returning a declared result type");
+                    if (self.return_reference != null) return self.sink.fail("E_TRY_RETURN", node.span, "try cannot propagate through a reference return");
+                    try self.require(input.error_type, output.error_type, node.span);
+                    try self.requireHandled(0, node.span);
+                    for (temporaries.items[0 .. temporaries.items.len - 1]) |temporary| if (self.requiresHandling(temporary)) return self.sink.fail("E_RESULT_PROPAGATION", node.span, "propagation could drop a pending result temporary; handle or transfer it before this expression");
+                    out.ty = input.ok_type;
+                    out.data = .{ .propagate = .{ .value = value, .output = self.return_type, .cleanup = try self.activeCleanup() } };
+                },
                 .variant => |variant| {
                     out.ty = try self.ty(variant.ty);
                     const tag = try self.catalog.variant(out.ty, self.src, variant.name, self.sink);
@@ -485,6 +506,20 @@ const Checker = struct {
                     } };
                 },
             }
+            const consumed: usize = switch (out.data) {
+                .integer, .boolean, .local, .read_ref, .len_slice => 0,
+                .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate => 1,
+                .index, .binary => 2,
+                .replace => 3,
+                .variant => |variant| if (variant.value != null) 1 else 0,
+                .array => |values| values.len,
+                .record => |initializers| initializers.len,
+                .update => |update| update.fields.len + 1,
+                .call => |call| call.arguments.len,
+            };
+            std.debug.assert(temporaries.items.len >= consumed);
+            temporaries.shrinkRetainingCapacity(temporaries.items.len - consumed);
+            try temporaries.append(self.allocator, out.ty);
             self.resolved[index] = @fromBackingInt(self.nodes.items.len);
             try self.nodes.append(self.allocator, out);
         }
@@ -690,12 +725,7 @@ const Checker = struct {
                 }
                 try self.requireHandled(0, stmt.span);
                 terminates = true;
-                var refs: std.ArrayList(typed.ReferenceId) = .empty;
-                for (self.references.items, 0..) |ref, i| {
-                    const ref_id: typed.ReferenceId = @fromBackingInt(i);
-                    if (self.active_refs.get(ref.name) == ref_id) try refs.append(self.allocator, ref_id);
-                }
-                cleanup = try refs.toOwnedSlice(self.allocator);
+                cleanup = try self.activeCleanup();
                 break :ret if (returned) |id| .{ .ret_ref = id } else .{ .ret = value.? };
             },
             .binding => |b| binding: {

@@ -8,6 +8,7 @@ pub const SwitchArm = struct { target: usize, slot: ?typed.LocalId };
 pub const Instruction = struct {
     span: Span,
     op: union(enum) {
+        try_result: struct { input: typed.Type, output: typed.Type, error_target: usize },
         push_i64: i64,
         push_bool: bool,
         push_integer: struct { ty: typed.Type, value: i128 },
@@ -237,6 +238,11 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                 if (!program.records[update.ty.recordIndex()].isRecord()) return error.InternalError;
                 try validateIndices(allocator, update.indices, program.records[update.ty.recordIndex()].fields.len);
             },
+            .try_result => |propagate| {
+                const input = typed.resultShape(propagate.input, program.records) orelse return error.InternalError;
+                const output = typed.resultShape(propagate.output, program.records) orelse return error.InternalError;
+                if (input.error_type != output.error_type or propagate.output != function.return_type or function.return_reference != null or propagate.error_target >= function.instructions.len) return error.InternalError;
+            },
             .acknowledge => |ty| {
                 if (!validType(ty, program) or !typed.requiresHandling(ty, program.records)) return error.InternalError;
             },
@@ -356,6 +362,11 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     const count = valueParameterCount(program.functions[@backingInt(id)]);
                     if (height < count) return error.InternalError;
                     height = height - count + @as(usize, if (instruction.op == .call_borrow) 0 else 1);
+                },
+                .try_result => |propagate| {
+                    if (height == 0) return error.InternalError;
+                    // Failure unwinds unfinished operands and carries one error result.
+                    try enqueue(heights, pending, &len, propagate.error_target, 1);
                 },
                 .ret_ref => {
                     if (height != 0) return error.InternalError;

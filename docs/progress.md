@@ -481,3 +481,31 @@ This is a C/D foundation, not completion. Propagation syntax, resource ownership
 partial-construction cleanup, capabilities/effects, generics, typed handles, and
 other unfinished roadmap tracks remain pending. The full goal remains active.
 Guardian gates were not exercised; hosted CI has not run.
+
+
+## 2026-09-05: C/D explicit propagation and early-return obligations
+
+Implemented unary `try`: success yields its payload; failure propagates into the
+enclosing function's declared result type with exactly matching error identity.
+Named variant mappings permit different result types, success payloads, and case
+orders. Error propagation cannot target ordinary unions or reference returns.
+
+The checker requires all other active result obligations to be handled and tracks
+unfinished expression operands so earlier result-bearing arguments or constructor
+fields cannot disappear on failure. Lowering emits explicit failure cleanup and
+return paths. The VM releases partial ordinary operands, retains the error payload,
+ends active references child-first, and preserves caller operands and access.
+Exact duplicate discovery is now `exact-v13`.
+
+199/199 tests pass in Debug and ReleaseFast (174 core, 25 actual CLI), including
+recursive/nested propagation, named error mappings, loop/short-circuit conditions,
+returned-view cleanup, allocation failures, all instruction trap boundaries of a
+nested aggregate propagation case, and 10,000 propagated failures within 16 KiB
+live runtime allocation. The propagation example returns 20. Formatting and
+whitespace checks pass on Guardian's exact pinned Zig snapshot.
+
+The plan's fallible-result handling, propagation, and acknowledgement acceptance
+cases now have implementation evidence. C/D remain incomplete: owned resources,
+partial-construction cleanup, capabilities/effects, arenas/pools, generics, and
+typed handles are still pending, along with the other unfinished roadmap tracks.
+Guardian gates were not exercised; hosted CI has not run. The full goal remains active.

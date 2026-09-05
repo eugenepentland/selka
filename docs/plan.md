@@ -629,7 +629,8 @@ parameters. [Bounded slices and checked narrowing](experiments/slices.md) are al
 implemented. [Returned-reference lifetime contracts](experiments/returned-references.md)
 complete B; see [the acceptance audit](experiments/b-audit.md). C/D now have
 [typed recoverable results and checked handling obligations](experiments/results.md).
-Propagation syntax, resource ownership, and the other unfinished work below remain pending.
+[Explicit propagation](experiments/propagation.md) now preserves error obligations
+and borrow cleanup. Resource ownership and the other unfinished work below remain pending.
 
 | Stage | Scope | Question to answer before proceeding |
 | --- | --- | --- |

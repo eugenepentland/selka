@@ -10,9 +10,10 @@ const Work = union(enum) {
     instruction: bc.Instruction,
     mark: Label,
     jump: struct { target: Label, conditional: bool = false, span: Span },
+    propagate: struct { input: typed.Type, output: typed.Type, target: Label, span: Span },
     dispatch: struct { ty: typed.Type, targets: []const Label, slots: []const ?typed.LocalId, span: Span },
 };
-const Fixup = struct { instruction: usize, label: Label, arm: ?usize = null };
+const Fixup = struct { instruction: usize, label: Label, arm: ?usize = null, propagation: bool = false };
 const Emitter = struct {
     allocator: std.mem.Allocator,
     program: typed.Program,
@@ -136,6 +137,17 @@ const Emitter = struct {
     fn emitExpression(self: *Emitter, id: typed.NodeId) !void {
         const node = self.program.nodes[@backingInt(id)];
         switch (node.data) {
+            .propagate => |propagate| {
+                const failure = try self.label();
+                const success = try self.label();
+                try self.push(.{ .mark = success });
+                try self.instruction(node.span, .ret);
+                for (propagate.cleanup) |reference| try self.instruction(node.span, .{ .end_borrow = reference });
+                try self.push(.{ .mark = failure });
+                try self.push(.{ .jump = .{ .target = success, .span = node.span } });
+                try self.push(.{ .propagate = .{ .input = self.program.nodes[@backingInt(propagate.value)].ty, .output = propagate.output, .target = failure, .span = node.span } });
+                try self.push(.{ .expression = propagate.value });
+            },
             .variant => |variant| {
                 try self.instruction(node.span, .{ .make_variant = .{ .ty = node.ty, .tag = variant.tag } });
                 if (variant.value) |value| try self.push(.{ .expression = value });
@@ -248,6 +260,10 @@ const Emitter = struct {
             .instruction => |inst| try self.code.append(self.allocator, inst),
             .statement => |id| try self.emitStatement(id),
             .expression => |id| try self.emitExpression(id),
+            .propagate => |propagate| {
+                try self.fixups.append(self.allocator, .{ .instruction = self.code.items.len, .label = propagate.target, .propagation = true });
+                try self.code.append(self.allocator, .{ .span = propagate.span, .op = .{ .try_result = .{ .input = propagate.input, .output = propagate.output, .error_target = 0 } } });
+            },
             .dispatch => |dispatch| {
                 const arms = try self.allocator.alloc(bc.SwitchArm, dispatch.targets.len);
                 for (dispatch.targets, dispatch.slots, arms, 0..) |target, slot, *arm, i| {
@@ -266,7 +282,7 @@ const Emitter = struct {
             const target = self.labels.items[@backingInt(fixup.label)] orelse return error.InternalError;
             const inst = &self.code.items[fixup.instruction];
             // Dispatch arms were allocated by this emitter and are not shared yet.
-            if (fixup.arm) |arm| @constCast(inst.op.switch_variant.arms)[arm].target = target else if (inst.op == .jump) inst.op.jump = target else inst.op.jump_if_false = target;
+            if (fixup.propagation) inst.op.try_result.error_target = target else if (fixup.arm) |arm| @constCast(inst.op.switch_variant.arms)[arm].target = target else if (inst.op == .jump) inst.op.jump = target else inst.op.jump_if_false = target;
         }
         return self.code.toOwnedSlice(self.allocator);
     }
