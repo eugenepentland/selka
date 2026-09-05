@@ -271,3 +271,6 @@ and emits ordinary exported functions. The example at `examples/input-values/`
 evaluates to 64. `eval-project --inputs=examples/input-values/inputs.json` generates
 the declared module in memory; the cache driver also accepts `--inputs` and reads it
 fresh on every lookup.
+
+Repeat `--inputs` for multiple declared modules (up to 16 manifests and 8 MiB combined).
+Conflicting module bindings reject; flag order does not change the request identity.

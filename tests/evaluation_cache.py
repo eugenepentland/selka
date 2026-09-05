@@ -147,7 +147,11 @@ def main():
         manifest.write_text(json.dumps(values))
         stale = root / 'config.my'
         stale.write_text('invalid stale source must not be loaded or overwritten')
-        input_options = [f'--inputs={manifest}']
+        second_manifest = root / 'second-input.json'
+        second_values = {'version': 1, 'module': 'second', 'values': [{'name': 'offset', 'type': 'i64', 'value': '0'}]}
+        second_manifest.write_text(json.dumps(second_values))
+        entry.write_text('module main; import config; import second; fn main()->i64{return config::value()+second::offset();}')
+        input_options = [f'--inputs={manifest}', f'--inputs={second_manifest}']
         generated = cache.evaluate(compiler, entry, directory, input_options)
         assert generated['cache'] == 'miss' and generated['result']['decimal'] == '3'
         values['values'][0]['value'] = '4'
@@ -155,7 +159,11 @@ def main():
         refreshed = cache.evaluate(compiler, entry, directory, input_options)
         assert refreshed['cache'] == 'miss' and refreshed['result']['decimal'] == '4'
         assert refreshed['request_sha256'] != generated['request_sha256']
-        assert cache.evaluate(compiler, entry, directory, input_options)['cache'] == 'hit'
+        assert cache.evaluate(compiler, entry, directory, list(reversed(input_options)))['cache'] == 'hit'
+        second_values['values'][0]['value'] = '1'
+        second_manifest.write_text(json.dumps(second_values))
+        changed_second = cache.evaluate(compiler, entry, directory, input_options)
+        assert changed_second['cache'] == 'miss' and changed_second['result']['decimal'] == '5'
         assert stale.read_text() == 'invalid stale source must not be loaded or overwritten'
         print('evaluation cache: real cold/warm VM invocation counts, source/budget misses, '
               'corruption repair, atomic failure cleanup, rejected source/runtime failures, '

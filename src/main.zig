@@ -1,7 +1,7 @@
 //! Host I/O and process policy stay outside the compiler and VM.
 const std = @import("std");
 const language = @import("mylang");
-const usage = "usage: mylang <input-module|check|run|dump-bytecode|discover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fmt-module|fmt-project|emit-c|emit-project-c|eval-project|list-modules|list-interfaces|check-project|run-project|check-policy> <file.my>\n  input-module: reads a typed JSON manifest and writes generated module source\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena\n  eval-project: --max-steps=N --max-frames=N --max-eval-bytes=N --evaluation-report|--evaluation-request --inputs=manifest.json (effect-free, parameter-free entry)\n  discover-duplicates/discover-project-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality/report-project-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: --check (otherwise writes formatted source to stdout)\n";
+const usage = "usage: mylang <input-module|check|run|dump-bytecode|discover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fmt-module|fmt-project|emit-c|emit-project-c|eval-project|list-modules|list-interfaces|check-project|run-project|check-policy> <file.my>\n  input-module: reads a typed JSON manifest and writes generated module source\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena\n  eval-project: --max-steps=N --max-frames=N --max-eval-bytes=N --evaluation-report|--evaluation-request --inputs=manifest.json (repeat for up to 16 modules; effect-free, parameter-free entry)\n  discover-duplicates/discover-project-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality/report-project-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: --check (otherwise writes formatted source to stdout)\n";
 
 pub fn main(init: std.process.Init) void {
     const status = dispatch(init) catch |err| status: {
@@ -127,7 +127,7 @@ fn report(init: std.process.Init, compilation: *const language.Compilation) !voi
 }
 
 const Command = enum { @"input-module", @"eval-project", @"emit-project-c", @"fmt-project", @"fmt-module", @"report-project-quality", @"discover-project-duplicates", @"check-policy", @"check-project", @"run-project", @"list-interfaces", @"list-modules", @"emit-c", fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
-const Parsed = struct { inputs: ?[]const u8, evaluation_request: bool, evaluation_report: bool, evaluation: language.evaluation.Options, policy: ?[]const u8, format_check: bool, quality: language.quality.Options, command: Command, path: []const u8, options: language.vm.Options, discovery: language.duplicates.Options, timings: bool };
+const Parsed = struct { inputs: [16][]const u8, input_count: usize, evaluation_request: bool, evaluation_report: bool, evaluation: language.evaluation.Options, policy: ?[]const u8, format_check: bool, quality: language.quality.Options, command: Command, path: []const u8, options: language.vm.Options, discovery: language.duplicates.Options, timings: bool };
 fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (args.len < 2) return error.Usage;
     const command = std.meta.stringToEnum(Command, args[0]) orelse return error.Usage;
@@ -135,7 +135,8 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     var saw_eval_bytes = false;
     var evaluation_report = false;
     var evaluation_request = false;
-    var inputs: ?[]const u8 = null;
+    var inputs: [16][]const u8 = @splat("");
+    var input_count: usize = 0;
     var quality: language.quality.Options = .{};
     var quality_seen: u8 = 0;
     var format_check = false;
@@ -156,8 +157,11 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     var saw_work = false;
     argument: for (args[1..]) |arg| {
         if (std.mem.startsWith(u8, arg, "--inputs=")) {
-            if (command != .@"eval-project" or inputs != null or arg.len == "--inputs=".len) return error.Usage;
-            inputs = arg["--inputs=".len..];
+            if (command != .@"eval-project" or input_count == inputs.len or arg.len == "--inputs=".len) return error.Usage;
+            const input = arg["--inputs=".len..];
+            for (inputs[0..input_count]) |previous| if (std.mem.eql(u8, previous, input)) return error.Usage;
+            inputs[input_count] = input;
+            input_count += 1;
             continue;
         }
         if (std.mem.eql(u8, arg, "--evaluation-request")) {
@@ -248,7 +252,7 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (saw_work and !discovery.approximate) return error.Usage;
     if (command == .@"fmt-project" and !format_check) return error.Usage;
     if (command == .@"check-policy" and policy == null) return error.Usage;
-    return .{ .inputs = inputs, .evaluation_request = evaluation_request, .evaluation_report = evaluation_report, .evaluation = .{ .max_steps = options.max_steps, .max_frames = options.max_frames, .max_bytes = evaluation.max_bytes }, .policy = policy, .format_check = format_check, .quality = quality, .command = command, .path = path orelse return error.Usage, .options = options, .discovery = discovery, .timings = timings };
+    return .{ .inputs = inputs, .input_count = input_count, .evaluation_request = evaluation_request, .evaluation_report = evaluation_report, .evaluation = .{ .max_steps = options.max_steps, .max_frames = options.max_frames, .max_bytes = evaluation.max_bytes }, .policy = policy, .format_check = format_check, .quality = quality, .command = command, .path = path orelse return error.Usage, .options = options, .discovery = discovery, .timings = timings };
 }
 
 fn positive(digits: []const u8) error{Usage}!u64 {
@@ -261,19 +265,20 @@ fn positive(digits: []const u8) error{Usage}!u64 {
     return value;
 }
 
+const GeneratedInput = struct { module: []const u8, path: []const u8, source: []const u8, manifest_path: []const u8 };
 const ModuleFiles = struct {
     io: std.Io,
     root: []const u8,
-    input: ?struct { module: []const u8, path: []const u8, source: []const u8 } = null,
+    inputs: []const GeneratedInput = &.{},
     fn read(context: ?*anyopaque, allocator: std.mem.Allocator, relative: []const u8, limit: usize) language.project.ReadError![]u8 {
         const self: *ModuleFiles = @ptrCast(@alignCast(context.?));
-        if (self.input) |input| if (std.mem.eql(u8, input.path, relative)) {
+        for (self.inputs) |input| if (std.mem.eql(u8, input.path, relative)) {
             if (input.source.len > limit) return error.TooLarge;
             return allocator.dupe(u8, input.source);
         };
         const path = try std.fs.path.join(allocator, &.{ self.root, relative });
         defer allocator.free(path);
-        return std.Io.Dir.cwd().readFileAlloc(self.io, path, allocator, .limited(limit)) catch |err| switch (err) {
+        return std.Io.Dir.cwd().readFileAlloc(self.io, path, allocator, .limited(limit + 1)) catch |err| switch (err) {
             error.OutOfMemory => error.OutOfMemory,
             error.FileNotFound => error.NotFound,
             error.StreamTooLong => error.TooLarge,
@@ -290,8 +295,21 @@ fn listModules(init: std.process.Init, parsed: Parsed) !u8 {
         return 2;
     }
     var files: ModuleFiles = .{ .io = init.io, .root = std.fs.path.dirname(path) orelse "." };
-    if (parsed.inputs) |manifest_path| {
-        const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, manifest_path, init.gpa, .limited(1024 * 1024));
+    const input_allocator = init.arena.allocator();
+    var generated_inputs: std.ArrayList(GeneratedInput) = .empty;
+    defer generated_inputs.deinit(input_allocator);
+    var manifest_bytes: usize = 0;
+    for (parsed.inputs[0..parsed.input_count]) |manifest_path| {
+        // This Zig snapshot rejects reads that reach the supplied limit.
+        // Add one so the documented manifest byte budgets are inclusive.
+        const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, manifest_path, init.gpa, .limited(@min(1024 * 1024, 8 * 1024 * 1024 - manifest_bytes) + 1)) catch |err| switch (err) {
+            error.StreamTooLong => {
+                try std.Io.File.stderr().writeStreamingAll(init.io, "input manifest byte budget exceeded (1 MiB per file, 8 MiB combined)\n");
+                return 2;
+            },
+            else => return err,
+        };
+        manifest_bytes += bytes.len;
         defer init.gpa.free(bytes);
         var manifest = (try parseInputManifest(init, manifest_path, bytes)) orelse return 2;
         defer manifest.deinit();
@@ -300,9 +318,15 @@ fn listModules(init: std.process.Init, parsed: Parsed) !u8 {
             try std.Io.File.stderr().writeStreamingAll(init.io, "input manifest must supply an imported module, not the entry module\n");
             return 2;
         }
-        const allocator = init.arena.allocator();
-        files.input = .{ .module = try allocator.dupe(u8, module), .path = try language.project.modulePath(allocator, module), .source = try manifest.generate(allocator) };
+        for (generated_inputs.items) |previous| if (std.mem.eql(u8, previous.module, module)) {
+            const message = try std.fmt.allocPrint(init.gpa, "{s}: duplicate input module {s}; already supplied by {s}\n", .{ manifest_path, module, previous.manifest_path });
+            defer init.gpa.free(message);
+            try std.Io.File.stderr().writeStreamingAll(init.io, message);
+            return 2;
+        };
+        try generated_inputs.append(input_allocator, .{ .module = try input_allocator.dupe(u8, module), .path = try language.project.modulePath(input_allocator, module), .source = try manifest.generate(input_allocator), .manifest_path = manifest_path });
     }
+    files.inputs = generated_inputs.items;
     var project = language.project.Project.init(init.gpa);
     defer project.deinit();
     project.load(.{ .context = &files, .read = ModuleFiles.read }, basename[0 .. basename.len - 3], .{}) catch |err| switch (err) {
@@ -314,8 +338,10 @@ fn listModules(init: std.process.Init, parsed: Parsed) !u8 {
         },
         else => return err,
     };
-    if (files.input) |input| if (!project.names.contains(input.module)) {
-        try std.Io.File.stderr().writeStreamingAll(init.io, "declared input module is not imported by the reachable project\n");
+    for (files.inputs) |input| if (!project.names.contains(input.module)) {
+        const message = try std.fmt.allocPrint(init.gpa, "{s}: declared input module {s} is not imported by the reachable project\n", .{ input.manifest_path, input.module });
+        defer init.gpa.free(message);
+        try std.Io.File.stderr().writeStreamingAll(init.io, message);
         return 2;
     };
     if (parsed.command == .@"fmt-project") {

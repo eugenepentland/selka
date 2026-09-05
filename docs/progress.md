@@ -1849,3 +1849,33 @@ derived schemas, general serialization/bindings, finer incremental compilation,
 generics, wider native operations, ordinary-program review, and all other unfinished
 roadmap work remain pending. Guardian was not exercised; hosted CI has not run. The
 full roadmap goal remains active.
+
+## 2026-09-05: Multiple bounded input manifests and inclusive file budgets
+
+Extended repeated --inputs bindings to at most 16 distinct generated modules, with
+1 MiB per manifest and 8 MiB combined. Duplicate literal paths reject as usage errors;
+duplicate logical modules across different files reject with both manifest paths.
+Every module must remain imported and cannot replace the entry. The bounded provider
+resolves unique in-memory bindings without depending on flag order. The cache driver
+forwards all bindings to both request and execution.
+
+Exact-boundary acceptance exposed the pinned Zig file reader's exclusive limit:
+files reaching the supplied limit are rejected. Manifest and ordinary module provider
+reads now add one to implement the documented inclusive byte budgets. Tests accept
+eight exact-1-MiB manifests and an exact-4-MiB ordinary module, reject the next byte or
+ninth full manifest, execute all 16 bindings, reject a 17th, and reject duplicate module
+names. Full request documents remain equal under reversed binding flags. Cache tests
+change either of two manifests independently and verify new results, while reversed
+unchanged bindings hit the same entry.
+
+All 14 build steps pass in Debug and ReleaseFast. The 461 unchanged core Zig tests
+reuse successful cached results and all 57 CLI tests pass (518 total), alongside
+extended input/cache drivers, eight verification-driver tests, receipt checks,
+module/duplicate scaling, and 392 native comparisons per host mode. Formatting and
+whitespace checks pass. Documentation, README, roadmap, and attached plan record the
+limits, identity rules, and boundary correction.
+
+Broader input types, schema derivation, general serialization/bindings, finer
+incremental compilation, generics, wider native operations, ordinary-program review,
+and all other unfinished roadmap work remain pending. Guardian was not exercised;
+hosted CI has not run. The full roadmap goal remains active.

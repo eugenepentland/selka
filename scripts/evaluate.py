@@ -233,14 +233,13 @@ def main():
     parser.add_argument('--max-frames', type=positive)
     parser.add_argument('--max-eval-bytes', type=positive)
     parser.add_argument('--timeout', type=positive_timeout, default=90)
-    parser.add_argument('--inputs', type=Path)
+    parser.add_argument('--inputs', type=Path, action='append', default=[])
     parser.add_argument('--compare-to', type=Path)
     parser.add_argument('--max-changes', type=positive, default='100')
     args = parser.parse_args()
     options = [f'--{name.replace("_", "-")}={getattr(args, name)}'
                for name in ('max_steps', 'max_frames', 'max_eval_bytes') if getattr(args, name) is not None]
-    if args.inputs is not None:
-        options.append(f'--inputs={args.inputs}')
+    options.extend(f'--inputs={path}' for path in args.inputs)
     try:
         result = evaluate(args.compiler, args.entry, args.cache_dir, options, args.timeout, args.compare_to, int(args.max_changes))
         print(encode(result).decode('utf-8'))

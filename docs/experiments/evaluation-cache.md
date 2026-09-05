@@ -12,7 +12,8 @@ The first run reports a cache miss and VM execution; the second reports a hit an
 skipped VM, both with the typed decimal result 12. The cache directory is explicit.
 `--compiler`, `--max-steps`, `--max-frames`, and `--max-eval-bytes` select the compiler
 and evaluation budgets. `--inputs=manifest.json` supplies a freshly generated typed
-input module to both request and execution invocations. `--timeout` bounds each compiler subprocess (default 90 seconds).
+input module to both request and execution invocations; repeat it for multiple
+distinct modules within the compiler limits. `--timeout` bounds each compiler subprocess (default 90 seconds).
 
 ## Lookup and execution
 

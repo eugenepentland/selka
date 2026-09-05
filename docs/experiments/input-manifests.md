@@ -63,12 +63,12 @@ boolean values. It independently checks the embedded manifest hash and determini
 output, and rejects duplicate/unknown JSON fields, numeric JSON values, path traversal,
 duplicate names, excess input count, and excess manifest bytes. Debug and ReleaseFast
 run the driver in zig build test. Schema derivation from language records, general
-serialization/bindings, multiple simultaneous manifests, and finer incremental
+serialization/bindings, broader input types, and finer incremental
 compilation remain pending.
 
 ## Automatic evaluation inputs and freshness
 
-One --inputs=manifest.json binding is supported per eval-project invocation, including
+Up to 16 --inputs=manifest.json bindings are supported per eval-project invocation, including
 request-only and successful-report modes. Paths to manifests are interpreted from the
 working directory. The manifest supplies an imported logical module through the
 existing bounded module provider. That explicit binding takes precedence over a disk
@@ -76,8 +76,8 @@ file at the same logical module path, including a stale or invalid generated fil
 No physical directory or generated file is required. The generated source retains
 normal module/type/effect checking and source-budget accounting.
 
-The entry module cannot be replaced by a manifest. A manifest whose module is absent
-from the reachable import graph is rejected as unused. Repeated/empty bindings and
+The entry module cannot be replaced by a manifest. Every manifest whose module is absent
+from the reachable import graph is rejected as unused. Duplicate-path/empty bindings and
 bindings supplied to other compiler commands reject as usage errors. Generation and
 manifest validation complete before loading the project; the retained in-memory
 snapshot remains owned through checking/evaluation. Source diagnostics for generated
@@ -94,3 +94,29 @@ Acceptance now also exercises in-memory loading over invalid disk content, absen
 files/directories, manifest value edits, generated-source receipt hashes, duplicate
 bindings, entry replacement/unused-manifest rejection, and real cached input changes
 followed by a warm hit. Existing disk contents remain unchanged in these tests.
+
+## Multiple manifest boundaries
+
+Repeat --inputs for distinct imported modules. Duplicate logical module bindings
+reject even when their manifests have different filenames or identical values; there
+is no first-wins or last-wins ambiguity. Literal duplicate manifest paths reject as
+usage errors, while alternate paths to the same logical module are detected after
+parsing. The compiler reports both conflicting manifest paths. Each declared module
+must be used by the reachable graph, and entry replacement remains forbidden.
+
+The invocation permits at most 16 manifests and 8 MiB of combined manifest bytes,
+while retaining the 1 MiB per-file limit and 1,024 values per manifest. Generated
+sources also count toward the existing project module/source budgets. The cache
+driver forwards every repeated binding to both request and execution. Valid binding
+flag order does not affect request identity: source/import order comes from the
+project graph, and each generated module retains its own manifest content hash.
+
+Acceptance executes 16 generated input modules, rejects a 17th binding, rejects two
+files naming the same module, compares full request documents under reversed binding
+flags, accepts eight exact-1-MiB manifests, and rejects a ninth. Cache tests change
+each of two manifests independently and verify refreshed values; reversing unchanged
+bindings still hits the same cache entry.
+
+The boundary tests also verify an exact-4-MiB ordinary source module and rejection
+of one extra byte. Manifest and module file readers account for the pinned Zig
+reader's exclusive limit so the documented byte budgets are inclusive.

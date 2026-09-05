@@ -98,6 +98,50 @@ def main():
         assert 'TooManyInputs' in generate(status=2).stderr
         manifest.write_bytes(b' ' * (1024 * 1024 + 1))
         assert 'ManifestTooLarge' in generate(status=2).stderr
+
+        bindings = []
+        for i in range(17):
+            file = root / f'data{i}.json'
+            file.write_text(json.dumps({'version': 1, 'module': f'data.m{i}',
+                                        'values': [{'name': 'value', 'type': 'i64', 'value': str(i)}]}))
+            bindings.append(file)
+
+        def multi_entry(count):
+            entry.write_text('module main;' + ''.join(f'import data.m{i};' for i in range(count)) +
+                             'fn main()->i64{return ' + '+'.join(f'm{i}::value()' for i in range(count)) + ';}')
+
+        def multi(files, status=0, request=False):
+            command = [compiler, 'eval-project', str(entry), *[f'--inputs={file}' for file in files]]
+            if request:
+                command.append('--evaluation-request')
+            result = subprocess.run(command, text=True, capture_output=True, timeout=90)
+            assert result.returncode == status, (result.returncode, result.stderr)
+            if status:
+                assert result.stdout == ''
+            return result
+
+        multi_entry(16)
+        assert multi(bindings[:16]).stdout == '120\n'
+        ordered = json.loads(multi(bindings[:16], request=True).stdout)
+        reversed_inputs = json.loads(multi(list(reversed(bindings[:16])), request=True).stdout)
+        assert ordered == reversed_inputs, 'binding flag order changed the request'
+        assert len(ordered['request']['sources']) == 17
+        assert 'usage:' in multi(bindings, status=2).stderr
+        duplicate = root / 'duplicate.json'
+        duplicate.write_bytes(bindings[0].read_bytes())
+        assert 'duplicate input module data.m0' in multi([bindings[0], duplicate], status=2).stderr
+        multi_entry(8)
+        for file in bindings[:9]:
+            data = file.read_bytes()
+            file.write_bytes(data + b' ' * (1024 * 1024 - len(data)))
+        assert multi(bindings[:8]).stdout == '28\n'
+        assert 'byte budget exceeded' in multi(bindings[:9], status=2).stderr
+        main_bytes = b'module main; fn main()->i64{return 0;}'
+        entry.write_bytes(main_bytes + b' ' * (4 * 1024 * 1024 - len(main_bytes)))
+        assert multi([]).stdout == '0\n'
+        with entry.open('ab') as stream:
+            stream.write(b' ')
+        assert 'E_PROJECT_BYTES' in multi([], status=1).stderr
         print('typed input manifests: deterministic generation, source digest, all integer width extrema, '
               'booleans, checked imported evaluation, strict JSON/duplicate/path/value rejection, and budgets passed')
 
