@@ -1560,3 +1560,29 @@ point to their completed follow-on implementations. Generics, compile-time/schem
 incremental work, wider native types/resources, and remaining corpus/scaling
 acceptance are still pending. Guardian was not exercised and hosted CI has not run.
 The full roadmap goal remains active.
+
+## 2026-09-05: Bounded approximate header index
+
+Approximate duplicate discovery now builds a stable merge-sorted header index and
+visits only compatible function pairs, retaining first-declaration pair order and
+the existing canonical-line distance/traceback. Header sorting and index movement
+are charged to the work budget; an incomplete index reports truncation without
+claiming exhaustive absence. Temporary index arrays are freed on success, budget
+exhaustion, and allocation failure. Near-v2 records the changed budget accounting;
+exact-v28 and similarity semantics are unchanged.
+
+506 Zig tests pass in Debug and ReleaseFast (451 core, 55 CLI), including the existing
+allocation-failure sweeps, interleaved header bucket ordering, output limits, and a
+1,024-input distant-pair test within 250,000 work units. The actual CLI scaling driver
+now runs as part of zig build test. Generated source corpora with 128/512/1,024
+functions find their compatible first/last pair without truncation under four
+million units and produce byte-identical repeat reports. Observed work counts are
+150,889 / 621,084 / 1,361,230. These generated cases establish header-index scaling,
+not ordinary-program usefulness or a guarantee for large compatible buckets.
+
+Eight verification-driver tests and 392 VM/native comparisons per host build mode
+also pass. Zig formatting and git diff whitespace checks pass. The plan and roadmap
+record this progress; broader ordinary-program review, compatible-bucket scaling,
+module corpus acceptance, generics, compile-time/schema/incremental work, and wider
+native operations remain pending. Guardian was not exercised; hosted CI has not run.
+The full roadmap goal remains active.

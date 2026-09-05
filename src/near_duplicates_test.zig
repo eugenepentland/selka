@@ -111,3 +111,44 @@ test "near pair limits bound repeated drift reports while exact groups remain co
     try t.expect(result.approximate.truncated);
     try t.expect(result.approximate.work <= result.options.near_options.max_work);
 }
+
+const near = discovery.near;
+fn indexedInput(allocator: std.mem.Allocator, id: usize, header: usize) !near.Input {
+    return .{ .function = @fromBackingInt(id), .bytes = try std.fmt.allocPrint(allocator, "signature {d}\nstmt block\na\nb\nc\nd\ne\nf\ng\nh\n{d}\n", .{ header, id }) };
+}
+test "header index retains source pair order across interleaved buckets" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    var inputs: [5]near.Input = undefined;
+    for (&inputs, [_]usize{ 0, 1, 0, 1, 0 }, 0..) |*input, header, id| input.* = try indexedInput(allocator, id, header);
+    const result = try near.discover(allocator, t.allocator, &inputs, .{});
+    try t.expect(!result.truncated);
+    try t.expectEqual(@as(usize, 4), result.pairs.len);
+    for (result.pairs, [_][2]usize{ .{ 0, 2 }, .{ 0, 4 }, .{ 1, 3 }, .{ 2, 4 } }) |pair, expected| {
+        try t.expectEqual(expected[0], @backingInt(pair.left));
+        try t.expectEqual(expected[1], @backingInt(pair.right));
+        try t.expectEqual(@as(usize, 1), pair.distance);
+    }
+    const limited = try near.discover(allocator, t.allocator, &inputs, .{ .max_pairs = 2 });
+    try t.expect(limited.truncated);
+    try t.expectEqual(@as(usize, 2), limited.pairs.len);
+    try t.expectEqual(@as(usize, 4), @backingInt(limited.pairs[1].right));
+}
+test "header index discovers distant compatible functions within a subquadratic budget" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    const inputs = try allocator.alloc(near.Input, 1024);
+    for (inputs, 0..) |*input, id| input.* = try indexedInput(allocator, id, if (id == inputs.len - 1) 0 else id);
+    const result = try near.discover(allocator, t.allocator, inputs, .{ .max_work = 250_000 });
+    try t.expect(!result.truncated);
+    try t.expect(result.work < 250_000);
+    try t.expectEqual(@as(usize, 1), result.pairs.len);
+    try t.expectEqual(@as(usize, 0), @backingInt(result.pairs[0].left));
+    try t.expectEqual(@as(usize, 1023), @backingInt(result.pairs[0].right));
+    const short = try near.discover(allocator, t.allocator, inputs, .{ .max_work = 2000 });
+    try t.expect(short.truncated);
+    try t.expect(short.work <= 2000);
+    try t.expectEqual(@as(usize, 0), short.pairs.len);
+}

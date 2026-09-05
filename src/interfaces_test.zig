@@ -279,7 +279,7 @@ fn discoveryScenario(allocator: std.mem.Allocator) !void {
     try t.expect(!grouped(analysis, compilation.program.?, "left::wrapper", "right::wrapper"));
     const text = try @import("duplicates.zig").render(allocator, analysis, compilation.program.?, compilation.src);
     defer allocator.free(text);
-    for ([_][]const u8{ "left.my:1:", "right.my:1:", "left::pure", "right::pure", "approximate near-v1" }) |part| try t.expect(std.mem.indexOf(u8, text, part) != null);
+    for ([_][]const u8{ "left.my:1:", "right.my:1:", "left::pure", "right::pure", "approximate near-v2" }) |part| try t.expect(std.mem.indexOf(u8, text, part) != null);
 }
 test "module duplicate discovery preserves nominal types and callees while normalizing shared import aliases" {
     try discoveryScenario(t.allocator);

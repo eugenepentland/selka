@@ -1,7 +1,7 @@
 # T: bounded approximate duplicate discovery
 
 Status: implemented as opt-in `discover-duplicates --approximate`. Exact discovery
-remains `exact-v28`; approximate scoring/reporting is separately versioned `near-v1`.
+remains `exact-v28`; approximate scoring/reporting is separately versioned `near-v2`.
 Reports are advisory, never rewrite code, and do not change source validity.
 
 ```sh
@@ -39,18 +39,28 @@ and direct self-recursion normalization are inherited from exact discovery.
 
 ## Work and output limits
 
-Search visits unique-group pairs in first-declaration order. The default work budget
-is 1,000,000 and the output limit is 100 pairs. `--max-work=N` requires `--approximate`
-and a positive value. Embedders can also set the pair limit. Header comparison bytes,
-pair enumeration, matrix cells, and a conservative bound on compared body-line bytes
-are charged. Length difference filters impossible matches before matrix allocation.
-Pairwise matrices use temporary storage and are freed after each comparison.
+Search builds a stable header index, then visits only compatible unique-group pairs
+in first-declaration order. The default work budget is 1,000,000 and the output limit
+is 100 pairs. `--max-work=N` requires `--approximate` and a positive value. Embedders
+can also set the pair limit. Index initialization, merge-sort entries/copies, header
+comparison bytes, compatible pair visits, matrix cells, and a conservative bound on
+compared body-line bytes are charged. Exhaustion during index construction reports
+an incomplete search with no near pairs; exact findings remain available.
 
-The budget bounds this comparison stage, not frontend checking, canonicalization,
+Stable merge sorting uses O(n log n) header comparisons and O(n) temporary index
+storage. Adjacent equal headers form source-ordered chains; discovery follows those
+chains while retaining global first-declaration pair order. Header equality is full
+byte equality, with no probabilistic filter. Length difference still filters
+impossible matches before matrix allocation. Pairwise matrices use temporary storage
+and are freed after each comparison.
+
+The budget bounds indexing and comparison, not frontend checking, canonicalization,
 line splitting, rendering, or wall-clock time. Matrix memory is proportional to the
-charged cell count. Pair enumeration and edit distance are potentially quadratic;
-this is a bounded first implementation, not a scalability claim or ranked global
-nearest-neighbor search. Exact discovery finishes independently of this budget.
+charged cell count. Compatible pairs within a common header bucket and their edit
+matrices can still be quadratic. This is not a global nearest-neighbor ranking or
+a whole-compiler scaling guarantee. Exact discovery finishes independently of this
+budget. The near-v2 version records changed work accounting and budget-limited search
+behavior; header eligibility, line similarity, and edit explanations are unchanged.
 
 Work or pair exhaustion stops search and emits `truncated=true` plus an explicit
 incomplete-search message. An absent candidate is never a proof of no duplication,
@@ -73,3 +83,18 @@ every allocation failure through comparison/output/rendering. Actual CLI tests
 verify advisory exit status, changed-value explanations, budget reporting, and
 invalid-option rejection. These are review fixtures, not production usefulness or
 performance statistics. Wider ordinary-program review remains ongoing tooling work.
+
+## Header-index scaling acceptance
+
+`zig build test` runs `tests/duplicate_scaling.py` against the actual compiler. It
+generates 128, 512, and 1,024 functions with distinct nominal parameter types except
+for a compatible first/last pair. Every run must find exactly that pair without
+truncation under four million work units and repeat the same report byte for byte.
+Observed work is 150,889 / 621,084 / 1,361,230 units respectively. These are generated
+stress fixtures, not ordinary-program usefulness evidence. The default one-million
+budget can still truncate the largest case; increasing it is explicit.
+
+A separate unit fixture with 1,024 canonical inputs finds the first/last compatible
+pair below 250,000 units. Interleaved buckets verify global pair order and output
+limits. Existing allocation-failure sweeps now include index allocations. Broader
+ordinary-program review and scaling within large compatible buckets remain pending.

@@ -1,7 +1,7 @@
 //! Bounded, deterministic edit-distance review of checked canonical body lines.
 const std = @import("std");
 const typed = @import("typed.zig");
-pub const version = "near-v1";
+pub const version = "near-v2";
 pub const Input = struct { function: typed.FunctionId, bytes: []const u8 };
 pub const Change = struct { before: ?[]const u8, after: ?[]const u8 };
 pub const Pair = struct { left: typed.FunctionId, right: typed.FunctionId, distance: usize, lines: usize, changes: []const Change };
@@ -15,6 +15,68 @@ fn body(allocator: std.mem.Allocator, bytes: []const u8) !Body {
     while (split.next()) |line| try lines.append(allocator, line);
     return .{ .header = bytes[0..start], .lines = try lines.toOwnedSlice(allocator) };
 }
+// Stable merge sorting bounds header comparisons and preserves declaration order
+// within each header bucket. Budget exhaustion abandons the incomplete index.
+fn indexHeaders(allocator: std.mem.Allocator, bodies: []const Body, remaining: *usize) !?[]usize {
+    if (bodies.len > remaining.*) return null;
+    remaining.* -= bodies.len;
+    const order = try allocator.alloc(usize, bodies.len);
+    defer allocator.free(order);
+    const scratch = try allocator.alloc(usize, bodies.len);
+    defer allocator.free(scratch);
+    const next = try allocator.alloc(usize, bodies.len);
+    errdefer allocator.free(next);
+    for (order, next, 0..) |*item, *link, i| {
+        item.* = i;
+        link.* = bodies.len;
+    }
+    var width: usize = 1;
+    while (width < bodies.len) : (width = @min(width *| 2, bodies.len)) {
+        var start: usize = 0;
+        while (start < bodies.len) {
+            const middle = @min(start +| width, bodies.len);
+            const end = @min(middle +| width, bodies.len);
+            var a = start;
+            var b = middle;
+            for (start..end) |out| {
+                if (remaining.* == 0) {
+                    allocator.free(next);
+                    return null;
+                }
+                remaining.* -= 1;
+                const take_left = if (a == middle) false else if (b == end) true else blk: {
+                    const cost = @max(bodies[order[a]].header.len, bodies[order[b]].header.len) +| 1;
+                    if (cost > remaining.*) {
+                        allocator.free(next);
+                        return null;
+                    }
+                    remaining.* -= cost;
+                    break :blk std.mem.order(u8, bodies[order[a]].header, bodies[order[b]].header) != .gt;
+                };
+                scratch[out] = if (take_left) order[a] else order[b];
+                if (take_left) a += 1 else b += 1;
+            }
+            start = end;
+        }
+        if (bodies.len > remaining.*) {
+            allocator.free(next);
+            return null;
+        }
+        remaining.* -= bodies.len;
+        @memcpy(order, scratch);
+    }
+    for (order[0..if (order.len == 0) 0 else order.len - 1], 0..) |left, position| {
+        const right = order[position + 1];
+        const cost = @max(bodies[left].header.len, bodies[right].header.len) +| 1;
+        if (cost > remaining.*) {
+            allocator.free(next);
+            return null;
+        }
+        remaining.* -= cost;
+        if (std.mem.eql(u8, bodies[left].header, bodies[right].header)) next[left] = right;
+    }
+    return next;
+}
 /// Output storage belongs to output_allocator; pairwise matrices are freed promptly.
 /// Inputs are representatives of exact groups, in first-declaration order.
 pub fn discover(output_allocator: std.mem.Allocator, temporary: std.mem.Allocator, inputs: []const Input, options: Options) !Result {
@@ -24,16 +86,18 @@ pub fn discover(output_allocator: std.mem.Allocator, temporary: std.mem.Allocato
     var pairs: std.ArrayList(Pair) = .empty;
     var remaining = options.max_work;
     var truncated = false;
+    const next = try indexHeaders(temporary, bodies, &remaining) orelse return .{ .pairs = &.{}, .work = options.max_work - remaining, .truncated = true };
+    defer temporary.free(next);
     outer: for (bodies, 0..) |left, i| {
-        for (bodies[i + 1 ..], i + 1..) |right, j| {
-            // Charge header comparison bytes and pair enumeration, including rejects.
-            const header_cost = @max(left.header.len, right.header.len) +| 1;
-            if (remaining < header_cost or pairs.items.len == options.max_pairs) {
+        var j = next[i];
+        while (j < bodies.len) : (j = next[j]) {
+            const right = bodies[j];
+            // Header identity is established by the index. Charge candidate visits.
+            if (remaining == 0 or pairs.items.len == options.max_pairs) {
                 truncated = true;
                 break :outer;
             }
-            remaining -= header_cost;
-            if (!std.mem.eql(u8, left.header, right.header)) continue;
+            remaining -= 1;
             const longest = @max(left.lines.len, right.lines.len);
             const allowance = longest / 100 * (100 - options.similarity_percent) + longest % 100 * (100 - options.similarity_percent) / 100;
             if (longest - @min(left.lines.len, right.lines.len) > allowance) continue;

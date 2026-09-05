@@ -46,6 +46,10 @@ pub fn build(b: *std.Build) void {
     native_tests.addArgs(&.{ "--zig", b.graph.zig_exe });
     native_tests.setCwd(b.path("."));
     test_step.dependOn(&native_tests.step);
+    const duplicate_scaling = b.addSystemCommand(&.{ "python3", "tests/duplicate_scaling.py", "--compiler" });
+    duplicate_scaling.addFileArg(exe.getEmittedBin());
+    duplicate_scaling.setCwd(b.path("."));
+    test_step.dependOn(&duplicate_scaling.step);
     const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("src"), b.path("tests") }, .check = true });
     b.step("fmt-check", "Check canonical Zig formatting").dependOn(&fmt.step);
 }

@@ -47,3 +47,6 @@ review, project native parity, generics,
 compile-time/schema/incremental work, and wider native operations remain pending.
 Future generated/schema entry points will require explicit roots when those features
 are introduced; this report does not invent them.
+
+Approximate search now uses the [near-v2 header index](approximate-discovery.md).
+This changes budget accounting while preserving header eligibility and similarity.

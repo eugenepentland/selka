@@ -52,3 +52,6 @@ also executes a non-truncated approximate comparison with the literal edit expos
 Remaining tooling work includes module formatting, broader candidate-index/corpus
 scaling review, project native parity, and schema/incremental integration. Generics and the other unfinished roadmap tracks
 remain pending.
+
+Approximate search now uses the [near-v2 header index](approximate-discovery.md).
+This changes budget accounting while preserving header eligibility and similarity.
