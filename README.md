@@ -72,7 +72,7 @@ zig build run -- discover-duplicates examples/duplicates.my --timings
 It reports exact checked-function candidates after normalizing bound names,
 with source locations and advisory explanations. Ordinary compilation does not
 run it. See the [comparison contract and review](docs/experiments/duplicate-discovery.md).
-All 361 tests pass in Debug and ReleaseFast.
+All 367 tests pass in Debug and ReleaseFast.
 
 [Post-MVP tracking](docs/experiments/roadmap.md) records the remaining experiments.
 Records, complete construction, field access, preserving updates, and declarative
@@ -153,3 +153,7 @@ exclusive destinations, lifetime checks, and snapshot preservation.
 [Typed-handle pool backend](docs/experiments/typed-pools.md) now supports nominal
 ID categories, stale-handle rejection, cyclic graphs, slot reuse, retained snapshots,
 and bulk clearing. Guest pool syntax and arena allocation remain pending.
+
+[Arena backing and checked region reset](docs/experiments/arenas.md) now separate
+buffer backing from retained snapshots, reject live borrows before reset, and reuse
+backing/registries across cycles. Guest arena scopes remain pending.

@@ -864,3 +864,28 @@ costs, cleanup order, and backend limits. Source pool/handle integration, arenas
 partial field moves, generics, and all other unfinished roadmap tracks remain in
 scope. C/D are not complete. Guardian was not exercised; hosted CI has not run.
 The full roadmap goal remains active.
+
+
+## 2026-09-05: C arena backing and checked region reset
+
+Separated memory Store buffer backing from runtime-owned payloads/registries and
+added checked bulk reset with a full borrow preflight. Arena backend initialization
+binds a Store to stable-address Zig arena backing. Normal reset preserves allocator
+authority and registry capacity, invalidates removed owners through generations,
+and preserves retained snapshots. Terminal cleanup also handles outstanding loans.
+Backing retention is explicit and reports its outcome separately from reset success.
+
+367 tests pass in Debug and ReleaseFast (331 core, 36 actual CLI). Acceptance covers
+nested/suspended/empty loan rejection without partial cleanup, allocator authority
+and quotas across cycles, stale owners/leases after reuse, independent arenas,
+aggregate snapshots after reset/destruction, allocation-failure sweeps, preheated
+cycles with host allocation disabled, and 10,000 create/grow/reset cycles within
+16 KiB live allocation. Formatting and whitespace checks pass. Discovery remains
+exact-v24 because the guest language has not changed.
+
+[Arena semantics](experiments/arenas.md) records stable-address requirements, parent
+snapshot ownership, retention costs, and physical-versus-logical memory limits.
+Source arena scopes, escape checks, allocator forwarding, pool/handle integration,
+partial field moves, and every other unfinished track remain in scope. C is not
+complete. Guardian was not exercised; hosted CI has not run. The full roadmap goal
+remains active.

@@ -1,5 +1,6 @@
 //! Guest memory identity, bounds, and dynamic borrow lifetimes for the B backend.
-//! No host address is exposed in a guest handle. Each Store has one runtime allocator.
+//! No host address is exposed in a guest handle. Buffer backing may use a region
+//! allocator; retained payloads and registries always use the runtime allocator.
 const std = @import("std");
 const values = @import("value.zig");
 const Value = values.Value;
@@ -101,6 +102,8 @@ const Lease = struct { allocation: Token, start: usize, length: usize, kind: Kin
 /// A Store is used by one VM execution thread, and handles never outlive its ID.
 pub const Store = struct {
     allocator: std.mem.Allocator,
+    /// Set only before first allocation; must outlive all buffer storage.
+    backing_allocator: ?std.mem.Allocator = null,
     identity: u64,
     limits: Limits = .{},
     statistics: Statistics = .{},
@@ -134,6 +137,22 @@ pub const Store = struct {
         self.leases = .{};
         self.identity = 0;
     }
+    fn backing(self: *Store) std.mem.Allocator {
+        return self.backing_allocator orelse self.allocator;
+    }
+    /// Region boundary: reject every live borrow before changing any allocation.
+    /// Retains registry capacity and allocator authority; old cell identities stay
+    /// invalid across reuse. Payload snapshots use the runtime allocator and survive.
+    pub fn reset(self: *Store) Error!void {
+        try self.checkMemory(self.identity);
+        for (self.cells.entries.items) |entry| if (entry.value) |owned| try unborrowed(owned);
+        var index = self.cells.entries.items.len;
+        while (index != 0) {
+            index -= 1;
+            const entry = self.cells.entries.items[index];
+            if (entry.value != null) self.releaseOwned(self.cells.remove(.{ .index = index, .generation = entry.generation }));
+        }
+    }
     fn checkMemory(self: *Store, identity: u64) Error!void {
         if (self.identity == 0) return error.MemoryClosed;
         if (self.identity != identity) return error.ForeignMemory;
@@ -154,7 +173,7 @@ pub const Store = struct {
             i -= 1;
             owned.values[i].release(self.allocator);
         }
-        self.allocator.free(owned.values);
+        self.backing().free(owned.values);
     }
     fn releaseOwned(self: *Store, owned: Cell) void {
         self.statistics.live_allocations -= 1;
@@ -178,7 +197,7 @@ pub const Store = struct {
         for (inputs) |input| if (input.typeOf() != element_type) return error.TypeMismatch;
         try self.capacityAllowed(capacity, capacity);
         if (self.statistics.live_allocations >= self.limits.max_allocations) return error.CapacityLimit;
-        const buffer = try self.allocator.alloc(Value, capacity);
+        const buffer = try self.backing().alloc(Value, capacity);
         for (inputs, buffer[0..inputs.len]) |input, *output| output.* = input.retain();
         const owned: Cell = .{ .element_type = element_type, .values = buffer, .length = inputs.len };
         errdefer self.freeCell(owned);
@@ -207,11 +226,11 @@ pub const Store = struct {
         if (capacity <= owned.values.len) return .unchanged;
         const increase = capacity - owned.values.len;
         try self.capacityAllowed(capacity, increase);
-        const grown = try self.allocator.alloc(Value, capacity);
+        const grown = try self.backing().alloc(Value, capacity);
         @memcpy(grown[0..owned.length], owned.values[0..owned.length]);
         // Transfer existing Value ownership; releasing the old elements here
         // would invalidate the moved snapshots in the new backing buffer.
-        self.allocator.free(owned.values);
+        self.backing().free(owned.values);
         owned.values = grown;
         self.statistics.total_capacity += increase;
         return .allocated;
