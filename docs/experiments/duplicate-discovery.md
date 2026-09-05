@@ -117,3 +117,10 @@ retain ordered array construction, indexed reads, replacement arguments, and
 length operand evaluation. Array type whitespace/leading zeroes and bound names
 remain normalized. `src/arrays_test.zig` verifies these distinctions; historical
 benchmark files retain the version actually measured.
+
+
+Nominal domains advance the comparison version to `exact-v5`. Canonical function
+headers retain the owning domain and private/public visibility. Wrapping and
+unwrapping remain explicit nodes, and external calls retain qualified names.
+`src/domains_test.zig` checks identical bound-renamed methods in one domain and
+distinguishes other owners, access contracts, and qualified callees.

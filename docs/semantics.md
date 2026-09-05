@@ -119,3 +119,11 @@ The integer extension adds signed/unsigned 8/16/32/64-bit types, suffixed decima
 literals, and `cast<T>(expression)`. Unsuffixed literals retain `i64` semantics.
 Operations require matching widths; bounds and signedness conversions are
 checked in every host mode. Boolean and record conversions remain separate.
+
+
+Nominal scalar domains are implemented: `domain Name: Scalar { ... }`, qualified
+factory/accessor functions, `private fn`, and owner-restricted `wrap<Domain>` /
+`unwrap` operations. Domain values do not implicitly convert to their backing
+scalar or other domains. See [domain semantics](experiments/domains.md) for the
+representation boundary, visibility, and runtime costs. Enums, tagged unions,
+exhaustive matching, and enum-indexed tables remain pending A2 work.

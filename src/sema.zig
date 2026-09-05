@@ -23,9 +23,13 @@ const Checker = struct {
     return_type: typed.Type = .i64,
     catalog: records.Catalog,
     conversion_fields: ?[]bool = null,
+    owner: ?typed.Type = null,
 
     fn ty(self: *Checker, span: source.Span) Error!typed.Type {
         return self.catalog.resolve(self.src, span, self.sink);
+    }
+    fn requireDomainAccess(self: *Checker, domain_type: typed.Type, span: source.Span) Error!void {
+        if (self.owner != domain_type) return self.sink.failRelated("E_PRIVATE_DOMAIN", span, "only functions declared inside this domain can access its representation; use its factories and accessors", .{ .span = self.catalog.records[domain_type.recordIndex()].declaration, .message = "domain representation is private here" });
     }
     fn fields(self: *Checker, record_type: typed.Type, initializers: []const ast.FieldInit, complete: bool, span: source.Span) Error![]const typed.FieldInit {
         const record = try self.catalog.record(record_type, span, self.sink);
@@ -123,12 +127,12 @@ const Checker = struct {
                         try work.append(self.allocator, .{ .id = replace.base });
                         continue;
                     },
-                    .length => |base| {
+                    .length, .unwrap => |base| {
                         try work.append(self.allocator, .{ .id = task.id, .emit = true });
                         try work.append(self.allocator, .{ .id = base });
                         continue;
                     },
-                    .cast => |cast| {
+                    .cast, .wrap => |cast| {
                         try work.append(self.allocator, .{ .id = task.id, .emit = true });
                         try work.append(self.allocator, .{ .id = cast.value });
                         continue;
@@ -237,6 +241,21 @@ const Checker = struct {
                     out.ty = parsed.ty;
                     out.data = .{ .integer = parsed.value };
                 },
+                .wrap => |wrap| {
+                    const value = self.resolved[@backingInt(wrap.value)].?;
+                    out.ty = try self.ty(wrap.ty);
+                    const backing = try self.catalog.domain(out.ty, wrap.ty, self.sink);
+                    try self.requireDomainAccess(out.ty, node.span);
+                    try self.require(self.nodes.items[@backingInt(value)].ty, backing, self.syntax.nodes.items[@backingInt(wrap.value)].span);
+                    out.data = .{ .wrap = value };
+                },
+                .unwrap => |input| {
+                    const value = self.resolved[@backingInt(input)].?;
+                    const domain_type = self.nodes.items[@backingInt(value)].ty;
+                    out.ty = try self.catalog.domain(domain_type, node.span, self.sink);
+                    try self.requireDomainAccess(domain_type, node.span);
+                    out.data = .{ .unwrap = value };
+                },
                 .cast => |cast| {
                     const value = self.resolved[@backingInt(cast.value)].?;
                     out.ty = try self.ty(cast.ty);
@@ -255,9 +274,13 @@ const Checker = struct {
                     out.data = .{ .local = slot };
                 },
                 .call => |call| {
-                    const function = self.functions.get(self.src.text(call.name)) orelse
-                        return self.sink.fail("E_UNKNOWN_FUNCTION", call.name, "no top-level function has this name");
+                    const owner = if (call.owner) |name| try self.ty(name) else null;
+                    if (owner) |domain_type| _ = try self.catalog.domain(domain_type, call.owner.?, self.sink);
+                    const name = try functionName(self.allocator, self.src, call.owner, call.name);
+                    const function = self.functions.get(name) orelse
+                        return self.sink.fail("E_UNKNOWN_FUNCTION", call.name, "no function has this qualified name");
                     const signature = self.syntax.functions[@backingInt(function)];
+                    if (signature.restricted and self.owner != owner) return self.sink.failRelated("E_PRIVATE_FUNCTION", call.name, "private domain function is only callable from the same domain", .{ .span = signature.name, .message = "private function declared here" });
                     if (signature.parameters.len != call.arguments.len)
                         return self.sink.fail("E_ARITY", node.span, "argument count does not match function parameters");
                     const arguments = try self.allocator.alloc(typed.NodeId, call.arguments.len);
@@ -399,11 +422,11 @@ fn warningLess(_: void, a: diagnostic.Diagnostic, b: diagnostic.Diagnostic) bool
 pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!typed.Program {
     const resolved = try allocator.alloc(?typed.NodeId, program.nodes.items.len);
     @memset(resolved, null);
-    const catalog = try records.collect(allocator, src, program.records, program.array_types, sink);
+    const catalog = try records.collect(allocator, src, program.records, program.domains, program.array_types, sink);
     var checker: Checker = .{ .allocator = allocator, .src = src, .syntax = program, .sink = sink, .resolved = resolved, .catalog = catalog };
     for (program.functions, 0..) |function, i| {
-        const name = src.text(function.name);
-        if (catalog.names.contains(name)) return sink.fail("E_DUPLICATE_NAME", function.name, "function name conflicts with a record type");
+        const name = try functionName(allocator, src, function.owner, function.name);
+        if (catalog.names.contains(name)) return sink.fail("E_DUPLICATE_NAME", function.name, "function name conflicts with a declared type");
         if (checker.functions.get(name)) |previous| return sink.failRelated("E_DUPLICATE_FUNCTION", function.name, "function name is already declared", .{ .span = program.functions[@backingInt(previous)].name, .message = "previous function declaration" });
         try checker.functions.put(allocator, name, @fromBackingInt(i));
     }
@@ -415,6 +438,7 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
     for (program.functions, functions, 0..) |function, *out, i| {
         checker.locals = .empty;
         checker.active.clearRetainingCapacity();
+        checker.owner = if (function.owner) |owner| try checker.ty(owner) else null;
         checker.return_type = try checker.ty(function.return_type);
         for (function.parameters) |parameter| {
             const name = src.text(parameter.name);
@@ -444,7 +468,7 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
             }
         }
         if (!body.terminates) return sink.fail("E_MISSING_RETURN", function.name, "function may fall through without returning its declared type; loops are conservatively treated as falling through, even while true");
-        out.* = .{ .conversion = function.conversion, .id = @fromBackingInt(i), .name = src.text(function.name), .declaration = function.name, .return_type = checker.return_type, .parameter_count = function.parameters.len, .body = body.id, .locals = try checker.locals.toOwnedSlice(allocator) };
+        out.* = .{ .owner = checker.owner, .restricted = function.restricted, .conversion = function.conversion, .id = @fromBackingInt(i), .name = try functionName(allocator, src, function.owner, function.name), .declaration = function.name, .return_type = checker.return_type, .parameter_count = function.parameters.len, .body = body.id, .locals = try checker.locals.toOwnedSlice(allocator) };
     }
     for (functions) |function| {
         for (function.locals) |local| {
@@ -487,4 +511,9 @@ fn conversionBody(src: source.Source, program: ast.Program, function: ast.Functi
             else => return sink.fail("E_CONVERSION_BODY", stmt.span, "conversion bodies contain named source-field discards followed by a complete record construction; use helpers for transformations"),
         }
     }
+}
+
+fn functionName(allocator: std.mem.Allocator, src: source.Source, owner: ?source.Span, name: source.Span) Error![]const u8 {
+    if (owner) |domain_name| return std.fmt.allocPrint(allocator, "{s}.{s}", .{ src.text(domain_name), src.text(name) });
+    return src.text(name);
 }

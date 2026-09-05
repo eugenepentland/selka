@@ -6,13 +6,16 @@ pub const StatementId = enum(usize) { _ };
 pub const BinaryOp = enum { add, sub, mul, div, rem, logical_and, logical_or, eq, ne, lt, le, gt, ge };
 pub const AssignmentOp = enum { set, add, sub };
 pub const UnaryOp = enum { neg, not };
+pub const TypedValue = struct { ty: Span, value: NodeId };
 pub const Node = struct {
     span: Span,
     data: union(enum) {
         integer: Span,
         boolean: bool,
         name: Span,
-        cast: struct { ty: Span, value: NodeId },
+        cast: TypedValue,
+        wrap: TypedValue,
+        unwrap: NodeId,
         array: struct { ty: Span, values: []const NodeId },
         index: struct { base: NodeId, index: NodeId },
         replace: struct { base: NodeId, index: NodeId, value: NodeId },
@@ -20,7 +23,7 @@ pub const Node = struct {
         record: struct { name: Span, fields: []const FieldInit },
         update: struct { base: NodeId, fields: []const FieldInit },
         field: struct { base: NodeId, name: Span },
-        call: struct { name: Span, arguments: []const NodeId },
+        call: struct { owner: ?Span = null, name: Span, arguments: []const NodeId },
         unary: struct { op: UnaryOp, operand: NodeId, op_span: Span },
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
     },
@@ -40,9 +43,11 @@ pub const Statement = struct {
 pub const FieldInit = struct { name: Span, value: NodeId };
 pub const Record = struct { name: Span, fields: []const Parameter };
 pub const Parameter = struct { name: Span, ty: Span };
-pub const Function = struct { conversion: bool = false, name: Span, parameters: []const Parameter, return_type: Span, body: StatementId };
+pub const Domain = struct { name: Span, backing: Span };
+pub const Function = struct { owner: ?Span = null, restricted: bool = false, conversion: bool = false, name: Span, parameters: []const Parameter, return_type: Span, body: StatementId };
 pub const ArrayType = struct { span: Span, length: Span, element: Span };
 pub const Program = struct {
+    domains: []const Domain = &.{},
     array_types: []const ArrayType = &.{},
     nodes: std.ArrayList(Node),
     statements: std.ArrayList(Statement),

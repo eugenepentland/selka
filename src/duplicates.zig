@@ -3,7 +3,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 
-pub const version = "exact-v4";
+pub const version = "exact-v5";
 pub const Population = enum { production, tests, generated, reference, intentional };
 pub const Options = struct { min_nodes: usize = 8, population: Population = .production };
 pub const Group = struct { members: []const typed.FunctionId, nodes: usize };
@@ -31,6 +31,8 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
     var nodes: usize = 0;
     writer.print("{s} fn {s} {d} {d}\n", .{ version, typed.typeName(function.return_type, program.records), function.parameter_count, function.locals.len }) catch return error.OutOfMemory;
     writer.print("conversion {}\n", .{function.conversion}) catch return error.OutOfMemory;
+    if (function.owner) |owner| writer.print("owner domain {s}\n", .{typed.typeName(owner, program.records)}) catch return error.OutOfMemory else writer.writeAll("owner none\n") catch return error.OutOfMemory;
+    writer.print("private {}\n", .{function.restricted}) catch return error.OutOfMemory;
     // Slot identities are declaration order within a function, including parameters.
     // Names, spans, and advisory use counters have no role in structural equality.
     for (function.locals) |local| writer.print("local {s} {}\n", .{ typed.typeName(local.ty, program.records), local.mutable }) catch return error.OutOfMemory;
@@ -60,7 +62,7 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
                         try work.append(allocator, .{ .expression = replace.base });
                     },
                     .length => |base| try work.append(allocator, .{ .expression = base }),
-                    .cast => |operand| try work.append(allocator, .{ .expression = operand }),
+                    .cast, .wrap, .unwrap => |operand| try work.append(allocator, .{ .expression = operand }),
                     .record => |fields| {
                         try recordFields(allocator, writer, &work, program, node.ty, fields);
                     },

@@ -159,9 +159,23 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 const schema = program.records[ty.recordIndex()].array orelse return error.InternalError;
                 try stack.append(allocator, typed.Value.number(.u64, schema.length));
             },
+            .wrap_domain => |ty| {
+                const input = try pop(&stack, frame.operand_base);
+                defer input.release(allocator);
+                const backing = program.records[ty.recordIndex()].domain orelse return error.InternalError;
+                if (input.typeOf() != backing) return error.InternalError;
+                try pushOwned(&stack, allocator, try typed.Value.create(allocator, ty, &.{input}));
+            },
+            .unwrap_domain => |ty| {
+                const input = try pop(&stack, frame.operand_base);
+                defer input.release(allocator);
+                if (input.typeOf() != ty) return error.InternalError;
+                try pushOwned(&stack, allocator, try input.getField(0));
+            },
             .get_field => |index| {
                 const record = try pop(&stack, frame.operand_base);
                 defer record.release(allocator);
+                if (record.typeOf().isAggregate() and program.records[record.typeOf().recordIndex()].domain != null) return error.InternalError;
                 try pushOwned(&stack, allocator, try record.getField(index));
             },
             .push_integer => |number| try stack.append(allocator, typed.Value.number(number.ty, number.value)),

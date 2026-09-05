@@ -118,6 +118,14 @@ const Emitter = struct {
                 try self.push(.{ .expression = field.base });
             },
             .integer => |value| try self.instruction(node.span, if (node.ty == .i64) .{ .push_i64 = @intCast(value) } else .{ .push_integer = .{ .ty = node.ty, .value = value } }),
+            .wrap => |value| {
+                try self.instruction(node.span, .{ .wrap_domain = node.ty });
+                try self.push(.{ .expression = value });
+            },
+            .unwrap => |value| {
+                try self.instruction(node.span, .{ .unwrap_domain = self.program.nodes[@backingInt(value)].ty });
+                try self.push(.{ .expression = value });
+            },
             .cast => |value| {
                 try self.instruction(node.span, .{ .cast_integer = node.ty });
                 try self.push(.{ .expression = value });
@@ -207,7 +215,7 @@ pub fn lower(allocator: std.mem.Allocator, program: typed.Program) !bc.Program {
     const functions = try allocator.alloc(bc.Function, program.functions.len);
     for (program.functions, functions) |function, *out| {
         var emitter: Emitter = .{ .allocator = allocator, .program = program };
-        out.* = .{ .conversion = function.conversion, .id = function.id, .name = function.name, .locals = function.locals, .parameter_count = function.parameter_count, .return_type = function.return_type, .instructions = try emitter.finish(function.body) };
+        out.* = .{ .owner = function.owner, .restricted = function.restricted, .conversion = function.conversion, .id = function.id, .name = function.name, .locals = function.locals, .parameter_count = function.parameter_count, .return_type = function.return_type, .instructions = try emitter.finish(function.body) };
     }
     const result: bc.Program = .{ .functions = functions, .main = program.main, .records = program.records };
     try bc.validate(allocator, result);

@@ -14,10 +14,12 @@ pub fn dump(allocator: std.mem.Allocator, program: bc.Program, src: Source) ![]u
 
 fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer.Error!void {
     for (program.records) |record| {
-        try writer.print("{s} {s} type#{d}\n", .{ if (record.array != null) "array" else "record", record.name, @backingInt(record.id) });
+        try writer.print("{s} {s} type#{d}\n", .{ if (record.array != null) "array" else if (record.domain != null) "domain" else "record", record.name, @backingInt(record.id) });
+        if (record.domain) |backing| try writer.print("  backing {s} (private)\n", .{typed.typeName(backing, program.records)});
         for (record.fields, 0..) |field, i| try writer.print("  field {d}: {s}: {s}\n", .{ i, field.name, typed.typeName(field.ty, program.records) });
     }
     for (program.functions) |function| {
+        if (function.restricted) try writer.writeAll("private ");
         if (function.conversion) try writer.writeAll("conversion ");
         try writer.print("function {s}(", .{function.name});
         for (function.locals[0..function.parameter_count], 0..) |parameter, i| {
@@ -36,6 +38,8 @@ fn write(writer: *std.Io.Writer, program: bc.Program, src: Source) std.Io.Writer
                 .array_length => |ty| try writer.print("ARRAY_LENGTH {s}", .{typed.typeName(ty, program.records)}),
                 .get_field => |index| try writer.print("GET_FIELD {d}", .{index}),
                 .push_integer => |number| try writer.print("PUSH_INT {f} {d}", .{ number.ty, number.value }),
+                .wrap_domain => |ty| try writer.print("WRAP_DOMAIN {s}", .{typed.typeName(ty, program.records)}),
+                .unwrap_domain => |ty| try writer.print("UNWRAP_DOMAIN {s}", .{typed.typeName(ty, program.records)}),
                 .cast_integer => |ty| try writer.print("CAST_INT {f}", .{ty}),
                 .neg_integer => |ty| try writer.print("NEG_INT_CHECKED {f}", .{ty}),
                 .binary_integer => |binary| try writer.print("INT_BINARY {f} {s}", .{ binary.ty, @tagName(binary.op) }),

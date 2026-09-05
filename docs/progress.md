@@ -1,6 +1,7 @@
 # Implementation progress
 
-The complete scalar MVP in plan sections 4–13 is implemented and audited. Post-MVP A1 and exact duplicate discovery are also implemented; the remaining
+The complete scalar MVP in plan sections 4–13 is implemented and audited. Post-MVP A1 and exact duplicate discovery are also implemented. A2 has nominal
+scalar domains and private construction; the remaining
 tracks in sections 15 and 18 are still pending. Earlier entries below describe
 their historical milestone checkpoints.
 
@@ -243,3 +244,27 @@ operations. [Array semantics](experiments/arrays.md) documents syntax, copy
 costs, and acceptance evidence. A1 is complete; the full roadmap goal remains
 active. A2 domain identity and exhaustive mappings are next. Guardian gates
 were not exercised; hosted CI has not run.
+
+
+## 2026-09-05: A2 nominal domains and private construction
+
+Implemented nominal integer/bool domains, qualified factories/accessors, private
+functions inside domains, and owner-restricted wrapping/unwrapping. The source
+checker rejects unit substitution, representation access by outside or other-domain
+code, and attempted factory bypass via casts, fields, construction, or updates.
+Privileges are lexical and do not propagate to free helpers called by a factory.
+
+Bytecode retains domain ownership and private visibility, validates privileged
+operations/calls, and separates domain wrapping from ordinary record creation.
+Exact duplicate discovery is `exact-v5`, preserving these contracts and qualified
+callees. Dumps and runtime call traces show domain-qualified function names.
+
+All 100 tests pass in Debug and ReleaseFast (83 core, 17 actual CLI), with
+allocation-failure sweeps and a 10,000-construction loop under 4 KiB live runtime
+storage. Budget and checked-cast traps release all storage. Formatting and
+whitespace checks pass. The domains example prints 1003.
+
+[Domain semantics](experiments/domains.md) documents the implemented boundary and
+its limitations. A2 remains in progress: closed enums/tagged unions, exhaustive
+matching, and enum-indexed tables are next. The full roadmap goal remains active.
+Guardian gates were not exercised; hosted CI has not run.

@@ -1,4 +1,4 @@
-//! Nominal record schemas and finite by-value layout checking.
+//! Nominal records/domains, structural arrays, and finite by-value layout checking.
 const std = @import("std");
 const ast = @import("ast.zig");
 const typed = @import("typed.zig");
@@ -22,12 +22,16 @@ pub const Catalog = struct {
     pub fn record(self: Catalog, ty: typed.Type, span: Span, sink: *diagnostic.Sink) Error!typed.Record {
         if (!ty.isAggregate()) return sink.fail("E_TYPE", span, "operation requires a record value");
         const schema = self.records[ty.recordIndex()];
-        if (schema.array != null) return sink.fail("E_TYPE", span, "operation requires a record value");
+        if (schema.array != null or schema.domain != null) return sink.fail("E_TYPE", span, "operation requires a record value");
         return schema;
     }
     pub fn array(self: Catalog, ty: typed.Type, span: Span, sink: *diagnostic.Sink) Error!typed.Array {
         if (!ty.isAggregate()) return sink.fail("E_TYPE", span, "operation requires a fixed array value");
         return self.records[ty.recordIndex()].array orelse sink.fail("E_TYPE", span, "operation requires a fixed array value");
+    }
+    pub fn domain(self: Catalog, ty: typed.Type, span: Span, sink: *diagnostic.Sink) Error!typed.Type {
+        if (!ty.isAggregate()) return sink.fail("E_TYPE", span, "operation requires a nominal scalar domain");
+        return self.records[ty.recordIndex()].domain orelse sink.fail("E_TYPE", span, "operation requires a nominal scalar domain");
     }
     pub fn field(self: Catalog, ty: typed.Type, src: Source, name: Span, sink: *diagnostic.Sink) Error!usize {
         _ = try self.record(ty, name, sink);
@@ -36,9 +40,9 @@ pub const Catalog = struct {
 };
 
 /// All storage is owned by the compilation arena.
-pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const ast.Record, arrays: []const ast.ArrayType, sink: *diagnostic.Sink) Error!Catalog {
-    const storage = try allocator.alloc(typed.Record, declarations.len + arrays.len);
-    var catalog: Catalog = .{ .records = storage[0..declarations.len], .names = .empty, .field_names = try allocator.alloc(std.StringHashMapUnmanaged(usize), declarations.len) };
+pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const ast.Record, domains: []const ast.Domain, arrays: []const ast.ArrayType, sink: *diagnostic.Sink) Error!Catalog {
+    const storage = try allocator.alloc(typed.Record, declarations.len + domains.len + arrays.len);
+    var catalog: Catalog = .{ .records = storage[0 .. declarations.len + domains.len], .names = .empty, .field_names = try allocator.alloc(std.StringHashMapUnmanaged(usize), declarations.len) };
     @memset(catalog.field_names, .empty);
     for (declarations, 0..) |declaration, i| {
         const name = src.text(declaration.name);
@@ -46,6 +50,14 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
         const id: typed.Type = @fromBackingInt(i + typed.Type.record_base);
         try catalog.names.put(allocator, name, id);
         storage[i] = .{ .id = id, .name = name, .declaration = declaration.name, .fields = &.{} };
+    }
+    for (domains, 0..) |declaration, offset| {
+        const name = src.text(declaration.name);
+        if (catalog.names.get(name)) |previous| return sink.failRelated("E_DUPLICATE_TYPE", declaration.name, "type is already declared", .{ .span = storage[previous.recordIndex()].declaration, .message = "previous type declaration" });
+        const index = declarations.len + offset;
+        const id: typed.Type = @fromBackingInt(index + typed.Type.record_base);
+        try catalog.names.put(allocator, name, id);
+        storage[index] = .{ .id = id, .name = name, .declaration = declaration.name, .fields = &.{} };
     }
     var interned: std.AutoHashMapUnmanaged(typed.Array, typed.Type) = .empty;
     for (arrays) |syntax| {
@@ -76,6 +88,11 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
             resolved.* = .{ .name = name, .declaration = field.name, .ty = try catalog.resolve(src, field.ty, sink) };
         }
         out.* = .{ .id = @fromBackingInt(i + typed.Type.record_base), .name = src.text(declaration.name), .declaration = declaration.name, .fields = fields };
+    }
+    for (domains, 0..) |declaration, offset| {
+        const backing = try catalog.resolve(src, declaration.backing, sink);
+        if (!backing.isInteger() and backing != .bool) return sink.fail("E_DOMAIN_BASE", declaration.backing, "domain backing must be a built-in integer or bool");
+        storage[declarations.len + offset].domain = backing;
     }
     // Iterative DFS rejects cycles without expanding records or recursing on the host.
     const State = enum { unseen, visiting, complete };

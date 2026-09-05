@@ -1,0 +1,34 @@
+domain Millimeters: u32 {
+    private fn raw(value: u32) -> Millimeters {
+        return wrap<Millimeters>(value);
+    }
+
+    fn from(value: u32) -> Millimeters {
+        // Clamp to the range this domain promises to represent.
+        if value > 1000u32 { return Millimeters.raw(1000u32); }
+        return Millimeters.raw(value);
+    }
+
+    fn number(value: Millimeters) -> u32 {
+        return unwrap(value);
+    }
+
+    fn add(a: Millimeters, b: Millimeters) -> Millimeters {
+        return Millimeters.from(unwrap(a) + unwrap(b));
+    }
+}
+
+domain Seconds: u32 {
+    fn from(value: u32) -> Seconds { return wrap<Seconds>(value); }
+    fn number(value: Seconds) -> u32 { return unwrap(value); }
+}
+
+struct Measurement { distance: Millimeters, elapsed: Seconds }
+
+fn main() -> i64 {
+    let sample = new Measurement {
+        distance: Millimeters.add(Millimeters.from(700u32), Millimeters.from(500u32)),
+        elapsed: Seconds.from(3u32)
+    };
+    return cast<i64>(Millimeters.number(sample.distance)) + cast<i64>(Seconds.number(sample.elapsed));
+}

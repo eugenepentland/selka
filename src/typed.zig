@@ -16,6 +16,8 @@ pub const Node = struct {
         boolean: bool,
         local: LocalId,
         cast: NodeId,
+        wrap: NodeId,
+        unwrap: NodeId,
         array: []const NodeId,
         index: struct { base: NodeId, index: NodeId },
         replace: struct { base: NodeId, index: NodeId, value: NodeId },
@@ -38,11 +40,12 @@ pub const Record = struct {
     declaration: Span,
     fields: []const Field,
     array: ?Array = null,
+    domain: ?Type = null,
     pub fn count(self: Record) usize {
-        return if (self.array) |a| a.length else self.fields.len;
+        return if (self.array) |a| a.length else if (self.domain != null) 1 else self.fields.len;
     }
     pub fn elementType(self: Record, index: usize) Type {
-        return if (self.array) |a| a.element else self.fields[index].ty;
+        return if (self.array) |a| a.element else self.domain orelse self.fields[index].ty;
     }
 };
 pub fn typeName(ty: Type, records: []const Record) []const u8 {
@@ -64,6 +67,8 @@ pub const Statement = struct {
 };
 pub const Local = struct { name: []const u8, declaration: Span, ty: Type, mutable: bool, reads: usize = 0, writes: usize = 0 };
 pub const Function = struct {
+    owner: ?Type = null,
+    restricted: bool = false,
     conversion: bool = false,
     id: FunctionId,
     name: []const u8,

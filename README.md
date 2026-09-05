@@ -72,7 +72,7 @@ zig build run -- discover-duplicates examples/duplicates.my --timings
 It reports exact checked-function candidates after normalizing bound names,
 with source locations and advisory explanations. Ordinary compilation does not
 run it. See the [comparison contract and review](docs/experiments/duplicate-discovery.md).
-All 90 tests pass in Debug and ReleaseFast.
+All 100 tests pass in Debug and ReleaseFast.
 
 [Post-MVP tracking](docs/experiments/roadmap.md) records the remaining experiments.
 Records, complete construction, field access, preserving updates, and declarative
@@ -81,7 +81,9 @@ Run `examples/records.my` (12) or `examples/conversions.my` (11).
 Signed/unsigned 8/16/32/64-bit integers and checked casts are implemented
 ([integer semantics](docs/experiments/integers.md)). Fixed arrays, checked indexing,
 `replace`, and `len` complete A1 ([array semantics](docs/experiments/arrays.md)).
-Run `examples/arrays.my` (44). A2 domain types and exhaustive mappings are next. Approximate
+Run `examples/arrays.my` (44). A2 now includes nominal scalar domains and private factories/accessors
+([domain semantics](docs/experiments/domains.md)); `examples/domains.my` returns
+1003. Closed variants and exhaustive mappings are next. Approximate
 matching, borrowing, ownership, effects, modules, native execution, and the other
 pending tracks are not yet complete.
 

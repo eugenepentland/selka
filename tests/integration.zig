@@ -216,3 +216,22 @@ test "CLI checks array schemas dumps indexing and reports bounds traps" {
     try invoke("run", bounds, 1, "", ":2:12: error[R_INDEX_BOUNDS]");
     try invoke("run", "fn main() -> i64 { discard replace(new [1]u8 [7u8], 18446744073709551615u64, 8u8); return 0; }", 1, "", "error[R_INDEX_BOUNDS]");
 }
+
+test "CLI checks domain privacy unit mismatches and qualified factory execution" {
+    try invoke("run", @embedFile("fixtures/domains.my"), 0, "1003\n", "");
+    try invoke("check", @embedFile("fixtures/domains.my"), 0, "", "");
+    const dumped = try runFixture("dump-bytecode", @embedFile("fixtures/domains.my"), &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    try testing.expectEqualStrings("", dumped.stderr);
+    for ([_][]const u8{ "domain Millimeters", "private function Millimeters.raw", "WRAP_DOMAIN Millimeters", "UNWRAP_DOMAIN Seconds" }) |instruction| {
+        try testing.expect(std.mem.indexOf(u8, dumped.stdout, instruction) != null);
+    }
+    const private = "domain D: i64 { private fn raw(n: i64) -> D { return wrap<D>(n); } } fn main() -> i64 { discard D.raw(1); return 0; }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| {
+        try invoke(command, private, 1, "", "error[E_PRIVATE_FUNCTION]");
+    }
+    try invoke("check", "domain D: i64 {} fn main() -> i64 { discard wrap<D>(1); return 0; }", 1, "", "error[E_PRIVATE_DOMAIN]");
+    try invoke("check", "domain Seconds: i64 { fn from(n: i64) -> Seconds { return wrap<Seconds>(n); } } domain Millimeters: i64 {} fn distance(n: Millimeters) -> i64 { discard n; return 0; } fn main() -> i64 { return distance(Seconds.from(1)); }", 1, "", "expected Millimeters, found Seconds");
+}
