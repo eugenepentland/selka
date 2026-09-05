@@ -1,6 +1,6 @@
 # Implemented semantics
 
-Status: M0–M4, 2026-09-05. This file describes implemented behavior, while
+Status: M0–M5 complete, 2026-09-05. This file describes implemented behavior, while
 [plan.md](plan.md) describes the complete target and future experiments.
 
 - A source file contains named functions and exactly one `fn main() -> i64`.
@@ -83,8 +83,8 @@ Status: M0–M4, 2026-09-05. This file describes implemented behavior, while
   explicit count of omitted older frames. Trace data borrows compilation-owned
   function names and is stored by value, requiring no extra runtime cleanup.
 
-The full MVP acceptance audit remains. Post-MVP feature syntax is not accepted
-as a placeholder with invented semantics.
+The [MVP acceptance audit](mvp-audit.md) records the verification evidence.
+Post-MVP feature syntax is not accepted as a placeholder with invented semantics.
 
 
 The guest has no strings, floats, aggregates, pointers, heap allocation, borrowing,

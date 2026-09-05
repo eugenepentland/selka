@@ -36,11 +36,11 @@ zig build fmt-check
 The example prints `7`. A successful program result is printed to stdout, not
 used as the exit code. Success exits 0, source errors and guest traps exit 1,
 and usage/I/O/host failures exit 2. Diagnostics go to stderr. Source files
-are currently limited to 16 MiB; excessive expression nesting is diagnosed.
+are currently limited to 16 MiB; excessive syntax nesting is diagnosed.
 
 ## Current implementation
 
-M0 through M4 are implemented: owned source buffers, source locations, lexer,
+The scalar MVP (M0–M5) is implemented and audited: owned source buffers, source locations, lexer,
 parser, separate untyped/typed representations, per-function instructions,
 an iterative VM with typed locals, jumps, and explicit call frames, deterministic dumps, binding diagnostics, and actual-CLI tests.
 
@@ -60,7 +60,11 @@ references, mutual recursion, and boolean or integer parameters/results.
 Guest traps include source locations and a bounded call trace.
 `examples/sum_inline.my` returns `4950`; `examples/gcd_inline.my` returns `6`.
 `examples/sum.my` and `examples/gcd.my` are the plan's exact acceptance programs.
-The final fixture and contract audit remains. Ownership, modules, native guest
-code, and the later quality contracts remain post-MVP experiments.
+All 47 tests pass in Debug and ReleaseFast, including from a fresh checkout.
+The [acceptance audit](docs/mvp-audit.md) maps requirements to evidence.
+
+The next stage is to use the scalar language on small programs and choose a
+post-MVP experiment from plan section 15. Ownership, modules, native guest
+code, and compiler-assisted duplicate discovery remain proposed experiments.
 
 See [implemented semantics](docs/semantics.md) and [verification/progress](docs/progress.md).

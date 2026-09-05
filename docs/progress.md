@@ -1,8 +1,8 @@
 # Implementation progress
 
-The objective remains the complete scalar MVP in plan sections 4–13. The later
-features in sections 15 and 18 remain proposed experiments, as specified by the
-plan. This checkpoint does not claim the MVP is complete.
+The complete scalar MVP in plan sections 4–13 is implemented and audited. The
+later features in sections 15 and 18 remain proposed experiments, as specified
+by the plan. Earlier entries below describe their milestone checkpoints.
 
 ## 2026-09-05: M0 and M1
 
@@ -101,7 +101,25 @@ Evidence:
   buffers, trap rendering, and disassembly.
 - Guardian gates were not exercised.
 
-## Remaining milestones
+## 2026-09-05: M5 and completion audit
 
-- M5: complete fixture matrix, parser/host-failure robustness, documentation,
-  and a requirement-by-requirement audit of the full MVP in Debug/ReleaseFast.
+Completed the CLI fixture matrix, related declaration diagnostics, malformed
+source and parser-limit checks, invalid-bytecode boundary checks, and bounded
+runtime-storage verification. Source errors, guest traps, and host failures
+remain distinct. Added editable factorial, nested-call, and Collatz examples.
+
+Evidence:
+
+- 47/47 tests pass in Debug and ReleaseFast (35 core, 12 actual CLI).
+- Fresh detached checkout of implementation commit `fb3458a` builds, passes the
+  same 47 tests in both modes, and passes formatting on Guardian's exact Zig.
+- A 100,000-iteration calling program fits a 16 KiB runtime allocator; repeated
+  executions and allocation-failure sweeps release their storage.
+- All three commands preserve warning order, status, and their exact stdout;
+  source errors and runtime traps assert relevant locations. Oversized input
+  produces a host-resource failure with no result output.
+- New examples return 120 (factorial), 6 (nested calls), and 111 (Collatz).
+- [mvp-audit.md](mvp-audit.md) maps the complete MVP contract to code and tests.
+
+No MVP work remains. Hosted CI has not run and no remote was created. Guardian
+was not exercised. Later experiments remain deferred as the plan specifies.

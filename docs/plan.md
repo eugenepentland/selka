@@ -1,12 +1,12 @@
 # Systems language: goals and Zig MVP implementation plan
 
-Status: proposed design, revision 2, updated 2026-09-05 after a Guardian design review.
+Status: revision 2; scalar MVP M0–M5 implemented and audited on 2026-09-05. Later language experiments remain proposed.
 
 Working executable name: `mylang`. Working source extension: `.my`.
 
 Purpose: a plan for an experimental implementation, not a finished language specification.
 
-Revision 2 adds explicit scalar-result discard and two advisory binding diagnostics to the MVP. It proposes complete record conversions, external capabilities, resource obligations, nominal domain types, exhaustive mappings, and compiler-assisted duplicate discovery for later experiments. Sections 3 and 15 distinguish the MVP commitments from those proposals; section 18 explains the Guardian-derived design and its limits. M0 and M1 remain the first implementation task.
+Revision 2 adds explicit scalar-result discard and two advisory binding diagnostics to the MVP. It proposes complete record conversions, external capabilities, resource obligations, nominal domain types, exhaustive mappings, and compiler-assisted duplicate discovery for later experiments. Sections 3 and 15 distinguish the MVP commitments from those proposals; section 18 explains the Guardian-derived design and its limits. M0–M5 are complete; section 16 preserves the original starting task for context.
 
 ## 1. Project direction
 
@@ -532,14 +532,14 @@ Acceptance: the exact programs in section 5 run; recursive factorial and nested-
 
 ### M5 — Complete the MVP contract
 
-- [ ] Finish `check`, `run`, and `dump-bytecode` with the documented output/status behavior.
-- [ ] Finish source-error and runtime-error fixtures, including integer boundaries.
-- [ ] Add readable messages for missing returns, missing `main`, duplicate declarations, and invalid calls.
-- [ ] Verify explicit-discard errors and binding warnings have stable codes/spans and deterministic order; warnings preserve each command's normal stdout and exit status.
-- [ ] Reject excessive parser nesting with a diagnostic; a default nesting budget of 256 is sufficient initially.
-- [ ] Check emitted jump targets and IDs, and ensure host allocations are cleaned up on failures.
-- [ ] Run the same semantic fixture suite with the host built in Debug and ReleaseFast.
-- [ ] Document implemented syntax and unsupported features.
+- [x] Finish `check`, `run`, and `dump-bytecode` with the documented output/status behavior.
+- [x] Finish source-error and runtime-error fixtures, including integer boundaries.
+- [x] Add readable messages for missing returns, missing `main`, duplicate declarations, and invalid calls.
+- [x] Verify explicit-discard errors and binding warnings have stable codes/spans and deterministic order; warnings preserve each command's normal stdout and exit status.
+- [x] Reject excessive parser nesting with a diagnostic; a default nesting budget of 256 is sufficient initially.
+- [x] Check emitted jump targets and IDs, and ensure host allocations are cleaned up on failures.
+- [x] Run the same semantic fixture suite with the host built in Debug and ReleaseFast.
+- [x] Document implemented syntax and unsupported features.
 
 Acceptance: every check in section 13 is satisfied. Stop feature expansion and try writing small programs.
 
@@ -583,20 +583,20 @@ The build's test target should exercise the actual CLI as well as internal funct
 
 ## 13. MVP definition of done
 
-- [ ] A clean checkout builds with the documented Zig version.
-- [ ] All three CLI commands behave as specified.
-- [ ] Every included feature in section 4 has a positive or negative fixture as appropriate.
-- [ ] The sum, GCD, recursive factorial, and nested-call programs pass.
-- [ ] Semantic errors are rejected before execution, including in unused functions.
-- [ ] Bare expression statements are rejected; explicit discard preserves evaluation and releases exactly one operand-stack value on normal completion.
-- [ ] Binding warnings use resolved identities, have stable codes/spans, and do not change successful command output or exit status.
-- [ ] Guest arithmetic and resource failures are located diagnostics, not host panics.
-- [ ] Calls and loop iterations do not accumulate abandoned locals, frames, or operand values.
-- [ ] The semantic suite passes in Debug and ReleaseFast.
-- [ ] The instruction dump is deterministic for the same source and compiler version.
-- [ ] Source locations survive parsing, checking, lowering, and execution.
-- [ ] Repeated compilation/execution in the test process releases request-owned allocations.
-- [ ] Unsupported features and the actual language rules are documented.
+- [x] A clean checkout builds with the documented Zig version.
+- [x] All three CLI commands behave as specified.
+- [x] Every included feature in section 4 has a positive or negative fixture as appropriate.
+- [x] The sum, GCD, recursive factorial, and nested-call programs pass.
+- [x] Semantic errors are rejected before execution, including in unused functions.
+- [x] Bare expression statements are rejected; explicit discard preserves evaluation and releases exactly one operand-stack value on normal completion.
+- [x] Binding warnings use resolved identities, have stable codes/spans, and do not change successful command output or exit status.
+- [x] Guest arithmetic and resource failures are located diagnostics, not host panics.
+- [x] Calls and loop iterations do not accumulate abandoned locals, frames, or operand values.
+- [x] The semantic suite passes in Debug and ReleaseFast.
+- [x] The instruction dump is deterministic for the same source and compiler version.
+- [x] Source locations survive parsing, checking, lowering, and execution.
+- [x] Repeated compilation/execution in the test process releases request-owned allocations.
+- [x] Unsupported features and the actual language rules are documented.
 
 This is the stopping point for MVP implementation. A native executable produced from a guest program is not required.
 
@@ -650,7 +650,7 @@ After that works, proceed milestone by milestone. Keep any design change in `doc
 
 ## 17. Implementation references and status
 
-The syntax, VM format, semantics, budgets, and milestones in this document are proposed project decisions. The implementation has reached M0–M2; see [progress.md](progress.md) for current verification and remaining work. Later language features remain proposals.
+The scalar syntax, VM format, semantics, and budgets in sections 4–13 are implemented in the sibling `mylang` repository. See [mvp-audit.md](mvp-audit.md) for the requirement-by-requirement evidence and [progress.md](progress.md) for milestone verification. M0–M5 are complete. Later language features remain proposals; no performance claims are made.
 
 Official Zig reference checked for the host arithmetic mechanisms:
 

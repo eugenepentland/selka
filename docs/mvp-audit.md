@@ -42,7 +42,19 @@ as CLI tests in `tests/integration.zig`.
 
 ## Verification record
 
-The final source is exercised locally in Debug and ReleaseFast. A fresh checkout
-will be built and tested before marking M5 and the MVP definition of done complete.
+On 2026-09-05 a fresh detached worktree of implementation commit `fb3458a`
+was created outside the development directory, with no existing local Zig cache.
+The following commands completed successfully there:
+
+- `zig version`: `0.17.0-dev.1683+5ceec001b`.
+- `zig build --summary all`: 3/3 steps succeeded; native executable installed.
+- `zig build test --summary all`: 47/47 tests (35 core, 12 actual CLI).
+- `zig build test -Doptimize=ReleaseFast --summary all`: same 47/47 tests.
+- `zig build fmt-check --summary all`: passed.
+
+The same suites passed in the development checkout. Source changes ended at
+`fb3458a`; subsequent completion edits update documentation only. All M5 and
+section 13 obligations have direct implementation and verification evidence in
+the table above. This completes the scalar MVP as defined by the plan.
 Hosted CI is configured but has not run: this repository has no remote. Guardian's
 gates were not exercised; no Guardian feedback entry is required for these builds.
