@@ -939,3 +939,30 @@ and review outcomes. These fixtures do not establish production usefulness or
 performance. Formatter, reference/complexity reports, verification tooling, and all
 other unfinished roadmap tracks remain in scope. Guardian was not exercised; hosted
 CI has not run. The full roadmap goal remains active.
+
+
+## 2026-09-05: T resolved references and configurable structural reports
+
+Implemented `report-quality` over checked function bodies. Reports use resolved
+call identities and source locations, count incoming syntactic sites, compute
+reachability from main iteratively, and list binding declaration/read/write facts.
+Private unreachable functions are distinguished from other potential entry points.
+Runtime execution, coverage, and assertion outcomes are explicitly unmeasured.
+Structural node/line/parameter/nesting/decision counters have configurable advisory
+thresholds; zero disables a signal without hiding its measured fact.
+
+389 tests pass in Debug and ReleaseFast (350 core, 39 actual CLI). Acceptance covers
+untaken call paths, cycles, unreachable callers, private/public notes, branch/loop/
+short-circuit/match/try counters, physical lines, deterministic rendering, disabled
+thresholds, every allocation failure, and a 2,001-function call chain without
+lowering or execution. CLI advisory status, source errors, and malformed/duplicate/
+wrong-command options pass. Formatting and whitespace checks pass. Manual inspection
+of the duplicate corpus agrees with one loop decision per sum helper and three
+resolved main calls. Exact/near discovery versions remain unchanged.
+
+[Quality report semantics](experiments/quality-reports.md) documents every counter,
+static-versus-runtime distinctions, threshold defaults, and reference coverage.
+Formatter and verification-driver work remain pending; modules/schemas must extend
+reference coverage and entry-root policy. All other unfinished roadmap tracks remain
+in scope. Guardian was not exercised; hosted CI has not run. The full roadmap goal
+remains active.

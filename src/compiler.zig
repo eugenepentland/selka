@@ -9,6 +9,7 @@ const typed = @import("typed.zig");
 const sema = @import("sema.zig");
 const lower = @import("lower.zig");
 pub const bytecode = @import("bytecode.zig");
+pub const quality = @import("quality.zig");
 pub const duplicates = @import("duplicates.zig");
 pub const vm = @import("vm.zig");
 const disassemble = @import("disassemble.zig");
@@ -66,6 +67,7 @@ test {
     _ = @import("compiler_test.zig");
     _ = @import("duplicates_test.zig");
     _ = @import("near_duplicates_test.zig");
+    _ = @import("quality_test.zig");
     _ = @import("value_test.zig");
     _ = @import("records_test.zig");
     _ = @import("integers_test.zig");

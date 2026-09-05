@@ -15,7 +15,7 @@ not a claim that the full future language has been delivered.
 | M, modules/interfaces | Pending a multi-file domain program | Resolve imports/exports and private boundaries; distinguish optional direction policy from type validity. |
 | E, native execution | Pending one concrete backend choice | Run the same scalar semantic/trap fixtures through the VM and native route. |
 | F, compile-time/schema/incremental work | Pending aggregates/variants/modules | Reject duplicate schema keys and undeclared inputs; explain invalidation and evaluation budgets. |
-| T, formatter/reference reports/verification | Exact discovery establishes the first command only | Preserve semantics/comments with one formatter; report resolved references separately from runtime test coverage. |
+| T, formatter/reference reports/verification | Resolved function-call/binding reports and configurable structural metrics implemented | Formatter and project-verification driver remain pending; extend references/entry roots with modules and schemas. |
 
 ## A1 completed decisions
 
@@ -89,3 +89,7 @@ the VM and CLI; nested source arena scopes and escape checking remain pending.
 
 [Approximate discovery](approximate-discovery.md) now reports bounded near matches
 separately from exact groups, with changed facts and explicit incomplete-search status.
+
+[Static quality reports](quality-reports.md) now separate resolved call reachability
+and binding counts from unmeasured runtime coverage, with configurable structural
+review thresholds.

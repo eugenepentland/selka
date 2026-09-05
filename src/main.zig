@@ -1,7 +1,7 @@
 //! Host I/O and process policy stay outside the compiler and VM.
 const std = @import("std");
 const language = @import("mylang");
-const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates> <file.my>\n  run: --max-steps=N --max-frames=N --memory=general|arena\n  discover-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n";
+const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates|report-quality> <file.my>\n  run: --max-steps=N --max-frames=N --memory=general|arena\n  discover-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n";
 
 pub fn main(init: std.process.Init) void {
     const status = dispatch(init) catch |err| status: {
@@ -36,6 +36,13 @@ fn dispatch(init: std.process.Init) !u8 {
     try report(init, &compilation);
     switch (parsed.command) {
         .check => return 0,
+        .@"report-quality" => {
+            var analysis = try language.quality.analyze(allocator, compilation.program.?, compilation.src, parsed.quality);
+            defer analysis.deinit();
+            const text = try language.quality.render(allocator, analysis, compilation.program.?, compilation.src);
+            defer allocator.free(text);
+            try std.Io.File.stdout().writeStreamingAll(init.io, text);
+        },
         .@"discover-duplicates" => {
             const start = std.Io.Timestamp.now(init.io, .awake);
             var analysis = try language.duplicates.discover(allocator, compilation.program.?, parsed.discovery);
@@ -80,11 +87,13 @@ fn report(init: std.process.Init, compilation: *const language.Compilation) !voi
     }
 }
 
-const Command = enum { check, run, @"dump-bytecode", @"discover-duplicates" };
-const Parsed = struct { command: Command, path: []const u8, options: language.vm.Options, discovery: language.duplicates.Options, timings: bool };
+const Command = enum { check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
+const Parsed = struct { quality: language.quality.Options, command: Command, path: []const u8, options: language.vm.Options, discovery: language.duplicates.Options, timings: bool };
 fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (args.len < 2) return error.Usage;
     const command = std.meta.stringToEnum(Command, args[0]) orelse return error.Usage;
+    var quality: language.quality.Options = .{};
+    var quality_seen: u8 = 0;
     var path: ?[]const u8 = null;
     var options: language.vm.Options = .{};
     var saw_steps = false;
@@ -95,7 +104,21 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     var saw_min = false;
     var saw_population = false;
     var saw_work = false;
-    for (args[1..]) |arg| {
+    argument: for (args[1..]) |arg| {
+        inline for (.{ "max_function_lines", "max_parameters", "max_nesting", "max_decisions", "max_line_bytes" }, .{ "--max-function-lines=", "--max-parameters=", "--max-nesting=", "--max-decisions=", "--max-line-bytes=" }, 0..) |field, prefix, index| {
+            if (std.mem.startsWith(u8, arg, prefix)) {
+                const bit: u8 = 1 << index;
+                if (command != .@"report-quality" or quality_seen & bit != 0) return error.Usage;
+                quality_seen |= bit;
+                const digits = arg[prefix.len..];
+                if (digits.len == 0) return error.Usage;
+                for (digits) |ch| if (!std.ascii.isDigit(ch)) {
+                    return error.Usage;
+                };
+                @field(quality, field) = std.fmt.parseUnsigned(usize, digits, 10) catch return error.Usage;
+                continue :argument;
+            }
+        }
         if (std.mem.startsWith(u8, arg, "--max-steps=")) {
             if (command != .run or saw_steps) return error.Usage;
             saw_steps = true;
@@ -144,7 +167,7 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
         }
     }
     if (saw_work and !discovery.approximate) return error.Usage;
-    return .{ .command = command, .path = path orelse return error.Usage, .options = options, .discovery = discovery, .timings = timings };
+    return .{ .quality = quality, .command = command, .path = path orelse return error.Usage, .options = options, .discovery = discovery, .timings = timings };
 }
 
 fn positive(digits: []const u8) error{Usage}!u64 {

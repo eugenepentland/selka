@@ -72,7 +72,7 @@ zig build run -- discover-duplicates examples/duplicates.my --timings
 It reports exact checked-function candidates after normalizing bound names,
 with source locations and advisory explanations. Ordinary compilation does not
 run it. See the [comparison contract and review](docs/experiments/duplicate-discovery.md).
-All 382 tests pass in Debug and ReleaseFast.
+All 389 tests pass in Debug and ReleaseFast.
 
 [Post-MVP tracking](docs/experiments/roadmap.md) records the remaining experiments.
 Records, complete construction, field access, preserving updates, and declarative
@@ -166,3 +166,8 @@ arena scopes remain pending; arena backing can accumulate until execution ends.
 [Approximate discovery](docs/experiments/approximate-discovery.md) is available with
 `discover-duplicates --approximate`. It reports canonical edits between near matches
 and explicitly flags an incomplete search when work or output limits are reached.
+
+[Static quality reports](docs/experiments/quality-reports.md) are available with
+`report-quality`. They show resolved calls, reachability from main, binding counts,
+and structural metrics with configurable review thresholds. Runtime coverage is
+explicitly unmeasured.

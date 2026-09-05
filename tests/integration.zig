@@ -523,3 +523,15 @@ test "CLI approximate discovery is advisory explains drift and reports budget ex
     for ([_][]const []const u8{ &.{"--max-work=1"}, &.{ "--approximate", "--max-work=0" }, &.{ "--approximate", "--approximate" } }) |options| try invokeOptions("discover-duplicates", source, options, 2, "", "usage:");
     try invokeOptions("check", source, &.{"--approximate"}, 2, "", "usage:");
 }
+
+test "CLI static quality report uses advisory thresholds and rejects invalid options" {
+    const source = "fn helper(x: i64) -> i64 { return x; } fn main() -> i64 { return helper(7); }";
+    const outcome = try runFixture("report-quality", source, &.{"--max-line-bytes=1"});
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    for ([_][]const u8{ "quality-v1", "calls helper", "reachable-from-main=true", "exceeds configured 1", "Runtime coverage and assertions: not measured" }) |part| try testing.expect(std.mem.indexOf(u8, outcome.stdout, part) != null);
+    for ([_][]const []const u8{ &.{"--max-nesting=-1"}, &.{"--max-decisions="}, &.{ "--max-parameters=1", "--max-parameters=2" }, &.{"--max-steps=1"} }) |options| try invokeOptions("report-quality", source, options, 2, "", "usage:");
+    try invokeOptions("run", source, &.{"--max-nesting=1"}, 2, "", "usage:");
+    try invoke("report-quality", "fn main() -> i64 { return false; }", 1, "", "error[E_TYPE]");
+}
