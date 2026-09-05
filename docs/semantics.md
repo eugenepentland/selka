@@ -132,5 +132,12 @@ Closed `enum` and tagged `union` declarations, explicit `new Type.variant`
 construction, and exhaustive `match` statements are implemented. Payload access
 requires a typed arm binding or explicit payload discard. Enum equality retains
 nominal identity. See [variant semantics](experiments/variants.md) for grammar,
-control flow, storage, and added-variant guarantees. Complete enum-indexed tables
-remain pending in A2.
+control flow, storage, and added-variant guarantees.
+
+
+Complete enum-indexed tables are implemented as `[Enum]Value`, with named
+construction requiring every enum case. Lookup/replacement requires the exact
+enum key type, and adding a case exposes incomplete constructors. See
+[table semantics](experiments/tables.md) for mapping identity, evaluation order,
+unknown-code boundaries, and storage costs. This completes A2; borrowing and
+slices remain pending.

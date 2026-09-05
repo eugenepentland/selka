@@ -1,7 +1,7 @@
 # Implementation progress
 
-The complete scalar MVP in plan sections 4–13 is implemented and audited. Post-MVP A1 and exact duplicate discovery are also implemented. A2 has nominal
-scalar domains, private construction, closed variants, and exhaustive matching; the remaining
+The complete scalar MVP in plan sections 4–13 is implemented and audited.
+Post-MVP A1, A2, and exact duplicate discovery are also implemented. Remaining
 tracks in sections 15 and 18 are still pending. Earlier entries below describe
 their historical milestone checkpoints.
 
@@ -294,3 +294,30 @@ prints 24. See [variant semantics](experiments/variants.md) for the full contrac
 A2 remains in progress: complete enum-indexed tables are next. The full pending
 roadmap goal remains active. Guardian gates were not exercised; hosted CI has
 not run.
+
+
+## 2026-09-05: A2 complete — enum-indexed tables
+
+Implemented `[Enum]Value` tables with complete named construction, exact enum-key
+lookup/replacement, immutable copies, and evaluated length queries. Table identity
+includes the nominal key enum and value type; equal-length numeric arrays and
+foreign enum tables remain distinct. Adding a case breaks incomplete constructors
+with a diagnostic at the new enum declaration. Reordered enum declarations retain
+the named mappings. Forward enums and nested aggregate/value types are supported.
+
+Table construction reuses named initializer checking and aggregate lowering.
+Validation checks key kind/cardinality, schema names/types, and constructor order;
+the VM validates key identity before reading enum tags. Exact duplicate discovery
+is `exact-v7`, retaining key types and named mappings. An explicit decoder fixture
+preserves unknown numeric protocol codes in a separately handled union variant;
+generated schemas/serialization remain future F work.
+
+All 123 tests pass in Debug and ReleaseFast (104 core, 19 actual CLI), including
+allocation failures, nested payload cleanup at every instruction trap boundary,
+and a 10,000-replacement loop under 4 KiB live runtime storage. Formatting and
+whitespace checks pass. The tables example prints 1407.
+
+[Table semantics and A2 acceptance](experiments/tables.md) links domain, variant,
+and mapping evidence. A2 is complete; borrowing/slices and guest memory identity
+are next. The full roadmap goal remains active. Guardian gates were not exercised;
+hosted CI has not run.

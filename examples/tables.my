@@ -1,0 +1,17 @@
+enum Status { ok, missing, failed }
+
+fn response_codes() -> [Status]u16 {
+    return new [Status]u16 {
+        failed: 500u16,
+        ok: 200u16,
+        missing: 404u16
+    };
+}
+
+fn main() -> i64 {
+    let original = response_codes();
+    let revised = replace(original, new Status.failed, 503u16);
+    return cast<i64>(original[new Status.failed])
+        + cast<i64>(revised[new Status.failed])
+        + cast<i64>(revised[new Status.missing]);
+}

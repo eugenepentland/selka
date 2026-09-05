@@ -1,8 +1,8 @@
 # A2: closed enums, tagged unions, and exhaustive matching
 
 Status: implemented. Together with nominal domains/private construction, this
-completes the variant and matching portions of A2. Complete enum-indexed tables
-remain pending; numeric fixed arrays are not a substitute for that contract.
+completes the variant and matching portions of A2. [Complete enum-indexed
+tables](tables.md) are also implemented, finishing A2.
 
 ## Declarations and construction
 

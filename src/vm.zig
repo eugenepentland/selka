@@ -129,11 +129,13 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 try pushOwned(&stack, allocator, value);
             },
             .get_index => |ty| {
-                const index = try numeric(&stack, frame.operand_base, null, allocator);
+                const key = try pop(&stack, frame.operand_base);
+                defer key.release(allocator);
                 const base = try pop(&stack, frame.operand_base);
                 defer base.release(allocator);
                 if (base.typeOf() != ty) return error.InternalError;
                 const schema = program.records[ty.recordIndex()].array orelse return error.InternalError;
+                const index = try arrayIndex(key, schema);
                 if (index < 0 or index >= schema.length) return trap("R_INDEX_BOUNDS", "array index is outside its declared bounds", instruction.span, frames.items, program);
                 try pushOwned(&stack, allocator, try base.getField(@intCast(index)));
             },
@@ -141,11 +143,12 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 if (stack.items.len - frame.operand_base < 3) return error.InternalError;
                 const start = stack.items.len - 3;
                 const base = stack.items[start];
-                const index = try stack.items[start + 1].asInteger();
+                const key = stack.items[start + 1];
                 const replacement = stack.items[start + 2];
                 if (base.typeOf() != ty) return error.InternalError;
                 const schema = program.records[ty.recordIndex()].array orelse return error.InternalError;
                 if (replacement.typeOf() != schema.element) return error.InternalError;
+                const index = try arrayIndex(key, schema);
                 if (index < 0 or index >= schema.length) return trap("R_INDEX_BOUNDS", "array replacement index is outside its declared bounds", instruction.span, frames.items, program);
                 const result = try base.updated(allocator, &.{@intCast(index)}, &.{replacement});
                 for (stack.items[start..]) |old| old.release(allocator);
@@ -312,4 +315,12 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
         }
     }
     return error.InternalError;
+}
+
+fn arrayIndex(value: typed.Value, schema: typed.Array) error{InternalError}!i128 {
+    if (schema.key) |key| {
+        if (value.typeOf() != key) return error.InternalError;
+        return try value.variantTag();
+    }
+    return value.asInteger();
 }

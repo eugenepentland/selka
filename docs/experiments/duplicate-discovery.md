@@ -131,3 +131,11 @@ retain resolved variant names and payloads. Match statements retain source arm
 order, variant-to-body mappings, and payload local slots, while normalizing bound
 spelling. `src/variants_test.zig` verifies renamed equivalents and distinguishes
 changed constructors and arm bodies. This does not introduce approximate matching.
+
+
+Complete enum tables advance the version to `exact-v7`. Table type identity
+includes the nominal enum key and value type. Named constructor entries retain
+key names and written evaluation order through the existing canonical field
+encoding. Lookup/replacement retains enum expressions. `src/tables_test.zig`
+checks renamed equivalents and distinguishes foreign enums, changed mappings,
+reordered initializers, and positional numeric arrays.

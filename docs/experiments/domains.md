@@ -2,8 +2,8 @@
 
 Status: domain types, qualified functions, private helpers, and representation
 access checks are implemented. [Closed enums, tagged unions, and exhaustive
-matching](variants.md) are also implemented. Complete enum-indexed tables remain
-pending A2 work.
+matching](variants.md) and [complete enum-indexed tables](tables.md) are also
+implemented, completing A2.
 
 ## Syntax and access
 

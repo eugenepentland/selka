@@ -250,3 +250,18 @@ test "CLI executes variants dumps dispatch and rejects newly incomplete matches"
     try invoke("check", "union U { value: i64, empty } fn main() -> i64 { discard new U.value(true); return 0; }", 1, "", "error[E_TYPE]");
     try invoke("run", "union U { value: i64 } fn main() -> i64 { match new U.value(1 / 0) { U.value(discard) => { return 0; } } }", 1, "", "error[R_DIVISION_BY_ZERO]");
 }
+
+test "CLI executes complete enum tables and rejects missing mappings in every command" {
+    try invoke("run", @embedFile("fixtures/tables.my"), 0, "1407\n", "");
+    try invoke("check", @embedFile("fixtures/tables.my"), 0, "", "");
+    const dumped = try runFixture("dump-bytecode", @embedFile("fixtures/tables.my"), &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    try testing.expectEqualStrings("", dumped.stderr);
+    for ([_][]const u8{ "table [Status]u16", "GET_INDEX [Status]u16", "REPLACE_INDEX [Status]u16" }) |instruction| try testing.expect(std.mem.indexOf(u8, dumped.stdout, instruction) != null);
+    const added = "enum Key { old, added } fn main() -> i64 { return new [Key]i64 { old: 7 }[new Key.old]; }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, added, 1, "", "missing initializer for key `added`");
+    try invoke("check", "enum Key { a } fn main() -> i64 { return new [Key]i64 { a: 7 }[0]; }", 1, "", "expected Key, found i64");
+    try invoke("check", "enum Key { a } fn main() -> i64 { discard new [Key]i64 [7]; return 0; }", 1, "", "error[E_TABLE_CONSTRUCTION]");
+}

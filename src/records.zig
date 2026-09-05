@@ -25,6 +25,10 @@ pub const Catalog = struct {
         if (!schema.isRecord()) return sink.fail("E_TYPE", span, "operation requires a record value");
         return schema;
     }
+    pub fn constructor(self: Catalog, ty: typed.Type, span: Span, sink: *diagnostic.Sink) Error!typed.Record {
+        if (ty.isAggregate() and self.records[ty.recordIndex()].tableKey() != null) return self.records[ty.recordIndex()];
+        return self.record(ty, span, sink);
+    }
     pub fn array(self: Catalog, ty: typed.Type, span: Span, sink: *diagnostic.Sink) Error!typed.Array {
         if (!ty.isAggregate()) return sink.fail("E_TYPE", span, "operation requires a fixed array value");
         return self.records[ty.recordIndex()].array orelse sink.fail("E_TYPE", span, "operation requires a fixed array value");
@@ -74,23 +78,47 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
         const index = declarations.len + domains.len + offset;
         const id: typed.Type = @fromBackingInt(index + typed.Type.record_base);
         try catalog.names.put(allocator, name, id);
-        storage[index] = .{ .id = id, .name = name, .declaration = declaration.name, .fields = &.{} };
+        const cases = try allocator.alloc(typed.Variant, declaration.cases.len);
+        for (declaration.cases, cases, 0..) |input, *output, tag| {
+            const variant_name = src.text(input.name);
+            if (catalog.field_names[index].get(variant_name)) |previous| return sink.failRelated("E_DUPLICATE_VARIANT", input.name, "variant is already declared", .{ .span = cases[previous].declaration, .message = "previous variant declaration" });
+            try catalog.field_names[index].put(allocator, variant_name, tag);
+            output.* = .{ .name = variant_name, .declaration = input.name, .payload = null };
+        }
+        storage[index] = .{ .id = id, .name = name, .declaration = declaration.name, .fields = &.{}, .variants = .{ .is_union = declaration.is_union, .cases = cases } };
     }
     var interned: std.AutoHashMapUnmanaged(typed.Array, typed.Type) = .empty;
     for (arrays) |syntax| {
-        const digits = src.text(syntax.length);
-        for (digits) |c| if (!std.ascii.isDigit(c)) return sink.fail("E_ARRAY_LENGTH", syntax.length, "array length must be an unsuffixed decimal integer");
-        const length = std.fmt.parseInt(usize, digits, 10) catch return sink.fail("E_ARRAY_LENGTH", syntax.length, "array length exceeds the host index range");
-        // A value buffer must fit addressable storage; no element metadata is expanded here.
-        if (length > std.math.maxInt(usize) / @sizeOf(typed.Value)) return sink.fail("E_ARRAY_LENGTH", syntax.length, "array value storage exceeds the host address range");
+        var enum_key: ?typed.Type = null;
+        const length: usize = switch (syntax.index) {
+            .length => |span| length: {
+                const digits = src.text(span);
+                for (digits) |c| if (!std.ascii.isDigit(c)) return sink.fail("E_ARRAY_LENGTH", span, "array length must be an unsuffixed decimal integer");
+                const count = std.fmt.parseInt(usize, digits, 10) catch return sink.fail("E_ARRAY_LENGTH", span, "array length exceeds the host index range");
+                if (count > std.math.maxInt(usize) / @sizeOf(typed.Value)) return sink.fail("E_ARRAY_LENGTH", span, "array value storage exceeds the host address range");
+                break :length count;
+            },
+            .enum_type => |span| length: {
+                const ty = try catalog.resolve(src, span, sink);
+                if (!ty.isAggregate() or !catalog.records[ty.recordIndex()].isEnum()) return sink.fail("E_TABLE_KEY", span, "table key must be a closed enum type");
+                enum_key = ty;
+                break :length catalog.records[ty.recordIndex()].variants.?.cases.len;
+            },
+        };
         const element = try catalog.resolve(src, syntax.element, sink);
-        const key: typed.Array = .{ .element = element, .length = length };
+        const key: typed.Array = .{ .element = element, .length = length, .key = enum_key };
         const entry = try interned.getOrPut(allocator, key);
         if (!entry.found_existing) {
             const index = catalog.records.len;
             const id: typed.Type = @fromBackingInt(index + typed.Type.record_base);
-            const name = try std.fmt.allocPrint(allocator, "[{d}]{s}", .{ length, typed.typeName(element, catalog.records) });
-            storage[index] = .{ .id = id, .name = name, .declaration = syntax.span, .fields = &.{}, .array = key };
+            const name = if (enum_key) |ty| try std.fmt.allocPrint(allocator, "[{s}]{s}", .{ typed.typeName(ty, catalog.records), typed.typeName(element, catalog.records) }) else try std.fmt.allocPrint(allocator, "[{d}]{s}", .{ length, typed.typeName(element, catalog.records) });
+            var fields: []const typed.Field = &.{};
+            if (enum_key) |ty| {
+                const entries = try allocator.alloc(typed.Field, length);
+                for (catalog.records[ty.recordIndex()].variants.?.cases, entries) |variant, *field| field.* = .{ .name = variant.name, .declaration = variant.declaration, .ty = element };
+                fields = entries;
+            }
+            storage[index] = .{ .id = id, .name = name, .declaration = syntax.span, .fields = fields, .array = key };
             catalog.records = storage[0 .. index + 1];
             entry.value_ptr.* = id;
         }
@@ -113,14 +141,8 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
     }
     for (variant_types, 0..) |declaration, offset| {
         const index = declarations.len + domains.len + offset;
-        const cases = try allocator.alloc(typed.Variant, declaration.cases.len);
-        for (declaration.cases, cases, 0..) |input, *output, tag| {
-            const name = src.text(input.name);
-            if (catalog.field_names[index].get(name)) |previous| return sink.failRelated("E_DUPLICATE_VARIANT", input.name, "variant is already declared", .{ .span = cases[previous].declaration, .message = "previous variant declaration" });
-            try catalog.field_names[index].put(allocator, name, tag);
-            output.* = .{ .name = name, .declaration = input.name, .payload = if (input.payload) |payload| try catalog.resolve(src, payload, sink) else null };
-        }
-        storage[index].variants = .{ .is_union = declaration.is_union, .cases = cases };
+        const cases = @constCast(storage[index].variants.?.cases);
+        for (declaration.cases, cases) |input, *output| output.payload = if (input.payload) |payload| try catalog.resolve(src, payload, sink) else null;
     }
     // Iterative DFS rejects cycles without expanding records or recursing on the host.
     const State = enum { unseen, visiting, complete };

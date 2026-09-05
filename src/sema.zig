@@ -32,14 +32,15 @@ const Checker = struct {
         if (self.owner != domain_type) return self.sink.failRelated("E_PRIVATE_DOMAIN", span, "only functions declared inside this domain can access its representation; use its factories and accessors", .{ .span = self.catalog.records[domain_type.recordIndex()].declaration, .message = "domain representation is private here" });
     }
     fn fields(self: *Checker, record_type: typed.Type, initializers: []const ast.FieldInit, complete: bool, span: source.Span) Error![]const typed.FieldInit {
-        const record = try self.catalog.record(record_type, span, self.sink);
+        const record = if (complete) try self.catalog.constructor(record_type, span, self.sink) else try self.catalog.record(record_type, span, self.sink);
+        const table_key = record.tableKey();
         const seen = try self.allocator.alloc(bool, record.fields.len);
         defer self.allocator.free(seen);
         @memset(seen, false);
         const checked = try self.allocator.alloc(typed.FieldInit, initializers.len);
         for (initializers, checked) |field, *out| {
-            const index = try self.catalog.field(record_type, self.src, field.name, self.sink);
-            if (seen[index]) return self.sink.fail("E_DUPLICATE_FIELD", field.name, "field is initialized more than once");
+            const index = if (table_key) |key| try self.catalog.variant(key, self.src, field.name, self.sink) else try self.catalog.field(record_type, self.src, field.name, self.sink);
+            if (seen[index]) return self.sink.fail(if (table_key != null) "E_DUPLICATE_KEY" else "E_DUPLICATE_FIELD", field.name, "named entry is initialized more than once");
             seen[index] = true;
             const value = self.resolved[@backingInt(field.value)].?;
             try self.require(self.nodes.items[@backingInt(value)].ty, record.fields[index].ty, self.syntax.nodes.items[@backingInt(field.value)].span);
@@ -47,8 +48,8 @@ const Checker = struct {
         }
         if (complete) for (seen, record.fields) |present, field| {
             if (!present) {
-                const message = try std.fmt.allocPrint(self.allocator, "missing initializer for field `{s}` of `{s}`", .{ field.name, record.name });
-                return self.sink.failRelated("E_INCOMPLETE_CONSTRUCTION", span, message, .{ .span = field.declaration, .message = "missing field declared here" });
+                const message = try std.fmt.allocPrint(self.allocator, "missing initializer for {s} `{s}` of `{s}`", .{ if (table_key != null) "key" else "field", field.name, record.name });
+                return self.sink.failRelated(if (table_key != null) "E_INCOMPLETE_TABLE" else "E_INCOMPLETE_CONSTRUCTION", span, message, .{ .span = field.declaration, .message = "missing entry declared here" });
             }
         };
         return checked;
@@ -90,6 +91,9 @@ const Checker = struct {
         const parsed = try self.literal(child.data.integer, true);
         if (parsed.ty.integer().?.signed and parsed.value == -parsed.ty.min()) return .{ .ty = parsed.ty, .value = -parsed.value };
         return null;
+    }
+    fn requireIndex(self: *Checker, array: typed.Array, actual: typed.Type, span: source.Span) Error!void {
+        if (array.key) |key| try self.require(actual, key, span) else try self.requireInteger(actual, span);
     }
     fn requireInteger(self: *Checker, actual: typed.Type, span: source.Span) Error!void {
         if (!actual.isInteger()) return self.sink.fail("E_TYPE", span, "operation requires an integer type");
@@ -200,6 +204,7 @@ const Checker = struct {
                 .array => |array| {
                     out.ty = try self.ty(array.ty);
                     const schema = try self.catalog.array(out.ty, array.ty, self.sink);
+                    if (schema.key != null) return self.sink.fail("E_TABLE_CONSTRUCTION", node.span, "enum-indexed tables require named initializers for every enum case");
                     if (array.values.len != schema.length) return self.sink.fail("E_ARRAY_ARITY", node.span, "array construction must initialize exactly its declared number of elements");
                     const values = try self.allocator.alloc(typed.NodeId, array.values.len);
                     for (array.values, values) |input, *value| {
@@ -212,7 +217,7 @@ const Checker = struct {
                     const base = self.resolved[@backingInt(access.base)].?;
                     const index_value = self.resolved[@backingInt(access.index)].?;
                     const schema = try self.catalog.array(self.nodes.items[@backingInt(base)].ty, node.span, self.sink);
-                    try self.requireInteger(self.nodes.items[@backingInt(index_value)].ty, self.syntax.nodes.items[@backingInt(access.index)].span);
+                    try self.requireIndex(schema, self.nodes.items[@backingInt(index_value)].ty, self.syntax.nodes.items[@backingInt(access.index)].span);
                     out.ty = schema.element;
                     out.data = .{ .index = .{ .base = base, .index = index_value } };
                 },
@@ -222,7 +227,7 @@ const Checker = struct {
                     const value = self.resolved[@backingInt(replace.value)].?;
                     out.ty = self.nodes.items[@backingInt(base)].ty;
                     const schema = try self.catalog.array(out.ty, node.span, self.sink);
-                    try self.requireInteger(self.nodes.items[@backingInt(index_value)].ty, self.syntax.nodes.items[@backingInt(replace.index)].span);
+                    try self.requireIndex(schema, self.nodes.items[@backingInt(index_value)].ty, self.syntax.nodes.items[@backingInt(replace.index)].span);
                     try self.require(self.nodes.items[@backingInt(value)].ty, schema.element, self.syntax.nodes.items[@backingInt(replace.value)].span);
                     out.data = .{ .replace = .{ .base = base, .index = index_value, .value = value } };
                 },

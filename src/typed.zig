@@ -35,7 +35,7 @@ pub const FieldInit = struct { index: usize, value: NodeId };
 pub const Field = struct { name: []const u8, declaration: Span, ty: Type };
 pub const Variant = struct { name: []const u8, declaration: Span, payload: ?Type };
 pub const Variants = struct { is_union: bool, cases: []const Variant };
-pub const Array = struct { element: Type, length: usize };
+pub const Array = struct { element: Type, length: usize, key: ?Type = null };
 // Aggregate schemas retain nominal record identities and intern structural arrays.
 pub const Record = struct {
     id: Type,
@@ -45,6 +45,9 @@ pub const Record = struct {
     array: ?Array = null,
     domain: ?Type = null,
     variants: ?Variants = null,
+    pub fn tableKey(self: Record) ?Type {
+        return if (self.array) |a| a.key else null;
+    }
     pub fn isRecord(self: Record) bool {
         return self.array == null and self.domain == null and self.variants == null;
     }

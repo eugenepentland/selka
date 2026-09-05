@@ -35,15 +35,15 @@ pub const Parser = struct {
         defer self.depth -= 1;
         const token = self.current();
         if (self.take(.lbracket)) {
-            const length = try self.expect(.integer);
+            const index: ast.ArrayIndex = if (self.current().tag == .integer) .{ .length = (try self.expect(.integer)).span } else .{ .enum_type = try self.typeName() };
             _ = try self.expect(.rbracket);
             const element = try self.typeName();
             const span: Span = .join(token.span, element);
-            try self.array_types.append(self.allocator, .{ .span = span, .length = length.span, .element = element });
+            try self.array_types.append(self.allocator, .{ .span = span, .index = index, .element = element });
             return span;
         }
         if (self.take(.kw_i64) or self.take(.kw_bool) or self.take(.kw_i8) or self.take(.kw_i16) or self.take(.kw_i32) or self.take(.kw_u8) or self.take(.kw_u16) or self.take(.kw_u32) or self.take(.kw_u64) or self.take(.ident)) return token.span;
-        return self.sink.fail("E_TYPE", token.span, "expected an integer, bool, record, domain, or fixed array type");
+        return self.sink.fail("E_TYPE", token.span, "expected a built-in, declared, fixed array, or enum-indexed table type");
     }
     pub fn parse(self: *Parser) diagnostic.Error!ast.Program {
         var functions: std.ArrayList(ast.Function) = .empty;

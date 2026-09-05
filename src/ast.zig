@@ -50,7 +50,8 @@ pub const Record = struct { name: Span, fields: []const Parameter };
 pub const Parameter = struct { name: Span, ty: Span };
 pub const Domain = struct { name: Span, backing: Span };
 pub const Function = struct { owner: ?Span = null, restricted: bool = false, conversion: bool = false, name: Span, parameters: []const Parameter, return_type: Span, body: StatementId };
-pub const ArrayType = struct { span: Span, length: Span, element: Span };
+pub const ArrayIndex = union(enum) { length: Span, enum_type: Span };
+pub const ArrayType = struct { span: Span, index: ArrayIndex, element: Span };
 pub const Program = struct {
     domains: []const Domain = &.{},
     variants: []const Variants = &.{},

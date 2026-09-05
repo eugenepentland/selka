@@ -73,7 +73,12 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             if ((!backing.isInteger() and backing != .bool) or record.fields.len != 0 or record.array != null) return error.InternalError;
         }
         if (record.array) |array| {
-            if (!validType(array.element, program) or record.fields.len != 0 or array.length > std.math.maxInt(usize) / @sizeOf(typed.Value)) return error.InternalError;
+            if (!validType(array.element, program) or array.length > std.math.maxInt(usize) / @sizeOf(typed.Value)) return error.InternalError;
+            if (array.key) |key| {
+                const variants = try variantSchema(key, program);
+                if (variants.is_union or variants.cases.len != array.length or record.fields.len != array.length) return error.InternalError;
+                for (record.fields, variants.cases) |field, variant| if (field.ty != array.element or !std.mem.eql(u8, field.name, variant.name)) return error.InternalError;
+            } else if (record.fields.len != 0) return error.InternalError;
         }
         for (record.fields) |field| if (!validType(field.ty, program)) {
             return error.InternalError;
