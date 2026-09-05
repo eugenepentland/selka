@@ -72,4 +72,5 @@ test {
     _ = @import("domains_test.zig");
     _ = @import("variants_test.zig");
     _ = @import("tables_test.zig");
+    _ = @import("memory_test.zig");
 }

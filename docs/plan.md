@@ -623,7 +623,9 @@ updates, declarative complete conversions, checked integer widths/casts, and
 A2 now includes [nominal scalar domains and private construction](experiments/domains.md);
 [closed variants and exhaustive matching](experiments/variants.md) are also implemented.
 [Complete enum-indexed tables](experiments/tables.md) finish A2. Borrowing and
-slices are next. Other tracks below remain pending.
+slices are next: [B now has a tested memory/lease registry](experiments/borrowing.md),
+while source borrow checking and VM integration remain pending. Other tracks
+below remain pending.
 
 | Stage | Scope | Question to answer before proceeding |
 | --- | --- | --- |

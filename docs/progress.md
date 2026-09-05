@@ -321,3 +321,28 @@ whitespace checks pass. The tables example prints 1407.
 and mapping evidence. A2 is complete; borrowing/slices and guest memory identity
 are next. The full roadmap goal remains active. Guardian gates were not exercised;
 hosted CI has not run.
+
+
+## 2026-09-05: B memory identity and dynamic borrow foundation
+
+Implemented a guest-memory backend with store identities, generation-checked
+allocation/lease registries, homogeneous owned buffers, bounded shared/exclusive
+views, and nested reborrowing. Whole-allocation conflicts prevent alias writes;
+exclusive parents suspend during child borrows, and parents cannot end before
+children. Stale, foreign, out-of-bounds, and read-only accesses are rejected.
+Generations and store identities never wrap into valid stale handles.
+
+Successful reads retain immutable value snapshots. Destruction refuses active
+borrows; final cleanup releases storage even with active leases. Failed registry
+allocations leave locks and parent relationships unchanged. Recycled slots keep
+10,000 allocation/reborrow cycles within a 4 KiB live-byte cap.
+
+All 133 tests pass in Debug and ReleaseFast (114 core, 19 actual CLI). New backend
+tests cover identity exhaustion, alias conflicts, child lifetimes, bounds, nested
+values, allocation-failure cleanup, and rollback after failed borrow creation.
+Formatting and whitespace checks pass. [The B record](experiments/borrowing.md)
+distinguishes this implementation from the remaining language work.
+
+B remains in progress: reference/slice syntax, static checks, VM integration, and
+end-to-end borrow programs are pending. The full roadmap goal remains active.
+Guardian gates were not exercised; hosted CI has not run.
