@@ -72,7 +72,7 @@ zig build run -- discover-duplicates examples/duplicates.my --timings
 It reports exact checked-function candidates after normalizing bound names,
 with source locations and advisory explanations. Ordinary compilation does not
 run it. See the [comparison contract and review](docs/experiments/duplicate-discovery.md).
-All 319 tests pass in Debug and ReleaseFast.
+All 331 tests pass in Debug and ReleaseFast.
 
 [Post-MVP tracking](docs/experiments/roadmap.md) records the remaining experiments.
 Records, complete construction, field access, preserving updates, and declarative
@@ -120,8 +120,8 @@ now flow from the entry point through helper parameters; acquisition and reserve
 require them. `examples/allocator-capabilities.my` returns 3.
 [Clock and randomness capabilities](docs/experiments/external-capabilities.md) now
 require injected host providers and contribute distinct transitive effects. The
-CLI checks their example but cannot run it without providers. Filesystem/network/
-environment operations, external resources and cleanup, and arenas/pools remain pending.
+CLI checks their example but cannot run it without providers. Further capability
+operations and their current limits are described below.
 
 The [external resource backend](docs/experiments/external-resources.md) now tracks
 fallible completion separately from fallback release, with scoped ownership moves
@@ -137,3 +137,7 @@ Partial field moves remain pending.
 [Bounded environment lookup](docs/experiments/environment.md) now uses explicit
 entry grants and injected providers, preserving missing/empty distinctions and
 rejecting oversized values without truncation.
+
+[Resource reads/writes](docs/experiments/resource-io.md) now expose bounded byte
+snapshots, explicit EOF, and actual write counts while retaining ownership. Slice
+I/O and operating-system adapters remain separate work.

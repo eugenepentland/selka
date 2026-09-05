@@ -59,7 +59,7 @@ pub fn readValue(allocator: std.mem.Allocator, runtime: *Runtime, output: typed.
     var fields: [3]typed.Value = undefined;
     fields[shape.bytes_field] = array;
     fields[shape.length_field] = typed.Value.number(.u64, length orelse 0);
-    fields[shape.present_field] = .{ .bool = length != null };
+    fields[shape.flag_field] = .{ .bool = length != null };
     const value = try typed.Value.create(allocator, shape.result.ok_type, &fields);
     defer value.release(allocator);
     return typed.Value.createVariant(allocator, output, shape.result.ok_tag, value);

@@ -495,6 +495,16 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 };
                 try pushOwned(&stack, allocator, output);
             },
+            .resource_io => |io| {
+                const input = if (io.kind == .write) try pop(&stack, frame.operand_base) else null;
+                defer if (input) |value| value.release(allocator);
+                const owner = locals.items[frame.local_base + @backingInt(io.owner)] orelse return error.InternalError;
+                const output = resource_execution.io(io.kind, io.output, program.records, owner, input, io.input) catch |err| switch (err) {
+                    error.InvalidCapability, error.InvalidOwner, error.Closed => return trap("R_CAPABILITY", "resource I/O owner is stale or invalid", instruction.span, frames.items, program),
+                    else => return err,
+                };
+                try pushOwned(&stack, allocator, output);
+            },
             .environment_get => |get| {
                 const name = try pop(&stack, frame.operand_base);
                 defer name.release(allocator);

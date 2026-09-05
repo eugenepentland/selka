@@ -251,6 +251,11 @@ const Checker = struct {
                         try work.append(self.allocator, .{ .id = base });
                         continue;
                     },
+                    .resource_io => |io| {
+                        try work.append(self.allocator, .{ .id = task.id, .emit = true });
+                        if (io.value) |value| try work.append(self.allocator, .{ .id = value });
+                        continue;
+                    },
                     .environment_get => |get| {
                         try work.append(self.allocator, .{ .id = task.id, .emit = true });
                         try work.append(self.allocator, .{ .id = get.name });
@@ -386,6 +391,26 @@ const Checker = struct {
                     const request_type = self.nodes.items[@backingInt(request)].ty;
                     if (!typed.byteRequest(request_type, self.catalog.records)) return self.sink.fail("E_RESOURCE_REQUEST", self.syntax.nodes.items[@backingInt(acquire.request)].span, "request must be a fixed u8 array");
                     out.data = .{ .acquire_resource = .{ .capability = capability, .request = request } };
+                },
+                .resource_io => |io| {
+                    const owner = try self.resolve(io.owner);
+                    const local = &self.locals.items[@backingInt(owner)];
+                    if (typed.resourceKind(local.ty, self.catalog.records) == null) return self.sink.fail("E_RESOURCE_TYPE", io.owner, "I/O requires an owned resource binding");
+                    if (!local.transfer_available) return self.sink.failRelated("E_OWNED_CONSUMED", io.owner, "resource has already been transferred", .{ .span = local.declaration, .message = "binding declared here" });
+                    if (!local.mutable) return self.sink.fail("E_IMMUTABLE", io.owner, "resource I/O requires a let mut binding");
+                    try self.ownerAccess(owner, true, io.owner);
+                    out.ty = try self.ty(io.ty);
+                    if (io.kind == .read) {
+                        if (typed.resourceReadShape(out.ty, self.catalog.records) == null) return self.sink.fail("E_RESOURCE_IO_RESULT", io.ty, "read result requires i64 error and record success with bytes: [N]u8, length: u64, eof: bool");
+                    } else {
+                        const shape = typed.resultShape(out.ty, self.catalog.records) orelse return self.sink.fail("E_RESOURCE_IO_RESULT", io.ty, "write result requires u64 success and i64 error");
+                        if (shape.ok_type != .u64 or shape.error_type != .i64) return self.sink.fail("E_RESOURCE_IO_RESULT", io.ty, "write result requires u64 success and i64 error");
+                    }
+                    const value = if (io.value) |input| self.resolved[@backingInt(input)].? else null;
+                    if (value) |input| if (!typed.byteRequest(self.nodes.items[@backingInt(input)].ty, self.catalog.records)) return self.sink.fail("E_RESOURCE_BYTES", node.span, "write input must be a fixed u8 array");
+                    local.reads += 1;
+                    local.writes += 1;
+                    out.data = .{ .resource_io = .{ .kind = io.kind, .owner = owner, .value = value } };
                 },
                 .environment_get => |get| {
                     out.ty = try self.ty(get.ty);
@@ -645,6 +670,7 @@ const Checker = struct {
                 .update => |update| update.fields.len + 1,
                 .call => |call| call.arguments.len,
                 .buffer_operation => |operation| operation.arguments.len,
+                .resource_io => |io| if (io.value != null) 1 else 0,
             };
             std.debug.assert(temporaries.items.len >= consumed);
             temporaries.shrinkRetainingCapacity(temporaries.items.len - consumed);

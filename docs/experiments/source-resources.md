@@ -3,8 +3,9 @@
 Status: nominal filesystem/network resource types, explicit entry grants, fallible
 acquisition/completion, moves/wrappers, lexical and trap cleanup, and transitive
 cleanup effects are implemented. Providers remain injected synchronous host
-adapters. Environment access, actual file/socket data operations, operating-system
-adapters, attenuation, arenas/pools, and other roadmap tracks remain pending.
+adapters. [Environment access](environment.md) and [fixed-byte-array reads/writes](resource-io.md)
+are now implemented. Slice I/O, operating-system adapters, attenuation, arenas/pools,
+and other roadmap tracks remain pending.
 
 ## Types and acquisition
 

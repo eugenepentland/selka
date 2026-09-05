@@ -38,6 +38,7 @@ pub const Instruction = struct {
         buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: typed.LocalId, output: typed.Type },
         complete_resource: typed.Type,
         acquire_resource: struct { output: typed.Type, request: typed.Type },
+        resource_io: struct { kind: @import("external_resources.zig").IoKind, owner: typed.LocalId, output: typed.Type, input: ?typed.Type },
         environment_get: struct { output: typed.Type, name: typed.Type },
         external_read: struct { kind: @import("external_capabilities.zig").Kind, output: typed.Type },
         acquire_buffer: typed.Type,
@@ -236,6 +237,17 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
                     if (shape.ok_type != .bool or shape.error_type != .i64) return error.InternalError;
                 } else if (operation.output != (if (operation.kind == .read) element else typed.Type.u64)) return error.InternalError;
             },
+            .resource_io => |io| {
+                if (@backingInt(io.owner) >= function.locals.len) return error.InternalError;
+                const local = function.locals[@backingInt(io.owner)];
+                if (!local.mutable or local.reference_parameter != null or typed.resourceKind(local.ty, program.records) == null) return error.InternalError;
+                if (io.kind == .read) {
+                    if (io.input != null or typed.resourceReadShape(io.output, program.records) == null) return error.InternalError;
+                } else {
+                    const shape = typed.resultShape(io.output, program.records) orelse return error.InternalError;
+                    if (shape.ok_type != .u64 or shape.error_type != .i64 or !typed.byteRequest(io.input orelse return error.InternalError, program.records)) return error.InternalError;
+                }
+            },
             .environment_get => |get| {
                 if (typed.environmentShape(get.output, program.records) == null or !typed.byteRequest(get.name, program.records)) return error.InternalError;
             },
@@ -378,6 +390,11 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
             switch (instruction.op) {
                 .push_i64, .push_bool, .push_integer, .load_local, .move_local, .read_ref, .read_field, .len_slice => height += 1,
                 .drop_local => {},
+                .resource_io => |io| {
+                    if (io.kind == .write) {
+                        if (height == 0) return error.InternalError;
+                    } else height += 1;
+                },
                 .buffer_operation => |operation| {
                     const count = operation.kind.arity();
                     if (height < count) return error.InternalError;

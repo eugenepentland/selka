@@ -766,3 +766,28 @@ byte lookup with no ambient fallback or mutation API. Resource data operations,
 partial field moves, attenuation, arenas/pools, and all other unfinished tracks
 remain in scope. C is not complete. Guardian was not exercised; hosted CI has not
 run. The full roadmap goal remains active.
+
+
+## 2026-09-05: C owned resource reads/writes and explicit partial progress
+
+Implemented optional provider read/write callbacks and source operations on live
+mutable resource bindings. Reads return bounded fixed-byte-array snapshots, actual
+length, and explicit EOF with zeroed tails. Writes return actual accepted counts.
+Neither operation consumes its owner, retries automatically, or implies completion.
+Provider counts are bounds-checked; unsupported operations return Unavailable.
+Source/bytecode validate mutability, lifetime, schemas, operands, and transitive
+effects. Bounded read-result schemas share validation with environment results.
+
+331 tests pass in Debug and ReleaseFast (297 core, 34 actual CLI). Acceptance covers
+partial/zero progress, EOF, raw bytes/padding, invalid provider counts, unsupported
+callbacks, stale owners, mutability/type errors, consuming write arguments, noio,
+recoverable retries, host OOM, all allocation failures, and every instruction trap
+boundary. 10,000 read/write cycles fit within 16 KiB live VM storage under one owner.
+Actual CLI tests cover checking/dumps, missing-provider denial, and source rejection.
+Formatting and whitespace checks pass. Discovery is exact-v22.
+
+[Resource I/O semantics](experiments/resource-io.md) states single-callback progress,
+trusted provider contracts, and nontransactional effects. Fixed arrays are supported;
+slice/range I/O remains pending, along with partial field moves, attenuation,
+arenas/pools, and all other unfinished roadmap tracks. C is not complete. Guardian
+was not exercised; hosted CI has not run. The full roadmap goal remains active.

@@ -12,7 +12,9 @@ pub const Kind = enum {
         };
     }
 };
-pub const Error = external.CallError || error{ Closed, InvalidCapability, InvalidOwner, IdentityExhausted, ResourceLimit };
+pub const Error = external.CallError || error{ Closed, InvalidCapability, InvalidOwner, IdentityExhausted, ResourceLimit, InvalidProvider };
+pub const IoKind = enum { read, write };
+pub const Read = struct { length: usize, eof: bool };
 pub const Capability = struct { store: u64, kind: Kind };
 pub const Owner = struct { store: u64, index: usize, generation: u64 };
 /// Trusted synchronous callbacks. Context outlives the store. Acquire failures
@@ -21,6 +23,11 @@ pub const Owner = struct { store: u64, index: usize, generation: u64 };
 /// without allocating/failing and must not imply completion. Requests are borrowed
 /// only for the acquire call. Numeric handles are private to this host adapter.
 pub const Provider = struct {
+    /// Read/write keep the handle live, including on errors. Buffers are borrowed
+    /// only for the callback. Counts describe actual progress, never exceed the
+    /// buffer, and need not fill it. EOF is explicit even for zero-capacity reads.
+    read: ?*const fn (*anyopaque, u64, []u8) external.CallError!Read = null,
+    write: ?*const fn (*anyopaque, u64, []const u8) external.CallError!usize = null,
     context: *anyopaque,
     acquire: *const fn (*anyopaque, []const u8) external.CallError!u64,
     complete: *const fn (*anyopaque, u64) external.CallError!void,
@@ -118,6 +125,22 @@ pub const Store = struct {
             self.free_head = index;
         }
         self.statistics.live -= 1;
+    }
+    pub fn read(self: *Store, owner: Owner, output: []u8) Error!Read {
+        const entry = try self.get(owner);
+        const callback = self.provider.read orelse return error.Unavailable;
+        @memset(output, 0);
+        const result = try callback(self.provider.context, entry.handle.?, output);
+        if (result.length > output.len) return error.InvalidProvider;
+        @memset(output[result.length..], 0);
+        return result;
+    }
+    pub fn write(self: *Store, owner: Owner, input: []const u8) Error!usize {
+        const entry = try self.get(owner);
+        const callback = self.provider.write orelse return error.Unavailable;
+        const length = try callback(self.provider.context, entry.handle.?, input);
+        if (length > input.len) return error.InvalidProvider;
+        return length;
     }
     pub fn complete(self: *Store, owner: Owner) Error!void {
         const entry = try self.get(owner);

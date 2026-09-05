@@ -72,6 +72,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
             switch (node.data) {
                 .acquire_resource => graph.direct(index, typed.resourceKind(typed.resultShape(node.ty, program.records).?.ok_type, program.records).?.effect(), node.span),
                 .complete_resource => graph.direct(index, typed.resourceKind(typed.completionShape(node.ty, program.records).?.resource_type, program.records).?.effect(), node.span),
+                .resource_io => |io| graph.direct(index, typed.resourceKind(function.locals[@backingInt(io.owner)].ty, program.records).?.effect(), node.span),
                 .environment_get => graph.direct(index, .environment, node.span),
                 .external_read => |read| graph.direct(index, read.kind.effect(), node.span),
                 .acquire_buffer => graph.direct(index, .allocation, node.span),
@@ -130,6 +131,11 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode.zig").P
             .complete_resource => |output| {
                 const shape = typed.completionShape(output, program.records) orelse return error.InternalError;
                 graph.direct(index, typed.resourceKind(shape.resource_type, program.records).?.effect(), instruction.span);
+            },
+            .resource_io => |io| {
+                if (@backingInt(io.owner) >= function.locals.len) return error.InternalError;
+                const kind = typed.resourceKind(function.locals[@backingInt(io.owner)].ty, program.records) orelse return error.InternalError;
+                graph.direct(index, kind.effect(), instruction.span);
             },
             .environment_get => graph.direct(index, .environment, instruction.span),
             .external_read => |read| graph.direct(index, read.kind.effect(), instruction.span),

@@ -2,9 +2,8 @@
 
 Status: read-only environment capabilities, bounded lookup, typed results, and
 transitive environment effects are implemented with injected synchronous providers.
-There is no ambient process-environment fallback or CLI provider. Resource data
-operations, partial field moves, attenuation, arenas/pools, and other roadmap tracks
-remain pending.
+There is no ambient process-environment fallback or CLI provider. [Resource reads/writes](resource-io.md) are now implemented. Slice I/O, partial
+field moves, attenuation, arenas/pools, and other roadmap tracks remain pending.
 
 ```text
 struct Entry { bytes: [64]u8, length: u64, present: bool }

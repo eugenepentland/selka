@@ -54,6 +54,38 @@ pub const Runtime = struct {
         defer value.release(self.allocator);
         return typed.Value.createVariant(self.allocator, output, shape.ok_tag, value);
     }
+    pub fn io(self: *Runtime, kind: resources.IoKind, output: typed.Type, records: []const typed.Record, value: typed.Value, input: ?typed.Value, input_type: ?typed.Type) !typed.Value {
+        if (value != .external_resource) return error.InternalError;
+        const resource = value.external_resource;
+        if (resource.store != try self.storeFor(typed.resourceKind(resource.ty, records) orelse return error.InternalError)) return error.InvalidOwner;
+        const owner = resource.owner orelse return error.InvalidOwner;
+        const shape = typed.resultShape(output, records).?;
+        if (kind == .write) {
+            const bytes = try @import("byte_values.zig").toOwnedBytes(self.allocator, input orelse return error.InternalError, input_type orelse return error.InternalError, records);
+            defer self.allocator.free(bytes);
+            const length = resource.store.write(owner, bytes) catch |err| {
+                const code = recoverable(err) orelse return err;
+                return typed.Value.createVariant(self.allocator, output, shape.error_tag, .{ .i64 = code });
+            };
+            return typed.Value.createVariant(self.allocator, output, shape.ok_tag, typed.Value.number(.u64, length));
+        }
+        const read_shape = typed.resourceReadShape(output, records).?;
+        const bytes = try self.allocator.alloc(u8, records[read_shape.bytes_type.recordIndex()].array.?.length);
+        defer self.allocator.free(bytes);
+        const read = resource.store.read(owner, bytes) catch |err| {
+            const code = recoverable(err) orelse return err;
+            return typed.Value.createVariant(self.allocator, output, shape.error_tag, .{ .i64 = code });
+        };
+        const array = try @import("byte_values.zig").fromBytes(self.allocator, bytes, read_shape.bytes_type, records);
+        defer array.release(self.allocator);
+        var fields: [3]typed.Value = undefined;
+        fields[read_shape.bytes_field] = array;
+        fields[read_shape.length_field] = typed.Value.number(.u64, read.length);
+        fields[read_shape.flag_field] = .{ .bool = read.eof };
+        const payload = try typed.Value.create(self.allocator, shape.ok_type, &fields);
+        defer payload.release(self.allocator);
+        return typed.Value.createVariant(self.allocator, output, shape.ok_tag, payload);
+    }
     pub fn complete(self: *Runtime, output: typed.Type, records: []const typed.Record, value: typed.Value) !typed.Value {
         const shape = typed.completionShape(output, records).?;
         if (value != .external_resource or value.typeOf() != shape.resource_type) return error.InternalError;

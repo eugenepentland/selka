@@ -372,6 +372,20 @@ pub const Parser = struct {
                 const close = try self.expect(.rparen);
                 break :buffer try self.append(.{ .span = .join(token.span, close.span), .data = .{ .buffer_operation = .{ .kind = kind, .owner = owner.span, .result = result, .arguments = arguments } } });
             },
+            .kw_read_resource, .kw_write_resource => resource_io: {
+                self.pos += 1;
+                _ = try self.expect(.lt);
+                const ty = try self.typeName();
+                _ = try self.expect(.gt);
+                _ = try self.expect(.lparen);
+                const owner = try self.expect(.ident);
+                const value = if (token.tag == .kw_write_resource) value: {
+                    _ = try self.expect(.comma);
+                    break :value try self.expression(0);
+                } else null;
+                const close = try self.expect(.rparen);
+                break :resource_io try self.append(.{ .span = .join(token.span, close.span), .data = .{ .resource_io = .{ .kind = if (token.tag == .kw_read_resource) .read else .write, .owner = owner.span, .ty = ty, .value = value } } });
+            },
             .kw_environment_get => environment: {
                 self.pos += 1;
                 _ = try self.expect(.lt);

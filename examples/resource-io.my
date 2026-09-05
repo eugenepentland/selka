@@ -1,0 +1,21 @@
+resource File: filesystem;
+result Open { ok: File, err: i64 }
+struct Chunk { bytes: [16]u8, length: u64, eof: bool }
+result Read { ok: Chunk, err: i64 }
+result Written { ok: u64, err: i64 }
+result Status { ok: i64, err: i64 }
+
+fn work(fs: filesystem_cap) -> Status effects(filesystem) {
+    let mut file = try acquire_resource<Open>(fs, new [1]u8 [42u8]);
+    let chunk = try read_resource<Read>(file);
+    // The count reports actual write progress. This example sends one byte.
+    let written = try write_resource<Written>(file, new [1]u8 [7u8]);
+    return new Status.ok(cast<i64>(chunk.length) + cast<i64>(written));
+}
+
+fn main(fs: filesystem_cap) -> i64 noalloc {
+    match work(fs) {
+        Status.ok(value) => { return value; },
+        Status.err(code) => { return -code; }
+    }
+}

@@ -244,3 +244,11 @@ and actual length, or i64 error. Missing and empty are distinct; oversized value
 fail without truncation. Entry grants require an injected provider. Lookup adds
 an environment effect, allowed under noio/noalloc without implying determinism.
 See [environment semantics](experiments/environment.md).
+
+
+`read_resource<Result>(owner)` and `write_resource<Result>(owner, bytes)` require a
+live mutable resource binding and preserve ownership. Reads return fixed byte-array
+snapshots, actual length, and explicit EOF; writes return accepted byte count. Both
+make one provider call and expose partial progress. Source and emission checks retain
+filesystem/network effects and reject invalid mutable/owner/result/input metadata.
+See [resource I/O semantics](experiments/resource-io.md). Slice/range I/O remains pending.

@@ -457,3 +457,16 @@ test "CLI checks bounded environment access without granting ambient process acc
     const invalid = "struct Entry { bytes: [1]u8, length: u64, present: bool } result Lookup { ok: Entry, err: i64 } fn main(env: environment_cap) -> i64 effects() { acknowledge environment_get<Lookup>(env, new [1]u8 [75u8]); return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_EFFECT_BOUND]");
 }
+
+test "CLI checks resource data operations effects and required mutation without ambient providers" {
+    const source = @embedFile("fixtures/resource-io.my");
+    try invoke("check", source, 0, "", "");
+    try invoke("run", source, 2, "", "host failure: CapabilityUnavailable");
+    const dumped = try runFixture("dump-bytecode", source, &.{});
+    defer testing.allocator.free(dumped.stdout);
+    defer testing.allocator.free(dumped.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
+    for ([_][]const u8{ "RESOURCE_read", "RESOURCE_write", "effects {filesystem}" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
+    const invalid = "resource File: filesystem; result Written { ok: u64, err: i64 } fn f(file: File) -> Written { return write_resource<Written>(file, new [0]u8 []); } fn main() -> i64 { return 0; }";
+    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_IMMUTABLE]");
+}
