@@ -1216,3 +1216,32 @@ embedding root-reset API. Generics, modules/interfaces, compile-time/schema/incr
 work, broader native support, and all other unfinished roadmap requirements remain
 in scope. Guardian was not exercised; hosted CI has not run. The full roadmap goal
 remains active.
+
+## 2026-09-05: M deterministic module header discovery
+
+Implemented the bounded project loader and `list-modules` CLI. Logical dotted
+names map to relative `.my` paths; matching declarations, unique imports/aliases,
+source/module/edge budgets, shared dependency reuse, and acyclic dependency order
+are enforced. Iterative traversal avoids recursive import loading. Cycle diagnostics
+show both importing and related declaration files. Reports include whole-source
+SHA-256 fingerprints and explicitly state that bodies/exports/types are unchecked.
+Failed and unfinished loads cannot render successful reports.
+
+467 Zig tests pass in Debug and ReleaseFast (419 core, 48 CLI), plus eight
+verification-driver tests and the unchanged 23-fixture/182-comparison native suite
+per host mode. New acceptance covers real filesystem imports, cross-file cycles,
+diamond reuse, deterministic reports, body-sensitive fingerprints, malformed and
+missing modules, duplicate aliases/imports, all configured budgets, path traversal
+rejection, a 600-module chain, and exhaustive allocation failures for loading and
+cycle diagnostics. Formatting and whitespace checks pass. The documented example
+executes with `shared.units` preceding `main`. An initial example used reserved
+keyword `domain` as a module segment; the actual CLI check caught it, and the
+example/documentation now use the valid identifier `units`.
+
+[Module discovery](experiments/module-discovery.md) documents the provider API,
+resolution root, limits, report semantics, and remaining integration. This is a
+prerequisite for complete modules, not completion of track M: exports, private
+boundaries, cross-file binding/type checking, and shared-domain execution remain
+pending. Generics, compile-time/schema/incremental work, native expansion, and other
+unfinished roadmap requirements remain in scope. Guardian was not exercised;
+hosted CI has not run. The full roadmap goal remains active.

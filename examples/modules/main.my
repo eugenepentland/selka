@@ -1,0 +1,7 @@
+module main;
+import shared.units;
+
+// Header discovery does not yet resolve this body or imported declarations.
+fn main() -> i64 {
+    return 0;
+}

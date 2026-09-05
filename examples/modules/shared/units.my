@@ -1,0 +1,4 @@
+module shared.units;
+
+// Export and cross-file privacy syntax will follow in the interface experiment.
+domain Distance: i64;

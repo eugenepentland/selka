@@ -1,5 +1,6 @@
 //! One request owns source, syntax, semantic nodes, and lowered instructions.
 const std = @import("std");
+pub const project = @import("project.zig");
 pub const source = @import("source.zig");
 pub const diagnostic = @import("diagnostic.zig");
 const lexer = @import("lexer.zig");
@@ -84,6 +85,7 @@ pub const Compilation = struct {
 };
 
 test {
+    _ = @import("project_test.zig");
     _ = @import("compiler_test.zig");
     _ = @import("duplicates_test.zig");
     _ = @import("near_duplicates_test.zig");

@@ -208,3 +208,7 @@ with conservative escape checks and cleanup across returns/errors.
 [Typed arena reset](docs/experiments/arena-reset.md) reclaims unused chunks inside
 a scope while preserving its allocator. `zig build run -- run examples/arena-reset.my`
 returns `3` after exercising guarded reset and reuse.
+
+Module header discovery is available with `zig build run -- list-modules examples/modules/main.my`.
+It reports bounded import graphs and cycles; exports and multi-file compilation
+remain pending. See [module discovery](docs/experiments/module-discovery.md).

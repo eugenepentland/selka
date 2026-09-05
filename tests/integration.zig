@@ -668,3 +668,43 @@ test "CLI executes typed arena resets and checks result obligations consistently
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
     try testing.expect(std.mem.indexOf(u8, dumped.stdout, "RESET_ARENA") != null);
 }
+
+test "CLI module discovery loads real files and diagnoses cross-file cycles" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.createDirPath(testing.io, "shared");
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input; import shared.data as data; fn main() -> i64 { return 0; }" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/data.my", .data = "module shared.data;" });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "list-modules", path } });
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    try testing.expectEqualStrings("", result.stderr);
+    const child = std.mem.indexOf(u8, result.stdout, "module shared.data path=shared/data.my sha256=").?;
+    const root = std.mem.indexOf(u8, result.stdout, "module input path=input.my sha256=").?;
+    try testing.expect(child < root);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "bodies/exports/types not checked") != null);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/data.my", .data = "module shared.data;\nimport input;" });
+    const cycle = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "list-modules", path } });
+    defer testing.allocator.free(cycle.stdout);
+    defer testing.allocator.free(cycle.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, cycle.term);
+    try testing.expectEqualStrings("", cycle.stdout);
+    for ([_][]const u8{ "E_IMPORT_CYCLE", "shared/data.my:2:", "input.my:1:", "input -> shared.data -> input" }) |part| try testing.expect(std.mem.indexOf(u8, cycle.stderr, part) != null);
+}
+
+test "CLI module discovery keeps header validity separate from compilation" {
+    const result = try runFixture("list-modules", "module input; fn broken( ;", &.{});
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "header discovery only") != null);
+    try invoke("list-modules", "module input; import missing;", 1, "", "E_MODULE_READ");
+    try invokeOptions("list-modules", "module input;", &.{"--max-steps=10"}, 2, "", "usage:");
+    const compilation = try runFixture("check", "module input; fn main() -> i64 { return 0; }", &.{});
+    defer testing.allocator.free(compilation.stdout);
+    defer testing.allocator.free(compilation.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, compilation.term);
+}

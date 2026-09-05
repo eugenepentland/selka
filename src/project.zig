@@ -1,0 +1,219 @@
+//! Deterministic module-header discovery. This graph does not yet resolve exports
+//! or type-check multi-file bodies. Provider paths are normalized relative names.
+const std = @import("std");
+const source = @import("source.zig");
+const lex = @import("lexer.zig");
+const diagnostic = @import("diagnostic.zig");
+pub const ReadError = error{ OutOfMemory, NotFound, ReadFailed, TooLarge };
+pub const Provider = struct { context: ?*anyopaque, read: *const fn (?*anyopaque, std.mem.Allocator, []const u8, usize) ReadError![]u8 };
+pub const Options = struct { max_modules: usize = 256, max_imports: usize = 4096, max_file_bytes: usize = 4 * 1024 * 1024, max_total_bytes: usize = 16 * 1024 * 1024 };
+pub const Site = struct { module: usize, span: source.Span };
+pub const Problem = struct { code: []const u8, message: []const u8, site: Site, related: ?Site = null };
+pub const Import = struct { name: []const u8, alias: []const u8, span: source.Span, target: usize = undefined };
+pub const Module = struct { name: []const u8, src: source.Source, declaration: source.Span = .{ .start = 0, .end = 0 }, body_start: usize = 0, imports: []Import = &.{}, digest: [32]u8 = undefined, state: enum { unseen, visiting, complete } = .unseen };
+pub const Project = struct {
+    arena: std.heap.ArenaAllocator,
+    modules: std.ArrayList(Module) = .empty,
+    order: std.ArrayList(usize) = .empty,
+    names: std.StringHashMapUnmanaged(usize) = .empty,
+    problem: ?Problem = null,
+    total_bytes: usize = 0,
+    import_count: usize = 0,
+    started: bool = false,
+    complete: bool = false,
+    pub fn init(allocator: std.mem.Allocator) Project {
+        return .{ .arena = .init(allocator) };
+    }
+    pub fn deinit(self: *Project) void {
+        self.arena.deinit();
+    }
+    fn fail(self: *Project, code: []const u8, message: []const u8, site: Site, related: ?Site) error{SourceError} {
+        self.problem = .{ .code = code, .message = message, .site = site, .related = related };
+        return error.SourceError;
+    }
+    fn intern(self: *Project, provider: Provider, name: []const u8, origin: ?Site, options: Options) diagnostic.Error!usize {
+        if (self.names.get(name)) |id| return id;
+        const allocator = self.arena.allocator();
+        if (self.modules.items.len >= options.max_modules) return self.fail("E_MODULE_LIMIT", "module count exceeds the project budget", origin orelse .{ .module = 0, .span = .{ .start = 0, .end = 0 } }, null);
+        const path = modulePath(allocator, name) catch |err| switch (err) {
+            error.InvalidModuleName => unreachable,
+            error.OutOfMemory => return error.OutOfMemory,
+        };
+        const id = self.modules.items.len;
+        const owned_name = try allocator.dupe(u8, name);
+        try self.modules.append(allocator, .{ .name = owned_name, .src = try source.Source.init(allocator, path, "") });
+        try self.names.put(allocator, owned_name, id);
+        const site = origin orelse Site{ .module = id, .span = .{ .start = 0, .end = 0 } };
+        const limit = @min(options.max_file_bytes, options.max_total_bytes - self.total_bytes);
+        const bytes = provider.read(provider.context, allocator, path, limit) catch |err| {
+            if (err == error.OutOfMemory) return error.OutOfMemory;
+            return self.fail(if (err == error.TooLarge) "E_PROJECT_BYTES" else "E_MODULE_READ", try std.fmt.allocPrint(allocator, "cannot load {s}: {s}", .{ path, @errorName(err) }), site, null);
+        };
+        defer allocator.free(bytes);
+        if (bytes.len > limit) return self.fail("E_PROJECT_BYTES", "provider exceeded the source byte budget", site, null);
+        self.total_bytes += bytes.len;
+        self.modules.items[id].src = try source.Source.init(allocator, path, bytes);
+        std.crypto.hash.sha2.Sha256.hash(bytes, &self.modules.items[id].digest, .{});
+        try self.header(id, options);
+        return id;
+    }
+    pub fn load(self: *Project, provider: Provider, entry: []const u8, options: Options) !void {
+        if (self.started) return error.ProjectAlreadyLoaded;
+        self.started = true;
+        if (!validName(entry)) return error.InvalidModuleName;
+        // An empty budget is a host configuration error, so no nonexistent source
+        // location needs to be manufactured for the diagnostic renderer.
+        if (options.max_modules == 0) return error.InvalidModuleBudget;
+        const allocator = self.arena.allocator();
+        const root = try self.intern(provider, entry, null, options);
+        const Visit = struct { id: usize, next: usize = 0 };
+        var work: std.ArrayList(Visit) = .empty;
+        defer work.deinit(allocator);
+        self.modules.items[root].state = .visiting;
+        try work.append(allocator, .{ .id = root });
+        while (work.items.len != 0) {
+            const index = work.items.len - 1;
+            const visit = work.items[index];
+            if (visit.next == self.modules.items[visit.id].imports.len) {
+                self.modules.items[visit.id].state = .complete;
+                try self.order.append(allocator, visit.id);
+                _ = work.pop();
+                continue;
+            }
+            work.items[index].next += 1;
+            const imported = self.modules.items[visit.id].imports[visit.next];
+            const site: Site = .{ .module = visit.id, .span = imported.span };
+            const target = try self.intern(provider, imported.name, site, options);
+            self.modules.items[visit.id].imports[visit.next].target = target;
+            switch (self.modules.items[target].state) {
+                .complete => {},
+                .unseen => {
+                    self.modules.items[target].state = .visiting;
+                    try work.append(allocator, .{ .id = target });
+                },
+                .visiting => {
+                    var chain: std.Io.Writer.Allocating = .init(allocator);
+                    var include = false;
+                    for (work.items) |at| {
+                        if (at.id == target) include = true;
+                        if (include) chain.writer.print("{s} -> ", .{self.modules.items[at.id].name}) catch return error.OutOfMemory;
+                    }
+                    chain.writer.writeAll(self.modules.items[target].name) catch return error.OutOfMemory;
+                    return self.fail("E_IMPORT_CYCLE", try chain.toOwnedSlice(), site, .{ .module = target, .span = self.modules.items[target].declaration });
+                },
+            }
+        }
+        self.complete = true;
+    }
+    fn header(self: *Project, id: usize, options: Options) diagnostic.Error!void {
+        const allocator = self.arena.allocator();
+        const src = self.modules.items[id].src;
+        var sink: diagnostic.Sink = .{ .allocator = allocator };
+        const tokens = lex.lex(allocator, src.bytes, &sink) catch |err| {
+            if (err == error.OutOfMemory) return err;
+            const problem = sink.items.items[0];
+            return self.fail(problem.code, problem.message, .{ .module = id, .span = problem.span }, null);
+        };
+        var scanner: Scanner = .{ .project = self, .id = id, .tokens = tokens };
+        try scanner.word("module");
+        const declared = try scanner.name();
+        _ = try scanner.expect(.semicolon);
+        self.modules.items[id].declaration = declared.span;
+        if (!std.mem.eql(u8, declared.text, self.modules.items[id].name)) return self.fail("E_MODULE_NAME", "declared module name does not match its requested path", .{ .module = id, .span = declared.span }, null);
+        var imports: std.ArrayList(Import) = .empty;
+        var aliases: std.StringHashMapUnmanaged(source.Span) = .empty;
+        var imported_names: std.StringHashMapUnmanaged(source.Span) = .empty;
+        while (scanner.isWord("import")) {
+            scanner.pos += 1;
+            const imported = try scanner.name();
+            var alias = imported.last;
+            if (scanner.take(.kw_as)) alias = src.text((try scanner.expect(.ident)).span);
+            _ = try scanner.expect(.semicolon);
+            if (aliases.get(alias)) |previous| return self.fail("E_IMPORT_ALIAS", "import alias is already bound", .{ .module = id, .span = imported.span }, .{ .module = id, .span = previous });
+            if (imported_names.get(imported.text)) |previous| return self.fail("E_DUPLICATE_IMPORT", "module is already imported in this file", .{ .module = id, .span = imported.span }, .{ .module = id, .span = previous });
+            if (self.import_count >= options.max_imports) return self.fail("E_IMPORT_LIMIT", "import count exceeds the project budget", .{ .module = id, .span = imported.span }, null);
+            self.import_count += 1;
+            try aliases.put(allocator, alias, imported.span);
+            try imported_names.put(allocator, imported.text, imported.span);
+            try imports.append(allocator, .{ .name = imported.text, .alias = alias, .span = imported.span });
+        }
+        self.modules.items[id].imports = try imports.toOwnedSlice(allocator);
+        self.modules.items[id].body_start = tokens[scanner.pos].span.start;
+    }
+    pub fn render(self: *Project, allocator: std.mem.Allocator) ![]u8 {
+        if (!self.complete) return error.IncompleteProject;
+        var output: std.Io.Writer.Allocating = .init(allocator);
+        errdefer output.deinit();
+        output.writer.writeAll("module graph v1; header discovery only; bodies/exports/types not checked\n") catch return error.OutOfMemory;
+        for (self.order.items) |id| {
+            const module = self.modules.items[id];
+            output.writer.print("module {s} path={s} sha256={s}\n", .{ module.name, module.src.path, std.fmt.bytesToHex(module.digest, .lower) }) catch return error.OutOfMemory;
+            for (module.imports) |imported| output.writer.print("  import {s} as {s}\n", .{ self.modules.items[imported.target].name, imported.alias }) catch return error.OutOfMemory;
+        }
+        return output.toOwnedSlice();
+    }
+    pub fn renderProblem(self: *Project, allocator: std.mem.Allocator) ![]u8 {
+        const problem = self.problem orelse return error.NoProblem;
+        const diag: diagnostic.Diagnostic = .{ .code = problem.code, .span = problem.site.span, .message = problem.message };
+        const primary = try diag.render(allocator, self.modules.items[problem.site.module].src);
+        if (problem.related) |related| {
+            defer allocator.free(primary);
+            const src = self.modules.items[related.module].src;
+            const at = src.locate(related.span.start);
+            return std.fmt.allocPrint(allocator, "{s}{s}:{d}:{d}: note: related module/import declaration\n", .{ primary, src.path, at.line, at.column });
+        }
+        return primary;
+    }
+};
+const Scanner = struct {
+    project: *Project,
+    id: usize,
+    tokens: []const lex.Token,
+    pos: usize = 0,
+    fn take(self: *Scanner, tag: lex.Tag) bool {
+        if (self.tokens[self.pos].tag != tag) return false;
+        self.pos += 1;
+        return true;
+    }
+    fn expect(self: *Scanner, tag: lex.Tag) diagnostic.Error!lex.Token {
+        const token = self.tokens[self.pos];
+        if (!self.take(tag)) return self.project.fail("E_MODULE_HEADER", "unexpected token in module/import header", .{ .module = self.id, .span = token.span }, null);
+        return token;
+    }
+    fn isWord(self: Scanner, text: []const u8) bool {
+        const token = self.tokens[self.pos];
+        return token.tag == .ident and std.mem.eql(u8, self.project.modules.items[self.id].src.text(token.span), text);
+    }
+    fn word(self: *Scanner, text: []const u8) diagnostic.Error!void {
+        if (!self.isWord(text)) return self.project.fail("E_MODULE_HEADER", "file must begin with a module declaration", .{ .module = self.id, .span = self.tokens[self.pos].span }, null);
+        self.pos += 1;
+    }
+    fn name(self: *Scanner) diagnostic.Error!struct { text: []const u8, last: []const u8, span: source.Span } {
+        const src = self.project.modules.items[self.id].src;
+        const first = try self.expect(.ident);
+        var last = first;
+        var output: std.Io.Writer.Allocating = .init(self.project.arena.allocator());
+        output.writer.writeAll(src.text(first.span)) catch return error.OutOfMemory;
+        while (self.take(.dot)) {
+            last = try self.expect(.ident);
+            output.writer.print(".{s}", .{src.text(last.span)}) catch return error.OutOfMemory;
+        }
+        return .{ .text = try output.toOwnedSlice(), .last = src.text(last.span), .span = .join(first.span, last.span) };
+    }
+};
+pub fn validName(name: []const u8) bool {
+    var parts = std.mem.splitScalar(u8, name, '.');
+    while (parts.next()) |part| {
+        if (part.len == 0 or !(std.ascii.isAlphabetic(part[0]) or part[0] == '_')) return false;
+        for (part[1..]) |byte| if (!(std.ascii.isAlphanumeric(byte) or byte == '_')) return false;
+    }
+    return name.len != 0;
+}
+pub fn modulePath(allocator: std.mem.Allocator, name: []const u8) ![]u8 {
+    if (!validName(name)) return error.InvalidModuleName;
+    const path = try std.fmt.allocPrint(allocator, "{s}.my", .{name});
+    for (path[0..name.len]) |*byte| if (byte.* == '.') {
+        byte.* = '/';
+    };
+    return path;
+}

@@ -1,0 +1,167 @@
+const std = @import("std");
+const t = std.testing;
+const p = @import("project.zig");
+const File = struct { path: []const u8, bytes: []const u8 };
+const Files = struct {
+    entries: []const File,
+    reads: usize = 0,
+    fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) p.ReadError![]u8 {
+        const self: *Files = @ptrCast(@alignCast(context.?));
+        self.reads += 1;
+        for (self.entries) |file| {
+            if (!std.mem.eql(u8, file.path, path)) continue;
+            if (file.bytes.len > limit) return error.TooLarge;
+            return allocator.dupe(u8, file.bytes);
+        }
+        return error.NotFound;
+    }
+    fn provider(self: *Files) p.Provider {
+        return .{ .context = self, .read = read };
+    }
+};
+const diamond = [_]File{
+    .{ .path = "main.my", .bytes = "module main; import left; import right as r; fn main() -> i64 { return 1; }" },
+    .{ .path = "left.my", .bytes = "module left; import shared . data;" },
+    .{ .path = "right.my", .bytes = "module right; import shared.data;" },
+    .{ .path = "shared/data.my", .bytes = "// shared\nmodule shared.data;" },
+};
+fn scenario(allocator: std.mem.Allocator) !void {
+    var files: Files = .{ .entries = &diamond };
+    var project = p.Project.init(allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    try t.expectEqual(@as(usize, 4), files.reads);
+    const names = [_][]const u8{ "shared.data", "left", "right", "main" };
+    for (project.order.items, names) |id, name| try t.expectEqualStrings(name, project.modules.items[id].name);
+    try t.expectEqual(project.modules.items[1].imports[0].target, project.modules.items[3].imports[0].target);
+    const rendered = try project.render(allocator);
+    defer allocator.free(rendered);
+    try t.expect(std.mem.indexOf(u8, rendered, "bodies/exports/types not checked") != null);
+    try t.expect(std.mem.indexOf(u8, rendered, "import right as r") != null);
+    try t.expectError(error.ProjectAlreadyLoaded, project.load(files.provider(), "main", .{}));
+}
+test "module diamond loads once in dependency order including allocation failures" {
+    try scenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
+}
+fn rejection(entries: []const File, options: p.Options, code: []const u8) !void {
+    var files: Files = .{ .entries = entries };
+    var project = p.Project.init(t.allocator);
+    defer project.deinit();
+    try t.expectError(error.SourceError, project.load(files.provider(), "main", options));
+    try t.expectEqualStrings(code, project.problem.?.code);
+    try t.expectError(error.IncompleteProject, project.render(t.allocator));
+    const message = try project.renderProblem(t.allocator);
+    defer t.allocator.free(message);
+    try t.expect(std.mem.indexOf(u8, message, code) != null);
+}
+test "module headers reject mismatch duplicate aliases duplicate imports and invalid syntax" {
+    for ([_]struct { text: []const u8, code: []const u8 }{
+        .{ .text = "module other;", .code = "E_MODULE_NAME" },
+        .{ .text = "fn main() -> i64 { return 0; }", .code = "E_MODULE_HEADER" },
+        .{ .text = "module main; import x.a; import y.a;", .code = "E_IMPORT_ALIAS" },
+        .{ .text = "module main; import x as a; import x as b;", .code = "E_DUPLICATE_IMPORT" },
+        .{ .text = "module main; import ../secret;", .code = "E_MODULE_HEADER" },
+        .{ .text = "module main; import", .code = "E_MODULE_HEADER" },
+    }) |case| try rejection(&.{.{ .path = "main.my", .bytes = case.text }}, .{}, case.code);
+}
+test "module cycles report importing and related file locations" {
+    var files: Files = .{ .entries = &.{
+        .{ .path = "main.my", .bytes = "module main;\nimport child;" },
+        .{ .path = "child.my", .bytes = "module child;\nimport main;" },
+    } };
+    var project = p.Project.init(t.allocator);
+    defer project.deinit();
+    try t.expectError(error.SourceError, project.load(files.provider(), "main", .{}));
+    const text = try project.renderProblem(t.allocator);
+    defer t.allocator.free(text);
+    for ([_][]const u8{ "E_IMPORT_CYCLE", "main -> child -> main", "child.my:2:", "main.my:1:" }) |part| try t.expect(std.mem.indexOf(u8, text, part) != null);
+    try rejection(&.{.{ .path = "main.my", .bytes = "module main; import main;" }}, .{}, "E_IMPORT_CYCLE");
+}
+test "module budgets and missing files fail without a partial report" {
+    try rejection(&diamond, .{ .max_modules = 2 }, "E_MODULE_LIMIT");
+    try rejection(&diamond, .{ .max_imports = 1 }, "E_IMPORT_LIMIT");
+    try rejection(&diamond, .{ .max_file_bytes = 4 }, "E_PROJECT_BYTES");
+    try rejection(&diamond, .{ .max_total_bytes = diamond[0].bytes.len }, "E_PROJECT_BYTES");
+    try rejection(&.{}, .{}, "E_MODULE_READ");
+    try rejection(&.{diamond[0]}, .{}, "E_MODULE_READ");
+}
+test "module paths exclude traversal and incomplete state cannot render" {
+    for ([_][]const u8{ "", ".", "..", "a..b", "a/b", "a\\b", "/tmp/a", "a.", "a-b", "1a" }) |name| {
+        try t.expect(!p.validName(name));
+        try t.expectError(error.InvalidModuleName, p.modulePath(t.allocator, name));
+    }
+    const path = try p.modulePath(t.allocator, "shared.data");
+    defer t.allocator.free(path);
+    try t.expectEqualStrings("shared/data.my", path);
+    var files: Files = .{ .entries = &.{} };
+    var project = p.Project.init(t.allocator);
+    defer project.deinit();
+    try t.expectError(error.IncompleteProject, project.render(t.allocator));
+    try t.expectError(error.InvalidModuleName, project.load(files.provider(), "../x", .{}));
+    try t.expectError(error.IncompleteProject, project.render(t.allocator));
+    try t.expectEqual(@as(usize, 0), files.reads);
+}
+
+fn cycleFailure(allocator: std.mem.Allocator) !void {
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = "module main; import main;" }} };
+    var project = p.Project.init(allocator);
+    defer project.deinit();
+    project.load(files.provider(), "main", .{}) catch |err| {
+        if (err == error.OutOfMemory) {
+            try t.expectError(error.IncompleteProject, project.render(allocator));
+            return err;
+        }
+        try t.expectEqual(error.SourceError, err);
+        const text = try project.renderProblem(allocator);
+        defer allocator.free(text);
+        try t.expect(std.mem.indexOf(u8, text, "E_IMPORT_CYCLE") != null);
+        return;
+    };
+    return error.ExpectedCycle;
+}
+test "module diagnostics and failed loads withstand every allocation failure" {
+    try cycleFailure(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), cycleFailure, .{});
+}
+test "module graph reports are deterministic and source digests track body edits" {
+    var files: Files = .{ .entries = &diamond };
+    var first = p.Project.init(t.allocator);
+    defer first.deinit();
+    var second = p.Project.init(t.allocator);
+    defer second.deinit();
+    try first.load(files.provider(), "main", .{});
+    try second.load(files.provider(), "main", .{});
+    const a = try first.render(t.allocator);
+    defer t.allocator.free(a);
+    const b = try second.render(t.allocator);
+    defer t.allocator.free(b);
+    try t.expectEqualStrings(a, b);
+    var changed_files = diamond;
+    changed_files[3].bytes = "module shared.data; fn helper() -> i64 { return 42; }";
+    files.entries = &changed_files;
+    var changed = p.Project.init(t.allocator);
+    defer changed.deinit();
+    try changed.load(files.provider(), "main", .{});
+    try t.expectEqualSlices(u8, &first.modules.items[0].digest, &changed.modules.items[0].digest);
+    try t.expect(!std.mem.eql(u8, &first.modules.items[2].digest, &changed.modules.items[2].digest));
+}
+test "module dependency traversal handles a long chain without recursive loading" {
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const allocator = arena.allocator();
+    const entries = try allocator.alloc(File, 600);
+    for (entries, 0..) |*file, i| {
+        const name = if (i == 0) "main" else try std.fmt.allocPrint(allocator, "m{d}", .{i});
+        file.path = try std.fmt.allocPrint(allocator, "{s}.my", .{name});
+        file.bytes = if (i + 1 == entries.len) try std.fmt.allocPrint(allocator, "module {s};", .{name}) else try std.fmt.allocPrint(allocator, "module {s}; import m{d};", .{ name, i + 1 });
+    }
+    var files: Files = .{ .entries = entries };
+    var project = p.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{ .max_modules = entries.len });
+    try t.expectEqual(entries.len, files.reads);
+    for (project.order.items, 0..) |id, i| try t.expectEqual(entries.len - i - 1, id);
+}
