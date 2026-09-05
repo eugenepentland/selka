@@ -72,7 +72,7 @@ zig build run -- discover-duplicates examples/duplicates.my --timings
 It reports exact checked-function candidates after normalizing bound names,
 with source locations and advisory explanations. Ordinary compilation does not
 run it. See the [comparison contract and review](docs/experiments/duplicate-discovery.md).
-All 374 tests pass in Debug and ReleaseFast.
+All 382 tests pass in Debug and ReleaseFast.
 
 [Post-MVP tracking](docs/experiments/roadmap.md) records the remaining experiments.
 Records, complete construction, field access, preserving updates, and declarative
@@ -94,7 +94,7 @@ also work; `examples/reference-parameters.my` returns 19. [Bounded slices](docs/
 slice parameters, and checked narrowing are implemented; `examples/slices.my` returns 13.
 [Returned-reference contracts](docs/experiments/returned-references.md) complete B
 ([acceptance audit](docs/experiments/b-audit.md)); `examples/returned-references.my` returns 20.
-Approximate matching, the full resource/effect system, modules, native execution, and the other
+The full resource/effect system, modules, native execution, and the other
 pending tracks are not yet complete.
 
 See [implemented semantics](docs/semantics.md) and [verification/progress](docs/progress.md).
@@ -162,3 +162,7 @@ backing/registries across cycles. Guest arena scopes remain pending.
 existing source programs with `run --memory=arena` or embedding option
 `memory_backing = .arena`. General allocation remains the default. Nested source
 arena scopes remain pending; arena backing can accumulate until execution ends.
+
+[Approximate discovery](docs/experiments/approximate-discovery.md) is available with
+`discover-duplicates --approximate`. It reports canonical edits between near matches
+and explicitly flags an incomplete search when work or output limits are reached.

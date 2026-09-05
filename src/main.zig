@@ -1,7 +1,7 @@
 //! Host I/O and process policy stay outside the compiler and VM.
 const std = @import("std");
 const language = @import("mylang");
-const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates> <file.my>\n  run: --max-steps=N --max-frames=N --memory=general|arena\n  discover-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings\n";
+const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates> <file.my>\n  run: --max-steps=N --max-frames=N --memory=general|arena\n  discover-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n";
 
 pub fn main(init: std.process.Init) void {
     const status = dispatch(init) catch |err| status: {
@@ -94,6 +94,7 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     var timings = false;
     var saw_min = false;
     var saw_population = false;
+    var saw_work = false;
     for (args[1..]) |arg| {
         if (std.mem.startsWith(u8, arg, "--max-steps=")) {
             if (command != .run or saw_steps) return error.Usage;
@@ -127,6 +128,13 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
             if (command != .@"discover-duplicates" or saw_population) return error.Usage;
             saw_population = true;
             discovery.population = std.meta.stringToEnum(language.duplicates.Population, arg["--population=".len..]) orelse return error.Usage;
+        } else if (std.mem.eql(u8, arg, "--approximate")) {
+            if (command != .@"discover-duplicates" or discovery.approximate) return error.Usage;
+            discovery.approximate = true;
+        } else if (std.mem.startsWith(u8, arg, "--max-work=")) {
+            if (command != .@"discover-duplicates" or saw_work) return error.Usage;
+            saw_work = true;
+            discovery.near_options.max_work = std.math.cast(usize, try positive(arg["--max-work=".len..])) orelse return error.Usage;
         } else if (std.mem.eql(u8, arg, "--timings")) {
             if (command != .@"discover-duplicates" or timings) return error.Usage;
             timings = true;
@@ -135,6 +143,7 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
             path = arg;
         }
     }
+    if (saw_work and !discovery.approximate) return error.Usage;
     return .{ .command = command, .path = path orelse return error.Usage, .options = options, .discovery = discovery, .timings = timings };
 }
 

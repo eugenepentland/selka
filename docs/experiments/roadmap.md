@@ -6,7 +6,7 @@ not a claim that the full future language has been delivered.
 
 | Track | Current state | Next concrete acceptance experiment |
 | --- | --- | --- |
-| T, exact duplicate discovery | Implemented as separate `discover-duplicates` command; review and scaling corpus added | Collect ordinary-program findings before adding approximate matching; never merge automatically. |
+| T, duplicate discovery | Exact grouping plus opt-in bounded approximate matching implemented; reports show canonical edits and truncation | Continue ordinary-program review and candidate-index scaling; never merge automatically. |
 | A1, aggregates and complete conversions | Implemented: records, construction, fields, preserving updates, complete conversions, integer widths/casts, fixed arrays, checked indexing | A1 acceptance passes; carry the immutable value semantics into A2. |
 | A2, nominal domains and exhaustive mappings | Implemented: domains/private construction, closed enums/tagged unions, exhaustive matching, and complete enum-indexed tables | A2 unit, privacy, added-variant match/table, and explicit unknown-code handling experiments pass. |
 | B, borrowing | Implemented: memory/lease registry, scoped references, reference/slice parameters, bounded views, and explicit returned-reference provenance | B acceptance passes; carry borrowing and snapshot rules into resource ownership. |
@@ -86,3 +86,6 @@ remain pending.
 
 [Execution-lifetime arenas](arena-execution.md) now run source programs through
 the VM and CLI; nested source arena scopes and escape checking remain pending.
+
+[Approximate discovery](approximate-discovery.md) now reports bounded near matches
+separately from exact groups, with changed facts and explicit incomplete-search status.

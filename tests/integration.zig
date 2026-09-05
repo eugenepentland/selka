@@ -507,3 +507,19 @@ test "CLI selects arena execution and validates memory backend options" {
     for ([_][]const u8{ "--memory=", "--memory=unknown" }) |option| try invokeOptions("run", source, &.{option}, 2, "", "usage:");
     for ([_][]const u8{ "check", "dump-bytecode", "discover-duplicates" }) |command| try invokeOptions(command, source, &.{"--memory=arena"}, 2, "", "usage:");
 }
+
+test "CLI approximate discovery is advisory explains drift and reports budget exhaustion" {
+    const source = "fn a(x: i64) -> i64 { return x * 2 + 1; } fn b(x: i64) -> i64 { return x * 2 + 3; } fn main() -> i64 { return 0; }";
+    const outcome = try runFixture("discover-duplicates", source, &.{ "--approximate", "--min-nodes=1" });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    for ([_][]const u8{ "near-v1", "near candidate:", "- 1", "+ 3", "Advisory only" }) |part| try testing.expect(std.mem.indexOf(u8, outcome.stdout, part) != null);
+    const limited = try runFixture("discover-duplicates", source, &.{ "--approximate", "--min-nodes=1", "--max-work=1" });
+    defer testing.allocator.free(limited.stdout);
+    defer testing.allocator.free(limited.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, limited.term);
+    try testing.expect(std.mem.indexOf(u8, limited.stdout, "Incomplete approximate search") != null);
+    for ([_][]const []const u8{ &.{"--max-work=1"}, &.{ "--approximate", "--max-work=0" }, &.{ "--approximate", "--approximate" } }) |options| try invokeOptions("discover-duplicates", source, options, 2, "", "usage:");
+    try invokeOptions("check", source, &.{"--approximate"}, 2, "", "usage:");
+}

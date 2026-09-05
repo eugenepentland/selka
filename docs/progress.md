@@ -914,3 +914,28 @@ arena byte bounds. Nested source arena scopes, escape checks, source reset, pool
 handle integration, partial field moves, and all other unfinished roadmap tracks
 remain in scope. C is incomplete. Guardian was not exercised; hosted CI has not
 run. The full roadmap goal remains active.
+
+
+## 2026-09-05: T bounded approximate duplicate discovery
+
+Added opt-in `discover-duplicates --approximate` with separately versioned near-v1
+canonical-line edit distance. Exact-v24 groups remain unchanged. Matching headers
+preserve signature/local/reference/effect/domain boundaries; body differences remain
+visible as insertions, deletions, or substitutions. Reports show source locations,
+exact-group representatives, edit counts, and bounded change excerpts. Work and
+pair limits explicitly mark incomplete search. The command remains advisory.
+
+382 tests pass in Debug and ReleaseFast (344 core, 38 actual CLI). Acceptance covers
+literal/operator/callee changes, inserted statements, unrelated bodies, nominal and
+effect boundaries, exact-copy grouping, deterministic output, default opt-out, work/
+pair limits, invalid budgets, and every allocation failure through comparison and
+rendering. CLI reporting, advisory exits, truncation, and invalid options pass.
+Formatting and whitespace checks pass. The existing sum review corpus yields one
+near pair with the intended lt/le difference, plus its unchanged exact-copy group.
+
+[Approximate comparison semantics](experiments/approximate-discovery.md) documents
+line-score limits, quadratic comparison bounded by explicit work, header exclusions,
+and review outcomes. These fixtures do not establish production usefulness or
+performance. Formatter, reference/complexity reports, verification tooling, and all
+other unfinished roadmap tracks remain in scope. Guardian was not exercised; hosted
+CI has not run. The full roadmap goal remains active.

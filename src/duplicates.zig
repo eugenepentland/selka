@@ -1,15 +1,18 @@
-//! Exact candidates over checked trees. No rewriting, execution, or validity rules.
+//! Exact groups and opt-in bounded near candidates over checked trees.
+//! No rewriting, execution, or validity rules.
 const std = @import("std");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 
 pub const version = "exact-v24";
 pub const Population = enum { production, tests, generated, reference, intentional };
-pub const Options = struct { min_nodes: usize = 8, population: Population = .production };
+pub const near = @import("near_duplicates.zig");
+pub const Options = struct { min_nodes: usize = 8, population: Population = .production, approximate: bool = false, near_options: near.Options = .{} };
 pub const Group = struct { members: []const typed.FunctionId, nodes: usize };
 pub const Analysis = struct {
     arena: std.heap.ArenaAllocator,
     groups: []const Group,
+    approximate: near.Result,
     functions_examined: usize,
     functions_indexed: usize,
     canonical_bytes: usize,
@@ -251,6 +254,7 @@ pub fn discover(allocator: std.mem.Allocator, program: typed.Program, options: O
     var buckets: std.ArrayList(Bucket) = .empty;
     var examined_bytes: usize = 0;
     var indexed: usize = 0;
+    var representatives: std.ArrayList(near.Input) = .empty;
     for (program.functions) |function| {
         const key = try canonical(scratch, program, function);
         examined_bytes += key.bytes.len;
@@ -258,6 +262,7 @@ pub fn discover(allocator: std.mem.Allocator, program: typed.Program, options: O
         indexed += 1;
         const entry = try index.getOrPut(scratch, key.bytes);
         if (!entry.found_existing) {
+            if (options.approximate) try representatives.append(scratch, .{ .function = function.id, .bytes = key.bytes });
             entry.value_ptr.* = buckets.items.len;
             try buckets.append(scratch, .{ .nodes = key.nodes });
         }
@@ -268,7 +273,8 @@ pub fn discover(allocator: std.mem.Allocator, program: typed.Program, options: O
         if (bucket.members.items.len < 2) continue;
         try groups.append(scratch, .{ .members = bucket.members.items, .nodes = bucket.nodes });
     }
-    return .{ .arena = arena, .groups = try groups.toOwnedSlice(scratch), .functions_examined = program.functions.len, .functions_indexed = indexed, .canonical_bytes = examined_bytes, .options = options };
+    const approximate: near.Result = if (options.approximate) try near.discover(scratch, allocator, representatives.items, options.near_options) else .{ .pairs = &.{}, .work = 0, .truncated = false };
+    return .{ .arena = arena, .approximate = approximate, .groups = try groups.toOwnedSlice(scratch), .functions_examined = program.functions.len, .functions_indexed = indexed, .canonical_bytes = examined_bytes, .options = options };
 }
 
 pub fn render(allocator: std.mem.Allocator, analysis: Analysis, program: typed.Program, source: Source) ![]u8 {
@@ -299,6 +305,24 @@ pub fn render(allocator: std.mem.Allocator, analysis: Analysis, program: typed.P
         writer.writeAll("  shared: types, literals, operators, control flow, local slots, and resolved calls\n  normalized: local/parameter names, source spelling, and direct self-recursion\n  review: no canonical helper declared; shared structure does not establish shared domain policy\n") catch return error.OutOfMemory;
     }
     writer.print("{d} candidate groups; {d}/{d} functions indexed\n", .{ analysis.groups.len, analysis.functions_indexed, analysis.functions_examined }) catch return error.OutOfMemory;
+    if (analysis.options.approximate) {
+        writer.print("approximate {s}: minimum line similarity={d}%; work={d}/{d}; truncated={}\n", .{ near.version, analysis.options.near_options.similarity_percent, analysis.approximate.work, analysis.options.near_options.max_work, analysis.approximate.truncated }) catch return error.OutOfMemory;
+        for (analysis.approximate.pairs) |pair| {
+            writer.print("near candidate: {d} canonical-line edits / {d} body lines; not semantic equivalence\n", .{ pair.distance, pair.lines }) catch return error.OutOfMemory;
+            for ([_]typed.FunctionId{ pair.left, pair.right }) |id| {
+                const function = program.functions[@backingInt(id)];
+                const at = source.locate(function.declaration.start);
+                writer.print("  {s}:{d}:{d}: {s} (exact-group representative)\n", .{ source.path, at.line, at.column, function.name }) catch return error.OutOfMemory;
+            }
+            for (pair.changes[0..@min(pair.changes.len, 8)]) |change| {
+                if (change.before) |line| writer.print("    - {s}\n", .{line}) catch return error.OutOfMemory;
+                if (change.after) |line| writer.print("    + {s}\n", .{line}) catch return error.OutOfMemory;
+            }
+            if (pair.changes.len > 8) writer.writeAll("    ... further canonical edits omitted; inspect both source bodies\n") catch return error.OutOfMemory;
+        }
+        writer.print("{d} approximate pairs; matching headers required; review differences and domain intent\n", .{analysis.approximate.pairs.len}) catch return error.OutOfMemory;
+        if (analysis.approximate.truncated) writer.writeAll("Incomplete approximate search: work or pair limit reached; absence is not evidence of no near matches.\n") catch return error.OutOfMemory;
+    }
     writer.writeAll("Advisory only. Independent implementations may remain separate; no code was merged.\n") catch return error.OutOfMemory;
     return output.toOwnedSlice();
 }

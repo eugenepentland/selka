@@ -65,6 +65,7 @@ pub const Compilation = struct {
 test {
     _ = @import("compiler_test.zig");
     _ = @import("duplicates_test.zig");
+    _ = @import("near_duplicates_test.zig");
     _ = @import("value_test.zig");
     _ = @import("records_test.zig");
     _ = @import("integers_test.zig");

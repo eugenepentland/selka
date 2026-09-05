@@ -57,8 +57,9 @@ The compiler still has no nominal scalar wrappers, resources, or declared
 external effects; analysis cannot claim to preserve absent metadata. New typed variants must extend serialization and
 negative fixtures before discovery supports those language features. Whole-
 function matching can miss useful repeated blocks and semantically equivalent
-implementations. Approximate matching is not implemented: changed constants,
-operators, or resolved external callees keep functions in separate groups.
+implementations. Changed constants, operators, or resolved external callees keep functions in
+separate exact groups. [Opt-in approximate discovery](approximate-discovery.md)
+now reports bounded near matches separately, with explicit canonical edits.
 
 ## Reviewed evidence
 
@@ -73,9 +74,9 @@ These are deliberate, inspectable examples, not production defect statistics.
 | Three independent identical functions, population intentional | One group with three locations and advisory wording | Intentional independence remains permitted; analysis does not make the program invalid. |
 | Generated benchmark corpus | 31 repeated arithmetic policies with renamed function/parameter bindings | Scaling input only, not an estimate of useful findings in real code. |
 
-The next comparison experiment can add approximate candidate indexing after
-reviewing more ordinary programs. It must explain changed constants/operators/
-callees rather than relabel them exact, and keep advisory behavior.
+[Approximate discovery](approximate-discovery.md) now explains changed constants,
+operators, and callees without relabeling them exact. Further ordinary-program
+review and scalable candidate indexing remain future improvements.
 
 ## Measurement
 
