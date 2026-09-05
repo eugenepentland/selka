@@ -56,8 +56,8 @@ cross-file diagnostics, module/import/source limits, unsafe path rejection, a
 and diagnostic rendering.
 
 Module parsing, export lists, and declaration visibility now have an
-[interface index](module-interfaces.md). Next: integrate its identities with semantic
-resolution and private access in bodies, and execute a shared-domain program. Dependency
+[interface index](module-interfaces.md). [Cross-file execution](module-execution.md)
+now integrates its identities with semantic resolution and private access in bodies. Dependency
 direction policy is separate from type validity. Module-aware formatter, reference
 roots, duplicate identities, native support, and incremental invalidation remain
 part of their respective roadmap requirements.

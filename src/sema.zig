@@ -6,6 +6,7 @@ const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
 const records = @import("records.zig");
 const Error = diagnostic.Error;
+const Names = @import("module_names.zig").Names;
 const Pending = struct { available: bool, fields: []const bool };
 const Work = struct { id: ast.NodeId, emit: bool = false, checkpoint: bool = false, verify: ?[]const Pending = null };
 const CheckedStatement = struct { id: typed.StatementId, terminates: bool };
@@ -30,6 +31,11 @@ const Checker = struct {
     references: std.ArrayList(typed.Reference) = .empty,
     active_refs: std.StringHashMapUnmanaged(typed.ReferenceId) = .empty,
 
+    fn topLevel(self: *Checker, span: source.Span) bool {
+        if (self.catalog.module_names) |names| return names.topLevel(span);
+        const name = self.src.text(span);
+        return self.functions.contains(name) or self.catalog.names.contains(name);
+    }
     fn ty(self: *Checker, span: source.Span) Error!typed.Type {
         return self.catalog.resolve(self.src, span, self.sink);
     }
@@ -91,7 +97,9 @@ const Checker = struct {
     fn callTarget(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span) Error!typed.FunctionId {
         const owner = if (call.owner) |name| try self.ty(name) else null;
         if (owner) |domain_type| _ = try self.catalog.domain(domain_type, call.owner.?, self.sink);
-        const name = try functionName(self.allocator, self.src, call.owner, call.name);
+        const current_owner = if (self.owner) |domain| self.catalog.records[domain.recordIndex()].name else null;
+        const bare_owner = if (current_owner) |name| (if (std.mem.lastIndexOf(u8, name, "::")) |at| name[at + 2 ..] else name) else null;
+        const name = if (self.catalog.module_names) |names| try names.reference(call.owner orelse call.name, .function, if (call.owner != null) call.name else null, bare_owner, self.sink) else try functionName(self.allocator, self.src, call.owner, call.name);
         const function = self.functions.get(name) orelse return self.sink.fail("E_UNKNOWN_FUNCTION", call.name, "no function has this qualified name");
         const signature = self.syntax.functions[@backingInt(function)];
         if (signature.restricted and self.owner != owner) return self.sink.failRelated("E_PRIVATE_FUNCTION", call.name, "private domain function is only callable from the same domain", .{ .span = signature.name, .message = "private function declared here" });
@@ -782,7 +790,7 @@ const Checker = struct {
                 const parent = try self.expression(scope.parent);
                 try self.require(self.nodes.items[@backingInt(parent)].ty, .allocator, stmt.span);
                 const name = self.src.text(scope.name);
-                if (self.functions.contains(name) or self.catalog.names.contains(name) or self.active.contains(name) or self.active_refs.contains(name)) return self.sink.fail("E_SHADOWING", scope.name, "arena allocator shadows an active name");
+                if (self.topLevel(scope.name) or self.active.contains(name) or self.active_refs.contains(name)) return self.sink.fail("E_SHADOWING", scope.name, "arena allocator shadows an active name");
                 self.arena_depth += 1;
                 defer self.arena_depth -= 1;
                 const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
@@ -841,7 +849,7 @@ const Checker = struct {
                     var slot: ?typed.LocalId = null;
                     if (arm.binding) |binding| {
                         const name = self.src.text(binding);
-                        if (self.functions.contains(name) or self.catalog.names.contains(name) or self.active.contains(name) or self.active_refs.contains(name)) return self.sink.fail("E_SHADOWING", binding, "payload binding shadows an active binding or top-level name");
+                        if (self.topLevel(binding) or self.active.contains(name) or self.active_refs.contains(name)) return self.sink.fail("E_SHADOWING", binding, "payload binding shadows an active binding or top-level name");
                         slot = @fromBackingInt(self.locals.items.len);
                         try self.locals.append(self.allocator, .{ .arena_depth = self.arena_depth, .name = name, .declaration = binding, .ty = payload.?, .mutable = false, .transfer_available = self.transfers(payload.?) });
                         try self.active.put(self.allocator, name, slot.?);
@@ -871,7 +879,7 @@ const Checker = struct {
                 const call_node = self.syntax.nodes.items[@backingInt(borrow.call)];
                 if (call_node.data != .call) return self.sink.fail("E_REFERENCE_RESULT", call_node.span, "borrow result requires a direct function call");
                 const name = self.src.text(borrow.name);
-                if (self.active.contains(name) or self.active_refs.contains(name) or self.functions.contains(name) or self.catalog.names.contains(name)) return self.sink.fail("E_SHADOWING", borrow.name, "reference shadows an active binding or top-level name");
+                if (self.active.contains(name) or self.active_refs.contains(name) or self.topLevel(borrow.name)) return self.sink.fail("E_SHADOWING", borrow.name, "reference shadows an active binding or top-level name");
                 const call = try self.expressionMode(borrow.call, true);
                 const checked_call = self.nodes.items[@backingInt(call)].data.call;
                 const signature = self.syntax.functions[@backingInt(checked_call.function)];
@@ -890,7 +898,7 @@ const Checker = struct {
             },
             .borrow => |borrow| borrow: {
                 const name = self.src.text(borrow.name);
-                if (self.active.contains(name) or self.active_refs.contains(name) or self.functions.contains(name) or self.catalog.names.contains(name)) return self.sink.fail("E_SHADOWING", borrow.name, "reference shadows an active binding or top-level name");
+                if (self.active.contains(name) or self.active_refs.contains(name) or self.topLevel(borrow.name)) return self.sink.fail("E_SHADOWING", borrow.name, "reference shadows an active binding or top-level name");
                 var range: ?typed.Range = null;
                 if (borrow.range) |bounds| {
                     const start = try self.expression(bounds.start);
@@ -1009,7 +1017,7 @@ const Checker = struct {
             },
             .binding => |b| binding: {
                 const name = self.src.text(b.name);
-                if (self.functions.contains(name) or self.catalog.names.contains(name) or self.active.contains(name) or self.active_refs.contains(name))
+                if (self.topLevel(b.name) or self.active.contains(name) or self.active_refs.contains(name))
                     return self.sink.fail("E_SHADOWING", b.name, "binding shadows an active local or top-level function");
                 const value = try self.expression(b.value);
                 const value_type = self.nodes.items[@backingInt(value)].ty;
@@ -1060,17 +1068,21 @@ fn warningLess(_: void, a: diagnostic.Diagnostic, b: diagnostic.Diagnostic) bool
     return std.mem.lessThan(u8, a.code, b.code);
 }
 pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!typed.Program {
+    return checkWithNames(allocator, src, program, sink, null);
+}
+pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!typed.Program {
     const resolved = try allocator.alloc(?typed.NodeId, program.nodes.items.len);
     @memset(resolved, null);
-    const catalog = try records.collect(allocator, src, program.records, program.domains, program.variants, program.array_types, program.buffers, program.resources, program.pools, sink);
+    const catalog = try records.collectWithNames(allocator, src, program.records, program.domains, program.variants, program.array_types, program.buffers, program.resources, program.pools, sink, module_names);
     var checker: Checker = .{ .allocator = allocator, .src = src, .syntax = program, .sink = sink, .resolved = resolved, .catalog = catalog };
     for (program.functions, 0..) |function, i| {
-        const name = try functionName(allocator, src, function.owner, function.name);
+        const name = if (module_names) |names| try names.functionDeclaration(function.owner, function.name) else try functionName(allocator, src, function.owner, function.name);
         if (catalog.names.contains(name)) return sink.fail("E_DUPLICATE_NAME", function.name, "function name conflicts with a declared type");
         if (checker.functions.get(name)) |previous| return sink.failRelated("E_DUPLICATE_FUNCTION", function.name, "function name is already declared", .{ .span = program.functions[@backingInt(previous)].name, .message = "previous function declaration" });
         try checker.functions.put(allocator, name, @fromBackingInt(i));
     }
-    const main = checker.functions.get("main") orelse return sink.fail("E_MAIN", .{ .start = 0, .end = 0 }, "the program requires fn main() -> i64");
+    const main_name = if (module_names) |names| try std.fmt.allocPrint(allocator, "{s}::main", .{names.index.project.modules.items[0].name}) else "main";
+    const main = checker.functions.get(main_name) orelse return sink.fail("E_MAIN", .{ .start = 0, .end = 0 }, "the program requires fn main() -> i64");
     const entry = program.functions[@backingInt(main)];
     if (entry.return_reference != null) return sink.fail("E_MAIN", entry.name, "main must return an i64 value");
     var entry_capabilities: u8 = 0;
@@ -1094,7 +1106,7 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
             const name = src.text(parameter.name);
             if (checker.active.get(name)) |previous| return sink.failRelated("E_DUPLICATE_PARAMETER", parameter.name, "parameter name is already declared", .{ .span = checker.locals.items[@backingInt(previous)].declaration, .message = "previous parameter declaration" });
             if (checker.active_refs.get(name)) |previous| return sink.failRelated("E_DUPLICATE_PARAMETER", parameter.name, "parameter name is already declared", .{ .span = checker.references.items[@backingInt(previous)].declaration, .message = "previous parameter declaration" });
-            if (checker.functions.contains(name) or checker.catalog.names.contains(name)) return sink.fail("E_SHADOWING", parameter.name, "parameter shadows a top-level function");
+            if (checker.topLevel(parameter.name)) return sink.fail("E_SHADOWING", parameter.name, "parameter shadows a top-level function");
             const slot: typed.LocalId = @fromBackingInt(checker.locals.items.len);
             const parameter_type = try checker.ty(parameter.ty);
             if (parameter.reference != null and checker.transfers(parameter_type)) return sink.fail("E_RESULT_BORROW", parameter.ty, "owned and result-bearing parameters must currently transfer by value");
@@ -1125,7 +1137,7 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
             }
         }
         if (!body.terminates) return sink.fail("E_MISSING_RETURN", function.name, "function may fall through without returning its declared type; loops are conservatively treated as falling through, even while true");
-        out.* = .{ .effect_bound = function.effect_bound, .return_reference = checker.return_reference, .references = try checker.references.toOwnedSlice(allocator), .owner = checker.owner, .restricted = function.restricted, .conversion = function.conversion, .id = @fromBackingInt(i), .name = try functionName(allocator, src, function.owner, function.name), .declaration = function.name, .return_type = checker.return_type, .parameter_count = function.parameters.len, .body = body.id, .locals = try checker.locals.toOwnedSlice(allocator) };
+        out.* = .{ .effect_bound = function.effect_bound, .return_reference = checker.return_reference, .references = try checker.references.toOwnedSlice(allocator), .owner = checker.owner, .restricted = function.restricted, .conversion = function.conversion, .id = @fromBackingInt(i), .name = if (module_names) |names| try names.functionDeclaration(function.owner, function.name) else try functionName(allocator, src, function.owner, function.name), .declaration = function.name, .return_type = checker.return_type, .parameter_count = function.parameters.len, .body = body.id, .locals = try checker.locals.toOwnedSlice(allocator) };
     }
     const checked: typed.Program = .{ .nodes = try checker.nodes.toOwnedSlice(allocator), .statements = try checker.statements.toOwnedSlice(allocator), .functions = functions, .main = main, .records = catalog.records };
     try @import("region_check.zig").check(allocator, checked, sink);

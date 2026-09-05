@@ -59,10 +59,8 @@ host allocation failure while loading, indexing, resolving, and rendering a vali
 interface graph. Existing single-file compiler/VM fixtures remain the execution
 baseline.
 
-[Source maps and AST relocation](module-source-mapping.md) now provide combined
-tables with original locations and module ownership. Next is integration with the
-type catalog and function checker: resolve all body
-references using these identities, preserve module source locations into typed IR,
-enforce private access at every reference, and execute the shared-domain example.
-Optional dependency-direction policy and module-aware quality, formatting, native,
-and incremental work remain pending. Track M is not complete.
+[Source maps and AST relocation](module-source-mapping.md) provide combined tables
+with original locations and module ownership. [Cross-file checking/execution](module-execution.md)
+now integrates the index with the type catalog and function checker. The interface
+command remains a narrower inspection tool. Optional dependency-direction policy
+and module-aware quality, formatting, native, and incremental work remain pending.

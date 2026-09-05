@@ -4,7 +4,7 @@ export Measurement;
 
 struct Measurement { distance: units::Distance }
 
-// Interface discovery parses this body; cross-file type checking follows later.
+// The imported factory enforces Distance construction in its defining module.
 fn main() -> i64 {
     let measurement = new Measurement { distance: units::Distance.make(12) };
     return units::Distance.number(measurement.distance);

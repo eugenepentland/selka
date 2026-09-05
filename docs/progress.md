@@ -1317,3 +1317,37 @@ shared-domain execution remain pending. Optional dependency-direction policy,
 generics, compile-time/schema/incremental work, native expansion, and other unfinished
 roadmap requirements remain in scope. Guardian was not exercised; hosted CI has not
 run. The full roadmap goal remains active.
+
+## 2026-09-05: M cross-file semantic checking and VM execution
+
+Integrated interface identities and mapped source context into the type catalog
+and function checker. Named declarations use logical-module-qualified identities;
+references resolve through direct import aliases in the source span's original
+module. Caller/callee types retain nominal identity, private module/domain access
+is enforced in bodies, and shadowing sees local declarations/import aliases without
+exposing hidden dependency names. All discovered bodies are checked. Execution
+selects main only from the entry module. Existing ownership, borrowing, result,
+finite-layout, arena-lifetime, and transitive-effect passes remain in the pipeline.
+
+Added `check-project` and `run-project` with ordinary VM step/frame/memory options,
+renderable mapped diagnostics on failed checking, and cross-file runtime traces.
+The documented Distance/Measurement example checks and returns 12, including arena
+execution. Header and interface listing commands retain their narrower contracts.
+
+484 Zig tests pass in Debug and ReleaseFast (434 core, 50 CLI), plus eight
+verification-driver tests and the unchanged 23-fixture/182-comparison native suite
+per host mode. New acceptance includes imported domain factories through private
+helpers, distinct same-named nominal types, hidden function/type rejection, missing
+references, import-alias shadowing, dependency-main isolation, uncalled invalid
+bodies, recursive layout rejection, cross-file noalloc/result obligations, and
+returned slices preserving caller mutation and snapshots. Real CLI tests check/run
+multiple files, reject private imports, preserve trap paths, and exercise step and
+memory options. Exhaustive allocation failures cover module loading, indexing,
+relocation, checking, lowering, and execution. Formatting and whitespace checks pass.
+
+[Module execution](experiments/module-execution.md) records commands, namespace and
+entry rules, ownership, validation, and remaining scope. Optional dependency-direction
+policy and broader module acceptance remain pending, alongside module-aware tooling,
+project native commands/parity, generics, compile-time/schema/incremental work, native
+operation expansion, and all other unfinished roadmap requirements. Guardian was
+not exercised; hosted CI has not run. The full roadmap goal remains active.

@@ -6,8 +6,10 @@ const Source = @import("source.zig").Source;
 const Span = @import("source.zig").Span;
 const diagnostic = @import("diagnostic.zig");
 const Error = diagnostic.Error;
+const Names = @import("module_names.zig").Names;
 
 pub const Catalog = struct {
+    module_names: ?*Names = null,
     records: []typed.Record,
     names: std.StringHashMapUnmanaged(typed.Type),
     array_types: std.AutoHashMapUnmanaged(usize, typed.Type) = .empty,
@@ -17,7 +19,8 @@ pub const Catalog = struct {
         if (self.array_types.get(span.start)) |ty| return ty;
         const name = src.text(span);
         if (typed.Type.fromName(name)) |builtin| return builtin;
-        return self.names.get(name) orelse sink.fail("E_UNKNOWN_TYPE", span, "type is not declared");
+        const key = if (self.module_names) |names| try names.reference(span, .type, null, null, sink) else name;
+        return self.names.get(key) orelse sink.fail("E_UNKNOWN_TYPE", span, "type is not declared");
     }
     pub fn record(self: Catalog, ty: typed.Type, span: Span, sink: *diagnostic.Sink) Error!typed.Record {
         if (!ty.isAggregate()) return sink.fail("E_TYPE", span, "operation requires a record value");
@@ -53,20 +56,24 @@ pub const Catalog = struct {
 
 /// All storage is owned by the compilation arena.
 pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const ast.Record, domains: []const ast.Domain, variant_types: []const ast.Variants, arrays: []const ast.ArrayType, buffers: []const ast.Domain, resources: []const ast.Domain, pools: []const ast.Pool, sink: *diagnostic.Sink) Error!Catalog {
+    return collectWithNames(allocator, src, declarations, domains, variant_types, arrays, buffers, resources, pools, sink, null);
+}
+
+pub fn collectWithNames(allocator: std.mem.Allocator, src: Source, declarations: []const ast.Record, domains: []const ast.Domain, variant_types: []const ast.Variants, arrays: []const ast.ArrayType, buffers: []const ast.Domain, resources: []const ast.Domain, pools: []const ast.Pool, sink: *diagnostic.Sink, module_names: ?*Names) Error!Catalog {
     const pool_base = declarations.len + domains.len + variant_types.len + buffers.len + resources.len;
     const named_count = pool_base + pools.len * 2;
     const storage = try allocator.alloc(typed.Record, named_count + arrays.len);
-    var catalog: Catalog = .{ .records = storage[0..named_count], .names = .empty, .field_names = try allocator.alloc(std.StringHashMapUnmanaged(usize), named_count) };
+    var catalog: Catalog = .{ .module_names = module_names, .records = storage[0..named_count], .names = .empty, .field_names = try allocator.alloc(std.StringHashMapUnmanaged(usize), named_count) };
     @memset(catalog.field_names, .empty);
     for (declarations, 0..) |declaration, i| {
-        const name = src.text(declaration.name);
+        const name = if (module_names) |names| try names.declaration(declaration.name) else src.text(declaration.name);
         if (catalog.names.get(name)) |previous| return sink.failRelated("E_DUPLICATE_TYPE", declaration.name, "record type is already declared", .{ .span = declarations[previous.recordIndex()].name, .message = "previous record declaration" });
         const id: typed.Type = @fromBackingInt(i + typed.Type.record_base);
         try catalog.names.put(allocator, name, id);
         storage[i] = .{ .id = id, .name = name, .declaration = declaration.name, .fields = &.{} };
     }
     for (domains, 0..) |declaration, offset| {
-        const name = src.text(declaration.name);
+        const name = if (module_names) |names| try names.declaration(declaration.name) else src.text(declaration.name);
         if (catalog.names.get(name)) |previous| return sink.failRelated("E_DUPLICATE_TYPE", declaration.name, "type is already declared", .{ .span = storage[previous.recordIndex()].declaration, .message = "previous type declaration" });
         const index = declarations.len + offset;
         const id: typed.Type = @fromBackingInt(index + typed.Type.record_base);
@@ -74,7 +81,7 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
         storage[index] = .{ .id = id, .name = name, .declaration = declaration.name, .fields = &.{} };
     }
     for (variant_types, 0..) |declaration, offset| {
-        const name = src.text(declaration.name);
+        const name = if (module_names) |names| try names.declaration(declaration.name) else src.text(declaration.name);
         if (catalog.names.get(name)) |previous| return sink.failRelated("E_DUPLICATE_TYPE", declaration.name, "type is already declared", .{ .span = storage[previous.recordIndex()].declaration, .message = "conflicting type declaration" });
         if (declaration.cases.len == 0) return sink.fail("E_EMPTY_VARIANTS", declaration.name, "closed enum and union types require at least one variant");
         const index = declarations.len + domains.len + offset;
@@ -90,7 +97,7 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
         storage[index] = .{ .id = id, .name = name, .declaration = declaration.name, .fields = &.{}, .variants = .{ .fallible = declaration.fallible, .is_union = declaration.is_union, .cases = cases } };
     }
     for (buffers, 0..) |declaration, offset| {
-        const name = src.text(declaration.name);
+        const name = if (module_names) |names| try names.declaration(declaration.name) else src.text(declaration.name);
         if (catalog.names.get(name)) |previous| return sink.failRelated("E_DUPLICATE_TYPE", declaration.name, "type is already declared", .{ .span = storage[previous.recordIndex()].declaration, .message = "previous type declaration" });
         const index = declarations.len + domains.len + variant_types.len + offset;
         const id: typed.Type = @fromBackingInt(index + typed.Type.record_base);
@@ -98,7 +105,7 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
         storage[index] = .{ .id = id, .name = name, .declaration = declaration.name, .fields = &.{}, .move_only = true };
     }
     for (resources, 0..) |declaration, offset| {
-        const name = src.text(declaration.name);
+        const name = if (module_names) |names| try names.declaration(declaration.name) else src.text(declaration.name);
         if (catalog.names.get(name)) |previous| return sink.failRelated("E_DUPLICATE_TYPE", declaration.name, "type is already declared", .{ .span = storage[previous.recordIndex()].declaration, .message = "previous type declaration" });
         const index = declarations.len + domains.len + variant_types.len + buffers.len + offset;
         const id: typed.Type = @fromBackingInt(index + typed.Type.record_base);
@@ -108,7 +115,7 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
     }
     for (pools, 0..) |declaration, offset| {
         for ([_]Span{ declaration.name, declaration.handle }, 0..) |span, part| {
-            const name = src.text(span);
+            const name = if (module_names) |names| try names.declaration(span) else src.text(span);
             if (catalog.names.get(name)) |previous| return sink.failRelated("E_DUPLICATE_TYPE", span, "type is already declared", .{ .span = storage[previous.recordIndex()].declaration, .message = "previous type declaration" });
             const index = pool_base + offset * 2 + part;
             const id: typed.Type = @fromBackingInt(index + typed.Type.record_base);
@@ -162,7 +169,7 @@ pub fn collect(allocator: std.mem.Allocator, src: Source, declarations: []const 
             try catalog.field_names[i].put(allocator, name, j);
             resolved.* = .{ .name = name, .declaration = field.name, .ty = try catalog.resolve(src, field.ty, sink) };
         }
-        out.* = .{ .id = @fromBackingInt(i + typed.Type.record_base), .name = src.text(declaration.name), .declaration = declaration.name, .fields = fields };
+        out.* = .{ .id = @fromBackingInt(i + typed.Type.record_base), .name = out.name, .declaration = declaration.name, .fields = fields };
     }
     for (domains, 0..) |declaration, offset| {
         const backing = try catalog.resolve(src, declaration.backing, sink);

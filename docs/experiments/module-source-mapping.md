@@ -42,8 +42,7 @@ with undefined-behavior sanitization: division by zero in `lib/helper.my` report
 that path and the caller in `entry.my`. This probe uses one scalar program's source
 fragments to test provenance; it is not evidence of module name resolution.
 
-Next: connect the relocated declarations to the type catalog and function checker
-using interface identities and original module context, then execute the shared
-Distance domain example with privacy/type/effect checks across files. Full module
-checking/execution, optional dependency-direction policy, generics, schema and
-incremental work, native expansion, and other unfinished roadmap work remain pending.
+[Cross-file checking/execution](module-execution.md) now connects the relocated
+declarations to the type catalog and function checker using interface identities
+and original module context. Optional dependency-direction policy, generics, schema
+and incremental work, native expansion, and other unfinished roadmap work remain pending.

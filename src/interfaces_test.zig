@@ -168,3 +168,79 @@ test "module AST relocation retains source spelling namespace ownership and node
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), mergedScenario, .{});
 }
+
+fn checkedScenario(allocator: std.mem.Allocator) !void {
+    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = "module main; import units; fn main() -> i64 { let x = units::Distance.make(12); return units::Distance.number(x); }" }, .{ .path = "units.my", .bytes = "module units; export Distance; domain Distance: i64 { private fn raw(x: i64) -> Distance { return wrap<Distance>(x); } fn make(x: i64) -> Distance { return Distance.raw(x); } fn number(x: Distance) -> i64 { return unwrap(x); } }" } } };
+    var project = graph.Project.init(allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try @import("project_compile.zig").Compilation.init(&index);
+    try compilation.emit();
+    const result = try @import("vm.zig").runWithOptions(allocator, compilation.code.?, .{});
+    try t.expectEqual(@as(i64, 12), result.value);
+}
+test "cross module domain factories type check and execute with allocation failure cleanup" {
+    try checkedScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), checkedScenario, .{});
+}
+
+fn rejectChecked(main: []const u8, dependency: []const u8, code: []const u8) !void {
+    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = main }, .{ .path = "units.my", .bytes = dependency } } };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try @import("project_compile.zig").Compilation.init(&index);
+    try t.expectError(error.SourceError, compilation.check());
+    try t.expectEqualStrings(code, compilation.diagnostics.items.items[0].code);
+    const rendered = try compilation.diagnostics.items.items[0].render(t.allocator, compilation.src);
+    defer t.allocator.free(rendered);
+    try t.expect(std.mem.indexOf(u8, rendered, ".my:") != null);
+}
+test "cross module bodies enforce private functions private types nominal identity and local shadowing" {
+    try rejectChecked("module main; import units; fn main() -> i64 { return units::hidden(); }", units, "E_PRIVATE_SYMBOL");
+    try rejectChecked("module main; import units; fn main() -> i64 { discard units::Distance.raw(1); return 0; }", units, "E_PRIVATE_SYMBOL");
+    try rejectChecked("module main; import units; fn main() -> i64 { let x = new units::Hidden {}; return 0; }", "module units; struct Hidden {}", "E_PRIVATE_SYMBOL");
+    try rejectChecked("module main; import units; struct X {} fn main() -> i64 { return units::take(new X {}); }", "module units; export X; export take; struct X {} fn take(x: X) -> i64 { return 0; }", "E_TYPE");
+    try rejectChecked("module main; import units; fn main() -> i64 { let units = 1; return units; }", units, "E_SHADOWING");
+    try rejectChecked("module main; import units; fn main() -> i64 { return hidden(); }", units, "E_UNKNOWN_SYMBOL");
+    try rejectChecked("module main; import units; fn main() -> i64 { return 0; }", "module units; fn bad() -> i64 { return true; }", "E_TYPE");
+    try rejectChecked("module main; import units; fn main() -> i64 { return 0; }", "module units; struct Recursive { next: Recursive }", "E_RECURSIVE_RECORD");
+}
+
+test "shared record types cross module boundaries and hidden names do not shadow caller locals" {
+    var files: Files = .{ .entries = &.{
+        .{ .path = "main.my", .bytes = "module main; import units; fn main() -> i64 { let hidden = 7; let x = units::make(hidden); return units::value(x); }" },
+        .{ .path = "units.my", .bytes = "module units; export X; export make; export value; struct X { number: i64 } fn hidden() -> i64 { return 99; } fn make(n: i64) -> X { return new X { number: n }; } fn value(x: X) -> i64 { return x.number; } fn main() -> i64 { return 88; }" },
+    } };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try @import("project_compile.zig").Compilation.init(&index);
+    try compilation.emit();
+    const result = try @import("vm.zig").runWithOptions(t.allocator, compilation.code.?, .{});
+    try t.expectEqual(@as(i64, 7), result.value);
+}
+
+test "cross module effect and recoverable result obligations are enforced" {
+    try rejectChecked("module main; import units; fn main(a: allocator) -> i64 noalloc { return units::allocate(a); }", "module units; export allocate; buffer B: i64; result R { ok: B, err: i64 } fn allocate(a: allocator) -> i64 { acknowledge acquire_buffer<R>(a, 1); return 0; }", "E_EFFECT_BOUND");
+    try rejectChecked("module main; import units; fn main() -> i64 { discard units::fallible(); return 0; }", "module units; export R; export fallible; result R { ok: i64, err: i64 } fn fallible() -> R { return new R.ok(7); }", "E_RESULT_DISCARD");
+}
+
+test "cross module returned slice references preserve caller mutation and snapshots" {
+    var files: Files = .{ .entries = &.{
+        .{ .path = "main.my", .bytes = "module main; import units; fn main() -> i64 { let mut values = new [3]i64 [1, 2, 3]; let old = values; borrow mut values[0..3] as all { borrow mut units::middle(all) as selected { write_slice(selected, 0, 9); } } return old[1] + values[1]; }" },
+        .{ .path = "units.my", .bytes = "module units; export middle; fn middle(values: &mut []i64) -> &mut []i64 from values { borrow mut values[1..2] as selected { return selected; } }" },
+    } };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try @import("project_compile.zig").Compilation.init(&index);
+    try compilation.emit();
+    const result = try @import("vm.zig").runWithOptions(t.allocator, compilation.code.?, .{});
+    try t.expectEqual(@as(i64, 11), result.value);
+}

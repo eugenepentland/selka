@@ -733,3 +733,35 @@ test "CLI module interfaces parse bodies and check exported signature visibility
     try invoke("list-interfaces", "module input; export f; struct Secret {} fn f() -> Secret { return new Secret {}; }", 1, "", "E_PRIVATE_INTERFACE");
     try invokeOptions("list-interfaces", "module input;", &.{"--check"}, 2, "", "usage:");
 }
+
+test "CLI checks and runs module programs with private boundaries and cross-file traps" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input; import helper; fn main() -> i64 { return helper::value(); }" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper; export value; fn value() -> i64 { return 42; }" });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    for ([_][]const u8{ "check-project", "run-project" }) |command| {
+        const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, command, path } });
+        defer testing.allocator.free(result.stdout);
+        defer testing.allocator.free(result.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+        try testing.expectEqualStrings(if (std.mem.eql(u8, command, "run-project")) "42\n" else "", result.stdout);
+        try testing.expectEqualStrings("", result.stderr);
+    }
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper; export value; fn value() -> i64 { return 1 / 0; }" });
+    const trap = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path } });
+    defer testing.allocator.free(trap.stdout);
+    defer testing.allocator.free(trap.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, trap.term);
+    for ([_][]const u8{ "R_DIVISION_BY_ZERO", "helper.my:1:", "input.my:1:" }) |part| try testing.expect(std.mem.indexOf(u8, trap.stderr, part) != null);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper; fn value() -> i64 { return 42; }" });
+    const hidden = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-project", path } });
+    defer testing.allocator.free(hidden.stdout);
+    defer testing.allocator.free(hidden.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, hidden.term);
+    for ([_][]const u8{ "E_PRIVATE_SYMBOL", "helper.my:1:", "input.my:1:" }) |part| try testing.expect(std.mem.indexOf(u8, hidden.stderr, part) != null);
+    try invokeOptions("run-project", "module input; fn main() -> i64 { return 7; }", &.{"--max-steps=1"}, 1, "", "R_STEP_LIMIT");
+    try invokeOptions("run-project", "module input; fn main() -> i64 { return 7; }", &.{"--memory=arena"}, 0, "7\n", "");
+    try invokeOptions("check-project", "module input; fn main() -> i64 { return 7; }", &.{"--max-steps=1"}, 2, "", "usage:");
+}

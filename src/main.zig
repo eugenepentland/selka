@@ -1,7 +1,7 @@
 //! Host I/O and process policy stay outside the compiler and VM.
 const std = @import("std");
 const language = @import("mylang");
-const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates|report-quality|fmt|emit-c|list-modules|list-interfaces> <file.my>\n  run: --max-steps=N --max-frames=N --memory=general|arena\n  discover-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  fmt: --check (otherwise writes formatted source to stdout)\n";
+const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates|report-quality|fmt|emit-c|list-modules|list-interfaces|check-project|run-project> <file.my>\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena\n  discover-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  fmt: --check (otherwise writes formatted source to stdout)\n";
 
 pub fn main(init: std.process.Init) void {
     const status = dispatch(init) catch |err| status: {
@@ -20,7 +20,7 @@ fn dispatch(init: std.process.Init) !u8 {
         try std.Io.File.stderr().writeStreamingAll(init.io, usage);
         return 2;
     };
-    if (parsed.command == .@"list-modules" or parsed.command == .@"list-interfaces") return listModules(init, parsed.path, parsed.command == .@"list-interfaces");
+    if (parsed.command == .@"list-modules" or parsed.command == .@"list-interfaces" or parsed.command == .@"check-project" or parsed.command == .@"run-project") return listModules(init, parsed);
     const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, parsed.path, allocator, .limited(16 * 1024 * 1024));
     defer allocator.free(bytes);
     var compilation = try language.Compilation.init(allocator, parsed.path, bytes);
@@ -53,7 +53,7 @@ fn dispatch(init: std.process.Init) !u8 {
     const check_ns = if (parsed.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
     if (parsed.command != .@"emit-c") try report(init, &compilation);
     switch (parsed.command) {
-        .fmt, .@"list-modules", .@"list-interfaces" => unreachable,
+        .fmt, .@"list-modules", .@"list-interfaces", .@"check-project", .@"run-project" => unreachable,
         .@"emit-c" => {
             const generated = compilation.emitC(allocator) catch |err| switch (err) {
                 error.SourceError => {
@@ -118,7 +118,7 @@ fn report(init: std.process.Init, compilation: *const language.Compilation) !voi
     }
 }
 
-const Command = enum { @"list-interfaces", @"list-modules", @"emit-c", fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
+const Command = enum { @"check-project", @"run-project", @"list-interfaces", @"list-modules", @"emit-c", fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
 const Parsed = struct { format_check: bool, quality: language.quality.Options, command: Command, path: []const u8, options: language.vm.Options, discovery: language.duplicates.Options, timings: bool };
 fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (args.len < 2) return error.Usage;
@@ -155,7 +155,7 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
             if (command != .fmt or format_check) return error.Usage;
             format_check = true;
         } else if (std.mem.startsWith(u8, arg, "--max-steps=")) {
-            if (command != .run or saw_steps) return error.Usage;
+            if ((command != .run and command != .@"run-project") or saw_steps) return error.Usage;
             saw_steps = true;
             const digits = arg["--max-steps=".len..];
             if (digits.len == 0) return error.Usage;
@@ -165,7 +165,7 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
             options.max_steps = std.fmt.parseUnsigned(u64, digits, 10) catch return error.Usage;
             if (options.max_steps == 0) return error.Usage;
         } else if (std.mem.startsWith(u8, arg, "--max-frames=")) {
-            if (command != .run or saw_frames) return error.Usage;
+            if ((command != .run and command != .@"run-project") or saw_frames) return error.Usage;
             saw_frames = true;
             const digits = arg["--max-frames=".len..];
             if (digits.len == 0) return error.Usage;
@@ -175,7 +175,7 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
             options.max_frames = std.fmt.parseUnsigned(u64, digits, 10) catch return error.Usage;
             if (options.max_frames == 0) return error.Usage;
         } else if (std.mem.startsWith(u8, arg, "--memory=")) {
-            if (command != .run or saw_memory) return error.Usage;
+            if ((command != .run and command != .@"run-project") or saw_memory) return error.Usage;
             saw_memory = true;
             options.memory_backing = std.meta.stringToEnum(language.vm.MemoryBacking, arg["--memory=".len..]) orelse return error.Usage;
         } else if (std.mem.startsWith(u8, arg, "--min-nodes=")) {
@@ -230,7 +230,8 @@ const ModuleFiles = struct {
         };
     }
 };
-fn listModules(init: std.process.Init, path: []const u8, with_interfaces: bool) !u8 {
+fn listModules(init: std.process.Init, parsed: Parsed) !u8 {
+    const path = parsed.path;
     const basename = std.fs.path.basename(path);
     if (!std.mem.endsWith(u8, basename, ".my") or !language.project.validName(basename[0 .. basename.len - 3]) or std.mem.indexOfScalar(u8, basename[0 .. basename.len - 3], '.') != null) {
         try std.Io.File.stderr().writeStreamingAll(init.io, "list-modules: entry must be an identifier.my file; imports resolve beneath its directory\n");
@@ -248,7 +249,7 @@ fn listModules(init: std.process.Init, path: []const u8, with_interfaces: bool) 
         },
         else => return err,
     };
-    const output = if (with_interfaces) result: {
+    const output = if (parsed.command != .@"list-modules") result: {
         var index = language.interfaces.build(&project) catch |err| switch (err) {
             error.SourceError => {
                 const message = try project.renderProblem(init.gpa);
@@ -258,9 +259,38 @@ fn listModules(init: std.process.Init, path: []const u8, with_interfaces: bool) 
             },
             else => return err,
         };
-        break :result try index.render(init.gpa);
+        if (parsed.command == .@"list-interfaces") break :result try index.render(init.gpa);
+        var compilation = try language.project_compile.Compilation.init(&index);
+        compilation.check() catch |err| switch (err) {
+            error.SourceError => {
+                try reportProject(init, &compilation);
+                return 1;
+            },
+            else => return err,
+        };
+        try reportProject(init, &compilation);
+        if (parsed.command == .@"check-project") return 0;
+        try compilation.emit();
+        const outcome = try language.vm.runWithOptions(init.gpa, compilation.code.?, parsed.options);
+        switch (outcome) {
+            .value => |value| break :result try std.fmt.allocPrint(init.gpa, "{d}\n", .{value}),
+            .trap => |trap| {
+                const message = try trap.render(init.gpa, compilation.src);
+                defer init.gpa.free(message);
+                try std.Io.File.stderr().writeStreamingAll(init.io, message);
+                return 1;
+            },
+        }
     } else try project.render(init.gpa);
     defer init.gpa.free(output);
     try std.Io.File.stdout().writeStreamingAll(init.io, output);
     return 0;
+}
+
+fn reportProject(init: std.process.Init, compilation: *language.project_compile.Compilation) !void {
+    for (compilation.diagnostics.items.items) |problem| {
+        const message = try problem.render(init.gpa, compilation.src);
+        defer init.gpa.free(message);
+        try std.Io.File.stderr().writeStreamingAll(init.io, message);
+    }
 }

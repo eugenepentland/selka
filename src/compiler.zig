@@ -1,5 +1,6 @@
 //! One request owns source, syntax, semantic nodes, and lowered instructions.
 const std = @import("std");
+pub const project_compile = @import("project_compile.zig");
 pub const project_syntax = @import("project_syntax.zig");
 pub const interfaces = @import("interfaces.zig");
 pub const project = @import("project.zig");

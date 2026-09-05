@@ -211,6 +211,10 @@ returns `3` after exercising guarded reset and reuse.
 
 Module header discovery is available with `zig build run -- list-modules examples/modules/main.my`.
 It reports bounded import graphs and cycles. `list-interfaces` on the same entry
-parses module bodies and checks explicit exports and signature visibility; body type
-checking and multi-file execution remain pending. See [module discovery](docs/experiments/module-discovery.md)
+parses module bodies and checks explicit exports and signature visibility; full body checking/execution is available through `check-project`/`run-project`. See [module discovery](docs/experiments/module-discovery.md)
 and [module interfaces](docs/experiments/module-interfaces.md).
+
+`zig build run -- run-project examples/modules/main.my` now returns 12 through a
+shared domain factory. `check-project` validates all imported bodies with nominal
+types, private boundaries, ownership, borrowing, and effects. See
+[module execution](docs/experiments/module-execution.md) for scope and remaining work.
