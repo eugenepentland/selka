@@ -1725,3 +1725,34 @@ for cache reuse; persistent caching, invalidation/rebuild explanations, external
 input manifests, schemas/generation, generics, wider native operations, and other
 unfinished roadmap work remain pending. Guardian was not exercised; hosted CI has
 not run. The full roadmap goal remains active.
+
+## 2026-09-05: Persistent successful-evaluation caching
+
+Added scripts/evaluate.py with an explicit cache directory and versioned run reporting.
+Every lookup invokes the compiler's checked request-only mode. Matching, checksummed,
+validated successful reports skip VM evaluation; misses execute the VM and compare
+the resulting request with the lookup snapshot before writing. Source/compiler races
+fail without caching mixed identities. Source/runtime failures never become entries.
+Writes use a flushed same-directory temporary file and atomic replacement, with
+cleanup and preservation of existing entries on replacement failure. Cache documents
+are bounded and duplicate-key/malformed/wrong-request/invalid-result entries are
+rejected and recomputed. The documented cache is trusted local build state, not an
+authenticated remote artifact store.
+
+The new actual-compiler acceptance driver verifies cold request+evaluation versus
+warm request-only invocation counts, source/budget misses, corruption repair, invalid
+decimal/request records, injected write failure, source/runtime rejection without
+writes, and source mutation between lookup and execution. All 13 build steps pass
+in Debug and ReleaseFast. The unchanged 516 Zig tests (459 core, 57 CLI) pass, with
+successful cached test results reused where reported. Eight verification-driver
+tests, evaluation receipt checks, module/duplicate scaling, and 392 native parity
+comparisons per host mode also pass. The manual module example returns 12 on a cold
+miss and a warm hit; the warm run explicitly reports vm=skipped. Formatting and
+whitespace checks pass, and the plan/roadmap/attached plan are synchronized.
+
+This completes persistent reuse of successful restricted VM results. Parsing, type
+checking, lowering, eligibility, and implementation hashing still run on every lookup.
+Dependency-granular frontend/native rebuilds, field-level invalidation explanations,
+measured rebuild savings, external data manifests, schemas/generation, generics,
+wider native operations, and all other unfinished roadmap work remain pending.
+Guardian was not exercised; hosted CI has not run. The full roadmap goal remains active.

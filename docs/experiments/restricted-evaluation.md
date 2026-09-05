@@ -73,3 +73,6 @@ authority errors, and option rejection. Debug and ReleaseFast run the same tests
 [Evaluation dependency reports](evaluation-reports.md) now expose source snapshots,
 implementation identity, and budgets with `--evaluation-report`. This establishes
 request identity recording; caching and invalidation remain pending.
+
+The [persistent evaluation driver](evaluation-cache.md) now reuses successful VM
+results by request identity. Frontend reuse and finer invalidation remain pending.

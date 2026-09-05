@@ -93,3 +93,6 @@ request generation for trapping/nonterminating programs even at one instruction 
 one frame, unchanged authority rejection, allocation-failure cleanup, and option
 exclusivity in both orders. This supplies the lookup input for future cache reuse;
 there is still no persistent cache or incremental compilation in this command.
+
+The separate [evaluation cache driver](evaluation-cache.md) now uses request-only
+lookup to reuse successful results. Compiler commands themselves remain cache-free.

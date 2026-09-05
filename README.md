@@ -251,10 +251,14 @@ Try `examples/native-enums.my` with the native builder.
 `eval-project` provides [restricted evaluation](docs/experiments/restricted-evaluation.md)
 for effect-free, parameter-free project entry points, with explicit step, frame,
 and VM-memory budgets. This is the compile-time evaluator foundation; schema
-generation and incremental caching remain pending.
+generation and finer incremental compilation remain pending.
 
 Use `eval-project --evaluation-report` for a JSON [dependency receipt](docs/experiments/evaluation-reports.md)
 containing the exact result, source/import hashes, budgets, and running compiler identity.
 
 `eval-project --evaluation-request` computes the same request identity after checking
 eligibility, without executing the entry or claiming a result.
+
+`python3 scripts/evaluate.py examples/modules/main.my --cache-dir .mylang-cache`
+provides [persistent evaluation reuse](docs/experiments/evaluation-cache.md). Hits
+still check the current project and explicitly report that VM execution was skipped.
