@@ -10,6 +10,7 @@ pub const Parser = struct {
     tokens: []const lex.Token,
     sink: *diagnostic.Sink,
     pos: usize = 0,
+    module_syntax: bool = false,
     nodes: std.ArrayList(ast.Node) = .empty,
     statements: std.ArrayList(ast.Statement) = .empty,
     depth: usize = 0,
@@ -31,6 +32,12 @@ pub const Parser = struct {
         if (self.depth >= 256) return self.sink.fail("E_NESTING_LIMIT", self.current().span, "parser nesting exceeds 256 levels");
         self.depth += 1;
     }
+    fn qualifiedTail(self: *Parser, first: Span) diagnostic.Error!Span {
+        if (!self.module_syntax or self.current().tag != .colon) return first;
+        self.pos += 1;
+        _ = try self.expect(.colon);
+        return .join(first, (try self.expect(.ident)).span);
+    }
     fn typeName(self: *Parser) diagnostic.Error!Span {
         try self.enter();
         defer self.depth -= 1;
@@ -43,7 +50,8 @@ pub const Parser = struct {
             try self.array_types.append(self.allocator, .{ .span = span, .index = index, .element = element });
             return span;
         }
-        if (self.take(.kw_i64) or self.take(.kw_bool) or self.take(.kw_i8) or self.take(.kw_i16) or self.take(.kw_i32) or self.take(.kw_u8) or self.take(.kw_u16) or self.take(.kw_u32) or self.take(.kw_u64) or self.take(.kw_allocator) or self.take(.kw_filesystem_cap) or self.take(.kw_network_cap) or self.take(.kw_environment_cap) or self.take(.kw_clock_cap) or self.take(.kw_random_cap) or self.take(.ident)) return token.span;
+        if (self.take(.kw_i64) or self.take(.kw_bool) or self.take(.kw_i8) or self.take(.kw_i16) or self.take(.kw_i32) or self.take(.kw_u8) or self.take(.kw_u16) or self.take(.kw_u32) or self.take(.kw_u64) or self.take(.kw_allocator) or self.take(.kw_filesystem_cap) or self.take(.kw_network_cap) or self.take(.kw_environment_cap) or self.take(.kw_clock_cap) or self.take(.kw_random_cap)) return token.span;
+        if (self.take(.ident)) return self.qualifiedTail(token.span);
         return self.sink.fail("E_TYPE", token.span, "expected a built-in, declared, fixed array, or enum-indexed table type");
     }
     pub fn parse(self: *Parser) diagnostic.Error!ast.Program {
@@ -223,7 +231,7 @@ pub const Parser = struct {
             const mutable = self.take(.kw_mut);
             const owner_position = self.pos;
             const owner = try self.expect(.ident);
-            if (self.current().tag == .lparen or self.current().tag == .dot) {
+            if (self.current().tag == .lparen or self.current().tag == .dot or (self.module_syntax and self.current().tag == .colon)) {
                 self.pos = owner_position;
                 const call = try self.expression(0);
                 _ = try self.expect(.kw_as);
@@ -249,7 +257,7 @@ pub const Parser = struct {
             _ = try self.expect(.lbrace);
             var arms: std.ArrayList(ast.MatchArm) = .empty;
             if (self.current().tag != .rbrace) while (true) {
-                const ty = try self.expect(.ident);
+                const ty = try self.qualifiedTail((try self.expect(.ident)).span);
                 _ = try self.expect(.dot);
                 const name = try self.expect(.ident);
                 var binding: ?Span = null;
@@ -260,7 +268,7 @@ pub const Parser = struct {
                 }
                 _ = try self.expect(.fat_arrow);
                 const body = try self.block();
-                try arms.append(self.allocator, .{ .ty = ty.span, .name = name.span, .binding = binding, .discard_payload = discard_payload, .body = body });
+                try arms.append(self.allocator, .{ .ty = ty, .name = name.span, .binding = binding, .discard_payload = discard_payload, .body = body });
                 if (!self.take(.comma)) break;
             };
             const close = try self.expect(.rbrace);
@@ -596,9 +604,9 @@ pub const Parser = struct {
             .integer, .ident, .kw_true, .kw_false => leaf: {
                 self.pos += 1;
                 var owner: ?Span = null;
-                var name = token.span;
+                var name = if (token.tag == .ident) try self.qualifiedTail(token.span) else token.span;
                 if (token.tag == .ident and self.current().tag == .dot and self.pos + 2 < self.tokens.len and self.tokens[self.pos + 1].tag == .ident and self.tokens[self.pos + 2].tag == .lparen) {
-                    owner = token.span;
+                    owner = name;
                     self.pos += 1;
                     name = (try self.expect(.ident)).span;
                 }
@@ -611,9 +619,9 @@ pub const Parser = struct {
                     const close = try self.expect(.rparen);
                     break :leaf try self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{ .owner = owner, .name = name, .arguments = try arguments.toOwnedSlice(self.allocator) } } });
                 }
-                break :leaf try self.append(.{ .span = token.span, .data = switch (token.tag) {
+                break :leaf try self.append(.{ .span = name, .data = switch (token.tag) {
                     .integer => .{ .integer = token.span },
-                    .ident => .{ .name = token.span },
+                    .ident => .{ .name = name },
                     else => .{ .boolean = token.tag == .kw_true },
                 } });
             },

@@ -708,3 +708,28 @@ test "CLI module discovery keeps header validity separate from compilation" {
     defer testing.allocator.free(compilation.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, compilation.term);
 }
+
+test "CLI module interfaces parse bodies and check exported signature visibility" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input; import units; export Sample; struct Sample { distance: units::Distance } fn main() -> i64 { return unknown(); }" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "units.my", .data = "module units; export Distance; domain Distance: i64 { fn make(x: i64) -> Distance { return wrap<Distance>(x); } }" });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "list-interfaces", path } });
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    try testing.expectEqualStrings("", result.stderr);
+    for ([_][]const u8{ "bodies not type checked", "export type Sample", "export type Distance", "export function Distance.make" }) |part| try testing.expect(std.mem.indexOf(u8, result.stdout, part) != null);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "units.my", .data = "module units; domain Distance: i64 {}" });
+    const hidden = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "list-interfaces", path } });
+    defer testing.allocator.free(hidden.stdout);
+    defer testing.allocator.free(hidden.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, hidden.term);
+    try testing.expectEqualStrings("", hidden.stdout);
+    for ([_][]const u8{ "E_PRIVATE_SYMBOL", "input.my:1:", "units.my:1:" }) |part| try testing.expect(std.mem.indexOf(u8, hidden.stderr, part) != null);
+    try invoke("list-interfaces", "module input; fn broken( ;", 1, "", "E_SYNTAX");
+    try invoke("list-interfaces", "module input; export f; struct Secret {} fn f() -> Secret { return new Secret {}; }", 1, "", "E_PRIVATE_INTERFACE");
+    try invokeOptions("list-interfaces", "module input;", &.{"--check"}, 2, "", "usage:");
+}

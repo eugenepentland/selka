@@ -8,7 +8,7 @@ the existing single-file grammar; they do not ignore imports.
 zig build run -- list-modules examples/modules/main.my
 ```
 
-Each file begins with a matching logical module name and optional imports:
+Each file begins with a matching logical module name, optional imports, and optional `export Name;` directives:
 
 ```text
 module main;
@@ -44,8 +44,9 @@ The report identifies itself as `module graph v1; header discovery only;
 bodies/exports/types not checked`, followed by normalized paths, whole-file SHA-256
 digests, and direct imports. These are content fingerprints, not a persistent
 cache or proof of semantic equivalence. The entire source is lexed, but parsing
-stops after leading imports. Body syntax, late directives, export declarations,
-references, and type validity are not checked by this command.
+stops after leading imports and exports. Body syntax, late directives, export targets, references, and type validity are
+not checked by this command. The separate [interface command](module-interfaces.md)
+parses bodies and checks export targets and signature visibility.
 
 Acceptance includes actual multi-file CLI execution, shared dependency loading,
 source ordering and deterministic reports, body-sensitive digests, missing sources,
@@ -54,8 +55,9 @@ cross-file diagnostics, module/import/source limits, unsafe path rejection, a
 600-module chain, and exhaustive allocation failures on both successful discovery
 and diagnostic rendering.
 
-Next: integrate module identities with parsing and semantic resolution, explicit
-exports and private boundaries, and execute a shared-domain program. Dependency
+Module parsing, export lists, and declaration visibility now have an
+[interface index](module-interfaces.md). Next: integrate its identities with semantic
+resolution and private access in bodies, and execute a shared-domain program. Dependency
 direction policy is separate from type validity. Module-aware formatter, reference
 roots, duplicate identities, native support, and incremental invalidation remain
 part of their respective roadmap requirements.

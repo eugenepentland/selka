@@ -1,7 +1,7 @@
 //! Host I/O and process policy stay outside the compiler and VM.
 const std = @import("std");
 const language = @import("mylang");
-const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates|report-quality|fmt|emit-c|list-modules> <file.my>\n  run: --max-steps=N --max-frames=N --memory=general|arena\n  discover-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  fmt: --check (otherwise writes formatted source to stdout)\n";
+const usage = "usage: mylang <check|run|dump-bytecode|discover-duplicates|report-quality|fmt|emit-c|list-modules|list-interfaces> <file.my>\n  run: --max-steps=N --max-frames=N --memory=general|arena\n  discover-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  fmt: --check (otherwise writes formatted source to stdout)\n";
 
 pub fn main(init: std.process.Init) void {
     const status = dispatch(init) catch |err| status: {
@@ -20,7 +20,7 @@ fn dispatch(init: std.process.Init) !u8 {
         try std.Io.File.stderr().writeStreamingAll(init.io, usage);
         return 2;
     };
-    if (parsed.command == .@"list-modules") return listModules(init, parsed.path);
+    if (parsed.command == .@"list-modules" or parsed.command == .@"list-interfaces") return listModules(init, parsed.path, parsed.command == .@"list-interfaces");
     const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, parsed.path, allocator, .limited(16 * 1024 * 1024));
     defer allocator.free(bytes);
     var compilation = try language.Compilation.init(allocator, parsed.path, bytes);
@@ -53,7 +53,7 @@ fn dispatch(init: std.process.Init) !u8 {
     const check_ns = if (parsed.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
     if (parsed.command != .@"emit-c") try report(init, &compilation);
     switch (parsed.command) {
-        .fmt, .@"list-modules" => unreachable,
+        .fmt, .@"list-modules", .@"list-interfaces" => unreachable,
         .@"emit-c" => {
             const generated = compilation.emitC(allocator) catch |err| switch (err) {
                 error.SourceError => {
@@ -118,7 +118,7 @@ fn report(init: std.process.Init, compilation: *const language.Compilation) !voi
     }
 }
 
-const Command = enum { @"list-modules", @"emit-c", fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
+const Command = enum { @"list-interfaces", @"list-modules", @"emit-c", fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
 const Parsed = struct { format_check: bool, quality: language.quality.Options, command: Command, path: []const u8, options: language.vm.Options, discovery: language.duplicates.Options, timings: bool };
 fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (args.len < 2) return error.Usage;
@@ -230,7 +230,7 @@ const ModuleFiles = struct {
         };
     }
 };
-fn listModules(init: std.process.Init, path: []const u8) !u8 {
+fn listModules(init: std.process.Init, path: []const u8, with_interfaces: bool) !u8 {
     const basename = std.fs.path.basename(path);
     if (!std.mem.endsWith(u8, basename, ".my") or !language.project.validName(basename[0 .. basename.len - 3]) or std.mem.indexOfScalar(u8, basename[0 .. basename.len - 3], '.') != null) {
         try std.Io.File.stderr().writeStreamingAll(init.io, "list-modules: entry must be an identifier.my file; imports resolve beneath its directory\n");
@@ -248,7 +248,18 @@ fn listModules(init: std.process.Init, path: []const u8) !u8 {
         },
         else => return err,
     };
-    const output = try project.render(init.gpa);
+    const output = if (with_interfaces) result: {
+        var index = language.interfaces.build(&project) catch |err| switch (err) {
+            error.SourceError => {
+                const message = try project.renderProblem(init.gpa);
+                defer init.gpa.free(message);
+                try std.Io.File.stderr().writeStreamingAll(init.io, message);
+                return 1;
+            },
+            else => return err,
+        };
+        break :result try index.render(init.gpa);
+    } else try project.render(init.gpa);
     defer init.gpa.free(output);
     try std.Io.File.stdout().writeStreamingAll(init.io, output);
     return 0;

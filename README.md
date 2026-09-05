@@ -210,5 +210,7 @@ a scope while preserving its allocator. `zig build run -- run examples/arena-res
 returns `3` after exercising guarded reset and reuse.
 
 Module header discovery is available with `zig build run -- list-modules examples/modules/main.my`.
-It reports bounded import graphs and cycles; exports and multi-file compilation
-remain pending. See [module discovery](docs/experiments/module-discovery.md).
+It reports bounded import graphs and cycles. `list-interfaces` on the same entry
+parses module bodies and checks explicit exports and signature visibility; body type
+checking and multi-file execution remain pending. See [module discovery](docs/experiments/module-discovery.md)
+and [module interfaces](docs/experiments/module-interfaces.md).

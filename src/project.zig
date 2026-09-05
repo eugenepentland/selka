@@ -9,8 +9,9 @@ pub const Provider = struct { context: ?*anyopaque, read: *const fn (?*anyopaque
 pub const Options = struct { max_modules: usize = 256, max_imports: usize = 4096, max_file_bytes: usize = 4 * 1024 * 1024, max_total_bytes: usize = 16 * 1024 * 1024 };
 pub const Site = struct { module: usize, span: source.Span };
 pub const Problem = struct { code: []const u8, message: []const u8, site: Site, related: ?Site = null };
+pub const Export = struct { name: []const u8, span: source.Span };
 pub const Import = struct { name: []const u8, alias: []const u8, span: source.Span, target: usize = undefined };
-pub const Module = struct { name: []const u8, src: source.Source, declaration: source.Span = .{ .start = 0, .end = 0 }, body_start: usize = 0, imports: []Import = &.{}, digest: [32]u8 = undefined, state: enum { unseen, visiting, complete } = .unseen };
+pub const Module = struct { name: []const u8, src: source.Source, declaration: source.Span = .{ .start = 0, .end = 0 }, body_start: usize = 0, imports: []Import = &.{}, exports: []Export = &.{}, digest: [32]u8 = undefined, state: enum { unseen, visiting, complete } = .unseen };
 pub const Project = struct {
     arena: std.heap.ArenaAllocator,
     modules: std.ArrayList(Module) = .empty,
@@ -27,7 +28,7 @@ pub const Project = struct {
     pub fn deinit(self: *Project) void {
         self.arena.deinit();
     }
-    fn fail(self: *Project, code: []const u8, message: []const u8, site: Site, related: ?Site) error{SourceError} {
+    pub fn fail(self: *Project, code: []const u8, message: []const u8, site: Site, related: ?Site) error{SourceError} {
         self.problem = .{ .code = code, .message = message, .site = site, .related = related };
         return error.SourceError;
     }
@@ -138,6 +139,18 @@ pub const Project = struct {
             try imports.append(allocator, .{ .name = imported.text, .alias = alias, .span = imported.span });
         }
         self.modules.items[id].imports = try imports.toOwnedSlice(allocator);
+        var exports: std.ArrayList(Export) = .empty;
+        var exported_names: std.StringHashMapUnmanaged(source.Span) = .empty;
+        while (scanner.isWord("export")) {
+            scanner.pos += 1;
+            const token = try scanner.expect(.ident);
+            const name = src.text(token.span);
+            _ = try scanner.expect(.semicolon);
+            if (exported_names.get(name)) |previous| return self.fail("E_DUPLICATE_EXPORT", "declaration is already exported", .{ .module = id, .span = token.span }, .{ .module = id, .span = previous });
+            try exported_names.put(allocator, name, token.span);
+            try exports.append(allocator, .{ .name = name, .span = token.span });
+        }
+        self.modules.items[id].exports = try exports.toOwnedSlice(allocator);
         self.modules.items[id].body_start = tokens[scanner.pos].span.start;
     }
     pub fn render(self: *Project, allocator: std.mem.Allocator) ![]u8 {

@@ -1,7 +1,11 @@
 module main;
 import shared.units;
+export Measurement;
 
-// Header discovery does not yet resolve this body or imported declarations.
+struct Measurement { distance: units::Distance }
+
+// Interface discovery parses this body; cross-file type checking follows later.
 fn main() -> i64 {
-    return 0;
+    let measurement = new Measurement { distance: units::Distance.make(12) };
+    return units::Distance.number(measurement.distance);
 }

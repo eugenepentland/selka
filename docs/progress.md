@@ -1245,3 +1245,36 @@ boundaries, cross-file binding/type checking, and shared-domain execution remain
 pending. Generics, compile-time/schema/incremental work, native expansion, and other
 unfinished roadmap requirements remain in scope. Guardian was not exercised;
 hosted CI has not run. The full roadmap goal remains active.
+
+## 2026-09-05: M parsed interfaces, explicit exports, and visibility resolution
+
+Implemented `export Name;` after import headers, module-mode parsing of qualified
+`alias::Name` types/calls/constructors/patterns, and an interface index with distinct
+module/symbol identities. The resolver enforces direct imports, declaration kinds,
+module-private names, and domain-private methods. Exported domains expose ordinary
+methods while retaining private methods. Exported signatures cannot expose private
+types through records, variants, arrays/table keys, buffers, pools, domain backing,
+or function parameters/results. Duplicate exports/declarations and alias conflicts
+have source diagnostics. `list-interfaces` parses all bodies and reports exported
+declarations, explicitly stating that bodies are not type checked.
+
+473 Zig tests pass in Debug and ReleaseFast (424 core, 49 CLI), plus eight
+verification-driver tests and the unchanged 23-fixture/182-comparison native suite
+per host mode. Acceptance covers public/private domain identity lookup, hidden
+implementation functions, missing/wrong-kind references, signature visibility,
+qualified AST spans, malformed bodies, actual CLI cross-file diagnostics, and all
+host allocation failures through successful loading/indexing/resolution/rendering.
+The shared-domain example's interface command runs successfully and lists Distance,
+Distance.make, Distance.number, and Measurement while hiding Distance.raw. Formatting
+and whitespace checks pass. Existing exact-v28, near-v1, and quality-v1 identities
+remain unchanged because those commands still operate on single-file programs.
+
+[Module interfaces](experiments/module-interfaces.md) specifies the implemented
+boundary. Index lookup and exported-signature visibility are validated; function
+bodies are not yet resolved or type checked across files. The next integration must
+connect these module identities to the type catalog/function checker and preserve
+module locations into typed IR and execution diagnostics. Shared-domain execution,
+optional dependency-direction policy, generics, compile-time/schema/incremental
+work, native expansion, and other unfinished roadmap requirements remain pending.
+Guardian was not exercised; hosted CI has not run. The full roadmap goal remains
+active.
