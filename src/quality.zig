@@ -4,12 +4,15 @@ const typed = @import("typed.zig");
 const walk = @import("typed_walk.zig");
 const source = @import("source.zig");
 pub const version = "quality-v1";
+pub const module_version = "quality-modules-v1";
 pub const Options = struct { max_function_lines: usize = 80, max_parameters: usize = 6, max_nesting: usize = 4, max_decisions: usize = 10, max_line_bytes: usize = 100 };
 pub const Call = struct { callee: typed.FunctionId, span: source.Span };
 pub const Function = struct {
     calls: []const Call = &.{},
     incoming_sites: usize = 0,
     reachable: bool = false,
+    exported: bool = false,
+    reachable_from_exports: bool = false,
     nodes: usize = 0,
     lines: usize = 0,
     longest_line: usize = 0,
@@ -21,11 +24,15 @@ pub const Analysis = struct {
     arena: std.heap.ArenaAllocator,
     functions: []Function,
     options: Options,
+    module_roots: bool,
     pub fn deinit(self: *Analysis) void {
         self.arena.deinit();
     }
 };
 pub fn analyze(allocator: std.mem.Allocator, program: typed.Program, src: source.Source, options: Options) !Analysis {
+    return analyzeWithExports(allocator, program, src, options, null);
+}
+pub fn analyzeWithExports(allocator: std.mem.Allocator, program: typed.Program, src: source.Source, options: Options, exports: ?[]const typed.FunctionId) !Analysis {
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
     const scratch = arena.allocator();
@@ -88,21 +95,35 @@ pub fn analyze(allocator: std.mem.Allocator, program: typed.Program, src: source
         }
         metrics.calls = try calls.toOwnedSlice(scratch);
     }
-    // Reachability follows resolved IDs, including cycles, once per function.
+    try markReachable(allocator, functions, &.{program.main}, "reachable");
+    if (exports) |roots| {
+        for (roots) |root| {
+            if (@backingInt(root) >= functions.len) return error.InvalidQualityRoot;
+            functions[@backingInt(root)].exported = true;
+        }
+        try markReachable(allocator, functions, roots, "reachable_from_exports");
+    }
+    return .{ .arena = arena, .functions = functions, .options = options, .module_roots = exports != null };
+}
+fn markReachable(allocator: std.mem.Allocator, functions: []Function, roots: []const typed.FunctionId, comptime field: []const u8) !void {
     var pending: std.ArrayList(typed.FunctionId) = .empty;
     defer pending.deinit(allocator);
-    try pending.append(allocator, program.main);
-    functions[@backingInt(program.main)].reachable = true;
+    for (roots) |root| {
+        if (@backingInt(root) >= functions.len) return error.InvalidQualityRoot;
+        if (@field(functions[@backingInt(root)], field)) continue;
+        @field(functions[@backingInt(root)], field) = true;
+        try pending.append(allocator, root);
+    }
     while (pending.pop()) |id| {
         for (functions[@backingInt(id)].calls) |call| {
             const target = &functions[@backingInt(call.callee)];
-            if (target.reachable) continue;
-            target.reachable = true;
+            if (@field(target, field)) continue;
+            @field(target, field) = true;
             try pending.append(allocator, call.callee);
         }
     }
-    return .{ .arena = arena, .functions = functions, .options = options };
 }
+
 fn signal(writer: *std.Io.Writer, name: []const u8, value: usize, limit: usize) error{OutOfMemory}!void {
     if (limit != 0 and value > limit) writer.print("  review: {s} {d} exceeds configured {d}; inspect cohesion before splitting\n", .{ name, value, limit }) catch return error.OutOfMemory;
 }
@@ -110,13 +131,17 @@ pub fn render(allocator: std.mem.Allocator, analysis: Analysis, program: typed.P
     var output: std.Io.Writer.Allocating = .init(allocator);
     errdefer output.deinit();
     const writer = &output.writer;
-    writer.print("static quality report {s}\n", .{version}) catch return error.OutOfMemory;
+    writer.print("static quality report {s}\n", .{if (analysis.module_roots) module_version else version}) catch return error.OutOfMemory;
     writer.writeAll("Reachability is from main over resolved calls, including untaken paths. Runtime coverage and assertions: not measured.\n") catch return error.OutOfMemory;
+    if (analysis.module_roots) writer.writeAll("Scope: reachable module graph. Export reachability starts at every exported function and public method of an exported domain; it is not evidence of external callers.\n") catch return error.OutOfMemory;
     for (program.functions, analysis.functions) |function, metrics| {
         const at = src.locate(function.declaration.start);
         writer.print("{s}:{d}:{d}: {s}; private={}; reachable-from-main={}; incoming-call-sites={d}\n", .{ at.path, at.line, at.column, function.name, function.restricted, metrics.reachable, metrics.incoming_sites }) catch return error.OutOfMemory;
         writer.print("  nodes={d} function-lines={d} longest-line-bytes={d} parameters={d} control-nesting={d} decision-points={d}\n", .{ metrics.nodes, metrics.lines, metrics.longest_line, metrics.parameters, metrics.nesting, metrics.decisions }) catch return error.OutOfMemory;
-        if (!metrics.reachable) writer.writeAll(if (function.restricted) "  review: private function has no call path from main in this compilation\n" else "  review: no call path from main; external entry policy must be considered before removal\n") catch return error.OutOfMemory;
+        if (analysis.module_roots) {
+            writer.print("  module-exported={} reachable-from-exports={} domain-private={}\n", .{ metrics.exported, metrics.reachable_from_exports, function.restricted }) catch return error.OutOfMemory;
+            if (!metrics.reachable and !metrics.reachable_from_exports) writer.writeAll("  review: no call path from main or exported interfaces in this graph; review before removal\n") catch return error.OutOfMemory;
+        } else if (!metrics.reachable) writer.writeAll(if (function.restricted) "  review: private function has no call path from main in this compilation\n" else "  review: no call path from main; external entry policy must be considered before removal\n") catch return error.OutOfMemory;
         for (metrics.calls) |call| {
             const site = src.locate(call.span.start);
             writer.print("  calls {s} at {s}:{d}:{d}\n", .{ program.functions[@backingInt(call.callee)].name, site.path, site.line, site.column }) catch return error.OutOfMemory;

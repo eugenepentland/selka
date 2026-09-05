@@ -286,3 +286,37 @@ test "module duplicate discovery preserves nominal types and callees while norma
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), discoveryScenario, .{});
 }
+
+fn qualityScenario(allocator: std.mem.Allocator) !void {
+    var files: Files = .{ .entries = &.{
+        .{ .path = "main.my", .bytes = "module main; import api; fn main() -> i64 { return api::used(); }" },
+        .{ .path = "api.my", .bytes = "module api; export used; export unused; export D; fn used() -> i64 { return 7; } fn unused() -> i64 { return helper(); } fn helper() -> i64 { return 2; } fn isolated() -> i64 { return 3; } fn cycle_a() -> i64 { return cycle_b(); } fn cycle_b() -> i64 { return cycle_a(); } domain D: i64 { private fn raw(x: i64) -> D { return wrap<D>(x); } fn make(x: i64) -> D { return D.raw(x); } }" },
+    } };
+    var project = graph.Project.init(allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try @import("project_compile.zig").Compilation.init(&index);
+    const roots = try compilation.exportRoots(allocator);
+    defer allocator.free(roots);
+    try t.expectEqual(@as(usize, 3), roots.len);
+    const quality = @import("quality.zig");
+    var analysis = try quality.analyzeWithExports(allocator, compilation.program.?, compilation.src, .{}, roots);
+    defer analysis.deinit();
+    for (compilation.program.?.functions, analysis.functions) |function, metrics| {
+        const expected_main = std.mem.eql(u8, function.name, "main::main") or std.mem.eql(u8, function.name, "api::used");
+        const expected_export = std.mem.eql(u8, function.name, "api::used") or std.mem.eql(u8, function.name, "api::unused") or std.mem.eql(u8, function.name, "api::D.make");
+        const expected_api = expected_export or std.mem.eql(u8, function.name, "api::helper") or std.mem.eql(u8, function.name, "api::D.raw");
+        try t.expectEqual(expected_main, metrics.reachable);
+        try t.expectEqual(expected_export, metrics.exported);
+        try t.expectEqual(expected_api, metrics.reachable_from_exports);
+    }
+    const text = try quality.render(allocator, analysis, compilation.program.?, compilation.src);
+    defer allocator.free(text);
+    for ([_][]const u8{ "quality-modules-v1", "module-exported=true reachable-from-exports=true", "module-exported=false reachable-from-exports=true domain-private=true", "no call path from main or exported interfaces", "calls api::used at main.my:", "not evidence of external callers" }) |part| try t.expect(std.mem.indexOf(u8, text, part) != null);
+}
+test "module quality reports distinguish main export and private helper reachability under allocation failure" {
+    try qualityScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), qualityScenario, .{});
+}

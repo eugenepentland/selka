@@ -109,3 +109,20 @@ test "static call reachability traverses a long chain without host recursion" {
     try t.expectEqual(@as(usize, 1), result.functions[try index(&c, "f2000")].incoming_sites);
     try t.expect(c.code == null);
 }
+
+test "explicit quality roots validate bounds and tolerate duplicate or empty roots" {
+    var c = try language.Compilation.init(t.allocator, "roots.my", "fn main() -> i64 { return 0; } fn api() -> i64 { return 1; }");
+    defer c.deinit();
+    try c.check();
+    var empty = try language.quality.analyzeWithExports(t.allocator, c.program.?, c.src, .{}, &.{});
+    defer empty.deinit();
+    try t.expect(empty.module_roots);
+    try t.expect(empty.functions[0].reachable);
+    try t.expect(!empty.functions[0].reachable_from_exports);
+    var duplicate = try language.quality.analyzeWithExports(t.allocator, c.program.?, c.src, .{}, &.{ @fromBackingInt(1), @fromBackingInt(1) });
+    defer duplicate.deinit();
+    try t.expect(duplicate.functions[1].exported);
+    try t.expect(duplicate.functions[1].reachable_from_exports);
+    try t.expect(!duplicate.functions[1].reachable);
+    try t.expectError(error.InvalidQualityRoot, language.quality.analyzeWithExports(t.allocator, c.program.?, c.src, .{}, &.{@fromBackingInt(2)}));
+}

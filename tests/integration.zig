@@ -838,3 +838,27 @@ test "CLI discovers cross module duplicates with options and rejects invalid dep
     try invokeOptions("discover-project-duplicates", "module input; fn main() -> i64 { return 0; }", &.{"--max-work=1"}, 2, "", "usage:");
     try invokeOptions("discover-project-duplicates", "module input; fn main() -> i64 { return 0; }", &.{"--max-steps=1"}, 2, "", "usage:");
 }
+
+test "CLI module quality reports preserve export roots and advisory thresholds" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input; import api; fn main() -> i64 { return 0; }" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "api.my", .data = "module api;\nexport entry;\nfn entry() -> i64 {\n return hidden();\n}\nfn hidden() -> i64 { return 1; }" });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "report-project-quality", path, "--max-function-lines=1" } });
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    try testing.expectEqualStrings("", result.stderr);
+    for ([_][]const u8{ "quality-modules-v1", "api.my:3:", "api::entry; private=false; reachable-from-main=false", "module-exported=true reachable-from-exports=true", "module-exported=false reachable-from-exports=true", "function-lines 3 exceeds configured 1", "calls api::hidden at api.my:4:", "Runtime coverage and assertions: not measured" }) |part| try testing.expect(std.mem.indexOf(u8, result.stdout, part) != null);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "no call path from main or exported interfaces") == null);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "api.my", .data = "module api; fn invalid() -> i64 { return true; }" });
+    const invalid = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "report-project-quality", path } });
+    defer testing.allocator.free(invalid.stdout);
+    defer testing.allocator.free(invalid.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, invalid.term);
+    try testing.expectEqualStrings("", invalid.stdout);
+    try testing.expect(std.mem.indexOf(u8, invalid.stderr, "E_TYPE") != null);
+    try invokeOptions("report-project-quality", "module input; fn main() -> i64 { return 0; }", &.{"--approximate"}, 2, "", "usage:");
+}

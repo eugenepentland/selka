@@ -15,7 +15,7 @@ not a claim that the full future language has been delivered.
 | M, modules/interfaces | In progress: bounded import discovery, explicit exports/privacy, source maps, module-aware type checking, and VM execution implemented; optional direction policy implemented; broader module acceptance pending | Shared-domain execution and separate optional direction policy pass; extend module corpus/scaling and tooling acceptance. |
 | E, native execution | Scalar C emission and pinned-Zig native builder implemented; scalar semantic/trap parity passes | Scalar acceptance complete; broader native support requires explicit operations and corresponding executable parity fixtures. |
 | F, compile-time/schema/incremental work | Pending aggregates/variants/modules | Reject duplicate schema keys and undeclared inputs; explain invalidation and evaluation budgets. |
-| T, formatter/reference reports/verification | Canonical formatter, resolved function-call/binding reports, configurable structural metrics, and separate manifest verification driver implemented | Extend reference/specification identities and entry roots with modules/schemas, and parity fixtures with native execution. |
+| T, formatter/reference reports/verification | Canonical single-file formatter, resolved function-call/binding reports including module main/export roots, configurable structural metrics, and separate manifest verification driver implemented | Extend reference/specification identities and entry roots with modules/schemas, and parity fixtures with native execution. |
 
 ## A1 completed decisions
 
@@ -140,3 +140,7 @@ Broader module acceptance and tooling integration remain pending.
 [Module duplicate discovery](module-duplicates.md) now reports exact and approximate
 candidates across checked imports while preserving qualified nominal/callee
 identities and original source paths.
+
+[Module quality reports](module-quality.md) now distinguish main reachability from
+exported interface roots and retain qualified calls and original file locations.
+Module formatting and schema/generated-root integration remain pending.

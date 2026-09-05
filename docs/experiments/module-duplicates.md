@@ -48,7 +48,7 @@ real CLI population/timing options, deliberately truncated approximate search, a
 rejection of invalid dependency bodies without partial discovery output. The example
 also executes a non-truncated approximate comparison with the literal edit exposed.
 
-Remaining tooling work includes module-aware formatter/reference roots and quality
-reports, broader candidate-index/corpus scaling review, project native parity, and
-schema/incremental integration. Generics and the other unfinished roadmap tracks
+[Module quality reports](module-quality.md) now account for exported interface roots.
+Remaining tooling work includes module formatting, broader candidate-index/corpus
+scaling review, project native parity, and schema/incremental integration. Generics and the other unfinished roadmap tracks
 remain pending.

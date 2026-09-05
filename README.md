@@ -227,3 +227,7 @@ Cross-file discovery is available through `discover-project-duplicates <entry.my
 with the same exact/approximate options as single-file discovery. Try
 `zig build run -- discover-project-duplicates examples/module-duplicates/main.my --approximate`.
 See [module duplicate discovery](docs/experiments/module-duplicates.md).
+
+`report-project-quality <entry.my>` reports resolved calls and structural metrics
+with separate main/export reachability. Exported interfaces and their private helpers
+are accounted for explicitly; see [module quality reports](docs/experiments/module-quality.md).

@@ -1417,3 +1417,30 @@ reference/quality roots, broader candidate-index/corpus scaling, project native
 parity, generics, compile-time/schema/incremental work, native expansion, and other
 unfinished roadmap work remain pending. Guardian was not exercised; hosted CI has
 not run. The full roadmap goal remains active.
+
+## 2026-09-05: T module quality reports and exported interface roots
+
+Added `report-project-quality` over checked module programs with separate main and
+exported-interface reachability. Export roots come from resolved interface identities,
+including ordinary methods of exported domains; private helpers inherit reachability
+through calls without becoming roots. Isolated recursive groups remain unrooted.
+Reports retain qualified call identities, original source locations, static binding
+counts, and configurable advisory metrics. No-call-path review now accounts for both
+root sets without claiming that exports have external callers or measured coverage.
+Single-file quality-v1 remains unchanged; module semantics use quality-modules-v1.
+
+495 Zig tests pass in Debug and ReleaseFast (442 core, 53 CLI), plus eight
+verification-driver tests and the unchanged 23-fixture/182-comparison native suite
+per host mode. Acceptance covers main-only/export-only/shared paths, private helpers
+and domain methods, isolated cycles, empty/duplicate/out-of-range roots, all allocation
+failures through checking/root extraction/analysis/rendering, original file references,
+CLI threshold advisories, and invalid dependency rejection without partial output.
+The shared-domain example report identifies make/number as exports and raw as a
+private helper reached by them. Formatting and whitespace checks pass.
+
+[Module quality semantics](experiments/module-quality.md) documents root scope,
+visibility flags, advisory interpretation, and unchanged runtime-coverage limits.
+Module formatting, broader corpus/scaling review, project native parity, generics,
+compile-time/schema/incremental work, wider native operations, and all other
+unfinished roadmap requirements remain pending. Guardian was not exercised; hosted
+CI has not run. The full roadmap goal remains active.

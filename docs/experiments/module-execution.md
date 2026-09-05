@@ -53,7 +53,7 @@ checking/lowering/executing a shared-domain program. Existing single-file and sc
 native parity fixtures remain regression coverage.
 
 [Optional dependency-direction policy](import-policy.md) is implemented as a
-separate check. Broader module corpus/scaling review remains. Module-aware formatter, duplicate/reference entry
-roots, project native commands/parity, and schema/incremental identities remain in
-their respective tracks. Generics, schema/compile-time/incremental work, and broader
+separate check. Broader module corpus/scaling review remains. [Module duplicates](module-duplicates.md) and [quality/export roots](module-quality.md)
+are implemented. Module formatting, project native commands/parity, and
+schema/incremental identities remain in their respective tracks. Generics, schema/compile-time/incremental work, and broader
 native operations remain pending. This milestone does not complete the full roadmap.
