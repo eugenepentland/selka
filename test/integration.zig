@@ -614,7 +614,7 @@ test "CLI emits scalar C and diagnoses unsupported native features without parti
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, generated.term);
     try testing.expect(std.mem.indexOf(u8, generated.stdout, "goto L") != null);
     try invoke("emit-c", "fn main() -> i64 { return false; }", 1, "", "error[E_TYPE]");
-    try invoke("emit-c", "fn main(heap:allocator) -> i64 { return 7; }", 1, "", "error[E_NATIVE_FEATURE]");
+    try invoke("emit-c", "fn main(clock:clock_cap) -> i64 { return 7; }", 1, "", "error[E_NATIVE_FEATURE]");
     try invokeOptions("emit-c", "fn main() -> i64 { return 7; }", &.{"--memory=arena"}, 2, "", "usage:");
 }
 
@@ -932,7 +932,7 @@ test "CLI native project emission rejects private calls and unsupported guest ty
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
     try testing.expectEqualStrings("", rejected.stdout);
     try testing.expect(std.mem.indexOf(u8, rejected.stderr, "E_PRIVATE_SYMBOL") != null);
-    try invoke("emit-project-c", "module input; fn main(heap:allocator) -> i64 { return 7; }", 1, "", "E_NATIVE_FEATURE");
+    try invoke("emit-project-c", "module input; fn main(clock:clock_cap) -> i64 { return 7; }", 1, "", "E_NATIVE_FEATURE");
     try invokeOptions("emit-project-c", "module input; fn main() -> i64 { return 0; }", &.{"--max-steps=1"}, 2, "", "usage:");
 }
 

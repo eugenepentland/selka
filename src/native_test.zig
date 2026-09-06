@@ -1,3 +1,4 @@
+//! Native emission, representation boundaries, and compiler allocation-failure cleanup.
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
@@ -21,8 +22,8 @@ test "native scalar emission is deterministic and cleans every failed allocation
 // spec: PROJ-6
 test "native emission rejects unsupported operations and uncalled unsupported signatures" {
     for ([_][]const u8{
-        "fn unsupported(heap: allocator) -> i64 { return 0; } fn main() -> i64 { return 7; }",
-        "fn main(heap:allocator)->i64{return 0;}",
+        "fn unsupported(clock: clock_cap) -> i64 { return 0; } fn main() -> i64 { return 7; }",
+        "fn main(clock:clock_cap)->i64{return 0;}",
     }) |text| {
         var c = try language.Compilation.init(t.allocator, "native.my", text);
         defer c.deinit();
@@ -86,8 +87,8 @@ test "native enum support retains exhaustive nominal checks and rejects unsuppor
 }
 test "native backend rejects unsupported owned payloads" {
     for ([_][]const u8{
-        "buffer B:i64; union U{value:B} fn unsupported(x:U)->i64{discard x;return 0;} fn main()->i64{return 0;}",
-        "buffer B:i64; struct R{value:B} fn unsupported(x:R)->i64{discard x;return 0;} fn main()->i64{return 0;}",
+        "resource B:filesystem; union U{value:B} fn unsupported(x:U)->i64{discard x;return 0;} fn main()->i64{return 0;}",
+        "resource B:filesystem; struct R{value:B} fn unsupported(x:R)->i64{discard x;return 0;} fn main()->i64{return 0;}",
     }) |text| {
         var c = try language.Compilation.init(t.allocator, "unsupported.my", text);
         defer c.deinit();
@@ -183,4 +184,21 @@ test "native reference support retains static lifetime and exclusivity checks" {
         try t.expectError(error.SourceError, c.emitC(t.allocator));
         try t.expect(!std.mem.eql(u8, c.diagnostics.items[c.diagnostics.items.len - 1].code, "E_NATIVE_FEATURE"));
     }
+}
+
+fn bufferScenario(allocator: std.mem.Allocator) !void {
+    var compilation = try language.Compilation.init(allocator, "buffers.my", "buffer B:i64;result A{ok:B,err:i64}result S{ok:bool,err:i64}" ++
+        "fn main(heap:allocator)->i64{match acquire_buffer<A>(heap,2){A.ok(acquired)=>{let mut b=acquired;" ++
+        "acknowledge append_buffer<S>(b,7);return read_buffer(b,0);},A.err(e)=>{return e;}}}");
+    defer compilation.deinit();
+    const output = try compilation.emitC(allocator);
+    defer allocator.free(output);
+    try t.expect(std.mem.indexOf(u8, output, "push_value(acquire_buffer(") != null);
+    try t.expect(std.mem.indexOf(u8, output, "int status = buffer_append(") != null);
+}
+// spec: NATIVE-BUFFER-1
+test "native buffer emission supports allocator entry and owned results with allocation cleanup" {
+    try bufferScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), bufferScenario, .{});
 }

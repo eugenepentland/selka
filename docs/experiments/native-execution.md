@@ -78,9 +78,9 @@ through checking/lowering/emission, and explicit rejection of unsupported signat
 and operations. Actual CLI tests verify emission, source errors, native-feature
 errors without partial C output, and wrong-command option rejection.
 
-`tests/native_cases.py` now compiles and executes 64 single-file and 12 module
+`tests/native_cases.py` now compiles and executes 71 single-file and 14 module
 fixtures at -O0 and -O2 with undefined-behavior sanitization and no sanitizer
-recovery. It performs 2,434 actual VM/native comparisons per compiler host mode
+recovery. It performs 2,538 actual VM/native comparisons per compiler host mode
 of exit status, stdout, trap locations, and module call frames. Scalar coverage includes:
 
 - Existing arithmetic, sum, and GCD fixtures; all integer widths and checked casts.
@@ -104,3 +104,6 @@ These tests establish the declared fixture behavior, not exhaustive equivalence
 for all inputs, a speed advantage, or whole-language native support. Post-MVP native expansion must add corresponding checked operations,
 cleanup/effect behavior, and executable parity cases rather than silently running
 the VM. Other unfinished roadmap tracks remain independent work.
+
+[Owned buffers](native-buffers.md) also support root allocators, mutation, growth,
+and checked views, with allocation-failure cleanup and module transfer acceptance.

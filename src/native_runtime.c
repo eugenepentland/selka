@@ -1,4 +1,4 @@
-/* Runtime support for generated scalar C. No bytecode decoder is linked. */
+/* Runtime support for generated native C. No bytecode decoder is linked. */
 #include <stdint.h>
 #include <inttypes.h>
 #include <stddef.h>
@@ -23,7 +23,8 @@ static V variant_payload(V value, unsigned tag_bits, unsigned payload_bits, int 
 typedef struct Aggregate Aggregate;
 typedef struct { V number; Aggregate *object; } Slot;
 struct Aggregate {
-    size_t refs, count, tag;
+    size_t refs, count, tag, capacity;
+    int buffer;
     Aggregate *previous, *next, *pending;
     Slot fields[];
 };
@@ -44,6 +45,7 @@ typedef struct {
     int return_mutable, has_capture;
 } Frame;
 static Aggregate *objects;
+static size_t guest_capacity;
 static Slot *values;
 static size_t nv, cv, nf, cf, site;
 static Frame *frames;
@@ -108,6 +110,7 @@ static void release_value(Slot value) {
         if (object->previous) object->previous->next = object->next;
         else objects = object->next;
         if (object->next) object->next->previous = object->previous;
+        if (object->buffer) guest_capacity -= object->capacity;
         free(object);
     }
 }
@@ -115,14 +118,14 @@ static Aggregate *new_object(size_t count, size_t tag) {
     if (count > (SIZE_MAX - sizeof(Aggregate)) / sizeof(Slot)) host_failure("OutOfMemory");
     Aggregate *object = calloc(1, sizeof(Aggregate) + count * sizeof(Slot));
     if (!object) host_failure("OutOfMemory");
-    object->refs = 1; object->count = count; object->tag = tag;
+    object->refs = 1; object->count = count; object->capacity = count; object->tag = tag;
     object->next = objects;
     if (objects) objects->previous = object;
     objects = object;
     return object;
 }
 static Slot clone_value(Slot value) {
-    if (!value.object) host_failure("InternalError");
+    if (!value.object || value.object->buffer) host_failure("InternalError");
     Aggregate *object = new_object(value.object->count, value.object->tag);
     for (size_t i = 0; i < object->count; ++i) object->fields[i] = copy_value(value.object->fields[i]);
     return (Slot){0, object};
@@ -221,6 +224,71 @@ static Slot boxed_variant(size_t tag, Slot payload, int has_payload) {
     if (has_payload) object->fields[0] = payload;
     return (Slot){0, object};
 }
+/* Guest capacity policy matches the VM's public default slot budget. Native
+   storage layout can differ; capacity failures remain typed language results. */
+static size_t guest_capacity_limit(void) { return SIZE_MAX / MYLANG_GUEST_VALUE_BYTES; }
+static Aggregate *buffer_owner(size_t owner, int write) {
+    Aggregate *buffer = local_access(owner, write)->value.object;
+    if (!buffer || !buffer->buffer) host_failure("InternalError");
+    return buffer;
+}
+static Slot acquire_buffer(size_t ok, size_t error) {
+    V capacity = pop(), authority = pop();
+    if (authority != 1) host_failure("InternalError");
+    if (capacity < 0 || (U)capacity > guest_capacity_limit() - guest_capacity)
+        return boxed_variant(error, (Slot){1, NULL}, 1);
+    Aggregate *buffer = new_object((size_t)capacity, 0);
+    buffer->count = 0; buffer->buffer = 1;
+    guest_capacity += (size_t)capacity;
+    return boxed_variant(ok, (Slot){0, buffer}, 1);
+}
+static size_t buffer_length(size_t owner) { return buffer_owner(owner, 0)->count; }
+static size_t buffer_capacity(size_t owner) { return buffer_owner(owner, 0)->capacity; }
+static Slot buffer_read(size_t owner) {
+    V index = pop(); Aggregate *buffer = buffer_owner(owner, 0);
+    if (index < 0 || (U)index >= buffer->count) trap("R_BUFFER_BOUNDS");
+    return copy_value(buffer->fields[(size_t)index]);
+}
+static int buffer_write(size_t owner) {
+    Slot value = pop_value(); V index = pop();
+    Aggregate *buffer = buffer_owner(owner, 1);
+    if (index < 0 || (U)index >= buffer->count) { release_value(value); return 3; }
+    release_value(buffer->fields[(size_t)index]); buffer->fields[(size_t)index] = value;
+    return 0;
+}
+static int buffer_append(size_t owner) {
+    Slot value = pop_value(); Aggregate *buffer = buffer_owner(owner, 1);
+    if (buffer->count == buffer->capacity) { release_value(value); return 2; }
+    buffer->fields[buffer->count++] = value;
+    return 0;
+}
+static int buffer_resize(size_t owner) {
+    Slot fill = pop_value(); V length = pop(); Aggregate *buffer = buffer_owner(owner, 1);
+    if (length < 0 || (U)length > SIZE_MAX) { release_value(fill); return 3; }
+    if ((U)length > buffer->capacity) { release_value(fill); return 2; }
+    while (buffer->count > (size_t)length) release_value(buffer->fields[--buffer->count]);
+    while (buffer->count < (size_t)length) buffer->fields[buffer->count++] = copy_value(fill);
+    release_value(fill);
+    return 0;
+}
+static int buffer_reserve(size_t owner) {
+    V capacity = pop(), authority = pop();
+    Aggregate *old = buffer_owner(owner, 1);
+    if (authority != 1 || old->refs != 1) host_failure("InternalError");
+    if (capacity < 0 || (U)capacity > guest_capacity_limit()) return 1;
+    if ((U)capacity <= old->capacity) return 0;
+    size_t increase = (size_t)capacity - old->capacity;
+    if (increase > guest_capacity_limit() - guest_capacity) return 1;
+    Aggregate *grown = new_object((size_t)capacity, 0);
+    grown->count = old->count; grown->buffer = 1;
+    memcpy(grown->fields, old->fields, old->count * sizeof(Slot));
+    /* Transfer initialized children once. No borrowed view can be active here. */
+    old->count = 0; old->buffer = 0;
+    release_value((Slot){0, old});
+    local_access(owner, 1)->value = (Slot){0, grown};
+    guest_capacity += increase;
+    return 0;
+}
 static Reference *active_reference(Reference *reference) {
     if (!reference || !reference->active) trap("R_REFERENCE_LIFETIME");
     return reference;
@@ -309,9 +377,14 @@ static void write_slice(size_t id) {
     size_t selected = slice_index(reference, index);
     usable_reference(reference);
     if (!reference->mutable) trap("R_REFERENCE_READ_ONLY");
-    Slot updated = clone_value(reference->owner->value);
-    release_value(updated.object->fields[selected]); updated.object->fields[selected] = value;
-    release_value(reference->owner->value); reference->owner->value = updated;
+    Aggregate *object = reference->owner->value.object;
+    if (object && object->buffer) {
+        release_value(object->fields[selected]); object->fields[selected] = value;
+    } else {
+        Slot updated = clone_value(reference->owner->value);
+        release_value(updated.object->fields[selected]); updated.object->fields[selected] = value;
+        release_value(reference->owner->value); reference->owner->value = updated;
+    }
 }
 static void enter(size_t function, size_t locals, size_t arguments, size_t target, size_t references, const size_t *slots) {
     if (nf >= max_frames) trap("R_FRAME_LIMIT");

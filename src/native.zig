@@ -100,6 +100,7 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     var output: std.Io.Writer.Allocating = .init(allocator);
     errdefer output.deinit();
     const w = &output.writer;
+    try w.print("#define MYLANG_GUEST_VALUE_BYTES {d}\n", .{@sizeOf(typed.Value)});
     try w.writeAll(@embedFile("native_runtime.c"));
     try w.writeAll("\nstatic const char *const names[] = {\n");
     for (program.functions) |function| {
@@ -117,6 +118,10 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     };
     try w.writeAll("};\nint main(int argc, char **argv) {\nsource_paths = paths; function_names = names; source_lines = lines; source_columns = columns;\noptions(argc, argv); size_t return_target = 0;\n");
     const main_index = @backingInt(program.main);
+    for (program.functions[main_index].scope.locals[0..program.functions[main_index].signature.parameter_count]) |parameter| {
+        if (parameter.ty != .allocator) return sink.fail(unsupported_feature, parameter.declaration, "native entry parameters require root allocator authority");
+        try w.writeAll("push(1);\n");
+    }
     try enter(w, program.functions[main_index], 0);
     try w.print(jump_format, .{offsets[main_index]});
     for (program.functions, offsets) |function, offset| {
@@ -185,6 +190,8 @@ fn checkFunction(layout: native_layout.Layout, function: bc.Function, sink: *dia
         .drop_local,
         .move_local,
         .load_local,
+        .acquire_buffer,
+        .buffer_operation,
         .store_local,
         .add_i64_checked,
         .sub_i64_checked,
@@ -305,6 +312,25 @@ fn writeOperation(context: InstructionOutput) !bool {
         .array_length => try w.writeAll("array_length();\n"),
         .read_field => |read| try w.print("push_value(field_value(local_access({d}, 0)->value, {d}));\n", .{ @backingInt(read.owner), read.field }),
         .take_field => |take| try w.print("take_field({d}, {d});\n", .{ @backingInt(take.owner), take.field }),
+        .acquire_buffer => |ty| {
+            const shape = typed.resultShape(ty, program.records).?;
+            try w.print("push_value(acquire_buffer({d}, {d}));\n", .{ shape.ok_tag, shape.error_tag });
+        },
+        .buffer_operation => |operation| {
+            switch (operation.kind) {
+                .length, .capacity => try w.print("push((V)buffer_{s}({d}));\n", .{ @tagName(operation.kind), @backingInt(operation.owner) }),
+                .read => try w.print("push_value(buffer_read({d}));\n", .{@backingInt(operation.owner)}),
+                else => {
+                    try w.print("int status = buffer_{s}({d}); Slot value = (Slot){{status ? status : 1, NULL}};\n", .{ @tagName(operation.kind), @backingInt(operation.owner) });
+                    const shape = typed.resultShape(operation.output, program.records).?;
+                    try w.writeAll("if (status) { push_value(");
+                    try variantValue(w, layout, operation.output, shape.error_tag, shape.error_type);
+                    try w.writeAll("); } else { push_value(");
+                    try variantValue(w, layout, operation.output, shape.ok_tag, shape.ok_type);
+                    try w.writeAll("); }\n");
+                },
+            }
+        },
         .acknowledge, .pop => try w.writeAll("release_value(pop_value());\n"),
         .move_local => |slot| try w.print("move_local({d});\n", .{@backingInt(slot)}),
         .push_bool => |value| try w.print("push({d});\n", .{@intFromBool(value)}),

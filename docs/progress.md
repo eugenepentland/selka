@@ -2634,3 +2634,24 @@ This exposes the existing frontend reuse component through a persistent CLI.
 Persistent/semantic query caches, automatic watching, structured diagnostic framing,
 native expansion, generics, source serialization, and other pending roadmap items
 remain open. Hosted CI remains unexecuted.
+
+## 2026-09-06: Native owned buffers
+
+The native emitter and C runtime now support root allocator parameters, supported
+owned buffer elements and wrappers, acquisition, queries, mutation, reserve,
+ownership cleanup, and borrowed buffer slices. Aggregate snapshots remain valid
+across buffer writes, growth, shrinking, and scope exit. Unsupported clock and
+external resource types still fail preflight without partial C output.
+
+Debug and ReleaseFast pass all 28 build steps, covering 529 core tests (cached after a
+successful fresh run) and 60 CLI tests, 2,538 VM/native comparisons across 71
+single-file and 14 module fixtures, and 322 injected native allocation failures
+with address/undefined sanitizers at both C optimization levels. Buffer memory
+cases use independent expected values and compare step/frame behavior with the VM.
+Formatting and the strict Guardian gate pass. The first full runs identified one
+outdated CLI expectation rejecting allocator parameters; it now checks rejection
+of the still-unsupported clock capability instead. Both corrected complete runs
+pass, retaining the successful core-test results.
+
+Native arenas, pools, external resources, generics, source serialization, and the
+other pending roadmap requirements remain open.

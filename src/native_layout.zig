@@ -41,7 +41,13 @@ pub const Layout = struct {
             if (record.shape.domain) |backing| {
                 widths[index] = self.width(backing);
                 supported[index] = self.supports(backing);
-            } else if (!record.contract.move_only and !record.shape.hasRuntimeIdentity()) {
+            } else if (record.shape.buffer) |element| {
+                if (unvisitedChild(element, states)) |child_index| {
+                    try stack.append(allocator, .{ .index = child_index });
+                    continue;
+                }
+                supported[index] = self.supports(element);
+            } else if (!record.shape.hasRuntimeIdentity()) {
                 const child_count = if (record.shape.variants) |v| v.cases.len else if (record.shape.array != null) @as(usize, 1) else record.fields.len;
                 if (frame.next < child_count) {
                     const child = childType(record, frame.next);
@@ -79,7 +85,8 @@ pub const Layout = struct {
     }
     /// Check whether the native backend can represent the supplied type.
     pub fn supports(self: Layout, ty: typed.Type) bool {
-        return ty.isInteger() or ty == .bool or (ty.isAggregate() and self.supported[ty.recordIndex()]);
+        if (ty.isInteger() or ty == .bool or ty == .allocator) return true;
+        return ty.isAggregate() and self.supported[ty.recordIndex()];
     }
     /// Return the native integer representation width for a supported type.
     pub fn width(self: Layout, ty: typed.Type) u8 {

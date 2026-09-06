@@ -37,11 +37,11 @@ executed in both C modes. Rejection tests preserve private-constructor and nomin
 mismatch diagnostics. Allocation-failure sweeps cover native emission and VM domain
 execution with cleanup.
 
-The suite now has 27 single-file native fixtures/206 comparisons and six module
+At this milestone the suite had 27 single-file native fixtures/206 comparisons and six module
 fixtures/114 comparisons per host build mode. Those numbers include the earlier
-scalar cases; they are not all new tests. Existing unsupported aggregate signatures
-and reference/resource operations continue to reject before C output.
+scalar cases; they are not all new tests. At that point, aggregate signatures and reference/resource operations rejected
+before C output.
 
-[Closed enums](native-enums.md) are now also supported. Records, arrays, tagged unions, borrowing, owned buffers/resources, pools, arenas, and
-other wider native operations remain pending. Generics, compile-time/schema/
-incremental work, and remaining corpus/scaling acceptance are also unfinished.
+Subsequent milestones add [enums](native-enums.md), [aggregates and variants](native-aggregates.md),
+[borrowing](native-references.md), and [owned buffers](native-buffers.md).
+Native external resources, pools, arenas, and other unfinished roadmap work remain pending.

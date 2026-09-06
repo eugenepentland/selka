@@ -41,6 +41,9 @@ def main():
             "reference-trap": "struct R{x:i64} fn main()->i64{let mut a=new [1]R[new R{x:7}];borrow mut a[0..1] as r{write_slice(r,1,new R{x:9});}return 0;}",
             "trap": "struct R{values:[2]i64} fn main()->i64{let r=new R{values:new [2]i64[0,7]};return r.values[2];}",
         }
+        for name in ("buffers", "buffer-views", "allocator-capabilities"):
+            programs[name] = (root / "examples" / f"{name}.my").read_text()
+        programs["buffer-aggregate"] = "struct R{values:[2]i64} buffer B:R; result A{err:i64,ok:B} result S{err:i64,ok:bool} fn main(heap:allocator)->i64{match acquire_buffer<A>(heap,2){A.ok(acquired)=>{let mut b=acquired;acknowledge append_buffer<S>(b,new R{values:new [2]i64[7,8]});let saved=read_buffer(b,0);acknowledge reserve_buffer<S>(b,heap,4);acknowledge resize_buffer<S>(b,4,saved);acknowledge write_buffer<S>(b,0,new R{values:new [2]i64[9,10]});borrow mut b[0..4] as view{write_slice(view,1,new R{values:new [2]i64[11,12]});}let changed=read_buffer(b,1);acknowledge resize_buffer<S>(b,0,saved);return saved.values[0]+changed.values[0];},A.err(e)=>{return e;}}}"
         failures = 0
         for name, text in programs.items():
             source.write_text(text)
@@ -53,6 +56,11 @@ def main():
                 baseline = invoke([executable])
                 attempts, peak = memory(baseline)
                 expected = b"20\n" if name == "failure" else b"12\n" if name == "reference" else b"40\n" if name == "reference-recursive" else b"20006\n"
+                buffer_results = {"buffers": b"21\n", "buffer-views": b"19\n", "allocator-capabilities": b"3\n", "buffer-aggregate": b"18\n"}
+                if name in buffer_results:
+                    expected = buffer_results[name]
+                    vm = invoke([compiler, "run", source])
+                    assert vm.returncode == 0 and vm.stdout == expected, (vm.stderr, vm.stdout)
                 if name in ("trap", "reference-trap"):
                     code = b"R_INDEX_BOUNDS" if name == "trap" else b"R_SLICE_BOUNDS"
                     assert baseline.returncode == 1 and code in baseline.stderr, baseline.stderr
@@ -61,7 +69,7 @@ def main():
                 if name == "loop":
                     # 40,000 aggregate replacements must not accumulate live heap.
                     assert peak < 65536, peak
-                if name in ("failure", "reference", "reference-recursive"):
+                if name in ("failure", "reference", "reference-recursive", "buffers", "buffer-views", "allocator-capabilities", "buffer-aggregate"):
                     for point in range(1, attempts + 1):
                         failed = invoke([executable], point)
                         memory(failed)
@@ -70,7 +78,11 @@ def main():
                     for options in (["--max-steps=8"], ["--max-frames=1"]):
                         limited = invoke([executable, *options])
                         memory(limited)
-                        assert limited.returncode == 1, limited.stderr
+                        oracle = invoke([compiler, "run", source, *options])
+                        assert limited.returncode == oracle.returncode and limited.stdout == oracle.stdout, (name, options, limited.stderr, oracle.stderr)
+                        if oracle.returncode == 1:
+                            code = re.search(rb"error\[(R_[A-Z_]+)\]", oracle.stderr)
+                            assert code and code.group(1) in limited.stderr, (limited.stderr, oracle.stderr)
         print(f"native memory: {failures} injected allocation failures, normal/trap/budget cleanup, and bounded 20000-update loop passed under address/undefined sanitizers at -O0/-O2")
 
 if __name__ == "__main__":

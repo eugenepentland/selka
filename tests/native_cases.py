@@ -87,6 +87,10 @@ def project_cases(compiler, zig, root, temp):
         "main.my": "module main; import views as v;fn main()->i64{let a=new [2]i64[2,3];borrow a[0..2] as all{return v::read(all);}}",
         "views.my": "module views;export read;fn read(x:&[]i64)->i64{return read_slice(x,2);}",
     }))
+    fixtures.append(("buffers", {
+        "main.my": "module main; import storage as s;fn main(heap:allocator)->i64{match s::make(heap){s::A.ok(b)=>{return read_buffer(b,1);},s::A.err(e)=>{return e;}}}",
+        "storage.my": "module storage;export B;export A;export make;buffer B:i64;result A{err:i64,ok:B} result S{err:i64,ok:bool} fn make(heap:allocator)->A{let mut b=try acquire_buffer<A>(heap,1);discard try append_buffer<S>(b,7);discard try reserve_buffer<S>(b,heap,3);discard try resize_buffer<S>(b,3,9);return new A.ok(b);}",
+    }))
     codec_root = root / "examples" / "domain-codecs"
     fixtures.append(("domain-codecs", {name: (codec_root / name).read_text() for name in ("main.my", "data.my")}))
     pairs = 0
@@ -128,7 +132,7 @@ def project_cases(compiler, zig, root, temp):
     entry = temp / "unsupported" / "main.my"
     entry.parent.mkdir()
     entry.write_text("module main; import helper; fn main() -> i64 { return 0; }")
-    (entry.parent / "helper.my").write_text("module helper; fn unsupported(heap:allocator) -> i64 { return 0; }")
+    (entry.parent / "helper.my").write_text("module helper; fn unsupported(clock:clock_cap) -> i64 { return 0; }")
     rejected = invoke([compiler, "emit-project-c", entry])
     assert rejected.returncode == 1 and rejected.stdout == b"" and b"E_NATIVE_FEATURE" in rejected.stderr, rejected
     assert b"helper.my:" in rejected.stderr, rejected.stderr
@@ -147,7 +151,7 @@ def main():
     compiler = args.compiler.resolve()
     root = Path(__file__).resolve().parents[1]
     fixtures = [(name, (root / "test" / "fixtures" / f"{name}.my").read_text()) for name in ("arithmetic", "sum", "gcd")]
-    fixtures += [(name, (root / "examples" / f"{name}.my").read_text()) for name in ("arrays", "records", "conversions", "tables", "references", "reference-parameters", "slices", "returned-references", "propagation")]
+    fixtures += [(name, (root / "examples" / f"{name}.my").read_text()) for name in ("arrays", "records", "conversions", "tables", "references", "reference-parameters", "slices", "returned-references", "propagation", "buffers", "buffer-views", "allocator-capabilities")]
     fixtures.append(("integers", "fn widen(x: u32) -> u64 { return cast<u64>(x); } fn main() -> i64 { let a = 127i8; let b = 255u8; let c = 32767i16; let d = 65535u16; let e = 2147483647i32; let f = 4294967295u32; return cast<i64>(a) + cast<i64>(b) + cast<i64>(c) + cast<i64>(d) + cast<i64>(e) + cast<i64>(widen(f)); }"))
     expressions = ["9223372036854775807 + 1", "-9223372036854775808 - 1", "3037000500 * 3037000500", "-(-9223372036854775808)", "-9223372036854775808 / -1", "-9223372036854775808 % -1", "1 / 0", "1 % 0", "-7 / 3", "-7 % 3", "cast<i64>(255u8 + 1u8)", "cast<i64>(127i8 + 1i8)", "cast<i64>(18446744073709551615u64 * 18446744073709551615u64)", "cast<i64>(cast<u8>(-1))"]
     fixtures += [(f"arithmetic-{i}", f"fn main() -> i64 {{ return {expr}; }}") for i, expr in enumerate(expressions)]
@@ -212,6 +216,14 @@ def main():
         ("reference-recursive", "fn count(n:i64,x:&mut i64)->i64{if n==0{return read_ref(x);}write_ref(x,read_ref(x)+1);return count(n-1,x);} fn main()->i64{let mut x=0;borrow mut x as r{return count(40,r);}}"),
         ("reference-return-whole", "struct R{x:i64} fn same(x:&mut R)->&mut R from x{return x;} fn main()->i64{let mut x=new R{x:7};let old=x;borrow mut x as r{borrow mut same(r) as selected{write_ref(selected,new R{x:9});}}return old.x+x.x;}"),
     ]
+    buffer_prefix = "buffer B:i64; result A{err:i64,ok:B} result S{err:i64,ok:bool} fn code(s:S)->i64{match s{S.ok(discard)=>{return 0;},S.err(e)=>{return e;}}} "
+    for name, body in (
+        ("statuses", "let mut n=code(append_buffer<S>(b,7));n+=code(append_buffer<S>(b,8));n+=code(write_buffer<S>(b,-1,9));n+=code(resize_buffer<S>(b,-1,0));n+=code(resize_buffer<S>(b,2,0));n+=code(reserve_buffer<S>(b,heap,-1));n+=code(reserve_buffer<S>(b,heap,0));return n+read_buffer(b,0);"),
+        ("read-bounds", "return read_buffer(b,0);"),
+        ("slice-bounds", "borrow b[0..1] as view{return read_slice(view,0);}"),
+        ("capacity-overflow", "return code(reserve_buffer<S>(b,heap,18446744073709551615u64));"),
+    ):
+        fixtures.append(("buffer-" + name, buffer_prefix + "fn main(heap:allocator)->i64{match acquire_buffer<A>(heap,1){A.ok(acquired)=>{let mut b=acquired;" + body + "},A.err(e)=>{return e;}}}"))
     pairs = 0
     with tempfile.TemporaryDirectory(prefix="mylang-native-parity-") as temp:
         temp = Path(temp)

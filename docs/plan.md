@@ -817,3 +817,11 @@ These are future-feature fixtures, not additional M0–M5 requirements.
 | Reference accuracy | Same-spelled declarations in different modules retain independent uses; test reachability is reported distinctly from executed coverage. |
 
 Evaluate these experiments by the errors prevented, the clarity of diagnostics, the cost of implementation and compilation, and the code users must write. Keep uncertain heuristics advisory and revise proposals when realistic examples expose unnecessary complexity.
+
+
+## Native owned-buffer implementation
+
+Root allocator parameters, owned buffers, mutations, reserve, and borrowed buffer
+slices now emit native C. Debug and ReleaseFast pass all 28 build steps, including
+2,538 VM/native comparisons and 322 allocation-failure cases. Native arenas, pools, external resources,
+and the remaining roadmap requirements are still open.

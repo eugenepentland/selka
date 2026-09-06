@@ -24,11 +24,12 @@ exported enum values across calls and compares every instruction budget through
 completion, including original file paths and call frames. Every fixture runs
 under C O0 and O2 with undefined-behavior sanitization. Allocation-failure sweeps
 exercise emission and VM execution; semantic rejection cases retain nominal and
-exhaustiveness checks. Both payloadless and payload-bearing union constructions
-still reject with E_NATIVE_FEATURE.
+exhaustiveness checks. At this milestone both payloadless and payload-bearing union constructions
+rejected with E_NATIVE_FEATURE.
 
-The combined native harness has 32 single-file fixtures/236 comparisons and seven
+At this milestone the combined native harness had 32 single-file fixtures/236 comparisons and seven
 module fixtures/156 comparisons per host build mode. These totals include earlier
-scalar and domain cases, not only enums. Records, arrays, tagged unions/results,
-borrowing, buffers, resources, pools, and arenas still need native implementations
-and corresponding executable parity evidence.
+scalar and domain cases, not only enums. Subsequent milestones add
+[aggregates and tagged results](native-aggregates.md), [borrowing](native-references.md),
+and [owned buffers](native-buffers.md). Native external resources, pools, and
+arenas remain pending.

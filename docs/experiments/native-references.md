@@ -59,5 +59,6 @@ python3 scripts/native.py examples/returned-references.my -o .zig-cache/native-v
 ```
 
 This implements the ordinary-value borrowing experiment in the native route.
-Borrowed buffer/resource I/O needs the remaining native capability and ownership
+[Owned buffer slices](native-buffers.md) now use the same checked view machinery.
+External resource I/O still needs native provider capabilities and resource ownership
 operations. The full native track and other unfinished roadmap tracks remain open.

@@ -372,8 +372,10 @@ nested scalar payloads, matching, transfers, acknowledgement, and propagation
 within a 127-bit layout. [Native aggregates](docs/experiments/native-aggregates.md)
 add records, arrays, tables, conversions/updates, and boxed variants beyond this
 limit. [Native borrowing and slices](docs/experiments/native-references.md) now support
-scoped loans, parameters, returned views, and snapshot-preserving writes. Native
-resources remain pending.
+scoped loans, parameters, returned views, and snapshot-preserving writes.
+[Native owned buffers](docs/experiments/native-buffers.md) add root allocators,
+mutation, growth, and borrowed views with VM/native and cleanup acceptance. Native
+arenas, pools, and external resources remain pending.
 
 The [ordinary application corpus](examples/corpus/README.md) adds a multi-module
 invoice calculator and packet decoder, tested against independent Python oracles.

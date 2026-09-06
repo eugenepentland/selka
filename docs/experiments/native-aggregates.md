@@ -13,8 +13,9 @@ pointer. Records and arrays use reference-counted immutable field storage.
 Small variants retain their packed representation; variants containing aggregate
 payloads or exceeding 127 bits use boxed storage. Width is no longer a reason
 to reject an otherwise-supported variant. The complete dependency graph is still
-checked: resources, buffers, pools, handles, and capabilities remain unsupported by this
-backend. [Ordinary-value borrowing and slices](native-references.md) are now supported.
+checked: external resources, pools, handles, and provider capabilities remain
+unsupported. [Ordinary-value borrowing and slices](native-references.md) and
+[root allocator buffers](native-buffers.md) extend this backend.
 
 Copies retain storage. Updates create new field storage and retain unchanged
 children, preserving previous copies and shared subvalues. Assignment and scope
