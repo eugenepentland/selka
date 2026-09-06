@@ -1,0 +1,7105 @@
+[
+  {
+    "name": "component_overlap",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "keepout",
+          "region": 0
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "empty_board",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [],
+        "nets": [],
+        "regions": [],
+        "features": []
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "component_opposite_face",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "component_not_exempted_by_copper_net",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "keepout",
+          "region": 0
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "edge_contact_clear",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              300,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "corner_contact_clear",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              300,
+              300,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "one_micrometre_overlap",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              299,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "keepout",
+          "region": 0
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "outside_before_keepout",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              -5,
+              100,
+              10,
+              20
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              -1,
+              100,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 2,
+        "first": {
+          "feature": 0,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "board_edge_contact_valid",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              0,
+              0,
+              1000,
+              1000
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "duplicate_component_precedes_geometry",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          1
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": true,
+    "expected": {
+      "err": {
+        "input": "duplicate_component"
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "duplicate_net",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          10
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "err": {
+        "input": "duplicate_net"
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "zero_identity",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          0,
+          1
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "err": {
+        "input": "invalid_id"
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "unknown_component",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "err": {
+        "input": "missing_component"
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "unknown_net",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "via",
+            "net": 99,
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "err": {
+        "input": "missing_net"
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "unknown_exemption",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              99
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "err": {
+        "input": "unknown_allow_net"
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "empty_blocks",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "err": {
+        "input": "empty_blocks"
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "zero_width",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              100,
+              100,
+              0,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "err": {
+        "input": "invalid_bounds"
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "negative_extent",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              20,
+              -1
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "err": {
+        "input": "invalid_bounds"
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "endpoint_out_of_range",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          999999999,
+          0,
+          2,
+          10
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "err": {
+        "input": "invalid_bounds"
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "i64_min_coordinate",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          -9223372036854775808,
+          0,
+          2,
+          10
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "err": {
+        "input": "invalid_bounds"
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "i64_max_extent",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          9223372036854775807,
+          10
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "err": {
+        "input": "invalid_bounds"
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "duplicate_exemptions_idempotent",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10,
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "same_number_distinct_id_catalogs",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          1,
+          2
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "keepout",
+          "region": 0
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "geometry_unavailable",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": true,
+    "expected": {
+      "err": {
+        "geometry": "unavailable"
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "unused_unavailable_geometry",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": true,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "invalid_feature_precedes_previous_violation",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          },
+          {
+            "kind": "via",
+            "net": 99,
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "err": {
+        "input": "missing_net"
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "max_violations",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          10,
+          10
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              -10,
+              -10,
+              30,
+              30
+            ],
+            "face": "both",
+            "blocks": [
+              "component"
+            ],
+            "allow_nets": []
+          },
+          {
+            "rect": [
+              -10,
+              -10,
+              30,
+              30
+            ],
+            "face": "both",
+            "blocks": [
+              "component"
+            ],
+            "allow_nets": []
+          },
+          {
+            "rect": [
+              -10,
+              -10,
+              30,
+              30
+            ],
+            "face": "both",
+            "blocks": [
+              "component"
+            ],
+            "allow_nets": []
+          },
+          {
+            "rect": [
+              -10,
+              -10,
+              30,
+              30
+            ],
+            "face": "both",
+            "blocks": [
+              "component"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              -1,
+              -1,
+              12,
+              12
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              -1,
+              -1,
+              12,
+              12
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              -1,
+              -1,
+              12,
+              12
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              -1,
+              -1,
+              12,
+              12
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              -1,
+              -1,
+              12,
+              12
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              -1,
+              -1,
+              12,
+              12
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              -1,
+              -1,
+              12,
+              12
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              -1,
+              -1,
+              12,
+              12
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 40,
+        "first": {
+          "feature": 0,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 32
+    }
+  },
+  {
+    "name": "face_matrix_top_0_0",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "keepout",
+          "region": 0
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "face_matrix_top_0_1",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "keepout",
+          "region": 0
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "face_matrix_top_1_0",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "face_matrix_top_1_1",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "face_matrix_top_2_0",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "keepout",
+          "region": 0
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "face_matrix_top_2_1",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "face_matrix_top_3_0",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "face_matrix_top_3_1",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "face_matrix_top_4_0",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "inner",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "face_matrix_top_4_1",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "inner",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "face_matrix_top_5_0",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "via",
+            "net": 10,
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "keepout",
+          "region": 0
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "face_matrix_top_5_1",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "via",
+            "net": 10,
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "face_matrix_bottom_0_0",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "bottom",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "face_matrix_bottom_0_1",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "bottom",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "face_matrix_bottom_1_0",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "bottom",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "keepout",
+          "region": 0
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "face_matrix_bottom_1_1",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "bottom",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "keepout",
+          "region": 0
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "face_matrix_bottom_2_0",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "bottom",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "face_matrix_bottom_2_1",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "bottom",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "face_matrix_bottom_3_0",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "bottom",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "keepout",
+          "region": 0
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "face_matrix_bottom_3_1",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "bottom",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "face_matrix_bottom_4_0",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "bottom",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "inner",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "face_matrix_bottom_4_1",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "bottom",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "inner",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "face_matrix_bottom_5_0",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "bottom",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "via",
+            "net": 10,
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "keepout",
+          "region": 0
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "face_matrix_bottom_5_1",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "bottom",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "via",
+            "net": 10,
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "face_matrix_both_0_0",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "both",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "keepout",
+          "region": 0
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "face_matrix_both_0_1",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "both",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "keepout",
+          "region": 0
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "face_matrix_both_1_0",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "both",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "keepout",
+          "region": 0
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "face_matrix_both_1_1",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "both",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "keepout",
+          "region": 0
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "face_matrix_both_2_0",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "both",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "keepout",
+          "region": 0
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "face_matrix_both_2_1",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "both",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "face_matrix_both_3_0",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "both",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "keepout",
+          "region": 0
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "face_matrix_both_3_1",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "both",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "face_matrix_both_4_0",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "both",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "inner",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "keepout",
+          "region": 0
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "face_matrix_both_4_1",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "both",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "inner",
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "face_matrix_both_5_0",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "both",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "via",
+            "net": 10,
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "keepout",
+          "region": 0
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "face_matrix_both_5_1",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              100,
+              100,
+              200,
+              200
+            ],
+            "face": "both",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "via",
+            "net": 10,
+            "rect": [
+              150,
+              150,
+              20,
+              20
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "generated_snapshot_00",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              463,
+              -16,
+              153,
+              165
+            ],
+            "face": "both",
+            "blocks": [
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              20
+            ]
+          },
+          {
+            "rect": [
+              49,
+              109,
+              6,
+              299
+            ],
+            "face": "both",
+            "blocks": [
+              "track"
+            ],
+            "allow_nets": [
+              20,
+              10
+            ]
+          },
+          {
+            "rect": [
+              404,
+              39,
+              39,
+              41
+            ],
+            "face": "bottom",
+            "blocks": [
+              "track",
+              "component"
+            ],
+            "allow_nets": []
+          },
+          {
+            "rect": [
+              269,
+              207,
+              170,
+              135
+            ],
+            "face": "both",
+            "blocks": [
+              "via",
+              "track"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              391,
+              261,
+              136,
+              64
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              916,
+              140,
+              116,
+              254
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              862,
+              425,
+              281,
+              157
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "inner",
+            "rect": [
+              172,
+              535,
+              8,
+              88
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              489,
+              217,
+              218,
+              268
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "inner",
+            "rect": [
+              723,
+              915,
+              175,
+              181
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              18,
+              67,
+              140,
+              8
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              464,
+              1098,
+              113,
+              69
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 4,
+        "first": {
+          "feature": 1,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 15
+    }
+  },
+  {
+    "name": "generated_snapshot_01",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              382,
+              368,
+              257,
+              274
+            ],
+            "face": "both",
+            "blocks": [
+              "component"
+            ],
+            "allow_nets": [
+              10,
+              20
+            ]
+          },
+          {
+            "rect": [
+              86,
+              407,
+              286,
+              258
+            ],
+            "face": "both",
+            "blocks": [
+              "track",
+              "via",
+              "component"
+            ],
+            "allow_nets": []
+          },
+          {
+            "rect": [
+              142,
+              497,
+              115,
+              133
+            ],
+            "face": "both",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10,
+              20
+            ]
+          },
+          {
+            "rect": [
+              266,
+              126,
+              120,
+              206
+            ],
+            "face": "both",
+            "blocks": [
+              "component"
+            ],
+            "allow_nets": [
+              20
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              60,
+              295,
+              45,
+              11
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              258,
+              927,
+              245,
+              76
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              177,
+              764,
+              288,
+              259
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "inner",
+            "rect": [
+              805,
+              -16,
+              235,
+              273
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 3,
+        "first": {
+          "feature": 1,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 7
+    }
+  },
+  {
+    "name": "generated_snapshot_02",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              343,
+              348,
+              257,
+              138
+            ],
+            "face": "bottom",
+            "blocks": [
+              "component",
+              "track"
+            ],
+            "allow_nets": [
+              10
+            ]
+          },
+          {
+            "rect": [
+              175,
+              470,
+              278,
+              98
+            ],
+            "face": "top",
+            "blocks": [
+              "component"
+            ],
+            "allow_nets": [
+              10,
+              20
+            ]
+          },
+          {
+            "rect": [
+              -16,
+              273,
+              178,
+              220
+            ],
+            "face": "top",
+            "blocks": [
+              "track",
+              "via",
+              "component"
+            ],
+            "allow_nets": [
+              20,
+              10
+            ]
+          },
+          {
+            "rect": [
+              48,
+              298,
+              61,
+              31
+            ],
+            "face": "both",
+            "blocks": [
+              "track",
+              "component"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              243,
+              1043,
+              199,
+              104
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              207,
+              683,
+              297,
+              66
+            ]
+          },
+          {
+            "kind": "via",
+            "net": 10,
+            "rect": [
+              527,
+              71,
+              209,
+              93
+            ]
+          },
+          {
+            "kind": "via",
+            "net": 10,
+            "rect": [
+              762,
+              528,
+              51,
+              116
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              55,
+              395,
+              150,
+              297
+            ]
+          },
+          {
+            "kind": "via",
+            "net": 10,
+            "rect": [
+              285,
+              454,
+              101,
+              75
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 5
+    }
+  },
+  {
+    "name": "generated_snapshot_03",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              40,
+              266,
+              287,
+              94
+            ],
+            "face": "both",
+            "blocks": [
+              "via"
+            ],
+            "allow_nets": [
+              20,
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "inner",
+            "rect": [
+              631,
+              959,
+              295,
+              182
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "inner",
+            "rect": [
+              323,
+              975,
+              113,
+              192
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              204,
+              686,
+              293,
+              196
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "inner",
+            "rect": [
+              508,
+              826,
+              150,
+              47
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              1041,
+              120,
+              24,
+              199
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              369,
+              1039,
+              125,
+              135
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 4,
+        "first": {
+          "feature": 0,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "generated_snapshot_04",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              341,
+              400,
+              178,
+              264
+            ],
+            "face": "both",
+            "blocks": [
+              "via"
+            ],
+            "allow_nets": []
+          },
+          {
+            "rect": [
+              32,
+              -9,
+              128,
+              116
+            ],
+            "face": "top",
+            "blocks": [
+              "via",
+              "track",
+              "component"
+            ],
+            "allow_nets": [
+              10,
+              20
+            ]
+          },
+          {
+            "rect": [
+              293,
+              56,
+              271,
+              299
+            ],
+            "face": "bottom",
+            "blocks": [
+              "track"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "via",
+            "net": 10,
+            "rect": [
+              976,
+              215,
+              204,
+              60
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              738,
+              296,
+              269,
+              283
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "inner",
+            "rect": [
+              380,
+              915,
+              218,
+              270
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 3,
+        "first": {
+          "feature": 0,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "generated_snapshot_05",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              91,
+              -14,
+              111,
+              62
+            ],
+            "face": "both",
+            "blocks": [
+              "via",
+              "track"
+            ],
+            "allow_nets": [
+              10
+            ]
+          },
+          {
+            "rect": [
+              456,
+              260,
+              262,
+              188
+            ],
+            "face": "both",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          },
+          {
+            "rect": [
+              288,
+              22,
+              275,
+              117
+            ],
+            "face": "top",
+            "blocks": [
+              "track"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              751,
+              379,
+              33,
+              93
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              337,
+              819,
+              224,
+              89
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "inner",
+            "rect": [
+              140,
+              282,
+              109,
+              125
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              1065,
+              426,
+              159,
+              130
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              332,
+              61,
+              98,
+              261
+            ]
+          },
+          {
+            "kind": "via",
+            "net": 10,
+            "rect": [
+              835,
+              706,
+              88,
+              223
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              378,
+              416,
+              143,
+              214
+            ]
+          },
+          {
+            "kind": "via",
+            "net": 10,
+            "rect": [
+              870,
+              847,
+              221,
+              278
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 3,
+        "first": {
+          "feature": 3,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 8
+    }
+  },
+  {
+    "name": "generated_snapshot_06",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              484,
+              273,
+              116,
+              187
+            ],
+            "face": "both",
+            "blocks": [
+              "track",
+              "via",
+              "component"
+            ],
+            "allow_nets": [
+              20,
+              10
+            ]
+          },
+          {
+            "rect": [
+              45,
+              202,
+              143,
+              289
+            ],
+            "face": "bottom",
+            "blocks": [
+              "track",
+              "via",
+              "component"
+            ],
+            "allow_nets": []
+          },
+          {
+            "rect": [
+              46,
+              273,
+              183,
+              189
+            ],
+            "face": "bottom",
+            "blocks": [
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10
+            ]
+          },
+          {
+            "rect": [
+              320,
+              402,
+              158,
+              243
+            ],
+            "face": "both",
+            "blocks": [
+              "via",
+              "track",
+              "component"
+            ],
+            "allow_nets": [
+              20,
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "via",
+            "net": 10,
+            "rect": [
+              990,
+              915,
+              232,
+              62
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              486,
+              103,
+              147,
+              267
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              652,
+              1,
+              240,
+              182
+            ]
+          },
+          {
+            "kind": "via",
+            "net": 10,
+            "rect": [
+              646,
+              910,
+              126,
+              116
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 2,
+        "first": {
+          "feature": 0,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 5
+    }
+  },
+  {
+    "name": "generated_snapshot_07",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              128,
+              379,
+              286,
+              64
+            ],
+            "face": "both",
+            "blocks": [
+              "via",
+              "track"
+            ],
+            "allow_nets": [
+              20
+            ]
+          },
+          {
+            "rect": [
+              491,
+              198,
+              14,
+              30
+            ],
+            "face": "top",
+            "blocks": [
+              "track",
+              "component"
+            ],
+            "allow_nets": []
+          },
+          {
+            "rect": [
+              493,
+              229,
+              18,
+              196
+            ],
+            "face": "top",
+            "blocks": [
+              "via",
+              "track"
+            ],
+            "allow_nets": []
+          },
+          {
+            "rect": [
+              136,
+              160,
+              158,
+              95
+            ],
+            "face": "top",
+            "blocks": [
+              "component"
+            ],
+            "allow_nets": [
+              20
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              579,
+              1095,
+              253,
+              143
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              1010,
+              6,
+              92,
+              187
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              513,
+              44,
+              116,
+              175
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              13,
+              144,
+              216,
+              45
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              402,
+              403,
+              140,
+              227
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              683,
+              703,
+              225,
+              59
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              84,
+              286,
+              30,
+              137
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              313,
+              312,
+              228,
+              258
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 5,
+        "first": {
+          "feature": 0,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 13
+    }
+  },
+  {
+    "name": "generated_snapshot_08",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              236,
+              8,
+              3,
+              145
+            ],
+            "face": "both",
+            "blocks": [
+              "track"
+            ],
+            "allow_nets": []
+          },
+          {
+            "rect": [
+              485,
+              294,
+              67,
+              225
+            ],
+            "face": "both",
+            "blocks": [
+              "track"
+            ],
+            "allow_nets": [
+              10
+            ]
+          },
+          {
+            "rect": [
+              319,
+              71,
+              38,
+              242
+            ],
+            "face": "both",
+            "blocks": [
+              "via"
+            ],
+            "allow_nets": [
+              20,
+              10
+            ]
+          },
+          {
+            "rect": [
+              24,
+              185,
+              74,
+              227
+            ],
+            "face": "bottom",
+            "blocks": [
+              "via",
+              "component"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              1023,
+              465,
+              39,
+              86
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "generated_snapshot_09",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              257,
+              22,
+              6,
+              1
+            ],
+            "face": "top",
+            "blocks": [
+              "track",
+              "component"
+            ],
+            "allow_nets": []
+          },
+          {
+            "rect": [
+              269,
+              219,
+              128,
+              161
+            ],
+            "face": "top",
+            "blocks": [
+              "track",
+              "component"
+            ],
+            "allow_nets": []
+          },
+          {
+            "rect": [
+              48,
+              88,
+              238,
+              228
+            ],
+            "face": "bottom",
+            "blocks": [
+              "component",
+              "via",
+              "track"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "via",
+            "net": 10,
+            "rect": [
+              242,
+              914,
+              17,
+              192
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "generated_snapshot_10",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              297,
+              273,
+              29,
+              164
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              815,
+              461,
+              280,
+              53
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              776,
+              482,
+              227,
+              20
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              473,
+              251,
+              199,
+              191
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              751,
+              18,
+              119,
+              13
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 2,
+        "first": {
+          "feature": 0,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 2
+    }
+  },
+  {
+    "name": "generated_snapshot_11",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              314,
+              196,
+              289,
+              211
+            ],
+            "face": "both",
+            "blocks": [
+              "via",
+              "track",
+              "component"
+            ],
+            "allow_nets": [
+              20,
+              10
+            ]
+          },
+          {
+            "rect": [
+              231,
+              393,
+              229,
+              294
+            ],
+            "face": "top",
+            "blocks": [
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              10,
+              20
+            ]
+          },
+          {
+            "rect": [
+              119,
+              208,
+              30,
+              48
+            ],
+            "face": "both",
+            "blocks": [
+              "component",
+              "track"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              589,
+              701,
+              105,
+              30
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 1
+    }
+  },
+  {
+    "name": "generated_snapshot_12",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              433,
+              -20,
+              60,
+              194
+            ],
+            "face": "bottom",
+            "blocks": [
+              "component",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              43,
+              157,
+              101,
+              152
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              673,
+              506,
+              19,
+              135
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              563,
+              927,
+              87,
+              193
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              17,
+              479,
+              11,
+              275
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              247,
+              40,
+              75,
+              198
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              -9,
+              933,
+              184,
+              140
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              1037,
+              526,
+              245,
+              74
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              721,
+              151,
+              187,
+              250
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 3,
+        "first": {
+          "feature": 2,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 4
+    }
+  },
+  {
+    "name": "generated_snapshot_13",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              311,
+              449,
+              133,
+              78
+            ],
+            "face": "bottom",
+            "blocks": [
+              "component",
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          },
+          {
+            "rect": [
+              290,
+              260,
+              254,
+              88
+            ],
+            "face": "top",
+            "blocks": [
+              "component"
+            ],
+            "allow_nets": [
+              20,
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              457,
+              558,
+              148,
+              173
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              982,
+              1063,
+              170,
+              297
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              264,
+              168,
+              102,
+              45
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              636,
+              510,
+              286,
+              257
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              216,
+              504,
+              129,
+              87
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 2,
+        "first": {
+          "feature": 1,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 4
+    }
+  },
+  {
+    "name": "generated_snapshot_14",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              167,
+              319,
+              174,
+              176
+            ],
+            "face": "both",
+            "blocks": [
+              "via",
+              "track"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              678,
+              253,
+              53,
+              15
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              907,
+              241,
+              107,
+              159
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              433,
+              1023,
+              104,
+              86
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "inner",
+            "rect": [
+              397,
+              803,
+              176,
+              184
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              673,
+              355,
+              257,
+              277
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 2,
+        "first": {
+          "feature": 1,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 4
+    }
+  },
+  {
+    "name": "generated_snapshot_15",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              11,
+              55,
+              161,
+              101
+            ],
+            "face": "top",
+            "blocks": [
+              "via",
+              "component",
+              "track"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              769,
+              583,
+              285,
+              36
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "inner",
+            "rect": [
+              48,
+              533,
+              33,
+              177
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "generated_snapshot_16",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              148,
+              76,
+              171,
+              81
+            ],
+            "face": "bottom",
+            "blocks": [
+              "component",
+              "via"
+            ],
+            "allow_nets": [
+              20,
+              10
+            ]
+          },
+          {
+            "rect": [
+              453,
+              120,
+              184,
+              75
+            ],
+            "face": "both",
+            "blocks": [
+              "component"
+            ],
+            "allow_nets": [
+              10,
+              20
+            ]
+          },
+          {
+            "rect": [
+              225,
+              243,
+              179,
+              24
+            ],
+            "face": "top",
+            "blocks": [
+              "via"
+            ],
+            "allow_nets": []
+          },
+          {
+            "rect": [
+              473,
+              294,
+              283,
+              22
+            ],
+            "face": "top",
+            "blocks": [
+              "track",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "via",
+            "net": 10,
+            "rect": [
+              741,
+              80,
+              193,
+              73
+            ]
+          },
+          {
+            "kind": "via",
+            "net": 10,
+            "rect": [
+              807,
+              210,
+              201,
+              39
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              321,
+              859,
+              137,
+              113
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 1,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 4
+    }
+  },
+  {
+    "name": "generated_snapshot_17",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              91,
+              470,
+              260,
+              53
+            ],
+            "face": "both",
+            "blocks": [
+              "track"
+            ],
+            "allow_nets": [
+              10
+            ]
+          },
+          {
+            "rect": [
+              202,
+              323,
+              88,
+              250
+            ],
+            "face": "bottom",
+            "blocks": [
+              "component",
+              "track"
+            ],
+            "allow_nets": [
+              20
+            ]
+          },
+          {
+            "rect": [
+              436,
+              248,
+              233,
+              28
+            ],
+            "face": "both",
+            "blocks": [
+              "component"
+            ],
+            "allow_nets": [
+              10
+            ]
+          },
+          {
+            "rect": [
+              301,
+              244,
+              173,
+              238
+            ],
+            "face": "bottom",
+            "blocks": [
+              "via",
+              "track"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              31,
+              397,
+              298,
+              217
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "inner",
+            "rect": [
+              774,
+              225,
+              153,
+              270
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              211,
+              148,
+              73,
+              123
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "inner",
+            "rect": [
+              830,
+              985,
+              199,
+              110
+            ]
+          },
+          {
+            "kind": "via",
+            "net": 10,
+            "rect": [
+              236,
+              739,
+              113,
+              26
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              733,
+              546,
+              227,
+              56
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              830,
+              770,
+              69,
+              192
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 3,
+        "first": {
+          "feature": 0,
+          "kind": "keepout",
+          "region": 1
+        }
+      },
+      "calls": 8
+    }
+  },
+  {
+    "name": "generated_snapshot_18",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              278,
+              225,
+              104,
+              1
+            ],
+            "face": "top",
+            "blocks": [
+              "track",
+              "via"
+            ],
+            "allow_nets": [
+              20,
+              10
+            ]
+          },
+          {
+            "rect": [
+              56,
+              111,
+              40,
+              31
+            ],
+            "face": "bottom",
+            "blocks": [
+              "component",
+              "via"
+            ],
+            "allow_nets": []
+          },
+          {
+            "rect": [
+              193,
+              278,
+              174,
+              10
+            ],
+            "face": "top",
+            "blocks": [
+              "track",
+              "component",
+              "via"
+            ],
+            "allow_nets": []
+          },
+          {
+            "rect": [
+              226,
+              245,
+              6,
+              160
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "via",
+              "track"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              1054,
+              822,
+              285,
+              197
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              1072,
+              366,
+              223,
+              99
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              423,
+              83,
+              259,
+              213
+            ]
+          },
+          {
+            "kind": "via",
+            "net": 10,
+            "rect": [
+              26,
+              244,
+              40,
+              100
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              284,
+              807,
+              281,
+              54
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              242,
+              874,
+              271,
+              217
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              658,
+              34,
+              83,
+              8
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 3,
+        "first": {
+          "feature": 0,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 14
+    }
+  },
+  {
+    "name": "generated_snapshot_19",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              -8,
+              459,
+              13,
+              135
+            ],
+            "face": "top",
+            "blocks": [
+              "track"
+            ],
+            "allow_nets": [
+              20,
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "via",
+            "net": 10,
+            "rect": [
+              383,
+              819,
+              105,
+              245
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              99,
+              675,
+              212,
+              62
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 0,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "generated_snapshot_20",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              424,
+              396,
+              35,
+              157
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "track"
+            ],
+            "allow_nets": [
+              20,
+              10
+            ]
+          },
+          {
+            "rect": [
+              304,
+              329,
+              100,
+              182
+            ],
+            "face": "bottom",
+            "blocks": [
+              "via"
+            ],
+            "allow_nets": []
+          },
+          {
+            "rect": [
+              195,
+              383,
+              119,
+              197
+            ],
+            "face": "both",
+            "blocks": [
+              "track",
+              "component"
+            ],
+            "allow_nets": [
+              20,
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              382,
+              541,
+              210,
+              5
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              915,
+              327,
+              209,
+              221
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              435,
+              276,
+              20,
+              29
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              530,
+              349,
+              209,
+              37
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              943,
+              832,
+              71,
+              175
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              1036,
+              730,
+              65,
+              163
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "front",
+            "rect": [
+              1088,
+              1010,
+              126,
+              199
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              752,
+              1014,
+              93,
+              56
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 5,
+        "first": {
+          "feature": 1,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 7
+    }
+  },
+  {
+    "name": "generated_snapshot_21",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              260,
+              105,
+              140,
+              94
+            ],
+            "face": "bottom",
+            "blocks": [
+              "via"
+            ],
+            "allow_nets": [
+              20
+            ]
+          },
+          {
+            "rect": [
+              83,
+              435,
+              275,
+              45
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "via",
+              "track"
+            ],
+            "allow_nets": [
+              20,
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "inner",
+            "rect": [
+              387,
+              464,
+              160,
+              80
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 0,
+        "first": null
+      },
+      "calls": 0
+    }
+  },
+  {
+    "name": "generated_snapshot_22",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              60,
+              15,
+              216,
+              141
+            ],
+            "face": "bottom",
+            "blocks": [
+              "track",
+              "component",
+              "via"
+            ],
+            "allow_nets": [
+              10,
+              20
+            ]
+          },
+          {
+            "rect": [
+              356,
+              165,
+              281,
+              250
+            ],
+            "face": "bottom",
+            "blocks": [
+              "via",
+              "track"
+            ],
+            "allow_nets": [
+              10
+            ]
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              602,
+              877,
+              97,
+              25
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              867,
+              932,
+              85,
+              184
+            ]
+          },
+          {
+            "kind": "track",
+            "net": 10,
+            "layer": "back",
+            "rect": [
+              393,
+              990,
+              50,
+              280
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              175,
+              170,
+              266,
+              147
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              1036,
+              1048,
+              140,
+              160
+            ]
+          },
+          {
+            "kind": "via",
+            "net": 10,
+            "rect": [
+              197,
+              952,
+              168,
+              237
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "top",
+            "rect": [
+              979,
+              745,
+              270,
+              8
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 5,
+        "first": {
+          "feature": 1,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 2
+    }
+  },
+  {
+    "name": "generated_snapshot_23",
+    "input": {
+      "version": 1,
+      "board": {
+        "outline": [
+          0,
+          0,
+          1000,
+          1000
+        ],
+        "components": [
+          1,
+          2
+        ],
+        "nets": [
+          10,
+          20
+        ],
+        "regions": [
+          {
+            "rect": [
+              267,
+              423,
+              134,
+              199
+            ],
+            "face": "both",
+            "blocks": [
+              "component",
+              "track"
+            ],
+            "allow_nets": [
+              10,
+              20
+            ]
+          },
+          {
+            "rect": [
+              398,
+              53,
+              185,
+              2
+            ],
+            "face": "bottom",
+            "blocks": [
+              "component",
+              "track"
+            ],
+            "allow_nets": [
+              10,
+              20
+            ]
+          },
+          {
+            "rect": [
+              233,
+              459,
+              108,
+              250
+            ],
+            "face": "bottom",
+            "blocks": [
+              "via"
+            ],
+            "allow_nets": [
+              20
+            ]
+          },
+          {
+            "rect": [
+              180,
+              131,
+              256,
+              215
+            ],
+            "face": "top",
+            "blocks": [
+              "component",
+              "via"
+            ],
+            "allow_nets": []
+          }
+        ],
+        "features": [
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              5,
+              564,
+              126,
+              19
+            ]
+          },
+          {
+            "kind": "component",
+            "id": 1,
+            "face": "bottom",
+            "rect": [
+              865,
+              853,
+              177,
+              250
+            ]
+          }
+        ]
+      }
+    },
+    "unavailable": false,
+    "expected": {
+      "ok": {
+        "violations": 1,
+        "first": {
+          "feature": 1,
+          "kind": "outside_board",
+          "region": null
+        }
+      },
+      "calls": 4
+    }
+  }
+]

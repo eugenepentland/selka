@@ -8,7 +8,8 @@ The implementation follows [the revision 3 plan](docs/plan.md) and
 language name and `.my` extension are provisional.
 
 Typed VM host-library calls now execute through explicit registrations. Next is
-a board-validation or constraint-processing trial with measured diagnostic repair outcomes.
+the [board-validation trial](experiments/board_trial/contract.md), whose contract
+and 87 oracle cases are fixed; validator execution and repair measurements remain pending.
 Expensive geometry can remain in Zig/C/Rust behind explicit typed wrappers.
 Completed C/native experiments remain available; further native compilation,
 LLVM, and direct x86_64 Linux work are deferred until the design and measurements
@@ -109,7 +110,9 @@ cache is ignored.
 The [typed VM host interface](docs/experiments/host-functions.md) supports explicit
 `host fn` declarations, transitive effects and program-bound registrations. It
 copies ordinary values through bounded synchronous sessions, including imported
-calls and typed results. Borrowed and runtime-owned boundary values reject.
+calls and typed results. Host-enabled typed application invocation now accepts
+snapshots and returns owned reports through exported guest functions. Borrowed
+and runtime-owned boundary values reject.
 
 The scalar MVP (M0–M5) is implemented and audited: owned source buffers, source locations, lexer,
 parser, separate untyped/typed representations, per-function instructions,

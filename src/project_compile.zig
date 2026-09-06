@@ -167,6 +167,19 @@ pub const Compilation = struct {
         try self.emit();
         return @import("vm.zig").invoke(allocator, self.code.?, try self.publicFunction(name), arguments, options);
     }
+    /// Invoke an explicitly exported guest function through registered host callbacks.
+    pub fn invokePublicWithHost(
+        self: *Compilation,
+        allocator: @import("std").mem.Allocator,
+        name: []const u8,
+        arguments: []const typed.Value,
+        registry: *@import("vm_host.zig").Registry,
+        options: @import("vm.zig").HostInvokeOptions,
+    ) (PublicFunctionError || @import("vm.zig").HostInvokeError)!@import("vm.zig").ValueResult {
+        if (options.execution.steps_executed) |steps| steps.* = 0;
+        try self.emit();
+        return @import("vm.zig").invokeWithHost(allocator, self.code.?, try self.publicFunction(name), arguments, registry, options);
+    }
     /// Resolve a public callable name, rejecting hidden or unknown functions.
     pub fn publicFunction(self: *Compilation, name: []const u8) PublicFunctionError!typed.FunctionId {
         try self.check();

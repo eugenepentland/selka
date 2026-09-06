@@ -145,6 +145,27 @@ traces, owned-buffer cleanup and allocation-failure cases.
 
 ## Acceptance and next experiment
 
+### Typed application entry points
+
+An embedding application can now pass a typed snapshot to an ordinary guest
+function and receive a caller-owned typed result using `vm.invokeWithHost`.
+For a module project, `Compilation.invokePublicWithHost` resolves only explicitly
+exported names before invoking. Both use the same program-bound registrations
+as `runWithHost`; direct `host fn` declarations are not guest entry points.
+
+`HostInvokeOptions.execution` supplies instruction/frame limits, argument-copy
+limits and optional executed-step reporting. `.callbacks` supplies independent
+host call/work/value limits. The caller retains its input values and releases a
+returned `.value` with the invocation allocator. Reference, capability and
+runtime-owned argument/result graphs reject; invalid arity, types, public names
+and missing registrations cannot execute callbacks. The original `invoke` and
+`invokePublic` APIs remain effect-free.
+
+`host_invocation_test.zig` verifies imported public entry selection, nominal
+success/error results, independent aggregate ownership, failure cleanup,
+instruction accounting and separate argument/callback budgets. This supplies the
+typed snapshot/report boundary needed by the board-validation trial.
+
 `host_functions_test.zig` exercises exact registrations and grants, metadata
 snapshots, missing preflight bindings, unsupported signatures, argument/result
 validation, declared success/error payloads, independent aggregate storage,
@@ -156,7 +177,8 @@ nominal aggregate results, formatting, duplicate discovery, malformed bytecode,
 program identity, error locations and session reuse. Allocation-failure sweeps
 span checking, linking, callbacks, guest-owned storage and result cleanup.
 
-The next milestone is the board/constraint trial with independent behavior and
-recorded agent repair outcomes. Add borrowed buffers or typed host-owned handles
+The [board trial contract and oracle](../../experiments/board_trial/contract.md)
+now fix 87 development cases before either validator implementation. Guest/Zig
+validation and recorded agent repair outcomes remain pending. Add borrowed buffers or typed host-owned handles
 only if that trial needs them, with explicit access, lifetime and stale-identity
 contracts. Interpreter optimization and native guest backends remain deferred.

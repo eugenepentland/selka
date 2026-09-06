@@ -60,9 +60,11 @@ explicit types, schemas, and interfaces where that improves the program.
    transitive effects, grants, copied values and typed failures. Registrations bind
    to the same compiled program; VM calls share bounded sessions and deterministic
    cleanup. Borrowed and runtime-owned boundary signatures reject explicitly.
-4. Run a board-validation or constraint-processing trial in the language, keeping
-   expensive geometry/routing kernels in Zig (or C/Rust behind a wrapper). Begin
-   with an explicit input snapshot and add only host operations the trial needs.
+4. Implement the [bounded board keepout trial](../experiments/board_trial/contract.md)
+   against its fixed snapshot contract and 87 independent oracle cases. Typed
+   host-enabled invocation now supports ordinary snapshot/report values. Guest
+   validation, a standalone Zig baseline and measured repair attempts remain
+   pending; geometry stays behind a typed wrapper.
 5. Use trial evidence to prioritize generic constraints/tooling, bounded source
    serialization, and finer incremental checks. These remain open; completing all
    abstraction experiments is not a prerequisite for starting the trial.
@@ -2120,3 +2122,52 @@ further abstractions/tooling. Borrowed host buffers/handles need explicit lifeti
 contracts if the trial requires them; the current interface rejects such
 signatures. Broader pending roadmap requirements remain active. Native guest
 execution remains outside this goal.
+
+
+## Board trial contract and typed application boundary — 2026-09-06
+
+The [bounded keepout contract](../experiments/board_trial/contract.md) now fixes
+snapshot capacities, distinct component/net/unit identities, explicit feature
+states, input-error precedence, face/layer/net-exemption rules, positive-area
+intersection and deterministic first-violation reporting. It is grounded in the
+read-only EDA board_keepout/drc_board_keepout sources, with commit and file hashes
+recorded. Rectangular integer footprints are a deliberate trial scope: no full
+production DRC migration, geometric/performance equivalence or reliability
+improvement is claimed.
+
+Before either validator implementation, the independent Python interval/set
+oracle and 87 fixed development cases now pass: 27 hand-checked boundary/error
+sentinels, 36 face/admission matrix cases and 24 generated snapshots. Cases include
+maximum violations, missing/duplicate identities, invalid rectangles, touching
+boundaries, exempt copper, through-vias, geometry unavailability and error
+precedence. Five oracle self-tests also cover transport rejection, exact
+endpoints, translation and identity-renaming invariance. Expected callback counts
+are recorded alongside typed result expectations. These are oracle checks, not
+executions of a completed guest or Zig validator, and not blinded repair evidence.
+
+The trial exposed the need for typed application entry points beyond scalar main.
+`vm.invokeWithHost` and project `Compilation.invokePublicWithHost` now accept
+ordinary copied snapshots and return caller-owned nominal values/results through
+registered callbacks. Public invocation resolves only exports; references,
+capabilities, runtime-owned graphs and direct host-only entries reject. Argument
+copying, VM steps/frames and callback budgets remain independent. Pure invocation
+retains its effect-free restrictions. Common invocation validation/execution is
+shared rather than duplicated.
+
+Three new core tests verify nominal success/error ownership and full allocation
+failure cleanup, export selection and invalid inputs before callbacks, located
+quota traps, step reporting and fresh sessions after failure. Debug `zig build
+test` passes 29/29 steps and 763/763 tests; ReleaseFast `test-interpreter` passes
+30/30 steps and the same 763 tests (696 core, 67 CLI). Both pass all 19
+interpreter/tooling driver invocations, including the new oracle self-tests and
+the existing 96 independent VM corpus comparisons. Formatting and all 88 Guardian
+checks pass with baselines disabled; report-only size/line findings remain.
+One additional gate cycle wrapped the long public-method signature. A focused
+fixture correction used the language's explicit read_ref operation. No native
+execution suite was run.
+
+Next: implement the guest board validator and standalone Zig baseline against
+these fixed expectations, register the rectangle kernel, compare typed reports
+and callback behavior, then run matched repairs with fresh held-out cases. The
+application and repair study remain incomplete. Other abstraction/tooling
+requirements remain active; native guest execution remains excluded.

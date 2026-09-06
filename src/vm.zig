@@ -191,6 +191,22 @@ pub fn runWithHost(allocator: std.mem.Allocator, program: bc.Program, options: O
 /// storage is copied; the caller owns a returned value in the supplied allocator.
 /// Module export selection belongs to the project API, not this bytecode layer.
 pub fn invoke(allocator: std.mem.Allocator, program: bc.Program, function_id: typed.FunctionId, arguments: []const typed.Value, options: InvokeOptions) InvokeError!ValueResult {
+    return runInvocation(allocator, program, options, try invocationEntry(allocator, program, function_id, arguments, options, 0));
+}
+/// Ordinary typed guest invocation with registered host effects and copied inputs.
+pub const HostInvokeOptions = struct { execution: InvokeOptions = .{}, callbacks: host.Limits = .{} };
+/// Host-enabled invocation preserves ordinary argument/export errors and rejects host-only entries.
+pub const HostInvokeError = InvokeError || vm_host.Error || error{InvocationHostDeclaration};
+/// Invoke a guest function with typed values and registered callbacks; caller owns the result.
+pub fn invokeWithHost(allocator: std.mem.Allocator, program: bc.Program, function_id: typed.FunctionId, arguments: []const typed.Value, registry: *vm_host.Registry, options: HostInvokeOptions) HostInvokeError!ValueResult {
+    var entry = try invocationEntry(allocator, program, function_id, arguments, options.execution, @import("effect_set.zig").all);
+    if (program.functions[@backingInt(function_id)].policy.host != null) return error.InvocationHostDeclaration;
+    const session = try registry.begin(allocator, program, options.callbacks);
+    defer session.close() catch |err| std.debug.panic("VM host session cleanup failed: {s}", .{@errorName(err)});
+    entry.host = .{ .registry = registry, .session = session };
+    return runInvocation(allocator, program, options.execution, entry);
+}
+fn invocationEntry(allocator: std.mem.Allocator, program: bc.Program, function_id: typed.FunctionId, arguments: []const typed.Value, options: InvokeOptions, allowed_effects: @import("effect_set.zig").Mask) InvokeError!Entry {
     if (options.steps_executed) |steps| steps.* = 0;
     if (options.max_steps == 0 or options.max_frames == 0) return error.InvalidBudget;
     if (options.arguments.max_values == 0 or options.arguments.max_depth == 0 or options.arguments.max_depth > 128) return error.InvalidValueLimits;
@@ -198,7 +214,7 @@ pub fn invoke(allocator: std.mem.Allocator, program: bc.Program, function_id: ty
     if (@backingInt(function_id) >= program.functions.len) return error.UnknownInvocationFunction;
     const function = program.functions[@backingInt(function_id)];
     if (function.policy.restricted) return error.PrivateInvocationFunction;
-    if (function.policy.effects != 0) return error.InvocationEffects;
+    if (function.policy.effects & ~allowed_effects != 0) return error.InvocationEffects;
     if (function.signature.return_reference != null) return error.InvocationReference;
     if (arguments.len != function.signature.parameter_count) return error.InvocationArity;
     try @import("data_type.zig").check(allocator, program.records, function.signature.return_type, true);
@@ -206,15 +222,14 @@ pub fn invoke(allocator: std.mem.Allocator, program: bc.Program, function_id: ty
         if (parameter.parameter.reference_parameter != null) return error.InvocationReference;
         try @import("data_type.zig").check(allocator, program.records, parameter.ty, true);
     }
+    return .{ .id = function_id, .arguments = arguments, .limits = options.arguments, .steps_executed = options.steps_executed };
+}
+fn runInvocation(allocator: std.mem.Allocator, program: bc.Program, options: InvokeOptions, entry: Entry) RunError!ValueResult {
     return runValues(allocator, program, .{ .max_steps = options.max_steps, .max_frames = options.max_frames, .memory = .{
         .provide_allocator = false,
-    } }, .{
-        .id = function_id,
-        .arguments = arguments,
-        .limits = options.arguments,
-        .steps_executed = options.steps_executed,
-    });
+    } }, entry);
 }
+
 const HostExecution = struct { registry: *const vm_host.Registry, session: host.Session };
 const Entry = struct {
     host: ?HostExecution = null,

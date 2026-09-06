@@ -3,6 +3,7 @@ test {
     _ = @import("host_functions_test.zig");
     _ = @import("vm_host_test.zig");
     _ = @import("host_declarations_test.zig");
+    _ = @import("host_invocation_test.zig");
     _ = @import("diagnostic_output_test.zig");
     _ = @import("provenance_test.zig");
     _ = @import("lifetime_provenance_test.zig");
