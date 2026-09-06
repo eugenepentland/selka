@@ -3114,3 +3114,22 @@ all 88 checks with baselines disabled. Allocation-failure coverage includes
 forwarded references, later-input provenance and imported result helpers/schema
 rendering. These results validate the supported reference contracts, not the
 remaining generic operations or broader roadmap requirements.
+
+
+### Readable specialization diagnostics and metadata — 2026-09-06
+
+Checked functions now retain concrete type arguments explicitly. Instance display
+names include ordered concrete types and qualified nominal names, remain unchanged
+when discovery order changes, and flow into dumps/reports and VM/C traces. Public
+module/schema roots use metadata rather than punctuation to exclude internal
+instances. This advances the original understandable-diagnostics criterion; it
+does not complete direct public generic tooling, broader operations, native
+embedding or incremental compilation. See `docs/experiments/generic-diagnostics.md`.
+
+Validation: all 586 core tests passed in Debug and ReleaseFast, all 60 CLI tests
+passed, and native parity passed 2682 comparisons across 93 single-file and 16
+module fixtures with -O0/-O2 and undefined-behavior sanitization. Guardian passed
+all 88 checks with baselines disabled. Tests cover discovery-order independence,
+qualified nominal names, dump/trace output, schema exclusion and allocation-failure
+cleanup. This does not establish completion of direct generic public tooling or
+the other unfinished roadmap tracks.

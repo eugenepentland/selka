@@ -44,6 +44,8 @@ test "generic execution preserves nominal values through copy contracts" {
     defer compilation.deinit();
     try t.expectEqual(@as(i64, 7), (try compilation.execute(t.allocator)).value);
     try t.expectEqual(@as(usize, 3), compilation.program.?.functions.len);
+    try t.expectEqualStrings("id::<A>", compilation.program.?.functions[1].name);
+    try t.expectEqualStrings("id::<B>", compilation.program.?.functions[2].name);
 }
 
 fn limited(count: usize) !void {
@@ -74,4 +76,37 @@ test "generic execution separates declaration ordinals for ordinary returned ref
         "fn main()->i64{let x=9;borrow x as r{borrow forward(r) as result{return read_ref(result);}}}");
     defer compilation.deinit();
     try t.expectEqual(@as(i64, 9), (try compilation.execute(t.allocator)).value);
+}
+
+// spec: GENERIC-DIAGNOSTIC-1
+test "generic diagnostics name concrete types independently of discovery order" {
+    const cases = [_][]const u8{
+        "fn id<T:copy>(x:T)->T{return x;}fn main()->i64{return id::<i64>(2);}",
+        "fn id<T:copy>(x:T)->T{return x;}fn extra()->bool{return id::<bool>(true);}fn main()->i64{return id::<i64>(2);}",
+    };
+    for (cases) |source_text| {
+        var compilation = try language.Compilation.init(t.allocator, "names.my", source_text);
+        defer compilation.deinit();
+        try compilation.check();
+        var found = false;
+        for (compilation.program.?.functions) |function| {
+            if (!std.mem.eql(u8, function.name, "id::<i64>")) continue;
+            found = true;
+            try t.expectEqualSlices(@import("typed.zig").Type, &.{.i64}, function.type_arguments);
+        }
+        try t.expect(found);
+        const dump = try compilation.dump(t.allocator);
+        defer t.allocator.free(dump);
+        try t.expect(std.mem.indexOf(u8, dump, "id::<i64>") != null);
+    }
+}
+test "generic diagnostics retain instantiated names in runtime traces" {
+    var compilation = try language.Compilation.init(t.allocator, "trace.my", "fn divide<T:integer>(x:T)->T{return x/cast<T>(0);}fn forward<U:integer>(x:U)->U{return divide::<U>(x);}" ++
+        "fn main()->i64{return cast<i64>(forward::<u8>(1u8));}");
+    defer compilation.deinit();
+    const result = try compilation.execute(t.allocator);
+    try t.expectEqualStrings("R_DIVISION_BY_ZERO", result.trap.code);
+    try t.expectEqual(@as(usize, 3), result.trap.stack.len);
+    try t.expectEqualStrings("divide::<u8>", result.trap.stack.frames[0].function);
+    try t.expectEqualStrings("forward::<u8>", result.trap.stack.frames[1].function);
 }

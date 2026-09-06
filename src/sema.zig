@@ -72,6 +72,24 @@ const Checker = struct {
     fn syntaxFunction(self: *Checker, id: typed.FunctionId) ast.Function {
         return self.syntax.functions[@backingInt(self.instance_keys.items[@backingInt(id)].declaration)];
     }
+    fn instanceName(self: *Checker, id: typed.FunctionId) Error![]const u8 {
+        const function = self.syntaxFunction(id);
+        const base = if (self.catalog.module_names) |module|
+            try module.functionDeclaration(function.policy.owner, function.name)
+        else
+            try functionName(self.allocator, self.src, function.policy.owner, function.name);
+        const arguments = self.instance_keys.items[@backingInt(id)].arguments;
+        if (arguments.len == 0) return base;
+        var output: std.Io.Writer.Allocating = .init(self.allocator);
+        defer output.deinit();
+        output.writer.print("{s}::<", .{base}) catch return error.OutOfMemory;
+        for (arguments, 0..) |argument, index| {
+            if (index != 0) output.writer.writeByte(',') catch return error.OutOfMemory;
+            output.writer.writeAll(typed.typeName(argument, self.catalog.records)) catch return error.OutOfMemory;
+        }
+        output.writer.writeByte('>') catch return error.OutOfMemory;
+        return output.toOwnedSlice();
+    }
     fn functionType(self: *Checker, id: typed.FunctionId, span: source.Span) Error!typed.Type {
         const key = self.instance_keys.items[@backingInt(id)];
         const function = self.syntax.functions[@backingInt(key.declaration)];
@@ -1455,7 +1473,8 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
                 .locals = try checker.locals.toOwnedSlice(allocator),
             },
             .id = @fromBackingInt(i),
-            .name = try instanceName(allocator, src, function, module_names, i),
+            .name = try checker.instanceName(@fromBackingInt(i)),
+            .type_arguments = checker.instance_keys.items[i].arguments,
             .declaration = function.name,
         });
     }
@@ -1510,9 +1529,3 @@ fn conversionBody(src: source.Source, program: ast.Program, function: ast.Functi
 }
 
 const functionName = @import("function_identity.zig").localName;
-
-fn instanceName(allocator: std.mem.Allocator, src: source.Source, function: ast.Function, names: ?*Names, index: usize) Error![]const u8 {
-    const base = if (names) |module| try module.functionDeclaration(function.policy.owner, function.name) else try functionName(allocator, src, function.policy.owner, function.name);
-    if (function.signature.type_parameters.len == 0) return base;
-    return std.fmt.allocPrint(allocator, "{s}${d}", .{ base, index });
-}

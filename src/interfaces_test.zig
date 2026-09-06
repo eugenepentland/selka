@@ -526,9 +526,10 @@ fn acceptChecked(main: []const u8, dependency: []const u8) !void {
 fn genericExecutionScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes = "module main;import units;fn id<T:integer>(x:T)->T{return x;}" ++
-            "fn main()->i64{let mut x=0;borrow mut x as r{discard units::set::<i64>(r,2);}" ++
+            "fn main()->i64{discard units::id::<units::Box>(new units::Box{value:1});" ++
+            "let mut x=0;borrow mut x as r{discard units::set::<i64>(r,2);}" ++
             "let values=new [1]i64 [x];borrow values[0..1] as s{borrow units::view::<i64>(s) as v{return units::run()+id::<i64>(units::head::<i64>(v));}}}" },
-        .{ .path = units_path, .bytes = "module units;export run;export id;export set;export head;export view;" ++
+        .{ .path = units_path, .bytes = "module units;export run;export id;export set;export head;export view;export Box;struct Box{value:i64}" ++
             "fn view<T:copy>(s:&[]T)->&[]T from s{return s;}" ++
             "fn head<T:copy>(s:&[]T)->T{borrow s[0..1] as first{return read_slice(first,0);}}" ++
             "fn set<T:copy>(x:&mut T,y:T)->T{write_ref(x,y);return read_ref(x);}fn id<T:copy>(x:T)->T{return x;}fn run()->i64{if id::<bool>(true){return id::<i64>(5);}return 0;}" },
@@ -540,12 +541,20 @@ fn genericExecutionScenario(allocator: std.mem.Allocator) !void {
     var compilation = try project_compile_module.Compilation.init(&index);
     try compilation.emit();
     try t.expectEqual(@as(i64, 7), (try @import("vm.zig").runWithOptions(allocator, compilation.code.?, .{})).value);
+    var nominal_instance = false;
+    for (compilation.program.?.functions) |function| {
+        if (!std.mem.eql(u8, function.name, "units::id::<units::Box>")) continue;
+        nominal_instance = true;
+        try t.expectEqual(@as(usize, 1), function.type_arguments.len);
+        try t.expectEqualStrings("units::Box", @import("typed.zig").typeName(function.type_arguments[0], compilation.program.?.records));
+    }
+    try t.expect(nominal_instance);
     const roots = try compilation.exportRoots(allocator);
     defer allocator.free(roots);
     try t.expectEqual(@as(usize, 1), roots.len);
     const schema = try @import("schema.zig").render(allocator, &compilation);
     defer allocator.free(schema);
-    try t.expect(std.mem.indexOfScalar(u8, schema, '$') == null);
+    try t.expect(std.mem.indexOf(u8, schema, "::<") == null);
     const generated = try compilation.emitC(allocator);
     defer allocator.free(generated);
     try t.expect(generated.len > 0);

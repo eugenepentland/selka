@@ -217,6 +217,8 @@ pub const ReturnReference = struct { parameter: LocalId, mutable: bool, slice: b
 /// Checked function signature, local/reference metadata, effects, and body identity.
 pub const Function = struct {
     policy: FunctionPolicy = .{},
+    /// Concrete specialization arguments; empty for an ordinary source function.
+    type_arguments: []const Type = &.{},
     signature: FunctionSignature = .{},
     scope: FunctionScope,
     id: FunctionId,

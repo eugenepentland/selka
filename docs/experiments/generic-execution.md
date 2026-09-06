@@ -32,9 +32,10 @@ what the declared requirements promise.
 ## Execution and public interfaces
 
 Instances use ordinary binding, ownership, region, and effect validation and the
-existing VM/C lowering. Internal names currently use a reserved `$` plus discovery
-ordinal to distinguish instances in dumps and traces. These names are compilation
-implementation details, not stable public names or a persistent cache identity.
+existing VM/C lowering. [Readable instance names](generic-diagnostics.md) include
+concrete type arguments in dumps and traces. Explicit checked metadata identifies
+specializations for public-root selection. These names remain diagnostic text,
+not stable public entry points or a persistent cache identity.
 
 Concrete module wrappers can call generic templates, execute publicly, and appear
 in schemas/bindings. Internal instances are excluded from direct module export

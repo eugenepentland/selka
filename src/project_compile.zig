@@ -129,7 +129,7 @@ pub const Compilation = struct {
     }
     fn exported(self: *Compilation, function: typed.Function) error{InternalError}!bool {
         // Concrete instances are implementation details reachable through ordinary exports.
-        if (@import("std").mem.indexOfScalar(u8, function.name, '$') != null) return false;
+        if (function.type_arguments.len != 0) return false;
         const original = self.src.originalSpan(function.declaration) catch return error.InternalError;
         if (original.input >= self.index.units.len or original.input >= self.index.project.modules.items.len) return error.InternalError;
         const unit = self.index.units[original.input];
