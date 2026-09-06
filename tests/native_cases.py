@@ -59,6 +59,10 @@ def project_cases(compiler, zig, root, temp):
             "helper.my": "module helper; export widen; fn widen(x: u8) -> u64 { return cast<u64>(x); }",
         }),
     ]
+    fixtures.append(("source-codecs", {
+        "main.my": "module main;import data as d;fn main()->i64{match codec_decode<d::Positive>(new d::Wire{n:7}){d::Decoded.ok(x)=>{return codec_encode<d::Positive>(x).n;},d::Decoded.err(e)=>{return e;}}}",
+        "data.my": (root / "examples/domain-codecs/data.my").read_text(),
+    }))
     fixtures.append(("domains", {
         "main.my": "module main; import shared.units as u; fn forward(x:u::Distance)->u::Distance{return x;} fn main()->i64{return u::Distance.number(forward(u::Distance.make(12)));}",
         "shared/units.my": "module shared.units; export Distance; domain Distance:i64 { private fn raw(x:i64)->Distance{return wrap<Distance>(x);} fn make(x:i64)->Distance{if x<0{return Distance.raw(0);}return Distance.raw(x);} fn number(x:Distance)->i64{return unwrap(x);} }",

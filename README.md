@@ -233,7 +233,9 @@ arguments and full-width results. [Native aggregate calls](docs/experiments/nati
 copy ordinary record, array and variant trees through caller-owned buffers.
 Generated Python wrappers also accept a [schema-pinned NativeClient](docs/experiments/native-bindings.md),
 which calls a matching shared library without a compiler subprocess, including
-declared domain codecs with typed decoder rejection errors.
+declared domain codecs with typed decoder rejection errors. Source programs can
+also use [declared codec operations](docs/experiments/source-codecs.md) to convert
+between domain values and their typed wire representations.
 
 [Partial record field moves](docs/experiments/partial-fields.md) use
 `take_field(owner, field)` to transfer individual fields immediately while preserving

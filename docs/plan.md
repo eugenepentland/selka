@@ -1368,3 +1368,29 @@ invalidation. Python syntax and whitespace checks pass; Guardian passes all 88
 checks with baselines disabled. This change does not claim a new full Zig-suite
 run. Source-level codec operations, borrowed/capability native invocation,
 incremental compilation and all other pending roadmap requirements remain open.
+
+
+### Source declared domain codec operations — 2026-09-06
+
+Source expressions now support `codec_decode<Domain>(wire)` and
+`codec_encode<Domain>(value)`. They select the methods named by an explicit codec
+contract and lower to ordinary checked calls, retaining public visibility,
+parameter/result typing, result obligations, effect checks and execution budgets.
+The decoder returns its declared typed result; encoding cannot accept raw backing
+values. Imported domain aliases and formatter round trips are supported.
+See `docs/experiments/source-codecs.md`.
+
+Both full core runs passed 591 tests in Debug/ReleaseFast; final focused acceptance
+adds a nonstandard method-name/transformation case and generic-constraint rejection.
+All 60 CLI tests and 2688 VM/native comparisons across 110 fixtures passed.
+Allocation-failure tests cover source execution/formatting and imported codec
+resolution. Guardian passes all 88 checks without baselines. New behavior
+classification subjects for the lexer, formatter and resolver were labeled
+intentional-change against the tagged SOURCE-CODEC-1 contract; uncertain subjects
+remain pending. No new full build-test run is claimed.
+
+This completes explicit source domain-to-wire conversion. JSON byte serialization
+operations still need bounded buffer/slice contracts, allocation authority and
+typed malformed-input handling. Generic codec constraints, borrowed/capability
+native invocation, finer incremental compilation and all other outstanding
+roadmap work remain open.

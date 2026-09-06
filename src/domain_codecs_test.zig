@@ -80,7 +80,8 @@ test "domain codec contracts require exact value signatures and ordinary complet
 }
 const Provider = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
-        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main;import data;fn main()->i64{return 0;}");
+        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main;import data as d;fn main()->i64{match codec_decode<d::Positive>(new d::Wire{n:7}){" ++
+            "d::Decoded.ok(x)=>{return codec_encode<d::Positive>(x).n;},d::Decoded.err(e)=>{return e;}}}");
         if (std.mem.eql(u8, path, "data.my")) return allocator.dupe(u8, "module data;export Wire;export Decoded;export Positive;" ++ source);
         return error.NotFound;
     }
@@ -91,6 +92,8 @@ fn projectScenario(allocator: std.mem.Allocator) !void {
     try project.load(.{ .context = null, .read = Provider.read }, "main", .{});
     var index = try language.interfaces.build(&project);
     var c = try language.project_compile.Compilation.init(&index);
+    try c.emit();
+    try t.expectEqual(@as(i64, 7), (try language.vm.runWithOptions(allocator, c.code.?, .{})).value);
     const json = try @import("schema.zig").render(allocator, &c);
     defer allocator.free(json);
     const parsed = try std.json.parseFromSlice(std.json.Value, allocator, json, .{});
@@ -133,4 +136,47 @@ test "domain codec formatting preserves comments entries and checked contracts" 
     defer t.allocator.free(stable);
     try t.expectEqualStrings(formatted, stable);
     try t.expect(std.mem.indexOf(u8, formatted, "// wire contract") != null);
+}
+
+const source_call = "fn main()->i64{match codec_decode<Positive>(new Wire{n:7}){Decoded.ok(x)=>{return codec_encode<Positive>(x).n;},Decoded.err(e)=>{return e;}}}";
+fn sourceScenario(allocator: std.mem.Allocator) !void {
+    var c = try language.Compilation.init(allocator, "source-codec.my", source ++ source_call);
+    defer c.deinit();
+    const result = try c.execute(allocator);
+    try t.expectEqual(@as(i64, 7), result.value);
+    const formatted = try c.format(allocator);
+    defer allocator.free(formatted);
+    try t.expect(std.mem.indexOf(u8, formatted, "codec_decode<Positive>") != null);
+    var again = try language.Compilation.init(allocator, "formatted.my", formatted);
+    defer again.deinit();
+    try t.expectEqual(@as(i64, 7), (try again.execute(allocator)).value);
+}
+// spec: SOURCE-CODEC-1
+test "source codec operations resolve declared methods and preserve formatting under allocation failures" {
+    try sourceScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), sourceScenario, .{});
+}
+test "source codec operations reject missing contracts invalid arity and backing bypass" {
+    try reject("domain D:i64{}fn main()->i64{return codec_encode<D>(0);}", "E_CODEC_REQUIRED");
+    try reject("fn main()->i64{return codec_decode<i64>(0);}", "E_TYPE");
+    try reject(source ++ "fn main()->i64{return codec_encode<Positive>(7);}", "E_TYPE");
+    try reject(source ++ "fn main()->i64{return codec_decode<Positive>();}", "E_CODEC_ARITY");
+    try reject(source ++ "fn main()->i64{return codec_decode(7);}", "E_CODEC_ARITY");
+    try reject("fn helper<T:copy>(x:T)->T{return codec_encode<T>(x);}fn main()->i64{return 0;}", "E_GENERIC_BODY_UNSUPPORTED");
+}
+
+test "source codec rejection remains a typed result requiring handling" {
+    var c = try language.Compilation.init(t.allocator, "reject.my", source ++ "fn main()->i64{match codec_decode<Positive>(new Wire{n:0}){Decoded.ok(x)=>{return codec_encode<Positive>(x).n;},Decoded.err(e)=>{return e;}}}");
+    defer c.deinit();
+    try t.expectEqual(@as(i64, -1), (try c.execute(t.allocator)).value);
+    try reject(source ++ "fn main()->i64{discard codec_decode<Positive>(new Wire{n:0});return 0;}", "E_RESULT_DISCARD");
+}
+
+test "source codec operations follow selected method names rather than naming conventions" {
+    var c = try language.Compilation.init(t.allocator, "named.my", prefix ++
+        "codec i64{decode:dec,encode:enc}fn dec(x:i64)->R{return new R.ok(wrap<D>(x*2));}" ++
+        "fn enc(x:D)->i64{return unwrap(x)+1;}}fn main()->i64{match codec_decode<D>(7){R.ok(x)=>{return codec_encode<D>(x);},R.err(e)=>{return e;}}}");
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 15), (try c.execute(t.allocator)).value);
 }

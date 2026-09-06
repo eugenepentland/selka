@@ -600,6 +600,7 @@ pub const Parser = struct {
                 const fields = try self.fieldInitializers();
                 break :update try self.append(.{ .span = .join(token.span, self.tokens[self.cursor.pos - 1].span), .data = .{ .update = .{ .base = base, .fields = fields } } });
             },
+            .kw_codec_encode, .kw_codec_decode => try self.parseCodecOperation(token),
             .integer, .ident, .kw_true, .kw_false => try self.parseLeaf(token),
             .kw_try => propagated: {
                 self.cursor.pos += 1;
@@ -910,6 +911,25 @@ pub const Parser = struct {
         return self.tokens[self.cursor.pos + 1].tag == .ident and (self.tokens[self.cursor.pos + 2].tag == .lparen or self.tokens[self.cursor.pos + 2].tag == .colon);
     }
 
+    fn parseCodecOperation(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
+        self.cursor.pos += 1;
+        if (!self.take(.lt)) return self.sink.fail("E_CODEC_ARITY", token.span, "codec operation requires one explicit domain type");
+        const types = try self.arena.allocator().alloc(Span, 1);
+        types[0] = try self.typeName();
+        _ = try self.expect(.gt);
+        _ = try self.expect(.lparen);
+        var arguments: std.ArrayList(ast.NodeId) = .empty;
+        if (self.current().tag != .rparen) while (true) {
+            try arguments.append(self.arena.allocator(), try self.expression(0));
+            if (!self.take(.comma)) break;
+        };
+        const close = try self.expect(.rparen);
+        return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{
+            .name = token.span,
+            .type_arguments = types,
+            .arguments = try arguments.toOwnedSlice(self.arena.allocator()),
+        } } });
+    }
     fn parseLeaf(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.pos += 1;
         var owner: ?Span = null;

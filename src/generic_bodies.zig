@@ -170,6 +170,8 @@ const Checker = struct {
         try self.locals.append(self.allocator, .{ .name = name, .ty = ty_value, .mutable = mutable });
     }
     fn callTarget(self: *Checker, invocation: Call) Error!ast.Function {
+        if (@import("source_codec.zig").operation(self.src.text(invocation.name)) and invocation.owner == null)
+            return self.sink.fail(eUnsupported, invocation.name, "generic codec operations require nominal codec constraints, which are not implemented");
         const key = if (self.module_names) |names|
             try names.reference(invocation.owner orelse invocation.name, .function, if (invocation.owner != null) invocation.name else null, if (self.owner) |owner| self.src.text(owner) else null, self.sink)
         else

@@ -193,7 +193,8 @@ const Checker = struct {
         }
         return self.sink.fail(eReturnLifetime, contract.source, "result lifetime names no parameter");
     }
-    fn callTarget(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span) Error!typed.FunctionId {
+    fn callTarget(self: *Checker, input: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span) Error!typed.FunctionId {
+        const call = try @import("source_codec.zig").resolve(self.src, self.syntax, self.catalog, input, self.sink);
         const owner = if (call.owner) |name| try self.ty(name) else null;
         if (owner) |domain_type| _ = try self.catalog.domain(domain_type, call.owner.?, self.sink);
         const current_owner = if (self.owner) |domain| self.catalog.records[domain.recordIndex()].name else null;

@@ -37,6 +37,8 @@ fn genericHead(tag: Tag) bool {
         .kw_reset_arena,
         .kw_cast,
         .kw_wrap,
+        .kw_codec_encode,
+        .kw_codec_decode,
         .kw_insert_pool,
         .kw_read_pool,
         .kw_replace_pool,
