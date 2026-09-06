@@ -1,0 +1,13 @@
+module inputs;
+export books;
+export cables;
+export adapters;
+fn books() -> i64 {
+    return 2;
+}
+fn cables() -> i64 {
+    return 3;
+}
+fn adapters() -> i64 {
+    return 1;
+}

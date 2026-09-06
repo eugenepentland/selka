@@ -1,0 +1,13 @@
+module main;
+import inputs;
+import pricing;
+fn main() -> i64 {
+    match pricing::calculate(inputs::books(), inputs::cables(), inputs::adapters()) {
+        pricing::Invoice.ok(receipt) => {
+            return receipt.total;
+        },
+        pricing::Invoice.err(discard) => {
+            return - 1;
+        }
+    }
+}

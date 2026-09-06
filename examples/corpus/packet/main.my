@@ -1,0 +1,24 @@
+module main;
+import inputs;
+import decoder;
+import model;
+fn main() -> i64 {
+    let bytes = inputs::bytes();
+    borrow bytes[0..inputs::size()] as packet {
+        match decoder::decode(packet) {
+            model::Decoded.err(error) => {
+                return model::error_code(error);
+            },
+            model::Decoded.ok(message) => {
+                match message {
+                    model::Message.heartbeat(sequence) => {
+                        return cast<i64>(sequence);
+                    },
+                    model::Message.reading(reading) => {
+                        return cast<i64>(reading.sequence) * 4294967296 + cast<i64>(reading.value);
+                    }
+                }
+            }
+        }
+    }
+}

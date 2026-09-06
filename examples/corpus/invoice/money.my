@@ -1,0 +1,13 @@
+module money;
+export Cents;
+domain Cents: i64 {
+    fn make(value: u64) -> Cents {
+        return wrap<Cents>(cast<i64>(value));
+    }
+    fn number(value: Cents) -> i64 {
+        return unwrap(value);
+    }
+    fn add(left: Cents, right: Cents) -> Cents {
+        return wrap<Cents>(unwrap(left) + unwrap(right));
+    }
+}

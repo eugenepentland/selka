@@ -1,0 +1,22 @@
+module quantity;
+export Count;
+export InvalidQuantity;
+export Parsed;
+enum InvalidQuantity {
+    outside_range
+}
+result Parsed {
+    ok: Count,
+    err: InvalidQuantity
+}
+domain Count: u16 {
+    fn parse(value: i64) -> Parsed {
+        if value < 0 || value > 99 {
+            return new Parsed.err(new InvalidQuantity.outside_range);
+        }
+        return new Parsed.ok(wrap<Count>(cast<u16>(value)));
+    }
+    fn number(value: Count) -> u16 {
+        return unwrap(value);
+    }
+}

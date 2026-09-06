@@ -50,7 +50,7 @@ semantically unresolved drafts, parser-cache isolation, every host allocation fa
 actual CLI stdout/check behavior, and multi-file graph checks. Both existing module
 example graphs were formatted, pass the graph check, and still execute to 12 and 46.
 
-[Scalar project native parity](module-native.md) is implemented. Broader
-module/candidate corpus and scaling review, generics,
+[Scalar project native parity](module-native.md) is implemented. Module graph scaling and an initial [ordinary corpus review](../../examples/corpus/README.md)
+are also implemented. Generics,
 compile-time/schema/incremental work, and wider native operations remain pending.
 Future syntax must extend the same formatter and preservation tests when introduced.

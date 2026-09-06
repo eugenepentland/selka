@@ -87,6 +87,11 @@ pub fn build(b: *std.Build) void {
     binding_cache.addFileArg(exe.getEmittedBin());
     binding_cache.setCwd(b.path("."));
     test_step.dependOn(&binding_cache.step);
+    const corpus_review = b.addSystemCommand(&.{ "python3", "tests/corpus_review.py", "--compiler" });
+    corpus_review.addFileArg(exe.getEmittedBin());
+    corpus_review.addArgs(&.{ "--zig", b.graph.zig_exe });
+    corpus_review.setCwd(b.path("."));
+    test_step.dependOn(&corpus_review.step);
     const schema_reports = b.addSystemCommand(&.{ "python3", "tests/schema_reports.py", "--compiler" });
     schema_reports.addFileArg(exe.getEmittedBin());
     schema_reports.setCwd(b.path("."));

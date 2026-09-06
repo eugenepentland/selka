@@ -2248,3 +2248,52 @@ capabilities, pools/arenas, generics, domain codecs, foreign callable wrappers,
 source/input integration, finer incremental compilation, ordinary-program review,
 and other unfinished roadmap work remain pending. Guardian was not exercised;
 hosted CI has not run. The full roadmap goal remains active.
+
+## 2026-09-06: Initial ordinary-application corpus and duplicate review
+
+Added an invoice calculator and borrowed packet decoder under examples/corpus:
+13 modules, 320 canonical source lines, explicit import policies, and a checked-in
+review explaining the application contracts and quality/discovery decisions. The
+invoice combines quantity/money domains, exhaustive catalog tables, typed results,
+aggregate calculations, and complete conversion to a public Receipt. The decoder
+combines borrowed byte slices, frame validation, checksum/unsigned decoding, typed
+errors and variants, and exhaustive caller handling.
+
+Exact/near discovery reports one 21-node exact pair for independent delivery and
+packaging tariffs and one near pair showing the handling increment's 100-to-150
+change. Both are deliberately retained as separate policies, with an executed
+independent delivery edit showing that packaging remains unchanged. Invoice search
+uses 25,142 work units without truncation; packet search uses 4,858 with no exact or
+near candidates. Default quality reports show all 21 functions statically reachable
+and correctly leave runtime coverage unmeasured. A cohesive 103-byte decoder
+condition is retained after its default 100-byte review signal; no extraction or
+threshold change is made solely to appease the metric.
+
+Added tests/corpus_review.py to the build. Independent Python expectations cover
+24 invoice and 24 packet inputs, including domain limits, rounding and fee/discount
+boundaries, maximum unsigned readings, malformed frames, and seeded valid cases.
+Every case executes with general/arena VM memory and native -O0/-O2 under UBSan:
+192 oracle checks per compiler host build mode. The driver also checks canonical
+module formatting, deterministic non-mutating discovery, quality/export roots,
+explicit import policy and denied added edges, added-product table completeness,
+added-source-field conversion accounting, added-message-variant match coverage,
+typed JSON and generated Python binding round trips, and declared-input evaluation
+without overwriting source inputs.
+
+All 21 build steps pass in Debug and ReleaseFast. The unchanged 535 Zig tests reuse
+successful cached results; all existing 2,434 VM/native comparisons, 236 native
+allocation-failure cases, eight verification tests, 29 Python/compiler wire
+comparisons, and schema/codec/input/cache/module/duplicate acceptance pass alongside
+the new corpus checks. Python syntax, Zig formatting, and whitespace checks pass.
+Native temporaries use the project filesystem through TMPDIR. Both entry examples
+produce their documented results, 7019 and 30064771372.
+
+This completes an initial authored ordinary-program review; it is not independent-
+user or production-deployment evidence. The review found no new compiler defect.
+It records continuing limitations around explicit domain codecs, callable foreign
+wrappers, unbounded inputs/real transport, and broader production evidence. README,
+roadmap, related module documents, and both plan copies are synchronized. Native
+resources/capabilities/pools/arenas, generics, domain codecs, foreign callable wrappers,
+source/input integration, finer incremental compilation, remaining discovery/tooling
+work, and other unfinished roadmap requirements remain pending. Guardian was not
+exercised; hosted CI has not run. The full roadmap goal remains active.

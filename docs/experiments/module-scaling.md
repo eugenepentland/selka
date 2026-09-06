@@ -43,6 +43,7 @@ Both Debug and ReleaseFast host builds run these checks. The cases establish
 behavior at the default limits, not a timing threshold, unbounded scalability,
 production usefulness, or new native support. Configurable embedding limits, source
 byte limits, provider read-once behavior, and partial-allocation cleanup retain their
-existing loader tests. Ordinary-program corpus review remains pending, alongside
+existing loader tests. An [initial ordinary-application corpus review](../../examples/corpus/README.md)
+now complements these generated graph checks. Other unfinished work includes
 generics, compile-time/schema/incremental work, wider native operations, and other
 unfinished roadmap requirements.
