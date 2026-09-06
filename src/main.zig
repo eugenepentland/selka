@@ -1,7 +1,7 @@
 //! Host I/O and process policy stay outside the compiler and VM.
 const std = @import("std");
 const language = @import("mylang");
-const usage = "usage: mylang <check-value-project|schema-project|input-module|check|run|dump-bytecode|discover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fmt-module|fmt-project|emit-c|emit-project-c|eval-project|list-modules|list-interfaces|check-project|run-project|check-policy> <file.my>\n  schema-project: --schema-report (include checked source and compiler identities)\n  check-value-project: --value=path.json (required; validates and writes canonical typed-json-v1); --max-codec-steps=N --max-codec-frames=N --max-codec-calls=N --max-codec-bytes=N --max-codec-values=N\n  input-module: reads a typed JSON manifest and writes generated module source\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena\n  eval-project: --max-steps=N --max-frames=N --max-eval-bytes=N --evaluation-report|--evaluation-request --inputs=manifest.json (repeat for up to 16 modules; effect-free, parameter-free entry)\n  discover-duplicates/discover-project-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality/report-project-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: --check (otherwise writes formatted source to stdout)\n";
+const usage = "usage: mylang <invoke-project|check-value-project|schema-project|input-module|check|run|dump-bytecode|discover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fmt-module|fmt-project|emit-c|emit-project-c|eval-project|list-modules|list-interfaces|check-project|run-project|check-policy> <file.my>\n  schema-project: --schema-report (include checked source and compiler identities)\n  check-value-project: --value=path.json (required; validates and writes canonical typed-json-v1); --max-codec-steps=N --max-codec-frames=N --max-codec-calls=N --max-codec-bytes=N --max-codec-values=N\n  invoke-project: --request=path.json (typed-call-v1, schema-pinned public function call; same codec budgets)\n  input-module: reads a typed JSON manifest and writes generated module source\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena\n  eval-project: --max-steps=N --max-frames=N --max-eval-bytes=N --evaluation-report|--evaluation-request --inputs=manifest.json (repeat for up to 16 modules; effect-free, parameter-free entry)\n  discover-duplicates/discover-project-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality/report-project-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: --check (otherwise writes formatted source to stdout)\n";
 
 pub fn main(init: std.process.Init) void {
     const status = dispatch(init) catch |err| status: {
@@ -20,7 +20,7 @@ fn dispatch(init: std.process.Init) !u8 {
         try std.Io.File.stderr().writeStreamingAll(init.io, usage);
         return 2;
     };
-    if (parsed.command == .@"check-value-project" or parsed.command == .@"schema-project" or parsed.command == .@"eval-project" or parsed.command == .@"list-modules" or parsed.command == .@"list-interfaces" or parsed.command == .@"check-project" or parsed.command == .@"run-project" or parsed.command == .@"check-policy" or parsed.command == .@"discover-project-duplicates" or parsed.command == .@"report-project-quality" or parsed.command == .@"fmt-project" or parsed.command == .@"emit-project-c") return listModules(init, parsed);
+    if (parsed.command == .@"invoke-project" or parsed.command == .@"check-value-project" or parsed.command == .@"schema-project" or parsed.command == .@"eval-project" or parsed.command == .@"list-modules" or parsed.command == .@"list-interfaces" or parsed.command == .@"check-project" or parsed.command == .@"run-project" or parsed.command == .@"check-policy" or parsed.command == .@"discover-project-duplicates" or parsed.command == .@"report-project-quality" or parsed.command == .@"fmt-project" or parsed.command == .@"emit-project-c") return listModules(init, parsed);
     const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, parsed.path, allocator, .limited(16 * 1024 * 1024));
     defer allocator.free(bytes);
     if (parsed.command == .@"input-module") {
@@ -61,7 +61,7 @@ fn dispatch(init: std.process.Init) !u8 {
     const check_ns = if (parsed.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
     if (parsed.command != .@"emit-c") try report(init, &compilation);
     switch (parsed.command) {
-        .@"check-value-project", .@"schema-project", .@"input-module", .@"eval-project", .fmt, .@"fmt-module", .@"fmt-project", .@"emit-project-c", .@"list-modules", .@"list-interfaces", .@"check-project", .@"run-project", .@"check-policy", .@"discover-project-duplicates", .@"report-project-quality" => unreachable,
+        .@"invoke-project", .@"check-value-project", .@"schema-project", .@"input-module", .@"eval-project", .fmt, .@"fmt-module", .@"fmt-project", .@"emit-project-c", .@"list-modules", .@"list-interfaces", .@"check-project", .@"run-project", .@"check-policy", .@"discover-project-duplicates", .@"report-project-quality" => unreachable,
         .@"emit-c" => {
             const generated = compilation.emitC(allocator) catch |err| switch (err) {
                 error.SourceError => {
@@ -126,7 +126,7 @@ fn report(init: std.process.Init, compilation: *const language.Compilation) !voi
     }
 }
 
-const Command = enum { @"check-value-project", @"schema-project", @"input-module", @"eval-project", @"emit-project-c", @"fmt-project", @"fmt-module", @"report-project-quality", @"discover-project-duplicates", @"check-policy", @"check-project", @"run-project", @"list-interfaces", @"list-modules", @"emit-c", fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
+const Command = enum { @"invoke-project", @"check-value-project", @"schema-project", @"input-module", @"eval-project", @"emit-project-c", @"fmt-project", @"fmt-module", @"report-project-quality", @"discover-project-duplicates", @"check-policy", @"check-project", @"run-project", @"list-interfaces", @"list-modules", @"emit-c", fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
 const Parsed = struct { codec: language.codec_json.Options, schema_report: bool, value_path: ?[]const u8, inputs: [16][]const u8, input_count: usize, evaluation_request: bool, evaluation_report: bool, evaluation: language.evaluation.Options, policy: ?[]const u8, format_check: bool, quality: language.quality.Options, command: Command, path: []const u8, options: language.vm.Options, discovery: language.duplicates.Options, timings: bool };
 fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (args.len < 2) return error.Usage;
@@ -168,15 +168,16 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
         inline for (.{ "max_steps", "max_frames", "max_calls", "max_bytes", "max_work_values" }, .{ "--max-codec-steps=", "--max-codec-frames=", "--max-codec-calls=", "--max-codec-bytes=", "--max-codec-values=" }, 0..) |field, prefix, index| {
             if (std.mem.startsWith(u8, arg, prefix)) {
                 const bit: u8 = 1 << index;
-                if (command != .@"check-value-project" or codec_seen & bit != 0) return error.Usage;
+                if ((command != .@"check-value-project" and command != .@"invoke-project") or codec_seen & bit != 0) return error.Usage;
                 codec_seen |= bit;
                 @field(codec, field) = std.math.cast(@TypeOf(@field(codec, field)), try positive(arg[prefix.len..])) orelse return error.Usage;
                 continue :argument;
             }
         }
-        if (std.mem.startsWith(u8, arg, "--value=")) {
-            if (command != .@"check-value-project" or value_path != null or arg.len == "--value=".len) return error.Usage;
-            value_path = arg["--value=".len..];
+        if (std.mem.startsWith(u8, arg, "--value=") or std.mem.startsWith(u8, arg, "--request=")) {
+            const prefix = if (command == .@"invoke-project") "--request=" else "--value=";
+            if ((command != .@"check-value-project" and command != .@"invoke-project") or !std.mem.startsWith(u8, arg, prefix) or value_path != null or arg.len == prefix.len) return error.Usage;
+            value_path = arg[prefix.len..];
             continue;
         }
         if (std.mem.startsWith(u8, arg, "--inputs=")) {
@@ -275,7 +276,7 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (saw_work and !discovery.approximate) return error.Usage;
     if (command == .@"fmt-project" and !format_check) return error.Usage;
     if (command == .@"check-policy" and policy == null) return error.Usage;
-    if (command == .@"check-value-project" and value_path == null) return error.Usage;
+    if ((command == .@"check-value-project" or command == .@"invoke-project") and value_path == null) return error.Usage;
     return .{ .codec = codec, .schema_report = schema_report, .value_path = value_path, .inputs = inputs, .input_count = input_count, .evaluation_request = evaluation_request, .evaluation_report = evaluation_report, .evaluation = .{ .max_steps = options.max_steps, .max_frames = options.max_frames, .max_bytes = evaluation.max_bytes }, .policy = policy, .format_check = format_check, .quality = quality, .command = command, .path = path orelse return error.Usage, .options = options, .discovery = discovery, .timings = timings };
 }
 
@@ -425,7 +426,7 @@ fn listModules(init: std.process.Init, parsed: Parsed) !u8 {
         }
         if (parsed.command != .@"eval-project") try reportProject(init, &compilation);
         if (parsed.command == .@"check-project") return 0;
-        if (parsed.command == .@"check-value-project") break :result (try checkValue(init, &compilation, parsed.value_path.?, parsed.codec)) orelse return 1;
+        if (parsed.command == .@"check-value-project" or parsed.command == .@"invoke-project") break :result (try checkValue(init, &compilation, parsed.value_path.?, parsed.codec, parsed.command == .@"invoke-project")) orelse return 1;
         if (parsed.command == .@"schema-project") break :result if (parsed.schema_report)
             try language.schema_report.render(init.gpa, &compilation, try compilerIdentity(init.io))
         else
@@ -550,27 +551,27 @@ fn parseInputManifest(init: std.process.Init, path: []const u8, bytes: []const u
     };
 }
 
-fn valueFailure(init: std.process.Init, path: []const u8, err: anyerror, location: ?*const language.typed_json.Location) !?[]u8 {
+fn valueFailure(init: std.process.Init, path: []const u8, err: anyerror, location: ?*const language.typed_json.Location, invocation: bool) !?[]u8 {
     const pointer = if (location) |at| (if (at.has_path) try std.json.Stringify.valueAlloc(init.gpa, at.text(), .{}) else null) else null;
     defer if (pointer) |text| init.gpa.free(text);
     const detail = if (pointer) |text| try std.fmt.allocPrint(init.gpa, " at JSON pointer {s}{s}", .{ text, if (location.?.truncated) " (path truncated)" else "" }) else try init.gpa.dupe(u8, "");
     defer init.gpa.free(detail);
-    const message = try std.fmt.allocPrint(init.gpa, "{s}: invalid typed JSON: {s}{s}\n", .{ path, @errorName(err), detail });
+    const message = try std.fmt.allocPrint(init.gpa, "{s}: invalid {s}: {s}{s}\n", .{ path, if (invocation) "invocation" else "typed JSON", @errorName(err), detail });
     defer init.gpa.free(message);
     try std.Io.File.stderr().writeStreamingAll(init.io, message);
     return null;
 }
-fn checkValue(init: std.process.Init, compilation: *language.project_compile.Compilation, path: []const u8, options: language.codec_json.Options) !?[]u8 {
+fn checkValue(init: std.process.Init, compilation: *language.project_compile.Compilation, path: []const u8, options: language.codec_json.Options, invocation: bool) !?[]u8 {
     const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, path, init.gpa, .limited(options.json.max_bytes + 1)) catch |err| {
-        if (err == error.StreamTooLong) return valueFailure(init, path, error.CodecByteLimit, null);
+        if (err == error.StreamTooLong) return valueFailure(init, path, error.CodecByteLimit, null, invocation);
         return err;
     };
     defer init.gpa.free(bytes);
     var failure: language.codec_json.Failure = .{};
     defer failure.deinit(init.gpa);
-    return language.codec_json.canonicalProject(init.gpa, compilation, bytes, options, &failure) catch |err| {
+    return (if (invocation) language.codec_json.invokeProject(init.gpa, compilation, bytes, options, &failure) else language.codec_json.canonicalProject(init.gpa, compilation, bytes, options, &failure)) catch |err| {
         if (err == error.OutOfMemory) return err;
-        _ = try valueFailure(init, path, err, &failure.location);
+        _ = try valueFailure(init, path, err, &failure.location, invocation);
         if (failure.execution.trap) |trap| {
             const rendered = try trap.render(init.gpa, compilation.src);
             defer init.gpa.free(rendered);

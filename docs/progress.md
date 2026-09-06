@@ -2430,3 +2430,47 @@ API/CLI behavior, ownership, limits, and remaining work; a sample wire document 
 checked in with the domain-codec example. Source serialization operations, generated
 callable bindings, richer input integration, and the other pending roadmap work
 remain unfinished. Guardian was not exercised; hosted CI has not run.
+
+## 2026-09-06: Schema-pinned public JSON function calls
+
+Added invoke-project --request and codec_json.invokeProject. typed-call-v1 requests
+supply the expected compact public schema SHA-256, qualified exported function name,
+and complete named JSON arguments. The full loaded project is checked/lowered;
+the schema is derived from those same owned source buffers and checked before
+argument codecs execute. Public function selection shares the existing export
+predicate without allocating an export list. Preflight rejects effects, references,
+and complete parameter/result graphs without wire representations.
+
+Argument decoding, the target invocation, and result encoding share existing live
+memory, guest-step, invocation-attempt, and traversal-work limits. Request bytes and
+tokens cover the entire document; all arguments share the per-direction value limit.
+The target counts as one invocation attempt in addition to argument/result codec
+calls. Schema rendering is accounted for, and its temporary text is released before
+argument materialization. Output remains a typed-json-v1 envelope. A target's typed
+err result is output data, while an argument decoder rejection is a located failure.
+Target traps retain source frames and /function; argument paths use /arguments/name,
+and output codec paths use /value. The trace accommodates the extra request envelope
+while retaining the full 128-level embedding value-depth boundary.
+
+Four new Zig tests cover named/reordered domain arguments, ordinary/result outputs,
+zero-argument/max-u64 calls, schema/visibility/effect/reference/argument preflight,
+exact shared budgets, memory limits, typed argument rejection, source traps, maximum
+depth, and every allocation failure through schema/request/call/result processing.
+The new tests/call_json.py build driver independently computes the schema pin and
+exercises the actual CLI, including stale signatures, fresh same-schema body edits,
+invalid private source, duplicate/unknown request keys, typed errors, byte boundaries,
+option validation, and failure-output suppression.
+
+Debug and ReleaseFast pass all 22 build steps and 557 Zig tests (500 core, 57 CLI).
+Existing 2490 VM/native comparisons, 236 native allocation-failure cases, 192
+application oracle checks per host mode, eight verification tests, 29 Python/compiler
+wire comparisons, and schema/input/cache/module/duplicate acceptance also pass.
+Focused tests, CLI acceptance, Zig formatting, Python syntax, and whitespace checks
+pass. README, experiment tracking, and both
+plan copies describe this executable request boundary and its limits.
+
+Generated callable wrappers and Python domain wire representations remain pending;
+this milestone supplies the schema-checked call protocol they need. Source codec
+operations, native ABI integration, richer inputs, and the other unfinished roadmap
+requirements remain open. Schema pins establish interface compatibility, not fixed
+implementation semantics. Guardian was not exercised; hosted CI has not run.

@@ -365,3 +365,8 @@ Try a declared domain codec with:
 ```sh
 zig-out/bin/mylang check-value-project examples/domain-codecs/main.my --value=examples/domain-codecs/value.json
 ```
+
+[invoke-project](docs/experiments/checked-calls.md) now calls exported functions from
+a schema-pinned typed-call-v1 request with named JSON arguments. Domain codecs and
+the target share operation budgets. This supplies the call boundary for generated
+wrappers, which remain pending.

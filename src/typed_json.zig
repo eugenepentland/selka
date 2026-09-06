@@ -48,7 +48,7 @@ pub const Location = struct {
 };
 const Trace = struct {
     location: ?*Location,
-    parts: [129]Part = undefined,
+    parts: [130]Part = undefined,
     len: usize = 1,
     fn init(location: ?*Location) Trace {
         var trace: Trace = .{ .location = location };
@@ -141,9 +141,25 @@ pub const Document = struct {
         return decoder.value(ty, self.parsed.value.value, 1);
     }
 };
+/// Decode one named argument while sharing the operation's counters.
+pub fn decodeArgument(allocator: std.mem.Allocator, execution: *Execution, ty: Type, input: Json, name: []const u8, budget: *Budget, location: *Location) !Value {
+    var trace = Trace.init(location);
+    trace.parts[0] = .{ .key = "arguments" };
+    trace.parts[1] = .{ .key = name };
+    trace.len = 2;
+    var decoder: Decoder = .{ .allocator = allocator, .records = execution.program.records, .execution = execution, .budget = budget, .trace = trace };
+    return decoder.value(ty, input, 1);
+}
 // Scan before building a JSON DOM: even invalid/unused subtrees are subject to
 // depth/token bounds. next() returns string fragments without allocating strings.
 fn scan(allocator: std.mem.Allocator, bytes: []const u8, limits: Limits) !void {
+    return scanDepth(allocator, bytes, limits, @as(usize, limits.max_depth) + 1);
+}
+pub fn scanRequest(allocator: std.mem.Allocator, bytes: []const u8, limits: Limits) !void {
+    try limits.check();
+    return scanDepth(allocator, bytes, limits, @as(usize, limits.max_depth) + 2);
+}
+fn scanDepth(allocator: std.mem.Allocator, bytes: []const u8, limits: Limits, container_depth: usize) !void {
     if (bytes.len > limits.max_bytes) return error.CodecByteLimit;
     var scanner = std.json.Scanner.initCompleteInput(allocator, bytes);
     defer scanner.deinit();
@@ -157,7 +173,7 @@ fn scan(allocator: std.mem.Allocator, bytes: []const u8, limits: Limits) !void {
         switch (token) {
             .object_begin, .array_begin => {
                 depth += 1;
-                if (depth > @as(usize, limits.max_depth) + 1) return error.CodecDepthLimit;
+                if (depth > container_depth) return error.CodecDepthLimit;
             },
             .object_end, .array_end => depth -= 1,
             else => {},

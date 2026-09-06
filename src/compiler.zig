@@ -154,4 +154,5 @@ test {
     _ = @import("invocation_test.zig");
     _ = @import("domain_codecs_test.zig");
     _ = @import("codec_json_test.zig");
+    _ = @import("call_json_test.zig");
 }

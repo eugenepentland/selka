@@ -58,10 +58,12 @@ pub const Compilation = struct {
     pub fn invokePublic(self: *Compilation, allocator: @import("std").mem.Allocator, name: []const u8, arguments: []const typed.Value, options: @import("vm.zig").InvokeOptions) !@import("vm.zig").ValueResult {
         if (options.steps_executed) |steps| steps.* = 0;
         try self.emit();
+        return @import("vm.zig").invoke(allocator, self.code.?, try self.publicFunction(name), arguments, options);
+    }
+    pub fn publicFunction(self: *Compilation, name: []const u8) !typed.FunctionId {
+        try self.check();
         for (self.program.?.functions) |function| {
-            if (@import("std").mem.eql(u8, function.name, name) and self.exported(function)) {
-                return @import("vm.zig").invoke(allocator, self.code.?, function.id, arguments, options);
-            }
+            if (@import("std").mem.eql(u8, function.name, name) and self.exported(function)) return function.id;
         }
         return error.UnknownPublicFunction;
     }

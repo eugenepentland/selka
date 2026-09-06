@@ -27,13 +27,14 @@ visibility retain the existing module interface rules.
 
 ## Budgets and ownership
 
-One operation shares these defaults across all domain calls:
+One operation shares these defaults across all domain calls and, for
+[invoke-project](checked-calls.md), the requested public function:
 
 | Limit | Default | CLI override |
 | --- | --- | --- |
 | Guest instructions | 1,000,000 | --max-codec-steps=N |
 | Frames per invocation | 256 | --max-codec-frames=N |
-| Codec invocation attempts | 4,096 | --max-codec-calls=N |
+| VM invocation attempts | 4,096 | --max-codec-calls=N |
 | Requested live allocation bytes | 32 MiB | --max-codec-bytes=N |
 | Traversed application/wire values across both directions | 131,072 | --max-codec-values=N |
 

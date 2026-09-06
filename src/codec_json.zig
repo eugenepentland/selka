@@ -97,3 +97,83 @@ fn canonicalInner(operation: *Operation, compilation: *@import("project_compile.
     operation.traversal.values = 0;
     return json.encodeWithCodecs(allocator, &operation.execution, ty, value, &operation.traversal, &failure.location);
 }
+
+pub const Request = struct { version: []const u8, schema_sha256: []const u8, function: []const u8, arguments: std.json.Value };
+/// Invoke a current exported interface only after checking its schema identity.
+/// Arguments use named wire values; output is one ordinary typed-json-v1 envelope.
+pub fn invokeProject(allocator: std.mem.Allocator, compilation: *@import("project_compile.zig").Compilation, bytes: []const u8, options: Options, failure: *Failure) ![]u8 {
+    try failure.begin();
+    if (options.statistics) |statistics| statistics.* = .{};
+    try compilation.emit();
+    var operation = try Operation.init(allocator, compilation.code.?, options, failure);
+    operation.traversal.work = &operation.work;
+    defer operation.report();
+    return invokeInner(&operation, compilation, bytes, failure) catch |err| return operation.classify(err);
+}
+fn invokeInner(operation: *Operation, compilation: *@import("project_compile.zig").Compilation, bytes: []const u8, failure: *Failure) ![]u8 {
+    const allocator = operation.memory.allocator();
+    try json.scanRequest(allocator, bytes, operation.traversal.limits);
+    const parsed = try std.json.parseFromSlice(Request, allocator, bytes, .{ .allocate = .alloc_always, .parse_numbers = false });
+    defer parsed.deinit();
+    const request = parsed.value;
+    if (!std.mem.eql(u8, request.version, "typed-call-v1")) {
+        failure.location.field("version");
+        return error.UnsupportedInvocationVersion;
+    }
+    if (!try schemaMatches(allocator, compilation, request.schema_sha256)) {
+        failure.location.field("schema_sha256");
+        return error.InvocationSchemaMismatch;
+    }
+    const id = compilation.publicFunction(request.function) catch |err| {
+        if (err != error.OutOfMemory) failure.location.field("function");
+        return err;
+    };
+    const function = compilation.program.?.functions[@backingInt(id)];
+    preflight(allocator, compilation.program.?.records, function) catch |err| {
+        if (err != error.OutOfMemory) failure.location.field("function");
+        return err;
+    };
+    if (request.arguments != .object or request.arguments.object.count() != function.parameter_count) {
+        failure.location.field("arguments");
+        return error.InvocationArguments;
+    }
+    const parameters = function.locals[0..function.parameter_count];
+    for (parameters) |parameter| if (!request.arguments.object.contains(parameter.name)) {
+        failure.location.field("arguments");
+        return error.InvocationArguments;
+    };
+    const arguments = try allocator.alloc(typed.Value, parameters.len);
+    var initialized: usize = 0;
+    defer {
+        for (arguments[0..initialized]) |argument| argument.release(allocator);
+        allocator.free(arguments);
+    }
+    for (parameters, arguments) |parameter, *argument| {
+        argument.* = try json.decodeArgument(allocator, &operation.execution, parameter.ty, request.arguments.object.get(parameter.name).?, parameter.name, &operation.traversal, &failure.location);
+        initialized += 1;
+    }
+    const value = operation.execution.invoke(allocator, id, arguments) catch |err| {
+        if (err != error.OutOfMemory) failure.location.field("function");
+        return err;
+    };
+    defer value.release(allocator);
+    operation.traversal.values = 0;
+    return json.encodeWithCodecs(allocator, &operation.execution, function.return_type, value, &operation.traversal, &failure.location);
+}
+fn preflight(allocator: std.mem.Allocator, records: []const typed.Record, function: typed.Function) !void {
+    if (function.effects != 0) return error.InvocationEffects;
+    if (function.return_reference != null) return error.InvocationReference;
+    try @import("data_type.zig").checkCodecs(allocator, records, function.return_type);
+    for (function.locals[0..function.parameter_count]) |parameter| {
+        if (parameter.reference_parameter != null) return error.InvocationReference;
+        try @import("data_type.zig").checkCodecs(allocator, records, parameter.ty);
+    }
+}
+
+fn schemaMatches(allocator: std.mem.Allocator, compilation: *@import("project_compile.zig").Compilation, expected: []const u8) !bool {
+    const schema = try @import("schema.zig").render(allocator, compilation);
+    defer allocator.free(schema);
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.sha2.Sha256.hash(schema, &digest, .{});
+    return std.mem.eql(u8, expected, &std.fmt.bytesToHex(digest, .lower));
+}

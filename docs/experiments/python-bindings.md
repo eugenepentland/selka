@@ -100,8 +100,10 @@ Generation can still produce bindings for independent ordinary types in that pro
 unsupported types do not receive constructible binding classes or implicit codecs.
 
 These are data bindings. The generator does not create callable FFI wrappers for
-exported functions or supply private domain factories. Native ABI integration,
-explicit domain codecs, and source-level codec operations remain separate work.
+exported functions or supply private domain factories. [Executed domain codecs](domain-json.md) and [schema-pinned public JSON calls](checked-calls.md)
+are now implemented in the compiler. Generated callable wrappers, Python domain wire
+representations, native ABI integration, and source-level codec operations remain
+separate work.
 
 ## Generation identity, failure behavior, and limits
 
