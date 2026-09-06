@@ -2,8 +2,9 @@
 
 The embedding API can now call an effect-free checked function with ordinary typed
 arguments and receive an owned typed value or a source diagnostic. This is the
-execution foundation for explicit domain codecs and callable wrappers; it does not
-yet declare codecs or add domain support to implicit JSON decoding.
+execution foundation for explicit domain codecs and callable wrappers. Source
+codec declarations are described separately; invocation does not add domain support
+to implicit JSON decoding.
 
 `vm.invoke(allocator, program, function_id, arguments, options)` validates the complete
 bytecode program and selects a function without rewriting its main entry. It rejects
@@ -57,6 +58,6 @@ step boundaries, frame-limit traces, authority/effect/reference rejection, and t
 unchanged integer main entry. Ordinary codec type checks now share a representation-
 independent complete-graph checker while retaining their existing error categories.
 
-Explicit codec declarations, whole-codec budgets, JSON integration, schema metadata,
-source codec operations, generated callable wrappers, and other pending roadmap work
-remain open. This API is an embedding interface, not a foreign ABI or a new CLI mode.
+[Explicit codec declarations and schema metadata](domain-codecs.md) are now
+implemented. Whole-codec budgets, JSON integration, source codec operations,
+generated callable wrappers, and other pending roadmap work remain open. This API is an embedding interface, not a foreign ABI or a new CLI mode.

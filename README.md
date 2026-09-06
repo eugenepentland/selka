@@ -354,3 +354,8 @@ integration with formatting, dependency policy, schemas, and data bindings.
 effect-free functions and checked domain factories with owned argument copies and
 typed results. Explicit domain codec declarations and callable foreign wrappers
 remain pending.
+
+Domains can now declare [explicit codec contracts](docs/experiments/domain-codecs.md)
+linking an ordinary wire type to checked public decoder/encoder methods. The schema
+records those contracts while preserving opaque backing; codec-aware JSON execution
+and callable bindings remain pending. See [the example](examples/domain-codecs/main.my).

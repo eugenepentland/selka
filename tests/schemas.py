@@ -103,11 +103,45 @@ struct Hidden { secret: i32 }
         assert 'E_PRIVATE_INTERFACE' in run(1)
         data.write_text(source)
         run(2, '--evaluation-request')
+        # Explicit codec contracts expose wire policy without exposing backing
+        # construction, and changing their selected method changes the schema.
+        fixture = Path(__file__).resolve().parents[1] / 'examples' / 'domain-codecs'
+        codec_source = (fixture / 'data.my').read_text()
+        data.write_text(codec_source)
+        entry.write_text((fixture / 'main.my').read_text())
+        codec_raw = run()
+        codec_schema = json.loads(codec_raw)
+        codec_types = {d['name']: d for d in codec_schema['types']}
+        domain = codec_types['data::Positive']
+        assert domain['opaque'] and 'fields' not in domain and 'element' not in domain
+        assert domain['codec'] == {
+            'wire': 'data::Wire', 'decode': 'data::Positive.from_wire',
+            'encode': 'data::Positive.to_wire', 'error_type': 'i64'}
+        assert 'Positive.raw' not in codec_raw
+        execution = subprocess.run([compiler, 'run-project', str(entry)], capture_output=True, text=True)
+        assert execution.returncode == 0 and execution.stdout == '7\n', execution.stderr
+        data.write_text(codec_source.replace('decode: from_wire', 'decode: alternate').replace(
+            '    private fn raw', '    fn alternate(x: Wire) -> Decoded { return Positive.from_wire(x); }\n    private fn raw'))
+        changed = json.loads(run())
+        changed_domain = next(d for d in changed['types'] if d['name'] == 'data::Positive')
+        assert changed_domain['codec']['decode'] == 'data::Positive.alternate'
+        assert run() != codec_raw
+        for old, new, code in (
+            ('decode: from_wire', 'decode: raw', 'E_CODEC_PRIVATE'),
+            ('decode: from_wire', 'decode: missing', 'E_CODEC_FUNCTION'),
+            ('codec Wire', 'codec i64', 'E_CODEC_SIGNATURE'),
+            ('encode: to_wire', 'decode: from_wire', 'E_DUPLICATE_CODEC_KEY'),
+            ('export Wire;', '', 'E_PRIVATE_INTERFACE'),
+        ):
+            data.write_text(codec_source.replace(old, new))
+            diagnostic = run(1)
+            assert code in diagnostic and 'data.my:' in diagnostic, diagnostic
+        data.write_text(codec_source)
         # An empty public interface remains empty even though main uses integers.
         entry.write_text('module main; fn main() -> i64 { return 0; }')
         empty = json.loads(run())
         assert empty['exports'] == empty['functions'] == empty['types'] == []
-    print('schema acceptance: public structure, nominal identity, privacy, cyclic handle graph, effects, borrowing, determinism, and rejection passed')
+    print('schema acceptance: public structure, nominal identity, privacy, cyclic handle graph, effects, borrowing, explicit domain codec contracts, determinism, and rejection passed')
 
 
 if __name__ == '__main__':

@@ -74,6 +74,23 @@ pub const Parser = struct {
         }
         return self.parse();
     }
+    fn parseCodec(self: *Parser) diagnostic.Error!ast.Codec {
+        const wire = try self.typeName();
+        _ = try self.expect(.lbrace);
+        var decode: ?Span = null;
+        var encode: ?Span = null;
+        while (self.current().tag != .rbrace) {
+            const key = (try self.expect(.ident)).span;
+            const name = self.src.text(key);
+            const target = if (std.mem.eql(u8, name, "decode")) &decode else if (std.mem.eql(u8, name, "encode")) &encode else return self.sink.fail("E_CODEC_KEY", key, "codec entries must be decode or encode");
+            if (target.* != null) return self.sink.fail("E_DUPLICATE_CODEC_KEY", key, "codec entry is declared more than once");
+            _ = try self.expect(.colon);
+            target.* = (try self.expect(.ident)).span;
+            if (!self.take(.comma)) break;
+        }
+        const end = (try self.expect(.rbrace)).span;
+        return .{ .wire = wire, .decode = decode orelse return self.sink.fail("E_INCOMPLETE_CODEC", end, "codec requires decode and encode entries"), .encode = encode orelse return self.sink.fail("E_INCOMPLETE_CODEC", end, "codec requires decode and encode entries") };
+    }
     fn moduleName(self: *Parser) diagnostic.Error!void {
         _ = try self.expect(.ident);
         while (self.take(.dot)) _ = try self.expect(.ident);
@@ -139,11 +156,16 @@ pub const Parser = struct {
                 _ = try self.expect(.colon);
                 const backing = try self.typeName();
                 _ = try self.expect(.lbrace);
+                var codec: ?ast.Codec = null;
                 while (self.current().tag != .rbrace) {
-                    try functions.append(self.allocator, try self.function(name.span));
+                    if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "codec")) {
+                        if (codec != null) return self.sink.fail("E_DUPLICATE_CODEC", self.current().span, "a domain declares at most one codec");
+                        self.pos += 1;
+                        codec = try self.parseCodec();
+                    } else try functions.append(self.allocator, try self.function(name.span));
                 }
                 _ = try self.expect(.rbrace);
-                try domains.append(self.allocator, .{ .name = name.span, .backing = backing });
+                try domains.append(self.allocator, .{ .name = name.span, .backing = backing, .codec = codec });
                 continue;
             }
             if (self.take(.kw_struct)) {

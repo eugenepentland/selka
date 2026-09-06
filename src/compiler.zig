@@ -151,4 +151,5 @@ test {
     _ = @import("results_test.zig");
     _ = @import("propagation_test.zig");
     _ = @import("invocation_test.zig");
+    _ = @import("domain_codecs_test.zig");
 }

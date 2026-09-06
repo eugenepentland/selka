@@ -5,7 +5,9 @@ const Compilation = @import("project_compile.zig").Compilation;
 const effects = @import("effect_set.zig");
 const Field = struct { name: []const u8, type: []const u8 };
 const Case = struct { name: []const u8, payload: ?[]const u8 };
+const Codec = struct { wire: []const u8, decode: []const u8, encode: []const u8, error_type: []const u8 };
 const Definition = struct {
+    codec: ?Codec = null,
     name: []const u8,
     kind: enum { integer, boolean, capability, record, array, table, domain, enumeration, tagged_union, result, buffer, resource, pool, handle },
     move_only: bool = false,
@@ -30,6 +32,7 @@ const Function = struct { name: []const u8, parameters: []const Parameter, resul
 const Graph = struct {
     allocator: std.mem.Allocator,
     records: []const typed.Record,
+    functions: []const typed.Function,
     seen: []bool,
     queue: std.ArrayList(typed.Type) = .empty,
     fn reference(self: *Graph, ty: typed.Type) ![]const u8 {
@@ -58,6 +61,11 @@ const Graph = struct {
         if (record.domain != null or record.buffer != null or record.resource != null or record.pool != null or record.handle_pool != null) {
             out.kind = if (record.domain != null) .domain else if (record.buffer != null) .buffer else if (record.resource != null) .resource else if (record.pool != null) .pool else .handle;
             out.@"opaque" = true;
+            if (record.codec) |codec| {
+                const decode = self.functions[@backingInt(codec.decode)];
+                const shape = typed.resultShape(decode.return_type, self.records).?;
+                out.codec = .{ .wire = try self.reference(codec.wire), .decode = decode.name, .encode = self.functions[@backingInt(codec.encode)].name, .error_type = try self.reference(shape.error_type) };
+            }
             if (record.buffer) |element| out.element = try self.reference(element);
             if (record.resource) |kind| out.authority = @tagName(kind);
             if (record.pool) |pool| {
@@ -100,7 +108,7 @@ pub fn render(allocator: std.mem.Allocator, compilation: *Compilation) ![]u8 {
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
     const scratch = arena.allocator();
-    var graph: Graph = .{ .allocator = scratch, .records = program.records, .seen = try scratch.alloc(bool, typed.Type.record_base + program.records.len) };
+    var graph: Graph = .{ .allocator = scratch, .records = program.records, .functions = program.functions, .seen = try scratch.alloc(bool, typed.Type.record_base + program.records.len) };
     @memset(graph.seen, false);
     var roots: std.ArrayList([]const u8) = .empty;
     // Resolve exported nominal declarations by identity; structural array names

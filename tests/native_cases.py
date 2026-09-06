@@ -87,6 +87,8 @@ def project_cases(compiler, zig, root, temp):
         "main.my": "module main; import views as v;fn main()->i64{let a=new [2]i64[2,3];borrow a[0..2] as all{return v::read(all);}}",
         "views.my": "module views;export read;fn read(x:&[]i64)->i64{return read_slice(x,2);}",
     }))
+    codec_root = root / "examples" / "domain-codecs"
+    fixtures.append(("domain-codecs", {name: (codec_root / name).read_text() for name in ("main.my", "data.my")}))
     pairs = 0
     for name, files in fixtures:
         directory = temp / ("module case " + name)
@@ -108,7 +110,7 @@ def project_cases(compiler, zig, root, temp):
                 native = invoke([executable, *options])
                 assert project_signature(vm) == project_signature(native), (name, mode, options, vm.stderr, native.stderr)
                 pairs += 1
-            if name in ("calls", "domains", "enums", "results", "aggregates", "references"):
+            if name in ("calls", "domains", "enums", "results", "aggregates", "references", "domain-codecs"):
                 for budget in range(1, 100):
                     options = [f"--max-steps={budget}"]
                     vm = invoke([compiler, "run-project", entry, *options])

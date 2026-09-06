@@ -60,7 +60,9 @@ pub const Variants = struct { fallible: bool = false, is_union: bool, cases: []c
 pub const Array = struct { element: Type, length: usize, key: ?Type = null };
 // Aggregate schemas retain nominal record identities and intern structural arrays.
 pub const Pool = struct { element: Type, handle: Type };
+pub const Codec = struct { wire: Type, decode: FunctionId, encode: FunctionId };
 pub const Record = struct {
+    codec: ?Codec = null,
     pool: ?Pool = null,
     handle_pool: ?Type = null,
     buffer: ?Type = null,

@@ -1142,6 +1142,7 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
     const checked: typed.Program = .{ .nodes = try checker.nodes.toOwnedSlice(allocator), .statements = try checker.statements.toOwnedSlice(allocator), .functions = functions, .main = main, .records = catalog.records };
     try @import("region_check.zig").check(allocator, checked, sink);
     try @import("effects.zig").check(allocator, checked, sink);
+    try @import("domain_codecs.zig").check(allocator, src, program.domains, catalog, functions, checker.functions, sink);
     for (functions) |function| {
         for (function.locals) |local| {
             if (local.reads == 0) try sink.items.append(allocator, .{

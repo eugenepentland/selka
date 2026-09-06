@@ -2334,3 +2334,49 @@ typed-invocation documentation, and both plan copies describe this foundation an
 its limits. Explicit codec declarations, whole-codec budgets, JSON/schema integration,
 source codec operations, callable foreign wrappers, and the other pending roadmap
 requirements remain unfinished. Guardian was not exercised; hosted CI has not run.
+
+## 2026-09-06: Explicit domain codec declarations and schema contracts
+
+Domains can declare codec Wire { decode: method, encode: method } inside their
+bodies. The parser rejects duplicate codecs and duplicate, missing, or unknown
+entries. After full body/effect checking, semantic resolution requires public
+methods of that exact domain, one value parameter each, no reference return, and
+no transitive effects. Decoders accept Wire and return a typed result whose ok
+payload is the domain; encoders accept the domain and return Wire. Complete wire
+and error graphs must be ordinary data, including all variant branches and array
+elements regardless of runtime selection or length. Their representation cannot
+implicitly depend on another domain or runtime authority/owner.
+
+Resolved wire/method identities are retained in typed and bytecode records. Module
+source relocation and existing public signature visibility checks preserve qualified
+identities and private-interface rejection. Public schemas add the explicit wire,
+decode, encode, and error_type contract while retaining opaque=true and omitting
+private backing/constructors. Changing the selected method changes the schema;
+existing schema/artifact identities therefore include the declaration. Domains
+without declarations keep their previous public representation.
+
+Five new Zig tests exercise declaration-selected factory success/error execution,
+module schemas/public invocation, malformed contracts and complete-graph rejection,
+formatting stability/comments, and every allocation failure through compilation,
+schema derivation, and calls. CLI schema acceptance checks contract contents,
+method-selection changes, private/unknown methods, duplicate entries, wrong wire
+types, private interfaces, and original diagnostic paths. The new two-module example
+prints 7 and joins native acceptance at -O0/-O2 with UBSan, including every instruction
+budget through successful completion and frame-limit comparisons.
+
+Debug and ReleaseFast pass all 21 build steps and 546 Zig tests (489 core, 57 CLI).
+The first full Debug process terminated with exit 143 before a build summary, without
+a test failure in its captured output; after confirming it stopped, the complete
+rerun passed. Native coverage is now 2,490 VM/native comparisons across 64 single-
+file and 13 module fixtures per host mode. Existing 236 native allocation-failure
+cases, 192 application oracle checks, eight verification tests, 29 Python/compiler
+wire comparisons, and schema/input/cache/module/duplicate acceptance also pass.
+Focused codec tests, CLI schema acceptance, canonical example formatting, Python
+syntax, Zig formatting, and whitespace checks pass. The plan attachment and repository plan are synchronized.
+
+This is declaration/schema implementation, not completed domain serialization.
+Representation-only typed JSON still rejects domains, and generated Python data
+bindings still treat them as unsupported. Codec-aware traversal/execution, shared
+whole-operation budgets, source codec operations, callable bindings, and the other
+pending roadmap work remain open. Contracts do not prove validation predicates or
+round-trip laws. Guardian was not exercised; hosted CI has not run.
