@@ -33,8 +33,9 @@ VM/native comparisons cover the source example, imported alias-qualified union
 construction/matching and a located trap inside an imported generic match arm.
 Both scalar and record payload representations are exercised.
 
-Result-bearing and runtime-owned variant graphs remain excluded. Abstract generic
-result handling, ownership state, parameter-dependent structural types, codec
+[Concrete result-bearing variants](generic-results.md) now retain handling
+obligations across matches and propagation. Runtime-owned graphs, partial field
+state, parameter-dependent structural types, codec
 constraints, public generic tooling and the remaining roadmap still need work.
 Concrete specialization continues to apply full semantic, ownership, region and
 effect checking after abstract acceptance.

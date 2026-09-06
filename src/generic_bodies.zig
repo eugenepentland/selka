@@ -8,13 +8,16 @@ const requirements = @import("generic_requirements.zig");
 const Error = diagnostic.Error;
 const Names = @import("module_names.zig").Names;
 const eShadowing = diagnostic.shadowing;
+const eResultOperation = diagnostic.result_operation;
+const eResultPath = diagnostic.result_path;
+const eTryReturn = "E_TRY_RETURN";
 const eUnsupported = "E_GENERIC_BODY_UNSUPPORTED";
 const Catalog = @import("records.zig").Catalog;
 const Symbolic = union(enum) { concrete: typed.Type, parameter: usize };
 const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
 const FunctionMap = std.StringHashMapUnmanaged(usize);
 const Return = struct { parameter: usize, mutable: bool, slice: bool };
-const Local = struct { name: source.Span, ty: Symbolic, mutable: bool, reference: ?bool = null, slice: bool = false, root: ?usize = null, children: usize = 0, shared: usize = 0, exclusive: usize = 0 };
+const Local = struct { name: source.Span, ty: Symbolic, mutable: bool, available: bool = true, reference: ?bool = null, slice: bool = false, root: ?usize = null, children: usize = 0, shared: usize = 0, exclusive: usize = 0 };
 const Checker = struct {
     allocator: std.mem.Allocator,
     src: source.Source,
@@ -34,6 +37,8 @@ const Checker = struct {
     active: std.StringHashMapUnmanaged(usize) = .empty,
     depth: usize = 0,
     work: usize = 0,
+    expression_depth: usize = 0,
+    temporary_results: usize = 0,
     fn enter(self: *Checker, span: source.Span) Error!void {
         if (self.depth == 256 or self.work == 100000) return self.sink.fail("E_GENERIC_BODY_LIMIT", span, "generic body exceeds checking depth/work budget");
         self.depth += 1;
@@ -47,8 +52,6 @@ const Checker = struct {
     fn concreteType(self: *Checker, span: source.Span) Error!Symbolic {
         const ty_value = try self.catalog.resolve(self.src, span, self.sink);
         if (ty_value.isAggregate() and !self.concrete_checked[ty_value.recordIndex()]) {
-            if (typed.requiresHandling(ty_value, self.catalog.records))
-                return self.sink.fail(eUnsupported, span, "concrete generic values cannot carry result obligations");
             @import("data_type.zig").check(self.allocator, self.catalog.records, ty_value, true) catch |err| {
                 if (err == error.OutOfMemory) return error.OutOfMemory;
                 return self.sink.fail(eUnsupported, span, "concrete generic values require complete copyable data graphs without runtime identities");
@@ -56,6 +59,31 @@ const Checker = struct {
             self.concrete_checked[ty_value.recordIndex()] = true;
         }
         return .{ .concrete = ty_value };
+    }
+    fn requiresHandling(self: *Checker, value: Symbolic) bool {
+        return switch (value) {
+            .concrete => |ty_value| typed.requiresHandling(ty_value, self.catalog.records),
+            .parameter => false,
+        };
+    }
+    fn requireHandled(self: *Checker, first: usize, span: source.Span) Error!void {
+        for (self.locals.items[first..]) |binding| {
+            if (binding.reference == null and binding.available and self.requiresHandling(binding.ty))
+                return self.sink.failRelated("E_RESULT_UNHANDLED", span, "result-bearing binding leaves scope without handling or transfer", .{ .span = binding.name, .message = "unhandled result-bearing binding" });
+        }
+    }
+    fn pendingState(self: *Checker, count: usize) Error![]bool {
+        const state = try self.allocator.alloc(bool, count);
+        for (self.locals.items[0..count], state) |binding, *available| available.* = binding.available;
+        return state;
+    }
+    fn restorePending(self: *Checker, state: []const bool) void {
+        for (self.locals.items[0..state.len], state) |*binding, available| binding.available = available;
+    }
+    fn samePending(self: *Checker, state: []const bool, span: source.Span, code: []const u8) Error!void {
+        for (self.locals.items[0..state.len], state) |binding, available| {
+            if (binding.available != available) return self.sink.failRelated(code, span, "result obligation must agree on every continuing path", .{ .span = binding.name, .message = "binding declared here" });
+        }
     }
     fn concreteValue(self: *Checker, value: Symbolic, span: source.Span) Error!typed.Type {
         return switch (value) {
@@ -96,6 +124,10 @@ const Checker = struct {
         const binding = try self.local(span);
         if (binding.reference != null) return self.sink.fail("E_REFERENCE_VALUE", span, "references require read_ref or an explicit reference parameter");
         try self.ownerAccess(binding.*, false, span);
+        if (self.requiresHandling(binding.ty)) {
+            if (!binding.available) return self.sink.fail("E_RESULT_CONSUMED", span, "result-bearing binding was already transferred");
+            binding.available = false;
+        }
         return binding.ty;
     }
     fn ownerAccess(self: *Checker, binding: Local, write: bool, span: source.Span) Error!void {
@@ -120,6 +152,7 @@ const Checker = struct {
             try self.ownerAccess(binding, borrow.mutable, borrow.owner);
         }
         if (borrow.range != null and !binding.slice) return self.sink.fail(eUnsupported, borrow.owner, "generic range borrowing requires a known slice input");
+        if (self.requiresHandling(binding.ty)) return self.sink.fail("E_RESULT_BORROW", borrow.owner, "result-bearing values must transfer by value");
         try self.supports(binding.ty, .copy, borrow.owner);
         return self.loanScope(.{ .name = borrow.name, .ty = binding.ty, .mutable = false, .reference = borrow.mutable, .slice = binding.slice, .root = binding.root orelse owner_index }, parent, borrow.body);
     }
@@ -155,6 +188,12 @@ const Checker = struct {
         if (node.data != .call) return self.sink.fail(diagnostic.reference_result, node.span, "borrow result requires a direct call");
         try self.enter(node.span);
         defer self.depth -= 1;
+        const before_temporaries = self.temporary_results;
+        self.expression_depth += 1;
+        defer {
+            self.expression_depth -= 1;
+            self.temporary_results = before_temporaries;
+        }
         const result = try self.call(node.data.call, node.span, true);
         const function = try self.callTarget(node.data.call);
         const contract = (try self.provenance(function)) orelse return self.sink.fail(diagnostic.reference_result, node.span, "borrow result requires a reference-returning function");
@@ -171,6 +210,7 @@ const Checker = struct {
             if (ref.root != contract.parameter) return self.sink.fail(diagnostic.return_lifetime, node.span, "returned reference does not originate from the declared input");
             try self.same(ref.ty, self.result, span);
         } else try self.same(try self.expression(value), self.result, span);
+        try self.requireHandled(0, span);
     }
     fn topLevel(self: *Checker, span: source.Span) Error!bool {
         if (self.module_names) |names| return names.topLevel(span);
@@ -257,6 +297,16 @@ const Checker = struct {
         return self.substituted(signature.return_type, signature.type_parameters, arguments);
     }
     fn expression(self: *Checker, id: ast.NodeId) Error!Symbolic {
+        const before = self.temporary_results;
+        self.expression_depth += 1;
+        defer self.expression_depth -= 1;
+        errdefer self.temporary_results = before;
+        const result = try self.expressionValue(id);
+        self.temporary_results = before;
+        if (self.expression_depth > 1 and self.requiresHandling(result)) self.temporary_results += 1;
+        return result;
+    }
+    fn expressionValue(self: *Checker, id: ast.NodeId) Error!Symbolic {
         const node = self.program.nodes.items[@backingInt(id)];
         try self.enter(node.span);
         defer self.depth -= 1;
@@ -278,6 +328,7 @@ const Checker = struct {
                 break :result ref.ty;
             },
             .call => |invocation| try self.call(invocation, node.span, false),
+            .propagate => |operand| try self.propagateValue(operand, node.span),
             .boolean => .{ .concrete = .bool },
             .integer => |span| .{ .concrete = (try @import("integer_literal.zig").parse(self.src, span, false, self.sink)).ty },
             .unary => |unary| result: {
@@ -301,21 +352,27 @@ const Checker = struct {
             .replace => |replacement| result: {
                 const base = try self.expression(replacement.base);
                 const shape = try self.arrayIndex(base, replacement.index, node.span);
+                if (self.requiresHandling(.{ .concrete = shape.element })) return self.sink.fail(eResultOperation, node.span, "replacement would drop a result-bearing element");
                 try self.same(try self.expression(replacement.value), .{ .concrete = shape.element }, node.span);
                 break :result base;
             },
             .field => |field| result: {
                 const base = try self.concreteValue(try self.expression(field.base), node.span);
                 const index = try self.catalog.field(base, self.src, field.name, self.sink);
+                for (self.catalog.records[base.recordIndex()].fields, 0..) |other, i| {
+                    if (i != index and self.requiresHandling(.{ .concrete = other.ty })) return self.sink.fail(eResultOperation, node.span, "projection would drop another result-bearing field");
+                }
                 break :result .{ .concrete = self.catalog.records[base.recordIndex()].fields[index].ty };
             },
             .length => |input| result: {
                 const base = try self.concreteValue(try self.expression(input), node.span);
                 _ = try self.catalog.array(base, node.span, self.sink);
+                if (self.requiresHandling(.{ .concrete = base })) return self.sink.fail(eResultOperation, node.span, "length would drop result-bearing elements");
                 break :result .{ .concrete = .u64 };
             },
             .index => |access| result: {
                 const shape = try self.arrayIndex(try self.expression(access.base), access.index, node.span);
+                if (shape.length != 1 and self.requiresHandling(.{ .concrete = shape.element })) return self.sink.fail(eResultOperation, node.span, "indexing would drop other result-bearing elements");
                 break :result .{ .concrete = shape.element };
             },
             .cast => |cast| result: {
@@ -327,6 +384,21 @@ const Checker = struct {
             },
             else => self.sink.fail(eUnsupported, node.span, "this operation still needs abstract generic body checking"),
         };
+    }
+    fn propagateValue(self: *Checker, operand: ast.NodeId, span: source.Span) Error!Symbolic {
+        const temporaries = self.temporary_results;
+        const value = try self.concreteValue(try self.expression(operand), span);
+        const input = typed.resultShape(value, self.catalog.records) orelse return self.sink.fail("E_TRY_TYPE", span, "try requires a declared result");
+        const return_type = switch (self.result) {
+            .concrete => |ty_value| ty_value,
+            .parameter => return self.sink.fail(eTryReturn, span, "try requires a concrete declared result return type"),
+        };
+        const output = typed.resultShape(return_type, self.catalog.records) orelse return self.sink.fail(eTryReturn, span, "try requires a result return type");
+        if (self.return_reference != null) return self.sink.fail(eTryReturn, span, "try cannot propagate through a reference return");
+        try self.same(.{ .concrete = input.error_type }, .{ .concrete = output.error_type }, span);
+        try self.requireHandled(0, span);
+        if (temporaries != 0) return self.sink.fail("E_RESULT_PROPAGATION", span, "propagation could drop an already evaluated result temporary");
+        return .{ .concrete = input.ok_type };
     }
     fn variantValue(self: *Checker, variant: @FieldType(@FieldType(ast.Node, "data"), "variant"), span: source.Span) Error!Symbolic {
         const result = try self.ty(variant.ty);
@@ -344,21 +416,32 @@ const Checker = struct {
         const seen = try self.allocator.alloc(bool, variants.cases.len);
         defer self.allocator.free(seen);
         @memset(seen, false);
+        const incoming = try self.pendingState(self.locals.items.len);
+        defer self.allocator.free(incoming);
+        var continuation: ?[]bool = null;
+        defer if (continuation) |state| self.allocator.free(state);
         var terminated = true;
         for (match.arms) |arm| {
+            self.restorePending(incoming);
             try self.same(try self.ty(arm.ty), value, arm.ty);
             const tag = try self.catalog.variant(ty_value, self.src, arm.name, self.sink);
             if (seen[tag]) return self.sink.fail("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm");
             seen[tag] = true;
             const payload = variants.cases[tag].payload;
+            if (arm.discard_payload and payload != null and self.requiresHandling(.{ .concrete = payload.? })) return self.sink.fail("E_RESULT_DISCARD", arm.name, "nested result payload requires explicit handling");
             if ((payload != null) != (arm.binding != null or arm.discard_payload)) return self.sink.fail("E_PATTERN_PAYLOAD", arm.name, "payload cases require a binding or discard; empty cases take neither");
             const before = self.locals.items.len;
             defer self.endScope(before);
             if (arm.binding) |binding| try self.bind(binding, .{ .concrete = payload.? }, false);
             const returns = try self.statement(arm.body);
+            if (!returns) {
+                try self.requireHandled(before, arm.name);
+                if (continuation) |state| try self.samePending(state, span, eResultPath) else continuation = try self.pendingState(incoming.len);
+            }
             terminated = terminated and returns;
         }
         for (seen) |present| if (!present) return self.sink.fail("E_INCOMPLETE_MATCH", span, "match must cover every declared case");
+        if (continuation) |state| self.restorePending(state);
         return terminated;
     }
     fn arrayIndex(self: *Checker, base: Symbolic, input: ast.NodeId, span: source.Span) Error!typed.Array {
@@ -392,6 +475,7 @@ const Checker = struct {
             const index = if (table_key) |key| try self.catalog.variant(key, self.src, field.name, self.sink) else try self.catalog.field(ty_value, self.src, field.name, self.sink);
             if (seen[index]) return self.sink.fail(if (table_key != null) "E_DUPLICATE_KEY" else "E_DUPLICATE_FIELD", field.name, "named entry is initialized more than once");
             seen[index] = true;
+            if (!complete and self.requiresHandling(.{ .concrete = shape.fields[index].ty })) return self.sink.fail(eResultOperation, field.name, "update would drop a result-bearing field");
             try self.same(try self.expression(field.value), .{ .concrete = shape.fields[index].ty }, field.name);
         }
         if (complete) for (seen) |present| {
@@ -400,7 +484,11 @@ const Checker = struct {
     }
     fn binary(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "binary")) Error!Symbolic {
         const left = try self.expression(operation.left);
+        const short_circuit = operation.op == .logical_and or operation.op == .logical_or;
+        const state = if (short_circuit) try self.pendingState(self.locals.items.len) else null;
+        defer if (state) |snapshot| self.allocator.free(snapshot);
         const right = try self.expression(operation.right);
+        if (state) |snapshot| try self.samePending(snapshot, operation.op_span, eResultPath);
         try self.same(right, left, operation.op_span);
         switch (operation.op) {
             .logical_and, .logical_or => try self.same(left, .{ .concrete = .bool }, operation.op_span),
@@ -420,7 +508,23 @@ const Checker = struct {
             if (terminated) return self.sink.fail("E_UNREACHABLE", self.program.statements.items[@backingInt(id)].span, "statement follows an unconditional return");
             terminated = try self.statement(id);
         }
+        if (!terminated and statements.len != 0) try self.requireHandled(before, self.program.statements.items[@backingInt(statements[statements.len - 1])].span);
         return terminated;
+    }
+    fn branchValue(self: *Checker, branch: @FieldType(@FieldType(ast.Statement, "data"), "branch"), span: source.Span) Error!bool {
+        try self.same(try self.expression(branch.condition), .{ .concrete = .bool }, span);
+        const before = try self.pendingState(self.locals.items.len);
+        defer self.allocator.free(before);
+        const left = try self.statement(branch.then_body);
+        const after = try self.pendingState(before.len);
+        defer self.allocator.free(after);
+        self.restorePending(before);
+        const right = if (branch.else_body) |other| try self.statement(other) else false;
+        if (!left) {
+            if (!right) try self.samePending(after, span, eResultPath);
+            self.restorePending(after);
+        }
+        return left and right;
     }
     fn statement(self: *Checker, id: ast.StatementId) Error!bool {
         const statement_value = self.program.statements.items[@backingInt(id)];
@@ -447,6 +551,10 @@ const Checker = struct {
                 const value = try self.expression(assignment.value);
                 try self.same(value, target.ty, assignment.op_span);
                 if (assignment.op != .set) try self.supports(target.ty, .integer, assignment.op_span);
+                if (self.requiresHandling(target.ty)) {
+                    if (target.available) return self.sink.fail("E_RESULT_OVERWRITE", assignment.name, "assignment would overwrite an unhandled result");
+                    target.available = true;
+                }
             },
             .write_slice => |write| {
                 const ref = try self.reference(write.name, true, true);
@@ -457,16 +565,22 @@ const Checker = struct {
                 const ref = try self.reference(write.name, true, false);
                 try self.same(try self.expression(write.value), ref.ty, statement_value.span);
             },
-            .discard => |value| try self.supports(try self.expression(value), .copy, statement_value.span),
-            .branch => |branch| {
-                try self.same(try self.expression(branch.condition), .{ .concrete = .bool }, statement_value.span);
-                const left = try self.statement(branch.then_body);
-                const right = if (branch.else_body) |other| try self.statement(other) else false;
-                return left and right;
+            .acknowledge => |value| {
+                if (!self.requiresHandling(try self.expression(value))) return self.sink.fail("E_ACKNOWLEDGE_TYPE", statement_value.span, "acknowledge requires a result-bearing value");
             },
+            .discard => |value| {
+                const ty_value = try self.expression(value);
+                if (self.requiresHandling(ty_value)) return self.sink.fail("E_RESULT_DISCARD", statement_value.span, "discard cannot erase a result obligation");
+                try self.supports(ty_value, .copy, statement_value.span);
+            },
+            .branch => |branch| return self.branchValue(branch, statement_value.span),
             .loop => |loop| {
+                const before = try self.pendingState(self.locals.items.len);
+                defer self.allocator.free(before);
                 try self.same(try self.expression(loop.condition), .{ .concrete = .bool }, statement_value.span);
-                _ = try self.statement(loop.body);
+                try self.samePending(before, statement_value.span, "E_RESULT_LOOP");
+                if (!try self.statement(loop.body)) try self.samePending(before, statement_value.span, "E_RESULT_LOOP");
+                self.restorePending(before);
             },
             else => return self.sink.fail(eUnsupported, statement_value.span, "this statement still needs abstract generic body checking"),
         }
@@ -538,7 +652,9 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
         for (parameters) |parameter| if (try checker.topLevel(parameter.name)) return sink.fail(eShadowing, parameter.name, "type parameter shadows a top-level declaration or import");
         checker.result = try checker.ty(function.signature.return_type);
         for (function.signature.parameters) |parameter| {
-            try checker.bind(parameter.name, try checker.ty(parameter.ty), false);
+            const parameter_type = try checker.ty(parameter.ty);
+            if (parameter.reference != null and checker.requiresHandling(parameter_type)) return sink.fail("E_RESULT_BORROW", parameter.ty, "result-bearing parameters must transfer by value");
+            try checker.bind(parameter.name, parameter_type, false);
             checker.locals.items[checker.locals.items.len - 1].reference = parameter.reference;
             checker.locals.items[checker.locals.items.len - 1].slice = parameter.slice;
             if (parameter.reference != null) checker.locals.items[checker.locals.items.len - 1].root = checker.locals.items.len - 1;

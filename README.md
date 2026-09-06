@@ -251,6 +251,8 @@ contracts remain pending. [Generic aggregate updates](docs/experiments/generic-u
 preserve record, array and enum-table snapshots.
 [Generic enum/union construction and matching](docs/experiments/generic-variants.md)
 now retain exact payload types and exhaustive cases.
+[Concrete generic results](docs/experiments/generic-results.md) now enforce transfers,
+acknowledgement, propagation and obligations across control-flow paths.
 
 [Lexical arenas](docs/experiments/source-arenas.md) use `arena heap as scratch { ... }`
 with conservative escape checks and cleanup across returns/errors.

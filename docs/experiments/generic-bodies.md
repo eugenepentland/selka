@@ -66,3 +66,8 @@ passed, and the focused abstract-body run passed eight tests. The Guardian build
 gate passed all 88 checks without baselines. These runs cover the implemented
 symbolic subset and ordinary-language regressions; they do not establish executable
 generics or completion of the full template-body contract.
+
+
+[Concrete result handling](generic-results.md) now adds transfer, acknowledgement,
+propagation and control-flow obligations. Partial field state and runtime-owned
+generic graphs remain pending.

@@ -72,3 +72,8 @@ with baselines disabled. No new full resource/provider-suite result is claimed.
 [Concrete schemas in generic bodies](generic-concrete.md) now permit fixed record,
 array and nominal value types alongside symbolic parameters, including checked
 construction, field/index projection and imported pure helper calls.
+
+
+[Concrete result handling](generic-results.md) now adds transfer, acknowledgement,
+propagation and control-flow obligations. Partial field state and runtime-owned
+generic graphs remain pending.

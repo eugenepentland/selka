@@ -1,8 +1,8 @@
 //! Scope and type checking use resolved binding identities, including advisory use counts.
-const eResultOperation = "E_RESULT_OPERATION";
+const eResultOperation = diagnostic.result_operation;
 const eOwnedConsumed = "E_OWNED_CONSUMED";
 const eReferenceResult = diagnostic.reference_result;
-const eResultPath = "E_RESULT_PATH";
+const eResultPath = diagnostic.result_path;
 const eReturnLifetime = diagnostic.return_lifetime;
 const eShadowing = diagnostic.shadowing;
 const eConversionBody = "E_CONVERSION_BODY";

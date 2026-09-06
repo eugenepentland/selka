@@ -7,6 +7,10 @@ pub const reference_result = "E_REFERENCE_RESULT";
 pub const reference_read_only = "E_REFERENCE_READ_ONLY";
 /// Shared code for mismatched or invalid declared reference provenance.
 pub const return_lifetime = "E_RETURN_LIFETIME";
+/// Shared code for aggregate operations that would erase result obligations.
+pub const result_operation = "E_RESULT_OPERATION";
+/// Shared code for inconsistent obligations across continuing control-flow paths.
+pub const result_path = "E_RESULT_PATH";
 const std = @import("std");
 const source = @import("source.zig");
 

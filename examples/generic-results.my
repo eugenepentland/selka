@@ -1,0 +1,38 @@
+result Number {
+    ok: i64,
+    err: i64
+}
+fn increment < T: integer >(input: Number, amount: T) -> Number {
+    return new Number.ok((try input) + cast<i64>(amount));
+}
+fn number < T: copy >(context: T, input: Number) -> i64 {
+    discard context;
+    match input {
+        Number.ok(value) => {
+            return value;
+        },
+        Number.err(code) => {
+            return 0 - code;
+        }
+    }
+}
+fn count < T: copy >(context: T, early: bool, input: Number) -> i64 {
+    discard context;
+    if early {
+        acknowledge input;
+        return 1;
+    }
+    acknowledge input;
+    let mut index = 0;
+    let mut pending = new Number.ok(0);
+    while index < 3 {
+        acknowledge pending;
+        pending = new Number.ok(index);
+        index += 1;
+    }
+    acknowledge pending;
+    return index;
+}
+fn main() -> i64 {
+    return number::< bool >(true, increment::< u8 >(new Number.ok(7), 1u8)) + number::< bool >(true, increment::< u8 >(new Number.err(3), 1u8)) + count::< u8 >(0u8, true, new Number.err(9)) + count::< u8 >(0u8, false, new Number.ok(9));
+}

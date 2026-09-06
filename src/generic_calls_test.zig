@@ -98,5 +98,5 @@ test "generic calls reject reachable clock effects even behind cycles and false 
     defer generic.deinit();
     try t.expectError(error.SourceError, generic.check());
     try t.expectEqualStrings("E_GENERIC_BODY_UNSUPPORTED", generic.diagnostics.items[0].code);
-    try t.expectEqualStrings("acknowledge clock_now<Time>(c);", generic.src.text(generic.diagnostics.items[0].span));
+    try t.expectEqualStrings("clock_now<Time>(c)", generic.src.text(generic.diagnostics.items[0].span));
 }

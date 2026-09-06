@@ -23,7 +23,8 @@ is not implicitly derived.
 Concrete domain values may pass through a template while retaining opacity.
 These changes do not permit structural operations on an unconstrained type
 parameter or allow direct domain backing construction. Concrete graphs containing
-runtime identities or result obligations reject even in uncalled templates.
+runtime identities reject even in uncalled templates. Concrete result obligations
+are now checked under [generic result handling](generic-results.md).
 Complete graph validation is cached by concrete root type during one abstract
 checking pass, avoiding repeated validation of the same fixed schema.
 
@@ -50,3 +51,8 @@ preservation.
 
 [Concrete generic variants](generic-variants.md) now support enum/union construction,
 exhaustive scoped matching and complete enum-table construction.
+
+
+[Concrete result handling](generic-results.md) now adds transfer, acknowledgement,
+propagation and control-flow obligations. Partial field state and runtime-owned
+generic graphs remain pending.

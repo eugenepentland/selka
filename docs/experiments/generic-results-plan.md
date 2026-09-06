@@ -1,13 +1,10 @@
-# Next generic result-handling implementation
+# Generic result-handling requirements
 
-Concrete result-bearing signatures currently reject during abstract generic type
-validation. Enabling them requires checking the same handling obligations as an
-ordinary function before any template is instantiated. Removing that rejection
-alone would let an uncalled template silently drop or duplicate a result.
-
-The next implementation should cover concrete result shapes while keeping type
-parameters symbolic. Generic result type declarations and associated success/error
-type constraints remain separate requirements.
+Concrete whole-value result handling is now implemented; see
+[the implementation and acceptance record](generic-results.md). The requirements
+below remain the acceptance contract. Partial field moves, runtime ownership,
+generic result declarations and associated success/error constraints are still
+pending; whole-value acceptance does not establish those capabilities.
 
 ## Required behavior
 
@@ -35,12 +32,11 @@ type constraints remain separate requirements.
 
 ## Implementation and acceptance
 
-Use the existing concrete checker (`sema.zig`'s pending-state operations,
-result operations and temporary checks) as the behavioral reference. Share state
-comparison/transition helpers where the concrete and symbolic representations
-permit it, while retaining distinct type resolution. Extend abstract locals with
-result availability and make scope/branch/loop checking explicit before allowing
-result-bearing types in `concreteType`.
+The ordinary checker (`sema.zig`) supplies the behavioral reference. The symbolic
+checker now maintains whole-value availability, checks scope/return exits, restores
+incoming branch/match states and compares continuing paths. Expression-local
+temporary counts protect propagation. Shared result diagnostic codes are declared
+in `diagnostic.zig`.
 
 Acceptance must include uncalled invalid templates, consumed aliases, discarded
 results, missing handling on one branch, returning/fallthrough match arms,
@@ -50,24 +46,18 @@ paths through VM/native backends with matching source traces. Allocation sweeps
 must cover checking and execution; no baseline or suppression can stand in for
 these missing abstract rules.
 
-This document records pending implementation and acceptance requirements. None of
-these new generic result behaviors is marked implemented by this plan.
+## Next implementation: partial field obligations
 
+`take_field` and `read_field` still reject during abstract checking. Extend local
+state with partial field availability and preserve it in every snapshot/restore
+and continuing-path comparison before enabling those operations. Follow the
+ordinary checker's `pendingObligation` rules: only remaining result-bearing fields
+keep a handling obligation; whole-record access after a partial move rejects.
+Reassignment may replenish a binding only after remaining obligations are handled.
 
-## Current implementation seams
-
-At commit `27f4eec`, `generic_bodies.zig` has no obligation state in `Local`.
-`namedValue` only checks borrowing access; `endScope` removes bindings without a
-handling check. The branch checker visits both branches sequentially, and the
-loop checker visits its condition/body once without a state comparison.
-`matchValue` restores lexical scope per arm but has no incoming obligation
-snapshot. These are the points that must change together before result-bearing
-concrete types can be enabled.
-
-The ordinary checker in `sema.zig` already exposes the behavior to preserve:
-`pendingState`, `restorePending`, `samePending`, `pendingObligation` and
-`requireHandled`. Its snapshots include both whole-value availability and partial
-field moves. A boolean-only abstract ledger must not accidentally erase the
-partial-move requirement for result-bearing records. Keep the concrete type
-rejection in place until the corresponding acceptance cases prove these
-transitions, including early-return paths with evaluated temporaries.
+Acceptance must include repeated moves, reads after moves, remaining ordinary
+field reads, multiple result fields, branch/loop disagreement about which field
+moved, whole-record use after a move, replenishment, early propagation with
+remaining fields and allocation-failure cleanup. Runtime-owned field support also
+requires the separate generic ownership/region rules and must not be inferred
+from this concrete result ledger.

@@ -1532,3 +1532,36 @@ scope and live-temporary acceptance requirements in
 generic types, codec constraints, public generic tooling, source byte
 serialization, borrowed/capability native invocation, finer incremental work and
 the remaining roadmap requirements are still open.
+
+
+### Concrete generic result obligations — 2026-09-06
+
+Generic templates now check concrete result-bearing values before instantiation.
+Whole-value transfer, acknowledgement, exhaustive payload handling, scope/return
+obligations and safe reassignment are enforced. Branches and matches restore the
+same incoming availability state and merge only continuing paths; loops and
+short-circuit expressions reject inconsistent obligations. Aggregate operations
+cannot silently erase sibling or replaced results. `try` checks compatible
+concrete result errors, live local obligations and already evaluated result
+temporaries in calls/aggregate construction. Result-bearing references reject
+consistently with ordinary functions, including in uncalled templates.
+
+See `docs/experiments/generic-results.md` and `examples/generic-results.my`
+(result 9). New acceptance covers uncalled rejection, consumed aliases, both
+branch outcomes, match fallthrough, nested payloads, overwrite/self-transfer,
+loop/short-circuit state, propagation success/error and pending temporaries,
+acknowledgement traps, and allocation failures during checking/execution/native
+emission. All 614 core tests pass in Debug and ReleaseFast; all 60 CLI tests pass.
+VM/native parity passes 2760 comparisons across 122 fixtures, including imported
+result schemas with aliases and a located acknowledgement trap. The final
+result-reference restriction also passes the 70-test generic-focused suite.
+Formatting and all 88 Guardian checks pass with baselines disabled; report-only
+size/line advice remains. This is focused milestone validation, not a new full
+resource/provider/binding integration run.
+
+Generic partial field moves remain explicitly unsupported. The next implementation
+must track remaining field obligations through snapshots, merges, reassignment
+and early propagation; `generic-results-plan.md` records that acceptance contract.
+Runtime ownership/regions, parameter-dependent structural types, codec
+constraints, public generic tooling, source byte serialization and all other
+pending roadmap requirements remain open.
