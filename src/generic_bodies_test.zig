@@ -47,7 +47,7 @@ test "generic body contracts reject undeclared operations mismatches and invalid
         .{ .text = "fn f<T:copy>(x:T)->T{while true{return x;}}", .code = "E_MISSING_RETURN" },
         .{ .text = "fn f<T:copy>(x:T)->T{return x;discard x;}", .code = "E_UNREACHABLE" },
         .{ .text = "fn f<T:copy>(x:T)->i8{discard x;return 128i8;}", .code = "E_INTEGER_RANGE" },
-        .{ .text = "fn f<T:copy>(x:T)->T{return other::<T>(x);}", .code = "E_GENERIC_BODY_UNSUPPORTED" },
+        .{ .text = "fn f<T:copy>(x:T)->T{return other::<T>(x);}", .code = "E_UNKNOWN_FUNCTION" },
         .{ .text = "fn f<T:copy>(x:&T)->T{return read_ref(x);}", .code = "E_GENERIC_BODY_UNSUPPORTED" },
     };
     for (cases) |case| try reject(case.text, case.code);

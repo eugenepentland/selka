@@ -33,7 +33,8 @@ Every body has a maximum checking depth of 256 and 100,000 expression/statement
 visits. These bound compiler work, not guest execution. Left-deep expressions and
 wide statement sequences exercise the limits without executing a template.
 
-Calls, concrete nominal/composite signature types, aggregate construction,
+[Generic-to-generic calls](generic-calls.md) are now supported. Calls to concrete
+helpers, concrete nominal/composite signature types, aggregate construction,
 references/slices, owned/resource operations, conversions, and other forms that
 need additional abstract rules return `E_GENERIC_BODY_UNSUPPORTED`. They are not
 silently skipped. Valid bodies in the supported subset still return
@@ -54,7 +55,8 @@ parameters, casts, scope/return rules, immutable assignments, signed literal min
 module-local visibility/shadowing, original diagnostic locations, allocation-failure
 cleanup, deep expressions, and the 100,000/100,002 visit boundary.
 
-Next work is generic call/signature resolution and requirement forwarding, bounded
+Generic call/signature resolution and requirement forwarding now have acceptance.
+Next work is bounded
 specialization identities, substitution with source/module provenance, remaining
 abstract ownership/reference/effect rules, and VM/C/schema/tooling integration.
 Generics and the full roadmap remain open.

@@ -449,3 +449,55 @@ test "generic body contracts respect module-local declaration and import scopes"
     try rejectChecked("module main;import units;fn f<T:copy>(x:T)->T{return x;}fn main()->i64{return 0;}", "module units;struct T{}", "E_GENERIC_UNSUPPORTED");
     try rejectChecked("module main;import units;fn main()->i64{return 0;}", "module units;fn bad<T:copy>(x:T,y:T)->T{return x+y;}", "E_GENERIC_OPERATION");
 }
+
+test "generic calls preserve imported declaration identity and private boundaries" {
+    const main = "module main;import units;fn identity<T:integer>(x:T)->T{return x;}fn forward<T:copy>(x:T)->T{return units::identity::<T>(x);}fn main()->i64{return 0;}";
+    const dependency = "module units;export identity;fn identity<U:copy>(x:U)->U{return x;}";
+    try rejectChecked(main, dependency, "E_GENERIC_UNSUPPORTED");
+    const domain_main = "module main;import units;fn forward<T:copy>(x:T)->T{return units::D.make::<T>(x);}fn main()->i64{return 0;}";
+    const domain_dependency = "module units;export D;domain D:i64{private fn hidden<T:copy>(x:T)->T{return x;}fn make<U:copy>(x:U)->U{return D.hidden::<U>(x);}}";
+    try rejectChecked(domain_main, domain_dependency, "E_GENERIC_UNSUPPORTED");
+    try rejectChecked(main, "module units;fn identity<U:copy>(x:U)->U{return x;}", "E_PRIVATE_SYMBOL");
+    try rejectChecked(main, "module units;export identity;fn identity<U:integer>(x:U)->U{return x;}", "E_GENERIC_ARGUMENT");
+}
+
+fn genericCallsScenario(allocator: std.mem.Allocator) !void {
+    var files: Files = .{ .entries = &.{
+        .{ .path = "main.my", .bytes = "module main;import units;fn forward<T:integer>(x:T)->T{return units::identity::<T>(x);}fn main()->i64{return 0;}" },
+        .{ .path = units_path, .bytes = "module units;export identity;fn identity<U:copy>(x:U)->U{return x;}" },
+    } };
+    var project = graph.Project.init(allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    const merged = try @import("project_syntax.zig").build(&index);
+    var names: @import("module_names.zig").Names = .{ .index = &index, .src = merged.src };
+    var sink: @import("diagnostic.zig").Sink = .{ .allocator = project.arena.allocator() };
+    try @import("generic_bodies.zig").checkWithNames(allocator, merged.src, merged.syntax, &sink, &names);
+    try t.expectEqual(@as(usize, 0), sink.items.items.len);
+}
+test "generic calls module resolution and signature substitution release allocation failures" {
+    try genericCallsScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), genericCallsScenario, .{});
+}
+
+test "generic calls requirement diagnostics link caller and imported declaration locations" {
+    var files: Files = .{ .entries = &.{
+        .{ .path = "main.my", .bytes = "module main;import units;fn forward<T:copy>(x:T)->T{return units::identity::<T>(x);}fn main()->i64{return 0;}" },
+        .{ .path = units_path, .bytes = "module units;export identity;fn identity<U:integer>(x:U)->U{return x;}" },
+    } };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try project_compile_module.Compilation.init(&index);
+    try t.expectError(error.SourceError, compilation.check());
+    const failure = compilation.diagnostics.items.items[0];
+    try t.expectEqualStrings("E_GENERIC_ARGUMENT", failure.code);
+    try t.expectEqualStrings("main.my", compilation.src.locate(failure.span.start).path);
+    try t.expectEqualStrings("T", compilation.src.text(failure.span));
+    try t.expect(failure.related != null);
+    try t.expectEqualStrings(units_path, compilation.src.locate(failure.related.?.span.start).path);
+    try t.expectEqualStrings("U", compilation.src.text(failure.related.?.span));
+}

@@ -2961,3 +2961,20 @@ passed, and the focused abstract-body run passed eight tests. The Guardian build
 gate passed all 88 checks without baselines. These runs cover the implemented
 symbolic subset and ordinary-language regressions; they do not establish executable
 generics or completion of the full template-body contract.
+
+
+### Abstract generic calls and requirement forwarding — 2026-09-06
+
+Added indexed generic declaration lookup, explicit type/value argument arity,
+requirement implication, and symbolic parameter/result substitution. Calls retain
+module/domain privacy and cross-file diagnostic links; same-named declarations
+remain distinct. Recursive calls check signatures without expanding bodies.
+Allocation-failure acceptance covers local and module-backed checking. Concrete
+helper summaries, broader abstract body forms, instance interning/substitution,
+executable specialization, and the remaining roadmap stay open.
+
+Validation: the full core suites passed 559 tests in Debug and ReleaseFast, all 60
+CLI tests passed, and final generic-focused acceptance passed 25 tests. The build
+gate passed all 88 Guardian checks without baselines. This validates abstract
+calls and ordinary-language regressions; executable generic specialization and
+completion of the broader roadmap remain unproven and unfinished.

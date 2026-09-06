@@ -1452,7 +1452,4 @@ fn conversionBody(src: source.Source, program: ast.Program, function: ast.Functi
     }
 }
 
-fn functionName(allocator: std.mem.Allocator, src: source.Source, owner: ?source.Span, name: source.Span) Error![]const u8 {
-    if (owner) |domain_name| return std.fmt.allocPrint(allocator, "{s}.{s}", .{ src.text(domain_name), src.text(name) });
-    return src.text(name);
-}
+const functionName = @import("function_identity.zig").localName;
