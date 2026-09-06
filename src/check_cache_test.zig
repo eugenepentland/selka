@@ -92,3 +92,29 @@ test "check cache replacement OutOfMemory preserves the prior successful verdict
     try t.expect(cache.lookup(&original) != null);
     try t.expectEqual(@as(usize, 1), cache.statistics.stored);
 }
+
+fn jsonScenario(allocator: std.mem.Allocator) !void {
+    var cache = Cache.init(allocator, 1024 * 1024);
+    defer cache.deinit();
+    cache.format = .json;
+    var files: Files = .{};
+    try remember(allocator, &cache, &files);
+    var project = language.project.Project.init(allocator);
+    defer project.deinit();
+    try load(&project, &files);
+    const warnings = cache.lookup(&project).?;
+    var parsed = try std.json.parseFromSlice(std.json.Value, allocator, warnings, .{});
+    defer parsed.deinit();
+    try t.expectEqualStrings("diagnostic-v1", parsed.value.object.get("version").?.string);
+    try t.expectEqualStrings("W_UNUSED_BINDING", parsed.value.object.get("diagnostic").?.object.get("code").?.string);
+    cache.format = .text;
+    try t.expect(cache.lookup(&project) == null);
+    cache.format = .json;
+    try t.expectEqualStrings(warnings, cache.lookup(&project).?);
+}
+
+test "successful verdict warnings retain JSON format and cannot replay across format changes" {
+    try jsonScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), jsonScenario, .{});
+}

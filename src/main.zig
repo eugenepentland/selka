@@ -3,6 +3,8 @@ const inputs_prefix = "--inputs=";
 const policy_prefix = "--policy=";
 const std = @import("std");
 const language = @import("mylang");
+const diagnostic_output = language.diagnostic_output;
+const Reporting = struct { timings: bool = false, diagnostics: ?diagnostic_output.Format = null };
 const usage = "usage: mylang " ++
     "<invoke-project|check-value-project|schema-project|input-module|check|run|dump-bytecode|di" ++
     "scover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fm" ++
@@ -25,7 +27,7 @@ const usage = "usage: mylang " ++
     "signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  " ++
     "fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: " ++
     "--check (otherwise writes formatted source to " ++
-    "stdout)\n  check-session: persistent check/clear/quit lines on stdin; JSON status on stdout; --inputs supported\n";
+    "stdout)\n  all commands: --diagnostics=text|json (stderr JSON Lines; stdout unchanged)\n  check-session: persistent check/clear/quit lines on stdin; JSON status on stdout; --inputs supported\n";
 
 /// Dispatch compiler commands, reporting usage/source/IO failures through process exit status.
 pub fn main(init: std.process.Init) void {
@@ -38,13 +40,34 @@ pub fn main(init: std.process.Init) void {
     if (status != 0) std.process.exit(status);
 }
 
-fn dispatch(init: std.process.Init) !u8 {
-    const allocator = init.gpa;
-    const args = try init.minimal.args.toSlice(init.arena.allocator());
+const Context = struct {
+    gpa: std.mem.Allocator,
+    arena: *std.heap.ArenaAllocator,
+    io: std.Io,
+    diagnostics: diagnostic_output.Format,
+    fn text(self: Context, bytes: []const u8) !void {
+        if (self.diagnostics == .text) return std.Io.File.stderr().writeStreamingAll(self.io, bytes);
+        const rendered = try diagnostic_output.message(self.gpa, bytes, self.diagnostics);
+        defer self.gpa.free(rendered);
+        try std.Io.File.stderr().writeStreamingAll(self.io, rendered);
+    }
+};
+fn dispatch(process: std.process.Init) !u8 {
+    const args = try process.minimal.args.toSlice(process.arena.allocator());
     const parsed = parseArgs(args[1..]) catch {
-        try std.Io.File.stderr().writeStreamingAll(init.io, usage);
+        try std.Io.File.stderr().writeStreamingAll(process.io, usage);
         return 2;
     };
+    const init: Context = .{ .gpa = process.gpa, .arena = process.arena, .io = process.io, .diagnostics = parsed.reporting.diagnostics orelse .text };
+    return run(init, parsed) catch |err| {
+        const message = try std.fmt.allocPrint(init.gpa, "mylang: host failure: {s}\n", .{@errorName(err)});
+        defer init.gpa.free(message);
+        try init.text(message);
+        return 2;
+    };
+}
+fn run(init: Context, parsed: Parsed) !u8 {
+    const allocator = init.gpa;
     if (parsed.command == .@"check-session") return checkSession(init, parsed);
     switch (parsed.command) {
         .@"check-session",
@@ -87,13 +110,13 @@ fn dispatch(init: std.process.Init) !u8 {
         defer allocator.free(formatted);
         if (parsed.format_check) {
             if (std.mem.eql(u8, formatted, bytes)) return 0;
-            try std.Io.File.stderr().writeStreamingAll(init.io, "formatting differs\n");
+            try init.text("formatting differs\n");
             return 1;
         }
         try std.Io.File.stdout().writeStreamingAll(init.io, formatted);
         return 0;
     }
-    const check_start = if (parsed.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
+    const check_start = if (parsed.reporting.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
     compilation.check() catch |err| switch (err) {
         error.SourceError => {
             try report(init, &compilation);
@@ -101,7 +124,7 @@ fn dispatch(init: std.process.Init) !u8 {
         },
         else => return err,
     };
-    const check_ns = if (parsed.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
+    const check_ns = if (parsed.reporting.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
     if (parsed.command != .@"emit-c") try report(init, &compilation);
     switch (parsed.command) {
         .@"check-session",
@@ -150,7 +173,7 @@ fn dispatch(init: std.process.Init) !u8 {
             const text = try language.duplicates.render(allocator, analysis, compilation.program.?, compilation.src);
             defer allocator.free(text);
             try std.Io.File.stdout().writeStreamingAll(init.io, text);
-            if (parsed.timings) {
+            if (parsed.reporting.timings) {
                 const counts = try std.fmt.allocPrint(allocator, "timings: frontend_ns={d} discovery_ns={d} source_bytes={d} ast_nodes={d} typed_nodes={d} " ++
                     "canonical_bytes={d} functions={d}" ++
                     "\n", .{
@@ -163,7 +186,7 @@ fn dispatch(init: std.process.Init) !u8 {
                     analysis.functions_examined,
                 });
                 defer allocator.free(counts);
-                try std.Io.File.stderr().writeStreamingAll(init.io, counts);
+                try init.text(counts);
             }
         },
         .@"dump-bytecode" => {
@@ -178,7 +201,7 @@ fn dispatch(init: std.process.Init) !u8 {
                 try std.Io.File.stdout().writeStreamingAll(init.io, text);
             },
             .trap => |diagnostic| {
-                const rendered = try diagnostic.render(allocator, compilation.src);
+                const rendered = try diagnostic_output.render(allocator, diagnostic, compilation.src, init.diagnostics);
                 defer allocator.free(rendered);
                 try std.Io.File.stderr().writeStreamingAll(init.io, rendered);
                 return 1;
@@ -188,9 +211,9 @@ fn dispatch(init: std.process.Init) !u8 {
     return 0;
 }
 
-fn report(init: std.process.Init, compilation: *const language.Compilation) !void {
+fn report(init: Context, compilation: *const language.Compilation) !void {
     for (compilation.diagnostics.items) |diagnostic| {
-        const rendered = try diagnostic.render(init.gpa, compilation.src);
+        const rendered = try diagnostic_output.render(init.gpa, diagnostic, compilation.src, init.diagnostics);
         defer init.gpa.free(rendered);
         try std.Io.File.stderr().writeStreamingAll(init.io, rendered);
     }
@@ -237,7 +260,7 @@ const Parsed = struct {
     path: []const u8,
     options: language.vm.Options,
     discovery: language.duplicates.Options,
-    timings: bool,
+    reporting: Reporting,
 };
 fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (args.len < 2) return error.Usage;
@@ -248,6 +271,11 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
         parser.options.max_frames = parser.evaluation.max_frames;
     }
     for (args[1..]) |arg| {
+        if (std.mem.startsWith(u8, arg, "--diagnostics=")) {
+            if (parser.reporting.diagnostics != null) return error.Usage;
+            parser.reporting.diagnostics = std.meta.stringToEnum(diagnostic_output.Format, arg["--diagnostics=".len..]) orelse return error.Usage;
+            continue;
+        }
         if (try parser.codecOption(arg)) continue;
         if (try parser.evaluationOption(arg)) continue;
         if (try parser.qualityOption(arg)) continue;
@@ -285,7 +313,7 @@ const ArgumentParser = struct {
     saw_frames: bool = false,
     saw_memory: bool = false,
     discovery: language.duplicates.Options = .{},
-    timings: bool = false,
+    reporting: Reporting = .{},
     saw_min: bool = false,
     saw_population: bool = false,
     saw_work: bool = false,
@@ -438,8 +466,8 @@ const ArgumentParser = struct {
             self.saw_work = true;
             self.discovery.near_options.max_work = std.math.cast(usize, try positive(arg["--max-work=".len..])) orelse return error.Usage;
         } else if (std.mem.eql(u8, arg, "--timings")) {
-            if ((self.command != .@"discover-duplicates" and self.command != .@"discover-project-duplicates") or self.timings) return error.Usage;
-            self.timings = true;
+            if ((self.command != .@"discover-duplicates" and self.command != .@"discover-project-duplicates") or self.reporting.timings) return error.Usage;
+            self.reporting.timings = true;
         } else return false;
         return true;
     }
@@ -468,7 +496,7 @@ const ArgumentParser = struct {
             .path = self.path orelse return error.Usage,
             .options = self.options,
             .discovery = self.discovery,
-            .timings = self.timings,
+            .reporting = self.reporting,
         };
     }
 };
@@ -504,15 +532,15 @@ const ModuleFiles = struct {
         };
     }
 };
-fn listModules(init: std.process.Init, parsed: Parsed) !u8 {
+fn listModules(init: Context, parsed: Parsed) !u8 {
     return listModulesWithCache(init, parsed, null, null);
 }
-fn listModulesWithCache(init: std.process.Init, parsed: Parsed, cache: ?*language.syntax_cache.Cache, verdict: ?*language.check_cache.Cache) !u8 {
-    const frontend_start = if (parsed.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
+fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_cache.Cache, verdict: ?*language.check_cache.Cache) !u8 {
+    const frontend_start = if (parsed.reporting.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
     const path = parsed.path;
     const basename = std.fs.path.basename(path);
     if (!validEntryBasename(basename)) {
-        try std.Io.File.stderr().writeStreamingAll(init.io, "list-modules: entry must be an identifier.my file; imports resolve beneath its directory\n");
+        try init.text("list-modules: entry must be an identifier.my file; imports resolve beneath its directory\n");
         return 2;
     }
     var files: ModuleFiles = .{ .io = init.io, .root = std.fs.path.dirname(path) orelse "." };
@@ -525,7 +553,7 @@ fn listModulesWithCache(init: std.process.Init, parsed: Parsed, cache: ?*languag
     const output = if (parsed.command != .@"list-modules") result: {
         var index = language.interfaces.buildWithCache(&project, cache) catch |err| switch (err) {
             error.SourceError => {
-                const message = try project.renderProblem(init.gpa);
+                const message = try diagnostic_output.renderProject(init.gpa, &project, init.diagnostics);
                 defer init.gpa.free(message);
                 try std.Io.File.stderr().writeStreamingAll(init.io, message);
                 return 1;
@@ -585,7 +613,7 @@ fn listModulesWithCache(init: std.process.Init, parsed: Parsed, cache: ?*languag
                 break :result try std.fmt.allocPrint(init.gpa, "{d}\n", .{value});
             },
             .trap => |trap| {
-                const message = try trap.render(init.gpa, compilation.src);
+                const message = try diagnostic_output.render(init.gpa, trap, compilation.src, init.diagnostics);
                 defer init.gpa.free(message);
                 try std.Io.File.stderr().writeStreamingAll(init.io, message);
                 return 1;
@@ -597,10 +625,10 @@ fn listModulesWithCache(init: std.process.Init, parsed: Parsed, cache: ?*languag
     return 0;
 }
 
-fn loadModules(init: std.process.Init, project: *language.project.Project, files: *ModuleFiles, basename: []const u8) !?u8 {
+fn loadModules(init: Context, project: *language.project.Project, files: *ModuleFiles, basename: []const u8) !?u8 {
     project.load(.{ .context = files, .read = ModuleFiles.read }, basename[0 .. basename.len - 3], .{}) catch |err| switch (err) {
         error.SourceError => {
-            const message = try project.renderProblem(init.gpa);
+            const message = try diagnostic_output.renderProject(init.gpa, project, init.diagnostics);
             defer init.gpa.free(message);
             try std.Io.File.stderr().writeStreamingAll(init.io, message);
             return 1;
@@ -616,7 +644,7 @@ fn rememberCheck(verdict: ?*language.check_cache.Cache, project: *const language
     return 0;
 }
 
-fn replayCheck(init: std.process.Init, command: Command, project: *const language.project.Project, verdict: ?*language.check_cache.Cache) !bool {
+fn replayCheck(init: Context, command: Command, project: *const language.project.Project, verdict: ?*language.check_cache.Cache) !bool {
     if (command != .@"check-project") return false;
     const cache = verdict orelse return false;
     const warnings = cache.lookup(project) orelse return false;
@@ -624,9 +652,9 @@ fn replayCheck(init: std.process.Init, command: Command, project: *const languag
     return true;
 }
 
-fn reportProject(init: std.process.Init, compilation: *language.project_compile.Compilation) !void {
+fn reportProject(init: Context, compilation: *language.project_compile.Compilation) !void {
     for (compilation.diagnostics.items.items) |problem| {
-        const message = try problem.render(init.gpa, compilation.src);
+        const message = try diagnostic_output.render(init.gpa, problem, compilation.src, init.diagnostics);
         defer init.gpa.free(message);
         try std.Io.File.stderr().writeStreamingAll(init.io, message);
     }
@@ -648,27 +676,27 @@ fn compilerIdentity(io: std.Io) !language.evaluation_report.Identity {
     return .{ .compiler_sha256 = hash.finalResult(), .zig_version = builtin.zig_version_string, .architecture = @tagName(builtin.cpu.arch), .os = @tagName(builtin.os.tag), .abi = @tagName(builtin.abi), .optimize = @tagName(builtin.mode) };
 }
 
-fn parseInputManifest(init: std.process.Init, path: []const u8, bytes: []const u8) !?language.input_manifest.Manifest {
+fn parseInputManifest(init: Context, path: []const u8, bytes: []const u8) !?language.input_manifest.Manifest {
     return language.input_manifest.Manifest.parse(init.gpa, bytes) catch |err| {
         if (err == error.OutOfMemory) return err;
         const message = try std.fmt.allocPrint(init.gpa, "{s}: invalid input manifest: {s}\n", .{ path, @errorName(err) });
         defer init.gpa.free(message);
-        try std.Io.File.stderr().writeStreamingAll(init.io, message);
+        try init.text(message);
         return null;
     };
 }
 
-fn valueFailure(init: std.process.Init, path: []const u8, err: anyerror, location: ?*const language.typed_json.Location, invocation: bool) !?[]u8 {
+fn valueFailure(init: Context, path: []const u8, err: anyerror, location: ?*const language.typed_json.Location, invocation: bool) !?[]u8 {
     const pointer = if (location) |at| (if (at.has_path) try std.json.Stringify.valueAlloc(init.gpa, at.text(), .{}) else null) else null;
     defer if (pointer) |text| init.gpa.free(text);
     const detail = if (pointer) |text| try std.fmt.allocPrint(init.gpa, " at JSON pointer {s}{s}", .{ text, if (location.?.truncated) " (path truncated)" else "" }) else try init.gpa.dupe(u8, "");
     defer init.gpa.free(detail);
     const message = try std.fmt.allocPrint(init.gpa, "{s}: invalid {s}: {s}{s}\n", .{ path, if (invocation) "invocation" else "typed JSON", @errorName(err), detail });
     defer init.gpa.free(message);
-    try std.Io.File.stderr().writeStreamingAll(init.io, message);
+    try init.text(message);
     return null;
 }
-fn checkValue(init: std.process.Init, compilation: *language.project_compile.Compilation, path: []const u8, options: language.codec_json.Options, invocation: bool) !?[]u8 {
+fn checkValue(init: Context, compilation: *language.project_compile.Compilation, path: []const u8, options: language.codec_json.Options, invocation: bool) !?[]u8 {
     const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, path, init.gpa, .limited(options.json.max_bytes + 1)) catch |err| {
         if (err == error.StreamTooLong) return valueFailure(init, path, error.CodecByteLimit, null, invocation);
         return err;
@@ -680,26 +708,26 @@ fn checkValue(init: std.process.Init, compilation: *language.project_compile.Com
         if (err == error.OutOfMemory) return err;
         _ = try valueFailure(init, path, err, &failure.location, invocation);
         if (failure.execution.trap) |trap| {
-            const rendered = try trap.render(init.gpa, compilation.src);
+            const rendered = try diagnostic_output.render(init.gpa, trap, compilation.src, init.diagnostics);
             defer init.gpa.free(rendered);
             try std.Io.File.stderr().writeStreamingAll(init.io, rendered);
         }
         if (failure.execution.rejection) |rejection| {
             const rendered = language.typed_json.encode(init.gpa, compilation.program.?.records, rejection.typeOf(), rejection, options.json) catch |render_error| {
                 if (render_error == error.OutOfMemory) return render_error;
-                try std.Io.File.stderr().writeStreamingAll(init.io, "codec error payload exceeds diagnostic serialization limits\n");
+                try init.text("codec error payload exceeds diagnostic serialization limits\n");
                 return null;
             };
             defer init.gpa.free(rendered);
-            try std.Io.File.stderr().writeStreamingAll(init.io, "codec rejection: ");
-            try std.Io.File.stderr().writeStreamingAll(init.io, rendered);
-            try std.Io.File.stderr().writeStreamingAll(init.io, "\n");
+            const message = try std.fmt.allocPrint(init.gpa, "codec rejection: {s}\n", .{rendered});
+            defer init.gpa.free(message);
+            try init.text(message);
         }
         return null;
     };
 }
 
-fn formatProject(init: std.process.Init, project: *language.project.Project) !u8 {
+fn formatProject(init: Context, project: *language.project.Project) !u8 {
     var changed: std.ArrayList([]const u8) = .empty;
     defer changed.deinit(init.gpa);
     for (project.order.items) |module_id| {
@@ -719,12 +747,12 @@ fn formatProject(init: std.process.Init, project: *language.project.Project) !u8
     for (changed.items) |path_name| {
         const message = try std.fmt.allocPrint(init.gpa, "{s}: formatting differs\n", .{path_name});
         defer init.gpa.free(message);
-        try std.Io.File.stderr().writeStreamingAll(init.io, message);
+        try init.text(message);
     }
     return if (changed.items.len == 0) 0 else 1;
 }
 
-fn discoverProject(init: std.process.Init, parsed: Parsed, project: *language.project.Project, compilation: *language.project_compile.Compilation, frontend_start: std.Io.Timestamp) !u8 {
+fn discoverProject(init: Context, parsed: Parsed, project: *language.project.Project, compilation: *language.project_compile.Compilation, frontend_start: std.Io.Timestamp) !u8 {
     const start = std.Io.Timestamp.now(init.io, .awake);
     var analysis = try language.duplicates.discover(init.gpa, compilation.program.?, parsed.discovery);
     defer analysis.deinit();
@@ -733,7 +761,7 @@ fn discoverProject(init: std.process.Init, parsed: Parsed, project: *language.pr
     defer init.gpa.free(text);
     try std.Io.File.stdout().writeStreamingAll(init.io, "scope: reachable module graph; declaration visibility and dependency policy require separate review\n");
     try std.Io.File.stdout().writeStreamingAll(init.io, text);
-    if (parsed.timings) {
+    if (parsed.reporting.timings) {
         const counts = try std.fmt.allocPrint(init.gpa, "timings: project_frontend_ns={d} discovery_ns={d} modules={d} source_bytes={d} " ++
             "ast_nodes={d} typed_nodes={d} canonical_bytes={d} functions={d}" ++
             "\n", .{
@@ -747,19 +775,19 @@ fn discoverProject(init: std.process.Init, parsed: Parsed, project: *language.pr
             analysis.functions_examined,
         });
         defer init.gpa.free(counts);
-        try std.Io.File.stderr().writeStreamingAll(init.io, counts);
+        try init.text(counts);
     }
     return 0;
 }
 
-fn checkProjectPolicy(init: std.process.Init, parsed: Parsed, project: *language.project.Project) !u8 {
+fn checkProjectPolicy(init: Context, parsed: Parsed, project: *language.project.Project) !u8 {
     const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, parsed.policy.?, init.gpa, .limited(1024 * 1024));
     defer init.gpa.free(bytes);
     var policy = language.import_policy.Policy.parse(init.gpa, bytes) catch |err| {
         if (err == error.OutOfMemory) return err;
         const message = try std.fmt.allocPrint(init.gpa, "{s}: invalid import policy: {s}\n", .{ parsed.policy.?, @errorName(err) });
         defer init.gpa.free(message);
-        try std.Io.File.stderr().writeStreamingAll(init.io, message);
+        try init.text(message);
         return 2;
     };
     defer policy.deinit();
@@ -772,7 +800,7 @@ fn checkProjectPolicy(init: std.process.Init, parsed: Parsed, project: *language
     return if (policy_report.denied == 0) 0 else 3;
 }
 
-fn prepareInputs(init: std.process.Init, parsed: Parsed, basename: []const u8) !?[]GeneratedInput {
+fn prepareInputs(init: Context, parsed: Parsed, basename: []const u8) !?[]GeneratedInput {
     const input_allocator = init.arena.allocator();
     var generated_inputs: std.ArrayList(GeneratedInput) = .empty;
     defer generated_inputs.deinit(input_allocator);
@@ -782,7 +810,7 @@ fn prepareInputs(init: std.process.Init, parsed: Parsed, basename: []const u8) !
         // Add one so the documented manifest byte budgets are inclusive.
         const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, manifest_path, init.gpa, .limited(@min(1024 * 1024, 8 * 1024 * 1024 - manifest_bytes) + 1)) catch |err| switch (err) {
             error.StreamTooLong => {
-                try std.Io.File.stderr().writeStreamingAll(init.io, "input manifest byte budget exceeded (1 MiB per file, 8 MiB combined)\n");
+                try init.text("input manifest byte budget exceeded (1 MiB per file, 8 MiB combined)\n");
                 return null;
             },
             else => return err,
@@ -793,13 +821,13 @@ fn prepareInputs(init: std.process.Init, parsed: Parsed, basename: []const u8) !
         defer manifest.deinit();
         const module = manifest.parsed.value.module;
         if (std.mem.eql(u8, module, basename[0 .. basename.len - 3])) {
-            try std.Io.File.stderr().writeStreamingAll(init.io, "input manifest must supply an imported module, not the entry module\n");
+            try init.text("input manifest must supply an imported module, not the entry module\n");
             return null;
         }
         for (generated_inputs.items) |previous| if (std.mem.eql(u8, previous.module, module)) {
             const message = try std.fmt.allocPrint(init.gpa, "{s}: duplicate input module {s}; already supplied by {s}\n", .{ manifest_path, module, previous.manifest_path });
             defer init.gpa.free(message);
-            try std.Io.File.stderr().writeStreamingAll(init.io, message);
+            try init.text(message);
             return null;
         };
         try generated_inputs.append(input_allocator, .{
@@ -813,7 +841,7 @@ fn prepareInputs(init: std.process.Init, parsed: Parsed, basename: []const u8) !
     return inputs;
 }
 
-fn evaluationRequest(init: std.process.Init, parsed: Parsed, project: *language.project.Project, compilation: *language.project_compile.Compilation) !?[]u8 {
+fn evaluationRequest(init: Context, parsed: Parsed, project: *language.project.Project, compilation: *language.project_compile.Compilation) !?[]u8 {
     const failure = language.evaluation.preflight(init.gpa, compilation.code.?, &compilation.diagnostics, parsed.evaluation) catch |err| switch (err) {
         error.SourceError => {
             try reportProject(init, compilation);
@@ -823,7 +851,7 @@ fn evaluationRequest(init: std.process.Init, parsed: Parsed, project: *language.
     };
     try reportProject(init, compilation);
     if (failure) |trap| {
-        const message = try trap.render(init.gpa, compilation.src);
+        const message = try diagnostic_output.render(init.gpa, trap, compilation.src, init.diagnostics);
         defer init.gpa.free(message);
         try std.Io.File.stderr().writeStreamingAll(init.io, message);
         return null;
@@ -832,11 +860,11 @@ fn evaluationRequest(init: std.process.Init, parsed: Parsed, project: *language.
     return report_text;
 }
 
-fn checkImportedInputs(init: std.process.Init, inputs: []const GeneratedInput, project: *const language.project.Project) !bool {
+fn checkImportedInputs(init: Context, inputs: []const GeneratedInput, project: *const language.project.Project) !bool {
     for (inputs) |input| if (!project.names.contains(input.module)) {
         const message = try std.fmt.allocPrint(init.gpa, "{s}: declared input module {s} is not imported by the reachable project\n", .{ input.manifest_path, input.module });
         defer init.gpa.free(message);
-        try std.Io.File.stderr().writeStreamingAll(init.io, message);
+        try init.text(message);
         return false;
     };
     return true;
@@ -850,9 +878,9 @@ fn validEntryBasename(basename: []const u8) bool {
 }
 
 const SessionCache = struct { syntax: language.syntax_cache.Cache, semantic: language.check_cache.Cache };
-fn checkSession(init: std.process.Init, parsed: Parsed) !u8 {
+fn checkSession(init: Context, parsed: Parsed) !u8 {
     if (!validEntryBasename(std.fs.path.basename(parsed.path))) {
-        try std.Io.File.stderr().writeStreamingAll(init.io, "check-session: entry must be an identifier.my file\n");
+        try init.text("check-session: entry must be an identifier.my file\n");
         return 2;
     }
     var cache: SessionCache = .{
@@ -861,6 +889,7 @@ fn checkSession(init: std.process.Init, parsed: Parsed) !u8 {
     };
     defer cache.syntax.deinit();
     defer cache.semantic.deinit();
+    cache.semantic.format = init.diagnostics;
     var buffer: [256]u8 = undefined;
     var input = std.Io.File.stdin().readerStreaming(init.io, &buffer);
     while (true) {
@@ -892,7 +921,7 @@ fn checkSession(init: std.process.Init, parsed: Parsed) !u8 {
         }
     }
 }
-fn sessionCheck(init: std.process.Init, parsed: Parsed, cache: *SessionCache) !void {
+fn sessionCheck(init: Context, parsed: Parsed, cache: *SessionCache) !void {
     var arena = std.heap.ArenaAllocator.init(init.gpa);
     defer arena.deinit();
     var request_init = init;
@@ -906,7 +935,7 @@ fn sessionCheck(init: std.process.Init, parsed: Parsed, cache: *SessionCache) !v
     };
     try sessionReply(init, "check", status, null, before, cache);
 }
-fn sessionReply(init: std.process.Init, action: []const u8, status: u8, failure: ?[]const u8, before: language.syntax_cache.Statistics, cache: *const SessionCache) !void {
+fn sessionReply(init: Context, action: []const u8, status: u8, failure: ?[]const u8, before: language.syntax_cache.Statistics, cache: *const SessionCache) !void {
     const text = try std.json.Stringify.valueAlloc(init.gpa, .{
         .version = "check-session-v1",
         .action = action,

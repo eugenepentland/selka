@@ -69,6 +69,8 @@ pub const syntax_cache = @import("syntax_cache.zig");
 pub const project = @import("project.zig");
 pub const source = @import("source.zig");
 pub const diagnostic = @import("diagnostic.zig");
+/// Versioned diagnostic rendering for CLI and tool consumers.
+pub const diagnostic_output = @import("diagnostic_output.zig");
 const lexer = @import("lexer.zig");
 const parser = @import("parser.zig");
 const ast = @import("ast.zig");

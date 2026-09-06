@@ -167,6 +167,10 @@ pub fn build(b: *std.Build) void {
     call_inputs.addFileArg(exe.getEmittedBin());
     call_inputs.setCwd(b.path("."));
     test_step.dependOn(&call_inputs.step);
+    const diagnostic_output = b.addSystemCommand(&.{ "python3", "tests/diagnostic_output.py", "--compiler" });
+    diagnostic_output.addFileArg(exe.getEmittedBin());
+    diagnostic_output.setCwd(b.path("."));
+    test_step.dependOn(&diagnostic_output.step);
     const check_session = b.addSystemCommand(&.{ "python3", "tests/check_session.py", "--compiler" });
     check_session.addFileArg(exe.getEmittedBin());
     check_session.setCwd(b.path("."));

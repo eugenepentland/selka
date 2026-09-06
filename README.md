@@ -7,8 +7,8 @@ The implementation follows [the revision 3 plan](docs/plan.md) and
 [interpreter-first roadmap](docs/experiments/interpreter-first.md). The working
 language name and `.my` extension are provisional.
 
-Next priorities are diagnostic repair quality,
-typed host-library calls, and a board-validation or constraint-processing trial.
+Next priorities are typed VM host-library calls and a board-validation or
+constraint-processing trial, including measured diagnostic repair outcomes.
 Expensive geometry can remain in Zig/C/Rust behind explicit typed wrappers.
 Completed C/native experiments remain available; further native compilation,
 LLVM, and direct x86_64 Linux work are deferred until the design and measurements
@@ -92,6 +92,10 @@ after cloning because Git hooks are local. It also configures Guardian metadata
 merge handling.
 
 [SPEC.md](SPEC.md) links implemented behaviors to executable regression tests.
+[Versioned JSON diagnostics](docs/experiments/json-diagnostics.md) are available
+with `--diagnostics=json`. Source locations, notes, VM traces and cached warnings
+stay on stderr; command results keep their stdout format.
+
 [Ownership diagnostic provenance](docs/experiments/diagnostic-provenance.md) now
 shows the invalid use, the earlier borrow/transfer, and the value declaration.
 Repair fixtures check these locations and execute the corrected programs.

@@ -10,11 +10,11 @@ uncalled templates. Existing error codes remain unchanged.
 The structured `Diagnostic` keeps the immediate cause in `related` and an optional
 binding-declaration note in `provenance.origin`. Returned-reference mismatches
 also keep the required input in `provenance.requirement`. Notes are stored by value;
-the bounded runtime trace remains separate. Text rendering prints the causal note before the
-creation/declaration note and maps each span through the original source map.
+the bounded runtime trace remains separate. Text rendering prints the causal note
+before the creation/declaration note and maps each span through the original source map.
 The CLI regression checks exact lines and columns in an imported generic module.
-This is structured data in the compiler API; a versioned general JSON diagnostic
-mode for CLI consumers is still pending.
+The [versioned CLI protocol](json-diagnostics.md) exposes this evidence through
+`--diagnostics=json`, alongside structured compiler API data.
 
 ## Move and borrow evidence
 
@@ -95,8 +95,8 @@ still needs matched tasks, recorded attempts and independent behavioral tests.
 
 ## Remaining diagnostic work
 
-General versioned machine-readable CLI output remains pending. Current lifetime
-notes show the origin and contract; they do not enumerate every intermediate
+[Versioned machine-readable CLI output](json-diagnostics.md) is implemented.
+Current lifetime notes show the origin and contract; they do not enumerate every intermediate
 assignment or helper in a dependency path. The initial
 [optional-value audit](optional-values.md) retains named unions/results; application
 usability and broader repair evidence remain pending. Typed host registration and

@@ -18,7 +18,7 @@ See [the current design and acceptance criteria](interpreter-first.md).
 | Priority | Work | Completion evidence |
 | --- | --- | --- |
 | 1 | Interpreter workflow, concrete generic local views and arena/reset lifetimes implemented | `test`/`test-interpreter` retain Guardian, core/CLI and interpreter/tooling coverage; `test-native` is optional and `test-all` combines both. Views and arenas have VM/CLI rejection and cleanup acceptance. Next active priority: diagnostic provenance and repair fixtures. |
-| 2 | In progress: move/borrow and arena/returned-reference provenance with executed repair fixtures implemented | Next: versioned CLI diagnostic output. The initial [optional-value audit](optional-values.md) retains named unions/results; application usability and agent repair success remain unmeasured. |
+| 2 | Move/borrow and lifetime provenance, executed repair fixtures, and [versioned CLI diagnostics](json-diagnostics.md) implemented | Next active milestone: typed VM host registration. The initial [optional-value audit](optional-values.md) retains named unions/results; application usability and agent repair success remain unmeasured. |
 | 3 | Typed registered host functions with handwritten wrappers | Exact signatures/effects, ownership and lifetime checks, typed errors, deterministic fake-host tests. |
 | 4 | Board-validation or constraint-processing module | Independent behavioral tests and recorded agent repair outcomes; geometry/routing kernels stay in native libraries. |
 | 5 | Trial-driven language/tooling refinement | Evidence for generic constraints, source serialization, incremental checking, and useful duplication reports. |
@@ -1030,3 +1030,44 @@ No native execution suite was run.
 Next: versioned machine-readable CLI diagnostics, followed by typed VM host-function
 registration and the board/constraint-processing trial. Broader abstraction/tooling
 and application repair evidence remain pending; native execution stays excluded.
+
+
+### Versioned machine-readable CLI diagnostics — 2026-09-06
+
+`--diagnostics=json` now selects diagnostic-v1 JSON Lines on stderr while command
+results and exit statuses retain their existing contracts. Source errors, warnings
+and VM traps preserve stable codes, severity, original-file byte ranges and
+byte-based line/columns, causal/origin/requirement notes, bounded guest frames and
+omission counts. Project discovery/interface errors retain cross-module related
+sites. Auxiliary messages have a separate record kind; usage and emergency output
+failures may still use text. Invalid UTF-8 text is preserved as byte arrays.
+
+A per-invocation output context applies the format across checking, execution,
+formatting, evaluation and tooling. Persistent sessions keep their stdout reply
+protocol. Successful warning caches record their format, preventing terminal-text
+replay under JSON selection; cold/warm/clear checks preserve identical warnings.
+See [the protocol contract](json-diagnostics.md). This adds no guest
+execution to request-only evaluation and does not change language semantics.
+
+Validation: the full Debug interpreter suite passes 28/28 steps and ReleaseFast
+passes 29/29 steps; both pass 738/738 core/CLI tests (673 core, 65 CLI), all 18
+interpreter/tooling driver invocations and 96 independent corpus comparisons.
+New renderer/cache tests exercise allocation failures, mapped EOF/cross-file ranges,
+escaped/Unicode/non-UTF8 data, all note roles and bounded traces. The independent
+CLI protocol driver covers source errors, module repair, loader/interface errors,
+traps, auxiliary failures, format rejection, text compatibility, request-only
+behavior and session replay. Formatting and all 88 Guardian checks pass without
+baselines; existing report-only size/line findings remain.
+
+Guardian required the behavioral change to have spec/test coverage and then caught
+an unconnected four-test module. After wiring it into the root, compilation exposed
+an incorrect fixture cleanup API, which was corrected to arena-owned source storage.
+The independent driver also corrected its assumption that evaluation-request would
+execute a division trap. The orphan/reachability findings were labelled useful-review;
+these findings did not expose a language runtime defect. No native execution suite
+was run.
+
+Next: typed registered VM host functions with explicit contracts and deterministic
+fake-host tests, then the board/constraint application and measured repair trial.
+Broader abstraction/tooling requirements remain pending. Native execution remains
+outside the active roadmap-completion goal.
