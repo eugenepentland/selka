@@ -219,9 +219,14 @@ The eight Python driver tests also run under `zig build test`, alongside the
 
 [Scalar native execution](docs/experiments/native-execution.md) is available with
 `emit-c` and `python3 scripts/native.py examples/sum.my -o /tmp/native-sum`.
-The pinned Zig compiles direct C branches and explicit frames. Native tests execute
-23 scalar fixtures across -O0/-O2 with undefined-behavior checks; aggregate/resource/
-borrowing operations are explicitly unsupported by this backend.
+The pinned Zig compiles direct C branches and explicit frames. The backend now
+covers all current bytecode operations, including aggregates, borrowing and
+resources, with VM/native parity and allocation-failure acceptance.
+
+[Native embedding](docs/experiments/native-embedding.md) builds a shared library
+with `python3 scripts/native.py examples/sum.my --library -o /tmp/libsum.so`.
+A C host supplies providers and budgets and receives a scalar result or bounded
+diagnostic through `mylang_native_run_v1`; calls return without printing or exiting.
 
 [Partial record field moves](docs/experiments/partial-fields.md) use
 `take_field(owner, field)` to transfer individual fields immediately while preserving

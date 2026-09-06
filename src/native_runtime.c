@@ -6,8 +6,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-#ifndef MYLANG_NATIVE_PROVIDER
+#if !defined(MYLANG_NATIVE_PROVIDER) && !defined(MYLANG_EMBED)
 MylangNativeProviders mylang_native_providers(void) { return (MylangNativeProviders){0}; }
+#endif
+#ifdef MYLANG_EMBED
+#include <setjmp.h>
+#include <stdatomic.h>
+static jmp_buf entry_escape;
+static MylangRunResult *active_result;
+static int64_t native_value;
 #endif
 static MylangNativeProviders providers;
 typedef __int128 V;
@@ -124,10 +131,28 @@ static void cleanup(void) {
     frames = NULL; values = NULL; cf = 0; cv = 0;
 }
 static void host_failure(const char *message) {
+#ifdef MYLANG_EMBED
+    active_result->status = 2; active_result->code = message;
+    cleanup(); longjmp(entry_escape, 1);
+#else
     fprintf(stderr, "mylang: host failure: %s\n", message);
     cleanup(); exit(2);
+#endif
 }
 static void trap(const char *code) {
+#ifdef MYLANG_EMBED
+    active_result->status = 1; active_result->code = code;
+    active_result->path = source_paths[site];
+    active_result->line = source_lines[site]; active_result->column = source_columns[site];
+    size_t location = site, shown = 0, visible = nf - (binding_call ? 1 : 0);
+    for (size_t i = visible; i && shown < 16; --i, ++shown) {
+        Frame f = frames[i - 1];
+        active_result->frames[shown] = (MylangRunFrame){function_names[f.function], source_paths[location], source_lines[location], source_columns[location]};
+        location = f.call_site;
+    }
+    active_result->frame_count = shown; active_result->omitted_frames = visible - shown;
+    cleanup(); longjmp(entry_escape, 1);
+#else
     fprintf(stderr, "%s:%zu:%zu: error[%s]\n", source_paths[site], source_lines[site], source_columns[site], code);
     size_t location = site, shown = 0, visible = nf - (binding_call ? 1 : 0);
     for (size_t i = visible; i && shown < 16; --i, ++shown) {
@@ -137,6 +162,7 @@ static void trap(const char *code) {
     }
     if (visible > shown) fprintf(stderr, "  ... %zu frames omitted\n", visible - shown);
     cleanup(); exit(1);
+#endif
 }
 static void *grow(void *old, size_t *capacity, size_t needed, size_t size) {
     if (needed <= *capacity) return old;

@@ -126,6 +126,7 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     const w = &output.writer;
     try w.print("#define MYLANG_GUEST_VALUE_BYTES {d}\n", .{@sizeOf(typed.Value)});
     try w.writeAll(@embedFile("native_providers.h"));
+    try w.writeAll(@embedFile("native_embed.h"));
     try w.writeAll(@embedFile("native_runtime.c"));
     try w.writeAll(@embedFile("native_resources.c"));
     try w.writeAll("\nstatic const char *const names[] = {\n");
@@ -142,8 +143,8 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
         try string(w, src.locate(ins.span.start).path);
         try w.writeAll(",\n");
     };
-    try w.writeAll("};\nint main(int argc, char **argv) {\nsource_paths = paths; function_names = names; source_lines = lines; source_columns = columns;\n" ++
-        "options(argc, argv); providers = mylang_native_providers(); validate_resource_providers(); size_t return_target = 0;\n");
+    try w.writeAll("};\n#ifdef MYLANG_EMBED\nstatic int execute_entry(void) {\n#else\nint main(int argc, char **argv) {\n#endif\nsource_paths = paths; function_names = names; source_lines = lines; source_columns = columns;\n" ++
+        "#ifndef MYLANG_EMBED\noptions(argc, argv); providers = mylang_native_providers();\n#endif\nvalidate_resource_providers(); size_t return_target = 0;\n");
     const main_index = @backingInt(program.main);
     for (program.functions[main_index].scope.locals[0..program.functions[main_index].signature.parameter_count]) |parameter| {
         switch (parameter.ty) {
@@ -182,6 +183,7 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
         try w.print("case {d}: goto L{d};\n", .{ offset + pc + 1, offset + pc + 1 });
     };
     try w.writeAll("default: host_failure(\"InternalError\"); } return 2;\n}\n");
+    try w.writeAll(@embedFile("native_embed.c"));
     return output.toOwnedSlice();
 }
 
@@ -496,7 +498,8 @@ fn writeOperation(context: InstructionOutput) !bool {
             falls_through = false;
         },
         .ret => {
-            try w.writeAll("Slot result = pop_value(); size_t target = leave(result); if (!nf) { printf(\"%\" PRId64 \"\\n\", (int64_t)result.number); cleanup(); return 0; }\nreturn_target = target; goto dispatch_return;\n");
+            try w.writeAll("Slot result = pop_value(); size_t target = leave(result); if (!nf) {\n" ++
+                "#ifdef MYLANG_EMBED\nnative_value = (int64_t)result.number;\n#else\nprintf(\"%\" PRId64 \"\\n\", (int64_t)result.number);\n#endif\ncleanup(); return 0; }\nreturn_target = target; goto dispatch_return;\n");
             falls_through = false;
         },
     }

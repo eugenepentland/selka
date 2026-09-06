@@ -14,6 +14,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
     try t.expect(std.mem.indexOf(u8, first, "__builtin_mul_overflow") != null);
 }
 // spec: PROJ-5
+// spec: NATIVE-EMBED-1
 test "native scalar emission is deterministic and cleans every failed allocation" {
     try scenario(t.allocator);
     var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });

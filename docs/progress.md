@@ -3133,3 +3133,21 @@ all 88 checks with baselines disabled. Tests cover discovery-order independence,
 qualified nominal names, dump/trace output, schema exclusion and allocation-failure
 cleanup. This does not establish completion of direct generic public tooling or
 the other unfinished roadmap tracks.
+
+
+### Native embedding entry and shared-library builds — 2026-09-06
+
+Generated C now offers `mylang_native_run_v1` with explicit providers and budgets,
+a scalar entry result, bounded located traps and returning host failures. Every
+invocation releases guest storage; repeated calls reset state, and overlapping
+calls return Busy. `scripts/native.py --library` builds a shared library while
+preserving atomic and unchanged-output publication. See
+`docs/experiments/native-embedding.md` for the public C header contract.
+
+Focused acceptance passed 22 host programs across -O0/-O2 with undefined-behavior
+sanitization, repeated calls, frame/step budgets, reentry/concurrent rejection,
+resource cleanup and allocation-failure recovery. Independent public-header hosts
+linked and ran Debug/ReleaseFast shared libraries and verified unchanged rebuilds.
+Full regression validation is in progress. Arbitrary exported native calls,
+aggregate native arguments/results, generated native callable bindings, finer
+incremental compilation and the other pending roadmap requirements remain open.

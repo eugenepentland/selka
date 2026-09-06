@@ -27,7 +27,7 @@ def publish(candidate, output):
     return True
 
 
-def compile_native(zig, mode, temporary, provider, candidate):
+def compile_native(zig, mode, temporary, provider, candidate, library=False):
     started = time.monotonic()
     optimize = "-O0" if mode == "Debug" else "-O2"
 
@@ -41,6 +41,8 @@ def compile_native(zig, mode, temporary, provider, candidate):
     flags = ["-std=c11", optimize, "-fdebug-compilation-dir=mylang-generated",
              "-ffile-prefix-map=" + str(temporary) + "=mylang-generated",
              "-fdebug-prefix-map=" + str(temporary) + "=mylang-generated"]
+    if library:
+        flags.extend(["-DMYLANG_EMBED=1", "-fPIC"])
     if provider is not None:
         flags.append("-DMYLANG_NATIVE_PROVIDER=1")
     if not run([*flags, '-c', 'program.c', '-o', str(generated)], cwd=temporary):
@@ -56,12 +58,13 @@ def compile_native(zig, mode, temporary, provider, candidate):
                     '-c', str(provider.resolve()), '-o', str(adapter)], env=provider_env):
             return False
         objects.append(str(adapter))
-    return run([optimize, *objects, '-o', str(candidate)])
+    return run([optimize, *(['-shared'] if library else []), *objects, '-o', str(candidate)])
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("source", type=Path)
+    parser.add_argument("--library", action="store_true", help="build a shared library exposing native_embed.h instead of a CLI executable")
     parser.add_argument("--project", action="store_true", help="compile a module entry and its reachable imports")
     parser.add_argument("-o", "--output", type=Path, required=True)
     parser.add_argument("--compiler", type=Path, default=Path("zig-out/bin/mylang"))
@@ -70,6 +73,8 @@ def main():
     parser.add_argument("--mode", choices=["Debug", "ReleaseFast"], default="Debug")
     parser.add_argument("--report", action="store_true", help="emit JSON build timings and output publication status on stdout")
     args = parser.parse_args()
+    if args.library and args.provider is not None:
+        parser.error("--library receives providers through its host API; --provider is for executable builds")
     try:
         zig = shutil.which(args.zig)
         if zig is None:
@@ -92,7 +97,7 @@ def main():
             candidate = Path(temp) / "program"
             source.write_bytes(generated.stdout)
             native_start = time.monotonic()
-            success = compile_native(zig, args.mode, Path(temp), args.provider, candidate)
+            success = compile_native(zig, args.mode, Path(temp), args.provider, candidate, args.library)
             native_seconds = time.monotonic() - native_start
             if not success:
                 return 2
@@ -100,6 +105,7 @@ def main():
             if args.report:
                 print(json.dumps({
                     "version": "native-build-v1", "mode": args.mode,
+                    "artifact_kind": "shared-library" if args.library else "executable",
                     "zig_version": actual, "output": str(output), "output_changed": changed,
                     "generated_c_bytes": len(generated.stdout),
                     "generated_c_sha256": hashlib.sha256(generated.stdout).hexdigest(),
