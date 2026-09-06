@@ -16,6 +16,10 @@ pub const Kind = enum {
             .write, .resize, .reserve => 2,
         };
     }
+    /// Identify operations that may allocate new guest backing storage.
+    pub fn allocates(self: Kind) bool {
+        return self == .reserve;
+    }
     /// Identify operations that modify buffer contents or initialized length.
     pub fn mutates(self: Kind) bool {
         return switch (self) {

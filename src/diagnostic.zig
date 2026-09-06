@@ -13,6 +13,10 @@ pub const result_operation = "E_RESULT_OPERATION";
 pub const result_path = "E_RESULT_PATH";
 /// Shared code for result obligations changed by a loop continuation.
 pub const result_loop = "E_RESULT_LOOP";
+/// Shared code for using an owned value after transfer.
+pub const owned_consumed = "E_OWNED_CONSUMED";
+/// Shared code for mutation without a mutable binding.
+pub const immutable = "E_IMMUTABLE";
 const std = @import("std");
 const source = @import("source.zig");
 

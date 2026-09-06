@@ -146,6 +146,14 @@ pub fn resultShape(ty: Type, records: []const Record) ?ResultShape {
     }
     return .{ .ok_type = variants.cases[ok orelse return null].payload.?, .error_type = variants.cases[err orelse return null].payload.?, .ok_tag = ok.?, .error_tag = err.? };
 }
+/// Resolve a buffer/pool acquisition result with the required i64 error payload.
+pub fn acquisitionShape(ty: Type, records: []const Record, pool: bool) ?ResultShape {
+    const result = resultShape(ty, records) orelse return null;
+    if (!result.ok_type.isAggregate() or result.error_type != .i64) return null;
+    const schema = records[result.ok_type.recordIndex()];
+    if (if (pool) schema.shape.pool == null else schema.shape.buffer == null) return null;
+    return result;
+}
 /// Equality supported by concrete expressions and generic equality requirements.
 pub fn supportsEquality(ty: Type, records: []const Record) bool {
     if (ty.isInteger() or ty == .bool) return true;

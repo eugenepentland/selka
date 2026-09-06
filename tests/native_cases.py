@@ -133,6 +133,14 @@ def project_cases(compiler, zig, root, temp):
         "data.my": "module data; export R; export Pair; result R{ok:i64,err:i64}struct Pair{left:R,right:R,code:i64}",
         "helpers.my": "module helpers; import data as d; export step; export number; fn step<T:copy>(p:d::Pair)->d::R{acknowledge take_field(p,left);let n=try take_field(p,right);return new d::R.ok(n+read_field(p,code));}fn number(r:d::R)->i64{match r{d::R.ok(n)=>{return n;},d::R.err(n)=>{return 0-n;}}}",
     }))
+    fixtures.append(("generic-runtime-modules", {
+        "main.my": "module main; import helper; fn main(heap:allocator)->i64{return helper::run::<u8>(heap,7u8)+helper::run::<i64>(heap,-1);}",
+        "helper.my": "module helper; export run; buffer B:i64;result A{ok:B,err:i64}result S{ok:bool,err:i64}fn make<T:integer>(heap:allocator,n:T)->A{let first=try acquire_buffer<A>(heap,1);let mut b=try acquire_buffer<A>(heap,n);discard try append_buffer<S>(b,7);discard first;return new A.ok(b);}fn run<T:integer>(heap:allocator,n:T)->i64{match make::<T>(heap,n){A.ok(b)=>{return read_buffer(b,0);},A.err(discard)=>{return 3;}}}",
+    }))
+    fixtures.append(("generic-runtime-trap", {
+        "main.my": "module main; import helper;fn main(heap:allocator)->i64{return helper::run::<u8>(heap,0u8);}",
+        "helper.my": "module helper;export run;buffer B:i64;result A{ok:B,err:i64}fn run<T:integer>(heap:allocator,n:T)->i64{match acquire_buffer<A>(heap,n){A.ok(b)=>{return read_buffer(b,0);},A.err(e)=>{return e;}}}",
+    }))
     fixtures.append(("generic-field-trap", {
         "main.my": "module main; import helper; fn main()->i64{return helper::run();}",
         "helper.my": "module helper; export run; result R{ok:i64,err:i64}struct Pair{r:R,code:i64}fn work<T:copy>(p:Pair)->i64{acknowledge take_field(p,r);return 7/read_field(p,code);}fn run()->i64{return work::<bool>(new Pair{r:new R.ok(1),code:0});}",
@@ -209,7 +217,7 @@ def main():
     root = Path(__file__).resolve().parents[1]
     fixtures = [(name, (root / "test" / "fixtures" / f"{name}.my").read_text()) for name in ("arithmetic", "sum", "gcd")]
     fixtures.append(("generic-pool", "pool P(Id):i64;result A{ok:P,err:i64}result H{ok:Id,err:i64}fn forward<T:copy>(pool:P)->P{return pool;}fn identity<T:copy>(value:T)->T{return value;}fn main(heap:allocator)->i64{match acquire_pool<A>(heap,1){A.ok(pool)=>{let mut moved=forward::<bool>(pool);match insert_pool<H>(moved,7){H.ok(id)=>{if id==identity::<Id>(id){return 7;}return 0;},H.err(e)=>{return e;}}},A.err(e)=>{return e;}}}"))
-    fixtures += [(name, (root / "examples" / f"{name}.my").read_text()) for name in ("arrays", "records", "conversions", "tables", "references", "reference-parameters", "slices", "returned-references", "propagation", "buffers", "buffer-views", "allocator-capabilities", "arena-reset", "pools", "arenas", "generics", "generic-references", "generic-slices", "generic-borrows", "generic-returned-references", "generic-records", "generic-updates", "generic-variants", "generic-results", "generic-fields", "generic-owned")]
+    fixtures += [(name, (root / "examples" / f"{name}.my").read_text()) for name in ("arrays", "records", "conversions", "tables", "references", "reference-parameters", "slices", "returned-references", "propagation", "buffers", "buffer-views", "allocator-capabilities", "arena-reset", "pools", "arenas", "generics", "generic-references", "generic-slices", "generic-borrows", "generic-returned-references", "generic-records", "generic-updates", "generic-variants", "generic-results", "generic-fields", "generic-owned", "generic-runtime")]
     for index in ("-1i8", "18446744073709551615u64"):
         index_type = "i8" if index.startswith("-") else "u64"
         fixtures.append(("generic-slice-bounds-" + index_type, "fn at<T:copy,I:integer>(s:&[]T,i:I)->T{return read_slice(s,i);}fn main()->i64{let values=new [1]i64 [7];borrow values[0..1] as s{return at::<i64," + index_type + ">(s," + index + ");}}"))

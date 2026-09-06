@@ -170,7 +170,7 @@ const Checker = struct {
         try self.ownerAccess(binding.*, self.transfers(binding.ty), span);
         if (binding.fields.len != 0) return self.sink.fail("E_PARTIAL_MOVE", span, "record has missing fields; access remaining fields individually or replace it");
         if (self.transfers(binding.ty)) {
-            if (!binding.available) return self.sink.fail(if (self.moveOnly(binding.ty)) "E_OWNED_CONSUMED" else "E_RESULT_CONSUMED", span, "binding was already transferred");
+            if (!binding.available) return self.sink.fail(if (self.moveOnly(binding.ty)) diagnostic.owned_consumed else "E_RESULT_CONSUMED", span, "binding was already transferred");
             binding.available = false;
         }
         return binding.ty;
@@ -193,7 +193,7 @@ const Checker = struct {
         if (parent != null) {
             _ = try self.reference(borrow.owner, borrow.mutable, binding.slice);
         } else {
-            if (borrow.mutable and !binding.mutable) return self.sink.fail("E_IMMUTABLE", borrow.owner, "exclusive borrowing requires a mutable owner");
+            if (borrow.mutable and !binding.mutable) return self.sink.fail(diagnostic.immutable, borrow.owner, "exclusive borrowing requires a mutable owner");
             try self.ownerAccess(binding, borrow.mutable, borrow.owner);
         }
         if (borrow.range != null and !binding.slice) return self.sink.fail(eUnsupported, borrow.owner, "generic range borrowing requires a known slice input");
@@ -360,6 +360,9 @@ const Checker = struct {
         return switch (node.data) {
             .name => |name| try self.namedValue(name),
             .read_field, .take_field => |access| try self.fieldValue(access, node.data == .take_field),
+            .acquire_buffer, .acquire_pool => |acquire| try self.acquireValue(acquire, node.data == .acquire_pool, node.span),
+            .buffer_operation => |operation| try self.bufferValue(operation),
+            .pool_operation => |operation| try self.poolValue(operation),
             .read_slice => |read| result: {
                 const ref = try self.reference(read.name, false, true);
                 try self.supports(try self.expression(read.index), .integer, node.span);
@@ -433,6 +436,65 @@ const Checker = struct {
             else => self.sink.fail(eUnsupported, node.span, "this operation still needs abstract generic body checking"),
         };
     }
+    fn runtimeOwner(self: *Checker, span: source.Span, mutates: bool) Error!void {
+        const binding = try self.local(span);
+        if (!binding.available) return self.sink.fail(diagnostic.owned_consumed, span, "operation owner was already transferred");
+        if (mutates and !binding.mutable) return self.sink.fail(diagnostic.immutable, span, "mutation requires a let mut binding");
+        try self.ownerAccess(binding.*, mutates, span);
+    }
+    fn operationResult(self: *Checker, span: ?source.Span, success: typed.Type, code: []const u8) Error!Symbolic {
+        const result_span = span orelse return .{ .concrete = success };
+        const result = try self.ty(result_span);
+        const result_type = try self.concreteValue(result, result_span);
+        const shape = typed.resultShape(result_type, self.catalog.records) orelse return self.sink.fail(code, result_span, "operation requires a matching success payload and i64 error result");
+        if (shape.ok_type != success or shape.error_type != .i64) return self.sink.fail(code, result_span, "operation result payloads do not match its contract");
+        return result;
+    }
+    fn bufferValue(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "buffer_operation")) Error!Symbolic {
+        const owner = try self.local(operation.owner);
+        const ty_value = try self.concreteValue(owner.ty, operation.owner);
+        if (owner.reference != null or !ty_value.isAggregate()) return self.sink.fail("E_BUFFER_TYPE", operation.owner, "operation requires a buffer value binding");
+        const element = self.catalog.records[ty_value.recordIndex()].shape.buffer orelse return self.sink.fail("E_BUFFER_TYPE", operation.owner, "operation requires a buffer value binding");
+        for (operation.arguments, 0..) |input, index| {
+            const value = try self.expression(input);
+            const at = self.program.nodes.items[@backingInt(input)].span;
+            const writes_element = index == 1 and (operation.kind == .write or operation.kind == .resize);
+            if (operation.kind == .reserve and index == 0) {
+                try self.same(value, .{ .concrete = .allocator }, at);
+            } else if (operation.kind == .append or writes_element) {
+                try self.same(value, .{ .concrete = element }, at);
+            } else try self.supports(value, .integer, at);
+        }
+        try self.runtimeOwner(operation.owner, operation.kind.mutates());
+        if (operation.kind.allocates()) self.effect_masks[self.function_index] |= effect_set.bit(.allocation);
+        const success: typed.Type = if (operation.result != null) .bool else if (operation.kind == .read) element else .u64;
+        return self.operationResult(operation.result, success, "E_BUFFER_RESULT");
+    }
+    fn poolValue(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "pool_operation")) Error!Symbolic {
+        const owner = try self.local(operation.owner);
+        const ty_value = try self.concreteValue(owner.ty, operation.owner);
+        if (owner.reference != null or !ty_value.isAggregate()) return self.sink.fail("E_POOL_TYPE", operation.owner, "operation requires a pool value binding");
+        const pool = self.catalog.records[ty_value.recordIndex()].shape.pool orelse return self.sink.fail("E_POOL_TYPE", operation.owner, "operation requires a pool value binding");
+        for (operation.arguments, 0..) |input, index| {
+            const expected = if (operation.kind == .insert or index == 1) pool.element else pool.handle;
+            try self.same(try self.expression(input), .{ .concrete = expected }, self.program.nodes.items[@backingInt(input)].span);
+        }
+        try self.runtimeOwner(operation.owner, operation.kind.mutates());
+        return self.operationResult(operation.result, operation.kind.output(pool), "E_POOL_RESULT");
+    }
+    fn acquireValue(self: *Checker, acquire: @FieldType(@FieldType(ast.Node, "data"), "acquire_buffer"), pool: bool, span: source.Span) Error!Symbolic {
+        const result = try self.ty(acquire.ty);
+        const result_type = try self.concreteValue(result, acquire.ty);
+        _ = typed.acquisitionShape(result_type, self.catalog.records, pool) orelse return self.sink.fail(
+            if (pool) "E_POOL_RESULT" else "E_BUFFER_RESULT",
+            acquire.ty,
+            "acquisition requires the matching owned success type and i64 error result",
+        );
+        try self.same(try self.expression(acquire.allocator), .{ .concrete = .allocator }, self.program.nodes.items[@backingInt(acquire.allocator)].span);
+        try self.supports(try self.expression(acquire.value), .integer, span);
+        self.effect_masks[self.function_index] |= effect_set.bit(.allocation);
+        return result;
+    }
     fn fieldValue(self: *Checker, access: @FieldType(@FieldType(ast.Node, "data"), "read_field"), taking: bool) Error!Symbolic {
         const binding = try self.local(access.owner);
         if (binding.reference != null) return self.sink.fail("E_TYPE", access.owner, "field access requires a value binding, not a reference");
@@ -441,7 +503,7 @@ const Checker = struct {
         const fields = self.catalog.records[owner_type.recordIndex()].fields;
         const result: Symbolic = .{ .concrete = fields[index].ty };
         if (!taking and self.transfers(result)) return self.sink.fail("E_FIELD_COPY", access.field, "read_field cannot copy owned values or result obligations");
-        if (self.transfers(binding.ty) and !binding.available) return self.sink.fail("E_OWNED_CONSUMED", access.owner, "record has already been transferred");
+        if (self.transfers(binding.ty) and !binding.available) return self.sink.fail(diagnostic.owned_consumed, access.owner, "record has already been transferred");
         if (taking and !self.transfers(binding.ty)) return self.sink.fail("E_FIELD_TAKE", access.owner, "take_field requires an owned or result-bearing record; use read_field for copyable records");
         if (binding.fields.len != 0 and binding.fields[index]) return self.sink.fail("E_FIELD_MOVED", access.field, "field has already been transferred");
         try self.ownerAccess(binding.*, taking, access.owner);
@@ -615,7 +677,7 @@ const Checker = struct {
             },
             .assignment => |assignment| {
                 const target = try self.local(assignment.name);
-                if (!target.mutable) return self.sink.fail("E_IMMUTABLE", assignment.name, "assignment requires a mutable binding");
+                if (!target.mutable) return self.sink.fail(diagnostic.immutable, assignment.name, "assignment requires a mutable binding");
                 try self.ownerAccess(target.*, true, assignment.name);
                 const value = try self.expression(assignment.value);
                 try self.same(value, target.ty, assignment.op_span);

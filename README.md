@@ -257,6 +257,8 @@ acknowledgement, propagation and obligations across control-flow paths.
 result obligations and reject mismatched field moves across those paths.
 [Concrete owned generic values](docs/experiments/generic-owned.md) now preserve
 transfers, implicit cleanup and transitive resource cleanup effects.
+[Generic buffer/pool operations](docs/experiments/generic-runtime.md) now check
+explicit allocator authority, mutation contracts and allocation effects.
 
 [Lexical arenas](docs/experiments/source-arenas.md) use `arena heap as scratch { ... }`
 with conservative escape checks and cleanup across returns/errors.

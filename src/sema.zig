@@ -1,6 +1,6 @@
 //! Scope and type checking use resolved binding identities, including advisory use counts.
 const eResultOperation = diagnostic.result_operation;
-const eOwnedConsumed = "E_OWNED_CONSUMED";
+const eOwnedConsumed = diagnostic.owned_consumed;
 const eReferenceResult = diagnostic.reference_result;
 const eResultPath = diagnostic.result_path;
 const eReturnLifetime = diagnostic.return_lifetime;
@@ -14,7 +14,7 @@ const eResourceIoResult = "E_RESOURCE_IO_RESULT";
 const eResultLoop = diagnostic.result_loop;
 const bindingDeclaredHere = "binding declared here";
 const ePoolResult = "E_POOL_RESULT";
-const eImmutable = "E_IMMUTABLE";
+const eImmutable = diagnostic.immutable;
 const std = @import("std");
 const ast = @import("ast.zig");
 const typed = @import("typed.zig");
@@ -606,10 +606,7 @@ const Checker = struct {
         const is_pool = node.data == .acquire_pool;
         const code: []const u8 = if (is_pool) ePoolResult else eBufferResult;
         const message: []const u8 = if (is_pool) "pool acquisition requires a pool success and i64 error result" else "buffer acquisition requires a buffer success and i64 error result";
-        const shape = typed.resultShape(out.ty, self.catalog.records) orelse return self.sink.fail(code, acquire.ty, message);
-        if (!shape.ok_type.isAggregate() or shape.error_type != .i64) return self.sink.fail(code, acquire.ty, message);
-        const schema = self.catalog.records[shape.ok_type.recordIndex()];
-        if (if (is_pool) schema.shape.pool == null else schema.shape.buffer == null) return self.sink.fail(code, acquire.ty, message);
+        _ = typed.acquisitionShape(out.ty, self.catalog.records, is_pool) orelse return self.sink.fail(code, acquire.ty, message);
         const capacity = self.resolved[@backingInt(acquire.value)].?;
         try self.requireInteger(self.nodes.items[@backingInt(capacity)].ty, node.span);
         const authority = self.resolved[@backingInt(acquire.allocator)].?;

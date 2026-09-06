@@ -49,15 +49,14 @@ with the deterministic test provider; it requires explicit provider authority.
 
 ## Remaining work
 
-This milestone adds owned input/value flow and cleanup effects. Acquisition,
-mutation, provider operations, buffer views and local arena/reset scopes inside
-templates still need abstract operation, permission and lifetime rules. Their
-explicit rejection prevents owned signatures from granting unchecked operations.
-Caller-supplied owned values can be forwarded; templates cannot yet introduce a
-local region. No new borrowing or escape policy is inferred from this support.
+This milestone adds owned input/value flow and cleanup effects.
+[Buffer/pool acquisition and operations](generic-runtime.md) now validate explicit
+allocator arguments, result shapes, mutation and direct allocation effects.
+Provider operations, buffer views and local arena/reset scopes still need their
+own abstract capability, permission and lifetime rules. Their explicit rejection
+prevents owned signatures from granting unchecked operations.
 
-Next, add typed acquisition/operation checking with explicit allocator/capability
-arguments, direct effect seeds and result-shape validation. Region scopes must
-track origins through local/field/call transfers and reject escapes before they
-are enabled. Structural constraints, codecs and public generic tooling remain
-pending separately, along with the other roadmap tracks.
+Caller-supplied owned values can be forwarded; templates cannot yet introduce a
+local region. Region scopes must track origins through local/field/call transfers
+and reject escapes before they are enabled. Structural constraints, codecs and
+public generic tooling remain pending separately, along with the other tracks.

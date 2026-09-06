@@ -1630,3 +1630,33 @@ generic bodies remain explicitly unsupported pending direct authority/effect,
 result-shape and region-origin checks. Owned input flow does not establish those
 operations. Structural generic types, codec constraints, public generic tooling,
 source byte serialization and all other roadmap requirements remain open.
+
+
+### Generic buffer and pool acquisition/operations — 2026-09-06
+
+Generic bodies now acquire concrete buffers and pools with explicit allocator
+arguments, integer capacities and matching owned-success/i64-error results.
+Buffer queries/read/write/append/resize/reserve and pool queries/insert/read/
+replace/remove/clear enforce exact element/handle/result types and mutable owners.
+Owner availability is checked after argument evaluation, rejecting an argument
+that transfers the buffer or pool being operated on. Acquisition and reserve seed
+allocation effects through helper calls; in-capacity mutations retain noalloc.
+The ordinary and abstract checkers share acquisition result validation, and the
+ordinary/bytecode/abstract effect passes share the buffer allocation predicate.
+
+See `docs/experiments/generic-runtime.md` and `examples/generic-runtime.my` (33).
+Acceptance covers malformed uncalled operations, incorrect authority/capacity,
+insufficient symbolic requirements, effect bounds, consumed/immutable owners,
+nominal handles, typed mutation results, success and negative-capacity failure,
+propagation and allocation-failure cleanup. All 631 core tests pass in Debug and
+ReleaseFast, all 60 CLI tests pass, and 2808 VM/native comparisons pass across 130
+fixtures. Imported acquisition/mutation helpers and a located empty-buffer trap
+are included. Formatting and all 88 Guardian checks pass with baselines disabled;
+nonblocking size/line findings remain and uncertain ROI subjects stay pending.
+No new full resource/provider/binding integration-suite run is claimed.
+
+Provider acquisition/completion/I/O, clock/random/environment operations and local
+arena/reset/view scopes inside templates remain pending. They require capability,
+permission, direct-effect and origin/lifetime checks. Structural generic types,
+codec constraints, public generic tooling, source byte serialization and the
+remaining roadmap requirements remain open.

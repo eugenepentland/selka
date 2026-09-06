@@ -86,7 +86,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
                 .environment_get => graph.direct(index, .environment, node.span),
                 .external_read => |read| graph.direct(index, read.kind.effect(), node.span),
                 .acquire_buffer, .acquire_pool => graph.direct(index, .allocation, node.span),
-                .buffer_operation => |op| if (bufferAllocates(op.kind)) {
+                .buffer_operation => |op| if (op.kind.allocates()) {
                     graph.direct(index, .allocation, node.span);
                 },
                 .call => |call| graph.call(index, @backingInt(call.function), node.span) catch |err| switch (err) {
@@ -170,8 +170,8 @@ pub fn checkAbstract(allocator: std.mem.Allocator, functions: []const @import("a
             if (forbidden & sets.bit(effect) == 0) continue;
             var origin = index;
             while (graph.states[origin].witnesses[@backingInt(effect)].?.via) |callee| origin = callee;
-            const message = try std.fmt.allocPrint(sink.allocator, "effect `{s}` from owned cleanup or a reachable helper exceeds declared bound", .{@tagName(effect)});
-            return sink.failRelated("E_EFFECT_BOUND", bound.span, message, .{ .span = graph.states[origin].witnesses[@backingInt(effect)].?.span, .message = "cleanup effect originates in this function's owned types" });
+            const message = try std.fmt.allocPrint(sink.allocator, "effect `{s}` from an operation, owned cleanup or a reachable helper exceeds declared bound", .{@tagName(effect)});
+            return sink.failRelated("E_EFFECT_BOUND", bound.span, message, .{ .span = graph.states[origin].witnesses[@backingInt(effect)].?.span, .message = "effect originates in this function's operations or owned types" });
         }
     }
 }
@@ -202,7 +202,7 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
             .environment_get => graph.direct(index, .environment, instruction.span),
             .external_read => |read| graph.direct(index, read.kind.effect(), instruction.span),
             .begin_region, .acquire_buffer, .acquire_pool => graph.direct(index, .allocation, instruction.span),
-            .buffer_operation => |op| if (bufferAllocates(op.kind)) {
+            .buffer_operation => |op| if (op.kind.allocates()) {
                 graph.direct(index, .allocation, instruction.span);
             },
             .call => |callee| try graph.call(index, @backingInt(callee), instruction.span),
@@ -269,13 +269,6 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
         if (function.policy.effects != state.mask) return error.InternalError;
         if (function.policy.effect_bound) |bound| if (bound.allowed & ~sets.all != 0 or state.mask & ~bound.allowed != 0) return error.InternalError;
     }
-}
-
-fn bufferAllocates(kind: @import("buffer_operations.zig").Kind) bool {
-    return switch (kind) {
-        .reserve => true,
-        .length, .capacity, .read, .write, .append, .resize => false,
-    };
 }
 
 test "effect lattice propagates independent effects through cycles without contaminating unrelated functions" {
