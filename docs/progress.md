@@ -2908,3 +2908,20 @@ parity passes all 2,616 comparisons; clock/random and environment acceptance pas
 passes two VM/native traces, 28 allocation failures, and six registry sanitizer
 runs. The build gate passes all 88 Guardian checks without baselines. This was
 focused validation; no new full-suite result is claimed for this milestone.
+
+
+### Declared-requirement generics: frontend stage — 2026-09-06
+
+Added explicit type parameters with nonempty requirement lists and `::<...>` call
+arguments to the AST/parser. Owned copies, mapped source spans, syntax-cache reuse,
+formatter round trips, exported-signature privacy, and 16/17 list boundaries are
+covered. Semantic preflight rejects these forms with `E_GENERIC_UNSUPPORTED`;
+requirements are not yet resolved and templates cannot execute. Generics remains
+open: requirement checking, bounded specialization, module/ownership/effect
+integration, VM/native execution, and tooling acceptance are the next work.
+
+Validation: the full core suite passed 540 tests in Debug and ReleaseFast, all 60
+CLI tests passed, and the final generic-focused run passed seven tests including
+the additional qualified-module formatting fixture. All Zig tests compiled and
+the build gate passed all 88 Guardian checks without baselines. No executable
+generic or native-specialization acceptance is claimed.

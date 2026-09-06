@@ -50,7 +50,7 @@ pub const Node = struct {
         record: struct { name: Span, fields: []const FieldInit },
         update: struct { base: NodeId, fields: []const FieldInit },
         field: struct { base: NodeId, name: Span },
-        call: struct { owner: ?Span = null, name: Span, arguments: []const NodeId },
+        call: struct { owner: ?Span = null, type_arguments: []const Span = &.{}, name: Span, arguments: []const NodeId },
         unary: struct { op: UnaryOp, operand: NodeId, op_span: Span },
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
     },
@@ -106,8 +106,10 @@ pub const FunctionPolicy = struct {
     restricted: bool = false,
     conversion: bool = false,
 };
+/// Named type variable with explicit source-spelled requirements.
+pub const TypeParameter = struct { name: Span, requirements: []const Span };
 /// Source parameter and result spellings with optional reference provenance.
-pub const FunctionSignature = struct { return_reference: ?ReturnReference = null, parameters: []const Parameter, return_type: Span };
+pub const FunctionSignature = struct { type_parameters: []const TypeParameter = &.{}, return_reference: ?ReturnReference = null, parameters: []const Parameter, return_type: Span };
 
 /// Fixed integer length or enum key spelling of an array/table type.
 pub const ArrayIndex = union(enum) { length: Span, enum_type: Span };

@@ -1326,8 +1326,13 @@ fn warningLess(_: void, a: diagnostic.Diagnostic, b: diagnostic.Diagnostic) bool
 pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!typed.Program {
     return checkWithNames(allocator, src, program, sink, null);
 }
+fn rejectUnimplementedGenerics(program: ast.Program, sink: *diagnostic.Sink) Error!void {
+    for (program.functions) |function| if (function.signature.type_parameters.len != 0) return sink.fail("E_GENERIC_UNSUPPORTED", function.name, "generic syntax is parsed, but executable specialization is not implemented");
+    for (program.nodes.items) |node| if (node.data == .call and node.data.call.type_arguments.len != 0) return sink.fail("E_GENERIC_UNSUPPORTED", node.span, "explicit type arguments require executable generic specialization");
+}
 /// Type-check linked module names and validate ownership, effects, and domain codecs.
 pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!typed.Program {
+    try rejectUnimplementedGenerics(program, sink);
     const resolved = try allocator.alloc(?typed.NodeId, program.nodes.items.len);
     @memset(resolved, null);
     const catalog = try records.collectWithNames(allocator, src, program, sink, module_names);

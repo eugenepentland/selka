@@ -1,4 +1,5 @@
 //! Recursive descent for statements; precedence climbing for expressions.
+const eGenericLimit = "E_GENERIC_LIMIT";
 const external_resources = @import("external_resources.zig");
 const std = @import("std");
 const ast = @import("ast.zig");
@@ -36,7 +37,7 @@ pub const Parser = struct {
         self.cursor.depth += 1;
     }
     fn qualifiedTail(self: *Parser, first: Span) diagnostic.Error!Span {
-        if (!self.module_syntax or self.current().tag != .colon) return first;
+        if (!self.module_syntax or self.current().tag != .colon or self.genericCallSuffix()) return first;
         self.cursor.pos += 1;
         _ = try self.expect(.colon);
         return .join(first, (try self.expect(.ident)).span);
@@ -232,6 +233,7 @@ pub const Parser = struct {
         const conversion = self.take(.kw_conversion);
         _ = try self.expect(.kw_fn);
         const name = try self.expect(.ident);
+        const type_parameters = try self.typeParameters();
         _ = try self.expect(.lparen);
         var parameters: std.ArrayList(ast.Parameter) = .empty;
         if (self.current().tag != .rparen) while (true) {
@@ -267,6 +269,7 @@ pub const Parser = struct {
                 .conversion = conversion,
             },
             .signature = .{
+                .type_parameters = type_parameters,
                 .return_reference = return_reference,
                 .parameters = try parameters.toOwnedSlice(self.arena.allocator()),
                 .return_type = return_type,
@@ -274,6 +277,53 @@ pub const Parser = struct {
             .name = name.span,
             .body = body,
         };
+    }
+    fn typeParameters(self: *Parser) diagnostic.Error![]const ast.TypeParameter {
+        if (!self.take(.lt)) return &.{};
+        var parameters: std.ArrayList(ast.TypeParameter) = .empty;
+        while (true) {
+            const name = (try self.expect(.ident)).span;
+            if (parameters.items.len == 16) return self.sink.fail(eGenericLimit, name, "at most 16 type parameters are permitted");
+            for (parameters.items) |previous| if (std.mem.eql(u8, self.src.text(previous.name), self.src.text(name))) return self.sink.fail("E_GENERIC_PARAMETER", name, "duplicate type parameter");
+            _ = try self.expect(.colon);
+            var requirements: std.ArrayList(Span) = .empty;
+            while (true) {
+                const requirement = (try self.expect(.ident)).span;
+                if (requirements.items.len == 16) return self.sink.fail(eGenericLimit, requirement, "at most 16 requirements are permitted");
+                for (requirements.items) |previous| if (std.mem.eql(u8, self.src.text(previous), self.src.text(requirement))) return self.sink.fail("E_GENERIC_REQUIREMENT", requirement, "duplicate type requirement");
+                try requirements.append(self.arena.allocator(), requirement);
+                if (!self.take(.plus)) break;
+            }
+            try parameters.append(self.arena.allocator(), .{ .name = name, .requirements = try requirements.toOwnedSlice(self.arena.allocator()) });
+            if (!self.take(.comma)) break;
+        }
+        _ = try self.expect(.gt);
+        return parameters.toOwnedSlice(self.arena.allocator());
+    }
+    fn borrowCallSuffix(self: *Parser) bool {
+        return switch (self.current().tag) {
+            .lparen, .dot => true,
+            .colon => self.module_syntax or self.genericCallSuffix(),
+            else => false,
+        };
+    }
+    fn genericCallSuffix(self: *Parser) bool {
+        if (self.cursor.pos + 2 >= self.tokens.len) return false;
+        return self.current().tag == .colon and self.tokens[self.cursor.pos + 1].tag == .colon and self.tokens[self.cursor.pos + 2].tag == .lt;
+    }
+    fn typeArguments(self: *Parser) diagnostic.Error![]const Span {
+        if (!self.genericCallSuffix()) return &.{};
+        self.cursor.pos += 3;
+        var arguments: std.ArrayList(Span) = .empty;
+        while (true) {
+            const argument = try self.typeName();
+            if (arguments.items.len == 16) return self.sink.fail(eGenericLimit, argument, "at most 16 type arguments are permitted");
+            try arguments.append(self.arena.allocator(), argument);
+            if (!self.take(.comma)) break;
+        }
+        _ = try self.expect(.gt);
+        if (self.current().tag != .lparen) return self.sink.fail("E_GENERIC_CALL", self.current().span, "explicit type arguments require a function call");
+        return arguments.toOwnedSlice(self.arena.allocator());
     }
     fn effectBound(self: *Parser) diagnostic.Error!?@import("effect_set.zig").Bound {
         const sets = @import("effect_set.zig");
@@ -331,7 +381,7 @@ pub const Parser = struct {
             const mutable = self.take(.kw_mut);
             const owner_position = self.cursor.pos;
             const owner = try self.expect(.ident);
-            if (self.current().tag == .lparen or self.current().tag == .dot or (self.module_syntax and self.current().tag == .colon)) {
+            if (self.borrowCallSuffix()) {
                 self.cursor.pos = owner_position;
                 const call = try self.expression(0);
                 _ = try self.expect(.kw_as);
@@ -857,7 +907,7 @@ pub const Parser = struct {
     fn methodSuffix(self: *Parser) bool {
         if (self.current().tag != .dot) return false;
         if (self.cursor.pos + 2 >= self.tokens.len) return false;
-        return self.tokens[self.cursor.pos + 1].tag == .ident and self.tokens[self.cursor.pos + 2].tag == .lparen;
+        return self.tokens[self.cursor.pos + 1].tag == .ident and (self.tokens[self.cursor.pos + 2].tag == .lparen or self.tokens[self.cursor.pos + 2].tag == .colon);
     }
 
     fn parseLeaf(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
@@ -869,6 +919,7 @@ pub const Parser = struct {
             self.cursor.pos += 1;
             name = (try self.expect(.ident)).span;
         }
+        const type_arguments = if (token.tag == .ident) try self.typeArguments() else &.{};
         if (token.tag == .ident and self.take(.lparen)) {
             var arguments: std.ArrayList(ast.NodeId) = .empty;
             if (self.current().tag != .rparen) while (true) {
@@ -876,7 +927,7 @@ pub const Parser = struct {
                 if (!self.take(.comma)) break;
             };
             const close = try self.expect(.rparen);
-            return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{ .owner = owner, .name = name, .arguments = try arguments.toOwnedSlice(self.arena.allocator()) } } });
+            return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{ .owner = owner, .type_arguments = type_arguments, .name = name, .arguments = try arguments.toOwnedSlice(self.arena.allocator()) } } });
         }
         return self.append(.{ .span = name, .data = switch (token.tag) {
             .integer => .{ .integer = token.span },

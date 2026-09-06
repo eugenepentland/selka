@@ -85,6 +85,16 @@ pub const Index = struct {
         const symbol = self.units[id.module].symbols.items[id.symbol];
         if (!symbol.exported) return self.project.fail("E_PRIVATE_INTERFACE", "exported interface exposes an unexported type", .{ .module = module, .span = span }, .{ .module = id.module, .span = symbol.span });
     }
+    fn genericSignatureType(self: *Index, module: usize, span: source.Span, parameters: []const ast.TypeParameter) diagnostic.Error!void {
+        const src = self.project.modules.items[module].src;
+        for (parameters) |parameter| if (std.mem.eql(u8, src.text(parameter.name), src.text(span))) return;
+        for (self.units[module].syntax.types.array_types) |array| {
+            if (array.span.start != span.start or array.span.end != span.end) continue;
+            if (array.index == .enum_type) try self.genericSignatureType(module, array.index.enum_type, parameters);
+            return self.genericSignatureType(module, array.element, parameters);
+        }
+        try self.signatureType(module, span);
+    }
     fn checkSignatures(self: *Index, module: usize) diagnostic.Error!void {
         const project = self.project;
         const allocator = project.arena.allocator();
@@ -110,8 +120,8 @@ pub const Index = struct {
             const src = project.modules.items[module].src;
             const name = if (function.policy.owner) |owner| try std.fmt.allocPrint(allocator, "{s}.{s}", .{ src.text(owner), src.text(function.name) }) else src.text(function.name);
             if (!unit.symbols.items[unit.names.get(name).?].exported) continue;
-            for (function.signature.parameters) |parameter| try self.signatureType(module, parameter.ty);
-            try self.signatureType(module, function.signature.return_type);
+            for (function.signature.parameters) |parameter| try self.genericSignatureType(module, parameter.ty, function.signature.type_parameters);
+            try self.genericSignatureType(module, function.signature.return_type, function.signature.type_parameters);
         }
     }
     /// Render exported declarations after interface checking; output belongs to allocator.

@@ -419,3 +419,22 @@ test "schema rendering rejects an exported declaration missing its checked type"
     compilation.program.?.records = &.{};
     try t.expectError(error.InvalidCheckedType, @import("schema.zig").render(t.allocator, &compilation));
 }
+
+test "generic syntax module interfaces retain scoped type names without hiding private concrete types" {
+    try reject("module main;export f;struct Secret{}fn f<T:copy>(x:T,y:[2]Secret)->T{return x;}", "E_PRIVATE_INTERFACE");
+    const text = "module main;export echo;fn echo<T:copy>(x:[2]T)->[2]T{return x;}fn main()->i64{return 0;}";
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = text }} };
+    var cache = @import("syntax_cache.zig").Cache.init(t.allocator, .{});
+    defer cache.deinit();
+    for (0..2) |_| {
+        var project = graph.Project.init(t.allocator);
+        defer project.deinit();
+        try project.load(files.provider(), "main", .{});
+        var index = try interfaces.buildWithCache(&project, &cache);
+        const merged = try @import("project_syntax.zig").build(&index);
+        const parameters = merged.syntax.functions[0].signature.type_parameters;
+        try t.expectEqual(@as(usize, 1), parameters.len);
+        try t.expectEqualStrings("copy", merged.src.text(parameters[0].requirements[0]));
+    }
+    try t.expectEqual(@as(usize, 1), cache.statistics.hits);
+}
