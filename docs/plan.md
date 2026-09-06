@@ -879,3 +879,12 @@ destruction order. Debug and ReleaseFast pass all 30 build steps and 593 core/CL
 tests, including ten explicit trap/OOM ordering cases and the existing 468 native
 allocation-failure cases under sanitizers. Native resource callbacks, propagation
 sequencing, and remaining roadmap work stay open.
+
+## Native propagation allocation order
+
+Native error propagation now boxes its outgoing result before releasing unfinished
+operands. An allocation-failure regression reproduces the previous reversed cleanup
+order and verifies the correction at O0/O2 with sanitizers. Debug and ReleaseFast
+pass all 30 build steps and 593 core/CLI tests; native memory acceptance now covers
+484 injected allocation failures. Native filesystem/network provider integration
+and all other unfinished roadmap requirements remain open.

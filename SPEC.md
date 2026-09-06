@@ -19,7 +19,7 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [CORE-8] Rejects nonexhaustive matches after a variant is added, including matches on statically known values.
 - [CORE-9] Uses enum case names for table construction and indexing regardless of declaration or initializer order.
 - [CORE-10] Rejects silent result abandonment and permits an explicit acknowledgement of the result obligation.
-- [CORE-11] Unwraps successful results and propagates compatible error payloads by case name across nominal result types.
+- [CORE-11] Unwraps successful results and propagates compatible error payloads by case name across nominal result types. Native propagation constructs the outgoing result before releasing unfinished operands; failed construction releases the propagated payload before those operands.
 ## Ownership and capabilities
 
 - [OWN-1] Rejects conflicting borrows, mutation through shared references, and writes with incompatible value types.

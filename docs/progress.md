@@ -2782,3 +2782,22 @@ Resource callback integration remains pending. Review also identified a native
 propagation sequencing change needed before resource payloads are enabled: box
 the outgoing error before releasing unfinished operands, as the VM does. This
 allocation boundary needs callback-trace acceptance in the resource milestone.
+
+## 2026-09-06: Native propagation allocation order
+
+Native propagation now constructs the outgoing error result before clearing
+unfinished operands, matching the VM. A generated-C destruction observer and
+allocation sweep verify that a boxing failure releases the propagated payload
+first. Replaying the previous emission sequence at allocation 8 reproduces its
+incorrect operand-before-payload order. The CORE-11 specification now states this
+allocation-boundary contract explicitly.
+
+Debug and ReleaseFast pass all 30 build steps and 593 core/CLI tests. Native
+memory acceptance passes 484 injected allocation failures, including 16 new cases
+across O0/O2, plus the ten explicit trap/OOM unwind cases. Sanitizers and zero-live
+memory checks pass. Guardian passes all 88 checks without frozen violations.
+
+Native filesystem/network operations remain pending. Their implementation record
+now identifies the pending-host-handle cleanup needed between successful provider
+acquisition and guest-owner allocation, alongside store and completion requirements.
+The full roadmap remains open.

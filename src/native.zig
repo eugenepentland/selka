@@ -302,9 +302,9 @@ fn writeOperation(context: InstructionOutput) !bool {
             try payload(w, layout, propagate.input, input.ok_type);
             try w.print("; release_value(variant); push_value(value); }} else if (tag == {d}) {{ Slot value = ", .{input.error_tag});
             try payload(w, layout, propagate.input, input.error_type);
-            try w.writeAll("; release_value(variant); clear_values(frames[nf-1].base); push_value(");
+            try w.writeAll("; release_value(variant); Slot propagated = ");
             try variantValue(w, layout, propagate.output, result.error_tag, result.error_type);
-            try w.print("); goto L{d}; }} else host_failure(\"InternalError\");\n", .{offset + propagate.error_target});
+            try w.print("; clear_values(frames[nf-1].base); push_value(propagated); goto L{d}; }} else host_failure(\"InternalError\");\n", .{offset + propagate.error_target});
         },
         .begin_borrow, .begin_slice => |id| {
             const reference = function.scope.references[@backingInt(id)];

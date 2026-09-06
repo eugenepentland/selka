@@ -42,11 +42,8 @@ required when filesystem/network emission is implemented.
   schema/index order inside aggregates. Allocation order is not schema order.
   Remaining store entries are a final safety net: reverse acquisition within each
   store, with network teardown before filesystem, matching `resource_runtime`.
-- Align generated error propagation with the VM before adding resource payloads:
-  the native `try_result` emitter currently clears unfinished operands before
-  boxing the outgoing result, while the VM constructs that result first. An OOM
-  during boxing must release the propagated payload before unfinished operands.
-  Resource callback traces must cover this allocation boundary explicitly.
+- Resource callback traces must also cover propagation boxing failures; the
+  ordinary-value allocation-boundary regression below establishes the sequence.
 - Add explicit versioned provider callbacks for acquisition, completion, fallback
   release, read, and write. Require grants before guest execution; preserve byte
   requests, independent per-kind quotas, checked identities, and permission
@@ -62,3 +59,34 @@ required when filesystem/network emission is implemented.
 The cleanup foundation does not complete native resource support or the wider
 roadmap. Filesystem/network operations and their provider callback acceptance
 remain pending.
+
+## Propagation allocation boundary
+
+Native error propagation now constructs its outgoing result before releasing
+unfinished operands, matching the VM. A generated-C fixture observes the final
+destruction of the error payload and a partially constructed caller value. Normal
+execution releases the unfinished value before the eventual returned payload;
+OOM during propagation releases the payload first. Injecting failure at allocation
+8 into the prior emission sequence demonstrates the reversed, incorrect order.
+
+The fixture sweeps all eight allocation points at C O0/O2 with sanitizers and
+zero-live-memory checks. Focused native memory acceptance now passes 484 allocation
+failures (the previous 468 plus 16 from this fixture). Complete Debug and ReleaseFast
+runs pass all 30 build steps and 593 core/CLI tests; all 88 Guardian checks pass. Native filesystem/network resource callbacks
+and the wider roadmap remain pending.
+
+## Provider registration boundary to implement
+
+The VM reserves store bookkeeping before acquisition, registers a successful host
+handle, then allocates its guest owner. If that last allocation fails, it releases
+the new handle immediately, before unwinding older guest values. Native integration
+needs the same ordering: keep a pending acquired handle until an aggregate owner
+has been registered, and release that pending handle before ordinary roots on
+failure. Final store teardown alone would release it too late.
+
+Use store indices rather than entry pointers across registry growth. Preserve
+independent per-kind live quotas (1024 by default), generations and retired slots,
+permission masks, and reverse acquisition links. A fixed slot array would conflate
+the live quota with retained retired entries. Successful completion must invalidate
+the entry before any result allocation; failed completion must retain ownership.
+These are implementation requirements, not claims of existing native support.

@@ -282,4 +282,5 @@ Complete Debug/ReleaseFast acceptance passes.
 [Native resource implementation](native-resources.md) now has a normal-cleanup
 ordering correction, counted emergency ownership unwind, and an executable
 destruction-order harness. Full Debug/ReleaseFast unwind acceptance passes; native
-filesystem/network operations and propagation ordering remain pending.
+filesystem/network operations remain pending. Propagation now boxes outgoing
+errors before clearing operands; full Debug/ReleaseFast regression acceptance passes.

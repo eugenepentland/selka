@@ -55,6 +55,7 @@ def main():
             "reference-trap": "struct R{x:i64} fn main()->i64{let mut a=new [1]R[new R{x:7}];borrow mut a[0..1] as r{write_slice(r,1,new R{x:9});}return 0;}",
             "trap": "struct R{values:[2]i64} fn main()->i64{let r=new R{values:new [2]i64[0,7]};return r.values[2];}",
         }
+        programs["propagation-order"] = "struct Mark{v:i64}struct Pair{first:Mark,second:i64}result R{ok:i64,err:Mark}result S{ok:Pair,err:Mark}fn work()->S{return new S.ok(new Pair{first:new Mark{v:1},second:try new R.err(new Mark{v:2})});}fn main()->i64{match work(){S.ok(p)=>{return p.second;},S.err(e)=>{return e.v;}}}"
         for name in ("buffers", "buffer-views", "allocator-capabilities", "arena-reset", "pools", "arenas"):
             programs[name] = (root / "examples" / f"{name}.my").read_text()
         programs["buffer-aggregate"] = "struct R{values:[2]i64} buffer B:R; result A{err:i64,ok:B} result S{err:i64,ok:bool} fn main(heap:allocator)->i64{match acquire_buffer<A>(heap,2){A.ok(acquired)=>{let mut b=acquired;acknowledge append_buffer<S>(b,new R{values:new [2]i64[7,8]});let saved=read_buffer(b,0);acknowledge reserve_buffer<S>(b,heap,4);acknowledge resize_buffer<S>(b,4,saved);acknowledge write_buffer<S>(b,0,new R{values:new [2]i64[9,10]});borrow mut b[0..4] as view{write_slice(view,1,new R{values:new [2]i64[11,12]});}let changed=read_buffer(b,1);acknowledge resize_buffer<S>(b,0,saved);return saved.values[0]+changed.values[0];},A.err(e)=>{return e;}}}"
@@ -67,7 +68,13 @@ def main():
             source.write_text(text)
             emitted = invoke([compiler, "emit-c", source])
             assert emitted.returncode == 0, emitted.stderr
-            generated.write_bytes(prefix + b"\n" + emitted.stdout)
+            body = emitted.stdout
+            if name == "propagation-order":
+                marker = b"if (object->buffer) guest_capacity -= object->capacity;"
+                assert body.count(marker) == 1
+                observe = b'if (object->count == 1 && !object->fields[0].object && (object->fields[0].number == 1 || object->fields[0].number == 2)) fprintf(stderr, "propagation-release: %d\\n", (int)object->fields[0].number); '
+                body = body.replace(marker, observe + marker)
+            generated.write_bytes(prefix + b"\n" + body)
             for mode in ("-O0", "-O2"):
                 built = invoke([args.zig, "cc", "-std=c11", mode, "-fsanitize=address,undefined", "-fno-sanitize-recover=undefined", generated, "-o", executable])
                 assert built.returncode == 0, (name, mode, built.returncode, built.stderr)
@@ -75,6 +82,9 @@ def main():
                 attempts, peak = memory(baseline)
                 expected = b"20\n" if name == "failure" else b"12\n" if name == "reference" else b"40\n" if name == "reference-recursive" else b"20006\n"
                 buffer_results = {"buffers": b"21\n", "buffer-views": b"19\n", "allocator-capabilities": b"3\n", "buffer-aggregate": b"18\n", "arena-reset": b"3\n", "arena-loop": b"20000\n", "arena-snapshot": b"7\n", "arena-propagation": b"1\n", "pools": b"52\n", "arenas": b"50\n", "pool-loop": b"20000\n"}
+                if name == "propagation-order":
+                    expected = b"2\n"
+                    assert re.findall(rb"propagation-release: (\d+)", baseline.stderr) == [b"1", b"2"], baseline.stderr
                 if name in buffer_results:
                     expected = buffer_results[name]
                     vm = invoke([compiler, "run", source])
@@ -87,11 +97,14 @@ def main():
                 if name in ("loop", "arena-loop", "pool-loop"):
                     # 40,000 aggregate replacements must not accumulate live heap.
                     assert peak < 65536, peak
-                if name in ("failure", "reference", "reference-recursive", "buffers", "buffer-views", "allocator-capabilities", "buffer-aggregate", "arena-reset", "arena-snapshot", "arena-propagation", "pools", "arenas"):
+                if name in ("failure", "reference", "reference-recursive", "buffers", "buffer-views", "allocator-capabilities", "buffer-aggregate", "arena-reset", "arena-snapshot", "arena-propagation", "pools", "arenas", "propagation-order"):
                     for point in range(1, attempts + 1):
                         failed = invoke([executable], point)
                         memory(failed)
                         assert failed.returncode == 2 and b"OutOfMemory" in failed.stderr, (point, failed.returncode, failed.stderr)
+                        if name == "propagation-order":
+                            released = re.findall(rb"propagation-release: (\d+)", failed.stderr)
+                            assert released in ([], [b"1"], [b"2", b"1"]), (point, released, failed.stderr)
                         failures += 1
                     for options in (["--max-steps=8"], ["--max-frames=1"]):
                         limited = invoke([executable, *options])
