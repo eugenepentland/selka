@@ -1055,3 +1055,21 @@ passed, and the build passed all 88 Guardian checks with baselines disabled.
 Coverage includes helper cycles, shared callees, module/domain privacy, hidden
 clock effects, invalid signatures/bodies, and allocation-failure cleanup. No
 executable specialization or full native-suite result is claimed for this change.
+
+
+### Bounded concrete specialization identities — 2026-09-06
+
+Added an independently tested compilation-local instance registry keyed by
+resolved declaration ordinal and ordered concrete type identities. Owned argument
+copies, stable discovery IDs, existing-key reuse at capacity, nominal identity,
+4096-entry/16-argument bounds, and allocation-failure recovery are covered.
+The registry is not yet wired into executable lowering: call discovery,
+per-instance type substitution, semantic/function-index migration, VM/native and
+tooling integration remain unfinished. See `docs/experiments/generic-instances.md`
+under docs/experiments. Generics and the broader roadmap remain open.
+
+Validation: all 568 core tests passed in Debug; focused instance-table acceptance
+passed six tests in Debug and ReleaseFast, including allocation-failure sweeps
+and recovery. The build passed all 88 Guardian checks with baselines disabled.
+This is registry and ordinary regression evidence; no new executable generic,
+CLI, or full native-suite result is claimed.
