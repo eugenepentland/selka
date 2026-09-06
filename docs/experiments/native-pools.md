@@ -26,5 +26,6 @@ stale generations, removal, and clear. Formatting and all 88 Guardian checks pas
 without frozen violations. A shared typed-result emission helper now serves pool
 operations, buffer mutations, and arena reset.
 
-External provider/resource operations remain unsupported. The wider roadmap
-remains open.
+[Native clock/random providers](native-providers.md) now use explicit C adapters.
+Environment and external-resource native operations remain pending, alongside the
+wider roadmap.

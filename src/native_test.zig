@@ -22,8 +22,8 @@ test "native scalar emission is deterministic and cleans every failed allocation
 // spec: PROJ-6
 test "native emission rejects unsupported operations and uncalled unsupported signatures" {
     for ([_][]const u8{
-        "fn unsupported(clock: clock_cap) -> i64 { return 0; } fn main() -> i64 { return 7; }",
-        "fn main(clock:clock_cap)->i64{return 0;}",
+        "fn unsupported(env: environment_cap) -> i64 { return 0; } fn main() -> i64 { return 7; }",
+        "fn main(env:environment_cap)->i64{return 0;}",
     }) |text| {
         var c = try language.Compilation.init(t.allocator, "native.my", text);
         defer c.deinit();
@@ -233,4 +233,19 @@ test "native pool emission supports owned registries and handles with allocation
     try poolScenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), poolScenario, .{});
+}
+
+fn providerScenario(allocator: std.mem.Allocator) !void {
+    var c = try language.Compilation.init(allocator, "providers.my", "result T{ok:i64,err:i64}fn main(c:clock_cap)->i64{match clock_now<T>(c){T.ok(n)=>{return n;},T.err(e)=>{return e;}}}");
+    defer c.deinit();
+    const output = try c.emitC(allocator);
+    defer allocator.free(output);
+    try t.expect(std.mem.indexOf(u8, output, "grant_external(0);") != null);
+    try t.expect(std.mem.indexOf(u8, output, "int status = external_read(0,") != null);
+}
+// spec: NATIVE-PROVIDER-1
+test "native clock emission preserves explicit grants and allocation cleanup" {
+    try providerScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), providerScenario, .{});
 }

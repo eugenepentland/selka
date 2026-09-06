@@ -1,9 +1,11 @@
 # C: injected clock and randomness capabilities
 
-Status: source capabilities, synchronous embedding providers, recoverable read
-results, and transitive clock/random effects are implemented. Filesystem, network,
-environment, external resource completion/cleanup, attenuation, and arenas/pools
-remain pending. This completes a subset of C, not the entire track.
+Source capabilities, synchronous embedding providers, recoverable read results,
+and transitive clock/random effects are implemented. This record describes the
+initial clock/random experiment. Later milestones add [environment lookup](environment.md),
+[external resources](source-resources.md), [attenuation](attenuation.md),
+[arenas](source-arenas.md), and [pools](source-pools.md).
+[Native clock/random adapters](native-providers.md) extend the C backend.
 
 ## Source contract
 
@@ -53,7 +55,7 @@ trusted embedding API, not a sandbox against a hostile host that edits internals
 There is no fallback to global clock or random APIs. The CLI supplies neither
 provider: `check` and `dump-bytecode` accept `examples/external-capabilities.my`,
 but `run` exits 2 with `CapabilityUnavailable`. Embedders supply providers to
-execute such programs. No real operating-system adapter or CLI grant flags are
+execute such programs. No real operating-system adapter or VM CLI grant flags are
 claimed by this experiment.
 
 Provider callbacks are trusted to honor the declared operation's effects. The

@@ -109,6 +109,7 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     errdefer output.deinit();
     const w = &output.writer;
     try w.print("#define MYLANG_GUEST_VALUE_BYTES {d}\n", .{@sizeOf(typed.Value)});
+    try w.writeAll(@embedFile("native_providers.h"));
     try w.writeAll(@embedFile("native_runtime.c"));
     try w.writeAll("\nstatic const char *const names[] = {\n");
     for (program.functions) |function| {
@@ -124,11 +125,16 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
         try string(w, src.locate(ins.span.start).path);
         try w.writeAll(",\n");
     };
-    try w.writeAll("};\nint main(int argc, char **argv) {\nsource_paths = paths; function_names = names; source_lines = lines; source_columns = columns;\noptions(argc, argv); size_t return_target = 0;\n");
+    try w.writeAll("};\nint main(int argc, char **argv) {\nsource_paths = paths; function_names = names; source_lines = lines; source_columns = columns;\n" ++
+        "options(argc, argv); providers = mylang_native_providers(); size_t return_target = 0;\n");
     const main_index = @backingInt(program.main);
     for (program.functions[main_index].scope.locals[0..program.functions[main_index].signature.parameter_count]) |parameter| {
-        if (parameter.ty != .allocator) return sink.fail(unsupported_feature, parameter.declaration, "native entry parameters require root allocator authority");
-        try w.writeAll("push(1);\n");
+        switch (parameter.ty) {
+            .allocator => try w.writeAll("push(1);\n"),
+            .clock_cap => try w.writeAll("grant_external(0);\n"),
+            .random_cap => try w.writeAll("grant_external(1);\n"),
+            else => return sink.fail(unsupported_feature, parameter.declaration, "native entry capability is unsupported"),
+        }
     }
     try enter(w, program.functions[main_index], 0);
     try w.print(jump_format, .{offsets[main_index]});
@@ -200,6 +206,7 @@ fn checkFunction(layout: native_layout.Layout, function: bc.Function, sink: *dia
         .load_local,
         .acquire_buffer,
         .acquire_pool,
+        .external_read,
         .pool_operation,
         .cmp_handle,
         .begin_region,
@@ -326,6 +333,10 @@ fn writeOperation(context: InstructionOutput) !bool {
         .array_length => try w.writeAll("array_length();\n"),
         .read_field => |read| try w.print("push_value(field_value(local_access({d}, 0)->value, {d}));\n", .{ @backingInt(read.owner), read.field }),
         .take_field => |take| try w.print("take_field({d}, {d});\n", .{ @backingInt(take.owner), take.field }),
+        .external_read => |operation| {
+            try w.print("Slot value = (Slot){{0}}; int status = external_read({d}, &value); if (status) value = (Slot){{status, NULL}};\n", .{@intFromBool(operation.kind == .random)});
+            try statusResult(w, layout, operation.output);
+        },
         .cmp_handle => |operation| try w.print("compare_handle({d});\n", .{@intFromBool(operation.predicate == .ne)}),
         .acquire_pool => |ty| {
             const shape = typed.resultShape(ty, program.records).?;

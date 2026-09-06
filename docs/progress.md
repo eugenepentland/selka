@@ -2702,3 +2702,30 @@ evidence-backed ROI labels and mandatory feedback are recorded in Guardian.
 Formatting passes. External provider/resource operations, generics, source
 serialization, finer incremental compilation, and other unfinished roadmap work
 remain open. Hosted CI remains unexecuted.
+
+## 2026-09-06: Native clock/random adapters
+
+Generated C now accepts clock/random capabilities through an explicit versioned
+C provider interface. The native builder links a selected adapter with --provider;
+without one, requested grants fail before guest execution. Contexts remain
+host-owned, callbacks return full-width scalar values or typed statuses, and host
+OOM releases native owned storage. Capabilities can pass through ordinary records
+and helper parameters. No ambient operating-system adapter is selected.
+
+A new acceptance driver executes shared expectations through VM callbacks and
+native C at O0/O2 with address/undefined sanitizers: 32 value/error/call-count
+comparisons and 14 injected allocation failures. It verifies full-width values,
+missing grants, skipped reads, provider errors/OOM, owned arena-buffer cleanup,
+and the actual builder adapter option. Its VM oracle compiles and runs separately
+from the core/CLI tests. Compiler emission allocation sweeps also pass.
+
+Complete Debug and ReleaseFast runs pass all 29 build steps and 592
+core/CLI Zig tests (532 core, 60 CLI), alongside existing native parity and memory
+acceptance (2,616 value/module comparisons and 468 general native allocation
+failures). Review changed the C runtime to read callback values only on success,
+matching the public failed-result contract; both complete modes pass on that change.
+Guardian's strict gate passes; the flat-disjunction threshold finding was labeled
+false-positive because the required split only appeased the policy.
+
+Environment and external-resource native operations, generics, source-level
+serialization, finer incremental compilation, and remaining roadmap work stay open.

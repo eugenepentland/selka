@@ -271,3 +271,6 @@ Native external resources remain pending.
 
 [Native pools](native-pools.md) now implement handles, operations, quotas, and
 root/arena cleanup; full Debug/ReleaseFast acceptance and sanitizer cleanup checks pass.
+
+[Native clock/random providers](native-providers.md) now use explicit C adapters
+with typed results and missing-grant checks; full Debug/ReleaseFast acceptance passes.

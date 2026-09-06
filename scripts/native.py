@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a scalar guest executable through C using the repository's pinned Zig."""
+"""Build a guest executable through C using the repository's pinned Zig."""
 import argparse
 from pathlib import Path
 import subprocess
@@ -13,6 +13,7 @@ def main():
     parser.add_argument("--project", action="store_true", help="compile a module entry and its reachable imports")
     parser.add_argument("-o", "--output", type=Path, required=True)
     parser.add_argument("--compiler", type=Path, default=Path("zig-out/bin/mylang"))
+    parser.add_argument("--provider", type=Path, help="trusted C adapter implementing native_providers.h")
     parser.add_argument("--zig", default="zig")
     parser.add_argument("--mode", choices=["Debug", "ReleaseFast"], default="Debug")
     args = parser.parse_args()
@@ -28,7 +29,8 @@ def main():
         with tempfile.TemporaryDirectory(prefix="mylang-native-") as temp:
             source = Path(temp) / "program.c"
             source.write_bytes(generated.stdout)
-            result = subprocess.run([args.zig, "cc", "-std=c11", "-O0" if args.mode == "Debug" else "-O2", str(source), "-o", str(args.output.resolve())], timeout=180)
+            adapter = [] if args.provider is None else ["-DMYLANG_NATIVE_PROVIDER=1", "-I", str(Path(__file__).resolve().parents[1] / "src"), str(args.provider.resolve())]
+            result = subprocess.run([args.zig, "cc", "-std=c11", "-O0" if args.mode == "Debug" else "-O2", str(source), *adapter, "-o", str(args.output.resolve())], timeout=180)
             return 0 if result.returncode == 0 else 2
     except (OSError, subprocess.SubprocessError) as error:
         print(f"native: {error}", file=sys.stderr)

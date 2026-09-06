@@ -136,7 +136,7 @@ def project_cases(compiler, zig, root, temp):
     entry = temp / "unsupported" / "main.my"
     entry.parent.mkdir()
     entry.write_text("module main; import helper; fn main() -> i64 { return 0; }")
-    (entry.parent / "helper.my").write_text("module helper; fn unsupported(clock:clock_cap) -> i64 { return 0; }")
+    (entry.parent / "helper.my").write_text("module helper; fn unsupported(env:environment_cap) -> i64 { return 0; }")
     rejected = invoke([compiler, "emit-project-c", entry])
     assert rejected.returncode == 1 and rejected.stdout == b"" and b"E_NATIVE_FEATURE" in rejected.stderr, rejected
     assert b"helper.my:" in rejected.stderr, rejected.stderr

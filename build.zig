@@ -66,6 +66,11 @@ pub fn build(b: *std.Build) void {
     native_memory.addArgs(&.{ "--zig", b.graph.zig_exe });
     native_memory.setCwd(b.path("."));
     test_step.dependOn(&native_memory.step);
+    const native_providers = b.addSystemCommand(&.{ "python3", "tests/native_providers.py", "--compiler" });
+    native_providers.addFileArg(exe.getEmittedBin());
+    native_providers.addArgs(&.{ "--zig", b.graph.zig_exe });
+    native_providers.setCwd(b.path("."));
+    test_step.dependOn(&native_providers.step);
     const duplicate_scaling = b.addSystemCommand(&.{ "python3", "tests/duplicate_scaling.py", "--compiler" });
     duplicate_scaling.addFileArg(exe.getEmittedBin());
     duplicate_scaling.setCwd(b.path("."));

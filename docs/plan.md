@@ -842,3 +842,13 @@ shared quotas, and root/arena cleanup. Both compiler modes pass all 28 build ste
 and 591 Zig tests; native acceptance covers 2,616 VM/native comparisons and 468
 sanitizer allocation-failure cases.
 External resources and the remaining roadmap work stay open.
+
+
+## Native clock/random providers
+
+Native clock/random capabilities now use explicit C provider adapters with typed
+errors and pre-execution grant checks. Debug and ReleaseFast pass all 29 build
+steps and 592 core/CLI tests, including 32 VM-checked provider comparisons and
+14 provider allocation-failure cases.
+Environment and external-resource native operations remain pending alongside the
+other unfinished roadmap work.

@@ -6,6 +6,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#ifndef MYLANG_NATIVE_PROVIDER
+MylangNativeProviders mylang_native_providers(void) { return (MylangNativeProviders){0}; }
+#endif
+static MylangNativeProviders providers;
 typedef __int128 V;
 typedef unsigned __int128 U;
 /* Layout preflight guarantees widths in 1..127 and packed totals <=127.
@@ -194,6 +198,29 @@ static V pop(void) {
     Slot value = pop_value();
     if (value.object) host_failure("InternalError");
     return value.number;
+}
+static void grant_external(int kind) {
+    if (kind ? !providers.random_u64 : !providers.clock_now) host_failure("CapabilityUnavailable");
+    push(kind ? -2 : -1);
+}
+static int external_read(int kind, Slot *value) {
+    V authority = pop();
+    if (authority != (kind ? -2 : -1)) trap("R_CAPABILITY");
+    MylangProviderStatus status;
+    if (kind) {
+        if (!providers.random_u64) return MYLANG_PROVIDER_UNAVAILABLE;
+        MylangRandomResult result = providers.random_u64(providers.random_context);
+        status = result.status;
+        if (status == MYLANG_PROVIDER_OK) value->number = (V)result.value;
+    } else {
+        if (!providers.clock_now) return MYLANG_PROVIDER_UNAVAILABLE;
+        MylangClockResult result = providers.clock_now(providers.clock_context);
+        status = result.status;
+        if (status == MYLANG_PROVIDER_OK) value->number = (V)result.value;
+    }
+    if (status == MYLANG_PROVIDER_OUT_OF_MEMORY) host_failure("OutOfMemory");
+    if (status < MYLANG_PROVIDER_OK || status > MYLANG_PROVIDER_FAILED) host_failure("InvalidProviderResult");
+    return (int)status;
 }
 static void clear_values(size_t base) {
     while (nv > base) release_value(values[--nv]);
