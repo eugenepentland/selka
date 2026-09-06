@@ -68,7 +68,7 @@ test "native closed enum dispatch and VM tag identity survive allocation failure
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), enumScenario, .{});
 }
-test "native enum support retains exhaustive nominal checks and rejects unions" {
+test "native enum support retains exhaustive nominal checks and rejects unsupported payloads" {
     for ([_][]const u8{
         "enum E{a,b} fn main()->i64{match new E.a { E.a=>{return 1;} }}",
         "enum A{x} enum B{x} fn main()->i64{if new A.x==new B.x{return 1;}return 0;}",
@@ -79,12 +79,49 @@ test "native enum support retains exhaustive nominal checks and rejects unions" 
         try t.expect(!std.mem.eql(u8, c.diagnostics.items[0].code, "E_NATIVE_FEATURE"));
     }
     for ([_][]const u8{
-        "union U{empty} fn main()->i64{discard new U.empty;return 0;}",
-        "union U{value:i64} fn main()->i64{match new U.value(7){U.value(x)=>{return x;}}}",
+        "struct R{x:i64} union U{value:R} fn main()->i64{discard new U.value(new R{x:7});return 0;}",
+        "union U{value:[1]i64} fn main()->i64{discard new U.value(new [1]i64[7]);return 0;}",
     }) |text| {
         var c = try language.Compilation.init(t.allocator, "unsupported.my", text);
         defer c.deinit();
         try t.expectError(error.SourceError, c.emitC(t.allocator));
         try t.expectEqualStrings("E_NATIVE_FEATURE", c.diagnostics.items[0].code);
     }
+}
+
+fn variantScenario(allocator: std.mem.Allocator) !void {
+    var c = try language.Compilation.init(allocator, "variant.my", "union E{missing,code:i8} result R{err:E,ok:i64} result S{ok:bool,err:E} fn convert(r:R)->S{return new S.ok(try r>0);} fn main()->i64{let a=new R.ok(1);acknowledge a;match convert(new R.err(new E.code(-128i8))){S.ok(discard)=>{return 0;},S.err(e)=>{match e{E.missing=>{return 1;},E.code(n)=>{return cast<i64>(n);}}}}}");
+    defer c.deinit();
+    const generated = try c.emitC(allocator);
+    defer allocator.free(generated);
+    try t.expectEqual(@as(i64, -128), (try c.execute(allocator)).value);
+}
+test "native nested variants and result propagation clean every allocation failure" {
+    try variantScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), variantScenario, .{});
+}
+test "native packed variants retain result handling obligations" {
+    for ([_][]const u8{
+        "result R{ok:i64,err:i64} fn main()->i64{let r=new R.ok(1);return 0;}",
+        "result R{ok:i64,err:i64} fn main()->i64{let a=new R.ok(1);let b=a;acknowledge a;acknowledge b;return 0;}",
+        "union U{a:i64,b:bool} fn main()->i64{match new U.a(1){U.a(n)=>{return n;}}}",
+    }) |source| {
+        var c = try language.Compilation.init(t.allocator, "invalid.my", source);
+        defer c.deinit();
+        try t.expectError(error.SourceError, c.emitC(t.allocator));
+        try t.expect(!std.mem.eql(u8, c.diagnostics.items[0].code, "E_NATIVE_FEATURE"));
+    }
+}
+
+test "native layout rejects values beyond the 127 bit slot" {
+    var source: std.Io.Writer.Allocating = .init(t.allocator);
+    defer source.deinit();
+    try source.writer.writeAll("union U0{value:u64} ");
+    for (1..64) |i| try source.writer.print("union U{d}{{value:U{d}}} ", .{ i, i - 1 });
+    try source.writer.writeAll("fn unused(x:U63)->i64{discard x;return 0;} fn main()->i64{return 7;}");
+    var c = try language.Compilation.init(t.allocator, "too-wide.my", source.written());
+    defer c.deinit();
+    try t.expectError(error.SourceError, c.emitC(t.allocator));
+    try t.expectEqualStrings("E_NATIVE_FEATURE", c.diagnostics.items[0].code);
 }

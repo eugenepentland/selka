@@ -2125,3 +2125,43 @@ integration, callable foreign wrappers, generics, wider native operations, finer
 incremental compilation, ordinary-program review, and all other unfinished roadmap
 work remain pending. Guardian was not exercised; hosted CI has not run. The full
 roadmap goal remains active.
+
+## 2026-09-06: Native packed tagged unions and results
+
+Extended C emission with checked packed layouts for scalar-payload unions/results,
+including nested variants, nominal scalar domains, and enums. An iterative memoized
+layout walk supports complete payload graphs up to 127 bits; unsupported records,
+arrays, owners, and oversized layouts remain explicit E_NATIVE_FEATURE failures.
+Unsigned packing and explicit signed extraction preserve integer extrema without
+signed-shift overflow. This internal representation is not a public ABI or wire format.
+
+Construction, exhaustive matching, copyable union assignment, result local moves,
+acknowledgement, and try propagation now emit directly. Error propagation repacks
+named error cases across result declarations while clearing only the callee's
+unfinished operands. Caller operands, frontend handling obligations, and instruction
+budget behavior remain intact. The native-results example builds and prints 20.
+
+Validation: 532 Zig tests (475 core, 57 CLI) pass in Debug and ReleaseFast; 770
+VM/native comparisons per compiler host mode cover 40 single-file and eight module
+fixtures at -O0/-O2 with undefined-behavior sanitization. New cases cover nested
+variants/results, signed minima, maximum u64, domain payloads, copy/assignment,
+reversed result tags, skipped traps, caller operands, every instruction budget in
+small cases, cross-module diagnostics, and a 127-bit value. Unit tests cover every
+allocation failure, handling/exhaustiveness rejection, unsupported payloads, and
+128-bit layout rejection. All existing schema/codec/input/cache/module/duplicate
+acceptance drivers, eight verification tests, and 29 Python/compiler wire comparisons
+also pass. Formatting, Python syntax, and whitespace checks pass.
+
+ReleaseFast completed all 19 build steps. Debug's full run passed all Zig tests and
+other acceptance drivers, but its native driver encountered a host linker abort.
+An isolated retry and syscall trace identified SIGBUS while writing a mapped output
+file on /tmp; the same C compiled on the project filesystem. The complete Debug
+native driver then passed with TMPDIR set to a directory in .zig-cache, retaining
+the exact pinned Zig and sanitizer flags. Failure assertions now include the fixture,
+mode, and compiler exit code. No backend behavior was changed to bypass this failure.
+
+README, roadmap, experiment documentation, and both plan copies are synchronized.
+Native records/arrays/resources/borrowing and wider layouts remain pending, as do
+generics, domain codecs, foreign callable wrappers, source/input integration, finer
+incremental compilation, ordinary-program review, and other unfinished roadmap work.
+Guardian was not exercised; hosted CI has not run. The full roadmap goal remains active.

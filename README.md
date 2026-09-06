@@ -335,3 +335,7 @@ Typed JSON errors now include a nested JSON pointer where typed validation can i
 one. Located embedding APIs retain the failure path independently of parsed documents;
 large paths are bounded and explicitly marked as truncated. See
 [codec diagnostics](docs/experiments/codec-diagnostics.md) for path semantics and limits.
+
+Native [packed unions and results](docs/experiments/native-variants.md) support
+nested scalar payloads, matching, transfers, acknowledgement, and propagation
+within a 127-bit layout. Wider native aggregates and resources remain pending.

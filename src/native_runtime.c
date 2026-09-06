@@ -7,6 +7,19 @@
 #include <string.h>
 #include <limits.h>
 typedef __int128 V;
+typedef unsigned __int128 U;
+/* Layout preflight guarantees widths in 1..127 and packed totals <=127.
+   Unsigned shifts avoid signed overflow; signed scalar restoration is explicit. */
+static U variant_mask(unsigned bits) { return (((U)1) << bits) - 1; }
+static V variant_make(V payload, unsigned tag_bits, unsigned payload_bits, size_t tag) {
+    return (V)((((U)payload & variant_mask(payload_bits)) << tag_bits) | (U)tag);
+}
+static V variant_payload(V value, unsigned tag_bits, unsigned payload_bits, int is_signed) {
+    U payload = ((U)value >> tag_bits) & variant_mask(payload_bits);
+    if (is_signed && (payload & ((U)1 << (payload_bits - 1))))
+        return -(V)(((U)1 << payload_bits) - payload);
+    return (V)payload;
+}
 typedef struct { V *locals; size_t base, target, function, call_site; } Frame;
 static V *values;
 static size_t nv, cv, nf, cf, site;

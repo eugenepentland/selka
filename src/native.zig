@@ -4,8 +4,9 @@ const bc = @import("bytecode.zig");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 const diagnostic = @import("diagnostic.zig");
-fn scalar(ty: typed.Type, records: []const typed.Record) bool {
-    return ty == .bool or ty.isInteger() or (ty.isAggregate() and (records[ty.recordIndex()].domain != null or records[ty.recordIndex()].isEnum()));
+const native_layout = @import("native_layout.zig");
+fn payload(w: *std.Io.Writer, layout: native_layout.Layout, ty: typed.Type, tag_bits: u8) !void {
+    try w.print("variant_payload(packed, {d}, {d}, {d})", .{ tag_bits, layout.width(ty), @intFromBool(layout.signed(ty)) });
 }
 fn literal(w: *std.Io.Writer, value: i128) !void {
     try w.print("({s}(V)UINT64_C({d}))", .{ if (value < 0) "-" else "", @abs(value) });
@@ -39,22 +40,30 @@ pub fn generate(allocator: std.mem.Allocator, program: bc.Program, src: Source, 
 }
 fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source, sink: *diagnostic.Sink) ![]u8 {
     try bc.validate(allocator, program);
+    var layout = try native_layout.Layout.init(allocator, program.records);
+    defer layout.deinit();
     const offsets = try allocator.alloc(usize, program.functions.len);
     defer allocator.free(offsets);
     var count: usize = 0;
     for (program.functions, offsets) |function, *offset| {
         offset.* = count;
         count += function.instructions.len;
-        if (!scalar(function.return_type, program.records) or function.references.len != 0 or function.return_reference != null) return sink.fail("E_NATIVE_FEATURE", function.instructions[0].span, "native scalar execution does not yet support this signature");
-        for (function.locals) |local| if (!scalar(local.ty, program.records) or local.reference_parameter != null) return sink.fail("E_NATIVE_FEATURE", local.declaration, "native scalar execution requires primitive scalar, nominal scalar domain, or closed enum locals and parameters");
+        if (layout.width(function.return_type) == 0 or function.references.len != 0 or function.return_reference != null) return sink.fail("E_NATIVE_FEATURE", function.instructions[0].span, "native scalar execution does not yet support this signature");
+        for (function.locals) |local| if (layout.width(local.ty) == 0 or local.reference_parameter != null) return sink.fail("E_NATIVE_FEATURE", local.declaration, "native execution requires supported scalar or packed variant locals and parameters");
         for (function.instructions) |instruction| switch (instruction.op) {
             .make_variant => |variant| {
-                if (!program.records[variant.ty.recordIndex()].isEnum()) return sink.fail("E_NATIVE_FEATURE", instruction.span, "native variant construction currently supports closed enums without payloads");
+                if (layout.width(variant.ty) == 0) return sink.fail("E_NATIVE_FEATURE", instruction.span, "native variant representation requires supported payloads and at most 127 packed bits");
             },
             .switch_variant => |dispatch| {
-                if (!program.records[dispatch.ty.recordIndex()].isEnum()) return sink.fail("E_NATIVE_FEATURE", instruction.span, "native matching currently supports closed enums without payloads");
+                if (layout.width(dispatch.ty) == 0) return sink.fail("E_NATIVE_FEATURE", instruction.span, "native matching requires a supported packed variant layout");
             },
-            .cmp_enum, .wrap_domain, .unwrap_domain, .push_i64, .push_bool, .push_integer, .cast_integer, .neg_integer, .binary_integer, .drop_local, .load_local, .store_local, .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .neg_i64_checked, .cmp_i64, .cmp_bool, .not_bool, .pop, .jump, .jump_if_false, .call, .ret => {},
+            .try_result => |propagate| {
+                if (layout.width(propagate.input) == 0 or layout.width(propagate.output) == 0) return sink.fail("E_NATIVE_FEATURE", instruction.span, "native propagation requires supported packed result layouts");
+            },
+            .acknowledge => |ty| {
+                if (layout.width(ty) == 0) return sink.fail("E_NATIVE_FEATURE", instruction.span, "native acknowledgement requires a supported result layout");
+            },
+            .cmp_enum, .wrap_domain, .unwrap_domain, .push_i64, .push_bool, .push_integer, .cast_integer, .neg_integer, .binary_integer, .drop_local, .move_local, .load_local, .store_local, .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .neg_i64_checked, .cmp_i64, .cmp_bool, .not_bool, .pop, .jump, .jump_if_false, .call, .ret => {},
             else => return sink.fail("E_NATIVE_FEATURE", instruction.span, "this operation is not yet supported by native scalar execution"),
         };
     }
@@ -99,14 +108,43 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
                 // emission. Domains carry their scalar backing without host boxes.
                 // The surrounding instruction tick still counts wrap/unwrap steps.
                 .wrap_domain, .unwrap_domain => {},
-                .make_variant => |variant| try w.print("push((V)UINT64_C({d}));\n", .{variant.tag}),
+                .make_variant => |variant| {
+                    const variants = program.records[variant.ty.recordIndex()].variants.?;
+                    if (variants.cases[variant.tag].payload) |ty| {
+                        try w.print("push(variant_make(pop(), {d}, {d}, {d}));\n", .{ native_layout.tagBits(variants.cases.len), layout.width(ty), variant.tag });
+                    } else try w.print("push((V)UINT64_C({d}));\n", .{variant.tag});
+                },
                 .cmp_enum => |comparison| try w.print("V b = pop(), a = pop(); push(a {s} b);\n", .{if (comparison.predicate == .eq) "==" else "!="}),
                 .switch_variant => |dispatch| {
-                    try w.writeAll("switch (pop()) {\n");
-                    for (dispatch.arms, 0..) |arm, tag| try w.print("case {d}: goto L{d};\n", .{ tag, offset + arm.target });
+                    const variants = program.records[dispatch.ty.recordIndex()].variants.?;
+                    if (!variants.is_union) {
+                        try w.writeAll("switch (pop()) {\n");
+                    } else try w.print("V packed = pop(); switch ((size_t)((U)packed & variant_mask({d}))) {{\n", .{native_layout.tagBits(variants.cases.len)});
+                    for (dispatch.arms, 0..) |arm, tag| {
+                        try w.print("case {d}: ", .{tag});
+                        if (arm.slot) |slot| {
+                            try w.print("frames[nf-1].locals[{d}] = ", .{@backingInt(slot)});
+                            try payload(w, layout, variants.cases[tag].payload.?, native_layout.tagBits(variants.cases.len));
+                            try w.writeAll("; ");
+                        }
+                        try w.print("goto L{d};\n", .{offset + arm.target});
+                    }
                     try w.writeAll("default: host_failure(\"InternalError\");\n}\n");
                     falls_through = false;
                 },
+                .try_result => |propagate| {
+                    const input = typed.resultShape(propagate.input, program.records).?;
+                    const result = typed.resultShape(propagate.output, program.records).?;
+                    const input_bits = native_layout.tagBits(program.records[propagate.input.recordIndex()].variants.?.cases.len);
+                    const output_bits = native_layout.tagBits(program.records[propagate.output.recordIndex()].variants.?.cases.len);
+                    try w.print("V packed = pop(); size_t tag = (size_t)((U)packed & variant_mask({d})); if (tag == {d}) {{ push(", .{ input_bits, input.ok_tag });
+                    try payload(w, layout, input.ok_type, input_bits);
+                    try w.print("); }} else if (tag == {d}) {{ nv = frames[nf-1].base; push(variant_make(", .{input.error_tag});
+                    try payload(w, layout, input.error_type, input_bits);
+                    try w.print(", {d}, {d}, {d})); goto L{d}; }} else host_failure(\"InternalError\");\n", .{ output_bits, layout.width(result.error_type), result.error_tag, offset + propagate.error_target });
+                },
+                .acknowledge => try w.writeAll("(void)pop();\n"),
+                .move_local => |slot| try w.print("push(frames[nf-1].locals[{d}]); frames[nf-1].locals[{d}] = 0;\n", .{ @backingInt(slot), @backingInt(slot) }),
                 .push_bool => |value| try w.print("push({d});\n", .{@intFromBool(value)}),
                 .drop_local => |slot| try w.print("frames[nf-1].locals[{d}] = 0;\n", .{@backingInt(slot)}),
                 .load_local => |slot| try w.print("push(frames[nf-1].locals[{d}]);\n", .{@backingInt(slot)}),

@@ -67,6 +67,10 @@ def project_cases(compiler, zig, root, temp):
         "main.my": "module main; import shared.colors as c; fn main()->i64 { let x=c::choose(true);match x { c::Color.blue=>{return c::score(x);},c::Color.red=>{return 0;} } }",
         "shared/colors.my": "module shared.colors; export Color;export choose;export score;enum Color{red,blue} fn choose(x:bool)->Color{if x{return new Color.blue;}return new Color.red;} fn score(x:Color)->i64{if x==new Color.blue{return 12;}return 1;}",
     }))
+    fixtures.append(("results", {
+        "main.my": "module main; import values as v; fn main()->i64{match v::work(new v::Input.err(-128i8)){v::Output.ok(discard)=>{return 0;},v::Output.err(n)=>{return 1000+cast<i64>(n);}}}",
+        "values.my": "module values; export Input;export Output;export work;result Input{err:i8,ok:i64} result Output{ok:bool,err:i8} fn work(r:Input)->Output{return new Output.ok(1+try r>0);}",
+    }))
     pairs = 0
     for name, files in fixtures:
         directory = temp / ("module case " + name)
@@ -82,13 +86,13 @@ def project_cases(compiler, zig, root, temp):
         for mode in ("-O0", "-O2"):
             executable = directory / "program"
             built = invoke([zig, "cc", "-std=c11", mode, "-fsanitize=undefined", "-fno-sanitize-recover=undefined", source, "-o", executable])
-            assert built.returncode == 0, built.stderr
+            assert built.returncode == 0, (name, mode, built.returncode, built.stderr)
             for options in ([], ["--max-steps=1"], ["--max-frames=1"]):
                 vm = invoke([compiler, "run-project", entry, *options])
                 native = invoke([executable, *options])
                 assert project_signature(vm) == project_signature(native), (name, mode, options, vm.stderr, native.stderr)
                 pairs += 1
-            if name in ("calls", "domains", "enums"):
+            if name in ("calls", "domains", "enums", "results"):
                 for budget in range(1, 100):
                     options = [f"--max-steps={budget}"]
                     vm = invoke([compiler, "run-project", entry, *options])
@@ -101,7 +105,7 @@ def project_cases(compiler, zig, root, temp):
             for mode in ("Debug", "ReleaseFast"):
                 executable = directory / "user-built"
                 built = invoke([sys.executable, root / "scripts/native.py", entry, "--project", "--mode", mode, "-o", executable, "--compiler", compiler, "--zig", zig])
-                assert built.returncode == 0, built.stderr
+                assert built.returncode == 0, (name, mode, built.returncode, built.stderr)
                 assert invoke([executable]).stdout == b"15\n"
     entry = temp / "unsupported" / "main.my"
     entry.parent.mkdir()
@@ -148,6 +152,24 @@ def main():
         ("enum-continuation", "enum State{a,b} fn main()->i64{let mut total=0;let mut state=new State.a;let mut i=0;while i<4{match state{State.b=>{total+=3;state=new State.a;},State.a=>{total+=1;state=new State.b;}}i+=1;}return total;}"),
         ("enum-single", "enum Only { value } fn pass(x:Only)->Only{return x;} fn main()->i64{match pass(new Only.value){Only.value=>{return 9;}}}"),
     ]
+    fixtures += [
+        ("variant-nested", "enum E{a,b,c} union Inner{number:i64,flag:bool,code:E} union Outer{empty,inner:Inner} fn pass(x:Outer)->Outer{return x;} fn score(x:Outer)->i64{match x{Outer.empty=>{return 0;},Outer.inner(v)=>{match v{Inner.number(n)=>{return n;},Inner.flag(b)=>{if b{return 1;}return 0;},Inner.code(e)=>{match e{E.a=>{return 2;},E.b=>{return 3;},E.c=>{return 4;}}}}}}} fn main()->i64{return score(pass(new Outer.inner(new Inner.number(-9223372036854775808))))+score(new Outer.inner(new Inner.flag(true)))+score(new Outer.inner(new Inner.code(new E.c)))+score(new Outer.empty);}"),
+        ("variant-u64", "union U{none,value:u64} fn main()->i64{match new U.value(18446744073709551615u64){U.none=>{return 0;},U.value(n)=>{if n==18446744073709551615u64{return 7;}return 1;}}}"),
+        ("variant-signed-domain", "domain D:i8{fn make(x:i8)->D{return wrap<D>(x);} fn value(x:D)->i8{return unwrap(x);}} union U{d:D,none} fn main()->i64{match new U.d(D.make(-128i8)){U.none=>{return 0;},U.d(d)=>{return cast<i64>(D.value(d));}}}"),
+        ("variant-copy", "union U{none,value:i16} fn main()->i64{let mut x=new U.value(-32768i16);let old=x;x=new U.none;match old{U.none=>{return 1;},U.value(n)=>{match x{U.none=>{return cast<i64>(n);},U.value(discard)=>{return 2;}}}}}"),
+        ("result-remap", "enum E{missing} result Input{err:E,ok:i64} result Output{ok:bool,err:E} fn convert(r:Input)->Output{return new Output.ok(try r>5);} fn handle(r:Output)->i64{match r{Output.ok(b)=>{if b{return 7;}return 1;},Output.err(e)=>{match e{E.missing=>{return 3;}}}}} fn main()->i64{return 100+handle(convert(new Input.ok(8)))+handle(convert(new Input.err(new E.missing)));}"),
+        ("result-early", "result R{ok:i64,err:i64} fn sum(a:i64,b:i64)->i64{return a+b;} fn work(r:R)->R{return new R.ok(sum(99,try r)+1/0);} fn main()->i64{let a=new R.ok(7);let b=a;acknowledge b;match work(new R.err(-9)){R.ok(n)=>{return n;},R.err(e)=>{return 100+e;}}}"),
+        ("result-nested", "result R{ok:i64,err:i64} union U{empty,r:R} fn main()->i64{let u=new U.r(new R.err(-17));match u{U.empty=>{return 0;},U.r(r)=>{match r{R.ok(n)=>{return n;},R.err(e)=>{return e;}}}}}"),
+    ]
+    # Exercise the largest packed value without relying on deeply nested syntax.
+    declarations = ["union U0{value:u64}"]
+    readers = ["fn read0(x:U0)->u64{match x{U0.value(n)=>{return n;}}}"]
+    values = ["let v0=new U0.value(18446744073709551615u64);"]
+    for i in range(1, 63):
+        declarations.append(f"union U{i}{{value:U{i-1}}}")
+        readers.append(f"fn read{i}(x:U{i})->u64{{match x{{U{i}.value(n)=>{{return read{i-1}(n);}}}}}}")
+        values.append(f"let v{i}=new U{i}.value(v{i-1});")
+    fixtures.append(("packed-127", " ".join(declarations + readers) + " fn main()->i64{" + "".join(values) + "if read62(v62)==18446744073709551615u64{return 7;}return 0;}"))
     pairs = 0
     with tempfile.TemporaryDirectory(prefix="mylang-native-parity-") as temp:
         temp = Path(temp)
@@ -161,7 +183,7 @@ def main():
             for mode in ("-O0", "-O2"):
                 executable = temp / "program"
                 compiled = invoke([args.zig, "cc", "-std=c11", mode, "-fsanitize=undefined", "-fno-sanitize-recover=undefined", c_file, "-o", executable])
-                assert compiled.returncode == 0, compiled.stderr.decode(errors="replace")
+                assert compiled.returncode == 0, (name, mode, compiled.returncode, compiled.stderr.decode(errors="replace"))
                 budgets = [[], ["--max-steps=1"], ["--max-frames=1"]]
                 if name == "recursive": budgets[0] = ["--max-frames=25000"]
                 for options in budgets:
@@ -169,8 +191,8 @@ def main():
                     native = invoke([executable, *options])
                     assert signature(vm) == signature(native), (name, mode, options, vm.stderr, native.stderr)
                     pairs += 1
-                if name == "calls":
-                    for budget in range(1, 60):
+                if name == "calls" or name.startswith(("variant-", "result-")):
+                    for budget in range(1, 200):
                         options = [f"--max-steps={budget}"]
                         vm = invoke([compiler, "run", source, *options])
                         native = invoke([executable, *options])
