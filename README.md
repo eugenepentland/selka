@@ -317,8 +317,8 @@ qualified identities, field/variant structure, integer bounds, borrowing contrac
 and inferred effects. Private declarations remain excluded; domains and runtime
 owners/capabilities retain opaque reconstruction boundaries. This establishes
 [schema derivation](docs/experiments/schemas.md). Ordinary serialization and Python
-data bindings are now implemented below; domain codecs, callable foreign wrappers,
-and generation receipt/cache integration remain pending.
+data bindings, domain codecs, Python callable wrappers, and generation receipt/cache
+integration are implemented as described below.
 
 Ordinary typed values now have a bounded JSON codec:
 
@@ -382,13 +382,13 @@ integration with formatting, dependency policy, schemas, and data bindings.
 
 [Typed embedding calls](docs/experiments/typed-invocation.md) can invoke exported
 effect-free functions and checked domain factories with owned argument copies and
-typed results. Explicit domain codec declarations and callable foreign wrappers
-remain pending.
+typed results. Explicit domain codecs and Python wrappers build on this API as
+described below.
 
 Domains can now declare [explicit codec contracts](docs/experiments/domain-codecs.md)
 linking an ordinary wire type to checked public decoder/encoder methods. The schema
 records those contracts while preserving opaque backing. [Executed JSON codecs](docs/experiments/domain-json.md)
-now use them with shared budgets; callable bindings remain pending. See [the example](examples/domain-codecs/main.my).
+now use them with shared budgets; Python calls also use these contracts. See [the example](examples/domain-codecs/main.my).
 
 Try a declared domain codec with:
 
@@ -399,4 +399,10 @@ zig-out/bin/mylang check-value-project examples/domain-codecs/main.my --value=ex
 [invoke-project](docs/experiments/checked-calls.md) now calls exported functions from
 a schema-pinned typed-call-v1 request with named JSON arguments. Domain codecs and
 the target share operation budgets. This supplies the call boundary for generated
-wrappers, which remain pending.
+Python wrappers described below.
+
+Generated Python bindings also expose `Client`, `CALLS`, and nominal domain wire
+objects for exported effect-free calls. Calls use the selected compiler and project
+through the schema-pinned JSON protocol; standalone data codecs remain independent
+of the compiler. See [generated Python calls](docs/experiments/python-calls.md) for
+usage, budgets, error handling, and unsupported boundaries.

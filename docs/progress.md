@@ -2517,3 +2517,35 @@ fix also passes against a staged export containing the original generator/runtim
 The workflow's
 Guardian revision is local and must be published before hosted CI can fetch it;
 no hosted CI run or language remote exists. The language roadmap remains open.
+
+## 2026-09-06: Generated callable Python bindings
+
+Completed the previously unfinished Python wrapper generation and embedded call
+runtime. Generated modules expose nominal typed functions, qualified CALLS entries,
+Client.call, and explicit unsupported-function reasons. Domain wire classes carry
+ordinary data; each incoming domain is validated by the language's declared decoder,
+and results use declared encoders. Standalone data codecs retain opaque-domain
+rejection. Calls freshly check source and pin the full public schema, retaining
+same-schema body freshness while rejecting stale interfaces before execution.
+
+CallLimits carries shared VM/codec budgets and host JSON validation limits. The
+subprocess bridge preserves typed result errors as data, reports compiler failures
+with diagnostics/status, validates returned type envelopes, and reaps timed-out or
+oversized-output processes. Capture is a polled temporary-file threshold, not a hard
+disk quota. No shell or separately installed Python runtime package is needed.
+
+Added the actual-compiler tests/python_calls.py driver to the standard build suite,
+covering nominal/domain/result calls, u64 boundaries, invalid arguments, decoder
+rejections, source traps, budgets, source/schema changes, timeout, capture, missing
+executables, stderr delivery, and output type mismatch. The checked-in domain call
+example also executes successfully. Existing standalone codec and cache tests
+continue to pass; the initial wrapper work is now included in this milestone.
+
+Debug and ReleaseFast pass all 26 build steps, including the new callable Python
+acceptance driver and the unchanged 580-test Zig suite (cached successful runs),
+2,490 VM/native comparisons, sanitizer failure cases, and application corpus.
+Guardian passes all 88 checks with no frozen violations. This completes the initial
+Python callable-wrapper and domain-wire milestones, not the broader roadmap.
+Source serialization operations, call/input-manifest integration, native ABI and
+resource expansion, generics, finer incremental compilation, and other pending
+requirements remain open. Hosted CI remains unexecuted.

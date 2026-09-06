@@ -14,7 +14,7 @@ not a claim that the full future language has been delivered.
 | D, errors and abstraction | In progress: typed results, checked handling/transfer, acknowledgement, and propagation implemented; typed-handle pool backend implemented; source handles implemented; generics pending | Require handling/propagation/explicit acknowledgement without erasing evaluation or ownership obligations. |
 | M, modules/interfaces | Implemented experimental scope: bounded imports, exports/privacy, source maps, module checking/VM execution, direction policy, default-limit graph/tooling acceptance, and initial ordinary-application corpus review | Shared-domain execution, direction policy, 256-module/4096-import boundaries, and invoice/packet application acceptance pass; production-user corpus evidence remains unmeasured. |
 | E, native execution | Scalar, domain, enum, record/array/table, conversion/update, packed/boxed union/result, and ordinary-value borrowing/slice C emission plus pinned-Zig native builder implemented for single-file and module projects; scalar semantic/trap/path/trace parity passes | Ordinary value acceptance and native allocation-failure cleanup implemented; native resources and other operations require explicit operations and corresponding executable parity fixtures. |
-| F, compile-time/schema/incremental work | In progress: restricted effect-free project evaluation with step/frame/VM-memory budgets and source/implementation dependency receipts plus request identity before execution and persistent successful VM-result reuse with bounded field-level request comparisons implemented; typed scalar input manifest validation/module generation and fresh in-memory evaluation/cache bindings for multiple bounded manifests implemented; checked public type/function schema derivation and bounded ordinary typed JSON serialization/deserialization with owned failure locations and standalone Python data bindings with checked persistent artifact reuse and unchanged-output preservation implemented; checked full source receipts for schema/binding generation and exported effect-free typed invocation with owned argument copies implemented; explicit domain codec declarations and schema contracts implemented; executed domain JSON with shared operation budgets implemented; schema-pinned public JSON invocation implemented; generated callable foreign wrappers and finer incremental compilation pending | Reject duplicate schema keys and undeclared inputs; explain invalidation and evaluation budgets. |
+| F, compile-time/schema/incremental work | In progress: restricted effect-free project evaluation with step/frame/VM-memory budgets and source/implementation dependency receipts plus request identity before execution and persistent successful VM-result reuse with bounded field-level request comparisons implemented; typed scalar input manifest validation/module generation and fresh in-memory evaluation/cache bindings for multiple bounded manifests implemented; checked public type/function schema derivation and bounded ordinary typed JSON serialization/deserialization with owned failure locations and standalone Python data bindings with checked persistent artifact reuse and unchanged-output preservation implemented; checked full source receipts for schema/binding generation and exported effect-free typed invocation with owned argument copies implemented; explicit domain codec declarations and schema contracts implemented; executed domain JSON with shared operation budgets implemented; schema-pinned public JSON invocation implemented; generated Python callable wrappers and domain wire objects implemented; native ABI bindings and finer incremental compilation pending | Reject duplicate schema keys and undeclared inputs; explain invalidation and evaluation budgets. |
 | T, formatter/reference reports/verification | Canonical single-file/module formatter and reachable-project formatting checks, resolved function-call/binding reports including module main/export roots, configurable structural metrics, and separate manifest verification driver implemented | Extend reference/specification identities and entry roots with modules/schemas, and parity fixtures with native execution. |
 
 ## A1 completed decisions
@@ -179,18 +179,18 @@ inputs and emits deterministic typed modules with manifest provenance hashes.
 graphs and function contracts while preserving nominal identities and opaque boundaries.
 Ordinary serialization and Python data bindings are now implemented as described below;
 declared domain codecs, executed JSON, and generation receipt/cache integration are
-implemented below; callable foreign wrappers remain pending.
+implemented below; Python callable wrappers are described at the end of this record.
 
 [Typed JSON codecs](typed-json.md) now validate and materialize ordinary checked
 values and serialize them canonically under byte/node/token/depth limits, rejecting
 opaque dependencies and private root types. Executed domain codecs are implemented
-below; source operations, callable foreign wrappers, and richer input/generation
+below; source operations, native ABI bindings, and richer input/generation
 integration remain pending.
 
 [Generated Python data bindings](python-bindings.md) now provide standalone nominal
 classes and compatible typed JSON codecs from fresh checked schemas, with generation
 limits, explicit unsupported-type reporting, and compiler/Python acceptance.
-Python domain-codec integration and foreign function wrappers remain pending; binding artifact reuse
+Python domain-codec integration and callable wrappers are implemented below; binding artifact reuse
 and loaded-source receipts are implemented below.
 
 [Incremental binding artifact reuse](binding-cache.md) now skips generation on a
@@ -220,23 +220,28 @@ authored bounded corpus, not production deployment or independent-user evidence.
 
 [Typed invocation](typed-invocation.md) supplies the checked factory execution
 foundation for explicit domain codecs and callable wrappers. Codec declarations, schema contracts, and executed JSON with shared operation
-budgets are implemented below. Callable binding generation remains pending;
+budgets and Python callable generation are implemented below;
 representation-only domain decoding stays disabled.
 
 [Explicit domain codec contracts](domain-codecs.md) now bind ordinary wire types to
 public effect-free decoder/encoder methods, require a typed decoder result for the
 exact domain, and emit checked schema metadata without exposing backing values.
-Executed JSON and shared budgets are implemented below. Source operations and
-callable bindings remain pending.
+Executed JSON and shared budgets are implemented below. Source operations and native ABI bindings remain pending.
 
 [Executed domain JSON codecs](domain-json.md) now traverse declared domain wire
 representations, execute checked factories/accessors, retain located typed errors
 and source traps, and share memory/step/call/work budgets across each operation.
-The CLI round trip uses this path; source serialization operations, generated
-callable bindings, and richer input integration remain pending.
+The CLI round trip and generated Python calls use this path; source serialization
+operations and richer input integration remain pending.
 
 [Schema-pinned public JSON calls](checked-calls.md) now execute exported functions
 from named wire arguments, verify the complete checked public schema before any
 argument codec executes, and share budgets across decoding, target execution, and
-encoding. Generated callable wrappers and Python domain wire representations remain
-pending; this supplies their executable request boundary.
+encoding. This supplies the executable request boundary for the generated Python
+wrappers and domain wire representations described below.
+
+[Generated Python calls](python-calls.md) complete the initial callable-wrapper and
+Python domain-wire work mentioned above. They invoke the schema-pinned compiler
+protocol with explicit limits, preserve typed result errors, and validate domains
+through declared language decoders. Native ABI bindings, source operations, and
+richer input integration remain pending.

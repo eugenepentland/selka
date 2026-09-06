@@ -17,7 +17,9 @@ runs `schema-project`, including checking all private/uncalled source bodies.
 
 The output is one standalone Python module. It imports only Python standard-library
 modules and embeds its schema and codec implementation; running it requires neither
-Zig, the compiler, this repository, nor a separately installed runtime package. It uses
+Zig, the compiler, this repository, nor a separately installed runtime package for
+data operations. [Generated calls](python-calls.md) additionally require an explicitly
+selected compiler and source project. It uses
 Python 3.10+ features, including dataclass slots. Acceptance was executed with the
 installed Python 3.14.4 interpreter.
 
@@ -148,6 +150,6 @@ budgets, expected root types, isolated standalone imports, stable generation aft
 private edits, regeneration after public changes, existing-file preservation, atomic
 write failure cleanup, and termination/reaping after time/capture limits.
 
-The driver is part of `zig build test` in Debug and ReleaseFast. Other language
-bindings, callable foreign function wrappers, explicit domain codecs, broader incremental compilation and the remaining compiler roadmap work are not delivered
-by this data-binding milestone.
+The driver is part of `zig build test` in Debug and ReleaseFast. Python callable wrappers and explicit domain wire support are delivered by the
+subsequent [Python calls milestone](python-calls.md). Other language bindings, native
+ABI integration, broader incremental compilation, and the remaining roadmap are open.

@@ -19,7 +19,8 @@ class Limits:
 
 
 class _Budget:
-    def __init__(self, limits):
+    def __init__(self, limits, calls=False):
+        self.calls = calls
         self.limits = limits
         self.values = 0
 
@@ -53,7 +54,7 @@ class _Number(str):
     pass
 
 
-def _scan(text, limits):
+def _scan(text, limits, overhead=1):
     """Count complete-input Zig scanner tokens/fragments before JSON DOM parsing."""
     index = depth = tokens = 0
 
@@ -72,7 +73,7 @@ def _scan(text, limits):
             depth += 1 if char in '{[' else -1
             if depth < 0:
                 raise CodecError('SyntaxError')
-            if depth > limits.max_depth + 1:
+            if depth > limits.max_depth + overhead:
                 raise CodecError('CodecDepthLimit')
             index += 1
         elif char == '"':
@@ -139,6 +140,13 @@ def _convert(name, value, encode, budget, depth, path):
     budget.take(depth, path)
     definition = _DEFINITIONS[name]
     kind = definition['kind']
+    if kind == 'domain':
+        if not budget.calls or 'codec' not in definition:
+            raise CodecError('NoImplicitCodec', path)
+        if encode and type(value) is not CALL_TYPES[name]:
+            raise CodecError('ValueTypeMismatch', path)
+        wire = _convert(definition['codec']['wire'], value.wire if encode else value, encode, budget, depth, path)
+        return wire if encode else CALL_TYPES[name](wire)
     if kind == 'integer':
         if encode:
             if type(value) is not int:
@@ -159,13 +167,13 @@ def _convert(name, value, encode, budget, depth, path):
         return value
     if kind == 'enumeration':
         if encode:
-            if type(value) is not TYPES[name]:
+            if type(value) is not CALL_TYPES[name]:
                 raise CodecError('ValueTypeMismatch', path)
             return value.value
         if type(value) is not str:
             raise CodecError('ValueTypeMismatch', path)
         try:
-            return TYPES[name](value)
+            return CALL_TYPES[name](value)
         except ValueError:
             raise CodecError('UnknownCodecCase', path) from None
     if kind in ('tagged_union', 'result'):
@@ -189,12 +197,12 @@ def _convert(name, value, encode, budget, depth, path):
         if has_payload:
             child = value.value if encode else value['value']
             payload = _convert(case['payload'], child, encode, budget, depth + 1, _path(path, 'value'))
-            return {'case': case_name, 'value': payload} if encode else CASES[name][case_name](payload)
-        return {'case': case_name} if encode else CASES[name][case_name]()
+            return {'case': case_name, 'value': payload} if encode else CALL_CASES[name][case_name](payload)
+        return {'case': case_name} if encode else CALL_CASES[name][case_name]()
     if kind == 'record':
         fields = definition['fields']
         if encode:
-            if type(value) is not TYPES[name]:
+            if type(value) is not CALL_TYPES[name]:
                 raise CodecError('ValueTypeMismatch', path)
         else:
             _keys(value, [field['name'] for field in fields], path)
@@ -203,10 +211,10 @@ def _convert(name, value, encode, budget, depth, path):
         output = {}
         for field in fields:
             key = field['name']
-            attribute = FIELDS[name][key]
+            attribute = CALL_FIELDS[name][key]
             child = getattr(value, attribute) if encode else value[key]
             output[key if encode else attribute] = _convert(field['type'], child, encode, budget, depth + 1, _path(path, key))
-        return output if encode else TYPES[name](**output)
+        return output if encode else CALL_TYPES[name](**output)
     length = definition['length']
     if kind == 'array':
         if type(value) is not (tuple if encode else list):
@@ -218,7 +226,7 @@ def _convert(name, value, encode, budget, depth, path):
         output = [_convert(definition['element'], child, encode, budget, depth + 1, _path(path, index)) for index, child in enumerate(value)]
         return output if encode else tuple(output)
     if kind == 'table':
-        key_type = TYPES[definition['key']]
+        key_type = CALL_TYPES[definition['key']]
         keys = [case['name'] for case in _DEFINITIONS[definition['key']]['cases']]
         if encode:
             if not isinstance(value, Mapping) or any(type(key) is not key_type for key in value):
@@ -237,17 +245,21 @@ def _convert(name, value, encode, budget, depth, path):
     raise CodecError('NoImplicitCodec', path)
 
 
-def _supported(name):
+def _supported(name, calls=False):
     if type(name) is not str:
         raise CodecError('ValueTypeMismatch', '/type')
     if name not in _DEFINITIONS:
         raise CodecError('UnknownCodecType')
-    if name in UNSUPPORTED_TYPES:
+    if name in (CALL_UNSUPPORTED_TYPES if calls else UNSUPPORTED_TYPES):
         raise CodecError('NoImplicitCodec')
 
 
 def loads(data, *, expected_type=None, limits=Limits()):
     """Decode a typed-json-v1 envelope into generated nominal Python values."""
+    return _loads(data, expected_type, limits, False)
+
+
+def _loads(data, expected_type, limits, calls):
     try:
         if type(data) is bytes:
             if len(data) > limits.max_bytes:
@@ -274,8 +286,8 @@ def loads(data, *, expected_type=None, limits=Limits()):
     name = document['type']
     if type(name) is not str or (expected_type is not None and name != expected_type):
         raise CodecError('ValueTypeMismatch', '/type')
-    _supported(name)
-    return _convert(name, document['value'], False, _Budget(limits), 1, '/value')
+    _supported(name, calls)
+    return _convert(name, document['value'], False, _Budget(limits, calls), 1, '/value')
 
 
 def dumps(value, *, type_name=None, limits=Limits()):
@@ -285,6 +297,10 @@ def dumps(value, *, type_name=None, limits=Limits()):
         raise TypeError('type_name is required for scalar and structural root values')
     _supported(name)
     document = {'version': 'typed-json-v1', 'type': name, 'value': _convert(name, value, True, _Budget(limits), 1, '/value')}
+    return _serialize(document, limits)
+
+
+def _serialize(document, limits, overhead=1):
     chunks = []
     count = 0
     for chunk in json.JSONEncoder(ensure_ascii=False, allow_nan=False, separators=(',', ':')).iterencode(document):
@@ -293,5 +309,117 @@ def dumps(value, *, type_name=None, limits=Limits()):
             raise CodecError('CodecByteLimit')
         chunks.append(chunk)
     text = ''.join(chunks)
-    _scan(text, limits)
+    _scan(text, limits, overhead)
     return text
+
+
+class CallError(RuntimeError):
+    """Transport/compiler failure; successful language err results remain data."""
+    def __init__(self, code, diagnostics='', returncode=None):
+        self.code = code
+        self.diagnostics = diagnostics
+        self.returncode = returncode
+        super().__init__(code + (': ' + diagnostics if diagnostics else ''))
+
+
+@dataclass(frozen=True, slots=True)
+class CallLimits:
+    json: Limits = Limits()
+    max_steps: int = 1000000
+    max_frames: int = 256
+    max_calls: int = 4096
+    max_bytes: int = 32 * 1024 * 1024
+    max_work_values: int = 131072
+    timeout_seconds: float = 30.0
+    capture_bytes: int = 4 * 1024 * 1024
+
+    def __post_init__(self):
+        import math
+        budgets = (self.max_steps, self.max_frames, self.max_calls, self.max_bytes, self.max_work_values)
+        if type(self.json) is not Limits or any(type(x) is not int or not 0 < x <= 18446744073709551615 for x in budgets):
+            raise CodecError('InvalidCallLimits')
+        if type(self.capture_bytes) is not int or self.capture_bytes <= 0 or type(self.timeout_seconds) not in (int, float):
+            raise CodecError('InvalidCallLimits')
+        try:
+            valid_timeout = self.timeout_seconds > 0 and math.isfinite(self.timeout_seconds)
+        except OverflowError:
+            valid_timeout = False
+        if not valid_timeout:
+            raise CodecError('InvalidCallLimits')
+
+
+@dataclass(frozen=True, slots=True)
+class Client:
+    """Explicit trusted compiler/project selection; calls never use a shell."""
+    compiler: str
+    entry: str
+    limits: CallLimits = CallLimits()
+    diagnostics: object = None
+
+    def __post_init__(self):
+        from pathlib import Path
+        if type(self.limits) is not CallLimits:
+            raise CodecError('InvalidCallLimits')
+        if self.diagnostics is not None and not callable(self.diagnostics):
+            raise TypeError('diagnostics must be a callback accepting compiler stderr')
+        object.__setattr__(self, 'compiler', str(Path(self.compiler).expanduser().resolve()))
+        object.__setattr__(self, 'entry', str(Path(self.entry).expanduser().resolve()))
+
+    def call(self, name, /, **arguments):
+        if type(name) is not str or name not in _FUNCTIONS:
+            raise CodecError('UnknownFunction')
+        if name in UNSUPPORTED_FUNCTIONS:
+            raise CodecError('UnsupportedFunction')
+        function = _FUNCTIONS[name]
+        _keys(arguments, [p['name'] for p in function['parameters']], '/arguments')
+        budget = _Budget(self.limits.json, calls=True)
+        wire = {p['name']: _convert(p['type'], arguments[p['name']], True, budget, 1, _path('/arguments', p['name'])) for p in function['parameters']}
+        document = {'version': 'typed-call-v1', 'schema_sha256': SCHEMA_SHA256, 'function': name, 'arguments': wire}
+        request = _serialize(document, self.limits.json, overhead=2).encode('utf-8')
+        try:
+            status, output, errors = self._run(request)
+        except OSError as error:
+            raise CallError('CompilerIO', str(error)) from error
+        diagnostics = errors.decode('utf-8', errors='replace')
+        if self.diagnostics is not None and diagnostics:
+            self.diagnostics(diagnostics)
+        if status != 0:
+            raise CallError('CompilerFailure', diagnostics, status)
+        return _loads(output, function['result'], self.limits.json, True)
+
+    def _run(self, request):
+        import os
+        import subprocess
+        import tempfile
+        import time
+        from pathlib import Path
+        with tempfile.TemporaryDirectory(prefix='mylang-call-') as directory:
+            path = Path(directory) / 'request.json'
+            path.write_bytes(request)
+            with tempfile.TemporaryFile() as output, tempfile.TemporaryFile() as errors:
+                flags = [f'--max-codec-{flag}={getattr(self.limits, field)}' for field, flag in (
+                    ('max_steps', 'steps'), ('max_frames', 'frames'), ('max_calls', 'calls'),
+                    ('max_bytes', 'bytes'), ('max_work_values', 'values'))]
+                process = subprocess.Popen([self.compiler, 'invoke-project', self.entry, '--request=' + str(path), *flags], stdout=output, stderr=errors)
+                deadline = time.monotonic() + self.limits.timeout_seconds
+                try:
+                    while True:
+                        status = process.poll()
+                        if os.fstat(output.fileno()).st_size + os.fstat(errors.fileno()).st_size > self.limits.capture_bytes:
+                            raise CallError('CaptureLimit')
+                        if status is not None:
+                            break
+                        if time.monotonic() >= deadline:
+                            raise CallError('CallTimeout')
+                        time.sleep(0.02)
+                finally:
+                    if process.poll() is None:
+                        process.terminate()
+                        try:
+                            process.wait(timeout=2)
+                        except subprocess.TimeoutExpired:
+                            process.kill()
+                            process.wait()
+                output.seek(0)
+                errors.seek(0)
+                return status, output.read(), errors.read()

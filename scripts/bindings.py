@@ -41,8 +41,10 @@ def class_name(name):
     return 'T_' + identifier(name)
 
 
-def dependencies(definition):
+def dependencies(definition, codecs=False):
     kind = definition['kind']
+    if kind == 'domain' and codecs and 'codec' in definition:
+        return [definition['codec']['wire']]
     if kind in ('array', 'table'):
         return [definition['element']] + ([definition['key']] if kind == 'table' else [])
     if kind == 'record':
@@ -52,7 +54,7 @@ def dependencies(definition):
     return []
 
 
-def analyze(schema):
+def analyze(schema, codecs=False):
     if schema.get('version') != 'language-schema-v1' or schema.get('representation') != 'language-contracts-no-wire-format-or-abi':
         raise ValueError('unsupported schema contract')
     definitions = {}
@@ -68,9 +70,10 @@ def analyze(schema):
     reverse = {name: [] for name in definitions}
     unsupported = set()
     for name, definition in definitions.items():
-        if definition['kind'] not in ORDINARY or definition.get('opaque') or definition.get('move_only'):
+        domain_codec = codecs and definition['kind'] == 'domain' and 'codec' in definition
+        if (definition['kind'] not in ORDINARY or definition.get('opaque') or definition.get('move_only')) and not domain_codec:
             unsupported.add(name)
-        for dependency in dependencies(definition):
+        for dependency in dependencies(definition, codecs):
             if dependency not in reverse:
                 raise ValueError('unresolved schema type: ' + dependency)
             reverse[dependency].append(name)
@@ -91,6 +94,26 @@ def generator_snapshot():
 
 def generate(schema, max_bytes=MAX_BYTES, *, snapshot=None):
     definitions, unsupported = analyze(schema)
+    _, call_unsupported = analyze(schema, codecs=True)
+    functions = {}
+    unsupported_functions = {}
+    for function in schema['functions']:
+        name = function['name']
+        if name in functions:
+            raise ValueError('duplicate schema function: ' + name)
+        functions[name] = function
+        parameters = function['parameters']
+        if len({p['name'] for p in parameters}) != len(parameters):
+            raise ValueError('duplicate function parameter: ' + name)
+        signature = [function['result'], *(p['type'] for p in parameters)]
+        if any(ty not in definitions for ty in signature):
+            raise ValueError('unresolved function type: ' + name)
+        if function['effects']:
+            unsupported_functions[name] = 'effectful function'
+        elif function.get('return_reference') is not None or any(p['mode'] != 'value' for p in parameters):
+            unsupported_functions[name] = 'reference boundary'
+        elif any(ty in call_unsupported for ty in signature):
+            unsupported_functions[name] = 'unavailable wire representation'
     runtime, generator_hash = snapshot if snapshot is not None else generator_snapshot()
     schema_text = canonical(schema)
     schema_hash = hashlib.sha256(schema_text.encode()).hexdigest()
@@ -110,6 +133,10 @@ def generate(schema, max_bytes=MAX_BYTES, *, snapshot=None):
         f'_SCHEMA = json.loads({schema_text!r})',
         "_DEFINITIONS = {item['name']: item for item in _SCHEMA['types']}",
         f'UNSUPPORTED_TYPES = frozenset({sorted(unsupported)!r})',
+        f'CALL_UNSUPPORTED_TYPES = frozenset({sorted(call_unsupported)!r})',
+        f'UNSUPPORTED_FUNCTIONS = MappingProxyType({unsupported_functions!r})',
+        f'_FUNCTIONS = {functions!r}',
+        "FUNCTION_NAMES = tuple(sorted(set(_FUNCTIONS) - set(UNSUPPORTED_FUNCTIONS)))",
         "TYPE_NAMES = tuple(sorted(set(_DEFINITIONS) - UNSUPPORTED_TYPES))",
         '',
     ]
@@ -130,12 +157,12 @@ def generate(schema, max_bytes=MAX_BYTES, *, snapshot=None):
     cases = {}
     fields = {}
     for name in sorted(definitions):
-        if name in unsupported:
+        if name in call_unsupported:
             continue
         definition = definitions[name]
         kind = definition['kind']
         cls = class_name(name)
-        if kind in ('record', 'enumeration', 'tagged_union', 'result'):
+        if kind in ('record', 'enumeration', 'tagged_union', 'result', 'domain'):
             types[name] = cls
         if kind == 'record':
             lines += ['@dataclass(frozen=True, slots=True)', f'class {cls}:']
@@ -146,6 +173,8 @@ def generate(schema, max_bytes=MAX_BYTES, *, snapshot=None):
                 lines.append(f'    {attribute}: {annotation(field["type"])}')
             if not definition['fields']:
                 lines.append('    pass')
+        elif kind == 'domain':
+            lines += ['@dataclass(frozen=True, slots=True)', f'class {cls}:', '    # Explicit wire data; the compiler validates it through the declared decoder.', '    wire: ' + annotation(definition['codec']['wire'])]
         elif kind == 'enumeration':
             lines.append(f'class {cls}(Enum):')
             for case in definition['cases']:
@@ -162,22 +191,36 @@ def generate(schema, max_bytes=MAX_BYTES, *, snapshot=None):
                 lines.append('    value: ' + annotation(case['payload']) if 'payload' in case else '    pass')
         lines.append('')
     lines += [
-        'TYPES = MappingProxyType({' + ', '.join(f'{name!r}: {cls}' for name, cls in types.items()) + '})',
-        'CASES = MappingProxyType({' + ', '.join(f'{name!r}: MappingProxyType({{' + ', '.join(f'{key!r}: {cls}' for key, cls in members.items()) + '})' for name, members in cases.items()) + '})',
-        f'FIELDS = MappingProxyType({{name: MappingProxyType(fields) for name, fields in {fields!r}.items()}})',
-        '_CASE_NAMES = {cls: (name, case) for name, members in CASES.items() for case, cls in members.items()}',
+        'CALL_TYPES = MappingProxyType({' + ', '.join(f'{name!r}: {cls}' for name, cls in types.items()) + '})',
+        'CALL_CASES = MappingProxyType({' + ', '.join(f'{name!r}: MappingProxyType({{' + ', '.join(f'{key!r}: {cls}' for key, cls in members.items()) + '})' for name, members in cases.items()) + '})',
+        f'CALL_FIELDS = MappingProxyType({{name: MappingProxyType(fields) for name, fields in {fields!r}.items()}})',
+        'TYPES = MappingProxyType({name: cls for name, cls in CALL_TYPES.items() if name not in UNSUPPORTED_TYPES})',
+        'CASES = MappingProxyType({name: cases for name, cases in CALL_CASES.items() if name not in UNSUPPORTED_TYPES})',
+        'FIELDS = MappingProxyType({name: fields for name, fields in CALL_FIELDS.items() if name not in UNSUPPORTED_TYPES})',
+        '_CASE_NAMES = {cls: (name, case) for name, members in CALL_CASES.items() for case, cls in members.items()}',
         '_TYPE_NAMES = {cls: name for name, cls in TYPES.items()}',
         '_TYPE_NAMES.update({cls: name for cls, (name, _) in _CASE_NAMES.items()})',
         "_CASES = {name: {case['name']: case for case in definition['cases']} for name, definition in _DEFINITIONS.items() if definition['kind'] in ('tagged_union', 'result')}",
         '', runtime,
     ]
+    wrappers = {}
+    for name in sorted(set(functions) - set(unsupported_functions)):
+        function = functions[name]
+        wrapper = 'F_' + identifier(name)
+        wrappers[name] = wrapper
+        parameters = function['parameters']
+        signature = ', '.join('p_' + identifier(p['name']) + ': ' + annotation(p['type']) for p in parameters)
+        arguments = ', '.join(repr(p['name']) + ': p_' + identifier(p['name']) for p in parameters)
+        lines += ['', f'def {wrapper}(client: Client, /' + (', ' + signature if signature else '') + ') -> ' + annotation(function['result']) + ':',
+                  f'    return client.call({name!r}, **{{{arguments}}})']
+    lines += ['', 'CALLS = MappingProxyType({' + ', '.join(f'{name!r}: {wrapper}' for name, wrapper in wrappers.items()) + '})']
     output = '\n'.join(lines).encode('utf-8')
     if len(output) > max_bytes:
         raise ValueError('generated bindings exceed output byte limit')
     compile(output, '<generated-bindings>', 'exec')
     return output, {'version': 'python-bindings-v1', 'schema_sha256': schema_hash, 'generator_sha256': generator_hash,
                     'sha256': hashlib.sha256(output).hexdigest(), 'bytes': len(output), 'supported_types': len(definitions) - len(unsupported),
-                    'unsupported_types': sorted(unsupported)}
+                    'unsupported_types': sorted(unsupported), 'callable_functions': len(wrappers), 'unsupported_functions': unsupported_functions}
 
 
 def checked_schema(compiler, entry, timeout, max_bytes=MAX_BYTES):
