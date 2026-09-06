@@ -947,3 +947,24 @@ steps reused cached results). Final focused watch acceptance passed with Debug
 and ReleaseFast compiler builds. Guardian passed all 88 checks with baselines
 disabled. Native resource acceptance passed 116 outcomes, 106 VM trace comparisons,
 392 allocation failures, and six registry sanitizer cases.
+
+
+### Native build publication and measurement — 2026-09-06
+
+The native builder now stages guest C, trusted adapter compilation, and linking,
+then atomically publishes complete executables. Identical executable bytes preserve
+inode/timestamp; failures preserve the last successful output. `--report` records
+generated-C identity, frontend/native elapsed time, and publication status while
+explicitly stating that the driver does not reuse compilation. Fresh trusted
+adapter cache storage prevents stale assembly `.incbin` inputs observed in the
+regression fixture. Adapter compilation retains the caller's working directory.
+Native compilation/query reuse, incremental linking, embedding/bindings, generics,
+source serialization, and the remaining roadmap requirements stay open.
+
+Validation: focused native-builder acceptance passes, including a failing-before
+partial-output simulation and the changed `.incbin` regression. Scalar/module
+parity passes all 2,616 comparisons; clock/random and environment acceptance pass
+32/38 comparisons and 14/56 allocation failures. Final fixed-I/O resource selection
+passes two VM/native traces, 28 allocation failures, and six registry sanitizer
+runs. The build gate passes all 88 Guardian checks without baselines. This was
+focused validation; no new full-suite result is claimed for this milestone.

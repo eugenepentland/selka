@@ -113,3 +113,7 @@ reset guards, and scope/return/failure cleanup with VM/native acceptance.
 
 [Native pools](native-pools.md) add generation-checked graph handles, shared
 quotas, immutable snapshots, and root/arena cleanup.
+
+[Native publication and timing](native-build-publication.md) now preserve complete
+outputs on build failure, avoid replacing unchanged executables, and report
+frontend/C-stage costs. Compilation reuse remains separate unfinished work.

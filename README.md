@@ -439,3 +439,7 @@ as JSON. Files and `--inputs` manifests are loaded afresh on every check. See
 Automatic project checking: `python3 scripts/watch.py examples/modules/main.my`
 reuses one compiler session and rechecks source/manifest content changes. See
 [watch behavior and bounds](docs/experiments/watch.md).
+
+Native builds support `--report` for emission/C build timings and publication
+status. Failed builds preserve the last executable; byte-identical successful
+builds preserve its timestamp. See [native publication](docs/experiments/native-build-publication.md).
