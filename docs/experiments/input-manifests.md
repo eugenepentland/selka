@@ -12,7 +12,8 @@ zig-out/bin/mylang eval-project examples/input-values/main.my
 The project returns 64 through config.values.batch_size and config.values.enabled.
 Use `eval-project --inputs=examples/input-values/inputs.json` to load the manifest
 and generate its module in memory for that invocation. The evaluation cache driver
-accepts the same `--inputs` option. Generated files on disk are no longer required
+accepts the same `--inputs` option. [Schemas and calls](call-inputs.md) also accept
+these manifests, including binding generation and generated Python clients. Generated files on disk are no longer required
 for this workflow; the compiler does not write or update them.
 
 ## Format

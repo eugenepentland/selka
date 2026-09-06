@@ -406,3 +406,8 @@ objects for exported effect-free calls. Calls use the selected compiler and proj
 through the schema-pinned JSON protocol; standalone data codecs remain independent
 of the compiler. See [generated Python calls](docs/experiments/python-calls.md) for
 usage, budgets, error handling, and unsupported boundaries.
+
+Schema generation, JSON calls, and Python binding generation accept repeated
+`--inputs` manifests. Generated clients accept `inputs=(path, ...)` and reread the
+values on each invocation. See [call inputs](docs/experiments/call-inputs.md) for
+schema invalidation and source receipt behavior.

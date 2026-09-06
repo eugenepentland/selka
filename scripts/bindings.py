@@ -223,9 +223,9 @@ def generate(schema, max_bytes=MAX_BYTES, *, snapshot=None):
                     'unsupported_types': sorted(unsupported), 'callable_functions': len(wrappers), 'unsupported_functions': unsupported_functions}
 
 
-def checked_schema(compiler, entry, timeout, max_bytes=MAX_BYTES):
+def checked_schema(compiler, entry, timeout, max_bytes=MAX_BYTES, inputs=()):
     with tempfile.TemporaryFile() as output, tempfile.TemporaryFile() as errors:
-        process = subprocess.Popen([str(compiler), 'schema-project', str(entry), '--schema-report'], stdout=output, stderr=errors)
+        process = subprocess.Popen([str(compiler), 'schema-project', str(entry), '--schema-report', *['--inputs=' + str(path) for path in inputs]], stdout=output, stderr=errors)
         deadline = time.monotonic() + timeout
         try:
             while True:
@@ -374,7 +374,7 @@ def load_cached(path, request):
         return None, 'invalid-cache'
 
 
-def build(compiler, entry, output_path, *, cache_dir=None, timeout=90, max_schema_bytes=MAX_BYTES, max_output_bytes=MAX_BYTES):
+def build(compiler, entry, output_path, *, cache_dir=None, timeout=90, max_schema_bytes=MAX_BYTES, max_output_bytes=MAX_BYTES, inputs=()):
     if type(timeout) not in (int, float) or not math.isfinite(timeout) or timeout <= 0 or any(type(limit) is not int or limit <= 0 for limit in (max_schema_bytes, max_output_bytes)):
         raise ValueError('generation limits must be finite and positive')
     resolved = shutil.which(str(compiler))
@@ -382,7 +382,12 @@ def build(compiler, entry, output_path, *, cache_dir=None, timeout=90, max_schem
         raise FileNotFoundError('compiler executable not found: ' + str(compiler))
     executable = Path(resolved).resolve()
     compiler_hash = file_digest(executable)
-    schema_receipt = checked_schema(executable, entry, timeout, max_schema_bytes)
+    inputs = tuple(Path(path).expanduser().resolve() for path in inputs)
+    if len(inputs) > 16 or len(set(inputs)) != len(inputs):
+        raise ValueError('inputs must contain at most 16 distinct manifest paths')
+    if output_path.resolve() in inputs:
+        raise ValueError('output cannot replace an input manifest')
+    schema_receipt = checked_schema(executable, entry, timeout, max_schema_bytes, inputs)
     schema = schema_receipt['schema']
     if file_digest(executable) != compiler_hash:
         raise ValueError('compiler changed during schema checking; retry generation')
@@ -404,6 +409,8 @@ def build(compiler, entry, output_path, *, cache_dir=None, timeout=90, max_schem
     if cache_path is not None:
         if output_path.resolve() == cache_path.resolve():
             raise ValueError('output cannot replace its cache entry')
+        if cache_path.resolve() in inputs:
+            raise ValueError('cache entry cannot replace an input manifest')
         cached, reason = load_cached(cache_path, request)
     if cached is None:
         source, report = generate(schema, max_output_bytes, snapshot=snapshot)
@@ -429,6 +436,7 @@ def main():
     parser.add_argument('--compiler', type=Path, default=ROOT / 'zig-out/bin/mylang')
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--cache-dir', type=Path)
+    parser.add_argument('--inputs', type=Path, action='append', default=[])
     parser.add_argument('--timeout', type=float, default=90)
     parser.add_argument('--max-schema-bytes', type=int, default=MAX_BYTES)
     parser.add_argument('--max-output-bytes', type=int, default=MAX_BYTES)
@@ -439,7 +447,7 @@ def main():
         parser.error('output cannot replace the entry, compiler, or generator')
     try:
         report = build(args.compiler, args.entry, args.output, cache_dir=args.cache_dir, timeout=args.timeout,
-                       max_schema_bytes=args.max_schema_bytes, max_output_bytes=args.max_output_bytes)
+                       max_schema_bytes=args.max_schema_bytes, max_output_bytes=args.max_output_bytes, inputs=args.inputs)
         print(canonical(report))
     except CompilerFailure as error:
         return 1 if error.status == 1 else 2

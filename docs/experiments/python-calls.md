@@ -54,10 +54,13 @@ compiler process. Output goes to temporary files and is polled; the capture limi
 is an observed threshold, not a hard disk quota. No shell is used. Temporary request
 and capture files are removed on success or failure.
 
+[Declared input manifests](call-inputs.md) can be supplied through `Client.inputs`
+and the generator's repeated `--inputs` options. Values are freshly loaded on each
+call; generation records their source provenance.
+
 Reference boundaries, effects, resources, and unavailable wire representations
 are reported as unsupported instead of generating callable wrappers. Native ABI
-bindings, callbacks, source serialization operations, and input-manifest integration
-for calls remain pending.
+bindings, callbacks, and source serialization operations remain pending.
 
 `tests/python_calls.py` exercises generated functions through a real compiler,
 nominal domain/result objects, u64 extremes, wrong arguments, typed rejection,

@@ -355,6 +355,7 @@ class Client:
     entry: str
     limits: CallLimits = CallLimits()
     diagnostics: object = None
+    inputs: tuple = ()
 
     def __post_init__(self):
         from pathlib import Path
@@ -364,6 +365,12 @@ class Client:
             raise TypeError('diagnostics must be a callback accepting compiler stderr')
         object.__setattr__(self, 'compiler', str(Path(self.compiler).expanduser().resolve()))
         object.__setattr__(self, 'entry', str(Path(self.entry).expanduser().resolve()))
+        if not isinstance(self.inputs, (tuple, list)):
+            raise CodecError('InvalidCallInputs')
+        inputs = tuple(str(Path(path).expanduser().resolve()) for path in self.inputs)
+        if len(inputs) > 16 or len(set(inputs)) != len(inputs):
+            raise CodecError('InvalidCallInputs')
+        object.__setattr__(self, 'inputs', inputs)
 
     def call(self, name, /, **arguments):
         if type(name) is not str or name not in _FUNCTIONS:
@@ -400,7 +407,7 @@ class Client:
                 flags = [f'--max-codec-{flag}={getattr(self.limits, field)}' for field, flag in (
                     ('max_steps', 'steps'), ('max_frames', 'frames'), ('max_calls', 'calls'),
                     ('max_bytes', 'bytes'), ('max_work_values', 'values'))]
-                process = subprocess.Popen([self.compiler, 'invoke-project', self.entry, '--request=' + str(path), *flags], stdout=output, stderr=errors)
+                process = subprocess.Popen([self.compiler, 'invoke-project', self.entry, '--request=' + str(path), *flags, *['--inputs=' + item for item in self.inputs]], stdout=output, stderr=errors)
                 deadline = time.monotonic() + self.limits.timeout_seconds
                 try:
                     while True:

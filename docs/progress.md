@@ -2549,3 +2549,30 @@ Python callable-wrapper and domain-wire milestones, not the broader roadmap.
 Source serialization operations, call/input-manifest integration, native ABI and
 resource expansion, generics, finer incremental compilation, and other pending
 requirements remain open. Hosted CI remains unexecuted.
+
+## 2026-09-06: Declared manifests for schemas and Python calls
+
+Extended the existing in-memory input-module loader to schema-project,
+check-value-project, and invoke-project. Binding generation forwards repeated
+--inputs selections during fresh checked schema derivation; generated Client
+instances copy/resolve their input paths and forward them on every invocation.
+Inputs retain existing module conflict/import checks and explicit count/byte limits.
+Output/cache writes cannot replace selected manifests.
+
+Input value changes produce fresh execution results and source receipts while
+allowing identical-schema binding artifact reuse. Input type changes that alter the
+public schema reject old generated calls and regenerate artifacts. No values are
+silently captured in clients, and no generated source is written to disk. Added
+actual-CLI schema loading/malformed-input coverage, CLI-4 in SPEC.md, and the
+call_inputs.py acceptance driver for fresh values, schema changes, receipt/cache
+behavior, input selection validation, and manifest preservation.
+
+Debug and ReleaseFast pass all 27 build steps: 523 core tests (cached) and
+58 CLI tests, the new declared-call-input driver, existing Python acceptance,
+2,490 VM/native comparisons, and 236 sanitizer allocation-failure cases.
+Formatting and Python syntax checks pass.
+Guardian passes all 88 checks; change-classification prompted the linked CLI
+regression and is labeled useful-review in the local ROI record. Mandatory feedback
+is committed in Guardian. This completes initial call/input-manifest integration;
+source serialization, native expansion, generics, finer incremental compilation,
+and the other open roadmap requirements remain pending. Hosted CI has not run.

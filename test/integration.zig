@@ -965,3 +965,25 @@ test "CLI evaluation request checks eligibility without running the entry" {
     for ([_][]const []const u8{ &.{ "--evaluation-request", "--evaluation-report" }, &.{ "--evaluation-report", "--evaluation-request" }, &.{ "--evaluation-request", "--evaluation-request" } }) |options| try invokeOptions("eval-project", infinite, options, 2, "", "usage:");
     try invokeOptions("run-project", infinite, &.{"--evaluation-request"}, 2, "", "usage:");
 }
+
+// spec: CLI-4
+test "CLI schema inputs load fresh generated modules and reject malformed manifests" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "values.json", .data =
+        \\{"version":1,"module":"config","values":[{"name":"value","type":"i64","value":"7"}]}
+    });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "values.json", testing.allocator);
+    defer testing.allocator.free(path);
+    const option = try std.fmt.allocPrint(testing.allocator, "--inputs={s}", .{path});
+    defer testing.allocator.free(option);
+    const source = "module input; import config; export read; fn read()->i64{return config::value();} fn main()->i64{return 0;}";
+    const result = try runFixture("schema-project", source, &.{option});
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    try testing.expect(std.mem.indexOf(u8, result.stdout, "input::read") != null);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "values.json", .data = "{}" });
+    try invokeOptions("schema-project", source, &.{option}, 2, "", "MissingField");
+    try invokeOptions("schema-project", source, &.{ option, option }, 2, "", "usage:");
+}

@@ -64,3 +64,4 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [CLI-1] Distinguishes source errors, runtime traps, and invalid command usage through actual process results.
 - [CLI-2] Reports missing arguments and missing source files as usage or host failures.
 - [CLI-3] Executes the plan acceptance programs and recursive functions through the command-line executable.
+- [CLI-4] Schema generation reads declared input manifests into generated modules on every invocation and rejects malformed or duplicate inputs.

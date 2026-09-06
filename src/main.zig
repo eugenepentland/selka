@@ -17,6 +17,7 @@ const usage = "usage: mylang " ++
     "eval-project: --max-steps=N --max-frames=N --max-eval-bytes=N " ++
     "--evaluation-report|--evaluation-request --inputs=manifest.json (repeat for up to 16 " ++
     "modules; effect-free, parameter-free entry)\n  " ++
+    "schema-project/check-value-project/invoke-project: --inputs=manifest.json (repeat for up to 16 modules)\n  " ++
     "discover-duplicates/discover-project-duplicates: --min-nodes=N " ++
     "--population=production|tests|generated|reference|intentional --timings --approximate " ++
     "--max-work=N\n  report-quality/report-project-quality: --max-function-lines=N " ++
@@ -324,7 +325,11 @@ const ArgumentParser = struct {
 
     fn evaluationOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
         if (std.mem.startsWith(u8, arg, inputs_prefix)) {
-            if (self.command != .@"eval-project" or self.input_count == self.inputs.len or arg.len == inputs_prefix.len) return error.Usage;
+            switch (self.command) {
+                .@"eval-project", .@"schema-project", .@"invoke-project", .@"check-value-project" => {},
+                else => return error.Usage,
+            }
+            if (self.input_count == self.inputs.len or arg.len == inputs_prefix.len) return error.Usage;
             const input = arg[inputs_prefix.len..];
             for (self.inputs[0..self.input_count]) |previous| if (std.mem.eql(u8, previous, input)) return error.Usage;
             self.inputs[self.input_count] = input;
