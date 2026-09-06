@@ -19,9 +19,8 @@ test "native scalar emission is deterministic and cleans every failed allocation
 }
 test "native emission rejects unsupported operations and uncalled unsupported signatures" {
     for ([_][]const u8{
-        "fn main() -> i64 { let x = 7; borrow x as r { return read_ref(r); } }",
         "fn unsupported(heap: allocator) -> i64 { return 0; } fn main() -> i64 { return 7; }",
-        "fn main() -> i64 { let x = 7; borrow x as r { return read_ref(r); } }",
+        "fn main(heap:allocator)->i64{return 0;}",
     }) |text| {
         var c = try language.Compilation.init(t.allocator, "native.my", text);
         defer c.deinit();
@@ -139,4 +138,30 @@ test "native aggregates and boxed result propagation clean every allocation fail
     try aggregateScenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), aggregateScenario, .{});
+}
+
+fn referenceScenario(allocator: std.mem.Allocator) !void {
+    const source = "fn middle(a:i64,x:&mut []i64,b:i64)->&mut []i64 from x{borrow mut x[a..b] as selected{return selected;}} fn main()->i64{let mut a=new [3]i64[2,3,5];let old=a;borrow mut a[0..3] as all{borrow mut middle(1,all,3) as selected{write_slice(selected,0,9);}}return old[1]+a[1];}";
+    var c = try language.Compilation.init(allocator, "reference.my", source);
+    defer c.deinit();
+    const generated = try c.emitC(allocator);
+    defer allocator.free(generated);
+    try t.expectEqual(@as(i64, 12), (try c.execute(allocator)).value);
+}
+test "native reference arguments returned slices and snapshots clean every compiler allocation failure" {
+    try referenceScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), referenceScenario, .{});
+}
+test "native reference support retains static lifetime and exclusivity checks" {
+    for ([_][]const u8{
+        "fn main()->i64{let mut x=1;borrow mut x as r{return x;}}",
+        "fn main()->i64{let x=1;borrow x as r{write_ref(r,2);}return x;}",
+        "fn bad(x:&i64)->&i64 from x{let local=1;borrow local as r{return r;}} fn main()->i64{return 0;}",
+    }) |source| {
+        var c = try language.Compilation.init(t.allocator, "invalid.my", source);
+        defer c.deinit();
+        try t.expectError(error.SourceError, c.emitC(t.allocator));
+        try t.expect(!std.mem.eql(u8, c.diagnostics.items[c.diagnostics.items.len - 1].code, "E_NATIVE_FEATURE"));
+    }
 }

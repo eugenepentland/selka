@@ -30,6 +30,19 @@ fn indices(w: *std.Io.Writer, values: []const usize) !void {
     for (values) |value| try w.print("{d},", .{value});
     try w.writeByte('}');
 }
+fn enter(w: *std.Io.Writer, function: bc.Function, target: usize) !void {
+    try w.print("enter({d}, {d}, {d}, {d}, {d}, ", .{ @backingInt(function.id), function.locals.len, bc.valueParameterCount(function), target, function.references.len });
+    if (bc.valueParameterCount(function) == 0) {
+        try w.writeAll("NULL");
+    } else {
+        try w.writeAll("(const size_t[]){");
+        for (function.locals[0..function.parameter_count], 0..) |local, index| {
+            if (local.reference_parameter == null) try w.print("{d},", .{index});
+        }
+        try w.writeByte('}');
+    }
+    try w.writeAll(");\n");
+}
 fn literal(w: *std.Io.Writer, value: i128) !void {
     try w.print("({s}(V)UINT64_C({d}))", .{ if (value < 0) "-" else "", @abs(value) });
 }
@@ -70,8 +83,9 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     for (program.functions, offsets) |function, *offset| {
         offset.* = count;
         count += function.instructions.len;
-        if (!layout.supports(function.return_type) or function.references.len != 0 or function.return_reference != null) return sink.fail("E_NATIVE_FEATURE", function.instructions[0].span, "native execution does not yet support this signature");
-        for (function.locals) |local| if (!layout.supports(local.ty) or local.reference_parameter != null) return sink.fail("E_NATIVE_FEATURE", local.declaration, "native execution requires supported value locals and parameters");
+        if (!layout.supports(function.return_type)) return sink.fail("E_NATIVE_FEATURE", function.instructions[0].span, "native execution does not yet support this signature");
+        for (function.locals) |local| if (!layout.supports(local.ty)) return sink.fail("E_NATIVE_FEATURE", local.declaration, "native execution requires supported value locals and parameters");
+        for (function.references) |reference| if (!layout.supports(reference.ty)) return sink.fail("E_NATIVE_FEATURE", reference.declaration, "native references require supported value types");
         for (function.instructions) |instruction| switch (instruction.op) {
             .make_variant => |variant| {
                 if (!layout.supports(variant.ty)) return sink.fail("E_NATIVE_FEATURE", instruction.span, "native variant representation requires supported payloads");
@@ -94,7 +108,7 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
             .get_index, .replace_index, .array_length => |ty| {
                 if (!layout.supports(ty)) return sink.fail("E_NATIVE_FEATURE", instruction.span, "native arrays require supported elements");
             },
-            .get_field, .read_field, .take_field => {},
+            .get_field, .read_field, .take_field, .begin_borrow, .begin_slice, .end_borrow, .read_ref, .write_ref, .read_slice, .write_slice, .len_slice, .call_refs, .call_borrow, .capture_ref, .ret_ref => {},
             .cmp_enum, .wrap_domain, .unwrap_domain, .push_i64, .push_bool, .push_integer, .cast_integer, .neg_integer, .binary_integer, .drop_local, .move_local, .load_local, .store_local, .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .neg_i64_checked, .cmp_i64, .cmp_bool, .not_bool, .pop, .jump, .jump_if_false, .call, .ret => {},
             else => return sink.fail("E_NATIVE_FEATURE", instruction.span, "this operation is not yet supported by native execution"),
         };
@@ -119,7 +133,8 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     };
     try w.writeAll("};\nint main(int argc, char **argv) {\nsource_paths = paths; function_names = names; source_lines = lines; source_columns = columns;\noptions(argc, argv); size_t return_target = 0;\n");
     const main_index = @backingInt(program.main);
-    try w.print("enter({d}, {d}, 0, 0); goto L{d};\n", .{ main_index, program.functions[main_index].locals.len, offsets[main_index] });
+    try enter(w, program.functions[main_index], 0);
+    try w.print("goto L{d};\n", .{offsets[main_index]});
     for (program.functions, offsets) |function, offset| {
         for (function.instructions, 0..) |ins, pc| {
             const location = offset + pc;
@@ -177,6 +192,19 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
                     try variantValue(w, layout, propagate.output, result.error_tag, result.error_type);
                     try w.print("); goto L{d}; }} else host_failure(\"InternalError\");\n", .{offset + propagate.error_target});
                 },
+                .begin_borrow, .begin_slice => |id| {
+                    const reference = function.references[@backingInt(id)];
+                    try w.print("begin_reference({d}, {d}, ", .{ @backingInt(id), @backingInt(reference.owner) });
+                    if (reference.parent) |parent| try w.print("{d}", .{@backingInt(parent)}) else try w.writeAll("SIZE_MAX");
+                    try w.print(", {d}, {d}, {d});\n", .{ @intFromBool(reference.mutable), @intFromBool(reference.slice), @intFromBool(ins.op == .begin_slice) });
+                },
+                .end_borrow => |id| try w.print("end_reference({d});\n", .{@backingInt(id)}),
+                .read_ref => |id| try w.print("read_reference({d});\n", .{@backingInt(id)}),
+                .write_ref => |id| try w.print("write_reference({d});\n", .{@backingInt(id)}),
+                .read_slice => |id| try w.print("read_slice({d});\n", .{@backingInt(id)}),
+                .write_slice => |id| try w.print("write_slice({d});\n", .{@backingInt(id)}),
+                .len_slice => |id| try w.print("length_slice({d});\n", .{@backingInt(id)}),
+                .capture_ref => |id| try w.print("capture_reference({d});\n", .{@backingInt(id)}),
                 .make_record => |record| {
                     try w.print("make_record({d}, ", .{record.fields});
                     try indices(w, record.order);
@@ -191,7 +219,7 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
                 .get_index => try w.writeAll("get_index();\n"),
                 .replace_index => try w.writeAll("replace_index();\n"),
                 .array_length => try w.writeAll("array_length();\n"),
-                .read_field => |read| try w.print("push_value(field_value(frames[nf-1].locals[{d}], {d}));\n", .{ @backingInt(read.owner), read.field }),
+                .read_field => |read| try w.print("push_value(field_value(local_access({d}, 0)->value, {d}));\n", .{ @backingInt(read.owner), read.field }),
                 .take_field => |take| try w.print("take_field({d}, {d});\n", .{ @backingInt(take.owner), take.field }),
                 .acknowledge, .pop => try w.writeAll("release_value(pop_value());\n"),
                 .move_local => |slot| try w.print("move_local({d});\n", .{@backingInt(slot)}),
@@ -244,10 +272,38 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
                     falls_through = false;
                 },
                 .jump_if_false => |target| try w.print("if (!pop()) goto L{d};\n", .{offset + target}),
-                .call => |callee_id| {
+                .call, .call_refs, .call_borrow => {
+                    const callee_id = switch (ins.op) {
+                        .call => |id| id,
+                        .call_refs => |call| call.function,
+                        .call_borrow => |call| call.function,
+                        else => unreachable,
+                    };
+                    const loans: []const typed.ReferenceId = switch (ins.op) {
+                        .call => &.{},
+                        .call_refs => |call| call.references,
+                        .call_borrow => |call| call.references,
+                        else => unreachable,
+                    };
                     const callee = @backingInt(callee_id);
                     const target = program.functions[callee];
-                    try w.print("enter({d}, {d}, {d}, {d}); goto L{d};\n", .{ callee, target.locals.len, target.parameter_count, location + 1, offsets[callee] });
+                    try enter(w, target, location + 1);
+                    try w.writeAll("binding_call = 1;\n");
+                    if (ins.op == .call_borrow) {
+                        const destination = ins.op.call_borrow.destination;
+                        const reference = function.references[@backingInt(destination)];
+                        try w.print("prepare_reference_return({d}, {d}, {d});\n", .{ @backingInt(destination), @backingInt(reference.parent.?), @intFromBool(reference.mutable) });
+                    }
+                    var argument: usize = 0;
+                    for (target.references, 0..) |reference, index| if (reference.parameter) {
+                        try w.print("bind_reference({d}, {d}, {d});\n", .{ index, @backingInt(loans[argument]), @intFromBool(reference.mutable) });
+                        argument += 1;
+                    };
+                    try w.print("binding_call = 0; goto L{d};\n", .{offsets[callee]});
+                    falls_through = false;
+                },
+                .ret_ref => {
+                    try w.writeAll("return_target = leave_reference(); goto dispatch_return;\n");
                     falls_through = false;
                 },
                 .ret => {
@@ -263,7 +319,7 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
         }
     }
     try w.writeAll("dispatch_return: switch (return_target) {\n");
-    for (program.functions, offsets) |function, offset| for (function.instructions, 0..) |ins, pc| if (ins.op == .call) {
+    for (program.functions, offsets) |function, offset| for (function.instructions, 0..) |ins, pc| if (ins.op == .call or ins.op == .call_refs or ins.op == .call_borrow) {
         try w.print("case {d}: goto L{d};\n", .{ offset + pc + 1, offset + pc + 1 });
     };
     try w.writeAll("default: host_failure(\"InternalError\"); } return 2;\n}\n");

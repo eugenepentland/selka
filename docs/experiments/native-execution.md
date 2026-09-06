@@ -30,8 +30,9 @@ also support construction, equality, calls, and exhaustive matching.
 [Packed tagged unions and results](native-variants.md) add supported payloads,
 matching, transfers, acknowledgement, and propagation.
 [Ordinary aggregates](native-aggregates.md) now support records, arrays, tables,
-conversions, updates, and boxed variants. Unsupported
-resource/capability/borrowing
+conversions, updates, and boxed variants. [Native references](native-references.md)
+add scoped borrowing, slices, parameters, and returned views. Unsupported
+resource/capability
 operations fail explicitly with E_NATIVE_FEATURE before any generated C is printed.
 Source type errors still use ordinary semantic diagnostics. There is no VM fallback.
 
@@ -77,9 +78,9 @@ through checking/lowering/emission, and explicit rejection of unsupported signat
 and operations. Actual CLI tests verify emission, source errors, native-feature
 errors without partial C output, and wrong-command option rejection.
 
-`tests/native_cases.py` now compiles and executes 51 single-file and 10 module
+`tests/native_cases.py` now compiles and executes 64 single-file and 12 module
 fixtures at -O0 and -O2 with undefined-behavior sanitization and no sanitizer
-recovery. It performs 1,506 actual VM/native comparisons per compiler host mode
+recovery. It performs 2,434 actual VM/native comparisons per compiler host mode
 of exit status, stdout, trap locations, and module call frames. Scalar coverage includes:
 
 - Existing arithmetic, sum, and GCD fixtures; all integer widths and checked casts.

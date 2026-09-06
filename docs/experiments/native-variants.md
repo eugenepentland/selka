@@ -39,5 +39,6 @@ every instruction budget through completion. Zig tests exercise allocation failu
 cleanup, frontend rejection of unhandled/moved results and incomplete matches,
 unsupported owner payloads, and boxed fallback beyond a 127-bit layout.
 
-Resources, capabilities, and borrowing still require further native implementation. Unsupported signatures and operations
+[Ordinary-value borrowing](native-references.md) is now implemented. Resources and
+capabilities still require further native implementation. Unsupported signatures and operations
 produce E_NATIVE_FEATURE. This milestone does not complete the full native track.

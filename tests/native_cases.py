@@ -79,6 +79,14 @@ def project_cases(compiler, zig, root, temp):
         "main.my": "module main; import data as d; fn main()->i64{return d::read(d::make());}",
         "data.my": "module data;export R;export make;export read;struct R{values:[1]i64} fn make()->R{return new R{values:new [1]i64[7]};} fn read(r:R)->i64{return r.values[1];}",
     }))
+    fixtures.append(("references", {
+        "main.my": "module main; import views as v; fn main()->i64{let mut a=new [3]i64[2,3,5];let old=a;borrow mut a[0..3] as all{borrow mut v::tail(all) as selected{discard v::set(9,selected);}}return old[1]+a[1];}",
+        "views.my": "module views;export tail;export set;fn tail(x:&mut []i64)->&mut []i64 from x{borrow mut x[1..len_slice(x)] as selected{return selected;}} fn set(n:i64,x:&mut []i64)->i64{write_slice(x,0,n);return read_slice(x,0);}",
+    }))
+    fixtures.append(("reference-trap", {
+        "main.my": "module main; import views as v;fn main()->i64{let a=new [2]i64[2,3];borrow a[0..2] as all{return v::read(all);}}",
+        "views.my": "module views;export read;fn read(x:&[]i64)->i64{return read_slice(x,2);}",
+    }))
     pairs = 0
     for name, files in fixtures:
         directory = temp / ("module case " + name)
@@ -100,7 +108,7 @@ def project_cases(compiler, zig, root, temp):
                 native = invoke([executable, *options])
                 assert project_signature(vm) == project_signature(native), (name, mode, options, vm.stderr, native.stderr)
                 pairs += 1
-            if name in ("calls", "domains", "enums", "results", "aggregates"):
+            if name in ("calls", "domains", "enums", "results", "aggregates", "references"):
                 for budget in range(1, 100):
                     options = [f"--max-steps={budget}"]
                     vm = invoke([compiler, "run-project", entry, *options])
@@ -137,7 +145,7 @@ def main():
     compiler = args.compiler.resolve()
     root = Path(__file__).resolve().parents[1]
     fixtures = [(name, (root / "tests" / "fixtures" / f"{name}.my").read_text()) for name in ("arithmetic", "sum", "gcd")]
-    fixtures += [(name, (root / "examples" / f"{name}.my").read_text()) for name in ("arrays", "records", "conversions", "tables")]
+    fixtures += [(name, (root / "examples" / f"{name}.my").read_text()) for name in ("arrays", "records", "conversions", "tables", "references", "reference-parameters", "slices", "returned-references", "propagation")]
     fixtures.append(("integers", "fn widen(x: u32) -> u64 { return cast<u64>(x); } fn main() -> i64 { let a = 127i8; let b = 255u8; let c = 32767i16; let d = 65535u16; let e = 2147483647i32; let f = 4294967295u32; return cast<i64>(a) + cast<i64>(b) + cast<i64>(c) + cast<i64>(d) + cast<i64>(e) + cast<i64>(widen(f)); }"))
     expressions = ["9223372036854775807 + 1", "-9223372036854775808 - 1", "3037000500 * 3037000500", "-(-9223372036854775808)", "-9223372036854775808 / -1", "-9223372036854775808 % -1", "1 / 0", "1 % 0", "-7 / 3", "-7 % 3", "cast<i64>(255u8 + 1u8)", "cast<i64>(127i8 + 1i8)", "cast<i64>(18446744073709551615u64 * 18446744073709551615u64)", "cast<i64>(cast<u8>(-1))"]
     fixtures += [(f"arithmetic-{i}", f"fn main() -> i64 {{ return {expr}; }}") for i, expr in enumerate(expressions)]
@@ -192,6 +200,16 @@ def main():
         ("aggregate-partial", "result R{ok:i64,err:i64} struct Pair{a:R,b:R,n:i64} fn main()->i64{let p=new Pair{a:new R.ok(7),b:new R.err(9),n:3};let a=take_field(p,a);acknowledge a;let b=take_field(p,b);match b{R.ok(discard)=>{return 0;},R.err(n)=>{return n+read_field(p,n);}}}"),
         ("aggregate-propagation", "struct R{n:i64} result Small{err:i64,ok:i64} result Big{ok:R,err:i64} fn widen(x:Small)->Big{return new Big.ok(new R{n:100+try x});} fn narrow(x:Big)->Small{return new Small.ok((try x).n);} fn main()->i64{let r=narrow(widen(new Small.err(-9)));match r{Small.ok(n)=>{return n;},Small.err(n)=>{return 100+n;}}}"),
     ]
+    fixtures += [
+        ("reference-mixed", "fn edit(a:i64,x:&mut i64,b:i64,y:&i64)->i64{write_ref(x,read_ref(x)+a+b+read_ref(y));return read_ref(x);} fn main()->i64{let mut x=1;let y=7;borrow mut x as r{borrow y as s{discard edit(2,r,3,s);}}return x;}"),
+        ("reference-range", "fn main()->i64{let a=new [2]i64[1,2];borrow a[-1..1] as r{return cast<i64>(len_slice(r));}}"),
+        ("reference-read-bounds", "fn main()->i64{let a=new [2]i64[1,2];borrow a[1..2] as r{return read_slice(r,1);}}"),
+        ("reference-write-bounds", "struct R{x:i64} fn main()->i64{let mut a=new [1]R[new R{x:7}];borrow mut a[0..1] as r{write_slice(r,-1,new R{x:9});}return 0;}"),
+        ("reference-empty", "fn main()->i64{let a=new [0]i64[];borrow a[0..0] as r{return cast<i64>(len_slice(r));}}"),
+        ("reference-shared", "fn sum(a:&i64,b:&i64)->i64{return read_ref(a)+read_ref(b);} fn main()->i64{let x=7;borrow x as r{borrow r as child{return read_ref(r)+sum(child,r);}}}"),
+        ("reference-recursive", "fn count(n:i64,x:&mut i64)->i64{if n==0{return read_ref(x);}write_ref(x,read_ref(x)+1);return count(n-1,x);} fn main()->i64{let mut x=0;borrow mut x as r{return count(40,r);}}"),
+        ("reference-return-whole", "struct R{x:i64} fn same(x:&mut R)->&mut R from x{return x;} fn main()->i64{let mut x=new R{x:7};let old=x;borrow mut x as r{borrow mut same(r) as selected{write_ref(selected,new R{x:9});}}return old.x+x.x;}"),
+    ]
     pairs = 0
     with tempfile.TemporaryDirectory(prefix="mylang-native-parity-") as temp:
         temp = Path(temp)
@@ -213,7 +231,7 @@ def main():
                     native = invoke([executable, *options])
                     assert signature(vm) == signature(native), (name, mode, options, vm.stderr, native.stderr)
                     pairs += 1
-                if name == "calls" or name.startswith(("variant-", "result-")) or name in ("arrays", "records", "conversions", "tables", "aggregate-result", "aggregate-partial", "aggregate-propagation", "aggregate-empty"):
+                if name == "calls" or name.startswith(("variant-", "result-")) or name in ("arrays", "records", "conversions", "tables", "aggregate-result", "aggregate-partial", "aggregate-propagation", "aggregate-empty", "references", "reference-parameters", "slices", "returned-references", "propagation", "reference-mixed", "reference-empty", "reference-shared", "reference-return-whole"):
                     for budget in range(1, 200):
                         options = [f"--max-steps={budget}"]
                         vm = invoke([compiler, "run", source, *options])

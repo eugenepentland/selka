@@ -2204,3 +2204,47 @@ Native borrowing/resources/capabilities/pools/arenas, generics, domain codecs, c
 foreign wrappers, source/input integration, finer incremental compilation, ordinary-
 program review, and the other unfinished roadmap work remain pending. Guardian was
 not exercised; hosted CI has not run. The full roadmap goal remains active.
+
+## 2026-09-06: Native ordinary-value borrowing and returned views
+
+Extended C emission with scoped shared/exclusive loans, reborrows, reference/slice
+parameters, checked slice ranges/access/writes, and returned-reference contracts.
+Stable per-frame owner and reference storage survives frame-vector growth. Root
+loans lock the full owner; exclusive parents suspend while children are active,
+shared parents remain readable, and child/owner access checks preserve the VM rules.
+Writes replace values or create updated arrays, preserving existing value snapshots.
+
+Calls place ordinary arguments in their source parameter slots and reborrow reference
+arguments separately. Returned views capture the declared caller owner's range,
+end callee loans, and create a fresh caller-side child loan. Normal frame exit checks
+that references are inactive; terminal cleanup frees reference/local storage and
+aggregate allocations without traversing stale parent pointers. Native reference
+values remain inaccessible as ordinary guest values, and existing static lifetime,
+provenance, type, and exclusivity checks run before emission. Buffer/resource/pool/
+arena operations still require their remaining native implementation.
+
+All 20 build steps pass in Debug and ReleaseFast: 535 Zig tests (478 core, 57 CLI),
+2,434 VM/native comparisons per compiler host mode across 64 single-file and 12
+module fixtures, eight verification tests, 29 Python/compiler wire comparisons,
+and all existing schema/codec/input/cache/module/duplicate drivers. Executed cases
+cover mixed value/reference arguments, shared aliases, recursive reborrows across
+frame growth, empty and narrowed slices, bounds traps, whole-record reference
+returns, nested returned slices, propagation cleanup, snapshot preservation, and
+cross-module locations/call frames. Small cases compare every instruction budget
+at native -O0/-O2 with UBSan. Compiler allocation-failure tests and static rejection
+cases also pass. The native returned-references example prints 20.
+
+The expanded native memory driver passes independently with both compiler host
+modes after adding recursive frame-growth fault coverage. It now injects 236
+allocation failures across native -O0/-O2, including active reborrows and returned
+views, and verifies zero outstanding runtime allocation bytes under AddressSanitizer
+and UBSan. Normal/trap/step/frame cleanup and the retained-snapshot 20,000-update
+memory bound also pass. Tests use the project filesystem for temporary native
+outputs via TMPDIR, retaining the exact pinned Zig and sanitizer settings.
+
+Formatting, Python syntax, and whitespace checks pass. README, native experiment
+documents, roadmap, and both plan copies are synchronized. Native resources and
+capabilities, pools/arenas, generics, domain codecs, foreign callable wrappers,
+source/input integration, finer incremental compilation, ordinary-program review,
+and other unfinished roadmap work remain pending. Guardian was not exercised;
+hosted CI has not run. The full roadmap goal remains active.

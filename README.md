@@ -341,4 +341,6 @@ Native [packed unions and results](docs/experiments/native-variants.md) support
 nested scalar payloads, matching, transfers, acknowledgement, and propagation
 within a 127-bit layout. [Native aggregates](docs/experiments/native-aggregates.md)
 add records, arrays, tables, conversions/updates, and boxed variants beyond this
-limit. Native borrowing and resources remain pending.
+limit. [Native borrowing and slices](docs/experiments/native-references.md) now support
+scoped loans, parameters, returned views, and snapshot-preserving writes. Native
+resources remain pending.

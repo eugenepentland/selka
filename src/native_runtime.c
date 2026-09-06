@@ -27,17 +27,33 @@ struct Aggregate {
     Aggregate *previous, *next, *pending;
     Slot fields[];
 };
-typedef struct { Slot *locals; size_t base, target, function, call_site, local_count; } Frame;
+typedef struct { Slot value; size_t shared; int exclusive; } Local;
+typedef struct Reference Reference;
+struct Reference {
+    Local *owner;
+    Reference *parent;
+    size_t children, start, length;
+    int active, mutable, slice;
+};
+typedef struct {
+    Local *locals;
+    Reference *references;
+    size_t base, target, function, call_site, local_count, reference_count;
+    Reference *return_destination, *return_parent;
+    Reference captured;
+    int return_mutable, has_capture;
+} Frame;
 static Aggregate *objects;
 static Slot *values;
 static size_t nv, cv, nf, cf, site;
 static Frame *frames;
+static int binding_call;
 static uint64_t steps, max_steps = 10000000, max_frames = 1024;
 static const char *const *source_paths;
 static const char *const *function_names;
 static const size_t *source_lines, *source_columns;
 static void cleanup(void) {
-    while (nf) free(frames[--nf].locals);
+    while (nf) { --nf; free(frames[nf].references); free(frames[nf].locals); }
     /* All heap objects are registered, including temporary and partial values.
        Emergency cleanup frees the registry directly without traversing edges. */
     while (objects) { Aggregate *next = objects->next; free(objects); objects = next; }
@@ -50,13 +66,13 @@ static void host_failure(const char *message) {
 }
 static void trap(const char *code) {
     fprintf(stderr, "%s:%zu:%zu: error[%s]\n", source_paths[site], source_lines[site], source_columns[site], code);
-    size_t location = site, shown = 0;
-    for (size_t i = nf; i && shown < 16; --i, ++shown) {
+    size_t location = site, shown = 0, visible = nf - (binding_call ? 1 : 0);
+    for (size_t i = visible; i && shown < 16; --i, ++shown) {
         Frame f = frames[i - 1];
         fprintf(stderr, "  at %s (%s:%zu:%zu)\n", function_names[f.function], source_paths[location], source_lines[location], source_columns[location]);
         location = f.call_site;
     }
-    if (nf > shown) fprintf(stderr, "  ... %zu frames omitted\n", nf - shown);
+    if (visible > shown) fprintf(stderr, "  ... %zu frames omitted\n", visible - shown);
     cleanup(); exit(1);
 }
 static void *grow(void *old, size_t *capacity, size_t needed, size_t size) {
@@ -129,14 +145,19 @@ static V pop(void) {
 static void clear_values(size_t base) {
     while (nv > base) release_value(values[--nv]);
 }
-static void store_local(size_t index, Slot value) {
-    Slot *local = &frames[nf - 1].locals[index];
-    release_value(*local); *local = value;
+static Local *local_access(size_t index, int write) {
+    Local *local = &frames[nf - 1].locals[index];
+    if (local->exclusive || (write && local->shared)) trap("R_BORROW_CONFLICT");
+    return local;
 }
-static void load_local(size_t index) { push_value(copy_value(frames[nf - 1].locals[index])); }
+static void store_local(size_t index, Slot value) {
+    Local *local = local_access(index, 1);
+    release_value(local->value); local->value = value;
+}
+static void load_local(size_t index) { push_value(copy_value(local_access(index, 0)->value)); }
 static void move_local(size_t index) {
-    Slot *local = &frames[nf - 1].locals[index];
-    Slot value = *local; *local = (Slot){0}; push_value(value);
+    Local *local = local_access(index, 1);
+    Slot value = local->value; local->value = (Slot){0}; push_value(value);
 }
 static Slot field_value(Slot value, size_t index) {
     if (!value.object || index >= value.object->count) host_failure("InternalError");
@@ -147,7 +168,7 @@ static void get_field(size_t index) {
     release_value(owner); push_value(value);
 }
 static void take_field(size_t index, size_t field) {
-    Slot *local = &frames[nf - 1].locals[index];
+    Slot *local = &local_access(index, 1)->value;
     if (!local->object || field >= local->object->count) host_failure("InternalError");
     if (local->object->refs != 1) {
         Slot unique = clone_value(*local); release_value(*local); *local = unique;
@@ -200,23 +221,154 @@ static Slot boxed_variant(size_t tag, Slot payload, int has_payload) {
     if (has_payload) object->fields[0] = payload;
     return (Slot){0, object};
 }
-static void enter(size_t function, size_t locals, size_t arguments, size_t target) {
+static Reference *active_reference(Reference *reference) {
+    if (!reference || !reference->active) trap("R_REFERENCE_LIFETIME");
+    return reference;
+}
+static Reference *usable_reference(Reference *reference) {
+    active_reference(reference);
+    if (reference->mutable && reference->children) trap("R_BORROW_SUSPENDED");
+    return reference;
+}
+static void child_reference(Reference *destination, Reference *parent, int mutable, int slice, size_t start, size_t length) {
+    if (destination->active) trap("R_REFERENCE_LIFETIME");
+    usable_reference(parent);
+    if (mutable && !parent->mutable) trap("R_REFERENCE_READ_ONLY");
+    if (parent->children == SIZE_MAX) host_failure("IdentityExhausted");
+    ++parent->children;
+    *destination = (Reference){.owner=parent->owner, .parent=parent, .start=start, .length=length,
+        .active=1, .mutable=mutable, .slice=slice};
+}
+static void begin_reference(size_t id, size_t owner, size_t parent_id, int mutable, int slice, int narrow) {
+    Frame *frame = &frames[nf-1];
+    Reference *destination = &frame->references[id];
+    if (destination->active) trap("R_REFERENCE_LIFETIME");
+    Reference *parent = parent_id == SIZE_MAX ? NULL : active_reference(&frame->references[parent_id]);
+    Local *local = parent ? parent->owner : &frame->locals[owner];
+    size_t start = 0, length = 0;
+    if (slice) {
+        if (parent && parent->slice) { start = parent->start; length = parent->length; }
+        else {
+            if (!local->value.object) host_failure("InternalError");
+            length = local->value.object->count;
+        }
+        if (narrow) {
+            V end = pop(), begin = pop();
+            if (begin < 0 || end < begin || (U)end > length) trap("R_SLICE_BOUNDS");
+            start += (size_t)begin; length = (size_t)(end - begin);
+        }
+    }
+    if (parent) {
+        child_reference(destination, parent, mutable, slice, start, length);
+    } else {
+        if (local->exclusive || (mutable && local->shared)) trap("R_BORROW_CONFLICT");
+        if (mutable) local->exclusive = 1;
+        else {
+            if (local->shared == SIZE_MAX) host_failure("IdentityExhausted");
+            ++local->shared;
+        }
+        *destination = (Reference){.owner=local, .start=start, .length=length, .active=1, .mutable=mutable, .slice=slice};
+    }
+}
+static void end_reference(size_t id) {
+    Reference *reference = active_reference(&frames[nf-1].references[id]);
+    if (reference->children) trap("R_REFERENCE_LIFETIME");
+    if (reference->parent) --reference->parent->children;
+    else if (reference->mutable) reference->owner->exclusive = 0;
+    else --reference->owner->shared;
+    *reference = (Reference){0};
+}
+static void read_reference(size_t id) {
+    Reference *reference = usable_reference(&frames[nf-1].references[id]);
+    push_value(copy_value(reference->owner->value));
+}
+static void write_reference(size_t id) {
+    Slot value = pop_value();
+    Reference *reference = usable_reference(&frames[nf-1].references[id]);
+    if (!reference->mutable) trap("R_REFERENCE_READ_ONLY");
+    release_value(reference->owner->value); reference->owner->value = value;
+}
+static void length_slice(size_t id) {
+    Reference *reference = usable_reference(&frames[nf-1].references[id]);
+    push((V)reference->length);
+}
+static size_t slice_index(Reference *reference, V index) {
+    if (index < 0 || (U)index >= reference->length) trap("R_SLICE_BOUNDS");
+    return reference->start + (size_t)index;
+}
+static void read_slice(size_t id) {
+    V index = pop();
+    Reference *reference = active_reference(&frames[nf-1].references[id]);
+    size_t selected = slice_index(reference, index);
+    usable_reference(reference);
+    push_value(field_value(reference->owner->value, selected));
+}
+static void write_slice(size_t id) {
+    Slot value = pop_value(); V index = pop();
+    Reference *reference = active_reference(&frames[nf-1].references[id]);
+    size_t selected = slice_index(reference, index);
+    usable_reference(reference);
+    if (!reference->mutable) trap("R_REFERENCE_READ_ONLY");
+    Slot updated = clone_value(reference->owner->value);
+    release_value(updated.object->fields[selected]); updated.object->fields[selected] = value;
+    release_value(reference->owner->value); reference->owner->value = updated;
+}
+static void enter(size_t function, size_t locals, size_t arguments, size_t target, size_t references, const size_t *slots) {
     if (nf >= max_frames) trap("R_FRAME_LIMIT");
     if (arguments > nv || (nf && arguments > nv - frames[nf - 1].base)) host_failure("InternalError");
-    if (nf == SIZE_MAX || locals > SIZE_MAX / sizeof(Slot)) host_failure("OutOfMemory");
+    if (nf == SIZE_MAX || locals > SIZE_MAX / sizeof(Local) || references > SIZE_MAX / sizeof(Reference)) host_failure("OutOfMemory");
     frames = grow(frames, &cf, nf + 1, sizeof(Frame));
-    Slot *storage = calloc(locals ? locals : 1, sizeof(Slot));
+    Local *storage = calloc(locals ? locals : 1, sizeof(Local));
     if (!storage) host_failure("OutOfMemory");
     size_t base = nv - arguments;
-    for (size_t i = 0; i < arguments; ++i) storage[i] = values[base + i];
-    frames[nf++] = (Frame){storage, base, target, function, site, locals};
+    for (size_t i = 0; i < arguments; ++i) storage[slots ? slots[i] : i].value = values[base + i];
+    frames[nf++] = (Frame){.locals=storage, .base=base, .target=target, .function=function,
+        .call_site=site, .local_count=locals, .reference_count=references};
     nv = base;
+    if (references) {
+        frames[nf-1].references = calloc(references, sizeof(Reference));
+        if (!frames[nf-1].references) host_failure("OutOfMemory");
+    }
+}
+static void bind_reference(size_t destination, size_t source, int mutable) {
+    Reference *parent = active_reference(&frames[nf-2].references[source]);
+    child_reference(&frames[nf-1].references[destination], parent, mutable, parent->slice, parent->start, parent->length);
+}
+static void prepare_reference_return(size_t destination, size_t parent, int mutable) {
+    Frame *frame = &frames[nf-1], *caller = &frames[nf-2];
+    frame->return_destination = &caller->references[destination];
+    if (frame->return_destination->active) trap("R_REFERENCE_LIFETIME");
+    frame->return_parent = usable_reference(&caller->references[parent]);
+    frame->return_mutable = mutable;
+}
+static void capture_reference(size_t id) {
+    Frame *frame = &frames[nf-1];
+    Reference *reference = usable_reference(&frame->references[id]);
+    if (!frame->return_parent || frame->has_capture || reference->owner != frame->return_parent->owner) trap("R_REFERENCE_LIFETIME");
+    frame->captured = *reference; frame->has_capture = 1;
+}
+static Frame leave_frame(void) {
+    Frame frame = frames[nf-1];
+    for (size_t i = 0; i < frame.reference_count; ++i)
+        if (frame.references[i].active) trap("R_REFERENCE_LIFETIME");
+    for (size_t i = 0; i < frame.local_count; ++i) {
+        if (frame.locals[i].exclusive || frame.locals[i].shared) trap("R_BORROW_CONFLICT");
+        release_value(frame.locals[i].value);
+    }
+    free(frame.references); free(frame.locals); --nf; clear_values(frame.base);
+    return frame;
 }
 static size_t leave(Slot result) {
-    Frame f = frames[--nf];
-    for (size_t i = 0; i < f.local_count; ++i) release_value(f.locals[i]);
-    free(f.locals); clear_values(f.base);
-    push_value(result); return f.target;
+    Frame frame = leave_frame();
+    push_value(result); return frame.target;
+}
+static size_t leave_reference(void) {
+    Frame *current = &frames[nf-1];
+    if (!current->has_capture || !current->return_destination || !current->return_parent) trap("R_REFERENCE_LIFETIME");
+    Frame frame = leave_frame();
+    child_reference(frame.return_destination, frame.return_parent, frame.return_mutable,
+        frame.captured.slice, frame.captured.start, frame.captured.length);
+    return frame.target;
 }
 static void tick(size_t location) {
     site = location;

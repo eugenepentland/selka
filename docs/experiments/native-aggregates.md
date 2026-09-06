@@ -13,8 +13,8 @@ pointer. Records and arrays use reference-counted immutable field storage.
 Small variants retain their packed representation; variants containing aggregate
 payloads or exceeding 127 bits use boxed storage. Width is no longer a reason
 to reject an otherwise-supported variant. The complete dependency graph is still
-checked: resources, buffers, pools, handles, capabilities, and borrowing remain
-unsupported by this backend.
+checked: resources, buffers, pools, handles, and capabilities remain unsupported by this
+backend. [Ordinary-value borrowing and slices](native-references.md) are now supported.
 
 Copies retain storage. Updates create new field storage and retain unchanged
 children, preserving previous copies and shared subvalues. Assignment and scope
@@ -49,7 +49,8 @@ earlier copy. These are executed measurements of the chosen fixtures, not a
 universal memory bound or allocator-cost claim.
 
 Zig tests cover compiler allocation failures and explicit rejection of unsupported
-owner payloads. The existing borrowed/resource tests still require E_NATIVE_FEATURE.
+owner payloads. The existing resource tests still require E_NATIVE_FEATURE; ordinary-value
+borrowing now has separate native acceptance.
 
 Examples can use the ordinary builder:
 
@@ -60,5 +61,5 @@ python3 scripts/native.py examples/arrays.my -o .zig-cache/native-arrays
 ```
 
 This completes ordinary aggregate execution in the experimental C route.
-Native borrowing, owned resources/capabilities, pools/arenas, and the other
+Native owned resources/capabilities, pools/arenas, and the other
 unfinished roadmap tracks remain pending.
