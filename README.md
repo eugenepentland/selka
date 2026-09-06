@@ -1,8 +1,18 @@
 # mylang
 
-An experimental systems language compiler and bytecode VM written in Zig.
-The implementation follows [the revision 2 plan](docs/plan.md). The working
+An experimental statically checked, interpreted language implemented in Zig.
+The custom bytecode VM is the primary runtime while we develop the language's
+semantics and test whether agents can write and repair correct code more reliably.
+The implementation follows [the revision 3 plan](docs/plan.md) and
+[interpreter-first roadmap](docs/experiments/interpreter-first.md). The working
 language name and `.my` extension are provisional.
+
+Next priorities are safe generic views/lifetimes, diagnostic repair quality,
+typed host-library calls, and a board-validation or constraint-processing trial.
+Expensive geometry can remain in Zig/C/Rust behind explicit typed wrappers.
+Completed C/native experiments remain available; further native compilation,
+LLVM, and direct x86_64 Linux work are deferred until the design and measurements
+justify them. Native feature descriptions below record the existing experiments.
 
 ## Toolchain
 
@@ -33,6 +43,10 @@ zig build test --summary all
 zig build test -Doptimize=ReleaseFast --summary all
 zig build fmt-check
 ```
+
+The full `zig build test` commands above still include native integration suites.
+A focused interpreter acceptance workflow is the next infrastructure task; this
+roadmap revision does not change the build targets.
 
 The example prints `7`. A successful program result is printed to stdout, not
 used as the exit code. Success exits 0, source errors and guest traps exit 1,

@@ -1,31 +1,98 @@
-# Systems language: goals and Zig MVP implementation plan
+# Language design and implementation plan
 
-Status: revision 2; scalar MVP M0–M5 implemented and audited on 2026-09-05. Post-MVP implementation is tracked in section 15.
+Status: revision 3, interpreter-first direction adopted on 2026-09-06. Scalar MVP M0–M5 and substantial post-MVP experiments are implemented. The current priorities below supersede older sequencing and dated “next” statements; completed experiments remain historical evidence.
 
 Working executable name: `mylang`. Working source extension: `.my`.
 
 Purpose: a plan for an experimental implementation, not a finished language specification.
 
-Revision 2 adds explicit scalar-result discard and two advisory binding diagnostics to the MVP. It proposes complete record conversions, external capabilities, resource obligations, nominal domain types, exhaustive mappings, and compiler-assisted duplicate discovery for later experiments. Sections 3 and 15 distinguish the MVP commitments from those proposals; section 18 explains the Guardian-derived design and its limits. M0–M5 are complete; section 16 preserves the original starting task for context.
+Revision 2 introduced Guardian-derived quality proposals. Revision 3 prioritizes
+language semantics, diagnostics, typed host calls, and real application evidence.
+Native compilation is deferred until the design is mature and a measured need
+justifies revisiting it. Sections 4–14 preserve the original scalar MVP contract;
+dated implementation entries record what was demonstrated at each checkpoint.
 
 ## 1. Project direction
 
-Build a small systems programming language that makes execution costs, memory ownership, and compilation work understandable. The eventual targets include native tools, data-heavy algorithms, and embedded software.
+Build a small, statically checked, interpreted language that helps agents write,
+understand, and modify correct code with fewer mistakes and less repair effort.
+Use a small custom bytecode VM implemented in Zig as the primary runtime while
+the design develops. The VM executes real application code; it is also useful for
+source-level debugging and inspecting semantics.
 
-Make important domain rules explicit enough that the compiler can identify affected code when those rules change. Favor one declared source for knowledge that must remain consistent, complete handling of data and variants, and visible dependencies. Code similarity and size are useful review signals; they do not establish whether a program is correct or an abstraction is appropriate.
+The existing parser, checker, separate typed IR, and VM remain the foundation.
+Checking and lowering to bytecode are compilation steps within this interpreted
+workflow. Zig builds the host implementation; it does not consume guest bytecode.
+Keep Guardian on the Zig implementation with blocking checks and no frozen
+violation baselines. Language guarantees and advisory application-code reports
+remain separate from Guardian's implementation-quality policies.
 
-The first implementation will be written in Zig. It will compile a deliberately small subset of the new language into a custom instruction set and execute those instructions in a VM also written in Zig.
+Favor a small number of strong, understandable rules: distinct IDs and units,
+exhaustive tagged unions, explicit optional values and checked errors, definite
+initialization, checked arithmetic and indexing, ownership and borrowing, explicit
+mutation, and controlled effects. Existing experiments cover many of these;
+remaining syntax and usability must be evaluated on realistic programs. More
+restrictions, obscure inference, or boilerplate are not success criteria. Keep
+inferred duplication and complexity advisory; share domain knowledge through
+explicit types, schemas, and interfaces where that improves the program.
 
-This is our bytecode, interpreted by our VM. It is not bytecode consumed by the Zig compiler. Zig builds the host executable; that executable processes programs written in the new language.
+### Current implementation order
 
-The first experiment should answer:
+1. Establish a focused interpreter acceptance workflow while retaining existing
+   native tests as an optional suite. Finish local array/buffer view checking in
+   generic bodies and region-origin checks needed for local arenas/reset; keep
+   unsupported cases explicit until lifetime checks are in place.
+2. Improve structured diagnostics and repair examples alongside those features:
+   stable codes and source locations, plus creation, borrow, move, and conflicting
+   use locations where relevant. Audit optional-value ergonomics using the
+   existing variant model before adding syntax.
+3. Add a small, explicitly registered typed host-library interface into the VM,
+   with handwritten Zig wrappers, declared effects, ownership, borrowed-buffer
+   lifetimes, and typed failures. Existing built-in providers are a starting
+   point; general domain-function registration is still pending.
+4. Run a board-validation or constraint-processing trial in the language, keeping
+   expensive geometry/routing kernels in Zig (or C/Rust behind a wrapper). Begin
+   with an explicit input snapshot and add only host operations the trial needs.
+5. Use trial evidence to prioritize generic constraints/tooling, bounded source
+   serialization, and finer incremental checks. These remain open; completing all
+   abstraction experiments is not a prerequisite for starting the trial.
 
-1. Can we build a clean, understandable compiler pipeline?
-2. Does the basic syntax feel comfortable when writing small programs?
-3. Can we add a feature without entangling parsing, type checking, and execution?
-4. Do failures produce useful source-level explanations?
+Measure pre-execution mistakes caught, next-attempt diagnostic repair success,
+unrelated edits and unsafe workarounds, and independent behavioral-test results.
+Compare equivalent tasks against an existing implementation, recording failed
+attempts as well as successes. Language usefulness remains an untested hypothesis
+until this application evidence exists.
 
-It will not yet establish native performance, memory safety for pointer programs, fast incremental rebuilding, or a practical ownership system. Those need separate experiments.
+### Runtime and future backends
+
+Keep VM semantics clear and execution bounded. Do not schedule instruction fusion,
+adaptive optimization, JIT work, or interpreter speed competitions. Profile actual
+application workloads before optimizing. Wasm remains an optional future runtime
+experiment if its sandboxing or infrastructure solves a concrete need.
+
+A typed host call lets interpreted code use an existing native library. It does
+not require compiling the language to native code. Host wrappers are trusted:
+the checker cannot prove arbitrary Zig/C/Rust safe. Keep raw pointers inside that
+boundary and define input/output ownership, reference validity, and failure
+behavior before exposing a function to guest code.
+
+Retain completed C emission, native ABI/binding work, and parity fixtures as
+experimental assets and historical evidence. Further native backend coverage,
+borrowed/capability native ABIs, native compilation performance, LLVM, and direct
+x86_64 Linux output are deferred, with no current delivery date. New language
+features need interpreter acceptance, not new native parity as a completion gate.
+Existing native commands may support only their documented experimental subset.
+
+Keep typed IR independent of VM bytecode. Types, ownership, cleanup, evaluation
+order, effects, overflow, and bounds behavior belong to the language definition.
+A future backend must implement those same rules. Revisit native compilation
+when representative projects establish stable semantics and measurements show a
+need that the typed host boundary does not adequately address.
+
+The detailed acceptance and trial design is in
+[the interpreter-first roadmap](experiments/interpreter-first.md). This revision
+changes priorities, not implemented behavior. In particular, `zig build test`
+still includes native integration suites until the workflow split is implemented.
 
 ## 2. Long-term language goals
 
@@ -85,7 +152,7 @@ Source locations, readable diagnostics, an instruction dump, and regression fixt
 
 Distinguish language errors from advisory analysis and project verification. Preserve resolved identities so later tools can inspect actual references and types. Ship one formatter when tooling expands. Keep inferred duplication, code-size metrics, and complexity thresholds advisory by default; tests, mutation testing, benchmarks, and change-history policies belong in the project-verification layer.
 
-## 3. Committed decisions versus open questions
+## 3. Original MVP commitments and historical open questions
 
 | Decision | Status |
 | --- | --- |
@@ -612,7 +679,11 @@ Do not judge potential native performance from the stack interpreter's speed. Us
 
 When advisory analysis is introduced, measure its incremental time separately from required semantic checking. Assess duplicate findings on reviewed examples, recording whether a finding exposed drift, suggested worthwhile reuse, or merely matched unrelated code. Include test fixtures and intentionally separate implementations in the evaluation corpus. Similarity scores, warning counts, and reductions in line count are not themselves evidence of improved correctness.
 
-## 15. Next experiments after the MVP
+## 15. Post-MVP experiment record
+
+Section 1 and [current tracking](experiments/roadmap.md) define the active order.
+The dated notes below preserve past scope and validation; their pending native
+work is deferred under revision 3.
 
 Implementation update (2026-09-05): exact scalar duplicate discovery in track T
 is now implemented as a separate advisory command. [Bounded approximate discovery](experiments/approximate-discovery.md) also reports near matches with canonical edits and explicit work limits. [Static quality reports](experiments/quality-reports.md) now expose resolved calls, binding counts, and configurable structural metrics separately from runtime coverage. [Canonical formatting](experiments/formatter.md) now preserves tokens/comments and supports syntax-only formatting checks. [Project verification](experiments/verification-driver.md) now executes an explicit manifest with filtered-scope reporting and separate correctness/timing evidence. See
@@ -640,11 +711,11 @@ and borrow cleanup. [Owned-buffer transfers and partial-acquisition cleanup](exp
 | C: ownership, capabilities, and effects | Owned buffers, resource transfer, partial-construction cleanup, allocator/external capabilities, small no-I/O and no-allocation contracts, arenas/pools | Are acquired resources cleaned up on recoverable failure, and can a caller verify transitive resource and external-access costs? |
 | D: errors and abstraction | Typed fallible results, propagation, deliberate-error acknowledgement, limited generics, typed handles | Are important results handled explicitly, and do abstractions preserve ownership, effects, and understandable diagnostics? |
 | M: modules and interfaces | Explicit exports, private implementation, resolved imports, and optional dependency-direction policies | Can shared domain rules live behind usable interfaces without exposing unrelated implementation details? |
-| E: native execution | One native code-generation route and shared semantic fixtures | Does native execution implement the same observable rules as the VM? |
+| E: native execution — deferred | Retain completed C/native experiments; LLVM and direct machine code remain future options | Reopen only after stable application semantics and measured need; no current native acceptance milestone. |
 | F: compile-time work, schemas, and incremental builds | Restricted evaluation, declared inputs, typed serialization/schema derivation, generated bindings, dependency recording, invalidation | Do generated representations stay consistent, and can generation cost and rebuild causes be explained and measured? |
 | T: compiler-assisted quality tooling | One formatter; exact structural duplicate discovery followed by approximate matching; reference/complexity reports; a separate project-verification driver | Do findings lead to useful improvements without unstable verdicts or forced abstractions? |
 
-Treat this as an experimental sequence, not a promise to finish each row before learning from the next. A small native backend experiment may be useful earlier if it exposes a representation problem.
+Use section 1’s interpreter-first order. Learn from the application trial before expanding abstractions; native backend experiments are deferred.
 
 Experiments M and T are companion tracks, not prerequisites for the scalar MVP or every later feature. Introduce module support when programs need shared interfaces. Begin duplicate discovery after real programs provide a reviewable corpus. Bring a minimal recoverable-error representation from D into C as needed to test allocation failure and cleanup; the full error/generic design can follow. Typed serialization requires the aggregate and variant model; cross-language generators should follow the declared-input and resource-budget discipline of F.
 
@@ -652,7 +723,7 @@ Before adding pointers, choose a VM memory representation with allocation identi
 
 A compiler written in a manually managed language does not prevent the new language from enforcing memory safety. Conversely, this scalar VM does not prove that a future borrow checker is sound.
 
-For native code generation, evaluate one route when there is a concrete program to compile. LLVM integration or emitting C are possible experiments; neither belongs in the first milestone. Do not begin with a custom machine-code backend, register allocator, linker, and debugger integration simultaneously.
+Future native work requires mature semantics and evidence of need from representative interpreted projects. Completed C experiments remain available; LLVM or direct x86_64 Linux output has no current milestone. A concrete program alone does not require reopening native development.
 
 The interpreter may later help implement compile-time evaluation, but runtime interpretation alone does not supply deterministic inputs, target-aware semantics, or caching. Cross-compilation requires guest types and layout to follow the target, not the host.
 

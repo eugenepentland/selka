@@ -1,9 +1,24 @@
 # Implementation progress
 
-The complete scalar MVP in plan sections 4–13 is implemented and audited.
-Post-MVP A1, A2, B, and exact duplicate discovery are also implemented. Remaining
-tracks in sections 15 and 18 are still pending. Earlier entries below describe
-their historical milestone checkpoints.
+The scalar MVP and substantial post-MVP experiments are implemented. The
+[revision 3 plan](plan.md) and [current roadmap](experiments/roadmap.md) define
+active priorities; the dated entries below preserve milestone evidence.
+
+## 2026-09-06: Interpreter-first direction adopted
+
+The custom Zig bytecode VM is the primary runtime while the design develops.
+Further native compilation and native ABI expansion are deferred; completed C
+emission, bindings, and parity evidence remain historical assets. No runtime or
+build-target behavior changed in this documentation revision.
+
+Next: a focused interpreter acceptance workflow, generic local view/region checks,
+diagnostic provenance and repair fixtures, a typed registered host-call boundary,
+and a board-validation or constraint-processing trial with independent tests.
+Keep expensive geometry/routing in native host libraries. Measure errors caught,
+next-attempt repair success, unrelated edits/workarounds, and behavioral correctness
+before claiming improved agent reliability. General host registration and the
+application trial are pending; existing provider callbacks and native guest-call
+ABIs do not establish their completion. See [the trial design](experiments/interpreter-first.md).
 
 ## 2026-09-05: M0 and M1
 
