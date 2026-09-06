@@ -380,8 +380,10 @@ now support chunk backing, checked reset, and scope/return cleanup.
 [Native pools](docs/experiments/native-pools.md) add generation-checked handles,
 snapshots, operations, and shared quotas on root/arena storage.
 [Native clock/random providers](docs/experiments/native-providers.md) use explicit
-C adapters selected with the native builder’s `--provider` option. Native environment
-lookup and external resources remain pending.
+C adapters selected with the native builder’s `--provider` option.
+[Native environment lookup](docs/experiments/native-environment.md) extends that
+interface with bounded bytes, missing/empty distinctions, and independent snapshots.
+Native filesystem/network resources remain pending.
 
 The [ordinary application corpus](examples/corpus/README.md) adds a multi-module
 invoice calculator and packet decoder, tested against independent Python oracles.

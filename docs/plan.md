@@ -852,3 +852,12 @@ steps and 592 core/CLI tests, including 32 VM-checked provider comparisons and
 14 provider allocation-failure cases.
 Environment and external-resource native operations remain pending alongside the
 other unfinished roadmap work.
+
+
+## Native environment lookup
+
+Native environment lookup now uses explicit provider ABI v2 with bounded byte
+output, missing/empty distinctions, padding, and independent snapshots. Complete Debug and ReleaseFast acceptance passes all 30 build steps and 593
+core/CLI tests, including 38 VM-checked environment comparisons and 56 injected
+allocation failures plus builder/ABI rejection checks. Native filesystem/network resources and remaining roadmap
+work remain open.

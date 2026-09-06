@@ -200,8 +200,15 @@ static V pop(void) {
     return value.number;
 }
 static void grant_external(int kind) {
-    if (kind ? !providers.random_u64 : !providers.clock_now) host_failure("CapabilityUnavailable");
-    push(kind ? -2 : -1);
+    int available;
+    switch (kind) {
+        case 0: available = providers.clock_now != NULL; break;
+        case 1: available = providers.random_u64 != NULL; break;
+        case 2: available = providers.environment_get != NULL; break;
+        default: host_failure("InternalError"); return;
+    }
+    if (!available) host_failure("CapabilityUnavailable");
+    push(-1 - kind);
 }
 static int external_read(int kind, Slot *value) {
     V authority = pop();
@@ -331,6 +338,41 @@ static Slot boxed_variant(size_t tag, Slot payload, int has_payload) {
 }
 /* Guest capacity policy matches the VM's public default slot budget. Native
    storage layout can differ; capacity failures remain typed language results. */
+static Slot environment_lookup(size_t capacity, size_t ok, size_t error, size_t bytes_field, size_t length_field, size_t present_field) {
+    Slot name = pop_value(); V authority = pop();
+    if (authority != -3) trap("R_CAPABILITY");
+    if (!name.object) host_failure("InternalError");
+    size_t length = name.object->count;
+    if (capacity > SIZE_MAX - length) host_failure("OutOfMemory");
+    size_t size = length + capacity;
+    Aggregate *scratch = new_object(size / sizeof(Slot) + (size % sizeof(Slot) != 0), 0);
+    /* Registered raw bytes have no child slots to traverse during cleanup. */
+    scratch->count = 0;
+    uint8_t *key = (uint8_t *)scratch->fields, *bytes = key + length;
+    for (size_t i = 0; i < length; ++i) key[i] = (uint8_t)name.object->fields[i].number;
+    MylangEnvironmentResult result = {MYLANG_PROVIDER_UNAVAILABLE, 0, 0};
+    if (providers.environment_get)
+        result = providers.environment_get(providers.environment_context, key, length, bytes, capacity);
+    if (result.status == MYLANG_PROVIDER_OUT_OF_MEMORY) host_failure("OutOfMemory");
+    if (result.status != MYLANG_PROVIDER_OK) {
+        int status = result.status == MYLANG_PROVIDER_NO_CAPACITY ? 4 : (int)result.status;
+        if (status < 1 || status > 4) host_failure("InvalidProvider");
+        release_value(name); release_value((Slot){0, scratch});
+        return boxed_variant(error, (Slot){status, NULL}, 1);
+    }
+    if (result.present != 0 && result.present != 1) host_failure("InvalidProvider");
+    if (result.present && result.length > capacity) host_failure("InvalidProvider");
+    size_t written = result.present ? result.length : 0;
+    memset(bytes + written, 0, capacity - written);
+    Aggregate *array = new_object(capacity, 0);
+    for (size_t i = 0; i < capacity; ++i) array->fields[i].number = bytes[i];
+    Aggregate *entry = new_object(3, 0);
+    entry->fields[bytes_field] = (Slot){0, array};
+    entry->fields[length_field].number = (V)written;
+    entry->fields[present_field].number = result.present;
+    release_value(name); release_value((Slot){0, scratch});
+    return boxed_variant(ok, (Slot){0, entry}, 1);
+}
 static size_t guest_capacity_limit(void) { return SIZE_MAX / MYLANG_GUEST_VALUE_BYTES; }
 static Aggregate *buffer_owner(size_t owner, int write) {
     Aggregate *buffer = local_access(owner, write)->value.object;

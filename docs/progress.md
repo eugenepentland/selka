@@ -2729,3 +2729,20 @@ false-positive because the required split only appeased the policy.
 
 Environment and external-resource native operations, generics, source-level
 serialization, finer incremental compilation, and remaining roadmap work stay open.
+
+## 2026-09-06: Native environment provider acceptance
+
+Generated C now implements bounded environment lookup through explicit provider
+ABI v2. It preserves arbitrary byte names, missing versus present-empty values,
+zero padding, typed errors, and independent returned snapshots. Missing grants
+fail before guest execution. The builder rejects an old provider factory symbol.
+
+Complete Debug and ReleaseFast runs pass all 30 build steps and 593 core/CLI
+tests (533 core, 60 CLI). Environment acceptance passes 38 VM-checked comparisons
+and 56 injected allocation failures under address/undefined sanitizers at O0/O2.
+The two provider VM oracle tests run separately. Existing acceptance passes 2,616
+native value/module comparisons, 468 general allocation failures, and 32 scalar
+provider comparisons with 14 allocation failures.
+
+Native filesystem/network resources, generics, source serialization, finer
+incremental compilation, and the remaining roadmap work stay open.

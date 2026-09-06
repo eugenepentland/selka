@@ -274,3 +274,7 @@ root/arena cleanup; full Debug/ReleaseFast acceptance and sanitizer cleanup chec
 
 [Native clock/random providers](native-providers.md) now use explicit C adapters
 with typed results and missing-grant checks; full Debug/ReleaseFast acceptance passes.
+
+[Native environment lookup](native-environment.md) now preserves bounded bytes,
+missing/empty values, padding, snapshots, and explicit grants through provider ABI v2.
+Complete Debug/ReleaseFast acceptance passes.

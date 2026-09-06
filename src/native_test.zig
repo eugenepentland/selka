@@ -22,8 +22,8 @@ test "native scalar emission is deterministic and cleans every failed allocation
 // spec: PROJ-6
 test "native emission rejects unsupported operations and uncalled unsupported signatures" {
     for ([_][]const u8{
-        "fn unsupported(env: environment_cap) -> i64 { return 0; } fn main() -> i64 { return 7; }",
-        "fn main(env:environment_cap)->i64{return 0;}",
+        "fn unsupported(fs: filesystem_cap) -> i64 { return 0; } fn main() -> i64 { return 7; }",
+        "fn main(fs:filesystem_cap)->i64{return 0;}",
     }) |text| {
         var c = try language.Compilation.init(t.allocator, "native.my", text);
         defer c.deinit();
@@ -248,4 +248,20 @@ test "native clock emission preserves explicit grants and allocation cleanup" {
     try providerScenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), providerScenario, .{});
+}
+
+fn environmentScenario(allocator: std.mem.Allocator) !void {
+    var c = try language.Compilation.init(allocator, "environment.my", "struct E{present:bool,length:u64,bytes:[4]u8}result R{err:i64,ok:E}" ++
+        "fn main(env:environment_cap)->i64{match environment_get<R>(env,new [1]u8[75u8]){R.ok(e)=>{return cast<i64>(e.length);},R.err(e)=>{return e;}}}");
+    defer c.deinit();
+    const output = try c.emitC(allocator);
+    defer allocator.free(output);
+    try t.expect(std.mem.indexOf(u8, output, "grant_external(2);") != null);
+    try t.expect(std.mem.indexOf(u8, output, "push_value(environment_lookup(4, 1, 0, 2, 1, 0))") != null);
+}
+// spec: NATIVE-ENVIRONMENT-1
+test "native environment emission preserves named fields and allocation cleanup" {
+    try environmentScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), environmentScenario, .{});
 }

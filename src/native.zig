@@ -133,6 +133,7 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
             .allocator => try w.writeAll("push(1);\n"),
             .clock_cap => try w.writeAll("grant_external(0);\n"),
             .random_cap => try w.writeAll("grant_external(1);\n"),
+            .environment_cap => try w.writeAll("grant_external(2);\n"),
             else => return sink.fail(unsupported_feature, parameter.declaration, "native entry capability is unsupported"),
         }
     }
@@ -207,6 +208,7 @@ fn checkFunction(layout: native_layout.Layout, function: bc.Function, sink: *dia
         .acquire_buffer,
         .acquire_pool,
         .external_read,
+        .environment_get,
         .pool_operation,
         .cmp_handle,
         .begin_region,
@@ -333,6 +335,13 @@ fn writeOperation(context: InstructionOutput) !bool {
         .array_length => try w.writeAll("array_length();\n"),
         .read_field => |read| try w.print("push_value(field_value(local_access({d}, 0)->value, {d}));\n", .{ @backingInt(read.owner), read.field }),
         .take_field => |take| try w.print("take_field({d}, {d});\n", .{ @backingInt(take.owner), take.field }),
+        .environment_get => |operation| {
+            const shape = typed.environmentShape(operation.output, program.records).?;
+            const capacity = program.records[shape.bytes_type.recordIndex()].shape.array.?.length;
+            try w.print("push_value(environment_lookup({d}, {d}, {d}, {d}, {d}, {d}));\n", .{
+                capacity, shape.result.ok_tag, shape.result.error_tag, shape.bytes_field, shape.length_field, shape.flag_field,
+            });
+        },
         .external_read => |operation| {
             try w.print("Slot value = (Slot){{0}}; int status = external_read({d}, &value); if (status) value = (Slot){{status, NULL}};\n", .{@intFromBool(operation.kind == .random)});
             try statusResult(w, layout, operation.output);
