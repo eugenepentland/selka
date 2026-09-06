@@ -43,7 +43,8 @@ Acceptance must include uncalled invalid templates, consumed aliases, discarded
 results, missing handling on one branch, returning/fallthrough match arms,
 loop/short-circuit mismatches, overwrites, nested aggregate obligations and early
 propagation with live temporaries. Valid examples must execute both success/error
-paths through VM/native backends with matching source traces. Allocation sweeps
+paths through the VM with checked source traces. Native parity is outside the
+active interpreter-first roadmap. Allocation sweeps
 must cover checking and execution; no baseline or suppression can stand in for
 these missing abstract rules.
 
@@ -59,6 +60,7 @@ allocation-failure acceptance.
 [Concrete owned fields](generic-owned.md) now participate in whole/partial move
 state, cleanup and transitive cleanup-effect bounds. [Buffer/pool acquisition and mutation](generic-runtime.md) now check explicit
 authority and effects. [Provider operations](generic-providers.md) now enforce capability/result/effect
-contracts. Local borrowing/views and region scopes still need origin and lifetime
-tracking before being enabled. Generic result constructors and
+contracts. [Concrete local array/buffer views](generic-local-views.md) now preserve
+owner access and input provenance. Local arena/reset scopes still need allocator
+origin and escape checking before being enabled. Generic result constructors and
 associated success/error constraints remain pending independently.

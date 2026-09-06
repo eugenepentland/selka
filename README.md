@@ -7,7 +7,7 @@ The implementation follows [the revision 3 plan](docs/plan.md) and
 [interpreter-first roadmap](docs/experiments/interpreter-first.md). The working
 language name and `.my` extension are provisional.
 
-Next priorities are safe generic views/lifetimes, diagnostic repair quality,
+Next priorities are generic arena/reset lifetimes, diagnostic repair quality,
 typed host-library calls, and a board-validation or constraint-processing trial.
 Expensive geometry can remain in Zig/C/Rust behind explicit typed wrappers.
 Completed C/native experiments remain available; further native compilation,
@@ -290,6 +290,10 @@ transfers, implicit cleanup and transitive resource cleanup effects.
 explicit allocator authority, mutation contracts and allocation effects.
 [Generic provider operations](docs/experiments/generic-providers.md) now retain
 capability, result, permission and effect contracts.
+[Generic local views](docs/experiments/generic-local-views.md) now support concrete
+array/buffer ranges and slices returned from declared whole-array inputs, with
+ownership/access checks before instantiation. The VM example
+`examples/generic-local-views.my` returns `22`.
 
 [Lexical arenas](docs/experiments/source-arenas.md) use `arena heap as scratch { ... }`
 with conservative escape checks and cleanup across returns/errors.

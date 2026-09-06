@@ -94,3 +94,6 @@ pub const Sink = struct {
         return error.SourceError;
     }
 };
+
+/// Owned/result references remain restricted to supported copyable buffer views.
+pub const result_borrow = "E_RESULT_BORROW";

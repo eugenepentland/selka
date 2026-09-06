@@ -146,6 +146,14 @@ pub fn resultShape(ty: Type, records: []const Record) ?ResultShape {
     }
     return .{ .ok_type = variants.cases[ok orelse return null].payload.?, .error_type = variants.cases[err orelse return null].payload.?, .ok_tag = ok.?, .error_tag = err.? };
 }
+/// Element type for numeric fixed-array and owned-buffer views; enum tables are not slices.
+pub fn sliceElement(ty: Type, records: []const Record) ?Type {
+    if (!ty.isAggregate() or ty.recordIndex() >= records.len) return null;
+    const shape = records[ty.recordIndex()].shape;
+    if (shape.buffer) |element| return element;
+    if (shape.array) |array| if (array.key == null) return array.element;
+    return null;
+}
 /// Resolve a buffer/pool acquisition result with the required i64 error payload.
 pub fn acquisitionShape(ty: Type, records: []const Record, pool: bool) ?ResultShape {
     const result = resultShape(ty, records) orelse return null;

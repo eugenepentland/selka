@@ -1036,3 +1036,28 @@ fn expectNativeEmission(source: []const u8, marker: []const u8) !void {
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, generated.term);
     try testing.expect(std.mem.indexOf(u8, generated.stdout, marker) != null);
 }
+
+test "CLI generic array input slices retain module provenance and VM memory modes" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input;import api;fn main()->i64{let mut a=new [3]i64[1,2,3];let old=a;borrow mut a as whole{borrow mut api::tail::<bool>(whole) as s{write_slice(s,0,7);}}return a[1]+old[1];}" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "api.my", .data = "module api;export tail;fn tail<T:copy>(a:&mut [3]i64)->&mut []i64 from a{borrow mut a[1..3] as s{return s;}}" });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    for ([_][]const u8{ "--memory=general", "--memory=arena" }) |mode| {
+        const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path, mode } });
+        defer testing.allocator.free(outcome.stdout);
+        defer testing.allocator.free(outcome.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+        try testing.expectEqualStrings("9\n", outcome.stdout);
+        try testing.expectEqualStrings("", outcome.stderr);
+    }
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "api.my", .data = "module api;export tail;fn tail<T:copy>(a:&mut [3]i64)->&mut []i64 from a{let mut local=new [1]i64[1];borrow mut local[0..1] as s{return s;}}" });
+    const rejected = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-project", path } });
+    defer testing.allocator.free(rejected.stdout);
+    defer testing.allocator.free(rejected.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
+    try testing.expectEqualStrings("", rejected.stdout);
+    try testing.expect(std.mem.indexOf(u8, rejected.stderr, "E_RETURN_LIFETIME") != null);
+    try testing.expect(std.mem.indexOf(u8, rejected.stderr, "api.my") != null);
+}

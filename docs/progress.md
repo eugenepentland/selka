@@ -3675,3 +3675,36 @@ ROI subjects have no new outcome evidence and remain unlabelled.
 Next: generic local array/buffer views and region-origin/lifetime checks, followed
 by diagnostic repair quality, typed host registration and the board/constraint
 trial. These remain open under the interpreter-first roadmap.
+
+
+### Generic local array and buffer views — 2026-09-06
+
+Abstract generic bodies now create slices from concrete numeric arrays and owned
+buffers, using the ordinary checker's shared element-shape helper. Bounds are
+evaluated before owner availability checks, so consuming a buffer inside a bound
+rejects the subsequent loan. Existing root identity and loan counters enforce
+conflicting access, transfer/growth restrictions, parent suspension and lexical
+restoration. Array snapshots preserve value semantics. Concrete whole-array
+reference inputs may supply returned slices under their declared input lifetime;
+local array/buffer views cannot escape that way.
+
+See [the view contract](experiments/generic-local-views.md) and
+`examples/generic-local-views.my` (22). Tests cover uncalled invalid templates,
+shape/element/permission errors, transfers inside bounds, active-owner conflicts,
+empty/nested views, source-located bounds traps, returned-input provenance and
+allocation-failure cleanup. The CLI checks an imported generic returned-view
+helper under general/arena VM memory and rejects a module-local lifetime escape.
+
+Validation: 644 core tests pass in Debug and ReleaseFast; all 61 CLI tests pass
+in both modes after correcting the new fixture's module call from `api.tail` to
+`api::tail`. The initial full suite runs exposed that fixture error; the complete
+CLI roots were rerun after the correction. Interpreter/tooling integration also
+passes, including 96 independent corpus comparisons. Focused generic coverage
+passes 100 tests. Formatting and all 88 Guardian checks pass without baselines;
+existing report-only size/line findings remain. No native execution suite was run.
+
+Generic local arena/reset scopes still require allocator-origin and escape
+checks. Symbolic array/buffer constructors and structural constraints, generic
+codec contracts, public generic tooling, typed host registration and the real
+application/repair trial remain open. Native work is excluded from the active
+goal.

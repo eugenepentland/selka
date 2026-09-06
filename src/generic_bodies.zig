@@ -185,6 +185,11 @@ const Checker = struct {
         for (self.locals.items[before..]) |item| _ = self.active.remove(self.src.text(item.name));
         self.locals.shrinkRetainingCapacity(before);
     }
+    fn sliceType(self: *Checker, value: Symbolic, span: source.Span) Error!Symbolic {
+        const owner_type = try self.concreteValue(value, span);
+        const element = typed.sliceElement(owner_type, self.catalog.records) orelse return self.sink.fail("E_SLICE_TYPE", span, "slicing requires a fixed numeric array, buffer, or existing slice");
+        return .{ .concrete = element };
+    }
     fn borrowScope(self: *Checker, borrow: @FieldType(@FieldType(ast.Statement, "data"), "borrow")) Error!bool {
         if (borrow.range) |range| {
             try self.supports(try self.expression(range.start), .integer, borrow.owner);
@@ -199,11 +204,15 @@ const Checker = struct {
             if (borrow.mutable and !binding.mutable) return self.sink.fail(diagnostic.immutable, borrow.owner, "exclusive borrowing requires a mutable owner");
             try self.ownerAccess(binding, borrow.mutable, borrow.owner);
         }
-        if (borrow.range != null and !binding.slice) return self.sink.fail(eUnsupported, borrow.owner, "generic range borrowing requires a known slice input");
-        if (self.transfers(binding.ty)) return self.sink.fail("E_RESULT_BORROW", borrow.owner, "result-bearing values must transfer by value");
-        try self.supports(binding.ty, .copy, borrow.owner);
-        return self.loanScope(.{ .name = borrow.name, .ty = binding.ty, .mutable = false, .reference = borrow.mutable, .slice = binding.slice, .root = binding.root orelse owner_index }, parent, borrow.body);
+        const buffer_owner = binding.ty == .concrete and binding.ty.concrete.isAggregate() and self.catalog.records[binding.ty.concrete.recordIndex()].shape.buffer != null;
+        if (buffer_owner and !binding.available) return self.sink.fail(diagnostic.owned_consumed, borrow.owner, "buffer has already been transferred");
+        if (self.transfers(binding.ty) and !(buffer_owner and borrow.range != null)) return self.sink.fail(diagnostic.result_borrow, borrow.owner, "owned and result-bearing values must transfer by value");
+        const element = if (borrow.range != null and !binding.slice) try self.sliceType(binding.ty, borrow.owner) else binding.ty;
+        if (self.transfers(element)) return self.sink.fail(diagnostic.result_borrow, borrow.owner, "result-bearing elements cannot be exposed through references");
+        try self.supports(element, .copy, borrow.owner);
+        return self.loanScope(.{ .name = borrow.name, .ty = element, .mutable = false, .reference = borrow.mutable, .slice = borrow.range != null or binding.slice, .root = binding.root orelse owner_index }, parent, borrow.body);
     }
+
     fn loanScope(self: *Checker, child: Local, parent: ?usize, body: ast.StatementId) Error!bool {
         const root = child.root.?;
         const mutable = child.reference.?;
@@ -226,7 +235,6 @@ const Checker = struct {
             const mutable = parameter.reference orelse return self.sink.fail(diagnostic.return_lifetime, contract.source, "reference result requires a reference input");
             if (contract.mutable and !mutable) return self.sink.fail(diagnostic.reference_read_only, contract.source, "shared input cannot supply an exclusive result");
             if (parameter.slice and !contract.slice) return self.sink.fail("E_REFERENCE_KIND", contract.source, "slice input cannot supply a whole-value reference result");
-            if (contract.slice != parameter.slice) return self.sink.fail(eUnsupported, contract.source, "generic reference results must preserve the input reference kind");
             return .{ .parameter = index, .mutable = contract.mutable, .slice = contract.slice };
         }
         return self.sink.fail(diagnostic.return_lifetime, contract.source, "result lifetime names no input parameter");
@@ -873,14 +881,18 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
         checker.seedCleanup(checker.result);
         for (function.signature.parameters) |parameter| {
             const parameter_type = try checker.ty(parameter.ty);
-            if (parameter.reference != null and checker.transfers(parameter_type)) return sink.fail("E_RESULT_BORROW", parameter.ty, "result-bearing parameters must transfer by value");
+            if (parameter.reference != null and checker.transfers(parameter_type)) return sink.fail(diagnostic.result_borrow, parameter.ty, "result-bearing parameters must transfer by value");
             try checker.bind(parameter.name, parameter_type, false);
             checker.locals.items[checker.locals.items.len - 1].reference = parameter.reference;
             checker.locals.items[checker.locals.items.len - 1].slice = parameter.slice;
             if (parameter.reference != null) checker.locals.items[checker.locals.items.len - 1].root = checker.locals.items.len - 1;
         }
         checker.return_reference = try checker.provenance(function);
-        if (checker.return_reference) |contract| try checker.same(checker.locals.items[contract.parameter].ty, checker.result, function.signature.return_type);
+        if (checker.return_reference) |contract| {
+            const input = checker.locals.items[contract.parameter];
+            const returned = if (contract.slice and !input.slice) try checker.sliceType(input.ty, function.signature.return_type) else input.ty;
+            try checker.same(returned, checker.result, function.signature.return_type);
+        }
         if (!try checker.statement(function.body)) return sink.fail("E_MISSING_RETURN", function.name, "template may fall through without returning its declared type");
     }
     try effects.checkAbstract(allocator, program.functions, effect_masks, effect_calls.items, sink);

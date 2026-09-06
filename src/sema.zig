@@ -9,7 +9,7 @@ const eConversionBody = "E_CONVERSION_BODY";
 const eResourceResult = diagnostic.resource_result;
 const eReferenceReadOnly = diagnostic.reference_read_only;
 const eBufferResult = "E_BUFFER_RESULT";
-const eResultBorrow = "E_RESULT_BORROW";
+const eResultBorrow = diagnostic.result_borrow;
 const eResourceIoResult = "E_RESOURCE_IO_RESULT";
 const eResultLoop = diagnostic.result_loop;
 const bindingDeclaredHere = "binding declared here";
@@ -240,12 +240,9 @@ const Checker = struct {
         if (self.references.items[@backingInt(id)].mode.slice != slice) return self.sink.fail("E_REFERENCE_KIND", span, if (slice) "operation requires a slice" else "operation requires a whole-value reference");
     }
     fn sliceElement(self: *Checker, ty_id: typed.Type, span: source.Span) Error!typed.Type {
-        if (ty_id.isAggregate()) if (self.catalog.records[ty_id.recordIndex()].shape.buffer) |element| return element;
-        if (ty_id.isAggregate()) if (self.catalog.records[ty_id.recordIndex()].shape.array) |array| {
-            if (array.key == null) return array.element;
-        };
-        return self.sink.fail("E_SLICE_TYPE", span, "slicing requires a fixed numeric array, buffer, or existing slice");
+        return typed.sliceElement(ty_id, self.catalog.records) orelse self.sink.fail("E_SLICE_TYPE", span, "slicing requires a fixed numeric array, buffer, or existing slice");
     }
+
     fn ownerAccess(self: *Checker, slot: typed.LocalId, write: bool, span: source.Span) Error!void {
         var entries = self.active_refs.valueIterator();
         while (entries.next()) |id| {
