@@ -48,8 +48,6 @@ acceptance output, not a proposed public wire representation.
 ```sh
 zig-out/bin/mylang run-project examples/corpus/packet/main.my
 # 30064771372
-python3 scripts/native.py examples/corpus/packet/main.my --project -o .zig-cache/packet
-.zig-cache/packet
 ```
 
 ## Reviewed findings
@@ -72,13 +70,19 @@ leaves runtime coverage and assertion outcomes unmeasured.
 
 ## Acceptance and limitations
 
-The build runs tests/corpus_review.py. Its independent Python expectations use a
+`zig build test` runs `tests/corpus_review.py` in VM-only mode. Its independent
+Python expectations use a
 price-vector calculation and Python byte decoding, never the language VM or generated
 bindings to calculate expected execution results. It covers 24 invoice cases and 24
 packet cases, including quantity extrema/rejection, fee/discount boundaries, tax
 rounding, maximum unsigned readings, short frames, each error category, and seeded
-valid inputs. Every case executes with general/arena VM memory and native -O0/-O2
-with undefined-behavior sanitization: 192 oracle checks per compiler host build mode.
+valid inputs. Every case executes with general/arena VM memory: 96 oracle checks
+per compiler host build mode. The default acceptance does not compile guest C.
+
+Existing native acceptance is optional through `zig build test-native` or directly
+with `python3 tests/corpus_review.py --compiler zig-out/bin/mylang --native --zig /path/to/zig`.
+That mode adds native -O0/-O2 with undefined-behavior sanitization, retaining the
+historical 192 oracle checks. Native execution is outside the active roadmap goal.
 
 The driver checks formatter idempotence through project checking, exact/near discovery
 determinism and non-mutation, default quality reports, explicit dependency policies,
@@ -89,9 +93,9 @@ Python expectations and generated binding artifacts stay outside production dupl
 analysis; intentional-policy decisions are recorded here rather than suppressed.
 
 The review found useful integration rather than a new compiler defect. Domain-valued
-internal totals need an explicit conversion for ordinary JSON/data bindings because
-domain codecs are still pending. External callers cannot yet invoke source functions
-through generated Python wrappers. Fixed arrays keep these applications bounded;
+internal totals use an explicit conversion for ordinary JSON/data bindings.
+Domain codecs and callable Python wrappers were added after the initial review;
+this corpus exercises its documented conversion and data-binding path. Fixed arrays keep these applications bounded;
 unbounded catalog ingestion, real transport I/O, performance validation, generics,
 and production-user corpus evidence remain separate work. Neither this corpus nor
 its green tests establish production readiness or exhaust all input behavior.

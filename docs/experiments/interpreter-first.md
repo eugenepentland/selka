@@ -1,5 +1,10 @@
 # Interpreter-first design and acceptance
 
+Native execution is outside the active roadmap-completion goal. Preserve the
+ability to add a backend later, but do not implement or extend native execution
+as part of completing this roadmap. The current goal is to develop the language
+on its bytecode VM; a future decision can reopen native work.
+
 Direction adopted on 2026-09-06; this document and [plan section 1](../plan.md#1-project-direction)
 supersede earlier native-first sequencing. These are planned acceptance criteria,
 not claims that the host interface or application trial is implemented.
@@ -115,11 +120,13 @@ and the strict Guardian gate on the Zig implementation with baselines disabled.
 Keep independent expected results as the oracle; interpreter execution alone
 cannot establish correctness. Extend specification links for implemented rules.
 
-The next infrastructure change should expose a focused interpreter test target
-and put expensive native compilation/parity integration behind an optional target.
-Today `zig build test` still runs those native suites; this documentation does
-not introduce new commands or change that behavior. Existing inexpensive native
-unit tests may remain in shared roots. A change to shared code should still receive
+The implemented workflow uses `zig build test` (or its `test-interpreter` alias)
+for interpreter acceptance, `test-native` for optional native compilation/parity
+integration, and `test-all` for both. Each route retains the Guardian gate. The
+default includes all existing core/CLI roots, interpreter/tooling drivers, and
+96 independent corpus checks in general/arena VM modes. Native corpus execution
+requires `--native --zig`; inexpensive C-emission tests remain in shared roots.
+CI uses the default suite in Debug and ReleaseFast. A change to shared code should still receive
 relevant regression checks; native feature parity is not required for each new
 language feature. Unsupported native features must fail explicitly when used.
 
@@ -133,3 +140,13 @@ Reopen native compilation after representative projects stabilize the semantics
 and measurements show an execution or deployment need not adequately served by
 typed host calls. Compare the existing C route, LLVM and direct machine code then;
 none is a prerequisite for proving the language useful now.
+
+
+## Workflow validation — 2026-09-06
+
+The default Debug suite passes 27/27 build steps and 699/699 core/CLI tests;
+ReleaseFast via `test-interpreter` passes 28/28 steps and the same 699 tests.
+Both run all 17 interpreter/tooling Python invocations, including 96 independent
+corpus comparisons. Verbose logs select no guest-native compilation driver.
+Formatting and Guardian pass with baselines disabled. This validates the workflow
+split; the host registration and application trial above remain pending.

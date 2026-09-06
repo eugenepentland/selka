@@ -1,5 +1,10 @@
 # Language design and implementation plan
 
+Native execution is outside the active roadmap-completion goal. Preserve the
+ability to add a backend later, but do not implement or extend native execution
+as part of completing this roadmap. The current goal is to develop the language
+on its bytecode VM; a future decision can reopen native work.
+
 Status: revision 3, interpreter-first direction adopted on 2026-09-06. Scalar MVP M0–M5 and substantial post-MVP experiments are implemented. The current priorities below supersede older sequencing and dated “next” statements; completed experiments remain historical evidence.
 
 Working executable name: `mylang`. Working source extension: `.my`.
@@ -38,8 +43,9 @@ explicit types, schemas, and interfaces where that improves the program.
 
 ### Current implementation order
 
-1. Establish a focused interpreter acceptance workflow while retaining existing
-   native tests as an optional suite. Finish local array/buffer view checking in
+1. Use the implemented interpreter acceptance workflow (`zig build test` or
+   `test-interpreter`); native integration is optional (`test-native`, with
+   `test-all` combining both). Finish local array/buffer view checking in
    generic bodies and region-origin checks needed for local arenas/reset; keep
    unsupported cases explicit until lifetime checks are in place.
 2. Improve structured diagnostics and repair examples alongside those features:
@@ -90,9 +96,9 @@ when representative projects establish stable semantics and measurements show a
 need that the typed host boundary does not adequately address.
 
 The detailed acceptance and trial design is in
-[the interpreter-first roadmap](experiments/interpreter-first.md). This revision
-changes priorities, not implemented behavior. In particular, `zig build test`
-still includes native integration suites until the workflow split is implemented.
+[the interpreter-first roadmap](experiments/interpreter-first.md). The test workflow
+now follows that direction: the default suite executes interpreter acceptance,
+with native compilation integration available through explicit optional targets.
 
 ## 2. Long-term language goals
 
@@ -1764,3 +1770,30 @@ remain pending. They need abstract borrow and origin/lifetime tracking before
 being enabled. Structural generic types, generic codec constraints, public generic
 tooling, source byte serialization and all other pending roadmap requirements
 remain open.
+
+
+### Interpreter acceptance workflow — 2026-09-06
+
+`zig build test` now runs the interpreter/checker, complete core/CLI roots and
+interpreter/tooling integration. `test-interpreter` aliases that suite. Existing
+native compilation drivers moved to optional `test-native`; `test-all` combines
+both. Guardian gates every route. The corpus defaults to general/arena VM runs
+against independent Python expectations (48 inputs, 96 comparisons), retaining
+formatting, duplicate discovery, policy, schema/binding and change-impact checks.
+Native corpus execution requires explicit `--native --zig`; shared inexpensive
+C-emission checks remain in the core/CLI roots. No native execution work is part
+of the active roadmap-completion goal, and no new native suite run is claimed.
+
+Validation: default Debug passes 27/27 build steps and 699/699 core/CLI tests;
+ReleaseFast through `test-interpreter` passes 28/28 steps and the same 699 tests.
+Both execute all 17 interpreter/tooling Python invocations, including eight
+verification-driver unit tests and 96 independent corpus comparisons. Verbose
+commands confirm neither route selects native integration drivers. All 29 previous
+script entries remain wired, with separate corpus modes; missing `--zig` is
+rejected before native-mode execution. Formatting and all 88 Guardian checks pass
+with baselines disabled; existing report-only size/line findings remain. Pending
+ROI subjects have no new outcome evidence and remain unlabelled.
+
+Next: generic local array/buffer views and region-origin/lifetime checks, followed
+by diagnostic repair quality, typed host registration and the board/constraint
+trial. These remain open under the interpreter-first roadmap.

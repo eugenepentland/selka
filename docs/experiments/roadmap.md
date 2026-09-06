@@ -1,5 +1,10 @@
 # Post-MVP experiment sequence
 
+Native execution is outside the active roadmap-completion goal. Preserve the
+ability to add a backend later, but do not implement or extend native execution
+as part of completing this roadmap. The current goal is to develop the language
+on its bytecode VM; a future decision can reopen native work.
+
 The user authorized duplicate discovery and post-MVP experiments on 2026-09-05.
 The scalar MVP remains the tested baseline. This is implementation tracking,
 not a claim that the full future language has been delivered.
@@ -12,7 +17,7 @@ See [the current design and acceptance criteria](interpreter-first.md).
 
 | Priority | Work | Completion evidence |
 | --- | --- | --- |
-| 1 | Focused interpreter test workflow; generic local views and region lifetimes | Guardian, checker/VM/CLI coverage, rejection and cleanup tests; native suites optional. |
+| 1 | Interpreter test workflow implemented; generic local views and region lifetimes pending | `test`/`test-interpreter` retain Guardian, core/CLI and interpreter/tooling coverage; `test-native` is optional and `test-all` combines both. Next: view/region rejection and cleanup tests. |
 | 2 | Diagnostic provenance and predictable safety rules | Stable structured codes/spans, readable ownership explanations, repair fixtures; audit optional-value ergonomics. |
 | 3 | Typed registered host functions with handwritten wrappers | Exact signatures/effects, ownership and lifetime checks, typed errors, deterministic fake-host tests. |
 | 4 | Board-validation or constraint-processing module | Independent behavioral tests and recorded agent repair outcomes; geometry/routing kernels stay in native libraries. |
@@ -22,8 +27,10 @@ See [the current design and acceptance criteria](interpreter-first.md).
 The host-function milestone is guest-to-host library calling through the VM.
 Previously implemented native embedding and generated native bindings compile
 and call guest programs; they do not complete this new host-registration milestone.
-`zig build test` currently still runs native integration suites. Splitting a
-focused interpreter workflow from optional native acceptance is pending.
+`zig build test` now runs interpreter acceptance; `test-interpreter` is an alias.
+`test-native` selects native compilation integration and `test-all` combines both.
+The ordinary corpus retains independent VM expectations in the default suite;
+its C compilation requires `--native --zig`. Shared core/CLI roots are unchanged.
 
 ## Track inventory
 

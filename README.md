@@ -44,9 +44,24 @@ zig build test -Doptimize=ReleaseFast --summary all
 zig build fmt-check
 ```
 
-The full `zig build test` commands above still include native integration suites.
-A focused interpreter acceptance workflow is the next infrastructure task; this
-roadmap revision does not change the build targets.
+`zig build test` runs checker/VM, actual CLI, and interpreter/tooling integration
+acceptance. `zig build test-interpreter` is an explicit alias. Both retain all
+core tests, including inexpensive C-emission checks, without compiling guest C.
+CI uses this default suite in Debug and ReleaseFast.
+
+Native compilation/parity integration remains available on demand:
+
+```sh
+zig build test-native --summary all
+zig build test-all --summary all
+```
+
+`test-native` runs the native drivers and the corpus with native execution;
+`test-all` combines both suites. Guardian gates each acceptance route. Native
+testing compiles guest C in its documented modes; `-Doptimize` selects the host
+compiler/VM mode. Use a disk-backed `TMPDIR` with sufficient space for large native
+runs. The default corpus driver needs only `--compiler`; direct native corpus
+runs also require `--native --zig /path/to/zig`.
 
 The example prints `7`. A successful program result is printed to stdout, not
 used as the exit code. Success exits 0, source errors and guest traps exit 1,
@@ -229,7 +244,7 @@ syntactically valid code without requiring completed type checking.
 `python3 scripts/verify.py verify.json`. Filters select explicit steps and their
 dependencies; reports distinguish selected success from full-manifest success.
 The eight Python driver tests also run under `zig build test`, alongside the
-413 Zig/core-and-CLI tests.
+core/CLI suites and the interpreter/tooling integration drivers.
 
 [Scalar native execution](docs/experiments/native-execution.md) is available with
 `emit-c` and `python3 scripts/native.py examples/sum.my -o /tmp/native-sum`.
