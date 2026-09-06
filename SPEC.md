@@ -115,7 +115,7 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 
 - [NATIVE-SCHEMA-1] Native module libraries expose immutable canonical public schema bytes and their SHA-256 from the same checked compilation as the emitted code. Queries execute no guest code. Single-file libraries without a public schema report absence. Field, case, type and public-function contract changes alter compatibility identity; source location and compatible implementation-only changes need not.
 
-- [NATIVE-BINDINGS-1] Generated Python bindings may call an explicitly selected native shared library only after verifying its canonical public schema hash. Ordinary typed wrappers retain value validation and snapshots, report bounded native traps and host failures, and never retry capacity failures implicitly. Domain codecs and reference/capability signatures remain unavailable through this client.
+- [NATIVE-BINDINGS-1] Generated Python bindings may call an explicitly selected native shared library only after verifying its canonical public schema hash. Ordinary typed wrappers retain value validation and snapshots, report bounded native traps and host failures, and never retry capacity failures implicitly. Declared domain codecs use the opt-in native codec API with typed rejection errors and shared call limits; ordinary calls retain their original ABI. Reference/capability signatures remain unavailable through this client.
 
 - [NATIVE-CODEC-1] Native embedding can internally invoke compiler-selected declared codec functions while preserving surrounding operands, frames, cleanup ownership and shared instruction/frame budgets. This internal path does not expose arbitrary private functions or accept unvalidated raw domain values through the public wire API.
 

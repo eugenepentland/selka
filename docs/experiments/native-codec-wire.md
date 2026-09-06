@@ -42,6 +42,7 @@ insufficient output, typed rejections and explicit decoder results. Allocation
 failure sweeps cover successful and rejected calls, assert no live allocations,
 and verify subsequent recovery. The driver is wired into `zig build test`.
 
-Generated `NativeClient` integration remains pending. Its current ordinary-value
-API deliberately retains the existing supported-function set until typed domain
-conversion and rejection handling are implemented there.
+Generated `NativeClient` now consumes this API for domain-bearing signatures,
+including typed rejection trees and shared call limits; see
+[native-bindings.md](native-bindings.md). Ordinary signatures retain the older
+value API and can use libraries without the codec symbol.

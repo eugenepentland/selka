@@ -232,7 +232,8 @@ by qualified name through `mylang_native_call_v1`, with checked integer/Boolean
 arguments and full-width results. [Native aggregate calls](docs/experiments/native-wire.md)
 copy ordinary record, array and variant trees through caller-owned buffers.
 Generated Python wrappers also accept a [schema-pinned NativeClient](docs/experiments/native-bindings.md),
-which calls a matching shared library without a compiler subprocess.
+which calls a matching shared library without a compiler subprocess, including
+declared domain codecs with typed decoder rejection errors.
 
 [Partial record field moves](docs/experiments/partial-fields.md) use
 `take_field(owner, field)` to transfer individual fields immediately while preserving

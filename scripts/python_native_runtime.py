@@ -28,15 +28,25 @@ class _NativeResult(_ctypes.Structure):
     _fields_ = [('execution', _NativeExecution), ('node_count', _ctypes.c_size_t)]
 
 
+class _NativeCodecOptions(_ctypes.Structure):
+    _fields_ = [('run', _NativeOptions), ('max_calls', _ctypes.c_uint64)]
+
+
+class _NativeCodecResult(_ctypes.Structure):
+    _fields_ = [('value', _NativeResult), ('domain', _ctypes.c_char_p),
+                ('calls', _ctypes.c_uint64), ('rejected', _ctypes.c_int)]
+
+
 @dataclass(frozen=True, slots=True)
 class NativeLimits:
     max_steps: int = 1000000
     max_frames: int = 256
     max_nodes: int = 65536
     max_depth: int = 128
+    max_calls: int = 4096
 
     def __post_init__(self):
-        if any(type(n) is not int or not 0 < n <= 18446744073709551615 for n in (self.max_steps, self.max_frames)):
+        if any(type(n) is not int or not 0 < n <= 18446744073709551615 for n in (self.max_steps, self.max_frames, self.max_calls)):
             raise CodecError('InvalidNativeLimits')
         if type(self.max_nodes) is not int or not 0 < self.max_nodes <= 100000:
             raise CodecError('InvalidNativeLimits')
@@ -44,7 +54,8 @@ class NativeLimits:
             raise CodecError('InvalidNativeLimits')
 
 
-NATIVE_FUNCTION_NAMES = tuple(name for name in FUNCTION_NAMES
+NATIVE_FUNCTION_NAMES = FUNCTION_NAMES
+_NATIVE_ORDINARY_FUNCTIONS = frozenset(name for name in FUNCTION_NAMES
     if all(ty not in UNSUPPORTED_TYPES for ty in
            [_FUNCTIONS[name]['result'], *(p['type'] for p in _FUNCTIONS[name]['parameters'])]))
 _NATIVE_TYPE_BYTES = {name: name.encode('utf-8') for name in _DEFINITIONS}
@@ -52,7 +63,11 @@ _NATIVE_TAGS = {name: {case['name']: i for i, case in enumerate(definition['case
                 for name, definition in _DEFINITIONS.items() if 'cases' in definition}
 
 
-def _native_flatten(name, value, output):
+def _native_flatten(name, value, output, limits, depth=1):
+    if depth > limits.max_depth:
+        raise CodecError('CodecDepthLimit', '/arguments')
+    if len(output) >= limits.max_nodes:
+        raise CodecError('CodecValueLimit', '/arguments')
     definition = _DEFINITIONS[name]
     kind = definition['kind']
     children = []
@@ -67,6 +82,8 @@ def _native_flatten(name, value, output):
         children = [(definition['element'], child) for child in value]
     elif kind == 'table':
         children = [(definition['element'], value[case['name']]) for case in _DEFINITIONS[definition['key']]['cases']]
+    elif kind == 'domain':
+        children = [(definition['codec']['wire'], value)]
     elif kind == 'enumeration':
         bits = _NATIVE_TAGS[name][value]
     else:
@@ -76,7 +93,7 @@ def _native_flatten(name, value, output):
             children = [(case['payload'], value['value'])]
     output.append((_NATIVE_TYPE_BYTES[name], bits, len(children)))
     for child, item in children:
-        _native_flatten(child, item, output)
+        _native_flatten(child, item, output, limits, depth+1)
 
 
 def _native_expand(name, nodes, count, cursor, depth, limits):
@@ -106,6 +123,10 @@ def _native_expand(name, nodes, count, cursor, depth, limits):
         if node.bits >= len(definition['cases']):
             raise CallError('InvalidNativeResult')
         return definition['cases'][node.bits]['name']
+    if kind == 'domain':
+        if node.bits or node.children != 1:
+            raise CallError('InvalidNativeResult')
+        return _native_expand(definition['codec']['wire'], nodes, count, cursor, depth+1, limits)
     if kind == 'record':
         if node.children != len(definition['fields']):
             raise CallError('InvalidNativeResult')
@@ -164,6 +185,11 @@ class NativeClient:
                              _ctypes.POINTER(_NativeOptions), _ctypes.POINTER(_NativeResult)]
             call.restype = _ctypes.c_int
             self._call = call
+            self._codec_call = getattr(self._library, 'mylang_native_call_codecs_v1', None)
+            if self._codec_call is not None:
+                self._codec_call.argtypes = call.argtypes[:5] + [
+                    _ctypes.POINTER(_NativeCodecOptions), _ctypes.POINTER(_NativeCodecResult)]
+                self._codec_call.restype = _ctypes.c_int
         except OSError as error:
             raise CallError('NativeLibraryIO', str(error)) from error
         except AttributeError as error:
@@ -174,22 +200,35 @@ class NativeClient:
             raise CodecError('UnknownFunction')
         if name not in NATIVE_FUNCTION_NAMES:
             raise CodecError('UnsupportedFunction')
+        codecs = name not in _NATIVE_ORDINARY_FUNCTIONS
+        if codecs and self._codec_call is None:
+            raise CallError('NativeABIUnavailable')
         function = _FUNCTIONS[name]
         _keys(arguments, [p['name'] for p in function['parameters']], '/arguments')
         limits = self.limits
         if type(limits) is not NativeLimits:
             raise CodecError('InvalidNativeLimits')
         codec_limits = Limits(max_values=limits.max_nodes, max_depth=limits.max_depth)
-        budget = _Budget(codec_limits)
+        budget = _Budget(codec_limits, calls=codecs)
         flat = []
         for parameter in function['parameters']:
             value = _convert(parameter['type'], arguments[parameter['name']], True, budget, 1, _path('/arguments', parameter['name']))
-            _native_flatten(parameter['type'], value, flat)
+            _native_flatten(parameter['type'], value, flat, limits)
         inputs = (_NativeNode * len(flat))(*[_NativeNode(*node) for node in flat])
         output = (_NativeNode * limits.max_nodes)()
         options = _NativeOptions(limits.max_steps, limits.max_frames, None)
         result = _NativeResult()
-        status = self._call(name.encode('utf-8'), inputs, len(flat), output, len(output), _ctypes.byref(options), _ctypes.byref(result))
+        codec_result = None
+        if codecs:
+            codec_result = _NativeCodecResult()
+            codec_options = _NativeCodecOptions(options, limits.max_calls)
+            status = self._codec_call(name.encode('utf-8'), inputs, len(flat), output, len(output),
+                                      _ctypes.byref(codec_options), _ctypes.byref(codec_result))
+            result = codec_result.value
+        else:
+            status = self._call(name.encode('utf-8'), inputs, len(flat), output, len(output), _ctypes.byref(options), _ctypes.byref(result))
+        if codec_result is not None and (codec_result.rejected not in (0, 1) or codec_result.calls > limits.max_calls):
+            raise CallError('InvalidNativeResult')
         execution = result.execution
         if status not in (0, 1, 2) or status != execution.status:
             raise CallError('InvalidNativeResult')
@@ -203,11 +242,29 @@ class NativeClient:
                 frames.append((frame.function or b'?').decode('utf-8', 'replace'))
             detail = '; '.join(filter(None, [location, ' -> '.join(frames),
                 f'required output nodes: {result.node_count}' if code == 'OutputTooSmall' else '']))
-            raise CallError(code, detail, status)
-        if not 0 < result.node_count <= len(output):
+            error = CallError(code, detail, status)
+            if codec_result is not None:
+                error.domain = codec_result.domain.decode('utf-8', 'replace') if codec_result.domain else None
+                error.calls = codec_result.calls
+                error.rejected = bool(codec_result.rejected)
+                error.rejection = None
+                if code == 'DomainCodecRejected':
+                    definition = _DEFINITIONS.get(error.domain, {})
+                    if status != 2 or codec_result.rejected != 1 or 'codec' not in definition:
+                        raise CallError('InvalidNativeResult')
+                    error.rejection = _native_result_value(definition['codec']['error_type'], output, result.node_count, limits, False)
+            raise error
+        if codec_result is not None and (codec_result.rejected or codec_result.domain):
             raise CallError('InvalidNativeResult')
-        cursor = [0]
-        wire = _native_expand(function['result'], output, result.node_count, cursor, 1, limits)
-        if cursor[0] != result.node_count:
-            raise CallError('InvalidNativeResult')
-        return _convert(function['result'], wire, False, _Budget(codec_limits), 1, '/result')
+        return _native_result_value(function['result'], output, result.node_count, limits, codecs)
+
+
+def _native_result_value(name, output, count, limits, codecs):
+    if not 0 < count <= len(output):
+        raise CallError('InvalidNativeResult')
+    cursor = [0]
+    wire = _native_expand(name, output, count, cursor, 1, limits)
+    if cursor[0] != count:
+        raise CallError('InvalidNativeResult')
+    codec_limits = Limits(max_values=limits.max_nodes, max_depth=limits.max_depth)
+    return _convert(name, wire, False, _Budget(codec_limits, calls=codecs), 1, '/result')

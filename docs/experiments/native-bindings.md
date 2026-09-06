@@ -19,8 +19,11 @@ changed = bindings.CALLS['main::change'](client, value)
 ```
 
 `NATIVE_FUNCTION_NAMES` lists wrappers supported by this client. Public functions
-with domain codec, reference/capability or resource signatures remain unavailable
-through it; the compiler-process client retains its existing domain codec support.
+with declared domain codecs use the opt-in native codec API, including nested
+domain values. Reference/capability and resource signatures remain unavailable.
+Ordinary signatures keep using the original value API; an older library without
+the codec symbol can still serve them. A domain call to such a library raises
+`NativeABIUnavailable`.
 Native calls need neither source files nor a compiler subprocess after the module
 and shared library have been built. The library is explicitly selected trusted
 native code loaded into the host process.
@@ -40,7 +43,7 @@ bytes excluding the terminating NUL. Single-file libraries with no public schema
 return NULL; the Python client reports `NativeSchemaUnavailable`.
 
 `NativeLimits` sets instruction/frame budgets and host value limits. Defaults are
-1,000,000 steps, 256 frames, 65,536 nodes and 128 levels; native hard limits remain
+1,000,000 steps, 256 frames, 65,536 nodes, 128 levels and 4,096 codec calls; native hard limits remain
 100,000 nodes and 128 levels. Calls are synchronous. These limits do not provide
 the compiler-process client's wall-clock timeout or process isolation. The output
 buffer uses `max_nodes`; insufficient capacity raises `CallError('OutputTooSmall')`
@@ -48,6 +51,18 @@ with the required node count. The client never retries a completed guest call
 implicitly. Native traps and host failures become `CallError` values with their
 native code and available location/frame diagnostics. Language `err` results
 remain ordinary typed return values.
+
+Domain wrappers contain explicit `.wire` data. The native decoder validates that
+data before the public call; returned wrappers contain the encoder's wire output.
+`max_calls` counts implicit decoders, the public root and implicit encoders for
+codec-bearing signatures. Native depth accounting includes the explicit domain
+node and its wire child. Each encoder runs once, including capacity failures.
+An implicit decoder failure raises `CallError('DomainCodecRejected')` with
+`.domain`, `.calls`, `.rejected` and a typed `.rejection` value (an integer,
+record, variant, or other declared ordinary error shape). Other codec failures
+retain available domain/call context and set `.rejection` to None. Insufficient
+rejection output retains `.rejected=True` and reports the required capacity;
+the client does not retry to obtain the missing error tree.
 
 The client reuses the existing data validator to enforce Python value types,
 integer ranges, complete records/tables and nominal identities. Inputs are copied
@@ -69,12 +84,13 @@ source entry is never executed by metadata queries.
 
 `tests/python_native_calls.py` compares typed compiler-process and native results
 for records, variants, tables, full-width integers and Booleans. It checks snapshots,
-traps and recovery, budgets, one-call capacity failures, unsupported domains,
+traps and recovery, budgets, one-call capacity failures, domain conversion and
+scalar/record decoder rejections, nested domain arrays, missing codec symbols,
 stale/missing schemas and successful calls after source removal. Both drivers
 run under `zig build test`. Existing schema, binding generation/cache and native
 value acceptance remain part of regression validation.
 
 [Internal native codec invocation](native-codec-dispatch.md) now preserves caller
-state and shared budgets. Public native domain conversion, borrowed/capability
-invocation and the remaining compilation
-and language roadmap work are still unfinished.
+state and shared budgets. Public native domain conversion and generated Python
+integration are implemented. Borrowed/capability invocation and the remaining
+compilation and language roadmap work are still unfinished.

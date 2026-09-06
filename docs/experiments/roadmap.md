@@ -722,3 +722,30 @@ driver runs in `zig build test`; a new
 full-suite pass is not claimed here. Guardian passes all 88 checks with baselines
 disabled. Generated Python domain support, source-level codec operations and all
 other outstanding roadmap requirements remain open.
+
+
+### Generated Python native domain bindings — 2026-09-06
+
+Generated `NativeClient` now supports the codec-capable public function set,
+using explicit domain wire wrappers and the native codec API for domain-bearing
+signatures. Ordinary signatures retain the original value ABI and work without
+the optional codec symbol. Domain calls report `NativeABIUnavailable` when that
+symbol is absent. Schema pins still apply before invocation.
+
+`NativeLimits.max_calls` defaults to 4096 and bounds implicit decoders, the public
+root and output encoders under the shared native execution. Host traversal counts
+explicit domain nodes in its depth and node budgets. Implicit decoder failures
+raise `CallError` with domain/call context and a typed scalar or aggregate rejection
+value. Insufficient output never triggers a retry, including when only the
+rejection flag and required error-tree capacity are available.
+
+Debug and ReleaseFast shared-library acceptance passes VM/native agreement for
+ordinary and nested domain values, nontrivial decoding/encoding, scalar/record
+rejections, explicit decoder results, decoder/encoder traps, exact call budgets,
+malformed output, absent codec APIs, success/rejection capacity failures and calls
+after source removal. Existing Python data binding (29 wire comparisons),
+compiler-process call and binding-cache suites pass, including runtime digest
+invalidation. Python syntax and whitespace checks pass; Guardian passes all 88
+checks with baselines disabled. This change does not claim a new full Zig-suite
+run. Source-level codec operations, borrowed/capability native invocation,
+incremental compilation and all other pending roadmap requirements remain open.

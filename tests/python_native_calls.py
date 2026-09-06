@@ -8,7 +8,27 @@ from native_embedding import invoke
 from python_calls import load, fails
 
 SOURCE = '''module main;import data;
+export domain_echo;export domain_pair;export DomainPair;export Rejection;export Checked;export Decoded;export checked_echo;export checked_many;
 export Pair;export Color;export U;export make;export change;export echo;export unsigned;export boolean;export variant;export table_value;export divide;export depth;
+struct Rejection{code:[4]i64}
+result Decoded{ok:Checked,err:Rejection}
+domain Checked:i64{
+ codec data::Wire{decode:from_wire,encode:to_wire}
+ fn from_wire(x:data::Wire)->Decoded{
+  if x.n<=0{return new Decoded.err(new Rejection{code:new [4]i64[-10,-10,-10,-10]});}
+  if x.n==99{return new Decoded.ok(wrap<Checked>(1/(x.n-99)));}
+  return new Decoded.ok(wrap<Checked>(x.n*2));
+ }
+ fn to_wire(x:Checked)->data::Wire{
+  if unwrap(x)==26{return new data::Wire{n:1/(unwrap(x)-26)};}
+  return new data::Wire{n:unwrap(x)+1};
+ }
+}
+fn checked_echo(x:Checked)->Checked{return x;}
+fn checked_many(x:Checked)->[2]Checked{return new [2]Checked[x,x];}
+struct DomainPair{items:[2]data::Positive}
+fn domain_echo(x:data::Positive)->data::Positive{return x;}
+fn domain_pair(x:DomainPair)->DomainPair{return x;}
 enum Color{red,blue}struct Pair{values:[2]i64,color:Color}union U{none,value:Pair}
 fn make()->Pair{return new Pair{values:new [2]i64[7,8],color:new Color.blue};}
 fn change(p:Pair)->Pair{return update(p){values:replace(p.values,0,9)};}
@@ -41,7 +61,12 @@ def main():
         values=bindings.CALL_FIELDS['main::Pair']['values']
         color=bindings.CALL_FIELDS['main::Pair']['color']
         pair=bindings.CALL_TYPES['main::Pair'](**{values:(7,8),color:bindings.CALL_TYPES['main::Color']('blue')})
-        fixtures=[('main::make',()),('main::change',(pair,)),('main::echo',(-9223372036854775808,)),
+        wire=bindings.CALL_TYPES['data::Wire'](**{bindings.CALL_FIELDS['data::Wire']['n']:7})
+        positive=bindings.CALL_TYPES['data::Positive'](wire)
+        domain_pair=bindings.CALL_TYPES['main::DomainPair'](**{bindings.CALL_FIELDS['main::DomainPair']['items']:(positive,positive)})
+        checked=bindings.CALL_TYPES['main::Checked'](wire)
+        fixtures=[('main::checked_echo',(checked,)),('main::domain_echo',(positive,)),('main::domain_pair',(domain_pair,)),
+                  ('data::Positive.from_wire',(wire,)),('data::Positive.to_wire',(positive,)),('main::make',()),('main::change',(pair,)),('main::echo',(-9223372036854775808,)),
                   ('main::unsigned',(18446744073709551615,)),('main::boolean',(True,)),
                   ('main::variant',(pair,)),('main::table_value',()),('main::depth',(20,))]
         expected=[bindings.CALLS[name](vm,*arguments) for name,arguments in fixtures]
@@ -52,6 +77,24 @@ def main():
             for (name,arguments),value in zip(fixtures,expected):
                 assert bindings.CALLS[name](client,*arguments)==value,name
             assert getattr(pair,values)==(7,8)
+            assert getattr(client.call('main::checked_echo',x=checked).wire,bindings.CALL_FIELDS['data::Wire']['n'])==15
+            def checked_value(n):
+                return bindings.CALL_TYPES['main::Checked'](bindings.CALL_TYPES['data::Wire'](**{bindings.CALL_FIELDS['data::Wire']['n']:n}))
+            error=fails(bindings.CallError,'DomainCodecRejected',lambda:client.call('main::checked_echo',x=checked_value(-1)))
+            rejection=bindings.CALL_TYPES['main::Rejection'](**{bindings.CALL_FIELDS['main::Rejection']['code']:(-10,-10,-10,-10)})
+            assert error.rejection==rejection and error.domain=='main::Checked'
+            for n,frame in ((99,'main::Checked.from_wire'),(13,'main::Checked.to_wire')):
+                error=fails(bindings.CallError,'R_DIVISION_BY_ZERO',lambda:client.call('main::checked_echo',x=checked_value(n)))
+                assert error.domain=='main::Checked' and frame in error.diagnostics
+            real_codec=client._codec_call
+            def malformed_codec(*arguments):
+                status=real_codec(*arguments)
+                arguments[3][0].children=0
+                return status
+            client._codec_call=malformed_codec
+            fails(bindings.CallError,'InvalidNativeResult',lambda:client.call('main::checked_echo',x=checked))
+            fails(bindings.CallError,'InvalidNativeResult',lambda:client.call('main::checked_echo',x=checked_value(-1)))
+            client._codec_call=real_codec
             error=fails(bindings.CallError,'R_DIVISION_BY_ZERO',lambda:client.call('main::divide',x=0))
             assert 'main::divide' in error.diagnostics and error.returncode==1
             assert client.call('main::echo',x=7)==7
@@ -65,10 +108,33 @@ def main():
             client._call=real_call
             fails(bindings.CodecError,'ValueTypeMismatch',lambda:client.call('main::boolean',x=1))
             fails(bindings.CodecError,'UnknownFunction',lambda:client.call('private'))
-            assert all(not name.startswith('data::Positive.') for name in bindings.NATIVE_FUNCTION_NAMES)
-            domain_functions=[name for name in bindings.FUNCTION_NAMES if name not in bindings.NATIVE_FUNCTION_NAMES]
-            assert domain_functions
-            fails(bindings.CodecError,'UnsupportedFunction',lambda:client.call(domain_functions[0]))
+            assert 'data::Positive.from_wire' in bindings.NATIVE_FUNCTION_NAMES
+            negative_wire=bindings.CALL_TYPES['data::Wire'](**{bindings.CALL_FIELDS['data::Wire']['n']:-1})
+            negative=bindings.CALL_TYPES['data::Positive'](negative_wire)
+            error=fails(bindings.CallError,'DomainCodecRejected',lambda:client.call('main::domain_echo',x=negative))
+            assert error.domain=='data::Positive' and error.rejection==-1 and error.rejected and error.calls==1
+            assert bindings.CALLS['data::Positive.from_wire'](client,negative_wire)==bindings.CALLS['data::Positive.from_wire'](vm,negative_wire)
+            codec_call=client._codec_call;client._codec_call=None
+            assert client.call('main::echo',x=7)==7
+            fails(bindings.CallError,'NativeABIUnavailable',lambda:client.call('main::domain_echo',x=positive))
+            client._codec_call=codec_call
+            limited=bindings.NativeClient(library,limits=bindings.NativeLimits(max_calls=2))
+            error=fails(bindings.CallError,'CodecCallLimit',lambda:limited.call('main::domain_echo',x=positive))
+            assert error.calls==2 and error.domain=='data::Positive' and error.rejection is None
+            limited=bindings.NativeClient(library,limits=bindings.NativeLimits(max_calls=3))
+            assert limited.call('main::domain_echo',x=positive)==positive
+            limited=bindings.NativeClient(library,limits=bindings.NativeLimits(max_depth=2))
+            fails(bindings.CodecError,'CodecDepthLimit',lambda:limited.call('main::domain_echo',x=positive))
+            small_codec=bindings.NativeClient(library,limits=bindings.NativeLimits(max_nodes=3))
+            codec_attempts=[];actual_codec=small_codec._codec_call
+            def tracked_codec(*arguments):
+                codec_attempts.append(1);return actual_codec(*arguments)
+            small_codec._codec_call=tracked_codec
+            error=fails(bindings.CallError,'OutputTooSmall',lambda:small_codec.call('main::checked_many',x=checked))
+            assert len(codec_attempts)==1 and error.calls==4 and 'required output nodes: 7' in error.diagnostics
+            error=fails(bindings.CallError,'OutputTooSmall',lambda:small_codec.call('main::checked_echo',x=checked_value(-1)))
+            assert len(codec_attempts)==2 and error.calls==1 and error.rejected and error.rejection is None
+            assert error.domain=='main::Checked' and 'required output nodes: 6' in error.diagnostics
             small=bindings.NativeClient(library,limits=bindings.NativeLimits(max_nodes=1))
             calls=[];actual=small._call
             def tracked(*arguments):
@@ -82,7 +148,7 @@ def main():
             fails(bindings.CodecError,'CodecDepthLimit',lambda:limited.call('main::make'))
             limited=bindings.NativeClient(library,limits=bindings.NativeLimits(max_frames=4))
             fails(bindings.CallError,'R_FRAME_LIMIT',lambda:limited.call('main::depth',n=20))
-        for options in ({'max_nodes':100001},{'max_depth':129},{'max_steps':0},{'max_frames':True}):
+        for options in ({'max_nodes':100001},{'max_depth':129},{'max_steps':0},{'max_frames':True},{'max_calls':0},{'max_calls':True}):
             fails(bindings.CodecError,'InvalidNativeLimits',lambda:bindings.NativeLimits(**options))
         entry.write_text(SOURCE.replace('values:[2]i64,color:Color','color:Color,values:[2]i64'))
         mismatch=root/'mismatch.so'
@@ -99,8 +165,9 @@ def main():
         fails(bindings.CallError,'NativeABIUnavailable',lambda:bindings.NativeClient(no_api))
         shutil.rmtree(project)
         # Existing generated wrappers and library remain sufficient after source removal.
-        assert bindings.CALLS['main::change'](client,pair)==expected[1]
-    print('Python native bindings: typed VM/native agreement, full-width scalars, snapshots, variants/tables, traps, budgets, no-retry capacity errors, schema mismatch and source-independent calls passed')
+        assert getattr(bindings.CALLS['main::change'](client,pair),values)==(9,8)
+        assert client.call('main::domain_echo',x=positive)==positive
+    print('Python native bindings: typed VM/native agreement, nested domains, scalar/record rejections, codec traps/quotas, no-retry success/rejection capacity errors, schema checks and source-independent calls passed')
 
 
 if __name__=='__main__':
