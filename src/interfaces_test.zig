@@ -464,7 +464,7 @@ test "generic calls preserve imported declaration identity and private boundarie
 fn genericCallsScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes = "module main;import units;fn forward<T:integer>(x:T)->T{return units::identity::<T>(x);}fn main()->i64{return 0;}" },
-        .{ .path = units_path, .bytes = "module units;export identity;fn identity<U:copy>(x:U)->U{return x;}" },
+        .{ .path = units_path, .bytes = "module units;export identity;fn identity<U:copy>(x:U)->U{discard helper(1);return x;}fn helper(x:i64)->i64{return x+1;}" },
     } };
     var project = graph.Project.init(allocator);
     defer project.deinit();
@@ -500,4 +500,13 @@ test "generic calls requirement diagnostics link caller and imported declaration
     try t.expect(failure.related != null);
     try t.expectEqualStrings(units_path, compilation.src.locate(failure.related.?.span.start).path);
     try t.expectEqualStrings("U", compilation.src.text(failure.related.?.span));
+}
+
+test "generic calls concrete helpers retain imported identity and private domain boundaries" {
+    const caller = "module main;import units;fn helper(x:i64)->bool{return x==0;}fn f<T:copy>(x:T)->i64{discard x;return units::helper(1);}fn main()->i64{return 0;}";
+    try rejectChecked(caller, "module units;export helper;fn helper(x:i64)->i64{return leaf(x);}fn leaf(x:i64)->i64{return x+1;}", "E_GENERIC_UNSUPPORTED");
+    try rejectChecked(caller, "module units;fn helper(x:i64)->i64{return x;}", "E_PRIVATE_SYMBOL");
+    const domain_caller = "module main;import units;fn f<T:copy>(x:T)->i64{discard x;return units::D.helper(1);}fn main()->i64{return 0;}";
+    try rejectChecked(domain_caller, "module units;export D;domain D:i64{fn helper(x:i64)->i64{return D.leaf(x);}private fn leaf(x:i64)->i64{return x+1;}}", "E_GENERIC_UNSUPPORTED");
+    try rejectChecked(domain_caller, "module units;export D;domain D:i64{fn helper(x:i64)->i64{return E.leaf(x);}}domain E:i64{private fn leaf(x:i64)->i64{return x;}}", "E_PRIVATE_FUNCTION");
 }

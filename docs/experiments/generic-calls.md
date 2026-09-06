@@ -40,12 +40,17 @@ interning and its resource limits remain separate unfinished work.
 
 ## Explicit boundaries
 
-Calls to nongeneric helpers still require concrete type/effect summaries and are
-rejected with `E_GENERIC_BODY_UNSUPPORTED`. Reference arguments/results,
+Calls to ordinary helpers now use the same builtin signature rules. A declaration
+worklist checks every transitively reachable helper body once, including recursive
+cycles, before accepting the abstract graph. Its queue is bounded by the number
+of declarations; calls cannot recursively expand checking. Uncalled ordinary
+functions remain outside this pass. Reference arguments/results,
 conversions, and nominal/composite type substitution remain unsupported here.
 Effectful operations in a called template are still rejected by that template's
 body check. Acceptance of a call does not bypass checking its callee or establish
-an effect summary for an unchecked foreign/concrete function.
+permission to call an unchecked foreign function. Hidden effects in concrete
+helpers, including in constant-false branches, reject explicitly. This is a
+conservative pure-body proof, not general effect inference.
 
 Ordinary entry functions do not yet receive executable generic-call lowering.
 A valid abstract call graph still ends with `E_GENERIC_UNSUPPORTED` from overall
@@ -69,3 +74,9 @@ CLI tests passed, and final generic-focused acceptance passed 25 tests. The buil
 gate passed all 88 Guardian checks without baselines. This validates abstract
 calls and ordinary-language regressions; executable generic specialization and
 completion of the broader roadmap remain unproven and unfinished.
+
+Validation: all 563 core tests passed in Debug and ReleaseFast, all 60 CLI tests
+passed, and the build passed all 88 Guardian checks with baselines disabled.
+Coverage includes helper cycles, shared callees, module/domain privacy, hidden
+clock effects, invalid signatures/bodies, and allocation-failure cleanup. No
+executable specialization or full native-suite result is claimed for this change.

@@ -2978,3 +2978,20 @@ CLI tests passed, and final generic-focused acceptance passed 25 tests. The buil
 gate passed all 88 Guardian checks without baselines. This validates abstract
 calls and ordinary-language regressions; executable generic specialization and
 completion of the broader roadmap remain unproven and unfinished.
+
+
+### Pure concrete helpers in generic call graphs — 2026-09-06
+
+Abstract generic checking now follows ordinary helper calls and validates all
+transitively reachable bodies using the supported pure builtin rules. A worklist
+bounded by declaration count visits each body once, including recursive cycles;
+uncalled ordinary functions are left to concrete checking. Original module/domain
+privacy and source locations survive traversal. Hidden clock operations reject
+even behind constant-false branches. General effect/reference contracts, nominal
+substitution, executable specialization, and other roadmap requirements remain open.
+
+Validation: all 563 core tests passed in Debug and ReleaseFast, all 60 CLI tests
+passed, and the build passed all 88 Guardian checks with baselines disabled.
+Coverage includes helper cycles, shared callees, module/domain privacy, hidden
+clock effects, invalid signatures/bodies, and allocation-failure cleanup. No
+executable specialization or full native-suite result is claimed for this change.

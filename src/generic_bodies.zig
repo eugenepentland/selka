@@ -21,6 +21,8 @@ const Checker = struct {
     parameters: []const requirements.Parameter,
     result: Symbolic,
     functions: *const FunctionMap,
+    pending: *std.ArrayList(usize),
+    scheduled: []bool,
     owner: ?source.Span = null,
     module_names: ?*Names = null,
     locals: std.ArrayList(Local) = .empty,
@@ -88,6 +90,10 @@ const Checker = struct {
             const allowed = if (self.owner) |owner| std.mem.eql(u8, self.src.text(owner), self.src.text(function.policy.owner.?)) else false;
             if (!allowed) return self.sink.failRelated("E_PRIVATE_FUNCTION", invocation.name, "private generic method requires the same declaring domain", .{ .span = function.name, .message = "private function declared here" });
         }
+        if (!self.scheduled[index]) {
+            self.pending.appendAssumeCapacity(index);
+            self.scheduled[index] = true;
+        }
         return function;
     }
     fn substituted(self: *Checker, span: source.Span, parameters: []const ast.TypeParameter, arguments: []const Symbolic) Error!Symbolic {
@@ -99,7 +105,6 @@ const Checker = struct {
     fn call(self: *Checker, invocation: Call, span: source.Span) Error!Symbolic {
         const function = try self.callTarget(invocation);
         const signature = function.signature;
-        if (signature.type_parameters.len == 0) return self.sink.fail(eUnsupported, span, "calls to concrete helpers still need checked type/effect summaries");
         if (signature.return_reference != null or function.policy.conversion) return self.sink.fail(eUnsupported, span, "generic reference-result and conversion calls still need abstract checking");
         if (invocation.type_arguments.len != signature.type_parameters.len) return self.sink.fail("E_GENERIC_ARITY", span, "explicit type argument count does not match generic parameters");
         if (invocation.arguments.len != signature.parameters.len) return self.sink.fail("E_ARITY", span, "argument count does not match function parameters");
@@ -241,11 +246,34 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
         if (entry.found_existing) return sink.fail("E_DUPLICATE_FUNCTION", function.name, "duplicate function declaration");
         entry.value_ptr.* = index;
     }
-    for (program.functions) |function| {
+    const scheduled = try allocator.alloc(bool, program.functions.len);
+    defer allocator.free(scheduled);
+    @memset(scheduled, false);
+    var pending = try std.ArrayList(usize).initCapacity(allocator, program.functions.len);
+    defer pending.deinit(allocator);
+    for (program.functions, 0..) |function, index| {
         if (function.signature.type_parameters.len == 0) continue;
+        scheduled[index] = true;
+        pending.appendAssumeCapacity(index);
+    }
+    var cursor: usize = 0;
+    while (cursor < pending.items.len) : (cursor += 1) {
+        const function = program.functions[pending.items[cursor]];
         const parameters = try requirements.resolve(allocator, src, function.signature.type_parameters, sink);
         defer allocator.free(parameters);
-        var checker: Checker = .{ .allocator = allocator, .src = src, .program = program, .sink = sink, .parameters = parameters, .result = undefined, .module_names = module_names, .functions = &functions, .owner = function.policy.owner };
+        var checker: Checker = .{
+            .allocator = allocator,
+            .src = src,
+            .program = program,
+            .sink = sink,
+            .parameters = parameters,
+            .result = undefined,
+            .module_names = module_names,
+            .functions = &functions,
+            .pending = &pending,
+            .scheduled = scheduled,
+            .owner = function.policy.owner,
+        };
         defer checker.locals.deinit(allocator);
         defer checker.active.deinit(allocator);
         if (function.signature.return_reference != null or function.policy.conversion) return sink.fail(eUnsupported, function.name, "generic reference results and conversions still need abstract checking");
