@@ -217,3 +217,20 @@ test "native arena emission supports lexical scopes and reset with allocation cl
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), arenaScenario, .{});
 }
+
+fn poolScenario(allocator: std.mem.Allocator) !void {
+    var compilation = try language.Compilation.init(allocator, "pools.my", "pool P(Id):i64;result A{ok:P,err:i64}result I{ok:Id,err:i64}" ++
+        "fn main(heap:allocator)->i64{match acquire_pool<A>(heap,2){A.ok(acquired)=>{let mut p=acquired;" ++
+        "acknowledge insert_pool<I>(p,7);return cast<i64>(len_pool(p));},A.err(e)=>{return e;}}}");
+    defer compilation.deinit();
+    const output = try compilation.emitC(allocator);
+    defer allocator.free(output);
+    try t.expect(std.mem.indexOf(u8, output, "push_value(acquire_pool(") != null);
+    try t.expect(std.mem.indexOf(u8, output, "int status = pool_insert(") != null);
+}
+// spec: NATIVE-POOL-1
+test "native pool emission supports owned registries and handles with allocation cleanup" {
+    try poolScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), poolScenario, .{});
+}

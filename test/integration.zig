@@ -643,7 +643,7 @@ test "CLI executes typed pool graphs and preserves diagnostics across analysis c
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
     try testing.expect(std.mem.indexOf(u8, dumped.stdout, "ACQUIRE_POOL") != null);
     try testing.expect(std.mem.indexOf(u8, dumped.stdout, "POOL_replace") != null);
-    try invoke("emit-c", source, 1, "", "error[E_NATIVE_FEATURE]");
+    try expectNativeEmission(source, "push_value(acquire_pool(");
     const invalid = "pool P(Id): i64; fn main() -> i64 { discard new Id {}; return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates", "report-quality", "emit-c" }) |command| try invoke(command, invalid, 1, "", "error[E_TYPE]");
 }
@@ -653,7 +653,7 @@ test "CLI executes nested source arenas and rejects escapes across compiler comm
     try invoke("run", source, 0, "50\n", "");
     try invokeOptions("run", source, &.{"--memory=arena"}, 0, "50\n", "");
     try invoke("check", source, 0, "", "");
-    try invoke("emit-c", source, 1, "", "error[E_NATIVE_FEATURE]");
+    try expectNativeEmission(source, "push_value(acquire_pool(");
     const invalid = "fn f(heap: allocator) -> allocator { arena heap as scratch { return scratch; } } fn main() -> i64 { return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates", "report-quality", "emit-c" }) |command| try invoke(command, invalid, 1, "", "error[E_ARENA_ESCAPE]");
     const dumped = try runFixture("dump-bytecode", source, &.{});
@@ -669,11 +669,7 @@ test "CLI executes typed arena resets and checks result obligations consistently
     try invoke("run", source, 0, "3\n", "");
     try invokeOptions("run", source, &.{"--memory=arena"}, 0, "3\n", "");
     try invoke("check", source, 0, "", "");
-    const generated = try runFixture("emit-c", source, &.{});
-    defer testing.allocator.free(generated.stdout);
-    defer testing.allocator.free(generated.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, generated.term);
-    try testing.expect(std.mem.indexOf(u8, generated.stdout, "int status = reset_arena();") != null);
+    try expectNativeEmission(source, "int status = reset_arena();");
     const invalid = "result R { ok: bool, err: i64 } fn main(heap: allocator) -> i64 { discard reset_arena<R>(heap); return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates", "report-quality", "emit-c" }) |command| try invoke(command, invalid, 1, "", "error[E_RESULT_DISCARD]");
     const dumped = try runFixture("dump-bytecode", source, &.{});
@@ -1029,4 +1025,12 @@ test "CLI sessionCheck returns host failure without terminating the session" {
     defer testing.allocator.free(replies);
     try testing.expect(std.mem.indexOf(u8, replies, "\"failure\":\"FileNotFound\"") != null);
     try testing.expect(std.mem.indexOf(u8, replies, "\"action\":\"quit\",\"status\":0") != null);
+}
+
+fn expectNativeEmission(source: []const u8, marker: []const u8) !void {
+    const generated = try runFixture("emit-c", source, &.{});
+    defer testing.allocator.free(generated.stdout);
+    defer testing.allocator.free(generated.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, generated.term);
+    try testing.expect(std.mem.indexOf(u8, generated.stdout, marker) != null);
 }

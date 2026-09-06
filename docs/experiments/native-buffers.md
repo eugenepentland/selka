@@ -21,5 +21,5 @@ tests after fresh successful runs, plus 60 CLI tests), including 2,538 VM/native
 fixtures. Formatting and the strict Guardian gate pass without frozen violations.
 
 [Native lexical arenas](native-arenas.md) now add chunk backing, reset, and
-allocator lifetimes. Native pools, external resources, and provider capabilities
-remain pending. Root allocator support does not imply support for those types.
+allocator lifetimes. [Native pools](native-pools.md) are also supported. External resources and provider
+capabilities remain pending. Root allocator support does not imply support for those types.

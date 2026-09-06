@@ -374,9 +374,12 @@ add records, arrays, tables, conversions/updates, and boxed variants beyond this
 limit. [Native borrowing and slices](docs/experiments/native-references.md) now support
 scoped loans, parameters, returned views, and snapshot-preserving writes.
 [Native owned buffers](docs/experiments/native-buffers.md) add root allocators,
-mutation, growth, and borrowed views with VM/native and cleanup acceptance. Native
-pools and external resources remain pending. [Native lexical arenas](docs/experiments/native-arenas.md)
+mutation, growth, and borrowed views with VM/native and cleanup acceptance.
+[Native lexical arenas](docs/experiments/native-arenas.md)
 now support chunk backing, checked reset, and scope/return cleanup.
+[Native pools](docs/experiments/native-pools.md) add generation-checked handles,
+snapshots, operations, and shared quotas on root/arena storage. External resources
+remain pending.
 
 The [ordinary application corpus](examples/corpus/README.md) adds a multi-module
 invoice calculator and packet decoder, tested against independent Python oracles.

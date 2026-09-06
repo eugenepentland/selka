@@ -31,11 +31,16 @@ static uint64_t next_region_identity = 2;
 static void clear_region_chunks(Region *region) {
     while (region->chunks) { Chunk *next = region->chunks->next; free(region->chunks); region->chunks = next; }
 }
+typedef struct { uint64_t generation; size_t next; int live; } PoolEntry;
+typedef struct { uint64_t identity; size_t issued, live, free_head; PoolEntry entries[]; } Pool;
+static size_t pool_owners, pool_slots;
+static uint64_t next_pool_identity = 1;
 typedef struct Aggregate Aggregate;
 typedef struct { V number; Aggregate *object; } Slot;
 struct Aggregate {
     size_t refs, count, tag, capacity;
     int buffer;
+    Pool *pool;
     Region *region;
     Aggregate *previous, *next, *pending;
     Slot fields[];
@@ -70,7 +75,7 @@ static void cleanup(void) {
     while (nf) { --nf; free(frames[nf].references); free(frames[nf].locals); }
     /* All heap objects are registered, including temporary and partial values.
        Emergency cleanup frees the registry directly without traversing edges. */
-    while (objects) { Aggregate *next = objects->next; if (!objects->region) free(objects); objects = next; }
+    while (objects) { Aggregate *next = objects->next; if (!objects->region) { free(objects->pool); free(objects); } objects = next; }
     for (size_t i = 0; i < 256; ++i) clear_region_chunks(&regions[i]);
     free(frames); free(values);
     frames = NULL; values = NULL;
@@ -124,6 +129,7 @@ static void release_value(Slot value) {
         else objects = object->next;
         if (object->next) object->next->previous = object->previous;
         if (object->buffer) guest_capacity -= object->capacity;
+        if (object->pool) { --pool_owners; pool_slots -= object->capacity; if (!object->region) free(object->pool); }
         if (object->region) --object->region->users; else free(object);
     }
 }
@@ -169,7 +175,7 @@ static Aggregate *new_object_in(size_t count, size_t tag, Region *region) {
 }
 static Aggregate *new_object(size_t count, size_t tag) { return new_object_in(count, tag, NULL); }
 static Slot clone_value(Slot value) {
-    if (!value.object || value.object->buffer) host_failure("InternalError");
+    if (!value.object || value.object->buffer || value.object->pool) host_failure("InternalError");
     Aggregate *object = new_object(value.object->count, value.object->tag);
     for (size_t i = 0; i < object->count; ++i) object->fields[i] = copy_value(value.object->fields[i]);
     return (Slot){0, object};
@@ -361,6 +367,91 @@ static int buffer_reserve(size_t owner) {
     local_access(owner, 1)->value = (Slot){0, grown};
     guest_capacity += increase;
     return 0;
+}
+static Aggregate *pool_owner(size_t owner) {
+    Aggregate *object = local_access(owner, 0)->value.object;
+    if (!object || !object->pool) host_failure("InternalError");
+    return object;
+}
+static Slot acquire_pool(size_t ok, size_t error) {
+    V capacity = pop(); Region *region = allocator_region(pop());
+    if (capacity < 0 || capacity > 4096 || pool_owners >= 64 || (U)capacity > 16384 - pool_slots)
+        return boxed_variant(error, (Slot){1, NULL}, 1);
+    if (next_pool_identity == UINT64_MAX) return boxed_variant(error, (Slot){2, NULL}, 1);
+    Aggregate *object = new_object_in((size_t)capacity, 0, region);
+    size_t bytes = sizeof(Pool) + (size_t)capacity * sizeof(PoolEntry);
+    Pool *pool = region ? region_allocate(region, bytes) : calloc(1, bytes);
+    if (!pool) host_failure("OutOfMemory");
+    object->pool = pool; pool->identity = next_pool_identity++; pool->free_head = SIZE_MAX;
+    ++pool_owners; pool_slots += (size_t)capacity;
+    return boxed_variant(ok, (Slot){0, object}, 1);
+}
+static int pool_index(Aggregate *owner, Slot handle, size_t *index) {
+    Aggregate *id = handle.object;
+    if (!id || id->count != 3) host_failure("InternalError");
+    if ((V)owner->pool->identity != id->fields[0].number) return 2;
+    V selected = id->fields[1].number;
+    if (selected < 0 || (U)selected >= owner->pool->issued) return 1;
+    *index = (size_t)selected;
+    PoolEntry entry = owner->pool->entries[*index];
+    return !entry.live || (V)entry.generation != id->fields[2].number ? 1 : 0;
+}
+static size_t pool_length(size_t owner) { return pool_owner(owner)->pool->live; }
+static size_t pool_capacity(size_t owner) { return pool_owner(owner)->capacity; }
+static int pool_insert(size_t owner, Slot *result) {
+    Slot value = pop_value(); Aggregate *object = pool_owner(owner); Pool *pool = object->pool;
+    if (pool->free_head == SIZE_MAX && pool->issued == object->capacity) { release_value(value); return 3; }
+    size_t index;
+    if (pool->free_head == SIZE_MAX) {
+        index = pool->issued++; pool->entries[index].generation = 1;
+    } else { index = pool->free_head; pool->free_head = pool->entries[index].next; }
+    PoolEntry *entry = &pool->entries[index]; entry->live = 1; entry->next = SIZE_MAX;
+    object->fields[index] = value; ++pool->live;
+    Aggregate *handle = new_object(3, 0);
+    handle->fields[0].number = (V)pool->identity;
+    handle->fields[1].number = (V)index;
+    handle->fields[2].number = (V)entry->generation;
+    *result = (Slot){0, handle}; return 0;
+}
+static int pool_read(size_t owner, Slot *result) {
+    Slot handle = pop_value(); Aggregate *object = pool_owner(owner); size_t index = 0;
+    int status = pool_index(object, handle, &index); release_value(handle);
+    if (!status) *result = copy_value(object->fields[index]);
+    return status;
+}
+static int pool_replace(size_t owner, Slot *result) {
+    Slot value = pop_value(), handle = pop_value(); Aggregate *object = pool_owner(owner); size_t index = 0;
+    int status = pool_index(object, handle, &index); release_value(handle);
+    if (status) { release_value(value); return status; }
+    release_value(object->fields[index]); object->fields[index] = value;
+    *result = (Slot){1, NULL}; return 0;
+}
+static void pool_remove_index(Aggregate *object, size_t index) {
+    Pool *pool = object->pool; PoolEntry *entry = &pool->entries[index];
+    release_value(object->fields[index]); object->fields[index] = (Slot){0};
+    entry->live = 0; --pool->live;
+    if (entry->generation != UINT64_MAX) {
+        ++entry->generation; entry->next = pool->free_head; pool->free_head = index;
+    }
+}
+static int pool_remove(size_t owner, Slot *result) {
+    Slot handle = pop_value(); Aggregate *object = pool_owner(owner); size_t index = 0;
+    int status = pool_index(object, handle, &index); release_value(handle);
+    if (!status) { pool_remove_index(object, index); *result = (Slot){1, NULL}; }
+    return status;
+}
+static V pool_clear(size_t owner) {
+    Aggregate *object = pool_owner(owner);
+    for (size_t i = object->pool->issued; i; --i)
+        if (object->pool->entries[i-1].live) pool_remove_index(object, i-1);
+    return 1;
+}
+static void compare_handle(int unequal) {
+    Slot right = pop_value(), left = pop_value();
+    if (!left.object || !right.object || left.object->count != 3 || right.object->count != 3) host_failure("InternalError");
+    int equal = 1;
+    for (size_t i = 0; i < 3; ++i) if (left.object->fields[i].number != right.object->fields[i].number) equal = 0;
+    release_value(left); release_value(right); push(unequal ? !equal : equal);
 }
 static Reference *active_reference(Reference *reference) {
     if (!reference || !reference->active) trap("R_REFERENCE_LIFETIME");

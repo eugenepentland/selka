@@ -35,6 +35,14 @@ fn variantValue(w: *std.Io.Writer, layout: native_layout.Layout, ty: typed.Type,
         try w.print("(Slot){{variant_make(value.number, {d}, {d}, {d}), NULL}}", .{ native_layout.tagBits(layout.records[ty.recordIndex()].shape.variants.?.cases.len), layout.width(value_type), tag });
     } else try w.print("(Slot){{{d}, NULL}}", .{tag});
 }
+fn statusResult(w: *std.Io.Writer, layout: native_layout.Layout, ty: typed.Type) !void {
+    const shape = typed.resultShape(ty, layout.records).?;
+    try w.writeAll("if (status) { push_value(");
+    try variantValue(w, layout, ty, shape.error_tag, shape.error_type);
+    try w.writeAll("); } else { push_value(");
+    try variantValue(w, layout, ty, shape.ok_tag, shape.ok_type);
+    try w.writeAll("); }\n");
+}
 fn indices(w: *std.Io.Writer, values: []const usize) !void {
     if (values.len == 0) return w.writeAll("NULL");
     try w.writeAll("(const size_t[]){");
@@ -191,6 +199,9 @@ fn checkFunction(layout: native_layout.Layout, function: bc.Function, sink: *dia
         .move_local,
         .load_local,
         .acquire_buffer,
+        .acquire_pool,
+        .pool_operation,
+        .cmp_handle,
         .begin_region,
         .end_region,
         .reset_arena,
@@ -315,16 +326,22 @@ fn writeOperation(context: InstructionOutput) !bool {
         .array_length => try w.writeAll("array_length();\n"),
         .read_field => |read| try w.print("push_value(field_value(local_access({d}, 0)->value, {d}));\n", .{ @backingInt(read.owner), read.field }),
         .take_field => |take| try w.print("take_field({d}, {d});\n", .{ @backingInt(take.owner), take.field }),
+        .cmp_handle => |operation| try w.print("compare_handle({d});\n", .{@intFromBool(operation.predicate == .ne)}),
+        .acquire_pool => |ty| {
+            const shape = typed.resultShape(ty, program.records).?;
+            try w.print("push_value(acquire_pool({d}, {d}));\n", .{ shape.ok_tag, shape.error_tag });
+        },
+        .pool_operation => |operation| {
+            if (operation.kind.fallible()) {
+                try w.print("Slot value = (Slot){{0}}; int status = pool_{s}({d}, &value); if (status) value = (Slot){{status, NULL}};\n", .{ @tagName(operation.kind), @backingInt(operation.owner) });
+                try statusResult(w, layout, operation.output);
+            } else try w.print("push((V)pool_{s}({d}));\n", .{ @tagName(operation.kind), @backingInt(operation.owner) });
+        },
         .begin_region => |slot| try w.print("begin_region({d});\n", .{@backingInt(slot)}),
         .end_region => |slot| try w.print("end_region({d});\n", .{@backingInt(slot)}),
         .reset_arena => |ty| {
             try w.writeAll("int status = reset_arena(); Slot value = (Slot){status ? status : 1, NULL};\n");
-            const shape = typed.resultShape(ty, program.records).?;
-            try w.writeAll("if (status) { push_value(");
-            try variantValue(w, layout, ty, shape.error_tag, shape.error_type);
-            try w.writeAll("); } else { push_value(");
-            try variantValue(w, layout, ty, shape.ok_tag, shape.ok_type);
-            try w.writeAll("); }\n");
+            try statusResult(w, layout, ty);
         },
         .acquire_buffer => |ty| {
             const shape = typed.resultShape(ty, program.records).?;
@@ -336,12 +353,7 @@ fn writeOperation(context: InstructionOutput) !bool {
                 .read => try w.print("push_value(buffer_read({d}));\n", .{@backingInt(operation.owner)}),
                 else => {
                     try w.print("int status = buffer_{s}({d}); Slot value = (Slot){{status ? status : 1, NULL}};\n", .{ @tagName(operation.kind), @backingInt(operation.owner) });
-                    const shape = typed.resultShape(operation.output, program.records).?;
-                    try w.writeAll("if (status) { push_value(");
-                    try variantValue(w, layout, operation.output, shape.error_tag, shape.error_type);
-                    try w.writeAll("); } else { push_value(");
-                    try variantValue(w, layout, operation.output, shape.ok_tag, shape.ok_type);
-                    try w.writeAll("); }\n");
+                    try statusResult(w, layout, operation.output);
                 },
             }
         },

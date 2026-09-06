@@ -41,6 +41,14 @@ pub const Layout = struct {
             if (record.shape.domain) |backing| {
                 widths[index] = self.width(backing);
                 supported[index] = self.supports(backing);
+            } else if (record.shape.handle_pool != null) {
+                supported[index] = true;
+            } else if (record.shape.pool) |pool| {
+                if (unvisitedChild(pool.element, states)) |child_index| {
+                    try stack.append(allocator, .{ .index = child_index });
+                    continue;
+                }
+                supported[index] = self.supports(pool.element);
             } else if (record.shape.buffer) |element| {
                 if (unvisitedChild(element, states)) |child_index| {
                     try stack.append(allocator, .{ .index = child_index });

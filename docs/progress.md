@@ -2678,3 +2678,27 @@ and ReleaseFast runs pass.
 
 Native pools and external resources remain unsupported, and the other pending
 roadmap tracks remain open.
+
+## 2026-09-06: Native pools and generation-checked handles
+
+The C backend now supports pool acquisition, queries, insertion, snapshot reads,
+replacement, removal, clear, and nominal handle equality. Pool identity and slot
+generation checks reject foreign/stale handles. Removal and clear invalidate old
+IDs; exhausted generations retire slots. Shared owner/per-pool/total-slot quotas
+match the VM defaults, including empty owners. Pool backing uses root or arena
+allocation, and retained ordinary snapshots remain independent of owner lifetime.
+
+Debug and ReleaseFast pass all 28 build steps and 591 Zig tests (531 core, 60 CLI).
+Native acceptance covers 2,616 comparisons across 83 value and 15 module fixtures;
+the new imported pool/handle-bundle case was rerun separately with both compiler
+modes after the original ReleaseFast parity driver completed. Sanitizer acceptance
+passes 468 injected allocation failures and bounded 20,000-iteration pool lifecycle,
+arena reset, and aggregate update loops. The actual CLI now verifies successful
+pool and combined arena/pool emission while retaining semantic rejection checks.
+
+Guardian passes all 88 checks without frozen violations. Its repeated-string
+findings prompted a shared typed-result emitter for buffers, pools, and arena reset;
+evidence-backed ROI labels and mandatory feedback are recorded in Guardian.
+Formatting passes. External provider/resource operations, generics, source
+serialization, finer incremental compilation, and other unfinished roadmap work
+remain open. Hosted CI remains unexecuted.

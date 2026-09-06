@@ -78,9 +78,9 @@ through checking/lowering/emission, and explicit rejection of unsupported signat
 and operations. Actual CLI tests verify emission, source errors, native-feature
 errors without partial C output, and wrong-command option rejection.
 
-`tests/native_cases.py` now compiles and executes 76 single-file and 14 module
+`tests/native_cases.py` now compiles and executes 83 single-file and 15 module
 fixtures at -O0 and -O2 with undefined-behavior sanitization and no sanitizer
-recovery. It performs 2,568 actual VM/native comparisons per compiler host mode
+recovery. It performs 2,616 actual VM/native comparisons per compiler host mode
 of exit status, stdout, trap locations, and module call frames. Scalar coverage includes:
 
 - Existing arithmetic, sum, and GCD fixtures; all integer widths and checked casts.
@@ -110,3 +110,6 @@ and checked views, with allocation-failure cleanup and module transfer acceptanc
 
 [Lexical arenas](native-arenas.md) add aligned chunk backing, allocator identity,
 reset guards, and scope/return/failure cleanup with VM/native acceptance.
+
+[Native pools](native-pools.md) add generation-checked graph handles, shared
+quotas, immutable snapshots, and root/arena cleanup.

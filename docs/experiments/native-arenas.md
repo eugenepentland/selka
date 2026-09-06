@@ -24,5 +24,6 @@ Sanitizer tests pass 380 injected allocation failures, covering reset, returned
 snapshots, propagation, and a bounded 20,000-iteration arena allocation/reset loop.
 Formatting and all 88 Guardian checks pass without frozen violations.
 
-Native pools and external resources remain unsupported. The broader native track
+[Native pools](native-pools.md) now support root/arena storage and checked handles.
+External resources remain unsupported. The broader native track
 and the other pending roadmap requirements remain open.

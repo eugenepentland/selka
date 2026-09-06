@@ -833,3 +833,12 @@ Native arena scopes, chunk backing, allocator identity, reset, and frame cleanup
 are implemented. Debug and ReleaseFast pass all 28 build steps, including 2,568
 VM/native comparisons and 380 allocation-failure cases. Native pools, external resources, and
 the other unfinished roadmap requirements remain open.
+
+
+## Native pools
+
+Native pools now implement generation-checked handles, queries/mutations, snapshots,
+shared quotas, and root/arena cleanup. Both compiler modes pass all 28 build steps
+and 591 Zig tests; native acceptance covers 2,616 VM/native comparisons and 468
+sanitizer allocation-failure cases.
+External resources and the remaining roadmap work stay open.

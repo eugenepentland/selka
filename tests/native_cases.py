@@ -91,6 +91,10 @@ def project_cases(compiler, zig, root, temp):
         "main.my": "module main; import storage as s;fn main(heap:allocator)->i64{match s::make(heap){s::A.ok(b)=>{return read_buffer(b,1);},s::A.err(e)=>{return e;}}}",
         "storage.my": "module storage;export B;export A;export make;buffer B:i64;result A{err:i64,ok:B} result S{err:i64,ok:bool} fn make(heap:allocator)->A{let mut b=try acquire_buffer<A>(heap,1);discard try append_buffer<S>(b,7);discard try reserve_buffer<S>(b,heap,3);discard try resize_buffer<S>(b,3,9);return new A.ok(b);}",
     }))
+    fixtures.append(("pool-handles", {
+        "main.my": "module main;import data as d;fn main(heap:allocator)->i64{arena heap as scratch{match d::make(scratch){d::O.ok(bundle)=>{let id=read_field(bundle,id);let p=take_field(bundle,p);match read_pool<d::R>(p,id){d::R.ok(n)=>{return n;},d::R.err(e)=>{return e;}}},d::O.err(e)=>{return e;}}}}",
+        "data.my": "module data;export P;export Id;export Bundle;export O;export R;export make;pool P(Id):i64;struct Bundle{p:P,id:Id}result O{ok:Bundle,err:i64}result A{ok:P,err:i64}result I{ok:Id,err:i64}result R{ok:i64,err:i64}fn make(heap:allocator)->O{let mut p=try acquire_pool<A>(heap,1);let id=try insert_pool<I>(p,7);return new O.ok(new Bundle{p:p,id:id});}",
+    }))
     codec_root = root / "examples" / "domain-codecs"
     fixtures.append(("domain-codecs", {name: (codec_root / name).read_text() for name in ("main.my", "data.my")}))
     pairs = 0
@@ -151,7 +155,7 @@ def main():
     compiler = args.compiler.resolve()
     root = Path(__file__).resolve().parents[1]
     fixtures = [(name, (root / "test" / "fixtures" / f"{name}.my").read_text()) for name in ("arithmetic", "sum", "gcd")]
-    fixtures += [(name, (root / "examples" / f"{name}.my").read_text()) for name in ("arrays", "records", "conversions", "tables", "references", "reference-parameters", "slices", "returned-references", "propagation", "buffers", "buffer-views", "allocator-capabilities", "arena-reset")]
+    fixtures += [(name, (root / "examples" / f"{name}.my").read_text()) for name in ("arrays", "records", "conversions", "tables", "references", "reference-parameters", "slices", "returned-references", "propagation", "buffers", "buffer-views", "allocator-capabilities", "arena-reset", "pools", "arenas")]
     fixtures.append(("integers", "fn widen(x: u32) -> u64 { return cast<u64>(x); } fn main() -> i64 { let a = 127i8; let b = 255u8; let c = 32767i16; let d = 65535u16; let e = 2147483647i32; let f = 4294967295u32; return cast<i64>(a) + cast<i64>(b) + cast<i64>(c) + cast<i64>(d) + cast<i64>(e) + cast<i64>(widen(f)); }"))
     expressions = ["9223372036854775807 + 1", "-9223372036854775808 - 1", "3037000500 * 3037000500", "-(-9223372036854775808)", "-9223372036854775808 / -1", "-9223372036854775808 % -1", "1 / 0", "1 % 0", "-7 / 3", "-7 % 3", "cast<i64>(255u8 + 1u8)", "cast<i64>(127i8 + 1i8)", "cast<i64>(18446744073709551615u64 * 18446744073709551615u64)", "cast<i64>(cast<u8>(-1))"]
     fixtures += [(f"arithmetic-{i}", f"fn main() -> i64 {{ return {expr}; }}") for i, expr in enumerate(expressions)]
@@ -221,6 +225,14 @@ def main():
         ("arena-empty-owner", "buffer B:i64;result A{ok:B,err:i64}result S{ok:bool,err:i64}fn main(heap:allocator)->i64{arena heap as scratch{match acquire_buffer<A>(scratch,0){A.ok(b)=>{match reset_arena<S>(scratch){S.err(e)=>{discard b;return e;},S.ok(discard)=>{discard b;return 9;}}},A.err(e)=>{return e;}}}}"),
         ("arena-wrong-growth", "buffer B:i64;result A{ok:B,err:i64}result S{ok:bool,err:i64}fn main(heap:allocator)->i64{arena heap as scratch{match acquire_buffer<A>(scratch,1){A.ok(acquired)=>{let mut b=acquired;acknowledge reserve_buffer<S>(b,heap,1);return 0;},A.err(e)=>{return e;}}}}"),
         ("arena-root-reset", "result S{err:i64,ok:bool}fn main(heap:allocator)->i64{match reset_arena<S>(heap){S.err(e)=>{return e;},S.ok(discard)=>{return 0;}}}"),
+    ]
+    pool_prefix = "pool P(Id):i64;result A{ok:P,err:i64}result I{err:i64,ok:Id}result S{ok:bool,err:i64}result W{ok:i64,err:i64} "
+    fixtures += [
+        ("pool-owner-quota", pool_prefix + "fn count(heap:allocator,n:i64)->i64{if n==0{return 9;}match acquire_pool<A>(heap,0){A.ok(p)=>{let value=count(heap,n-1);discard p;return value;},A.err(e)=>{return e;}}}fn main(heap:allocator)->i64{return count(heap,65);}"),
+        ("pool-total-quota", pool_prefix + "fn count(heap:allocator,n:i64)->i64{if n==0{return 9;}match acquire_pool<A>(heap,4096){A.ok(p)=>{let value=count(heap,n-1);discard p;return value;},A.err(e)=>{return e;}}}fn main(heap:allocator)->i64{return count(heap,5);}"),
+        ("pool-slot-limit", pool_prefix + "fn main(heap:allocator)->i64{match acquire_pool<A>(heap,4097){A.ok(discard)=>{return 9;},A.err(e)=>{return e;}}}"),
+        ("pool-full", pool_prefix + "fn work(heap:allocator)->W{let mut p=try acquire_pool<A>(heap,0);let id=try insert_pool<I>(p,7);discard id;return new W.ok(9);}fn main(heap:allocator)->i64{match work(heap){W.ok(n)=>{return n;},W.err(e)=>{return e;}}}"),
+        ("pool-equality", pool_prefix + "fn work(heap:allocator)->W{let mut p=try acquire_pool<A>(heap,1);let a=try insert_pool<I>(p,7);let saved=a;discard try remove_pool<S>(p,a);let b=try insert_pool<I>(p,8);let mut other=try acquire_pool<A>(heap,1);let c=try insert_pool<I>(other,9);discard clear_pool(p);if saved==a && a!=b && b!=c{return new W.ok(7);}return new W.ok(0);}fn main(heap:allocator)->i64{match work(heap){W.ok(n)=>{return n;},W.err(e)=>{return e;}}}"),
     ]
     buffer_prefix = "buffer B:i64; result A{err:i64,ok:B} result S{err:i64,ok:bool} fn code(s:S)->i64{match s{S.ok(discard)=>{return 0;},S.err(e)=>{return e;}}} "
     for name, body in (
