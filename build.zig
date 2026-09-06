@@ -74,6 +74,10 @@ pub fn build(b: *std.Build) void {
     typed_json.addFileArg(exe.getEmittedBin());
     typed_json.setCwd(b.path("."));
     test_step.dependOn(&typed_json.step);
+    const python_bindings = b.addSystemCommand(&.{ "python3", "tests/python_bindings.py", "--compiler" });
+    python_bindings.addFileArg(exe.getEmittedBin());
+    python_bindings.setCwd(b.path("."));
+    test_step.dependOn(&python_bindings.step);
     const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("src"), b.path("tests") }, .check = true });
     b.step("fmt-check", "Check canonical Zig formatting").dependOn(&fmt.step);
 }

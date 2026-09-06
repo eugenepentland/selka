@@ -14,7 +14,7 @@ not a claim that the full future language has been delivered.
 | D, errors and abstraction | In progress: typed results, checked handling/transfer, acknowledgement, and propagation implemented; typed-handle pool backend implemented; source handles implemented; generics pending | Require handling/propagation/explicit acknowledgement without erasing evaluation or ownership obligations. |
 | M, modules/interfaces | In progress: bounded import discovery, explicit exports/privacy, source maps, module-aware type checking, and VM execution implemented; optional direction policy and default-limit graph/tooling acceptance implemented; ordinary-program corpus review pending | Shared-domain execution, direction policy, and integrated 256-module/4096-import acceptance pass; extend ordinary-program corpus review. |
 | E, native execution | Scalar, nominal scalar domain, and closed enum C emission plus pinned-Zig native builder implemented for single-file and module projects; scalar semantic/trap/path/trace parity passes | Scalar acceptance complete; broader native support requires explicit operations and corresponding executable parity fixtures. |
-| F, compile-time/schema/incremental work | In progress: restricted effect-free project evaluation with step/frame/VM-memory budgets and source/implementation dependency receipts plus request identity before execution and persistent successful VM-result reuse with bounded field-level request comparisons implemented; typed scalar input manifest validation/module generation and fresh in-memory evaluation/cache bindings for multiple bounded manifests implemented; checked public type/function schema derivation and bounded ordinary typed JSON serialization/deserialization implemented; domain codecs, generated bindings, generation integration, and finer incremental compilation pending | Reject duplicate schema keys and undeclared inputs; explain invalidation and evaluation budgets. |
+| F, compile-time/schema/incremental work | In progress: restricted effect-free project evaluation with step/frame/VM-memory budgets and source/implementation dependency receipts plus request identity before execution and persistent successful VM-result reuse with bounded field-level request comparisons implemented; typed scalar input manifest validation/module generation and fresh in-memory evaluation/cache bindings for multiple bounded manifests implemented; checked public type/function schema derivation and bounded ordinary typed JSON serialization/deserialization and standalone Python data bindings implemented; domain codecs, callable foreign wrappers, generation integration, and finer incremental compilation pending | Reject duplicate schema keys and undeclared inputs; explain invalidation and evaluation budgets. |
 | T, formatter/reference reports/verification | Canonical single-file/module formatter and reachable-project formatting checks, resolved function-call/binding reports including module main/export roots, configurable structural metrics, and separate manifest verification driver implemented | Extend reference/specification identities and entry roots with modules/schemas, and parity fixtures with native execution. |
 
 ## A1 completed decisions
@@ -177,10 +177,15 @@ inputs and emits deterministic typed modules with manifest provenance hashes.
 
 [Checked public schema derivation](schemas.md) now emits deterministic exported type
 graphs and function contracts while preserving nominal identities and opaque boundaries.
-Ordinary serialization is now implemented as described below; domain codecs, generated
-bindings, and generation receipt/budget integration remain pending.
+Ordinary serialization and Python data bindings are now implemented as described below;
+domain codecs, callable foreign wrappers, and generation receipt/cache integration remain pending.
 
 [Typed JSON codecs](typed-json.md) now validate and materialize ordinary checked
 values and serialize them canonically under byte/node/token/depth limits, rejecting
-opaque dependencies and private root types. Source operations, domain codecs, bindings,
-and richer input/generation integration remain pending.
+opaque dependencies and private root types. Source operations, domain codecs, callable
+foreign wrappers, and richer input/generation integration remain pending.
+
+[Generated Python data bindings](python-bindings.md) now provide standalone nominal
+classes and compatible typed JSON codecs from fresh checked schemas, with generation
+limits, explicit unsupported-type reporting, and compiler/Python acceptance.
+Domain codecs, foreign function wrappers, and generation receipt/cache integration remain pending.

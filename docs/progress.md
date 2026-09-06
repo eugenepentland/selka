@@ -1960,3 +1960,47 @@ wider native support, ordinary-program review, and all other unfinished roadmap 
 remain pending. Diagnostics currently identify the input file and error category,
 without a nested JSON path. Guardian was not exercised; hosted CI has not run. The
 full roadmap goal remains active.
+
+## 2026-09-06: Generated standalone Python data bindings
+
+Added scripts/bindings.py, an embedded standalone runtime template, and an executed
+Python/ compiler acceptance driver. Every generation invokes schema-project to check
+the complete current source graph. Output contains annotated nominal record dataclasses,
+closed enums, distinct variant/result case dataclasses, and typed-json-v1 loads/dumps
+using only the Python standard library. Arrays decode as tuples and tables as read-only
+enum-keyed mappings. Exact native class/type checks preserve nominal identities and
+reject Python bool in integer positions. Collision-free escaping preserves module and
+field identities while handling Python keywords and special attribute names.
+
+Complete type-graph analysis lists opaque types and all dependent types explicitly as
+unsupported. No implicit constructor/codec is generated for domains, authority, runtime
+owners/handles, or wrappers containing them. Source result identities remain visible,
+but Python clients do not gain the language compiler's static handling obligations.
+Generated data bindings do not claim callable function wrappers or a foreign ABI.
+
+The runtime enforces typed JSON byte/value/token/depth limits, strict Unicode and
+object keys, full integer ranges, complete aggregate/table shapes, and closed case
+names. Typed errors include JSON-pointer paths where available. Generation embeds
+schema and generator/runtime content hashes, reports output identity and unsupported
+types, caps captured output and compiler elapsed time, checks generated Python syntax,
+and installs output atomically. Failures preserve existing output, and timed-out or
+oversized compiler children are terminated and reaped. Captured temporary files may
+overshoot the size threshold between polls; these limits are not a total memory quota.
+
+All 17 build steps pass in Debug and ReleaseFast: 525 Zig tests (468 core, 57 CLI),
+eight verification-driver tests, 29 compiler/Python wire comparisons per compiler host
+mode, existing codec/schema/input/receipt/cache/module/duplicate acceptance, and 392
+VM/native comparisons per host mode. Python binding acceptance also covers independent
+host construction, keyword/nominal collisions, immutable decoded containers, invalid
+wire/native values, custom limits, isolated standalone imports, private-change stability,
+public-change regeneration, exact output budgets, atomic write cleanup, and process
+reaping under time/capture failures. The generated message example runs successfully.
+Zig formatting, Python syntax, and whitespace checks pass. Documentation, roadmap,
+README, and both plan copies are synchronized.
+
+Standalone Python data bindings are implemented. Explicit domain codecs, callable
+foreign wrappers, source-level codec operations, richer declared inputs, generation
+receipt/cache integration, finer incremental compilation, generics, wider native
+operations, ordinary-program review, and all other unfinished roadmap work remain
+pending. Guardian was not exercised; hosted CI has not run. The full roadmap goal
+remains active.

@@ -110,8 +110,12 @@ exercise every allocation failure with leak checking. Existing manifest acceptan
 continues to cover the shared integer parser.
 
 This establishes ordinary typed serialization/deserialization. Domain codec
-declarations, external key mappings, JSON-path diagnostics, generated language
-bindings, source-level codec operations, richer declared-input integration, and
+declarations, external key mappings, compiler JSON-path diagnostics, callable foreign
+wrappers, source-level codec operations, richer declared-input integration, and
 generation budget/receipt/cache integration remain pending. The schema report is a
 language-contract graph; `typed-json-v1` defines this separate wire representation.
 Neither establishes a native memory layout or foreign ABI.
+
+[Generated Python data bindings](python-bindings.md) now implement this wire contract
+in standalone annotated nominal classes and bounded Python codecs, with executed
+compiler/Python parity acceptance.

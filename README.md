@@ -285,8 +285,9 @@ The deterministic JSON graph includes exported types and function signatures,
 qualified identities, field/variant structure, integer bounds, borrowing contracts,
 and inferred effects. Private declarations remain excluded; domains and runtime
 owners/capabilities retain opaque reconstruction boundaries. This establishes
-[schema derivation](docs/experiments/schemas.md); serialization, foreign bindings,
-and generation receipt/budget integration remain pending.
+[schema derivation](docs/experiments/schemas.md). Ordinary serialization and Python
+data bindings are now implemented below; domain codecs, callable foreign wrappers,
+and generation receipt/cache integration remain pending.
 
 Ordinary typed values now have a bounded JSON codec:
 
@@ -300,3 +301,18 @@ canonical `typed-json-v1`. It supports integer/boolean values, records, arrays,
 enum tables, enums, unions, and results. Duplicate/unknown keys and invalid values
 reject; opaque types require future explicit codecs. See the
 [wire contract, limits, and remaining integration](docs/experiments/typed-json.md).
+
+Generate standalone Python data bindings from the checked public schema:
+
+```sh
+mkdir -p zig-out/bindings
+python3 scripts/bindings.py examples/schema/main.my \
+  --output zig-out/bindings/message_bindings.py
+PYTHONPATH=zig-out/bindings python3 examples/schema/use_bindings.py
+```
+
+The module provides annotated nominal records/enums/variant classes and compatible
+bounded typed JSON codecs using only Python's standard library. Generation reports
+unsupported opaque types explicitly and preserves existing output on failure. See
+[Python bindings](docs/experiments/python-bindings.md) for naming, constructors,
+wire parity, limits, and remaining foreign-function/domain integration.

@@ -76,8 +76,9 @@ identity fingerprint.
 Derivation does not establish a wire format, target memory layout, foreign ABI,
 codec, or external-data validator. Explicit effect bounds are not emitted separately
 from inferred effects. [Ordinary typed JSON serialization/deserialization](typed-json.md) now uses this
-checked type model. Domain codec declarations, external key mappings, generated
-language bindings, and generation budget/receipt integration remain roadmap work. Consumers must not treat an opaque type as safely
+checked type model. [Generated Python data bindings](python-bindings.md) now consume the checked public
+schema. Domain codec declarations, external key mappings, callable foreign wrappers,
+and generation receipt/cache integration remain roadmap work. Consumers must not treat an opaque type as safely
 constructible from its descriptive metadata.
 
 ## Acceptance
