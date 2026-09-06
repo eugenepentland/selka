@@ -446,17 +446,17 @@ test "generic requirements checkGenericRequirements validates exported and uncal
 
 test "generic body contracts respect module-local declaration and import scopes" {
     try rejectChecked("module main;import units;fn f<T:copy>(x:T)->T{let units=x;return units;}fn main()->i64{return 0;}", "module units;", "E_SHADOWING");
-    try rejectChecked("module main;import units;fn f<T:copy>(x:T)->T{return x;}fn main()->i64{return 0;}", "module units;struct T{}", "E_GENERIC_UNSUPPORTED");
+    try acceptChecked("module main;import units;fn f<T:copy>(x:T)->T{return x;}fn main()->i64{return 0;}", "module units;struct T{}");
     try rejectChecked("module main;import units;fn main()->i64{return 0;}", "module units;fn bad<T:copy>(x:T,y:T)->T{return x+y;}", "E_GENERIC_OPERATION");
 }
 
 test "generic calls preserve imported declaration identity and private boundaries" {
     const main = "module main;import units;fn identity<T:integer>(x:T)->T{return x;}fn forward<T:copy>(x:T)->T{return units::identity::<T>(x);}fn main()->i64{return 0;}";
     const dependency = "module units;export identity;fn identity<U:copy>(x:U)->U{return x;}";
-    try rejectChecked(main, dependency, "E_GENERIC_UNSUPPORTED");
+    try acceptChecked(main, dependency);
     const domain_main = "module main;import units;fn forward<T:copy>(x:T)->T{return units::D.make::<T>(x);}fn main()->i64{return 0;}";
     const domain_dependency = "module units;export D;domain D:i64{private fn hidden<T:copy>(x:T)->T{return x;}fn make<U:copy>(x:U)->U{return D.hidden::<U>(x);}}";
-    try rejectChecked(domain_main, domain_dependency, "E_GENERIC_UNSUPPORTED");
+    try acceptChecked(domain_main, domain_dependency);
     try rejectChecked(main, "module units;fn identity<U:copy>(x:U)->U{return x;}", "E_PRIVATE_SYMBOL");
     try rejectChecked(main, "module units;export identity;fn identity<U:integer>(x:U)->U{return x;}", "E_GENERIC_ARGUMENT");
 }
@@ -504,9 +504,49 @@ test "generic calls requirement diagnostics link caller and imported declaration
 
 test "generic calls concrete helpers retain imported identity and private domain boundaries" {
     const caller = "module main;import units;fn helper(x:i64)->bool{return x==0;}fn f<T:copy>(x:T)->i64{discard x;return units::helper(1);}fn main()->i64{return 0;}";
-    try rejectChecked(caller, "module units;export helper;fn helper(x:i64)->i64{return leaf(x);}fn leaf(x:i64)->i64{return x+1;}", "E_GENERIC_UNSUPPORTED");
+    try acceptChecked(caller, "module units;export helper;fn helper(x:i64)->i64{return leaf(x);}fn leaf(x:i64)->i64{return x+1;}");
     try rejectChecked(caller, "module units;fn helper(x:i64)->i64{return x;}", "E_PRIVATE_SYMBOL");
     const domain_caller = "module main;import units;fn f<T:copy>(x:T)->i64{discard x;return units::D.helper(1);}fn main()->i64{return 0;}";
-    try rejectChecked(domain_caller, "module units;export D;domain D:i64{fn helper(x:i64)->i64{return D.leaf(x);}private fn leaf(x:i64)->i64{return x+1;}}", "E_GENERIC_UNSUPPORTED");
+    try acceptChecked(domain_caller, "module units;export D;domain D:i64{fn helper(x:i64)->i64{return D.leaf(x);}private fn leaf(x:i64)->i64{return x+1;}}");
     try rejectChecked(domain_caller, "module units;export D;domain D:i64{fn helper(x:i64)->i64{return E.leaf(x);}}domain E:i64{private fn leaf(x:i64)->i64{return x;}}", "E_PRIVATE_FUNCTION");
+}
+
+fn acceptChecked(main: []const u8, dependency: []const u8) !void {
+    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = main }, .{ .path = units_path, .bytes = dependency } } };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try project_compile_module.Compilation.init(&index);
+    try compilation.check();
+    try compilation.emit();
+    try t.expectEqual(@as(i64, 0), (try @import("vm.zig").runWithOptions(t.allocator, compilation.code.?, .{})).value);
+}
+
+fn genericExecutionScenario(allocator: std.mem.Allocator) !void {
+    var files: Files = .{ .entries = &.{
+        .{ .path = "main.my", .bytes = "module main;import units;fn id<T:integer>(x:T)->T{return x;}fn main()->i64{return units::run()+id::<i64>(2);}" },
+        .{ .path = units_path, .bytes = "module units;export run;export id;fn id<T:copy>(x:T)->T{return x;}fn run()->i64{if id::<bool>(true){return id::<i64>(5);}return 0;}" },
+    } };
+    var project = graph.Project.init(allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try project_compile_module.Compilation.init(&index);
+    try compilation.emit();
+    try t.expectEqual(@as(i64, 7), (try @import("vm.zig").runWithOptions(allocator, compilation.code.?, .{})).value);
+    const roots = try compilation.exportRoots(allocator);
+    defer allocator.free(roots);
+    try t.expectEqual(@as(usize, 1), roots.len);
+    const schema = try @import("schema.zig").render(allocator, &compilation);
+    defer allocator.free(schema);
+    try t.expect(std.mem.indexOfScalar(u8, schema, '$') == null);
+    const generated = try compilation.emitC(allocator);
+    defer allocator.free(generated);
+    try t.expect(generated.len > 0);
+}
+test "generic execution retains module identities and ordinary public schema roots" {
+    try genericExecutionScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), genericExecutionScenario, .{});
 }

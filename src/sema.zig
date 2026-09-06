@@ -22,6 +22,7 @@ const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
 const records = @import("records.zig");
 const Error = diagnostic.Error;
+const instances = @import("generic_instances.zig");
 const Names = @import("module_names.zig").Names;
 const Pending = struct { available: bool, fields: []const bool };
 const Work = struct { id: ast.NodeId, emit: bool = false, checkpoint: bool = false, verify: ?[]const Pending = null };
@@ -43,7 +44,13 @@ const Checker = struct {
     locals: std.ArrayList(typed.Local) = .empty,
     active: std.StringHashMapUnmanaged(typed.LocalId) = .empty,
     resolved: []?typed.NodeId,
-    functions: std.StringHashMapUnmanaged(typed.FunctionId) = .empty,
+    functions: std.StringHashMapUnmanaged(instances.DeclarationId) = .empty,
+    resolved_nodes: std.ArrayList(usize) = .empty,
+    instance_keys: std.ArrayList(instances.Key) = .empty,
+    generic_registry: instances.Registry = .{},
+    ordinary_ids: []?typed.FunctionId,
+    ordinary_count: usize = 0,
+    current_function: ?typed.FunctionId = null,
     return_type: typed.Type = .i64,
     arena_depth: usize = 0,
     catalog: records.Catalog,
@@ -59,7 +66,42 @@ const Checker = struct {
         return self.functions.contains(name) or self.catalog.names.contains(name);
     }
     fn ty(self: *Checker, span: source.Span) Error!typed.Type {
+        if (self.current_function) |id| return self.functionType(id, span);
         return self.catalog.resolve(self.src, span, self.sink);
+    }
+    fn syntaxFunction(self: *Checker, id: typed.FunctionId) ast.Function {
+        return self.syntax.functions[@backingInt(self.instance_keys.items[@backingInt(id)].declaration)];
+    }
+    fn functionType(self: *Checker, id: typed.FunctionId, span: source.Span) Error!typed.Type {
+        const key = self.instance_keys.items[@backingInt(id)];
+        const function = self.syntax.functions[@backingInt(key.declaration)];
+        for (function.signature.type_parameters, key.arguments) |parameter, argument| {
+            if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(span))) return argument;
+        }
+        return self.catalog.resolve(self.src, span, self.sink);
+    }
+    fn specialize(self: *Checker, declaration: instances.DeclarationId, call: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span) Error!typed.FunctionId {
+        const function = self.syntax.functions[@backingInt(declaration)];
+        if (call.type_arguments.len != function.signature.type_parameters.len) return self.sink.fail("E_GENERIC_ARITY", span, "explicit type argument count does not match generic parameters");
+        if (self.ordinary_ids[@backingInt(declaration)]) |id| return id;
+        const required = try @import("generic_requirements.zig").resolve(self.allocator, self.src, function.signature.type_parameters, self.sink);
+        const arguments = try self.allocator.alloc(typed.Type, required.len);
+        for (call.type_arguments, required, arguments) |at, parameter, *argument| {
+            argument.* = try self.ty(at);
+            if (!parameter.requirements.accepts(argument.*, self.catalog.records)) return self.sink.failRelated(
+                "E_GENERIC_ARGUMENT",
+                at,
+                "type argument does not satisfy the callee's declared requirements",
+                .{ .span = parameter.name, .message = "required type parameter declared here" },
+            );
+        }
+        const instance = self.generic_registry.intern(self.allocator, .{ .declaration = declaration, .arguments = arguments }) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            else => return self.sink.fail("E_GENERIC_LIMIT", span, "generic specialization exceeds instance or type argument budget"),
+        };
+        const index = self.ordinary_count + @backingInt(instance);
+        if (index == self.instance_keys.items.len) try self.instance_keys.append(self.allocator, (self.generic_registry.get(instance) catch return error.InternalError));
+        return @fromBackingInt(index);
     }
     fn requiresHandling(self: *Checker, value_type: typed.Type) bool {
         return typed.requiresHandling(value_type, self.catalog.records);
@@ -154,7 +196,7 @@ const Checker = struct {
             },
         );
         if (signature.signature.parameters.len != call.arguments.len) return self.sink.fail("E_ARITY", span, "argument count does not match function parameters");
-        return function;
+        return self.specialize(function, call, span);
     }
     fn reference(self: *Checker, span: source.Span) Error!typed.ReferenceId {
         const id = self.active_refs.get(self.src.text(span)) orelse return self.sink.fail("E_REFERENCE_SCOPE", span, "reference is not active in this scope");
@@ -392,7 +434,7 @@ const Checker = struct {
             .call => |call| {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
                 const target = try self.callTarget(call, node.span);
-                const signature = self.syntax.functions[@backingInt(target)];
+                const signature = self.syntaxFunction(target);
                 if (signature.signature.return_reference != null and !(allow_reference)) return self.sink.fail(eReferenceResult, node.span, "reference-returning calls require a borrow scope");
                 var i = call.arguments.len;
                 while (i > 0) {
@@ -605,7 +647,7 @@ const Checker = struct {
     }
     fn checkCall(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
         const function = try self.callTarget(call, node.span);
-        const signature = self.syntax.functions[@backingInt(function)];
+        const signature = self.syntaxFunction(function);
         var arguments: std.ArrayList(typed.NodeId) = .empty;
         var loans: std.ArrayList(typed.ReferenceId) = .empty;
         for (call.arguments, signature.signature.parameters) |arg, parameter| {
@@ -616,7 +658,7 @@ const Checker = struct {
                 const ref = self.references.items[@backingInt(id)];
                 try self.requireReferenceKind(id, parameter.slice, argument.span);
                 if (mutable and !ref.mutable) return self.sink.fail(eReferenceReadOnly, argument.span, "exclusive parameter requires an exclusive reference");
-                try self.require(ref.ty, try self.ty(parameter.ty), argument.span);
+                try self.require(ref.ty, try self.functionType(function, parameter.ty), argument.span);
                 for (loans.items) |previous_id| {
                     const previous = self.references.items[@backingInt(previous_id)];
                     if (previous.owner == ref.owner and (previous.mutable or ref.mutable)) return self.sink.failRelated(
@@ -632,11 +674,11 @@ const Checker = struct {
                 try loans.append(self.allocator, id);
             } else {
                 const value = self.resolved[@backingInt(arg)].?;
-                try self.require(self.nodes.items[@backingInt(value)].ty, try self.ty(parameter.ty), argument.span);
+                try self.require(self.nodes.items[@backingInt(value)].ty, try self.functionType(function, parameter.ty), argument.span);
                 try arguments.append(self.allocator, value);
             }
         }
-        out.ty = try self.ty(signature.signature.return_type);
+        out.ty = try self.functionType(function, signature.signature.return_type);
         out.data = .{ .call = .{ .function = function, .arguments = try arguments.toOwnedSlice(self.allocator), .references = try loans.toOwnedSlice(self.allocator) } };
     }
     fn checkedExpression(self: *Checker, node: ast.Node, minimum_literal: ?Literal, temporaries: []const typed.Type) Error!typed.Node {
@@ -906,6 +948,7 @@ const Checker = struct {
             std.debug.assert(temporaries.items.len >= consumed);
             temporaries.shrinkRetainingCapacity(temporaries.items.len - consumed);
             try temporaries.append(self.allocator, out.ty);
+            try self.resolved_nodes.append(self.allocator, index);
             self.resolved[index] = @fromBackingInt(self.nodes.items.len);
             try self.nodes.append(self.allocator, out);
         }
@@ -1032,7 +1075,7 @@ const Checker = struct {
         if (self.active.contains(name) or self.active_refs.contains(name) or try self.topLevel(borrow.name)) return self.sink.fail(eShadowing, borrow.name, "reference shadows an active binding or top-level name");
         const call = try self.expressionMode(borrow.call, true);
         const checked_call = self.nodes.items[@backingInt(call)].data.call;
-        const signature = self.syntax.functions[@backingInt(checked_call.function)];
+        const signature = self.syntaxFunction(checked_call.function);
         const contract = (try self.returnContract(signature)) orelse return self.sink.fail(eReferenceResult, call_node.span, "borrow result requires a reference-returning function");
         if (borrow.mutable and !contract.mutable) return self.sink.fail(eReferenceReadOnly, borrow.name, "shared function result cannot be borrowed exclusively");
         const argument = self.syntax.nodes.items[@backingInt(call_node.data.call.arguments[@backingInt(contract.parameter)])];
@@ -1310,19 +1353,19 @@ fn warningLess(_: void, a: diagnostic.Diagnostic, b: diagnostic.Diagnostic) bool
 pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!typed.Program {
     return checkWithNames(allocator, src, program, sink, null);
 }
-fn rejectUnimplementedGenerics(src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!void {
+fn checkGenericContracts(src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!void {
     for (program.functions) |function| _ = try @import("generic_requirements.zig").resolve(sink.allocator, src, function.signature.type_parameters, sink);
     try @import("generic_bodies.zig").checkWithNames(sink.allocator, src, program, sink, module_names);
-    for (program.functions) |function| if (function.signature.type_parameters.len != 0) return sink.fail("E_GENERIC_UNSUPPORTED", function.name, "generic syntax is parsed, but executable specialization is not implemented");
-    for (program.nodes.items) |node| if (node.data == .call and node.data.call.type_arguments.len != 0) return sink.fail("E_GENERIC_UNSUPPORTED", node.span, "explicit type arguments require executable generic specialization");
 }
 /// Type-check linked module names and validate ownership, effects, and domain codecs.
 pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!typed.Program {
-    try rejectUnimplementedGenerics(src, program, sink, module_names);
+    try checkGenericContracts(src, program, sink, module_names);
     const resolved = try allocator.alloc(?typed.NodeId, program.nodes.items.len);
     @memset(resolved, null);
     const catalog = try records.collectWithNames(allocator, src, program, sink, module_names);
-    var checker: Checker = .{ .allocator = allocator, .src = src, .syntax = program, .sink = sink, .resolved = resolved, .catalog = catalog };
+    const ordinary_ids = try allocator.alloc(?typed.FunctionId, program.functions.len);
+    @memset(ordinary_ids, null);
+    var checker: Checker = .{ .allocator = allocator, .src = src, .syntax = program, .sink = sink, .resolved = resolved, .catalog = catalog, .ordinary_ids = ordinary_ids };
     for (program.functions, 0..) |function, i| {
         const name = if (module_names) |names| try names.functionDeclaration(function.policy.owner, function.name) else try functionName(allocator, src, function.policy.owner, function.name);
         if (catalog.names.contains(name)) return sink.fail("E_DUPLICATE_NAME", function.name, "function name conflicts with a declared type");
@@ -1336,10 +1379,16 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
             },
         );
         try checker.functions.put(allocator, name, @fromBackingInt(i));
+        if (function.signature.type_parameters.len == 0) {
+            ordinary_ids[i] = @fromBackingInt(checker.instance_keys.items.len);
+            try checker.instance_keys.append(allocator, .{ .declaration = @fromBackingInt(i), .arguments = &.{} });
+        }
     }
     const main_name = if (module_names) |names| try std.fmt.allocPrint(allocator, "{s}::main", .{names.index.project.modules.items[0].name}) else "main";
-    const main = checker.functions.get(main_name) orelse return sink.fail("E_MAIN", .{ .start = 0, .end = 0 }, "the program requires fn main() -> i64");
-    const entry = program.functions[@backingInt(main)];
+    checker.ordinary_count = checker.instance_keys.items.len;
+    const main_declaration = checker.functions.get(main_name) orelse return sink.fail("E_MAIN", .{ .start = 0, .end = 0 }, "the program requires fn main() -> i64");
+    const entry = program.functions[@backingInt(main_declaration)];
+    const main = ordinary_ids[@backingInt(main_declaration)] orelse return sink.fail("E_MAIN", entry.name, "main cannot have type parameters");
     if (entry.signature.return_reference != null) return sink.fail("E_MAIN", entry.name, "main must return an i64 value");
     var entry_capabilities: u8 = 0;
     for (entry.signature.parameters) |parameter| {
@@ -1349,8 +1398,13 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
         entry_capabilities |= bit;
     }
     if (try checker.ty(entry.signature.return_type) != .i64) return sink.fail("E_TYPE", entry.signature.return_type, "main must return i64");
-    const functions = try allocator.alloc(typed.Function, program.functions.len);
-    for (program.functions, functions, 0..) |function, *out, i| {
+    var checked_functions: std.ArrayList(typed.Function) = .empty;
+    var i: usize = 0;
+    while (i < checker.instance_keys.items.len) : (i += 1) {
+        checker.current_function = @fromBackingInt(i);
+        const function = checker.syntaxFunction(@fromBackingInt(i));
+        for (checker.resolved_nodes.items) |node| checker.resolved[node] = null;
+        checker.resolved_nodes.clearRetainingCapacity();
         checker.locals = .empty;
         checker.references = .empty;
         checker.active_refs.clearRetainingCapacity();
@@ -1383,7 +1437,7 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
             }
         }
         if (!body.terminates) return sink.fail("E_MISSING_RETURN", function.name, "function may fall through without returning its declared type; loops are conservatively treated as falling through, even while true");
-        out.* = .{
+        try checked_functions.append(allocator, .{
             .policy = .{
                 .effect_bound = function.policy.effect_bound,
                 .owner = checker.owner,
@@ -1401,14 +1455,17 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
                 .locals = try checker.locals.toOwnedSlice(allocator),
             },
             .id = @fromBackingInt(i),
-            .name = if (module_names) |names| try names.functionDeclaration(function.policy.owner, function.name) else try functionName(allocator, src, function.policy.owner, function.name),
+            .name = try instanceName(allocator, src, function, module_names, i),
             .declaration = function.name,
-        };
+        });
     }
+    const functions = try checked_functions.toOwnedSlice(allocator);
+    var executable_names: std.StringHashMapUnmanaged(typed.FunctionId) = .empty;
+    for (functions) |function| try executable_names.put(allocator, function.name, function.id);
     const checked: typed.Program = .{ .nodes = try checker.nodes.toOwnedSlice(allocator), .statements = try checker.statements.toOwnedSlice(allocator), .functions = functions, .main = main, .records = catalog.records };
     try @import("region_check.zig").check(allocator, checked, sink);
     try @import("effects.zig").check(allocator, checked, sink);
-    try @import("domain_codecs.zig").check(allocator, src, program.types.domains, catalog, .{ .items = functions, .names = checker.functions }, sink);
+    try @import("domain_codecs.zig").check(allocator, src, program.types.domains, catalog, .{ .items = functions, .names = executable_names }, sink);
     for (functions) |function| {
         for (function.scope.locals) |local| {
             if (local.usage.reads == 0) try sink.items.append(allocator, .{
@@ -1453,3 +1510,9 @@ fn conversionBody(src: source.Source, program: ast.Program, function: ast.Functi
 }
 
 const functionName = @import("function_identity.zig").localName;
+
+fn instanceName(allocator: std.mem.Allocator, src: source.Source, function: ast.Function, names: ?*Names, index: usize) Error![]const u8 {
+    const base = if (names) |module| try module.functionDeclaration(function.policy.owner, function.name) else try functionName(allocator, src, function.policy.owner, function.name);
+    if (function.signature.type_parameters.len == 0) return base;
+    return std.fmt.allocPrint(allocator, "{s}${d}", .{ base, index });
+}

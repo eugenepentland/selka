@@ -1,4 +1,4 @@
-//! Generic syntax is retained explicitly until executable specialization is implemented.
+//! Generic syntax retains source contract metadata through executable specialization.
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
@@ -38,8 +38,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
     defer roundtrip.deinit();
     try roundtrip.parse();
     try t.expectEqual(@as(usize, 2), roundtrip.syntax.?.functions[0].signature.type_parameters.len);
-    try t.expectError(error.SourceError, compilation.check());
-    try t.expectEqualStrings("E_GENERIC_UNSUPPORTED", compilation.diagnostics.items[0].code);
+    try compilation.check();
 }
 // spec: GENERIC-SYNTAX-1
 test "generic syntax retains requirements type arguments and relocated owned metadata" {
@@ -64,7 +63,7 @@ test "generic syntax rejects incomplete duplicate and uncallable annotations" {
     var compilation = try language.Compilation.init(t.allocator, "bad-call.my", "fn f(x:i64)->i64{return x;}fn main()->i64{return f::<i64>(1);}");
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());
-    try t.expectEqualStrings("E_GENERIC_UNSUPPORTED", compilation.diagnostics.items[0].code);
+    try t.expectEqualStrings("E_GENERIC_ARITY", compilation.diagnostics.items[0].code);
 }
 
 test "generic syntax list limits accept sixteen and reject seventeen entries" {

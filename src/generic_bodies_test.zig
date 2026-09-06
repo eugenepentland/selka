@@ -17,8 +17,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
     var sink: diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
     try bodies.check(allocator, compilation.src, compilation.syntax.?, &sink);
     try t.expectEqual(@as(usize, 0), sink.items.items.len);
-    try t.expectError(error.SourceError, compilation.check());
-    try t.expectEqualStrings("E_GENERIC_UNSUPPORTED", compilation.diagnostics.items[0].code);
+    try compilation.check();
 }
 // spec: GENERIC-BODY-1
 test "generic body contracts check pure control flow without concrete representative types" {

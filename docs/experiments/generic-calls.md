@@ -1,7 +1,8 @@
 # Abstract calls between generic templates
 
 The symbolic body checker now supports calls between templates in its pure subset.
-This extends abstract validation; executable specialization is still unfinished.
+Pure executable specialization is now implemented; see
+[the execution experiment](generic-execution.md) for its scope.
 
 ```text
 fn identity<U: copy>(value: U) -> U { return value; }
@@ -52,9 +53,9 @@ permission to call an unchecked foreign function. Hidden effects in concrete
 helpers, including in constant-false branches, reject explicitly. This is a
 conservative pure-body proof, not general effect inference.
 
-Ordinary entry functions do not yet receive executable generic-call lowering.
-A valid abstract call graph still ends with `E_GENERIC_UNSUPPORTED` from overall
-semantic checking. No VM/native executable or binding support is claimed.
+Ordinary entry functions now discover concrete instances and execute supported
+generic calls through the VM/C backends. Direct generic public invocation and
+broader reference/effect contracts remain unfinished.
 
 ## Acceptance and next work
 
@@ -64,9 +65,9 @@ missing/extra type and value arguments, recursion, private methods, imported
 public domain methods, same-named functions in different modules, related source
 locations, and allocation failures in local and module-backed call checking.
 
-Next: bounded concrete instance interning, discovery from entry/exports,
-substitution while retaining module/source provenance, integration with ordinary
-semantic/effect checks and VM/C lowering, and the remaining abstract body forms.
+Pure instance discovery, substitution, and VM/C lowering now have
+[execution acceptance](generic-execution.md). Next are the remaining abstract
+body forms and direct generic public schema/invocation contracts.
 Generics and the full roadmap remain active work.
 
 Validation: the full core suites passed 559 tests in Debug and ReleaseFast, all 60

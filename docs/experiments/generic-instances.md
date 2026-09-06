@@ -2,8 +2,8 @@
 
 `generic_instances.Registry` supplies the bounded identity table needed to
 replace semantic checking's current one-declaration/one-executable-function
-assumption. It is independently tested but is not yet connected to executable
-lowering. Valid generic programs still receive `E_GENERIC_UNSUPPORTED`.
+assumption. It is now connected to concrete semantic checking; see
+[executable specialization](generic-execution.md) for integration and boundaries.
 
 ## Identity and ownership
 
@@ -43,12 +43,11 @@ nominal types with equal representation, deterministic ordinals, 16/17 arguments
 4096/4097 entries, lookup at capacity, invalid IDs, allocation-failure sweeps, and
 recovery with existing entries across table-growth boundaries.
 
-Next, concrete semantic checking must resolve generic calls into this registry,
-substitute each instance's types while retaining original declaration source and
-module context, and check queued bodies independently. Typed-function indexes,
-per-instance expression caches, effect/region analysis, schema/tooling identities,
-and VM/native execution need integration. The registry alone does not prove
-executable specialization, generic recursion behavior, or completion of generics.
+Concrete semantic checking now resolves calls into this registry and checks
+queued bodies independently with their concrete substitutions. The
+[execution experiment](generic-execution.md) records VM/C acceptance and current
+public-wrapper boundaries. Broader generic contracts and tooling remain open;
+registry tests alone do not prove completion of those requirements.
 
 Validation: all 568 core tests passed in Debug; focused instance-table acceptance
 passed six tests in Debug and ReleaseFast, including allocation-failure sweeps

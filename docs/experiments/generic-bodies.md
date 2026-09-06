@@ -33,13 +33,12 @@ Every body has a maximum checking depth of 256 and 100,000 expression/statement
 visits. These bound compiler work, not guest execution. Left-deep expressions and
 wide statement sequences exercise the limits without executing a template.
 
-[Generic-to-generic calls](generic-calls.md) are now supported. Calls to concrete
-helpers, concrete nominal/composite signature types, aggregate construction,
+[Generic calls and pure concrete helpers](generic-calls.md) are now supported.
+Concrete nominal/composite signature types, aggregate construction,
 references/slices, owned/resource operations, conversions, and other forms that
 need additional abstract rules return `E_GENERIC_BODY_UNSUPPORTED`. They are not
-silently skipped. Valid bodies in the supported subset still return
-`E_GENERIC_UNSUPPORTED` from overall semantic checking because instance interning,
-substitution, and executable specialization are not implemented.
+silently skipped. Valid bodies in the supported subset now execute through
+[concrete specialization](generic-execution.md).
 
 The supported subset has no effectful operations. This does not implement abstract
 call-effect inference, general move-only/result handling, reference provenance,
@@ -56,9 +55,8 @@ module-local visibility/shadowing, original diagnostic locations, allocation-fai
 cleanup, deep expressions, and the 100,000/100,002 visit boundary.
 
 Generic call/signature resolution and requirement forwarding now have acceptance.
-Next work is bounded
-specialization identities, substitution with source/module provenance, remaining
-abstract ownership/reference/effect rules, and VM/C/schema/tooling integration.
+The remaining work includes abstract ownership/reference/effect rules and
+broader schema/tooling integration; pure specialization now has VM/C acceptance.
 Generics and the full roadmap remain open.
 
 Validation: all 554 core tests passed in Debug and ReleaseFast, all 60 CLI tests

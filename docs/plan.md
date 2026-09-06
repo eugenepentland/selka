@@ -1073,3 +1073,25 @@ passed six tests in Debug and ReleaseFast, including allocation-failure sweeps
 and recovery. The build passed all 88 Guardian checks with baselines disabled.
 This is registry and ordinary regression evidence; no new executable generic,
 CLI, or full native-suite result is claimed.
+
+
+### Executable pure generic specialization — 2026-09-06
+
+Concrete semantic checking now separates source declarations from executable
+instances, resolves callee signatures through concrete type arguments, and clears
+touched expression cache entries between bodies. Recursive/repeated calls reuse
+bounded specialization IDs; ordinary functions do not consume the 4096 generic
+instance budget. The supported pure templates execute through VM/C lowering,
+including integer widths, nominal copy values, and imported calls. Ordinary
+public wrappers remain schema roots while internal instances are excluded.
+General reference/effect/ownership contracts, direct generic schema/invocation,
+user-defined requirements, and other roadmap tracks remain unfinished.
+See `docs/experiments/generic-execution.md` for the current scope and boundaries.
+
+Validation: full core runs passed 573 tests in Debug and ReleaseFast; all 60 CLI
+tests passed. Final generic-focused acceptance passed 40 tests, including the
+additional returned-reference identity regression. Native parity passed 2640
+comparisons across 86 single-file and 16 module fixtures with -O0/-O2 and undefined
+behavior sanitization; 50 final targeted codec comparisons passed after inserting
+an uninstantiated template before codec functions. Guardian passed all 88 checks
+with baselines disabled. No new full resource/provider-suite result is claimed.
