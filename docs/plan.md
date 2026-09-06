@@ -60,11 +60,11 @@ explicit types, schemas, and interfaces where that improves the program.
    transitive effects, grants, copied values and typed failures. Registrations bind
    to the same compiled program; VM calls share bounded sessions and deterministic
    cleanup. Borrowed and runtime-owned boundary signatures reject explicitly.
-4. Implement the [bounded board keepout trial](../experiments/board_trial/contract.md)
-   against its fixed snapshot contract and 87 independent oracle cases. Typed
-   host-enabled invocation now supports ordinary snapshot/report values. Guest
-   validation, a standalone Zig baseline and measured repair attempts remain
-   pending; geometry stays behind a typed wrapper.
+4. The [bounded board keepout trial](../experiments/board_trial/README.md) now
+   executes guest validation on the VM and a standalone Zig baseline against 87
+   fixed oracle cases plus 60 transformed cases, with exact report/callback
+   agreement. Geometry stays behind a typed wrapper. Prepare matched repair
+   tasks and fresh held-out cases next; measured repair attempts remain pending.
 5. Use trial evidence to prioritize generic constraints/tooling, bounded source
    serialization, and finer incremental checks. These remain open; completing all
    abstraction experiments is not a prerequisite for starting the trial.
@@ -2171,3 +2171,58 @@ these fixed expectations, register the rectangle kernel, compare typed reports
 and callback behavior, then run matched repairs with fresh held-out cases. The
 application and repair study remain incomplete. Other abstraction/tooling
 requirements remain active; native guest execution remains excluded.
+
+## Executable VM board-validation trial — 2026-09-06
+
+The [trial application](../experiments/board_trial/README.md) now executes ten
+checked guest modules on the bytecode VM. Its exported validator takes a bounded
+nominal Board and returns a typed Validation result. One explicitly registered
+`geometry::overlap` callback performs rectangle intersection in Zig. Whole-input
+preflight precedes geometry; failed geometry discards the partial report. The
+handwritten wrapper preserves domain identities, rejects changed numeric domain
+representations, counts operations and charges cooperative work. Guest source is
+embedded in the runner at build time.
+
+A standalone Zig validator implements the same fixed contract. The Python grader
+passes only sanitized requests to the executable, then compares each VM and Zig
+observation independently with the previously fixed oracle. Both match all 87
+fixed cases and 60 translation/identity-renaming cases: complete outcomes, exact
+first-violation locations and callback counts. Eighteen malformed transports
+reject without a report. Three seeded source edits verify located component/net
+and unit type errors, and an incomplete feature match with its related new-variant
+declaration. These are development regressions, not measured repair attempts.
+
+Four new Zig tests cover snapshot/callback allocation failures, typed geometry
+failure and fresh subsequent sessions, a located one-step VM-budget trap with no
+callbacks, nominal/capacity rejection, endpoint checks before arithmetic and
+partial transport-allocation cleanup. The fixed contract, oracle, cases and five
+oracle self-tests remain unchanged. The native baseline is not the complete EDA
+DRC, and the shared tiny rectangle kernel is not a routing-performance benchmark.
+
+The application exposed explicit equality helpers for nominal IDs and separate
+component/net slot helpers as abstraction costs. Default duplicate discovery
+(exact-v28 / near-v3, minimum eight nodes) reports no candidates, indexing 18/29
+functions without truncation. Its matching-header restriction excludes helpers
+with different nominal argument types; this is not proof of no semantic overlap.
+These observations can guide later equality/parameterized-type experiments.
+
+Guardian's fixed src/test scan required moving executable trial sources under
+`src/board_trial/`; the contract/oracle stay under experiments. Added real test
+and executable reachability roots, documented boundary contracts and retained
+structured trap data in the application helper. All artifact installations now
+precede attaching the install gate so both executables are gated. Baselines stay
+disabled; existing report-only size/line findings remain. Thirty-eight trial ROI
+subjects received evidence-backed labels; uncertain subjects remain pending.
+
+Validation: Debug `zig build test` passes 33/33 steps; ReleaseFast
+`test-interpreter` passes 34/34. Each executes all four new trial Zig tests and
+all 20 interpreter/tooling Python invocations, including 96 existing independent
+VM corpus checks. Unchanged core/CLI test results are cached in these runs; no
+fresh 763-test execution is claimed. `zig build`, Zig formatting, guest project
+formatting and all 88 Guardian checks pass; ReleaseFast reuses the green Guardian
+result. No guest-native execution acceptance was run.
+
+Next: prepare matched repair tasks and fresh held-out cases, retain actual
+attempts and independent outcomes, and use those results to prioritize the
+remaining language abstractions and tooling. The repair study and broader
+roadmap remain incomplete. Native guest execution remains outside the active goal.

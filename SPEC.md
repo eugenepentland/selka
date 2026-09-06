@@ -166,3 +166,5 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 
 
 - [HOST-INVOKE-1] Host-enabled typed invocation accepts only ordinary copied-value guest signatures and returns a caller-owned typed value or a located trap. Program-bound registrations preflight before guest effects; missing bindings, invalid arguments and hidden public entry names cannot execute callbacks. Pure invocation retains effect-free restrictions. Direct external declarations are not guest entry points. Per-invocation instruction/frame and callback budgets reset, and arguments/results clean up under allocation failures.
+
+- [BOARD-TRIAL-1] The bounded board-validation experiment runs guest bytecode through typed Zig geometry callbacks, compares deterministic reports and callback counts with an independent fixed oracle and standalone Zig implementation, and releases snapshot and callback graphs on allocation failure.

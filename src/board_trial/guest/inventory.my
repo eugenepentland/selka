@@ -1,0 +1,73 @@
+module inventory;
+import model as m;
+import ids;
+export hasComponent;
+export hasNet;
+export checkComponents;
+export checkNets;
+fn hasComponent(slots: [4]m::ComponentSlot, needle: ids::ComponentId, end: u64) -> bool {
+    let mut i = 0u64;
+    while i < end {
+        match slots[i] {
+            m::ComponentSlot.none => {},
+            m::ComponentSlot.some(value) => {
+                if ids::ComponentId.same(value, needle) {
+                    return true;
+                }
+            }
+        }
+        i = i + 1u64;
+    }
+    return false;
+}
+fn hasNet(slots: [4]m::NetSlot, needle: ids::NetId, end: u64) -> bool {
+    let mut i = 0u64;
+    while i < end {
+        match slots[i] {
+            m::NetSlot.none => {},
+            m::NetSlot.some(value) => {
+                if ids::NetId.same(value, needle) {
+                    return true;
+                }
+            }
+        }
+        i = i + 1u64;
+    }
+    return false;
+}
+fn checkComponents(slots: [4]m::ComponentSlot) -> m::Preflight {
+    let mut i = 0u64;
+    while i < len(slots) {
+        match slots[i] {
+            m::ComponentSlot.none => {},
+            m::ComponentSlot.some(value) => {
+                if ids::ComponentId.number(value) == 0u64 {
+                    return new m::Preflight.err(new m::Failure.input(new m::InputProblem.invalid_id));
+                }
+                if hasComponent(slots, value, i) {
+                    return new m::Preflight.err(new m::Failure.input(new m::InputProblem.duplicate_component));
+                }
+            }
+        }
+        i = i + 1u64;
+    }
+    return new m::Preflight.ok(true);
+}
+fn checkNets(slots: [4]m::NetSlot) -> m::Preflight {
+    let mut i = 0u64;
+    while i < len(slots) {
+        match slots[i] {
+            m::NetSlot.none => {},
+            m::NetSlot.some(value) => {
+                if ids::NetId.number(value) == 0u64 {
+                    return new m::Preflight.err(new m::Failure.input(new m::InputProblem.invalid_id));
+                }
+                if hasNet(slots, value, i) {
+                    return new m::Preflight.err(new m::Failure.input(new m::InputProblem.duplicate_net));
+                }
+            }
+        }
+        i = i + 1u64;
+    }
+    return new m::Preflight.ok(true);
+}

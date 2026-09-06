@@ -1,0 +1,40 @@
+module bounds;
+import model as m;
+import units;
+export valid;
+export inside;
+export rectangle;
+fn axis(origin: units::Micrometres, extent: units::Micrometres) -> bool {
+    let x = units::Micrometres.number(origin);
+    let width = units::Micrometres.number(extent);
+    if x < - 1000000000 || x > 1000000000 {
+        return false;
+    }
+    if width < 1 || width > 1000000000 {
+        return false;
+    }
+    return x + width <= 1000000000;
+}
+fn valid(rect: m::Rect) -> bool {
+    return axis(rect.x, rect.width) && axis(rect.y, rect.height);
+}
+fn inside(outer: m::Rect, inner: m::Rect) -> bool {
+    let x = units::Micrometres.number(inner.x);
+    let y = units::Micrometres.number(inner.y);
+    let left = units::Micrometres.number(outer.x);
+    let bottom = units::Micrometres.number(outer.y);
+    return x >= left && y >= bottom && x + units::Micrometres.number(inner.width) <= left + units::Micrometres.number(outer.width) && y + units::Micrometres.number(inner.height) <= bottom + units::Micrometres.number(outer.height);
+}
+fn rectangle(item: m::Feature) -> m::Rect {
+    match item {
+        m::Feature.component(value) => {
+            return value.rect;
+        },
+        m::Feature.track(value) => {
+            return value.rect;
+        },
+        m::Feature.via(value) => {
+            return value.rect;
+        }
+    }
+}

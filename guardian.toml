@@ -11,7 +11,7 @@ on_build = "block"
 enabled = false
 
 [test_reachability]
-roots = ["src/root_test.zig", "test/integration.zig"]
+roots = ["src/root_test.zig", "test/integration.zig", "src/board_trial/tests.zig"]
 
 [orphan_files]
-roots = ["src/compiler.zig", "src/main.zig", "src/root_test.zig"]
+roots = ["src/compiler.zig", "src/main.zig", "src/root_test.zig", "src/board_trial/runner.zig", "src/board_trial/tests.zig"]

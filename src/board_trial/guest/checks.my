@@ -1,0 +1,77 @@
+module checks;
+import model as m;
+import inventory;
+import bounds;
+export preflight;
+fn region(board: m::Board, item: m::Region) -> m::Preflight {
+    if !bounds::valid(item.rect) {
+        return new m::Preflight.err(new m::Failure.input(new m::InputProblem.invalid_bounds));
+    }
+    if !item.blocks.component && !item.blocks.track && !item.blocks.via {
+        return new m::Preflight.err(new m::Failure.input(new m::InputProblem.empty_blocks));
+    }
+    let mut i = 0u64;
+    while i < len(item.allow_nets) {
+        match item.allow_nets[i] {
+            m::NetSlot.none => {},
+            m::NetSlot.some(net) => {
+                if !inventory::hasNet(board.nets, net, len(board.nets)) {
+                    return new m::Preflight.err(new m::Failure.input(new m::InputProblem.unknown_allow_net));
+                }
+            }
+        }
+        i = i + 1u64;
+    }
+    return new m::Preflight.ok(true);
+}
+fn feature(board: m::Board, item: m::Feature) -> m::Preflight {
+    if !bounds::valid(bounds::rectangle(item)) {
+        return new m::Preflight.err(new m::Failure.input(new m::InputProblem.invalid_bounds));
+    }
+    match item {
+        m::Feature.component(value) => {
+            if !inventory::hasComponent(board.components, value.id, len(board.components)) {
+                return new m::Preflight.err(new m::Failure.input(new m::InputProblem.missing_component));
+            }
+        },
+        m::Feature.track(value) => {
+            if !inventory::hasNet(board.nets, value.net, len(board.nets)) {
+                return new m::Preflight.err(new m::Failure.input(new m::InputProblem.missing_net));
+            }
+        },
+        m::Feature.via(value) => {
+            if !inventory::hasNet(board.nets, value.net, len(board.nets)) {
+                return new m::Preflight.err(new m::Failure.input(new m::InputProblem.missing_net));
+            }
+        }
+    }
+    return new m::Preflight.ok(true);
+}
+fn preflight(board: m::Board) -> m::Preflight {
+    if !bounds::valid(board.outline) {
+        return new m::Preflight.err(new m::Failure.input(new m::InputProblem.invalid_bounds));
+    }
+    discard try inventory::checkComponents(board.components);
+    discard try inventory::checkNets(board.nets);
+    let mut i = 0u64;
+    while i < len(board.regions) {
+        match board.regions[i] {
+            m::RegionSlot.none => {},
+            m::RegionSlot.some(value) => {
+                discard try region(board, value);
+            }
+        }
+        i = i + 1u64;
+    }
+    i = 0u64;
+    while i < len(board.features) {
+        match board.features[i] {
+            m::FeatureSlot.none => {},
+            m::FeatureSlot.some(value) => {
+                discard try feature(board, value);
+            }
+        }
+        i = i + 1u64;
+    }
+    return new m::Preflight.ok(true);
+}

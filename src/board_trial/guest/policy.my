@@ -1,0 +1,43 @@
+module policy;
+import model as m;
+import inventory;
+export applies;
+fn side(region: m::RegionFace, face: m::Face) -> bool {
+    match region {
+        m::RegionFace.both => {
+            return true;
+        },
+        m::RegionFace.top => {
+            return face == new m::Face.top;
+        },
+        m::RegionFace.bottom => {
+            return face == new m::Face.bottom;
+        }
+    }
+}
+fn layer(region: m::RegionFace, value: m::Layer) -> bool {
+    match region {
+        m::RegionFace.both => {
+            return true;
+        },
+        m::RegionFace.top => {
+            return value == new m::Layer.front;
+        },
+        m::RegionFace.bottom => {
+            return value == new m::Layer.back;
+        }
+    }
+}
+fn applies(item: m::Feature, region: m::Region) -> bool {
+    match item {
+        m::Feature.component(value) => {
+            return region.blocks.component && side(region.face, value.face);
+        },
+        m::Feature.track(value) => {
+            return region.blocks.track && layer(region.face, value.layer) && !inventory::hasNet(region.allow_nets, value.net, len(region.allow_nets));
+        },
+        m::Feature.via(value) => {
+            return region.blocks.via && !inventory::hasNet(region.allow_nets, value.net, len(region.allow_nets));
+        }
+    }
+}

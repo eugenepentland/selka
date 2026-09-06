@@ -1,0 +1,14 @@
+module geometry;
+import model as m;
+export contact;
+host fn overlap(a: m::Rect, b: m::Rect) -> m::Overlap effects(host);
+fn contact(a: m::Rect, b: m::Rect) -> m::ContactResult effects(host) {
+    match overlap(a, b) {
+        m::Overlap.ok(value) => {
+            return new m::ContactResult.ok(value);
+        },
+        m::Overlap.err(problem) => {
+            return new m::ContactResult.err(new m::Failure.geometry(problem));
+        }
+    }
+}

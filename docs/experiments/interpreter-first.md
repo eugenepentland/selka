@@ -93,15 +93,18 @@ Existing filesystem/network/clock/environment providers are reusable experience.
 Existing native embedding and Python bindings call compiled guest functions;
 they do not provide general guest-to-host domain-function registration.
 
-## First substantial application experiment — contract/oracle prepared
+## First substantial application experiment — validators execute
 
 The [bounded keepout trial](../../experiments/board_trial/contract.md) now fixes
 its snapshot, typed outcomes, validation order and 87 independent development
 cases before implementation. It is grounded in EDA face/layer/net-exemption
 policies, with integer rectangular footprints and explicit scope limits. The
-guest validator, standalone Zig baseline and repair study remain pending. Model component/net IDs and units as distinct types and validation
-outcomes as explicit variants. Keep expensive geometry and routing kernels in
-the host; start with the smallest set of typed host calls the module requires.
+[guest validator and standalone Zig baseline](../../experiments/board_trial/README.md)
+now match all 87 fixed outcomes and callback counts plus 60 transformed cases.
+Component/net IDs and units are distinct types; validation outcomes are explicit
+variants. The guest executes on the VM with one registered rectangle callback.
+Eighteen malformed transports reject, and allocation-failure cleanup is tested.
+The measured repair study remains pending.
 
 Compare equivalent changes in the existing implementation and the language using
 matched task descriptions, available context, model/tool configuration and a

@@ -1,0 +1,68 @@
+module validation;
+import model as m;
+import bounds;
+import checks;
+import policy;
+import geometry;
+export validate;
+fn add(report: m::Report, position: u64, kind: m::ViolationKind, region: m::RegionIndex) -> m::Report {
+    let mut first = report.first;
+    match first {
+        m::First.none => {
+            first = new m::First.some(new m::Violation {
+                feature: position,
+                kind: kind,
+                region: region
+            });
+        },
+        m::First.some(discard) => {}
+    }
+    return new m::Report {
+        violations: report.violations + 1u64,
+        first: first
+    };
+}
+fn inspect(board: m::Board, item: m::Feature, position: u64, previous: m::Report) -> m::Validation effects(host) {
+    let mut report = previous;
+    let rect = bounds::rectangle(item);
+    if !bounds::inside(board.outline, rect) {
+        report = add(report, position, new m::ViolationKind.outside_board, new m::RegionIndex.board);
+    }
+    let mut i = 0u64;
+    while i < len(board.regions) {
+        match board.regions[i] {
+            m::RegionSlot.none => {},
+            m::RegionSlot.some(region) => {
+                if policy::applies(item, region) {
+                    let contact = try geometry::contact(rect, region.rect);
+                    match contact {
+                        m::Contact.clear => {},
+                        m::Contact.intersection => {
+                            report = add(report, position, new m::ViolationKind.keepout, new m::RegionIndex.keepout(i));
+                        }
+                    }
+                }
+            }
+        }
+        i = i + 1u64;
+    }
+    return new m::Validation.ok(report);
+}
+fn validate(board: m::Board) -> m::Validation effects(host) {
+    discard try checks::preflight(board);
+    let mut report = new m::Report {
+        violations: 0u64,
+        first: new m::First.none
+    };
+    let mut i = 0u64;
+    while i < len(board.features) {
+        match board.features[i] {
+            m::FeatureSlot.none => {},
+            m::FeatureSlot.some(item) => {
+                report = try inspect(board, item, i, report);
+            }
+        }
+        i = i + 1u64;
+    }
+    return new m::Validation.ok(report);
+}

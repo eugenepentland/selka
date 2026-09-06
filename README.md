@@ -7,9 +7,10 @@ The implementation follows [the revision 3 plan](docs/plan.md) and
 [interpreter-first roadmap](docs/experiments/interpreter-first.md). The working
 language name and `.my` extension are provisional.
 
-Typed VM host-library calls now execute through explicit registrations. Next is
-the [board-validation trial](experiments/board_trial/contract.md), whose contract
-and 87 oracle cases are fixed; validator execution and repair measurements remain pending.
+Typed VM host-library calls now execute through explicit registrations. The
+[board-validation trial](experiments/board_trial/README.md) runs on the VM and
+matches a standalone Zig baseline against 87 fixed oracle cases and 60 transformed
+cases. Measured agent repair attempts remain pending.
 Expensive geometry can remain in Zig/C/Rust behind explicit typed wrappers.
 Completed C/native experiments remain available; further native compilation,
 LLVM, and direct x86_64 Linux work are deferred until the design and measurements
