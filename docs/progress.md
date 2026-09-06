@@ -3416,3 +3416,28 @@ build-test run is claimed.
 Concrete variant construction/matching, result/ownership abstract rules,
 parameter-dependent structural types, codec constraints, public generic tooling,
 source JSON serialization and all other pending roadmap requirements remain open.
+
+
+### Concrete generic variants and exhaustive matching — 2026-09-06
+
+Generic bodies now construct concrete copyable enums/unions and match them
+exhaustively. Nominal case ownership, exact payload presence/type, arm-local
+bindings, duplicate/missing cases and all-arm return flow are checked before
+instantiation. Every arm is checked even after a fallthrough arm; bindings do not
+escape or conflict across independent arms. Named enum-table construction now
+requires every declared key exactly once and shares record field validation.
+See `docs/experiments/generic-variants.md` and `examples/generic-variants.my`, which
+returns 16 from record/scalar union payloads and a complete enum table.
+
+All 605 core tests pass in Debug/ReleaseFast; all 60 CLI tests and 2742 VM/native
+comparisons across 119 fixtures pass. Allocation sweeps cover construction,
+matching, enum tables, execution and native emission. Rejection tests cover
+payload/case/type errors, scope escape, incomplete return paths and invalid later
+arms. Imported fixtures retain aliases and located traps inside generic match
+arms. Formatting and all 88 Guardian checks pass with baselines disabled.
+Uncertain ROI subjects remain pending; no new full build-test run is claimed.
+
+Result-bearing and runtime-owned variant graphs remain excluded pending abstract
+handling/ownership rules. Parameter-dependent structural types, generic codec
+constraints, public generic tooling, source JSON serialization and the remaining
+roadmap requirements stay open.

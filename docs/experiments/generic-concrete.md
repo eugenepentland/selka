@@ -37,8 +37,7 @@ VM/native acceptance includes the source example, imported aliases through pure
 helpers, and an imported generic bounds trap.
 
 Generic record/type declarations, parameter-dependent composite shapes, structural
-requirements, variant construction/matching, and general
-result/ownership operations still need abstract rules. Source codec constraints,
+requirements and general result/ownership operations still need abstract rules. Source codec constraints,
 public generic invocation/schema representation and other roadmap items remain
 open. Concrete specialization still performs full semantic, ownership, region and
 effect checks after abstract acceptance.
@@ -47,3 +46,7 @@ effect checks after abstract acceptance.
 [Generic aggregate updates](generic-updates.md) now support partial concrete record
 updates and array/table replacement with shared field/index checks and snapshot
 preservation.
+
+
+[Concrete generic variants](generic-variants.md) now support enum/union construction,
+exhaustive scoped matching and complete enum-table construction.

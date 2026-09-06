@@ -1,0 +1,28 @@
+struct Payload { n: i64 }
+enum Color { red, blue }
+union Choice { none, value: Payload }
+union Scalar { empty, number: i64 }
+fn make<T: integer>(value: T) -> Choice {
+    return new Choice.value(new Payload { n: cast<i64>(value) });
+}
+fn score<T: copy>(context: T, value: Choice) -> i64 {
+    discard context;
+    match value {
+        Choice.none => { return 0; },
+        Choice.value(payload) => { return payload.n; }
+    }
+}
+fn scalar<T: copy>(context: T, value: Scalar) -> i64 {
+    discard context;
+    match value {
+        Scalar.empty => { return 0; },
+        Scalar.number(payload) => { return payload; }
+    }
+}
+fn table<T: integer>(value: T) -> [Color]i64 {
+    return new [Color]i64 { red: cast<i64>(value), blue: 9 };
+}
+fn main() -> i64 {
+    return score::<bool>(true, make::<u8>(7u8))
+        + scalar::<i64>(0, new Scalar.number(table::<u16>(1u16)[new Color.blue]));
+}

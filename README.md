@@ -249,6 +249,8 @@ Source arena scopes and pure generic specialization are implemented.
 support fixed data schemas alongside symbolic parameters; broader generic
 contracts remain pending. [Generic aggregate updates](docs/experiments/generic-updates.md)
 preserve record, array and enum-table snapshots.
+[Generic enum/union construction and matching](docs/experiments/generic-variants.md)
+now retain exact payload types and exhaustive cases.
 
 [Lexical arenas](docs/experiments/source-arenas.md) use `arena heap as scratch { ... }`
 with conservative escape checks and cleanup across returns/errors.

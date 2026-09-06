@@ -78,3 +78,52 @@ test "generic aggregate updates reject malformed changes in uncalled templates" 
     try reject("fn f<T:copy>(p:T)->T{return update(p){};}fn main()->i64{return 0;}", "E_GENERIC_BODY_UNSUPPORTED");
     try reject("enum A{a}enum B{a}fn f<T:copy>(p:[A]i64,key:B)->[A]i64{return replace(p,key,1);}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
 }
+
+const variants = "struct Payload{n:i64}enum Color{red,blue}union Choice{none,value:Payload}" ++
+    "fn make<T:integer>(x:T)->Choice{return new Choice.value(new Payload{n:cast<i64>(x)});}" ++
+    "fn score<T:copy>(context:T,x:Choice)->i64{discard context;match x{Choice.none=>{return 0;},Choice.value(p)=>{return p.n;}}}" ++
+    "fn color<T:copy>(context:T)->Color{discard context;return new Color.blue;}" ++
+    "fn mapping<T:integer>(x:T)->[Color]i64{return new [Color]i64{red:cast<i64>(x),blue:0};}" ++
+    "fn main()->i64{match color::<bool>(true){Color.red=>{return 0;},Color.blue=>{return score::<i64>(0,make::<u8>(7u8))+mapping::<u8>(2u8)[new Color.red];}}}";
+fn variantScenario(allocator: std.mem.Allocator) !void {
+    var c = try language.Compilation.init(allocator, "variants.my", variants);
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 9), (try c.execute(allocator)).value);
+    const generated = try c.emitC(allocator);
+    defer allocator.free(generated);
+}
+// spec: GENERIC-VARIANT-1
+test "generic concrete variants construct and match with scoped payloads under allocation failures" {
+    try variantScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), variantScenario, .{});
+}
+test "generic concrete variants reject incomplete duplicate and malformed uncalled matches" {
+    try reject("enum E{a,b}fn f<T:copy>(x:E)->i64{match x{E.a=>{return 1;}}}fn main()->i64{return 0;}", "E_INCOMPLETE_MATCH");
+    try reject("enum E{a}fn f<T:copy>(x:E)->i64{match x{E.a=>{return 1;},E.a=>{return 2;}}}fn main()->i64{return 0;}", "E_DUPLICATE_ARM");
+    try reject("union E{a:i64}fn f<T:copy>(x:E)->i64{match x{E.a=>{return 1;}}}fn main()->i64{return 0;}", "E_PATTERN_PAYLOAD");
+    try reject("enum E{a}fn f<T:copy>(x:E)->i64{match x{E.a(p)=>{return p;}}}fn main()->i64{return 0;}", "E_PATTERN_PAYLOAD");
+    try reject("union E{a:i64}fn f<T:copy>(x:T)->E{discard x;return new E.a(true);}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
+    try reject("union E{a:i64}fn f<T:copy>(x:T)->E{discard x;return new E.a;}fn main()->i64{return 0;}", "E_VARIANT_PAYLOAD");
+    try reject("enum E{a}enum F{a}fn f<T:copy>(x:E)->i64{match x{F.a=>{return 1;}}}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
+}
+
+test "generic match payload scopes and fallthrough preserve independent arm checking" {
+    var c = try language.Compilation.init(t.allocator, "arms.my", "union U{left:i64,right:i64}" ++
+        "fn f<T:copy>(x:T,u:U)->i64{discard x;let mut out=0;match u{U.left(p)=>{out=p;},U.right(p)=>{out=p+1;}}return out;}" ++
+        "fn main()->i64{return f::<bool>(true,new U.left(7))+f::<bool>(false,new U.right(8));}");
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 16), (try c.execute(t.allocator)).value);
+    try reject("union U{a:i64}fn f<T:copy>(u:U)->i64{match u{U.a(p)=>{discard p;}}return p;}fn main()->i64{return 0;}", "E_UNKNOWN_NAME");
+    try reject("enum U{a,b}fn f<T:copy>(u:U)->i64{match u{U.a=>{},U.b=>{return true;}}return 0;}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
+    try reject("enum U{a,b}fn f<T:copy>(u:U)->i64{match u{U.a=>{},U.b=>{return 1;}}}fn main()->i64{return 0;}", "E_MISSING_RETURN");
+}
+test "generic concrete enum tables require complete unique nominal keys" {
+    var c = try language.Compilation.init(t.allocator, "table.my", "enum K{a,b}" ++
+        "fn table<T:integer>(x:T)->[K]i64{return new [K]i64{a:cast<i64>(x),b:2};}" ++
+        "fn main()->i64{return table::<u8>(7u8)[new K.a];}");
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 7), (try c.execute(t.allocator)).value);
+    try reject("enum K{a,b}fn f<T:copy>(x:T)->[K]i64{discard x;return new [K]i64{a:1};}fn main()->i64{return 0;}", "E_INCOMPLETE_TABLE");
+    try reject("enum K{a}fn f<T:copy>(x:T)->[K]i64{discard x;return new [K]i64{a:1,a:2};}fn main()->i64{return 0;}", "E_DUPLICATE_KEY");
+}

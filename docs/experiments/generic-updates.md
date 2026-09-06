@@ -29,6 +29,6 @@ unknown and wrongly typed fields, invalid indices/elements, mismatched enum keys
 and attempted updates of symbolic parameters. Shared VM/native acceptance executes
 the example and imported replacement traps with zero and maximum-u64 indices.
 
-Concrete enums/unions still need generic construction/matching rules. Generic
-result/ownership operations, parameter-dependent structural types, codec
+[Concrete enum/union construction and matching](generic-variants.md) are now
+supported. Generic result/ownership operations, parameter-dependent structural types, codec
 constraints, public generic tooling and other roadmap requirements remain open.

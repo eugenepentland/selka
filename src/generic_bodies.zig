@@ -291,6 +291,7 @@ const Checker = struct {
             },
             .binary => |operation| try self.binary(operation),
             .record => |record| try self.recordValue(record, node.span),
+            .variant => |variant| try self.variantValue(variant, node.span),
             .array => |array| try self.arrayValue(array, node.span),
             .update => |update| result: {
                 const base = try self.expression(update.base);
@@ -327,6 +328,39 @@ const Checker = struct {
             else => self.sink.fail(eUnsupported, node.span, "this operation still needs abstract generic body checking"),
         };
     }
+    fn variantValue(self: *Checker, variant: @FieldType(@FieldType(ast.Node, "data"), "variant"), span: source.Span) Error!Symbolic {
+        const result = try self.ty(variant.ty);
+        const ty_value = try self.concreteValue(result, span);
+        const tag = try self.catalog.variant(ty_value, self.src, variant.name, self.sink);
+        const payload = (try self.catalog.variants(ty_value, span, self.sink)).cases[tag].payload;
+        if ((payload != null) != (variant.value != null)) return self.sink.fail("E_VARIANT_PAYLOAD", span, "construction must supply exactly the declared payload");
+        if (variant.value) |value| try self.same(try self.expression(value), .{ .concrete = payload.? }, span);
+        return result;
+    }
+    fn matchValue(self: *Checker, match: @FieldType(@FieldType(ast.Statement, "data"), "match"), span: source.Span) Error!bool {
+        const value = try self.expression(match.value);
+        const ty_value = try self.concreteValue(value, span);
+        const variants = try self.catalog.variants(ty_value, span, self.sink);
+        const seen = try self.allocator.alloc(bool, variants.cases.len);
+        defer self.allocator.free(seen);
+        @memset(seen, false);
+        var terminated = true;
+        for (match.arms) |arm| {
+            try self.same(try self.ty(arm.ty), value, arm.ty);
+            const tag = try self.catalog.variant(ty_value, self.src, arm.name, self.sink);
+            if (seen[tag]) return self.sink.fail("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm");
+            seen[tag] = true;
+            const payload = variants.cases[tag].payload;
+            if ((payload != null) != (arm.binding != null or arm.discard_payload)) return self.sink.fail("E_PATTERN_PAYLOAD", arm.name, "payload cases require a binding or discard; empty cases take neither");
+            const before = self.locals.items.len;
+            defer self.endScope(before);
+            if (arm.binding) |binding| try self.bind(binding, .{ .concrete = payload.? }, false);
+            const returns = try self.statement(arm.body);
+            terminated = terminated and returns;
+        }
+        for (seen) |present| if (!present) return self.sink.fail("E_INCOMPLETE_MATCH", span, "match must cover every declared case");
+        return terminated;
+    }
     fn arrayIndex(self: *Checker, base: Symbolic, input: ast.NodeId, span: source.Span) Error!typed.Array {
         const shape = try self.catalog.array(try self.concreteValue(base, span), span, self.sink);
         const index = try self.expression(input);
@@ -349,18 +383,19 @@ const Checker = struct {
         return result;
     }
     fn recordFields(self: *Checker, ty_value: typed.Type, fields: []const ast.FieldInit, complete: bool, span: source.Span) Error!void {
-        const shape = try self.catalog.record(ty_value, span, self.sink);
+        const shape = if (complete) try self.catalog.constructor(ty_value, span, self.sink) else try self.catalog.record(ty_value, span, self.sink);
+        const table_key = shape.tableKey();
         const seen = try self.allocator.alloc(bool, shape.fields.len);
         defer self.allocator.free(seen);
         @memset(seen, false);
         for (fields) |field| {
-            const index = try self.catalog.field(ty_value, self.src, field.name, self.sink);
-            if (seen[index]) return self.sink.fail("E_DUPLICATE_FIELD", field.name, "record field is initialized more than once");
+            const index = if (table_key) |key| try self.catalog.variant(key, self.src, field.name, self.sink) else try self.catalog.field(ty_value, self.src, field.name, self.sink);
+            if (seen[index]) return self.sink.fail(if (table_key != null) "E_DUPLICATE_KEY" else "E_DUPLICATE_FIELD", field.name, "named entry is initialized more than once");
             seen[index] = true;
             try self.same(try self.expression(field.value), .{ .concrete = shape.fields[index].ty }, field.name);
         }
         if (complete) for (seen) |present| {
-            if (!present) return self.sink.fail("E_MISSING_FIELD", span, "record construction must initialize every field");
+            if (!present) return self.sink.fail(if (table_key != null) "E_INCOMPLETE_TABLE" else "E_MISSING_FIELD", span, "named construction must initialize every entry");
         };
     }
     fn binary(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "binary")) Error!Symbolic {
@@ -393,6 +428,7 @@ const Checker = struct {
         defer self.depth -= 1;
         switch (statement_value.data) {
             .block => |statements| return self.block(statements),
+            .match => |match| return self.matchValue(match, statement_value.span),
             .borrow => |borrow| return self.borrowScope(borrow),
             .borrow_call => |borrow| return self.borrowCall(borrow),
             .ret => |value| {
