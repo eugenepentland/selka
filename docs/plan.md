@@ -861,3 +861,12 @@ output, missing/empty distinctions, padding, and independent snapshots. Complete
 core/CLI tests, including 38 VM-checked environment comparisons and 56 injected
 allocation failures plus builder/ABI rejection checks. Native filesystem/network resources and remaining roadmap
 work remain open.
+
+## Native resource cleanup foundation
+
+Native frame returns now destroy locals in reverse slot order, matching the VM.
+An executable harness covers local/operand/schema order, shared snapshots, and
+20,000-level nonallocating destruction. Complete Debug/ReleaseFast acceptance
+passes all 30 build steps and 593 core/CLI tests, plus the native memory checks.
+Emergency ownership unwind and filesystem/network resource operations remain
+pending prerequisites for complete native execution.

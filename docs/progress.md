@@ -2746,3 +2746,19 @@ provider comparisons with 14 allocation failures.
 
 Native filesystem/network resources, generics, source serialization, finer
 incremental compilation, and the remaining roadmap work stay open.
+
+## 2026-09-06: Native resource cleanup foundation
+
+Review for native filesystem/network support found that frame return destroyed
+locals in ascending slot order, unlike the VM. Native return now clears and
+releases locals in reverse order. A runtime harness verifies local, operand, and
+nested schema order, retained snapshots, and nonallocating destruction of a
+20,000-level value. The previous runtime fails the new local-order assertion.
+
+Complete Debug and ReleaseFast runs pass all 30 build steps and 593 core/CLI
+tests. The harness passes at C O0/O2 with address/undefined sanitizers, alongside
+all 468 existing native allocation-failure cases. Guardian passes all 88 checks.
+
+This is a prerequisite for observable resource release callbacks. Emergency
+ownership unwind, native filesystem/network operations, and the wider roadmap
+remain pending; see [native resource implementation](experiments/native-resources.md).

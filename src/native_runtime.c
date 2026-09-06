@@ -657,9 +657,12 @@ static Frame leave_frame(void) {
     Frame frame = frames[nf-1];
     for (size_t i = 0; i < frame.reference_count; ++i)
         if (frame.references[i].active) trap("R_REFERENCE_LIFETIME");
-    for (size_t i = 0; i < frame.local_count; ++i) {
-        if (frame.locals[i].exclusive || frame.locals[i].shared) trap("R_BORROW_CONFLICT");
-        release_value(frame.locals[i].value);
+    for (size_t i = frame.local_count; i != 0;) {
+        Local *local = &frame.locals[--i];
+        if (local->exclusive || local->shared) trap("R_BORROW_CONFLICT");
+        Slot value = local->value;
+        local->value = (Slot){0};
+        release_value(value);
     }
     clear_values(frame.base);
     while (nr > frame.region_base) close_region(active_regions[--nr]);
