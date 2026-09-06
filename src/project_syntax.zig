@@ -53,9 +53,10 @@ pub fn build(index: *interfaces.Index) BuildError!Merged {
         for (unit.syntax.functions) |_| try function_modules.append(allocator, module);
     }
     // Append each declaration category once, avoiding quadratic slice copying.
-    inline for (.{ "functions", "records", "domains", "variants", "array_types", "buffers", "resources", "pools" }) |field| {
+    inline for (.{ "functions", "records", "domains", "variants", "arrays", "applications", "buffers", "resources", "pools" }) |field| {
         const is_function = comptime std.mem.eql(u8, field, "functions");
-        const Collection = if (is_function) ast.Program else ast.TypeDeclarations;
+        const is_expression = comptime std.mem.eql(u8, field, "arrays") or std.mem.eql(u8, field, "applications");
+        const Collection = if (is_function) ast.Program else if (is_expression) ast.TypeExpressions else ast.TypeDeclarations;
         const Slice = @FieldType(Collection, field);
         const Item = @typeInfo(Slice).pointer.child;
         var declarations: std.ArrayList(Item) = .empty;
@@ -68,12 +69,12 @@ pub fn build(index: *interfaces.Index) BuildError!Merged {
                 .node_count = unit.syntax.nodes.items.len,
                 .statement_count = unit.syntax.statements.items.len,
             };
-            for (@field(if (is_function) unit.syntax else unit.syntax.types, field)) |item| try declarations.append(allocator, try map.value(allocator, Item, item));
+            for (@field(if (is_function) unit.syntax else if (is_expression) unit.syntax.types.expressions else unit.syntax.types, field)) |item| try declarations.append(allocator, try map.value(allocator, Item, item));
         }
         if (is_function) {
             merged.functions = try declarations.toOwnedSlice(allocator);
         } else {
-            @field(merged.types, field) = try declarations.toOwnedSlice(allocator);
+            @field(if (is_expression) merged.types.expressions else merged.types, field) = try declarations.toOwnedSlice(allocator);
         }
     }
     return .{ .src = src, .syntax = merged, .modules = ranges, .function_modules = try function_modules.toOwnedSlice(allocator) };

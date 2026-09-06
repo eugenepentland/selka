@@ -1210,3 +1210,9 @@ test "CLI executes generic fixed arrays and reports uncalled template shape erro
     try invoke("run", "fn twice<T:integer>(x:T)->[2]T{return new [2]T[x,x+x];}fn main()->i64{return twice::<i64>(6)[1];}", 0, "12\n", "");
     try invokeOptions("check", "fn bad<T:copy>(a:[2]T)->[3]T{return a;}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_TYPE\"");
 }
+
+test "CLI formats nominal templates but rejects execution until specialization is implemented" {
+    const source = "struct Box<T:copy>{value:T}fn main()->i64{return 0;}";
+    try invoke("fmt", source, 0, "struct Box<T: copy> {\n    value: T\n}\nfn main() -> i64 {\n    return 0;\n}\n", "");
+    try invokeOptions("run", source, &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_TYPE_UNSUPPORTED\"");
+}

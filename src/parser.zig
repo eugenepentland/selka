@@ -13,15 +13,18 @@ pub const Parser = struct {
     arena: *std.heap.ArenaAllocator,
     tokens: []const lex.Token,
     sink: *diagnostic.Sink,
-    cursor: struct { pos: usize = 0, depth: usize = 0 } = .{},
+    cursor: struct { pos: usize = 0, depth: usize = 0, equal_tail: ?usize = null } = .{},
     module_syntax: bool = false,
     syntax: struct {
         nodes: std.ArrayList(ast.Node) = .empty,
         statements: std.ArrayList(ast.Statement) = .empty,
         array_types: std.ArrayList(ast.ArrayType) = .empty,
+        applications: std.ArrayList(ast.TypeApplication) = .empty,
     } = .{},
     fn current(self: *Parser) lex.Token {
-        return self.tokens[self.cursor.pos];
+        const token = self.tokens[self.cursor.pos];
+        if (self.cursor.equal_tail == self.cursor.pos) return .{ .tag = .equal, .span = .{ .start = token.span.start + 1, .end = token.span.end } };
+        return token;
     }
     fn take(self: *Parser, tag: lex.Tag) bool {
         if (self.current().tag != tag) return false;
@@ -74,8 +77,30 @@ pub const Parser = struct {
         }) |tag| {
             if (self.take(tag)) return token.span;
         }
-        if (self.take(.ident)) return self.qualifiedTail(token.span);
+        if (self.current().tag == .ident) return self.nominalTypeName();
         return self.sink.fail("E_TYPE", token.span, "expected a built-in, declared, fixed array, or enum-indexed table type");
+    }
+    fn nominalTypeName(self: *Parser) diagnostic.Error!Span {
+        const token = try self.expect(.ident);
+        const name = try self.qualifiedTail(token.span);
+        if (!self.take(.lt)) return name;
+        var arguments: std.ArrayList(Span) = .empty;
+        while (true) {
+            const argument = try self.typeName();
+            if (arguments.items.len == 16) return self.sink.fail(eGenericLimit, argument, "at most 16 type arguments are permitted");
+            try arguments.append(self.arena.allocator(), argument);
+            if (!self.take(.comma)) break;
+        }
+        const close = try self.closeNominalType();
+        const span: Span = .join(name, close.span);
+        try self.syntax.applications.append(self.arena.allocator(), .{ .span = span, .name = name, .arguments = try arguments.toOwnedSlice(self.arena.allocator()) });
+        return span;
+    }
+    fn closeNominalType(self: *Parser) diagnostic.Error!lex.Token {
+        const token = self.current();
+        if (token.tag != .ge) return self.expect(.gt);
+        self.cursor.equal_tail = self.cursor.pos;
+        return .{ .tag = .gt, .span = .{ .start = token.span.start, .end = token.span.start + 1 } };
     }
     /// Parse module headers and bodies without loading imports or checking names.
     pub fn parseModule(self: *Parser) diagnostic.Error!ast.Program {
@@ -167,6 +192,7 @@ pub const Parser = struct {
                 const is_union = self.current().tag != .kw_enum;
                 self.cursor.pos += 1;
                 const name = try self.expect(.ident);
+                const type_parameters = try self.typeParameters();
                 _ = try self.expect(.lbrace);
                 var cases: std.ArrayList(ast.Variant) = .empty;
                 if (self.current().tag != .rbrace) while (true) {
@@ -176,7 +202,7 @@ pub const Parser = struct {
                     if (!self.take(.comma)) break;
                 };
                 _ = try self.expect(.rbrace);
-                try variants.append(self.arena.allocator(), .{ .name = name.span, .fallible = fallible, .is_union = is_union, .cases = try cases.toOwnedSlice(self.arena.allocator()) });
+                try variants.append(self.arena.allocator(), .{ .type_parameters = type_parameters, .name = name.span, .fallible = fallible, .is_union = is_union, .cases = try cases.toOwnedSlice(self.arena.allocator()) });
                 continue;
             }
             if (self.take(.kw_domain)) {
@@ -198,6 +224,7 @@ pub const Parser = struct {
             }
             if (self.take(.kw_struct)) {
                 const name = try self.expect(.ident);
+                const type_parameters = try self.typeParameters();
                 _ = try self.expect(.lbrace);
                 var fields: std.ArrayList(ast.Parameter) = .empty;
                 if (self.current().tag != .rbrace) while (true) {
@@ -207,7 +234,7 @@ pub const Parser = struct {
                     if (!self.take(.comma)) break;
                 };
                 _ = try self.expect(.rbrace);
-                try records.append(self.arena.allocator(), .{ .name = name.span, .fields = try fields.toOwnedSlice(self.arena.allocator()) });
+                try records.append(self.arena.allocator(), .{ .type_parameters = type_parameters, .name = name.span, .fields = try fields.toOwnedSlice(self.arena.allocator()) });
                 continue;
             }
             try functions.append(self.arena.allocator(), try self.function(null));
@@ -219,7 +246,7 @@ pub const Parser = struct {
                 .buffers = try buffers.toOwnedSlice(self.arena.allocator()),
                 .variants = try variants.toOwnedSlice(self.arena.allocator()),
                 .domains = try domains.toOwnedSlice(self.arena.allocator()),
-                .array_types = try self.syntax.array_types.toOwnedSlice(self.arena.allocator()),
+                .expressions = .{ .arrays = try self.syntax.array_types.toOwnedSlice(self.arena.allocator()), .applications = try self.syntax.applications.toOwnedSlice(self.arena.allocator()) },
                 .records = try records.toOwnedSlice(self.arena.allocator()),
             },
 
@@ -432,7 +459,7 @@ pub const Parser = struct {
             _ = try self.expect(.lbrace);
             var arms: std.ArrayList(ast.MatchArm) = .empty;
             if (self.current().tag != .rbrace) while (true) {
-                const ty = try self.qualifiedTail((try self.expect(.ident)).span);
+                const ty = try self.nominalTypeName();
                 _ = try self.expect(.dot);
                 const name = try self.expect(.ident);
                 var binding: ?Span = null;

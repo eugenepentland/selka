@@ -72,6 +72,8 @@ explicit types, schemas, and interfaces where that improves the program.
    removes nominal-ID comparison helpers while preserving type isolation. Use
    further evidence to prioritize parameterized records/unions, generic
    constraints/tooling, bounded source serialization, and finer incremental checks.
+   [Nominal template syntax/interfaces](experiments/nominal-type-syntax.md) are
+   implemented as groundwork; semantic specialization and execution remain open.
    These remain open; completing all
    abstraction experiments is not a prerequisite for starting the trial.
 
@@ -2390,3 +2392,69 @@ Next: parameterized nominal records and unions, plus actual matched repair
 attempts when fresh-participant authorization is available. Source serialization,
 public generic tooling, finer incremental checking and the other pending roadmap
 requirements remain active; native execution remains excluded.
+
+## Nominal template syntax and interface groundwork — 2026-09-06
+
+This checkpoint adds the representation needed for parameterized nominal types;
+**it does not implement their semantic specialization or execution**. Record and
+variant declarations retain explicit type parameters/requirements, while
+applications such as `Slot<Pair<i64,bool>>` retain separate base-name and argument
+spans. Type expressions now group arrays and nominal applications separately
+from declarations. Construction and match-arm type positions use the same
+application syntax. See [the staged contract](experiments/nominal-type-syntax.md).
+
+Owned AST copying, module relocation and the bounded syntax cache preserve this
+metadata. Module interfaces check declaration identity through direct aliases,
+application arity, nested public-type visibility and parameter shadowing. Unknown
+requirements reject even in private nominal declarations. This phase does not
+claim to verify layouts or application requirement satisfaction.
+
+Formatting uses parsed nominal angle positions so argument commas do not become
+field separators. Comments survive, and `let x:Box<i64>=...` is recognized as a
+type close followed by assignment and formatted with separating whitespace.
+Ordinary `x >= y` comparisons keep their meaning. Parameter/argument lists remain
+bounded at 16 and recursive syntax at 256 levels.
+
+Until semantic specialization is implemented, source checking rejects nominal
+templates and applications with `E_GENERIC_TYPE_UNSUPPORTED` before typed IR or
+bytecode is produced. An unused template cannot be silently treated as an empty
+ordinary record. Existing executable generic functions and fixed arrays retain
+their current behavior. No guest-native backend work was added.
+
+Seven new core tests exercise nested declarations/applications, constructors and
+patterns, owned copying, mapped spans, comments/formatting/operator ambiguity,
+list/nesting bounds, cached module relocation, privacy/arity/kind/scope rejection,
+allocation-failure cleanup and the explicit semantic boundary. One actual CLI
+test checks formatting and structured execution rejection.
+
+Validation: Debug interpreter acceptance passes 34/34 build steps and 794/794
+Zig tests (721 core, 69 actual CLI, four board integration), plus the 21 Python
+drivers. The board trial still passes 147 comparisons, 18 malformed transports
+and three seeded static errors. All 40 nominal-related tests selected in
+ReleaseFast pass, including the new syntax/allocation-failure tests. The gated
+install passes 8/8 steps and formatting passes. These checks establish the
+syntax/interface groundwork and preservation of existing interpreter behavior;
+they do not establish executable nominal specialization or agent repair results.
+
+Guardian passes all 88 checks with baselines disabled; existing report-only
+findings remain. Two `error-path-test` findings required helper names in an
+already-existing allocation-sweep test title. No coverage changed; both subjects
+were labeled false-positive locally and the shared extra gate cycle was counted
+once. Mandatory usage feedback records that limitation.
+
+The remaining nominal-type milestone requires:
+
+- Template validation even when unused: names, duplicate fields/cases, argument
+  requirements, by-value recursion and declaration-scoped identities.
+- Concrete instance interning by template declaration and ordered resolved type
+  arguments, with bounded growth and complete layouts in the shared catalog.
+- Symbolic field/payload checking for construction, projection, updates, matching
+  and results, preserving ownership, partial moves, borrowing, effects and arena
+  origins without representative-type substitution.
+- Composition with generic arrays/calls and module visibility, followed by the
+  board trial's parameterized optional-slot types and shared membership routine
+  against its unchanged behavioral contract.
+
+The nominal-type milestone remains open, alongside the actual matched repair
+study, source serialization, public generic tooling, finer incremental checks
+and other pending roadmap requirements. Native execution remains excluded.

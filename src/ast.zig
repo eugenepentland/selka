@@ -80,11 +80,11 @@ pub const MatchArm = struct { ty: Span, name: Span, binding: ?Span, discard_payl
 /// Source-spelled case name and optional payload type.
 pub const Variant = struct { name: Span, payload: ?Span };
 /// Parsed enum, union, or result declaration with its closed case list.
-pub const Variants = struct { fallible: bool = false, name: Span, is_union: bool, cases: []const Variant };
+pub const Variants = struct { type_parameters: []const TypeParameter = &.{}, fallible: bool = false, name: Span, is_union: bool, cases: []const Variant };
 /// Source field spelling and its initializer expression.
 pub const FieldInit = struct { name: Span, value: NodeId };
 /// Parsed record name and ordered field declarations.
-pub const Record = struct { name: Span, fields: []const Parameter };
+pub const Record = struct { type_parameters: []const TypeParameter = &.{}, name: Span, fields: []const Parameter };
 /// Parsed start and end expressions for a slice range.
 pub const Range = struct { start: NodeId, end: NodeId };
 /// Source name/type and optional reference or slice passing mode.
@@ -130,6 +130,11 @@ pub const TypeDeclarations = struct {
     resources: []const Domain = &.{},
     domains: []const Domain = &.{},
     variants: []const Variants = &.{},
-    array_types: []const ArrayType = &.{},
+    expressions: TypeExpressions = .{},
     records: []const Record = &.{},
 };
+
+/// Parsed nominal application; the base name and each type argument retain exact source spans.
+pub const TypeApplication = struct { span: Span, name: Span, arguments: []const Span };
+/// Structural and nominal type expressions referenced by declarations and function bodies.
+pub const TypeExpressions = struct { arrays: []const ArrayType = &.{}, applications: []const TypeApplication = &.{} };

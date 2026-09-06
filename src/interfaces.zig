@@ -66,14 +66,29 @@ pub const Index = struct {
     }
     fn signatureType(self: *Index, module: usize, span: source.Span) diagnostic.Error!void {
         const syntax = self.units[module].syntax;
-        for (syntax.types.array_types) |array| {
+        for (syntax.types.expressions.arrays) |array| {
             if (array.span.start != span.start or array.span.end != span.end) continue;
             if (array.index == .enum_type) try self.signatureType(module, array.index.enum_type);
             return self.signatureType(module, array.element);
         }
-        const allocator = self.project.arena.allocator();
         const src = self.project.modules.items[module].src;
         if (typed.Type.fromName(src.text(span)) != null) return;
+        for (syntax.types.expressions.applications) |application| {
+            if (application.span.start == span.start and application.span.end == span.end) return self.applicationType(module, application, &.{});
+        }
+        const id = try self.typeIdentity(module, span);
+        try self.requirePublicType(module, span, id);
+        if (self.declaredTypeParameters(id).len != 0) return self.project.fail(
+            "E_GENERIC_ARITY",
+            "nominal type template requires explicit type arguments",
+            .{ .module = module, .span = span },
+            .{ .module = id.module, .span = self.units[id.module].symbols.items[id.symbol].span },
+        );
+    }
+    fn typeIdentity(self: *Index, module: usize, span: source.Span) diagnostic.Error!Identity {
+        const allocator = self.project.arena.allocator();
+        const src = self.project.modules.items[module].src;
+
         // Re-lex this short name to normalize whitespace/comments around ::.
         var sink: diagnostic.Sink = .{ .allocator = allocator };
         const tokens = try lexer.lex(allocator, src.text(span), &sink);
@@ -81,9 +96,52 @@ pub const Index = struct {
         const alias = if (tokens.len == 5) text[tokens[0].span.start..tokens[0].span.end] else null;
         const last = if (alias != null) tokens[3] else tokens[0];
         const name = text[last.span.start..last.span.end];
-        const id = try self.resolve(.{ .from = module, .alias = alias, .name = name, .kind = .type, .owner = null, .span = span });
+        return self.resolve(.{ .from = module, .alias = alias, .name = name, .kind = .type, .owner = null, .span = span });
+    }
+    fn requirePublicType(self: *Index, module: usize, span: source.Span, id: Identity) diagnostic.Error!void {
         const symbol = self.units[id.module].symbols.items[id.symbol];
         if (!symbol.exported) return self.project.fail("E_PRIVATE_INTERFACE", "exported interface exposes an unexported type", .{ .module = module, .span = span }, .{ .module = id.module, .span = symbol.span });
+    }
+    fn applicationType(self: *Index, module: usize, application: ast.TypeApplication, parameters: []const ast.TypeParameter) diagnostic.Error!void {
+        const src = self.project.modules.items[module].src;
+        for (parameters) |parameter| if (std.mem.eql(u8, src.text(parameter.name), src.text(application.name))) return self.project.fail(
+            "E_TYPE_APPLICATION",
+            "type parameters cannot be used as type constructors",
+            .{ .module = module, .span = application.name },
+            null,
+        );
+        const id = try self.typeIdentity(module, application.name);
+        try self.requirePublicType(module, application.name, id);
+        const declaration = self.units[id.module].symbols.items[id.symbol].span;
+        const arity = self.declaredTypeParameters(id).len;
+        if (arity != application.arguments.len) return self.project.fail(
+            "E_GENERIC_ARITY",
+            "type application argument count does not match its declaration",
+            .{ .module = module, .span = application.span },
+            .{ .module = id.module, .span = declaration },
+        );
+        for (application.arguments) |argument| try self.genericSignatureType(module, argument, parameters);
+    }
+    fn declaredTypeParameters(self: *Index, id: Identity) []const ast.TypeParameter {
+        const declaration = self.units[id.module].symbols.items[id.symbol].span;
+        inline for (.{ "records", "variants" }) |category| {
+            for (@field(self.units[id.module].syntax.types, category)) |item| {
+                if (item.name.start == declaration.start) return item.type_parameters;
+            }
+        }
+        return &.{};
+    }
+    fn checkNominalParameters(self: *Index, module: usize, parameters: []const ast.TypeParameter) diagnostic.Error!void {
+        try self.checkGenericRequirements(module, parameters);
+        const src = self.project.modules.items[module].src;
+        for (parameters) |parameter| {
+            const name = src.text(parameter.name);
+            const site: graph.Site = .{ .module = module, .span = parameter.name };
+            if (self.units[module].names.get(name)) |symbol| return self.project.fail("E_SHADOWING", "type parameter shadows a module declaration", site, .{ .module = module, .span = self.units[module].symbols.items[symbol].span });
+            for (self.project.modules.items[module].imports) |imported| {
+                if (std.mem.eql(u8, name, imported.alias)) return self.project.fail("E_SHADOWING", "type parameter shadows an import alias", site, .{ .module = module, .span = imported.span });
+            }
+        }
     }
     fn checkGenericRequirements(self: *Index, module: usize, parameters: []const ast.TypeParameter) diagnostic.Error!void {
         var sink: diagnostic.Sink = .{ .allocator = self.project.arena.allocator() };
@@ -96,7 +154,10 @@ pub const Index = struct {
     fn genericSignatureType(self: *Index, module: usize, span: source.Span, parameters: []const ast.TypeParameter) diagnostic.Error!void {
         const src = self.project.modules.items[module].src;
         for (parameters) |parameter| if (std.mem.eql(u8, src.text(parameter.name), src.text(span))) return;
-        for (self.units[module].syntax.types.array_types) |array| {
+        for (self.units[module].syntax.types.expressions.applications) |application| {
+            if (application.span.start == span.start and application.span.end == span.end) return self.applicationType(module, application, parameters);
+        }
+        for (self.units[module].syntax.types.expressions.arrays) |array| {
             if (array.span.start != span.start or array.span.end != span.end) continue;
             if (array.index == .enum_type) try self.genericSignatureType(module, array.index.enum_type, parameters);
             return self.genericSignatureType(module, array.element, parameters);
@@ -108,12 +169,14 @@ pub const Index = struct {
         const allocator = project.arena.allocator();
         const unit = self.units[module];
         for (unit.syntax.types.records) |record| {
+            try self.checkNominalParameters(module, record.type_parameters);
             if (!unit.symbols.items[unit.names.get(project.modules.items[module].src.text(record.name)).?].exported) continue;
-            for (record.fields) |field| try self.signatureType(module, field.ty);
+            for (record.fields) |field| try self.genericSignatureType(module, field.ty, record.type_parameters);
         }
         for (unit.syntax.types.variants) |variant| {
+            try self.checkNominalParameters(module, variant.type_parameters);
             if (!unit.symbols.items[unit.names.get(project.modules.items[module].src.text(variant.name)).?].exported) continue;
-            for (variant.cases) |case| if (case.payload) |payload| try self.signatureType(module, payload);
+            for (variant.cases) |case| if (case.payload) |payload| try self.genericSignatureType(module, payload, variant.type_parameters);
         }
         for (unit.syntax.types.domains) |domain| {
             if (unit.symbols.items[unit.names.get(project.modules.items[module].src.text(domain.name)).?].exported) try self.signatureType(module, domain.backing);

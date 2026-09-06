@@ -121,7 +121,7 @@ pub const Compilation = struct {
 
     pub fn format(self: *Compilation, allocator: std.mem.Allocator) FormatError![]u8 {
         try self.parse();
-        return @import("formatter.zig").format(allocator, self.src.bytes, self.tokens.?);
+        return @import("formatter.zig").format(allocator, self.src.bytes, self.tokens.?, self.syntax.?.types);
     }
 
     /// Parse module syntax and allocate its canonical formatting with the caller allocator.
@@ -130,8 +130,8 @@ pub const Compilation = struct {
         defer self.diagnostics = sink.items;
         const tokens = try lexer.lex(sink.allocator, self.src.bytes, &sink);
         var p: parser.Parser = .{ .src = self.src, .arena = &self.arena, .tokens = tokens, .sink = &sink };
-        _ = try p.parseModule();
-        return @import("formatter.zig").format(allocator, self.src.bytes, tokens);
+        const syntax = try p.parseModule();
+        return @import("formatter.zig").format(allocator, self.src.bytes, tokens, syntax.types);
     }
 
     /// Lazily type-check parsed syntax and retain the checked program.

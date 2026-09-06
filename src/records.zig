@@ -103,10 +103,11 @@ pub const Catalog = struct {
 
 /// All storage is owned by the compilation arena.
 pub fn collectWithNames(allocator: std.mem.Allocator, src: Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!Catalog {
+    try @import("nominal_type_syntax.zig").requireImplemented(src, program, sink);
     const declarations = program.types.records;
     const domains = program.types.domains;
     const variant_types = program.types.variants;
-    const arrays = program.types.array_types;
+    const arrays = program.types.expressions.arrays;
     const buffers = program.types.buffers;
     const resources = program.types.resources;
     const pools = program.types.pools;
@@ -261,7 +262,7 @@ const Collector = struct {
         const sink = self.sink;
         const catalog = self.catalog;
         const storage = self.storage;
-        const arrays = self.program.types.array_types;
+        const arrays = self.program.types.expressions.arrays;
         for (arrays) |syntax| {
             const depends = generic_arrays.parameter(src, self.program, syntax.element) or catalog.arrays.templates.contains(syntax.element.start);
             if (syntax.index == .enum_type and (depends or generic_arrays.parameter(src, self.program, syntax.index.enum_type))) return sink.fail(

@@ -1,6 +1,7 @@
 //! Canonical whitespace over parser-validated tokens, preserving token spellings
 //! and all line comments in their original token gaps.
 const std = @import("std");
+const ast = @import("ast.zig");
 const lex = @import("lexer.zig");
 const Tag = lex.Tag;
 const Output = struct {
@@ -96,10 +97,40 @@ fn spaceBetween(previous: Tag, current: Tag, generic_open: bool, previous_generi
     };
     return true;
 }
-pub fn format(allocator: std.mem.Allocator, bytes: []const u8, tokens: []const lex.Token) std.mem.Allocator.Error![]u8 {
+fn nominalHeads(allocator: std.mem.Allocator, types: ast.TypeDeclarations) std.mem.Allocator.Error!std.AutoHashMapUnmanaged(usize, void) {
+    var heads: std.AutoHashMapUnmanaged(usize, void) = .empty;
+    errdefer heads.deinit(allocator);
+    for (types.expressions.applications) |application| try heads.put(allocator, application.name.end, {});
+    inline for (.{ "records", "variants" }) |category| {
+        for (@field(types, category)) |declaration| if (declaration.type_parameters.len != 0) try heads.put(allocator, declaration.name.end, {});
+    }
+    return heads;
+}
+fn splitTypeClosures(allocator: std.mem.Allocator, tokens: []const lex.Token, applications: []const ast.TypeApplication) std.mem.Allocator.Error!std.ArrayList(lex.Token) {
+    var adjusted: std.ArrayList(lex.Token) = .empty;
+    errdefer adjusted.deinit(allocator);
+    if (applications.len == 0) return adjusted;
+    var ends: std.AutoHashMapUnmanaged(usize, void) = .empty;
+    defer ends.deinit(allocator);
+    for (applications) |application| try ends.put(allocator, application.span.end, {});
+    for (tokens, 0..) |token, index| {
+        if (token.tag == .ge and ends.contains(token.span.start + 1)) {
+            if (adjusted.items.len == 0) try adjusted.appendSlice(allocator, tokens[0..index]);
+            try adjusted.append(allocator, .{ .tag = .gt, .span = .{ .start = token.span.start, .end = token.span.start + 1 } });
+            try adjusted.append(allocator, .{ .tag = .equal, .span = .{ .start = token.span.start + 1, .end = token.span.end } });
+        } else if (adjusted.items.len != 0) try adjusted.append(allocator, token);
+    }
+    return adjusted;
+}
+pub fn format(allocator: std.mem.Allocator, bytes: []const u8, input_tokens: []const lex.Token, types: ast.TypeDeclarations) std.mem.Allocator.Error![]u8 {
+    var adjusted = try splitTypeClosures(allocator, input_tokens, types.expressions.applications);
+    defer adjusted.deinit(allocator);
+    const tokens = if (adjusted.items.len != 0) adjusted.items else input_tokens;
     var output: std.Io.Writer.Allocating = .init(allocator);
     errdefer output.deinit();
     var out: Output = .{ .writer = &output.writer };
+    var heads = try nominalHeads(allocator, types);
+    defer heads.deinit(allocator);
     var delimiters: std.ArrayList(Tag) = .empty;
     defer delimiters.deinit(allocator);
     var previous: Tag = .eof;
@@ -109,7 +140,7 @@ pub fn format(allocator: std.mem.Allocator, bytes: []const u8, tokens: []const l
         try out.comments(bytes[end..token.span.start]);
         if (token.tag == .eof) break;
         const top: Tag = if (delimiters.items.len == 0) .eof else delimiters.items[delimiters.items.len - 1];
-        const generic_open = token.tag == .lt and genericHead(previous);
+        const generic_open = token.tag == .lt and (genericHead(previous) or (index != 0 and heads.contains(tokens[index - 1].span.end)));
         const generic_close = token.tag == .gt and top == .lt;
         // Two colon tokens qualify a module name. Preserve comments between them
         // while avoiding the ordinary annotation space after the second colon.
@@ -128,7 +159,7 @@ pub fn format(allocator: std.mem.Allocator, bytes: []const u8, tokens: []const l
         try out.text(bytes[token.span.start..token.span.end]);
         if (token.tag == .lbrace or token.tag == .lparen or token.tag == .lbracket or generic_open) try delimiters.append(allocator, token.tag) else if (closes(token.tag) and (token.tag != .gt or generic_close)) _ = delimiters.pop();
         if (token.tag == .lbrace) out.indent += 1;
-        previous_generic = generic_open or generic_close;
+        previous_generic = generic_open;
         previous = token.tag;
         end = token.span.end;
     }

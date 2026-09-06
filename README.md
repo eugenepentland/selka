@@ -318,6 +318,9 @@ escapes before instantiation. `examples/generic-regions.my` returns `3`.
 [Generic fixed arrays](docs/experiments/generic-arrays.md) now support `[N]T`
 construction, nested substitution, nominal-ID membership and borrowed views.
 `examples/generic-arrays.my` returns `3`; parameterized records and unions remain open.
+[Nominal template syntax and interfaces](docs/experiments/nominal-type-syntax.md)
+now retain declarations and nested applications, but semantic specialization and
+execution remain explicitly unavailable.
 
 [Lexical arenas](docs/experiments/source-arenas.md) use `arena heap as scratch { ... }`
 with conservative escape checks and cleanup across returns/errors.
