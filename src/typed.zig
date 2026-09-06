@@ -146,6 +146,13 @@ pub fn resultShape(ty: Type, records: []const Record) ?ResultShape {
     }
     return .{ .ok_type = variants.cases[ok orelse return null].payload.?, .error_type = variants.cases[err orelse return null].payload.?, .ok_tag = ok.?, .error_tag = err.? };
 }
+/// Equality supported by concrete expressions and generic equality requirements.
+pub fn supportsEquality(ty: Type, records: []const Record) bool {
+    if (ty.isInteger() or ty == .bool) return true;
+    if (!ty.isAggregate()) return false;
+    const record = records[ty.recordIndex()];
+    return record.isEnum() or record.shape.handle_pool != null;
+}
 /// Determine whether a type carries ownership that forbids implicit copying.
 pub fn moveOnly(ty: Type, records: []const Record) bool {
     return ty.isAggregate() and records[ty.recordIndex()].contract.move_only;

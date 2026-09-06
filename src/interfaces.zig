@@ -85,6 +85,14 @@ pub const Index = struct {
         const symbol = self.units[id.module].symbols.items[id.symbol];
         if (!symbol.exported) return self.project.fail("E_PRIVATE_INTERFACE", "exported interface exposes an unexported type", .{ .module = module, .span = span }, .{ .module = id.module, .span = symbol.span });
     }
+    fn checkGenericRequirements(self: *Index, module: usize, parameters: []const ast.TypeParameter) diagnostic.Error!void {
+        var sink: diagnostic.Sink = .{ .allocator = self.project.arena.allocator() };
+        _ = @import("generic_requirements.zig").resolve(sink.allocator, self.project.modules.items[module].src, parameters, &sink) catch |err| {
+            if (err != error.SourceError) return err;
+            const problem = sink.items.items[0];
+            return self.project.fail(problem.code, problem.message, .{ .module = module, .span = problem.span }, null);
+        };
+    }
     fn genericSignatureType(self: *Index, module: usize, span: source.Span, parameters: []const ast.TypeParameter) diagnostic.Error!void {
         const src = self.project.modules.items[module].src;
         for (parameters) |parameter| if (std.mem.eql(u8, src.text(parameter.name), src.text(span))) return;
@@ -117,6 +125,7 @@ pub const Index = struct {
             if (unit.symbols.items[unit.names.get(project.modules.items[module].src.text(pool.name)).?].exported) try self.signatureType(module, pool.element);
         }
         for (unit.syntax.functions) |function| {
+            try self.checkGenericRequirements(module, function.signature.type_parameters);
             const src = project.modules.items[module].src;
             const name = if (function.policy.owner) |owner| try std.fmt.allocPrint(allocator, "{s}.{s}", .{ src.text(owner), src.text(function.name) }) else src.text(function.name);
             if (!unit.symbols.items[unit.names.get(name).?].exported) continue;

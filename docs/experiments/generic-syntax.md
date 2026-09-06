@@ -13,8 +13,9 @@ fn choose<T: copy + equality, U: integer>(x: T, y: U) -> T {
 choose::<i64, u8>(1, 2u8)
 ```
 
-Requirements are currently retained names, not resolved traits or verified
-operator/ownership guarantees. Each type parameter needs a nonempty requirement
+The parser retains requirement names. Semantic and interface checking now
+[resolve builtin requirements](generic-requirements.md); template bodies are not
+yet checked against their operation/ownership guarantees. Each type parameter needs a nonempty requirement
 list. Duplicate parameters or duplicate requirements on one parameter are errors.
 At most 16 type parameters, 16 requirements per parameter, and 16 call type
 arguments are accepted. These are frontend resource bounds, not a specialization
@@ -46,8 +47,8 @@ core tests continue to guard existing parsing and execution.
 
 ## Next implementation requirements
 
-- Resolve declared requirements and define the operations they permit, including
-  copying/moving, equality, arithmetic, references, and effect bounds.
+- Extend the resolved builtin requirements as needed for move-only parameters
+  and user-defined contracts; enforce their operations in template bodies.
 - Check template bodies against those requirements, including uncalled templates;
   do not infer a universal guarantee from one sample concrete type.
 - Intern bounded specializations by resolved declaration and nominal type identity,

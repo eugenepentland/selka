@@ -366,3 +366,21 @@ CLI tests passed, and the final generic-focused run passed seven tests including
 the additional qualified-module formatting fixture. All Zig tests compiled and
 the build gate passed all 88 Guardian checks without baselines. No executable
 generic or native-specialization acceptance is claimed.
+
+
+### Generic builtin requirement resolution — 2026-09-06
+
+Added normalized `copy`, `equality`, and `integer` requirements, implication checks,
+and concrete type matching using existing ownership/result contracts. Equality
+uses the same predicate as ordinary expressions. Unknown requirements are rejected
+in all templates, including uncalled private module declarations; malformed AST
+inputs and allocation-failure cleanup are covered. Template-body checking and
+executable specialization remain unsupported. General move-only/user-defined
+requirements, bounded instance interning, substitution, backend/tooling integration,
+and the rest of the roadmap remain open.
+
+Validation: full core runs passed 546 tests in Debug and ReleaseFast; all 60 CLI
+tests passed. The focused requirement run passed seven tests, including the added
+module/private-template diagnostic case. The build passed all 88 Guardian checks
+without baselines. These results validate requirement resolution/matching and
+ordinary language regressions, not executable generics or template-body checking.

@@ -649,12 +649,6 @@ const Checker = struct {
         out.ty = try self.ty(signature.signature.return_type);
         out.data = .{ .call = .{ .function = function, .arguments = try arguments.toOwnedSlice(self.allocator), .references = try loans.toOwnedSlice(self.allocator) } };
     }
-    fn supportsEquality(self: *Checker, value_type: typed.Type) bool {
-        if (value_type.isInteger() or value_type == .bool) return true;
-        if (!value_type.isAggregate()) return false;
-        const record = self.catalog.records[value_type.recordIndex()];
-        return record.isEnum() or record.shape.handle_pool != null;
-    }
     fn checkedExpression(self: *Checker, node: ast.Node, minimum_literal: ?Literal, temporaries: []const typed.Type) Error!typed.Node {
         var out: typed.Node = .{ .span = node.span, .ty = .i64, .data = undefined };
         if (minimum_literal) |parsed| {
@@ -857,7 +851,7 @@ const Checker = struct {
                         out.ty = .bool;
                     },
                     .eq, .ne => {
-                        if (!self.supportsEquality(lt)) return self.sink.fail("E_TYPE", b.op_span, "aggregate equality is not defined; compare the relevant elements explicitly");
+                        if (!typed.supportsEquality(lt, self.catalog.records)) return self.sink.fail("E_TYPE", b.op_span, "aggregate equality is not defined; compare the relevant elements explicitly");
                         out.ty = .bool;
                     },
                     .lt, .le, .gt, .ge => {
@@ -1326,13 +1320,14 @@ fn warningLess(_: void, a: diagnostic.Diagnostic, b: diagnostic.Diagnostic) bool
 pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!typed.Program {
     return checkWithNames(allocator, src, program, sink, null);
 }
-fn rejectUnimplementedGenerics(program: ast.Program, sink: *diagnostic.Sink) Error!void {
+fn rejectUnimplementedGenerics(src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!void {
+    for (program.functions) |function| _ = try @import("generic_requirements.zig").resolve(sink.allocator, src, function.signature.type_parameters, sink);
     for (program.functions) |function| if (function.signature.type_parameters.len != 0) return sink.fail("E_GENERIC_UNSUPPORTED", function.name, "generic syntax is parsed, but executable specialization is not implemented");
     for (program.nodes.items) |node| if (node.data == .call and node.data.call.type_arguments.len != 0) return sink.fail("E_GENERIC_UNSUPPORTED", node.span, "explicit type arguments require executable generic specialization");
 }
 /// Type-check linked module names and validate ownership, effects, and domain codecs.
 pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!typed.Program {
-    try rejectUnimplementedGenerics(program, sink);
+    try rejectUnimplementedGenerics(src, program, sink);
     const resolved = try allocator.alloc(?typed.NodeId, program.nodes.items.len);
     @memset(resolved, null);
     const catalog = try records.collectWithNames(allocator, src, program, sink, module_names);

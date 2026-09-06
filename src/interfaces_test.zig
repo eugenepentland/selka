@@ -438,3 +438,8 @@ test "generic syntax module interfaces retain scoped type names without hiding p
     }
     try t.expectEqual(@as(usize, 1), cache.statistics.hits);
 }
+
+test "generic requirements checkGenericRequirements validates exported and uncalled private templates" {
+    try reject("module main;export f;fn f<T:unknown>(x:T)->T{return x;}", "E_GENERIC_REQUIREMENT");
+    try reject("module main;fn private_template<T:unknown>(x:T)->T{return x;}fn main()->i64{return 0;}", "E_GENERIC_REQUIREMENT");
+}
