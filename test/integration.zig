@@ -1123,3 +1123,74 @@ test "CLI borrow provenance maps causal and declaration notes to the original mo
     try testing.expectEqualStrings("9\n", accepted.stdout);
     try testing.expectEqualStrings("", accepted.stderr);
 }
+
+test "CLI arena lifetime provenance maps the escaped allocator to its original generic module" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const bad =
+        \\module helper;
+        \\export work;
+        \\fn work<T:copy>(heap:allocator)->allocator{
+        \\arena heap as scratch{
+        \\return scratch;
+        \\}
+        \\}
+    ;
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = bad });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input;import helper;fn main(heap:allocator)->i64{discard helper::work::<bool>(heap);return 7;}" });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const rejected = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-project", path } });
+    defer testing.allocator.free(rejected.stdout);
+    defer testing.allocator.free(rejected.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
+    try testing.expectEqualStrings("", rejected.stdout);
+    for ([_][]const u8{ "helper.my:5:1: error[E_ARENA_ESCAPE]", "helper.my:4:15: shorter-lived arena declared here" }) |part|
+        try testing.expect(std.mem.indexOf(u8, rejected.stderr, part) != null);
+    const fixed = try std.mem.replaceOwned(u8, testing.allocator, bad, "return scratch;", "discard scratch;return heap;");
+    defer testing.allocator.free(fixed);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = fixed });
+    const accepted = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path } });
+    defer testing.allocator.free(accepted.stdout);
+    defer testing.allocator.free(accepted.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, accepted.term);
+    try testing.expectEqualStrings("7\n", accepted.stdout);
+    try testing.expectEqualStrings("", accepted.stderr);
+}
+
+test "CLI returned lifetime notes map the borrow owner and required input to original module locations" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const bad =
+        \\module helper;
+        \\export work;
+        \\fn work<T:copy>(input:&i64)->&i64 from input{
+        \\let local=7;
+        \\borrow local as loan{
+        \\return loan;
+        \\}
+        \\}
+    ;
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = bad });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input;import helper;fn main()->i64{let n=9;borrow n as r{borrow helper::work::<bool>(r) as returned{return read_ref(returned);}}}" });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const rejected = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-project", path } });
+    defer testing.allocator.free(rejected.stdout);
+    defer testing.allocator.free(rejected.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
+    try testing.expectEqualStrings("", rejected.stdout);
+    for ([_][]const u8{
+        "helper.my:6:8: error[E_RETURN_LIFETIME]", "helper.my:5:17: returned borrow declared here",
+        "helper.my:4:5: value declared here",      "helper.my:3:17: result lifetime is tied to this input",
+    }) |part| try testing.expect(std.mem.indexOf(u8, rejected.stderr, part) != null);
+    const fixed = try std.mem.replaceOwned(u8, testing.allocator, bad, "let local=7;\nborrow local as loan{\nreturn loan;\n}", "return input;");
+    defer testing.allocator.free(fixed);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = fixed });
+    const accepted = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path } });
+    defer testing.allocator.free(accepted.stdout);
+    defer testing.allocator.free(accepted.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, accepted.term);
+    try testing.expectEqualStrings("9\n", accepted.stdout);
+    try testing.expectEqualStrings("", accepted.stderr);
+}

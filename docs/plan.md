@@ -49,9 +49,9 @@ explicit types, schemas, and interfaces where that improves the program.
    are implemented, along with arena/reset origin and escape checks.
    Keep unsupported structural operations explicit until their rules are in place.
 2. Improve structured diagnostics and repair examples alongside those features.
-   Whole-value/partial-field moves and borrow conflicts now retain causal and
-   declaration sites, with executed repair fixtures. Arena/lifetime provenance and
-   versioned CLI diagnostic output remain pending. The initial
+   Whole-value/partial-field moves, borrow conflicts, arena escapes and invalid
+   reference returns now retain causal, declaration and contract evidence, with
+   executed repair fixtures. Versioned CLI diagnostic output remains pending. The initial
    [optional-value audit](experiments/optional-values.md) retains named unions and
    checked results; measure application usability before adding convenience syntax.
 3. Add a small, explicitly registered typed host-library interface into the VM,
@@ -1941,3 +1941,46 @@ Next: arena-origin and returned-lifetime explanations and versioned machine-read
 CLI diagnostics, then typed host registration and the application/repair trial.
 Broader abstraction/tooling and trial evidence remain open. Native execution stays
 outside the active goal.
+
+
+### Arena and returned-reference diagnostic evidence — 2026-09-06
+
+Arena dependency analysis now retains the limiting arena declaration alongside
+its depth. Ordinary and abstract generic checking share monotone witness selection:
+deeper arenas take precedence, and equal depths select the earliest declaration.
+Witness changes propagate through cycles even when depth is unchanged. Existing
+conservative dependencies through calls, aggregates, assignments and reference
+writes remain intact. E_ARENA_ESCAPE identifies the originating arena scope.
+
+Invalid reference returns now report the returned borrow, its actual owner and
+the input parameter required by the signature. Structured diagnostics group owner
+and contract evidence under `provenance`, alongside the immediate `related` note.
+Both imported-module CLI fixtures verify original lines/columns and execute valid
+repairs. See [the diagnostic contract](experiments/diagnostic-provenance.md).
+
+New tests cover escaping buffer allocation repaired to caller-owned backing,
+returning a declared input instead of local storage, loop fixed points, helper
+writes, nested origins, deterministic cyclic propagation and diagnostic allocation
+failures. Notes explain static origins and contracts, not a full trace of every
+intermediate operation or a predicted execution path.
+
+Validation: 668 core and 65 CLI tests are validated in Debug and ReleaseFast.
+The full Debug interpreter suite passed 27/27 steps and 733/733 tests. The initial
+ReleaseFast run passed all CLI tests but exposed NondeterministicMemoryUsage in
+an existing allocation-failure sweep: in-place backing growth changed its counted
+allocation sequence. Disabling resize in that sweep follows the existing allocator
+test pattern. The corrected sweep passes separately in both modes; the final
+ReleaseFast interpreter suite passed 28/28 steps, rerunning all 668 core tests and
+reusing the unchanged successful 65-test CLI result. Interpreter/tooling drivers
+and 96 independent corpus comparisons pass. Formatting and all 88 Guardian checks
+pass without baselines; existing report-only size/line findings remain.
+
+One extra gate cycle grouped diagnostic evidence, split a hard-limit line and
+shared a repeated note string; the type-size finding was labelled useful-review.
+A focused test also caught and corrected the fixture helper name `wrap`, which is
+reserved syntax. These were test/design findings, not a new language runtime bug.
+No native execution suite was run.
+
+Next: versioned machine-readable CLI diagnostics, followed by typed VM host-function
+registration and the board/constraint-processing trial. Broader abstraction/tooling
+and application repair evidence remain pending; native execution stays excluded.

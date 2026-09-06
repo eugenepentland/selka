@@ -5,46 +5,44 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const walk = @import("typed_walk.zig");
 const diagnostic = @import("diagnostic.zig");
-const Span = @import("source.zig").Span;
+const origin = @import("region_origin.zig");
+const Dependency = origin.Dependency;
+const grow = origin.grow;
+const requireLimit = origin.requireLimit;
 /// Whether a concrete value can retain arena authority or arena-owned storage.
 pub fn carries(ty: typed.Type, types: []const bool) bool {
     return ty == .allocator or (ty.isAggregate() and types[ty.recordIndex()]);
-}
-fn grow(target: *usize, dependency: usize) bool {
-    if (target.* >= dependency) return false;
-    target.* = dependency;
-    return true;
 }
 const Analysis = struct {
     program: typed.Program,
     function: typed.Function,
     types: []const bool,
-    nodes: []usize,
-    locals: []usize,
-    fn node(self: Analysis, id: typed.NodeId) usize {
+    nodes: []Dependency,
+    locals: []Dependency,
+    fn node(self: Analysis, id: typed.NodeId) Dependency {
         return self.nodes[@backingInt(id)];
     }
-    fn local(self: Analysis, id: typed.LocalId) usize {
+    fn local(self: Analysis, id: typed.LocalId) Dependency {
         return self.locals[@backingInt(id)];
     }
-    fn reference(self: Analysis, id: typed.ReferenceId) usize {
+    fn reference(self: Analysis, id: typed.ReferenceId) Dependency {
         return self.local(self.function.scope.references[@backingInt(id)].owner);
     }
-    fn arguments(self: Analysis, inputs: []const typed.NodeId) usize {
-        var dependency: usize = 0;
-        for (inputs) |input| dependency = @max(dependency, self.node(input));
+    fn arguments(self: Analysis, inputs: []const typed.NodeId) Dependency {
+        var dependency: Dependency = .{};
+        for (inputs) |input| dependency = origin.combine(dependency, self.node(input));
         return dependency;
     }
-    fn fields(self: Analysis, inputs: []const typed.FieldInit) usize {
-        var dependency: usize = 0;
-        for (inputs) |input| dependency = @max(dependency, self.node(input.value));
+    fn fields(self: Analysis, inputs: []const typed.FieldInit) Dependency {
+        var dependency: Dependency = .{};
+        for (inputs) |input| dependency = origin.combine(dependency, self.node(input.value));
         return dependency;
     }
-    fn call(self: Analysis, invocation: @FieldType(@FieldType(typed.Node, "data"), "call")) usize {
+    fn call(self: Analysis, invocation: @FieldType(@FieldType(typed.Node, "data"), "call")) Dependency {
         var dependency = self.arguments(invocation.arguments);
         for (invocation.references) |id| {
             const ref = self.function.scope.references[@backingInt(id)];
-            if (carries(ref.ty, self.types)) dependency = @max(dependency, self.reference(id));
+            if (carries(ref.ty, self.types)) dependency = origin.combine(dependency, self.reference(id));
         }
         return dependency;
     }
@@ -57,8 +55,8 @@ const Analysis = struct {
         };
         unreachable; // Checked reference argument count.
     }
-    fn expression(self: Analysis, expression_node: typed.Node) usize {
-        if (!carries(expression_node.ty, self.types)) return 0;
+    fn expression(self: Analysis, expression_node: typed.Node) Dependency {
+        if (!carries(expression_node.ty, self.types)) return .{};
         return switch (expression_node.data) {
             .local => |id| self.local(id),
             .read_ref => |id| self.reference(id),
@@ -67,19 +65,19 @@ const Analysis = struct {
             .acquire_buffer, .acquire_pool => |acquire| self.node(acquire.allocator),
             .reset_arena, .cast, .wrap, .unwrap, .length, .complete_resource => |value| self.node(value),
             .propagate => |propagate| self.node(propagate.value),
-            .variant => |variant| if (variant.value) |value| self.node(value) else 0,
+            .variant => |variant| if (variant.value) |value| self.node(value) else .{},
             .array => |inputs| self.arguments(inputs),
             .record => |inputs| self.fields(inputs),
-            .update => |update| @max(self.node(update.base), self.fields(update.fields)),
+            .update => |update| origin.combine(self.node(update.base), self.fields(update.fields)),
             .field => |field| self.node(field.base),
             .index => |index| self.node(index.base),
-            .replace => |replace| @max(self.node(replace.base), self.node(replace.value)),
+            .replace => |replace| origin.combine(self.node(replace.base), self.node(replace.value)),
             .call => |invocation| self.call(invocation),
             .buffer_operation => |operation| self.local(operation.owner),
             .pool_operation => |operation| self.local(operation.owner),
             .unary => |unary| self.node(unary.operand),
-            .binary => |binary| @max(self.node(binary.left), self.node(binary.right)),
-            .integer, .boolean, .len_slice, .acquire_resource, .resource_io, .restrict_resource, .environment_get, .external_read => 0,
+            .binary => |binary| origin.combine(self.node(binary.left), self.node(binary.right)),
+            .integer, .boolean, .len_slice, .acquire_resource, .resource_io, .restrict_resource, .environment_get, .external_read => .{},
         };
     }
     fn writeReference(self: Analysis, id: typed.ReferenceId, value: typed.NodeId) bool {
@@ -92,7 +90,7 @@ const Analysis = struct {
     fn refLimit(self: Analysis, id: typed.ReferenceId) usize {
         const ref = self.function.scope.references[@backingInt(id)];
         const owner = self.function.scope.locals[@backingInt(ref.owner)];
-        if (owner.ty.isAggregate() and self.program.records[owner.ty.recordIndex()].shape.buffer != null) return self.local(ref.owner);
+        if (owner.ty.isAggregate() and self.program.records[owner.ty.recordIndex()].shape.buffer != null) return self.local(ref.owner).depth;
         return owner.ownership.arena_depth;
     }
     fn validateExpression(self: Analysis, expression_node: typed.Node, sink: *diagnostic.Sink) diagnostic.Error!void {
@@ -102,11 +100,11 @@ const Analysis = struct {
                 if (carries(input.error_type, self.types)) try requireLimit(self.node(propagate.value), 0, expression_node.span, sink);
             },
             .buffer_operation => |operation| {
-                if (operation.kind == .append) try requireLimit(self.node(operation.arguments[0]), self.local(operation.owner), expression_node.span, sink);
-                if (operation.kind == .write or operation.kind == .resize) try requireLimit(self.node(operation.arguments[1]), self.local(operation.owner), expression_node.span, sink);
+                if (operation.kind == .append) try requireLimit(self.node(operation.arguments[0]), self.local(operation.owner).depth, expression_node.span, sink);
+                if (operation.kind == .write or operation.kind == .resize) try requireLimit(self.node(operation.arguments[1]), self.local(operation.owner).depth, expression_node.span, sink);
             },
             .pool_operation => |operation| {
-                if (operation.kind == .insert or operation.kind == .replace) try requireLimit(self.node(operation.arguments[if (operation.kind == .insert) 0 else 1]), self.local(operation.owner), expression_node.span, sink);
+                if (operation.kind == .insert or operation.kind == .replace) try requireLimit(self.node(operation.arguments[if (operation.kind == .insert) 0 else 1]), self.local(operation.owner).depth, expression_node.span, sink);
             },
             .call => |invocation| {
                 const dependency = self.call(invocation);
@@ -133,9 +131,9 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
     const types = try typeDependencies(allocator, program.records);
     defer allocator.free(types);
     var changed = false;
-    const nodes = try allocator.alloc(usize, program.nodes.len);
+    const nodes = try allocator.alloc(Dependency, program.nodes.len);
     defer allocator.free(nodes);
-    @memset(nodes, 0);
+    @memset(nodes, .{});
     for (program.functions) |function| {
         // A helper without local regions cannot introduce a shorter lifetime;
         // callers conservatively propagate all argument/reference dependencies.
@@ -145,9 +143,9 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
         var items: std.ArrayList(walk.Item) = .empty;
         defer items.deinit(allocator);
         while (try walker.next()) |item| try items.append(allocator, item);
-        const locals = try allocator.alloc(usize, function.scope.locals.len);
+        const locals = try allocator.alloc(Dependency, function.scope.locals.len);
         defer allocator.free(locals);
-        @memset(locals, 0);
+        @memset(locals, .{});
         const analysis: Analysis = .{ .program = program, .function = function, .types = types, .nodes = nodes, .locals = locals };
         changed = true;
         while (changed) {
@@ -229,7 +227,10 @@ fn propagateDependencies(analysis: Analysis, item: walk.Item) bool {
             }
         },
         .statement => |id| switch (program.statements[@backingInt(id)].data) {
-            .arena_scope => |scope| changed = grow(&locals[@backingInt(scope.slot)], function.scope.locals[@backingInt(scope.slot)].ownership.arena_depth) or changed,
+            .arena_scope => |scope| changed = grow(&locals[@backingInt(scope.slot)], .{
+                .depth = function.scope.locals[@backingInt(scope.slot)].ownership.arena_depth,
+                .scope = function.scope.locals[@backingInt(scope.slot)].declaration,
+            }) or changed,
             .initialize, .assign => |store| changed = grow(&locals[@backingInt(store.slot)], analysis.node(store.value)) or changed,
             .match => |match| for (match.arms) |arm| {
                 if (arm.slot) |slot| if (carries(function.scope.locals[@backingInt(slot)].ty, types)) {
@@ -242,9 +243,4 @@ fn propagateDependencies(analysis: Analysis, item: walk.Item) bool {
         },
     }
     return changed;
-}
-
-/// Reject a value whose arena dependency exceeds its destination lifetime.
-pub fn requireLimit(dependency: usize, limit: usize, span: Span, sink: *diagnostic.Sink) diagnostic.Error!void {
-    if (dependency > limit) return sink.fail("E_ARENA_ESCAPE", span, "value depends on a shorter-lived arena; keep its allocator and owned storage inside that scope");
 }

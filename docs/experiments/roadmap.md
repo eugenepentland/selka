@@ -18,7 +18,7 @@ See [the current design and acceptance criteria](interpreter-first.md).
 | Priority | Work | Completion evidence |
 | --- | --- | --- |
 | 1 | Interpreter workflow, concrete generic local views and arena/reset lifetimes implemented | `test`/`test-interpreter` retain Guardian, core/CLI and interpreter/tooling coverage; `test-native` is optional and `test-all` combines both. Views and arenas have VM/CLI rejection and cleanup acceptance. Next active priority: diagnostic provenance and repair fixtures. |
-| 2 | In progress: whole-value/partial-field transfer and borrow provenance with executed repair fixtures implemented | Next: arena/lifetime provenance and versioned CLI diagnostic output. The initial [optional-value audit](optional-values.md) retains named unions/results; application usability and agent repair success remain unmeasured. |
+| 2 | In progress: move/borrow and arena/returned-reference provenance with executed repair fixtures implemented | Next: versioned CLI diagnostic output. The initial [optional-value audit](optional-values.md) retains named unions/results; application usability and agent repair success remain unmeasured. |
 | 3 | Typed registered host functions with handwritten wrappers | Exact signatures/effects, ownership and lifetime checks, typed errors, deterministic fake-host tests. |
 | 4 | Board-validation or constraint-processing module | Independent behavioral tests and recorded agent repair outcomes; geometry/routing kernels stay in native libraries. |
 | 5 | Trial-driven language/tooling refinement | Evidence for generic constraints, source serialization, incremental checking, and useful duplication reports. |
@@ -987,3 +987,46 @@ Next: arena-origin and returned-lifetime explanations and versioned machine-read
 CLI diagnostics, then typed host registration and the application/repair trial.
 Broader abstraction/tooling and trial evidence remain open. Native execution stays
 outside the active goal.
+
+
+### Arena and returned-reference diagnostic evidence — 2026-09-06
+
+Arena dependency analysis now retains the limiting arena declaration alongside
+its depth. Ordinary and abstract generic checking share monotone witness selection:
+deeper arenas take precedence, and equal depths select the earliest declaration.
+Witness changes propagate through cycles even when depth is unchanged. Existing
+conservative dependencies through calls, aggregates, assignments and reference
+writes remain intact. E_ARENA_ESCAPE identifies the originating arena scope.
+
+Invalid reference returns now report the returned borrow, its actual owner and
+the input parameter required by the signature. Structured diagnostics group owner
+and contract evidence under `provenance`, alongside the immediate `related` note.
+Both imported-module CLI fixtures verify original lines/columns and execute valid
+repairs. See [the diagnostic contract](diagnostic-provenance.md).
+
+New tests cover escaping buffer allocation repaired to caller-owned backing,
+returning a declared input instead of local storage, loop fixed points, helper
+writes, nested origins, deterministic cyclic propagation and diagnostic allocation
+failures. Notes explain static origins and contracts, not a full trace of every
+intermediate operation or a predicted execution path.
+
+Validation: 668 core and 65 CLI tests are validated in Debug and ReleaseFast.
+The full Debug interpreter suite passed 27/27 steps and 733/733 tests. The initial
+ReleaseFast run passed all CLI tests but exposed NondeterministicMemoryUsage in
+an existing allocation-failure sweep: in-place backing growth changed its counted
+allocation sequence. Disabling resize in that sweep follows the existing allocator
+test pattern. The corrected sweep passes separately in both modes; the final
+ReleaseFast interpreter suite passed 28/28 steps, rerunning all 668 core tests and
+reusing the unchanged successful 65-test CLI result. Interpreter/tooling drivers
+and 96 independent corpus comparisons pass. Formatting and all 88 Guardian checks
+pass without baselines; existing report-only size/line findings remain.
+
+One extra gate cycle grouped diagnostic evidence, split a hard-limit line and
+shared a repeated note string; the type-size finding was labelled useful-review.
+A focused test also caught and corrected the fixture helper name `wrap`, which is
+reserved syntax. These were test/design findings, not a new language runtime bug.
+No native execution suite was run.
+
+Next: versioned machine-readable CLI diagnostics, followed by typed VM host-function
+registration and the board/constraint-processing trial. Broader abstraction/tooling
+and application repair evidence remain pending; native execution stays excluded.

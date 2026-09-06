@@ -1,13 +1,16 @@
 # Ownership diagnostic provenance and repair fixtures
 
-Whole-value and partial-field transfer errors, conflicting borrows and suspended parent references
-now report the invalid use, the earlier operation and the value declaration.
+Whole-value and partial-field transfer errors, conflicting borrows and suspended
+parent references report the invalid use, the earlier operation and the value
+declaration. Arena escapes and invalid returned references now explain their
+lifetime origins and contracts as described below.
 This applies to ordinary checking and to abstract generic bodies, including
 uncalled templates. Existing error codes remain unchanged.
 
 The structured `Diagnostic` keeps the immediate cause in `related` and an optional
-binding-declaration note in `origin`. Both are stored by value; the bounded runtime
-trace remains separate. Text rendering prints the causal note before the
+binding-declaration note in `provenance.origin`. Returned-reference mismatches
+also keep the required input in `provenance.requirement`. Notes are stored by value;
+the bounded runtime trace remains separate. Text rendering prints the causal note before the
 creation/declaration note and maps each span through the original source map.
 The CLI regression checks exact lines and columns in an imported generic module.
 This is structured data in the compiler API; a versioned general JSON diagnostic
@@ -38,6 +41,31 @@ Ordinary checking chooses the earliest applicable declaration by source span;
 generic checking walks lexical loan order and records explicit parent identity.
 This avoids exposing hash-map iteration order as the choice of reported borrow.
 
+## Arena and returned-reference lifetimes
+
+Arena dependencies now carry both depth and the arena allocator's declaration.
+Ordinary checking and abstract generic graph propagation share the same dependency
+ordering and E_ARENA_ESCAPE helper. Deeper dependencies take precedence; when depths
+are equal, the earliest declaration wins. A changed witness propagates even when
+the depth stays the same, so cycles and traversal order cannot leave a stale later
+origin. These finite monotone updates preserve termination of the existing fixed
+point analyses. The graph still queues each node at most once at a time.
+
+The note identifies the arena supplying the limiting dependency. Origins survive
+assignments, aggregate construction and extraction, conservative helper calls and
+mutable reference writes through the existing data flow. This does not make the
+analysis path-sensitive: an assignment inside `while false` can still contribute a
+static dependency. The explanation reports that dependency, not a prediction of
+which branch executes. Host checker storage increases from a depth to a depth and
+optional span per tracked node/local; no VM execution or memory policy changes.
+
+When a returned reference comes from a different root than the signature allows,
+E_RETURN_LIFETIME identifies the returned loan, the actual owner's declaration and
+the required input parameter. Reborrows retain their root identity. Text rendering
+prints the causal loan, owner, and contract notes in that order. Both ordinary and
+abstract generic checks use this contract, and imported-module CLI tests assert
+all original lines and columns before executing corrected projects.
+
 ## Repair acceptance
 
 The fixtures assert diagnostic codes and exact primary, cause and declaration
@@ -54,6 +82,11 @@ spans, then independently check and execute repaired programs. They cover:
   and clearing earlier extraction witnesses when a record is replenished.
 - Mapping all locations to an imported module and executing its repaired version.
 - Preserving allocation failures while collecting and rendering provenance.
+- Allocating an escaping buffer from the caller's heap instead of a local arena.
+- Returning the declared input reference instead of borrowing a local value.
+- Retaining arena origins through loop fixed points and mutable helper writes;
+  selecting the deepest nested arena and propagating equal-depth witnesses through
+  cycles under allocation failure.
 
 These are authored regression repairs, not measurements of an agent's repair
 success rate. They do not prescribe blind text replacement or prove that every
@@ -62,8 +95,9 @@ still needs matched tasks, recorded attempts and independent behavioral tests.
 
 ## Remaining diagnostic work
 
-Arena-origin explanations, richer returned-lifetime paths, and general
-machine-readable CLI output remain pending. The initial
+General versioned machine-readable CLI output remains pending. Current lifetime
+notes show the origin and contract; they do not enumerate every intermediate
+assignment or helper in a dependency path. The initial
 [optional-value audit](optional-values.md) retains named unions/results; application
 usability and broader repair evidence remain pending. Typed host registration and
 the application trial remain active roadmap work; native execution remains excluded.

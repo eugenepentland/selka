@@ -1,6 +1,7 @@
 //! Unit test entry point, separate from the production compiler module.
 test {
     _ = @import("provenance_test.zig");
+    _ = @import("lifetime_provenance_test.zig");
     _ = @import("generic_returned_references_test.zig");
     _ = @import("generic_borrows_test.zig");
     _ = @import("generic_local_views_test.zig");

@@ -310,7 +310,7 @@ const Checker = struct {
             self.temporary_results = before_temporaries;
         }
         const previous_inputs = self.region_inputs;
-        self.region_inputs = try self.regions.add(0);
+        self.region_inputs = try self.regions.add(.{});
         defer self.region_inputs = previous_inputs;
         const result = try self.call(node.data.call, node.span, true);
         self.region_inputs = previous_inputs;
@@ -326,7 +326,12 @@ const Checker = struct {
             const node = self.program.nodes.items[@backingInt(value)];
             if (node.data != .name) return self.sink.fail(diagnostic.reference_result, node.span, "reference return requires an active reference name");
             const ref = try self.reference(node.data.name, contract.mutable, contract.slice);
-            if (ref.root != contract.parameter) return self.sink.fail(diagnostic.return_lifetime, node.span, "returned reference does not originate from the declared input");
+            if (ref.root != contract.parameter) return self.sink.failReturnLifetime(
+                node.span,
+                ref.name,
+                self.locals.items[ref.root.?].name,
+                self.locals.items[contract.parameter].name,
+            );
             try self.same(ref.ty, self.result, span);
             try self.regions.require(self.locals.items[ref.root.?].origin, .{ .depth = 0 }, span);
         } else {
@@ -351,7 +356,7 @@ const Checker = struct {
         if (self.active.contains(text)) return self.sink.fail(eShadowing, name, "binding shadows an active template binding");
         for (self.parameters) |parameter| if (std.mem.eql(u8, text, self.src.text(parameter.name))) return self.sink.fail(eShadowing, name, "binding shadows a template type parameter");
         try self.active.put(self.allocator, text, self.locals.items.len);
-        try self.locals.append(self.allocator, .{ .name = name, .ty = ty_value, .mutable = mutable, .origin = try self.regions.add(0), .arena_depth = self.arena_depth });
+        try self.locals.append(self.allocator, .{ .name = name, .ty = ty_value, .mutable = mutable, .origin = try self.regions.add(.{}), .arena_depth = self.arena_depth });
         self.seedCleanup(ty_value);
     }
     fn callTarget(self: *Checker, invocation: Call) Error!ast.Function {
@@ -434,11 +439,11 @@ const Checker = struct {
         defer self.expression_depth -= 1;
         errdefer self.temporary_results = before;
         const previous_inputs = self.region_inputs;
-        const inputs = try self.regions.add(0);
+        const inputs = try self.regions.add(.{});
         self.region_inputs = inputs;
         defer self.region_inputs = previous_inputs;
         const result = try self.expressionValue(id);
-        const output = try self.regions.add(0);
+        const output = try self.regions.add(.{});
         if (self.carriesRegion(result)) try self.regions.flow(inputs, output);
         if (previous_inputs) |parent| try self.regions.flow(output, parent);
         self.last_origin = output;
@@ -852,7 +857,7 @@ const Checker = struct {
                 defer self.arena_depth -= 1;
                 try self.bind(scope.name, .{ .concrete = .allocator }, false);
                 defer self.endScope(before);
-                try self.regions.flow(try self.regions.add(self.arena_depth), self.locals.items[before].origin);
+                try self.regions.flow(try self.regions.add(.{ .depth = self.arena_depth, .scope = scope.name }), self.locals.items[before].origin);
                 self.seedEffect(.allocation);
                 return self.statement(scope.body);
             },

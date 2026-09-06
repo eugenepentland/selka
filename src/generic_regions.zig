@@ -2,7 +2,8 @@
 const std = @import("std");
 const diagnostic = @import("diagnostic.zig");
 const Span = @import("source.zig").Span;
-const Node = struct { depth: usize, edge: ?usize = null, queued: bool = false };
+const origin = @import("region_origin.zig");
+const Node = struct { dependency: origin.Dependency, edge: ?usize = null, queued: bool = false };
 const Edge = struct { target: usize, next: ?usize };
 /// Destination lifetime is either a lexical scope or an owned container's allocator.
 pub const Limit = union(enum) { depth: usize, node: usize };
@@ -20,9 +21,9 @@ pub const Graph = struct {
         self.constraints.deinit(self.allocator);
     }
     /// Create a stable dependency identity, optionally seeded by an arena scope.
-    pub fn add(self: *Graph, depth: usize) std.mem.Allocator.Error!usize {
+    pub fn add(self: *Graph, dependency: origin.Dependency) std.mem.Allocator.Error!usize {
         const id = self.nodes.items.len;
-        try self.nodes.append(self.allocator, .{ .depth = depth });
+        try self.nodes.append(self.allocator, .{ .dependency = dependency });
         return id;
     }
     /// Propagate the source lifetime dependency into a destination value.
@@ -39,7 +40,7 @@ pub const Graph = struct {
     pub fn check(self: *Graph, sink: *diagnostic.Sink) diagnostic.Error!void {
         var pending = try std.ArrayList(usize).initCapacity(self.allocator, self.nodes.items.len);
         defer pending.deinit(self.allocator);
-        for (self.nodes.items, 0..) |*node, id| if (node.depth != 0) {
+        for (self.nodes.items, 0..) |*node, id| if (node.dependency.depth != 0) {
             node.queued = true;
             pending.appendAssumeCapacity(id);
         };
@@ -49,8 +50,7 @@ pub const Graph = struct {
             while (edge) |index| {
                 const link = self.edges.items[index];
                 const target = &self.nodes.items[link.target];
-                if (target.depth < self.nodes.items[id].depth) {
-                    target.depth = self.nodes.items[id].depth;
+                if (origin.grow(&target.dependency, self.nodes.items[id].dependency)) {
                     if (!target.queued) {
                         target.queued = true;
                         pending.appendAssumeCapacity(link.target);
@@ -62,9 +62,9 @@ pub const Graph = struct {
         for (self.constraints.items) |constraint| {
             const limit = switch (constraint.limit) {
                 .depth => |depth| depth,
-                .node => |id| self.nodes.items[id].depth,
+                .node => |id| self.nodes.items[id].dependency.depth,
             };
-            try @import("region_check.zig").requireLimit(self.nodes.items[constraint.value].depth, limit, constraint.span, sink);
+            try origin.requireLimit(self.nodes.items[constraint.value].dependency, limit, constraint.span, sink);
         }
     }
 };

@@ -11,7 +11,7 @@ fn checkRepair(bad: []const u8, fixed: []const u8, code: []const u8, locations: 
     try t.expectEqualStrings(code, problem.code);
     try t.expectEqual(locations[0], problem.span.start);
     try t.expectEqual(locations[1], problem.related.?.span.start);
-    try t.expectEqual(locations[2], problem.origin.?.span.start);
+    try t.expectEqual(locations[2], problem.provenance.origin.?.span.start);
     const rendered = try problem.render(t.allocator, c.src);
     defer t.allocator.free(rendered);
     try t.expect(std.mem.indexOf(u8, rendered, "value declared here") != null);
@@ -88,7 +88,7 @@ test "transfer witnesses follow continuing branches and reset after replacement"
         const problem = c.diagnostics.items[0];
         try t.expectEqualStrings("E_RESULT_CONSUMED", problem.code);
         try t.expectEqual(at(bad, "current=value", 8), problem.related.?.span.start);
-        try t.expectEqual(at(bad, "mut value", 4), problem.origin.?.span.start);
+        try t.expectEqual(at(bad, "mut value", 4), problem.provenance.origin.?.span.start);
     }
 }
 fn renderScenario(allocator: std.mem.Allocator) !void {
@@ -190,7 +190,9 @@ fn fieldFailureScenario(allocator: std.mem.Allocator) !void {
 }
 test "partial move checking preserves allocation failures through rejection and provenance" {
     try fieldFailureScenario(t.allocator);
-    try t.checkAllAllocationFailures(t.allocator, fieldFailureScenario, .{});
+    // In-place arena growth otherwise makes the number of counted allocations address-dependent.
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), fieldFailureScenario, .{});
 }
 
 test "replacement clears partial move witnesses before taking the replenished record" {

@@ -1229,14 +1229,11 @@ const Checker = struct {
             if (expression_node.data != .name) return self.sink.fail(eReferenceResult, expression_node.span, "reference return requires an active reference name");
             returned = try self.reference(expression_node.data.name);
             const ref = self.references.items[@backingInt(returned.?)];
-            if (ref.owner != contract.parameter) return self.sink.failRelated(
-                eReturnLifetime,
+            if (ref.owner != contract.parameter) return self.sink.failReturnLifetime(
                 expression_node.span,
-                "returned reference does not borrow from the declared input parameter",
-                .{
-                    .span = ref.declaration,
-                    .message = "returned borrow declared here",
-                },
+                ref.declaration,
+                self.locals.items[@backingInt(ref.owner)].declaration,
+                self.locals.items[@backingInt(contract.parameter)].declaration,
             );
             try self.requireReferenceKind(returned.?, contract.slice, expression_node.span);
             if (contract.mutable and !ref.mutable) return self.sink.fail(eReferenceReadOnly, expression_node.span, "shared reference cannot supply an exclusive result");

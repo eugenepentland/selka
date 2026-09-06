@@ -21,6 +21,7 @@ pub const immutable = "E_IMMUTABLE";
 pub const resource_result = "E_RESOURCE_RESULT";
 const std = @import("std");
 const source = @import("source.zig");
+const value_declared_here = "value declared here";
 
 /// Distinguishes rejecting errors from advisory diagnostics.
 pub const Severity = enum { err, warning };
@@ -35,7 +36,7 @@ pub const Diagnostic = struct {
     span: source.Span,
     message: []const u8,
     related: ?Related = null,
-    origin: ?Related = null,
+    provenance: struct { origin: ?Related = null, requirement: ?Related = null } = .{},
     // Bounded by-value guest trace needs no separate cleanup on trap paths.
     stack: struct { frames: [16]Trace = undefined, len: usize = 0, omitted: usize = 0 } = .{},
 
@@ -57,7 +58,7 @@ pub const Diagnostic = struct {
         var output: std.Io.Writer.Allocating = .init(allocator);
         errdefer output.deinit();
         output.writer.writeAll(primary) catch return error.OutOfMemory;
-        for ([_]?Related{ self.related, self.origin }) |note| if (note) |related| {
+        for ([_]?Related{ self.related, self.provenance.origin, self.provenance.requirement }) |note| if (note) |related| {
             const at = src.locate(related.span.start);
             output.writer.print("  note: {s}:{d}:{d}: {s}\n", .{ at.path, at.line, at.column, related.message }) catch return error.OutOfMemory;
         };
@@ -91,7 +92,22 @@ pub const Sink = struct {
 
     /// Keep the immediate cause and the value declaration as separate source evidence.
     pub fn failProvenance(self: *Sink, code: []const u8, span: source.Span, message: []const u8, cause: Related, declaration: source.Span) Error {
-        self.items.append(self.allocator, .{ .code = code, .span = span, .message = message, .related = cause, .origin = .{ .span = declaration, .message = "value declared here" } }) catch return error.OutOfMemory;
+        self.items.append(self.allocator, .{ .code = code, .span = span, .message = message, .related = cause, .provenance = .{ .origin = .{ .span = declaration, .message = value_declared_here } } }) catch return error.OutOfMemory;
+        return error.SourceError;
+    }
+
+    /// Explain the actual returned borrow, its owner and the input required by the signature.
+    pub fn failReturnLifetime(self: *Sink, span: source.Span, loan: source.Span, owner: source.Span, input: source.Span) Error {
+        self.items.append(self.allocator, .{
+            .code = return_lifetime,
+            .span = span,
+            .message = "returned reference does not borrow from the declared input parameter",
+            .related = .{ .span = loan, .message = "returned borrow declared here" },
+            .provenance = .{
+                .origin = .{ .span = owner, .message = value_declared_here },
+                .requirement = .{ .span = input, .message = "result lifetime is tied to this input" },
+            },
+        }) catch return error.OutOfMemory;
         return error.SourceError;
     }
 
@@ -109,7 +125,7 @@ pub const Sink = struct {
     pub fn failTransfer(self: *Sink, code: []const u8, span: source.Span, declaration: source.Span, transfer: ?source.Span) Error {
         const message = "value has already been transferred or handled";
         if (transfer) |at| return self.failProvenance(code, span, message, .{ .span = at, .message = "earlier transfer or handling on this path" }, declaration);
-        return self.failRelated(code, span, message, .{ .span = declaration, .message = "value declared here" });
+        return self.failRelated(code, span, message, .{ .span = declaration, .message = value_declared_here });
     }
 
     /// Append a source error and return SourceError, preserving allocator failure.
