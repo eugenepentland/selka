@@ -1501,3 +1501,34 @@ Result-bearing and runtime-owned variant graphs remain excluded pending abstract
 handling/ownership rules. Parameter-dependent structural types, generic codec
 constraints, public generic tooling, source JSON serialization and the remaining
 roadmap requirements stay open.
+
+
+### Full roadmap regression checkpoint — 2026-09-06
+
+The complete `zig build test --summary all` run at source commit `27f4eec`
+finished with exit status 0: **40/40 build steps succeeded and 665/665 Zig tests
+passed** (605 core plus 60 CLI). The integration drivers also passed, including
+2742 VM/native comparisons across 119 fixtures, generated Python value/domain
+bindings, native embedding and codec wire calls, allocation-failure cleanup,
+resource/provider boundaries, exact check-session reuse, watch recovery, schema
+and evaluation receipts, binding caches, the two-application ordinary corpus,
+and 256-module/4096-import boundary acceptance. This closes the full-suite
+validation gap noted in the preceding focused milestone records. The earlier
+ReleaseFast core results remain separate; this was the default Debug build test.
+
+Guardian passed all 88 checks with violation baselines disabled. Report-only
+file-size, function-length and line-length findings remain; passing the gate does
+not mean the report contains no findings. Pending ROI subjects were inspected and
+left unclassified where this run supplied no evidence for a human outcome.
+
+Optimized C compilation for the quota-reuse and quota-network fixtures took
+95.6 and 90.3 seconds respectively, versus about 1.2 seconds each at `-O0`.
+These are observations from this run, not isolated benchmarks; native compilation
+performance remains an open roadmap requirement.
+
+Abstract generic result handling is the next implementation, with branch, loop,
+scope and live-temporary acceptance requirements in
+`docs/experiments/generic-results-plan.md`. It remains unimplemented. Structural
+generic types, codec constraints, public generic tooling, source byte
+serialization, borrowed/capability native invocation, finer incremental work and
+the remaining roadmap requirements are still open.
