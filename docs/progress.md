@@ -2165,3 +2165,42 @@ Native records/arrays/resources/borrowing and wider layouts remain pending, as d
 generics, domain codecs, foreign callable wrappers, source/input integration, finer
 incremental compilation, ordinary-program review, and other unfinished roadmap work.
 Guardian was not exercised; hosted CI has not run. The full roadmap goal remains active.
+
+## 2026-09-06: Native ordinary aggregates and allocation-failure cleanup
+
+Extended native C values with reference-counted immutable field storage. Records,
+fixed arrays, enum-indexed tables, complete conversions, field access, preserving
+updates, checked indexing/replacement, length queries, and aggregate arguments/
+returns now execute directly in single-file and module projects. Result-bearing
+records support partial field transfers and non-consuming reads. Small variants
+retain packed storage; aggregate payloads and widths beyond 127 bits use boxes.
+Typed error propagation crosses packed/boxed result representations while preserving
+named cases, caller operands, static handling obligations, and instruction budgets.
+
+Copies retain storage and updates retain unchanged children. Assignment and scope
+exit release old values promptly. Normal release walks an intrusive work list without
+host recursion or cleanup allocation. A separate live-object registry supports direct
+failure cleanup, including temporary/partial values during construction and stack/
+frame allocation failures. Unsupported resource, buffer, pool, handle, capability,
+and borrowing operations still reject explicitly. Layout checking traverses complete
+type dependencies, including zero-length array element types. No public ABI or VM/
+native physical-allocation equivalence is claimed.
+
+All 20 build steps pass in Debug and ReleaseFast: 533 Zig tests (476 core, 57 CLI),
+1,506 VM/native comparisons per compiler host mode across 51 single-file and 10 module
+fixtures, eight verification tests, 29 Python/compiler wire comparisons, and all
+existing schema/codec/input/cache/module/duplicate acceptance. Native execution uses
+UBSan at -O0/-O2. The new native memory driver additionally uses AddressSanitizer and
+injects 38 allocation failures across both native modes, checking zero outstanding
+runtime bytes after host errors. Normal/trap/step/frame cleanup passes; a 20,000-update
+loop preserves an earlier copy and keeps peak live storage below 64 KiB. Compiler
+allocation-failure tests cover aggregates and boxed propagation. The array example
+builds natively and prints 44. Formatting, Python syntax, and whitespace checks pass.
+
+Validation used TMPDIR under .zig-cache/native-validation to avoid the previously
+observed /tmp linker mapping fault, retaining the pinned Zig and sanitizer settings.
+README, native experiment documents, roadmap, and both plan copies are synchronized.
+Native borrowing/resources/capabilities/pools/arenas, generics, domain codecs, callable
+foreign wrappers, source/input integration, finer incremental compilation, ordinary-
+program review, and the other unfinished roadmap work remain pending. Guardian was
+not exercised; hosted CI has not run. The full roadmap goal remains active.

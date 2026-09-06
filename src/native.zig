@@ -5,8 +5,30 @@ const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 const diagnostic = @import("diagnostic.zig");
 const native_layout = @import("native_layout.zig");
-fn payload(w: *std.Io.Writer, layout: native_layout.Layout, ty: typed.Type, tag_bits: u8) !void {
-    try w.print("variant_payload(packed, {d}, {d}, {d})", .{ tag_bits, layout.width(ty), @intFromBool(layout.signed(ty)) });
+fn payload(w: *std.Io.Writer, layout: native_layout.Layout, owner: typed.Type, ty: typed.Type) !void {
+    if (layout.width(owner) == 0) {
+        try w.writeAll("field_value(variant, 0)");
+    } else {
+        const tag_bits = native_layout.tagBits(layout.records[owner.recordIndex()].variants.?.cases.len);
+        try w.print("(Slot){{variant_payload(variant.number, {d}, {d}, {d}), NULL}}", .{ tag_bits, layout.width(ty), @intFromBool(layout.signed(ty)) });
+    }
+}
+fn variantTag(w: *std.Io.Writer, layout: native_layout.Layout, ty: typed.Type) !void {
+    if (layout.width(ty) == 0) return w.writeAll("variant.object->tag");
+    try w.print("(size_t)((U)variant.number & variant_mask({d}))", .{native_layout.tagBits(layout.records[ty.recordIndex()].variants.?.cases.len)});
+}
+fn variantValue(w: *std.Io.Writer, layout: native_layout.Layout, ty: typed.Type, tag: usize, payload_type: ?typed.Type) !void {
+    if (layout.width(ty) == 0) {
+        try w.print("boxed_variant({d}, value, {d})", .{ tag, @intFromBool(payload_type != null) });
+    } else if (payload_type) |value_type| {
+        try w.print("(Slot){{variant_make(value.number, {d}, {d}, {d}), NULL}}", .{ native_layout.tagBits(layout.records[ty.recordIndex()].variants.?.cases.len), layout.width(value_type), tag });
+    } else try w.print("(Slot){{{d}, NULL}}", .{tag});
+}
+fn indices(w: *std.Io.Writer, values: []const usize) !void {
+    if (values.len == 0) return w.writeAll("NULL");
+    try w.writeAll("(const size_t[]){");
+    for (values) |value| try w.print("{d},", .{value});
+    try w.writeByte('}');
 }
 fn literal(w: *std.Io.Writer, value: i128) !void {
     try w.print("({s}(V)UINT64_C({d}))", .{ if (value < 0) "-" else "", @abs(value) });
@@ -48,23 +70,33 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     for (program.functions, offsets) |function, *offset| {
         offset.* = count;
         count += function.instructions.len;
-        if (layout.width(function.return_type) == 0 or function.references.len != 0 or function.return_reference != null) return sink.fail("E_NATIVE_FEATURE", function.instructions[0].span, "native scalar execution does not yet support this signature");
-        for (function.locals) |local| if (layout.width(local.ty) == 0 or local.reference_parameter != null) return sink.fail("E_NATIVE_FEATURE", local.declaration, "native execution requires supported scalar or packed variant locals and parameters");
+        if (!layout.supports(function.return_type) or function.references.len != 0 or function.return_reference != null) return sink.fail("E_NATIVE_FEATURE", function.instructions[0].span, "native execution does not yet support this signature");
+        for (function.locals) |local| if (!layout.supports(local.ty) or local.reference_parameter != null) return sink.fail("E_NATIVE_FEATURE", local.declaration, "native execution requires supported value locals and parameters");
         for (function.instructions) |instruction| switch (instruction.op) {
             .make_variant => |variant| {
-                if (layout.width(variant.ty) == 0) return sink.fail("E_NATIVE_FEATURE", instruction.span, "native variant representation requires supported payloads and at most 127 packed bits");
+                if (!layout.supports(variant.ty)) return sink.fail("E_NATIVE_FEATURE", instruction.span, "native variant representation requires supported payloads");
             },
             .switch_variant => |dispatch| {
-                if (layout.width(dispatch.ty) == 0) return sink.fail("E_NATIVE_FEATURE", instruction.span, "native matching requires a supported packed variant layout");
+                if (!layout.supports(dispatch.ty)) return sink.fail("E_NATIVE_FEATURE", instruction.span, "native matching requires a supported variant layout");
             },
             .try_result => |propagate| {
-                if (layout.width(propagate.input) == 0 or layout.width(propagate.output) == 0) return sink.fail("E_NATIVE_FEATURE", instruction.span, "native propagation requires supported packed result layouts");
+                if (!layout.supports(propagate.input) or !layout.supports(propagate.output)) return sink.fail("E_NATIVE_FEATURE", instruction.span, "native propagation requires supported result layouts");
             },
             .acknowledge => |ty| {
-                if (layout.width(ty) == 0) return sink.fail("E_NATIVE_FEATURE", instruction.span, "native acknowledgement requires a supported result layout");
+                if (!layout.supports(ty)) return sink.fail("E_NATIVE_FEATURE", instruction.span, "native acknowledgement requires a supported result layout");
             },
+            .make_record => |record| {
+                if (!layout.supports(record.ty)) return sink.fail("E_NATIVE_FEATURE", instruction.span, "native aggregate construction requires supported fields");
+            },
+            .update_record => |record| {
+                if (!layout.supports(record.ty)) return sink.fail("E_NATIVE_FEATURE", instruction.span, "native record updates require supported fields");
+            },
+            .get_index, .replace_index, .array_length => |ty| {
+                if (!layout.supports(ty)) return sink.fail("E_NATIVE_FEATURE", instruction.span, "native arrays require supported elements");
+            },
+            .get_field, .read_field, .take_field => {},
             .cmp_enum, .wrap_domain, .unwrap_domain, .push_i64, .push_bool, .push_integer, .cast_integer, .neg_integer, .binary_integer, .drop_local, .move_local, .load_local, .store_local, .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .neg_i64_checked, .cmp_i64, .cmp_bool, .not_bool, .pop, .jump, .jump_if_false, .call, .ret => {},
-            else => return sink.fail("E_NATIVE_FEATURE", instruction.span, "this operation is not yet supported by native scalar execution"),
+            else => return sink.fail("E_NATIVE_FEATURE", instruction.span, "this operation is not yet supported by native execution"),
         };
     }
     var output: std.Io.Writer.Allocating = .init(allocator);
@@ -109,25 +141,25 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
                 // The surrounding instruction tick still counts wrap/unwrap steps.
                 .wrap_domain, .unwrap_domain => {},
                 .make_variant => |variant| {
-                    const variants = program.records[variant.ty.recordIndex()].variants.?;
-                    if (variants.cases[variant.tag].payload) |ty| {
-                        try w.print("push(variant_make(pop(), {d}, {d}, {d}));\n", .{ native_layout.tagBits(variants.cases.len), layout.width(ty), variant.tag });
-                    } else try w.print("push((V)UINT64_C({d}));\n", .{variant.tag});
+                    const payload_type = program.records[variant.ty.recordIndex()].variants.?.cases[variant.tag].payload;
+                    try w.print("Slot value = {s}; push_value(", .{if (payload_type != null) "pop_value()" else "(Slot){0}"});
+                    try variantValue(w, layout, variant.ty, variant.tag, payload_type);
+                    try w.writeAll(");\n");
                 },
                 .cmp_enum => |comparison| try w.print("V b = pop(), a = pop(); push(a {s} b);\n", .{if (comparison.predicate == .eq) "==" else "!="}),
                 .switch_variant => |dispatch| {
                     const variants = program.records[dispatch.ty.recordIndex()].variants.?;
-                    if (!variants.is_union) {
-                        try w.writeAll("switch (pop()) {\n");
-                    } else try w.print("V packed = pop(); switch ((size_t)((U)packed & variant_mask({d}))) {{\n", .{native_layout.tagBits(variants.cases.len)});
+                    try w.writeAll("Slot variant = pop_value(); switch (");
+                    try variantTag(w, layout, dispatch.ty);
+                    try w.writeAll(") {\n");
                     for (dispatch.arms, 0..) |arm, tag| {
                         try w.print("case {d}: ", .{tag});
                         if (arm.slot) |slot| {
-                            try w.print("frames[nf-1].locals[{d}] = ", .{@backingInt(slot)});
-                            try payload(w, layout, variants.cases[tag].payload.?, native_layout.tagBits(variants.cases.len));
-                            try w.writeAll("; ");
+                            try w.print("store_local({d}, ", .{@backingInt(slot)});
+                            try payload(w, layout, dispatch.ty, variants.cases[tag].payload.?);
+                            try w.writeAll("); ");
                         }
-                        try w.print("goto L{d};\n", .{offset + arm.target});
+                        try w.print("release_value(variant); goto L{d};\n", .{offset + arm.target});
                     }
                     try w.writeAll("default: host_failure(\"InternalError\");\n}\n");
                     falls_through = false;
@@ -135,21 +167,38 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
                 .try_result => |propagate| {
                     const input = typed.resultShape(propagate.input, program.records).?;
                     const result = typed.resultShape(propagate.output, program.records).?;
-                    const input_bits = native_layout.tagBits(program.records[propagate.input.recordIndex()].variants.?.cases.len);
-                    const output_bits = native_layout.tagBits(program.records[propagate.output.recordIndex()].variants.?.cases.len);
-                    try w.print("V packed = pop(); size_t tag = (size_t)((U)packed & variant_mask({d})); if (tag == {d}) {{ push(", .{ input_bits, input.ok_tag });
-                    try payload(w, layout, input.ok_type, input_bits);
-                    try w.print("); }} else if (tag == {d}) {{ nv = frames[nf-1].base; push(variant_make(", .{input.error_tag});
-                    try payload(w, layout, input.error_type, input_bits);
-                    try w.print(", {d}, {d}, {d})); goto L{d}; }} else host_failure(\"InternalError\");\n", .{ output_bits, layout.width(result.error_type), result.error_tag, offset + propagate.error_target });
+                    try w.writeAll("Slot variant = pop_value(); size_t tag = ");
+                    try variantTag(w, layout, propagate.input);
+                    try w.print("; if (tag == {d}) {{ Slot value = ", .{input.ok_tag});
+                    try payload(w, layout, propagate.input, input.ok_type);
+                    try w.print("; release_value(variant); push_value(value); }} else if (tag == {d}) {{ Slot value = ", .{input.error_tag});
+                    try payload(w, layout, propagate.input, input.error_type);
+                    try w.writeAll("; release_value(variant); clear_values(frames[nf-1].base); push_value(");
+                    try variantValue(w, layout, propagate.output, result.error_tag, result.error_type);
+                    try w.print("); goto L{d}; }} else host_failure(\"InternalError\");\n", .{offset + propagate.error_target});
                 },
-                .acknowledge => try w.writeAll("(void)pop();\n"),
-                .move_local => |slot| try w.print("push(frames[nf-1].locals[{d}]); frames[nf-1].locals[{d}] = 0;\n", .{ @backingInt(slot), @backingInt(slot) }),
+                .make_record => |record| {
+                    try w.print("make_record({d}, ", .{record.fields});
+                    try indices(w, record.order);
+                    try w.writeAll(");\n");
+                },
+                .update_record => |update| {
+                    try w.print("update_record({d}, ", .{update.indices.len});
+                    try indices(w, update.indices);
+                    try w.writeAll(");\n");
+                },
+                .get_field => |index| try w.print("get_field({d});\n", .{index}),
+                .get_index => try w.writeAll("get_index();\n"),
+                .replace_index => try w.writeAll("replace_index();\n"),
+                .array_length => try w.writeAll("array_length();\n"),
+                .read_field => |read| try w.print("push_value(field_value(frames[nf-1].locals[{d}], {d}));\n", .{ @backingInt(read.owner), read.field }),
+                .take_field => |take| try w.print("take_field({d}, {d});\n", .{ @backingInt(take.owner), take.field }),
+                .acknowledge, .pop => try w.writeAll("release_value(pop_value());\n"),
+                .move_local => |slot| try w.print("move_local({d});\n", .{@backingInt(slot)}),
                 .push_bool => |value| try w.print("push({d});\n", .{@intFromBool(value)}),
-                .drop_local => |slot| try w.print("frames[nf-1].locals[{d}] = 0;\n", .{@backingInt(slot)}),
-                .load_local => |slot| try w.print("push(frames[nf-1].locals[{d}]);\n", .{@backingInt(slot)}),
-                .store_local => |slot| try w.print("frames[nf-1].locals[{d}] = pop();\n", .{@backingInt(slot)}),
-                .pop => try w.writeAll("(void)pop();\n"),
+                .drop_local => |slot| try w.print("store_local({d}, (Slot){{0}});\n", .{@backingInt(slot)}),
+                .load_local => |slot| try w.print("load_local({d});\n", .{@backingInt(slot)}),
+                .store_local => |slot| try w.print("store_local({d}, pop_value());\n", .{@backingInt(slot)}),
                 .not_bool => try w.writeAll("push(!pop());\n"),
                 .cmp_i64 => |op| try w.print("V b = pop(), a = pop(); push(a {s} b);\n", .{predicate(std.meta.stringToEnum(typed.BinaryOp, @tagName(op)).?)}),
                 .cmp_bool => |op| try w.print("V b = pop(), a = pop(); push(a {s} b);\n", .{if (op == .eq) "==" else "!="}),
@@ -202,7 +251,7 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
                     falls_through = false;
                 },
                 .ret => {
-                    try w.writeAll("V result = pop(); size_t target = leave(result); if (!nf) { printf(\"%\" PRId64 \"\\n\", (int64_t)result); cleanup(); return 0; }\nreturn_target = target; goto dispatch_return;\n");
+                    try w.writeAll("Slot result = pop_value(); size_t target = leave(result); if (!nf) { printf(\"%\" PRId64 \"\\n\", (int64_t)result.number); cleanup(); return 0; }\nreturn_target = target; goto dispatch_return;\n");
                     falls_through = false;
                 },
                 else => unreachable,

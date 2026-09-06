@@ -94,8 +94,9 @@ also work; `examples/reference-parameters.my` returns 19. [Bounded slices](docs/
 slice parameters, and checked narrowing are implemented; `examples/slices.my` returns 13.
 [Returned-reference contracts](docs/experiments/returned-references.md) complete B
 ([acceptance audit](docs/experiments/b-audit.md)); `examples/returned-references.my` returns 20.
-The full resource/effect system, modules, full-language native execution, and the other
-pending tracks are not yet complete.
+Resource/capability operations and modules have subsequent implemented milestones
+below. Full-language native execution, generics, and other pending roadmap work
+are not yet complete.
 
 See [implemented semantics](docs/semantics.md) and [verification/progress](docs/progress.md).
 
@@ -237,12 +238,12 @@ are accounted for explicitly; see [module quality reports](docs/experiments/modu
 Neither command writes source files; see [module formatting](docs/experiments/module-formatting.md).
 
 Scalar module projects support `emit-project-c` and `scripts/native.py --project`.
-Try the [module-native example](docs/experiments/module-native.md); aggregates and
-resource operations still require broader native implementation.
+Try the [module-native example](docs/experiments/module-native.md); resource
+operations still require broader native implementation.
 
 Native code now supports [nominal scalar domains](docs/experiments/native-domains.md),
 including `examples/modules/domain_main.my` (12), while preserving checked private
-construction and explicit accessors. Wider native aggregates/resources remain pending.
+construction and explicit accessors. Native resources remain pending.
 
 Native [closed enums](docs/experiments/native-enums.md) now support construction,
 equality, calls, mutation, and exhaustive matches in single-file and module programs.
@@ -338,4 +339,6 @@ large paths are bounded and explicitly marked as truncated. See
 
 Native [packed unions and results](docs/experiments/native-variants.md) support
 nested scalar payloads, matching, transfers, acknowledgement, and propagation
-within a 127-bit layout. Wider native aggregates and resources remain pending.
+within a 127-bit layout. [Native aggregates](docs/experiments/native-aggregates.md)
+add records, arrays, tables, conversions/updates, and boxed variants beyond this
+limit. Native borrowing and resources remain pending.

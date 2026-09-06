@@ -28,8 +28,10 @@ functions. [Nominal scalar domains](native-domains.md) now also use scalar backi
 with checked privacy and instruction-budget parity. [Closed enums](native-enums.md)
 also support construction, equality, calls, and exhaustive matching.
 [Packed tagged unions and results](native-variants.md) add supported payloads,
-matching, transfers, acknowledgement, and propagation. Unsupported
-record/array/resource/capability/borrowing
+matching, transfers, acknowledgement, and propagation.
+[Ordinary aggregates](native-aggregates.md) now support records, arrays, tables,
+conversions, updates, and boxed variants. Unsupported
+resource/capability/borrowing
 operations fail explicitly with E_NATIVE_FEATURE before any generated C is printed.
 Source type errors still use ordinary semantic diagnostics. There is no VM fallback.
 
@@ -75,9 +77,10 @@ through checking/lowering/emission, and explicit rejection of unsupported signat
 and operations. Actual CLI tests verify emission, source errors, native-feature
 errors without partial C output, and wrong-command option rejection.
 
-`tests/native_cases.py` compiles and executes 23 scalar fixtures at -O0 and -O2 with
-undefined-behavior sanitization and no sanitizer recovery. It performs 182 actual
-VM/native comparisons of exit status, stdout, and guest trap code/line/column:
+`tests/native_cases.py` now compiles and executes 51 single-file and 10 module
+fixtures at -O0 and -O2 with undefined-behavior sanitization and no sanitizer
+recovery. It performs 1,506 actual VM/native comparisons per compiler host mode
+of exit status, stdout, trap locations, and module call frames. Scalar coverage includes:
 
 - Existing arithmetic, sum, and GCD fixtures; all integer widths and checked casts.
 - Signed overflow/negation, unsigned intermediate overflow, division/remainder by
@@ -94,8 +97,9 @@ tests. The current verification manifest's Debug/ReleaseFast test steps therefor
 include actual scalar native parity; its separate memory-parity step still means
 only general/arena VM memory parity.
 
-These tests establish the declared scalar fixture behavior, not exhaustive equivalence
-for all inputs, native OOM fault injection, a speed advantage, or whole-language
-native support. Post-MVP native expansion must add corresponding checked operations,
+The [aggregate acceptance](native-aggregates.md) adds records, arrays, variants,
+and a separate native allocation-failure/cleanup driver with address sanitization.
+These tests establish the declared fixture behavior, not exhaustive equivalence
+for all inputs, a speed advantage, or whole-language native support. Post-MVP native expansion must add corresponding checked operations,
 cleanup/effect behavior, and executable parity cases rather than silently running
 the VM. Other unfinished roadmap tracks remain independent work.

@@ -20,8 +20,16 @@ static V variant_payload(V value, unsigned tag_bits, unsigned payload_bits, int 
         return -(V)(((U)1 << payload_bits) - payload);
     return (V)payload;
 }
-typedef struct { V *locals; size_t base, target, function, call_site; } Frame;
-static V *values;
+typedef struct Aggregate Aggregate;
+typedef struct { V number; Aggregate *object; } Slot;
+struct Aggregate {
+    size_t refs, count, tag;
+    Aggregate *previous, *next, *pending;
+    Slot fields[];
+};
+typedef struct { Slot *locals; size_t base, target, function, call_site, local_count; } Frame;
+static Aggregate *objects;
+static Slot *values;
 static size_t nv, cv, nf, cf, site;
 static Frame *frames;
 static uint64_t steps, max_steps = 10000000, max_frames = 1024;
@@ -30,6 +38,9 @@ static const char *const *function_names;
 static const size_t *source_lines, *source_columns;
 static void cleanup(void) {
     while (nf) free(frames[--nf].locals);
+    /* All heap objects are registered, including temporary and partial values.
+       Emergency cleanup frees the registry directly without traversing edges. */
+    while (objects) { Aggregate *next = objects->next; free(objects); objects = next; }
     free(frames); free(values);
     frames = NULL; values = NULL;
 }
@@ -61,31 +72,151 @@ static void *grow(void *old, size_t *capacity, size_t needed, size_t size) {
     if (!result) host_failure("OutOfMemory");
     *capacity = next; return result;
 }
-static void push(V value) {
+static Slot copy_value(Slot value) {
+    if (value.object) {
+        if (value.object->refs == SIZE_MAX) host_failure("OutOfMemory");
+        ++value.object->refs;
+    }
+    return value;
+}
+static void release_value(Slot value) {
+    Aggregate *work = NULL;
+    if (value.object && --value.object->refs == 0) work = value.object;
+    while (work) {
+        Aggregate *object = work;
+        work = object->pending;
+        for (size_t i = 0; i < object->count; ++i) {
+            Aggregate *child = object->fields[i].object;
+            if (child && --child->refs == 0) { child->pending = work; work = child; }
+        }
+        if (object->previous) object->previous->next = object->next;
+        else objects = object->next;
+        if (object->next) object->next->previous = object->previous;
+        free(object);
+    }
+}
+static Aggregate *new_object(size_t count, size_t tag) {
+    if (count > (SIZE_MAX - sizeof(Aggregate)) / sizeof(Slot)) host_failure("OutOfMemory");
+    Aggregate *object = calloc(1, sizeof(Aggregate) + count * sizeof(Slot));
+    if (!object) host_failure("OutOfMemory");
+    object->refs = 1; object->count = count; object->tag = tag;
+    object->next = objects;
+    if (objects) objects->previous = object;
+    objects = object;
+    return object;
+}
+static Slot clone_value(Slot value) {
+    if (!value.object) host_failure("InternalError");
+    Aggregate *object = new_object(value.object->count, value.object->tag);
+    for (size_t i = 0; i < object->count; ++i) object->fields[i] = copy_value(value.object->fields[i]);
+    return (Slot){0, object};
+}
+static void push_value(Slot value) {
     if (nv == SIZE_MAX) host_failure("OutOfMemory");
-    values = grow(values, &cv, nv + 1, sizeof(V));
+    values = grow(values, &cv, nv + 1, sizeof(Slot));
     values[nv++] = value;
 }
-static V pop(void) {
+static void push(V value) { push_value((Slot){value, NULL}); }
+static Slot pop_value(void) {
     if (!nf || nv <= frames[nf - 1].base) host_failure("InternalError");
     return values[--nv];
+}
+static V pop(void) {
+    Slot value = pop_value();
+    if (value.object) host_failure("InternalError");
+    return value.number;
+}
+static void clear_values(size_t base) {
+    while (nv > base) release_value(values[--nv]);
+}
+static void store_local(size_t index, Slot value) {
+    Slot *local = &frames[nf - 1].locals[index];
+    release_value(*local); *local = value;
+}
+static void load_local(size_t index) { push_value(copy_value(frames[nf - 1].locals[index])); }
+static void move_local(size_t index) {
+    Slot *local = &frames[nf - 1].locals[index];
+    Slot value = *local; *local = (Slot){0}; push_value(value);
+}
+static Slot field_value(Slot value, size_t index) {
+    if (!value.object || index >= value.object->count) host_failure("InternalError");
+    return copy_value(value.object->fields[index]);
+}
+static void get_field(size_t index) {
+    Slot owner = pop_value(), value = field_value(owner, index);
+    release_value(owner); push_value(value);
+}
+static void take_field(size_t index, size_t field) {
+    Slot *local = &frames[nf - 1].locals[index];
+    if (!local->object || field >= local->object->count) host_failure("InternalError");
+    if (local->object->refs != 1) {
+        Slot unique = clone_value(*local); release_value(*local); *local = unique;
+    }
+    Slot value = local->object->fields[field];
+    local->object->fields[field] = (Slot){0};
+    push_value(value);
+}
+static void make_record(size_t count, const size_t *order) {
+    Aggregate *object = new_object(count, 0);
+    size_t base = nv - count;
+    for (size_t i = 0; i < count; ++i) object->fields[order ? order[i] : i] = values[base + i];
+    nv = base; push_value((Slot){0, object});
+}
+static void update_record(size_t count, const size_t *indices) {
+    size_t base = nv - count - 1;
+    Slot updated = clone_value(values[base]);
+    for (size_t i = 0; i < count; ++i) {
+        release_value(updated.object->fields[indices[i]]);
+        updated.object->fields[indices[i]] = values[base + 1 + i];
+    }
+    release_value(values[base]); nv = base; push_value(updated);
+}
+static size_t array_index(V index, Slot owner) {
+    if (!owner.object) host_failure("InternalError");
+    if (index < 0 || (U)index >= owner.object->count) trap("R_INDEX_BOUNDS");
+    return (size_t)index;
+}
+static void get_index(void) {
+    V index = pop(); Slot owner = pop_value();
+    Slot value = field_value(owner, array_index(index, owner));
+    release_value(owner); push_value(value);
+}
+static void replace_index(void) {
+    size_t base = nv - 3;
+    size_t index = array_index(values[base + 1].number, values[base]);
+    Slot updated = clone_value(values[base]);
+    release_value(updated.object->fields[index]);
+    updated.object->fields[index] = values[base + 2];
+    release_value(values[base]); nv = base; push_value(updated);
+}
+static void array_length(void) {
+    Slot value = pop_value();
+    if (!value.object) host_failure("InternalError");
+    size_t count = value.object->count;
+    release_value(value); push((V)count);
+}
+static Slot boxed_variant(size_t tag, Slot payload, int has_payload) {
+    Aggregate *object = new_object(has_payload ? 1 : 0, tag);
+    if (has_payload) object->fields[0] = payload;
+    return (Slot){0, object};
 }
 static void enter(size_t function, size_t locals, size_t arguments, size_t target) {
     if (nf >= max_frames) trap("R_FRAME_LIMIT");
     if (arguments > nv || (nf && arguments > nv - frames[nf - 1].base)) host_failure("InternalError");
-    if (nf == SIZE_MAX || locals > SIZE_MAX / sizeof(V)) host_failure("OutOfMemory");
+    if (nf == SIZE_MAX || locals > SIZE_MAX / sizeof(Slot)) host_failure("OutOfMemory");
     frames = grow(frames, &cf, nf + 1, sizeof(Frame));
-    V *storage = calloc(locals ? locals : 1, sizeof(V));
+    Slot *storage = calloc(locals ? locals : 1, sizeof(Slot));
     if (!storage) host_failure("OutOfMemory");
     size_t base = nv - arguments;
     for (size_t i = 0; i < arguments; ++i) storage[i] = values[base + i];
-    frames[nf++] = (Frame){storage, base, target, function, site};
+    frames[nf++] = (Frame){storage, base, target, function, site, locals};
     nv = base;
 }
-static size_t leave(V result) {
+static size_t leave(Slot result) {
     Frame f = frames[--nf];
-    free(f.locals); nv = f.base;
-    push(result); return f.target;
+    for (size_t i = 0; i < f.local_count; ++i) release_value(f.locals[i]);
+    free(f.locals); clear_values(f.base);
+    push_value(result); return f.target;
 }
 static void tick(size_t location) {
     site = location;

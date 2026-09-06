@@ -71,6 +71,14 @@ def project_cases(compiler, zig, root, temp):
         "main.my": "module main; import values as v; fn main()->i64{match v::work(new v::Input.err(-128i8)){v::Output.ok(discard)=>{return 0;},v::Output.err(n)=>{return 1000+cast<i64>(n);}}}",
         "values.my": "module values; export Input;export Output;export work;result Input{err:i8,ok:i64} result Output{ok:bool,err:i8} fn work(r:Input)->Output{return new Output.ok(1+try r>0);}",
     }))
+    fixtures.append(("aggregates", {
+        "main.my": "module main; import data as d; fn main()->i64{let old=d::make();match d::change(old){d::Outcome.ok(r)=>{return r.values[0]+old.values[0];},d::Outcome.err(discard)=>{return 0;}}}",
+        "data.my": "module data;export R;export Outcome;export make;export change;struct R{values:[2]i64} result Outcome{ok:R,err:R} fn make()->R{return new R{values:new [2]i64[7,8]};} fn change(r:R)->Outcome{return new Outcome.ok(update(r){values:replace(r.values,0,9)});}",
+    }))
+    fixtures.append(("aggregate-trap", {
+        "main.my": "module main; import data as d; fn main()->i64{return d::read(d::make());}",
+        "data.my": "module data;export R;export make;export read;struct R{values:[1]i64} fn make()->R{return new R{values:new [1]i64[7]};} fn read(r:R)->i64{return r.values[1];}",
+    }))
     pairs = 0
     for name, files in fixtures:
         directory = temp / ("module case " + name)
@@ -92,7 +100,7 @@ def project_cases(compiler, zig, root, temp):
                 native = invoke([executable, *options])
                 assert project_signature(vm) == project_signature(native), (name, mode, options, vm.stderr, native.stderr)
                 pairs += 1
-            if name in ("calls", "domains", "enums", "results"):
+            if name in ("calls", "domains", "enums", "results", "aggregates"):
                 for budget in range(1, 100):
                     options = [f"--max-steps={budget}"]
                     vm = invoke([compiler, "run-project", entry, *options])
@@ -110,7 +118,7 @@ def project_cases(compiler, zig, root, temp):
     entry = temp / "unsupported" / "main.my"
     entry.parent.mkdir()
     entry.write_text("module main; import helper; fn main() -> i64 { return 0; }")
-    (entry.parent / "helper.my").write_text("module helper; fn unsupported() -> [1]i64 { return new [1]i64 [1]; }")
+    (entry.parent / "helper.my").write_text("module helper; fn unsupported(heap:allocator) -> i64 { return 0; }")
     rejected = invoke([compiler, "emit-project-c", entry])
     assert rejected.returncode == 1 and rejected.stdout == b"" and b"E_NATIVE_FEATURE" in rejected.stderr, rejected
     assert b"helper.my:" in rejected.stderr, rejected.stderr
@@ -129,6 +137,7 @@ def main():
     compiler = args.compiler.resolve()
     root = Path(__file__).resolve().parents[1]
     fixtures = [(name, (root / "tests" / "fixtures" / f"{name}.my").read_text()) for name in ("arithmetic", "sum", "gcd")]
+    fixtures += [(name, (root / "examples" / f"{name}.my").read_text()) for name in ("arrays", "records", "conversions", "tables")]
     fixtures.append(("integers", "fn widen(x: u32) -> u64 { return cast<u64>(x); } fn main() -> i64 { let a = 127i8; let b = 255u8; let c = 32767i16; let d = 65535u16; let e = 2147483647i32; let f = 4294967295u32; return cast<i64>(a) + cast<i64>(b) + cast<i64>(c) + cast<i64>(d) + cast<i64>(e) + cast<i64>(widen(f)); }"))
     expressions = ["9223372036854775807 + 1", "-9223372036854775808 - 1", "3037000500 * 3037000500", "-(-9223372036854775808)", "-9223372036854775808 / -1", "-9223372036854775808 % -1", "1 / 0", "1 % 0", "-7 / 3", "-7 % 3", "cast<i64>(255u8 + 1u8)", "cast<i64>(127i8 + 1i8)", "cast<i64>(18446744073709551615u64 * 18446744073709551615u64)", "cast<i64>(cast<u8>(-1))"]
     fixtures += [(f"arithmetic-{i}", f"fn main() -> i64 {{ return {expr}; }}") for i, expr in enumerate(expressions)]
@@ -170,6 +179,19 @@ def main():
         readers.append(f"fn read{i}(x:U{i})->u64{{match x{{U{i}.value(n)=>{{return read{i-1}(n);}}}}}}")
         values.append(f"let v{i}=new U{i}.value(v{i-1});")
     fixtures.append(("packed-127", " ".join(declarations + readers) + " fn main()->i64{" + "".join(values) + "if read62(v62)==18446744073709551615u64{return 7;}return 0;}"))
+    for i in range(63, 66):
+        declarations.append(f"union U{i}{{value:U{i-1}}}")
+        readers.append(f"fn read{i}(x:U{i})->u64{{match x{{U{i}.value(n)=>{{return read{i-1}(n);}}}}}}")
+        values.append(f"let v{i}=new U{i}.value(v{i-1});")
+    fixtures.append(("boxed-130", " ".join(declarations + readers) + " fn main()->i64{" + "".join(values) + "if read65(v65)==18446744073709551615u64{return 7;}return 0;}"))
+    fixtures += [
+        ("aggregate-result", "struct R{a:[2]i64,b:i64} result Outcome{ok:R,err:R} fn work(x:Outcome)->Outcome{return new Outcome.ok(try x);} fn main()->i64{let old=new R{b:3,a:new [2]i64[4,5]};let changed=update(old){a:replace(old.a,0,9)};match work(new Outcome.err(changed)){Outcome.ok(discard)=>{return 0;},Outcome.err(r)=>{return r.a[0]+old.a[0];}}}"),
+        ("aggregate-bounds", "fn main()->i64{let a=new [2]i64[7,9];return a[-1];}"),
+        ("aggregate-replace-bounds", "struct R{n:i64} fn main()->i64{let a=new [1]R[new R{n:7}];discard replace(a,18446744073709551615u64,new R{n:9});return 0;}"),
+        ("aggregate-empty", "struct Empty{} fn main()->i64{let a=new [0]Empty[];discard new Empty{};return cast<i64>(len(a));}"),
+        ("aggregate-partial", "result R{ok:i64,err:i64} struct Pair{a:R,b:R,n:i64} fn main()->i64{let p=new Pair{a:new R.ok(7),b:new R.err(9),n:3};let a=take_field(p,a);acknowledge a;let b=take_field(p,b);match b{R.ok(discard)=>{return 0;},R.err(n)=>{return n+read_field(p,n);}}}"),
+        ("aggregate-propagation", "struct R{n:i64} result Small{err:i64,ok:i64} result Big{ok:R,err:i64} fn widen(x:Small)->Big{return new Big.ok(new R{n:100+try x});} fn narrow(x:Big)->Small{return new Small.ok((try x).n);} fn main()->i64{let r=narrow(widen(new Small.err(-9)));match r{Small.ok(n)=>{return n;},Small.err(n)=>{return 100+n;}}}"),
+    ]
     pairs = 0
     with tempfile.TemporaryDirectory(prefix="mylang-native-parity-") as temp:
         temp = Path(temp)
@@ -191,7 +213,7 @@ def main():
                     native = invoke([executable, *options])
                     assert signature(vm) == signature(native), (name, mode, options, vm.stderr, native.stderr)
                     pairs += 1
-                if name == "calls" or name.startswith(("variant-", "result-")):
+                if name == "calls" or name.startswith(("variant-", "result-")) or name in ("arrays", "records", "conversions", "tables", "aggregate-result", "aggregate-partial", "aggregate-propagation", "aggregate-empty"):
                     for budget in range(1, 200):
                         options = [f"--max-steps={budget}"]
                         vm = invoke([compiler, "run", source, *options])
@@ -214,7 +236,7 @@ def main():
         project_cases(compiler, args.zig, root, temp)
         for bad in ("--max-steps=0", "--max-frames=-1", "--max-steps=18446744073709551616", "--unknown"):
             assert invoke([temp / "built", bad]).returncode == 2
-    print(f"native parity: {len(fixtures)} scalar fixtures, {pairs} executed comparisons across -O0/-O2 with undefined-behavior sanitization; builder/budgets passed")
+    print(f"native parity: {len(fixtures)} value fixtures, {pairs} executed comparisons across -O0/-O2 with undefined-behavior sanitization; builder/budgets passed")
 
 
 if __name__ == "__main__":

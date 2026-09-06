@@ -2,7 +2,8 @@
 
 The C backend supports tagged unions and typed results whose complete payload
 graph consists of integers, booleans, scalar domains, enums, and nested supported
-variants within a 127-bit packed value. Construction, exhaustive matching,
+variants. Values fitting 127 bits use packed storage;
+[larger variants and aggregate payloads](native-aggregates.md) now use boxes. Construction, exhaustive matching,
 copyable union assignment, result transfer, acknowledgement, and error propagation
 work in single files and module projects. Frontend nominal, privacy, exhaustiveness,
 and handling checks still run before emission.
@@ -10,7 +11,7 @@ and handling checks still run before emission.
 Try `python3 scripts/native.py examples/native-results.my -o /tmp/native-results`;
 the executable prints `20`.
 
-Each variant reserves at least one low tag bit and enough higher bits for its
+Each packed variant reserves at least one low tag bit and enough higher bits for its
 largest payload. Integer payloads retain their declared width; signed values are
 explicitly reconstructed on extraction. Packing uses unsigned 128-bit operations
 and leaves the signed storage slot's sign bit clear. The layout is an internal
@@ -24,8 +25,8 @@ Acknowledgement consumes the checked result, and local transfers retain frontend
 use-after-move rules. Nested result payloads retain mandatory handling obligations.
 
 Every emitted instruction still consumes its VM step, including representation
-operations, transfer, acknowledgement, and propagation. Native variants need no
-per-value heap allocation or resource cleanup. The ordinary native frame and
+operations, transfer, acknowledgement, and propagation. Packed native variants need no
+per-value heap allocation; boxed variants use reference-counted storage. The ordinary native frame and
 operand storage still allocate; physical memory usage and OOM timing need not
 match the VM.
 
@@ -36,9 +37,7 @@ result handling, cross-module source paths and frames, and a 127-bit nested valu
 Both -O0 and -O2 use undefined-behavior sanitization. Small new cases compare
 every instruction budget through completion. Zig tests exercise allocation failure
 cleanup, frontend rejection of unhandled/moved results and incomplete matches,
-unsupported record/array payloads, and rejection of a 128-bit layout even in an
-uncalled function.
+unsupported owner payloads, and boxed fallback beyond a 127-bit layout.
 
-Records, arrays, resources, capabilities, borrowing, and larger packed variants
-still require further native implementation. Unsupported signatures and operations
+Resources, capabilities, and borrowing still require further native implementation. Unsupported signatures and operations
 produce E_NATIVE_FEATURE. This milestone does not complete the full native track.

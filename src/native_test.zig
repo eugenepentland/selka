@@ -19,7 +19,7 @@ test "native scalar emission is deterministic and cleans every failed allocation
 }
 test "native emission rejects unsupported operations and uncalled unsupported signatures" {
     for ([_][]const u8{
-        "fn main() -> i64 { let a = new [1]i64 [7]; return a[0]; }",
+        "fn main() -> i64 { let x = 7; borrow x as r { return read_ref(r); } }",
         "fn unsupported(heap: allocator) -> i64 { return 0; } fn main() -> i64 { return 7; }",
         "fn main() -> i64 { let x = 7; borrow x as r { return read_ref(r); } }",
     }) |text| {
@@ -60,7 +60,7 @@ fn enumScenario(allocator: std.mem.Allocator) !void {
     defer c.deinit();
     const generated = try c.emitC(allocator);
     defer allocator.free(generated);
-    try t.expect(std.mem.indexOf(u8, generated, "switch (pop())") != null);
+    try t.expect(std.mem.indexOf(u8, generated, "switch (") != null);
     try t.expectEqual(@as(i64, 123), (try c.execute(allocator)).value);
 }
 test "native closed enum dispatch and VM tag identity survive allocation failures" {
@@ -79,8 +79,8 @@ test "native enum support retains exhaustive nominal checks and rejects unsuppor
         try t.expect(!std.mem.eql(u8, c.diagnostics.items[0].code, "E_NATIVE_FEATURE"));
     }
     for ([_][]const u8{
-        "struct R{x:i64} union U{value:R} fn main()->i64{discard new U.value(new R{x:7});return 0;}",
-        "union U{value:[1]i64} fn main()->i64{discard new U.value(new [1]i64[7]);return 0;}",
+        "buffer B:i64; union U{value:B} fn unsupported(x:U)->i64{discard x;return 0;} fn main()->i64{return 0;}",
+        "buffer B:i64; struct R{value:B} fn unsupported(x:R)->i64{discard x;return 0;} fn main()->i64{return 0;}",
     }) |text| {
         var c = try language.Compilation.init(t.allocator, "unsupported.my", text);
         defer c.deinit();
@@ -114,7 +114,7 @@ test "native packed variants retain result handling obligations" {
     }
 }
 
-test "native layout rejects values beyond the 127 bit slot" {
+test "native layout boxes values beyond the 127 bit slot" {
     var source: std.Io.Writer.Allocating = .init(t.allocator);
     defer source.deinit();
     try source.writer.writeAll("union U0{value:u64} ");
@@ -122,6 +122,21 @@ test "native layout rejects values beyond the 127 bit slot" {
     try source.writer.writeAll("fn unused(x:U63)->i64{discard x;return 0;} fn main()->i64{return 7;}");
     var c = try language.Compilation.init(t.allocator, "too-wide.my", source.written());
     defer c.deinit();
-    try t.expectError(error.SourceError, c.emitC(t.allocator));
-    try t.expectEqualStrings("E_NATIVE_FEATURE", c.diagnostics.items[0].code);
+    const generated = try c.emitC(t.allocator);
+    defer t.allocator.free(generated);
+    try t.expectEqual(@as(i64, 7), (try c.execute(t.allocator)).value);
+}
+
+fn aggregateScenario(allocator: std.mem.Allocator) !void {
+    const source = "struct R{a:[2]i64,b:i64} result Outcome{ok:R,err:R} fn work(x:Outcome)->Outcome{return new Outcome.ok(try x);} fn main()->i64{let old=new R{b:3,a:new [2]i64[4,5]};let changed=update(old){a:replace(old.a,0,9)};match work(new Outcome.err(changed)){Outcome.ok(discard)=>{return 0;},Outcome.err(r)=>{return r.a[0]+old.a[0];}}}";
+    var c = try language.Compilation.init(allocator, "aggregate.my", source);
+    defer c.deinit();
+    const generated = try c.emitC(allocator);
+    defer allocator.free(generated);
+    try t.expectEqual(@as(i64, 13), (try c.execute(allocator)).value);
+}
+test "native aggregates and boxed result propagation clean every allocation failure" {
+    try aggregateScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), aggregateScenario, .{});
 }
