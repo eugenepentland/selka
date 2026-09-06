@@ -67,3 +67,8 @@ comparisons across 86 single-file and 16 module fixtures with -O0/-O2 and undefi
 behavior sanitization; 50 final targeted codec comparisons passed after inserting
 an uninstantiated template before codec functions. Guardian passed all 88 checks
 with baselines disabled. No new full resource/provider-suite result is claimed.
+
+
+[Concrete schemas in generic bodies](generic-concrete.md) now permit fixed record,
+array and nominal value types alongside symbolic parameters, including checked
+construction, field/index projection and imported pure helper calls.

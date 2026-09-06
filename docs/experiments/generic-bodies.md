@@ -6,7 +6,8 @@ concrete type stands in for an unknown type. Thus equal requirements on `T` and
 `U` do not make them the same type, and `copy` does not permit arithmetic merely
 because a future caller might supply an integer.
 
-Supported signatures contain type parameters or builtin scalar/capability values.
+Supported signatures contain type parameters, builtin scalar/capability values,
+and [concrete copyable value schemas](generic-concrete.md).
 Supported bodies include local bindings and annotations, mutable assignment,
 returns, discard of copyable values, blocks, branches, loops, arithmetic/comparison,
 Boolean operations, and checked integer casts. Arithmetic and ordered comparison
@@ -34,8 +35,8 @@ visits. These bound compiler work, not guest execution. Left-deep expressions an
 wide statement sequences exercise the limits without executing a template.
 
 [Generic calls and pure concrete helpers](generic-calls.md) are now supported.
-Concrete nominal/composite signature types, aggregate construction,
-owned/resource operations, conversions, and other forms that
+Concrete record/fixed-array construction and projection are now supported.
+Parameter-dependent composite types, owned/resource operations, conversions, and other forms that
 need additional abstract rules return `E_GENERIC_BODY_UNSUPPORTED`. They are not
 silently skipped. Valid bodies in the supported subset now execute through
 [concrete specialization](generic-execution.md).

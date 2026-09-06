@@ -103,6 +103,15 @@ def project_cases(compiler, zig, root, temp):
         "main.my": "module main;import units;fn identity<T:integer>(x:T)->T{return x;}fn main()->i64{let mut x=0;borrow mut x as r{discard units::set::<i64>(r,2);}let values=new [1]i64 [x];borrow values[0..1] as s{borrow units::view::<i64>(s) as v{return units::run()+identity::<i64>(units::head::<i64>(v));}}}",
         "units.my": "module units;export run;export identity;export set;export head;export view;fn view<T:copy>(s:&[]T)->&[]T from s{return s;}fn head<T:copy>(s:&[]T)->T{borrow s[0..1] as first{return read_slice(first,0);}}fn set<T:copy>(x:&mut T,y:T)->T{write_ref(x,y);return read_ref(x);}fn identity<T:copy>(x:T)->T{return x;}fn run()->i64{if identity::<bool>(true){return identity::<i64>(5);}return 0;}",
     }))
+    fixtures.append(("generic-concrete-modules", {
+        "main.my": "module main;import data as d;import helpers as h;fn main()->i64{return h::total::<bool>(true,new d::Sample{values:new [2]i64[7,8]});}",
+        "data.my": "module data;export Sample;struct Sample{values:[2]i64}",
+        "helpers.my": "module helpers;import data as d;export total;fn score(p:d::Sample)->i64{return p.values[0]+p.values[1];}fn total<T:copy>(context:T,p:d::Sample)->i64{discard context;return score(p);}",
+    }))
+    fixtures.append(("generic-concrete-trap", {
+        "main.my": "module main;import helpers as h;fn main()->i64{return h::at::<i64>(new [2]i64[7,8],-1);}",
+        "helpers.my": "module helpers;export at;fn at<T:integer>(values:[2]i64,index:T)->i64{return values[index];}",
+    }))
     codec_root = root / "examples" / "domain-codecs"
     fixtures.append(("domain-codecs", {name: (codec_root / name).read_text().replace("domain Positive:", "fn unused<T:copy>(x:T)->T{return x;}domain Positive:") for name in ("main.my", "data.my")}))
     pairs = 0
@@ -166,7 +175,7 @@ def main():
     compiler = args.compiler.resolve()
     root = Path(__file__).resolve().parents[1]
     fixtures = [(name, (root / "test" / "fixtures" / f"{name}.my").read_text()) for name in ("arithmetic", "sum", "gcd")]
-    fixtures += [(name, (root / "examples" / f"{name}.my").read_text()) for name in ("arrays", "records", "conversions", "tables", "references", "reference-parameters", "slices", "returned-references", "propagation", "buffers", "buffer-views", "allocator-capabilities", "arena-reset", "pools", "arenas", "generics", "generic-references", "generic-slices", "generic-borrows", "generic-returned-references")]
+    fixtures += [(name, (root / "examples" / f"{name}.my").read_text()) for name in ("arrays", "records", "conversions", "tables", "references", "reference-parameters", "slices", "returned-references", "propagation", "buffers", "buffer-views", "allocator-capabilities", "arena-reset", "pools", "arenas", "generics", "generic-references", "generic-slices", "generic-borrows", "generic-returned-references", "generic-records")]
     for index in ("-1i8", "18446744073709551615u64"):
         index_type = "i8" if index.startswith("-") else "u64"
         fixtures.append(("generic-slice-bounds-" + index_type, "fn at<T:copy,I:integer>(s:&[]T,i:I)->T{return read_slice(s,i);}fn main()->i64{let values=new [1]i64 [7];borrow values[0..1] as s{return at::<i64," + index_type + ">(s," + index + ");}}"))

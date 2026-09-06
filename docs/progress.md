@@ -3362,3 +3362,32 @@ verdict helpers and was labeled useful-review. The cache behavior was labeled
 intentional-change; uncertain subjects remain pending. No new full build-test run
 is claimed. Finer semantic queries, persistent reuse, incremental native linking,
 source JSON byte serialization and all other pending roadmap items remain open.
+
+
+### Concrete schemas in generic bodies — 2026-09-06
+
+The abstract generic checker now shares the resolved type catalog with concrete
+specialization. Fixed copyable records, arrays and nominal values can appear
+alongside symbolic parameters in signatures, local annotations, generic calls
+and pure concrete helpers. Record/array construction, record projection, array
+and enum-table indexing, and length use declared concrete schemas. Imported
+aliases retain declaring-module resolution; nominally different records remain
+distinct, and symbolic integer parameters still require explicit conversion to
+fixed integer fields. Concrete domains can pass through without exposing backing
+construction. Complete runtime-identity/result-bearing graphs remain excluded.
+See `docs/experiments/generic-concrete.md` and `examples/generic-records.my`.
+
+All 599 core tests pass in Debug/ReleaseFast, all 60 CLI tests pass, and VM/native
+parity passes 2706 comparisons across 113 fixtures, including imported record
+helpers and an imported generic bounds trap. Final focused tests in both modes
+also verify concrete-domain passthrough. Allocation sweeps cover abstract and
+concrete checking, VM execution and native emission. Formatting and all 88 Guardian
+checks pass with baselines disabled. Its concreteType error-path claim was labeled
+false-positive because rejection/allocation tests already covered the catch;
+adding the helper name to the test title was the only required edit.
+
+Parameter-dependent composite types, generic type declarations, structural
+requirements, aggregate updates, variants/results/ownership abstract rules,
+source codec constraints, public generic tooling and the remaining roadmap
+requirements stay open. This is not completion of the full generic language or
+a claim of a new full build-test run.

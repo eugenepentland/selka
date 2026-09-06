@@ -1372,16 +1372,16 @@ fn warningLess(_: void, a: diagnostic.Diagnostic, b: diagnostic.Diagnostic) bool
 pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!typed.Program {
     return checkWithNames(allocator, src, program, sink, null);
 }
-fn checkGenericContracts(src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!void {
+fn checkGenericContracts(src: source.Source, program: ast.Program, sink: *diagnostic.Sink, catalog: records.Catalog) Error!void {
     for (program.functions) |function| _ = try @import("generic_requirements.zig").resolve(sink.allocator, src, function.signature.type_parameters, sink);
-    try @import("generic_bodies.zig").checkWithNames(sink.allocator, src, program, sink, module_names);
+    try @import("generic_bodies.zig").checkWithCatalog(sink.allocator, src, program, sink, catalog);
 }
 /// Type-check linked module names and validate ownership, effects, and domain codecs.
 pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!typed.Program {
-    try checkGenericContracts(src, program, sink, module_names);
+    const catalog = try records.collectWithNames(allocator, src, program, sink, module_names);
+    try checkGenericContracts(src, program, sink, catalog);
     const resolved = try allocator.alloc(?typed.NodeId, program.nodes.items.len);
     @memset(resolved, null);
-    const catalog = try records.collectWithNames(allocator, src, program, sink, module_names);
     const ordinary_ids = try allocator.alloc(?typed.FunctionId, program.functions.len);
     @memset(ordinary_ids, null);
     var checker: Checker = .{ .allocator = allocator, .src = src, .syntax = program, .sink = sink, .resolved = resolved, .catalog = catalog, .ordinary_ids = ordinary_ids };

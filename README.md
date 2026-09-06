@@ -125,7 +125,7 @@ slice parameters, and checked narrowing are implemented; `examples/slices.my` re
 [Returned-reference contracts](docs/experiments/returned-references.md) complete B
 ([acceptance audit](docs/experiments/b-audit.md)); `examples/returned-references.my` returns 20.
 Resource/capability operations and modules have subsequent implemented milestones
-below. Full-language native execution, generics, and other pending roadmap work
+below. Broader native interfaces, generic contracts, and other pending roadmap work
 are not yet complete.
 
 See [implemented semantics](docs/semantics.md) and [verification/progress](docs/progress.md).
@@ -244,7 +244,10 @@ access to the remainder and enforcing result obligations and branch consistency.
 Source [pools and nominal handles](docs/experiments/source-pools.md) now support
 cyclic graphs, snapshot reads, checked IDs, and shared execution quotas. Run
 `zig build run -- run examples/pools.my` for the graph fixture (result `52`).
-Source arena scopes are implemented; generics remain pending.
+Source arena scopes and pure generic specialization are implemented.
+[Concrete generic records and arrays](docs/experiments/generic-concrete.md) now
+support fixed data schemas alongside symbolic parameters; broader generic
+contracts remain pending.
 
 [Lexical arenas](docs/experiments/source-arenas.md) use `arena heap as scratch { ... }`
 with conservative escape checks and cleanup across returns/errors.

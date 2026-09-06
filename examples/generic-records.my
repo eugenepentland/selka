@@ -1,0 +1,17 @@
+struct Sample {
+    values: [2]i64,
+    tag: u8
+}
+fn make<T: integer>(x: T) -> Sample {
+    return new Sample {
+        values: new [2]i64[cast<i64>(x), cast<i64>(x) + 1],
+        tag: 7u8
+    };
+}
+fn total<T: copy>(context: T, sample: Sample) -> i64 {
+    discard context;
+    return sample.values[0] + sample.values[1] + cast<i64>(len(sample.values));
+}
+fn main() -> i64 {
+    return total::<bool>(true, make::<u8>(7u8));
+}

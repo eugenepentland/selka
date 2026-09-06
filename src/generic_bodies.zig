@@ -9,7 +9,8 @@ const Error = diagnostic.Error;
 const Names = @import("module_names.zig").Names;
 const eShadowing = diagnostic.shadowing;
 const eUnsupported = "E_GENERIC_BODY_UNSUPPORTED";
-const Symbolic = union(enum) { builtin: typed.Type, parameter: usize };
+const Catalog = @import("records.zig").Catalog;
+const Symbolic = union(enum) { concrete: typed.Type, parameter: usize };
 const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
 const FunctionMap = std.StringHashMapUnmanaged(usize);
 const Return = struct { parameter: usize, mutable: bool, slice: bool };
@@ -18,6 +19,8 @@ const Checker = struct {
     allocator: std.mem.Allocator,
     src: source.Source,
     program: ast.Program,
+    catalog: Catalog,
+    concrete_checked: []bool,
     sink: *diagnostic.Sink,
     parameters: []const requirements.Parameter,
     result: Symbolic,
@@ -39,8 +42,26 @@ const Checker = struct {
     fn ty(self: *Checker, span: source.Span) Error!Symbolic {
         const text = self.src.text(span);
         for (self.parameters, 0..) |parameter, index| if (std.mem.eql(u8, text, self.src.text(parameter.name))) return .{ .parameter = index };
-        if (typed.Type.fromName(text)) |builtin| return .{ .builtin = builtin };
-        return self.sink.fail(eUnsupported, span, "generic body checking does not yet support concrete nominal or composite signature types");
+        return self.concreteType(span);
+    }
+    fn concreteType(self: *Checker, span: source.Span) Error!Symbolic {
+        const ty_value = try self.catalog.resolve(self.src, span, self.sink);
+        if (ty_value.isAggregate() and !self.concrete_checked[ty_value.recordIndex()]) {
+            if (typed.requiresHandling(ty_value, self.catalog.records))
+                return self.sink.fail(eUnsupported, span, "concrete generic values cannot carry result obligations");
+            @import("data_type.zig").check(self.allocator, self.catalog.records, ty_value, true) catch |err| {
+                if (err == error.OutOfMemory) return error.OutOfMemory;
+                return self.sink.fail(eUnsupported, span, "concrete generic values require complete copyable data graphs without runtime identities");
+            };
+            self.concrete_checked[ty_value.recordIndex()] = true;
+        }
+        return .{ .concrete = ty_value };
+    }
+    fn concreteValue(self: *Checker, value: Symbolic, span: source.Span) Error!typed.Type {
+        return switch (value) {
+            .concrete => |ty_value| ty_value,
+            .parameter => self.sink.fail(eUnsupported, span, "structural operations require a concrete type; parameter shapes need declared constraints"),
+        };
     }
     fn same(self: *Checker, actual: Symbolic, expected: Symbolic, span: source.Span) Error!void {
         if (!std.meta.eql(actual, expected)) return self.sink.fail("E_GENERIC_TYPE", span, "types differ; distinct type parameters remain distinct even with identical requirements");
@@ -48,10 +69,10 @@ const Checker = struct {
     fn supports(self: *Checker, ty_value: Symbolic, requirement: requirements.Requirement, span: source.Span) Error!void {
         const supported = switch (ty_value) {
             .parameter => |index| self.parameters[index].requirements.contains(requirement),
-            .builtin => |builtin| result: {
+            .concrete => |builtin| result: {
                 var required: requirements.Set = .{};
                 required.include(requirement);
-                break :result required.accepts(builtin, &.{});
+                break :result required.accepts(builtin, self.catalog.records);
             },
         };
         if (!supported) {
@@ -191,8 +212,7 @@ const Checker = struct {
     fn substituted(self: *Checker, span: source.Span, parameters: []const ast.TypeParameter, arguments: []const Symbolic) Error!Symbolic {
         const text = self.src.text(span);
         for (parameters, arguments) |parameter, argument| if (std.mem.eql(u8, text, self.src.text(parameter.name))) return argument;
-        if (typed.Type.fromName(text)) |builtin| return .{ .builtin = builtin };
-        return self.sink.fail(eUnsupported, span, "generic call signature still needs nominal/composite substitution");
+        return self.concreteType(span);
     }
     fn call(self: *Checker, invocation: Call, span: source.Span, allow_reference: bool) Error!Symbolic {
         const function = try self.callTarget(invocation);
@@ -209,7 +229,7 @@ const Checker = struct {
             argument.* = try self.ty(argument_span);
             const satisfies = switch (argument.*) {
                 .parameter => |index| self.parameters[index].requirements.implies(parameter.requirements),
-                .builtin => |builtin| parameter.requirements.accepts(builtin, &.{}),
+                .concrete => |builtin| parameter.requirements.accepts(builtin, self.catalog.records),
             };
             if (!satisfies) return self.sink.failRelated(
                 "E_GENERIC_ARGUMENT",
@@ -250,7 +270,7 @@ const Checker = struct {
             },
             .len_slice => |name| result: {
                 _ = try self.reference(name, false, true);
-                break :result .{ .builtin = .u64 };
+                break :result .{ .concrete = .u64 };
             },
             .read_ref => |name| result: {
                 const ref = try self.reference(name, false, false);
@@ -258,18 +278,37 @@ const Checker = struct {
                 break :result ref.ty;
             },
             .call => |invocation| try self.call(invocation, node.span, false),
-            .boolean => .{ .builtin = .bool },
-            .integer => |span| .{ .builtin = (try @import("integer_literal.zig").parse(self.src, span, false, self.sink)).ty },
+            .boolean => .{ .concrete = .bool },
+            .integer => |span| .{ .concrete = (try @import("integer_literal.zig").parse(self.src, span, false, self.sink)).ty },
             .unary => |unary| result: {
                 const child = self.program.nodes.items[@backingInt(unary.operand)];
                 const operand: Symbolic = if (unary.op == .neg and child.data == .integer)
-                    .{ .builtin = (try @import("integer_literal.zig").parse(self.src, child.data.integer, true, self.sink)).ty }
+                    .{ .concrete = (try @import("integer_literal.zig").parse(self.src, child.data.integer, true, self.sink)).ty }
                 else
                     try self.expression(unary.operand);
-                if (unary.op == .neg) try self.supports(operand, .integer, unary.op_span) else try self.same(operand, .{ .builtin = .bool }, unary.op_span);
+                if (unary.op == .neg) try self.supports(operand, .integer, unary.op_span) else try self.same(operand, .{ .concrete = .bool }, unary.op_span);
                 break :result operand;
             },
             .binary => |operation| try self.binary(operation),
+            .record => |record| try self.recordValue(record, node.span),
+            .array => |array| try self.arrayValue(array, node.span),
+            .field => |field| result: {
+                const base = try self.concreteValue(try self.expression(field.base), node.span);
+                const index = try self.catalog.field(base, self.src, field.name, self.sink);
+                break :result .{ .concrete = self.catalog.records[base.recordIndex()].fields[index].ty };
+            },
+            .length => |input| result: {
+                const base = try self.concreteValue(try self.expression(input), node.span);
+                _ = try self.catalog.array(base, node.span, self.sink);
+                break :result .{ .concrete = .u64 };
+            },
+            .index => |access| result: {
+                const base = try self.concreteValue(try self.expression(access.base), node.span);
+                const shape = try self.catalog.array(base, node.span, self.sink);
+                const index = try self.expression(access.index);
+                if (shape.key) |key| try self.same(index, .{ .concrete = key }, node.span) else try self.supports(index, .integer, node.span);
+                break :result .{ .concrete = shape.element };
+            },
             .cast => |cast| result: {
                 const operand = try self.expression(cast.value);
                 const target = try self.ty(cast.ty);
@@ -280,18 +319,43 @@ const Checker = struct {
             else => self.sink.fail(eUnsupported, node.span, "this operation still needs abstract generic body checking"),
         };
     }
+    fn arrayValue(self: *Checker, array: @FieldType(@FieldType(ast.Node, "data"), "array"), span: source.Span) Error!Symbolic {
+        const result = try self.ty(array.ty);
+        const ty_value = try self.concreteValue(result, span);
+        const shape = try self.catalog.array(ty_value, span, self.sink);
+        if (shape.key != null) return self.sink.fail("E_TYPE", span, "enum-indexed tables require named construction");
+        if (array.values.len != shape.length) return self.sink.fail("E_ARRAY_LENGTH", span, "array construction must supply its declared number of elements");
+        for (array.values) |value| try self.same(try self.expression(value), .{ .concrete = shape.element }, span);
+        return result;
+    }
+    fn recordValue(self: *Checker, record: @FieldType(@FieldType(ast.Node, "data"), "record"), span: source.Span) Error!Symbolic {
+        const result = try self.ty(record.name);
+        const ty_value = try self.concreteValue(result, span);
+        const shape = try self.catalog.record(ty_value, span, self.sink);
+        const seen = try self.allocator.alloc(bool, shape.fields.len);
+        defer self.allocator.free(seen);
+        @memset(seen, false);
+        for (record.fields) |field| {
+            const index = try self.catalog.field(ty_value, self.src, field.name, self.sink);
+            if (seen[index]) return self.sink.fail("E_DUPLICATE_FIELD", field.name, "record field is initialized more than once");
+            seen[index] = true;
+            try self.same(try self.expression(field.value), .{ .concrete = shape.fields[index].ty }, field.name);
+        }
+        for (seen) |present| if (!present) return self.sink.fail("E_MISSING_FIELD", span, "record construction must initialize every field");
+        return result;
+    }
     fn binary(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "binary")) Error!Symbolic {
         const left = try self.expression(operation.left);
         const right = try self.expression(operation.right);
         try self.same(right, left, operation.op_span);
         switch (operation.op) {
-            .logical_and, .logical_or => try self.same(left, .{ .builtin = .bool }, operation.op_span),
+            .logical_and, .logical_or => try self.same(left, .{ .concrete = .bool }, operation.op_span),
             .eq, .ne => try self.supports(left, .equality, operation.op_span),
             else => try self.supports(left, .integer, operation.op_span),
         }
         return switch (operation.op) {
             .add, .sub, .mul, .div, .rem => left,
-            else => .{ .builtin = .bool },
+            else => .{ .concrete = .bool },
         };
     }
     fn block(self: *Checker, statements: []const ast.StatementId) Error!bool {
@@ -340,13 +404,13 @@ const Checker = struct {
             },
             .discard => |value| try self.supports(try self.expression(value), .copy, statement_value.span),
             .branch => |branch| {
-                try self.same(try self.expression(branch.condition), .{ .builtin = .bool }, statement_value.span);
+                try self.same(try self.expression(branch.condition), .{ .concrete = .bool }, statement_value.span);
                 const left = try self.statement(branch.then_body);
                 const right = if (branch.else_body) |other| try self.statement(other) else false;
                 return left and right;
             },
             .loop => |loop| {
-                try self.same(try self.expression(loop.condition), .{ .builtin = .bool }, statement_value.span);
+                try self.same(try self.expression(loop.condition), .{ .concrete = .bool }, statement_value.span);
                 _ = try self.statement(loop.body);
             },
             else => return self.sink.fail(eUnsupported, statement_value.span, "this statement still needs abstract generic body checking"),
@@ -360,12 +424,21 @@ pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Prog
 }
 /// Validate bodies while preserving the declaring module's names and import aliases.
 pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!void {
+    const catalog = try @import("records.zig").collectWithNames(sink.allocator, src, program, sink, module_names);
+    return checkWithCatalog(allocator, src, program, sink, catalog);
+}
+/// Check symbolic bodies against the same concrete type catalog used by specialization.
+pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, catalog: Catalog) Error!void {
+    const module_names = catalog.module_names;
     var has_generic = false;
     for (program.functions) |function| if (function.signature.type_parameters.len != 0) {
         has_generic = true;
         break;
     };
     if (!has_generic) return;
+    const concrete_checked = try allocator.alloc(bool, catalog.records.len);
+    defer allocator.free(concrete_checked);
+    @memset(concrete_checked, false);
     var functions: FunctionMap = .empty;
     defer functions.deinit(allocator);
     for (program.functions, 0..) |function, index| {
@@ -393,6 +466,8 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
             .allocator = allocator,
             .src = src,
             .program = program,
+            .catalog = catalog,
+            .concrete_checked = concrete_checked,
             .sink = sink,
             .parameters = parameters,
             .result = undefined,
