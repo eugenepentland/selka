@@ -323,3 +323,10 @@ generation ran. Identical output preserves its modification time with or without
 cache, avoiding unnecessary downstream rebuild triggers. See
 [binding artifact reuse](docs/experiments/binding-cache.md) for request identities,
 corruption handling, and the remaining frontend incremental work.
+
+Use `schema-project --schema-report` to include hashes and byte counts for every loaded
+module, resolved imports, and the actual compiler image behind a checked schema.
+Binding generation includes fresh source receipts even when its public schema is
+unchanged and an artifact is reused. See
+[schema source receipts](docs/experiments/schema-receipts.md) for identity and snapshot
+semantics, integrity checks, and remaining frontend incremental work.

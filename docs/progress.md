@@ -2050,3 +2050,42 @@ finer incremental compilation, domain codecs, callable foreign wrappers, source/
 integration, generics, wider native support, ordinary-program review, and all other
 unfinished roadmap requirements remain pending. Guardian was not exercised; hosted CI
 has not run. The full roadmap goal remains active.
+
+## 2026-09-06: Checked schema and binding source receipts
+
+Added schema-project --schema-report and the schema_report.render embedding API.
+The versioned envelope includes the public schema and its digest alongside complete
+loaded-source identity: logical entry, dependency-first unique module records, relative
+paths, whole-file hashes/byte counts, resolved imports/aliases, and the running compiler
+image hash with Zig/target/optimization metadata. Source records use the project-owned
+buffers that were checked, without reopening source paths after checking.
+
+Source traversal, implementation formatting, and compact JSON hashing are now shared
+with evaluation receipts through source_receipt.zig, retaining the evaluation report/
+request formats. Main's executable identity helper serves both receipt paths. Ordinary
+schema-project output remains unchanged, and duplicate/misplaced report flags reject.
+
+The binding generator now requests and verifies schema receipts before generation or
+artifact lookup. Every run report includes fresh schema_source and its digest, including
+on cache hits. Artifact reuse remains keyed to the public schema and generation inputs,
+so private source edits can change provenance while retaining a hit and unchanged output.
+The cache request also records the actual compiler image reported by the schema process,
+separately from the selected launcher hash for wrapper support.
+
+All 19 build steps pass in Debug and ReleaseFast: 526 Zig tests (469 core, 57 CLI),
+eight verification-driver tests, independent schema receipt acceptance, 29 compiler/
+Python wire comparisons, binding/evaluation cache acceptance, all existing codec/schema/
+input/module/duplicate drivers, and 392 VM/native comparisons per host mode. Receipt
+acceptance independently verifies source/compiler/schema hashes, byte counts, shared
+dependencies, relocation, unrelated files, private/public/alias changes, rejection and
+integrity/order checks, and fresh provenance on binding hits. A project unit scenario
+removes provider files after loading and exercises all allocation failures, proving
+owned-snapshot use and cleanup. Python syntax, Zig formatting, and whitespace checks
+pass; documentation, roadmap, README, and both plan copies are synchronized.
+
+Complete loaded-source receipts for schema/binding generation are implemented. They
+identify the checked bytes rather than archive source text or claim a filesystem-wide
+atomic snapshot. Frontend/declaration-granular incremental compilation, domain codecs,
+callable foreign wrappers, source-level codec/input integration, generics, wider native
+support, ordinary-program review, and all other unfinished roadmap work remain pending.
+Guardian was not exercised; hosted CI has not run. The full roadmap goal remains active.

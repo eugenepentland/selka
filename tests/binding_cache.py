@@ -42,7 +42,9 @@ def main():
             assert generation.call_count == 0 and frontend.call_count == 1
             assert (output.stat().st_ino, output.stat().st_mtime_ns) == (identity.st_ino, identity.st_mtime_ns)
             entry.write_text(entry.read_text() + '\n// private source change\n')
-            assert build()['cache'] == 'hit'
+            private = build()
+            assert private['cache'] == 'hit' and private['schema_source_sha256'] != first['schema_source_sha256']
+            assert private['request_sha256'] == first['request_sha256']
             assert generation.call_count == 0 and frontend.call_count == 2
             # Damage or remove only the destination; a verified hit reinstalls it.
             output.write_bytes(b'stale')

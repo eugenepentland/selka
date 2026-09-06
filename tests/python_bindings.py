@@ -76,7 +76,9 @@ struct Hidden { private_data: bool }
         # Private bodies, comments, aliases, and import order do not change bindings.
         data.write_text(source + '\n// private change\nfn unused() -> i64 { return 3; }')
         entry.write_text('module main; import peer as p; import data as d; fn main() -> i64 { return 1; }')
-        assert generate() == dict(report, installation='unchanged') and output.read_bytes() == original
+        private = generate()
+        assert private['sha256'] == report['sha256'] and private['request'] == report['request'] and output.read_bytes() == original
+        assert private['schema_source_sha256'] != report['schema_source_sha256']
         bindings = load_module(output, 'generated_bindings_acceptance')
         assert bindings.SCHEMA_SHA256 == report['schema_sha256']
         assert bindings.GENERATOR_SHA256 == report['generator_sha256']

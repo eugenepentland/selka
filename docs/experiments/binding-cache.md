@@ -22,6 +22,7 @@ The `python-bindings-request-v1` object records:
 - The complete returned public schema's compact JSON SHA-256.
 - Generator/runtime content identity, captured once for the invocation and shared
   by request construction and source generation.
+- SHA-256 of the actual compiler image reported in the checked schema receipt.
 - SHA-256 of the selected compiler executable. Its bytes are read before and after
   schema checking; a detected change rejects generation for a retry.
 - Python implementation, full version, bytecode cache tag, and optimization setting.
@@ -60,8 +61,8 @@ installation, preserving inode and modification time. This also applies with the
 cache disabled. A missing or stale destination is installed atomically, including
 from a cache hit; timestamps alone are never accepted as evidence of freshness.
 
-The `python-bindings-run-v1` stdout report includes the request and its hash, artifact
-identities, `frontend: checked`, cache status/reason, actual generation execution/skip,
+The `python-bindings-run-v1` stdout report includes the request and its hash, fresh
+[schema source receipts](schema-receipts.md), artifact identities, `frontend: checked`, cache status/reason, actual generation execution/skip,
 and `installation: unchanged|replaced`. Private implementation changes may retain the
 same schema and produce a cache hit. A different compiler or limit may cause a miss
 while producing identical bytes, in which case destination installation still skips.
@@ -83,6 +84,6 @@ bodies, disabled-cache no-op installation, and cache-write failure cleanup.
 
 The driver runs in Debug and ReleaseFast with the existing generated-binding wire
 parity and compiler suites. These observations establish actual generation skips and
-avoided file rewrites, not a measured end-to-end performance improvement. Full source
-snapshot receipts for generation, frontend/declaration-granular reuse, cache eviction,
-and broader incremental compilation remain separate work.
+avoided file rewrites, not a measured end-to-end performance improvement. Full loaded-source receipts are now implemented as described above. Frontend/
+declaration-granular reuse, cache eviction, and broader incremental compilation remain
+separate work.

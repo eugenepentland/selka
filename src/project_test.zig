@@ -241,3 +241,32 @@ test "checked public schemas retain structure and privacy with allocation failur
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), schemaScenario, .{});
 }
+
+fn schemaReceiptScenario(allocator: std.mem.Allocator) !void {
+    var files: Files = .{ .entries = &.{
+        .{ .path = "main.my", .bytes = "module main; import data; fn main() -> i64 { return 0; }" },
+        .{ .path = "data.my", .bytes = "module data; export Item; struct Item { n: u64 }" },
+    } };
+    var project = p.Project.init(allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    const expected_bytes = files.entries[1].bytes.len;
+    files.entries = &.{}; // Receipt/checking must consume the owned loaded snapshot.
+    var index = try @import("interfaces.zig").build(&project);
+    var compilation = try @import("project_compile.zig").Compilation.init(&index);
+    const text = try @import("schema_report.zig").render(allocator, &compilation, report_identity);
+    defer allocator.free(text);
+    const parsed = try std.json.parseFromSlice(std.json.Value, allocator, text, .{});
+    defer parsed.deinit();
+    try t.expectEqual(@as(usize, 2), files.reads);
+    try t.expectEqualStrings("schema-report-v1", parsed.value.object.get("version").?.string);
+    const sources = parsed.value.object.get("source").?.object.get("sources").?.array.items;
+    try t.expectEqual(@as(usize, 2), sources.len);
+    try t.expectEqualStrings("data", sources[0].object.get("module").?.string);
+    try t.expectEqual(@as(i64, @intCast(expected_bytes)), sources[0].object.get("bytes").?.integer);
+}
+test "schema receipts retain checked source dependencies with allocation failure cleanup" {
+    try schemaReceiptScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), schemaReceiptScenario, .{});
+}

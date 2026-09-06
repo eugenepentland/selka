@@ -117,8 +117,9 @@ Generation is deterministic for those inputs and independent of checkout paths.
 Import aliases/order, comments, and private changes leave the generated artifact
 unchanged when the public schema is unchanged. A public schema change regenerates
 new classes/metadata. The optional cache adds compiler/Python/output-limit identities and fresh schema
-checking. It reuses generated artifacts; it is not frontend incremental compilation
-or a full source-snapshot generation receipt.
+checking. It reuses generated artifacts; it is not frontend incremental compilation.
+[Checked source receipts](schema-receipts.md) now record all loaded module identities
+and the actual compiler image alongside the public schema, including on cache hits.
 
 Defaults are a 90-second compiler subprocess deadline, 16 MiB combined captured
 schema/diagnostics, and 16 MiB final generated output. Flags `--timeout`,
@@ -146,6 +147,5 @@ private edits, regeneration after public changes, existing-file preservation, at
 write failure cleanup, and termination/reaping after time/capture limits.
 
 The driver is part of `zig build test` in Debug and ReleaseFast. Other language
-bindings, callable foreign function wrappers, explicit domain codecs, full source-snapshot generation
-receipts, broader incremental compilation, and the remaining compiler roadmap work are not delivered
+bindings, callable foreign function wrappers, explicit domain codecs, broader incremental compilation and the remaining compiler roadmap work are not delivered
 by this data-binding milestone.

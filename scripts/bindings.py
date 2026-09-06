@@ -182,7 +182,7 @@ def generate(schema, max_bytes=MAX_BYTES, *, snapshot=None):
 
 def checked_schema(compiler, entry, timeout, max_bytes=MAX_BYTES):
     with tempfile.TemporaryFile() as output, tempfile.TemporaryFile() as errors:
-        process = subprocess.Popen([str(compiler), 'schema-project', str(entry)], stdout=output, stderr=errors)
+        process = subprocess.Popen([str(compiler), 'schema-project', str(entry), '--schema-report'], stdout=output, stderr=errors)
         deadline = time.monotonic() + timeout
         try:
             while True:
@@ -212,7 +212,39 @@ def checked_schema(compiler, entry, timeout, max_bytes=MAX_BYTES):
         schema = json.loads(output.read(max_bytes + 1), object_pairs_hook=unique)
         if not isinstance(schema, dict):
             raise ValueError('invalid compiler schema document')
-        return schema
+        return validate_schema_report(schema)
+
+
+def validate_schema_report(document):
+    if not isinstance(document, dict) or set(document) != {'version', 'source_sha256', 'source', 'schema_sha256', 'schema'} or document['version'] != 'schema-report-v1':
+        raise ValueError('invalid schema receipt')
+    source, schema = document['source'], document['schema']
+    if not isinstance(source, dict) or not isinstance(schema, dict) or source.get('version') != 'schema-source-v1' or schema.get('version') != 'language-schema-v1':
+        raise ValueError('unsupported schema receipt payload')
+    if digest(source) != document['source_sha256'] or digest(schema) != document['schema_sha256']:
+        raise ValueError('schema receipt checksum mismatch')
+    if set(source) != {'version', 'entry', 'implementation', 'sources'} or source['entry'] != schema.get('entry'):
+        raise ValueError('schema receipt entry mismatch')
+    implementation = source['implementation']
+    if not isinstance(implementation, dict) or set(implementation) != {'compiler_sha256', 'zig_version', 'architecture', 'os', 'abi', 'optimize'} or any(type(value) is not str for value in implementation.values()):
+        raise ValueError('invalid schema compiler identity')
+    def hash_text(value):
+        return type(value) is str and len(value) == 64 and all(char in '0123456789abcdef' for char in value)
+    if not hash_text(implementation['compiler_sha256']) or type(source['sources']) is not list or not source['sources']:
+        raise ValueError('invalid schema source identities')
+    names = set()
+    for item in source['sources']:
+        if not isinstance(item, dict) or set(item) != {'module', 'path', 'sha256', 'bytes', 'imports'}:
+            raise ValueError('invalid schema source record')
+        if type(item['module']) is not str or not item['module'] or item['module'] in names or type(item['path']) is not str or type(item['bytes']) is not int or item['bytes'] < 0 or not hash_text(item['sha256']) or type(item['imports']) is not list:
+            raise ValueError('invalid schema source metadata')
+        for imported in item['imports']:
+            if not isinstance(imported, dict) or set(imported) != {'module', 'alias'} or type(imported['module']) is not str or imported['module'] not in names or type(imported['alias']) is not str:
+                raise ValueError('invalid schema dependency order')
+        names.add(item['module'])
+    if source['sources'][-1]['module'] != source['entry']:
+        raise ValueError('schema entry is not the final dependency root')
+    return document
 
 
 class CompilerFailure(Exception):
@@ -299,7 +331,8 @@ def build(compiler, entry, output_path, *, cache_dir=None, timeout=90, max_schem
         raise FileNotFoundError('compiler executable not found: ' + str(compiler))
     executable = Path(resolved).resolve()
     compiler_hash = file_digest(executable)
-    schema = checked_schema(executable, entry, timeout, max_schema_bytes)
+    schema_receipt = checked_schema(executable, entry, timeout, max_schema_bytes)
+    schema = schema_receipt['schema']
     if file_digest(executable) != compiler_hash:
         raise ValueError('compiler changed during schema checking; retry generation')
     snapshot = generator_snapshot()
@@ -308,6 +341,7 @@ def build(compiler, entry, output_path, *, cache_dir=None, timeout=90, max_schem
         'schema_sha256': digest(schema),
         'generator_sha256': snapshot[1],
         'compiler_sha256': compiler_hash,
+        'schema_compiler_sha256': schema_receipt['source']['implementation']['compiler_sha256'],
         'python': {'implementation': sys.implementation.name, 'version': sys.version,
                    'cache_tag': sys.implementation.cache_tag, 'optimize': sys.flags.optimize},
         'max_output_bytes': max_output_bytes,
@@ -332,6 +366,7 @@ def build(compiler, entry, output_path, *, cache_dir=None, timeout=90, max_schem
     if not unchanged:
         store(output_path, source)
     return dict(report, version='python-bindings-run-v1', output=str(output_path), request=request, request_sha256=request_hash,
+                schema_source=schema_receipt['source'], schema_source_sha256=schema_receipt['source_sha256'],
                 frontend='checked', cache=('disabled' if cache_path is None else 'hit' if cached is not None else 'miss'),
                 reason=reason, generation=('skipped' if cached is not None else 'executed'),
                 installation=('unchanged' if unchanged else 'replaced'))
