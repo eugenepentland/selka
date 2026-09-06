@@ -870,3 +870,12 @@ An executable harness covers local/operand/schema order, shared snapshots, and
 passes all 30 build steps and 593 core/CLI tests, plus the native memory checks.
 Emergency ownership unwind and filesystem/network resource operations remain
 pending prerequisites for complete native execution.
+
+## Native emergency ownership unwind
+
+Native emergency cleanup now tracks temporary acquisition order and reconstructs
+ownership roots without allocating, preserving temporary/operand/local/schema
+destruction order. Debug and ReleaseFast pass all 30 build steps and 593 core/CLI
+tests, including ten explicit trap/OOM ordering cases and the existing 468 native
+allocation-failure cases under sanitizers. Native resource callbacks, propagation
+sequencing, and remaining roadmap work stay open.

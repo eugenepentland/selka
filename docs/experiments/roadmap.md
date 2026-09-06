@@ -280,5 +280,6 @@ missing/empty values, padding, snapshots, and explicit grants through provider A
 Complete Debug/ReleaseFast acceptance passes.
 
 [Native resource implementation](native-resources.md) now has a normal-cleanup
-ordering correction and an executable destruction-order harness. Emergency
-ownership unwind and filesystem/network operations remain pending.
+ordering correction, counted emergency ownership unwind, and an executable
+destruction-order harness. Full Debug/ReleaseFast unwind acceptance passes; native
+filesystem/network operations and propagation ordering remain pending.

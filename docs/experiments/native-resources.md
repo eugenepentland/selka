@@ -15,20 +15,38 @@ nonrecursive destruction with no allocation. The previous runtime fails the
 reverse-local assertion. Both C optimization levels run this harness with address
 and undefined-behavior sanitizers in the native memory acceptance driver.
 
-This establishes normal value destruction only. Emergency cleanup still frees
-the allocation registry directly. It must be replaced before enabling native
-resource owners, because resource release callbacks make ownership order visible.
+Emergency cleanup now reconstructs temporary roots from reference counts,
+subtracting references held by aggregate fields, operands, and locals. The
+intrusive registry records temporary acquisition order on creation, copying, and
+stack transfer. Cleanup releases temporary references first, then all operands
+and locals in reverse order, using the same nonrecursive value destructor.
+This requires no allocation or recursive graph traversal; the supported ownership
+graph has no pointer cycles (source graph cycles use value handles).
+
+The harness verifies a pop order different from allocation order, shared local
+references, and nested temporary construction. Actual trap and injected OOM paths
+exercise stack growth, frame reference allocation after argument transfer, and
+partial result construction: ten cases across C O0/O2. The previous raw-registry
+cleanup fails the new destruction-order assertion. Existing native memory
+acceptance passes all 468 injected allocation failures on the new runtime.
+Complete Debug and ReleaseFast runs pass all 30 build steps and 593 core/CLI
+tests, with all 88 Guardian checks passing. Resource callback trace parity remains
+required when filesystem/network emission is implemented.
 
 ## Remaining implementation requirements
 
-- Track in-flight owned values as well as operand/local roots. Helpers can pop a
-  value into a C temporary before a later allocation fails; stack scanning alone
-  would miss its required cleanup. Constructor adoption and field extraction must
-  transfer ownership without an allocating gap or duplicate release.
+- Extend the verified ownership unwind to native resource values. New helpers
+  must preserve counted ownership through constructor adoption and field
+  extraction, including allocation failures while values are C temporaries.
 - Preserve reverse operand and local order on unwind and depth-first reverse
   schema/index order inside aggregates. Allocation order is not schema order.
   Remaining store entries are a final safety net: reverse acquisition within each
   store, with network teardown before filesystem, matching `resource_runtime`.
+- Align generated error propagation with the VM before adding resource payloads:
+  the native `try_result` emitter currently clears unfinished operands before
+  boxing the outgoing result, while the VM constructs that result first. An OOM
+  during boxing must release the propagated payload before unfinished operands.
+  Resource callback traces must cover this allocation boundary explicitly.
 - Add explicit versioned provider callbacks for acquisition, completion, fallback
   release, read, and write. Require grants before guest execution; preserve byte
   requests, independent per-kind quotas, checked identities, and permission
@@ -41,7 +59,6 @@ resource owners, because resource release callbacks make ownership order visible
   denied operations, missing grants, and every native allocation failure. Include
   read/write arrays and slices, attenuation, quota boundaries, and mixed stores.
 
-The normal-cleanup correction does not complete the native resource milestone or
-the wider roadmap. Complete Debug and ReleaseFast regression runs pass all 30 build steps and
-593 core/CLI tests, including this harness and 468 existing native allocation
-failures. Guardian passes all 88 checks.
+The cleanup foundation does not complete native resource support or the wider
+roadmap. Filesystem/network operations and their provider callback acceptance
+remain pending.

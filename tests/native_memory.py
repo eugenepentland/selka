@@ -41,7 +41,12 @@ def main():
             result = invoke([executable])
             assert result.returncode == 0, ("cleanup", mode, result.stderr)
             memory(result)
-        print("native cleanup: reverse locals/operands/schema, retained snapshots and 20000-level nonallocating destruction passed", flush=True)
+            for failure in ("trap", "oom", "push-oom", "enter-oom", "constructor-oom"):
+                result = invoke([executable, failure])
+                assert result.returncode == (1 if failure == "trap" else 2), (failure, mode, result.stderr)
+                assert (b"error[R_TEST]" if failure == "trap" else b"host failure: OutOfMemory") in result.stderr, result.stderr
+                memory(result)
+        print("native cleanup: temporary/operand/local/schema order, 10 trap/OOM cases, retained snapshots and 20000-level nonallocating destruction passed", flush=True)
         programs = {
             "failure": "struct R{values:[2]i64} result Small{ok:i64,err:i64} result Big{err:i64,ok:R} fn make(r:Small)->Big{return new Big.ok(new R{values:new [2]i64[try r,9]});} fn forward(r:Big)->Big{return new Big.ok(update(try r){values:new [2]i64[4,5]});} fn main()->i64{let old=new R{values:new [2]i64[7,8]};let changed=update(old){values:replace(old.values,0,9)};let bad=forward(make(new Small.err(3)));acknowledge bad;match forward(make(new Small.ok(1))){Big.ok(r)=>{return r.values[0]+changed.values[0]+old.values[0];},Big.err(e)=>{return e;}}}",
             "loop": "struct R{values:[2]i64} fn main()->i64{let mut r=new R{values:new [2]i64[0,7]};let saved=r;let mut i=0;while i<20000{r=update(r){values:replace(r.values,0,i)};i+=1;}return r.values[0]+saved.values[1];}",

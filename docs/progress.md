@@ -2762,3 +2762,23 @@ all 468 existing native allocation-failure cases. Guardian passes all 88 checks.
 This is a prerequisite for observable resource release callbacks. Emergency
 ownership unwind, native filesystem/network operations, and the wider roadmap
 remain pending; see [native resource implementation](experiments/native-resources.md).
+
+## 2026-09-06: Native emergency ownership unwind
+
+The C runtime now derives temporary references from registered reference counts
+and ownership edges, then releases temporaries, operands, and locals in their
+required order. Creation, copying, and stack transfer maintain temporary order
+without allocations or an epoch counter. Destruction remains nonrecursive.
+
+The harness verifies acquisition order differing from allocation order, shared
+local snapshots, nested temporary construction, and ten actual trap/OOM cases
+across O0/O2, including stack growth, partial constructors, and frame setup after
+argument transfer. The previous emergency cleanup fails the new order assertion.
+All 468 existing native allocation-failure cases still pass under sanitizers.
+Complete Debug and ReleaseFast runs pass all 30 steps and 593 core/CLI tests;
+Guardian passes all 88 checks without frozen violations.
+
+Resource callback integration remains pending. Review also identified a native
+propagation sequencing change needed before resource payloads are enabled: box
+the outgoing error before releasing unfinished operands, as the VM does. This
+allocation boundary needs callback-trace acceptance in the resource milestone.

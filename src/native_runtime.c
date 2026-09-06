@@ -47,6 +47,8 @@ struct Aggregate {
     Pool *pool;
     Region *region;
     Aggregate *previous, *next, *pending;
+    Aggregate *unwind_next;
+    size_t unwind_refs;
     Slot fields[];
 };
 typedef struct { Slot value; size_t shared; int exclusive; } Local;
@@ -75,14 +77,43 @@ static uint64_t steps, max_steps = 10000000, max_frames = 1024;
 static const char *const *source_paths;
 static const char *const *function_names;
 static const size_t *source_lines, *source_columns;
+static void release_value(Slot value);
+/* References not held by an aggregate, operand, or local belong to in-flight
+   C temporaries. Registry order records their most recent acquisition, rather
+   than only object allocation order. No cleanup bookkeeping allocates. */
 static void cleanup(void) {
-    while (nf) { --nf; free(frames[nf].references); free(frames[nf].locals); }
-    /* All heap objects are registered, including temporary and partial values.
-       Emergency cleanup frees the registry directly without traversing edges. */
-    while (objects) { Aggregate *next = objects->next; if (!objects->region) { free(objects->pool); free(objects); } objects = next; }
+    for (Aggregate *object = objects; object; object = object->next)
+        object->unwind_refs = object->refs;
+    for (Aggregate *object = objects; object; object = object->next)
+        for (size_t i = 0; i < object->count; ++i)
+            if (object->fields[i].object) --object->fields[i].object->unwind_refs;
+    for (size_t i = 0; i < nv; ++i)
+        if (values[i].object) --values[i].object->unwind_refs;
+    for (size_t f = 0; f < nf; ++f)
+        for (size_t i = 0; i < frames[f].local_count; ++i)
+            if (frames[f].locals[i].value.object) --frames[f].locals[i].value.object->unwind_refs;
+    Aggregate *temporaries = NULL, **tail = &temporaries;
+    for (Aggregate *object = objects; object; object = object->next) {
+        if (!object->unwind_refs) continue;
+        *tail = object; tail = &object->unwind_next;
+    }
+    *tail = NULL;
+    while (temporaries) {
+        Aggregate *object = temporaries;
+        temporaries = object->unwind_next;
+        size_t count = object->unwind_refs;
+        while (count--) release_value((Slot){0, object});
+    }
+    while (nv) release_value(values[--nv]);
+    while (nf) {
+        Frame *frame = &frames[--nf];
+        for (size_t i = frame->local_count; i != 0;)
+            release_value(frame->locals[--i].value);
+        free(frame->references); free(frame->locals);
+    }
     for (size_t i = 0; i < 256; ++i) clear_region_chunks(&regions[i]);
     free(frames); free(values);
-    frames = NULL; values = NULL;
+    frames = NULL; values = NULL; cf = 0; cv = 0;
 }
 static void host_failure(const char *message) {
     fprintf(stderr, "mylang: host failure: %s\n", message);
@@ -112,12 +143,23 @@ static void *grow(void *old, size_t *capacity, size_t needed, size_t size) {
     if (!result) host_failure("OutOfMemory");
     *capacity = next; return result;
 }
+static Slot temporary_value(Slot value) {
+    Aggregate *object = value.object;
+    if (object && object != objects) {
+        if (object->previous) object->previous->next = object->next;
+        if (object->next) object->next->previous = object->previous;
+        object->previous = NULL; object->next = objects;
+        if (objects) objects->previous = object;
+        objects = object;
+    }
+    return value;
+}
 static Slot copy_value(Slot value) {
     if (value.object) {
         if (value.object->refs == SIZE_MAX) host_failure("OutOfMemory");
         ++value.object->refs;
     }
-    return value;
+    return temporary_value(value);
 }
 static void release_value(Slot value) {
     Aggregate *work = NULL;
@@ -185,6 +227,7 @@ static Slot clone_value(Slot value) {
     return (Slot){0, object};
 }
 static void push_value(Slot value) {
+    temporary_value(value);
     if (nv == SIZE_MAX) host_failure("OutOfMemory");
     values = grow(values, &cv, nv + 1, sizeof(Slot));
     values[nv++] = value;
@@ -192,7 +235,7 @@ static void push_value(Slot value) {
 static void push(V value) { push_value((Slot){value, NULL}); }
 static Slot pop_value(void) {
     if (!nf || nv <= frames[nf - 1].base) host_failure("InternalError");
-    return values[--nv];
+    return temporary_value(values[--nv]);
 }
 static V pop(void) {
     Slot value = pop_value();

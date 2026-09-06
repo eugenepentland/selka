@@ -30,7 +30,40 @@ static void expect_trace(const unsigned *expected, size_t count) {
     for (size_t i = 0; i < count; ++i) assert(trace[i] == expected[i]);
     trace_count = 0;
 }
-int main(void) {
+static void expect_failed_cleanup(void) {
+    assert(objects == NULL);
+    expect_trace((unsigned[]){2, 1, 0}, 3);
+}
+static void fail_with_owned_values(const char *mode) {
+    static const char *paths[] = {"cleanup.my"}, *names[] = {"main"};
+    static const size_t positions[] = {1};
+    source_paths = paths; function_names = names;
+    source_lines = positions; source_columns = positions;
+    enter(0, 1, 0, 0, 0, NULL);
+    store_local(0, leaf(0)); push_value(leaf(1)); push_value(leaf(2));
+    Slot temporary = pop_value();
+    assert(atexit(expect_failed_cleanup) == 0);
+    if (!strcmp(mode, "trap")) trap("R_TEST");
+    if (!strcmp(mode, "push-oom")) {
+        while (nv < cv) push(0);
+        test_fail_at = test_attempts + 1;
+        push_value(temporary);
+    } else if (!strcmp(mode, "enter-oom")) {
+        /* Locals and argument transfer succeed; reference storage fails. */
+        test_fail_at = test_attempts + 2;
+        enter(0, 1, 1, 0, 1, NULL);
+    } else if (!strcmp(mode, "constructor-oom")) {
+        test_fail_at = test_attempts + 2;
+        (void)boxed_variant(0, boxed_variant(0, temporary, 1), 1);
+    } else {
+        assert(!strcmp(mode, "oom"));
+        test_fail_at = test_attempts + 1;
+        (void)boxed_variant(0, temporary, 1);
+    }
+    assert(!"expected host failure");
+}
+int main(int argc, char **argv) {
+    if (argc == 2) { fail_with_owned_values(argv[1]); return 91; }
     /* Local slot order is independent of allocation order. Empty moved slots
        must not disturb reverse cleanup; a shared snapshot outlives the frame. */
     enter(0, 4, 0, 0, 0, NULL);
@@ -70,6 +103,30 @@ int main(void) {
     assert(test_attempts == before);
     expect_trace((unsigned[]){0}, 1);
     assert(objects == NULL);
+
+    /* Temporary acquisition order differs from allocation order. Operand roots
+       precede all locals, and an extra temporary reference must not free a
+       shared local early. Cleanup itself must allocate nothing. */
+    enter(0, 2, 0, 0, 0, NULL);
+    store_local(0, leaf(0)); store_local(1, leaf(1));
+    push_value(leaf(2)); push_value(leaf(3));
+    push_value(leaf(4)); push_value(leaf(5));
+    (void)pop_value(); (void)pop_value();
+    (void)copy_value(frames[0].locals[0].value);
+    before = test_attempts;
     cleanup();
+    assert(test_attempts == before && objects == NULL);
+    expect_trace((unsigned[]){4, 5, 3, 2, 1, 0}, 6);
+
+    /* Emergency cleanup follows the ownership graph, including a temporary
+       nested constructor whose children were allocated in a different order. */
+    a = leaf(0); b = leaf(1); c = leaf(2);
+    nested = new_object(2, 0);
+    nested->fields[0] = c; nested->fields[1] = a;
+    outer = new_object(2, 0);
+    outer->fields[0] = b; outer->fields[1] = (Slot){0, nested};
+    cleanup();
+    assert(objects == NULL);
+    expect_trace((unsigned[]){0, 2, 1}, 3);
     return 0;
 }
