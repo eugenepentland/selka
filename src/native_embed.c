@@ -3,6 +3,7 @@
 /* Transfer one owned input through a compiler-selected codec, retaining the
    surrounding execution's operands, frames, budgets and failure destination. */
 static Slot invoke_codec(size_t function, Slot argument) {
+    wire_count_call();
     const size_t base = nv, depth = nf;
     push_value(argument);
     execute_entry(NULL, NULL, 0, function);
@@ -33,6 +34,7 @@ static int run_embedding(const char *name, const MylangScalar *arguments, size_t
     }
     if (scalar && result->status == 0) *scalar = (MylangScalar){native_type, native_bits};
     result->steps = steps;
+    if (wire) { free(wire->prepared);wire->prepared=NULL; }
     active_result = NULL; wire_call = NULL;
     atomic_flag_clear_explicit(&entry_busy, memory_order_release);
     return result->status;
@@ -49,9 +51,9 @@ int mylang_native_call_v1(const char *name, const MylangScalar *arguments, size_
     }
     return run_embedding(name, arguments, count, options, &result->execution, &result->value, NULL);
 }
-int mylang_native_call_values_v1(const char *name, const MylangWireNode *arguments,
+static int call_values(const char *name, const MylangWireNode *arguments,
     size_t node_count, MylangWireNode *output, size_t capacity,
-    const MylangRunOptions *options, MylangWireResult *result) {
+    const MylangRunOptions *options, MylangWireResult *result, WireCall *wire) {
     if (!result) return 2;
     *result = (MylangWireResult){0};
     if (!name || (node_count && !arguments) || (capacity && !output)) {
@@ -60,9 +62,25 @@ int mylang_native_call_values_v1(const char *name, const MylangWireNode *argumen
     if (node_count > 100000 || capacity > 100000) {
         result->execution.status=2; result->execution.code="WireLimit"; return 2;
     }
-    WireCall wire={.input=arguments,.count=node_count,.output=output,.capacity=capacity};
-    int status=run_embedding(name, NULL, 0, options, &result->execution, NULL, &wire);
-    result->node_count=wire.needed;
+    wire->input=arguments;wire->count=node_count;wire->output=output;wire->capacity=capacity;
+    int status=run_embedding(name, NULL, 0, options, &result->execution, NULL, wire);
+    result->node_count=wire->needed;
+    return status;
+}
+int mylang_native_call_values_v1(const char *name, const MylangWireNode *arguments,
+    size_t node_count, MylangWireNode *output, size_t capacity,
+    const MylangRunOptions *options, MylangWireResult *result) {
+    WireCall wire={0};
+    return call_values(name,arguments,node_count,output,capacity,options,result,&wire);
+}
+int mylang_native_call_codecs_v1(const char *name, const MylangWireNode *arguments,
+    size_t node_count, MylangWireNode *output, size_t capacity,
+    const MylangCodecOptions *options, MylangCodecResult *result) {
+    if (!result) return 2;
+    *result=(MylangCodecResult){0};
+    WireCall wire={.codecs=1,.max_calls=options && options->max_calls ? options->max_calls : 4096};
+    int status=call_values(name,arguments,node_count,output,capacity,options ? &options->run : NULL,&result->value,&wire);
+    result->domain=wire.domain;result->calls=wire.calls;result->rejected=wire.rejected;
     return status;
 }
 #endif

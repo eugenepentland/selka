@@ -328,6 +328,7 @@ fn codecDispatchScenario(allocator: std.mem.Allocator) !void {
     defer allocator.free(generated);
 }
 // spec: NATIVE-CODEC-1
+// spec: NATIVE-CODEC-WIRE-1
 test "native declared codec dispatcher emission cleans every allocation failure" {
     try codecDispatchScenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });

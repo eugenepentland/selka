@@ -1,9 +1,11 @@
 /* Private schemas and bounded preorder host value traversal. */
+typedef struct { size_t wire, decode, encode, result, ok, error, error_type; } WireCodec;
 typedef struct {
     const char *name;
     unsigned kind, bits, is_signed, tag_bits;
     size_t count;
     const size_t *children;
+    const WireCodec *codec;
 } WireSchema;
 static const WireSchema wire_schemas[];
 typedef struct {
@@ -11,8 +13,28 @@ typedef struct {
     size_t count, cursor;
     MylangWireNode *output;
     size_t capacity, needed, return_type;
+    int codecs, rejected;
+    uint64_t calls, max_calls;
+    const char *domain;
+    MylangWireNode *prepared;
+    size_t prepared_capacity;
 } WireCall;
 static WireCall *wire_call;
+static Slot invoke_codec(size_t function, Slot argument);
+static void wire_read_domain(const WireSchema *schema, unsigned depth);
+static void wire_write(size_t type, Slot value, unsigned depth, size_t *cursor, int write);
+static void wire_count_call(void) {
+    if (!wire_call || !wire_call->codecs) return;
+    if (wire_call->calls == wire_call->max_calls) host_failure("CodecCallLimit");
+    ++wire_call->calls;
+}
+static void wire_publish(size_t type, Slot value) {
+    size_t count=0;
+    wire_write(type,value,0,&count,2);
+    wire_call->needed=count;
+    if (count > wire_call->capacity) host_failure("OutputTooSmall");
+    memcpy(wire_call->output,wire_call->prepared,count*sizeof(MylangWireNode));
+}
 static V wire_scalar(size_t type, uint64_t bits) {
     const WireSchema *schema = &wire_schemas[type];
     V number = (V)bits;
@@ -49,7 +71,29 @@ static void wire_read(size_t type, unsigned depth) {
         else push(present ? variant_make(payload.number, schema->tag_bits, wire_schemas[child].bits, (size_t)node->bits) : (V)node->bits);
         return;
     }
+    if (schema->kind == 5 && wire_call->codecs) {
+        if (node->bits || node->children != 1) host_failure("InvalidArgument");
+        wire_read_domain(schema,depth);return;
+    }
     host_failure("UnsupportedSignature");
+}
+static void wire_read_domain(const WireSchema *schema, unsigned depth) {
+    const WireCodec *codec=schema->codec;
+    wire_read(codec->wire,depth+1);
+    const char *previous=wire_call->domain;
+    wire_call->domain=schema->name;
+    Slot result=invoke_codec(codec->decode,values[--nv]);
+    const WireSchema *shape=&wire_schemas[codec->result];
+    size_t tag=shape->bits ? (size_t)((U)result.number & variant_mask(shape->tag_bits)) : result.object->tag;
+    if (tag != codec->ok && tag != codec->error) host_failure("InternalError");
+    const WireSchema *payload=&wire_schemas[shape->children[tag]];
+    Slot value=shape->bits ? (Slot){variant_payload(result.number,shape->tag_bits,payload->bits,payload->is_signed),NULL} : field_value(result,0);
+    release_value(result);
+    if (tag == codec->ok) { push_value(value);wire_call->domain=previous;return; }
+    wire_call->rejected=1;
+    wire_publish(codec->error_type,value);
+    release_value(value);
+    host_failure("DomainCodecRejected");
 }
 static void wire_write(size_t type, Slot value, unsigned depth, size_t *cursor, int write) {
     if (depth >= 128 || *cursor >= 100000) host_failure("WireLimit");
@@ -62,9 +106,20 @@ static void wire_write(size_t type, Slot value, unsigned depth, size_t *cursor, 
         node.bits = schema->bits ? (uint64_t)((U)value.number & variant_mask(schema->tag_bits)) : value.object->tag;
         if (node.bits >= schema->count) host_failure("InternalError");
         child = schema->children[node.bits]; node.children = child != SIZE_MAX;
-    } else host_failure("UnsupportedSignature");
-    if (write) wire_call->output[*cursor] = node;
+    } else if (schema->kind == 5 && wire_call->codecs) node.children=1;
+    else host_failure("UnsupportedSignature");
+    if (write == 2) {
+        wire_call->prepared=grow(wire_call->prepared,&wire_call->prepared_capacity,*cursor+1,sizeof(MylangWireNode));
+        wire_call->prepared[*cursor]=node;
+    } else if (write) wire_call->output[*cursor] = node;
     ++*cursor;
+    if (schema->kind == 5) {
+        const char *previous=wire_call->domain;
+        wire_call->domain=schema->name;
+        Slot encoded=invoke_codec(schema->codec->encode,copy_value(value));
+        wire_write(schema->codec->wire,encoded,depth+1,cursor,write);
+        release_value(encoded);wire_call->domain=previous;return;
+    }
     for (size_t i=0; i<node.children; ++i) {
         size_t child_type = child;
         Slot part;
@@ -81,6 +136,7 @@ static void wire_write(size_t type, Slot value, unsigned depth, size_t *cursor, 
 }
 static void wire_finish(Slot value) {
     if (!wire_call) return;
+    if (wire_call->codecs) { wire_publish(wire_call->return_type,value);return; }
     size_t count = 0;
     wire_write(wire_call->return_type, value, 0, &count, 0);
     wire_call->needed = count;

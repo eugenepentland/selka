@@ -1,19 +1,22 @@
-//! Native host value schemas; domain construction and resource identities stay opaque.
+//! Native host schemas for ordinary values and opt-in declared domain codecs.
 const std = @import("std");
 const typed = @import("typed.zig");
 const bc = @import("bytecode.zig");
 const native_layout = @import("native_layout.zig");
 
-/// Mark finite ordinary value shapes whose children can all cross the host boundary.
-pub fn supported(allocator: std.mem.Allocator, records: []const typed.Record) std.mem.Allocator.Error![]bool {
+/// Mark finite value shapes supported by the selected host conversion mode.
+pub fn supported(allocator: std.mem.Allocator, records: []const typed.Record, codecs: bool) std.mem.Allocator.Error![]bool {
     const flags = try allocator.alloc(bool, records.len);
     @memset(flags, false);
     var changed = true;
     while (changed) {
         changed = false;
         for (records, 0..) |record, i| {
-            if (flags[i] or record.shape.hasRuntimeIdentity() or record.shape.domain != null or record.contract.move_only) continue;
-            if (!childrenSupported(record, flags)) continue;
+            if (flags[i] or record.shape.hasRuntimeIdentity() or record.contract.move_only) continue;
+            if (record.shape.domain != null) {
+                const codec = record.contract.codec orelse continue;
+                if (!codecs or !valueSupported(codec.wire, flags)) continue;
+            } else if (!childrenSupported(record, flags)) continue;
             flags[i] = true;
             changed = true;
         }
@@ -44,7 +47,7 @@ pub fn signature(function: bc.Function, flags: []const bool) bool {
     return true;
 }
 /// Emit a private schema table consumed by the bounded native wire reader/writer.
-pub fn emit(w: *std.Io.Writer, layout: native_layout.Layout, flags: []const bool) error{WriteFailed}!void {
+pub fn emit(w: *std.Io.Writer, layout: native_layout.Layout, flags: []const bool, functions: []const bc.Function) error{ WriteFailed, InternalError }!void {
     try w.writeAll("#ifdef MYLANG_EMBED\n");
     try w.writeAll(@embedFile("native_wire.c"));
     try w.writeAll("static const WireSchema wire_schemas[] = {\n");
@@ -55,6 +58,8 @@ pub fn emit(w: *std.Io.Writer, layout: native_layout.Layout, flags: []const bool
             try w.writeAll("0,0,0,0,0,NULL},\n");
         } else if (!ty.isAggregate()) {
             try w.print("1,{d},{d},0,0,NULL}},\n", .{ layout.width(ty), @intFromBool(layout.signed(ty)) });
+        } else if (layout.records[ty.recordIndex()].shape.domain != null) {
+            try emitCodec(w, layout, layout.records[ty.recordIndex()], functions);
         } else try emitRecord(w, layout, layout.records[ty.recordIndex()]);
     }
     try w.writeAll("};\n#endif\n");
@@ -74,4 +79,15 @@ fn emitRecord(w: *std.Io.Writer, layout: native_layout.Layout, record: typed.Rec
         try w.print("{d},", .{@backingInt(array.element)});
     } else for (record.fields) |field| try w.print("{d},", .{@backingInt(field.ty)});
     try w.writeAll("}},\n");
+}
+
+fn emitCodec(w: *std.Io.Writer, layout: native_layout.Layout, record: typed.Record, functions: []const bc.Function) !void {
+    const codec = record.contract.codec orelse return error.InternalError;
+    const result = functions[@backingInt(codec.decode)].signature.return_type;
+    const shape = typed.resultShape(result, layout.records) orelse return error.InternalError;
+    try w.print("5,{d},{d},0,0,NULL,&(const WireCodec){{{d},{d},{d},{d},{d},{d},{d}}}}},\n", .{
+        layout.width(record.id),   @intFromBool(layout.signed(record.id)), @backingInt(codec.wire),
+        @backingInt(codec.decode), @backingInt(codec.encode),              @backingInt(result),
+        shape.ok_tag,              shape.error_tag,                        @backingInt(shape.error_type),
+    });
 }

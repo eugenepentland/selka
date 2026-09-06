@@ -120,8 +120,10 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     try bc.validate(allocator, program);
     var layout = try native_layout.Layout.init(allocator, program.records);
     defer layout.deinit();
-    const wire_types = try native_wire.supported(allocator, program.records);
+    const wire_types = try native_wire.supported(allocator, program.records, false);
     defer allocator.free(wire_types);
+    const codec_types = try native_wire.supported(allocator, program.records, true);
+    defer allocator.free(codec_types);
     const offsets = try allocator.alloc(usize, program.functions.len);
     defer allocator.free(offsets);
     var count: usize = 0;
@@ -139,7 +141,7 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     try w.writeAll(@embedFile("native_runtime.c"));
     try w.writeAll(@embedFile("native_resources.c"));
     try writeInterface(w, interface.schema);
-    try native_wire.emit(w, layout, wire_types);
+    try native_wire.emit(w, layout, codec_types, program.functions);
     try w.writeAll("\nstatic const char *const names[] = {\n");
     for (program.functions) |function| {
         try string(w, function.name);
@@ -158,7 +160,7 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
         "#else\nint main(int argc, char **argv) {\n#endif\nsource_paths = paths; function_names = names; source_lines = lines; source_columns = columns;\n" ++
         "#ifndef MYLANG_EMBED\noptions(argc, argv); providers = mylang_native_providers();\n#endif\nvalidate_resource_providers(); size_t return_target = 0;\n");
     try writeCodecDispatch(allocator, w, program, offsets);
-    try writeExports(w, program, offsets, interface.roots, wire_types);
+    try writeExports(w, program, offsets, interface.roots, wire_types, codec_types);
     const main_index = @backingInt(program.main);
     for (program.functions[main_index].scope.locals[0..program.functions[main_index].signature.parameter_count]) |parameter| {
         switch (parameter.ty) {
@@ -245,7 +247,7 @@ fn scalarSignature(function: bc.Function) bool {
 fn scalarType(ty: typed.Type) bool {
     return ty.isInteger() or ty == .bool;
 }
-fn writeExports(w: *std.Io.Writer, program: bc.Program, offsets: []const usize, roots: []const typed.FunctionId, wire_types: []const bool) !void {
+fn writeExports(w: *std.Io.Writer, program: bc.Program, offsets: []const usize, roots: []const typed.FunctionId, wire_types: []const bool, codec_types: []const bool) !void {
     try w.writeAll("#ifdef MYLANG_EMBED\nif (entry_name) {\n");
     for (roots) |root| {
         const index = @backingInt(root);
@@ -255,10 +257,12 @@ fn writeExports(w: *std.Io.Writer, program: bc.Program, offsets: []const usize, 
         try string(w, function.name);
         try w.writeAll(")) {\n");
         try w.writeAll("if (wire_call) {\n");
-        if (native_wire.signature(function, wire_types)) {
+        if (native_wire.signature(function, codec_types)) {
+            if (!native_wire.signature(function, wire_types)) try w.writeAll("if (!wire_call->codecs) host_failure(\"UnsupportedSignature\");\n");
             for (function.scope.locals[0..function.signature.parameter_count]) |local|
                 try w.print("wire_read({d}, 0);\n", .{@backingInt(local.ty)});
             try w.writeAll("if (wire_call->cursor != wire_call->count) host_failure(\"InvalidArgument\");\n");
+            try w.writeAll("wire_count_call();\n");
             try w.print("wire_call->return_type = {d};\n", .{@backingInt(function.signature.return_type)});
             try enter(w, function, 0);
             try w.print(jump_format, .{offsets[index]});

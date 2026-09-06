@@ -49,7 +49,7 @@ typedef struct { MylangRunResult execution; size_t node_count; } MylangWireResul
    and output is unchanged; the function has already executed. Other failures
    leave node_count zero. Input/output/result/options must not alias.
    At most 100000 input/output nodes and 128 levels are supported. Domains and
-   runtime identities are opaque until an explicit native codec ABI exists. */
+   runtime identities are opaque in this API. */
 int mylang_native_call_values_v1(const char *name, const MylangWireNode *arguments,
     size_t node_count, MylangWireNode *output, size_t capacity,
     const MylangRunOptions *options, MylangWireResult *result);
@@ -61,4 +61,23 @@ int mylang_native_call_values_v1(const char *name, const MylangWireNode *argumen
    interface compatibility, not identical implementation behavior. */
 const char *mylang_native_schema_json_v1(void);
 const char *mylang_native_schema_sha256_v1(void);
+/* Opt-in declared domain codecs. A domain node has bits=0 and one child:
+   the declared ordinary wire value. Decoders validate inputs; encoders run
+   once for each returned domain. Calls include decoders, the public function
+   and encoders under shared step/frame/call budgets. */
+typedef struct { MylangRunOptions run; uint64_t max_calls; } MylangCodecOptions;
+typedef struct {
+    MylangWireResult value;
+    const char *domain;
+    uint64_t calls;
+    int rejected;
+} MylangCodecResult;
+/* max_calls=0 selects 4096. On DomainCodecRejected, rejected=1 and output
+   contains the decoder's ordinary typed rejection tree. OutputTooSmall can
+   instead report required rejection capacity, retaining rejected and domain.
+   Other failures write no output; node_count remains zero. Domain strings
+   borrow library storage. The ordinary v1 value API keeps domains opaque. */
+int mylang_native_call_codecs_v1(const char *name, const MylangWireNode *arguments,
+    size_t node_count, MylangWireNode *output, size_t capacity,
+    const MylangCodecOptions *options, MylangCodecResult *result);
 #endif

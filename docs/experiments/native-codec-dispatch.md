@@ -12,9 +12,9 @@ source locations and the emergency cleanup destination remain shared with the
 surrounding operation. Normal public entry/value calls retain their existing
 return and cleanup behavior.
 
-This is a prerequisite for native domain conversion, not completed public domain
-support. The ordinary wire API and generated NativeClient still reject domain
-signatures. Source codec declarations require public, effect-free methods and
+The public codec wire API now uses this dispatcher for domain conversion; see
+[native-codec-wire.md](native-codec-wire.md). The ordinary wire API and generated
+NativeClient still reject domain signatures. Source codec declarations require public, effect-free methods and
 complete ordinary wire/error representations without domains or runtime owners.
 The internal dispatcher consumes those already-checked contracts.
 
@@ -34,10 +34,7 @@ covers emission of declared codec dispatch. The host driver runs in `zig build t
 
 ## Remaining integration
 
-Public domain calls still need codec-aware input traversal, typed rejection and
-domain failure reporting, and a shared codec-call quota. Output traversal must
-execute each encoder once: the ordinary writer's measure-then-copy traversal
-cannot simply invoke encoders in both passes. A bounded prepared output tree can
-retain encoded wire data until capacity is known. Generated Python bindings then
-need the matching versioned native contract for domain wire objects and typed
-rejections. Existing ordinary-call ABI behavior must remain compatible.
+Public input/output conversion, typed rejection reporting, shared call quotas and
+once-only output staging are implemented in the versioned codec wire API.
+Generated Python bindings still need to consume that API and expose typed decoder
+rejections. Existing ordinary-call ABI behavior remains compatible.

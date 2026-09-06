@@ -3257,3 +3257,27 @@ Public native codec input/output conversion, typed rejection reporting, shared
 codec-call quotas and generated-client domain support remain unfinished. Output
 encoding must be staged so each encoder runs once rather than once per sizing
 and writing pass. The other pending roadmap requirements also remain open.
+
+
+### Public native domain codec calls — 2026-09-06
+
+The new `mylang_native_call_codecs_v1` API converts declared domain wire values,
+including domains nested in records, arrays and variants. Input decoders, the
+public root and output encoders share step/frame limits and a separate bounded
+call quota. Encoded output is staged before publication so each encoder runs once
+and insufficient buffers or traps leave caller output unchanged. Implicit decoder
+rejections carry the domain identity and ordinary typed rejection tree; explicit
+public decoder calls retain ordinary language-result semantics. The original
+value API keeps its domain opacity. See `docs/experiments/native-codec-wire.md`.
+
+Four sanitizer hosts and four separately linked public-header hosts pass both
+optimization modes and packed/boxed rejection representations. Coverage includes
+nested conversion, exact call limits, shared step/frame budgets, decoder/encoder
+traps, unchanged insufficient output, allocation failures and repeated recovery.
+All 588 core tests pass in Debug and ReleaseFast. Existing internal codec, ordinary
+wire, scalar call, generated Python native-client and 24 embedding host cases pass,
+including cross-API Busy rejection. All 2682 VM/native comparisons pass. The new
+driver runs in `zig build test`; a new
+full-suite pass is not claimed here. Guardian passes all 88 checks with baselines
+disabled. Generated Python domain support, source-level codec operations and all
+other outstanding roadmap requirements remain open.
