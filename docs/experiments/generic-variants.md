@@ -34,8 +34,8 @@ construction/matching and a located trap inside an imported generic match arm.
 Both scalar and record payload representations are exercised.
 
 [Concrete result-bearing variants](generic-results.md) now retain handling
-obligations across matches and propagation. Runtime-owned graphs, partial field
-state, parameter-dependent structural types, codec
+obligations across matches and propagation. [Partial field state](generic-fields.md) now supports extracting concrete
+result-bearing record payloads. Runtime-owned graphs, parameter-dependent structural types, codec
 constraints, public generic tooling and the remaining roadmap still need work.
 Concrete specialization continues to apply full semantic, ownership, region and
 effect checking after abstract acceptance.

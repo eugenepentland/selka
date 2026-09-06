@@ -17,9 +17,23 @@ const Symbolic = union(enum) { concrete: typed.Type, parameter: usize };
 const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
 const FunctionMap = std.StringHashMapUnmanaged(usize);
 const Return = struct { parameter: usize, mutable: bool, slice: bool };
-const Local = struct { name: source.Span, ty: Symbolic, mutable: bool, available: bool = true, reference: ?bool = null, slice: bool = false, root: ?usize = null, children: usize = 0, shared: usize = 0, exclusive: usize = 0 };
+const Pending = struct { available: bool, fields: []const bool };
+const Local = struct {
+    name: source.Span,
+    ty: Symbolic,
+    mutable: bool,
+    available: bool = true,
+    fields: []const bool = &.{},
+    reference: ?bool = null,
+    slice: bool = false,
+    root: ?usize = null,
+    children: usize = 0,
+    shared: usize = 0,
+    exclusive: usize = 0,
+};
 const Checker = struct {
     allocator: std.mem.Allocator,
+    field_arena: std.heap.ArenaAllocator,
     src: source.Source,
     program: ast.Program,
     catalog: Catalog,
@@ -66,23 +80,42 @@ const Checker = struct {
             .parameter => false,
         };
     }
+    fn pendingObligation(self: *Checker, binding: Local) bool {
+        if (binding.reference != null or !binding.available) return false;
+        if (!self.requiresHandling(binding.ty)) return false;
+        if (binding.fields.len == 0) return true;
+        const record = self.catalog.records[binding.ty.concrete.recordIndex()];
+        for (record.fields, binding.fields) |field, moved| {
+            if (!moved and self.requiresHandling(.{ .concrete = field.ty })) return true;
+        }
+        return false;
+    }
     fn requireHandled(self: *Checker, first: usize, span: source.Span) Error!void {
         for (self.locals.items[first..]) |binding| {
-            if (binding.reference == null and binding.available and self.requiresHandling(binding.ty))
+            if (self.pendingObligation(binding))
                 return self.sink.failRelated("E_RESULT_UNHANDLED", span, "result-bearing binding leaves scope without handling or transfer", .{ .span = binding.name, .message = "unhandled result-bearing binding" });
         }
     }
-    fn pendingState(self: *Checker, count: usize) Error![]bool {
-        const state = try self.allocator.alloc(bool, count);
-        for (self.locals.items[0..count], state) |binding, *available| available.* = binding.available;
+    fn pendingState(self: *Checker, count: usize) Error![]Pending {
+        const state = try self.allocator.alloc(Pending, count);
+        for (self.locals.items[0..count], state) |binding, *pending| pending.* = .{ .available = binding.available, .fields = binding.fields };
         return state;
     }
-    fn restorePending(self: *Checker, state: []const bool) void {
-        for (self.locals.items[0..state.len], state) |*binding, available| binding.available = available;
+    fn restorePending(self: *Checker, state: []const Pending) void {
+        for (self.locals.items[0..state.len], state) |*binding, pending| {
+            binding.available = pending.available;
+            binding.fields = pending.fields;
+        }
     }
-    fn samePending(self: *Checker, state: []const bool, span: source.Span, code: []const u8) Error!void {
-        for (self.locals.items[0..state.len], state) |binding, available| {
-            if (binding.available != available) return self.sink.failRelated(code, span, "result obligation must agree on every continuing path", .{ .span = binding.name, .message = "binding declared here" });
+    fn samePending(self: *Checker, state: []const Pending, span: source.Span, code: []const u8) Error!void {
+        for (self.locals.items[0..state.len], state) |binding, pending| {
+            const fields_match = std.mem.eql(bool, binding.fields, pending.fields);
+            if (binding.available != pending.available or !fields_match) return self.sink.failRelated(
+                code,
+                span,
+                "result obligation must agree on every continuing path",
+                .{ .span = binding.name, .message = "binding declared here" },
+            );
         }
     }
     fn concreteValue(self: *Checker, value: Symbolic, span: source.Span) Error!typed.Type {
@@ -124,6 +157,7 @@ const Checker = struct {
         const binding = try self.local(span);
         if (binding.reference != null) return self.sink.fail("E_REFERENCE_VALUE", span, "references require read_ref or an explicit reference parameter");
         try self.ownerAccess(binding.*, false, span);
+        if (binding.fields.len != 0) return self.sink.fail("E_PARTIAL_MOVE", span, "record has missing fields; access remaining fields individually or replace it");
         if (self.requiresHandling(binding.ty)) {
             if (!binding.available) return self.sink.fail("E_RESULT_CONSUMED", span, "result-bearing binding was already transferred");
             binding.available = false;
@@ -312,6 +346,7 @@ const Checker = struct {
         defer self.depth -= 1;
         return switch (node.data) {
             .name => |name| try self.namedValue(name),
+            .read_field, .take_field => |access| try self.fieldValue(access, node.data == .take_field),
             .read_slice => |read| result: {
                 const ref = try self.reference(read.name, false, true);
                 try self.supports(try self.expression(read.index), .integer, node.span);
@@ -385,6 +420,27 @@ const Checker = struct {
             else => self.sink.fail(eUnsupported, node.span, "this operation still needs abstract generic body checking"),
         };
     }
+    fn fieldValue(self: *Checker, access: @FieldType(@FieldType(ast.Node, "data"), "read_field"), taking: bool) Error!Symbolic {
+        const binding = try self.local(access.owner);
+        if (binding.reference != null) return self.sink.fail("E_TYPE", access.owner, "field access requires a value binding, not a reference");
+        const owner_type = try self.concreteValue(binding.ty, access.owner);
+        const index = try self.catalog.field(owner_type, self.src, access.field, self.sink);
+        const fields = self.catalog.records[owner_type.recordIndex()].fields;
+        const result: Symbolic = .{ .concrete = fields[index].ty };
+        if (!taking and self.requiresHandling(result)) return self.sink.fail("E_FIELD_COPY", access.field, "read_field cannot copy result obligations");
+        if (self.requiresHandling(binding.ty) and !binding.available) return self.sink.fail("E_OWNED_CONSUMED", access.owner, "record has already been transferred");
+        if (taking and !self.requiresHandling(binding.ty)) return self.sink.fail("E_FIELD_TAKE", access.owner, "take_field requires a result-bearing record; use read_field for copyable records");
+        if (binding.fields.len != 0 and binding.fields[index]) return self.sink.fail("E_FIELD_MOVED", access.field, "field has already been transferred");
+        try self.ownerAccess(binding.*, taking, access.owner);
+        if (taking) {
+            const moved = try self.field_arena.allocator().alloc(bool, fields.len);
+            @memset(moved, false);
+            if (binding.fields.len != 0) @memcpy(moved, binding.fields);
+            moved[index] = true;
+            binding.fields = moved;
+        }
+        return result;
+    }
     fn propagateValue(self: *Checker, operand: ast.NodeId, span: source.Span) Error!Symbolic {
         const temporaries = self.temporary_results;
         const value = try self.concreteValue(try self.expression(operand), span);
@@ -418,7 +474,7 @@ const Checker = struct {
         @memset(seen, false);
         const incoming = try self.pendingState(self.locals.items.len);
         defer self.allocator.free(incoming);
-        var continuation: ?[]bool = null;
+        var continuation: ?[]Pending = null;
         defer if (continuation) |state| self.allocator.free(state);
         var terminated = true;
         for (match.arms) |arm| {
@@ -552,8 +608,9 @@ const Checker = struct {
                 try self.same(value, target.ty, assignment.op_span);
                 if (assignment.op != .set) try self.supports(target.ty, .integer, assignment.op_span);
                 if (self.requiresHandling(target.ty)) {
-                    if (target.available) return self.sink.fail("E_RESULT_OVERWRITE", assignment.name, "assignment would overwrite an unhandled result");
+                    if (self.pendingObligation(target.*)) return self.sink.fail("E_RESULT_OVERWRITE", assignment.name, "assignment would overwrite an unhandled result");
                     target.available = true;
+                    target.fields = &.{};
                 }
             },
             .write_slice => |write| {
@@ -633,6 +690,7 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
         defer allocator.free(parameters);
         var checker: Checker = .{
             .allocator = allocator,
+            .field_arena = std.heap.ArenaAllocator.init(allocator),
             .src = src,
             .program = program,
             .catalog = catalog,
@@ -646,6 +704,7 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
             .scheduled = scheduled,
             .owner = function.policy.owner,
         };
+        defer checker.field_arena.deinit();
         defer checker.locals.deinit(allocator);
         defer checker.active.deinit(allocator);
         if (function.policy.conversion) return sink.fail(eUnsupported, function.name, "generic conversions still need abstract checking");

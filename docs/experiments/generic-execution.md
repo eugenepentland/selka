@@ -75,5 +75,5 @@ construction, field/index projection and imported pure helper calls.
 
 
 [Concrete result handling](generic-results.md) now adds transfer, acknowledgement,
-propagation and control-flow obligations. Partial field state and runtime-owned
-generic graphs remain pending.
+propagation and control-flow obligations. [Partial field state](generic-fields.md) now preserves remaining obligations;
+runtime-owned generic graphs remain pending.

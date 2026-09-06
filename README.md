@@ -253,6 +253,8 @@ preserve record, array and enum-table snapshots.
 now retain exact payload types and exhaustive cases.
 [Concrete generic results](docs/experiments/generic-results.md) now enforce transfers,
 acknowledgement, propagation and obligations across control-flow paths.
+[Generic partial fields](docs/experiments/generic-fields.md) now track remaining
+result obligations and reject mismatched field moves across those paths.
 
 [Lexical arenas](docs/experiments/source-arenas.md) use `arena heap as scratch { ... }`
 with conservative escape checks and cleanup across returns/errors.

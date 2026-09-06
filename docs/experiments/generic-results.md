@@ -48,8 +48,6 @@ and a located trap during acknowledgement.
 ## Remaining work
 
 This is concrete result support, not generic type constructors. Symbolic
-success/error shapes and associated constraints remain pending. `take_field` and
-`read_field` in generic bodies still need abstract partial-field state and path
-merges; their existing explicit rejection prevents this whole-value ledger from
-silently approximating partial moves. Runtime-owned graphs, resource/region
-ownership, generic codec constraints and public generic tooling remain open.
+success/error shapes and associated constraints remain pending. [Partial field moves](generic-fields.md) now preserve remaining obligations and
+field-aware path merges. Runtime-owned graphs, resource/region ownership,
+generic codec constraints and public generic tooling remain open.

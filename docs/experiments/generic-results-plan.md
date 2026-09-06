@@ -2,9 +2,10 @@
 
 Concrete whole-value result handling is now implemented; see
 [the implementation and acceptance record](generic-results.md). The requirements
-below remain the acceptance contract. Partial field moves, runtime ownership,
-generic result declarations and associated success/error constraints are still
-pending; whole-value acceptance does not establish those capabilities.
+below remain the acceptance contract. Partial field moves are now covered by
+[generic fields](generic-fields.md). Runtime ownership, generic result declarations
+and associated success/error constraints are still pending; whole-value acceptance
+does not establish those capabilities.
 
 ## Required behavior
 
@@ -46,18 +47,18 @@ paths through VM/native backends with matching source traces. Allocation sweeps
 must cover checking and execution; no baseline or suppression can stand in for
 these missing abstract rules.
 
-## Next implementation: partial field obligations
+## Partial field acceptance and remaining ownership work
 
-`take_field` and `read_field` still reject during abstract checking. Extend local
-state with partial field availability and preserve it in every snapshot/restore
-and continuing-path comparison before enabling those operations. Follow the
-ordinary checker's `pendingObligation` rules: only remaining result-bearing fields
-keep a handling obligation; whole-record access after a partial move rejects.
-Reassignment may replenish a binding only after remaining obligations are handled.
+`take_field` and `read_field` now maintain immutable partial field state through
+snapshots, restoration and continuing-path comparisons. Remaining result-bearing
+fields keep their obligations; whole-record access after a partial move rejects.
+Reassignment replenishes a binding only after remaining result obligations are
+handled. [The partial-field record](generic-fields.md) documents executable and
+allocation-failure acceptance.
 
-Acceptance must include repeated moves, reads after moves, remaining ordinary
-field reads, multiple result fields, branch/loop disagreement about which field
-moved, whole-record use after a move, replenishment, early propagation with
-remaining fields and allocation-failure cleanup. Runtime-owned field support also
-requires the separate generic ownership/region rules and must not be inferred
-from this concrete result ledger.
+Runtime-owned fields remain excluded. Enabling them requires abstract whole/field
+move state for non-result owned values, cleanup at exits and overwritten bindings,
+borrow conflicts, region lifetime checks and declared capability/effect authority.
+Use ordinary semantic checks as the contract, and test uncalled templates before
+allowing runtime-owned type graphs. Generic result constructors and associated
+success/error constraints remain pending independently of runtime ownership.

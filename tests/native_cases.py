@@ -128,6 +128,15 @@ def project_cases(compiler, zig, root, temp):
         "model.my": "module model; export R; result R{ok:i64,err:i64}",
         "helpers.my": "module helpers; import model as m; export step; export number; fn step<T:integer>(r:m::R,n:T)->m::R{return new m::R.ok((try r)+cast<i64>(n));}fn number<T:copy>(r:m::R)->i64{match r{m::R.ok(n)=>{return n;},m::R.err(n)=>{return 0-n;}}}",
     }))
+    fixtures.append(("generic-field-modules", {
+        "main.my": "module main; import data as d; import helpers as h; fn main()->i64{return h::number(h::step::<bool>(new d::Pair{left:new d::R.ok(1),right:new d::R.ok(5),code:6}))+h::number(h::step::<bool>(new d::Pair{left:new d::R.ok(1),right:new d::R.err(2),code:6}));}",
+        "data.my": "module data; export R; export Pair; result R{ok:i64,err:i64}struct Pair{left:R,right:R,code:i64}",
+        "helpers.my": "module helpers; import data as d; export step; export number; fn step<T:copy>(p:d::Pair)->d::R{acknowledge take_field(p,left);let n=try take_field(p,right);return new d::R.ok(n+read_field(p,code));}fn number(r:d::R)->i64{match r{d::R.ok(n)=>{return n;},d::R.err(n)=>{return 0-n;}}}",
+    }))
+    fixtures.append(("generic-field-trap", {
+        "main.my": "module main; import helper; fn main()->i64{return helper::run();}",
+        "helper.my": "module helper; export run; result R{ok:i64,err:i64}struct Pair{r:R,code:i64}fn work<T:copy>(p:Pair)->i64{acknowledge take_field(p,r);return 7/read_field(p,code);}fn run()->i64{return work::<bool>(new Pair{r:new R.ok(1),code:0});}",
+    }))
     fixtures.append(("generic-result-trap", {
         "main.my": "module main; import helper; fn main()->i64{return helper::work::<u8>(0u8);}",
         "helper.my": "module helper; export work; result R{ok:i64,err:i64}fn work<T:integer>(n:T)->i64{acknowledge new R.err(7/cast<i64>(n));return 0;}",
@@ -199,7 +208,7 @@ def main():
     compiler = args.compiler.resolve()
     root = Path(__file__).resolve().parents[1]
     fixtures = [(name, (root / "test" / "fixtures" / f"{name}.my").read_text()) for name in ("arithmetic", "sum", "gcd")]
-    fixtures += [(name, (root / "examples" / f"{name}.my").read_text()) for name in ("arrays", "records", "conversions", "tables", "references", "reference-parameters", "slices", "returned-references", "propagation", "buffers", "buffer-views", "allocator-capabilities", "arena-reset", "pools", "arenas", "generics", "generic-references", "generic-slices", "generic-borrows", "generic-returned-references", "generic-records", "generic-updates", "generic-variants", "generic-results")]
+    fixtures += [(name, (root / "examples" / f"{name}.my").read_text()) for name in ("arrays", "records", "conversions", "tables", "references", "reference-parameters", "slices", "returned-references", "propagation", "buffers", "buffer-views", "allocator-capabilities", "arena-reset", "pools", "arenas", "generics", "generic-references", "generic-slices", "generic-borrows", "generic-returned-references", "generic-records", "generic-updates", "generic-variants", "generic-results", "generic-fields")]
     for index in ("-1i8", "18446744073709551615u64"):
         index_type = "i8" if index.startswith("-") else "u64"
         fixtures.append(("generic-slice-bounds-" + index_type, "fn at<T:copy,I:integer>(s:&[]T,i:I)->T{return read_slice(s,i);}fn main()->i64{let values=new [1]i64 [7];borrow values[0..1] as s{return at::<i64," + index_type + ">(s," + index + ");}}"))

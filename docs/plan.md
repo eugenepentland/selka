@@ -1565,3 +1565,32 @@ and early propagation; `generic-results-plan.md` records that acceptance contrac
 Runtime ownership/regions, parameter-dependent structural types, codec
 constraints, public generic tooling, source byte serialization and all other
 pending roadmap requirements remain open.
+
+
+### Concrete generic partial field moves — 2026-09-06
+
+Generic bodies now support `read_field` on concrete records and `take_field` on
+concrete result-bearing records. Whole-value availability and immutable moved-field
+bitmaps travel together through branch/match snapshots, loop checks and
+short-circuit comparisons. Equivalent extraction orders agree; different remaining
+fields reject. Scope exit, return, overwrite and early propagation inspect
+remaining result obligations. Replacing a handled partial binding restores all
+fields, while whole-value use of an incomplete record rejects.
+
+See `docs/experiments/generic-fields.md` and `examples/generic-fields.my` (result
+17). Acceptance includes uncalled malformed templates, repeated moves, result
+copying, consumed owners, missing fields, nested records, returning/fallthrough
+arms, loop replenishment, propagation with remaining fields or temporary results,
+and allocation failures during checking, execution and native emission. All 620
+core tests pass in Debug and ReleaseFast, all 60 CLI tests pass, and 2778 VM/native
+comparisons pass across 125 fixtures. Imported schema/helper aliases and a located
+trap after extraction are included. Formatting and all 88 Guardian checks pass
+with baselines disabled; nonblocking size/line findings remain. No new full
+resource/provider/binding integration run is claimed. Uncertain ROI observations
+remain unclassified.
+
+Runtime-owned generic graphs remain excluded. The next abstraction work must
+preserve whole/field ownership transfer, implicit cleanup, borrowing, region
+lifetimes and capability/effect authority before enabling those graphs. Symbolic
+structural types, generic codec constraints, public generic tooling, source byte
+serialization and all other pending roadmap items remain open.
