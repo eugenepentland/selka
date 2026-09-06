@@ -3144,10 +3144,11 @@ calls return Busy. `scripts/native.py --library` builds a shared library while
 preserving atomic and unchanged-output publication. See
 `docs/experiments/native-embedding.md` for the public C header contract.
 
-Focused acceptance passed 22 host programs across -O0/-O2 with undefined-behavior
+Focused acceptance passed 24 host programs across -O0/-O2 with undefined-behavior
 sanitization, repeated calls, frame/step budgets, reentry/concurrent rejection,
-resource cleanup and allocation-failure recovery. Independent public-header hosts
+live-resource trap cleanup and allocation-failure recovery. Independent public-header hosts
 linked and ran Debug/ReleaseFast shared libraries and verified unchanged rebuilds.
-Full regression validation is in progress. Arbitrary exported native calls,
+All 586 ReleaseFast core tests also passed; full Debug regression validation is
+in progress. Arbitrary exported native calls,
 aggregate native arguments/results, generated native callable bindings, finer
 incremental compilation and the other pending roadmap requirements remain open.

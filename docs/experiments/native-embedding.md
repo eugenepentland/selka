@@ -59,12 +59,12 @@ contexts remain unfinished. This is a foundation for those roadmap requirements.
 
 ## Acceptance
 
-`tests/native_embedding.py`, wired into `zig build test`, compiles 11 fixtures in
+`tests/native_embedding.py`, wired into `zig build test`, compiles 12 fixtures in
 both -O0 and -O2 with undefined-behavior sanitization. It checks repeated execution,
 bounded trap frames, budget exhaustion, explicit provider validation, reentry and
 concurrent Busy rejection, allocation-failure sweeps and subsequent recovery.
 Fixtures cover generics, returned references, arenas, pools, buffers and resource
-ownership. Separate C hosts use only the public headers to link and run shared
+ownership, including a division trap with an acquired resource still live. Separate C hosts use only the public headers to link and run shared
 libraries in Debug and ReleaseFast; rebuilding identical inputs preserves output
 identity. All of these focused checks passed. Full regression results are recorded
 in the roadmap's milestone entry when validation completes.

@@ -117,6 +117,7 @@ def main():
     root = Path(__file__).resolve().parents[1]
     fixtures = [
         ('recursive', 'fn depth(n:i64)->i64{if n==0{return 7;}return depth(n-1);}fn main()->i64{return depth(20);}', 0, 7, 0),
+        ('resource-trap', 'resource File:filesystem;result Open{ok:File,err:i64}fn divide(n:i64)->i64{return 1/n;}fn main(fs:filesystem_cap)->i64{match acquire_resource<Open>(fs,new [0]u8 []){Open.ok(f)=>{let value=divide(0);discard f;return value;},Open.err(e)=>{return e;}}}', 1, 0, 2),
         ('resource', 'resource File:filesystem;result Open{ok:File,err:i64}fn main(fs:filesystem_cap)->i64{match acquire_resource<Open>(fs,new [0]u8 []){Open.ok(f)=>{discard f;return 7;},Open.err(e)=>{return e;}}}', 0, 7, 2),
         ('scalar', 'fn main()->i64{return 7;}', 0, 7, 0),
         ('trap', 'fn divide(x:i64)->i64{return 1/x;}fn main()->i64{return divide(0);}', 1, 0, 1),
