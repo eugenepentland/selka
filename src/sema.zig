@@ -1,13 +1,13 @@
 //! Scope and type checking use resolved binding identities, including advisory use counts.
 const eResultOperation = "E_RESULT_OPERATION";
 const eOwnedConsumed = "E_OWNED_CONSUMED";
-const eReferenceResult = "E_REFERENCE_RESULT";
+const eReferenceResult = diagnostic.reference_result;
 const eResultPath = "E_RESULT_PATH";
-const eReturnLifetime = "E_RETURN_LIFETIME";
+const eReturnLifetime = diagnostic.return_lifetime;
 const eShadowing = diagnostic.shadowing;
 const eConversionBody = "E_CONVERSION_BODY";
 const eResourceResult = "E_RESOURCE_RESULT";
-const eReferenceReadOnly = "E_REFERENCE_READ_ONLY";
+const eReferenceReadOnly = diagnostic.reference_read_only;
 const eBufferResult = "E_BUFFER_RESULT";
 const eResultBorrow = "E_RESULT_BORROW";
 const eResourceIoResult = "E_RESOURCE_IO_RESULT";
@@ -160,16 +160,17 @@ const Checker = struct {
         }
         return refs.toOwnedSlice(self.allocator);
     }
-    fn returnContract(self: *Checker, function: ast.Function) Error!?typed.ReturnReference {
+    fn returnContract(self: *Checker, id: typed.FunctionId) Error!?typed.ReturnReference {
+        const function = self.syntaxFunction(id);
         const contract = function.signature.return_reference orelse return null;
         for (function.signature.parameters, 0..) |parameter, index| {
             if (!std.mem.eql(u8, self.src.text(parameter.name), self.src.text(contract.source))) continue;
             const mutable = parameter.reference orelse return self.sink.fail(eReturnLifetime, contract.source, "reference result must borrow from a reference parameter");
             if (contract.mutable and !mutable) return self.sink.fail(eReferenceReadOnly, contract.source, "shared parameter cannot supply an exclusive result");
-            const input_type = try self.ty(parameter.ty);
+            const input_type = try self.functionType(id, parameter.ty);
             const expected = if (contract.slice and !parameter.slice) try self.sliceElement(input_type, contract.source) else input_type;
             if (parameter.slice and !contract.slice) return self.sink.fail("E_REFERENCE_KIND", function.signature.return_type, "a slice parameter cannot supply a whole-value reference result");
-            try self.require(try self.ty(function.signature.return_type), expected, function.signature.return_type);
+            try self.require(try self.functionType(id, function.signature.return_type), expected, function.signature.return_type);
             return .{ .parameter = @fromBackingInt(index), .mutable = contract.mutable, .slice = contract.slice };
         }
         return self.sink.fail(eReturnLifetime, contract.source, "result lifetime names no parameter");
@@ -1075,8 +1076,7 @@ const Checker = struct {
         if (self.active.contains(name) or self.active_refs.contains(name) or try self.topLevel(borrow.name)) return self.sink.fail(eShadowing, borrow.name, "reference shadows an active binding or top-level name");
         const call = try self.expressionMode(borrow.call, true);
         const checked_call = self.nodes.items[@backingInt(call)].data.call;
-        const signature = self.syntaxFunction(checked_call.function);
-        const contract = (try self.returnContract(signature)) orelse return self.sink.fail(eReferenceResult, call_node.span, "borrow result requires a reference-returning function");
+        const contract = (try self.returnContract(checked_call.function)) orelse return self.sink.fail(eReferenceResult, call_node.span, "borrow result requires a reference-returning function");
         if (borrow.mutable and !contract.mutable) return self.sink.fail(eReferenceReadOnly, borrow.name, "shared function result cannot be borrowed exclusively");
         const argument = self.syntax.nodes.items[@backingInt(call_node.data.call.arguments[@backingInt(contract.parameter)])];
         const parent = try self.reference(argument.data.name);
@@ -1411,7 +1411,7 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
         checker.active.clearRetainingCapacity();
         checker.owner = if (function.policy.owner) |owner| try checker.ty(owner) else null;
         checker.return_type = try checker.ty(function.signature.return_type);
-        checker.return_reference = try checker.returnContract(function);
+        checker.return_reference = try checker.returnContract(@fromBackingInt(i));
         try checker.bindParameters(function);
         checker.conversion_fields = null;
         if (function.policy.conversion) {

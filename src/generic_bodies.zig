@@ -12,6 +12,7 @@ const eUnsupported = "E_GENERIC_BODY_UNSUPPORTED";
 const Symbolic = union(enum) { builtin: typed.Type, parameter: usize };
 const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
 const FunctionMap = std.StringHashMapUnmanaged(usize);
+const Return = struct { parameter: usize, mutable: bool, slice: bool };
 const Local = struct { name: source.Span, ty: Symbolic, mutable: bool, reference: ?bool = null, slice: bool = false, root: ?usize = null, children: usize = 0, shared: usize = 0, exclusive: usize = 0 };
 const Checker = struct {
     allocator: std.mem.Allocator,
@@ -20,6 +21,7 @@ const Checker = struct {
     sink: *diagnostic.Sink,
     parameters: []const requirements.Parameter,
     result: Symbolic,
+    return_reference: ?Return = null,
     functions: *const FunctionMap,
     pending: *std.ArrayList(usize),
     scheduled: []bool,
@@ -66,7 +68,7 @@ const Checker = struct {
         const exclusive = value.reference orelse return self.sink.fail("E_REFERENCE_SCOPE", span, "operation requires an active reference");
         if (exclusive and value.children != 0) return self.sink.fail("E_BORROW_SUSPENDED", span, "exclusive reference is suspended while a child borrow is active");
         if (value.slice != slice) return self.sink.fail("E_REFERENCE_KIND", span, "whole-value references and slices are distinct");
-        if (mutable and !exclusive) return self.sink.fail("E_REFERENCE_READ_ONLY", span, "write or exclusive forwarding requires an exclusive reference");
+        if (mutable and !exclusive) return self.sink.fail(diagnostic.reference_read_only, span, "write or exclusive forwarding requires an exclusive reference");
         return value;
     }
     fn namedValue(self: *Checker, span: source.Span) Error!Symbolic {
@@ -98,21 +100,56 @@ const Checker = struct {
         }
         if (borrow.range != null and !binding.slice) return self.sink.fail(eUnsupported, borrow.owner, "generic range borrowing requires a known slice input");
         try self.supports(binding.ty, .copy, borrow.owner);
-        const root = binding.root orelse owner_index;
+        return self.loanScope(.{ .name = borrow.name, .ty = binding.ty, .mutable = false, .reference = borrow.mutable, .slice = binding.slice, .root = binding.root orelse owner_index }, parent, borrow.body);
+    }
+    fn loanScope(self: *Checker, child: Local, parent: ?usize, body: ast.StatementId) Error!bool {
+        const root = child.root.?;
+        const mutable = child.reference.?;
         const before = self.locals.items.len;
-        try self.bind(borrow.name, binding.ty, false);
+        try self.bind(child.name, child.ty, false);
         defer self.endScope(before);
-        const child = &self.locals.items[before];
-        child.reference = borrow.mutable;
-        child.slice = binding.slice;
-        child.root = root;
-        if (borrow.mutable) self.locals.items[root].exclusive += 1 else self.locals.items[root].shared += 1;
+        self.locals.items[before] = child;
+        if (mutable) self.locals.items[root].exclusive += 1 else self.locals.items[root].shared += 1;
         if (parent) |id| self.locals.items[id].children += 1;
         defer {
-            if (borrow.mutable) self.locals.items[root].exclusive -= 1 else self.locals.items[root].shared -= 1;
+            if (mutable) self.locals.items[root].exclusive -= 1 else self.locals.items[root].shared -= 1;
             if (parent) |id| self.locals.items[id].children -= 1;
         }
-        return self.statement(borrow.body);
+        return self.statement(body);
+    }
+    fn provenance(self: *Checker, function: ast.Function) Error!?Return {
+        const contract = function.signature.return_reference orelse return null;
+        for (function.signature.parameters, 0..) |parameter, index| {
+            if (!std.mem.eql(u8, self.src.text(parameter.name), self.src.text(contract.source))) continue;
+            const mutable = parameter.reference orelse return self.sink.fail(diagnostic.return_lifetime, contract.source, "reference result requires a reference input");
+            if (contract.mutable and !mutable) return self.sink.fail(diagnostic.reference_read_only, contract.source, "shared input cannot supply an exclusive result");
+            if (parameter.slice and !contract.slice) return self.sink.fail("E_REFERENCE_KIND", contract.source, "slice input cannot supply a whole-value reference result");
+            if (contract.slice != parameter.slice) return self.sink.fail(eUnsupported, contract.source, "generic reference results must preserve the input reference kind");
+            return .{ .parameter = index, .mutable = contract.mutable, .slice = contract.slice };
+        }
+        return self.sink.fail(diagnostic.return_lifetime, contract.source, "result lifetime names no input parameter");
+    }
+    fn borrowCall(self: *Checker, borrow: @FieldType(@FieldType(ast.Statement, "data"), "borrow_call")) Error!bool {
+        const node = self.program.nodes.items[@backingInt(borrow.call)];
+        if (node.data != .call) return self.sink.fail(diagnostic.reference_result, node.span, "borrow result requires a direct call");
+        try self.enter(node.span);
+        defer self.depth -= 1;
+        const result = try self.call(node.data.call, node.span, true);
+        const function = try self.callTarget(node.data.call);
+        const contract = (try self.provenance(function)) orelse return self.sink.fail(diagnostic.reference_result, node.span, "borrow result requires a reference-returning function");
+        if (borrow.mutable and !contract.mutable) return self.sink.fail(diagnostic.reference_read_only, borrow.name, "shared result cannot be borrowed exclusively");
+        const argument = self.program.nodes.items[@backingInt(node.data.call.arguments[contract.parameter])].data.name;
+        const parent = self.active.get(self.src.text(argument)).?;
+        return self.loanScope(.{ .name = borrow.name, .ty = result, .mutable = false, .reference = borrow.mutable, .slice = contract.slice, .root = self.locals.items[parent].root }, parent, borrow.body);
+    }
+    fn returnValue(self: *Checker, value: ast.NodeId, span: source.Span) Error!void {
+        if (self.return_reference) |contract| {
+            const node = self.program.nodes.items[@backingInt(value)];
+            if (node.data != .name) return self.sink.fail(diagnostic.reference_result, node.span, "reference return requires an active reference name");
+            const ref = try self.reference(node.data.name, contract.mutable, contract.slice);
+            if (ref.root != contract.parameter) return self.sink.fail(diagnostic.return_lifetime, node.span, "returned reference does not originate from the declared input");
+            try self.same(ref.ty, self.result, span);
+        } else try self.same(try self.expression(value), self.result, span);
     }
     fn topLevel(self: *Checker, span: source.Span) Error!bool {
         if (self.module_names) |names| return names.topLevel(span);
@@ -155,10 +192,11 @@ const Checker = struct {
         if (typed.Type.fromName(text)) |builtin| return .{ .builtin = builtin };
         return self.sink.fail(eUnsupported, span, "generic call signature still needs nominal/composite substitution");
     }
-    fn call(self: *Checker, invocation: Call, span: source.Span) Error!Symbolic {
+    fn call(self: *Checker, invocation: Call, span: source.Span, allow_reference: bool) Error!Symbolic {
         const function = try self.callTarget(invocation);
         const signature = function.signature;
-        if (signature.return_reference != null or function.policy.conversion) return self.sink.fail(eUnsupported, span, "generic reference-result and conversion calls still need abstract checking");
+        if (function.policy.conversion) return self.sink.fail(eUnsupported, span, "generic conversions still need abstract checking");
+        if (signature.return_reference != null and !allow_reference) return self.sink.fail(diagnostic.reference_result, span, "reference-returning calls require a borrow scope");
         if (invocation.type_arguments.len != signature.type_parameters.len) return self.sink.fail("E_GENERIC_ARITY", span, "explicit type argument count does not match generic parameters");
         if (invocation.arguments.len != signature.parameters.len) return self.sink.fail("E_ARITY", span, "argument count does not match function parameters");
         const required = try requirements.resolve(self.allocator, self.src, signature.type_parameters, self.sink);
@@ -217,7 +255,7 @@ const Checker = struct {
                 try self.supports(ref.ty, .copy, name);
                 break :result ref.ty;
             },
-            .call => |invocation| try self.call(invocation, node.span),
+            .call => |invocation| try self.call(invocation, node.span, false),
             .boolean => .{ .builtin = .bool },
             .integer => |span| .{ .builtin = (try @import("integer_literal.zig").parse(self.src, span, false, self.sink)).ty },
             .unary => |unary| result: {
@@ -271,8 +309,9 @@ const Checker = struct {
         switch (statement_value.data) {
             .block => |statements| return self.block(statements),
             .borrow => |borrow| return self.borrowScope(borrow),
+            .borrow_call => |borrow| return self.borrowCall(borrow),
             .ret => |value| {
-                try self.same(try self.expression(value), self.result, statement_value.span);
+                try self.returnValue(value, statement_value.span);
                 return true;
             },
             .binding => |binding| {
@@ -363,7 +402,7 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
         };
         defer checker.locals.deinit(allocator);
         defer checker.active.deinit(allocator);
-        if (function.signature.return_reference != null or function.policy.conversion) return sink.fail(eUnsupported, function.name, "generic reference results and conversions still need abstract checking");
+        if (function.policy.conversion) return sink.fail(eUnsupported, function.name, "generic conversions still need abstract checking");
         for (parameters) |parameter| if (try checker.topLevel(parameter.name)) return sink.fail(eShadowing, parameter.name, "type parameter shadows a top-level declaration or import");
         checker.result = try checker.ty(function.signature.return_type);
         for (function.signature.parameters) |parameter| {
@@ -372,6 +411,8 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
             checker.locals.items[checker.locals.items.len - 1].slice = parameter.slice;
             if (parameter.reference != null) checker.locals.items[checker.locals.items.len - 1].root = checker.locals.items.len - 1;
         }
+        checker.return_reference = try checker.provenance(function);
+        if (checker.return_reference) |contract| try checker.same(checker.locals.items[contract.parameter].ty, checker.result, function.signature.return_type);
         if (!try checker.statement(function.body)) return sink.fail("E_MISSING_RETURN", function.name, "template may fall through without returning its declared type");
     }
 }

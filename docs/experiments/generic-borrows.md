@@ -22,8 +22,7 @@ templates and branches that a particular execution may never take.
 
 Scope exit restores counts and removes the reference name, including during
 checking failures and returns. Returning a copied value through a borrow is
-supported; returning a reference still requires the separate, unfinished generic
-provenance contract. Immutable copied values keep their ordinary snapshot semantics.
+supported; returning a reference now uses the [generic provenance contract](generic-returned-references.md). Immutable copied values keep their ordinary snapshot semantics.
 
 ## Slice narrowing and boundaries
 
@@ -37,8 +36,7 @@ operation universally.
 Tests cover recursive shared/exclusive narrowing, parent and owner restoration,
 shared siblings, owner conflicts, suspended parent access, scope escape,
 permission escalation, invalid range types, shadowing, bounds traps, allocation
-failures and imported helpers. Generic returned-reference contracts, broader
-abstract type/effect/ownership operations, and other roadmap tracks remain open.
+failures and imported helpers. Broader abstract type/effect/ownership operations, and other roadmap tracks remain open.
 
 Validation: all 582 core tests passed in Debug and ReleaseFast, all 60 CLI tests
 passed, and native parity passed 2676 comparisons across 92 single-file and 16

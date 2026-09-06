@@ -35,7 +35,8 @@ wrapper without becoming an internal schema root. Native fixtures exercise slice
 mutation and bounds traps in both C optimization modes.
 
 [Lexical borrowing and narrowing](generic-borrows.md) now have acceptance.
-Reference/slice results and provenance, general move-only requirements, and broader abstract effect/ownership
+[Reference/slice results and provenance](generic-returned-references.md) are
+supported too. General move-only requirements and broader abstract effect/ownership
 rules remain unfinished. This extension handles slice inputs and operations;
 it does not establish completion of the generic or wider language roadmap.
 

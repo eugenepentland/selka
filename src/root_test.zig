@@ -1,5 +1,6 @@
 //! Unit test entry point, separate from the production compiler module.
 test {
+    _ = @import("generic_returned_references_test.zig");
     _ = @import("generic_borrows_test.zig");
     _ = @import("generic_slices_test.zig");
     _ = @import("generic_references_test.zig");

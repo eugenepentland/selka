@@ -534,3 +534,24 @@ module fixtures with -O0/-O2 and undefined-behavior sanitization. Guardian passe
 all 88 checks with baselines disabled. Allocation-failure tests cover recursive
 borrows and imported narrowing helpers. These results do not establish generic
 reference-result provenance or completion of the broader roadmap.
+
+
+### Generic reference-result provenance — 2026-09-06
+
+Generic whole-reference and slice results now validate explicit input provenance,
+kind, permission and symbolic type before specialization. Borrow-call scopes and
+forwarding preserve roots and parent suspension, including results borrowed from
+later parameters. Concrete return contracts resolve types in the callee instance.
+Imported result helpers execute through ordinary wrappers with internal instances
+excluded from public schema roots. Abstract whole-value-to-slice shape, broader
+nominal/composite operations, move-only/external-effect contracts, direct generic
+public invocation, and other roadmap requirements remain unfinished. See
+`docs/experiments/generic-returned-references.md` for scope and acceptance.
+
+Validation: all 584 core tests passed in Debug and ReleaseFast, all 60 CLI tests
+passed, and native parity passed 2682 comparisons across 93 single-file and 16
+module fixtures with -O0/-O2 and undefined-behavior sanitization. Guardian passed
+all 88 checks with baselines disabled. Allocation-failure coverage includes
+forwarded references, later-input provenance and imported result helpers/schema
+rendering. These results validate the supported reference contracts, not the
+remaining generic operations or broader roadmap requirements.

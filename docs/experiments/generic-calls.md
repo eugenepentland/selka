@@ -46,8 +46,9 @@ worklist checks every transitively reachable helper body once, including recursi
 cycles, before accepting the abstract graph. Its queue is bounded by the number
 of declarations; calls cannot recursively expand checking. Uncalled ordinary
 functions remain outside this pass. [Shared/exclusive reference inputs](generic-references.md)
-and [slice inputs](generic-slices.md) are now supported. Reference results,
-conversions, and nominal/composite type substitution remain unsupported here.
+and [slice inputs](generic-slices.md) are now supported, as are
+[reference results](generic-returned-references.md).
+Conversions and nominal/composite type substitution remain unsupported here.
 Effectful operations in a called template are still rejected by that template's
 body check. Acceptance of a call does not bypass checking its callee or establish
 permission to call an unchecked foreign function. Hidden effects in concrete

@@ -1,6 +1,12 @@
 //! Stable diagnostics are data; only the CLI chooses an output destination.
 /// Shared code for forbidden source binding/type-variable shadowing.
 pub const shadowing = "E_SHADOWING";
+/// Shared code for misuse of a reference-returning function or reference result.
+pub const reference_result = "E_REFERENCE_RESULT";
+/// Shared code for attempts to strengthen shared reference permissions.
+pub const reference_read_only = "E_REFERENCE_READ_ONLY";
+/// Shared code for mismatched or invalid declared reference provenance.
+pub const return_lifetime = "E_RETURN_LIFETIME";
 const std = @import("std");
 const source = @import("source.zig");
 
