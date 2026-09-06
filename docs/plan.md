@@ -888,3 +888,15 @@ order and verifies the correction at O0/O2 with sanitizers. Debug and ReleaseFas
 pass all 30 build steps and 593 core/CLI tests; native memory acceptance now covers
 484 injected allocation failures. Native filesystem/network provider integration
 and all other unfinished roadmap requirements remain open.
+
+## Native filesystem/network lifecycle
+
+Native resource acquisition, retryable completion, permission intersection, nominal
+owners, and failure cleanup are implemented through explicit provider ABI v3.
+Debug and ReleaseFast pass all 31 build steps and 594 core/CLI tests. The new
+driver checks 32 native outcomes (28 with exact VM callback trace comparisons)
+and 120 injected lifecycle allocation failures under sanitizers.
+
+Resource byte I/O, broader permission/quota/generation and mixed-store acceptance,
+and the other unfinished roadmap requirements remain pending. This completes
+the initial native lifecycle implementation, not full native resource support.

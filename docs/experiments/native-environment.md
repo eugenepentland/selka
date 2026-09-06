@@ -20,11 +20,11 @@ ignored. The host callback is trusted to stay within its borrowed output buffer.
 Returned ordinary values own independent copies, so later lookups cannot alter
 prior snapshots. Temporary bytes and partial values join native failure cleanup.
 
-The factory symbol is now mylang_native_providers_v2. Adapters should include the
+The current factory symbol is mylang_native_providers_v3. Adapters should include the
 current native_providers.h and implement its generic mylang_native_providers name.
 The builder compiles the adapter source with that header; a stale v1 factory cannot
-silently link against v2 emission. Clock/random adapters remain supported when
-rebuilt against v2, with absent environment fields granting no environment access.
+silently link against v3 emission. Clock/random adapters remain supported when
+rebuilt against v3, with absent environment fields granting no environment access.
 
 Acceptance passes 38 VM-checked value/error/call-count comparisons and
 56 injected allocation failures at C O0/O2 with address/undefined sanitizers and
@@ -37,4 +37,5 @@ VM oracle tests execute separately. Existing native acceptance also passes: 2,61
 value/module comparisons, 468 general allocation failures, and 32 clock/random
 comparisons with 14 allocation failures.
 
-Native filesystem/network resource operations and the wider roadmap remain open.
+[Native resource lifecycle](native-resources.md) extends provider ABI v3. Resource
+byte I/O and the wider roadmap remain open.

@@ -383,7 +383,9 @@ snapshots, operations, and shared quotas on root/arena storage.
 C adapters selected with the native builder’s `--provider` option.
 [Native environment lookup](docs/experiments/native-environment.md) extends that
 interface with bounded bytes, missing/empty distinctions, and independent snapshots.
-Native filesystem/network resources remain pending.
+[Native resource lifecycle providers](docs/experiments/native-resources.md) add
+filesystem/network acquisition, retryable completion, and ownership cleanup.
+Native resource byte I/O remains pending.
 
 The [ordinary application corpus](examples/corpus/README.md) adds a multi-module
 invoice calculator and packet decoder, tested against independent Python oracles.

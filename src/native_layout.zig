@@ -41,7 +41,7 @@ pub const Layout = struct {
             if (record.shape.domain) |backing| {
                 widths[index] = self.width(backing);
                 supported[index] = self.supports(backing);
-            } else if (record.shape.handle_pool != null) {
+            } else if (record.shape.handle_pool != null or record.shape.resource != null) {
                 supported[index] = true;
             } else if (record.shape.pool) |pool| {
                 if (unvisitedChild(pool.element, states)) |child_index| {
@@ -94,6 +94,7 @@ pub const Layout = struct {
     /// Check whether the native backend can represent the supplied type.
     pub fn supports(self: Layout, ty: typed.Type) bool {
         if (ty.isInteger() or ty == .bool or ty == .allocator) return true;
+        if (ty == .filesystem_cap or ty == .network_cap) return true;
         if (ty == .clock_cap or ty == .random_cap or ty == .environment_cap) return true;
         return ty.isAggregate() and self.supported[ty.recordIndex()];
     }

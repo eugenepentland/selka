@@ -49,6 +49,9 @@ struct Aggregate {
     Aggregate *previous, *next, *pending;
     Aggregate *unwind_next;
     size_t unwind_refs;
+    unsigned resource_kind;
+    size_t resource_index;
+    uint64_t resource_generation;
     Slot fields[];
 };
 typedef struct { Slot value; size_t shared; int exclusive; } Local;
@@ -78,10 +81,14 @@ static const char *const *source_paths;
 static const char *const *function_names;
 static const size_t *source_lines, *source_columns;
 static void release_value(Slot value);
+static void release_resource(Aggregate *object);
+static void release_pending_resource(void);
+static void cleanup_resources(void);
 /* References not held by an aggregate, operand, or local belong to in-flight
    C temporaries. Registry order records their most recent acquisition, rather
    than only object allocation order. No cleanup bookkeeping allocates. */
 static void cleanup(void) {
+    release_pending_resource();
     for (Aggregate *object = objects; object; object = object->next)
         object->unwind_refs = object->refs;
     for (Aggregate *object = objects; object; object = object->next)
@@ -111,6 +118,7 @@ static void cleanup(void) {
             release_value(frame->locals[--i].value);
         free(frame->references); free(frame->locals);
     }
+    cleanup_resources();
     for (size_t i = 0; i < 256; ++i) clear_region_chunks(&regions[i]);
     free(frames); free(values);
     frames = NULL; values = NULL; cf = 0; cv = 0;
@@ -174,6 +182,7 @@ static void release_value(Slot value) {
         if (object->previous) object->previous->next = object->next;
         else objects = object->next;
         if (object->next) object->next->previous = object->previous;
+        if (object->resource_kind) release_resource(object);
         if (object->buffer) guest_capacity -= object->capacity;
         if (object->pool) { --pool_owners; pool_slots -= object->capacity; if (!object->region) free(object->pool); }
         if (object->region) --object->region->users; else free(object);
@@ -221,7 +230,7 @@ static Aggregate *new_object_in(size_t count, size_t tag, Region *region) {
 }
 static Aggregate *new_object(size_t count, size_t tag) { return new_object_in(count, tag, NULL); }
 static Slot clone_value(Slot value) {
-    if (!value.object || value.object->buffer || value.object->pool) host_failure("InternalError");
+    if (!value.object || value.object->buffer || value.object->pool || value.object->resource_kind) host_failure("InternalError");
     Aggregate *object = new_object(value.object->count, value.object->tag);
     for (size_t i = 0; i < object->count; ++i) object->fields[i] = copy_value(value.object->fields[i]);
     return (Slot){0, object};

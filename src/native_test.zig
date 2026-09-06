@@ -20,10 +20,9 @@ test "native scalar emission is deterministic and cleans every failed allocation
     try t.checkAllAllocationFailures(no_resize.allocator(), scenario, .{});
 }
 // spec: PROJ-6
-test "native emission rejects unsupported operations and uncalled unsupported signatures" {
+test "native emission rejects unsupported operations in uncalled functions" {
     for ([_][]const u8{
-        "fn unsupported(fs: filesystem_cap) -> i64 { return 0; } fn main() -> i64 { return 7; }",
-        "fn main(fs:filesystem_cap)->i64{return 0;}",
+        "resource File:filesystem;result W{ok:u64,err:i64}fn unused(f:File)->i64{let mut file=f;acknowledge write_resource<W>(file,new [0]u8[]);return 0;}fn main()->i64{return 7;}",
     }) |text| {
         var c = try language.Compilation.init(t.allocator, "native.my", text);
         defer c.deinit();
@@ -85,15 +84,15 @@ test "native enum support retains exhaustive nominal checks and rejects unsuppor
         try t.expect(!std.mem.eql(u8, c.diagnostics.items[0].code, "E_NATIVE_FEATURE"));
     }
 }
-test "native backend rejects unsupported owned payloads" {
+test "native backend supports owned resource payloads" {
     for ([_][]const u8{
         "resource B:filesystem; union U{value:B} fn unsupported(x:U)->i64{discard x;return 0;} fn main()->i64{return 0;}",
         "resource B:filesystem; struct R{value:B} fn unsupported(x:R)->i64{discard x;return 0;} fn main()->i64{return 0;}",
     }) |text| {
         var c = try language.Compilation.init(t.allocator, "unsupported.my", text);
         defer c.deinit();
-        try t.expectError(error.SourceError, c.emitC(t.allocator));
-        try t.expectEqualStrings("E_NATIVE_FEATURE", c.diagnostics.items[0].code);
+        const generated = try c.emitC(t.allocator);
+        defer t.allocator.free(generated);
     }
 }
 
@@ -264,4 +263,18 @@ test "native environment emission preserves named fields and allocation cleanup"
     try environmentScenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), environmentScenario, .{});
+}
+
+fn resourceScenario(allocator: std.mem.Allocator) !void {
+    var c = try language.Compilation.init(allocator, "resources.my", "resource File:filesystem;result A{ok:File,err:i64}struct E{resource:File,code:i64}result F{err:E,ok:bool}" ++
+        "fn main(fs:filesystem_cap)->i64{match acquire_resource<A>(fs,new [0]u8[]){A.ok(f)=>{acknowledge complete_resource<F>(f);return 7;},A.err(e)=>{return e;}}}");
+    defer c.deinit();
+    const generated = try c.emitC(allocator);
+    defer allocator.free(generated);
+}
+// spec: NATIVE-RESOURCE-1
+test "native resource lifecycle emission cleans failed compiler allocations" {
+    try resourceScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), resourceScenario, .{});
 }

@@ -1,9 +1,11 @@
 # Native resource implementation and acceptance
 
-Filesystem/network resource emission remains pending. The source and VM contracts
+Filesystem/network acquisition, completion, permission attenuation, and ownership
+cleanup are implemented with provider ABI v3; full regression acceptance passes.
+Byte I/O and additional stress acceptance remain pending. The source and VM contracts
 in [source resources](source-resources.md), [resource I/O](resource-io.md),
 [attenuation](attenuation.md), and [slice I/O](resource-slices.md) define the target.
-Native support must cover those operations rather than only acquisition.
+Full native support must also cover array and slice I/O.
 
 ## Cleanup foundation
 
@@ -90,3 +92,51 @@ permission masks, and reverse acquisition links. A fixed slot array would confla
 the live quota with retained retired entries. Successful completion must invalidate
 the entry before any result allocation; failed completion must retain ownership.
 These are implementation requirements, not claims of existing native support.
+
+## Lifecycle provider implementation
+
+Provider ABI v3 adds filesystem/network contexts, explicit initial permission masks
+(read=1, write=2, complete=4), and acquire/complete/release callbacks. The builder
+links adapters through the existing `--provider` option; the versioned factory is
+now `mylang_native_providers_v3`. Include the current header and implement its
+generic `mylang_native_providers` macro name. Callbacks are synchronous and must
+not reenter the generated program. No ambient filesystem/network adapter is chosen.
+
+Entry grants check all mandatory callbacks before guest execution. Permission
+restriction intersects masks, and completion checks the acquired mask before
+calling the provider. Missing grants fail before even a skipped operation. Each
+family has a growable generation-checked registry, a 1024-live-owner default quota,
+and a reverse acquisition chain. Retired generation slots are not reused.
+
+Successful acquisition records a pending handle until guest-owner allocation
+finishes; OOM there releases it before older roots. Successful completion consumes
+the handle before result allocation. Recoverable completion failure returns the
+owner and code in the declared field order, allowing retry. Other exits only
+release; they never implicitly complete. Nominal wrappers and partial moves use
+the existing ownership graph.
+
+Focused acceptance passes 32 native status/ownership cases at O0/O2: 28 compare
+exact callback traces with VM execution and four check malformed C-provider
+statuses unavailable in the VM callback type. All 120 injected native allocation
+failures clean live handles and storage, including pending acquisition, retries,
+successful completion followed by allocation failure, and reordered fields.
+The separate VM oracle and all 23 focused native Zig tests pass. Complete Debug
+and ReleaseFast runs pass all 31 build steps and 594 core/CLI tests (534 core,
+60 CLI), with all 88 Guardian checks passing. Byte I/O, source attenuation acceptance,
+quota/reuse/generation stress, mixed-store traces, and broader resource corpus
+acceptance remain open.
+
+## Byte I/O contract still to implement
+
+Fixed-array reads return a fresh byte array with a zeroed tail. Slice reads stage
+provider output and commit only the reported prefix, preserving the original
+slice tail and bytes outside the view. Failed reads must leave guest storage
+unchanged. Prepare any ordinary-array replacement before invoking the provider,
+as `byte_slices.Prepared.init` does; buffer slices retain their backing owner.
+
+Read/write keep owners live on both success and failure. Check permission before
+callback availability, accept partial counts within the supplied bound, and reject
+invalid counts/EOF flags as host failures. Slice result records and fixed-array
+result records have different shapes; write results can use the existing packed
+status-result emitter. Callback traces must cover the allocation boundary before
+provider invocation and the result allocations after a successful slice commit.

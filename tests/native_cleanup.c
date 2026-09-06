@@ -19,6 +19,7 @@ static void observe_free(void *pointer) {
 #include "../src/native_providers.h"
 #define MYLANG_GUEST_VALUE_BYTES 48
 #include "../src/native_runtime.c"
+#include "../src/native_resources.c"
 
 static Slot leaf(unsigned id) {
     Aggregate *object = new_object(0, 0);

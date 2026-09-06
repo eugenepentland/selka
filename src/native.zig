@@ -111,6 +111,7 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     try w.print("#define MYLANG_GUEST_VALUE_BYTES {d}\n", .{@sizeOf(typed.Value)});
     try w.writeAll(@embedFile("native_providers.h"));
     try w.writeAll(@embedFile("native_runtime.c"));
+    try w.writeAll(@embedFile("native_resources.c"));
     try w.writeAll("\nstatic const char *const names[] = {\n");
     for (program.functions) |function| {
         try string(w, function.name);
@@ -126,7 +127,7 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
         try w.writeAll(",\n");
     };
     try w.writeAll("};\nint main(int argc, char **argv) {\nsource_paths = paths; function_names = names; source_lines = lines; source_columns = columns;\n" ++
-        "options(argc, argv); providers = mylang_native_providers(); size_t return_target = 0;\n");
+        "options(argc, argv); providers = mylang_native_providers(); validate_resource_providers(); size_t return_target = 0;\n");
     const main_index = @backingInt(program.main);
     for (program.functions[main_index].scope.locals[0..program.functions[main_index].signature.parameter_count]) |parameter| {
         switch (parameter.ty) {
@@ -134,6 +135,8 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
             .clock_cap => try w.writeAll("grant_external(0);\n"),
             .random_cap => try w.writeAll("grant_external(1);\n"),
             .environment_cap => try w.writeAll("grant_external(2);\n"),
+            .filesystem_cap => try w.writeAll("grant_resource(0);\n"),
+            .network_cap => try w.writeAll("grant_resource(1);\n"),
             else => return sink.fail(unsupported_feature, parameter.declaration, "native entry capability is unsupported"),
         }
     }
@@ -207,6 +210,9 @@ fn checkFunction(layout: native_layout.Layout, function: bc.Function, sink: *dia
         .load_local,
         .acquire_buffer,
         .acquire_pool,
+        .acquire_resource,
+        .complete_resource,
+        .restrict_resource,
         .external_read,
         .environment_get,
         .pool_operation,
@@ -347,6 +353,16 @@ fn writeOperation(context: InstructionOutput) !bool {
             try statusResult(w, layout, operation.output);
         },
         .cmp_handle => |operation| try w.print("compare_handle({d});\n", .{@intFromBool(operation.predicate == .ne)}),
+        .acquire_resource => |operation| {
+            const shape = typed.resultShape(operation.output, program.records).?;
+            const kind = typed.resourceKind(shape.ok_type, program.records).?;
+            try w.print("push_value(acquire_resource({d}, {d}, {d}));\n", .{ @intFromBool(kind == .network), shape.ok_tag, shape.error_tag });
+        },
+        .complete_resource => |ty| {
+            const shape = typed.completionShape(ty, program.records).?;
+            try w.print("push_value(complete_resource({d}, {d}, {d}, {d}));\n", .{ shape.result.ok_tag, shape.result.error_tag, shape.resource_field, shape.code_field });
+        },
+        .restrict_resource => |operation| try w.print("restrict_resource({d});\n", .{operation.permissions}),
         .acquire_pool => |ty| {
             const shape = typed.resultShape(ty, program.records).?;
             try w.print("push_value(acquire_pool({d}, {d}));\n", .{ shape.ok_tag, shape.error_tag });

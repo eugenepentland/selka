@@ -284,3 +284,8 @@ ordering correction, counted emergency ownership unwind, and an executable
 destruction-order harness. Full Debug/ReleaseFast unwind acceptance passes; native
 filesystem/network operations remain pending. Propagation now boxes outgoing
 errors before clearing operands; full Debug/ReleaseFast regression acceptance passes.
+
+Native resource lifecycle providers now implement acquisition, completion, reduced
+permissions, and failure cleanup through ABI v3. Focused VM trace comparisons and
+allocation-failure checks and full Debug/ReleaseFast regression acceptance pass. Native
+resource byte I/O and broader stress acceptance remain pending.

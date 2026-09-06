@@ -2801,3 +2801,30 @@ Native filesystem/network operations remain pending. Their implementation record
 now identifies the pending-host-handle cleanup needed between successful provider
 acquisition and guest-owner allocation, alongside store and completion requirements.
 The full roadmap remains open.
+
+## 2026-09-06: Native resource lifecycle providers
+
+Native filesystem/network capabilities now support explicit grants, acquisition,
+permission intersection, retryable completion, nominal owners/wrappers, and
+fallback release through provider ABI v3. A pending-handle record closes the OOM
+gap between successful acquisition and guest-owner allocation. Successful
+completion consumes the handle before allocating its result. Each provider family
+uses an independent generation-checked registry and a default 1024-live-owner quota.
+
+The new driver passes 32 native cases at O0/O2: 28 match VM callback traces, and
+four reject malformed C-provider statuses. All 120 injected lifecycle allocation
+failures release live handles and native storage, including retries, pending-owner
+allocation, post-completion result allocation, and reordered aggregate fields.
+The VM oracle runs separately from the core/CLI tests.
+
+Complete Debug and ReleaseFast runs pass all 31 steps and 594 core/CLI tests
+(534 core, 60 CLI), alongside existing native acceptance: 2,616 value/module
+comparisons, 484 general allocation failures, and the earlier provider and unwind
+drivers. Guardian passes all 88 checks without frozen violations. Existing
+clock/random/environment adapters rebuild against the v3 header; ABI rejection
+acceptance passes.
+
+Native resource byte I/O, source attenuation stress, quota/reuse/generation
+boundaries, mixed-store traces, and broader resource corpus acceptance remain
+pending. Generics, source serialization, finer incremental compilation, and the
+other unfinished roadmap requirements remain open.
