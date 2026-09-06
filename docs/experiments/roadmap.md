@@ -18,7 +18,7 @@ See [the current design and acceptance criteria](interpreter-first.md).
 | Priority | Work | Completion evidence |
 | --- | --- | --- |
 | 1 | Interpreter workflow, concrete generic local views and arena/reset lifetimes implemented | `test`/`test-interpreter` retain Guardian, core/CLI and interpreter/tooling coverage; `test-native` is optional and `test-all` combines both. Views and arenas have VM/CLI rejection and cleanup acceptance. Next active priority: diagnostic provenance and repair fixtures. |
-| 2 | Diagnostic provenance and predictable safety rules | Stable structured codes/spans, readable ownership explanations, repair fixtures; audit optional-value ergonomics. |
+| 2 | In progress: whole-value transfer and borrow provenance with executed repair fixtures implemented | Next: partial-field/arena/lifetime provenance and versioned CLI diagnostic output; audit optional-value ergonomics. Agent repair success remains unmeasured. |
 | 3 | Typed registered host functions with handwritten wrappers | Exact signatures/effects, ownership and lifetime checks, typed errors, deterministic fake-host tests. |
 | 4 | Board-validation or constraint-processing module | Independent behavioral tests and recorded agent repair outcomes; geometry/routing kernels stay in native libraries. |
 | 5 | Trial-driven language/tooling refinement | Evidence for generic constraints, source serialization, incremental checking, and useful duplication reports. |
@@ -917,3 +917,33 @@ Result-bearing and runtime-owned variant graphs remain excluded pending abstract
 handling/ownership rules. Parameter-dependent structural types, generic codec
 constraints, public generic tooling, source JSON serialization and the remaining
 roadmap requirements stay open.
+
+
+### Ownership diagnostic provenance and repairs — 2026-09-06
+
+Whole-value transfer/handling failures, conflicting borrows and suspended parent
+references now retain both the causal operation and the original binding's
+source location. Ordinary and abstract generic checking share the diagnostic
+helpers. Ownership snapshots preserve move witnesses across checked paths;
+replacement clears the witness before a later transfer. Active-loan selection
+is deterministic, and imported generic diagnostics map every note to the
+original module. See [the provenance contract](diagnostic-provenance.md).
+
+Authored repair fixtures assert exact diagnostic codes and source offsets, then
+execute corrected result-transfer, borrow-scope, child-reference and moved-buffer
+programs. A CLI fixture checks all three imported-module locations and executes
+the repaired project. Allocation-failure coverage checks collection and rendering.
+These regressions do not measure an agent's repair success rate.
+
+Validation: Debug `zig build test` passes 27/27 steps and ReleaseFast
+`test-interpreter` passes 28/28 steps; both pass 721/721 core/CLI tests
+(658 core, 63 CLI), the interpreter/tooling drivers and 96 independent corpus
+comparisons. Formatting and all 88 Guardian checks pass with baselines disabled;
+existing report-only size/line findings remain. A test helper's parameter count
+and five hard-limit call lines required one additional gate cycle. No native
+execution suite was run.
+
+Partial-field moves, arena/lifetime explanations, versioned machine-readable CLI
+diagnostics and optional-value ergonomics remain open in this track. Typed host
+registration, the real application/repair trial and remaining interpreter
+roadmap items stay active. Native execution remains excluded.

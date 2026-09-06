@@ -1086,3 +1086,40 @@ test "CLI generic module arenas reset safely and reject allocator escape" {
     try testing.expect(std.mem.indexOf(u8, rejected.stderr, "E_ARENA_ESCAPE") != null);
     try testing.expect(std.mem.indexOf(u8, rejected.stderr, "helper.my") != null);
 }
+
+test "CLI borrow provenance maps causal and declaration notes to the original module" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    const bad =
+        \\module helper;
+        \\export work;
+        \\fn work<T:copy>()->i64{
+        \\let mut owner=7;
+        \\borrow owner as loan{
+        \\owner=9;
+        \\discard read_ref(loan);
+        \\}
+        \\return owner;
+        \\}
+    ;
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = bad });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input;import helper;fn main()->i64{return helper::work::<bool>();}" });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const rejected = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-project", path } });
+    defer testing.allocator.free(rejected.stdout);
+    defer testing.allocator.free(rejected.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
+    try testing.expectEqualStrings("", rejected.stdout);
+    for ([_][]const u8{ "helper.my:6:1: error[E_BORROW_CONFLICT]", "note: helper.my:5:17: conflicting borrow starts here", "note: helper.my:4:9: value declared here" }) |part|
+        try testing.expect(std.mem.indexOf(u8, rejected.stderr, part) != null);
+    const fixed = try std.mem.replaceOwned(u8, testing.allocator, bad, "owner=9;\ndiscard read_ref(loan);\n}", "discard read_ref(loan);\n}\nowner=9;");
+    defer testing.allocator.free(fixed);
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = fixed });
+    const accepted = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path } });
+    defer testing.allocator.free(accepted.stdout);
+    defer testing.allocator.free(accepted.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, accepted.term);
+    try testing.expectEqualStrings("9\n", accepted.stdout);
+    try testing.expectEqualStrings("", accepted.stderr);
+}

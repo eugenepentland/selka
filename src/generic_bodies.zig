@@ -21,13 +21,15 @@ const Symbolic = union(enum) { concrete: typed.Type, parameter: usize };
 const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
 const FunctionMap = std.StringHashMapUnmanaged(usize);
 const Return = struct { parameter: usize, mutable: bool, slice: bool };
-const Pending = struct { available: bool, fields: []const bool };
+const Pending = struct { available: bool, fields: []const bool, transfer_span: ?source.Span };
 const Local = struct {
     name: source.Span,
     ty: Symbolic,
     mutable: bool,
     origin: usize = 0,
     arena_depth: usize = 0,
+    transfer_span: ?source.Span = null,
+    parent: ?usize = null,
     available: bool = true,
     fields: []const bool = &.{},
     reference: ?bool = null,
@@ -141,13 +143,14 @@ const Checker = struct {
     }
     fn pendingState(self: *Checker, count: usize) Error![]Pending {
         const state = try self.allocator.alloc(Pending, count);
-        for (self.locals.items[0..count], state) |binding, *pending| pending.* = .{ .available = binding.available, .fields = binding.fields };
+        for (self.locals.items[0..count], state) |binding, *pending| pending.* = .{ .available = binding.available, .fields = binding.fields, .transfer_span = binding.transfer_span };
         return state;
     }
     fn restorePending(self: *Checker, state: []const Pending) void {
         for (self.locals.items[0..state.len], state) |*binding, pending| {
             binding.available = pending.available;
             binding.fields = pending.fields;
+            binding.transfer_span = pending.transfer_span;
         }
     }
     fn samePending(self: *Checker, state: []const Pending, span: source.Span, code: []const u8) Error!void {
@@ -193,7 +196,17 @@ const Checker = struct {
     fn reference(self: *Checker, span: source.Span, mutable: bool, slice: bool) Error!*Local {
         const value = try self.local(span);
         const exclusive = value.reference orelse return self.sink.fail("E_REFERENCE_SCOPE", span, "operation requires an active reference");
-        if (exclusive and value.children != 0) return self.sink.fail("E_BORROW_SUSPENDED", span, "exclusive reference is suspended while a child borrow is active");
+        if (exclusive and value.children != 0) {
+            const parent = self.active.get(self.src.text(span)).?;
+            for (self.locals.items) |child| if (child.parent == parent) return self.sink.failProvenance(
+                "E_BORROW_SUSPENDED",
+                span,
+                "exclusive reference is suspended by an active child borrow",
+                .{ .span = child.name, .message = "child borrow starts here" },
+                self.locals.items[value.root.?].name,
+            );
+            return error.InternalError;
+        }
         if (value.slice != slice) return self.sink.fail("E_REFERENCE_KIND", span, "whole-value references and slices are distinct");
         if (mutable and !exclusive) return self.sink.fail(diagnostic.reference_read_only, span, "write or exclusive forwarding requires an exclusive reference");
         return value;
@@ -204,14 +217,26 @@ const Checker = struct {
         try self.ownerAccess(binding.*, self.transfers(binding.ty), span);
         if (binding.fields.len != 0) return self.sink.fail("E_PARTIAL_MOVE", span, "record has missing fields; access remaining fields individually or replace it");
         if (self.transfers(binding.ty)) {
-            if (!binding.available) return self.sink.fail(if (self.moveOnly(binding.ty)) diagnostic.owned_consumed else "E_RESULT_CONSUMED", span, "binding was already transferred");
+            if (!binding.available) return self.sink.failTransfer(if (self.moveOnly(binding.ty)) diagnostic.owned_consumed else "E_RESULT_CONSUMED", span, binding.name, binding.transfer_span);
             binding.available = false;
+            binding.transfer_span = span;
         }
         try self.regionRead(binding.*);
         return binding.ty;
     }
     fn ownerAccess(self: *Checker, binding: Local, write: bool, span: source.Span) Error!void {
-        if (binding.exclusive != 0 or (write and binding.shared != 0)) return self.sink.fail("E_BORROW_CONFLICT", span, "owner access conflicts with an active borrow");
+        if (binding.exclusive == 0 and (!write or binding.shared == 0)) return;
+        const root = self.active.get(self.src.text(binding.name)).?;
+        for (self.locals.items) |loan| {
+            if (loan.root == root and loan.parent == null and (write or loan.reference == true)) return self.sink.failProvenance(
+                "E_BORROW_CONFLICT",
+                span,
+                "owner access conflicts with an active borrow",
+                .{ .span = loan.name, .message = "conflicting borrow starts here" },
+                binding.name,
+            );
+        }
+        return error.InternalError;
     }
     fn endScope(self: *Checker, before: usize) void {
         for (self.locals.items[before..]) |item| _ = self.active.remove(self.src.text(item.name));
@@ -237,7 +262,7 @@ const Checker = struct {
             try self.ownerAccess(binding, borrow.mutable, borrow.owner);
         }
         const buffer_owner = binding.ty == .concrete and binding.ty.concrete.isAggregate() and self.catalog.records[binding.ty.concrete.recordIndex()].shape.buffer != null;
-        if (buffer_owner and !binding.available) return self.sink.fail(diagnostic.owned_consumed, borrow.owner, "buffer has already been transferred");
+        if (buffer_owner and !binding.available) return self.sink.failTransfer(diagnostic.owned_consumed, borrow.owner, binding.name, binding.transfer_span);
         if (self.transfers(binding.ty) and !(buffer_owner and borrow.range != null)) return self.sink.fail(diagnostic.result_borrow, borrow.owner, "owned and result-bearing values must transfer by value");
         const element = if (borrow.range != null and !binding.slice) try self.sliceType(binding.ty, borrow.owner) else binding.ty;
         if (self.transfers(element)) return self.sink.fail(diagnostic.result_borrow, borrow.owner, "result-bearing elements cannot be exposed through references");
@@ -252,6 +277,7 @@ const Checker = struct {
         try self.bind(child.name, child.ty, false);
         defer self.endScope(before);
         self.locals.items[before] = child;
+        self.locals.items[before].parent = parent;
         if (mutable) self.locals.items[root].exclusive += 1 else self.locals.items[root].shared += 1;
         if (parent) |id| self.locals.items[id].children += 1;
         defer {
@@ -586,7 +612,7 @@ const Checker = struct {
     }
     fn runtimeOwner(self: *Checker, span: source.Span, mutates: bool) Error!void {
         const binding = try self.local(span);
-        if (!binding.available) return self.sink.fail(diagnostic.owned_consumed, span, "operation owner was already transferred");
+        if (!binding.available) return self.sink.failTransfer(diagnostic.owned_consumed, span, binding.name, binding.transfer_span);
         if (mutates and !binding.mutable) return self.sink.fail(diagnostic.immutable, span, "mutation requires a let mut binding");
         try self.ownerAccess(binding.*, mutates, span);
     }
@@ -657,7 +683,7 @@ const Checker = struct {
         const fields = self.catalog.records[owner_type.recordIndex()].fields;
         const result: Symbolic = .{ .concrete = fields[index].ty };
         if (!taking and self.transfers(result)) return self.sink.fail("E_FIELD_COPY", access.field, "read_field cannot copy owned values or result obligations");
-        if (self.transfers(binding.ty) and !binding.available) return self.sink.fail(diagnostic.owned_consumed, access.owner, "record has already been transferred");
+        if (self.transfers(binding.ty) and !binding.available) return self.sink.failTransfer(diagnostic.owned_consumed, access.owner, binding.name, binding.transfer_span);
         if (taking and !self.transfers(binding.ty)) return self.sink.fail("E_FIELD_TAKE", access.owner, "take_field requires an owned or result-bearing record; use read_field for copyable records");
         if (binding.fields.len != 0 and binding.fields[index]) return self.sink.fail("E_FIELD_MOVED", access.field, "field has already been transferred");
         try self.ownerAccess(binding.*, taking, access.owner);
@@ -860,6 +886,7 @@ const Checker = struct {
                 if (self.transfers(target.ty)) {
                     if (self.pendingObligation(target.*)) return self.sink.fail("E_RESULT_OVERWRITE", assignment.name, "assignment would overwrite an unhandled result");
                     target.available = true;
+                    target.transfer_span = null;
                     target.fields = &.{};
                 }
             },

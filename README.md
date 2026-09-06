@@ -92,6 +92,9 @@ after cloning because Git hooks are local. It also configures Guardian metadata
 merge handling.
 
 [SPEC.md](SPEC.md) links implemented behaviors to executable regression tests.
+[Ownership diagnostic provenance](docs/experiments/diagnostic-provenance.md) now
+shows the invalid use, the earlier borrow/transfer, and the value declaration.
+Repair fixtures check these locations and execute the corrected programs.
 `src/root_test.zig` is the unit test root, and `test/integration.zig` contains the
 actual CLI tests. Python acceptance drivers remain in `tests/`. There are no
 frozen violations or accepted violation baselines. Guardian's local telemetry

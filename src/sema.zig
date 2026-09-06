@@ -24,7 +24,7 @@ const records = @import("records.zig");
 const Error = diagnostic.Error;
 const instances = @import("generic_instances.zig");
 const Names = @import("module_names.zig").Names;
-const Pending = struct { available: bool, fields: []const bool };
+const Pending = struct { available: bool, fields: []const bool, transfer_span: ?source.Span };
 const Work = struct { id: ast.NodeId, emit: bool = false, checkpoint: bool = false, verify: ?[]const Pending = null };
 const CheckedStatement = struct { id: typed.StatementId, terminates: bool };
 
@@ -129,13 +129,14 @@ const Checker = struct {
     }
     fn pendingState(self: *Checker, count: usize) Error![]Pending {
         const state = try self.allocator.alloc(Pending, count);
-        for (self.locals.items[0..count], state) |local, *pending| pending.* = .{ .available = local.ownership.transfer_available, .fields = local.ownership.partial_fields };
+        for (self.locals.items[0..count], state) |local, *pending| pending.* = .{ .available = local.ownership.transfer_available, .fields = local.ownership.partial_fields, .transfer_span = local.ownership.transfer_span };
         return state;
     }
     fn restorePending(self: *Checker, state: []const Pending) void {
         for (self.locals.items[0..state.len], state) |*local, pending| {
             local.ownership.transfer_available = pending.available;
             local.ownership.partial_fields = pending.fields;
+            local.ownership.transfer_span = pending.transfer_span;
         }
     }
     fn samePending(self: *Checker, state: []const Pending, span: source.Span, code: []const u8) Error!void {
@@ -223,17 +224,21 @@ const Checker = struct {
         const ref = self.references.items[@backingInt(id)];
         if (self.locals.items[@backingInt(ref.owner)].parameter.reference_parameter != null) self.locals.items[@backingInt(ref.owner)].usage.reads += 1;
         if (ref.mutable) {
+            var cause: ?source.Span = null;
             var entries = self.active_refs.valueIterator();
-            while (entries.next()) |child| if (self.references.items[@backingInt(child.*)].parent == id) return self.sink.failRelated(
+            while (entries.next()) |child| {
+                const loan = self.references.items[@backingInt(child.*)];
+                if (loan.parent == id and (cause == null or loan.declaration.start < cause.?.start)) cause = loan.declaration;
+            }
+            if (cause) |at| return self.sink.failProvenance(
                 "E_BORROW_SUSPENDED",
                 span,
                 "exclusive reference is suspended by an active child borrow",
-                .{
-                    .span = self.references.items[@backingInt(child.*)].declaration,
-                    .message = "child borrow starts here",
-                },
+                .{ .span = at, .message = "child borrow starts here" },
+                self.locals.items[@backingInt(ref.owner)].declaration,
             );
         }
+
         return id;
     }
     fn requireReferenceKind(self: *Checker, id: typed.ReferenceId, slice: bool, span: source.Span) Error!void {
@@ -244,19 +249,21 @@ const Checker = struct {
     }
 
     fn ownerAccess(self: *Checker, slot: typed.LocalId, write: bool, span: source.Span) Error!void {
+        var cause: ?source.Span = null;
         var entries = self.active_refs.valueIterator();
         while (entries.next()) |id| {
             const ref = self.references.items[@backingInt(id.*)];
-            if (ref.owner == slot and ref.parent == null and (write or ref.mutable)) return self.sink.failRelated(
-                "E_BORROW_CONFLICT",
-                span,
-                "owner access conflicts with an active borrow",
-                .{
-                    .span = ref.declaration,
-                    .message = "conflicting borrow starts here",
-                },
-            );
+            if (ref.owner == slot and ref.parent == null and (write or ref.mutable)) {
+                if (cause == null or ref.declaration.start < cause.?.start) cause = ref.declaration;
+            }
         }
+        if (cause) |at| return self.sink.failProvenance(
+            "E_BORROW_CONFLICT",
+            span,
+            "owner access conflicts with an active borrow",
+            .{ .span = at, .message = "conflicting borrow starts here" },
+            self.locals.items[@backingInt(slot)].declaration,
+        );
     }
     fn requireDomainAccess(self: *Checker, domain_type: typed.Type, span: source.Span) Error!void {
         if (self.owner != domain_type) return self.sink.failRelated(
@@ -484,7 +491,7 @@ const Checker = struct {
         const field = try self.catalog.field(local.ty, self.src, read.field, self.sink);
         out.ty = self.catalog.records[local.ty.recordIndex()].fields[field].ty;
         if (!taking and self.transfers(out.ty)) return self.sink.fail("E_FIELD_COPY", read.field, "read_field cannot copy owned values or result obligations");
-        if (self.transfers(local.ty) and !local.ownership.transfer_available) return self.sink.failRelated(eOwnedConsumed, read.owner, "record has already been transferred", .{ .span = local.declaration, .message = bindingDeclaredHere });
+        if (self.transfers(local.ty) and !local.ownership.transfer_available) return self.sink.failTransfer(eOwnedConsumed, read.owner, local.declaration, local.ownership.transfer_span);
         if (taking and !self.transfers(local.ty)) return self.sink.fail("E_FIELD_TAKE", read.owner, "take_field requires an owned or result-bearing record; use read_field for copyable records");
         if (local.ownership.partial_fields.len != 0 and local.ownership.partial_fields[field]) return self.sink.fail("E_FIELD_MOVED", read.field, "field has already been transferred");
         try self.ownerAccess(owner, taking, read.owner);
@@ -506,7 +513,7 @@ const Checker = struct {
         const local = &self.locals.items[@backingInt(owner)];
         if (local.parameter.reference_parameter != null or !local.ty.isAggregate()) return self.sink.fail("E_POOL_TYPE", operation.owner, "operation requires an owned pool binding");
         const pool = self.catalog.records[local.ty.recordIndex()].shape.pool orelse return self.sink.fail("E_POOL_TYPE", operation.owner, "operation requires an owned pool binding");
-        if (!local.ownership.transfer_available) return self.sink.fail(eOwnedConsumed, operation.owner, "pool has already been transferred");
+        if (!local.ownership.transfer_available) return self.sink.failTransfer(eOwnedConsumed, operation.owner, local.declaration, local.ownership.transfer_span);
         if (operation.kind.mutates() and !local.mutable) return self.sink.fail(eImmutable, operation.owner, "pool mutation requires a let mut binding");
         try self.ownerAccess(owner, operation.kind.mutates(), operation.owner);
         local.usage.reads += 1;
@@ -529,7 +536,7 @@ const Checker = struct {
         const owner = try self.resolve(operation.owner);
         const local = &self.locals.items[@backingInt(owner)];
         if (!local.ty.isAggregate() or self.catalog.records[local.ty.recordIndex()].shape.buffer == null) return self.sink.fail("E_BUFFER_TYPE", operation.owner, "operation requires an owned buffer binding");
-        if (!local.ownership.transfer_available) return self.sink.failRelated(eOwnedConsumed, operation.owner, "buffer has already been transferred", .{ .span = local.declaration, .message = bindingDeclaredHere });
+        if (!local.ownership.transfer_available) return self.sink.failTransfer(eOwnedConsumed, operation.owner, local.declaration, local.ownership.transfer_span);
         if (operation.kind.mutates() and !local.mutable) return self.sink.fail(eImmutable, operation.owner, "buffer mutation requires a let mut binding");
         try self.ownerAccess(owner, operation.kind.mutates(), operation.owner);
         local.usage.reads += 1;
@@ -572,7 +579,7 @@ const Checker = struct {
         const owner = try self.resolve(io.owner);
         const local = &self.locals.items[@backingInt(owner)];
         if (typed.resourceKind(local.ty, self.catalog.records) == null) return self.sink.fail("E_RESOURCE_TYPE", io.owner, "I/O requires an owned resource binding");
-        if (!local.ownership.transfer_available) return self.sink.failRelated(eOwnedConsumed, io.owner, "resource has already been transferred", .{ .span = local.declaration, .message = bindingDeclaredHere });
+        if (!local.ownership.transfer_available) return self.sink.failTransfer(eOwnedConsumed, io.owner, local.declaration, local.ownership.transfer_span);
         if (!local.mutable) return self.sink.fail(eImmutable, io.owner, "resource I/O requires a let mut binding");
         try self.ownerAccess(owner, true, io.owner);
         const slice_reference = if (io.reference) |name| try self.reference(name) else null;
@@ -643,16 +650,15 @@ const Checker = struct {
         const slot = try self.resolve(name);
         if (self.locals.items[@backingInt(slot)].ownership.partial_fields.len != 0) return self.sink.fail("E_PARTIAL_MOVE", name, "record has missing fields; access remaining fields individually or replace the binding");
         if (self.transfers(self.locals.items[@backingInt(slot)].ty)) {
-            if (!self.locals.items[@backingInt(slot)].ownership.transfer_available) return self.sink.failRelated(
-                if (typed.moveOnly(self.locals.items[@backingInt(slot)].ty, self.catalog.records)) eOwnedConsumed else "E_RESULT_CONSUMED",
+            const local = &self.locals.items[@backingInt(slot)];
+            if (!local.ownership.transfer_available) return self.sink.failTransfer(
+                if (typed.moveOnly(local.ty, self.catalog.records)) eOwnedConsumed else "E_RESULT_CONSUMED",
                 name,
-                "value has already been transferred or handled",
-                .{
-                    .span = self.locals.items[@backingInt(slot)].declaration,
-                    .message = bindingDeclaredHere,
-                },
+                local.declaration,
+                local.ownership.transfer_span,
             );
-            self.locals.items[@backingInt(slot)].ownership.transfer_available = false;
+            local.ownership.transfer_available = false;
+            local.ownership.transfer_span = name;
         }
         try self.ownerAccess(slot, self.transfers(self.locals.items[@backingInt(slot)].ty), name);
         self.locals.items[@backingInt(slot)].usage.reads += 1;
@@ -1131,7 +1137,12 @@ const Checker = struct {
         }
         const owner_type = self.locals.items[@backingInt(owner)].ty;
         const buffer_owner = owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].shape.buffer != null;
-        if (buffer_owner and !self.locals.items[@backingInt(owner)].ownership.transfer_available) return self.sink.fail(eOwnedConsumed, borrow.owner, "buffer has already been transferred");
+        if (buffer_owner and !self.locals.items[@backingInt(owner)].ownership.transfer_available) return self.sink.failTransfer(
+            eOwnedConsumed,
+            borrow.owner,
+            self.locals.items[@backingInt(owner)].declaration,
+            self.locals.items[@backingInt(owner)].ownership.transfer_span,
+        );
         const buffer_view = buffer_owner and (range != null or parent != null);
         if (self.transfers(owner_type) and !buffer_view) return self.sink.fail(eResultBorrow, borrow.owner, "owned and result-bearing values must currently transfer by value; borrowing these values is not supported");
         const source_type = if (parent) |id| self.references.items[@backingInt(id)].ty else self.locals.items[@backingInt(owner)].ty;
@@ -1278,6 +1289,7 @@ const Checker = struct {
         if (self.transfers(self.locals.items[@backingInt(slot)].ty)) {
             if (self.pendingObligation(self.locals.items[@backingInt(slot)])) return self.sink.fail("E_RESULT_OVERWRITE", a.name, "assignment would overwrite an unhandled result-bearing value");
             self.locals.items[@backingInt(slot)].ownership.transfer_available = true;
+            self.locals.items[@backingInt(slot)].ownership.transfer_span = null;
             self.locals.items[@backingInt(slot)].ownership.partial_fields = &.{};
         }
         self.locals.items[@backingInt(slot)].usage.writes += 1;

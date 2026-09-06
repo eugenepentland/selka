@@ -35,6 +35,7 @@ pub const Diagnostic = struct {
     span: source.Span,
     message: []const u8,
     related: ?Related = null,
+    origin: ?Related = null,
     // Bounded by-value guest trace needs no separate cleanup on trap paths.
     stack: struct { frames: [16]Trace = undefined, len: usize = 0, omitted: usize = 0 } = .{},
 
@@ -56,10 +57,10 @@ pub const Diagnostic = struct {
         var output: std.Io.Writer.Allocating = .init(allocator);
         errdefer output.deinit();
         output.writer.writeAll(primary) catch return error.OutOfMemory;
-        if (self.related) |related| {
+        for ([_]?Related{ self.related, self.origin }) |note| if (note) |related| {
             const at = src.locate(related.span.start);
             output.writer.print("  note: {s}:{d}:{d}: {s}\n", .{ at.path, at.line, at.column, related.message }) catch return error.OutOfMemory;
-        }
+        };
         for (self.stack.frames[0..self.stack.len]) |entry| {
             const at = src.locate(entry.span.start);
             output.writer.print("  in {s} at {s}:{d}:{d}\n", .{ entry.function, at.path, at.line, at.column }) catch return error.OutOfMemory;
@@ -86,6 +87,19 @@ pub const Sink = struct {
     pub fn failRelated(self: *Sink, code: []const u8, span: source.Span, message: []const u8, related: Related) Error {
         self.items.append(self.allocator, .{ .code = code, .span = span, .message = message, .related = related }) catch return error.OutOfMemory;
         return error.SourceError;
+    }
+
+    /// Keep the immediate cause and the value declaration as separate source evidence.
+    pub fn failProvenance(self: *Sink, code: []const u8, span: source.Span, message: []const u8, cause: Related, declaration: source.Span) Error {
+        self.items.append(self.allocator, .{ .code = code, .span = span, .message = message, .related = cause, .origin = .{ .span = declaration, .message = "value declared here" } }) catch return error.OutOfMemory;
+        return error.SourceError;
+    }
+
+    /// Diagnose reuse of a transferred value, retaining a witness from the checked path.
+    pub fn failTransfer(self: *Sink, code: []const u8, span: source.Span, declaration: source.Span, transfer: ?source.Span) Error {
+        const message = "value has already been transferred or handled";
+        if (transfer) |at| return self.failProvenance(code, span, message, .{ .span = at, .message = "earlier transfer or handling on this path" }, declaration);
+        return self.failRelated(code, span, message, .{ .span = declaration, .message = "value declared here" });
     }
 
     /// Append a source error and return SourceError, preserving allocator failure.

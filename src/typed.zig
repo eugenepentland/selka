@@ -222,7 +222,7 @@ pub const Local = struct {
     mutable: bool,
 };
 /// Compile-time ownership availability, partial moves, and arena provenance.
-pub const LocalOwnership = struct { arena_depth: usize = 0, partial_fields: []const bool = &.{}, transfer_available: bool = false };
+pub const LocalOwnership = struct { transfer_span: ?Span = null, arena_depth: usize = 0, partial_fields: []const bool = &.{}, transfer_available: bool = false };
 /// Passing convention for a reference or slice parameter binding.
 pub const LocalParameter = struct { slice_parameter: bool = false, reference_parameter: ?bool = null };
 /// Static binding reads, writes, and mutability evidence used by quality diagnostics.

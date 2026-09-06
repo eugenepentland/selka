@@ -48,9 +48,10 @@ explicit types, schemas, and interfaces where that improves the program.
    `test-all` combining both). Local array/buffer views and concrete array-input slice results
    are implemented, along with arena/reset origin and escape checks.
    Keep unsupported structural operations explicit until their rules are in place.
-2. Improve structured diagnostics and repair examples alongside those features:
-   stable codes and source locations, plus creation, borrow, move, and conflicting
-   use locations where relevant. Audit optional-value ergonomics using the
+2. Improve structured diagnostics and repair examples alongside those features.
+   Whole-value move and borrow conflicts now retain causal and declaration sites,
+   with executed repair fixtures. Partial-field/arena/lifetime provenance and
+   versioned CLI diagnostic output remain pending. Audit optional-value ergonomics using the
    existing variant model before adding syntax.
 3. Add a small, explicitly registered typed host-library interface into the VM,
    with handwritten Zig wrappers, declared effects, ownership, borrowed-buffer
@@ -1869,3 +1870,33 @@ then typed host registration and the board/constraint-processing trial. Structur
 generic types, codec constraints, public generic tooling, source serialization
 and finer incremental checking remain open; native execution remains excluded
 from the active goal.
+
+
+### Ownership diagnostic provenance and repairs — 2026-09-06
+
+Whole-value transfer/handling failures, conflicting borrows and suspended parent
+references now retain both the causal operation and the original binding's
+source location. Ordinary and abstract generic checking share the diagnostic
+helpers. Ownership snapshots preserve move witnesses across checked paths;
+replacement clears the witness before a later transfer. Active-loan selection
+is deterministic, and imported generic diagnostics map every note to the
+original module. See [the provenance contract](experiments/diagnostic-provenance.md).
+
+Authored repair fixtures assert exact diagnostic codes and source offsets, then
+execute corrected result-transfer, borrow-scope, child-reference and moved-buffer
+programs. A CLI fixture checks all three imported-module locations and executes
+the repaired project. Allocation-failure coverage checks collection and rendering.
+These regressions do not measure an agent's repair success rate.
+
+Validation: Debug `zig build test` passes 27/27 steps and ReleaseFast
+`test-interpreter` passes 28/28 steps; both pass 721/721 core/CLI tests
+(658 core, 63 CLI), the interpreter/tooling drivers and 96 independent corpus
+comparisons. Formatting and all 88 Guardian checks pass with baselines disabled;
+existing report-only size/line findings remain. A test helper's parameter count
+and five hard-limit call lines required one additional gate cycle. No native
+execution suite was run.
+
+Partial-field moves, arena/lifetime explanations, versioned machine-readable CLI
+diagnostics and optional-value ergonomics remain open in this track. Typed host
+registration, the real application/repair trial and remaining interpreter
+roadmap items stay active. Native execution remains excluded.

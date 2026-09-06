@@ -48,6 +48,8 @@ primary source spans, related locations and readable explanations. For ownership
 conflicts, identify creation, borrow or move, and the conflicting later use when
 applicable. Preserve module and generic-call context. Test the structured output
 and repair examples; do not expose compiler internals as required user knowledge.
+[Whole-value and borrow provenance](diagnostic-provenance.md) now has exact-location
+and executed-repair acceptance. The broader diagnostic track remains open.
 
 ## Typed host-library interface — pending
 
