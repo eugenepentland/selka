@@ -73,7 +73,9 @@ explicit types, schemas, and interfaces where that improves the program.
    further evidence to prioritize parameterized records/unions, generic
    constraints/tooling, bounded source serialization, and finer incremental checks.
    [Nominal template syntax/interfaces](experiments/nominal-type-syntax.md) are
-   implemented as groundwork; semantic specialization and execution remain open.
+   implemented as groundwork. [Declaration checking](experiments/nominal-template-checks.md)
+   now validates unused fields/payloads, identities and argument requirements;
+   finite layouts, concrete specialization and execution remain open.
    These remain open; completing all
    abstraction experiments is not a prerequisite for starting the trial.
 
@@ -2458,3 +2460,65 @@ The remaining nominal-type milestone requires:
 The nominal-type milestone remains open, alongside the actual matched repair
 study, source serialization, public generic tooling, finer incremental checks
 and other pending roadmap requirements. Native execution remains excluded.
+
+## Nominal template declaration semantics — 2026-09-06
+
+The [declaration-checking stage](experiments/nominal-template-checks.md) now
+builds reusable semantic metadata for parameterized records and variants.
+Field/payload expressions retain declaration identities, ordered applications,
+recursive arrays and local type variables; identically spelled templates from
+different modules stay distinct. This metadata is separate from executable
+`typed.Type` IDs and does not substitute a representative scalar for a parameter.
+
+Unused declarations now report unknown field types, parameter shadowing,
+duplicate fields/cases/types, malformed result schemas, wrong application arity,
+invalid constructor kinds and insufficient argument requirements before the
+remaining specialization boundary. Requirement diagnostics retain the argument
+site and the declaration's requirement site, including across imported modules.
+
+Copy guarantees propagate through ordinary/generic records and unions using a
+reverse dependency worklist. Owners and pending results remove copy transitively;
+zero-length arrays do not acquire their element's value obligations. Nested
+argument constraints still apply, including phantom parameters and enum table
+keys. Scalar domains, enums and pool handles keep equality without gaining
+integer operations, and records/unions do not acquire implicit equality.
+Expression checking is bounded at 256 levels and 100,000 visits. The worklist
+visits each removed copy guarantee once rather than recursively walking long
+declaration chains.
+
+Ten new core tests cover declaration metadata, invalid unused types, requirement
+implication, ownership/results, array keys/lengths, checking-work exhaustion,
+imported identities and original diagnostic locations. They include allocation
+failure sweeps on successful collection, semantic rejection and a diagnostic
+allocator separate from the compilation arena, plus a 1,200-record
+reverse-ordered dependency chain. One actual CLI test verifies
+structured errors from unused templates.
+
+This completes the names/member/argument-requirement portion of template
+validation. It does **not** prove finite by-value layouts or implement concrete
+instance interning, executable layouts, symbolic field/payload operations,
+borrowing/arena behavior for those operations, or board `Slot<T>` consolidation.
+Well-formed templates still reject with `E_GENERIC_TYPE_UNSUPPORTED` before typed
+IR or bytecode. Function-body uses of parameterized types remain behind that
+boundary. No guest-native work was added.
+
+Validation: the final Debug interpreter suite passes 34/34 build steps and
+805/805 Zig tests (731 core, 70 actual CLI and four board integration), plus all
+21 Python drivers. The board trial retains 147 matching comparisons, 18 malformed
+transport rejections and three seeded static errors. All 50 nominal-selected
+tests pass in Debug and ReleaseFast. The gated install passes 8/8 steps and
+formatting passes. Repair harness fixtures pass; actual agent repairs remain
+pending.
+
+Guardian passes all 88 checks with baselines disabled; existing report-only
+findings remain. Condition/diagnostic formatting and a sharper work-boundary test
+were labeled useful-review. A test-only lookup error requirement was labeled
+false-positive because replacing it with an ordinary test assertion added no
+coverage. The shared extra gate cycle was counted once. Separate allocator
+review/testing exposed and fixed metadata allocation through the diagnostic sink;
+that leak was not a Guardian finding. Mandatory feedback records these outcomes.
+
+Next: finite layout validation and concrete nominal instance interning in the
+shared catalog, then symbolic construction/projection/update/match/result rules
+and the unchanged board trial. The measured repair study, serialization,
+incremental tooling and remaining roadmap requirements stay open.

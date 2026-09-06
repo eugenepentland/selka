@@ -2,8 +2,10 @@
 
 This checkpoint implements the syntax and module-interface foundation for
 parameterized records and variants. **Nominal type specialization and execution
-are not implemented yet.** The semantic checker rejects these forms with
-`E_GENERIC_TYPE_UNSUPPORTED` before producing typed IR or bytecode. Generic fixed
+are not implemented yet.** The semantic checker rejects well-formed uses with
+`E_GENERIC_TYPE_UNSUPPORTED` before producing typed IR or bytecode. The subsequent
+[declaration-checking stage](nominal-template-checks.md) now reports malformed
+fields/payloads and insufficient argument requirements before that boundary. Generic fixed
 arrays remain executable as documented in [their contract](generic-arrays.md).
 
 The parser can now retain declarations such as:
@@ -52,7 +54,7 @@ satisfaction, recursive-type finiteness, ownership, generic field operations or
 exhaustive matching. Those are required parts of the next semantic stage.
 Supporting syntax for result and enum templates does not commit to unchecked
 payloads, implicit equality or new ownership rules. Ordinary source compilation
-explicitly refuses all nominal templates/applications in the meantime, including
+still refuses execution of nominal templates/applications in the meantime, including
 unused templates that otherwise have a runnable `main`.
 
 `src/nominal_type_syntax_test.zig` exercises nested syntax, constructors/patterns,

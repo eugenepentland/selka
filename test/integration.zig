@@ -1216,3 +1216,8 @@ test "CLI formats nominal templates but rejects execution until specialization i
     try invoke("fmt", source, 0, "struct Box<T: copy> {\n    value: T\n}\nfn main() -> i64 {\n    return 0;\n}\n", "");
     try invokeOptions("run", source, &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_TYPE_UNSUPPORTED\"");
 }
+
+test "CLI reports unused nominal template requirement errors before unsupported execution" {
+    try invokeOptions("check", "struct Key<T:equality>{value:T}struct Bad<U:copy>{key:Key<U>}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_REQUIREMENT\"");
+    try invokeOptions("check", "struct Bad<T:copy>{value:Missing}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_UNKNOWN_TYPE\"");
+}

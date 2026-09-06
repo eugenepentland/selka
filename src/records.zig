@@ -103,7 +103,7 @@ pub const Catalog = struct {
 
 /// All storage is owned by the compilation arena.
 pub fn collectWithNames(allocator: std.mem.Allocator, src: Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!Catalog {
-    try @import("nominal_type_syntax.zig").requireImplemented(src, program, sink);
+    try @import("nominal_type_syntax.zig").requireImplemented(allocator, src, program, sink, module_names);
     const declarations = program.types.records;
     const domains = program.types.domains;
     const variant_types = program.types.variants;
