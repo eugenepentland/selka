@@ -26,48 +26,7 @@ pub const Merged = struct {
     modules: []const Range,
     function_modules: []const usize,
 };
-const Remap = struct {
-    allocator: std.mem.Allocator,
-    src: source.Source,
-    module: usize,
-    nodes: usize,
-    statements: usize,
-    node_count: usize,
-    statement_count: usize,
-    fn value(self: Remap, comptime T: type, input: T) error{ OutOfMemory, InvalidSourceIndex, InvalidSourceSpan, InvalidNodeId, InvalidStatementId }!T {
-        if (T == source.Span) return self.src.mappedSpan(self.module, input);
-        if (T == ast.NodeId) {
-            if (@backingInt(input) >= self.node_count) return error.InvalidNodeId;
-            return @fromBackingInt(@backingInt(input) + self.nodes);
-        }
-        if (T == ast.StatementId) {
-            if (@backingInt(input) >= self.statement_count) return error.InvalidStatementId;
-            return @fromBackingInt(@backingInt(input) + self.statements);
-        }
-        return switch (@typeInfo(T)) {
-            .@"struct" => result: {
-                var output: T = undefined;
-                inline for (@typeInfo(T).@"struct".field_names, @typeInfo(T).@"struct".field_types) |name, Field| @field(output, name) = try self.value(Field, @field(input, name));
-                break :result output;
-            },
-            .@"union" => result: {
-                inline for (@typeInfo(T).@"union".field_names, @typeInfo(T).@"union".field_types) |name, Field| {
-                    if (std.meta.activeTag(input) == @field(std.meta.Tag(T), name)) break :result @unionInit(T, name, try self.value(Field, @field(input, name)));
-                }
-                unreachable;
-            },
-            .optional => |optional| if (input) |present| try self.value(optional.child, present) else null,
-            .pointer => |pointer| result: {
-                if (pointer.size != .slice) @compileError("AST remapping requires owned slices, not pointers");
-                const output = try self.allocator.alloc(pointer.child, input.len);
-                for (input, output) |item, *out| out.* = try self.value(pointer.child, item);
-                break :result output;
-            },
-            .@"enum", .int, .bool, .void => input,
-            else => @compileError("AST field needs an explicit relocation rule: " ++ @typeName(T)),
-        };
-    }
-};
+const Remap = @import("ast_copy.zig").Mapper;
 /// All output storage belongs to index.project.arena; the original AST is unchanged.
 pub fn build(index: *interfaces.Index) BuildError!Merged {
     const project = index.project;
@@ -81,7 +40,6 @@ pub fn build(index: *interfaces.Index) BuildError!Merged {
     var function_modules: std.ArrayList(usize) = .empty;
     for (index.units, 0..) |unit, module| {
         const map: Remap = .{
-            .allocator = allocator,
             .src = src,
             .module = module,
             .nodes = merged.nodes.items.len,
@@ -89,8 +47,8 @@ pub fn build(index: *interfaces.Index) BuildError!Merged {
             .node_count = unit.syntax.nodes.items.len,
             .statement_count = unit.syntax.statements.items.len,
         };
-        for (unit.syntax.nodes.items) |node| try merged.nodes.append(allocator, try map.value(ast.Node, node));
-        for (unit.syntax.statements.items) |statement| try merged.statements.append(allocator, try map.value(ast.Statement, statement));
+        for (unit.syntax.nodes.items) |node| try merged.nodes.append(allocator, try map.value(allocator, ast.Node, node));
+        for (unit.syntax.statements.items) |statement| try merged.statements.append(allocator, try map.value(allocator, ast.Statement, statement));
         ranges[module] = .{ .node_start = map.nodes, .node_end = merged.nodes.items.len, .statement_start = map.statements, .statement_end = merged.statements.items.len };
         for (unit.syntax.functions) |_| try function_modules.append(allocator, module);
     }
@@ -103,7 +61,6 @@ pub fn build(index: *interfaces.Index) BuildError!Merged {
         var declarations: std.ArrayList(Item) = .empty;
         for (index.units, ranges, 0..) |unit, range, module| {
             const map: Remap = .{
-                .allocator = allocator,
                 .src = src,
                 .module = module,
                 .nodes = range.node_start,
@@ -111,7 +68,7 @@ pub fn build(index: *interfaces.Index) BuildError!Merged {
                 .node_count = unit.syntax.nodes.items.len,
                 .statement_count = unit.syntax.statements.items.len,
             };
-            for (@field(if (is_function) unit.syntax else unit.syntax.types, field)) |item| try declarations.append(allocator, try map.value(Item, item));
+            for (@field(if (is_function) unit.syntax else unit.syntax.types, field)) |item| try declarations.append(allocator, try map.value(allocator, Item, item));
         }
         if (is_function) {
             merged.functions = try declarations.toOwnedSlice(allocator);

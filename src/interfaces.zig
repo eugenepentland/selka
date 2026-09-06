@@ -132,21 +132,16 @@ pub const Index = struct {
 };
 /// Parse and index every module before checking exported signature visibility.
 pub fn build(project: *graph.Project) (diagnostic.Error || error{IncompleteProject})!Index {
+    return buildWithCache(project, null);
+}
+/// Reuse unchanged parse tables while rebuilding all symbols and exported signature checks.
+pub fn buildWithCache(project: *graph.Project, cache: ?*@import("syntax_cache.zig").Cache) (diagnostic.Error || error{IncompleteProject})!Index {
     if (!project.progress.complete or project.problem != null) return error.IncompleteProject;
     const allocator = project.arena.allocator();
     var index: Index = .{ .project = project, .units = try allocator.alloc(Unit, project.modules.items.len) };
     for (project.order.items) |module_id| {
         const module = project.modules.items[module_id];
-        var sink: diagnostic.Sink = .{ .allocator = allocator };
-        const tokens = try lexer.lex(allocator, module.src.bytes, &sink);
-        var start: usize = 0;
-        while (tokens[start].span.start < module.header.body_start) start += 1;
-        var parse: parser.Parser = .{ .src = module.src, .arena = &project.arena, .tokens = tokens, .cursor = .{ .pos = start }, .sink = &sink, .module_syntax = true };
-        const syntax = parse.parse() catch |err| {
-            if (err == error.OutOfMemory) return err;
-            const problem = sink.items.items[0];
-            return project.fail(problem.code, problem.message, .{ .module = module_id, .span = problem.span }, null);
-        };
+        const syntax = try moduleSyntax(project, module_id, cache);
         index.units[module_id] = .{ .syntax = syntax };
         inline for (.{ "records", "domains", "variants", "buffers", "resources", "pools" }) |field| {
             for (@field(syntax.types, field)) |declaration| try index.add(module_id, declaration.name, .type, null, false);
@@ -171,4 +166,27 @@ pub fn build(project: *graph.Project) (diagnostic.Error || error{IncompleteProje
 fn sameOwner(local: bool, owner: ?[]const u8, declared: []const u8) bool {
     if (!local) return false;
     return std.mem.eql(u8, owner orelse return false, declared);
+}
+
+fn moduleSyntax(project: *graph.Project, module_id: usize, cache: ?*@import("syntax_cache.zig").Cache) diagnostic.Error!ast.Program {
+    const module = project.modules.items[module_id];
+    if (cache) |retained| {
+        if (try retained.lookup(project.arena.allocator(), module.src, module.header.body_start)) |syntax| return syntax;
+    }
+    var sink: diagnostic.Sink = .{ .allocator = project.arena.allocator() };
+    const syntax = parseModule(project, module_id, &sink) catch |err| {
+        if (err != error.SourceError) return err;
+        const problem = sink.items.items[0];
+        return project.fail(problem.code, problem.message, .{ .module = module_id, .span = problem.span }, null);
+    };
+    if (cache) |retained| try retained.remember(module.src, module.header.body_start, syntax);
+    return syntax;
+}
+fn parseModule(project: *graph.Project, module_id: usize, sink: *diagnostic.Sink) diagnostic.Error!ast.Program {
+    const module = project.modules.items[module_id];
+    const tokens = try lexer.lex(project.arena.allocator(), module.src.bytes, sink);
+    var start: usize = 0;
+    while (tokens[start].span.start < module.header.body_start) start += 1;
+    var parse: parser.Parser = .{ .src = module.src, .arena = &project.arena, .tokens = tokens, .cursor = .{ .pos = start }, .sink = sink, .module_syntax = true };
+    return parse.parse();
 }

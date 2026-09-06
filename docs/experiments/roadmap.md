@@ -251,3 +251,8 @@ in-memory modules to schema/codec/invocation CLI paths, binding generation, and
 generated Python clients. Fresh values and source receipts coexist with compatible
 artifact reuse; schema changes invalidate old calls. Source serialization and
 finer frontend incremental work remain pending.
+
+[Bounded incremental module syntax](incremental-syntax.md) now reuses exact parse
+tables across fresh embedding projects, with owned copies, retention limits,
+invalidation/eviction observations, and fresh semantic checks. Persistent and
+semantic query caching, CLI sessions, and the rest of F remain pending.

@@ -411,3 +411,9 @@ Schema generation, JSON calls, and Python binding generation accept repeated
 `--inputs` manifests. Generated clients accept `inputs=(path, ...)` and reread the
 values on each invocation. See [call inputs](docs/experiments/call-inputs.md) for
 schema invalidation and source receipt behavior.
+
+Long-lived Zig embedding hosts can reuse unchanged module parse tables through
+`syntax_cache.Cache` and `interfaces.buildWithCache`. Returned syntax belongs to
+each fresh project; all semantic checking still runs. See
+[incremental module syntax](docs/experiments/incremental-syntax.md) for limits,
+observations, and the remaining incremental-compilation work.

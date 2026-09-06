@@ -65,3 +65,5 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [CLI-2] Reports missing arguments and missing source files as usage or host failures.
 - [CLI-3] Executes the plan acceptance programs and recursive functions through the command-line executable.
 - [CLI-4] Schema generation reads declared input manifests into generated modules on every invocation and rejects malformed or duplicate inputs.
+
+- [CACHE-1] Reusing unchanged module syntax preserves fresh semantic checks and changed results, with independent returned storage and bounded cache retention.

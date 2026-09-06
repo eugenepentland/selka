@@ -1,5 +1,6 @@
 //! Unit test entry point, separate from the production compiler module.
 test {
+    _ = @import("syntax_cache_test.zig");
     _ = @import("import_policy_test.zig");
     _ = @import("source_map_test.zig");
     _ = @import("project_test.zig");

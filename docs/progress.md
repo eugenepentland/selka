@@ -2576,3 +2576,36 @@ regression and is labeled useful-review in the local ROI record. Mandatory feedb
 is committed in Guardian. This completes initial call/input-manifest integration;
 source serialization, native expansion, generics, finer incremental compilation,
 and the other open roadmap requirements remain pending. Hosted CI has not run.
+
+## 2026-09-06: Bounded incremental module syntax
+
+Added an owned syntax_cache.Cache and interfaces.buildWithCache for repeated
+embedding compilations. Exact source path/bytes/body-start matches reuse successful
+parse tables; each hit deep-copies nested syntax into the fresh project arena.
+Oldest-insertion eviction and arena-capacity/entry limits bound retained storage,
+with explicit hit/miss/store/eviction/bypass observations. Invalid syntax is never
+cached. Allocation failures propagate with cleanup; clearing the cache cannot
+invalidate returned syntax.
+
+Extracted the existing checked AST relocation walker into a shared copier, avoiding
+separate recursive traversal implementations. A fresh project still loads and lexes
+module headers, rebuilds symbols/interfaces, resolves names, and checks every body,
+including ownership and effects. A cached parse therefore cannot conceal changed
+private declarations, dependency signatures, or invalid caller behavior. The cache
+skips the interface phase's repeated lexer/body-parser work; no whole-build speedup
+is claimed, and ordinary CLI invocations remain uncached.
+
+Five new tests cover repeated hits, body edits and results, clearing before use,
+every allocation failure, eviction, source/expanded-syntax budget bypasses, fresh
+semantic/privacy errors on cache hits, invalid syntax recovery, and provider bounds.
+The existing source relocation tests pass with the shared copier. Debug and
+ReleaseFast pass all 27 build steps and 586 Zig tests (528 core, 58 CLI), plus the
+existing native parity, sanitizer, Python binding/input/cache, and corpus drivers.
+Guardian passes all 88 checks with no frozen violations. The mapper allocator
+ownership false positive and specification-ID collision are recorded in committed
+Guardian feedback; the former has an evidence-backed ROI label.
+
+This implements the first frontend query-reuse component. Persistent syntax and
+semantic queries, finer invalidation, CLI sessions, native incremental linking,
+generics, source serialization, and other pending roadmap requirements remain open.
+Hosted CI remains unexecuted.
