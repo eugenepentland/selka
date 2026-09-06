@@ -20,11 +20,12 @@ const ast = @import("ast.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
+const field_moves = @import("field_moves.zig");
 const records = @import("records.zig");
 const Error = diagnostic.Error;
 const instances = @import("generic_instances.zig");
 const Names = @import("module_names.zig").Names;
-const Pending = struct { available: bool, fields: []const bool, transfer_span: ?source.Span };
+const Pending = struct { available: bool, fields: field_moves.State, transfer_span: ?source.Span };
 const Work = struct { id: ast.NodeId, emit: bool = false, checkpoint: bool = false, verify: ?[]const Pending = null };
 const CheckedStatement = struct { id: typed.StatementId, terminates: bool };
 
@@ -140,7 +141,7 @@ const Checker = struct {
         }
     }
     fn samePending(self: *Checker, state: []const Pending, span: source.Span, code: []const u8) Error!void {
-        for (self.locals.items[0..state.len], state) |local, pending| if (local.ownership.transfer_available != pending.available or !std.mem.eql(bool, local.ownership.partial_fields, pending.fields)) return self.sink.failRelated(
+        for (self.locals.items[0..state.len], state) |local, pending| if (local.ownership.transfer_available != pending.available or !field_moves.same(local.ownership.partial_fields, pending.fields)) return self.sink.failRelated(
             if (!self.requiresHandling(local.ty) and typed.moveOnly(local.ty, self.catalog.records)) (if (std.mem.eql(u8, code, eResultLoop)) "E_OWNED_LOOP" else "E_OWNED_PATH") else code,
             span,
             "ownership or result obligation must have the same state on every continuing path",
@@ -154,7 +155,7 @@ const Checker = struct {
         if (!local.ownership.transfer_available or !self.requiresHandling(local.ty)) return false;
         if (local.ownership.partial_fields.len == 0) return true;
         for (self.catalog.records[local.ty.recordIndex()].fields, local.ownership.partial_fields) |field, moved| {
-            if (!moved and self.requiresHandling(field.ty)) return true;
+            if (moved == null and self.requiresHandling(field.ty)) return true;
         }
         return false;
     }
@@ -493,15 +494,17 @@ const Checker = struct {
         if (!taking and self.transfers(out.ty)) return self.sink.fail("E_FIELD_COPY", read.field, "read_field cannot copy owned values or result obligations");
         if (self.transfers(local.ty) and !local.ownership.transfer_available) return self.sink.failTransfer(eOwnedConsumed, read.owner, local.declaration, local.ownership.transfer_span);
         if (taking and !self.transfers(local.ty)) return self.sink.fail("E_FIELD_TAKE", read.owner, "take_field requires an owned or result-bearing record; use read_field for copyable records");
-        if (local.ownership.partial_fields.len != 0 and local.ownership.partial_fields[field]) return self.sink.fail("E_FIELD_MOVED", read.field, "field has already been transferred");
-        try self.ownerAccess(owner, taking, read.owner);
-        if (taking) {
-            const moved = try self.allocator.alloc(bool, self.catalog.records[local.ty.recordIndex()].fields.len);
-            @memset(moved, false);
-            if (local.ownership.partial_fields.len != 0) @memcpy(moved, local.ownership.partial_fields);
-            moved[field] = true;
-            local.ownership.partial_fields = moved;
+        if (local.ownership.partial_fields.len != 0) {
+            if (local.ownership.partial_fields[field]) |at| return self.sink.failMovedField(read.field, local.declaration, at);
         }
+        try self.ownerAccess(owner, taking, read.owner);
+        if (taking) local.ownership.partial_fields = try field_moves.take(
+            self.allocator,
+            local.ownership.partial_fields,
+            self.catalog.records[local.ty.recordIndex()].fields.len,
+            field,
+            read.field,
+        );
         local.usage.reads += 1;
         if (self.conversion_fields) |seen| {
             if (@backingInt(owner) == 0) seen[field] = true;
@@ -648,7 +651,11 @@ const Checker = struct {
     fn checkName(self: *Checker, _: ast.Node, name: @FieldType(@FieldType(ast.Node, "data"), "name"), out: *typed.Node) Error!void {
         if (self.active_refs.contains(self.src.text(name))) return self.sink.fail("E_REFERENCE_VALUE", name, "references cannot be copied, stored, returned, or passed to value parameters; use read_ref to copy the referenced value");
         const slot = try self.resolve(name);
-        if (self.locals.items[@backingInt(slot)].ownership.partial_fields.len != 0) return self.sink.fail("E_PARTIAL_MOVE", name, "record has missing fields; access remaining fields individually or replace the binding");
+        if (field_moves.first(self.locals.items[@backingInt(slot)].ownership.partial_fields)) |at| return self.sink.failPartialMove(
+            name,
+            self.locals.items[@backingInt(slot)].declaration,
+            at,
+        );
         if (self.transfers(self.locals.items[@backingInt(slot)].ty)) {
             const local = &self.locals.items[@backingInt(slot)];
             if (!local.ownership.transfer_available) return self.sink.failTransfer(

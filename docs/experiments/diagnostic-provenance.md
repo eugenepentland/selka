@@ -1,6 +1,6 @@
 # Ownership diagnostic provenance and repair fixtures
 
-Whole-value transfer errors, conflicting borrows and suspended parent references
+Whole-value and partial-field transfer errors, conflicting borrows and suspended parent references
 now report the invalid use, the earlier operation and the value declaration.
 This applies to ordinary checking and to abstract generic bodies, including
 uncalled templates. Existing error codes remain unchanged.
@@ -22,6 +22,16 @@ identifies a preceding checked path; it is not a claim that execution selected
 that path. Consumed buffer/pool/resource queries, field operations and whole-value
 uses share the transfer diagnostic helper where they reject consumed owners.
 
+Partial record moves retain one optional source span per schema field, shared by
+ordinary and abstract checking. A missing-field access reports that field's earlier
+extraction; an invalid whole-record use reports the earliest recorded missing-field
+witness. The causal span identifies the field token in `take_field`. Immutable
+snapshots preserve witnesses when branches restore, and complete replacement clears
+them. Joins compare field availability independently of source positions, so two
+branches may extract the same fields at different sites or in different orders.
+This replaces boolean checker bookkeeping with optional spans; it increases host
+memory per partially moved record snapshot, without changing the VM's move bitmap.
+
 Conflicting loans identify the active borrow and original owner declaration.
 Suspended exclusive references identify the child borrow that prevents access.
 Ordinary checking chooses the earliest applicable declaration by source span;
@@ -38,6 +48,10 @@ spans, then independently check and execute repaired programs. They cover:
 - Reading through the child reference while an exclusive parent is suspended.
 - Querying the surviving buffer owner after a move.
 - Clearing an old move witness when a binding is replaced after branch handling.
+- Locating repeated field extraction and incomplete whole-record use, then handling
+  the remaining fields in an executed repair.
+- Restoring the continuing branch's field witness after another branch returns,
+  and clearing earlier extraction witnesses when a record is replenished.
 - Mapping all locations to an imported module and executing its repaired version.
 - Preserving allocation failures while collecting and rendering provenance.
 
@@ -48,8 +62,8 @@ still needs matched tasks, recorded attempts and independent behavioral tests.
 
 ## Remaining diagnostic work
 
-Partial-field move provenance, arena-origin explanations, richer returned-lifetime
-paths, and general machine-readable CLI output remain pending. Audit optional
-value ergonomics and extend the repair corpus before calling the diagnostic track
-complete. Typed host registration and the application trial remain active roadmap
-work; native execution remains excluded.
+Arena-origin explanations, richer returned-lifetime paths, and general
+machine-readable CLI output remain pending. The initial
+[optional-value audit](optional-values.md) retains named unions/results; application
+usability and broader repair evidence remain pending. Typed host registration and
+the application trial remain active roadmap work; native execution remains excluded.

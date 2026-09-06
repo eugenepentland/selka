@@ -4,6 +4,7 @@ const ast = @import("ast.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
+const field_moves = @import("field_moves.zig");
 const requirements = @import("generic_requirements.zig");
 const Error = diagnostic.Error;
 const effects = @import("effects.zig");
@@ -21,7 +22,7 @@ const Symbolic = union(enum) { concrete: typed.Type, parameter: usize };
 const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
 const FunctionMap = std.StringHashMapUnmanaged(usize);
 const Return = struct { parameter: usize, mutable: bool, slice: bool };
-const Pending = struct { available: bool, fields: []const bool, transfer_span: ?source.Span };
+const Pending = struct { available: bool, fields: field_moves.State, transfer_span: ?source.Span };
 const Local = struct {
     name: source.Span,
     ty: Symbolic,
@@ -31,7 +32,7 @@ const Local = struct {
     transfer_span: ?source.Span = null,
     parent: ?usize = null,
     available: bool = true,
-    fields: []const bool = &.{},
+    fields: field_moves.State = &.{},
     reference: ?bool = null,
     slice: bool = false,
     root: ?usize = null,
@@ -131,7 +132,7 @@ const Checker = struct {
         if (binding.fields.len == 0) return true;
         const record = self.catalog.records[binding.ty.concrete.recordIndex()];
         for (record.fields, binding.fields) |field, moved| {
-            if (!moved and self.requiresHandling(.{ .concrete = field.ty })) return true;
+            if (moved == null and self.requiresHandling(.{ .concrete = field.ty })) return true;
         }
         return false;
     }
@@ -155,7 +156,7 @@ const Checker = struct {
     }
     fn samePending(self: *Checker, state: []const Pending, span: source.Span, code: []const u8) Error!void {
         for (self.locals.items[0..state.len], state) |binding, pending| {
-            const fields_match = std.mem.eql(bool, binding.fields, pending.fields);
+            const fields_match = field_moves.same(binding.fields, pending.fields);
             const owned = self.moveOnly(binding.ty) and !self.requiresHandling(binding.ty);
             const mismatch_code = if (owned) (if (std.mem.eql(u8, code, diagnostic.result_loop)) "E_OWNED_LOOP" else "E_OWNED_PATH") else code;
             if (binding.available != pending.available or !fields_match) return self.sink.failRelated(
@@ -215,7 +216,7 @@ const Checker = struct {
         const binding = try self.local(span);
         if (binding.reference != null) return self.sink.fail("E_REFERENCE_VALUE", span, "references require read_ref or an explicit reference parameter");
         try self.ownerAccess(binding.*, self.transfers(binding.ty), span);
-        if (binding.fields.len != 0) return self.sink.fail("E_PARTIAL_MOVE", span, "record has missing fields; access remaining fields individually or replace it");
+        if (field_moves.first(binding.fields)) |at| return self.sink.failPartialMove(span, binding.name, at);
         if (self.transfers(binding.ty)) {
             if (!binding.available) return self.sink.failTransfer(if (self.moveOnly(binding.ty)) diagnostic.owned_consumed else "E_RESULT_CONSUMED", span, binding.name, binding.transfer_span);
             binding.available = false;
@@ -685,15 +686,11 @@ const Checker = struct {
         if (!taking and self.transfers(result)) return self.sink.fail("E_FIELD_COPY", access.field, "read_field cannot copy owned values or result obligations");
         if (self.transfers(binding.ty) and !binding.available) return self.sink.failTransfer(diagnostic.owned_consumed, access.owner, binding.name, binding.transfer_span);
         if (taking and !self.transfers(binding.ty)) return self.sink.fail("E_FIELD_TAKE", access.owner, "take_field requires an owned or result-bearing record; use read_field for copyable records");
-        if (binding.fields.len != 0 and binding.fields[index]) return self.sink.fail("E_FIELD_MOVED", access.field, "field has already been transferred");
-        try self.ownerAccess(binding.*, taking, access.owner);
-        if (taking) {
-            const moved = try self.field_arena.allocator().alloc(bool, fields.len);
-            @memset(moved, false);
-            if (binding.fields.len != 0) @memcpy(moved, binding.fields);
-            moved[index] = true;
-            binding.fields = moved;
+        if (binding.fields.len != 0) {
+            if (binding.fields[index]) |at| return self.sink.failMovedField(access.field, binding.name, at);
         }
+        try self.ownerAccess(binding.*, taking, access.owner);
+        if (taking) binding.fields = try field_moves.take(self.field_arena.allocator(), binding.fields, fields.len, index, access.field);
         return result;
     }
     fn propagateValue(self: *Checker, operand: ast.NodeId, span: source.Span) Error!Symbolic {

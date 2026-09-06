@@ -30,7 +30,7 @@ that depend on a VM instruction encoding or the host's incidental memory layout.
 | --- | --- |
 | Distinct IDs and units | Reject mixed component/net identities and coordinate units; test public/private construction and explicit conversions. |
 | Tagged unions and exhaustive matching | Adding a state diagnoses every match that promised completeness. |
-| Explicit optional values and errors | Represent absence explicitly using variants initially; test access only after case handling and failures that cannot be silently discarded. Audit usability before proposing dedicated optional syntax. |
+| Explicit optional values and errors | Represent absence explicitly using variants initially; test access only after case handling and failures that cannot be silently discarded. The initial [optional-value audit](optional-values.md) retains named unions/results; measure usability in the application trial before proposing dedicated optional syntax. |
 | Initialization and checked operations | Reject reads without initialization; test overflow, division and indexing failures in Debug and ReleaseFast with located diagnostics/traps. |
 | Ownership and borrowing | Reject consumed values, escaping references, and conflicting access; verify cleanup on success, early errors and traps. |
 | Mutation and effects | Require visible mutation and authority for external operations; enforce effect bounds transitively through helpers, host calls and cleanup. |
@@ -48,7 +48,7 @@ primary source spans, related locations and readable explanations. For ownership
 conflicts, identify creation, borrow or move, and the conflicting later use when
 applicable. Preserve module and generic-call context. Test the structured output
 and repair examples; do not expose compiler internals as required user knowledge.
-[Whole-value and borrow provenance](diagnostic-provenance.md) now has exact-location
+[Whole-value, partial-field and borrow provenance](diagnostic-provenance.md) now has exact-location
 and executed-repair acceptance. The broader diagnostic track remains open.
 
 ## Typed host-library interface — pending

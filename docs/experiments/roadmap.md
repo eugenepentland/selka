@@ -18,7 +18,7 @@ See [the current design and acceptance criteria](interpreter-first.md).
 | Priority | Work | Completion evidence |
 | --- | --- | --- |
 | 1 | Interpreter workflow, concrete generic local views and arena/reset lifetimes implemented | `test`/`test-interpreter` retain Guardian, core/CLI and interpreter/tooling coverage; `test-native` is optional and `test-all` combines both. Views and arenas have VM/CLI rejection and cleanup acceptance. Next active priority: diagnostic provenance and repair fixtures. |
-| 2 | In progress: whole-value transfer and borrow provenance with executed repair fixtures implemented | Next: partial-field/arena/lifetime provenance and versioned CLI diagnostic output; audit optional-value ergonomics. Agent repair success remains unmeasured. |
+| 2 | In progress: whole-value/partial-field transfer and borrow provenance with executed repair fixtures implemented | Next: arena/lifetime provenance and versioned CLI diagnostic output. The initial [optional-value audit](optional-values.md) retains named unions/results; application usability and agent repair success remain unmeasured. |
 | 3 | Typed registered host functions with handwritten wrappers | Exact signatures/effects, ownership and lifetime checks, typed errors, deterministic fake-host tests. |
 | 4 | Board-validation or constraint-processing module | Independent behavioral tests and recorded agent repair outcomes; geometry/routing kernels stay in native libraries. |
 | 5 | Trial-driven language/tooling refinement | Evidence for generic constraints, source serialization, incremental checking, and useful duplication reports. |
@@ -947,3 +947,43 @@ Partial-field moves, arena/lifetime explanations, versioned machine-readable CLI
 diagnostics and optional-value ergonomics remain open in this track. Typed host
 registration, the real application/repair trial and remaining interpreter
 roadmap items stay active. Native execution remains excluded.
+
+
+### Partial-move provenance and optional-value audit — 2026-09-06
+
+Partial record state now retains the source span of each extracted field in
+immutable snapshots shared by ordinary and abstract generic checking. Reusing a
+missing field reports E_FIELD_MOVED with its extraction and owner declaration;
+using an incomplete record reports E_PARTIAL_MOVE with an earlier missing-field
+witness. Continuing-path checks compare availability independently of source
+locations. Restoring a branch restores its witnesses, and whole-binding replacement
+clears them. This increases compiler bookkeeping per snapshot; the VM representation
+and ownership rules are unchanged. See [diagnostic provenance](diagnostic-provenance.md).
+
+New fixtures assert exact locations and execute repairs for repeated extraction,
+incomplete whole-record use, a continuing branch after another branch returns,
+and replenished records. Allocation sweeps preserve diagnostic rejection and
+cleanup. Existing branch-order, result-obligation and runtime partial-move tests
+remain part of acceptance.
+
+The initial [optional-value audit](optional-values.md) retains named
+unions for absence and declared results for errors. A combined VM lookup example
+executed present, absent and failure states; five malformed alternatives rejected
+with the expected codes. Nested statement matches and per-payload declarations
+are documented design costs for the application trial, not evidence of measured
+agent usability or a reason to add implicit unwrapping.
+
+Validation: Debug `zig build test` passes 27/27 steps and ReleaseFast
+`test-interpreter` passes 28/28 steps; both pass 725/725 core/CLI tests
+(662 core, 63 CLI), interpreter/tooling drivers and 96 independent corpus
+comparisons. Formatting and all 88 Guardian checks pass with baselines disabled;
+existing report-only size/line findings remain. Two additional gate cycles resolved
+a compound assertion, the spec-link format and a test-only failure sentinel warning.
+The assertion finding was labelled useful-review; the sentinel finding was labelled
+false-positive because an equivalent test assertion was the only resulting change.
+No native execution suite was run.
+
+Next: arena-origin and returned-lifetime explanations and versioned machine-readable
+CLI diagnostics, then typed host registration and the application/repair trial.
+Broader abstraction/tooling and trial evidence remain open. Native execution stays
+outside the active goal.

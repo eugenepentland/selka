@@ -128,3 +128,91 @@ test "owned buffer queries report the transfer site and repair to the surviving 
         );
     }
 }
+
+const pair_schema = "result R{ok:i64,err:i64}struct Pair{first:R,second:R,code:i64}";
+const pair_binding = "let pair=new Pair{first:new R.ok(1),second:new R.ok(2),code:7};";
+// spec: DIAGNOSTIC-PARTIAL-MOVE-1
+test "missing field and partial record diagnostics point to extraction and execute valid repairs" {
+    for ([_]bool{ false, true }) |generic| {
+        const prefix = if (generic) "fn work<T:copy>()->i64{" else "fn work()->i64{";
+        const main = if (generic) "fn main()->i64{return work::<bool>();}" else "fn main()->i64{return work();}";
+        const before = try std.mem.concat(t.allocator, u8, &.{ pair_schema, prefix, pair_binding, "acknowledge take_field(pair,first);" });
+        defer t.allocator.free(before);
+        const after = "acknowledge take_field(pair,second);return read_field(pair,code);}";
+        const fixed = try std.mem.concat(t.allocator, u8, &.{ before, after, main });
+        defer t.allocator.free(fixed);
+        for ([_]bool{ false, true }) |whole| {
+            const bad = try std.mem.concat(t.allocator, u8, &.{ before, if (whole) "acknowledge pair;" else "acknowledge take_field(pair,first);", after, main });
+            defer t.allocator.free(bad);
+            try checkRepair(
+                bad,
+                fixed,
+                if (whole) "E_PARTIAL_MOVE" else "E_FIELD_MOVED",
+                .{ before.len + (if (whole) @as(usize, 12) else 28), at(bad, "take_field(pair,first)", 16), at(bad, "let pair", 4) },
+                7,
+            );
+        }
+    }
+}
+test "partial field witnesses restore the continuing branch instead of the returned branch" {
+    for ([_]bool{ false, true }) |generic| {
+        const prefix = if (generic) "fn work<T:copy>(flag:bool)->i64{" else "fn work(flag:bool)->i64{";
+        const main = if (generic) "fn main()->i64{return work::<bool>(false);}" else "fn main()->i64{return work(false);}";
+        const branches = "if flag{acknowledge take_field(pair,first);acknowledge take_field(pair,second);return 5;}else{acknowledge take_field(pair,second);}";
+        const before = try std.mem.concat(t.allocator, u8, &.{ pair_schema, prefix, pair_binding, branches });
+        defer t.allocator.free(before);
+        const bad = try std.mem.concat(t.allocator, u8, &.{ before, "acknowledge take_field(pair,second);return read_field(pair,code);}", main });
+        defer t.allocator.free(bad);
+        const fixed = try std.mem.concat(t.allocator, u8, &.{ before, "acknowledge take_field(pair,first);return read_field(pair,code);}", main });
+        defer t.allocator.free(fixed);
+        try checkRepair(
+            bad,
+            fixed,
+            "E_FIELD_MOVED",
+            .{ before.len + 28, std.mem.lastIndexOf(u8, before, "take_field(pair,second)").? + 16, at(bad, "let pair", 4) },
+            7,
+        );
+    }
+}
+fn fieldFailureScenario(allocator: std.mem.Allocator) !void {
+    const text = pair_schema ++ "fn work<T:copy>()->i64{" ++ pair_binding ++
+        "acknowledge take_field(pair,first);acknowledge take_field(pair,first);return 0;}fn main()->i64{return 0;}";
+    var c = try language.Compilation.init(allocator, "field-failure.my", text);
+    defer c.deinit();
+    c.check() catch |err| {
+        if (err != error.SourceError) return err;
+        const problem = c.diagnostics.items[0];
+        try t.expectEqualStrings("E_FIELD_MOVED", problem.code);
+        try t.expectEqual(at(text, "take_field(pair,first)", 16), problem.related.?.span.start);
+        return;
+    };
+    try t.expect(false);
+}
+test "partial move checking preserves allocation failures through rejection and provenance" {
+    try fieldFailureScenario(t.allocator);
+    try t.checkAllAllocationFailures(t.allocator, fieldFailureScenario, .{});
+}
+
+test "replacement clears partial move witnesses before taking the replenished record" {
+    for ([_]bool{ false, true }) |generic| {
+        const prefix = if (generic) "fn work<T:copy>()->i64{" else "fn work()->i64{";
+        const main = if (generic) "fn main()->i64{return work::<bool>();}" else "fn main()->i64{return work();}";
+        const setup = "let mut pair=new Pair{first:new R.ok(1),second:new R.ok(2),code:3};" ++
+            "acknowledge take_field(pair,first);acknowledge take_field(pair,second);" ++
+            "pair=new Pair{first:new R.ok(4),second:new R.ok(5),code:7};acknowledge take_field(pair,first);";
+        const before = try std.mem.concat(t.allocator, u8, &.{ pair_schema, prefix, setup });
+        defer t.allocator.free(before);
+        const after = "acknowledge take_field(pair,second);return read_field(pair,code);}";
+        const bad = try std.mem.concat(t.allocator, u8, &.{ before, "acknowledge pair;", after, main });
+        defer t.allocator.free(bad);
+        const fixed = try std.mem.concat(t.allocator, u8, &.{ before, after, main });
+        defer t.allocator.free(fixed);
+        try checkRepair(
+            bad,
+            fixed,
+            "E_PARTIAL_MOVE",
+            .{ before.len + 12, std.mem.lastIndexOf(u8, before, "take_field(pair,first)").? + 16, at(bad, "mut pair", 4) },
+            7,
+        );
+    }
+}

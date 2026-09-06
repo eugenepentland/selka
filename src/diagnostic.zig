@@ -95,6 +95,16 @@ pub const Sink = struct {
         return error.SourceError;
     }
 
+    /// Identify the earlier extraction when a moved field is accessed again.
+    pub fn failMovedField(self: *Sink, span: source.Span, declaration: source.Span, transfer: source.Span) Error {
+        return self.failProvenance("E_FIELD_MOVED", span, "field has already been transferred", .{ .span = transfer, .message = "earlier field transfer on this path" }, declaration);
+    }
+
+    /// Identify a missing field when the incomplete record is used as a whole.
+    pub fn failPartialMove(self: *Sink, span: source.Span, declaration: source.Span, transfer: source.Span) Error {
+        return self.failProvenance("E_PARTIAL_MOVE", span, "record has missing fields; access remaining fields individually or replace the binding", .{ .span = transfer, .message = "earlier field transfer on this path" }, declaration);
+    }
+
     /// Diagnose reuse of a transferred value, retaining a witness from the checked path.
     pub fn failTransfer(self: *Sink, code: []const u8, span: source.Span, declaration: source.Span, transfer: ?source.Span) Error {
         const message = "value has already been transferred or handled";

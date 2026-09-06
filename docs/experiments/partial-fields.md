@@ -59,7 +59,9 @@ the parent. Shared aggregates reject destructive extraction, preserving snapshot
 Ordinary immutable updates reject partial aggregate storage.
 
 The checker uses immutable field-state snapshots when branches or expressions need
-ownership comparisons; each take copies a field-state array. The runtime bitmap
+ownership comparisons; each take copies an array of optional source spans. A present
+span records the extraction of that field, while comparisons use only availability.
+See [diagnostic provenance](diagnostic-provenance.md) for causal notes and repairs. The runtime bitmap
 allocates once per partially moved record. These are host bookkeeping costs, not
 guest buffer backing allocations: noalloc retains its existing guest-allocation
 meaning. Cleanup effects remain conservatively inferred from owned types. No general
