@@ -88,6 +88,14 @@ pub fn build(b: *std.Build) void {
     const board_contract = b.addSystemCommand(&.{ "python3", "-m", "unittest", "discover", "-s", "experiments/board_trial", "-p", "test_oracle.py" });
     board_contract.setCwd(b.path("."));
     test_step.dependOn(&board_contract.step);
+    const repair_study = b.addSystemCommand(&.{ "python3", "experiments/board_trial/repair/selftest.py", "--compiler" });
+    repair_study.addFileArg(exe.getEmittedBin());
+    repair_study.addArgs(&.{ "--zig", b.graph.zig_exe });
+    repair_study.setCwd(b.path("."));
+    test_step.dependOn(&repair_study.step);
+    const repair_step = b.step("test-repair-study", "Verify repair-study fixtures and retained evidence");
+    repair_step.dependOn(&repair_study.step);
+    guardian.addAllChecks(b, guardian_exe, repair_step, .{});
     const python_native = b.addSystemCommand(&.{ "python3", "tests/python_native_calls.py", "--compiler" });
     python_native.addFileArg(exe.getEmittedBin());
     python_native.addArgs(&.{ "--zig", b.graph.zig_exe });

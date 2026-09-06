@@ -7,7 +7,8 @@ on its bytecode VM; a future decision can reopen native work.
 
 Direction adopted on 2026-09-06; this document and [plan section 1](../plan.md#1-project-direction)
 supersede earlier native-first sequencing. These are planned acceptance criteria,
-with the copied-value host interface now implemented; the application trial remains pending.
+with the copied-value host interface and bounded application validator implemented;
+measured agent repair attempts remain pending.
 
 ## Objective and architecture
 
@@ -104,7 +105,9 @@ now match all 87 fixed outcomes and callback counts plus 60 transformed cases.
 Component/net IDs and units are distinct types; validation outcomes are explicit
 variants. The guest executes on the VM with one registered rectangle callback.
 Eighteen malformed transports reject, and allocation-failure cleanup is tested.
-The measured repair study remains pending.
+The [repair-study harness](../../experiments/board_trial/repair/README.md) now
+prepares task pairs and retains checks, frozen submissions and fresh shared
+grading cases. Actual agent repair attempts remain pending.
 
 Compare equivalent changes in the existing implementation and the language using
 matched task descriptions, available context, model/tool configuration and a

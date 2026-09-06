@@ -63,8 +63,9 @@ explicit types, schemas, and interfaces where that improves the program.
 4. The [bounded board keepout trial](../experiments/board_trial/README.md) now
    executes guest validation on the VM and a standalone Zig baseline against 87
    fixed oracle cases plus 60 transformed cases, with exact report/callback
-   agreement. Geometry stays behind a typed wrapper. Prepare matched repair
-   tasks and fresh held-out cases next; measured repair attempts remain pending.
+   agreement. Geometry stays behind a typed wrapper. The [repair-study harness](../experiments/board_trial/repair/README.md)
+   now prepares five task pairs, records submissions and grades fresh shared
+   cases after sealing. Actual agent repair attempts remain pending.
 5. Use trial evidence to prioritize generic constraints/tooling, bounded source
    serialization, and finer incremental checks. These remain open; completing all
    abstraction experiments is not a prerequisite for starting the trial.
@@ -2226,3 +2227,54 @@ Next: prepare matched repair tasks and fresh held-out cases, retain actual
 attempts and independent outcomes, and use those results to prioritize the
 remaining language abstractions and tooling. The repair study and broader
 roadmap remain incomplete. Native guest execution remains outside the active goal.
+
+
+## Recorded repair-study tooling — 2026-09-06
+
+The [repair-study harness](../experiments/board_trial/repair/README.md) now
+prepares five task pairs: nominal identity mixing, unit conversion, missing
+through-via handling, net exemptions and board-boundary behavior. Four use the
+existing board validator; the units task compares its existing guest helper
+with an equivalent small Zig helper. The state task is a missing-handler
+regression, not full evolution of the board schema. Actual agent repair attempts
+and broader schema/application experiments remain pending.
+
+Preparation freezes compiler/trial source, tool and harness hashes and provides
+only editable files plus read-only same-language context. It records the seeded
+failure before participant work, then captures every check's immutable source,
+patch, diagnostics, command status and timing. Repeated unchanged checks are
+separate from edited submissions. Out-of-scope edits, missing context and symlink
+submissions are retained as failed boundary checks before execution. There are
+five edited submissions and twenty checks per task; snapshots and later grading
+retain failed and abandoned outcomes rather than selecting successes.
+
+Sealing stops edits/checks from affecting the submitted candidate. Paired grading
+requires both sides to be sealed and their task, model label, tools, sources and
+budgets to agree. It then creates shared fresh inputs: 128 board cases or 64 unit
+conversions. Interrupted grading resumes the same plan and retains partial runs.
+Individual grading remains explicitly unpaired. The output records raw outcomes
+and first-edited/final correctness, with no automatic comparative reliability
+claim. Context restrictions are a study protocol, not an OS sandbox; review
+actual patches for type erasure, changed contracts and other workarounds.
+
+Ten harness self-tests verify all ten seeded failures and known restorations on
+development and fresh cases, source boundaries, sealing, snapshot/tool/compiler
+changes, check budgets, symlink handling, timeout records, paired case identity
+and grading recovery. These are explicitly labeled fixture restorations, not
+agent measurements. An initial fixture run found that the Zig admission seed
+left an unused via payload capture; removing that capture made the seed expose
+its intended behavioral error. No language implementation bug was identified.
+
+Debug `zig build test` passes 34/34 steps and ReleaseFast `test-interpreter`
+passes 35/35. Both execute all 21 interpreter/tooling driver invocations,
+including the ten new harness tests, existing 147 board comparisons and 96
+ordinary VM corpus checks. The three unchanged Zig test roots reuse cached
+results; no fresh full Zig-test execution is claimed. The focused
+`test-repair-study` target, formatting and the Guardian gate pass with baselines
+disabled. Existing report-only findings remain. No guest-native backend work or
+acceptance was performed.
+
+Next: run actual matched attempts with fresh isolated participants, retain raw
+outcomes and patch reviews, then use that evidence and a real project pilot to
+prioritize remaining abstractions, serialization and incremental tooling. The
+subagent authorization question is pending; the broader roadmap remains active.

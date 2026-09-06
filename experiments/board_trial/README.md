@@ -55,5 +55,7 @@ application code; trusted wrappers still require independent review and tests.
 This is development acceptance evidence. No blinded or matched agent repair
 attempts have been collected, no relative reliability claim is justified, and
 the tiny geometry kernel provides no meaningful routing-performance comparison.
-Next prepare equivalent repair tasks and fresh held-out cases, retaining failed
-attempts and raw diagnostics/patches. Native guest compilation remains deferred.
+The [repair-study harness](repair/README.md) prepares five task pairs, retains
+failed checks and patches, and grades shared fresh cases after both submissions
+are sealed. Its known-answer fixture restorations validate the harness; actual
+agent repair attempts remain pending. Native guest compilation remains deferred.
