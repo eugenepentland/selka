@@ -56,4 +56,5 @@ shared libraries using only the public headers. The driver runs under
 
 This establishes executable public scalar invocation. [Ordinary aggregate values](native-wire.md)
 now use a separate bounded wire API. Domain codec invocation at the native boundary,
-borrowed/capability signatures and generated native callable bindings remain unfinished.
+and borrowed/capability signatures remain unfinished. [Generated native Python
+bindings](native-bindings.md) now use the ordinary value ABI with schema checks.

@@ -105,16 +105,18 @@ fn predicate(op: typed.BinaryOp) []const u8 {
 }
 /// Validate supported bytecode and allocate standalone C source; report unsupported features through the sink.
 pub fn generate(allocator: std.mem.Allocator, program: bc.Program, src: Source, sink: *diagnostic.Sink) GenerateError![]u8 {
-    return generateWithExports(allocator, program, src, sink, &.{});
+    return generateWithInterface(allocator, program, src, sink, .{});
 }
-/// Generate native C retaining only explicitly selected public function roots.
-pub fn generateWithExports(allocator: std.mem.Allocator, program: bc.Program, src: Source, sink: *diagnostic.Sink, roots: []const typed.FunctionId) GenerateError![]u8 {
-    return generateInner(allocator, program, src, sink, roots) catch |err| switch (err) {
+/// Checked public roots and optional canonical schema bytes from the same compilation.
+pub const Interface = struct { roots: []const typed.FunctionId = &.{}, schema: ?[]const u8 = null };
+/// Generate native C retaining the selected public roots and immutable schema identity.
+pub fn generateWithInterface(allocator: std.mem.Allocator, program: bc.Program, src: Source, sink: *diagnostic.Sink, interface: Interface) GenerateError![]u8 {
+    return generateInner(allocator, program, src, sink, interface) catch |err| switch (err) {
         error.WriteFailed => error.OutOfMemory,
         else => err,
     };
 }
-fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source, sink: *diagnostic.Sink, roots: []const typed.FunctionId) ![]u8 {
+fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source, sink: *diagnostic.Sink, interface: Interface) ![]u8 {
     try bc.validate(allocator, program);
     var layout = try native_layout.Layout.init(allocator, program.records);
     defer layout.deinit();
@@ -136,6 +138,7 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     try w.writeAll(@embedFile("native_embed.h"));
     try w.writeAll(@embedFile("native_runtime.c"));
     try w.writeAll(@embedFile("native_resources.c"));
+    try writeInterface(w, interface.schema);
     try native_wire.emit(w, layout, wire_types);
     try w.writeAll("\nstatic const char *const names[] = {\n");
     for (program.functions) |function| {
@@ -154,7 +157,7 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     try w.writeAll("};\n#ifdef MYLANG_EMBED\nstatic int execute_entry(const char *entry_name, const MylangScalar *arguments, size_t argument_count) {\n" ++
         "#else\nint main(int argc, char **argv) {\n#endif\nsource_paths = paths; function_names = names; source_lines = lines; source_columns = columns;\n" ++
         "#ifndef MYLANG_EMBED\noptions(argc, argv); providers = mylang_native_providers();\n#endif\nvalidate_resource_providers(); size_t return_target = 0;\n");
-    try writeExports(w, program, offsets, roots, wire_types);
+    try writeExports(w, program, offsets, interface.roots, wire_types);
     const main_index = @backingInt(program.main);
     for (program.functions[main_index].scope.locals[0..program.functions[main_index].signature.parameter_count]) |parameter| {
         switch (parameter.ty) {
@@ -195,6 +198,18 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     try w.writeAll("default: host_failure(\"InternalError\"); } return 2;\n}\n");
     try w.writeAll(@embedFile("native_embed.c"));
     return output.toOwnedSlice();
+}
+
+fn writeInterface(w: *std.Io.Writer, schema: ?[]const u8) !void {
+    try w.writeAll("#ifdef MYLANG_EMBED\nconst char *mylang_native_schema_json_v1(void) { return ");
+    if (schema) |bytes| try string(w, bytes) else try w.writeAll("NULL");
+    try w.writeAll("; }\nconst char *mylang_native_schema_sha256_v1(void) { return ");
+    if (schema) |bytes| {
+        var digest: [32]u8 = undefined;
+        std.crypto.hash.sha2.Sha256.hash(bytes, &digest, .{});
+        try string(w, &std.fmt.bytesToHex(digest, .lower));
+    } else try w.writeAll("NULL");
+    try w.writeAll("; }\n#endif\n");
 }
 
 fn scalarSignature(function: bc.Function) bool {

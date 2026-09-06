@@ -124,13 +124,14 @@ def main():
             assert output.read_bytes() == original and path.read_bytes() == stored
         limited = build(max_output_bytes=driver.MAX_BYTES - 1)
         assert limited['cache'] == 'miss' and limited['request_sha256'] != key and limited['installation'] == 'unchanged'
-        runtime = root / 'runtime.py'
-        runtime.write_text(driver.RUNTIME.read_text() + '\n# changed runtime input\n')
-        with patch.object(driver, 'RUNTIME', runtime):
-            changed = build()
-            assert changed['cache'] == 'miss' and changed['request_sha256'] != key
-            assert output.read_bytes() != original
-        assert build()['cache'] == 'hit' and output.read_bytes() == original
+        for dependency in ('RUNTIME', 'NATIVE_RUNTIME'):
+            runtime = root / (dependency.lower() + '.py')
+            runtime.write_text(getattr(driver, dependency).read_text() + '\n# changed runtime input\n')
+            with patch.object(driver, dependency, runtime):
+                changed = build()
+                assert changed['cache'] == 'miss' and changed['request_sha256'] != key
+                assert output.read_bytes() != original
+            assert build()['cache'] == 'hit' and output.read_bytes() == original
         # A different selected executable is a distinct dependency even when the
         # returned schema is identical. Modify only a private wrapper, not Zig.
         wrapper = root / 'compiler-wrapper'

@@ -306,11 +306,13 @@ fn exportedScenario(allocator: std.mem.Allocator) !void {
     try c.emit();
     var sink: @import("diagnostic.zig").Sink = .{ .allocator = allocator };
     defer sink.deinit();
-    const generated = try @import("native.zig").generateWithExports(allocator, c.code.?, c.src, &sink, &.{ c.code.?.functions[0].id, c.code.?.functions[1].id });
+    const generated = try @import("native.zig").generateWithInterface(allocator, c.code.?, c.src, &sink, .{ .roots = &.{ c.code.?.functions[0].id, c.code.?.functions[1].id }, .schema = "{\"fixture\":true}" });
     defer allocator.free(generated);
 }
 // spec: NATIVE-CALL-1
 // spec: NATIVE-WIRE-1
+// spec: NATIVE-SCHEMA-1
+// spec: NATIVE-BINDINGS-1
 test "native public value emission releases storage at every allocation failure" {
     try exportedScenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });

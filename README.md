@@ -231,6 +231,8 @@ Module libraries also support [exported scalar calls](docs/experiments/native-ca
 by qualified name through `mylang_native_call_v1`, with checked integer/Boolean
 arguments and full-width results. [Native aggregate calls](docs/experiments/native-wire.md)
 copy ordinary record, array and variant trees through caller-owned buffers.
+Generated Python wrappers also accept a [schema-pinned NativeClient](docs/experiments/native-bindings.md),
+which calls a matching shared library without a compiler subprocess.
 
 [Partial record field moves](docs/experiments/partial-fields.md) use
 `take_field(owner, field)` to transfer individual fields immediately while preserving

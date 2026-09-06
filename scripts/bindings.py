@@ -15,6 +15,7 @@ import time
 
 ROOT = Path(__file__).resolve().parents[1]
 RUNTIME = Path(__file__).with_name('python_bindings_runtime.py')
+NATIVE_RUNTIME = Path(__file__).with_name('python_native_runtime.py')
 MAX_BYTES = 16 * 1024 * 1024
 ORDINARY = {'integer', 'boolean', 'record', 'array', 'table', 'enumeration', 'tagged_union', 'result'}
 
@@ -87,7 +88,7 @@ def analyze(schema, codecs=False):
 
 
 def generator_snapshot():
-    runtime = RUNTIME.read_text(encoding='utf-8')
+    runtime = RUNTIME.read_text(encoding='utf-8') + '\n' + NATIVE_RUNTIME.read_text(encoding='utf-8')
     identity = hashlib.sha256(Path(__file__).read_bytes() + b'\0' + runtime.encode()).hexdigest()
     return runtime, identity
 

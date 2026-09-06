@@ -29,8 +29,8 @@ int status = mylang_native_call_values_v1(
 ```
 
 The host must use the library's matching schema and declaration order; nominal
-names alone are not a schema-version fingerprint. Generated native bindings and
-automatic schema pinning remain subsequent work.
+names alone are not a schema-version fingerprint. [Native Python bindings](native-bindings.md)
+now verify the library's canonical schema identity automatically before calling.
 
 Input data is copied into guest storage. Output is copied into caller-provided
 nodes before guest cleanup, so no guest allocation escapes. Only type/diagnostic

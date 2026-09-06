@@ -53,4 +53,12 @@ typedef struct { MylangRunResult execution; size_t node_count; } MylangWireResul
 int mylang_native_call_values_v1(const char *name, const MylangWireNode *arguments,
     size_t node_count, MylangWireNode *output, size_t capacity,
     const MylangRunOptions *options, MylangWireResult *result);
+/* Immutable language-schema-v1 interface from the compiled module snapshot.
+   SHA-256 is lowercase hex over the exact JSON bytes (excluding the NUL).
+   Both queries return NULL for single-file output without a public schema.
+   They do not execute guest code and may run concurrently. Returned strings
+   remain valid while the library is loaded. A matching schema establishes
+   interface compatibility, not identical implementation behavior. */
+const char *mylang_native_schema_json_v1(void);
+const char *mylang_native_schema_sha256_v1(void);
 #endif

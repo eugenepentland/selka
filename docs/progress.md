@@ -3201,3 +3201,33 @@ guest-frame-only stack helper before entry-frame creation; this was test-derived
 evidence. Native domain codecs, generated schema-pinned native bindings,
 borrowed/capability signatures, incremental compilation and other roadmap items
 remain unfinished.
+
+
+### Schema-pinned generated native Python bindings — 2026-09-06
+
+Native module libraries now expose canonical public schema bytes and SHA-256
+from the same checked compilation as their code. Shared checked-schema rendering
+avoids a project/schema import cycle. Generated Python modules include
+`NativeClient` and `NativeLimits`; their existing typed wrappers call ordinary
+native scalar/record/array/table/variant/result functions only after validating
+the library's schema. Calls preserve host snapshots, report native traps and
+budgets, and do not retry output-capacity failures. Both embedded runtime sources
+participate in the generator/cache identity. See
+`docs/experiments/native-bindings.md` for usage and the synchronous native boundary.
+
+Independent metadata tests pass public field/type/case/export invalidation,
+compatible body/private/relocation stability, concurrent queries, both native
+optimization modes and absent single-file schemas. Generated Python acceptance
+passes typed compiler/native comparisons, schema/ABI/I/O rejection, integer
+boundaries, snapshots, traps/recovery, node/depth/frame/step budgets, malformed
+results and calls after source removal. Existing Python data/call, binding-cache,
+schema and receipt tests pass; cache tests include changes to the native runtime.
+All 587 core tests passed in Debug/ReleaseFast, all 60 CLI tests and formatting
+passed, and native parity passed 2682 comparisons. Native scalar/aggregate host
+acceptance passes, and Guardian passed all 88 checks without baselines. These are
+focused and core regression results, not a new full-build-test run.
+
+Native domain codecs, borrowed/capability invocation, source serialization,
+finer semantic/native incremental compilation and the other pending roadmap
+requirements remain unfinished. Schema identity establishes interface
+compatibility; it does not authenticate implementation behavior.

@@ -117,7 +117,13 @@ pub const Compilation = struct {
         try self.emit();
         const roots = try self.exportRoots(allocator);
         defer allocator.free(roots);
-        return @import("native.zig").generateWithExports(allocator, self.code.?, self.src, &self.diagnostics, roots);
+        const schema = @import("schema_graph.zig").render(allocator, self.index, self.program.?, roots) catch |err| switch (err) {
+            error.OutOfMemory => return error.OutOfMemory,
+            error.SourceError => return error.SourceError,
+            else => return error.InternalError,
+        };
+        defer allocator.free(schema);
+        return @import("native.zig").generateWithInterface(allocator, self.code.?, self.src, &self.diagnostics, .{ .roots = roots, .schema = schema });
     }
     /// Allocate the function identities exposed by the checked public interface.
     pub fn exportRoots(self: *Compilation, allocator: @import("std").mem.Allocator) CheckError![]typed.FunctionId {

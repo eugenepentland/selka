@@ -13,7 +13,7 @@ not a claim that the full future language has been delivered.
 | C, ownership/capabilities/effects | Owned buffers, queries/mutations, checked views, moves/wrappers, and partial-construction cleanup, and transitive allocation bounds, and explicit allocator capabilities implemented; clock/random capabilities and effects implemented; source filesystem/network resource acquisition/completion, owned error returns, and cleanup effects implemented; bounded environment lookup implemented; fixed-byte-array resource reads/writes implemented; resource permission attenuation implemented; borrowed slice I/O implemented; typed-handle pool and arena-reset backends plus execution-lifetime VM/CLI arena selection implemented; partial field moves implemented; source pools/handles, checked shared region backing, lexical source arenas, and conservative escape checking implemented; explicit source reset results implemented | Allocator and clock/random authority/effects pass acceptance; source resource lifecycle and cleanup effects pass; bounded environment lookup passes; resource reads/writes pass; permission attenuation passes; borrowed slice I/O passes; lexical arena acceptance passes under the documented conservative lifetime rules; explicit reset result acceptance passes. |
 | D, errors and abstraction | In progress: typed results, checked handling/transfer, acknowledgement, and propagation implemented; typed-handle pool backend implemented; source handles implemented; generic syntax, builtin requirement resolution, and initial pure symbolic body/call checking and executable specialization implemented; broader generic contracts and tooling pending | Require handling/propagation/explicit acknowledgement without erasing evaluation or ownership obligations. |
 | M, modules/interfaces | Implemented experimental scope: bounded imports, exports/privacy, source maps, module checking/VM execution, direction policy, default-limit graph/tooling acceptance, and initial ordinary-application corpus review | Shared-domain execution, direction policy, 256-module/4096-import boundaries, and invoice/packet application acceptance pass; production-user corpus evidence remains unmeasured. |
-| E, native execution | Scalar, domain, enum, record/array/table, conversion/update, packed/boxed union/result, and ordinary-value borrowing/slice and root-allocator owned-buffer/lexical-arena/pool C emission, explicit clock/random/environment provider adapters, and pinned-Zig native builder implemented for single-file and module projects; scalar semantic/trap/path/trace parity passes | Ordinary value acceptance and native allocation-failure cleanup implemented; All current bytecode operations have native emission; explicit resource ABI v4 and lifecycle/I/O/generation/quota acceptance pass. Scalar native entry embedding and shared-library builds pass focused acceptance; exported scalar native calls now pass acceptance; ordinary aggregate native calls pass acceptance; native domain codecs, generated bindings and broader compilation performance remain open. |
+| E, native execution | Scalar, domain, enum, record/array/table, conversion/update, packed/boxed union/result, and ordinary-value borrowing/slice and root-allocator owned-buffer/lexical-arena/pool C emission, explicit clock/random/environment provider adapters, and pinned-Zig native builder implemented for single-file and module projects; scalar semantic/trap/path/trace parity passes | Ordinary value acceptance and native allocation-failure cleanup implemented; All current bytecode operations have native emission; explicit resource ABI v4 and lifecycle/I/O/generation/quota acceptance pass. Scalar native entry embedding and shared-library builds pass focused acceptance; exported scalar native calls now pass acceptance; ordinary aggregate native calls pass acceptance; generated native Python bindings now verify schema compatibility; native domain codecs and broader compilation performance remain open. |
 | F, compile-time/schema/incremental work | In progress: restricted effect-free project evaluation with step/frame/VM-memory budgets and source/implementation dependency receipts plus request identity before execution and persistent successful VM-result reuse with bounded field-level request comparisons implemented; typed scalar input manifest validation/module generation and fresh in-memory evaluation/cache bindings for multiple bounded manifests implemented; checked public type/function schema derivation and bounded ordinary typed JSON serialization/deserialization with owned failure locations and standalone Python data bindings with checked persistent artifact reuse and unchanged-output preservation implemented; checked full source receipts for schema/binding generation and exported effect-free typed invocation with owned argument copies implemented; explicit domain codec declarations and schema contracts implemented; executed domain JSON with shared operation budgets implemented; schema-pinned public JSON invocation implemented; generated Python callable wrappers and domain wire objects plus fresh manifest inputs for schema generation and calls implemented; automatic content polling through a persistent check session implemented; native ABI bindings and finer incremental compilation pending | Reject duplicate schema keys and undeclared inputs; explain invalidation and evaluation budgets. |
 | T, formatter/reference reports/verification | Canonical single-file/module formatter and reachable-project formatting checks, resolved function-call/binding reports including module main/export roots, configurable structural metrics, and separate manifest verification driver implemented | Extend reference/specification identities and entry roots with modules/schemas, and parity fixtures with native execution. |
 
@@ -642,3 +642,33 @@ guest-frame-only stack helper before entry-frame creation; this was test-derived
 evidence. Native domain codecs, generated schema-pinned native bindings,
 borrowed/capability signatures, incremental compilation and other roadmap items
 remain unfinished.
+
+
+### Schema-pinned generated native Python bindings — 2026-09-06
+
+Native module libraries now expose canonical public schema bytes and SHA-256
+from the same checked compilation as their code. Shared checked-schema rendering
+avoids a project/schema import cycle. Generated Python modules include
+`NativeClient` and `NativeLimits`; their existing typed wrappers call ordinary
+native scalar/record/array/table/variant/result functions only after validating
+the library's schema. Calls preserve host snapshots, report native traps and
+budgets, and do not retry output-capacity failures. Both embedded runtime sources
+participate in the generator/cache identity. See
+`docs/experiments/native-bindings.md` for usage and the synchronous native boundary.
+
+Independent metadata tests pass public field/type/case/export invalidation,
+compatible body/private/relocation stability, concurrent queries, both native
+optimization modes and absent single-file schemas. Generated Python acceptance
+passes typed compiler/native comparisons, schema/ABI/I/O rejection, integer
+boundaries, snapshots, traps/recovery, node/depth/frame/step budgets, malformed
+results and calls after source removal. Existing Python data/call, binding-cache,
+schema and receipt tests pass; cache tests include changes to the native runtime.
+All 587 core tests passed in Debug/ReleaseFast, all 60 CLI tests and formatting
+passed, and native parity passed 2682 comparisons. Native scalar/aggregate host
+acceptance passes, and Guardian passed all 88 checks without baselines. These are
+focused and core regression results, not a new full-build-test run.
+
+Native domain codecs, borrowed/capability invocation, source serialization,
+finer semantic/native incremental compilation and the other pending roadmap
+requirements remain unfinished. Schema identity establishes interface
+compatibility; it does not authenticate implementation behavior.

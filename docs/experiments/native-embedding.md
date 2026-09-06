@@ -55,8 +55,8 @@ active invocation. The host chooses its own printing and error policy.
 The entry API invokes the source `main` with capability entry parameters and returns
 its scalar result. [Exported scalar calls](native-calls.md) now have a separate versioned API.
 [Ordinary aggregate arguments/results](native-wire.md) also have a bounded wire
-API. Domain codecs, generated native callable bindings, and parallel per-call
-runtime contexts remain unfinished. This is a foundation for those roadmap requirements.
+API. [Generated native Python bindings](native-bindings.md) verify schema identity
+before calling. Domain codecs and parallel per-call runtime contexts remain unfinished. This is a foundation for those roadmap requirements.
 
 ## Acceptance
 
