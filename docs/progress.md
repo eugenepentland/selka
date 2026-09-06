@@ -3055,3 +3055,22 @@ module fixtures using -O0/-O2 and undefined-behavior sanitization. Guardian pass
 all 88 checks with baselines disabled. Allocation-failure coverage includes local
 reference forwarding and imported setter execution/schema generation. These
 results do not establish the unfinished slice or returned-reference contracts.
+
+
+### Generic slice input operations — 2026-09-06
+
+Generic shared/exclusive slice inputs now support length, element reads/writes,
+and forwarding. Abstract checks retain reference kind, symbolic element identity,
+integer-index requirements, access permission, and alias rules. Concrete VM/C
+instances retain runtime view lengths, bounds traps and immutable snapshots.
+Imported slice helpers execute through ordinary public wrappers. Lexical generic
+borrow scopes/narrowing, reference-result provenance, wider effect/ownership
+contracts, and other roadmap tracks remain unfinished. See
+`docs/experiments/generic-slices.md` for current scope and acceptance.
+
+Validation: all 579 core tests passed in Debug and ReleaseFast, all 60 CLI tests
+passed, and native parity passed 2664 comparisons across 90 single-file and 16
+module fixtures with -O0/-O2 and undefined-behavior sanitization. Guardian passed
+all 88 checks with baselines disabled. Allocation-failure coverage includes slice
+forwarding and module-backed execution/schema generation. Generic lexical borrow
+scopes and returned-reference contracts remain unverified and unfinished.

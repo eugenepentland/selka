@@ -96,8 +96,8 @@ def project_cases(compiler, zig, root, temp):
         "data.my": "module data;export P;export Id;export Bundle;export O;export R;export make;pool P(Id):i64;struct Bundle{p:P,id:Id}result O{ok:Bundle,err:i64}result A{ok:P,err:i64}result I{ok:Id,err:i64}result R{ok:i64,err:i64}fn make(heap:allocator)->O{let mut p=try acquire_pool<A>(heap,1);let id=try insert_pool<I>(p,7);return new O.ok(new Bundle{p:p,id:id});}",
     }))
     fixtures.append(("generics", {
-        "main.my": "module main;import units;fn identity<T:integer>(x:T)->T{return x;}fn main()->i64{let mut x=0;borrow mut x as r{discard units::set::<i64>(r,2);}return units::run()+identity::<i64>(x);}",
-        "units.my": "module units;export run;export identity;export set;fn set<T:copy>(x:&mut T,y:T)->T{write_ref(x,y);return read_ref(x);}fn identity<T:copy>(x:T)->T{return x;}fn run()->i64{if identity::<bool>(true){return identity::<i64>(5);}return 0;}",
+        "main.my": "module main;import units;fn identity<T:integer>(x:T)->T{return x;}fn main()->i64{let mut x=0;borrow mut x as r{discard units::set::<i64>(r,2);}let values=new [1]i64 [x];borrow values[0..1] as s{return units::run()+identity::<i64>(units::head::<i64>(s));}}",
+        "units.my": "module units;export run;export identity;export set;export head;fn head<T:copy>(s:&[]T)->T{return read_slice(s,0);}fn set<T:copy>(x:&mut T,y:T)->T{write_ref(x,y);return read_ref(x);}fn identity<T:copy>(x:T)->T{return x;}fn run()->i64{if identity::<bool>(true){return identity::<i64>(5);}return 0;}",
     }))
     codec_root = root / "examples" / "domain-codecs"
     fixtures.append(("domain-codecs", {name: (codec_root / name).read_text().replace("domain Positive:", "fn unused<T:copy>(x:T)->T{return x;}domain Positive:") for name in ("main.my", "data.my")}))
@@ -162,7 +162,10 @@ def main():
     compiler = args.compiler.resolve()
     root = Path(__file__).resolve().parents[1]
     fixtures = [(name, (root / "test" / "fixtures" / f"{name}.my").read_text()) for name in ("arithmetic", "sum", "gcd")]
-    fixtures += [(name, (root / "examples" / f"{name}.my").read_text()) for name in ("arrays", "records", "conversions", "tables", "references", "reference-parameters", "slices", "returned-references", "propagation", "buffers", "buffer-views", "allocator-capabilities", "arena-reset", "pools", "arenas", "generics", "generic-references")]
+    fixtures += [(name, (root / "examples" / f"{name}.my").read_text()) for name in ("arrays", "records", "conversions", "tables", "references", "reference-parameters", "slices", "returned-references", "propagation", "buffers", "buffer-views", "allocator-capabilities", "arena-reset", "pools", "arenas", "generics", "generic-references", "generic-slices")]
+    for index in ("-1i8", "18446744073709551615u64"):
+        index_type = "i8" if index.startswith("-") else "u64"
+        fixtures.append(("generic-slice-bounds-" + index_type, "fn at<T:copy,I:integer>(s:&[]T,i:I)->T{return read_slice(s,i);}fn main()->i64{let values=new [1]i64 [7];borrow values[0..1] as s{return at::<i64," + index_type + ">(s," + index + ");}}"))
     fixtures.append(("generic-overflow", "fn add<T:integer>(a:T,b:T)->T{return a+b;}fn main()->i64{return cast<i64>(add::<i8>(127i8,1i8));}"))
     fixtures.append(("generic-nominal", "struct A{x:i64}struct B{x:i64}fn id<T:copy>(x:T)->T{return x;}fn main()->i64{let a=id::<A>(new A{x:3});let b=id::<B>(new B{x:4});return a.x+b.x;}"))
     fixtures.append(("integers", "fn widen(x: u32) -> u64 { return cast<u64>(x); } fn main() -> i64 { let a = 127i8; let b = 255u8; let c = 32767i16; let d = 65535u16; let e = 2147483647i32; let f = 4294967295u32; return cast<i64>(a) + cast<i64>(b) + cast<i64>(c) + cast<i64>(d) + cast<i64>(e) + cast<i64>(widen(f)); }"))

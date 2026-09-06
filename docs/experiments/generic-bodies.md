@@ -35,7 +35,7 @@ wide statement sequences exercise the limits without executing a template.
 
 [Generic calls and pure concrete helpers](generic-calls.md) are now supported.
 Concrete nominal/composite signature types, aggregate construction,
-reference results/slices, lexical borrow scopes, owned/resource operations, conversions, and other forms that
+reference results, lexical borrow scopes, owned/resource operations, conversions, and other forms that
 need additional abstract rules return `E_GENERIC_BODY_UNSUPPORTED`. They are not
 silently skipped. Valid bodies in the supported subset now execute through
 [concrete specialization](generic-execution.md).

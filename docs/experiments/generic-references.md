@@ -32,7 +32,8 @@ mathematical purity or of general abstract effect inference.
 
 ## Boundaries and acceptance
 
-Generic slice parameters, lexical borrow scopes inside templates, reference
+Generic slice parameters now have [separate acceptance](generic-slices.md).
+Lexical borrow scopes inside templates, reference
 results, conversions, and owned/resource operations remain unsupported. This
 stage does not infer reference result provenance or lifetime contracts. Ordinary
 callers can create lexical borrows and pass them into supported generic helpers.
