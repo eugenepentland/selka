@@ -125,6 +125,11 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
             if (!comparison.ty.isAggregate()) return error.InternalError;
             if (program.records[comparison.ty.recordIndex()].shape.handle_pool == null) return error.InternalError;
         },
+        .cmp_domain => |comparison| {
+            if (!validType(comparison.ty, program) or !comparison.ty.isAggregate()) return error.InternalError;
+            const backing = program.records[comparison.ty.recordIndex()].shape.domain orelse return error.InternalError;
+            if (!backing.isInteger() and backing != .bool) return error.InternalError;
+        },
         .cmp_enum => |comparison| {
             if ((try variantSchema(comparison.ty, program)).is_union) return error.InternalError;
         },
@@ -475,7 +480,7 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
                 if (height == 0) return error.InternalError;
                 height -= 1;
             },
-            .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .cmp_i64, .cmp_bool, .binary_integer, .get_index, .cmp_enum, .cmp_handle => {
+            .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .cmp_i64, .cmp_bool, .binary_integer, .get_index, .cmp_enum, .cmp_handle, .cmp_domain => {
                 if (height < 2) return error.InternalError;
                 height -= 1;
             },

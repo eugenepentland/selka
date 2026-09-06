@@ -11,7 +11,7 @@ fn hasComponent(slots: [4]m::ComponentSlot, needle: ids::ComponentId, end: u64) 
         match slots[i] {
             m::ComponentSlot.none => {},
             m::ComponentSlot.some(value) => {
-                if ids::ComponentId.same(value, needle) {
+                if value == needle {
                     return true;
                 }
             }
@@ -26,7 +26,7 @@ fn hasNet(slots: [4]m::NetSlot, needle: ids::NetId, end: u64) -> bool {
         match slots[i] {
             m::NetSlot.none => {},
             m::NetSlot.some(value) => {
-                if ids::NetId.same(value, needle) {
+                if value == needle {
                     return true;
                 }
             }

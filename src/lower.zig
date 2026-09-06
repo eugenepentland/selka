@@ -364,6 +364,7 @@ const Emitter = struct {
 fn binaryInstruction(binary: anytype, nodes: []const typed.Node, records: []const typed.Record) bc.Instruction {
     const operand_type = nodes[@backingInt(binary.left)].ty;
     if (operand_type.isAggregate() and records[operand_type.recordIndex()].shape.handle_pool != null) return .{ .span = binary.op_span, .op = .{ .cmp_handle = .{ .ty = operand_type, .predicate = if (binary.op == .eq) .eq else .ne } } };
+    if (operand_type.isAggregate() and records[operand_type.recordIndex()].shape.domain != null) return .{ .span = binary.op_span, .op = .{ .cmp_domain = .{ .ty = operand_type, .predicate = if (binary.op == .eq) .eq else .ne } } };
     if (operand_type.isAggregate()) return .{ .span = binary.op_span, .op = .{ .cmp_enum = .{ .ty = operand_type, .predicate = if (binary.op == .eq) .eq else .ne } } };
     if (operand_type.isInteger() and operand_type != .i64)
         return .{ .span = binary.op_span, .op = .{ .binary_integer = .{ .ty = operand_type, .op = binary.op } } };

@@ -66,8 +66,11 @@ explicit types, schemas, and interfaces where that improves the program.
    agreement. Geometry stays behind a typed wrapper. The [repair-study harness](../experiments/board_trial/repair/README.md)
    now prepares five task pairs, records submissions and grades fresh shared
    cases after sealing. Actual agent repair attempts remain pending.
-5. Use trial evidence to prioritize generic constraints/tooling, bounded source
-   serialization, and finer incremental checks. These remain open; completing all
+5. The first trial-driven simplification, [scalar domain equality](experiments/domain-equality.md),
+   removes nominal-ID comparison helpers while preserving type isolation. Use
+   further evidence to prioritize parameterized composite types, generic
+   constraints/tooling, bounded source serialization, and finer incremental checks.
+   These remain open; completing all
    abstraction experiments is not a prerequisite for starting the trial.
 
 Measure pre-execution mistakes caught, next-attempt diagnostic repair success,
@@ -2278,3 +2281,48 @@ Next: run actual matched attempts with fresh isolated participants, retain raw
 outcomes and patch reviews, then use that evidence and a real project pilot to
 prioritize remaining abstractions, serialization and incremental tooling. The
 subagent authorization question is pending; the broader roadmap remains active.
+
+## Scalar domain equality from the board trial — 2026-09-06
+
+The board trial exposed redundant `same` helpers for nominal IDs. Scalar domains
+now support `==` and `!=` between values of the same resolved declaration, using
+their integer or boolean backing values. Generic `T:equality` accepts those
+same types. This adds no implicit arithmetic, ordering, integer requirement,
+conversion, representation access or equality between distinct declarations.
+Import aliases preserve declaration identity; identical names in separate
+modules remain distinct. See [the contract](experiments/domain-equality.md).
+
+The typed binary IR remains independent of execution. A dedicated `CMP_DOMAIN`
+bytecode operation validates the domain schema and checks runtime operand
+identity and backing shape without synthesizing privileged unwraps in callers.
+It preserves left-to-right evaluation, scalar precision, operand cleanup and
+VM limits. The historical C emitter explicitly rejects this new operation;
+guest-native execution remains excluded from the active goal.
+
+The guest board validator now compares component/net IDs directly and removes
+two `same` helpers. The fixed contract and oracle are unchanged. Parameterized
+composite types are still needed to address the separate duplication between
+component/net optional-slot membership routines.
+
+Eight focused tests cover scalar widths and extremes, booleans, generic
+requirements, module aliases and distinct declarations, forbidden operations,
+invalid comparison schemas/runtime identities, disassembly, allocation-failure
+cleanup, bounded loops, step limits and left-operand trap precedence. Existing
+board cases check that simplifying the guest code preserves application behavior.
+
+Validation: the first Debug acceptance run executed all 775 Zig tests successfully
+(704 core, 67 CLI, four board integration), and its Python drivers passed. Its
+only failure was Guardian's test-structure finding; instruction lookup was then
+separated from assertions. The final Debug rerun passes all 34 build steps,
+including a fresh 704-test core run and the Python drivers; the unchanged CLI
+and board Zig test roots reuse their successful results. All 88 Guardian checks
+pass with baselines disabled,
+and existing report-only findings remain. ReleaseFast passes the eight new
+focused tests plus four imported runtime tests, an 8/8-step gated install, and
+the board driver: 147 comparisons, 18 malformed transports and three seeded
+static errors. No guest-native suite was run.
+
+Next: complete the matched repair study when fresh-participant authorization is
+available, then prioritize parameterized composite types, serialization and
+incremental tooling using that evidence and a real project pilot. The pending
+agent study has not been run; the broader roadmap remains open.

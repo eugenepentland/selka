@@ -45,10 +45,10 @@ Distinct IDs and units, exhaustive feature matches, typed failures and explicit
 host effects are usable in this bounded application. Input checking runs before
 geometry, and a geometry failure discards the partial successful report.
 
-Implementation exposed two abstraction costs: nominal IDs require explicit
-`same` helpers because aggregate equality is unsupported, and fixed optional
-slots require separate component/net membership helpers without parameterized
-composite types. These are concrete candidates for later language experiments.
+Implementation exposed two abstraction costs. Scalar domains now support ordinary
+`==` and `!=`, removing the two nominal-ID `same` helpers while preserving ID
+isolation. Fixed optional slots still require separate component/net membership
+helpers without parameterized composite types; that abstraction remains open.
 The snapshot wrapper keeps host conversion and VM allocation outside ordinary
 application code; trusted wrappers still require independent review and tests.
 

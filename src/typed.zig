@@ -167,7 +167,7 @@ pub fn supportsEquality(ty: Type, records: []const Record) bool {
     if (ty.isInteger() or ty == .bool) return true;
     if (!ty.isAggregate()) return false;
     const record = records[ty.recordIndex()];
-    return record.isEnum() or record.shape.handle_pool != null;
+    return record.isEnum() or record.shape.handle_pool != null or record.shape.domain != null;
 }
 /// Determine whether a type carries ownership that forbids implicit copying.
 pub fn moveOnly(ty: Type, records: []const Record) bool {

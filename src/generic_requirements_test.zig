@@ -32,11 +32,11 @@ test "generic requirements preserve nominal identity and ownership obligations" 
     try compilation.check();
     const records = compilation.program.?.records;
     const cases = [_]struct { name: []const u8, copy: bool = false, equality: bool = false }{
-        .{ .name = "Distance", .copy = true },                .{ .name = "Point", .copy = true },
-        .{ .name = "Color", .copy = true, .equality = true }, .{ .name = "NodeId", .copy = true, .equality = true },
-        .{ .name = "Bytes" },                                 .{ .name = "File" },
-        .{ .name = "Nodes" },                                 .{ .name = "Answer" },
-        .{ .name = "Pending" },                               .{ .name = "Owned" },
+        .{ .name = "Distance", .copy = true, .equality = true }, .{ .name = "Point", .copy = true },
+        .{ .name = "Color", .copy = true, .equality = true },    .{ .name = "NodeId", .copy = true, .equality = true },
+        .{ .name = "Bytes" },                                    .{ .name = "File" },
+        .{ .name = "Nodes" },                                    .{ .name = "Answer" },
+        .{ .name = "Pending" },                                  .{ .name = "Owned" },
     };
     for (cases) |case| {
         const found = namedType(records, case.name);

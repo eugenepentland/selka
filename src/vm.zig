@@ -348,6 +348,7 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
             .begin_region => step.executeBeginRegion(),
             .end_region => step.executeEndRegion(),
             .cmp_handle => step.executeCmpHandle(),
+            .cmp_domain => step.executeCmpDomain(),
             .cmp_enum => step.executeCmpEnum(),
             .wrap_domain => step.executeWrapDomain(),
             .unwrap_domain => step.executeUnwrapDomain(),
@@ -782,6 +783,25 @@ const Step = struct {
         defer left.release(allocator);
         if (left.typeOf() != comparison.ty or right.typeOf() != comparison.ty) return error.InternalError;
         const equal = try left.variantTag() == try right.variantTag();
+        try stack.append(allocator, .{ .bool = if (comparison.predicate == .eq) equal else !equal });
+        return null;
+    }
+
+    fn executeCmpDomain(self: *Step) !?ValueResult {
+        const allocator = self.execution.allocator;
+        const stack = self.execution.state.stack;
+        const comparison = self.instruction.op.cmp_domain;
+        const right = try pop(stack, self.frame.operand_base);
+        defer right.release(allocator);
+        const left = try pop(stack, self.frame.operand_base);
+        defer left.release(allocator);
+        if (left != .aggregate or right != .aggregate or left.typeOf() != comparison.ty or right.typeOf() != comparison.ty) return error.InternalError;
+        if (left.aggregate.fields.len != 1 or right.aggregate.fields.len != 1) return error.InternalError;
+        const backing = self.execution.program.records[comparison.ty.recordIndex()].shape.domain orelse return error.InternalError;
+        const a = left.aggregate.fields[0];
+        const b = right.aggregate.fields[0];
+        if (a.typeOf() != backing or b.typeOf() != backing) return error.InternalError;
+        const equal = if (backing == .bool) a.bool == b.bool else try a.asInteger() == try b.asInteger();
         try stack.append(allocator, .{ .bool = if (comparison.predicate == .eq) equal else !equal });
         return null;
     }

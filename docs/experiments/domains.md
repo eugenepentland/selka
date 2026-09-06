@@ -69,11 +69,11 @@ returning an integer does not grant the caller permission to wrap it again.
 Explicit calls to another domain's public factory are intentional conversions;
 a Seconds value cannot be passed directly where Millimeters is required.
 
-There are no automatically inherited arithmetic, equality, or ordering operators.
-Expose domain operations as functions, using backing scalar operations internally.
-This avoids assigning numeric operations to identifiers or other domains that
-share a numeric representation. Factory failures can currently trap through
-checked scalar operations; recoverable typed errors remain in track D.
+Scalar domains now support [same-domain equality](domain-equality.md): `==` and
+`!=` compare backing values without exposing them. Arithmetic and ordering are
+not inherited. Expose those operations as domain functions when meaningful;
+identifiers do not gain arithmetic merely because their representation is numeric.
+Factory failures can trap through checked scalar operations or use typed results.
 
 Domain functions may use ordinary record conversions, but `conversion fn`
 continues to require record parameters/results and named source-field accounting.

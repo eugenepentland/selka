@@ -101,6 +101,7 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
                 if (arm.slot) |slot| @as(?usize, @backingInt(slot)) else null,
             });
         },
+        .cmp_domain => |comparison| try writer.print("CMP_DOMAIN {s} {s}", .{ typed.typeName(comparison.ty, program.records), @tagName(comparison.predicate) }),
         .cmp_enum => |comparison| try writer.print("CMP_ENUM {s} {s}", .{ typed.typeName(comparison.ty, program.records), @tagName(comparison.predicate) }),
         .reset_arena => |ty| try writer.print("RESET_ARENA {f}", .{ty}),
         .begin_region => |slot| try writer.print("BEGIN_REGION local={d}", .{@backingInt(slot)}),

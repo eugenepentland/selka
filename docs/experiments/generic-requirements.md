@@ -11,7 +11,7 @@ execution.
 | Requirement | Concrete promise |
 | --- | --- |
 | `copy` | The checked type carries neither move-only ownership nor pending result-handling obligations. |
-| `equality` | The type supports ordinary language equality: integers, booleans, closed enums, and nominal pool handles. Also implies `copy`. |
+| `equality` | The type supports ordinary language equality: integers, booleans, scalar domains, closed enums, and nominal pool handles. Also implies `copy`. |
 | `integer` | The type is one of the eight signed/unsigned integer widths. Also implies `equality` and `copy`. |
 
 Requirements normalize into a closed set. An explicit `copy + integer` declaration
@@ -21,7 +21,8 @@ for validating type-parameter forwarding during later template checking. It does
 not itself validate any generic call or body today.
 
 Nominal domains retain their boundary: an integer-backed domain does not satisfy
-`integer` and has no implicit equality unless the concrete language defines it.
+`integer`. Scalar domains support `equality` through same-domain value comparison;
+different domain declarations never become interchangeable.
 Ordinary records may satisfy `copy`, but do not acquire implicit structural
 equality. Results and records containing pending results fail `copy`, even when
 their scalar payloads could otherwise be copied. Buffers, resource owners, pools,

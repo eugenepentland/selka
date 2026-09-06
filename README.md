@@ -158,7 +158,9 @@ Signed/unsigned 8/16/32/64-bit integers and checked casts are implemented
 `replace`, and `len` complete A1 ([array semantics](docs/experiments/arrays.md)).
 Run `examples/arrays.my` (44). A2 now includes nominal scalar domains and private factories/accessors
 ([domain semantics](docs/experiments/domains.md)); `examples/domains.my` returns
-1003. Closed enums/tagged unions and exhaustive matching are also implemented
+1003. [Scalar domain equality](docs/experiments/domain-equality.md) supports `==`,
+`!=` and generic equality contracts without mixing distinct IDs or units.
+Closed enums/tagged unions and exhaustive matching are also implemented
 ([variant semantics](docs/experiments/variants.md)); `examples/variants.my` returns
 24. Complete enum-indexed tables finish A2
 ([table semantics](docs/experiments/tables.md)); `examples/tables.my` returns 1407.

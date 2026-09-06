@@ -16,6 +16,7 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [CORE-5] Constructs records by field name and preserves original values when producing updated record copies.
 - [CORE-6] Preserves fixed-array copies and accepts each integer index width, including zero-length arrays.
 - [CORE-7] Rejects interchange between distinct nominal domains and requires their declared construction operations.
+- [DOMAIN-EQUALITY-1] Values of the same scalar domain support == and != by their integer or boolean backing values, including generic equality requirements. Declaration identity must match across module aliases; equality exposes no backing value, permits no implicit arithmetic or ordering, evaluates operands left to right, and preserves VM cleanup and execution limits.
 - [CORE-8] Rejects nonexhaustive matches after a variant is added, including matches on statically known values.
 - [CORE-9] Uses enum case names for table construction and indexing regardless of declaration or initializer order.
 - [CORE-10] Rejects silent result abandonment and permits an explicit acknowledgement of the result obligation.

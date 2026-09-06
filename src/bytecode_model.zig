@@ -23,6 +23,7 @@ pub const Instruction = struct {
         make_variant: struct { ty: typed.Type, tag: usize },
         switch_variant: struct { ty: typed.Type, arms: []const SwitchArm },
         cmp_handle: struct { ty: typed.Type, predicate: Equality },
+        cmp_domain: struct { ty: typed.Type, predicate: Equality },
         cmp_enum: struct { ty: typed.Type, predicate: Equality },
         unwrap_domain: typed.Type,
         neg_integer: typed.Type,

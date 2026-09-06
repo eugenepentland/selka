@@ -230,6 +230,7 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
             .wrap_domain,
             .make_variant,
             .switch_variant,
+            .cmp_domain,
             .cmp_enum,
             .cmp_handle,
             .unwrap_domain,

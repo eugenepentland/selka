@@ -5,9 +5,6 @@ domain ComponentId: u64 {
     fn make(raw: u64) -> ComponentId {
         return wrap<ComponentId>(raw);
     }
-    fn same(a: ComponentId, b: ComponentId) -> bool {
-        return unwrap(a) == unwrap(b);
-    }
     fn number(value: ComponentId) -> u64 {
         return unwrap(value);
     }
@@ -15,9 +12,6 @@ domain ComponentId: u64 {
 domain NetId: u64 {
     fn make(raw: u64) -> NetId {
         return wrap<NetId>(raw);
-    }
-    fn same(a: NetId, b: NetId) -> bool {
-        return unwrap(a) == unwrap(b);
     }
     fn number(value: NetId) -> u64 {
         return unwrap(value);

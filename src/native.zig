@@ -293,6 +293,7 @@ fn checkFunction(layout: native_layout.Layout, function: bc.Function, sink: *dia
     for (function.scope.locals) |local| if (!layout.supports(local.ty)) return sink.fail(unsupported_feature, local.declaration, "native execution requires supported value locals and parameters");
     for (function.scope.references) |reference| if (!layout.supports(reference.ty)) return sink.fail(unsupported_feature, reference.declaration, "native references require supported value types");
     for (function.scope.instructions) |instruction| switch (instruction.op) {
+        .cmp_domain => return sink.fail(unsupported_feature, instruction.span, "domain equality is supported by the bytecode VM; native emission is deferred"),
         .make_variant => |variant| {
             if (!layout.supports(variant.ty)) return sink.fail(unsupported_feature, instruction.span, "native variant representation requires supported payloads");
         },
@@ -400,6 +401,7 @@ fn writeOperation(context: InstructionOutput) !bool {
             try variantValue(w, layout, variant.ty, variant.tag, payload_type);
             try w.writeAll(");\n");
         },
+        .cmp_domain => return error.InternalError,
         .cmp_enum => |comparison| try w.print(binary_format, .{if (comparison.predicate == .eq) "==" else "!="}),
         .switch_variant => |dispatch| {
             const variants = program.records[dispatch.ty.recordIndex()].shape.variants.?;
