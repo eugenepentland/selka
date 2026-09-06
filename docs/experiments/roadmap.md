@@ -476,3 +476,23 @@ comparisons across 86 single-file and 16 module fixtures with -O0/-O2 and undefi
 behavior sanitization; 50 final targeted codec comparisons passed after inserting
 an uninstantiated template before codec functions. Guardian passed all 88 checks
 with baselines disabled. No new full resource/provider-suite result is claimed.
+
+
+### Generic borrowed input parameters — 2026-09-06
+
+Abstract checking now distinguishes value, shared-reference and exclusive-reference
+bindings. Supported templates read, write and forward reference inputs while
+preserving symbolic types, access permissions, and ordinary alias rules. Duplicate
+exclusive inputs reject even when forwarded to shared callee parameters; repeated
+shared inputs remain valid. Calls use a temporary name table and count reference
+arguments toward the work budget. Concrete instances retain ordinary borrow
+validation and VM/C execution. Generic slices, lexical borrow scopes, returned
+reference provenance, broader ownership/effects, and other roadmap work remain open.
+See `docs/experiments/generic-references.md` for scope and acceptance.
+
+Validation: all 576 core tests passed in Debug and ReleaseFast, all 60 CLI tests
+passed, and native parity passed 2646 comparisons across 87 single-file and 16
+module fixtures using -O0/-O2 and undefined-behavior sanitization. Guardian passed
+all 88 checks with baselines disabled. Allocation-failure coverage includes local
+reference forwarding and imported setter execution/schema generation. These
+results do not establish the unfinished slice or returned-reference contracts.

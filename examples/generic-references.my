@@ -1,0 +1,20 @@
+fn get<T: copy>(value: &T) -> T {
+    return read_ref(value);
+}
+fn set<T: copy>(value: &mut T, replacement: T) -> T {
+    write_ref(value, replacement);
+    return get::<T>(value);
+}
+fn twice<T: integer>(left: &T, right: &T) -> T {
+    return read_ref(left) + read_ref(right);
+}
+fn double<T: integer>(value: &T) -> T {
+    return twice::<T>(value, value);
+}
+fn main() -> i64 {
+    let mut small = 1i8;
+    let mut large = 2;
+    borrow mut small as value { discard set::<i8>(value, 7i8); }
+    borrow mut large as value { discard set::<i64>(value, 9); }
+    borrow small as value { return cast<i64>(double::<i8>(value)) + large; }
+}

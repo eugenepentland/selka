@@ -12,7 +12,7 @@ const eUnsupported = "E_GENERIC_BODY_UNSUPPORTED";
 const Symbolic = union(enum) { builtin: typed.Type, parameter: usize };
 const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
 const FunctionMap = std.StringHashMapUnmanaged(usize);
-const Local = struct { name: source.Span, ty: Symbolic, mutable: bool };
+const Local = struct { name: source.Span, ty: Symbolic, mutable: bool, reference: ?bool = null };
 const Checker = struct {
     allocator: std.mem.Allocator,
     src: source.Source,
@@ -60,6 +60,17 @@ const Checker = struct {
     fn local(self: *Checker, span: source.Span) Error!*Local {
         const index = self.active.get(self.src.text(span)) orelse return self.sink.fail("E_UNKNOWN_NAME", span, "name is not defined in this template scope");
         return &self.locals.items[index];
+    }
+    fn reference(self: *Checker, span: source.Span, mutable: bool) Error!*Local {
+        const value = try self.local(span);
+        const exclusive = value.reference orelse return self.sink.fail("E_REFERENCE_SCOPE", span, "operation requires an active reference");
+        if (mutable and !exclusive) return self.sink.fail("E_REFERENCE_READ_ONLY", span, "write or exclusive forwarding requires an exclusive reference");
+        return value;
+    }
+    fn namedValue(self: *Checker, span: source.Span) Error!Symbolic {
+        const binding = try self.local(span);
+        if (binding.reference != null) return self.sink.fail("E_REFERENCE_VALUE", span, "references require read_ref or an explicit reference parameter");
+        return binding.ty;
     }
     fn topLevel(self: *Checker, span: source.Span) Error!bool {
         if (self.module_names) |names| return names.topLevel(span);
@@ -125,10 +136,21 @@ const Checker = struct {
                 .{ .span = parameter.name, .message = "required type parameter declared here" },
             );
         }
-        for (invocation.arguments, signature.parameters) |value, parameter| {
-            if (parameter.reference != null) return self.sink.fail(eUnsupported, parameter.name, "generic reference arguments still need abstract checking");
+        var loans: std.StringHashMapUnmanaged(void) = .empty;
+        defer loans.deinit(self.allocator);
+        for (invocation.arguments, signature.parameters) |input, parameter| {
+            if (parameter.slice) return self.sink.fail(eUnsupported, parameter.name, "generic slice arguments still need abstract checking");
             const expected = try self.substituted(parameter.ty, signature.type_parameters, arguments);
-            try self.same(try self.expression(value), expected, self.program.nodes.items[@backingInt(value)].span);
+            const node = self.program.nodes.items[@backingInt(input)];
+            if (parameter.reference) |mutable| {
+                if (node.data != .name) return self.sink.fail("E_REFERENCE_ARGUMENT", node.span, "reference parameter requires an active reference name");
+                const ref = try self.reference(node.data.name, mutable);
+                try self.same(ref.ty, expected, node.span);
+                try self.enter(node.span);
+                self.depth -= 1;
+                const loan = try loans.getOrPut(self.allocator, self.src.text(node.data.name));
+                if (loan.found_existing and ref.reference.?) return self.sink.fail("E_BORROW_CONFLICT", node.span, "call cannot alias an exclusive reference argument");
+            } else try self.same(try self.expression(input), expected, node.span);
         }
         return self.substituted(signature.return_type, signature.type_parameters, arguments);
     }
@@ -137,7 +159,12 @@ const Checker = struct {
         try self.enter(node.span);
         defer self.depth -= 1;
         return switch (node.data) {
-            .name => |name| (try self.local(name)).ty,
+            .name => |name| try self.namedValue(name),
+            .read_ref => |name| result: {
+                const ref = try self.reference(name, false);
+                try self.supports(ref.ty, .copy, name);
+                break :result ref.ty;
+            },
             .call => |invocation| try self.call(invocation, node.span),
             .boolean => .{ .builtin = .bool },
             .integer => |span| .{ .builtin = (try @import("integer_literal.zig").parse(self.src, span, false, self.sink)).ty },
@@ -210,6 +237,10 @@ const Checker = struct {
                 try self.same(value, target.ty, assignment.op_span);
                 if (assignment.op != .set) try self.supports(target.ty, .integer, assignment.op_span);
             },
+            .write_ref => |write| {
+                const ref = try self.reference(write.name, true);
+                try self.same(try self.expression(write.value), ref.ty, statement_value.span);
+            },
             .discard => |value| try self.supports(try self.expression(value), .copy, statement_value.span),
             .branch => |branch| {
                 try self.same(try self.expression(branch.condition), .{ .builtin = .bool }, statement_value.span);
@@ -280,8 +311,9 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
         for (parameters) |parameter| if (try checker.topLevel(parameter.name)) return sink.fail(eShadowing, parameter.name, "type parameter shadows a top-level declaration or import");
         checker.result = try checker.ty(function.signature.return_type);
         for (function.signature.parameters) |parameter| {
-            if (parameter.reference != null) return sink.fail(eUnsupported, parameter.name, "generic reference parameters still need abstract checking");
+            if (parameter.slice) return sink.fail(eUnsupported, parameter.name, "generic slice parameters still need abstract checking");
             try checker.bind(parameter.name, try checker.ty(parameter.ty), false);
+            checker.locals.items[checker.locals.items.len - 1].reference = parameter.reference;
         }
         if (!try checker.statement(function.body)) return sink.fail("E_MISSING_RETURN", function.name, "template may fall through without returning its declared type");
     }

@@ -45,7 +45,8 @@ Calls to ordinary helpers now use the same builtin signature rules. A declaratio
 worklist checks every transitively reachable helper body once, including recursive
 cycles, before accepting the abstract graph. Its queue is bounded by the number
 of declarations; calls cannot recursively expand checking. Uncalled ordinary
-functions remain outside this pass. Reference arguments/results,
+functions remain outside this pass. [Shared/exclusive reference inputs](generic-references.md)
+are now supported. Reference results and slices,
 conversions, and nominal/composite type substitution remain unsupported here.
 Effectful operations in a called template are still rejected by that template's
 body check. Acceptance of a call does not bypass checking its callee or establish

@@ -44,7 +44,8 @@ public type-argument invocation remain unfinished tooling work.
 
 ## Boundaries and acceptance
 
-References, conversions, general effectful/owned generic bodies, user-defined
+Shared/exclusive reference inputs now have [separate acceptance](generic-references.md).
+Reference results, slices, lexical borrow scopes, conversions, general effectful/owned generic bodies, user-defined
 requirements, and nominal/composite operations beyond the current abstract rules
 still reject explicitly. Builtin `copy`, `equality`, and `integer` constraints do
 not imply arbitrary operations, lifetime contracts, or move-only support.

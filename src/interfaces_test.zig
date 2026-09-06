@@ -525,8 +525,10 @@ fn acceptChecked(main: []const u8, dependency: []const u8) !void {
 
 fn genericExecutionScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
-        .{ .path = "main.my", .bytes = "module main;import units;fn id<T:integer>(x:T)->T{return x;}fn main()->i64{return units::run()+id::<i64>(2);}" },
-        .{ .path = units_path, .bytes = "module units;export run;export id;fn id<T:copy>(x:T)->T{return x;}fn run()->i64{if id::<bool>(true){return id::<i64>(5);}return 0;}" },
+        .{ .path = "main.my", .bytes = "module main;import units;fn id<T:integer>(x:T)->T{return x;}" ++
+            "fn main()->i64{let mut x=0;borrow mut x as r{discard units::set::<i64>(r,2);}return units::run()+id::<i64>(x);}" },
+        .{ .path = units_path, .bytes = "module units;export run;export id;export set;" ++
+            "fn set<T:copy>(x:&mut T,y:T)->T{write_ref(x,y);return read_ref(x);}fn id<T:copy>(x:T)->T{return x;}fn run()->i64{if id::<bool>(true){return id::<i64>(5);}return 0;}" },
     } };
     var project = graph.Project.init(allocator);
     defer project.deinit();

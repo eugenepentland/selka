@@ -35,12 +35,13 @@ wide statement sequences exercise the limits without executing a template.
 
 [Generic calls and pure concrete helpers](generic-calls.md) are now supported.
 Concrete nominal/composite signature types, aggregate construction,
-references/slices, owned/resource operations, conversions, and other forms that
+reference results/slices, lexical borrow scopes, owned/resource operations, conversions, and other forms that
 need additional abstract rules return `E_GENERIC_BODY_UNSUPPORTED`. They are not
 silently skipped. Valid bodies in the supported subset now execute through
 [concrete specialization](generic-execution.md).
 
-The supported subset has no effectful operations. This does not implement abstract
+[Borrowed input parameters](generic-references.md) now permit explicit mutation
+through exclusive references. External effectful operations remain unsupported. This does not implement abstract
 call-effect inference, general move-only/result handling, reference provenance,
 region escape checking, or complete generic body validation. Those remain required
 before broad executable generic support. Existing concrete checks must still run
