@@ -1,4 +1,6 @@
 //! Stable diagnostics are data; only the CLI chooses an output destination.
+/// Shared code for forbidden source binding/type-variable shadowing.
+pub const shadowing = "E_SHADOWING";
 const std = @import("std");
 const source = @import("source.zig");
 

@@ -4,7 +4,7 @@ const eOwnedConsumed = "E_OWNED_CONSUMED";
 const eReferenceResult = "E_REFERENCE_RESULT";
 const eResultPath = "E_RESULT_PATH";
 const eReturnLifetime = "E_RETURN_LIFETIME";
-const eShadowing = "E_SHADOWING";
+const eShadowing = diagnostic.shadowing;
 const eConversionBody = "E_CONVERSION_BODY";
 const eResourceResult = "E_RESOURCE_RESULT";
 const eReferenceReadOnly = "E_REFERENCE_READ_ONLY";
@@ -249,19 +249,9 @@ const Checker = struct {
     fn resolve(self: *Checker, name: source.Span) Error!typed.LocalId {
         return self.active.get(self.src.text(name)) orelse self.sink.fail("E_UNKNOWN_NAME", name, "name is not defined in this scope");
     }
-    const Literal = struct { ty: typed.Type, value: i128 };
+    const Literal = @import("integer_literal.zig").Literal;
     fn literal(self: *Checker, span: source.Span, allow_minimum: bool) Error!Literal {
-        const text = self.src.text(span);
-        var digits: usize = 0;
-        while (digits < text.len and std.ascii.isDigit(text[digits])) digits += 1;
-        const literal_type: typed.Type = if (digits == text.len) .i64 else typed.Type.fromName(text[digits..]) orelse
-            return self.sink.fail("E_INTEGER_SUFFIX", span, "unknown integer suffix; use i8/i16/i32/i64 or u8/u16/u32/u64");
-        if (!literal_type.isInteger()) return self.sink.fail("E_INTEGER_SUFFIX", span, "integer suffix must name an integer type");
-        const magnitude = std.fmt.parseUnsigned(u128, text[0..digits], 10) catch
-            return self.sink.fail("E_INTEGER_RANGE", span, "integer literal magnitude is too large");
-        const maximum: u128 = @intCast(literal_type.max() + @as(i128, if (allow_minimum and literal_type.integer().?.signed) 1 else 0));
-        if (magnitude > maximum) return self.sink.fail("E_INTEGER_RANGE", span, "integer literal does not fit its type; signed minimum magnitudes must be directly negated");
-        return .{ .ty = literal_type, .value = @intCast(magnitude) };
+        return @import("integer_literal.zig").parse(self.src, span, allow_minimum, self.sink);
     }
     fn minimum(self: *Checker, node: ast.Node) Error!?Literal {
         if (node.data != .unary or node.data.unary.op != .neg) return null;
@@ -1320,14 +1310,15 @@ fn warningLess(_: void, a: diagnostic.Diagnostic, b: diagnostic.Diagnostic) bool
 pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!typed.Program {
     return checkWithNames(allocator, src, program, sink, null);
 }
-fn rejectUnimplementedGenerics(src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!void {
+fn rejectUnimplementedGenerics(src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!void {
     for (program.functions) |function| _ = try @import("generic_requirements.zig").resolve(sink.allocator, src, function.signature.type_parameters, sink);
+    try @import("generic_bodies.zig").checkWithNames(sink.allocator, src, program, sink, module_names);
     for (program.functions) |function| if (function.signature.type_parameters.len != 0) return sink.fail("E_GENERIC_UNSUPPORTED", function.name, "generic syntax is parsed, but executable specialization is not implemented");
     for (program.nodes.items) |node| if (node.data == .call and node.data.call.type_arguments.len != 0) return sink.fail("E_GENERIC_UNSUPPORTED", node.span, "explicit type arguments require executable generic specialization");
 }
 /// Type-check linked module names and validate ownership, effects, and domain codecs.
 pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!typed.Program {
-    try rejectUnimplementedGenerics(src, program, sink);
+    try rejectUnimplementedGenerics(src, program, sink, module_names);
     const resolved = try allocator.alloc(?typed.NodeId, program.nodes.items.len);
     @memset(resolved, null);
     const catalog = try records.collectWithNames(allocator, src, program, sink, module_names);

@@ -3,7 +3,8 @@
 Track D now resolves three builtin requirements during semantic preflight and
 module interface checking. It checks every declaration, including uncalled and
 private templates. Unknown names get a located `E_GENERIC_REQUIREMENT` diagnostic.
-This is requirement resolution, **not template-body checking or specialization**;
+Requirement resolution now feeds [initial pure body checking](generic-bodies.md);
+full template checking and specialization remain incomplete.
 otherwise-valid generic declarations still produce `E_GENERIC_UNSUPPORTED` before
 execution.
 
@@ -53,7 +54,7 @@ unknown requirements in uncalled templates, module-private declarations, malform
 AST input, and allocation failures. Ordinary expression equality remains covered
 by the complete core suites.
 
-Next: abstract template-body validation using these contracts, bounded instance
+Next: extend abstract template-body validation beyond the initial pure subset, bounded instance
 interning by declaration and nominal type identity, substitution with preserved
 module/source context, and VM/native/tooling integration. Generics and the broader
 roadmap remain open.

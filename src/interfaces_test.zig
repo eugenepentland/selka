@@ -443,3 +443,9 @@ test "generic requirements checkGenericRequirements validates exported and uncal
     try reject("module main;export f;fn f<T:unknown>(x:T)->T{return x;}", "E_GENERIC_REQUIREMENT");
     try reject("module main;fn private_template<T:unknown>(x:T)->T{return x;}fn main()->i64{return 0;}", "E_GENERIC_REQUIREMENT");
 }
+
+test "generic body contracts respect module-local declaration and import scopes" {
+    try rejectChecked("module main;import units;fn f<T:copy>(x:T)->T{let units=x;return units;}fn main()->i64{return 0;}", "module units;", "E_SHADOWING");
+    try rejectChecked("module main;import units;fn f<T:copy>(x:T)->T{return x;}fn main()->i64{return 0;}", "module units;struct T{}", "E_GENERIC_UNSUPPORTED");
+    try rejectChecked("module main;import units;fn main()->i64{return 0;}", "module units;fn bad<T:copy>(x:T,y:T)->T{return x+y;}", "E_GENERIC_OPERATION");
+}

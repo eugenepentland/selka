@@ -14,8 +14,8 @@ choose::<i64, u8>(1, 2u8)
 ```
 
 The parser retains requirement names. Semantic and interface checking now
-[resolve builtin requirements](generic-requirements.md); template bodies are not
-yet checked against their operation/ownership guarantees. Each type parameter needs a nonempty requirement
+[resolve builtin requirements](generic-requirements.md); the [initial pure body checker](generic-bodies.md) enforces supported operations
+symbolically. Full ownership/reference/effect checking and specialization remain open. Each type parameter needs a nonempty requirement
 list. Duplicate parameters or duplicate requirements on one parameter are errors.
 At most 16 type parameters, 16 requirements per parameter, and 16 call type
 arguments are accepted. These are frontend resource bounds, not a specialization

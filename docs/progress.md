@@ -2943,3 +2943,21 @@ tests passed. The focused requirement run passed seven tests, including the adde
 module/private-template diagnostic case. The build passed all 88 Guardian checks
 without baselines. These results validate requirement resolution/matching and
 ordinary language regressions, not executable generics or template-body checking.
+
+
+### Initial abstract generic body checking — 2026-09-06
+
+Added symbolic checking of the pure builtin/type-parameter subset: locals,
+assignment, returns, branches/loops, casts, arithmetic, and equality. Type-variable
+identities remain distinct and operations require declared guarantees; no concrete
+representative type is substituted. Literal validation is shared with the concrete
+checker. Module scope, original diagnostics, allocation cleanup, and explicit
+256-depth/100000-visit limits have acceptance coverage. Calls, nominal/composite
+signatures, references, ownership/effects, and executable specialization remain
+explicitly unsupported. Generics and the broader roadmap remain open.
+
+Validation: all 554 core tests passed in Debug and ReleaseFast, all 60 CLI tests
+passed, and the focused abstract-body run passed eight tests. The Guardian build
+gate passed all 88 checks without baselines. These runs cover the implemented
+symbolic subset and ordinary-language regressions; they do not establish executable
+generics or completion of the full template-body contract.
