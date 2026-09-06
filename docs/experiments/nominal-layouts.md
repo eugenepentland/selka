@@ -1,10 +1,9 @@
 # Finite nominal template layouts
 
 Nominal declarations now pass a finite storage-dependency check before the
-remaining executable-specialization boundary. This includes unused templates
-and private types in imported modules. Well-formed finite templates still report
-`E_GENERIC_TYPE_UNSUPPORTED`: concrete catalog materialization and operations on
-parameterized records/unions are not implemented yet.
+concrete-specialization stage. This includes unused templates
+and private types in imported modules. [Concrete instances](nominal-instances.md)
+now use this graph to materialize executable runtime schemas.
 
 The implementation follows [declaration checking](nominal-template-checks.md).
 It retains scoped symbolic parameters instead of choosing a representative scalar
@@ -84,19 +83,18 @@ construction and rejected cycles.
 
 ## Remaining work
 
-Graph IDs are semantic identities, not executable `typed.Type` IDs. Unexpanded
-phantom argument identities must not be turned into fabricated empty runtime
-records. Concrete catalog materialization must retain that distinction while
-providing complete layouts for stored values. This stage does not calculate
-backend offsets or implement field construction/projection/update, variant
-matching, result propagation, borrowing or arena behavior for parameterized types.
+Graph IDs are semantic identities, not executable `typed.Type` IDs. The concrete
+catalog now materializes only required, complete concrete layouts, keeping
+unexpanded phantom arguments out of the runtime record table. Its shared runtime
+layout validator derives ownership and result obligations. This graph does not
+calculate backend offsets or define generic function-body operations.
 
-Eight new core tests cover identity reuse and separation, finite nested/phantom
+Eight core graph tests cover identity reuse and separation, finite nested/phantom
 forms, direct/indirect/permuted/array/result/buffer/pool cycles, instance/array/work
 limits, 1,200-type finite chains, allocation failures and imported diagnostic
-locations. One CLI test distinguishes a recursive-layout error from the
-remaining unsupported-execution boundary for valid finite types.
+locations. The CLI distinguishes recursive-layout errors from accepted finite
+types. Concrete execution has additional coverage in the specialization contract.
 
-Concrete specialization and symbolic body operations remain the next milestones,
-followed by shared `Slot<T>` types in the unchanged board trial. Native guest
-compilation remains outside the active goal.
+Symbolic body operations remain the next milestone, followed by shared `Slot<T>`
+types in the unchanged board trial. Native guest compilation remains outside the
+active goal.

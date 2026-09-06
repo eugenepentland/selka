@@ -1,0 +1,194 @@
+//! Concrete nominal instances execute through ordinary typed IR and the checked bytecode VM.
+const std = @import("std");
+const t = std.testing;
+const language = @import("compiler.zig");
+const typed = @import("typed.zig");
+const definitions = "struct Box<T:copy>{value:T}union Slot<T:copy>{none,some:T}result Answer<T:copy>{ok:T,err:i64}";
+fn run(allocator: std.mem.Allocator, text: []const u8, expected: i64) !void {
+    var compilation = try language.Compilation.init(allocator, "instances.my", text);
+    defer compilation.deinit();
+    const output = try compilation.execute(allocator);
+    try t.expectEqual(expected, output.value);
+}
+fn reject(text: []const u8, code: []const u8) !void {
+    var compilation = try language.Compilation.init(t.allocator, "bad-instances.my", text);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.check());
+    try t.expectEqualStrings(code, compilation.diagnostics.items[0].code);
+}
+const basic = definitions ++ "fn main()->i64{let a=new Box<i64>{value:7};let b=update(a){value:9};" ++
+    "let slot=new Slot<Box<i64>>.some(b);match slot{Slot<Box<i64>>.none=>{return 0;},Slot<Box<i64>>.some(value)=>{return a.value+value.value;}}}";
+// spec: NOMINAL-INSTANCE-1
+test "nominal instances construct update nest and exhaustively match on the VM" {
+    try run(t.allocator, basic, 16);
+    try run(t.allocator, definitions ++
+        "fn plus(input:Answer<i64>)->Answer<i64>{return new Answer<i64>.ok((try input)+1);}fn main()->i64{match plus(new Answer<i64>.ok(4)){Answer<i64>.ok(n)=>{return n;},Answer<i64>.err(discard)=>{return 0;}}}", 5);
+}
+test "nominal instances preserve argument order and nominal declaration identity" {
+    try reject(definitions ++ "fn takes(x:Box<i64>)->i64{return x.value;}fn main()->i64{return takes(new Box<bool>{value:true});}", "E_TYPE");
+    try reject("struct Pair<A:copy,B:copy>{a:A,b:B}fn takes(x:Pair<i64,bool>)->i64{return x.a;}fn main()->i64{return takes(new Pair<bool,i64>{a:true,b:1});}", "E_TYPE");
+    try reject("struct A<T:copy>{value:T}struct B<T:copy>{value:T}fn takes(x:A<i64>)->i64{return x.value;}fn main()->i64{return takes(new B<i64>{value:1});}", "E_TYPE");
+    try reject(definitions ++ "fn main()->i64{let x:Box=1;return x;}", "E_GENERIC_ARITY");
+    try reject(definitions ++ "fn Box()->i64{return 1;}fn main()->i64{return 0;}", "E_DUPLICATE_NAME");
+}
+test "nominal instances compose with existing generic functions and fixed arrays" {
+    try run(t.allocator, definitions ++ "fn id<T:copy>(x:T)->T{return x;}fn pair<T:copy>(x:T)->[2]T{return new [2]T[x,x];}" ++
+        "fn main()->i64{let boxes=pair::<Box<i64>>(id::<Box<i64>>(new Box<i64>{value:6}));return boxes[0].value+boxes[1].value;}", 12);
+    try run(t.allocator, definitions ++ "fn main()->i64{let a=new [2]Box<i64>[new Box<i64>{value:3},new Box<i64>{value:8}];return a[1].value;}", 8);
+}
+test "nominal instances keep growing phantom arguments outside runtime storage" {
+    try run(t.allocator, "struct Empty<T:copy>{}struct Grow<T:copy>{marker:Empty<Grow<[1]T>>}" ++
+        "fn main()->i64{discard new Grow<i64>{marker:new Empty<Grow<[1]i64>>{}};return 1;}", 1);
+}
+fn allocations(allocator: std.mem.Allocator) !void {
+    try run(allocator, basic, 16);
+}
+test "nominal catalog collect and VM execution clean up every allocation failure" {
+    try allocations(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), allocations, .{});
+}
+
+const owned = "buffer B:u8;result Open{ok:B,err:i64}struct Owner<T:copy>{buffer:B,tag:T}" ++ definitions ++
+    "fn work(heap:allocator)->Answer<i64>{let owner=new Owner<i64>{buffer:try acquire_buffer<Open>(heap,2),tag:9};" ++
+    "let tag=read_field(owner,tag);discard take_field(owner,buffer);return new Answer<i64>.ok(tag);}" ++
+    "fn main(heap:allocator)->i64{match work(heap){Answer<i64>.ok(n)=>{return n;},Answer<i64>.err(e)=>{return e;}}}";
+fn ownedScenario(allocator: std.mem.Allocator) !void {
+    var compilation = try language.Compilation.init(allocator, "owned-instance.my", owned);
+    defer compilation.deinit();
+    var stats: @import("memory.zig").Statistics = .{};
+    const result = try compilation.executeWithOptions(allocator, .{ .memory = .{ .statistics = &stats } });
+    try t.expectEqual(@as(i64, 9), result.value);
+    try t.expectEqual(@as(u64, 1), stats.created);
+    try t.expectEqual(stats.created, stats.released);
+    try t.expectEqual(@as(usize, 0), stats.live_allocations);
+}
+test "nominal instances retain owned fields partial moves result obligations and cleanup" {
+    try ownedScenario(t.allocator);
+    try reject("buffer B:u8;result Open{ok:B,err:i64}struct Owner<T:copy>{buffer:B,tag:T}result Created<T:copy>{ok:Owner<T>,err:i64}" ++
+        "fn make(heap:allocator)->Created<i64>{arena heap as scratch{return new Created<i64>.ok(new Owner<i64>{buffer:try acquire_buffer<Open>(scratch,1),tag:1});}}fn main()->i64{return 0;}", "E_ARENA_ESCAPE");
+    try run(t.allocator, definitions ++ "fn main(heap:allocator)->i64{let mut outside=new Box<i64>{value:0};" ++
+        "arena heap as scratch{outside=new Box<i64>{value:11};}return outside.value;}", 11);
+    try reject(definitions ++ "buffer B:u8;struct Owner<T:copy>{buffer:B,tag:T}fn bad(value:Owner<i64>)->i64{discard take_field(value,buffer);discard take_field(value,buffer);return 0;}fn main()->i64{return 0;}", "E_FIELD_MOVED");
+    try reject(definitions ++ "struct Pending<T:copy>{result:Answer<T>}fn bad(value:Pending<i64>)->i64{return 0;}fn main()->i64{return 0;}", "E_RESULT_UNHANDLED");
+    try reject(definitions ++ "fn main()->i64{let x=new Answer<i64>.ok(1);discard x;return 0;}", "E_RESULT_DISCARD");
+    try reject(definitions ++ "fn main()->i64{discard new Box<Answer<i64>>{value:new Answer<i64>.ok(1)};return 0;}", "E_GENERIC_REQUIREMENT");
+    try run(t.allocator, definitions ++ "fn main()->i64{discard new Box<[0]Answer<i64>>{value:new [0]Answer<i64>[]};return 2;}", 2);
+}
+test "nominal owned instance execution frees partial construction under allocation failures" {
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), ownedScenario, .{});
+}
+test "nominal instances preserve borrowing snapshots arrays and enum key identities" {
+    try run(t.allocator, definitions ++ "enum Key<T:copy>{left,right}fn main()->i64{" ++
+        "let mut box=new Box<i64>{value:3};let snapshot=box;borrow mut box as r{write_ref(r,new Box<i64>{value:8});}" ++
+        "let table=new [Key<bool>]Box<i64>{left:box,right:snapshot};return table[new Key<bool>.left].value+table[new Key<bool>.right].value;}", 11);
+    try reject(definitions ++ "fn main()->i64{let mut box=new Box<i64>{value:3};borrow box as r{box=new Box<i64>{value:4};}return 0;}", "E_BORROW_CONFLICT");
+    try reject(definitions ++ "enum Key<T:copy>{left,right}fn main()->i64{let table=new [Key<bool>]i64{left:1,right:2};return table[new Key<i64>.left];}", "E_TYPE");
+}
+test "nominal instances reject symbolic nominal bodies explicitly while concrete generic bodies remain checked" {
+    try reject(definitions ++ "fn identity<T:copy>(x:Box<T>)->Box<T>{return x;}fn main()->i64{return 0;}", "E_GENERIC_BODY_UNSUPPORTED");
+    try reject(definitions ++ "fn bad<T:copy>()->i64{let box=new Box<i64>{value:true};return 0;}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
+    try run(t.allocator, definitions ++ "fn concrete<T:copy>()->i64{let box=new Box<i64>{value:4};return box.value;}fn main()->i64{return concrete::<bool>();}", 4);
+}
+const Modules = struct {
+    fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
+        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main;import model as m;fn main()->i64{let x=new m::Box<i64>{value:4};return m::twice(x).value;}");
+        if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8, "module model;export Box;export Empty;export twice;struct Box<T:copy>{value:T}struct Empty<T:copy>{}struct Hidden{value:i64}" ++
+            "fn twice(x:Box<i64>)->Box<i64>{return update(x){value:x.value*2};}" ++
+            "fn hidden_values(x:Box<Hidden>,y:Empty<Hidden>)->i64{discard x;discard y;return 0;}");
+        return error.NotFound;
+    }
+};
+fn moduleScenario(allocator: std.mem.Allocator) !void {
+    var project = language.project.Project.init(allocator);
+    defer project.deinit();
+    try project.load(.{ .context = null, .read = Modules.read }, "main", .{});
+    var index = try language.interfaces.build(&project);
+    var compilation = try language.project_compile.Compilation.init(&index);
+    try compilation.emit();
+    const public_type = try compilation.publicValueType("model::Box<i64>");
+    try t.expectEqual(typed.Type.i64, compilation.program.?.records[public_type.recordIndex()].fields[0].ty);
+    try t.expectError(error.UnknownPublicValueType, compilation.publicValueType("model::Box<model::Hidden>"));
+    try t.expectError(error.UnknownPublicValueType, compilation.publicValueType("model::Empty<model::Hidden>"));
+    try t.expectEqual(@as(i64, 8), (try language.vm.run(allocator, compilation.code.?)).value);
+}
+test "nominal instances share declaration identity through imported signatures and constructors" {
+    try moduleScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), moduleScenario, .{});
+}
+fn largeNames(allocator: std.mem.Allocator) ![]u8 {
+    var text: std.Io.Writer.Allocating = .init(allocator);
+    defer text.deinit();
+    try text.writer.writeAll("struct Pair<A:copy,B:copy>{a:A,b:B}");
+    for (0..18) |i| try text.writer.print("struct Chain{d}<T:copy>{{next:Chain{d}<Pair<T,T>>}}", .{ i, i + 1 });
+    try text.writer.writeAll("struct Chain18<T:copy>{}fn takes(x:Chain0<i64>)->i64{discard x;return 0;}fn main()->i64{return 0;}");
+    return text.toOwnedSlice();
+}
+test "nominal concrete type names stop expansion before excessive diagnostic allocation" {
+    const text = try largeNames(t.allocator);
+    defer t.allocator.free(text);
+    try reject(text, "E_GENERIC_LIMIT");
+}
+
+fn hostEcho(call: *language.host_functions.Call) language.host_functions.CallbackError!typed.Value {
+    return typed.Value.createVariant(call.allocator(), call.result_type, 0, call.arguments[0]);
+}
+fn hostScenario(allocator: std.mem.Allocator) !void {
+    var compilation = try language.Compilation.init(allocator, "host-instance.my", definitions ++
+        "host fn echo(x:Box<i64>)->Answer<Box<i64>> effects(host);fn main()->i64{match echo(new Box<i64>{value:7}){Answer<Box<i64>>.ok(box)=>{return box.value;},Answer<Box<i64>>.err(e)=>{return e;}}}");
+    defer compilation.deinit();
+    try compilation.emit();
+    var registry = try language.vm_host.Registry.init(allocator, compilation.code.?);
+    defer registry.deinit();
+    const signature = try registry.contract("echo");
+    try registry.register("echo", .{ .signature = signature, .invoke = hostEcho }, signature.effects);
+    const result = try language.vm.runWithHost(allocator, compilation.code.?, .{}, &registry, .{});
+    try t.expectEqual(@as(i64, 7), result.value);
+}
+test "nominal instances cross typed host calls without erasing result or payload identity" {
+    try hostScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), hostScenario, .{});
+}
+test "nominal exported type constructors require explicit schema tooling rather than invalid checked types" {
+    var project = language.project.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(.{ .context = null, .read = Modules.read }, "main", .{});
+    var index = try language.interfaces.build(&project);
+    var compilation = try language.project_compile.Compilation.init(&index);
+    try t.expectError(error.SourceError, language.schema.render(t.allocator, &compilation));
+    try t.expectEqualStrings("E_SCHEMA_GENERIC_TYPE", compilation.diagnostics.items.items[0].code);
+    try t.expectEqualStrings("Box", compilation.src.text(compilation.diagnostics.items.items[0].span));
+    const roots = try compilation.exportRoots(t.allocator);
+    defer t.allocator.free(roots);
+    try t.expectError(error.UnsupportedGenericTypeExport, @import("schema_graph.zig").render(t.allocator, &index, compilation.program.?, roots));
+}
+
+fn catalogCategories(allocator: std.mem.Allocator) !void {
+    try run(allocator, definitions ++
+        "domain Id:i64{fn make(n:i64)->Id{return wrap<Id>(n);}fn number(n:Id)->i64{return unwrap(n);}}" ++
+        "fn main()->i64{let box=new Box<Id>{value:Id.make(13)};return Id.number(box.value);}", 13);
+    const program = definitions ++ "pool P(Handle):Box<i64>;result Open{ok:P,err:i64}result Insert{ok:Handle,err:i64}" ++
+        "result Read{ok:Box<i64>,err:i64}resource File:filesystem;" ++
+        "fn work(heap:allocator)->Answer<i64>{let mut pool=try acquire_pool<Open>(heap,1);" ++
+        "let id=try insert_pool<Insert>(pool,new Box<i64>{value:17});let value=try read_pool<Read>(pool,id);return new Answer<i64>.ok(value.value);}" ++
+        "fn main(heap:allocator)->i64{match work(heap){Answer<i64>.ok(n)=>{return n;},Answer<i64>.err(e)=>{return e;}}}";
+    var compilation = try language.Compilation.init(allocator, "nominal-pool.my", program);
+    defer compilation.deinit();
+    try t.expectEqual(@as(i64, 17), (try compilation.execute(allocator)).value);
+    var resources: usize = 0;
+    for (compilation.program.?.records) |record| if (record.shape.resource) |kind| {
+        try t.expectEqual(@import("external_resources.zig").Kind.filesystem, kind);
+        try t.expect(record.contract.move_only);
+        resources += 1;
+    };
+    try t.expectEqual(@as(usize, 1), resources);
+}
+
+test "nominal catalog preserves domain factories pool handles and ordinary resource contracts" {
+    try catalogCategories(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), catalogCategories, .{});
+}

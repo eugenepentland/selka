@@ -97,20 +97,18 @@ test "nominal application list and nesting bounds reject excessive syntax" {
     try parseReject(nested, "E_NESTING_LIMIT");
 }
 
-test "nominal templates and applications cannot silently reach executable lowering" {
+test "unused nominal templates do not become empty executable record schemas" {
     const cases = [_][]const u8{
         "struct Box<T:copy>{value:T}fn main()->i64{return 0;}",
         "union Slot<T:copy>{none,some:T}fn main()->i64{return 0;}",
         "result R<T:copy>{ok:T,err:i64}fn main()->i64{return 0;}",
         "enum Tag<T:copy>{first,second}fn main()->i64{return 0;}",
-        "struct Plain{n:i64}fn main()->i64{discard new Plain<i64>{n:1};return 0;}",
     };
     for (cases) |text| {
         var compilation = try language.Compilation.init(t.allocator, "deferred.my", text);
         defer compilation.deinit();
-        try t.expectError(error.SourceError, compilation.emit());
-        try t.expectEqualStrings("E_GENERIC_TYPE_UNSUPPORTED", compilation.diagnostics.items[0].code);
-        try t.expect(compilation.program == null and compilation.code == null);
+        try t.expectEqual(@as(i64, 0), (try compilation.execute(t.allocator)).value);
+        try t.expectEqual(@as(usize, 0), compilation.program.?.records.len);
     }
     var invalid = try language.Compilation.init(t.allocator, "requirements.my", "struct Box<T:missing>{value:T}fn main()->i64{return 0;}");
     defer invalid.deinit();
@@ -149,7 +147,7 @@ fn moduleScenario(allocator: std.mem.Allocator) !void {
         try t.expectEqual(@as(usize, iteration * 2), cache.statistics.hits);
         var compilation = try language.project_compile.Compilation.init(&index);
         try t.expectError(error.SourceError, compilation.check());
-        try t.expectEqualStrings("E_GENERIC_TYPE_UNSUPPORTED", compilation.diagnostics.items.items[0].code);
+        try t.expectEqualStrings("E_GENERIC_BODY_UNSUPPORTED", compilation.diagnostics.items.items[0].code);
     }
 }
 test "public nominal templates survive cached syntax and project relocation with requirements intact" {

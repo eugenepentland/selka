@@ -1211,18 +1211,28 @@ test "CLI executes generic fixed arrays and reports uncalled template shape erro
     try invokeOptions("check", "fn bad<T:copy>(a:[2]T)->[3]T{return a;}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_TYPE\"");
 }
 
-test "CLI formats nominal templates but rejects execution until specialization is implemented" {
+test "CLI formats nominal templates and runs programs with unused declarations" {
     const source = "struct Box<T:copy>{value:T}fn main()->i64{return 0;}";
     try invoke("fmt", source, 0, "struct Box<T: copy> {\n    value: T\n}\nfn main() -> i64 {\n    return 0;\n}\n", "");
-    try invokeOptions("run", source, &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_TYPE_UNSUPPORTED\"");
+    try invokeOptions("run", source, &.{"--diagnostics=json"}, 0, "0\n", "");
 }
 
-test "CLI reports unused nominal template requirement errors before unsupported execution" {
+test "CLI reports unused nominal template requirement errors" {
     try invokeOptions("check", "struct Key<T:equality>{value:T}struct Bad<U:copy>{key:Key<U>}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_REQUIREMENT\"");
     try invokeOptions("check", "struct Bad<T:copy>{value:Missing}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_UNKNOWN_TYPE\"");
 }
 
 test "CLI rejects recursive nominal layouts but preserves finite nested and phantom forms" {
     try invokeOptions("check", "struct Node<T:copy>{next:Node<T>}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_RECURSIVE_RECORD\"");
-    try invokeOptions("check", "struct Box<T:copy>{value:T}struct Empty<T:copy>{}struct Finite<U:copy>{nested:Box<Box<U>>,phantom:Empty<Finite<[1]U>>}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_TYPE_UNSUPPORTED\"");
+    try invokeOptions("check", "struct Box<T:copy>{value:T}struct Empty<T:copy>{}struct Finite<U:copy>{nested:Box<Box<U>>,phantom:Empty<Finite<[1]U>>}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 0, "", "");
+}
+
+test "CLI executes concrete nominal instances and reports argument identity errors" {
+    const definitions = "struct Box<T:copy>{value:T}union Slot<T:copy>{none,some:T}";
+    const program = definitions ++ "fn main()->i64{let slot=new Slot<Box<i64>>.some(new Box<i64>{value:12});" ++
+        "match slot{Slot<Box<i64>>.none=>{return 0;},Slot<Box<i64>>.some(box)=>{return box.value;}}}";
+    for ([_][]const u8{ "--memory=general", "--memory=arena" }) |mode|
+        try invokeOptions("run", program, &.{mode}, 0, "12\n", "");
+    try invokeOptions("check", definitions ++
+        "fn takes(box:Box<i64>)->i64{return box.value;}fn main()->i64{return takes(new Box<bool>{value:true});}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_TYPE\"");
 }

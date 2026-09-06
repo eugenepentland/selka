@@ -36,7 +36,7 @@ const State = enum { unneeded, queued, ready, visiting, complete };
 pub const Edge = struct { target: Id, span: Span };
 /// Graph-owned layout identity with a separately discovered storage dependency list.
 pub const Node = struct { key: Key, site: Span, edges: []const Edge = &.{}, state: State = .unneeded };
-const Budget = struct { instances: usize = 0, arrays: usize = 0, work: usize = 0, depth: usize = 0 };
+const Budget = struct { instances: usize = 0, arrays: usize = 0, work: usize = 0, depth: usize = 0, expanded: usize = 0 };
 /// Layout evidence for all declarations, including templates with distinct symbolic parameters.
 pub const Graph = struct {
     allocator: std.mem.Allocator,
@@ -105,6 +105,16 @@ pub const Graph = struct {
             },
         };
     }
+    /// Intern a concrete source type and validate only newly demanded storage dependencies.
+    pub fn materialize(self: *Graph, value: templates.Expression, span: Span) Error!Id {
+        if (templates.depends(value)) return self.sink.fail("E_GENERIC_BODY_UNSUPPORTED", span, "nominal specialization requires resolved concrete type arguments");
+        const first = self.pending.items.len;
+        const id = try self.resolve(value, &.{}, span);
+        try self.need(id);
+        try self.expand();
+        try self.acyclic(first);
+        return id;
+    }
     fn roots(self: *Graph) Error!void {
         for (self.templates.declarations.items, 0..) |declaration, id| {
             var arguments: [16]Id = undefined;
@@ -113,9 +123,8 @@ pub const Graph = struct {
         }
     }
     fn expand(self: *Graph) Error!void {
-        var cursor: usize = 0;
-        while (cursor < self.pending.items.len) : (cursor += 1) {
-            const id = self.pending.items[cursor];
+        while (self.budget.expanded < self.pending.items.len) {
+            const id = self.pending.items[self.budget.expanded];
             const node = self.nodes.items[@backingInt(id)];
             var edges: std.ArrayList(Edge) = .empty;
             defer edges.deinit(self.allocator);
@@ -127,7 +136,8 @@ pub const Graph = struct {
                         try edges.append(self.allocator, .{ .target = child, .span = field.name });
                     };
                 },
-                .array => {
+                .array => |array| {
+                    if (array.key) |key| try self.need(key);
                     // Existing finite-type policy follows even zero-length array elements.
                     const element = node.key.arguments[0];
                     try self.need(element);
@@ -137,13 +147,14 @@ pub const Graph = struct {
             }
             self.nodes.items[@backingInt(id)].edges = try edges.toOwnedSlice(self.allocator);
             self.nodes.items[@backingInt(id)].state = .ready;
+            self.budget.expanded += 1;
         }
     }
-    fn acyclic(self: *Graph) Error!void {
+    fn acyclic(self: *Graph, first: usize) Error!void {
         const Visit = struct { id: Id, next: usize = 0 };
         var stack: std.ArrayList(Visit) = .empty;
         defer stack.deinit(self.allocator);
-        for (self.pending.items) |root| {
+        for (self.pending.items[first..]) |root| {
             if (self.nodes.items[@backingInt(root)].state == .complete) continue;
             self.nodes.items[@backingInt(root)].state = .visiting;
             try stack.append(self.allocator, .{ .id = root });
@@ -179,6 +190,6 @@ pub fn collect(allocator: std.mem.Allocator, index: *const templates.Index, sink
     errdefer graph.deinit();
     try graph.roots();
     try graph.expand();
-    try graph.acyclic();
+    try graph.acyclic(0);
     return graph;
 }

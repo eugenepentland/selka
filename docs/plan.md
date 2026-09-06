@@ -76,8 +76,10 @@ explicit types, schemas, and interfaces where that improves the program.
    implemented as groundwork. [Declaration checking](experiments/nominal-template-checks.md)
    now validates unused fields/payloads, identities and argument requirements;
    [finite layout checking](experiments/nominal-layouts.md) now validates stored
-   dependencies while preserving phantom arguments. Concrete catalog specialization
-   and execution remain open.
+   dependencies while preserving phantom arguments. [Concrete instances](experiments/nominal-instances.md)
+   now execute on the VM with complete schemas and existing ownership/host rules.
+   Symbolic nominal operations in generic functions, public generic tooling, and
+   board `Slot<T>` consolidation remain open.
    These remain open; completing all
    abstraction experiments is not a prerequisite for starting the trial.
 
@@ -2585,3 +2587,59 @@ Next: concrete nominal catalog specialization that preserves these semantic
 identities and complete stored-value layouts, then symbolic field/payload
 operations and the board trial. The measured repair study, source serialization,
 incremental tooling and remaining roadmap requirements remain active.
+
+
+## Concrete nominal instance execution — 2026-09-06
+
+Concrete record, union, result and enum templates now specialize into complete
+runtime schemas and execute on the bytecode VM. Declaration identity and ordered
+argument identities preserve distinctions across nested applications, arrays,
+enum keys and imported aliases. Existing generic functions can receive concrete
+instances, including arrays of those instances. `examples/nominal-instances.my`
+returns `16`. See [the instance contract](experiments/nominal-instances.md).
+
+The catalog materializes only demanded concrete storage. Unused symbolic roots
+and unexpanded phantom arguments do not become fabricated empty runtime records.
+Graph expansion resumes for concrete source applications; the catalog and
+ordinary declarations share runtime lookup and finite ownership/layout validation.
+Canonical display names have a 1 MiB compilation budget to bound exponential
+argument-name growth in otherwise finite type families.
+
+Construction, updates, exhaustive matches, checked result propagation, partial
+owned field moves, borrowing, snapshots and arena escape checks use the existing
+language rules. Imported public value lookup now resolves the base declaration
+and requires public argument identities, including phantom arguments. Typed host
+registration transports complete concrete signatures and checked result payloads.
+Tests also cover ordinary domains, pool handles and resource contracts when a
+nominal template selects the new catalog path.
+
+Symbolic nominal applications such as `Box<T>` in generic function bodies still
+reject with `E_GENERIC_BODY_UNSUPPORTED`. Exporting a generic type constructor
+through public schema tooling reports `E_SCHEMA_GENERIC_TYPE` with a source
+location; the lower-level graph API has an explicit unsupported error. Neither
+limitation is treated as completion of the larger nominal-type milestone.
+
+Validation: `zig build test-interpreter --summary all` passes 35/35 steps and
+829/829 Zig tests (753 core, 72 CLI and four board-runner tests), plus all 21
+Python drivers. The 72 nominal-focused tests pass in Debug and ReleaseFast;
+allocation-failure sweeps cover plain/owned schemas, imported programs, typed
+host calls and mixed domain/pool/resource catalogs. Both CLI memory backings run
+the example successfully. Formatting and the gated install pass. Guardian passes
+all 88 checks with baselines disabled; existing report-only findings remain.
+
+The board trial retains 147 matching comparisons, 18 malformed transports and
+three seeded static-error checks; the ordinary VM corpus retains 96 independent
+oracle comparisons. Repair harness fixture tests pass, but actual agent repair
+attempts remain pending. No guest-native integration was run.
+
+Guardian prompted an explicit specification contract, direct schema error-path
+coverage and a reusable catalog test scenario now swept for allocation failures.
+Those evidence-backed observations are labeled useful-review. Hard-limit line
+splits, a shared import and removal of temporary debug output also cleared the
+gate. These gate findings did not establish a language runtime defect.
+
+Next: symbolic nominal field/payload operations and specialization in generic
+functions, then board `Slot<T>` consolidation and public generic tooling. The
+measured repair study, source serialization, finer incremental checking and other
+remaining roadmap requirements stay active. Guest-native compilation remains
+outside this goal.

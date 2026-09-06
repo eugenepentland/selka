@@ -1,0 +1,24 @@
+struct Box<T: copy> {
+    value: T
+}
+union Slot<T: copy> {
+    none,
+    some: T
+}
+fn main() -> i64 {
+    let original = new Box<i64> {
+        value: 7
+    };
+    let changed = update(original) {
+        value: 9
+    };
+    let slot = new Slot<Box<i64>>.some(changed);
+    match slot {
+        Slot<Box<i64>>.none => {
+            return 0;
+        },
+        Slot<Box<i64>>.some(box) => {
+            return original.value + box.value;
+        }
+    }
+}

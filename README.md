@@ -317,13 +317,17 @@ allocator origins through aggregates, references and helper writes, rejecting
 escapes before instantiation. `examples/generic-regions.my` returns `3`.
 [Generic fixed arrays](docs/experiments/generic-arrays.md) now support `[N]T`
 construction, nested substitution, nominal-ID membership and borrowed views.
-`examples/generic-arrays.my` returns `3`; parameterized records and unions remain open.
+`examples/generic-arrays.my` returns `3`.
 [Nominal template syntax and interfaces](docs/experiments/nominal-type-syntax.md)
 now retain declarations and nested applications. [Declaration checking](docs/experiments/nominal-template-checks.md)
 validates unused template fields, identities and argument requirements.
 [Finite layout checking](docs/experiments/nominal-layouts.md) now distinguishes
-stored recursion from finite nesting and phantom arguments. Concrete catalog
-specialization and execution remain explicitly unavailable.
+stored recursion from finite nesting and phantom arguments.
+[Concrete nominal instances](docs/experiments/nominal-instances.md) now execute
+records, unions, results and enum templates on the VM, preserving argument
+identity, ownership, borrowing and typed host contracts.
+`examples/nominal-instances.my` returns `16`. Symbolic uses such as `Box<T>`
+inside generic functions and public type-constructor schema export remain pending.
 
 [Lexical arenas](docs/experiments/source-arenas.md) use `arena heap as scratch { ... }`
 with conservative escape checks and cleanup across returns/errors.

@@ -12,98 +12,12 @@ const diagnostic = @import("diagnostic.zig");
 const Error = diagnostic.Error;
 const Names = @import("module_names.zig").Names;
 
-const ArrayCatalog = struct {
-    resolved: std.AutoHashMapUnmanaged(usize, typed.Type) = .empty,
-    templates: std.AutoHashMapUnmanaged(usize, generic_arrays.Template) = .empty,
-    shapes: std.AutoHashMapUnmanaged(typed.Array, typed.Type) = .empty,
-    specialized: usize = 0,
-};
-
-/// Arena-owned type identities, field indexes, and resolved aggregate layouts.
-pub const Catalog = struct {
-    module_names: ?*Names = null,
-    records: []typed.Record,
-    names: std.StringHashMapUnmanaged(typed.Type),
-    arrays: ArrayCatalog = .{},
-    record_capacity: usize = 0,
-    field_names: []std.StringHashMapUnmanaged(usize),
-
-    /// Resolve a source type name or interned array span, diagnosing unknown types.
-    pub fn resolve(self: Catalog, src: Source, span: Span, sink: *diagnostic.Sink) Error!typed.Type {
-        if (self.arrays.resolved.get(span.start)) |ty| return ty;
-        const name = src.text(span);
-        if (typed.Type.fromName(name)) |builtin| return builtin;
-        const key = if (self.module_names) |names| try names.reference(span, .type, null, null, sink) else name;
-        return self.names.get(key) orelse sink.fail("E_UNKNOWN_TYPE", span, "type is not declared");
-    }
-    /// Intern a specialized numeric array while retaining declaration-based element identity.
-    pub fn instantiateArray(self: *Catalog, allocator: std.mem.Allocator, element: typed.Type, length: usize, span: Span, sink: *diagnostic.Sink) Error!typed.Type {
-        const shape: typed.Array = .{ .element = element, .length = length };
-        if (self.arrays.shapes.get(shape)) |found| return found;
-        if (self.arrays.specialized == 4096) return sink.fail("E_GENERIC_LIMIT", span, "generic array specialization exceeds 4096 distinct shapes");
-        const id: typed.Type = @fromBackingInt(self.records.len + typed.Type.record_base);
-        const name = try std.fmt.allocPrint(allocator, "[{d}]{s}", .{ length, typed.typeName(element, self.records) });
-        const schema: typed.Record = .{
-            .id = id,
-            .name = name,
-            .declaration = span,
-            .fields = &.{},
-            .shape = .{ .array = shape },
-            .contract = .{ .move_only = length != 0 and typed.moveOnly(element, self.records), .requires_handling = length != 0 and typed.requiresHandling(element, self.records) },
-        };
-        var storage: std.ArrayList(typed.Record) = .{ .items = self.records, .capacity = self.record_capacity };
-        defer {
-            self.records = storage.items;
-            self.record_capacity = storage.capacity;
-        }
-        try storage.ensureUnusedCapacity(allocator, 1);
-        try self.arrays.shapes.put(allocator, shape, id);
-        storage.appendAssumeCapacity(schema);
-        self.arrays.specialized += 1;
-        return id;
-    }
-    /// Require a record type and return its declared field layout.
-    pub fn record(self: Catalog, ty: typed.Type, span: Span, sink: *diagnostic.Sink) Error!typed.Record {
-        if (!ty.isAggregate()) return sink.fail("E_TYPE", span, "operation requires a record value");
-        const schema = self.records[ty.recordIndex()];
-        if (!schema.isRecord()) return sink.fail("E_TYPE", span, "operation requires a record value");
-        return schema;
-    }
-    /// Return the record or enum-indexed table layout used by named construction.
-    pub fn constructor(self: Catalog, ty: typed.Type, span: Span, sink: *diagnostic.Sink) Error!typed.Record {
-        if (ty.isAggregate() and self.records[ty.recordIndex()].tableKey() != null) return self.records[ty.recordIndex()];
-        return self.record(ty, span, sink);
-    }
-    /// Require a fixed array or table and return its element and index schema.
-    pub fn array(self: Catalog, ty: typed.Type, span: Span, sink: *diagnostic.Sink) Error!typed.Array {
-        if (!ty.isAggregate()) return sink.fail("E_TYPE", span, "operation requires a fixed array value");
-        return self.records[ty.recordIndex()].shape.array orelse sink.fail("E_TYPE", span, "operation requires a fixed array value");
-    }
-    /// Require a nominal scalar domain and return its backing scalar type.
-    pub fn domain(self: Catalog, ty: typed.Type, span: Span, sink: *diagnostic.Sink) Error!typed.Type {
-        if (!ty.isAggregate()) return sink.fail("E_TYPE", span, "operation requires a nominal scalar domain");
-        return self.records[ty.recordIndex()].shape.domain orelse sink.fail("E_TYPE", span, "operation requires a nominal scalar domain");
-    }
-    /// Require a closed variant type and return its declared cases.
-    pub fn variants(self: Catalog, ty: typed.Type, span: Span, sink: *diagnostic.Sink) Error!typed.Variants {
-        if (!ty.isAggregate()) return sink.fail("E_TYPE", span, "operation requires an enum or tagged union");
-        return self.records[ty.recordIndex()].shape.variants orelse sink.fail("E_TYPE", span, "operation requires an enum or tagged union");
-    }
-    /// Resolve a variant name to its stable case index.
-    pub fn variant(self: Catalog, ty: typed.Type, src: Source, name: Span, sink: *diagnostic.Sink) Error!usize {
-        _ = try self.variants(ty, name, sink);
-        return self.field_names[ty.recordIndex()].get(src.text(name)) orelse sink.fail("E_UNKNOWN_VARIANT", name, "variant is not declared on this type");
-    }
-    /// Resolve a record field name to its stable field index.
-    pub fn field(self: Catalog, ty: typed.Type, src: Source, name: Span, sink: *diagnostic.Sink) Error!usize {
-        _ = try self.record(ty, name, sink);
-        return self.field_names[ty.recordIndex()].get(src.text(name)) orelse sink.fail("E_UNKNOWN_FIELD", name, "field does not exist on this record type");
-    }
-};
+/// Shared arena-owned runtime type catalog used by both declaration collectors.
+pub const Catalog = @import("type_catalog.zig").Catalog;
 
 /// All storage is owned by the compilation arena.
 pub fn collectWithNames(allocator: std.mem.Allocator, src: Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!Catalog {
-    try @import("nominal_type_syntax.zig").requireImplemented(allocator, src, program, sink, module_names);
+    if (@import("nominal_type_syntax.zig").present(program)) return @import("nominal_catalog.zig").collect(allocator, src, program, sink, module_names);
     const declarations = program.types.records;
     const domains = program.types.domains;
     const variant_types = program.types.variants;
@@ -120,7 +34,7 @@ pub fn collectWithNames(allocator: std.mem.Allocator, src: Source, program: ast.
     try collector.declareNames();
     try collector.internArrays();
     try collector.resolveFields();
-    try collector.validateLayouts();
+    try @import("record_layouts.zig").validate(allocator, catalog.records, sink);
     return catalog;
 }
 
@@ -369,98 +283,6 @@ const Collector = struct {
         for (pools, 0..) |declaration, offset| {
             const index = pool_base + offset * 2;
             storage[index].shape.pool = .{ .element = try catalog.resolve(src, declaration.element, sink), .handle = storage[index + 1].id };
-        }
-    }
-    fn finishLayout(self: *Collector, record_index: usize, schema: typed.Record) Error!void {
-        const catalog = self.catalog;
-        const sink = self.sink;
-        var requires_handling = false;
-        var move_only = schema.shape.buffer != null or schema.shape.resource != null or schema.shape.pool != null;
-        if (schema.shape.variants) |variants| {
-            requires_handling = variants.fallible;
-            for (variants.cases) |case| if (case.payload) |payload| {
-                requires_handling = requires_handling or typed.requiresHandling(payload, catalog.records);
-                move_only = move_only or typed.moveOnly(payload, catalog.records);
-            };
-        } else if (schema.shape.array) |array| {
-            requires_handling = array.length != 0 and typed.requiresHandling(array.element, catalog.records);
-            move_only = array.length != 0 and typed.moveOnly(array.element, catalog.records);
-        } else {
-            for (schema.fields) |field| {
-                requires_handling = requires_handling or typed.requiresHandling(field.ty, catalog.records);
-                move_only = move_only or typed.moveOnly(field.ty, catalog.records);
-            }
-        }
-        if (schema.shape.buffer) |element| {
-            if (typed.moveOnly(element, catalog.records) or typed.requiresHandling(element, catalog.records)) return sink.fail(
-                "E_BUFFER_ELEMENT",
-                schema.declaration,
-                "buffer elements must be ordinary copyable values without result obligations",
-            );
-        }
-        if (schema.shape.pool) |pool| {
-            if (typed.moveOnly(pool.element, catalog.records) or typed.requiresHandling(pool.element, catalog.records)) return sink.fail(
-                "E_POOL_ELEMENT",
-                schema.declaration,
-                "pool elements must be ordinary copyable values without result obligations",
-            );
-        }
-        catalog.records[record_index].contract.move_only = move_only;
-        catalog.records[record_index].contract.requires_handling = requires_handling;
-    }
-    fn validateLayouts(self: *Collector) Error!void {
-        const allocator = self.allocator;
-        const sink = self.sink;
-        const catalog = self.catalog;
-        // Iterative DFS rejects cycles without expanding records or recursing on the host.
-        const State = enum { unseen, visiting, complete };
-        const states = try allocator.alloc(State, catalog.records.len);
-        defer allocator.free(states);
-        @memset(states, .unseen);
-        const Visit = struct { record: usize, next_field: usize = 0 };
-        var work: std.ArrayList(Visit) = .empty;
-        defer work.deinit(allocator);
-        for (catalog.records, 0..) |_, root| {
-            if (states[root] != .unseen) continue;
-            states[root] = .visiting;
-            try work.append(allocator, .{ .record = root });
-            while (work.items.len != 0) {
-                const last = work.items.len - 1;
-                const visit = work.items[last];
-                const schema = catalog.records[visit.record];
-                const edge_count = if (schema.shape.variants) |v| v.cases.len else if (schema.shape.array != null or schema.shape.buffer != null or schema.shape.pool != null) @as(usize, 1) else schema.fields.len;
-                if (visit.next_field == edge_count) {
-                    try self.finishLayout(visit.record, schema);
-                    states[visit.record] = .complete;
-                    _ = work.pop();
-                    continue;
-                }
-                work.items[last].next_field += 1;
-                const field: typed.Field = if (schema.shape.variants) |v| .{
-                    .name = v.cases[visit.next_field].name,
-                    .ty = v.cases[visit.next_field].payload orelse continue,
-                    .declaration = v.cases[visit.next_field].declaration,
-                } else if (schema.shape.array) |a| .{
-                    .name = "element",
-                    .ty = a.element,
-                    .declaration = schema.declaration,
-                } else if (schema.shape.buffer) |element| .{
-                    .name = "element",
-                    .ty = element,
-                    .declaration = schema.declaration,
-                } else if (schema.shape.pool) |pool| .{
-                    .name = "element",
-                    .ty = pool.element,
-                    .declaration = schema.declaration,
-                } else schema.fields[visit.next_field];
-                if (!field.ty.isAggregate()) continue;
-                const child = field.ty.recordIndex();
-                if (states[child] == .visiting) return sink.fail("E_RECURSIVE_RECORD", field.declaration, "record fields must form a finite by-value layout; this field closes a cycle");
-                if (states[child] == .unseen) {
-                    states[child] = .visiting;
-                    try work.append(allocator, .{ .record = child });
-                }
-            }
         }
     }
 };

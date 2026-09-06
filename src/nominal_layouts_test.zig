@@ -52,6 +52,16 @@ test "nominal layout collect preserves identity finite nesting and phantom argum
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
+fn finite(text: []const u8) !void {
+    var compilation = try language.Compilation.init(t.allocator, "finite.my", text);
+    defer compilation.deinit();
+    try compilation.parse();
+    var sink: language.diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
+    const index = try templates.collect(compilation.arena.allocator(), compilation.src, compilation.syntax.?, &sink, null);
+    var graph = try layouts.collect(t.allocator, &index, &sink);
+    defer graph.deinit();
+    try t.expectEqual(@as(usize, 0), sink.items.items.len);
+}
 fn reject(text: []const u8, code: []const u8, detail: []const u8) !void {
     var compilation = try language.Compilation.init(t.allocator, "recursive.my", text);
     defer compilation.deinit();
@@ -94,14 +104,14 @@ fn identitySource(allocator: std.mem.Allocator, count: usize, wrap: bool) ![]u8 
 test "nominal layout expansion bounds distinct array identities" {
     const accepted = try identitySource(t.allocator, 4096, false);
     defer t.allocator.free(accepted);
-    try reject(accepted, "E_GENERIC_TYPE_UNSUPPORTED", "executable layouts");
+    try finite(accepted);
     const excessive = try identitySource(t.allocator, 4097, false);
     defer t.allocator.free(excessive);
     try reject(excessive, "E_GENERIC_LIMIT", "4096 array shapes");
     // Tag and Values contribute two symbolic roots before the field applications.
     const nominal = try identitySource(t.allocator, 4094, true);
     defer t.allocator.free(nominal);
-    try reject(nominal, "E_GENERIC_TYPE_UNSUPPORTED", "executable layouts");
+    try finite(nominal);
     const nominal_excess = try identitySource(t.allocator, 4095, true);
     defer t.allocator.free(nominal_excess);
     try reject(nominal_excess, "E_GENERIC_LIMIT", "4096 type instances");
@@ -132,7 +142,7 @@ fn longSource(allocator: std.mem.Allocator) ![]u8 {
 test "nominal layout checking handles long finite declaration chains iteratively" {
     const text = try longSource(t.allocator);
     defer t.allocator.free(text);
-    try reject(text, "E_GENERIC_TYPE_UNSUPPORTED", "executable layouts");
+    try finite(text);
 }
 fn cycleScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "cycle.my", "struct Box<T:copy>{value:T}struct Loop<U:copy>{box:Box<Loop<U>>}");

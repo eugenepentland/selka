@@ -127,8 +127,8 @@ pub const RecordShape = struct {
         return self.array != null or self.domain != null or self.variants != null;
     }
 };
-/// Checked move/result obligations and an optional explicit domain wire contract.
-pub const RecordContract = struct { codec: ?Codec = null, move_only: bool = false, requires_handling: bool = false };
+/// Checked obligations, type-argument visibility and an optional explicit domain wire contract.
+pub const RecordContract = struct { public_arguments: bool = true, codec: ?Codec = null, move_only: bool = false, requires_handling: bool = false };
 /// Payload types and case tags of a checked ok/err result schema.
 pub const ResultShape = struct { ok_type: Type, error_type: Type, ok_tag: usize, error_tag: usize };
 /// Recognize a valid fallible result and return its payload types and tags.

@@ -2,10 +2,9 @@
 
 Parameterized records and variants now have declaration-scoped semantic metadata.
 The checker validates their fields and payloads even when no function uses them.
-**Concrete layout specialization and execution are still pending.** The subsequent
-[layout-checking stage](nominal-layouts.md) now verifies finite storage dependencies. A valid
-nominal template still ends with `E_GENERIC_TYPE_UNSUPPORTED`; malformed
-metadata reports the specific error first. No typed IR or bytecode is emitted.
+The subsequent [layout-checking stage](nominal-layouts.md) verifies finite storage
+dependencies and [concrete specialization](nominal-instances.md) materializes
+executable schemas. Malformed metadata reports its specific error before lowering.
 
 For example, this unused declaration now reports `E_GENERIC_REQUIREMENT` on `U`,
 with a related location pointing to `Key`'s requirement:
@@ -16,9 +15,8 @@ struct Bad<U:copy> { key: Key<U> }
 fn main() -> i64 { return 0; }
 ```
 
-Changing `U:copy` to `U:equality` satisfies that declaration constraint. It does
-not yet make the program executable: the remaining specialization boundary is
-reported afterward.
+Changing `U:copy` to `U:equality` satisfies that declaration constraint and lets
+this program execute, returning zero without materializing unused templates.
 
 ## Identities and expressions
 
@@ -67,8 +65,8 @@ does not itself prove by-value finiteness; [the layout graph](nominal-layouts.md
 now supplies that separate check. It does not allocate executable instance IDs, check
 function-body uses of parameterized fields/payloads, or establish borrowing and
 arena behavior for those operations. It cannot be used as a full program
-acceptance verdict. The existing lowering boundary remains in place until those
-rules are implemented.
+acceptance verdict. Concrete operations use the shared runtime catalog and
+ordinary checker; parameter-dependent nominal body operations remain pending.
 
 ## Evidence and next work
 
@@ -79,7 +77,7 @@ cross-module diagnostic locations. They include allocation-failure sweeps and a
 1,200-record reverse-ordered dependency chain. An actual CLI test checks structured
 requirement and unknown-type errors from unused templates.
 
-Next: concrete catalog specialization using the finite layout graph, followed by
-symbolic record/variant operations and the board trial's shared `Slot<T>` types.
+Concrete catalog specialization is now implemented. Next: symbolic record/variant
+operations and the board trial's shared `Slot<T>` types.
 This checkpoint does not complete the nominal-type roadmap item or the measured
 agent-repair study. Native guest compilation remains outside the active goal.

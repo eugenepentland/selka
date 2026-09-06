@@ -1,12 +1,11 @@
 # Nominal type template syntax and interfaces
 
-This checkpoint implements the syntax and module-interface foundation for
-parameterized records and variants. **Nominal type specialization and execution
-are not implemented yet.** The semantic checker rejects well-formed uses with
-`E_GENERIC_TYPE_UNSUPPORTED` before producing typed IR or bytecode. The subsequent
-[declaration-checking stage](nominal-template-checks.md) now reports malformed
-fields/payloads and insufficient argument requirements before that boundary. Generic fixed
-arrays remain executable as documented in [their contract](generic-arrays.md).
+This document describes the syntax and module-interface foundation for
+parameterized records and variants. Subsequent [declaration checking](nominal-template-checks.md),
+[finite layout checking](nominal-layouts.md), and [concrete specialization](nominal-instances.md)
+now let concrete instances execute on the VM. Generic function bodies containing
+parameter-dependent nominal applications remain pending. Generic fixed arrays
+remain executable as documented in [their contract](generic-arrays.md).
 
 The parser can now retain declarations such as:
 
@@ -51,16 +50,15 @@ nominal declarations.
 
 This interface phase does **not** prove field layout, application requirement
 satisfaction, recursive-type finiteness, ownership, generic field operations or
-exhaustive matching. Those are required parts of the next semantic stage.
+exhaustive matching. Those belong to the subsequent semantic stages.
 Supporting syntax for result and enum templates does not commit to unchecked
 payloads, implicit equality or new ownership rules. Ordinary source compilation
-still refuses execution of nominal templates/applications in the meantime, including
-unused templates that otherwise have a runnable `main`.
+now executes concrete applications and programs with valid unused templates.
 
 `src/nominal_type_syntax_test.zig` exercises nested syntax, constructors/patterns,
 source spans, owned copying, allocation failures, formatting/comments/operator
 ambiguity, limits, cached module relocation, interface privacy/arity/kind/scope
-errors and the semantic rejection boundary. `test/integration.zig` checks the
-actual formatter and structured CLI rejection. This is a foundation checkpoint,
+errors and explicit unsupported symbolic-body diagnostics. `test/integration.zig`
+checks the actual formatter, unused declarations and structured CLI diagnostics. This is a foundation checkpoint,
 not completion of the parameterized-record/union roadmap item. No guest-native
 backend work is included.

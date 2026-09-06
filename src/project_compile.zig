@@ -154,10 +154,8 @@ pub const Compilation = struct {
             const original = self.src.originalSpan(record.declaration) catch return error.InternalError;
             if (original.input >= self.index.units.len or original.input >= self.index.project.modules.items.len) return error.InternalError;
             const unit = self.index.units[original.input];
-            const prefix_len = self.index.project.modules.items[original.input].name.len + 2;
-            if (prefix_len > record.name.len) return error.InternalError;
-            const symbol = unit.symbols.items[unit.names.get(record.name[prefix_len..]) orelse return error.InternalError];
-            if (symbol.exported and symbol.kind == .type) return record.id;
+            const symbol = unit.symbols.items[unit.names.get(self.src.text(record.declaration)) orelse return error.InternalError];
+            if (symbol.exported and symbol.kind == .type and record.contract.public_arguments) return record.id;
         }
         return error.UnknownPublicValueType;
     }

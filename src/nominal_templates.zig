@@ -241,7 +241,8 @@ fn builtinGuarantees(ty: typed.Type) requirements.Set {
     }
     return result;
 }
-fn depends(value: Expression) bool {
+/// Test whether an expression retains a parameter from its declaring scope.
+pub fn depends(value: Expression) bool {
     return switch (value) {
         .parameter => true,
         .array => |array| depends(array.element),

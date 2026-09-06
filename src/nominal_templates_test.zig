@@ -59,12 +59,10 @@ fn separateSinkScenario(allocator: std.mem.Allocator) !void {
     try compilation.parse();
     var sink: language.diagnostic.Sink = .{ .allocator = allocator };
     defer sink.items.deinit(allocator);
-    _ = @import("records.zig").collectWithNames(compilation.arena.allocator(), compilation.src, compilation.syntax.?, &sink, null) catch |err| {
-        if (err != error.SourceError) return err;
-        try t.expectEqualStrings("E_GENERIC_TYPE_UNSUPPORTED", sink.items.items[0].code);
-        return;
-    };
-    return error.TestUnexpectedResult;
+    const catalog = try @import("records.zig").collectWithNames(compilation.arena.allocator(), compilation.src, compilation.syntax.?, &sink, null);
+    try t.expectEqual(@as(usize, 0), catalog.records.len);
+    try t.expect(catalog.template_names.contains("Box"));
+    try t.expectEqual(@as(usize, 0), sink.items.items.len);
 }
 // spec: NOMINAL-TEMPLATE-CHECK-1
 test "nominal template collect and expression preserve identity and guarantees across allocation failures" {
