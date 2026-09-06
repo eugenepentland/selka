@@ -218,6 +218,22 @@ def main():
         ("generic-denied", generic, {"ACQUIRE": 2}, 0, b"2\n", None),
         ("generic-trap", generic_trap, {}, 1, b"", b"R_DIVISION_BY_ZERO"),
     ])
+    generic_retry = example.replace("fn retry(", "fn retry<G:copy>(").replace("match retry(", "match retry::<bool>(")
+    generic_retry = generic_retry.replace("match acquire_resource<Open>(fs, new [1]u8 [42u8])", "match open::<bool>(fs)")
+    generic_retry += "fn open<G:copy>(cap:filesystem_cap)->Open{return acquire_resource<Open>(restrict_resource<read,write,complete>(cap),new [1]u8[42u8]);}"
+    cases.extend([
+        ("generic-provider-retry", generic_retry, {"COMPLETE": 1}, 0, b"7\n", None),
+        ("generic-provider-denied", generic_retry, {"COMPLETE": 2}, 0, b"2\n", None),
+    ])
+    for name, source, settings, code, output, error in io_cases(prefix, finish):
+        if name in ("io-fixed", "io-network", "io-fixed-read-3", "io-fixed-write-3", "io-source-attenuation"):
+            generic_io = source.replace("fn work(", "fn work<G:copy>(").replace("match work(", "match work::<bool>(")
+            cases.append(("generic-" + name, generic_io, settings, code, output, error))
+    generic_slices = (root / "examples/generic-provider-slices.my").read_text()
+    cases.extend([
+        ("generic-provider-slice", generic_slices, {}, 0, b"3\n", None),
+        ("generic-provider-slice-denied", generic_slices, {"READ": 3}, 0, b"3\n", None),
+    ])
     if args.case:
         selected = set(args.case)
         cases = [case for case in cases if case[0] in selected]
@@ -282,7 +298,7 @@ def main():
                     assert (executed.returncode, executed.stdout) == (code, output), executed.stderr
                     assert events(executed) == trace, executed.stderr
                 comparisons += 1
-                if name in ("normal", "retry", "denied", "reordered", "network", "io-fixed", "io-slice", "io-buffer", "io-empty-fixed", "io-empty-slice", "io-empty-buffer", "io-slice-read-3", "io-buffer-read-3", "mixed", "generic-cleanup", "generic-network"):
+                if name in ("normal", "retry", "denied", "reordered", "network", "io-fixed", "io-slice", "io-buffer", "io-empty-fixed", "io-empty-slice", "io-empty-buffer", "io-slice-read-3", "io-buffer-read-3", "mixed", "generic-cleanup", "generic-network", "generic-provider-retry", "generic-io-fixed", "generic-provider-slice"):
                     for point in range(1, attempts + 1):
                         failed = invoke([executable], settings, point)
                         assert failed.returncode == 2 and b"host failure: OutOfMemory" in failed.stderr, (name, point, failed.stderr)

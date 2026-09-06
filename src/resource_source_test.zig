@@ -285,3 +285,22 @@ test "generic owned resources clean up explicit and implicit drops under allocat
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), genericCleanupScenario, .{});
 }
+
+const generic_retry = declarations ++
+    "fn open<G:copy>(cap:filesystem_cap)->Open effects(filesystem){return acquire_resource<Open>(cap,new [0]u8[]);}" ++
+    "fn finish<G:copy>(file:File)->Finish effects(filesystem){match complete_resource<Finish>(file){Finish.ok(done)=>{return new Finish.ok(done);},Finish.err(failure)=>{return complete_resource<Finish>(failure.resource);}}}" ++
+    "fn main(cap:filesystem_cap)->i64{match open::<bool>(cap){Open.ok(file)=>{match finish::<bool>(file){Finish.ok(discard)=>{return 7;},Finish.err(failure)=>{return failure.code;}}},Open.err(e)=>{return e;}}}";
+fn genericRetryScenario(allocator: std.mem.Allocator) !void {
+    var fake: Fake = .{ .fail_complete_count = 1 };
+    defer std.debug.assert(fake.live == 0);
+    var c = try language.Compilation.init(allocator, "generic-retry.my", generic_retry);
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 7), (try c.executeWithOptions(allocator, .{ .resources = .{ .filesystem = fake.provider() } })).value);
+    try t.expectEqual(@as(usize, 2), fake.complete_calls);
+    try t.expectEqual(@as(usize, 0), fake.released);
+}
+test "generic resource acquisition and completion return ownership for retry under allocation failures" {
+    try genericRetryScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), genericRetryScenario, .{});
+}

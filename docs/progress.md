@@ -3600,3 +3600,36 @@ arena/reset/view scopes inside templates remain pending. They require capability
 permission, direct-effect and origin/lifetime checks. Structural generic types,
 codec constraints, public generic tooling, source byte serialization and the
 remaining roadmap requirements remain open.
+
+
+### Generic provider operations — 2026-09-06
+
+Generic bodies now check clock/random reads, environment lookup, resource
+acquisition/completion, capability attenuation, fixed-byte I/O and I/O through
+caller-supplied slices. Exact capability families and concrete result schemas are
+required; resource I/O checks mutable owner availability after arguments, and slice
+reads require exclusive byte views. Direct provider effects propagate through the
+abstract call graph, including recursive helpers and statically unreachable source
+branches. Runtime provider availability, permission intersection, partial I/O,
+result ownership and cleanup retain their ordinary behavior.
+
+See `docs/experiments/generic-providers.md` and the explicit-provider
+`examples/generic-provider-slices.my`. Uncalled-template tests reject malformed
+contracts and forbidden effects. Execution/allocation sweeps cover generic scalar
+callbacks, bounded environment output, owned completion retry and slice I/O.
+All 639 core tests pass in Debug and ReleaseFast, all 60 CLI tests pass, and 2808
+standard VM/native comparisons pass across 130 fixtures. Native clock/random
+acceptance passes 64 value/error/call-count comparisons and 28 injected failures;
+environment acceptance passes 60 comparisons and 76 failures. Selected resource
+acceptance passes 16 outcomes and matching provider traces, 88 allocation failures
+and six generation sanitizer runs. Generic skipped calls execute no callbacks.
+The provider builder fixture now selects its intended source explicitly instead
+of depending on the final source-list entry. Formatting and all 88 Guardian checks
+pass without baselines; nonblocking size/line findings remain and uncertain ROI
+subjects stay pending. No new full binding/cache integration run is claimed.
+
+Constructing local array/buffer views and local arena/reset scopes in templates
+remain pending. They need abstract borrow and origin/lifetime tracking before
+being enabled. Structural generic types, generic codec constraints, public generic
+tooling, source byte serialization and all other pending roadmap requirements
+remain open.

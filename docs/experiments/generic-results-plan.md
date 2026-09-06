@@ -58,6 +58,7 @@ allocation-failure acceptance.
 
 [Concrete owned fields](generic-owned.md) now participate in whole/partial move
 state, cleanup and transitive cleanup-effect bounds. [Buffer/pool acquisition and mutation](generic-runtime.md) now check explicit
-authority and effects. Provider operations, borrowing/views and region scopes
-remain pending and need permission and origin tracking before being enabled. Generic result constructors and
+authority and effects. [Provider operations](generic-providers.md) now enforce capability/result/effect
+contracts. Local borrowing/views and region scopes still need origin and lifetime
+tracking before being enabled. Generic result constructors and
 associated success/error constraints remain pending independently.

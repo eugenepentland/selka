@@ -1,3 +1,4 @@
+//! Environment capability contracts, bounded provider output and generic execution tests.
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
@@ -194,4 +195,20 @@ test "environment emission rejects malformed output shapes and VM checks capabil
         instruction.* = original;
     }
     try t.expectEqual(@as(usize, 0), fake.calls);
+}
+
+const generic_environment = declarations ++
+    "fn lookup<G:copy>(cap:environment_cap)->Lookup effects(environment){return environment_get<Lookup>(cap,new [1]u8[75u8]);}" ++
+    "fn main(cap:environment_cap)->i64{match lookup::<bool>(cap){Lookup.ok(e)=>{return cast<i64>(e.length)+cast<i64>(e.bytes[0])+cast<i64>(e.bytes[1]);},Lookup.err(e)=>{return e;}}}";
+fn genericEnvironmentScenario(allocator: std.mem.Allocator) !void {
+    var fake: Fake = .{};
+    var c = try language.Compilation.init(allocator, "generic-environment.my", generic_environment);
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 257), (try c.executeWithOptions(allocator, .{ .environment = fake.provider() })).value);
+    try t.expectEqual(@as(usize, 1), fake.calls);
+}
+test "generic environment lookup preserves bounded bytes and callback allocation failures" {
+    try genericEnvironmentScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), genericEnvironmentScenario, .{});
 }

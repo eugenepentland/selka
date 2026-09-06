@@ -94,9 +94,9 @@ test "generic calls reject reachable clock effects even behind cycles and false 
     var ordinary = try language.Compilation.init(t.allocator, "ordinary.my", effectful ++ "fn main(c:clock_cap)->i64{return helper(c);}");
     defer ordinary.deinit();
     try ordinary.check();
-    var generic = try language.Compilation.init(t.allocator, "generic.my", effectful ++ "fn f<T:copy>(x:T,c:clock_cap)->i64{discard x;return helper(c);}");
+    var generic = try language.Compilation.init(t.allocator, "generic.my", effectful ++ "fn f<T:copy>(x:T,c:clock_cap)->i64 effects(){discard x;return helper(c);}fn main()->i64{return 0;}");
     defer generic.deinit();
     try t.expectError(error.SourceError, generic.check());
-    try t.expectEqualStrings("E_GENERIC_BODY_UNSUPPORTED", generic.diagnostics.items[0].code);
-    try t.expectEqualStrings("clock_now<Time>(c)", generic.src.text(generic.diagnostics.items[0].span));
+    try t.expectEqualStrings("E_EFFECT_BOUND", generic.diagnostics.items[0].code);
+    try t.expectEqualStrings("effects()", generic.src.text(generic.diagnostics.items[0].span));
 }

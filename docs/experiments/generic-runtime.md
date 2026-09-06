@@ -40,9 +40,8 @@ read trap. Compiler allocation sweeps include checking, VM execution and C emiss
 
 ## Remaining work
 
-Local arena/reset scopes and buffer views still need abstract origin, lifetime and
-borrow rules. Filesystem/network acquisition/completion/I/O and clock/random/
-environment operations still need their own capability, permission, result-shape
-and direct-effect checks in templates. Existing owned resource forwarding and
-cleanup do not imply those operations are implemented. Structural generic types,
-codec constraints, public tooling and the other roadmap tracks remain pending.
+Local arena/reset scopes and constructing buffer/array views still need abstract
+origin, lifetime and borrow rules. [Provider operations](generic-providers.md) now
+check capability, permission, result and effect contracts, including I/O through
+caller-supplied byte slices. Structural generic types, codec constraints, public
+tooling and the other roadmap tracks remain pending.

@@ -251,3 +251,26 @@ test "arena execution preserves resource slice snapshots partial IO and external
         try t.expectEqual(@as(usize, 0), stats.live_allocations);
     }
 }
+
+const generic_slice = declarations ++
+    "fn transfer<G:copy>(input:File,view:&mut[]u8)->Status{let mut file=input;let read=try read_resource_slice<Read>(file," ++
+    "view);let written=try write_resource_slice<Written>(file,view);return new Status.ok(cast<i64>(read.length)+cast<i64>(" ++
+    "written));}" ++
+    "fn main(cap:filesystem_cap)->i64{match acquire_resource<Open>(cap,new [0]u8[]){Open.ok(" ++
+    "file)=>{let mut bytes=new [3]u8[0u8,0u8,0u8];borrow mut bytes[0..3] as view{match transfer::<bool>(file,view){Status.ok(" ++
+    "n)=>{return n;},Status.err(e)=>{return e;}}}},Open.err(e)=>{return e;}}}";
+fn genericSliceScenario(allocator: std.mem.Allocator) !void {
+    var fake: Fake = .{};
+    defer std.debug.assert(fake.live == 0);
+    var c = try language.Compilation.init(allocator, "generic-resource-slice.my", generic_slice);
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 5), (try c.executeWithOptions(allocator, .{ .resources = .{ .filesystem = fake.provider() } })).value);
+    try t.expectEqual(@as(usize, 1), fake.reads);
+    try t.expectEqual(@as(usize, 1), fake.writes);
+    try t.expectEqualSlices(u8, &.{ 7, 8, 0 }, fake.input[0..fake.input_length]);
+}
+test "generic slice provider IO preserves exclusive views counts and cleanup under allocation failure" {
+    try genericSliceScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), genericSliceScenario, .{});
+}

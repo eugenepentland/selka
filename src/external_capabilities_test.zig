@@ -165,3 +165,21 @@ test "external emission rejects wrong result shape and VM rejects wrong operand 
     }
     try t.expectEqual(@as(usize, 0), fake.calls);
 }
+
+const generic_provider_source = declarations ++
+    "fn read<G:copy>(clock:clock_cap,random:random_cap)->Time effects(clock,random){let n=try clock_now<Time>(clock);" ++
+    "let word=try random_u64<Random>(random);if word==18446744073709551615u64{return new Time.ok(n);}return new Time.err(9);}" ++
+    "fn main(clock:clock_cap,random:random_cap)->i64{match read::<bool>(clock,random){Time.ok(n)=>{return n;},Time.err(e)=>{return e;}}}";
+fn genericProviderScenario(allocator: std.mem.Allocator) !void {
+    var fake: Fake = .{};
+    var c = try language.Compilation.init(allocator, "generic-provider.my", generic_provider_source);
+    defer c.deinit();
+    try t.expectEqual(@as(i64, -7), (try c.executeWithOptions(allocator, .{ .external = fake.providers() })).value);
+    try t.expectEqual(@as(usize, 2), fake.calls);
+}
+// spec: GENERIC-PROVIDER-EXEC-1
+test "generic provider reads preserve values callback counts and allocation cleanup" {
+    try genericProviderScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), genericProviderScenario, .{});
+}

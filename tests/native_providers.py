@@ -14,6 +14,10 @@ SOURCES = [
     "result T{ok:i64,err:i64}fn main(c:clock_cap,r:random_cap)->i64{discard r;if false{acknowledge clock_now<T>(c);}return 7;}",
 ]
 
+SOURCES.append(SOURCES[0].replace("fn work(", "fn work<G:copy>(").replace("match work(", "match work::<bool>(").replace("arena heap as scratch{", "{").replace("acquire_buffer<A>(scratch,", "acquire_buffer<A>(heap,"))
+
+SOURCES.append(SOURCES[1].replace("fn main(", "fn skip<G:copy>(") + "fn main(c:clock_cap,r:random_cap)->i64{return skip::<bool>(c,r);}")
+
 
 def cases():
     result = [(0, 0, 0, 0, -(1 << 63), None, 1, 1), (1, 0, 0, 0, 7, None, 0, 0)]
@@ -23,6 +27,8 @@ def cases():
     for source in (0, 1):
         for missing in (1, 2, 3):
             result.append((source, 0, 0, missing, 0, "CapabilityUnavailable", 0, 0))
+    result += [(2, *case[1:]) for case in result if case[0] == 0]
+    result += [(3, *case[1:]) for case in result if case[0] == 1]
     return result
 
 
@@ -96,7 +102,7 @@ def main():
                         assert result.returncode == 0 and result.stdout == f"{expected}\n".encode(), (case, result.stderr, result.stdout)
                     assert f"provider-calls: {cc} {rc}\n".encode() in result.stderr, (case, result.stderr)
                     comparisons += 1
-                if index == 0:
+                if index in (0, 2):
                     env = os.environ.copy()
                     env.update(TEST_CLOCK_STATUS="0", TEST_RANDOM_STATUS="0", TEST_MISSING="0")
                     env.pop("NATIVE_FAIL_ALLOCATION", None)
@@ -112,6 +118,7 @@ def main():
             assert absent.returncode == 0, absent.stderr
             denied = invoke([executable])
             assert denied.returncode == 2 and b"CapabilityUnavailable" in denied.stderr and denied.stdout == b"", denied
+        source.write_text(SOURCES[1])
         built = invoke(["python3", root / "scripts/native.py", source, "--compiler", compiler, "--zig", args.zig, "--provider", root / "tests/native_provider.c", "-o", executable])
         assert built.returncode == 0, built.stderr
         result = invoke([executable])

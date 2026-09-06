@@ -52,9 +52,10 @@ with the deterministic test provider; it requires explicit provider authority.
 This milestone adds owned input/value flow and cleanup effects.
 [Buffer/pool acquisition and operations](generic-runtime.md) now validate explicit
 allocator arguments, result shapes, mutation and direct allocation effects.
-Provider operations, buffer views and local arena/reset scopes still need their
-own abstract capability, permission and lifetime rules. Their explicit rejection
-prevents owned signatures from granting unchecked operations.
+[Provider operations](generic-providers.md) now preserve capability, permission
+and effect contracts. Local buffer/array views and arena/reset scopes still need
+abstract origin and lifetime rules; their explicit rejection prevents unchecked
+local-region operations.
 
 Caller-supplied owned values can be forwarded; templates cannot yet introduce a
 local region. Region scopes must track origins through local/field/call transfers

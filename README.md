@@ -259,6 +259,8 @@ result obligations and reject mismatched field moves across those paths.
 transfers, implicit cleanup and transitive resource cleanup effects.
 [Generic buffer/pool operations](docs/experiments/generic-runtime.md) now check
 explicit allocator authority, mutation contracts and allocation effects.
+[Generic provider operations](docs/experiments/generic-providers.md) now retain
+capability, result, permission and effect contracts.
 
 [Lexical arenas](docs/experiments/source-arenas.md) use `arena heap as scratch { ... }`
 with conservative escape checks and cleanup across returns/errors.

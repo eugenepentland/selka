@@ -23,6 +23,9 @@ CASES = [(0, mode, False, value, error, 1) for mode, value, error in (
     (3, 1, False, -1, None, 1), (3, 2, False, 0, None, 1), (3, 0, False, -14, None, 1),
 ] + [(index, 0, True, 0, "CapabilityUnavailable", 0) for index in range(4)]
 
+SOURCES.append(SOURCES[0].replace("fn get(", "fn get<G:copy>(").replace("match get(", "match get::<bool>("))
+CASES += [(4, *case[1:]) for case in CASES if case[0] == 0]
+
 
 def settings(mode=0, missing=False, empty=False):
     env = os.environ.copy()
@@ -101,7 +104,7 @@ def main():
                         assert result.returncode == 0 and result.stdout == f"{expected}\n".encode(), (index, mode, result.stderr, result.stdout)
                     assert f"environment-calls: {calls}\n".encode() in result.stderr, (index, mode, result.stderr)
                     comparisons += 1
-                if index in (0, 1):
+                if index in (0, 1, 4):
                     env = settings(10 if index == 1 else 0)
                     baseline = invoke([executable], env)
                     attempts, _ = memory(baseline)

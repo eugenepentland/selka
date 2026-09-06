@@ -89,6 +89,9 @@ const Checker = struct {
             .parameter => false,
         };
     }
+    fn seedEffect(self: *Checker, effect: effect_set.Effect) void {
+        self.effect_masks[self.function_index] |= effect_set.bit(effect);
+    }
     fn pendingObligation(self: *Checker, binding: Local) bool {
         if (binding.reference != null or !binding.available) return false;
         if (!self.requiresHandling(binding.ty)) return false;
@@ -363,6 +366,17 @@ const Checker = struct {
             .acquire_buffer, .acquire_pool => |acquire| try self.acquireValue(acquire, node.data == .acquire_pool, node.span),
             .buffer_operation => |operation| try self.bufferValue(operation),
             .pool_operation => |operation| try self.poolValue(operation),
+            .external_read => |read| try self.externalValue(read),
+            .environment_get => |get| try self.environmentValue(get),
+            .acquire_resource => |acquire| try self.acquireResource(acquire),
+            .complete_resource => |complete| try self.completeResource(complete),
+            .resource_io => |io| try self.resourceIo(io),
+            .restrict_resource => |restrict| result: {
+                const value = try self.expression(restrict.value);
+                const value_type = try self.concreteValue(value, node.span);
+                if (value_type.resourceKind() == null) return self.sink.fail("E_TYPE", node.span, "restriction requires filesystem or network capability authority");
+                break :result value;
+            },
             .read_slice => |read| result: {
                 const ref = try self.reference(read.name, false, true);
                 try self.supports(try self.expression(read.index), .integer, node.span);
@@ -436,6 +450,70 @@ const Checker = struct {
             else => self.sink.fail(eUnsupported, node.span, "this operation still needs abstract generic body checking"),
         };
     }
+    fn externalValue(self: *Checker, read: @FieldType(@FieldType(ast.Node, "data"), "external_read")) Error!Symbolic {
+        const success: typed.Type = if (read.kind == .clock) .i64 else .u64;
+        const result = try self.operationResult(read.ty, success, "E_EXTERNAL_RESULT");
+        const authority: typed.Type = if (read.kind == .clock) .clock_cap else .random_cap;
+        try self.same(try self.expression(read.capability), .{ .concrete = authority }, self.program.nodes.items[@backingInt(read.capability)].span);
+        self.seedEffect(read.kind.effect());
+        return result;
+    }
+    fn byteInput(self: *Checker, input: ast.NodeId, code: []const u8) Error!void {
+        const span = self.program.nodes.items[@backingInt(input)].span;
+        const value_type = try self.concreteValue(try self.expression(input), span);
+        if (!typed.byteRequest(value_type, self.catalog.records)) return self.sink.fail(code, span, "input requires a fixed u8 array");
+    }
+    fn environmentValue(self: *Checker, get: @FieldType(@FieldType(ast.Node, "data"), "environment_get")) Error!Symbolic {
+        const result = try self.ty(get.ty);
+        const result_type = try self.concreteValue(result, get.ty);
+        if (typed.environmentShape(result_type, self.catalog.records) == null) return self.sink.fail("E_ENVIRONMENT_RESULT", get.ty, "environment result requires bytes, length and present success fields with i64 error");
+        try self.same(try self.expression(get.capability), .{ .concrete = .environment_cap }, self.program.nodes.items[@backingInt(get.capability)].span);
+        try self.byteInput(get.name, "E_ENVIRONMENT_NAME");
+        self.seedEffect(.environment);
+        return result;
+    }
+    fn acquireResource(self: *Checker, acquire: @FieldType(@FieldType(ast.Node, "data"), "acquire_resource")) Error!Symbolic {
+        const result = try self.ty(acquire.ty);
+        const result_type = try self.concreteValue(result, acquire.ty);
+        const shape = typed.resultShape(result_type, self.catalog.records) orelse return self.sink.fail(diagnostic.resource_result, acquire.ty, "acquisition requires a resource success and i64 error result");
+        const kind = typed.resourceKind(shape.ok_type, self.catalog.records) orelse return self.sink.fail(diagnostic.resource_result, acquire.ty, "acquisition success must be a resource");
+        if (shape.error_type != .i64) return self.sink.fail(diagnostic.resource_result, acquire.ty, "acquisition error must be i64");
+        const authority: typed.Type = if (kind == .filesystem) .filesystem_cap else .network_cap;
+        try self.same(try self.expression(acquire.capability), .{ .concrete = authority }, self.program.nodes.items[@backingInt(acquire.capability)].span);
+        try self.byteInput(acquire.request, "E_RESOURCE_REQUEST");
+        self.seedEffect(kind.effect());
+        return result;
+    }
+    fn completeResource(self: *Checker, complete: @FieldType(@FieldType(ast.Node, "data"), "complete_resource")) Error!Symbolic {
+        const result = try self.ty(complete.ty);
+        const result_type = try self.concreteValue(result, complete.ty);
+        const shape = typed.completionShape(result_type, self.catalog.records) orelse return self.sink.fail("E_COMPLETION_RESULT", complete.ty, "completion requires bool success and an error record containing the resource and i64 code");
+        try self.same(try self.expression(complete.value), .{ .concrete = shape.resource_type }, self.program.nodes.items[@backingInt(complete.value)].span);
+        self.seedEffect(typed.resourceKind(shape.resource_type, self.catalog.records).?.effect());
+        return result;
+    }
+    fn resourceIo(self: *Checker, io: @FieldType(@FieldType(ast.Node, "data"), "resource_io")) Error!Symbolic {
+        if (io.value) |input| try self.byteInput(input, "E_RESOURCE_BYTES");
+        const owner = try self.local(io.owner);
+        const owner_type = try self.concreteValue(owner.ty, io.owner);
+        if (owner.reference != null) return self.sink.fail("E_RESOURCE_TYPE", io.owner, "I/O requires an owned resource value binding");
+        const kind = typed.resourceKind(owner_type, self.catalog.records) orelse return self.sink.fail("E_RESOURCE_TYPE", io.owner, "I/O requires an owned resource value binding");
+        try self.runtimeOwner(io.owner, true);
+        if (io.reference) |name| {
+            const ref = try self.reference(name, io.kind == .read, true);
+            try self.same(ref.ty, .{ .concrete = .u8 }, name);
+        }
+        const result = try self.ty(io.ty);
+        const result_type = try self.concreteValue(result, io.ty);
+        if (io.kind == .write) {
+            _ = try self.operationResult(io.ty, .u64, "E_RESOURCE_IO_RESULT");
+        } else {
+            const valid = if (io.reference != null) typed.resourceSliceReadShape(result_type, self.catalog.records) != null else typed.resourceReadShape(result_type, self.catalog.records) != null;
+            if (!valid) return self.sink.fail("E_RESOURCE_IO_RESULT", io.ty, "read result must contain the required bytes/length/eof fields and i64 error");
+        }
+        self.seedEffect(kind.effect());
+        return result;
+    }
     fn runtimeOwner(self: *Checker, span: source.Span, mutates: bool) Error!void {
         const binding = try self.local(span);
         if (!binding.available) return self.sink.fail(diagnostic.owned_consumed, span, "operation owner was already transferred");
@@ -466,7 +544,7 @@ const Checker = struct {
             } else try self.supports(value, .integer, at);
         }
         try self.runtimeOwner(operation.owner, operation.kind.mutates());
-        if (operation.kind.allocates()) self.effect_masks[self.function_index] |= effect_set.bit(.allocation);
+        if (operation.kind.allocates()) self.seedEffect(.allocation);
         const success: typed.Type = if (operation.result != null) .bool else if (operation.kind == .read) element else .u64;
         return self.operationResult(operation.result, success, "E_BUFFER_RESULT");
     }
@@ -492,7 +570,7 @@ const Checker = struct {
         );
         try self.same(try self.expression(acquire.allocator), .{ .concrete = .allocator }, self.program.nodes.items[@backingInt(acquire.allocator)].span);
         try self.supports(try self.expression(acquire.value), .integer, span);
-        self.effect_masks[self.function_index] |= effect_set.bit(.allocation);
+        self.seedEffect(.allocation);
         return result;
     }
     fn fieldValue(self: *Checker, access: @FieldType(@FieldType(ast.Node, "data"), "read_field"), taking: bool) Error!Symbolic {

@@ -1,0 +1,47 @@
+resource File: filesystem;
+result Open {
+    ok: File,
+    err: i64
+}
+struct Progress {
+    length: u64,
+    eof: bool
+}
+result Read {
+    ok: Progress,
+    err: i64
+}
+result Written {
+    ok: u64,
+    err: i64
+}
+result Status {
+    ok: i64,
+    err: i64
+}
+fn transfer < G: copy >(input: File, view: &mut []u8) -> Status {
+    let mut file = input;
+    let read = try read_resource_slice<Read>(file, view);
+    let written = try write_resource_slice<Written>(file, view);
+    return new Status.ok(cast<i64>(read.length) + cast<i64>(written));
+}
+fn main(cap: filesystem_cap) -> i64 {
+    match acquire_resource<Open>(cap, new [0]u8[]) {
+        Open.ok(file) => {
+            let mut bytes = new [3]u8[0u8, 0u8, 0u8];
+            borrow mut bytes[0..3] as view {
+                match transfer::< bool >(file, view) {
+                    Status.ok(n) => {
+                        return n;
+                    },
+                    Status.err(e) => {
+                        return e;
+                    }
+                }
+            }
+        },
+        Open.err(e) => {
+            return e;
+        }
+    }
+}

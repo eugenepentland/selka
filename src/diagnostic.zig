@@ -17,6 +17,8 @@ pub const result_loop = "E_RESULT_LOOP";
 pub const owned_consumed = "E_OWNED_CONSUMED";
 /// Shared code for mutation without a mutable binding.
 pub const immutable = "E_IMMUTABLE";
+/// Shared code for a malformed resource acquisition result.
+pub const resource_result = "E_RESOURCE_RESULT";
 const std = @import("std");
 const source = @import("source.zig");
 
