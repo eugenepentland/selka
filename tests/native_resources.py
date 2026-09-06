@@ -84,12 +84,12 @@ fn write(context:*anyopaque,handle:u64,bytes:[]const u8)E!usize{
 }
 fn release(context:*anyopaque,handle:u64)void{const self:*Fake=@ptrCast(@alignCast(context));self.live-=1;record(.{.op='R',.kind=self.kind,.handle=handle});}
 };
-fn scenario(id:usize,source:[]const u8,acquire:u8,complete:u8,permissions:u8,missing:bool,read:u8,write:u8,io_missing:bool,expected:i64,failure:?anyerror)!void{
+fn scenario(id:usize,source:[]const u8,acquire:u8,complete:u8,permissions:u8,missing:bool,read:u8,write:u8,io_missing:bool,expected:i64,failure:?anyerror,trap:?[]const u8)!void{
  count=0;var fakes=[_]Fake{.{.kind=0,.acquire_status=acquire,.complete_mode=complete,.read_mode=read,.write_mode=write},.{.kind=1,.acquire_status=acquire,.complete_mode=complete,.read_mode=read,.write_mode=write}};
  var c=try language.Compilation.init(t.allocator,"resources.my",source);defer c.deinit();
  var options:language.vm.Options=.{};options.resources.filesystem_permissions=permissions;options.resources.network_permissions=permissions;
  if(!missing){options.resources.filesystem=.{.context=&fakes[0],.acquire=Fake.acquire,.complete=Fake.complete,.release=Fake.release,.read=if(io_missing)null else Fake.read,.write=if(io_missing)null else Fake.write};options.resources.network=.{.context=&fakes[1],.acquire=Fake.acquire,.complete=Fake.complete,.release=Fake.release,.read=if(io_missing)null else Fake.read,.write=if(io_missing)null else Fake.write};}
- if(failure)|err|{try t.expectError(err,c.executeWithOptions(t.allocator,options));}else{try t.expectEqual(expected,(try c.executeWithOptions(t.allocator,options)).value);}
+ if(trap)|code|{try t.expectEqualStrings(code,(try c.executeWithOptions(t.allocator,options)).trap.code);}else if(failure)|err|{try t.expectError(err,c.executeWithOptions(t.allocator,options));}else{try t.expectEqual(expected,(try c.executeWithOptions(t.allocator,options)).value);}
  for(fakes)|fake|try t.expectEqual(@as(usize,0),fake.live);
  for(events[0..count])|event|std.debug.print("resource-oracle: {d} {c} {d} {d} {d} {d} {d} {d}\n",.{id,event.op,event.kind,event.handle,event.permissions,event.status,event.length,event.key});
 }
@@ -100,8 +100,9 @@ fn scenario(id:usize,source:[]const u8,acquire:u8,complete:u8,permissions:u8,mis
         if error == b"InvalidProvider" and settings.get("READ") != 5 and settings.get("WRITE") != 5:
             continue
         included.add(index)
-        failure = "null" if error is None else "error." + error.decode()
-        calls.append(f"try scenario({index},{json.dumps(source)},{settings.get('ACQUIRE',0)},{settings.get('COMPLETE',0)},{settings.get('PERMISSIONS',7)},{str(bool(settings.get('MISSING',0))).lower()},{settings.get('READ',0)},{settings.get('WRITE',0)},{str(bool(settings.get('IO_MISSING',0))).lower()},{int(output) if output else 0},{failure});")
+        failure = "null" if error is None or code == 1 else "error." + error.decode()
+        trap = json.dumps(error.decode()) if code == 1 else "null"
+        calls.append(f"try scenario({index},{json.dumps(source)},{settings.get('ACQUIRE',0)},{settings.get('COMPLETE',0)},{settings.get('PERMISSIONS',7)},{str(bool(settings.get('MISSING',0))).lower()},{settings.get('READ',0)},{settings.get('WRITE',0)},{str(bool(settings.get('IO_MISSING',0))).lower()},{int(output) if output else 0},{failure},{trap});")
     path = directory / "oracle.zig"
     path.write_text(template + '\ntest "resource-oracle"{\n' + "\n".join(calls) + "\n}\n")
     result = invoke([zig, "test", "-OReleaseFast", "--test-filter", "resource-oracle", "--dep", "language", f"-Mroot={path}", f"-Mlanguage={root / 'src/compiler.zig'}"])
@@ -208,6 +209,15 @@ def main():
     network_quota = quota.replace("filesystem", "RESOURCE_KIND").replace("network", "filesystem").replace("RESOURCE_KIND", "network")
     mixed = prefix + "resource Socket:network;result N{ok:Socket,err:i64}struct Pair{left:File,right:Socket}fn work(fs:filesystem_cap,net:network_cap)->Run{let socket=try acquire_resource<N>(net,new [0]u8[]);let file=try acquire_resource<A>(fs,new [0]u8[]);let pair=new Pair{right:socket,left:file};discard pair;return new Run.ok(9);}fn main(fs:filesystem_cap,net:network_cap)->i64{match work(fs,net){Run.ok(n)=>{return n;},Run.err(e)=>{return e;}}}"
     cases.extend([("quota-reuse", quota, {}, 0, b"8\n", None), ("quota-network", network_quota, {}, 0, b"8\n", None), ("mixed", mixed, {}, 0, b"9\n", None)])
+    generic = (root / "examples/generic-resources.my").read_text()
+    generic_trap = generic.replace("return read_field(value, code);", "return 7 / (read_field(value, code) - 7);")
+    assert generic_trap != generic
+    cases.extend([
+        ("generic-cleanup", generic, {}, 0, b"8\n", None),
+        ("generic-network", generic.replace("filesystem", "network"), {}, 0, b"8\n", None),
+        ("generic-denied", generic, {"ACQUIRE": 2}, 0, b"2\n", None),
+        ("generic-trap", generic_trap, {}, 1, b"", b"R_DIVISION_BY_ZERO"),
+    ])
     if args.case:
         selected = set(args.case)
         cases = [case for case in cases if case[0] in selected]
@@ -241,7 +251,8 @@ def main():
                 result = invoke([executable], settings)
                 assert (result.returncode, result.stdout) == (code, output), (name, result.stderr)
                 if error:
-                    assert b"host failure: " + error in result.stderr, result.stderr
+                    marker = b"error[" + error + b"]" if code == 1 else b"host failure: " + error
+                    assert marker in result.stderr, result.stderr
                 attempts, _ = memory(result)
                 pending_points = [int(point) for point in re.findall(rb"resource-pending: (\d+)", result.stderr)]
                 trace = events(result)
@@ -271,7 +282,7 @@ def main():
                     assert (executed.returncode, executed.stdout) == (code, output), executed.stderr
                     assert events(executed) == trace, executed.stderr
                 comparisons += 1
-                if name in ("normal", "retry", "denied", "reordered", "network", "io-fixed", "io-slice", "io-buffer", "io-empty-fixed", "io-empty-slice", "io-empty-buffer", "io-slice-read-3", "io-buffer-read-3", "mixed"):
+                if name in ("normal", "retry", "denied", "reordered", "network", "io-fixed", "io-slice", "io-buffer", "io-empty-fixed", "io-empty-slice", "io-empty-buffer", "io-slice-read-3", "io-buffer-read-3", "mixed", "generic-cleanup", "generic-network"):
                     for point in range(1, attempts + 1):
                         failed = invoke([executable], settings, point)
                         assert failed.returncode == 2 and b"host failure: OutOfMemory" in failed.stderr, (name, point, failed.stderr)

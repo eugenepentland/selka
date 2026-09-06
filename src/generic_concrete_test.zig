@@ -36,14 +36,14 @@ test "generic concrete shapes reject mismatched nominal values and malformed con
     try reject("fn f<T:copy>(x:[2]i64)->i64{return x[true];}fn main()->i64{return 0;}", "E_GENERIC_OPERATION");
     try reject("fn f<T:copy>(x:T)->i64{return x.n;}fn main()->i64{return 0;}", "E_GENERIC_BODY_UNSUPPORTED");
 }
-test "generic concreteType signatures enforce result handling and runtime ownership exclusions" {
+test "generic concreteType signatures enforce result handling and owned transfers" {
     var c = try language.Compilation.init(t.allocator, "domain.my", "domain D:i64{fn make(x:i64)->D{return wrap<D>(x);}fn number(x:D)->i64{return unwrap(x);}}" ++
         "fn preserve<T:copy>(context:T,value:D)->D{discard context;return value;}fn main()->i64{return D.number(preserve::<bool>(true,D.make(7)));}");
     defer c.deinit();
     try t.expectEqual(@as(i64, 7), (try c.execute(t.allocator)).value);
     try reject("result R{ok:i64,err:i64}fn f<T:copy>(x:R)->i64{return 0;}fn main()->i64{return 0;}", "E_RESULT_UNHANDLED");
-    try reject("buffer B:u8;struct Outer{inner:B}fn g<T:copy>(x:Outer)->i64{return 0;}fn main()->i64{return 0;}", "E_GENERIC_BODY_UNSUPPORTED");
-    try reject("buffer B:u8;fn f<T:copy>(x:B)->i64{return 0;}fn main()->i64{return 0;}", "E_GENERIC_BODY_UNSUPPORTED");
+    try reject("buffer B:u8;struct Outer{inner:B}fn g<T:copy>(x:Outer)->Outer{discard x;return x;}fn main()->i64{return 0;}", "E_OWNED_CONSUMED");
+    try reject("buffer B:u8;fn f<T:copy>(x:B)->B{discard x;return x;}fn main()->i64{return 0;}", "E_OWNED_CONSUMED");
     try reject("domain D:i64{}fn f<T:copy>(x:D)->i64{return x+1;}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
 }
 

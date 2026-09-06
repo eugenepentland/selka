@@ -149,6 +149,33 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
     }
 }
 
+/// Resolved declaration edge collected while checking symbolic template bodies.
+pub const AbstractCall = struct { caller: usize, callee: usize, span: Span };
+/// Check abstract cleanup/call effects before any generic specialization exists.
+pub fn checkAbstract(allocator: std.mem.Allocator, functions: []const @import("ast.zig").Function, masks: []const sets.Mask, calls: []const AbstractCall, sink: *diagnostic.Sink) diagnostic.Error!void {
+    if (functions.len != masks.len) return error.InternalError;
+    var graph = try Graph.init(allocator, functions.len);
+    defer graph.deinit();
+    for (functions, masks, 0..) |function, mask, index| {
+        for (std.meta.tags(sets.Effect)) |effect| {
+            if (mask & sets.bit(effect) != 0) graph.direct(index, effect, function.name);
+        }
+    }
+    for (calls) |edge| try graph.call(edge.caller, edge.callee, edge.span);
+    try graph.infer();
+    for (functions, 0..) |function, index| {
+        const bound = function.policy.effect_bound orelse continue;
+        const forbidden = graph.states[index].mask & ~bound.allowed;
+        for (std.meta.tags(sets.Effect)) |effect| {
+            if (forbidden & sets.bit(effect) == 0) continue;
+            var origin = index;
+            while (graph.states[origin].witnesses[@backingInt(effect)].?.via) |callee| origin = callee;
+            const message = try std.fmt.allocPrint(sink.allocator, "effect `{s}` from owned cleanup or a reachable helper exceeds declared bound", .{@tagName(effect)});
+            return sink.failRelated("E_EFFECT_BOUND", bound.span, message, .{ .span = graph.states[origin].witnesses[@backingInt(effect)].?.span, .message = "cleanup effect originates in this function's owned types" });
+        }
+    }
+}
+
 /// Independently recompute effects from emitted operations, including all call forms.
 pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.zig").Program) ValidateError!void {
     var graph = try Graph.init(allocator, program.functions.len);
@@ -272,7 +299,8 @@ fn typeMask(ty: typed.Type, masks: []const sets.Mask) error{InternalError}!sets.
     if (ty.recordIndex() >= masks.len) return error.InternalError;
     return masks[ty.recordIndex()];
 }
-fn cleanupMasks(allocator: std.mem.Allocator, records: []const typed.Record) ![]sets.Mask {
+/// Compute fallback cleanup effects for each complete nominal type graph.
+pub fn cleanupMasks(allocator: std.mem.Allocator, records: []const typed.Record) ValidateError![]sets.Mask {
     const masks = try allocator.alloc(sets.Mask, records.len);
     errdefer allocator.free(masks);
     @memset(masks, 0);

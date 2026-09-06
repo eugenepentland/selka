@@ -70,4 +70,5 @@ generics or completion of the full template-body contract.
 
 [Concrete result handling](generic-results.md) now adds transfer, acknowledgement,
 propagation and control-flow obligations. [Partial field state](generic-fields.md) now preserves remaining obligations;
-runtime-owned generic graphs remain pending.
+[concrete owned flow](generic-owned.md) now retains transfer and cleanup effects.
+Runtime operations and region scopes remain pending.

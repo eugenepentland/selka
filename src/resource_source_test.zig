@@ -261,3 +261,27 @@ test "partial record extraction releases external owners immediately and preserv
     var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(no_resize.allocator(), partialFieldResourceScenario, .{});
 }
+
+const generic_cleanup = declarations ++
+    "struct Owned{file:File,code:i64}" ++
+    "fn forward<T:copy>(file:File)->File effects(filesystem){return file;}" ++
+    "fn drop<T:copy>(file:File)->i64 effects(filesystem){return 1;}" ++
+    "fn fields<T:copy>(value:Owned)->i64 effects(filesystem){discard take_field(value,file);return read_field(value,code);}" ++
+    "fn handle<T:copy>(r:Open)->i64 effects(filesystem){match r{Open.ok(file)=>{return fields::<bool>(new Owned{file:forward::<bool>(file),code:7});},Open.err(code)=>{return code;}}}" ++
+    "fn main(fs:filesystem_cap)->i64{let first=handle::<bool>(acquire_resource<Open>(fs,new [0]u8[]));match acquire_resource<Open>(fs,new [0]u8[]){Open.ok(file)=>{return first+drop::<bool>(file);},Open.err(code)=>{return code;}}}";
+fn genericCleanupScenario(allocator: std.mem.Allocator) !void {
+    var fake: Fake = .{};
+    defer std.debug.assert(fake.live == 0);
+    var c = try language.Compilation.init(allocator, "generic-cleanup.my", generic_cleanup);
+    defer c.deinit();
+    const outcome = try c.executeWithOptions(allocator, .{ .resources = .{ .filesystem = fake.provider() } });
+    try t.expectEqual(@as(i64, 8), outcome.value);
+    try t.expectEqual(@as(usize, 2), fake.released);
+    try t.expectEqual(@as(usize, 0), fake.complete_calls);
+}
+// spec: GENERIC-CLEANUP-1
+test "generic owned resources clean up explicit and implicit drops under allocation failure" {
+    try genericCleanupScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), genericCleanupScenario, .{});
+}

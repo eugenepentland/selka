@@ -3,7 +3,7 @@
 Concrete whole-value result handling is now implemented; see
 [the implementation and acceptance record](generic-results.md). The requirements
 below remain the acceptance contract. Partial field moves are now covered by
-[generic fields](generic-fields.md). Runtime ownership, generic result declarations
+[generic fields](generic-fields.md). Runtime operations/regions, generic result declarations
 and associated success/error constraints are still pending; whole-value acceptance
 does not establish those capabilities.
 
@@ -56,9 +56,8 @@ Reassignment replenishes a binding only after remaining result obligations are
 handled. [The partial-field record](generic-fields.md) documents executable and
 allocation-failure acceptance.
 
-Runtime-owned fields remain excluded. Enabling them requires abstract whole/field
-move state for non-result owned values, cleanup at exits and overwritten bindings,
-borrow conflicts, region lifetime checks and declared capability/effect authority.
-Use ordinary semantic checks as the contract, and test uncalled templates before
-allowing runtime-owned type graphs. Generic result constructors and associated
-success/error constraints remain pending independently of runtime ownership.
+[Concrete owned fields](generic-owned.md) now participate in whole/partial move
+state, cleanup and transitive cleanup-effect bounds. Acquisition/mutation and
+region scopes remain pending: they need direct authority/effect checks, borrowing
+and origin tracking before being enabled. Generic result constructors and
+associated success/error constraints remain pending independently.

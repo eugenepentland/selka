@@ -1,4 +1,4 @@
-//! Symbolic checking of pure template bodies; no representative concrete type is substituted.
+//! Symbolic template checking preserves types, ownership and effects without representative substitution.
 const std = @import("std");
 const ast = @import("ast.zig");
 const typed = @import("typed.zig");
@@ -6,6 +6,8 @@ const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
 const requirements = @import("generic_requirements.zig");
 const Error = diagnostic.Error;
+const effects = @import("effects.zig");
+const effect_set = @import("effect_set.zig");
 const Names = @import("module_names.zig").Names;
 const eShadowing = diagnostic.shadowing;
 const eResultOperation = diagnostic.result_operation;
@@ -37,7 +39,10 @@ const Checker = struct {
     src: source.Source,
     program: ast.Program,
     catalog: Catalog,
-    concrete_checked: []bool,
+    cleanup_masks: []const effect_set.Mask,
+    effect_masks: []effect_set.Mask,
+    effect_calls: *std.ArrayList(effects.AbstractCall),
+    function_index: usize,
     sink: *diagnostic.Sink,
     parameters: []const requirements.Parameter,
     result: Symbolic,
@@ -64,15 +69,19 @@ const Checker = struct {
         return self.concreteType(span);
     }
     fn concreteType(self: *Checker, span: source.Span) Error!Symbolic {
-        const ty_value = try self.catalog.resolve(self.src, span, self.sink);
-        if (ty_value.isAggregate() and !self.concrete_checked[ty_value.recordIndex()]) {
-            @import("data_type.zig").check(self.allocator, self.catalog.records, ty_value, true) catch |err| {
-                if (err == error.OutOfMemory) return error.OutOfMemory;
-                return self.sink.fail(eUnsupported, span, "concrete generic values require complete copyable data graphs without runtime identities");
-            };
-            self.concrete_checked[ty_value.recordIndex()] = true;
-        }
-        return .{ .concrete = ty_value };
+        return .{ .concrete = try self.catalog.resolve(self.src, span, self.sink) };
+    }
+    fn moveOnly(self: *Checker, value: Symbolic) bool {
+        return switch (value) {
+            .concrete => |ty_value| typed.moveOnly(ty_value, self.catalog.records),
+            .parameter => false,
+        };
+    }
+    fn transfers(self: *Checker, value: Symbolic) bool {
+        return self.moveOnly(value) or self.requiresHandling(value);
+    }
+    fn seedCleanup(self: *Checker, value: Symbolic) void {
+        if (value == .concrete and value.concrete.isAggregate()) self.effect_masks[self.function_index] |= self.cleanup_masks[value.concrete.recordIndex()];
     }
     fn requiresHandling(self: *Checker, value: Symbolic) bool {
         return switch (value) {
@@ -110,8 +119,10 @@ const Checker = struct {
     fn samePending(self: *Checker, state: []const Pending, span: source.Span, code: []const u8) Error!void {
         for (self.locals.items[0..state.len], state) |binding, pending| {
             const fields_match = std.mem.eql(bool, binding.fields, pending.fields);
+            const owned = self.moveOnly(binding.ty) and !self.requiresHandling(binding.ty);
+            const mismatch_code = if (owned) (if (std.mem.eql(u8, code, diagnostic.result_loop)) "E_OWNED_LOOP" else "E_OWNED_PATH") else code;
             if (binding.available != pending.available or !fields_match) return self.sink.failRelated(
-                code,
+                mismatch_code,
                 span,
                 "result obligation must agree on every continuing path",
                 .{ .span = binding.name, .message = "binding declared here" },
@@ -156,10 +167,10 @@ const Checker = struct {
     fn namedValue(self: *Checker, span: source.Span) Error!Symbolic {
         const binding = try self.local(span);
         if (binding.reference != null) return self.sink.fail("E_REFERENCE_VALUE", span, "references require read_ref or an explicit reference parameter");
-        try self.ownerAccess(binding.*, false, span);
+        try self.ownerAccess(binding.*, self.transfers(binding.ty), span);
         if (binding.fields.len != 0) return self.sink.fail("E_PARTIAL_MOVE", span, "record has missing fields; access remaining fields individually or replace it");
-        if (self.requiresHandling(binding.ty)) {
-            if (!binding.available) return self.sink.fail("E_RESULT_CONSUMED", span, "result-bearing binding was already transferred");
+        if (self.transfers(binding.ty)) {
+            if (!binding.available) return self.sink.fail(if (self.moveOnly(binding.ty)) "E_OWNED_CONSUMED" else "E_RESULT_CONSUMED", span, "binding was already transferred");
             binding.available = false;
         }
         return binding.ty;
@@ -186,7 +197,7 @@ const Checker = struct {
             try self.ownerAccess(binding, borrow.mutable, borrow.owner);
         }
         if (borrow.range != null and !binding.slice) return self.sink.fail(eUnsupported, borrow.owner, "generic range borrowing requires a known slice input");
-        if (self.requiresHandling(binding.ty)) return self.sink.fail("E_RESULT_BORROW", borrow.owner, "result-bearing values must transfer by value");
+        if (self.transfers(binding.ty)) return self.sink.fail("E_RESULT_BORROW", borrow.owner, "result-bearing values must transfer by value");
         try self.supports(binding.ty, .copy, borrow.owner);
         return self.loanScope(.{ .name = borrow.name, .ty = binding.ty, .mutable = false, .reference = borrow.mutable, .slice = binding.slice, .root = binding.root orelse owner_index }, parent, borrow.body);
     }
@@ -263,6 +274,7 @@ const Checker = struct {
         for (self.parameters) |parameter| if (std.mem.eql(u8, text, self.src.text(parameter.name))) return self.sink.fail(eShadowing, name, "binding shadows a template type parameter");
         try self.active.put(self.allocator, text, self.locals.items.len);
         try self.locals.append(self.allocator, .{ .name = name, .ty = ty_value, .mutable = mutable });
+        self.seedCleanup(ty_value);
     }
     fn callTarget(self: *Checker, invocation: Call) Error!ast.Function {
         if (@import("source_codec.zig").operation(self.src.text(invocation.name)) and invocation.owner == null)
@@ -273,6 +285,7 @@ const Checker = struct {
             try @import("function_identity.zig").localName(self.sink.allocator, self.src, invocation.owner, invocation.name);
         const index = self.functions.get(key) orelse return self.sink.fail("E_UNKNOWN_FUNCTION", invocation.name, "no function has this qualified name");
         const function = self.program.functions[index];
+        try self.effect_calls.append(self.allocator, .{ .caller = self.function_index, .callee = index, .span = invocation.name });
         if (self.module_names == null and function.policy.restricted) {
             const allowed = if (self.owner) |owner| std.mem.eql(u8, self.src.text(owner), self.src.text(function.policy.owner.?)) else false;
             if (!allowed) return self.sink.failRelated("E_PRIVATE_FUNCTION", invocation.name, "private generic method requires the same declaring domain", .{ .span = function.name, .message = "private function declared here" });
@@ -427,9 +440,9 @@ const Checker = struct {
         const index = try self.catalog.field(owner_type, self.src, access.field, self.sink);
         const fields = self.catalog.records[owner_type.recordIndex()].fields;
         const result: Symbolic = .{ .concrete = fields[index].ty };
-        if (!taking and self.requiresHandling(result)) return self.sink.fail("E_FIELD_COPY", access.field, "read_field cannot copy result obligations");
-        if (self.requiresHandling(binding.ty) and !binding.available) return self.sink.fail("E_OWNED_CONSUMED", access.owner, "record has already been transferred");
-        if (taking and !self.requiresHandling(binding.ty)) return self.sink.fail("E_FIELD_TAKE", access.owner, "take_field requires a result-bearing record; use read_field for copyable records");
+        if (!taking and self.transfers(result)) return self.sink.fail("E_FIELD_COPY", access.field, "read_field cannot copy owned values or result obligations");
+        if (self.transfers(binding.ty) and !binding.available) return self.sink.fail("E_OWNED_CONSUMED", access.owner, "record has already been transferred");
+        if (taking and !self.transfers(binding.ty)) return self.sink.fail("E_FIELD_TAKE", access.owner, "take_field requires an owned or result-bearing record; use read_field for copyable records");
         if (binding.fields.len != 0 and binding.fields[index]) return self.sink.fail("E_FIELD_MOVED", access.field, "field has already been transferred");
         try self.ownerAccess(binding.*, taking, access.owner);
         if (taking) {
@@ -607,7 +620,7 @@ const Checker = struct {
                 const value = try self.expression(assignment.value);
                 try self.same(value, target.ty, assignment.op_span);
                 if (assignment.op != .set) try self.supports(target.ty, .integer, assignment.op_span);
-                if (self.requiresHandling(target.ty)) {
+                if (self.transfers(target.ty)) {
                     if (self.pendingObligation(target.*)) return self.sink.fail("E_RESULT_OVERWRITE", assignment.name, "assignment would overwrite an unhandled result");
                     target.available = true;
                     target.fields = &.{};
@@ -628,15 +641,15 @@ const Checker = struct {
             .discard => |value| {
                 const ty_value = try self.expression(value);
                 if (self.requiresHandling(ty_value)) return self.sink.fail("E_RESULT_DISCARD", statement_value.span, "discard cannot erase a result obligation");
-                try self.supports(ty_value, .copy, statement_value.span);
+                if (ty_value == .parameter) try self.supports(ty_value, .copy, statement_value.span);
             },
             .branch => |branch| return self.branchValue(branch, statement_value.span),
             .loop => |loop| {
                 const before = try self.pendingState(self.locals.items.len);
                 defer self.allocator.free(before);
                 try self.same(try self.expression(loop.condition), .{ .concrete = .bool }, statement_value.span);
-                try self.samePending(before, statement_value.span, "E_RESULT_LOOP");
-                if (!try self.statement(loop.body)) try self.samePending(before, statement_value.span, "E_RESULT_LOOP");
+                try self.samePending(before, statement_value.span, diagnostic.result_loop);
+                if (!try self.statement(loop.body)) try self.samePending(before, statement_value.span, diagnostic.result_loop);
                 self.restorePending(before);
             },
             else => return self.sink.fail(eUnsupported, statement_value.span, "this statement still needs abstract generic body checking"),
@@ -662,9 +675,13 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
         break;
     };
     if (!has_generic) return;
-    const concrete_checked = try allocator.alloc(bool, catalog.records.len);
-    defer allocator.free(concrete_checked);
-    @memset(concrete_checked, false);
+    const cleanup_masks = try effects.cleanupMasks(allocator, catalog.records);
+    defer allocator.free(cleanup_masks);
+    const effect_masks = try allocator.alloc(effect_set.Mask, program.functions.len);
+    defer allocator.free(effect_masks);
+    @memset(effect_masks, 0);
+    var effect_calls: std.ArrayList(effects.AbstractCall) = .empty;
+    defer effect_calls.deinit(allocator);
     var functions: FunctionMap = .empty;
     defer functions.deinit(allocator);
     for (program.functions, 0..) |function, index| {
@@ -694,7 +711,10 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
             .src = src,
             .program = program,
             .catalog = catalog,
-            .concrete_checked = concrete_checked,
+            .cleanup_masks = cleanup_masks,
+            .effect_masks = effect_masks,
+            .effect_calls = &effect_calls,
+            .function_index = pending.items[cursor],
             .sink = sink,
             .parameters = parameters,
             .result = undefined,
@@ -710,9 +730,10 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
         if (function.policy.conversion) return sink.fail(eUnsupported, function.name, "generic conversions still need abstract checking");
         for (parameters) |parameter| if (try checker.topLevel(parameter.name)) return sink.fail(eShadowing, parameter.name, "type parameter shadows a top-level declaration or import");
         checker.result = try checker.ty(function.signature.return_type);
+        checker.seedCleanup(checker.result);
         for (function.signature.parameters) |parameter| {
             const parameter_type = try checker.ty(parameter.ty);
-            if (parameter.reference != null and checker.requiresHandling(parameter_type)) return sink.fail("E_RESULT_BORROW", parameter.ty, "result-bearing parameters must transfer by value");
+            if (parameter.reference != null and checker.transfers(parameter_type)) return sink.fail("E_RESULT_BORROW", parameter.ty, "result-bearing parameters must transfer by value");
             try checker.bind(parameter.name, parameter_type, false);
             checker.locals.items[checker.locals.items.len - 1].reference = parameter.reference;
             checker.locals.items[checker.locals.items.len - 1].slice = parameter.slice;
@@ -722,4 +743,5 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
         if (checker.return_reference) |contract| try checker.same(checker.locals.items[contract.parameter].ty, checker.result, function.signature.return_type);
         if (!try checker.statement(function.body)) return sink.fail("E_MISSING_RETURN", function.name, "template may fall through without returning its declared type");
     }
+    try effects.checkAbstract(allocator, program.functions, effect_masks, effect_calls.items, sink);
 }

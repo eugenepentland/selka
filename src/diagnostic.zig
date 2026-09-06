@@ -11,6 +11,8 @@ pub const return_lifetime = "E_RETURN_LIFETIME";
 pub const result_operation = "E_RESULT_OPERATION";
 /// Shared code for inconsistent obligations across continuing control-flow paths.
 pub const result_path = "E_RESULT_PATH";
+/// Shared code for result obligations changed by a loop continuation.
+pub const result_loop = "E_RESULT_LOOP";
 const std = @import("std");
 const source = @import("source.zig");
 

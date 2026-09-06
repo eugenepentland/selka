@@ -1594,3 +1594,39 @@ preserve whole/field ownership transfer, implicit cleanup, borrowing, region
 lifetimes and capability/effect authority before enabling those graphs. Symbolic
 structural types, generic codec constraints, public generic tooling, source byte
 serialization and all other pending roadmap items remain open.
+
+
+### Concrete generic owned flow and cleanup effects — 2026-09-06
+
+Generic bodies now accept concrete owned buffers, pools and external resources,
+including their aggregate/result wrappers. Whole and partial reads transfer once;
+continuing branches/loops/short-circuit paths agree on remaining ownership. Ordinary
+owned values may be discarded or dropped at scope exit, and replacement releases
+the prior owner. Result obligations remain explicit. Owned reference parameters and
+general borrows still reject under the ordinary checker's current policy.
+
+The abstract pass collects owned-type cleanup masks and resolved call edges, then
+reuses the ordinary effect solver. Filesystem/network fallback cleanup propagates
+through helper cycles and rejects incompatible bounds in uncalled templates.
+Zero-length resource arrays retain their empty cleanup mask. Copy-constrained type
+arguments still exclude owned values; ordinary pool handles retain copy identity.
+See `docs/experiments/generic-owned.md`, `examples/generic-owned.my` (14), and the
+explicit-provider `examples/generic-resources.my` (8 with the test provider).
+
+All 626 core tests pass in Debug and ReleaseFast, all 60 CLI tests pass, and 2790
+VM/native comparisons pass across 127 fixtures. Generic-focused coverage passes
+82 tests. Selected native resource acceptance passes 10 outcomes and matching VM
+provider traces, six generation sanitizer runs and 90 injected allocation failures.
+Those selected cases include existing normal resource behavior and generic
+filesystem/network cleanup, denied acquisition and a guest trap. The resource
+oracle now distinguishes guest traps from host errors. Core allocation sweeps also
+verify generic provider release exactly once after explicit or implicit drops.
+Formatting and all 88 Guardian checks pass without baselines; nonblocking size/line
+findings remain. Uncertain ROI observations remain pending. No new full
+resource/provider/binding integration-suite run is claimed.
+
+Acquisition, mutation, provider operations and local arena/reset scopes inside
+generic bodies remain explicitly unsupported pending direct authority/effect,
+result-shape and region-origin checks. Owned input flow does not establish those
+operations. Structural generic types, codec constraints, public generic tooling,
+source byte serialization and all other roadmap requirements remain open.
