@@ -7,8 +7,8 @@ The implementation follows [the revision 3 plan](docs/plan.md) and
 [interpreter-first roadmap](docs/experiments/interpreter-first.md). The working
 language name and `.my` extension are provisional.
 
-Next priorities are typed VM host-library calls and a board-validation or
-constraint-processing trial, including measured diagnostic repair outcomes.
+Typed VM host-library calls now execute through explicit registrations. Next is
+a board-validation or constraint-processing trial with measured diagnostic repair outcomes.
 Expensive geometry can remain in Zig/C/Rust behind explicit typed wrappers.
 Completed C/native experiments remain available; further native compilation,
 LLVM, and direct x86_64 Linux work are deferred until the design and measurements
@@ -106,9 +106,10 @@ cache is ignored.
 
 ## Current implementation
 
-The [typed host registry](docs/experiments/host-functions.md) now validates exact
-contracts and copies ordinary values through bounded synchronous sessions. Guest
-host declarations and VM dispatch are the next integration work.
+The [typed VM host interface](docs/experiments/host-functions.md) supports explicit
+`host fn` declarations, transitive effects and program-bound registrations. It
+copies ordinary values through bounded synchronous sessions, including imported
+calls and typed results. Borrowed and runtime-owned boundary values reject.
 
 The scalar MVP (M0–M5) is implemented and audited: owned source buffers, source locations, lexer,
 parser, separate untyped/typed representations, per-function instructions,

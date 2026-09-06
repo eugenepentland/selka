@@ -55,12 +55,11 @@ explicit types, schemas, and interfaces where that improves the program.
    now expose that evidence, VM traces and cached warnings with `--diagnostics=json`. The initial
    [optional-value audit](experiments/optional-values.md) retains named unions and
    checked results; measure application usability before adding convenience syntax.
-3. Add a small, explicitly registered typed host-library interface into the VM,
-   with handwritten Zig wrappers, declared effects, ownership, borrowed-buffer
-   lifetimes, and typed failures. Existing built-in providers are a starting
-   point. The [trusted registration boundary](experiments/host-functions.md) now
-   validates copied values, signatures, grants and session budgets; guest
-   declarations, program linking and VM dispatch remain pending.
+3. The [typed VM host interface](experiments/host-functions.md) now supports
+   explicit guest declarations and handwritten Zig wrappers with exact signatures,
+   transitive effects, grants, copied values and typed failures. Registrations bind
+   to the same compiled program; VM calls share bounded sessions and deterministic
+   cleanup. Borrowed and runtime-owned boundary signatures reject explicitly.
 4. Run a board-validation or constraint-processing trial in the language, keeping
    expensive geometry/routing kernels in Zig (or C/Rust behind a wrapper). Begin
    with an explicit input snapshot and add only host operations the trial needs.
@@ -2065,3 +2064,59 @@ Those integrations remain pending; this checkpoint does not complete the typed
 host-interface milestone. The board/constraint trial, measured agent repairs and
 broader abstraction/tooling work remain open. Native guest execution stays
 outside the active roadmap-completion goal.
+
+
+## Typed guest-to-host VM execution — 2026-09-06
+
+The initial [typed VM host interface](experiments/host-functions.md) now executes
+explicit `host fn` declarations through handwritten Zig wrappers. A declaration
+has a semicolon instead of a guest body and an exact `effects(host, ...)`
+contract. Ordinary/imported calls and concrete generic helpers preserve nominal
+parameter/result identities. Source checking rejects unsupported generic host
+signatures, methods/conversions, references, capabilities and runtime-owned data;
+main keeps a guest body. Host and additional declared effects propagate through
+ordinary and abstract generic call graphs, including uncalled templates, and
+exclude calls from effect-free evaluation, invocation and codec contracts.
+
+The program-bound registry derives only marked declarations from validated
+bytecode, snapshots their contracts and checks the exact immutable compilation
+and catalog. Ordinary guest functions cannot be rebound. Preflight requires all
+bindings/grants, including unused declarations, before guest operations. One
+session spans an execution; VM instruction/frame accounting and host
+call/work/value/depth budgets all apply. Typed success/error variants rejoin
+normal guest handling. Callback failure, invalid output and host quota exhaustion
+produce located traps with caller traces; allocation failure remains a host error.
+Guest-owned buffers and partially produced/copied values clean up on every exit.
+
+Independent bytecode validation rejects fabricated host bodies, entry functions,
+signatures and effects. Formatting and disassembly preserve declarations;
+duplicate discovery excludes external implementations. Public schemas include
+the host effect. The CLI checks these programs and reports missing registrations
+in text or versioned JSON; an embedding application supplies wrappers. The
+retained C emitter rejects host declarations clearly. No guest-native backend
+was added or extended to execute them.
+
+Eleven new core tests and two actual CLI tests cover source contracts, transitive
+and uncalled generic effects, separate-program rejection, all-binding preflight,
+imported aggregate/result execution, source traces, quota failures, malformed
+bytecode, formatting/discovery and cleanup. Allocation-failure sweeps span scalar
+calls, imported nominal results and live guest buffer cleanup. The documented Zig
+embedding example independently executes and returns 42; a public host schema
+reports its exact parameter/result and host effect.
+
+Debug `zig build test` passes 28/28 steps and 760/760 tests; ReleaseFast
+`test-interpreter` passes 29/29 steps and the same 760 tests (693 core, 67 CLI).
+Both pass all 18 interpreter/tooling driver invocations and 96 independent VM
+corpus comparisons. Formatting and all 88 Guardian checks pass with baselines
+disabled; existing report-only size/line findings remain. Guardian prompted a
+cohesive extraction of binding-warning reporting from semantic checking, plus
+line wrapping and one shared effects import; the cognitive-complexity subject
+remains labelled useful-review. Fixture corrections used the existing generic
+call syntax and source-location API. No native execution suite was run.
+
+Next: the board-validation/constraint-processing application, an independent
+behavioral oracle, and recorded agent repair attempts. Its evidence should guide
+further abstractions/tooling. Borrowed host buffers/handles need explicit lifetime
+contracts if the trial requires them; the current interface rejects such
+signatures. Broader pending roadmap requirements remain active. Native guest
+execution remains outside this goal.

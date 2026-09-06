@@ -22,6 +22,10 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
     try validateEntry(program);
     for (program.functions, 0..) |function, index| {
         try validateFunction(program, function, index);
+        if (function.policy.host != null) {
+            try validateHost(allocator, program, function);
+            continue;
+        }
         for (function.scope.instructions) |instruction| try validateInstruction(allocator, program, function, instruction);
         try validateFlow(allocator, program, function);
     }
@@ -45,6 +49,7 @@ fn validateRecords(program: Program) Error!void {
 
 fn validateEntry(program: Program) Error!void {
     const main = program.functions[@backingInt(program.main)];
+    if (main.policy.host != null) return error.InternalError;
     if (main.signature.return_reference != null) return error.InternalError;
     if (main.signature.parameter_count > main.scope.locals.len) return error.InternalError;
     if (main.signature.return_type != .i64) return error.InternalError;
@@ -60,7 +65,8 @@ fn validateEntry(program: Program) Error!void {
 }
 
 fn validateFunction(program: Program, function: Function, i: usize) Error!void {
-    if (@backingInt(function.id) != i or function.scope.instructions.len == 0) return error.InternalError;
+    if (@backingInt(function.id) != i) return error.InternalError;
+    if (function.policy.host == null and function.scope.instructions.len == 0) return error.InternalError;
     if (function.policy.owner) |owner| {
         if (!owner.isAggregate()) return error.InternalError;
         if (!validType(owner, program)) return error.InternalError;
@@ -90,6 +96,23 @@ fn validateFunction(program: Program, function: Function, i: usize) Error!void {
             if (count != 1) return error.InternalError;
         }
     }
+}
+
+fn validateHost(allocator: std.mem.Allocator, program: Program, function: Function) Error!void {
+    if (function.scope.instructions.len != 0 or function.scope.references.len != 0) return error.InternalError;
+    if (function.policy.owner != null or function.policy.restricted or function.policy.conversion) return error.InternalError;
+    if (function.signature.return_reference != null or function.signature.parameter_count != function.scope.locals.len) return error.InternalError;
+    try validateHostType(allocator, program.records, function.signature.return_type);
+    for (function.scope.locals) |parameter| {
+        if (parameter.parameter.reference_parameter != null or parameter.parameter.slice_parameter or parameter.mutable) return error.InternalError;
+        try validateHostType(allocator, program.records, parameter.ty);
+    }
+}
+fn validateHostType(allocator: std.mem.Allocator, records: []const typed.Record, ty: typed.Type) Error!void {
+    @import("data_type.zig").check(allocator, records, ty, true) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return error.InternalError,
+    };
 }
 
 fn validateInstruction(allocator: std.mem.Allocator, program: Program, function: Function, instruction: Instruction) Error!void {

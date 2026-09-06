@@ -73,6 +73,8 @@ pub const diagnostic = @import("diagnostic.zig");
 pub const diagnostic_output = @import("diagnostic_output.zig");
 /// Trusted typed host registration and copied-value callback boundary.
 pub const host_functions = @import("host_functions.zig");
+/// Program-bound registration adapter for explicitly declared VM host functions.
+pub const vm_host = @import("vm_host.zig");
 const lexer = @import("lexer.zig");
 const parser = @import("parser.zig");
 const ast = @import("ast.zig");

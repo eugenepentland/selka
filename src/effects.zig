@@ -12,7 +12,7 @@ const Span = @import("source.zig").Span;
 const diagnostic = @import("diagnostic.zig");
 const Witness = struct { span: Span, via: ?usize = null };
 const Edge = struct { caller: usize, span: Span };
-const State = struct { mask: sets.Mask = 0, witnesses: [6]?Witness = @splat(null), callers: std.ArrayList(Edge) = .empty, queued: bool = false };
+const State = struct { mask: sets.Mask = 0, witnesses: [std.meta.tags(sets.Effect).len]?Witness = @splat(null), callers: std.ArrayList(Edge) = .empty, queued: bool = false };
 const Graph = struct {
     allocator: std.mem.Allocator,
     states: []State,
@@ -71,6 +71,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
     };
     defer allocator.free(cleanup_masks);
     for (program.functions, 0..) |function, index| {
+        if (function.policy.host) |span| try seedHost(&graph, index, function.policy.effect_bound, span);
         try seedOwnership(&graph, index, function.signature.return_type, function.scope.locals, function.declaration, cleanup_masks);
         var walker = try @import("typed_walk.zig").Walker.init(allocator, program, function.scope.body);
         defer walker.deinit();
@@ -157,6 +158,7 @@ pub fn checkAbstract(allocator: std.mem.Allocator, functions: []const @import("a
     var graph = try Graph.init(allocator, functions.len);
     defer graph.deinit();
     for (functions, masks, 0..) |function, mask, index| {
+        if (function.policy.host) |span| try seedHost(&graph, index, function.policy.effect_bound, span);
         for (std.meta.tags(sets.Effect)) |effect| {
             if (mask & sets.bit(effect) != 0) graph.direct(index, effect, function.name);
         }
@@ -183,6 +185,7 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
     const cleanup_masks = try cleanupMasks(allocator, program.records);
     defer allocator.free(cleanup_masks);
     for (program.functions, 0..) |function, index| {
+        if (function.policy.host) |span| try seedHost(&graph, index, function.policy.effect_bound, span);
         try seedOwnership(&graph, index, function.signature.return_type, function.scope.locals, .{ .start = 0, .end = 0 }, cleanup_masks);
         for (function.scope.instructions) |instruction| switch (instruction.op) {
             .acquire_resource => |acquire| {
@@ -331,4 +334,10 @@ fn seedOwnership(graph: *Graph, index: usize, result: typed.Type, locals: []cons
 
 fn seedIndependentEffects(graph: *Graph, span: Span) void {
     for (std.meta.tags(sets.Effect)) |effect| graph.direct(if (effect == .environment) 3 else 2, effect, span);
+}
+
+fn seedHost(graph: *Graph, index: usize, bound: ?sets.Bound, span: Span) error{InternalError}!void {
+    const allowed = (bound orelse return error.InternalError).allowed;
+    if (allowed & ~sets.all != 0 or allowed & sets.bit(.host) == 0) return error.InternalError;
+    for (std.meta.tags(sets.Effect)) |effect| if (allowed & sets.bit(effect) != 0) graph.direct(index, effect, span);
 }

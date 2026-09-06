@@ -243,6 +243,7 @@ pub const Function = struct {
 };
 /// Declared visibility and effect policy, with its inferred execution effects.
 pub const FunctionPolicy = struct {
+    host: ?Span = null,
     effect_bound: ?@import("effect_set.zig").Bound = null,
     effects: @import("effect_set.zig").Mask = 0,
     owner: ?Type = null,

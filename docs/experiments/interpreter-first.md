@@ -7,7 +7,7 @@ on its bytecode VM; a future decision can reopen native work.
 
 Direction adopted on 2026-09-06; this document and [plan section 1](../plan.md#1-project-direction)
 supersede earlier native-first sequencing. These are planned acceptance criteria,
-not claims that the host interface or application trial is implemented.
+with the copied-value host interface now implemented; the application trial remains pending.
 
 ## Objective and architecture
 
@@ -53,7 +53,7 @@ and executed-repair acceptance, including arena origins and returned-input contr
 [Versioned CLI diagnostics](json-diagnostics.md) now expose the same evidence;
 application repair outcomes remain unmeasured.
 
-## Typed host-library interface — in progress
+## Typed host-library interface — initial copied-value implementation
 
 Start with a few explicit, synchronous registrations and handwritten Zig wrappers.
 Language callers see ordinary typed operations, for example board/options to a
@@ -61,10 +61,10 @@ routing result or declared error. They should not need to know which native
 implementation language supplies the operation. Heavy geometry may remain in
 Zig, C or Rust without a native compiler for guest programs.
 
-The [registry boundary](host-functions.md) now implements exact registration,
-copied ordinary values, typed results, explicit grants and bounded sessions.
-Guest declarations, program linking and VM dispatch remain pending. Complete
-integration must satisfy these contracts:
+The [typed host interface](host-functions.md) now implements source declarations,
+program-bound registrations and VM calls with copied ordinary values, typed
+results, transitive effects, explicit grants and bounded sessions. Borrowed and
+runtime-owned signatures reject explicitly. Its contracts and future extensions are:
 
 - Registration identity, exact parameter/result types, declared effects and
   required capabilities. Reject unknown registrations and mismatched contracts
@@ -157,4 +157,5 @@ ReleaseFast via `test-interpreter` passes 28/28 steps and the same 699 tests.
 Both run all 17 interpreter/tooling Python invocations, including 96 independent
 corpus comparisons. Verbose logs select no guest-native compilation driver.
 Formatting and Guardian pass with baselines disabled. This validates the workflow
-split; the host registration and application trial above remain pending.
+split. At this historical checkpoint host registration and the application trial
+were pending; the host-interface section above records the current implementation.

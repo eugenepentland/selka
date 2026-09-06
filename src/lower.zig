@@ -388,6 +388,7 @@ pub fn lower(allocator: std.mem.Allocator, program: typed.Program) LowerError!bc
         var emitter: Emitter = .{ .allocator = allocator, .program = program };
         out.* = .{
             .policy = .{
+                .host = function.policy.host,
                 .effect_bound = function.policy.effect_bound,
                 .effects = function.policy.effects,
                 .owner = function.policy.owner,
@@ -402,7 +403,7 @@ pub fn lower(allocator: std.mem.Allocator, program: typed.Program) LowerError!bc
             .scope = .{
                 .references = function.scope.references,
                 .locals = function.scope.locals,
-                .instructions = try emitter.finish(function.scope.body),
+                .instructions = if (function.policy.host != null) &.{} else try emitter.finish(function.scope.body),
             },
             .id = function.id,
             .name = function.name,

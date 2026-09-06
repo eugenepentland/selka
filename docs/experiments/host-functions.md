@@ -1,9 +1,9 @@
 # Typed host functions
 
-The trusted registration and value-copy boundary is implemented. Guest host
-declarations, program linking and bytecode call dispatch remain pending. This
-work supports the interpreter; native compilation of guest programs remains
-outside the active goal.
+Explicit guest declarations now execute through the bytecode VM and the trusted
+registration/value-copy boundary. Ordinary and imported calls, generic helpers,
+typed results, effects, preflight and cleanup have executed acceptance. Native
+compilation of guest host calls remains outside the active goal.
 
 ## Implemented registry contract
 
@@ -21,7 +21,7 @@ records, fixed arrays, enums, unions, results and nominal domains. The complete
 graph must exclude capabilities, runtime identity and move-only storage. Shared
 and exclusive reference signatures reject explicitly. Type IDs have meaning
 only in the borrowed catalog; wrappers must be built for that same catalog.
-The later VM linker must also verify the registry against the compiled program.
+The VM adapter also pins registrations to the exact compiled program/catalog.
 
 A session copies arguments into its execution allocator, invokes the callback,
 validates its declared output type and returns an independent owned copy. Input
@@ -60,61 +60,103 @@ outputs when returning a Zig error. The registry cannot validate arbitrary
 pointer ownership, prevent a wrapper from retaining a pointer, or preempt an
 uncooperative callback. Choose bounded operations and charge their work.
 
-## Acceptance and remaining integration
+## Guest declarations and VM execution
+
+Declare an externally implemented operation with an explicit signature:
+
+```text
+host fn measure(point: Point) -> Checked effects(host);
+```
+
+The semicolon replaces a guest body. Host declarations are ordinary top-level
+functions with copied data signatures. Generic guest helpers may call them, but
+generic host declarations, domain methods, complete conversions and borrowed
+signatures reject explicitly. `host` remains a contextual name; existing ordinary
+identifiers still parse. Main must have a guest body.
+
+Every host declaration explicitly includes the `host` effect. Additional effects
+such as filesystem access require corresponding registration grants. Effects
+propagate through ordinary and abstract generic callers, including uncalled
+bodies. The existing effect-free evaluator, typed invocation and codec contracts
+cannot execute a host call. Installation plus grants supplies trusted embedding
+authority; guest code cannot create a callback merely by naming a function.
+
+`compiler.vm_host.Registry.init` validates bytecode and extracts only explicit
+host declarations. It borrows that immutable compilation/catalog and snapshots
+registration contracts. Names are resolved identities such as
+`geometry::validate`, independent of an importing module's alias. `register`
+cannot replace ordinary guest functions. `vm.runWithHost` checks program identity
+and all bindings/grants before guest operations, then owns one session until
+execution cleanup. The compilation and callback contexts must outlive the registry.
+
+Preflight requires every host declaration, including unused ones. A normal VM
+run without registrations returns `R_HOST_REGISTRATION` at a host declaration.
+The CLI can check, format and inspect these programs, but executing their host
+calls requires an embedding application to install wrappers; no command-line
+symbol loading is provided.
+
+Each guest call retains normal instruction/frame accounting and uses the
+session's callback/value/work limits. Wrapper failures, invalid output contracts
+and exhausted host limits become `R_HOST_FAILURE`, `R_HOST_CONTRACT` and
+`R_HOST_LIMIT` traps at the guest call site, with caller traces. `OutOfMemory`
+remains a host execution error. Declared result variants pass back to ordinary
+guest matching/propagation and cannot be silently discarded. Failure does not
+roll back host side effects; wrappers must define those semantics themselves.
+
+Bytecode validation independently rejects fabricated host bodies, reference
+metadata, missing effects and non-data signatures. Disassembly marks external
+declarations, and duplicate discovery excludes them: identical signatures without
+bodies are no evidence of duplicated implementations. The retained C emitter
+clearly rejects this feature; native guest execution remains deferred.
+
+## Minimal Zig embedding
+
+This callback returns a scalar, which has no owned storage to retain:
+
+```zig
+const std = @import("std");
+const language = @import("mylang");
+
+fn identity(call: *language.host_functions.Call) language.host_functions.CallbackError!language.vm.Value {
+    return call.arguments[0];
+}
+
+pub fn execute(allocator: std.mem.Allocator) !i64 {
+    var compilation = try language.Compilation.init(allocator, "example.my",
+        "host fn identity(x:i64)->i64 effects(host);fn main()->i64{return identity(42);}");
+    defer compilation.deinit();
+    try compilation.emit();
+    var registrations = try language.vm_host.Registry.init(allocator, compilation.code.?);
+    defer registrations.deinit();
+    const signature = try registrations.contract("identity");
+    try registrations.register("identity", .{ .signature = signature, .invoke = identity }, signature.effects);
+    const outcome = try language.vm.runWithHost(allocator, compilation.code.?, .{}, &registrations, .{});
+    return switch (outcome) {
+        .value => |value| value,
+        .trap => error.GuestTrap, // An application can render outcome.trap using the source map.
+    };
+}
+```
+
+`contract` supplies compiler-resolved nominal IDs for handwritten wrappers. The
+wrapper remains responsible for implementing that exact contract. See
+`vm_host_test.zig` for imported aggregate/results, generic guest calls, caller
+traces, owned-buffer cleanup and allocation-failure cases.
+
+## Acceptance and next experiment
 
 `host_functions_test.zig` exercises exact registrations and grants, metadata
 snapshots, missing preflight bindings, unsupported signatures, argument/result
 validation, declared success/error payloads, independent aggregate storage,
 call/work/value/depth limits, reentry, stale sessions and generation exhaustion.
-Allocation-failure sweeps cover registration, argument copying, wrapper output
-construction, result copying and cleanup with owned aggregate/results.
 
-The next implementation must connect this boundary end to end:
+`host_declarations_test.zig`, `vm_host_test.zig` and actual CLI tests extend that
+coverage through source checking, abstract effects, lowered calls, module aliases,
+nominal aggregate results, formatting, duplicate discovery, malformed bytecode,
+program identity, error locations and session reuse. Allocation-failure sweeps
+span checking, linking, callbacks, guest-owned storage and result cleanup.
 
-1. Explicit guest host declarations with exact signatures and visible effects;
-   reject deferred borrowed, generic and authority-bearing contracts clearly.
-2. Preserve declaration identity through modules, checked IR, lowering and
-   bytecode validation. Do not permit callbacks to override ordinary functions.
-3. Bind against the same compiled program and preflight registrations before
-   executing guest operations. Keep host calls out of effect-free evaluation.
-4. Dispatch checked VM calls through one session, with located runtime failures,
-   ordinary guest result handling, instruction quotas and deterministic cleanup.
-5. Verify imported calls, transitive/generic effects, malformed bytecode, absent
-   or denied registrations and failure paths using deterministic fake wrappers.
-
-Then build the board/constraint trial and record independent behavior and actual
-agent repair outcomes. Registry tests alone do not establish language usefulness.
-
-## Proposed guest integration, not implemented syntax
-
-Use an explicit declaration, for example
-`host fn measure(point: Point) -> Checked effects(host);`. Its semicolon denotes
-an externally implemented function; ordinary function bodies cannot be rebound.
-Keep `host` contextual so effect names and existing identifiers continue to parse.
-Initially restrict declarations to ordinary top-level functions with copied data
-signatures. Generic callers may use a host declaration, but generic host
-declarations, domain methods, complete conversions and borrowed signatures need
-separate contracts before acceptance.
-
-Add a distinct host-call effect, included in every host declaration and propagated
-through ordinary and abstract generic callers. This prevents a computation-only
-wrapper from entering the existing effect-free evaluator or codec execution
-path. Additional declared effects such as filesystem access require corresponding
-registration grants. Installation plus grants supplies trusted embedding
-authority; guest code cannot invent a callback by naming a function.
-
-Prefer a program-bound VM registration adapter over accepting an unrelated
-registry at dispatch time. It should borrow the exact checked program/catalog,
-derive only marked host declarations, and retain a function-ID-to-registration
-mapping. A separate `runWithHost` entry can supply that adapter and session limits
-without expanding the existing default VM options. Preflight precedes guest
-effects, and one session lasts exactly one execution. Copied arguments/results
-remain under the VM's normal value ownership and cleanup paths. Preserve ordinary
-instruction accounting for each call and expose wrapper failures at the call site.
-
-Bytecode validation must independently reject fabricated host bodies, reference
-metadata, missing effects and non-data signatures. Duplicate discovery should
-exclude external declarations: identical signatures without bodies are no
-evidence of duplicated implementations. The retained C emitter should clearly
-reject this new feature; implementing host calls in a native guest backend is
-outside the active scope.
+The next milestone is the board/constraint trial with independent behavior and
+recorded agent repair outcomes. Add borrowed buffers or typed host-owned handles
+only if that trial needs them, with explicit access, lifetime and stale-identity
+contracts. Interpreter optimization and native guest backends remain deferred.

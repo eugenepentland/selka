@@ -110,7 +110,10 @@ pub fn discover(allocator: std.mem.Allocator, program: typed.Program, options: O
     var examined_bytes: usize = 0;
     var indexed: usize = 0;
     var representatives: std.ArrayList(near.Input) = .empty;
+    var examined: usize = 0;
     for (program.functions) |function| {
+        if (function.policy.host != null) continue;
+        examined += 1;
         const key = try canonical(scratch, program, function);
         examined_bytes += key.bytes.len;
         if (key.nodes < options.min_nodes) continue;
@@ -129,7 +132,7 @@ pub fn discover(allocator: std.mem.Allocator, program: typed.Program, options: O
         try groups.append(scratch, .{ .members = bucket.members.items, .nodes = bucket.nodes });
     }
     const approximate: near.Result = if (options.approximate) try near.discover(scratch, allocator, representatives.items, options.near_options) else .{ .pairs = &.{}, .work = 0, .truncated = false };
-    return .{ .arena = arena, .approximate = approximate, .groups = try groups.toOwnedSlice(scratch), .functions_examined = program.functions.len, .functions_indexed = indexed, .canonical_bytes = examined_bytes, .options = options };
+    return .{ .arena = arena, .approximate = approximate, .groups = try groups.toOwnedSlice(scratch), .functions_examined = examined, .functions_indexed = indexed, .canonical_bytes = examined_bytes, .options = options };
 }
 
 /// Allocate a textual discovery report containing source locations and normalized match evidence.

@@ -1418,6 +1418,7 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
     const main_declaration = checker.functions.get(main_name) orelse return sink.fail("E_MAIN", .{ .start = 0, .end = 0 }, "the program requires fn main() -> i64");
     const entry = program.functions[@backingInt(main_declaration)];
     const main = ordinary_ids[@backingInt(main_declaration)] orelse return sink.fail("E_MAIN", entry.name, "main cannot have type parameters");
+    if (entry.policy.host != null) return sink.fail("E_MAIN", entry.name, "main must have a guest body");
     if (entry.signature.return_reference != null) return sink.fail("E_MAIN", entry.name, "main must return an i64 value");
     var entry_capabilities: u8 = 0;
     for (entry.signature.parameters) |parameter| {
@@ -1442,6 +1443,10 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
         checker.return_type = try checker.ty(function.signature.return_type);
         checker.return_reference = try checker.returnContract(@fromBackingInt(i));
         try checker.bindParameters(function);
+        if (function.policy.host != null) {
+            try checkHostType(allocator, catalog.records, checker.return_type, function.signature.return_type, sink);
+            for (checker.locals.items) |local| try checkHostType(allocator, catalog.records, local.ty, local.declaration, sink);
+        }
         checker.conversion_fields = null;
         if (function.policy.conversion) {
             if (function.signature.return_reference != null or function.signature.parameters.len != 1 or function.signature.parameters[0].reference != null) return sink.fail(
@@ -1465,9 +1470,14 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
                 }
             }
         }
-        if (!body.terminates) return sink.fail("E_MISSING_RETURN", function.name, "function may fall through without returning its declared type; loops are conservatively treated as falling through, even while true");
+        if (function.policy.host == null and !body.terminates) return sink.fail(
+            "E_MISSING_RETURN",
+            function.name,
+            "function may fall through without returning its declared type; loops are conservatively treated as falling through, even while true",
+        );
         try checked_functions.append(allocator, .{
             .policy = .{
+                .host = function.policy.host,
                 .effect_bound = function.policy.effect_bound,
                 .owner = checker.owner,
                 .restricted = function.policy.restricted,
@@ -1496,22 +1506,7 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
     try @import("region_check.zig").check(allocator, checked, sink);
     try @import("effects.zig").check(allocator, checked, sink);
     try @import("domain_codecs.zig").check(allocator, src, program.types.domains, catalog, .{ .items = functions, .names = executable_names }, sink);
-    for (functions) |function| {
-        for (function.scope.locals) |local| {
-            if (local.usage.reads == 0) try sink.items.append(allocator, .{
-                .severity = .warning,
-                .code = "W_UNUSED_BINDING",
-                .span = local.declaration,
-                .message = "binding is never read; use it or remove it, preserving initializer effects with discard when needed",
-            });
-            if (local.mutable and local.usage.writes == 0 and !local.usage.mutable_borrow) try sink.items.append(allocator, .{
-                .severity = .warning,
-                .code = "W_UNNECESSARY_MUT",
-                .span = local.declaration,
-                .message = "binding is never assigned after initialization; remove mut",
-            });
-        }
-    }
+    try warnBindings(allocator, functions, sink);
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
     return checked;
 }
@@ -1540,3 +1535,30 @@ fn conversionBody(src: source.Source, program: ast.Program, function: ast.Functi
 }
 
 const functionName = @import("function_identity.zig").localName;
+
+fn checkHostType(allocator: std.mem.Allocator, catalog: []const typed.Record, ty: typed.Type, span: source.Span, sink: *diagnostic.Sink) Error!void {
+    @import("data_type.zig").check(allocator, catalog, ty, true) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return sink.fail("E_HOST_SIGNATURE", span, "host signatures require ordinary data without capabilities or runtime-owned storage"),
+    };
+}
+
+fn warnBindings(allocator: std.mem.Allocator, functions: []const typed.Function, sink: *diagnostic.Sink) Error!void {
+    for (functions) |function| {
+        if (function.policy.host != null) continue;
+        for (function.scope.locals) |local| {
+            if (local.usage.reads == 0) try sink.items.append(allocator, .{
+                .severity = .warning,
+                .code = "W_UNUSED_BINDING",
+                .span = local.declaration,
+                .message = "binding is never read; use it or remove it, preserving initializer effects with discard when needed",
+            });
+            if (local.mutable and local.usage.writes == 0 and !local.usage.mutable_borrow) try sink.items.append(allocator, .{
+                .severity = .warning,
+                .code = "W_UNNECESSARY_MUT",
+                .span = local.declaration,
+                .message = "binding is never assigned after initialization; remove mut",
+            });
+        }
+    }
+}

@@ -2,6 +2,17 @@
 const std = @import("std");
 const testing = std.testing;
 const compiler_path = @import("test_options").compiler_path;
+const host_program = "host fn measure(x:i64)->i64 effects(host);fn main()->i64{return measure(6);}";
+
+test "CLI checks host declarations and reports missing VM registration as a located trap" {
+    try invoke("check", host_program, 0, "", "");
+    try invoke("run", host_program, 1, "", "error[R_HOST_REGISTRATION]");
+    try invokeOptions("run", host_program, &.{"--diagnostics=json"}, 1, "", "\"code\":\"R_HOST_REGISTRATION\"");
+}
+test "CLI host source contracts retain machine-readable rejection codes" {
+    try invokeOptions("check", "host fn f(x:&i64)->i64 effects(host);fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_HOST_SIGNATURE\"");
+    try invoke("check", "host fn f()->i64 effects();fn main()->i64{return 0;}", 1, "", "error[E_HOST_EFFECTS]");
+}
 
 fn invoke(command: []const u8, text: []const u8, expected_status: u8, expected_stdout: []const u8, stderr_part: []const u8) !void {
     return invokeOptions(command, text, &.{}, expected_status, expected_stdout, stderr_part);

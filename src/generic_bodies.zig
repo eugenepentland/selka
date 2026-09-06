@@ -972,6 +972,7 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
     var cursor: usize = 0;
     while (cursor < pending.items.len) : (cursor += 1) {
         const function = program.functions[pending.items[cursor]];
+        if (function.policy.host != null) continue;
         const parameters = try requirements.resolve(allocator, src, function.signature.type_parameters, sink);
         defer allocator.free(parameters);
         var checker: Checker = .{

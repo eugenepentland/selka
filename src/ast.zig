@@ -101,6 +101,7 @@ pub const ReturnReference = struct { source: Span, mutable: bool, slice: bool };
 pub const Function = struct { policy: FunctionPolicy = .{}, signature: FunctionSignature, name: Span, body: StatementId };
 /// Source visibility and declared effect bound before name/type resolution.
 pub const FunctionPolicy = struct {
+    host: ?Span = null,
     effect_bound: ?@import("effect_set.zig").Bound = null,
     owner: ?Span = null,
     restricted: bool = false,

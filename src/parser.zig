@@ -2,6 +2,7 @@
 const eGenericLimit = "E_GENERIC_LIMIT";
 const external_resources = @import("external_resources.zig");
 const std = @import("std");
+const effects = @import("effect_set.zig");
 const ast = @import("ast.zig");
 const lex = @import("lexer.zig");
 const Span = @import("source.zig").Span;
@@ -228,6 +229,8 @@ pub const Parser = struct {
         };
     }
     fn function(self: *Parser, owner: ?Span) diagnostic.Error!ast.Function {
+        const host: ?Span = if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "host")) self.current().span else null;
+        if (host != null) self.cursor.pos += 1;
         const restricted = self.take(.kw_private);
         if (restricted and owner == null) return self.sink.fail("E_PRIVATE_SCOPE", self.tokens[self.cursor.pos - 1].span, "private functions must be declared inside a domain");
         const conversion = self.take(.kw_conversion);
@@ -259,10 +262,19 @@ pub const Parser = struct {
             if (!std.mem.eql(u8, self.src.text(from.span), "from")) return self.sink.fail("E_RETURN_LIFETIME", from.span, "reference result requires `from` followed by a reference parameter name");
             return_reference = .{ .source = (try self.expect(.ident)).span, .mutable = mutable, .slice = slice };
         }
+        if (host) |span| {
+            if (owner != null or restricted or conversion) return self.sink.fail("E_HOST_DECLARATION", span, "host declarations must be ordinary top-level functions");
+            if (type_parameters.len != 0) return self.sink.fail("E_HOST_DECLARATION", span, "generic host declarations are not supported");
+            if (return_reference != null) return self.sink.fail("E_HOST_SIGNATURE", span, "host results must be copied ordinary values");
+            for (parameters.items) |parameter| if (parameter.reference != null) return self.sink.fail("E_HOST_SIGNATURE", parameter.name, "host parameters must be copied ordinary values");
+            if (self.current().tag != .ident or !std.mem.eql(u8, self.src.text(self.current().span), "effects")) return self.sink.fail("E_HOST_EFFECTS", span, "host declarations require an explicit effects(host, ...) contract");
+        }
         const effect_bound = try self.effectBound();
-        const body = try self.block();
+        if (host) |span| if (effect_bound.?.allowed & effects.bit(.host) == 0) return self.sink.fail("E_HOST_EFFECTS", span, "host declarations must include the host effect");
+        const body = if (host != null) try self.addStatement(.{ .span = (try self.expect(.semicolon)).span, .data = .{ .block = &.{} } }) else try self.block();
         return .{
             .policy = .{
+                .host = host,
                 .effect_bound = effect_bound,
                 .owner = owner,
                 .restricted = restricted,
@@ -325,8 +337,8 @@ pub const Parser = struct {
         if (self.current().tag != .lparen) return self.sink.fail("E_GENERIC_CALL", self.current().span, "explicit type arguments require a function call");
         return arguments.toOwnedSlice(self.arena.allocator());
     }
-    fn effectBound(self: *Parser) diagnostic.Error!?@import("effect_set.zig").Bound {
-        const sets = @import("effect_set.zig");
+    fn effectBound(self: *Parser) diagnostic.Error!?effects.Bound {
+        const sets = effects;
         const token = self.current();
         if (token.tag != .ident) return null;
         const spelling = self.src.text(token.span);
@@ -340,7 +352,11 @@ pub const Parser = struct {
         var allowed: sets.Mask = 0;
         if (self.current().tag != .rparen) while (true) {
             const name = try self.expect(.ident);
-            const effect = std.meta.stringToEnum(sets.Effect, self.src.text(name.span)) orelse return self.sink.fail("E_UNKNOWN_EFFECT", name.span, "unknown effect; expected allocation, filesystem, network, clock, random, or environment");
+            const effect = std.meta.stringToEnum(sets.Effect, self.src.text(name.span)) orelse return self.sink.fail(
+                "E_UNKNOWN_EFFECT",
+                name.span,
+                "unknown effect; expected allocation, filesystem, network, clock, random, environment, or host",
+            );
             if (allowed & sets.bit(effect) != 0) return self.sink.fail("E_DUPLICATE_EFFECT", name.span, "effect appears more than once in this bound");
             allowed |= sets.bit(effect);
             if (!self.take(.comma)) break;

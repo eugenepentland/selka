@@ -5,6 +5,8 @@ const overflow_code = "R_OVERFLOW";
 const reference_lifetime_code = "R_REFERENCE_LIFETIME";
 const inactive_reference_message = "reference is not active";
 const inactive_slice_message = "slice is not active";
+const host = @import("host_functions.zig");
+const vm_host = @import("vm_host.zig");
 const value_copy = @import("value_copy.zig");
 const std = @import("std");
 const bc = @import("bytecode.zig");
@@ -175,6 +177,16 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
         .trap => |diagnostic| .{ .trap = diagnostic },
     };
 }
+/// Execute interpreted main with exact registered host functions and fresh callback budgets.
+pub fn runWithHost(allocator: std.mem.Allocator, program: bc.Program, options: Options, registry: *vm_host.Registry, limits: host.Limits) (RunError || vm_host.Error)!Result {
+    try bc.validate(allocator, program);
+    const session = try registry.begin(allocator, program, limits);
+    defer session.close() catch |err| std.debug.panic("VM host session cleanup failed: {s}", .{@errorName(err)});
+    return switch (try runValues(allocator, program, options, .{ .id = program.main, .host = .{ .registry = registry, .session = session } })) {
+        .value => |value| .{ .value = try integer(value, allocator) },
+        .trap => |diagnostic| .{ .trap = diagnostic },
+    };
+}
 /// Invoke a checked effect-free function with borrowed ordinary arguments. Input
 /// storage is copied; the caller owns a returned value in the supplied allocator.
 /// Module export selection belongs to the project API, not this bytecode layer.
@@ -203,7 +215,9 @@ pub fn invoke(allocator: std.mem.Allocator, program: bc.Program, function_id: ty
         .steps_executed = options.steps_executed,
     });
 }
+const HostExecution = struct { registry: *const vm_host.Registry, session: host.Session };
 const Entry = struct {
+    host: ?HostExecution = null,
     id: typed.FunctionId,
     arguments: ?[]const typed.Value = null,
     limits: value_copy.Limits = .{},
@@ -216,6 +230,9 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
     };
     if (options.max_steps == 0 or options.max_frames == 0) return error.InvalidBudget;
     try bc.validate(allocator, program);
+    if (entry_request.host == null) for (program.functions) |function| {
+        if (function.policy.host) |span| return trap("R_HOST_REGISTRATION", "program requires explicitly registered host functions", span, &.{}, program);
+    };
     var region: @import("arena.zig").Arena = undefined;
     try region.init(allocator, options.memory.limits);
     const storage = &region.store;
@@ -284,7 +301,7 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
         .options = options,
         .storage = storage,
         .pools = &pools,
-        .providers = .{ .environment = &environment_execution, .resources = &resource_execution, .external = &external_runtime },
+        .providers = .{ .host = entry_request.host, .environment = &environment_execution, .resources = &resource_execution, .external = &external_runtime },
         .state = .{ .stack = &stack, .locals = &locals, .owners = &owners, .references = &references, .active_regions = &active_regions, .frames = &frames },
     };
     while (frames.items.len != 0) {
@@ -398,6 +415,7 @@ const Execution = struct {
     state: State,
 };
 const Providers = struct {
+    host: ?HostExecution = null,
     environment: *environment.Runtime,
     resources: *resource_runtime.Runtime,
     external: *external.Runtime,
@@ -1509,6 +1527,15 @@ const Step = struct {
         return null;
     }
 
+    fn hostFailure(self: *Step, err: host.Error) RunError!?ValueResult {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        const code: []const u8 = switch (err) {
+            error.HostCallLimit, error.HostWorkLimit, error.ValueCountLimit, error.ValueDepthLimit => "R_HOST_LIMIT",
+            error.HostFailure => "R_HOST_FAILURE",
+            else => "R_HOST_CONTRACT",
+        };
+        return trap(code, @errorName(err), self.instruction.span, self.execution.state.frames.items, self.execution.program);
+    }
     fn executeCall(self: *Step) !?ValueResult {
         const allocator = self.execution.allocator;
         const program = self.execution.program;
@@ -1544,6 +1571,15 @@ const Step = struct {
             if (parameter.parameter.reference_parameter != null) continue;
             if (stack.items[argument_index].typeOf() != parameter.ty) return error.InternalError;
             argument_index += 1;
+        }
+        if (callee.policy.host != null) {
+            const bound = self.execution.providers.host orelse return error.InternalError;
+            const registration = bound.registry.resolve(id) catch return error.InternalError;
+            const result = bound.session.call(registration, stack.items[argument_base..]) catch |err| return self.hostFailure(err);
+            releaseValues(stack.items[argument_base..], allocator);
+            stack.shrinkRetainingCapacity(argument_base);
+            try pushOwned(stack, allocator, result);
+            return null;
         }
         var return_target: ?ReturnTarget = null;
         if (instruction.op == .call_borrow) {

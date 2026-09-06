@@ -118,6 +118,7 @@ pub fn generateWithInterface(allocator: std.mem.Allocator, program: bc.Program, 
 }
 fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source, sink: *diagnostic.Sink, interface: Interface) ![]u8 {
     try bc.validate(allocator, program);
+    for (program.functions) |function| if (function.policy.host) |span| return sink.fail(unsupported_feature, span, "host declarations currently execute only in the bytecode VM");
     var layout = try native_layout.Layout.init(allocator, program.records);
     defer layout.deinit();
     const wire_types = try native_wire.supported(allocator, program.records, false);

@@ -57,6 +57,7 @@ fn writeFunction(writer: *std.Io.Writer, program: bc.Program, src: Source, funct
             function.scope.locals[@backingInt(contract.parameter)].name,
         });
     } else try writer.print(") -> {s}\n", .{typed.typeName(function.signature.return_type, program.records)});
+    if (function.policy.host != null) try writer.writeAll("  host declaration\n");
     if (function.policy.effects != 0 or function.policy.effect_bound != null) {
         try writer.writeAll("  effects ");
         try @import("effect_set.zig").write(writer, function.policy.effects);
