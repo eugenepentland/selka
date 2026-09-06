@@ -30,13 +30,15 @@ pub const Compilation = struct {
         var roots: @import("std").ArrayList(typed.FunctionId) = .empty;
         errdefer roots.deinit(allocator);
         for (self.program.?.functions) |function| {
-            const original = self.src.originalSpan(function.declaration) catch unreachable;
-            const unit = self.index.units[original.input];
-            const prefix_len = self.index.project.modules.items[original.input].name.len + 2;
-            const symbol = unit.symbols.items[unit.names.get(function.name[prefix_len..]).?];
-            if (symbol.exported) try roots.append(allocator, function.id);
+            if (self.exported(function)) try roots.append(allocator, function.id);
         }
         return roots.toOwnedSlice(allocator);
+    }
+    fn exported(self: *Compilation, function: typed.Function) bool {
+        const original = self.src.originalSpan(function.declaration) catch unreachable;
+        const unit = self.index.units[original.input];
+        const prefix_len = self.index.project.modules.items[original.input].name.len + 2;
+        return unit.symbols.items[unit.names.get(function.name[prefix_len..]).?].exported;
     }
     /// Select an explicitly exported nominal type, or a built-in type.
     pub fn publicValueType(self: *Compilation, name: []const u8) !typed.Type {
@@ -51,6 +53,17 @@ pub const Compilation = struct {
             if (symbol.exported and symbol.kind == .type) return record.id;
         }
         return error.UnknownPublicValueType;
+    }
+    /// Only explicitly exported functions/public methods may be invoked by name.
+    pub fn invokePublic(self: *Compilation, allocator: @import("std").mem.Allocator, name: []const u8, arguments: []const typed.Value, options: @import("vm.zig").InvokeOptions) !@import("vm.zig").ValueResult {
+        if (options.steps_executed) |steps| steps.* = 0;
+        try self.emit();
+        for (self.program.?.functions) |function| {
+            if (@import("std").mem.eql(u8, function.name, name) and self.exported(function)) {
+                return @import("vm.zig").invoke(allocator, self.code.?, function.id, arguments, options);
+            }
+        }
+        return error.UnknownPublicFunction;
     }
     pub fn emit(self: *Compilation) !void {
         try self.check();

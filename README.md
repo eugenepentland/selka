@@ -349,3 +349,8 @@ The [ordinary application corpus](examples/corpus/README.md) adds a multi-module
 invoice calculator and packet decoder, tested against independent Python oracles.
 Its review records intentional duplicate policies, changed-rule diagnostics, and
 integration with formatting, dependency policy, schemas, and data bindings.
+
+[Typed embedding calls](docs/experiments/typed-invocation.md) can invoke exported
+effect-free functions and checked domain factories with owned argument copies and
+typed results. Explicit domain codec declarations and callable foreign wrappers
+remain pending.

@@ -2297,3 +2297,40 @@ resources/capabilities/pools/arenas, generics, domain codecs, foreign callable w
 source/input integration, finer incremental compilation, remaining discovery/tooling
 work, and other unfinished roadmap requirements remain pending. Guardian was not
 exercised; hosted CI has not run. The full roadmap goal remains active.
+
+## 2026-09-06: Typed invocation foundation for explicit domain codecs
+
+Added vm.invoke and project Compilation.invokePublic so embedding callers can run
+checked effect-free factories with typed arguments and receive an owned typed value
+or a source trap without changing the program's main entry. Project selection
+requires an exported function or public method of an exported domain; private
+construction, references at the call boundary, authority/resource graphs, and
+transitive effects are rejected. Ordinary run/runWithOptions behavior is retained.
+
+Arguments are structurally checked and independently copied into the invocation
+allocator, with a shared value-count budget and bounded traversal depth. Partial
+copies clean up on allocation failure. Returned values may outlive the argument
+allocator, while nominal IDs and trap metadata retain their documented compilation
+lifetime requirements. Exact instruction counts and step/frame limits are exposed.
+Structural checks cannot establish invariants for host-fabricated domain values;
+future untrusted decoding must invoke a declared checked factory on wire values.
+Invocation does not itself impose a total-memory or output-expansion limit.
+
+Six new tests cover successful and rejected Positive factory inputs, export/privacy,
+unchanged integer entry execution, cross-allocator snapshots, malformed arguments,
+shared argument budgets, exact step boundaries and frame traces, and every allocation
+failure through compilation, invocation, and nested argument copying. Initial full
+runs exposed an unnecessary allocation of all export roots during public selection;
+direct lookup now shares the existing export predicate and the focused failure
+injection tests pass. The complete ordinary-type graph checker is shared with JSON,
+which retains its existing errors and continues to reject implicit domain codecs.
+
+Debug and ReleaseFast pass all 21 build steps and 541 Zig tests (484 core, 57 CLI).
+Existing acceptance also passes: 2,434 VM/native comparisons, 236 native allocation-
+failure cases, 192 application oracle checks per host mode, eight verification
+tests, and 29 Python/compiler wire comparisons, alongside the schema/input/cache/
+module/duplicate drivers. Formatting and whitespace checks pass. README, experiment roadmap,
+typed-invocation documentation, and both plan copies describe this foundation and
+its limits. Explicit codec declarations, whole-codec budgets, JSON/schema integration,
+source codec operations, callable foreign wrappers, and the other pending roadmap
+requirements remain unfinished. Guardian was not exercised; hosted CI has not run.

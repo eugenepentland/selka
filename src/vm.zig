@@ -12,6 +12,14 @@ const resource_runtime = @import("resource_runtime.zig");
 pub const MemoryBacking = enum { general, arena };
 pub const Options = struct { pool_limits: pool_runtime.Limits = .{}, pool_statistics: ?*pool_runtime.Statistics = null, memory_backing: MemoryBacking = .general, environment: ?environment.Provider = null, resources: resource_runtime.Options = .{}, external: external.Providers = .{}, provide_allocator: bool = true, memory_statistics: ?*memory.Statistics = null, memory_limits: memory.Limits = .{}, max_steps: u64 = 10_000_000, max_frames: u64 = 1024 };
 pub const Result = union(enum) { value: i64, trap: Diagnostic };
+pub const Value = typed.Value;
+pub const ValueResult = union(enum) { value: Value, trap: Diagnostic };
+pub const InvokeOptions = struct {
+    max_steps: u64 = 1_000_000,
+    max_frames: u64 = 256,
+    arguments: @import("value_copy.zig").Limits = .{},
+    steps_executed: ?*u64 = null,
+};
 fn integer(value: typed.Value, allocator: std.mem.Allocator) error{InternalError}!i64 {
     defer value.release(allocator);
     if (value != .i64) return error.InternalError;
@@ -53,7 +61,7 @@ fn reborrowFull(store: *memory.Store, parent: memory.Borrow, kind: memory.Kind) 
     const view = try store.describe(parent);
     return store.reborrow(parent, 0, view.length, kind);
 }
-fn trap(code: []const u8, message: []const u8, span: Span, frames: []const Frame, program: bc.Program) Result {
+fn trap(code: []const u8, message: []const u8, span: Span, frames: []const Frame, program: bc.Program) ValueResult {
     var diagnostic: Diagnostic = .{ .code = code, .message = message, .span = span };
     var i = frames.len;
     var at = span;
@@ -67,7 +75,7 @@ fn trap(code: []const u8, message: []const u8, span: Span, frames: []const Frame
     diagnostic.trace_omitted = i;
     return .{ .trap = diagnostic };
 }
-fn overflow(instruction: bc.Instruction, frames: []const Frame, program: bc.Program) Result {
+fn overflow(instruction: bc.Instruction, frames: []const Frame, program: bc.Program) ValueResult {
     return trap("R_OVERFLOW", "integer arithmetic overflowed i64", instruction.span, frames, program);
 }
 fn pop(stack: *std.ArrayList(typed.Value), base: usize) error{InternalError}!typed.Value {
@@ -78,6 +86,37 @@ pub fn run(allocator: std.mem.Allocator, program: bc.Program) !Result {
     return runWithOptions(allocator, program, .{});
 }
 pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options: Options) !Result {
+    return switch (try runValues(allocator, program, options, program.main, null, .{}, null)) {
+        .value => |value| .{ .value = try integer(value, allocator) },
+        .trap => |diagnostic| .{ .trap = diagnostic },
+    };
+}
+/// Invoke a checked effect-free function with borrowed ordinary arguments. Input
+/// storage is copied; the caller owns a returned value in the supplied allocator.
+/// Module export selection belongs to the project API, not this bytecode layer.
+pub fn invoke(allocator: std.mem.Allocator, program: bc.Program, function_id: typed.FunctionId, arguments: []const typed.Value, options: InvokeOptions) !ValueResult {
+    if (options.steps_executed) |steps| steps.* = 0;
+    if (options.max_steps == 0 or options.max_frames == 0) return error.InvalidBudget;
+    if (options.arguments.max_values == 0 or options.arguments.max_depth == 0 or options.arguments.max_depth > 128) return error.InvalidValueLimits;
+    try bc.validate(allocator, program);
+    if (@backingInt(function_id) >= program.functions.len) return error.UnknownInvocationFunction;
+    const function = program.functions[@backingInt(function_id)];
+    if (function.restricted) return error.PrivateInvocationFunction;
+    if (function.effects != 0) return error.InvocationEffects;
+    if (function.return_reference != null) return error.InvocationReference;
+    if (arguments.len != function.parameter_count) return error.InvocationArity;
+    try @import("data_type.zig").check(allocator, program.records, function.return_type, true);
+    for (function.locals[0..function.parameter_count]) |parameter| {
+        if (parameter.reference_parameter != null) return error.InvocationReference;
+        try @import("data_type.zig").check(allocator, program.records, parameter.ty, true);
+    }
+    return runValues(allocator, program, .{ .max_steps = options.max_steps, .max_frames = options.max_frames, .provide_allocator = false }, function_id, arguments, options.arguments, options.steps_executed);
+}
+fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options, entry_id: typed.FunctionId, entry_arguments: ?[]const typed.Value, argument_limits: @import("value_copy.zig").Limits, steps_executed: ?*u64) !ValueResult {
+    var steps: u64 = 0;
+    defer if (steps_executed) |out| {
+        out.* = steps;
+    };
     if (options.max_steps == 0 or options.max_frames == 0) return error.InvalidBudget;
     try bc.validate(allocator, program);
     var region: @import("arena.zig").Arena = undefined;
@@ -121,11 +160,14 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
     defer active_regions.deinit(allocator);
     var frames: std.ArrayList(Frame) = .empty;
     defer frames.deinit(allocator);
-    try locals.resize(allocator, program.functions[@backingInt(program.main)].locals.len);
+    try locals.resize(allocator, program.functions[@backingInt(entry_id)].locals.len);
     @memset(locals.items, null);
-    const entry = program.functions[@backingInt(program.main)];
+    const entry = program.functions[@backingInt(entry_id)];
+    var copier: @import("value_copy.zig").Copier = .{ .allocator = allocator, .records = program.records, .limits = argument_limits };
     for (entry.locals[0..entry.parameter_count], 0..) |parameter, index| {
-        if (parameter.ty == .allocator) {
+        if (entry_arguments) |values| {
+            locals.items[index] = try copier.copy(parameter.ty, values[index]);
+        } else if (parameter.ty == .allocator) {
             if (!options.provide_allocator) return error.CapabilityUnavailable;
             locals.items[index] = .{ .allocator = try storage.allocatorCapability() };
         } else if (parameter.ty == .environment_cap) {
@@ -136,10 +178,9 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
             locals.items[index] = .{ .external = try external_runtime.grant(parameter.ty.externalKind().?) };
         }
     }
-    try references.resize(allocator, program.functions[@backingInt(program.main)].references.len);
+    try references.resize(allocator, program.functions[@backingInt(entry_id)].references.len);
     @memset(references.items, null);
-    try frames.append(allocator, .{ .function = program.main, .local_base = 0, .operand_base = 0, .call_span = .{ .start = 0, .end = 0 } });
-    var steps: u64 = 0;
+    try frames.append(allocator, .{ .function = entry_id, .local_base = 0, .operand_base = 0, .call_span = .{ .start = 0, .end = 0 } });
     while (frames.items.len != 0) {
         // Copy frame metadata before any grow; no references survive reallocations.
         const frame_index = frames.items.len - 1;
@@ -854,7 +895,7 @@ pub fn runWithOptions(allocator: std.mem.Allocator, program: bc.Program, options
                 _ = frames.pop();
                 if (value) |owned| {
                     transferred = true;
-                    if (frames.items.len == 0) return .{ .value = try integer(owned, allocator) };
+                    if (frames.items.len == 0) return .{ .value = owned };
                     try pushOwned(&stack, allocator, owned);
                 } else {
                     const target = frame.return_target.?;
@@ -912,7 +953,7 @@ fn arrayIndex(value: typed.Value, schema: typed.Array) error{InternalError}!i128
     return value.asInteger();
 }
 
-fn memoryFailure(err: memory.Error, instruction: bc.Instruction, frames: []const Frame, program: bc.Program) error{ OutOfMemory, IdentityExhausted }!Result {
+fn memoryFailure(err: memory.Error, instruction: bc.Instruction, frames: []const Frame, program: bc.Program) error{ OutOfMemory, IdentityExhausted }!ValueResult {
     return switch (err) {
         error.RegionInUse => trap("R_REGION_IN_USE", "arena backing still has live owners", instruction.span, frames, program),
         error.InvalidCapability => trap("R_CAPABILITY", "allocator capability is not valid for this execution", instruction.span, frames, program),

@@ -150,4 +150,5 @@ test {
     _ = @import("returned_references_test.zig");
     _ = @import("results_test.zig");
     _ = @import("propagation_test.zig");
+    _ = @import("invocation_test.zig");
 }
