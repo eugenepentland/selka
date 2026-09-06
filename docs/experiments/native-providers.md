@@ -9,7 +9,7 @@ Unused and short-circuited reads still require declared entry grants.
 `src/native_providers.h` defines the C adapter interface. The adapter implements
 `mylang_native_providers()` and returns optional callbacks with host-owned contexts
 that outlive the synchronous execution. Setup must not perform guest reads. The
-header versions its factory symbol as `mylang_native_providers_v3`; incompatible
+header versions its factory symbol as `mylang_native_providers_v4`; incompatible
 future interface versions must use a different symbol. Generated C embeds its
 interface definition, while the builder supplies the header include directory to
 the separately compiled adapter.
@@ -43,4 +43,7 @@ native allocation-failure cases also pass. Formatting and all 88 Guardian checks
 pass without frozen violations.
 [Native environment lookup](native-environment.md) extends provider ABI v2; its
 full Debug/ReleaseFast acceptance passes. [Resource lifecycle providers](native-resources.md) now extend ABI v3; full
-lifecycle regression acceptance passes and byte I/O remains pending.
+lifecycle and byte I/O regression acceptance pass.
+
+[Native resource byte I/O](native-resources.md) now extends provider ABI v4; full
+array/slice I/O regression acceptance passes.

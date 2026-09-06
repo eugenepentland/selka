@@ -609,14 +609,14 @@ test "CLI formatter preserves checking and is idempotent across the language fix
     }
 }
 
-test "CLI emits scalar C and diagnoses unsupported native features without partial output" {
+test "CLI emits scalar C and diagnoses invalid native source without partial output" {
     const generated = try runFixture("emit-c", "fn main() -> i64 { return 7; }", &.{});
     defer testing.allocator.free(generated.stdout);
     defer testing.allocator.free(generated.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, generated.term);
     try testing.expect(std.mem.indexOf(u8, generated.stdout, "goto L") != null);
     try invoke("emit-c", "fn main() -> i64 { return false; }", 1, "", "error[E_TYPE]");
-    try invoke("emit-c", "resource F:filesystem;result W{ok:u64,err:i64}fn work(file:F)->i64{let mut f=file;acknowledge write_resource<W>(f,new [0]u8[]);return 0;}fn main()->i64{return 7;}", 1, "", "error[E_NATIVE_FEATURE]");
+    try invoke("emit-c", "fn unused()->i64{return false;}fn main()->i64{return 7;}", 1, "", "error[E_TYPE]");
     try invokeOptions("emit-c", "fn main() -> i64 { return 7; }", &.{"--memory=arena"}, 2, "", "usage:");
 }
 
@@ -921,7 +921,7 @@ test "CLI module formatting is syntax only and project checking reports every ch
     try invokeOptions("fmt-module", "module input;", &.{"--max-steps=1"}, 2, "", "usage:");
 }
 
-test "CLI native project emission rejects private calls and unsupported guest types before stdout" {
+test "CLI native project emission rejects private calls and invalid guest functions before stdout" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input; import helper; fn main() -> i64 { return helper::hidden(); }" });
@@ -934,7 +934,7 @@ test "CLI native project emission rejects private calls and unsupported guest ty
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
     try testing.expectEqualStrings("", rejected.stdout);
     try testing.expect(std.mem.indexOf(u8, rejected.stderr, "E_PRIVATE_SYMBOL") != null);
-    try invoke("emit-project-c", "module input; resource F:filesystem;result W{ok:u64,err:i64}fn work(file:F)->i64{let mut f=file;acknowledge write_resource<W>(f,new [0]u8[]);return 0;}fn main()->i64{return 7;}", 1, "", "E_NATIVE_FEATURE");
+    try invoke("emit-project-c", "module input; fn unused()->i64{return false;}fn main()->i64{return 7;}", 1, "", "E_TYPE");
     try invokeOptions("emit-project-c", "module input; fn main() -> i64 { return 0; }", &.{"--max-steps=1"}, 2, "", "usage:");
 }
 

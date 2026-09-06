@@ -385,7 +385,8 @@ C adapters selected with the native builder’s `--provider` option.
 interface with bounded bytes, missing/empty distinctions, and independent snapshots.
 [Native resource lifecycle providers](docs/experiments/native-resources.md) add
 filesystem/network acquisition, retryable completion, and ownership cleanup.
-Native resource byte I/O remains pending.
+Native array/slice resource I/O now supports partial transfers, EOF, snapshots,
+and failure cleanup through explicit provider adapters.
 
 The [ordinary application corpus](examples/corpus/README.md) adds a multi-module
 invoice calculator and packet decoder, tested against independent Python oracles.

@@ -43,6 +43,22 @@ fn statusResult(w: *std.Io.Writer, layout: native_layout.Layout, ty: typed.Type)
     try variantValue(w, layout, ty, shape.ok_tag, shape.ok_type);
     try w.writeAll("); }\n");
 }
+fn writeResourceIo(w: *std.Io.Writer, layout: native_layout.Layout, operation: @FieldType(@FieldType(bc.Instruction, "op"), "resource_io")) !void {
+    try w.print("Slot value = (Slot){{0}}; int status = resource_{s}({d}, ", .{ @tagName(operation.kind), @backingInt(operation.owner) });
+    if (operation.reference) |reference| try w.print("{d}", .{@backingInt(reference)}) else try w.writeAll("SIZE_MAX");
+    if (operation.kind == .read) {
+        if (operation.reference != null) {
+            const shape = typed.resourceSliceReadShape(operation.output, layout.records).?;
+            try w.print(", 0, 0, {d}, {d}", .{ shape.length_field, shape.eof_field });
+        } else {
+            const shape = typed.resourceReadShape(operation.output, layout.records).?;
+            const capacity = layout.records[shape.bytes_type.recordIndex()].shape.array.?.length;
+            try w.print(", {d}, {d}, {d}, {d}", .{ capacity, shape.bytes_field, shape.length_field, shape.flag_field });
+        }
+    }
+    try w.writeAll(", &value); if (status) value = (Slot){status, NULL};\n");
+    try statusResult(w, layout, operation.output);
+}
 fn indices(w: *std.Io.Writer, values: []const usize) !void {
     if (values.len == 0) return w.writeAll("NULL");
     try w.writeAll("(const size_t[]){");
@@ -213,6 +229,7 @@ fn checkFunction(layout: native_layout.Layout, function: bc.Function, sink: *dia
         .acquire_resource,
         .complete_resource,
         .restrict_resource,
+        .resource_io,
         .external_read,
         .environment_get,
         .pool_operation,
@@ -237,7 +254,6 @@ fn checkFunction(layout: native_layout.Layout, function: bc.Function, sink: *dia
         .call,
         .ret,
         => {},
-        else => return sink.fail(unsupported_feature, instruction.span, "this operation is not yet supported by native execution"),
     };
 }
 
@@ -362,6 +378,7 @@ fn writeOperation(context: InstructionOutput) !bool {
             const shape = typed.completionShape(ty, program.records).?;
             try w.print("push_value(complete_resource({d}, {d}, {d}, {d}));\n", .{ shape.result.ok_tag, shape.result.error_tag, shape.resource_field, shape.code_field });
         },
+        .resource_io => |operation| try writeResourceIo(w, layout, operation),
         .restrict_resource => |operation| try w.print("restrict_resource({d});\n", .{operation.permissions}),
         .acquire_pool => |ty| {
             const shape = typed.resultShape(ty, program.records).?;
@@ -482,7 +499,6 @@ fn writeOperation(context: InstructionOutput) !bool {
             try w.writeAll("Slot result = pop_value(); size_t target = leave(result); if (!nf) { printf(\"%\" PRId64 \"\\n\", (int64_t)result.number); cleanup(); return 0; }\nreturn_target = target; goto dispatch_return;\n");
             falls_through = false;
         },
-        else => unreachable,
     }
     return falls_through;
 }

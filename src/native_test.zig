@@ -20,14 +20,14 @@ test "native scalar emission is deterministic and cleans every failed allocation
     try t.checkAllAllocationFailures(no_resize.allocator(), scenario, .{});
 }
 // spec: PROJ-6
-test "native emission rejects unsupported operations in uncalled functions" {
+test "native emission validates uncalled functions" {
     for ([_][]const u8{
-        "resource File:filesystem;result W{ok:u64,err:i64}fn unused(f:File)->i64{let mut file=f;acknowledge write_resource<W>(file,new [0]u8[]);return 0;}fn main()->i64{return 7;}",
+        "fn unused()->i64{return false;}fn main()->i64{return 7;}",
     }) |text| {
         var c = try language.Compilation.init(t.allocator, "native.my", text);
         defer c.deinit();
         try t.expectError(error.SourceError, c.emitC(t.allocator));
-        try t.expectEqualStrings("E_NATIVE_FEATURE", c.diagnostics.items[c.diagnostics.items.len - 1].code);
+        try t.expectEqualStrings("E_TYPE", c.diagnostics.items[c.diagnostics.items.len - 1].code);
     }
 }
 
@@ -277,4 +277,23 @@ test "native resource lifecycle emission cleans failed compiler allocations" {
     try resourceScenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), resourceScenario, .{});
+}
+
+fn resourceIoScenario(allocator: std.mem.Allocator) !void {
+    const source = "resource File:filesystem;result A{ok:File,err:i64}struct Chunk{bytes:[4]u8,length:u64,eof:bool}" ++
+        "result R{ok:Chunk,err:i64}struct Progress{eof:bool,length:u64}result S{err:i64,ok:Progress}result W{ok:u64,err:i64}" ++
+        "fn main(fs:filesystem_cap)->i64{match acquire_resource<A>(fs,new [0]u8[]){A.ok(owner)=>{let mut file=owner;" ++
+        "acknowledge read_resource<R>(file);let mut bytes=new [4]u8[1u8,2u8,3u8,4u8];borrow mut bytes[0..4] as d{" ++
+        "acknowledge read_resource_slice<S>(file,d);}borrow bytes[0..4] as input{acknowledge write_resource_slice<W>(file,input);}" ++
+        "acknowledge write_resource<W>(file,new [0]u8[]);return 7;},A.err(e)=>{return e;}}}";
+    var c = try language.Compilation.init(allocator, "resource-io.my", source);
+    defer c.deinit();
+    const generated = try c.emitC(allocator);
+    defer allocator.free(generated);
+}
+// spec: NATIVE-RESOURCE-IO-1
+test "native resource array and slice IO emission cleans failed compiler allocations" {
+    try resourceIoScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), resourceIoScenario, .{});
 }

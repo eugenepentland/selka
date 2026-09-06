@@ -150,3 +150,90 @@ static Slot complete_resource(size_t ok, size_t error, size_t resource_field, si
     failure->fields[code_field].number = status;
     return boxed_variant(error, (Slot){0, failure}, 1);
 }
+
+/* Provider buffers are staging storage, never pointers into guest aggregates. */
+static Aggregate *resource_bytes(size_t capacity) {
+    Aggregate *scratch = new_object(capacity / sizeof(Slot) + (capacity % sizeof(Slot) != 0), 0);
+    scratch->count = 0; return scratch;
+}
+static Reference *resource_view(size_t id, int mutable) {
+    Reference *view = usable_reference(&frames[nf - 1].references[id]);
+    if (!view->slice || (mutable && !view->mutable)) trap("R_REFERENCE_READ_ONLY");
+    Aggregate *array = view->owner->value.object;
+    if (!array || view->start > array->count || view->length > array->count - view->start) trap("R_SLICE_BOUNDS");
+    return view;
+}
+static int resource_write(size_t owner, size_t reference, Slot *result) {
+    Slot input = {0}; Reference *view = NULL;
+    if (reference == SIZE_MAX) input = pop_value(); else view = resource_view(reference, 0);
+    unsigned kind; ResourceEntry *entry = resource_owner(local_access(owner, 0)->value, &kind);
+    Aggregate *array = view ? view->owner->value.object : input.object;
+    if (!array) host_failure("InternalError");
+    size_t length = view ? view->length : array->count, start = view ? view->start : 0;
+    Aggregate *scratch = resource_bytes(length);
+    uint8_t *bytes = (uint8_t *)scratch->fields;
+    for (size_t i = 0; i < length; ++i) bytes[i] = (uint8_t)array->fields[start + i].number;
+    MylangResourceProvider *provider = resource_provider(kind);
+    int status = 2;
+    if (entry->permissions & 2) {
+        status = 1;
+        if (provider->write) {
+            MylangResourceWrite written = provider->write(provider->context, entry->handle, bytes, length);
+            status = resource_status(written.status);
+            if (!status) {
+                if (written.length > length) host_failure("InvalidProvider");
+                result->number = (V)written.length;
+            }
+        }
+    }
+    release_value(input); release_value((Slot){0, scratch});
+    return status;
+}
+static int resource_read(size_t owner, size_t reference, size_t capacity, size_t bytes_field,
+                         size_t length_field, size_t eof_field, Slot *result) {
+    unsigned kind; ResourceEntry *entry = resource_owner(local_access(owner, 0)->value, &kind);
+    Reference *view = reference == SIZE_MAX ? NULL : resource_view(reference, 1);
+    if (view) capacity = view->length;
+    Aggregate *scratch = resource_bytes(capacity);
+    uint8_t *bytes = (uint8_t *)scratch->fields;
+    Slot replacement = {0};
+    if (view && capacity && !view->owner->value.object->buffer)
+        replacement = clone_value(view->owner->value);
+    MylangResourceProvider *provider = resource_provider(kind);
+    int status = 2; size_t length = 0; int eof = 0;
+    if (entry->permissions & 1) {
+        status = 1;
+        if (provider->read) {
+            MylangResourceRead read = provider->read(provider->context, entry->handle, bytes, capacity);
+            status = resource_status(read.status);
+            if (!status) {
+                if (read.length > capacity || (read.eof != 0 && read.eof != 1)) host_failure("InvalidProvider");
+                length = read.length; eof = read.eof;
+                memset(bytes + length, 0, capacity - length);
+            }
+        }
+    }
+    if (status) {
+        release_value(replacement); release_value((Slot){0, scratch}); return status;
+    }
+    Aggregate *array = NULL;
+    if (view) {
+        if (length) {
+            Aggregate *destination = replacement.object ? replacement.object : view->owner->value.object;
+            for (size_t i = 0; i < length; ++i) destination->fields[view->start + i].number = bytes[i];
+            if (replacement.object) {
+                release_value(view->owner->value); view->owner->value = replacement; replacement = (Slot){0};
+            }
+        }
+        release_value(replacement);
+    } else {
+        array = new_object(capacity, 0);
+        for (size_t i = 0; i < capacity; ++i) array->fields[i].number = bytes[i];
+    }
+    Aggregate *record = new_object(view ? 2 : 3, 0);
+    if (array) record->fields[bytes_field] = (Slot){0, array};
+    record->fields[length_field].number = (V)length;
+    record->fields[eof_field].number = eof;
+    release_value((Slot){0, scratch}); *result = (Slot){0, record};
+    return 0;
+}

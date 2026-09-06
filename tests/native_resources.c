@@ -36,6 +36,30 @@ static MylangProviderStatus complete(void *opaque, uint64_t handle) {
     record((Event){'C', context->kind, (unsigned)handle, 0, status, 0, 0});
     return (MylangProviderStatus)status;
 }
+static MylangResourceRead read_bytes(void *opaque, uint64_t handle, uint8_t *bytes, size_t capacity) {
+    Context *context = opaque;
+    unsigned mode = setting("TEST_RESOURCE_READ", 0);
+    unsigned status = mode <= 4 ? mode : 0;
+    for (size_t i = 0; i < capacity; ++i) bytes[i] = 170;
+    size_t length = capacity < 2 ? capacity : 2;
+    if (length) bytes[0] = 65;
+    if (length > 1) bytes[1] = 0;
+    if (mode == 5) length = capacity + 1;
+    if (mode == 6) length = 0;
+    if (mode == 8) length = capacity;
+    record((Event){'D', context->kind, (unsigned)handle, 0, status, capacity, 0});
+    return (MylangResourceRead){(MylangProviderStatus)status, status ? SIZE_MAX : length, status ? -1 : mode == 7 ? 2 : mode == 9 ? 0 : 1};
+}
+static MylangResourceWrite write_bytes(void *opaque, uint64_t handle, const uint8_t *bytes, size_t length) {
+    Context *context = opaque;
+    unsigned mode = setting("TEST_RESOURCE_WRITE", 0);
+    unsigned status = mode <= 4 ? mode : 0;
+    uint64_t key = 0;
+    for (size_t i = 0; i < length; ++i) key = key * 257 + bytes[i];
+    record((Event){'W', context->kind, (unsigned)handle, 0, status, length, key});
+    size_t written = mode == 5 ? length + 1 : length ? 1 : 0;
+    return (MylangResourceWrite){(MylangProviderStatus)status, status ? SIZE_MAX : written};
+}
 static void release(void *opaque, uint64_t handle) {
     Context *context = opaque;
     --context->live;
@@ -55,6 +79,10 @@ MylangNativeProviders mylang_native_providers(void) {
     if (!setting("TEST_RESOURCE_MISSING", 0)) {
         result.filesystem = (MylangResourceProvider){&contexts[0], setting("TEST_RESOURCE_PERMISSIONS", 7), acquire, complete, release};
         result.network = (MylangResourceProvider){&contexts[1], setting("TEST_RESOURCE_PERMISSIONS", 7), acquire, complete, release};
+    }
+    if (!setting("TEST_RESOURCE_IO_MISSING", 0)) {
+        result.filesystem.read = read_bytes; result.network.read = read_bytes;
+        result.filesystem.write = write_bytes; result.network.write = write_bytes;
     }
     return result;
 }

@@ -41,7 +41,7 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [PROJ-3] Rejects duplicate exports, missing exported symbols, and private types exposed through public interfaces.
 - [PROJ-4] Reports related declarations in their original source files after project source mapping.
 - [PROJ-5] Emits deterministic native C for scalar programs and releases compiler allocations on injected failure.
-- [PROJ-6] Rejects native emission of unsupported operations and unsupported signatures even in uncalled functions.
+- [PROJ-6] Validates every function before native emission, including uncalled functions, and rejects invalid source without partial output.
 - [PROJ-7] Retains static lifetime and exclusivity checks when compiling supported references to native C.
 ## Discovery and formatting
 
@@ -80,3 +80,5 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [NATIVE-ENVIRONMENT-1] Native environment lookup preserves bounded output, missing/empty distinctions, zero padding, typed failures, and explicit provider grants.
 
 - [NATIVE-RESOURCE-1] Native resource lifecycle emission preserves nominal owners, explicit grants, permission intersection, retryable completion errors, and pending-handle cleanup before older guest values.
+
+- [NATIVE-RESOURCE-IO-1] Native resource reads/writes preserve permissions, bounded partial counts, EOF, fixed-array zero padding, slice snapshots, and unchanged guest bytes on provider failure.

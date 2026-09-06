@@ -900,3 +900,16 @@ and 120 injected lifecycle allocation failures under sanitizers.
 Resource byte I/O, broader permission/quota/generation and mixed-store acceptance,
 and the other unfinished roadmap requirements remain pending. This completes
 the initial native lifecycle implementation, not full native resource support.
+
+## Native resource byte I/O
+
+Provider ABI v4 implements array/slice reads and writes with partial progress, EOF,
+permission checks, snapshots, and failure-safe staging. All currently defined
+bytecode operations have native emission. Debug and ReleaseFast pass all 31 build
+steps and 595 core/CLI tests. Resource acceptance covers 114 outcomes, 104 exact
+VM trace comparisons, and 392 injected allocation failures, plus quota/reuse and
+mixed-store checks. The large sanitized quota compilation needs a separate
+300-second test budget; observed O2 compilation took approximately 106–120 seconds.
+
+Generation-exhaustion/stale-owner and simultaneous per-kind quota stress, native
+embedding/performance, and all other unfinished roadmap requirements remain open.

@@ -2828,3 +2828,28 @@ Native resource byte I/O, source attenuation stress, quota/reuse/generation
 boundaries, mixed-store traces, and broader resource corpus acceptance remain
 pending. Generics, source serialization, finer incremental compilation, and the
 other unfinished roadmap requirements remain open.
+
+## 2026-09-06: Native resource array and slice I/O
+
+Provider ABI v4 now supports optional read/write callbacks. Native array and buffer
+slices stage reads, preserve snapshots and failed-read bytes, and commit only the
+reported prefix. Fixed reads return zero-padded independent arrays. Permissions,
+partial counts, EOF, missing callbacks, and malformed metadata are checked.
+All currently defined bytecode operations now have native emission; invalid
+uncalled source still fails before output.
+
+Debug and ReleaseFast pass all 31 build steps and 595 core/CLI tests (535 core,
+60 CLI), with all 88 Guardian checks passing and no frozen violations. Resource
+acceptance covers 114 outcomes, 104 VM trace comparisons, and 392 injected
+allocation failures under sanitizers. It includes native builder execution,
+mixed-store cleanup, and two passes through the 1024-live-filesystem-owner quota
+to check rejection and reuse. Three provider VM oracle tests run separately.
+
+The large quota fixture exceeded the previous 90-second C compilation timeout.
+With a separate 300-second compilation budget, its sanitized O2 builds completed
+in approximately 106 seconds focused and 118–120 seconds in the full runs.
+Execution remains bounded at 90 seconds, with sanitizers and memory checks intact.
+
+Generation-exhaustion/stale-owner and simultaneous per-kind quota stress remain
+pending, as do native embedding/performance, generics, source serialization, finer
+incremental compilation, and the remaining roadmap requirements.

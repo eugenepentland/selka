@@ -2,10 +2,11 @@
 #define MYLANG_NATIVE_PROVIDERS_H
 #include <stdint.h>
 #include <stddef.h>
-#define MYLANG_NATIVE_PROVIDER_ABI 3
-#define mylang_native_providers mylang_native_providers_v3
+#define MYLANG_NATIVE_PROVIDER_ABI 4
+#define mylang_native_providers mylang_native_providers_v4
 /* Trusted synchronous adapters. Contexts outlive the generated program's run.
-   No callback is invoked while checking whether an entry grant is available. */
+   Callbacks must not reenter this generated program. No callback is invoked
+   while checking whether an entry grant is available. */
 typedef enum {
     MYLANG_PROVIDER_OK = 0,
     MYLANG_PROVIDER_UNAVAILABLE = 1,
@@ -25,12 +26,18 @@ typedef struct { MylangProviderStatus status; size_t length; int present; } Myla
    consumes it; completion failure keeps it live. Release never implies completion
    and must return without allocation, failure, or guest reentry. */
 typedef struct { MylangProviderStatus status; uint64_t handle; } MylangResourceResult;
+/* Transfers keep the handle live, including on errors. Success counts fit the
+   borrowed buffer; read EOF is 0 or 1. Error count/EOF members are ignored. */
+typedef struct { MylangProviderStatus status; size_t length; int eof; } MylangResourceRead;
+typedef struct { MylangProviderStatus status; size_t length; } MylangResourceWrite;
 typedef struct {
     void *context;
     unsigned permissions; /* read=1, write=2, complete=4; intersection only */
     MylangResourceResult (*acquire)(void *, const uint8_t *, size_t, unsigned);
     MylangProviderStatus (*complete)(void *, uint64_t);
     void (*release)(void *, uint64_t);
+    MylangResourceRead (*read)(void *, uint64_t, uint8_t *, size_t);
+    MylangResourceWrite (*write)(void *, uint64_t, const uint8_t *, size_t);
 } MylangResourceProvider;
 typedef struct {
     void *clock_context;

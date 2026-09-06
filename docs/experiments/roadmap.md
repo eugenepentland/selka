@@ -289,3 +289,8 @@ Native resource lifecycle providers now implement acquisition, completion, reduc
 permissions, and failure cleanup through ABI v3. Focused VM trace comparisons and
 allocation-failure checks and full Debug/ReleaseFast regression acceptance pass. Native
 resource byte I/O and broader stress acceptance remain pending.
+
+Native array/slice resource I/O is implemented through ABI v4, completing emission
+for the currently defined bytecode operations. Focused VM trace, allocation-failure,
+quota/reuse, and mixed-store checks and full Debug/ReleaseFast acceptance pass.
+Generation-exhaustion stress, native embedding, and wider roadmap work remain open.

@@ -123,7 +123,7 @@ def main():
         old_adapter = temp / "old-adapter.c"
         old_adapter.write_text('#include "native_providers.h"\nMylangNativeProviders mylang_native_providers_v1(void){return (MylangNativeProviders){0};}\n')
         incompatible = invoke(["python3", root / "scripts/native.py", source, "--compiler", compiler, "--zig", args.zig, "--provider", old_adapter, "-o", temp / "incompatible"])
-        assert incompatible.returncode == 2 and b"mylang_native_providers_v3" in incompatible.stderr, incompatible.stderr
+        assert incompatible.returncode == 2 and b"mylang_native_providers_v4" in incompatible.stderr, incompatible.stderr
         print(f"native environment: {comparisons} VM-checked value/error/call comparisons, {failures} allocation failures, bounded bytes, snapshots, missing grants and builder/ABI rejection passed")
 
 

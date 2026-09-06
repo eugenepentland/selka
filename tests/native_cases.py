@@ -137,14 +137,17 @@ def project_cases(compiler, zig, root, temp):
     entry.parent.mkdir()
     entry.write_text("module main; import helper; fn main() -> i64 { return 0; }")
     (entry.parent / "helper.my").write_text("module helper; " + (root / "examples/resource-io.my").read_text())
+    supported = invoke([compiler, "emit-project-c", entry])
+    assert supported.returncode == 0, supported.stderr
+    (entry.parent / "helper.my").write_text("module helper; fn unused()->i64{return false;}")
     rejected = invoke([compiler, "emit-project-c", entry])
-    assert rejected.returncode == 1 and rejected.stdout == b"" and b"E_NATIVE_FEATURE" in rejected.stderr, rejected
+    assert rejected.returncode == 1 and rejected.stdout == b"" and b"E_TYPE" in rejected.stderr, rejected
     assert b"helper.my:" in rejected.stderr, rejected.stderr
     existing = entry.parent / "existing"
     existing.write_bytes(b"preserve existing artifact")
     rejected = invoke([sys.executable, root / "scripts/native.py", entry, "--project", "-o", existing, "--compiler", compiler, "--zig", zig])
     assert rejected.returncode == 1 and existing.read_bytes() == b"preserve existing artifact", rejected.stderr
-    print(f"module native parity: {len(fixtures)} project fixtures, {pairs} executed comparisons including file paths/call frames across -O0/-O2; project builder and unsupported-feature checks passed")
+    print(f"module native parity: {len(fixtures)} project fixtures, {pairs} executed comparisons including file paths/call frames across -O0/-O2; project builder and invalid-source checks passed")
 
 
 def main():
