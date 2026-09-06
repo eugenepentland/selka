@@ -3231,3 +3231,29 @@ Native domain codecs, borrowed/capability invocation, source serialization,
 finer semantic/native incremental compilation and the other pending roadmap
 requirements remain unfinished. Schema identity establishes interface
 compatibility; it does not authenticate implementation behavior.
+
+
+### Internal native codec execution — 2026-09-06
+
+Generated native dispatch now permits internal calls only to functions selected
+by checked domain codec declarations. One owned argument and result cross the
+internal call boundary while the surrounding operands, frames, instruction/frame
+budgets and cleanup destination are preserved. Normal public calls retain their
+existing behavior. This is a prerequisite for codec-aware native value traversal;
+public wire calls and NativeClient still reject domain signatures. See
+`docs/experiments/native-codec-dispatch.md` for the remaining integration.
+
+Four sanitizer hosts pass nontrivial decoder/encoder execution, packed/boxed
+rejection ownership, caller operand/frame preservation, shared budgets, exact
+trap frames, non-codec private-helper rejection, allocation failures and recovery.
+An uninstantiated generic declaration verifies separation from source declaration
+ordinals. Compiler codec-dispatch allocation sweeps pass. All 588 core tests
+passed in Debug/ReleaseFast, all 60 CLI tests and formatting passed, and native
+parity passed 2682 comparisons. Existing 24 embedding cases, ordinary aggregate
+wire acceptance and generated native Python tests pass. Guardian passed all 88
+checks with baselines disabled; no new full-build-test run is claimed.
+
+Public native codec input/output conversion, typed rejection reporting, shared
+codec-call quotas and generated-client domain support remain unfinished. Output
+encoding must be staged so each encoder runs once rather than once per sizing
+and writing pass. The other pending roadmap requirements also remain open.

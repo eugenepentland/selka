@@ -1,0 +1,43 @@
+# Internal native codec invocation
+
+The native embedding runtime can invoke a compiler-selected declared decoder or
+encoder inside an existing execution. Generated dispatch cases select only the
+functions referenced by checked domain codec contracts. They do not provide a
+public function-ID API or make other private helpers callable.
+
+An internal invocation transfers one owned argument, enters the existing compiled
+function body, and returns one owned value at the caller's original frame depth.
+The caller's earlier operands and frames survive. Instruction and frame budgets,
+source locations and the emergency cleanup destination remain shared with the
+surrounding operation. Normal public entry/value calls retain their existing
+return and cleanup behavior.
+
+This is a prerequisite for native domain conversion, not completed public domain
+support. The ordinary wire API and generated NativeClient still reject domain
+signatures. Source codec declarations require public, effect-free methods and
+complete ordinary wire/error representations without domains or runtime owners.
+The internal dispatcher consumes those already-checked contracts.
+
+## Acceptance
+
+`tests/native_codec_dispatch.py` invokes declared codecs from a controlled C test
+hook inside a live embedding call. A decoder doubles a positive wire integer and
+an encoder adds one to its domain backing; the host observes 15 from input 7.
+Negative inputs produce packed scalar or boxed record rejection payloads with
+correct ownership. A caller-owned aggregate operand and its frame remain intact
+across all calls. A non-codec private helper is rejected by internal dispatch.
+
+Four address/undefined-behavior sanitizer hosts (-O0/-O2, packed/boxed rejection)
+check repeated calls, shared step/frame limits, exact decoder/caller trap frames,
+allocation-failure sweeps, cleanup and recovery. A Zig compiler allocation sweep
+covers emission of declared codec dispatch. The host driver runs in `zig build test`.
+
+## Remaining integration
+
+Public domain calls still need codec-aware input traversal, typed rejection and
+domain failure reporting, and a shared codec-call quota. Output traversal must
+execute each encoder once: the ordinary writer's measure-then-copy traversal
+cannot simply invoke encoders in both passes. A bounded prepared output tree can
+retain encoded wire data until capacity is known. Generated Python bindings then
+need the matching versioned native contract for domain wire objects and typed
+rejections. Existing ordinary-call ABI behavior must remain compatible.

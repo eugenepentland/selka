@@ -74,5 +74,7 @@ stale/missing schemas and successful calls after source removal. Both drivers
 run under `zig build test`. Existing schema, binding generation/cache and native
 value acceptance remain part of regression validation.
 
-Native domain codecs, borrowed/capability invocation and the remaining compilation
+[Internal native codec invocation](native-codec-dispatch.md) now preserves caller
+state and shared budgets. Public native domain conversion, borrowed/capability
+invocation and the remaining compilation
 and language roadmap work are still unfinished.

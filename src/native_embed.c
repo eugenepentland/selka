@@ -1,5 +1,14 @@
 /* Included after the generated entry function. */
 #ifdef MYLANG_EMBED
+/* Transfer one owned input through a compiler-selected codec, retaining the
+   surrounding execution's operands, frames, budgets and failure destination. */
+static Slot invoke_codec(size_t function, Slot argument) {
+    const size_t base = nv, depth = nf;
+    push_value(argument);
+    execute_entry(NULL, NULL, 0, function);
+    if (nf != depth || nv != base + 1) host_failure("InternalError");
+    return values[--nv];
+}
 static atomic_flag entry_busy = ATOMIC_FLAG_INIT;
 static int run_embedding(const char *name, const MylangScalar *arguments, size_t count,
     const MylangRunOptions *configuration, MylangRunResult *result, MylangScalar *scalar, WireCall *wire) {
@@ -19,7 +28,7 @@ static int run_embedding(const char *name, const MylangScalar *arguments, size_t
     memset(active_regions, 0, sizeof active_regions);
     active_result = result;
     if (!setjmp(entry_escape)) {
-        result->status = execute_entry(name, arguments, count);
+        result->status = execute_entry(name, arguments, count, SIZE_MAX);
         result->value = native_value;
     }
     if (scalar && result->status == 0) *scalar = (MylangScalar){native_type, native_bits};

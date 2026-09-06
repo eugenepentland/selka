@@ -61,6 +61,11 @@ pub fn build(b: *std.Build) void {
     python_native.addArgs(&.{ "--zig", b.graph.zig_exe });
     python_native.setCwd(b.path("."));
     test_step.dependOn(&python_native.step);
+    const native_codec = b.addSystemCommand(&.{ "python3", "tests/native_codec_dispatch.py", "--compiler" });
+    native_codec.addFileArg(exe.getEmittedBin());
+    native_codec.addArgs(&.{ "--zig", b.graph.zig_exe });
+    native_codec.setCwd(b.path("."));
+    test_step.dependOn(&native_codec.step);
     const native_schema = b.addSystemCommand(&.{ "python3", "tests/native_schema.py", "--compiler" });
     native_schema.addFileArg(exe.getEmittedBin());
     native_schema.addArgs(&.{ "--zig", b.graph.zig_exe });

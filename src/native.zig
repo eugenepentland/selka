@@ -154,9 +154,10 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
         try string(w, src.locate(ins.span.start).path);
         try w.writeAll(",\n");
     };
-    try w.writeAll("};\n#ifdef MYLANG_EMBED\nstatic int execute_entry(const char *entry_name, const MylangScalar *arguments, size_t argument_count) {\n" ++
+    try w.writeAll("};\n#ifdef MYLANG_EMBED\nstatic int execute_entry(const char *entry_name, const MylangScalar *arguments, size_t argument_count, size_t codec_entry) {\n" ++
         "#else\nint main(int argc, char **argv) {\n#endif\nsource_paths = paths; function_names = names; source_lines = lines; source_columns = columns;\n" ++
         "#ifndef MYLANG_EMBED\noptions(argc, argv); providers = mylang_native_providers();\n#endif\nvalidate_resource_providers(); size_t return_target = 0;\n");
+    try writeCodecDispatch(allocator, w, program, offsets);
     try writeExports(w, program, offsets, interface.roots, wire_types);
     const main_index = @backingInt(program.main);
     for (program.functions[main_index].scope.locals[0..program.functions[main_index].signature.parameter_count]) |parameter| {
@@ -198,6 +199,27 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     try w.writeAll("default: host_failure(\"InternalError\"); } return 2;\n}\n");
     try w.writeAll(@embedFile("native_embed.c"));
     return output.toOwnedSlice();
+}
+
+fn writeCodecDispatch(allocator: std.mem.Allocator, w: *std.Io.Writer, program: bc.Program, offsets: []const usize) !void {
+    const selected = try allocator.alloc(bool, program.functions.len);
+    defer allocator.free(selected);
+    @memset(selected, false);
+    for (program.records) |record| if (record.contract.codec) |codec| {
+        const decode = @backingInt(codec.decode);
+        const encode = @backingInt(codec.encode);
+        if (decode >= selected.len or encode >= selected.len) return error.InternalError;
+        selected[decode] = true;
+        selected[encode] = true;
+    };
+    try w.writeAll("#ifdef MYLANG_EMBED\nconst size_t return_depth = nf;\nif (codec_entry != SIZE_MAX) { switch (codec_entry) {\n");
+    for (program.functions, offsets, selected) |function, offset, enabled| {
+        if (!enabled) continue;
+        try w.print("case {d}:\n", .{@backingInt(function.id)});
+        try enter(w, function, 0);
+        try w.print(jump_format, .{offset});
+    }
+    try w.writeAll("default: host_failure(\"InternalError\"); } }\n#endif\n");
 }
 
 fn writeInterface(w: *std.Io.Writer, schema: ?[]const u8) !void {
@@ -572,9 +594,11 @@ fn writeOperation(context: InstructionOutput) !bool {
             falls_through = false;
         },
         .ret => {
-            try w.writeAll("Slot result = pop_value(); size_t target = leave(result); if (!nf) {\n" ++
-                "#ifdef MYLANG_EMBED\nwire_finish(result);\nnative_value = (int64_t)result.number; native_bits = (uint64_t)(U)result.number;\n" ++
-                "#else\nprintf(\"%\" PRId64 \"\\n\", (int64_t)result.number);\n#endif\ncleanup(); return 0; }\nreturn_target = target; goto dispatch_return;\n");
+            try w.writeAll("Slot result = pop_value(); size_t target = leave(result);\n" ++
+                "#ifdef MYLANG_EMBED\nif (nf == return_depth) { if (codec_entry != SIZE_MAX) return 0;\n" ++
+                "wire_finish(result); native_value = (int64_t)result.number; native_bits = (uint64_t)(U)result.number; cleanup(); return 0; }\n" ++
+                "#else\nif (!nf) { printf(\"%\" PRId64 \"\\n\", (int64_t)result.number); cleanup(); return 0; }\n#endif\n" ++
+                "return_target = target; goto dispatch_return;\n");
             falls_through = false;
         },
     }

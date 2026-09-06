@@ -318,3 +318,18 @@ test "native public value emission releases storage at every allocation failure"
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), exportedScenario, .{});
 }
+
+fn codecDispatchScenario(allocator: std.mem.Allocator) !void {
+    var c = try language.Compilation.init(allocator, "codec.my", "result R{ok:D,err:i64}domain D:i64{codec i64{decode:dec,encode:enc}" ++
+        "fn dec(x:i64)->R{if x<0{return new R.err(x);}return new R.ok(wrap<D>(x));}" ++
+        "fn enc(x:D)->i64{return unwrap(x);}}fn main()->i64{return 0;}");
+    defer c.deinit();
+    const generated = try c.emitC(allocator);
+    defer allocator.free(generated);
+}
+// spec: NATIVE-CODEC-1
+test "native declared codec dispatcher emission cleans every allocation failure" {
+    try codecDispatchScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), codecDispatchScenario, .{});
+}
