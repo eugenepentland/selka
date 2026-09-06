@@ -2089,3 +2089,39 @@ atomic snapshot. Frontend/declaration-granular incremental compilation, domain c
 callable foreign wrappers, source-level codec/input integration, generics, wider native
 support, ordinary-program review, and all other unfinished roadmap work remain pending.
 Guardian was not exercised; hosted CI has not run. The full roadmap goal remains active.
+
+## 2026-09-06: Owned typed JSON failure locations
+
+Added optional located parse/decode/encode APIs and CLI JSON-pointer diagnostics.
+Checked failures now identify nested record fields, array indices, enum-table keys,
+variant discriminators/payloads, declared types, and unsupported document versions.
+Missing fields are identified in schema order before materialization; extra object
+fields identify their containing object, and array arity errors identify the first
+missing/excess index. Existing unlocated APIs retain their signatures.
+
+One bounded traversal stack records the deepest failure into an owned 4-KiB Location
+buffer without allocating. Locations survive document/catalog teardown, reset before
+reuse, escape JSON-pointer separators, and retain valid UTF-8 when truncated. CLI
+rendering quotes the pointer and explicitly marks a truncated prefix. Out-of-memory
+failures remain host failures; located decoding rechecks mutable embedding limits.
+Raw JSON syntax/duplicate-key errors may still have no known pointer and retain their
+input filename/error category. Message rendering follows ordinary host allocation
+policy; location capture itself allocates nothing.
+
+All 19 build steps pass in Debug and ReleaseFast: 529 Zig tests (472 core, 57 CLI),
+eight verification-driver tests, extended typed JSON acceptance, all schema/source/
+input/cache/module/duplicate checks, 29 compiler/Python wire comparisons, and 392
+VM/native comparisons per host mode. Unit evidence covers independent location
+ownership, malformed nested native values without consuming input, reset after
+success, escaping, ASCII/UTF-8 truncation, mutated limits, allocation failures, and
+existing partial-decode cleanup. CLI evidence covers nested result/union/record/
+array paths, missing payload/table keys, integer ranges, discriminator/type/version
+selection, excess elements, and explicitly truncated long field names. Python syntax,
+Zig formatting, and whitespace checks pass; roadmap, README, documentation, and both
+plan copies are synchronized.
+
+Typed value failure locations are implemented. Domain codecs, source-level codec/input
+integration, callable foreign wrappers, generics, wider native operations, finer
+incremental compilation, ordinary-program review, and all other unfinished roadmap
+work remain pending. Guardian was not exercised; hosted CI has not run. The full
+roadmap goal remains active.

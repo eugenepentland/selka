@@ -53,9 +53,12 @@ struct Private { hidden: bool }
             assert run() == output
             return output
 
-        def reject(ty, value, code):
+        def reject(ty, value, code, pointer=None):
             path.write_text(json.dumps({'version': 'typed-json-v1', 'type': ty, 'value': value}))
-            assert code in run(1)
+            message = run(1)
+            assert code in message
+            if pointer is not None:
+                assert 'JSON pointer ' + json.dumps(pointer) in message, message
 
         for signed in (True, False):
             for bits in (8, 16, 32, 64):
@@ -88,20 +91,34 @@ struct Private { hidden: bool }
         check('data::Choice', {'value': point, 'case': 'point'})
         check('data::Outcome', {'case': 'ok', 'value': {'case': 'point', 'value': point}})
         check('data::Outcome', {'case': 'err', 'value': '-128'})
-        reject('data::Choice', {'case': 'other'}, 'UnknownCodecCase')
+        reject('data::Choice', {'case': 'other'}, 'UnknownCodecCase', '/value/case')
         reject('data::Choice', {'case': 'none', 'value': None}, 'UnexpectedCodecField')
-        reject('data::Choice', {'case': 'point'}, 'IncompleteCodecValue')
+        reject('data::Choice', {'case': 'point'}, 'IncompleteCodecValue', '/value/value')
         reject('data::Choice', {'case': 'point', 'value': point, 'extra': 0}, 'UnexpectedCodecField')
         reject('data::Point', {**point, 'extra': 0}, 'UnexpectedCodecField')
         reject('data::Point', {key: value for key, value in point.items() if key != 'x'}, 'IncompleteCodecValue')
-        reject('data::Point', {**point, 'samples': ['1']}, 'IncompleteCodecValue')
-        reject('data::Point', {**point, 'flags': {'yes': True}}, 'IncompleteCodecValue')
+        reject('data::Point', {**point, 'samples': ['1']}, 'IncompleteCodecValue', '/value/samples/1')
+        reject('data::Point', {**point, 'flags': {'yes': True}}, 'IncompleteCodecValue', '/value/flags/no')
         reject('data::Point', {**point, 'flags': {'yes': True, 'maybe': False}}, 'IncompleteCodecValue')
         for ty, value in [('Secret', '1'), ('Maybe', {'case': 'none'}), ('Zero', {'data': []}), ('Bytes', []), ('File', '1'), ('Pool', []), ('Handle', '1')]:
             reject('data::' + ty, value, 'NoImplicitCodec')
-        reject('allocator', '1', 'NoImplicitCodec')
-        reject('data::Private', {'hidden': True}, 'UnknownPublicValueType')
+        reject('allocator', '1', 'NoImplicitCodec', '/type')
+        reject('data::Private', {'hidden': True}, 'UnknownPublicValueType', '/type')
         reject('missing::Point', point, 'UnknownPublicValueType')
+        reject('data::Outcome', {'case': 'ok', 'value': {'case': 'point', 'value': {**point, 'samples': ['1', '40000']}}}, 'CodecIntegerOutOfRange', '/value/value/value/samples/1')
+        reject('data::Point', {**point, 'samples': ['1', '2', '3']}, 'IncompleteCodecValue', '/value/samples/2')
+        reject('data::Point', {**point, 'flags': {'yes': 'wrong', 'no': False}}, 'ValueTypeMismatch', '/value/flags/yes')
+        path.write_text(json.dumps({'version': 'typed-json-v2', 'type': 'bool', 'value': True}))
+        assert 'JSON pointer "/version"' in run(1)
+        # Long names produce an explicitly marked, valid quoted pointer prefix.
+        long_name = 'x' * 5000
+        module.write_text('module data; export Long; struct Long { ' + long_name + ': bool }')
+        path.write_text(json.dumps({'version': 'typed-json-v1', 'type': 'data::Long', 'value': {long_name: 'wrong'}}))
+        message = run(1)
+        assert 'ValueTypeMismatch' in message and '(path truncated)' in message
+        pointer = message.split(' at JSON pointer ', 1)[1].split(' (path truncated)', 1)[0]
+        assert len(json.loads(pointer)) == 4096 and json.loads(pointer).startswith('/value/')
+        module.write_text(source)
         # Duplicate decoded keys, including escaped aliases, reject at any depth.
         for raw in (
             '{"version":"typed-json-v1","version":"typed-json-v1","type":"bool","value":true}',

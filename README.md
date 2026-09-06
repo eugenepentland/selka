@@ -330,3 +330,8 @@ Binding generation includes fresh source receipts even when its public schema is
 unchanged and an artifact is reused. See
 [schema source receipts](docs/experiments/schema-receipts.md) for identity and snapshot
 semantics, integrity checks, and remaining frontend incremental work.
+
+Typed JSON errors now include a nested JSON pointer where typed validation can identify
+one. Located embedding APIs retain the failure path independently of parsed documents;
+large paths are bounded and explicitly marked as truncated. See
+[codec diagnostics](docs/experiments/codec-diagnostics.md) for path semantics and limits.

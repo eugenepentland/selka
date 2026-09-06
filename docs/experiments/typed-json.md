@@ -13,7 +13,9 @@ zig-out/bin/mylang check-value-project examples/schema/main.my \
 
 Successful canonical JSON goes to stdout with status 0. Source or data errors
 exit 1 with empty stdout; usage and host I/O/allocation failures exit 2. Diagnostics
-identify the input path and error category. Missing/duplicate `--value` and unrelated
+identify the input path, error category, and a JSON pointer for typed value failures.
+See [codec failure locations](codec-diagnostics.md) for ownership, truncation, and
+raw-syntax limitations. Missing/duplicate `--value` and unrelated
 flags reject. The command does not execute source code, invoke providers, or write
 files. It resolves an exact qualified exported type name, rather than a local import
 alias. Private/unknown nominal names reject. Root structural arrays are available
@@ -110,8 +112,8 @@ exercise every allocation failure with leak checking. Existing manifest acceptan
 continues to cover the shared integer parser.
 
 This establishes ordinary typed serialization/deserialization. Domain codec
-declarations, external key mappings, compiler JSON-path diagnostics, callable foreign
-wrappers, source-level codec operations, richer declared-input integration, and
+declarations, external key mappings, callable foreign wrappers, source-level codec
+operations, richer declared-input integration, and
 generation budget/receipt/cache integration remain pending. The schema report is a
 language-contract graph; `typed-json-v1` defines this separate wire representation.
 Neither establishes a native memory layout or foreign ABI.

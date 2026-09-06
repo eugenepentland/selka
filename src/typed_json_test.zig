@@ -19,8 +19,10 @@ fn scenario(allocator: std.mem.Allocator) !void {
     const ty = find(records, "Outcome");
     var parsed = try codec.Document.parse(allocator, document, .{});
     // The materialized value must outlive all JSON parsing storage.
-    const value = parsed.decode(allocator, records, ty) catch |err| {
+    var location: codec.Location = .{};
+    const value = parsed.decodeWithLocation(allocator, records, ty, &location) catch |err| {
         parsed.deinit();
+        if (err == error.OutOfMemory) try t.expect(!location.has_path);
         return err;
     };
     parsed.deinit();
@@ -28,7 +30,8 @@ fn scenario(allocator: std.mem.Allocator) !void {
     const point = value.aggregate.fields[0].aggregate.fields[0];
     try t.expectEqual(@as(i128, 18446744073709551615), try point.aggregate.fields[0].asInteger());
     try t.expect(point.aggregate.fields[1].aggregate.fields[0].bool);
-    const output = try codec.encode(allocator, records, ty, value, .{});
+    const output = try codec.encodeWithLocation(allocator, records, ty, value, .{}, &location);
+    try t.expect(!location.has_path);
     defer allocator.free(output);
     try t.expectEqualStrings(canonical, output);
 }
@@ -106,4 +109,61 @@ test "typed JSON rejects later fields after releasing already decoded aggregates
     defer parsed.deinit();
     try t.expectError(error.ValueTypeMismatch, parsed.decode(t.allocator, records, find(records, "Outer")));
     try t.expectError(error.ValueTypeMismatch, parsed.decode(t.allocator, records, find(records, "Inner")));
+}
+
+test "typed JSON failure locations survive document and checked catalog teardown" {
+    var location: codec.Location = .{};
+    {
+        var compilation = try language.Compilation.init(t.allocator, "codec.my", source);
+        defer compilation.deinit();
+        try compilation.check();
+        const records = compilation.program.?.records;
+        const invalid = "{\"version\":\"typed-json-v1\",\"type\":\"Outcome\",\"value\":{\"case\":\"ok\",\"value\":{\"case\":\"point\",\"value\":{\"x\":\"7\",\"flags\":{\"yes\":true,\"no\":\"wrong\"}}}}}";
+        var parsed = try codec.Document.parse(t.allocator, invalid, .{});
+        defer parsed.deinit();
+        try t.expectError(error.ValueTypeMismatch, parsed.decodeWithLocation(t.allocator, records, find(records, "Outcome"), &location));
+    }
+    try t.expect(location.has_path and !location.truncated);
+    try t.expectEqualStrings("/value/value/value/flags/no", location.text());
+    // Reusing a diagnostic cannot retain a stale path after success.
+    const text = try codec.encodeWithLocation(t.allocator, &.{}, .bool, .{ .bool = true }, .{}, &location);
+    defer t.allocator.free(text);
+    try t.expect(!location.has_path);
+}
+test "typed JSON encoding locates malformed nested native values without consuming them" {
+    var compilation = try language.Compilation.init(t.allocator, "codec.my", "struct R { values: [2]u8 } fn main()->i64{return 0;}");
+    defer compilation.deinit();
+    try compilation.check();
+    const records = compilation.program.?.records;
+    const array = try Value.create(t.allocator, find(records, "[2]u8"), &.{ Value.number(.u8, 1), .{ .bool = false } });
+    defer array.release(t.allocator);
+    const value = try Value.create(t.allocator, find(records, "R"), &.{array});
+    defer value.release(t.allocator);
+    var location: codec.Location = .{};
+    try t.expectError(error.ValueTypeMismatch, codec.encodeWithLocation(t.allocator, records, find(records, "R"), value, .{}, &location));
+    try t.expectEqualStrings("/value/values/1", location.text());
+    try t.expectEqual(@as(usize, 1), value.aggregate.references);
+    try t.expectEqual(@as(usize, 2), array.aggregate.references);
+}
+test "typed JSON location escaping truncation and mutated limits remain bounded" {
+    var location: codec.Location = .{};
+    location.field("a/b~c");
+    try t.expectEqualStrings("/a~1b~0c", location.text());
+    const long: [5000]u8 = @splat('x');
+    location.field(&long);
+    try t.expect(location.truncated and location.len == 4096);
+    var unicode_name: [5000]u8 = undefined;
+    for (0..2500) |i| {
+        unicode_name[i * 2] = 0xc3;
+        unicode_name[i * 2 + 1] = 0xa9;
+    }
+    location.field(&unicode_name);
+    try t.expect(location.truncated and std.unicode.utf8ValidateSlice(location.text()));
+    var parsed = try codec.Document.parse(t.allocator, "{\"version\":\"typed-json-v1\",\"type\":\"bool\",\"value\":true}", .{});
+    defer parsed.deinit();
+    parsed.limits.max_depth = 129;
+    try t.expectError(error.InvalidCodecLimits, parsed.decodeWithLocation(t.allocator, &.{}, .bool, &location));
+    try t.expect(!location.has_path);
+    try t.expectError(error.NoImplicitCodec, codec.encodeWithLocation(t.allocator, &.{}, .allocator, .{ .bool = false }, .{}, &location));
+    try t.expectEqualStrings("/type", location.text());
 }

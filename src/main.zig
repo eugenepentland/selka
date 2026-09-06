@@ -539,8 +539,12 @@ fn parseInputManifest(init: std.process.Init, path: []const u8, bytes: []const u
     };
 }
 
-fn valueFailure(init: std.process.Init, path: []const u8, err: anyerror) !?[]u8 {
-    const message = try std.fmt.allocPrint(init.gpa, "{s}: invalid typed JSON: {s}\n", .{ path, @errorName(err) });
+fn valueFailure(init: std.process.Init, path: []const u8, err: anyerror, location: ?*const language.typed_json.Location) !?[]u8 {
+    const pointer = if (location) |at| (if (at.has_path) try std.json.Stringify.valueAlloc(init.gpa, at.text(), .{}) else null) else null;
+    defer if (pointer) |text| init.gpa.free(text);
+    const detail = if (pointer) |text| try std.fmt.allocPrint(init.gpa, " at JSON pointer {s}{s}", .{ text, if (location.?.truncated) " (path truncated)" else "" }) else try init.gpa.dupe(u8, "");
+    defer init.gpa.free(detail);
+    const message = try std.fmt.allocPrint(init.gpa, "{s}: invalid typed JSON: {s}{s}\n", .{ path, @errorName(err), detail });
     defer init.gpa.free(message);
     try std.Io.File.stderr().writeStreamingAll(init.io, message);
     return null;
@@ -548,20 +552,24 @@ fn valueFailure(init: std.process.Init, path: []const u8, err: anyerror) !?[]u8 
 fn checkValue(init: std.process.Init, compilation: *language.project_compile.Compilation, path: []const u8) !?[]u8 {
     const limits: language.typed_json.Limits = .{};
     const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, path, init.gpa, .limited(limits.max_bytes + 1)) catch |err| {
-        if (err == error.StreamTooLong) return valueFailure(init, path, error.CodecByteLimit);
+        if (err == error.StreamTooLong) return valueFailure(init, path, error.CodecByteLimit, null);
         return err;
     };
     defer init.gpa.free(bytes);
-    return canonicalValue(init.gpa, compilation, bytes, limits) catch |err| {
+    var location: language.typed_json.Location = .{};
+    return canonicalValue(init.gpa, compilation, bytes, limits, &location) catch |err| {
         if (err == error.OutOfMemory) return err;
-        return valueFailure(init, path, err);
+        return valueFailure(init, path, err, &location);
     };
 }
-fn canonicalValue(allocator: std.mem.Allocator, compilation: *language.project_compile.Compilation, bytes: []const u8, limits: language.typed_json.Limits) ![]u8 {
-    var document = try language.typed_json.Document.parse(allocator, bytes, limits);
+fn canonicalValue(allocator: std.mem.Allocator, compilation: *language.project_compile.Compilation, bytes: []const u8, limits: language.typed_json.Limits, location: *language.typed_json.Location) ![]u8 {
+    var document = try language.typed_json.Document.parseWithLocation(allocator, bytes, limits, location);
     defer document.deinit();
-    const ty = try compilation.publicValueType(document.parsed.value.type);
-    const value = try document.decode(allocator, compilation.program.?.records, ty);
+    const ty = compilation.publicValueType(document.parsed.value.type) catch |err| {
+        if (err != error.OutOfMemory) location.field("type");
+        return err;
+    };
+    const value = try document.decodeWithLocation(allocator, compilation.program.?.records, ty, location);
     defer value.release(allocator);
-    return language.typed_json.encode(allocator, compilation.program.?.records, ty, value, limits);
+    return language.typed_json.encodeWithLocation(allocator, compilation.program.?.records, ty, value, limits, location);
 }
