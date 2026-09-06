@@ -1,24 +1,47 @@
 //! Owned source and byte locations; diagnostic text borrows this storage.
+/// Failures returned by initMapped; callers must handle these boundary errors.
+pub const InitMappedError = error{
+    EmptySourceMap,
+    NestedSourceMap,
+    OutOfMemory,
+    Overflow,
+};
+/// Failures returned by mappedSpan; callers must handle these boundary errors.
+pub const MappedSpanError = error{
+    InvalidSourceIndex,
+    InvalidSourceSpan,
+};
+/// Failures returned by originalSpan; callers must handle these boundary errors.
+pub const OriginalSpanError = error{
+    InvalidSourceSpan,
+    NotMappedSource,
+};
+
 const std = @import("std");
 
+/// Half-open byte range within source text.
 pub const Span = struct {
     start: usize,
     end: usize,
 
+    /// Join ordered source ranges from the start of a through the end of b.
     pub fn join(a: Span, b: Span) Span {
         return .{ .start = a.start, .end = b.end };
     }
 };
 
+/// Source path, owned bytes, line index, and optional origins for merged modules.
 pub const Source = struct {
     path: []const u8,
     bytes: []const u8,
     line_starts: []const usize,
     origins: []const Origin = &.{},
 
+    /// Offset and original source contributing a segment to merged source text.
     pub const Origin = struct { start: usize, original: Source };
 
-    pub fn init(allocator: std.mem.Allocator, path: []const u8, bytes: []const u8) !Source {
+    /// Copy source bytes/path and allocate a line index with the supplied allocator.
+    pub fn init(allocator: std.mem.Allocator, path: []const u8, bytes: []const u8) std.mem.Allocator.Error!Source {
         const owned_path = try allocator.dupe(u8, path);
         errdefer allocator.free(owned_path);
         const owned_bytes = try allocator.dupe(u8, bytes);
@@ -35,7 +58,7 @@ pub const Source = struct {
     /// Copy source bytes into one offset space without changing source spelling.
     /// Origin metadata borrows the inputs, which must outlive the returned Source.
     /// Caller owns returned bytes/path/line_starts/origins (normally in an arena).
-    pub fn initMapped(allocator: std.mem.Allocator, inputs: []const Source) !Source {
+    pub fn initMapped(allocator: std.mem.Allocator, inputs: []const Source) InitMappedError!Source {
         if (inputs.len == 0) return error.EmptySourceMap;
         var size: usize = 0;
         for (inputs) |input| {
@@ -61,7 +84,8 @@ pub const Source = struct {
         return mapped;
     }
 
-    pub fn mappedSpan(self: Source, input: usize, local: Span) !Span {
+    /// Convert a checked module-local span into the merged source coordinate space.
+    pub fn mappedSpan(self: Source, input: usize, local: Span) MappedSpanError!Span {
         if (input >= self.origins.len) return error.InvalidSourceIndex;
         const origin = self.origins[input];
         if (local.start > local.end or local.end > origin.original.bytes.len) return error.InvalidSourceSpan;
@@ -79,19 +103,23 @@ pub const Source = struct {
         return low;
     }
 
-    pub fn originalSpan(self: Source, global: Span) !struct { input: usize, span: Span } {
+    /// Locate the original module and local span underlying a merged span.
+    pub fn originalSpan(self: Source, global: Span) OriginalSpanError!struct { input: usize, span: Span } {
         const index = self.originIndex(global.start) orelse return error.NotMappedSource;
         const origin = self.origins[index];
         if (global.start > global.end or global.end > origin.start + origin.original.bytes.len) return error.InvalidSourceSpan;
         return .{ .input = index, .span = .{ .start = global.start - origin.start, .end = global.end - origin.start } };
     }
 
+    /// Borrow the bytes covered by a valid source span.
     pub fn text(self: Source, span: Span) []const u8 {
         return self.bytes[span.start..span.end];
     }
 
+    /// Original path, line/column, and source line text for a diagnostic location.
     pub const Location = struct { path: []const u8, line: usize, column: usize, text: []const u8 };
 
+    /// Map a byte offset to its original source path and human-readable line/column.
     pub fn locate(self: Source, offset: usize) Location {
         if (self.originIndex(offset)) |index| {
             const origin = self.origins[index];

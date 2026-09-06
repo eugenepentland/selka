@@ -1,15 +1,17 @@
+//! Slice bounds, mutability, and lifetime tests, including forged reference metadata and bounded allocator execution.
+const fixture_path = "slices.my";
 const std = @import("std");
 const testing = std.testing;
 const language = @import("compiler.zig");
 const LimitedLiveAllocator = @import("test_support.zig").LimitedLiveAllocator;
 
 fn result(source: []const u8, expected: i64) !void {
-    var compilation = try language.Compilation.init(testing.allocator, "slices.my", source);
+    var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
     defer compilation.deinit();
     try testing.expectEqual(expected, (try compilation.execute(testing.allocator)).value);
 }
 fn reject(source: []const u8, code: []const u8) !void {
-    var compilation = try language.Compilation.init(testing.allocator, "slices.my", source);
+    var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
     defer compilation.deinit();
     try testing.expectError(error.SourceError, compilation.check());
     try testing.expectEqualStrings(code, compilation.diagnostics.items[0].code);
@@ -29,12 +31,15 @@ test "slices read and replace bounded ranges while preserving owner snapshots" {
     try result("fn main() -> i64 { let a = new [2]i64 [1, 2]; borrow a[2..2] as s { borrow s[0..0] as empty { return cast<i64>(len_slice(empty)); } } }", 0);
 }
 
+// spec: OWN-3
 test "slice ranges and indices reject negatives reversed ranges and full unsigned overflow" {
     for ([_][]const u8{ "-1..1", "0..3", "2..1", "18446744073709551615u64..18446744073709551615u64", "0..18446744073709551615u64" }) |range| {
         const source = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ let a = new [2]i64 [1, 2]; borrow a[{s}] as s {{ return cast<i64>(len_slice(s)); }} }}", .{range});
         defer testing.allocator.free(source);
         try bounds(source);
     }
+}
+test "slice reads and writes reject out of bounds indices" {
     for ([_][]const u8{ "-1", "1", "18446744073709551615u64" }) |index| {
         const read = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ let a = new [2]i64 [1, 2]; borrow a[1..2] as s {{ return read_slice(s, {s}); }} }}", .{index});
         defer testing.allocator.free(read);
@@ -48,7 +53,10 @@ test "slice ranges and indices reject negatives reversed ranges and full unsigne
 }
 
 test "slice reborrows compose offsets and restore exclusive access" {
-    try result("fn main() -> i64 { let mut a = new [4]i64 [1, 2, 3, 4]; borrow mut a as whole { borrow mut whole[1..4] as s { borrow mut s[1..2] as child { write_slice(child, 0, 9); } borrow s as copy { discard read_slice(copy, 1); } write_slice(s, 0, 7); } return read_ref(whole)[1] + read_ref(whole)[2]; } }", 16);
+    try result("fn main() -> i64 { let mut a = new [4]i64 [1, 2, 3, 4]; borrow mut a as whole { " ++
+        "borrow mut whole[1..4] as s { borrow mut s[1..2] as child { write_slice(child, 0, 9);" ++
+        " } borrow s as copy { discard read_slice(copy, 1); } write_slice(s, 0, 7); } return " ++
+        "read_ref(whole)[1] + read_ref(whole)[2]; } }", 16);
     try reject("fn main() -> i64 { let mut a = new [2]i64 [1, 2]; borrow mut a[0..2] as s { borrow s[0..1] as child { return cast<i64>(len_slice(s)); } } }", "E_BORROW_SUSPENDED");
     try reject("fn main() -> i64 { let mut a = new [2]i64 [1, 2]; borrow mut a[0..1] as left { borrow mut a[1..2] as right { return read_slice(right, 0); } } }", "E_BORROW_CONFLICT");
     try reject("fn main() -> i64 { let a = new [2]i64 [1, 2]; borrow a[0..2] as s { borrow mut s[0..1] as child { return read_slice(child, 0); } } }", "E_REFERENCE_READ_ONLY");
@@ -60,7 +68,10 @@ test "slice parameters accept different lengths and support recursively narrowed
     const source = try std.fmt.allocPrint(testing.allocator, "{s} fn main() -> i64 {{ let a = new [2]i64 [1, 2]; let b = new [3]i64 [3, 4, 5]; borrow a[0..2] as x {{ borrow b[0..3] as y {{ return sum(x) + sum(y); }} }} }}", .{sum});
     defer testing.allocator.free(source);
     try result(source, 15);
-    try result("fn clear(s: &mut []i64) -> i64 { if len_slice(s) == 0u64 { return 0; } write_slice(s, 0, 0); borrow mut s[1..len_slice(s)] as rest { return clear(rest); } } fn main() -> i64 { let mut a = new [3]i64 [1, 2, 3]; borrow mut a[0..3] as s { discard clear(s); } return a[0] + a[1] + a[2]; }", 0);
+    try result("fn clear(s: &mut []i64) -> i64 { if len_slice(s) == 0u64 { return 0; } write_slice(s," ++
+        " 0, 0); borrow mut s[1..len_slice(s)] as rest { return clear(rest); } } fn main() -> " ++
+        "i64 { let mut a = new [3]i64 [1, 2, 3]; borrow mut a[0..3] as s { discard clear(s); }" ++
+        " return a[0] + a[1] + a[2]; }", 0);
     try result("fn pair(a: &[]i64, b: &[]i64) -> i64 { return read_slice(a, 0) + read_slice(b, 0); } fn main() -> i64 { let a = new [1]i64 [7]; borrow a[0..1] as s { return pair(s, s); } }", 14);
     try reject("fn f(s: &[]u8) -> i64 { return cast<i64>(len_slice(s)); } fn main() -> i64 { let a = new [1]i64 [7]; borrow a[0..1] as s { return f(s); } }", "E_TYPE");
     try reject("fn f(s: &mut []i64) -> i64 { return cast<i64>(len_slice(s)); } fn main() -> i64 { let a = new [1]i64 [7]; borrow a[0..1] as s { return f(s); } }", "E_REFERENCE_READ_ONLY");
@@ -83,15 +94,22 @@ test "slice kinds cannot bypass nominal types owner conflicts or lexical lifetim
 }
 
 test "slice bounds and write operands evaluate once in source order before access" {
-    try result("fn next(r: &mut i64) -> i64 { let old = read_ref(r); write_ref(r, old + 1); return old; } fn main() -> i64 { let mut i = 0; let mut a = new [2]i64 [7, 9]; borrow mut i as n { borrow mut a[next(n)..next(n)] as s { write_ref(n, 0); write_slice(s, next(n), next(n)); } } return a[0] + a[1] + i; }", 12);
+    try result("fn next(r: &mut i64) -> i64 { let old = read_ref(r); write_ref(r, old + 1); return " ++
+        "old; } fn main() -> i64 { let mut i = 0; let mut a = new [2]i64 [7, 9]; borrow mut i " ++
+        "as n { borrow mut a[next(n)..next(n)] as s { write_ref(n, 0); write_slice(s, next(n)," ++
+        " next(n)); } } return a[0] + a[1] + i; }", 12);
     var trapped = try language.Compilation.init(testing.allocator, "order.my", "fn main() -> i64 { let mut a = new [1]i64 [1]; borrow mut a[0..1] as s { write_slice(s, 99, 1 / 0); } return 0; }");
     defer trapped.deinit();
     try testing.expectEqualStrings("R_DIVISION_BY_ZERO", (try trapped.execute(testing.allocator)).trap.code);
 }
 
-const nested_source = "struct R { n: i64 } fn change(s: &mut []R) -> R { let old = read_slice(s, 0); write_slice(s, 0, new R { n: 9 }); borrow s[0..1] as child { discard read_slice(child, 0); return old; } } fn main() -> i64 { let mut a = new [2]R [new R { n: 1 }, new R { n: 2 }]; let original = a; borrow mut a[1..2] as s { let previous = change(s); return previous.n + original[1].n + read_slice(s, 0).n; } }";
+const nested_source = "struct R { n: i64 } fn change(s: &mut []R) -> R { let old = read_slice(s, 0); " ++
+    "write_slice(s, 0, new R { n: 9 }); borrow s[0..1] as child { discard " ++
+    "read_slice(child, 0); return old; } } fn main() -> i64 { let mut a = new [2]R [new R " ++
+    "{ n: 1 }, new R { n: 2 }]; let original = a; borrow mut a[1..2] as s { let previous " ++
+    "= change(s); return previous.n + original[1].n + read_slice(s, 0).n; } }";
 fn allocationScenario(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, "slices.my", nested_source);
+    var compilation = try language.Compilation.init(allocator, fixture_path, nested_source);
     defer compilation.deinit();
     try testing.expectEqual(@as(i64, 13), (try compilation.execute(allocator)).value);
     const dump = try compilation.dump(allocator);
@@ -104,14 +122,17 @@ test "slice aggregate snapshots call cleanup and lowering survive allocation fai
     var no_resize = testing.FailingAllocator.init(testing.allocator, .{ .resize_fail_index = 0 });
     try testing.checkAllAllocationFailures(no_resize.allocator(), allocationScenario, .{});
     try result("fn f(s: &mut [2]i64) -> i64 { borrow mut s[1..2] as part { write_slice(part, 0, 8); } return read_ref(s)[1]; } fn main() -> i64 { let mut a = new [2]i64 [1, 2]; borrow mut a as r { return f(r); } }", 8);
-    try result("fn f(s: &mut [][1]i64) -> i64 { let old = read_slice(s, 0); write_slice(s, 0, new [1]i64 [7]); return old[0] + read_slice(s, 0)[0]; } fn main() -> i64 { let mut a = new [1][1]i64 [new [1]i64 [2]]; borrow mut a[0..1] as s { return f(s); } }", 9);
+    try result("fn f(s: &mut [][1]i64) -> i64 { let old = read_slice(s, 0); write_slice(s, 0, new " ++
+        "[1]i64 [7]); return old[0] + read_slice(s, 0)[0]; } fn main() -> i64 { let mut a = " ++
+        "new [1][1]i64 [new [1]i64 [2]]; borrow mut a[0..1] as s { return f(s); } }", 9);
 }
 
 test "slice writes reuse bounded storage and release at each instruction trap boundary" {
-    var compilation = try language.Compilation.init(testing.allocator, "slices.my", nested_source);
+    var compilation = try language.Compilation.init(testing.allocator, fixture_path, nested_source);
     defer compilation.deinit();
     try compilation.emit();
     var limiter = LimitedLiveAllocator{ .parent = testing.allocator, .limit = 16384 };
+    defer limiter.deinit();
     var complete = false;
     for (1..150) |budget| {
         const outcome = try compilation.executeWithOptions(limiter.allocator(), .{ .max_steps = budget });
@@ -123,7 +144,9 @@ test "slice writes reuse bounded storage and release at each instruction trap bo
         try testing.expectEqualStrings("R_STEP_LIMIT", outcome.trap.code);
     }
     try testing.expect(complete);
-    var loop = try language.Compilation.init(testing.allocator, "loop.my", "fn bump(s: &mut []i64) -> i64 { write_slice(s, 0, read_slice(s, 0) + 1); return 0; } fn main() -> i64 { let mut a = new [1]i64 [0]; while a[0] < 10000 { borrow mut a[0..1] as s { discard bump(s); } } return a[0]; }");
+    var loop = try language.Compilation.init(testing.allocator, "loop.my", "fn bump(s: &mut []i64) -> i64 { write_slice(s, 0, read_slice(s, 0) + 1); return 0; } " ++
+        "fn main() -> i64 { let mut a = new [1]i64 [0]; while a[0] < 10000 { borrow mut " ++
+        "a[0..1] as s { discard bump(s); } } return a[0]; }");
     defer loop.deinit();
     try loop.emit();
     try testing.expectEqual(@as(i64, 10000), (try loop.execute(limiter.allocator())).value);
@@ -131,7 +154,11 @@ test "slice writes reuse bounded storage and release at each instruction trap bo
 }
 
 test "slice duplicate identity retains bounds modes element types and indexing" {
-    const source = "fn a(s: &[]i64) -> i64 { borrow s[0..1] as part { return read_slice(part, 0); } } fn b(x: &[]i64) -> i64 { borrow x[0..1] as renamed { return read_slice(renamed, 0); } } fn c(s: &[]i64) -> i64 { borrow s[1..2] as part { return read_slice(part, 0); } } fn d(s: &mut []i64) -> i64 { borrow s[0..1] as part { return read_slice(part, 0); } } fn main() -> i64 { return 0; }";
+    const source = "fn a(s: &[]i64) -> i64 { borrow s[0..1] as part { return read_slice(part, 0); } } fn " ++
+        "b(x: &[]i64) -> i64 { borrow x[0..1] as renamed { return read_slice(renamed, 0); } } " ++
+        "fn c(s: &[]i64) -> i64 { borrow s[1..2] as part { return read_slice(part, 0); } } fn " ++
+        "d(s: &mut []i64) -> i64 { borrow s[0..1] as part { return read_slice(part, 0); } } " ++
+        "fn main() -> i64 { return 0; }";
     var compilation = try language.Compilation.init(testing.allocator, "duplicates.my", source);
     defer compilation.deinit();
     try compilation.check();
@@ -143,37 +170,44 @@ test "slice duplicate identity retains bounds modes element types and indexing" 
 
 test "VM validates slice metadata and traps suspended slice access without retaining storage" {
     const typed = @import("typed.zig");
-    var compilation = try language.Compilation.init(testing.allocator, "invalid-slice.my", "fn main() -> i64 { let mut a = new [2]i64 [1, 2]; borrow mut a[0..2] as root { borrow root[0..1] as child { return cast<i64>(len_slice(child)); } } }");
+    var compilation = try language.Compilation.init(testing.allocator, "invalid-slice.my", "fn main() -> i64 { let mut a = new [2]i64 [1, 2]; borrow mut a[0..2] as root { " ++
+        "borrow root[0..1] as child { return cast<i64>(len_slice(child)); } } }");
     defer compilation.deinit();
     try compilation.emit();
     const original = compilation.code.?;
     const functions = try testing.allocator.dupe(language.bytecode.Function, original.functions);
     defer testing.allocator.free(functions);
-    const instructions = try testing.allocator.dupe(language.bytecode.Instruction, functions[0].instructions);
+    const instructions = try testing.allocator.dupe(language.bytecode.Instruction, functions[0].scope.instructions);
     defer testing.allocator.free(instructions);
-    functions[0].instructions = instructions;
+    functions[0].scope.instructions = instructions;
     var program = original;
     program.functions = functions;
-    for (instructions) |*instruction| if (instruction.op == .len_slice) {
-        instruction.op.len_slice = @fromBackingInt(0);
-    };
+    try corruptSliceLengths(instructions, false);
     var limiter = LimitedLiveAllocator{ .parent = testing.allocator, .limit = 16384 };
+    defer limiter.deinit();
     const outcome = try language.vm.run(limiter.allocator(), program);
     try testing.expectEqualStrings("R_BORROW_SUSPENDED", outcome.trap.code);
     try testing.expectEqual(@as(usize, 0), limiter.live);
-    @memcpy(instructions, original.functions[0].instructions);
-    for (instructions) |*instruction| if (instruction.op == .len_slice) {
-        const reference = instruction.op.len_slice;
-        instruction.op = .{ .read_ref = reference };
-    };
+    @memcpy(instructions, original.functions[0].scope.instructions);
+    try corruptSliceLengths(instructions, true);
     try testing.expectError(error.InternalError, language.bytecode.validate(testing.allocator, program));
-    @memcpy(instructions, original.functions[0].instructions);
-    const references = try testing.allocator.dupe(typed.Reference, functions[0].references);
+    @memcpy(instructions, original.functions[0].scope.instructions);
+    const references = try testing.allocator.dupe(typed.Reference, functions[0].scope.references);
     defer testing.allocator.free(references);
-    functions[0].references = references;
+    functions[0].scope.references = references;
     references[0].ty = .bool;
     try testing.expectError(error.InternalError, language.bytecode.validate(testing.allocator, program));
-    @memcpy(references, original.functions[0].references);
-    references[1].slice = false;
+    @memcpy(references, original.functions[0].scope.references);
+    references[1].mode.slice = false;
     try testing.expectError(error.InternalError, language.bytecode.validate(testing.allocator, program));
+}
+
+fn corruptSliceLengths(instructions: []language.bytecode.Instruction, read: bool) !void {
+    var changed: usize = 0;
+    for (instructions) |*instruction| if (instruction.op == .len_slice) {
+        const reference = instruction.op.len_slice;
+        instruction.op = if (read) .{ .read_ref = reference } else .{ .len_slice = @fromBackingInt(0) };
+        changed += 1;
+    };
+    try testing.expect(changed > 0);
 }

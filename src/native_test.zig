@@ -12,11 +12,13 @@ fn scenario(allocator: std.mem.Allocator) !void {
     try t.expect(std.mem.indexOf(u8, first, "goto L") != null);
     try t.expect(std.mem.indexOf(u8, first, "__builtin_mul_overflow") != null);
 }
+// spec: PROJ-5
 test "native scalar emission is deterministic and cleans every failed allocation" {
     try scenario(t.allocator);
     var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(no_resize.allocator(), scenario, .{});
 }
+// spec: PROJ-6
 test "native emission rejects unsupported operations and uncalled unsupported signatures" {
     for ([_][]const u8{
         "fn unsupported(heap: allocator) -> i64 { return 0; } fn main() -> i64 { return 7; }",
@@ -30,7 +32,9 @@ test "native emission rejects unsupported operations and uncalled unsupported si
 }
 
 fn domainScenario(allocator: std.mem.Allocator) !void {
-    var c = try language.Compilation.init(allocator, "domain.my", "domain D:i64 { fn make(x:i64)->D{return wrap<D>(x);} fn value(x:D)->i64{return unwrap(x);} } fn forward(x:D)->D{return x;} fn main()->i64{return D.value(forward(D.make(37)));}");
+    var c = try language.Compilation.init(allocator, "domain.my", "domain D:i64 { fn make(x:i64)->D{return wrap<D>(x);} fn value(x:D)->i64{return " ++
+        "unwrap(x);} } fn forward(x:D)->D{return x;} fn main()->i64{return " ++
+        "D.value(forward(D.make(37)));}");
     defer c.deinit();
     const generated = try c.emitC(allocator);
     defer allocator.free(generated);
@@ -55,7 +59,9 @@ test "native domain representation elision does not bypass nominal or private ch
 }
 
 fn enumScenario(allocator: std.mem.Allocator) !void {
-    var c = try language.Compilation.init(allocator, "enum.my", "enum Color{red,green,blue} fn score(x:Color)->i64{match x{Color.blue=>{return 3;},Color.red=>{return 1;},Color.green=>{return 2;}}} fn main()->i64{return score(new Color.red)*100+score(new Color.green)*10+score(new Color.blue);}");
+    var c = try language.Compilation.init(allocator, "enum.my", "enum Color{red,green,blue} fn score(x:Color)->i64{match x{Color.blue=>{return 3;}," ++
+        "Color.red=>{return 1;},Color.green=>{return 2;}}} fn main()->i64{return score(new " ++
+        "Color.red)*100+score(new Color.green)*10+score(new Color.blue);}");
     defer c.deinit();
     const generated = try c.emitC(allocator);
     defer allocator.free(generated);
@@ -77,6 +83,8 @@ test "native enum support retains exhaustive nominal checks and rejects unsuppor
         try t.expectError(error.SourceError, c.emitC(t.allocator));
         try t.expect(!std.mem.eql(u8, c.diagnostics.items[0].code, "E_NATIVE_FEATURE"));
     }
+}
+test "native backend rejects unsupported owned payloads" {
     for ([_][]const u8{
         "buffer B:i64; union U{value:B} fn unsupported(x:U)->i64{discard x;return 0;} fn main()->i64{return 0;}",
         "buffer B:i64; struct R{value:B} fn unsupported(x:R)->i64{discard x;return 0;} fn main()->i64{return 0;}",
@@ -89,7 +97,10 @@ test "native enum support retains exhaustive nominal checks and rejects unsuppor
 }
 
 fn variantScenario(allocator: std.mem.Allocator) !void {
-    var c = try language.Compilation.init(allocator, "variant.my", "union E{missing,code:i8} result R{err:E,ok:i64} result S{ok:bool,err:E} fn convert(r:R)->S{return new S.ok(try r>0);} fn main()->i64{let a=new R.ok(1);acknowledge a;match convert(new R.err(new E.code(-128i8))){S.ok(discard)=>{return 0;},S.err(e)=>{match e{E.missing=>{return 1;},E.code(n)=>{return cast<i64>(n);}}}}}");
+    var c = try language.Compilation.init(allocator, "variant.my", "union E{missing,code:i8} result R{err:E,ok:i64} result S{ok:bool,err:E} fn " ++
+        "convert(r:R)->S{return new S.ok(try r>0);} fn main()->i64{let a=new R.ok(1);" ++
+        "acknowledge a;match convert(new R.err(new E.code(-128i8))){S.ok(discard)=>{return 0;}" ++
+        ",S.err(e)=>{match e{E.missing=>{return 1;},E.code(n)=>{return cast<i64>(n);}}}}}");
     defer c.deinit();
     const generated = try c.emitC(allocator);
     defer allocator.free(generated);
@@ -127,7 +138,11 @@ test "native layout boxes values beyond the 127 bit slot" {
 }
 
 fn aggregateScenario(allocator: std.mem.Allocator) !void {
-    const source = "struct R{a:[2]i64,b:i64} result Outcome{ok:R,err:R} fn work(x:Outcome)->Outcome{return new Outcome.ok(try x);} fn main()->i64{let old=new R{b:3,a:new [2]i64[4,5]};let changed=update(old){a:replace(old.a,0,9)};match work(new Outcome.err(changed)){Outcome.ok(discard)=>{return 0;},Outcome.err(r)=>{return r.a[0]+old.a[0];}}}";
+    const source = "struct R{a:[2]i64,b:i64} result Outcome{ok:R,err:R} fn " ++
+        "work(x:Outcome)->Outcome{return new Outcome.ok(try x);} fn main()->i64{let old=new " ++
+        "R{b:3,a:new [2]i64[4,5]};let changed=update(old){a:replace(old.a,0,9)};match " ++
+        "work(new Outcome.err(changed)){Outcome.ok(discard)=>{return 0;}," ++
+        "Outcome.err(r)=>{return r.a[0]+old.a[0];}}}";
     var c = try language.Compilation.init(allocator, "aggregate.my", source);
     defer c.deinit();
     const generated = try c.emitC(allocator);
@@ -141,7 +156,10 @@ test "native aggregates and boxed result propagation clean every allocation fail
 }
 
 fn referenceScenario(allocator: std.mem.Allocator) !void {
-    const source = "fn middle(a:i64,x:&mut []i64,b:i64)->&mut []i64 from x{borrow mut x[a..b] as selected{return selected;}} fn main()->i64{let mut a=new [3]i64[2,3,5];let old=a;borrow mut a[0..3] as all{borrow mut middle(1,all,3) as selected{write_slice(selected,0,9);}}return old[1]+a[1];}";
+    const source = "fn middle(a:i64,x:&mut []i64,b:i64)->&mut []i64 from x{borrow mut x[a..b] as " ++
+        "selected{return selected;}} fn main()->i64{let mut a=new [3]i64[2,3,5];let old=a;" ++
+        "borrow mut a[0..3] as all{borrow mut middle(1,all,3) as " ++
+        "selected{write_slice(selected,0,9);}}return old[1]+a[1];}";
     var c = try language.Compilation.init(allocator, "reference.my", source);
     defer c.deinit();
     const generated = try c.emitC(allocator);
@@ -153,6 +171,7 @@ test "native reference arguments returned slices and snapshots clean every compi
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), referenceScenario, .{});
 }
+// spec: PROJ-7
 test "native reference support retains static lifetime and exclusivity checks" {
     for ([_][]const u8{
         "fn main()->i64{let mut x=1;borrow mut x as r{return x;}}",

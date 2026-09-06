@@ -1,4 +1,12 @@
 //! Public checked type graph. This describes language contracts, not a wire format or ABI.
+/// Failures returned by render; callers must handle these boundary errors.
+pub const RenderError = error{
+    InvalidCheckedType,
+    OutOfMemory,
+    SourceError,
+    InternalError,
+};
+
 const std = @import("std");
 const typed = @import("typed.zig");
 const Compilation = @import("project_compile.zig").Compilation;
@@ -55,30 +63,30 @@ const Graph = struct {
         };
         if (!ty.isAggregate()) return .{ .name = name, .kind = if (ty == .bool) .boolean else .capability, .@"opaque" = ty != .bool };
         const record = self.records[ty.recordIndex()];
-        var out: Definition = .{ .name = name, .kind = .record, .move_only = record.move_only, .requires_handling = record.requires_handling };
+        var out: Definition = .{ .name = name, .kind = .record, .move_only = record.contract.move_only, .requires_handling = record.contract.requires_handling };
         // Domains may only be constructed through their checked factories. Runtime
         // owners/handles/capabilities have no portable reconstruction operation.
-        if (record.domain != null or record.buffer != null or record.resource != null or record.pool != null or record.handle_pool != null) {
-            out.kind = if (record.domain != null) .domain else if (record.buffer != null) .buffer else if (record.resource != null) .resource else if (record.pool != null) .pool else .handle;
+        if (record.shape.domain != null or record.shape.hasRuntimeIdentity()) {
+            out.kind = if (record.shape.domain != null) .domain else if (record.shape.buffer != null) .buffer else if (record.shape.resource != null) .resource else if (record.shape.pool != null) .pool else .handle;
             out.@"opaque" = true;
-            if (record.codec) |codec| {
+            if (record.contract.codec) |codec| {
                 const decode = self.functions[@backingInt(codec.decode)];
-                const shape = typed.resultShape(decode.return_type, self.records).?;
+                const shape = typed.resultShape(decode.signature.return_type, self.records).?;
                 out.codec = .{ .wire = try self.reference(codec.wire), .decode = decode.name, .encode = self.functions[@backingInt(codec.encode)].name, .error_type = try self.reference(shape.error_type) };
             }
-            if (record.buffer) |element| out.element = try self.reference(element);
-            if (record.resource) |kind| out.authority = @tagName(kind);
-            if (record.pool) |pool| {
+            if (record.shape.buffer) |element| out.element = try self.reference(element);
+            if (record.shape.resource) |kind| out.authority = @tagName(kind);
+            if (record.shape.pool) |pool| {
                 out.element = try self.reference(pool.element);
                 out.handle = try self.reference(pool.handle);
             }
-            if (record.handle_pool) |pool| out.pool = try self.reference(pool);
-        } else if (record.array) |array| {
+            if (record.shape.handle_pool) |pool| out.pool = try self.reference(pool);
+        } else if (record.shape.array) |array| {
             out.kind = if (array.key != null) .table else .array;
             out.element = try self.reference(array.element);
             out.length = array.length;
             if (array.key) |key| out.key = try self.reference(key);
-        } else if (record.variants) |variants| {
+        } else if (record.shape.variants) |variants| {
             out.kind = if (variants.fallible) .result else if (variants.is_union) .tagged_union else .enumeration;
             const cases = try self.allocator.alloc(Case, variants.cases.len);
             for (cases, variants.cases) |*item, variant| item.* = .{ .name = variant.name, .payload = if (variant.payload) |payload| try self.reference(payload) else null };
@@ -102,7 +110,7 @@ fn lessName(_: void, a: []const u8, b: []const u8) bool {
 }
 /// Checks all bodies before deriving anything. Output is owned by allocator;
 /// temporary graph storage is released, including on allocation failure.
-pub fn render(allocator: std.mem.Allocator, compilation: *Compilation) ![]u8 {
+pub fn render(allocator: std.mem.Allocator, compilation: *Compilation) RenderError![]u8 {
     try compilation.check();
     const program = compilation.program.?;
     var arena = std.heap.ArenaAllocator.init(allocator);
@@ -113,8 +121,8 @@ pub fn render(allocator: std.mem.Allocator, compilation: *Compilation) ![]u8 {
     var roots: std.ArrayList([]const u8) = .empty;
     // Resolve exported nominal declarations by identity; structural array names
     // are not declarations and acquire visibility only through public contracts.
-    var nominal = std.StringHashMap(typed.Type).init(scratch);
-    for (program.records) |record| try nominal.put(record.name, record.id);
+    var nominal: std.StringHashMapUnmanaged(typed.Type) = .empty;
+    for (program.records) |record| try nominal.put(scratch, record.name, record.id);
     for (compilation.index.units, 0..) |unit, module| {
         for (unit.symbols.items) |symbol| {
             if (!symbol.exported or symbol.kind != .type) continue;
@@ -127,22 +135,22 @@ pub fn render(allocator: std.mem.Allocator, compilation: *Compilation) ![]u8 {
     const functions = try scratch.alloc(Function, function_ids.len);
     for (functions, function_ids) |*output, id| {
         const function = program.functions[@backingInt(id)];
-        const parameters = try scratch.alloc(Parameter, function.parameter_count);
-        for (parameters, function.locals[0..function.parameter_count]) |*parameter, local| parameter.* = .{
+        const parameters = try scratch.alloc(Parameter, function.signature.parameter_count);
+        for (parameters, function.scope.locals[0..function.signature.parameter_count]) |*parameter, local| parameter.* = .{
             .name = local.name,
             .type = try graph.reference(local.ty),
-            .mode = if (local.reference_parameter) |mutable| (if (local.slice_parameter) (if (mutable) .exclusive_slice else .shared_slice) else (if (mutable) .exclusive_reference else .shared_reference)) else .value,
+            .mode = if (local.parameter.reference_parameter) |mutable| (if (local.parameter.slice_parameter) (if (mutable) .exclusive_slice else .shared_slice) else (if (mutable) .exclusive_reference else .shared_reference)) else .value,
         };
         var names: std.ArrayList([]const u8) = .empty;
         inline for (std.meta.tags(effects.Effect)) |effect| {
-            if (function.effects & effects.bit(effect) != 0) try names.append(scratch, @tagName(effect));
+            if (function.policy.effects & effects.bit(effect) != 0) try names.append(scratch, @tagName(effect));
         }
         output.* = .{
             .name = function.name,
             .parameters = parameters,
-            .result = try graph.reference(function.return_type),
+            .result = try graph.reference(function.signature.return_type),
             .effects = names.items,
-            .return_reference = if (function.return_reference) |ref| .{ .parameter = @backingInt(ref.parameter), .mutable = ref.mutable, .slice = ref.slice } else null,
+            .return_reference = if (function.signature.return_reference) |ref| .{ .parameter = @backingInt(ref.parameter), .mutable = ref.mutable, .slice = ref.slice } else null,
         };
     }
     var definitions: std.ArrayList(Definition) = .empty;

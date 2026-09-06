@@ -1,14 +1,38 @@
 //! Host I/O and process policy stay outside the compiler and VM.
+const inputs_prefix = "--inputs=";
+const policy_prefix = "--policy=";
 const std = @import("std");
 const language = @import("mylang");
-const usage = "usage: mylang <invoke-project|check-value-project|schema-project|input-module|check|run|dump-bytecode|discover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fmt-module|fmt-project|emit-c|emit-project-c|eval-project|list-modules|list-interfaces|check-project|run-project|check-policy> <file.my>\n  schema-project: --schema-report (include checked source and compiler identities)\n  check-value-project: --value=path.json (required; validates and writes canonical typed-json-v1); --max-codec-steps=N --max-codec-frames=N --max-codec-calls=N --max-codec-bytes=N --max-codec-values=N\n  invoke-project: --request=path.json (typed-call-v1, schema-pinned public function call; same codec budgets)\n  input-module: reads a typed JSON manifest and writes generated module source\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena\n  eval-project: --max-steps=N --max-frames=N --max-eval-bytes=N --evaluation-report|--evaluation-request --inputs=manifest.json (repeat for up to 16 modules; effect-free, parameter-free entry)\n  discover-duplicates/discover-project-duplicates: --min-nodes=N --population=production|tests|generated|reference|intentional --timings --approximate --max-work=N\n  report-quality/report-project-quality: --max-function-lines=N --max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: --check (otherwise writes formatted source to stdout)\n";
+const usage = "usage: mylang " ++
+    "<invoke-project|check-value-project|schema-project|input-module|check|run|dump-bytecode|di" ++
+    "scover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fm" ++
+    "t-module|fmt-project|emit-c|emit-project-c|eval-project|list-modules|list-interfaces|check" ++
+    "-project|run-project|check-policy> <file.my>\n  schema-project: --schema-report (include " ++
+    "checked source and compiler identities)\n  check-value-project: --value=path.json " ++
+    "(required; validates and writes canonical typed-json-v1); --max-codec-steps=N " ++
+    "--max-codec-frames=N --max-codec-calls=N --max-codec-bytes=N --max-codec-values=N\n  " ++
+    "invoke-project: --request=path.json (typed-call-v1, schema-pinned public function call; " ++
+    "same codec budgets)\n  input-module: reads a typed JSON manifest and writes generated " ++
+    "module source\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena\n  " ++
+    "eval-project: --max-steps=N --max-frames=N --max-eval-bytes=N " ++
+    "--evaluation-report|--evaluation-request --inputs=manifest.json (repeat for up to 16 " ++
+    "modules; effect-free, parameter-free entry)\n  " ++
+    "discover-duplicates/discover-project-duplicates: --min-nodes=N " ++
+    "--population=production|tests|generated|reference|intentional --timings --approximate " ++
+    "--max-work=N\n  report-quality/report-project-quality: --max-function-lines=N " ++
+    "--max-parameters=N --max-nesting=N --max-decisions=N --max-line-bytes=N (0 disables a " ++
+    "signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  " ++
+    "fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: " ++
+    "--check (otherwise writes formatted source to " ++
+    "stdout)\n";
 
+/// Dispatch compiler commands, reporting usage/source/IO failures through process exit status.
 pub fn main(init: std.process.Init) void {
     const status = dispatch(init) catch |err| status: {
         var buffer: [256]u8 = undefined;
         const message = std.fmt.bufPrint(&buffer, "mylang: host failure: {s}\n", .{@errorName(err)}) catch "mylang: host failure\n";
-        std.Io.File.stderr().writeStreamingAll(init.io, message) catch {};
-        break :status 2;
+        std.Io.File.stderr().writeStreamingAll(init.io, message) catch break :status @as(u8, 2);
+        break :status @as(u8, 2);
     };
     if (status != 0) std.process.exit(status);
 }
@@ -20,7 +44,23 @@ fn dispatch(init: std.process.Init) !u8 {
         try std.Io.File.stderr().writeStreamingAll(init.io, usage);
         return 2;
     };
-    if (parsed.command == .@"invoke-project" or parsed.command == .@"check-value-project" or parsed.command == .@"schema-project" or parsed.command == .@"eval-project" or parsed.command == .@"list-modules" or parsed.command == .@"list-interfaces" or parsed.command == .@"check-project" or parsed.command == .@"run-project" or parsed.command == .@"check-policy" or parsed.command == .@"discover-project-duplicates" or parsed.command == .@"report-project-quality" or parsed.command == .@"fmt-project" or parsed.command == .@"emit-project-c") return listModules(init, parsed);
+    switch (parsed.command) {
+        .@"invoke-project",
+        .@"check-value-project",
+        .@"schema-project",
+        .@"eval-project",
+        .@"list-modules",
+        .@"list-interfaces",
+        .@"check-project",
+        .@"run-project",
+        .@"check-policy",
+        .@"discover-project-duplicates",
+        .@"report-project-quality",
+        .@"fmt-project",
+        .@"emit-project-c",
+        => return listModules(init, parsed),
+        else => {},
+    }
     const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, parsed.path, allocator, .limited(16 * 1024 * 1024));
     defer allocator.free(bytes);
     if (parsed.command == .@"input-module") {
@@ -61,7 +101,23 @@ fn dispatch(init: std.process.Init) !u8 {
     const check_ns = if (parsed.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
     if (parsed.command != .@"emit-c") try report(init, &compilation);
     switch (parsed.command) {
-        .@"invoke-project", .@"check-value-project", .@"schema-project", .@"input-module", .@"eval-project", .fmt, .@"fmt-module", .@"fmt-project", .@"emit-project-c", .@"list-modules", .@"list-interfaces", .@"check-project", .@"run-project", .@"check-policy", .@"discover-project-duplicates", .@"report-project-quality" => unreachable,
+        .@"invoke-project",
+        .@"check-value-project",
+        .@"schema-project",
+        .@"input-module",
+        .@"eval-project",
+        .fmt,
+        .@"fmt-module",
+        .@"fmt-project",
+        .@"emit-project-c",
+        .@"list-modules",
+        .@"list-interfaces",
+        .@"check-project",
+        .@"run-project",
+        .@"check-policy",
+        .@"discover-project-duplicates",
+        .@"report-project-quality",
+        => unreachable,
         .@"emit-c" => {
             const generated = compilation.emitC(allocator) catch |err| switch (err) {
                 error.SourceError => {
@@ -91,7 +147,17 @@ fn dispatch(init: std.process.Init) !u8 {
             defer allocator.free(text);
             try std.Io.File.stdout().writeStreamingAll(init.io, text);
             if (parsed.timings) {
-                const counts = try std.fmt.allocPrint(allocator, "timings: frontend_ns={d} discovery_ns={d} source_bytes={d} ast_nodes={d} typed_nodes={d} canonical_bytes={d} functions={d}\n", .{ check_ns, analysis_ns, bytes.len, compilation.syntax.?.nodes.items.len + compilation.syntax.?.statements.items.len, compilation.program.?.nodes.len + compilation.program.?.statements.len, analysis.canonical_bytes, analysis.functions_examined });
+                const counts = try std.fmt.allocPrint(allocator, "timings: frontend_ns={d} discovery_ns={d} source_bytes={d} ast_nodes={d} typed_nodes={d} " ++
+                    "canonical_bytes={d} functions={d}" ++
+                    "\n", .{
+                    check_ns,
+                    analysis_ns,
+                    bytes.len,
+                    compilation.syntax.?.nodes.items.len + compilation.syntax.?.statements.items.len,
+                    compilation.program.?.nodes.len + compilation.program.?.statements.len,
+                    analysis.canonical_bytes,
+                    analysis.functions_examined,
+                });
                 defer allocator.free(counts);
                 try std.Io.File.stderr().writeStreamingAll(init.io, counts);
             }
@@ -126,159 +192,277 @@ fn report(init: std.process.Init, compilation: *const language.Compilation) !voi
     }
 }
 
-const Command = enum { @"invoke-project", @"check-value-project", @"schema-project", @"input-module", @"eval-project", @"emit-project-c", @"fmt-project", @"fmt-module", @"report-project-quality", @"discover-project-duplicates", @"check-policy", @"check-project", @"run-project", @"list-interfaces", @"list-modules", @"emit-c", fmt, check, run, @"dump-bytecode", @"discover-duplicates", @"report-quality" };
-const Parsed = struct { codec: language.codec_json.Options, schema_report: bool, value_path: ?[]const u8, inputs: [16][]const u8, input_count: usize, evaluation_request: bool, evaluation_report: bool, evaluation: language.evaluation.Options, policy: ?[]const u8, format_check: bool, quality: language.quality.Options, command: Command, path: []const u8, options: language.vm.Options, discovery: language.duplicates.Options, timings: bool };
+const Command = enum {
+    @"invoke-project",
+    @"check-value-project",
+    @"schema-project",
+    @"input-module",
+    @"eval-project",
+    @"emit-project-c",
+    @"fmt-project",
+    @"fmt-module",
+    @"report-project-quality",
+    @"discover-project-duplicates",
+    @"check-policy",
+    @"check-project",
+    @"run-project",
+    @"list-interfaces",
+    @"list-modules",
+    @"emit-c",
+    fmt,
+    check,
+    run,
+    @"dump-bytecode",
+    @"discover-duplicates",
+    @"report-quality",
+};
+const Parsed = struct {
+    codec: language.codec_json.Options,
+    schema_report: bool,
+    value_path: ?[]const u8,
+    inputs: [16][]const u8,
+    input_count: usize,
+    evaluation_request: bool,
+    evaluation_report: bool,
+    evaluation: language.evaluation.Options,
+    policy: ?[]const u8,
+    format_check: bool,
+    quality: language.quality.Options,
+    command: Command,
+    path: []const u8,
+    options: language.vm.Options,
+    discovery: language.duplicates.Options,
+    timings: bool,
+};
 fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
     if (args.len < 2) return error.Usage;
     const command = std.meta.stringToEnum(Command, args[0]) orelse return error.Usage;
-    var codec: language.codec_json.Options = .{};
-    var codec_seen: u8 = 0;
-    var schema_report = false;
-    var value_path: ?[]const u8 = null;
-    var evaluation: language.evaluation.Options = .{};
-    var saw_eval_bytes = false;
-    var evaluation_report = false;
-    var evaluation_request = false;
-    var inputs: [16][]const u8 = @splat("");
-    var input_count: usize = 0;
-    var quality: language.quality.Options = .{};
-    var quality_seen: u8 = 0;
-    var format_check = false;
-    var path: ?[]const u8 = null;
-    var policy: ?[]const u8 = null;
-    var options: language.vm.Options = .{};
+    var parser: ArgumentParser = .{ .command = command };
     if (command == .@"eval-project") {
-        options.max_steps = evaluation.max_steps;
-        options.max_frames = evaluation.max_frames;
+        parser.options.max_steps = parser.evaluation.max_steps;
+        parser.options.max_frames = parser.evaluation.max_frames;
     }
-    var saw_steps = false;
-    var saw_frames = false;
-    var saw_memory = false;
-    var discovery: language.duplicates.Options = .{};
-    var timings = false;
-    var saw_min = false;
-    var saw_population = false;
-    var saw_work = false;
-    argument: for (args[1..]) |arg| {
-        if (std.mem.eql(u8, arg, "--schema-report")) {
-            if (command != .@"schema-project" or schema_report) return error.Usage;
-            schema_report = true;
+    for (args[1..]) |arg| {
+        if (try parser.codecOption(arg)) continue;
+        if (try parser.evaluationOption(arg)) continue;
+        if (try parser.qualityOption(arg)) continue;
+        if (try parser.executionOption(arg)) continue;
+        if (try parser.discoveryOption(arg)) continue;
+        if (std.mem.startsWith(u8, arg, policy_prefix)) {
+            if (command != .@"check-policy" or parser.policy != null or arg.len == policy_prefix.len) return error.Usage;
+            parser.policy = arg[policy_prefix.len..];
             continue;
         }
-        inline for (.{ "max_steps", "max_frames", "max_calls", "max_bytes", "max_work_values" }, .{ "--max-codec-steps=", "--max-codec-frames=", "--max-codec-calls=", "--max-codec-bytes=", "--max-codec-values=" }, 0..) |field, prefix, index| {
+        if (std.mem.startsWith(u8, arg, "--") or parser.path != null) return error.Usage;
+        parser.path = arg;
+    }
+    return parser.finish();
+}
+const ArgumentParser = struct {
+    command: Command,
+    codec: language.codec_json.Options = .{},
+    codec_seen: u8 = 0,
+    schema_report: bool = false,
+    value_path: ?[]const u8 = null,
+    evaluation: language.evaluation.Options = .{},
+    saw_eval_bytes: bool = false,
+    evaluation_report: bool = false,
+    evaluation_request: bool = false,
+    inputs: [16][]const u8 = @splat(""),
+    input_count: usize = 0,
+    quality: language.quality.Options = .{},
+    quality_seen: u8 = 0,
+    format_check: bool = false,
+    path: ?[]const u8 = null,
+    policy: ?[]const u8 = null,
+    options: language.vm.Options = .{},
+    saw_steps: bool = false,
+    saw_frames: bool = false,
+    saw_memory: bool = false,
+    discovery: language.duplicates.Options = .{},
+    timings: bool = false,
+    saw_min: bool = false,
+    saw_population: bool = false,
+    saw_work: bool = false,
+    fn codecOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (std.mem.eql(u8, arg, "--schema-report")) {
+            if (self.command != .@"schema-project" or self.schema_report) return error.Usage;
+            self.schema_report = true;
+            return true;
+        }
+        inline for (.{
+            "max_steps",
+            "max_frames",
+            "max_calls",
+            "max_bytes",
+            "max_work_values",
+        }, .{
+            "--max-codec-steps=",
+            "--max-codec-frames=",
+            "--max-codec-calls=",
+            "--max-codec-bytes=",
+            "--max-codec-values=",
+        }, 0..) |field, prefix, index| {
             if (std.mem.startsWith(u8, arg, prefix)) {
                 const bit: u8 = 1 << index;
-                if ((command != .@"check-value-project" and command != .@"invoke-project") or codec_seen & bit != 0) return error.Usage;
-                codec_seen |= bit;
-                @field(codec, field) = std.math.cast(@TypeOf(@field(codec, field)), try positive(arg[prefix.len..])) orelse return error.Usage;
-                continue :argument;
+                if ((self.command != .@"check-value-project" and self.command != .@"invoke-project") or self.codec_seen & bit != 0) return error.Usage;
+                self.codec_seen |= bit;
+                @field(self.codec, field) = std.math.cast(@TypeOf(@field(self.codec, field)), try positive(arg[prefix.len..])) orelse return error.Usage;
+                return true;
             }
         }
         if (std.mem.startsWith(u8, arg, "--value=") or std.mem.startsWith(u8, arg, "--request=")) {
-            const prefix = if (command == .@"invoke-project") "--request=" else "--value=";
-            if ((command != .@"check-value-project" and command != .@"invoke-project") or !std.mem.startsWith(u8, arg, prefix) or value_path != null or arg.len == prefix.len) return error.Usage;
-            value_path = arg[prefix.len..];
-            continue;
+            const prefix = if (self.command == .@"invoke-project") "--request=" else "--value=";
+            if (self.command != .@"check-value-project" and self.command != .@"invoke-project") return error.Usage;
+            if (!std.mem.startsWith(u8, arg, prefix)) return error.Usage;
+            if (self.value_path != null or arg.len == prefix.len) return error.Usage;
+            self.value_path = arg[prefix.len..];
+            return true;
         }
-        if (std.mem.startsWith(u8, arg, "--inputs=")) {
-            if (command != .@"eval-project" or input_count == inputs.len or arg.len == "--inputs=".len) return error.Usage;
-            const input = arg["--inputs=".len..];
-            for (inputs[0..input_count]) |previous| if (std.mem.eql(u8, previous, input)) return error.Usage;
-            inputs[input_count] = input;
-            input_count += 1;
-            continue;
+        return false;
+    }
+
+    fn evaluationOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (std.mem.startsWith(u8, arg, inputs_prefix)) {
+            if (self.command != .@"eval-project" or self.input_count == self.inputs.len or arg.len == inputs_prefix.len) return error.Usage;
+            const input = arg[inputs_prefix.len..];
+            for (self.inputs[0..self.input_count]) |previous| if (std.mem.eql(u8, previous, input)) return error.Usage;
+            self.inputs[self.input_count] = input;
+            self.input_count += 1;
+            return true;
         }
         if (std.mem.eql(u8, arg, "--evaluation-request")) {
-            if (command != .@"eval-project" or evaluation_request or evaluation_report) return error.Usage;
-            evaluation_request = true;
-            continue;
+            if (self.command != .@"eval-project" or self.evaluation_request or self.evaluation_report) return error.Usage;
+            self.evaluation_request = true;
+            return true;
         }
         if (std.mem.eql(u8, arg, "--evaluation-report")) {
-            if (command != .@"eval-project" or evaluation_report or evaluation_request) return error.Usage;
-            evaluation_report = true;
-            continue;
+            if (self.command != .@"eval-project" or self.evaluation_report or self.evaluation_request) return error.Usage;
+            self.evaluation_report = true;
+            return true;
         }
         if (std.mem.startsWith(u8, arg, "--max-eval-bytes=")) {
-            if (command != .@"eval-project" or saw_eval_bytes) return error.Usage;
-            saw_eval_bytes = true;
-            evaluation.max_bytes = std.math.cast(usize, try positive(arg["--max-eval-bytes=".len..])) orelse return error.Usage;
-            continue;
+            if (self.command != .@"eval-project" or self.saw_eval_bytes) return error.Usage;
+            self.saw_eval_bytes = true;
+            self.evaluation.max_bytes = std.math.cast(usize, try positive(arg["--max-eval-bytes=".len..])) orelse return error.Usage;
+            return true;
         }
-        if (std.mem.startsWith(u8, arg, "--policy=")) {
-            if (command != .@"check-policy" or policy != null or arg.len == "--policy=".len) return error.Usage;
-            policy = arg["--policy=".len..];
-            continue;
-        }
-        inline for (.{ "max_function_lines", "max_parameters", "max_nesting", "max_decisions", "max_line_bytes" }, .{ "--max-function-lines=", "--max-parameters=", "--max-nesting=", "--max-decisions=", "--max-line-bytes=" }, 0..) |field, prefix, index| {
+        return false;
+    }
+
+    fn qualityOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        inline for (.{
+            "max_function_lines",
+            "max_parameters",
+            "max_nesting",
+            "max_decisions",
+            "max_line_bytes",
+        }, .{
+            "--max-function-lines=",
+            "--max-parameters=",
+            "--max-nesting=",
+            "--max-decisions=",
+            "--max-line-bytes=",
+        }, 0..) |field, prefix, index| {
             if (std.mem.startsWith(u8, arg, prefix)) {
                 const bit: u8 = 1 << index;
-                if ((command != .@"report-quality" and command != .@"report-project-quality") or quality_seen & bit != 0) return error.Usage;
-                quality_seen |= bit;
+                if ((self.command != .@"report-quality" and self.command != .@"report-project-quality") or self.quality_seen & bit != 0) return error.Usage;
+                self.quality_seen |= bit;
                 const digits = arg[prefix.len..];
                 if (digits.len == 0) return error.Usage;
                 for (digits) |ch| if (!std.ascii.isDigit(ch)) {
                     return error.Usage;
                 };
-                @field(quality, field) = std.fmt.parseUnsigned(usize, digits, 10) catch return error.Usage;
-                continue :argument;
+                @field(self.quality, field) = std.fmt.parseUnsigned(usize, digits, 10) catch return error.Usage;
+                return true;
             }
         }
+        return false;
+    }
+
+    fn executionOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
         if (std.mem.eql(u8, arg, "--check")) {
-            if ((command != .fmt and command != .@"fmt-module" and command != .@"fmt-project") or format_check) return error.Usage;
-            format_check = true;
+            if ((self.command != .fmt and self.command != .@"fmt-module" and self.command != .@"fmt-project") or self.format_check) return error.Usage;
+            self.format_check = true;
         } else if (std.mem.startsWith(u8, arg, "--max-steps=")) {
-            if ((command != .run and command != .@"run-project" and command != .@"eval-project") or saw_steps) return error.Usage;
-            saw_steps = true;
+            if ((self.command != .run and self.command != .@"run-project" and self.command != .@"eval-project") or self.saw_steps) return error.Usage;
+            self.saw_steps = true;
             const digits = arg["--max-steps=".len..];
             if (digits.len == 0) return error.Usage;
             for (digits) |ch| if (!std.ascii.isDigit(ch)) {
                 return error.Usage;
             };
-            options.max_steps = std.fmt.parseUnsigned(u64, digits, 10) catch return error.Usage;
-            if (options.max_steps == 0) return error.Usage;
+            self.options.max_steps = std.fmt.parseUnsigned(u64, digits, 10) catch return error.Usage;
+            if (self.options.max_steps == 0) return error.Usage;
         } else if (std.mem.startsWith(u8, arg, "--max-frames=")) {
-            if ((command != .run and command != .@"run-project" and command != .@"eval-project") or saw_frames) return error.Usage;
-            saw_frames = true;
+            if ((self.command != .run and self.command != .@"run-project" and self.command != .@"eval-project") or self.saw_frames) return error.Usage;
+            self.saw_frames = true;
             const digits = arg["--max-frames=".len..];
             if (digits.len == 0) return error.Usage;
             for (digits) |ch| if (!std.ascii.isDigit(ch)) {
                 return error.Usage;
             };
-            options.max_frames = std.fmt.parseUnsigned(u64, digits, 10) catch return error.Usage;
-            if (options.max_frames == 0) return error.Usage;
+            self.options.max_frames = std.fmt.parseUnsigned(u64, digits, 10) catch return error.Usage;
+            if (self.options.max_frames == 0) return error.Usage;
         } else if (std.mem.startsWith(u8, arg, "--memory=")) {
-            if ((command != .run and command != .@"run-project") or saw_memory) return error.Usage;
-            saw_memory = true;
-            options.memory_backing = std.meta.stringToEnum(language.vm.MemoryBacking, arg["--memory=".len..]) orelse return error.Usage;
-        } else if (std.mem.startsWith(u8, arg, "--min-nodes=")) {
-            if ((command != .@"discover-duplicates" and command != .@"discover-project-duplicates") or saw_min) return error.Usage;
-            saw_min = true;
-            discovery.min_nodes = std.math.cast(usize, try positive(arg["--min-nodes=".len..])) orelse return error.Usage;
-        } else if (std.mem.startsWith(u8, arg, "--population=")) {
-            if ((command != .@"discover-duplicates" and command != .@"discover-project-duplicates") or saw_population) return error.Usage;
-            saw_population = true;
-            discovery.population = std.meta.stringToEnum(language.duplicates.Population, arg["--population=".len..]) orelse return error.Usage;
-        } else if (std.mem.eql(u8, arg, "--approximate")) {
-            if ((command != .@"discover-duplicates" and command != .@"discover-project-duplicates") or discovery.approximate) return error.Usage;
-            discovery.approximate = true;
-        } else if (std.mem.startsWith(u8, arg, "--max-work=")) {
-            if ((command != .@"discover-duplicates" and command != .@"discover-project-duplicates") or saw_work) return error.Usage;
-            saw_work = true;
-            discovery.near_options.max_work = std.math.cast(usize, try positive(arg["--max-work=".len..])) orelse return error.Usage;
-        } else if (std.mem.eql(u8, arg, "--timings")) {
-            if ((command != .@"discover-duplicates" and command != .@"discover-project-duplicates") or timings) return error.Usage;
-            timings = true;
-        } else {
-            if (std.mem.startsWith(u8, arg, "--") or path != null) return error.Usage;
-            path = arg;
-        }
+            if ((self.command != .run and self.command != .@"run-project") or self.saw_memory) return error.Usage;
+            self.saw_memory = true;
+            self.options.memory.backing = std.meta.stringToEnum(language.vm.MemoryBacking, arg["--memory=".len..]) orelse return error.Usage;
+        } else return false;
+        return true;
     }
-    if (saw_work and !discovery.approximate) return error.Usage;
-    if (command == .@"fmt-project" and !format_check) return error.Usage;
-    if (command == .@"check-policy" and policy == null) return error.Usage;
-    if ((command == .@"check-value-project" or command == .@"invoke-project") and value_path == null) return error.Usage;
-    return .{ .codec = codec, .schema_report = schema_report, .value_path = value_path, .inputs = inputs, .input_count = input_count, .evaluation_request = evaluation_request, .evaluation_report = evaluation_report, .evaluation = .{ .max_steps = options.max_steps, .max_frames = options.max_frames, .max_bytes = evaluation.max_bytes }, .policy = policy, .format_check = format_check, .quality = quality, .command = command, .path = path orelse return error.Usage, .options = options, .discovery = discovery, .timings = timings };
-}
+
+    fn discoveryOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (std.mem.startsWith(u8, arg, "--min-nodes=")) {
+            if ((self.command != .@"discover-duplicates" and self.command != .@"discover-project-duplicates") or self.saw_min) return error.Usage;
+            self.saw_min = true;
+            self.discovery.min_nodes = std.math.cast(usize, try positive(arg["--min-nodes=".len..])) orelse return error.Usage;
+        } else if (std.mem.startsWith(u8, arg, "--population=")) {
+            if ((self.command != .@"discover-duplicates" and self.command != .@"discover-project-duplicates") or self.saw_population) return error.Usage;
+            self.saw_population = true;
+            self.discovery.population = std.meta.stringToEnum(language.duplicates.Population, arg["--population=".len..]) orelse return error.Usage;
+        } else if (std.mem.eql(u8, arg, "--approximate")) {
+            if ((self.command != .@"discover-duplicates" and self.command != .@"discover-project-duplicates") or self.discovery.approximate) return error.Usage;
+            self.discovery.approximate = true;
+        } else if (std.mem.startsWith(u8, arg, "--max-work=")) {
+            if ((self.command != .@"discover-duplicates" and self.command != .@"discover-project-duplicates") or self.saw_work) return error.Usage;
+            self.saw_work = true;
+            self.discovery.near_options.max_work = std.math.cast(usize, try positive(arg["--max-work=".len..])) orelse return error.Usage;
+        } else if (std.mem.eql(u8, arg, "--timings")) {
+            if ((self.command != .@"discover-duplicates" and self.command != .@"discover-project-duplicates") or self.timings) return error.Usage;
+            self.timings = true;
+        } else return false;
+        return true;
+    }
+    fn finish(self: *ArgumentParser) error{Usage}!Parsed {
+        if (self.saw_work and !self.discovery.approximate) return error.Usage;
+        if (self.command == .@"fmt-project" and !self.format_check) return error.Usage;
+        if (self.command == .@"check-policy" and self.policy == null) return error.Usage;
+        if ((self.command == .@"check-value-project" or self.command == .@"invoke-project") and self.value_path == null) return error.Usage;
+        return .{
+            .codec = self.codec,
+            .schema_report = self.schema_report,
+            .value_path = self.value_path,
+            .inputs = self.inputs,
+            .input_count = self.input_count,
+            .evaluation_request = self.evaluation_request,
+            .evaluation_report = self.evaluation_report,
+            .evaluation = .{
+                .max_steps = self.options.max_steps,
+                .max_frames = self.options.max_frames,
+                .max_bytes = self.evaluation.max_bytes,
+            },
+            .policy = self.policy,
+            .format_check = self.format_check,
+            .quality = self.quality,
+            .command = self.command,
+            .path = self.path orelse return error.Usage,
+            .options = self.options,
+            .discovery = self.discovery,
+            .timings = self.timings,
+        };
+    }
+};
 
 fn positive(digits: []const u8) error{Usage}!u64 {
     if (digits.len == 0) return error.Usage;
@@ -315,43 +499,12 @@ fn listModules(init: std.process.Init, parsed: Parsed) !u8 {
     const frontend_start = if (parsed.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
     const path = parsed.path;
     const basename = std.fs.path.basename(path);
-    if (!std.mem.endsWith(u8, basename, ".my") or !language.project.validName(basename[0 .. basename.len - 3]) or std.mem.indexOfScalar(u8, basename[0 .. basename.len - 3], '.') != null) {
+    if (!validEntryBasename(basename)) {
         try std.Io.File.stderr().writeStreamingAll(init.io, "list-modules: entry must be an identifier.my file; imports resolve beneath its directory\n");
         return 2;
     }
     var files: ModuleFiles = .{ .io = init.io, .root = std.fs.path.dirname(path) orelse "." };
-    const input_allocator = init.arena.allocator();
-    var generated_inputs: std.ArrayList(GeneratedInput) = .empty;
-    defer generated_inputs.deinit(input_allocator);
-    var manifest_bytes: usize = 0;
-    for (parsed.inputs[0..parsed.input_count]) |manifest_path| {
-        // This Zig snapshot rejects reads that reach the supplied limit.
-        // Add one so the documented manifest byte budgets are inclusive.
-        const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, manifest_path, init.gpa, .limited(@min(1024 * 1024, 8 * 1024 * 1024 - manifest_bytes) + 1)) catch |err| switch (err) {
-            error.StreamTooLong => {
-                try std.Io.File.stderr().writeStreamingAll(init.io, "input manifest byte budget exceeded (1 MiB per file, 8 MiB combined)\n");
-                return 2;
-            },
-            else => return err,
-        };
-        manifest_bytes += bytes.len;
-        defer init.gpa.free(bytes);
-        var manifest = (try parseInputManifest(init, manifest_path, bytes)) orelse return 2;
-        defer manifest.deinit();
-        const module = manifest.parsed.value.module;
-        if (std.mem.eql(u8, module, basename[0 .. basename.len - 3])) {
-            try std.Io.File.stderr().writeStreamingAll(init.io, "input manifest must supply an imported module, not the entry module\n");
-            return 2;
-        }
-        for (generated_inputs.items) |previous| if (std.mem.eql(u8, previous.module, module)) {
-            const message = try std.fmt.allocPrint(init.gpa, "{s}: duplicate input module {s}; already supplied by {s}\n", .{ manifest_path, module, previous.manifest_path });
-            defer init.gpa.free(message);
-            try std.Io.File.stderr().writeStreamingAll(init.io, message);
-            return 2;
-        };
-        try generated_inputs.append(input_allocator, .{ .module = try input_allocator.dupe(u8, module), .path = try language.project.modulePath(input_allocator, module), .source = try manifest.generate(input_allocator), .manifest_path = manifest_path });
-    }
-    files.inputs = generated_inputs.items;
+    files.inputs = (try prepareInputs(init, parsed, basename)) orelse return 2;
     var project = language.project.Project.init(init.gpa);
     defer project.deinit();
     project.load(.{ .context = &files, .read = ModuleFiles.read }, basename[0 .. basename.len - 3], .{}) catch |err| switch (err) {
@@ -363,36 +516,8 @@ fn listModules(init: std.process.Init, parsed: Parsed) !u8 {
         },
         else => return err,
     };
-    for (files.inputs) |input| if (!project.names.contains(input.module)) {
-        const message = try std.fmt.allocPrint(init.gpa, "{s}: declared input module {s} is not imported by the reachable project\n", .{ input.manifest_path, input.module });
-        defer init.gpa.free(message);
-        try std.Io.File.stderr().writeStreamingAll(init.io, message);
-        return 2;
-    };
-    if (parsed.command == .@"fmt-project") {
-        var changed: std.ArrayList([]const u8) = .empty;
-        defer changed.deinit(init.gpa);
-        for (project.order.items) |module_id| {
-            const src = project.modules.items[module_id].src;
-            var compilation = try language.Compilation.init(init.gpa, src.path, src.bytes);
-            defer compilation.deinit();
-            const formatted = compilation.formatModule(init.gpa) catch |err| switch (err) {
-                error.SourceError => {
-                    try report(init, &compilation);
-                    return 1;
-                },
-                else => return err,
-            };
-            defer init.gpa.free(formatted);
-            if (!std.mem.eql(u8, formatted, src.bytes)) try changed.append(init.gpa, src.path);
-        }
-        for (changed.items) |path_name| {
-            const message = try std.fmt.allocPrint(init.gpa, "{s}: formatting differs\n", .{path_name});
-            defer init.gpa.free(message);
-            try std.Io.File.stderr().writeStreamingAll(init.io, message);
-        }
-        return if (changed.items.len == 0) 0 else 1;
-    }
+    if (!try checkImportedInputs(init, files.inputs, &project)) return 2;
+    if (parsed.command == .@"fmt-project") return formatProject(init, &project);
     const output = if (parsed.command != .@"list-modules") result: {
         var index = language.interfaces.build(&project) catch |err| switch (err) {
             error.SourceError => {
@@ -438,59 +563,10 @@ fn listModules(init: std.process.Init, parsed: Parsed) !u8 {
             defer analysis.deinit();
             break :result try language.quality.render(init.gpa, analysis, compilation.program.?, compilation.src);
         }
-        if (parsed.command == .@"discover-project-duplicates") {
-            const start = std.Io.Timestamp.now(init.io, .awake);
-            var analysis = try language.duplicates.discover(init.gpa, compilation.program.?, parsed.discovery);
-            defer analysis.deinit();
-            const discovery_ns = start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds;
-            const text = try language.duplicates.render(init.gpa, analysis, compilation.program.?, compilation.src);
-            defer init.gpa.free(text);
-            try std.Io.File.stdout().writeStreamingAll(init.io, "scope: reachable module graph; declaration visibility and dependency policy require separate review\n");
-            try std.Io.File.stdout().writeStreamingAll(init.io, text);
-            if (parsed.timings) {
-                const counts = try std.fmt.allocPrint(init.gpa, "timings: project_frontend_ns={d} discovery_ns={d} modules={d} source_bytes={d} ast_nodes={d} typed_nodes={d} canonical_bytes={d} functions={d}\n", .{ frontend_start.durationTo(start).nanoseconds, discovery_ns, project.modules.items.len, project.total_bytes, compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len, compilation.program.?.nodes.len + compilation.program.?.statements.len, analysis.canonical_bytes, analysis.functions_examined });
-                defer init.gpa.free(counts);
-                try std.Io.File.stderr().writeStreamingAll(init.io, counts);
-            }
-            return 0;
-        }
-        if (parsed.command == .@"check-policy") {
-            const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, parsed.policy.?, init.gpa, .limited(1024 * 1024));
-            defer init.gpa.free(bytes);
-            var policy = language.import_policy.Policy.parse(init.gpa, bytes) catch |err| {
-                if (err == error.OutOfMemory) return err;
-                const message = try std.fmt.allocPrint(init.gpa, "{s}: invalid import policy: {s}\n", .{ parsed.policy.?, @errorName(err) });
-                defer init.gpa.free(message);
-                try std.Io.File.stderr().writeStreamingAll(init.io, message);
-                return 2;
-            };
-            defer policy.deinit();
-            var policy_report = try language.import_policy.evaluate(init.gpa, &project, policy);
-            defer policy_report.deinit();
-            const text = try language.import_policy.render(init.gpa, policy_report, &project, policy);
-            defer init.gpa.free(text);
-            try std.Io.File.stdout().writeStreamingAll(init.io, "language: valid\n");
-            try std.Io.File.stdout().writeStreamingAll(init.io, text);
-            return if (policy_report.denied == 0) 0 else 3;
-        }
+        if (parsed.command == .@"discover-project-duplicates") return discoverProject(init, parsed, &project, &compilation, frontend_start);
+        if (parsed.command == .@"check-policy") return checkProjectPolicy(init, parsed, &project);
         try compilation.emit();
-        if (parsed.evaluation_request) {
-            const failure = language.evaluation.preflight(init.gpa, compilation.code.?, &compilation.diagnostics, parsed.evaluation) catch |err| switch (err) {
-                error.SourceError => {
-                    try reportProject(init, &compilation);
-                    return 1;
-                },
-                else => return err,
-            };
-            try reportProject(init, &compilation);
-            if (failure) |trap| {
-                const message = try trap.render(init.gpa, compilation.src);
-                defer init.gpa.free(message);
-                try std.Io.File.stderr().writeStreamingAll(init.io, message);
-                return 1;
-            }
-            break :result try language.evaluation_report.renderRequest(init.gpa, &project, parsed.evaluation, try compilerIdentity(init.io));
-        }
+        if (parsed.evaluation_request) break :result (try evaluationRequest(init, parsed, &project, &compilation)) orelse return 1;
         const outcome = if (parsed.command == .@"eval-project") language.evaluation.evaluate(init.gpa, compilation.code.?, &compilation.diagnostics, parsed.evaluation) catch |err| switch (err) {
             error.SourceError => {
                 try reportProject(init, &compilation);
@@ -590,4 +666,154 @@ fn checkValue(init: std.process.Init, compilation: *language.project_compile.Com
         }
         return null;
     };
+}
+
+fn formatProject(init: std.process.Init, project: *language.project.Project) !u8 {
+    var changed: std.ArrayList([]const u8) = .empty;
+    defer changed.deinit(init.gpa);
+    for (project.order.items) |module_id| {
+        const src = project.modules.items[module_id].src;
+        var compilation = try language.Compilation.init(init.gpa, src.path, src.bytes);
+        defer compilation.deinit();
+        const formatted = compilation.formatModule(init.gpa) catch |err| switch (err) {
+            error.SourceError => {
+                try report(init, &compilation);
+                return 1;
+            },
+            else => return err,
+        };
+        defer init.gpa.free(formatted);
+        if (!std.mem.eql(u8, formatted, src.bytes)) try changed.append(init.gpa, src.path);
+    }
+    for (changed.items) |path_name| {
+        const message = try std.fmt.allocPrint(init.gpa, "{s}: formatting differs\n", .{path_name});
+        defer init.gpa.free(message);
+        try std.Io.File.stderr().writeStreamingAll(init.io, message);
+    }
+    return if (changed.items.len == 0) 0 else 1;
+}
+
+fn discoverProject(init: std.process.Init, parsed: Parsed, project: *language.project.Project, compilation: *language.project_compile.Compilation, frontend_start: std.Io.Timestamp) !u8 {
+    const start = std.Io.Timestamp.now(init.io, .awake);
+    var analysis = try language.duplicates.discover(init.gpa, compilation.program.?, parsed.discovery);
+    defer analysis.deinit();
+    const discovery_ns = start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds;
+    const text = try language.duplicates.render(init.gpa, analysis, compilation.program.?, compilation.src);
+    defer init.gpa.free(text);
+    try std.Io.File.stdout().writeStreamingAll(init.io, "scope: reachable module graph; declaration visibility and dependency policy require separate review\n");
+    try std.Io.File.stdout().writeStreamingAll(init.io, text);
+    if (parsed.timings) {
+        const counts = try std.fmt.allocPrint(init.gpa, "timings: project_frontend_ns={d} discovery_ns={d} modules={d} source_bytes={d} " ++
+            "ast_nodes={d} typed_nodes={d} canonical_bytes={d} functions={d}" ++
+            "\n", .{
+            frontend_start.durationTo(start).nanoseconds,
+            discovery_ns,
+            project.modules.items.len,
+            project.counts.bytes,
+            compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len,
+            compilation.program.?.nodes.len + compilation.program.?.statements.len,
+            analysis.canonical_bytes,
+            analysis.functions_examined,
+        });
+        defer init.gpa.free(counts);
+        try std.Io.File.stderr().writeStreamingAll(init.io, counts);
+    }
+    return 0;
+}
+
+fn checkProjectPolicy(init: std.process.Init, parsed: Parsed, project: *language.project.Project) !u8 {
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, parsed.policy.?, init.gpa, .limited(1024 * 1024));
+    defer init.gpa.free(bytes);
+    var policy = language.import_policy.Policy.parse(init.gpa, bytes) catch |err| {
+        if (err == error.OutOfMemory) return err;
+        const message = try std.fmt.allocPrint(init.gpa, "{s}: invalid import policy: {s}\n", .{ parsed.policy.?, @errorName(err) });
+        defer init.gpa.free(message);
+        try std.Io.File.stderr().writeStreamingAll(init.io, message);
+        return 2;
+    };
+    defer policy.deinit();
+    var policy_report = try language.import_policy.evaluate(init.gpa, project, policy);
+    defer policy_report.deinit();
+    const text = try language.import_policy.render(init.gpa, policy_report, project, policy);
+    defer init.gpa.free(text);
+    try std.Io.File.stdout().writeStreamingAll(init.io, "language: valid\n");
+    try std.Io.File.stdout().writeStreamingAll(init.io, text);
+    return if (policy_report.denied == 0) 0 else 3;
+}
+
+fn prepareInputs(init: std.process.Init, parsed: Parsed, basename: []const u8) !?[]GeneratedInput {
+    const input_allocator = init.arena.allocator();
+    var generated_inputs: std.ArrayList(GeneratedInput) = .empty;
+    defer generated_inputs.deinit(input_allocator);
+    var manifest_bytes: usize = 0;
+    for (parsed.inputs[0..parsed.input_count]) |manifest_path| {
+        // This Zig snapshot rejects reads that reach the supplied limit.
+        // Add one so the documented manifest byte budgets are inclusive.
+        const bytes = std.Io.Dir.cwd().readFileAlloc(init.io, manifest_path, init.gpa, .limited(@min(1024 * 1024, 8 * 1024 * 1024 - manifest_bytes) + 1)) catch |err| switch (err) {
+            error.StreamTooLong => {
+                try std.Io.File.stderr().writeStreamingAll(init.io, "input manifest byte budget exceeded (1 MiB per file, 8 MiB combined)\n");
+                return null;
+            },
+            else => return err,
+        };
+        manifest_bytes += bytes.len;
+        defer init.gpa.free(bytes);
+        var manifest = (try parseInputManifest(init, manifest_path, bytes)) orelse return null;
+        defer manifest.deinit();
+        const module = manifest.parsed.value.module;
+        if (std.mem.eql(u8, module, basename[0 .. basename.len - 3])) {
+            try std.Io.File.stderr().writeStreamingAll(init.io, "input manifest must supply an imported module, not the entry module\n");
+            return null;
+        }
+        for (generated_inputs.items) |previous| if (std.mem.eql(u8, previous.module, module)) {
+            const message = try std.fmt.allocPrint(init.gpa, "{s}: duplicate input module {s}; already supplied by {s}\n", .{ manifest_path, module, previous.manifest_path });
+            defer init.gpa.free(message);
+            try std.Io.File.stderr().writeStreamingAll(init.io, message);
+            return null;
+        };
+        try generated_inputs.append(input_allocator, .{
+            .module = try input_allocator.dupe(u8, module),
+            .path = try language.project.modulePath(input_allocator, module),
+            .source = try manifest.generate(input_allocator),
+            .manifest_path = manifest_path,
+        });
+    }
+    const inputs = try generated_inputs.toOwnedSlice(input_allocator);
+    return inputs;
+}
+
+fn evaluationRequest(init: std.process.Init, parsed: Parsed, project: *language.project.Project, compilation: *language.project_compile.Compilation) !?[]u8 {
+    const failure = language.evaluation.preflight(init.gpa, compilation.code.?, &compilation.diagnostics, parsed.evaluation) catch |err| switch (err) {
+        error.SourceError => {
+            try reportProject(init, compilation);
+            return null;
+        },
+        else => return err,
+    };
+    try reportProject(init, compilation);
+    if (failure) |trap| {
+        const message = try trap.render(init.gpa, compilation.src);
+        defer init.gpa.free(message);
+        try std.Io.File.stderr().writeStreamingAll(init.io, message);
+        return null;
+    }
+    const report_text = try language.evaluation_report.renderRequest(init.gpa, project, parsed.evaluation, try compilerIdentity(init.io));
+    return report_text;
+}
+
+fn checkImportedInputs(init: std.process.Init, inputs: []const GeneratedInput, project: *const language.project.Project) !bool {
+    for (inputs) |input| if (!project.names.contains(input.module)) {
+        const message = try std.fmt.allocPrint(init.gpa, "{s}: declared input module {s} is not imported by the reachable project\n", .{ input.manifest_path, input.module });
+        defer init.gpa.free(message);
+        try std.Io.File.stderr().writeStreamingAll(init.io, message);
+        return false;
+    };
+    return true;
+}
+
+fn validEntryBasename(basename: []const u8) bool {
+    if (!std.mem.endsWith(u8, basename, ".my")) return false;
+    const name = basename[0 .. basename.len - 3];
+    if (!language.project.validName(name)) return false;
+    return std.mem.indexOfScalar(u8, name, '.') == null;
 }

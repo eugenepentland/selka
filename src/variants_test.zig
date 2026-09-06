@@ -1,15 +1,17 @@
+//! Closed variant construction and matching tests, including nominal identity, allocation failures, and forged bytecode.
+const fixture_path = "variants.my";
 const std = @import("std");
 const testing = std.testing;
 const language = @import("compiler.zig");
 const LimitedLiveAllocator = @import("test_support.zig").LimitedLiveAllocator;
 
 fn result(source: []const u8, expected: i64) !void {
-    var compilation = try language.Compilation.init(testing.allocator, "variants.my", source);
+    var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
     defer compilation.deinit();
     try testing.expectEqual(expected, (try compilation.execute(testing.allocator)).value);
 }
 fn reject(source: []const u8, code: []const u8) !void {
-    var compilation = try language.Compilation.init(testing.allocator, "variants.my", source);
+    var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
     defer compilation.deinit();
     try testing.expectError(error.SourceError, compilation.check());
     try testing.expectEqualStrings(code, compilation.diagnostics.items[0].code);
@@ -18,7 +20,9 @@ const choice = "enum Choice { first, second, third } ";
 const event = "union Event { count: i64, flag: bool, empty } ";
 
 test "closed enums construct compare and dispatch by nominal variant identity" {
-    try result(choice ++ "fn rank(x: Choice) -> i64 { match x { Choice.third => { return 30; }, Choice.first => { return 10; }, Choice.second => { return 20; } } } fn main() -> i64 { return rank(new Choice.first) + rank(new Choice.second) + rank(new Choice.third); }", 60);
+    try result(choice ++ "fn rank(x: Choice) -> i64 { match x { Choice.third => { return 30; }, Choice.first " ++
+        "=> { return 10; }, Choice.second => { return 20; } } } fn main() -> i64 { return " ++
+        "rank(new Choice.first) + rank(new Choice.second) + rank(new Choice.third); }", 60);
     try result(choice ++ "fn main() -> i64 { if new Choice.first == new Choice.first && new Choice.first != new Choice.second { return 1; } return 0; }", 1);
     try result(choice ++ "fn main() -> i64 { if new Choice.first == new Choice.second || new Choice.third != new Choice.third { return 0; } return 1; }", 1);
     try reject(choice ++ "enum Other { first, second, third } fn main() -> i64 { discard new Choice.first == new Other.first; return 0; }", "E_TYPE");
@@ -28,14 +32,20 @@ test "closed enums construct compare and dispatch by nominal variant identity" {
 }
 
 test "tagged union matches bind only the selected payload with its exact type" {
-    try result(event ++ "fn score(x: Event) -> i64 { match x { Event.flag(flag) => { if flag { return 7; } return 0; }, Event.empty => { return 2; }, Event.count(n) => { return n * 3; } } } fn main() -> i64 { return score(new Event.count(4)) + score(new Event.flag(true)) + score(new Event.empty); }", 21);
+    try result(event ++ "fn score(x: Event) -> i64 { match x { Event.flag(flag) => { if flag { return 7; } " ++
+        "return 0; }, Event.empty => { return 2; }, Event.count(n) => { return n * 3; } } } " ++
+        "fn main() -> i64 { return score(new Event.count(4)) + score(new Event.flag(true)) + " ++
+        "score(new Event.empty); }", 21);
     try result("union U { a: i64, b: i64 } fn value(x: U) -> i64 { match x { U.a(n) => { return n; }, U.b(n) => { return n + 1; } } } fn main() -> i64 { return value(new U.a(7)) + value(new U.b(9)); }", 17);
     try result(event ++ "fn main() -> i64 { match new Event.count(7) { Event.count(discard) => { return 1; }, Event.flag(discard) => { return 2; }, Event.empty => { return 3; } } }", 1);
     try reject(event ++ "fn main() -> i64 { discard new Event.count(1) == new Event.count(1); return 0; }", "E_TYPE");
-    try result("struct Box { n: i64 } union U { value: Box, empty } fn main() -> i64 { let mut original = new U.value(new Box { n: 19 }); match original { U.value(payload) => { original = new U.empty; return payload.n; }, U.empty => { return 0; } } }", 19);
+    try result("struct Box { n: i64 } union U { value: Box, empty } fn main() -> i64 { let mut " ++
+        "original = new U.value(new Box { n: 19 }); match original { U.value(payload) => { " ++
+        "original = new U.empty; return payload.n; }, U.empty => { return 0; } } }", 19);
     try reject(event ++ "fn main() -> i64 { return new Event.count(1).count; }", "E_TYPE");
 }
 
+// spec: CORE-8
 test "exhaustive matching detects added variants even on statically known values" {
     const source = "enum Choice { first, second, added } fn main() -> i64 { match new Choice.first { Choice.first => { return 1; }, Choice.second => { return 2; } } }";
     var compilation = try language.Compilation.init(testing.allocator, "added.my", source);
@@ -99,26 +109,29 @@ test "match return analysis and control flow joins handle empty arms loops and n
 
 test "match evaluates one scrutinee and only the selected arm without erasing payload effects" {
     try result(event ++ "fn main() -> i64 { match new Event.count(5) { Event.empty => { return 1 / 0; }, Event.flag(discard) => { return 9223372036854775807 + 1; }, Event.count(n) => { return n; } } }", 5);
-    var compilation = try language.Compilation.init(testing.allocator, "order.my", event ++ "fn main() -> i64 { match new Event.count(1 / 0) { Event.empty => { return 0; }, Event.flag(discard) => { return 0; }, Event.count(discard) => { return 0; } } }");
+    var compilation = try language.Compilation.init(testing.allocator, "order.my", event ++ "fn main() -> i64 { match new Event.count(1 / 0) { Event.empty => { return 0; }, " ++
+        "Event.flag(discard) => { return 0; }, Event.count(discard) => { return 0; } } }");
     defer compilation.deinit();
     const outcome = try compilation.execute(testing.allocator);
     try testing.expectEqualStrings("R_DIVISION_BY_ZERO", outcome.trap.code);
     try testing.expectEqualStrings("/", compilation.src.text(outcome.trap.span));
-    var limited = try language.Compilation.init(testing.allocator, "once.my", "enum One { only } fn choose() -> One { let mut i = 0; while i < 100 { i += 1; } return new One.only; } fn main() -> i64 { match choose() { One.only => { return 7; } } }");
+    var limited = try language.Compilation.init(testing.allocator, "once.my", "enum One { only } fn choose() -> One { let mut i = 0; while i < 100 { i += 1; } " ++
+        "return new One.only; } fn main() -> i64 { match choose() { One.only => { return 7; } " ++
+        "} }");
     defer limited.deinit();
     // Count actual CALL instructions: dispatch does not duplicate the scrutinee.
     try limited.emit();
-    var calls: usize = 0;
-    for (limited.code.?.functions[@backingInt(limited.code.?.main)].instructions) |instruction| if (instruction.op == .call) {
-        calls += 1;
-    };
+    const calls = @import("instruction_test.zig").count(limited.code.?.functions[@backingInt(limited.code.?.main)].scope.instructions, .call);
     try testing.expectEqual(@as(usize, 1), calls);
     try testing.expectEqual(@as(i64, 7), (try limited.execute(testing.allocator)).value);
 }
 
-const nested = "struct Box { n: i64 } union Item { boxes: [2]Box, empty } fn value(x: Item) -> i64 { match x { Item.empty => { return 0; }, Item.boxes(values) => { return values[0].n + values[1].n; } } } fn main() -> i64 { let a = new Item.boxes(new [2]Box [new Box { n: 3 }, new Box { n: 7 }]); let b = a; return value(a) + value(b); }";
+const nested = "struct Box { n: i64 } union Item { boxes: [2]Box, empty } fn value(x: Item) -> i64 { " ++
+    "match x { Item.empty => { return 0; }, Item.boxes(values) => { return values[0].n + " ++
+    "values[1].n; } } } fn main() -> i64 { let a = new Item.boxes(new [2]Box [new Box { " ++
+    "n: 3 }, new Box { n: 7 }]); let b = a; return value(a) + value(b); }";
 fn allocationScenario(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, "variants.my", nested);
+    var compilation = try language.Compilation.init(allocator, fixture_path, nested);
     defer compilation.deinit();
     try testing.expectEqual(@as(i64, 20), (try compilation.execute(allocator)).value);
     const dump = try compilation.dump(allocator);
@@ -133,11 +146,15 @@ test "variant payloads dispatch fixups dumps and discovery clean up at every all
 }
 
 test "variant copies and payload bindings retain bounded storage across overwrites and traps" {
-    const source = "union State { running: i64, stopped } fn main() -> i64 { let mut state = new State.running(0); let mut done = false; while !done { match state { State.running(n) => { if n < 10000 { state = new State.running(n + 1); } else { state = new State.stopped; } }, State.stopped => { done = true; } } } return 10000; }";
+    const source = "union State { running: i64, stopped } fn main() -> i64 { let mut state = new " ++
+        "State.running(0); let mut done = false; while !done { match state { State.running(n) " ++
+        "=> { if n < 10000 { state = new State.running(n + 1); } else { state = new " ++
+        "State.stopped; } }, State.stopped => { done = true; } } } return 10000; }";
     var compilation = try language.Compilation.init(testing.allocator, "loop.my", source);
     defer compilation.deinit();
     try compilation.emit();
     var limiter = LimitedLiveAllocator{ .parent = testing.allocator, .limit = 4096 };
+    defer limiter.deinit();
     try testing.expectEqual(@as(i64, 10000), (try compilation.execute(limiter.allocator())).value);
     try testing.expectEqual(@as(usize, 0), limiter.live);
     // Trap at every executed boundary of a program owning nested aggregate payloads.
@@ -158,7 +175,11 @@ test "variant copies and payload bindings retain bounded storage across overwrit
 }
 
 test "duplicate identity retains resolved variants arms and payload bindings" {
-    const source = "union U { a: i64, b: i64 } fn one(x: U) -> i64 { match x { U.a(n) => { return n; }, U.b(n) => { return n + 1; } } } fn two(y: U) -> i64 { match y { U.a(v) => { return v; }, U.b(w) => { return w + 1; } } } fn changed(x: U) -> i64 { match x { U.a(n) => { return n + 1; }, U.b(n) => { return n; } } } fn a() -> U { return new U.a(1); } fn b() -> U { return new U.b(1); } fn main() -> i64 { return 0; }";
+    const source = "union U { a: i64, b: i64 } fn one(x: U) -> i64 { match x { U.a(n) => { return n; }, " ++
+        "U.b(n) => { return n + 1; } } } fn two(y: U) -> i64 { match y { U.a(v) => { return v;" ++
+        " }, U.b(w) => { return w + 1; } } } fn changed(x: U) -> i64 { match x { U.a(n) => { " ++
+        "return n + 1; }, U.b(n) => { return n; } } } fn a() -> U { return new U.a(1); } fn " ++
+        "b() -> U { return new U.b(1); } fn main() -> i64 { return 0; }";
     var compilation = try language.Compilation.init(testing.allocator, "duplicates.my", source);
     defer compilation.deinit();
     try compilation.check();
@@ -176,7 +197,26 @@ test "variant bytecode validates tags exhaustive targets and payload destination
     const bc = language.bytecode;
     const span: language.source.Span = .{ .start = 0, .end = 1 };
     const ty: typed.Type = @fromBackingInt(typed.Type.record_base);
-    const schema: typed.Record = .{ .id = ty, .name = "U", .declaration = span, .fields = &.{}, .variants = .{ .is_union = true, .cases = &.{ .{ .name = "a", .declaration = span, .payload = .i64 }, .{ .name = "b", .declaration = span, .payload = null } } } };
+    const schema: typed.Record = .{
+        .id = ty,
+        .name = "U",
+        .declaration = span,
+        .fields = &.{},
+        .shape = .{
+            .variants = .{
+                .is_union = true,
+                .cases = &.{ .{
+                    .name = "a",
+                    .declaration = span,
+                    .payload = .i64,
+                }, .{
+                    .name = "b",
+                    .declaration = span,
+                    .payload = null,
+                } },
+            },
+        },
+    };
     const Op = @FieldType(bc.Instruction, "op");
     const operations = [_]Op{
         .{ .make_variant = .{ .ty = ty, .tag = 2 } },
@@ -189,7 +229,24 @@ test "variant bytecode validates tags exhaustive targets and payload destination
     };
     for (operations) |op| {
         const instructions = [_]bc.Instruction{ .{ .span = span, .op = op }, .{ .span = span, .op = .ret } };
-        const program: bc.Program = .{ .records = &.{schema}, .functions = &.{.{ .id = @fromBackingInt(0), .name = "main", .locals = &.{.{ .name = "payload", .declaration = span, .ty = .bool, .mutable = false }}, .instructions = &instructions }} };
+        const program: bc.Program = .{
+            .records = &.{
+                schema,
+            },
+            .functions = &.{.{
+                .id = @fromBackingInt(0),
+                .name = "main",
+                .scope = .{
+                    .locals = &.{.{
+                        .name = "payload",
+                        .declaration = span,
+                        .ty = .bool,
+                        .mutable = false,
+                    }},
+                    .instructions = &instructions,
+                },
+            }},
+        };
         try testing.expectError(error.InternalError, bc.validate(testing.allocator, program));
     }
 }

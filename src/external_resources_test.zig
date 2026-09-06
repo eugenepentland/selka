@@ -1,3 +1,4 @@
+//! External resource registry and provider tests covering ownership, permission checks, completion, and cleanup.
 const std = @import("std");
 const t = std.testing;
 const resources = @import("external_resources.zig");
@@ -151,6 +152,7 @@ test "move completion release and unwind do not allocate registry storage" {
 test "recycled external registry has bounded live memory" {
     var fake: Fake = .{};
     var limited: @import("test_support.zig").LimitedLiveAllocator = .{ .parent = t.allocator, .limit = 4096 };
+    defer limited.deinit();
     var store = try resources.Store.init(limited.allocator(), .network, fake.provider(), 1);
     defer store.deinit();
     const cap = try store.grant();
@@ -158,7 +160,7 @@ test "recycled external registry has bounded live memory" {
         const owner = try store.acquire(cap, target);
         try store.release(try store.transfer(owner));
     }
-    try t.expectEqual(@as(usize, 1), store.entries.items.len);
+    try t.expectEqual(@as(usize, 1), store.registry.entries.items.len);
     store.deinit();
     try t.expectEqual(@as(usize, 0), limited.live);
     try t.expectEqual(@as(usize, 0), fake.live);
@@ -235,7 +237,7 @@ test "exhausted generations retain live owners and retire released slots without
     defer store.deinit();
     const cap = try store.grant();
     var owner = try store.acquire(cap, target);
-    store.entries.items[owner.index].generation = std.math.maxInt(u64);
+    store.registry.entries.items[owner.index].generation = std.math.maxInt(u64);
     owner.generation = std.math.maxInt(u64);
     try t.expectError(error.IdentityExhausted, store.transfer(owner));
     try store.release(owner);
@@ -243,5 +245,12 @@ test "exhausted generations retain live owners and retire released slots without
     try t.expect(next.index != owner.index);
     try t.expectEqual(@as(u64, 1), next.generation);
     try t.expectError(error.InvalidOwner, store.complete(owner));
+    try t.expect(!store.releaseIfLive(owner));
     try store.complete(next);
+    try t.expect(!store.releaseIfLive(next));
+    const live = try store.acquire(cap, target);
+    try t.expect(store.releaseIfLive(live));
+    try t.expect(!store.releaseIfLive(live));
+    store.deinit();
+    try t.expect(!store.releaseIfLive(live));
 }

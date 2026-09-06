@@ -1,17 +1,26 @@
 //! Deterministic successful-evaluation receipt. No cache lookup or file writes.
+/// Failures returned by render; callers must handle these boundary errors.
+pub const RenderError = error{
+    IncompleteProject,
+    InvalidBudget,
+    OutOfMemory,
+};
+
 const std = @import("std");
 const project = @import("project.zig");
 const evaluation = @import("evaluation.zig");
 const receipt = @import("source_receipt.zig");
 pub const Identity = receipt.Identity;
-pub fn render(allocator: std.mem.Allocator, graph: *const project.Project, value: i64, options: evaluation.Options, identity: Identity) ![]u8 {
+/// Allocate a deterministic evaluation receipt with source identities, limits, and the scalar result.
+pub fn render(allocator: std.mem.Allocator, graph: *const project.Project, value: i64, options: evaluation.Options, identity: Identity) RenderError![]u8 {
     return renderInner(allocator, graph, value, options, identity);
 }
-pub fn renderRequest(allocator: std.mem.Allocator, graph: *const project.Project, options: evaluation.Options, identity: Identity) ![]u8 {
+/// Allocate the evaluation request identity without executing the program.
+pub fn renderRequest(allocator: std.mem.Allocator, graph: *const project.Project, options: evaluation.Options, identity: Identity) RenderError![]u8 {
     return renderInner(allocator, graph, null, options, identity);
 }
 fn renderInner(allocator: std.mem.Allocator, graph: *const project.Project, value: ?i64, options: evaluation.Options, identity: Identity) ![]u8 {
-    if (!graph.complete or graph.problem != null or graph.modules.items.len == 0) return error.IncompleteProject;
+    if (!graph.progress.complete or graph.problem != null or graph.modules.items.len == 0) return error.IncompleteProject;
     if (options.max_steps == 0 or options.max_frames == 0 or options.max_bytes == 0) return error.InvalidBudget;
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();

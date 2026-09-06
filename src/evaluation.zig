@@ -1,15 +1,56 @@
 //! Restricted evaluation foundation: checked call graph, no injected authority,
 //! and a fixed VM allocation budget independent of frontend/source storage.
+/// Failures returned by evaluate; callers must handle these boundary errors.
+pub const EvaluateError = error{
+    BorrowConflict,
+    BorrowSuspended,
+    Bounds,
+    CapabilityUnavailable,
+    CapacityLimit,
+    ChildrenActive,
+    Closed,
+    Denied,
+    ExpiredBorrow,
+    Failed,
+    ForeignMemory,
+    IdentityExhausted,
+    InternalError,
+    InvalidAggregateType,
+    InvalidAllocation,
+    InvalidBudget,
+    InvalidCapability,
+    InvalidDataType,
+    InvalidDataValue,
+    InvalidOwner,
+    InvalidProvider,
+    InvalidValueLimits,
+    MemoryClosed,
+    NoCapacity,
+    NotDataType,
+    OutOfMemory,
+    ReadOnly,
+    RegionInUse,
+    ResourceLimit,
+    SourceError,
+    TypeMismatch,
+    Unavailable,
+    ValueCountLimit,
+    ValueDepthLimit,
+    ValueTypeMismatch,
+};
+
 const std = @import("std");
 const bc = @import("bytecode.zig");
 const diagnostic = @import("diagnostic.zig");
 const vm = @import("vm.zig");
+/// Instruction, frame, and live-byte limits for authority-free scalar evaluation.
 pub const Options = struct { max_steps: u64 = 1_000_000, max_frames: u64 = 256, max_bytes: usize = 16 * 1024 * 1024 };
-pub fn evaluate(allocator: std.mem.Allocator, program: bc.Program, sink: *diagnostic.Sink, options: Options) !vm.Result {
+/// Reject authority-bearing programs and evaluate a scalar result with bounded resources.
+pub fn evaluate(allocator: std.mem.Allocator, program: bc.Program, sink: *diagnostic.Sink, options: Options) EvaluateError!vm.Result {
     return (try process(allocator, program, sink, options, true)).?;
 }
 /// Null means eligible for evaluation; it does not establish execution or a value.
-pub fn preflight(allocator: std.mem.Allocator, program: bc.Program, sink: *diagnostic.Sink, options: Options) !?diagnostic.Diagnostic {
+pub fn preflight(allocator: std.mem.Allocator, program: bc.Program, sink: *diagnostic.Sink, options: Options) EvaluateError!?diagnostic.Diagnostic {
     return if (try process(allocator, program, sink, options, false)) |result| result.trap else null;
 }
 fn process(allocator: std.mem.Allocator, program: bc.Program, sink: *diagnostic.Sink, options: Options, execute: bool) !?vm.Result {
@@ -23,11 +64,15 @@ fn process(allocator: std.mem.Allocator, program: bc.Program, sink: *diagnostic.
         else => return err,
     };
     const entry = program.functions[@backingInt(program.main)];
-    const span = entry.instructions[0].span;
-    if (entry.effects != 0) return sink.fail("E_EVAL_EFFECT", span, "compile-time evaluation requires an effect-free entry call graph, including untaken branches");
-    if (entry.parameter_count != 0) return sink.fail("E_EVAL_INPUT", span, "compile-time entry must have no parameters or injected capabilities");
+    const span = entry.scope.instructions[0].span;
+    if (entry.policy.effects != 0) return sink.fail("E_EVAL_EFFECT", span, "compile-time evaluation requires an effect-free entry call graph, including untaken branches");
+    if (entry.signature.parameter_count != 0) return sink.fail("E_EVAL_INPUT", span, "compile-time entry must have no parameters or injected capabilities");
     if (!execute) return null;
-    return vm.runWithOptions(bounded, program, .{ .max_steps = options.max_steps, .max_frames = options.max_frames, .provide_allocator = false }) catch |err| switch (err) {
+    return vm.runWithOptions(bounded, program, .{
+        .max_steps = options.max_steps,
+        .max_frames = options.max_frames,
+        .memory = .{ .provide_allocator = false },
+    }) catch |err| switch (err) {
         error.OutOfMemory => memoryTrap(),
         else => return err,
     };

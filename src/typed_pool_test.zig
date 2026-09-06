@@ -136,6 +136,7 @@ test "exhausted generations retire slots instead of reviving stale graph IDs" {
 }
 test "recycled pool slots and bulk resets stay within a fixed live memory bound" {
     var limited: @import("test_support.zig").LimitedLiveAllocator = .{ .parent = t.allocator, .limit = 4096 };
+    defer limited.deinit();
     var nodes = try Nodes.init(limited.allocator(), 2, .{});
     defer nodes.deinit();
     for (0..10000) |index| {

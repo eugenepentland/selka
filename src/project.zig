@@ -1,33 +1,78 @@
 //! Deterministic module-header discovery. This graph does not yet resolve exports
 //! or type-check multi-file bodies. Provider paths are normalized relative names.
+/// Failures returned by load; callers must handle these boundary errors.
+pub const LoadError = error{
+    InvalidModuleBudget,
+    InvalidModuleName,
+    OutOfMemory,
+    ProjectAlreadyLoaded,
+    SourceError,
+    InternalError,
+};
+/// Failures returned by render; callers must handle these boundary errors.
+pub const RenderError = error{
+    IncompleteProject,
+    OutOfMemory,
+};
+/// Failures returned by renderProblem; callers must handle these boundary errors.
+pub const RenderProblemError = error{
+    NoProblem,
+    OutOfMemory,
+};
+/// Failures returned by modulePath; callers must handle these boundary errors.
+pub const ModulePathError = error{
+    InvalidModuleName,
+    OutOfMemory,
+};
+
 const std = @import("std");
 const source = @import("source.zig");
 const lex = @import("lexer.zig");
 const diagnostic = @import("diagnostic.zig");
 pub const ReadError = error{ OutOfMemory, NotFound, ReadFailed, TooLarge };
+/// Source reader callback; returned bytes use the supplied allocator and respect the byte limit.
 pub const Provider = struct { context: ?*anyopaque, read: *const fn (?*anyopaque, std.mem.Allocator, []const u8, usize) ReadError![]u8 };
+/// Bounds on module count, import edges, individual files, and total source bytes.
 pub const Options = struct { max_modules: usize = 256, max_imports: usize = 4096, max_file_bytes: usize = 4 * 1024 * 1024, max_total_bytes: usize = 16 * 1024 * 1024 };
+/// A source span paired with the module whose bytes it indexes.
 pub const Site = struct { module: usize, span: source.Span };
+/// Project diagnostic and optional related declaration/import location.
 pub const Problem = struct { code: []const u8, message: []const u8, site: Site, related: ?Site = null };
+/// Declared public name and its source location.
 pub const Export = struct { name: []const u8, span: source.Span };
+/// Imported module name, local alias, source span, and resolved target index.
 pub const Import = struct { name: []const u8, alias: []const u8, span: source.Span, target: usize = undefined };
-pub const Module = struct { name: []const u8, src: source.Source, declaration: source.Span = .{ .start = 0, .end = 0 }, body_start: usize = 0, imports: []Import = &.{}, exports: []Export = &.{}, digest: [32]u8 = undefined, state: enum { unseen, visiting, complete } = .unseen };
+/// Owned source and parsed dependency metadata with traversal state and content digest.
+pub const Module = struct {
+    name: []const u8,
+    src: source.Source,
+    header: struct { declaration: source.Span = .{ .start = 0, .end = 0 }, body_start: usize = 0 } = .{},
+    imports: []Import = &.{},
+    exports: []Export = &.{},
+    digest: [32]u8 = undefined,
+    state: enum {
+        unseen,
+        visiting,
+        complete,
+    } = .unseen,
+};
+/// Owns loaded modules, diagnostics, and dependency order in a project arena.
 pub const Project = struct {
     arena: std.heap.ArenaAllocator,
     modules: std.ArrayList(Module) = .empty,
     order: std.ArrayList(usize) = .empty,
     names: std.StringHashMapUnmanaged(usize) = .empty,
     problem: ?Problem = null,
-    total_bytes: usize = 0,
-    import_count: usize = 0,
-    started: bool = false,
-    complete: bool = false,
+    counts: struct { bytes: usize = 0, imports: usize = 0 } = .{},
+    progress: struct { started: bool = false, complete: bool = false } = .{},
+    /// Create an empty project arena; release all project storage with deinit.
     pub fn init(allocator: std.mem.Allocator) Project {
         return .{ .arena = .init(allocator) };
     }
     pub fn deinit(self: *Project) void {
         self.arena.deinit();
     }
+    /// Record a project diagnostic and return SourceError for propagation.
     pub fn fail(self: *Project, code: []const u8, message: []const u8, site: Site, related: ?Site) error{SourceError} {
         self.problem = .{ .code = code, .message = message, .site = site, .related = related };
         return error.SourceError;
@@ -45,22 +90,23 @@ pub const Project = struct {
         try self.modules.append(allocator, .{ .name = owned_name, .src = try source.Source.init(allocator, path, "") });
         try self.names.put(allocator, owned_name, id);
         const site = origin orelse Site{ .module = id, .span = .{ .start = 0, .end = 0 } };
-        const limit = @min(options.max_file_bytes, options.max_total_bytes - self.total_bytes);
+        const limit = @min(options.max_file_bytes, options.max_total_bytes - self.counts.bytes);
         const bytes = provider.read(provider.context, allocator, path, limit) catch |err| {
             if (err == error.OutOfMemory) return error.OutOfMemory;
             return self.fail(if (err == error.TooLarge) "E_PROJECT_BYTES" else "E_MODULE_READ", try std.fmt.allocPrint(allocator, "cannot load {s}: {s}", .{ path, @errorName(err) }), site, null);
         };
         defer allocator.free(bytes);
         if (bytes.len > limit) return self.fail("E_PROJECT_BYTES", "provider exceeded the source byte budget", site, null);
-        self.total_bytes += bytes.len;
+        self.counts.bytes += bytes.len;
         self.modules.items[id].src = try source.Source.init(allocator, path, bytes);
         std.crypto.hash.sha2.Sha256.hash(bytes, &self.modules.items[id].digest, .{});
         try self.header(id, options);
         return id;
     }
-    pub fn load(self: *Project, provider: Provider, entry: []const u8, options: Options) !void {
-        if (self.started) return error.ProjectAlreadyLoaded;
-        self.started = true;
+    /// Load the reachable import graph iteratively while enforcing source and graph limits.
+    pub fn load(self: *Project, provider: Provider, entry: []const u8, options: Options) LoadError!void {
+        if (self.progress.started) return error.ProjectAlreadyLoaded;
+        self.progress.started = true;
         if (!validName(entry)) return error.InvalidModuleName;
         // An empty budget is a host configuration error, so no nonexistent source
         // location needs to be manufactured for the diagnostic renderer.
@@ -100,11 +146,11 @@ pub const Project = struct {
                         if (include) chain.writer.print("{s} -> ", .{self.modules.items[at.id].name}) catch return error.OutOfMemory;
                     }
                     chain.writer.writeAll(self.modules.items[target].name) catch return error.OutOfMemory;
-                    return self.fail("E_IMPORT_CYCLE", try chain.toOwnedSlice(), site, .{ .module = target, .span = self.modules.items[target].declaration });
+                    return self.fail("E_IMPORT_CYCLE", try chain.toOwnedSlice(), site, .{ .module = target, .span = self.modules.items[target].header.declaration });
                 },
             }
         }
-        self.complete = true;
+        self.progress.complete = true;
     }
     fn header(self: *Project, id: usize, options: Options) diagnostic.Error!void {
         const allocator = self.arena.allocator();
@@ -119,7 +165,7 @@ pub const Project = struct {
         try scanner.word("module");
         const declared = try scanner.name();
         _ = try scanner.expect(.semicolon);
-        self.modules.items[id].declaration = declared.span;
+        self.modules.items[id].header.declaration = declared.span;
         if (!std.mem.eql(u8, declared.text, self.modules.items[id].name)) return self.fail("E_MODULE_NAME", "declared module name does not match its requested path", .{ .module = id, .span = declared.span }, null);
         var imports: std.ArrayList(Import) = .empty;
         var aliases: std.StringHashMapUnmanaged(source.Span) = .empty;
@@ -132,8 +178,8 @@ pub const Project = struct {
             _ = try scanner.expect(.semicolon);
             if (aliases.get(alias)) |previous| return self.fail("E_IMPORT_ALIAS", "import alias is already bound", .{ .module = id, .span = imported.span }, .{ .module = id, .span = previous });
             if (imported_names.get(imported.text)) |previous| return self.fail("E_DUPLICATE_IMPORT", "module is already imported in this file", .{ .module = id, .span = imported.span }, .{ .module = id, .span = previous });
-            if (self.import_count >= options.max_imports) return self.fail("E_IMPORT_LIMIT", "import count exceeds the project budget", .{ .module = id, .span = imported.span }, null);
-            self.import_count += 1;
+            if (self.counts.imports >= options.max_imports) return self.fail("E_IMPORT_LIMIT", "import count exceeds the project budget", .{ .module = id, .span = imported.span }, null);
+            self.counts.imports += 1;
             try aliases.put(allocator, alias, imported.span);
             try imported_names.put(allocator, imported.text, imported.span);
             try imports.append(allocator, .{ .name = imported.text, .alias = alias, .span = imported.span });
@@ -151,10 +197,11 @@ pub const Project = struct {
             try exports.append(allocator, .{ .name = name, .span = token.span });
         }
         self.modules.items[id].exports = try exports.toOwnedSlice(allocator);
-        self.modules.items[id].body_start = tokens[scanner.pos].span.start;
+        self.modules.items[id].header.body_start = tokens[scanner.pos].span.start;
     }
-    pub fn render(self: *Project, allocator: std.mem.Allocator) ![]u8 {
-        if (!self.complete) return error.IncompleteProject;
+    /// Allocate the completed dependency graph report; reject incomplete loading state.
+    pub fn render(self: *Project, allocator: std.mem.Allocator) RenderError![]u8 {
+        if (!self.progress.complete) return error.IncompleteProject;
         var output: std.Io.Writer.Allocating = .init(allocator);
         errdefer output.deinit();
         output.writer.writeAll("module graph v1; header discovery only; bodies/exports/types not checked\n") catch return error.OutOfMemory;
@@ -165,7 +212,8 @@ pub const Project = struct {
         }
         return output.toOwnedSlice();
     }
-    pub fn renderProblem(self: *Project, allocator: std.mem.Allocator) ![]u8 {
+    /// Allocate the current project diagnostic with source locations.
+    pub fn renderProblem(self: *Project, allocator: std.mem.Allocator) RenderProblemError![]u8 {
         const problem = self.problem orelse return error.NoProblem;
         const diag: diagnostic.Diagnostic = .{ .code = problem.code, .span = problem.site.span, .message = problem.message };
         const primary = try diag.render(allocator, self.modules.items[problem.site.module].src);
@@ -214,6 +262,7 @@ const Scanner = struct {
         return .{ .text = try output.toOwnedSlice(), .last = src.text(last.span), .span = .join(first.span, last.span) };
     }
 };
+/// Check dotted module names while excluding filesystem traversal syntax.
 pub fn validName(name: []const u8) bool {
     var parts = std.mem.splitScalar(u8, name, '.');
     while (parts.next()) |part| {
@@ -222,7 +271,8 @@ pub fn validName(name: []const u8) bool {
     }
     return name.len != 0;
 }
-pub fn modulePath(allocator: std.mem.Allocator, name: []const u8) ![]u8 {
+/// Allocate the relative source path corresponding to a valid dotted module name.
+pub fn modulePath(allocator: std.mem.Allocator, name: []const u8) ModulePathError![]u8 {
     if (!validName(name)) return error.InvalidModuleName;
     const path = try std.fmt.allocPrint(allocator, "{s}.my", .{name});
     for (path[0..name.len]) |*byte| if (byte.* == '.') {

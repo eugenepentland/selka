@@ -1,9 +1,14 @@
+//! Domain codec JSON tests verify shared budgets, typed rejections, ownership, and forged contract failures.
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const typed = @import("typed.zig");
 const codec = language.codec_json;
-const source = "struct Wire{n:i64} struct Why{code:i64} result Decoded{ok:Positive,err:Why} domain Positive:i64{codec Wire{decode:dec,encode:enc}fn dec(x:Wire)->Decoded{if x.n<=0{return new Decoded.err(new Why{code:-1});}return new Decoded.ok(wrap<Positive>(x.n));}fn enc(x:Positive)->Wire{return new Wire{n:unwrap(x)};}}struct Pair{items:[2]Positive}fn main()->i64{return 0;}";
+const source = "struct Wire{n:i64} struct Why{code:i64} result Decoded{ok:Positive,err:Why} domain " ++
+    "Positive:i64{codec Wire{decode:dec,encode:enc}fn dec(x:Wire)->Decoded{if " ++
+    "x.n<=0{return new Decoded.err(new Why{code:-1});}return new " ++
+    "Decoded.ok(wrap<Positive>(x.n));}fn enc(x:Positive)->Wire{return new " ++
+    "Wire{n:unwrap(x)};}}struct Pair{items:[2]Positive}fn main()->i64{return 0;}";
 const good = "{\"version\":\"typed-json-v1\",\"type\":\"Pair\",\"value\":{\"items\":[{\"n\":\"7\"},{\"n\":\"9\"}]}}";
 const bad = "{\"version\":\"typed-json-v1\",\"type\":\"Pair\",\"value\":{\"items\":[{\"n\":\"7\"},{\"n\":\"0\"}]}}";
 fn find(records: []const typed.Record, name: []const u8) typed.Type {
@@ -38,11 +43,12 @@ fn scenario(allocator: std.mem.Allocator) !void {
     unexpected.release(allocator);
     return error.TestExpectedRejection;
 }
-test "codec JSON executes nested factories and retains located typed rejections under allocation failures" {
+test "codec JSON UnreleasedCodecFailure preserves typed rejections under allocation failures" {
     try scenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
+// spec: WIRE-5
 test "codec JSON shares instruction call traversal and memory budgets across nested values" {
     var c = try language.Compilation.init(t.allocator, "budgets.my", source);
     defer c.deinit();
@@ -59,10 +65,7 @@ test "codec JSON shares instruction call traversal and memory budgets across nes
     at_limit.release(t.allocator);
     try t.expectError(error.CodecMemoryLimit, codec.decode(t.allocator, code, ty, good, .{ .max_bytes = 1 }, &failure));
     const tighter_limit = exact.peak_bytes - 1;
-    if (codec.decode(t.allocator, code, ty, good, .{ .max_bytes = tighter_limit, .statistics = &stats }, &failure)) |tighter| {
-        tighter.release(t.allocator);
-        try t.expect(stats.peak_bytes <= tighter_limit);
-    } else |err| try t.expectEqual(error.CodecMemoryLimit, err);
+    try expectMemoryBound(codec.decode(t.allocator, code, ty, good, .{ .max_bytes = tighter_limit, .statistics = &stats }, &failure), &stats, tighter_limit);
     try t.expectError(error.DomainCodecTrap, codec.decode(t.allocator, code, ty, good, .{ .max_steps = exact.steps - 1, .statistics = &stats }, &failure));
     try t.expectEqual(exact.steps - 1, stats.steps);
     try t.expectEqualStrings("R_STEP_LIMIT", failure.execution.trap.?.code);
@@ -124,7 +127,9 @@ test "codec JSON excludes unregistered domains in inactive branches and zero arr
     }
 }
 test "codec JSON keeps wire depth separate from private domain storage and preserves u64 extrema" {
-    var c = try language.Compilation.init(t.allocator, "width.my", "result R{ok:D,err:bool}domain D:u64{codec u64{decode:dec,encode:enc}fn dec(x:u64)->R{return new R.ok(wrap<D>(x));}fn enc(x:D)->u64{return unwrap(x);}}fn main()->i64{return 0;}");
+    var c = try language.Compilation.init(t.allocator, "width.my", "result R{ok:D,err:bool}domain D:u64{codec u64{decode:dec,encode:enc}fn " ++
+        "dec(x:u64)->R{return new R.ok(wrap<D>(x));}fn enc(x:D)->u64{return unwrap(x);}}fn " ++
+        "main()->i64{return 0;}");
     defer c.deinit();
     try c.emit();
     const bytes = "{\"version\":\"typed-json-v1\",\"type\":\"D\",\"value\":\"18446744073709551615\"}";
@@ -148,8 +153,8 @@ test "codec JSON traps retain source traces and frame budgets" {
     try t.expectError(error.DomainCodecTrap, codec.decode(t.allocator, c.code.?, find(c.code.?.records, "D"), "{\"version\":\"typed-json-v1\",\"type\":\"D\",\"value\":\"1\"}", .{ .max_frames = 2 }, &failure));
     try t.expectEqualStrings("/value", failure.location.text());
     try t.expectEqualStrings("R_FRAME_LIMIT", failure.execution.trap.?.code);
-    try t.expectEqual(@as(usize, 2), failure.execution.trap.?.trace_len);
-    try t.expectEqualStrings("D.dec", failure.execution.trap.?.trace[0].function);
+    try t.expectEqual(@as(usize, 2), failure.execution.trap.?.stack.len);
+    try t.expectEqualStrings("D.dec", failure.execution.trap.?.stack.frames[0].function);
 }
 
 test "codec JSON rejects recursive host codec metadata before wire traversal" {
@@ -160,10 +165,42 @@ test "codec JSON rejects recursive host codec metadata before wire traversal" {
     const records = try t.allocator.dupe(typed.Record, code.records);
     defer t.allocator.free(records);
     const domain = find(records, "Positive");
-    records[domain.recordIndex()].codec.?.wire = domain;
+    records[domain.recordIndex()].contract.codec.?.wire = domain;
     code.records = records;
     var failure: codec.Failure = .{};
     defer failure.deinit(t.allocator);
     try t.expectError(error.NoImplicitCodec, codec.decode(t.allocator, code, find(records, "Pair"), good, .{}, &failure));
     try t.expectEqualStrings("/type", failure.location.text());
+}
+
+fn expectMemoryBound(result: anyerror!@import("value.zig").Value, stats: *const codec.Statistics, limit: usize) !void {
+    if (result) |value| {
+        value.release(t.allocator);
+        try t.expect(stats.peak_bytes <= limit);
+    } else |err| try t.expectEqual(error.CodecMemoryLimit, err);
+}
+
+test "codec execution rejects exhausted steps and forged wire contracts" {
+    var c = try language.Compilation.init(t.allocator, "codec-contract.my", source);
+    defer c.deinit();
+    try c.emit();
+    const runtime = @import("codec_execution.zig");
+    var failure: runtime.Failure = .{};
+    defer failure.deinit(t.allocator);
+    var execution: runtime.Execution = .{
+        .program = c.code.?,
+        .max_steps = 0,
+        .max_frames = 256,
+        .max_calls = 10,
+        .arguments = .{},
+        .failure = &failure,
+    };
+    try t.expectError(error.CodecStepLimit, execution.invoke(t.allocator, c.code.?.main, &.{}));
+    try t.expectEqual(@as(usize, 0), execution.used.calls);
+    const domain = find(c.code.?.records, "Positive");
+    const value = try typed.Value.create(t.allocator, domain, &.{.{ .i64 = 7 }});
+    defer value.release(t.allocator);
+    @constCast(c.code.?.records)[domain.recordIndex()].contract.codec.?.wire = .bool;
+    execution.max_steps = 1000000;
+    try t.expectError(error.InvalidCodecContract, execution.encode(t.allocator, domain, value));
 }

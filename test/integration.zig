@@ -38,13 +38,15 @@ test "CLI dumps actual instructions" {
     try invoke("dump-bytecode", @embedFile("fixtures/arithmetic.my"), 0, @embedFile("fixtures/arithmetic.dump"), "");
 }
 
-test "CLI distinguishes source errors runtime traps and usage" {
+// spec: CLI-1
+test "CLI distinguishes source errors runtime traps and Usage errors" {
     try invoke("check", "fn main() -> i64 { return 1 + ; }", 1, "", "error[E_EXPRESSION]");
     try invoke("check", "fn main() -> i64 { return 9223372036854775807 + 1; }", 0, "", "");
     try invoke("run", "fn main() -> i64 { return 9223372036854775807 + 1; }", 1, "", "error[R_OVERFLOW]");
     try invoke("unknown", "", 2, "", "usage:");
 }
 
+// spec: CLI-2
 test "CLI missing arguments and missing files are host or usage failures" {
     const no_args = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{compiler_path} });
     defer testing.allocator.free(no_args.stdout);
@@ -95,6 +97,7 @@ test "CLI executes control flow and preserves discarded traps" {
     try invoke("check", "fn main() -> i64 { while true { return 7; } }", 1, "", "error[E_MISSING_RETURN]");
 }
 
+// spec: CLI-3
 test "CLI executes the exact plan acceptance programs and recursive functions" {
     try invoke("run", @embedFile("fixtures/sum.my"), 0, "4950\n", "");
     try invoke("run", @embedFile("fixtures/gcd.my"), 0, "6\n", "");
@@ -233,7 +236,9 @@ test "CLI checks domain privacy unit mismatches and qualified factory execution"
         try invoke(command, private, 1, "", "error[E_PRIVATE_FUNCTION]");
     }
     try invoke("check", "domain D: i64 {} fn main() -> i64 { discard wrap<D>(1); return 0; }", 1, "", "error[E_PRIVATE_DOMAIN]");
-    try invoke("check", "domain Seconds: i64 { fn from(n: i64) -> Seconds { return wrap<Seconds>(n); } } domain Millimeters: i64 {} fn distance(n: Millimeters) -> i64 { discard n; return 0; } fn main() -> i64 { return distance(Seconds.from(1)); }", 1, "", "expected Millimeters, found Seconds");
+    try invoke("check", "domain Seconds: i64 { fn from(n: i64) -> Seconds { return wrap<Seconds>(n); } } domai" ++
+        "n Millimeters: i64 {} fn distance(n: Millimeters) -> i64 { discard n; return 0; } fn " ++
+        "main() -> i64 { return distance(Seconds.from(1)); }", 1, "", "expected Millimeters, found Seconds");
 }
 
 test "CLI executes variants dumps dispatch and rejects newly incomplete matches" {
@@ -321,7 +326,9 @@ test "CLI runs returned views and rejects escaping local references" {
     for ([_][]const u8{ "CALL_BORROW", "CAPTURE_REF", "RETURN_REF", "from values" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
     const escape = "fn bad(input: &i64) -> &i64 from input { let local = 7; borrow local as r { return r; } } fn main() -> i64 { return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, escape, 1, "", "error[E_RETURN_LIFETIME]");
-    try invoke("run", "fn one(s: &[]i64) -> &[]i64 from s { borrow s[0..1] as r { return r; } } fn main() -> i64 { let a = new [2]i64 [1, 2]; borrow a[0..2] as s { borrow one(s) as r { return read_slice(r, 1); } } }", 1, "", "error[R_SLICE_BOUNDS]");
+    try invoke("run", "fn one(s: &[]i64) -> &[]i64 from s { borrow s[0..1] as r { return r; } } fn main() ->" ++
+        " i64 { let a = new [2]i64 [1, 2]; borrow a[0..2] as s { borrow one(s) as r { return r" ++
+        "ead_slice(r, 1); } } }", 1, "", "error[R_SLICE_BOUNDS]");
 }
 
 test "CLI handles recoverable results and rejects silent error loss" {
@@ -493,7 +500,10 @@ test "CLI checks resource slice IO and exclusive destination requirements" {
     defer testing.allocator.free(dumped.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
     for ([_][]const u8{ "RESOURCE_read_slice", "RESOURCE_write_slice" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
-    const invalid = "resource File: filesystem; struct Progress { length: u64, eof: bool } result Read { ok: Progress, err: i64 } fn f(input: File, destination: &[]u8) -> i64 { let mut file = input; acknowledge read_resource_slice<Read>(file, destination); return 0; } fn main() -> i64 { return 0; }";
+    const invalid = "resource File: filesystem; struct Progress { length: u64, eof: bool } result Read { o" ++
+        "k: Progress, err: i64 } fn f(input: File, destination: &[]u8) -> i64 { let mut file =" ++
+        " input; acknowledge read_resource_slice<Read>(file, destination); return 0; } fn main" ++
+        "() -> i64 { return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_REFERENCE_READ_ONLY]");
 }
 
@@ -766,7 +776,7 @@ test "CLI checks and runs module programs with private boundaries and cross-file
     try invokeOptions("check-project", "module input; fn main() -> i64 { return 7; }", &.{"--max-steps=1"}, 2, "", "usage:");
 }
 
-test "CLI import policy distinguishes language failures policy failures and configuration failures" {
+test "CLI checkProjectPolicy distinguishes language failures policy failures and configuration failures" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input; import core; fn main() -> i64 { return core::value(); }" });

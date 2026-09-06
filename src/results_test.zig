@@ -1,30 +1,35 @@
+const fixture_path = "results.my";
 const std = @import("std");
 const testing = std.testing;
 const language = @import("compiler.zig");
 const LimitedLiveAllocator = @import("test_support.zig").LimitedLiveAllocator;
-const declaration = "result R { ok: i64, err: i64 } ";
+const declaration = @import("fixture_declarations_test.zig").scalar_result;
 fn result(source: []const u8, expected: i64) !void {
-    var compilation = try language.Compilation.init(testing.allocator, "results.my", source);
+    var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
     defer compilation.deinit();
     try testing.expectEqual(expected, (try compilation.execute(testing.allocator)).value);
 }
 fn reject(body: []const u8, code: []const u8) !void {
     const source = try std.mem.concat(testing.allocator, u8, &.{ declaration, body });
     defer testing.allocator.free(source);
-    var compilation = try language.Compilation.init(testing.allocator, "results.my", source);
+    var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
     defer compilation.deinit();
     try testing.expectError(error.SourceError, compilation.check());
     try testing.expectEqualStrings(code, compilation.diagnostics.items[0].code);
 }
 
 test "nominal typed results handle success and failure through exhaustive matches" {
-    try result("enum E { missing } result R { err: E, ok: i64 } fn make(ok: bool) -> R { if ok { return new R.ok(7); } return new R.err(new E.missing); } fn handle(r: R) -> i64 { match r { R.ok(n) => { return n; }, R.err(e) => { match e { E.missing => { return 3; } } } } } fn main() -> i64 { return handle(make(true)) + handle(make(false)); }", 10);
+    try result("enum E { missing } result R { err: E, ok: i64 } fn make(ok: bool) -> R { if ok { " ++
+        "return new R.ok(7); } return new R.err(new E.missing); } fn handle(r: R) -> i64 { " ++
+        "match r { R.ok(n) => { return n; }, R.err(e) => { match e { E.missing => { return 3; " ++
+        "} } } } } fn main() -> i64 { return handle(make(true)) + handle(make(false)); }", 10);
     try result("result R { ok: i64, err: bool } fn forward(r: R) -> R { return r; } fn main() -> i64 { let result = forward(new R.err(true)); match result { R.ok(n) => { return n; }, R.err(e) => { if e { return 9; } return 0; } } }", 9);
     try reject("result Bad { ok: i64 } fn main() -> i64 { return 0; }", "E_RESULT_SCHEMA");
     try reject("result Bad { ok: i64, err } fn main() -> i64 { return 0; }", "E_RESULT_SCHEMA");
     try reject("result Other { ok: i64, err: i64 } fn f(r: R) -> Other { return r; } fn main() -> i64 { return 0; }", "E_TYPE");
 }
 
+// spec: CORE-10
 test "binding transfer and explicit acknowledgement cannot silently discard results" {
     try result("result R { ok: i64, err: i64 } fn main() -> i64 { let first = new R.err(7); let second = first; acknowledge second; return 1; }", 1);
     try reject("fn main() -> i64 { let ignored = new R.err(7); return 0; }", "E_RESULT_UNHANDLED");
@@ -67,15 +72,22 @@ test "wrappers arrays and unions preserve nested result obligations" {
     try reject("fn main() -> i64 { acknowledge new [2]R [new R.err(1), new R.ok(2)][0]; return 0; }", "E_RESULT_OPERATION");
     try reject("union Box { wrapped: R, empty } fn main() -> i64 { match new Box.wrapped(new R.err(1)) { Box.wrapped(discard) => { return 0; }, Box.empty => { return 1; } } }", "E_RESULT_DISCARD");
     try reject("union Box { wrapped: R, empty } fn main() -> i64 { match new Box.wrapped(new R.err(1)) { Box.wrapped(r) => {}, Box.empty => {} } return 0; }", "E_RESULT_UNHANDLED");
-    try result("result R { ok: i64, err: i64 } struct Box { r: R, n: i64 } fn main() -> i64 { let box = new Box { r: new R.err(1), n: 7 }; let updated = update(box) { n: 9 }; acknowledge updated.r; acknowledge new [1]R [new R.err(3)][0]; discard new [0]R []; return 1; }", 1);
+    try result("result R { ok: i64, err: i64 } struct Box { r: R, n: i64 } fn main() -> i64 { let " ++
+        "box = new Box { r: new R.err(1), n: 7 }; let updated = update(box) { n: 9 }; " ++
+        "acknowledge updated.r; acknowledge new [1]R [new R.err(3)][0]; discard new [0]R []; " ++
+        "return 1; }", 1);
     try reject("struct Box { r: R } fn main() -> i64 { let box = new Box { r: new R.err(1) }; acknowledge update(box) { r: new R.ok(2) }; return 0; }", "E_RESULT_OPERATION");
     try result("result R { ok: i64, err: i64 } result Outer { ok: R, err: bool } fn main() -> i64 { match new Outer.ok(new R.err(7)) { Outer.ok(inner) => { acknowledge inner; return 1; }, Outer.err(discard) => { return 0; } } }", 1);
     try reject("fn f(r: &R) -> i64 { return 0; } fn main() -> i64 { return 0; }", "E_RESULT_BORROW");
 }
 
-const owned_source = "struct Item { n: i64 } result R { ok: Item, err: i64 } fn fallible(flag: bool) -> R { let mut x = new Item { n: 3 }; borrow mut x as r { if flag { write_ref(r, new Item { n: 9 }); return new R.ok(read_ref(r)); } return new R.err(7); } } fn main() -> i64 { let r = fallible(false); match r { R.ok(item) => { return item.n; }, R.err(code) => { acknowledge fallible(true); return code; } } }";
+const owned_source = "struct Item { n: i64 } result R { ok: Item, err: i64 } fn fallible(flag: bool) -> R " ++
+    "{ let mut x = new Item { n: 3 }; borrow mut x as r { if flag { write_ref(r, new Item " ++
+    "{ n: 9 }); return new R.ok(read_ref(r)); } return new R.err(7); } } fn main() -> i64 " ++
+    "{ let r = fallible(false); match r { R.ok(item) => { return item.n; }, R.err(code) " ++
+    "=> { acknowledge fallible(true); return code; } } }";
 fn allocationScenario(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, "results.my", owned_source);
+    var compilation = try language.Compilation.init(allocator, fixture_path, owned_source);
     defer compilation.deinit();
     try testing.expectEqual(@as(i64, 7), (try compilation.execute(allocator)).value);
     const dump = try compilation.dump(allocator);
@@ -97,10 +109,11 @@ test "result checking runtime ownership and rendering survive allocation failure
 }
 
 test "result loops and every trap boundary release bounded live runtime storage" {
-    var compilation = try language.Compilation.init(testing.allocator, "results.my", owned_source);
+    var compilation = try language.Compilation.init(testing.allocator, fixture_path, owned_source);
     defer compilation.deinit();
     try compilation.emit();
     var limiter = LimitedLiveAllocator{ .parent = testing.allocator, .limit = 16384 };
+    defer limiter.deinit();
     var complete = false;
     for (1..150) |budget| {
         const outcome = try compilation.executeWithOptions(limiter.allocator(), .{ .max_steps = budget });
@@ -120,7 +133,10 @@ test "result loops and every trap boundary release bounded live runtime storage"
 }
 
 test "duplicate identity retains explicit acknowledgement and fallible result types" {
-    var compilation = try language.Compilation.init(testing.allocator, "duplicates.my", "result R { ok: i64, err: i64 } fn a(r: R) -> i64 { acknowledge r; return 1; } fn b(other: R) -> i64 { acknowledge other; return 1; } fn c(r: R) -> i64 { match r { R.ok(discard) => {}, R.err(discard) => {} } return 1; } fn main() -> i64 { return 0; }");
+    var compilation = try language.Compilation.init(testing.allocator, "duplicates.my", "result R { ok: i64, err: i64 } fn a(r: R) -> i64 { acknowledge r; return 1; } fn " ++
+        "b(other: R) -> i64 { acknowledge other; return 1; } fn c(r: R) -> i64 { match r { " ++
+        "R.ok(discard) => {}, R.err(discard) => {} } return 1; } fn main() -> i64 { return 0; " ++
+        "}");
     defer compilation.deinit();
     try compilation.check();
     var discovery = try language.duplicates.discover(testing.allocator, compilation.program.?, .{ .min_nodes = 1 });

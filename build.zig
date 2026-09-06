@@ -1,5 +1,6 @@
 const std = @import("std");
 const builtin = @import("builtin");
+const guardian = @import("guardian");
 
 pub fn build(b: *std.Build) void {
     if (!std.mem.eql(u8, builtin.zig_version_string, "0.17.0-dev.1683+5ceec001b"))
@@ -21,21 +22,35 @@ pub fn build(b: *std.Build) void {
         }),
     });
     b.installArtifact(exe);
+    const guardian_dep = b.dependency("guardian", .{ .target = target, .optimize = optimize });
+    const guardian_exe = guardian_dep.artifact("guardian-check");
+    guardian.addAllChecks(b, guardian_exe, b.getInstallStep(), .{});
     const run = b.addRunArtifact(exe);
     run.addPassthruArgs();
+    run.step.dependOn(b.getInstallStep());
     b.step("run", "Check, run, or inspect a source program").dependOn(&run.step);
 
-    const unit = b.addTest(.{ .root_module = core });
+    const unit = b.addTest(.{ .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
+        .root_source_file = b.path("src/root_test.zig"),
+        .target = target,
+        .optimize = optimize,
+    }) });
     const options = b.addOptions();
     options.addOptionPath("compiler_path", exe.getEmittedBin());
-    const integration = b.addTest(.{ .root_module = b.createModule(.{
-        .root_source_file = b.path("tests/integration.zig"),
+    const integration = b.addTest(.{ .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
+        .root_source_file = b.path("test/integration.zig"),
         .target = target,
         .optimize = optimize,
     }) });
     integration.root_module.addOptions("test_options", options);
+    guardian.enableTestDiagnostics(unit.root_module);
+    guardian.enableTestDiagnostics(integration.root_module);
+    const compile_tests = b.step("test-compile", "Compile every Zig test without running the suite");
+    compile_tests.dependOn(&unit.step);
+    compile_tests.dependOn(&integration.step);
     const run_integration = b.addRunArtifact(integration);
     const test_step = b.step("test", "Run semantic and actual-CLI regression tests");
+    guardian.addAllChecks(b, guardian_exe, test_step, .{});
     test_step.dependOn(&b.addRunArtifact(unit).step);
     test_step.dependOn(&run_integration.step);
     const driver_tests = b.addSystemCommand(&.{ "python3", "-m", "unittest", "discover", "-s", "tests/verification", "-p", "test_driver.py" });
@@ -100,6 +115,6 @@ pub fn build(b: *std.Build) void {
     calls.addFileArg(exe.getEmittedBin());
     calls.setCwd(b.path("."));
     test_step.dependOn(&calls.step);
-    const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("src"), b.path("tests") }, .check = true });
+    const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("src"), b.path("tests"), b.path("test") }, .check = true });
     b.step("fmt-check", "Check canonical Zig formatting").dependOn(&fmt.step);
 }

@@ -12,6 +12,7 @@ fn result(expression: []const u8, expected: i64) !void {
     try testing.expectEqual(expected, outcome.value);
 }
 
+// spec: CORE-1
 test "precedence grouping left associativity and operand order" {
     try result("1 + 2 * 3", 7);
     try result("(1 + 2) * 3", 9);
@@ -21,6 +22,7 @@ test "precedence grouping left associativity and operand order" {
     try result("00012", 12);
 }
 
+// spec: CORE-2
 test "overflow traps at the responsible operator without folding during check" {
     const cases = [_][]const u8{
         "9223372036854775807 + 1",       "3037000500 * 3037000500",
@@ -40,6 +42,7 @@ test "overflow traps at the responsible operator without folding during check" {
     }
 }
 
+// spec: CORE-3
 test "malformed source and range errors are normal located diagnostics" {
     const cases = [_]struct { text: []const u8, code: []const u8 }{
         .{ .text = "", .code = "E_MAIN" },
@@ -92,9 +95,9 @@ test "parser rejects excessive nesting without a host stack overflow" {
     var text: std.Io.Writer.Allocating = .init(testing.allocator);
     defer text.deinit();
     try text.writer.writeAll("fn main() -> i64 { return ");
-    for (0..300) |_| try text.writer.writeByte('(');
+    try text.writer.splatByteAll('(', 300);
     try text.writer.writeByte('1');
-    for (0..300) |_| try text.writer.writeByte(')');
+    try text.writer.splatByteAll(')', 300);
     try text.writer.writeAll("; }");
     var compilation = try language.Compilation.init(testing.allocator, "deep.my", text.written());
     defer compilation.deinit();
@@ -118,7 +121,9 @@ test "invalid internal bytecode is not a guest trap" {
     const program: language.bytecode.Program = .{ .functions = &.{.{
         .id = @fromBackingInt(@intCast(0)),
         .name = "main",
-        .instructions = &.{.{ .span = .{ .start = 0, .end = 0 }, .op = .ret }},
+        .scope = .{
+            .instructions = &.{.{ .span = .{ .start = 0, .end = 0 }, .op = .ret }},
+        },
     }} };
     try testing.expectError(error.InternalError, language.vm.run(testing.allocator, program));
 }
@@ -256,14 +261,18 @@ test "all comparisons boolean operations and logical precedence have observable 
     try booleanResult("true || false && false", true);
     try booleanResult("1 + 2 * 3 == 7 && 4 >= 3", true);
     const operands = [_][]const u8{ "false", "true" };
-    for (operands, 0..) |left, a| for (operands, 0..) |right, b| {
+    for (0..4) |pair| {
+        const a = pair / 2;
+        const b = pair % 2;
+        const left = operands[a];
+        const right = operands[b];
         const conjunction = try std.fmt.allocPrint(testing.allocator, "{s} && {s}", .{ left, right });
         defer testing.allocator.free(conjunction);
         const disjunction = try std.fmt.allocPrint(testing.allocator, "{s} || {s}", .{ left, right });
         defer testing.allocator.free(disjunction);
         try booleanResult(conjunction, a == 1 and b == 1);
         try booleanResult(disjunction, a == 1 or b == 1);
-    };
+    }
 }
 
 test "short circuit skips traps while explicit discard retains evaluation" {
@@ -359,7 +368,9 @@ test "allocation failures during label patching and control-flow validation rele
 test "forward mutual recursive and nested calls preserve caller operands" {
     try programResult("fn main() -> i64 { return 1 + add(add(2, 3), add(4, 5)); } fn add(a: i64, b: i64) -> i64 { return a + b; }", 15);
     try programResult("fn fact(n: i64) -> i64 { if n <= 1 { return 1; } return n * fact(n - 1); } fn main() -> i64 { return fact(10); }", 3628800);
-    try programResult("fn even(n: i64) -> bool { if n == 0 { return true; } return odd(n - 1); } fn main() -> i64 { if even(100) && !odd(100) { return 7; } return 0; } fn odd(n: i64) -> bool { if n == 0 { return false; } return even(n - 1); }", 7);
+    try programResult("fn even(n: i64) -> bool { if n == 0 { return true; } return odd(n - 1); } fn main() " ++
+        "-> i64 { if even(100) && !odd(100) { return 7; } return 0; } fn odd(n: i64) -> bool " ++
+        "{ if n == 0 { return false; } return even(n - 1); }", 7);
     try programResult("fn f(n: i64) -> i64 { let x = n + 2; discard g(x); return x; } fn g(x: i64) -> bool { return x > 0; } fn main() -> i64 { let mut n = 0; while n < 5000 { discard f(n); n += 1; } return 1 + f(2); }", 5);
     try programResult("fn f(x: bool, y: i64) -> bool { return x && y > 0; } fn main() -> i64 { if f(true, 2) { return 8; } return 0; }", 8);
 }
@@ -414,14 +425,14 @@ test "frame limits count main and guest recursion never consumes the host call s
     try testing.expectError(error.InvalidBudget, compilation.executeWithOptions(testing.allocator, .{ .max_frames = 0 }));
     const one = try compilation.executeWithOptions(testing.allocator, .{ .max_frames = 1 });
     try testing.expectEqualStrings("R_FRAME_LIMIT", one.trap.code);
-    try testing.expectEqual(@as(usize, 1), one.trap.trace_len);
+    try testing.expectEqual(@as(usize, 1), one.trap.stack.len);
     const deep = try compilation.executeWithOptions(testing.allocator, .{ .max_frames = 20_000 });
     try testing.expectEqualStrings("R_FRAME_LIMIT", deep.trap.code);
-    try testing.expectEqual(@as(usize, 16), deep.trap.trace_len);
-    try testing.expectEqual(@as(usize, 19_984), deep.trap.trace_omitted);
+    try testing.expectEqual(@as(usize, 16), deep.trap.stack.len);
+    try testing.expectEqual(@as(usize, 19_984), deep.trap.stack.omitted);
     const step = try compilation.executeWithOptions(testing.allocator, .{ .max_steps = 2 });
     try testing.expectEqualStrings("R_STEP_LIMIT", step.trap.code);
-    try testing.expectEqual(@as(usize, 3), step.trap.trace_len);
+    try testing.expectEqual(@as(usize, 3), step.trap.stack.len);
 }
 
 test "call traces locate guest operators and callers and argument traps evaluate left to right" {
@@ -430,10 +441,10 @@ test "call traces locate guest operators and callers and argument traps evaluate
     defer compilation.deinit();
     const outcome = try compilation.execute(testing.allocator);
     try testing.expectEqualStrings("R_DIVISION_BY_ZERO", outcome.trap.code);
-    try testing.expectEqual(@as(usize, 3), outcome.trap.trace_len);
+    try testing.expectEqual(@as(usize, 3), outcome.trap.stack.len);
     for ([_][]const u8{ "inner", "outer", "main" }, 0..) |name, i| {
-        try testing.expectEqualStrings(name, outcome.trap.trace[i].function);
-        try testing.expectEqual(3 - i, compilation.src.locate(outcome.trap.trace[i].span.start).line);
+        try testing.expectEqualStrings(name, outcome.trap.stack.frames[i].function);
+        try testing.expectEqual(3 - i, compilation.src.locate(outcome.trap.stack.frames[i].span.start).line);
     }
     const rendered = try outcome.trap.render(testing.allocator, compilation.src);
     defer testing.allocator.free(rendered);
@@ -459,7 +470,8 @@ test "allocation failures in signature collection calls frame growth and trace r
 }
 
 test "runtime storage remains bounded across many calls and loop declarations" {
-    var compilation = try language.Compilation.init(testing.allocator, "bounded.my", "fn f(n: i64) -> i64 { let local = n + 1; return local; } fn main() -> i64 { let mut n = 0; while n < 100000 { let local = 1 + f(n); discard local; n += 1; } return n; }");
+    var compilation = try language.Compilation.init(testing.allocator, "bounded.my", "fn f(n: i64) -> i64 { let local = n + 1; return local; } fn main() -> i64 { let mut " ++
+        "n = 0; while n < 100000 { let local = 1 + f(n); discard local; n += 1; } return n; }");
     defer compilation.deinit();
     try compilation.emit();
     // Includes validator scratch and all three VM buffers. Retaining abandoned
@@ -484,8 +496,13 @@ test "malformed syntax smoke corpus keeps diagnostics inside owned source" {
             try testing.expect(diag.span.start <= diag.span.end and diag.span.end <= end);
         };
     }
+}
+test "mutated syntax smoke corpus keeps diagnostics inside owned source" {
+    const seed = "fn main() -> i64 { let mut x = 3; while x > 0 { x -= 1; } return x; }";
     const bytes = [_]u8{ 0, 0xff, '\n', ')', '}', ',', ';', '!', '=', '/', '&', '|' };
-    for (bytes) |byte| for (0..seed.len) |at| {
+    for (0..bytes.len * seed.len) |case| {
+        const byte = bytes[case / seed.len];
+        const at = case % seed.len;
         var mutated: [seed.len]u8 = seed.*;
         mutated[at] = byte;
         var compilation = try language.Compilation.init(testing.allocator, "mutated.my", &mutated);
@@ -495,7 +512,7 @@ test "malformed syntax smoke corpus keeps diagnostics inside owned source" {
             const diag = compilation.diagnostics.items[0];
             try testing.expect(diag.span.start <= diag.span.end and diag.span.end <= mutated.len);
         };
-    };
+    }
 }
 
 test "all recursive syntax forms obey the parser nesting budget" {
@@ -553,7 +570,13 @@ test "emission validation rejects invalid references jumps and inconsistent join
         &.{ .{ .span = span, .op = .{ .push_bool = true } }, .{ .span = span, .op = .{ .jump_if_false = 3 } }, .{ .span = span, .op = .{ .push_i64 = 1 } }, .{ .span = span, .op = .{ .jump = 3 } } },
     };
     for (variants) |instructions| {
-        const program: bc.Program = .{ .functions = &.{.{ .id = @fromBackingInt(0), .name = "main", .instructions = instructions }} };
+        const program: bc.Program = .{ .functions = &.{.{
+            .id = @fromBackingInt(0),
+            .name = "main",
+            .scope = .{
+                .instructions = instructions,
+            },
+        }} };
         try testing.expectError(error.InternalError, language.vm.run(testing.allocator, program));
     }
 }

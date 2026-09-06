@@ -1,11 +1,23 @@
 //! Bounded, deterministic edit-distance review of checked canonical body lines.
+/// Failures returned by discover; callers must handle these boundary errors.
+pub const DiscoverError = error{
+    InternalError,
+    InvalidThreshold,
+    OutOfMemory,
+};
+
 const std = @import("std");
 const typed = @import("typed.zig");
 pub const version = "near-v3";
+/// Function identity and borrowed normalized body used by near-match discovery.
 pub const Input = struct { function: typed.FunctionId, bytes: []const u8 };
+/// Borrowed before/after lines explaining a substitution, insertion, or removal.
 pub const Change = struct { before: ?[]const u8, after: ?[]const u8 };
+/// Function pair, bounded edit distance, and its line-level difference evidence.
 pub const Pair = struct { left: typed.FunctionId, right: typed.FunctionId, distance: usize, lines: usize, changes: []const Change };
+/// Similarity threshold and explicit work/output bounds for near-match discovery.
 pub const Options = struct { similarity_percent: u8 = 90, max_work: usize = 1_000_000, max_pairs: usize = 100 };
+/// Reported pairs and work consumed, with explicit truncation when limits stop discovery.
 pub const Result = struct { pairs: []const Pair, work: usize, truncated: bool };
 const Body = struct { header: []const u8, lines: []const []const u8 };
 fn body(allocator: std.mem.Allocator, bytes: []const u8) !Body {
@@ -44,14 +56,9 @@ fn indexHeaders(allocator: std.mem.Allocator, bodies: []const Body, remaining: *
                     return null;
                 }
                 remaining.* -= 1;
-                const take_left = if (a == middle) false else if (b == end) true else blk: {
-                    const cost = @max(bodies[order[a]].header.len, bodies[order[b]].header.len) +| 1;
-                    if (cost > remaining.*) {
-                        allocator.free(next);
-                        return null;
-                    }
-                    remaining.* -= cost;
-                    break :blk std.mem.order(u8, bodies[order[a]].header, bodies[order[b]].header) != .gt;
+                const take_left = if (a == middle) false else if (b == end) true else compareHeaders(bodies[order[a]].header, bodies[order[b]].header, remaining) orelse {
+                    allocator.free(next);
+                    return null;
                 };
                 scratch[out] = if (take_left) order[a] else order[b];
                 if (take_left) a += 1 else b += 1;
@@ -98,7 +105,7 @@ const Matrix = struct {
 };
 /// Output storage belongs to output_allocator; pairwise matrices are freed promptly.
 /// Inputs are representatives of exact groups, in first-declaration order.
-pub fn discover(output_allocator: std.mem.Allocator, temporary: std.mem.Allocator, inputs: []const Input, options: Options) !Result {
+pub fn discover(output_allocator: std.mem.Allocator, temporary: std.mem.Allocator, inputs: []const Input, options: Options) DiscoverError!Result {
     if (options.similarity_percent == 0 or options.similarity_percent >= 100 or options.max_work == 0 or options.max_pairs == 0) return error.InvalidThreshold;
     const bodies = try output_allocator.alloc(Body, inputs.len);
     for (inputs, bodies) |input, *parsed| parsed.* = try body(output_allocator, input.bytes);
@@ -141,19 +148,7 @@ pub fn discover(output_allocator: std.mem.Allocator, temporary: std.mem.Allocato
             defer temporary.free(storage);
             @memset(storage, allowance + 1);
             const matrix: Matrix = .{ .cells = storage, .width = width, .allowance = allowance, .columns = cols };
-            for (0..rows) |r| {
-                const end = @min(cols, r +| allowance +| 1);
-                for (matrix.start(r)..end) |c| {
-                    if (r == 0) {
-                        matrix.set(r, c, c);
-                    } else if (c == 0) {
-                        matrix.set(r, c, r);
-                    } else {
-                        const substitution: usize = if (std.mem.eql(u8, left.lines[r - 1], right.lines[c - 1])) 0 else 1;
-                        matrix.set(r, c, @min(matrix.get(r - 1, c - 1) + substitution, @min(matrix.get(r - 1, c) + 1, matrix.get(r, c - 1) + 1)));
-                    }
-                }
-            }
+            fillDistances(matrix, left, right);
             const distance = matrix.get(left.lines.len, right.lines.len);
             if (distance == 0 or distance > allowance) continue;
             var changes: std.ArrayList(Change) = .empty;
@@ -181,4 +176,28 @@ pub fn discover(output_allocator: std.mem.Allocator, temporary: std.mem.Allocato
         }
     }
     return .{ .pairs = try pairs.toOwnedSlice(output_allocator), .work = options.max_work - remaining, .truncated = truncated };
+}
+
+fn compareHeaders(left: []const u8, right: []const u8, remaining: *usize) ?bool {
+    const cost = @max(left.len, right.len) +| 1;
+    if (cost > remaining.*) return null;
+    remaining.* -= cost;
+    return std.mem.order(u8, left, right) != .gt;
+}
+
+fn fillDistances(matrix: Matrix, left: Body, right: Body) void {
+    const allowance = matrix.allowance;
+    for (0..left.lines.len +| 1) |r| {
+        const end = @min(matrix.columns, r +| allowance +| 1);
+        for (matrix.start(r)..end) |c| {
+            if (r == 0) {
+                matrix.set(r, c, c);
+            } else if (c == 0) {
+                matrix.set(r, c, r);
+            } else {
+                const substitution: usize = if (std.mem.eql(u8, left.lines[r - 1], right.lines[c - 1])) 0 else 1;
+                matrix.set(r, c, @min(matrix.get(r - 1, c - 1) + substitution, @min(matrix.get(r - 1, c) + 1, matrix.get(r, c - 1) + 1)));
+            }
+        }
+    }
 }

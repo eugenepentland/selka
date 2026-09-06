@@ -17,7 +17,8 @@ On the development machine it is installed at:
 /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig version
 ```
 
-The build targets the native host and has no package dependencies. The CLI
+The build targets the native host and depends on the sibling `../guardian-zig`
+checkout for compiler quality checks. The CLI
 uses this snapshot's `std.process.Init` and `std.Io` APIs. Do not substitute
 Zig 0.15 APIs or update the compiler version as part of a language feature.
 
@@ -37,6 +38,35 @@ The example prints `7`. A successful program result is printed to stdout, not
 used as the exit code. Success exits 0, source errors and guest traps exit 1,
 and usage/I/O/host failures exit 2. Diagnostics go to stderr. Source files
 are currently limited to 16 MiB; excessive syntax nesting is diagnosed.
+
+## Compiler quality gate
+
+Guardian checks the Zig compiler implementation on `zig build`, `zig build test`,
+and `zig build run`. `guardian.toml` selects the strict profile and blocking builds;
+violation baselines are disabled. Runtime tests use Guardian's counting runner so
+an empty test selection cannot pass unnoticed. `zig build test-compile` compiles
+both complete Zig test roots without executing them.
+
+Keep this checkout beside `guardian-zig`. Guardian uses the same pinned Zig
+snapshot. CI checks out both repositories and pins the Guardian revision in its
+workflow. The build verifies any reused Guardian binary against its source.
+
+```sh
+zig build guardian -- all . --gate --full
+zig build guardian-doctor
+zig build guardian-debt
+zig build guardian -- install-hook .
+```
+
+The hook command installs a blocking pre-commit gate in this checkout; repeat it
+after cloning because Git hooks are local. It also configures Guardian metadata
+merge handling.
+
+[SPEC.md](SPEC.md) links implemented behaviors to executable regression tests.
+`src/root_test.zig` is the unit test root, and `test/integration.zig` contains the
+actual CLI tests. Python acceptance drivers remain in `tests/`. There are no
+frozen violations or accepted violation baselines. Guardian's local telemetry
+cache is ignored.
 
 ## Current implementation
 

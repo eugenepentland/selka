@@ -35,12 +35,18 @@ test "source allocator forwarding growth and returned buffer slices agree across
     defer c.deinit();
     for ([_]language.vm.MemoryBacking{ .general, .arena }) |backing| {
         var stats: memory.Statistics = .{};
-        const result = try c.executeWithOptions(t.allocator, .{ .memory_backing = backing, .memory_statistics = &stats });
+        const result = try c.executeWithOptions(t.allocator, .{
+            .memory = .{ .backing = backing, .statistics = &stats },
+        });
         try t.expectEqual(@as(i64, 19), result.value);
         try t.expectEqual(@as(u64, 1), stats.created);
         try released(stats);
-        try t.expectError(error.CapabilityUnavailable, c.executeWithOptions(t.allocator, .{ .memory_backing = backing, .provide_allocator = false }));
-        const limited = try c.executeWithOptions(t.allocator, .{ .memory_backing = backing, .memory_limits = .{ .max_buffer_capacity = 2 }, .memory_statistics = &stats });
+        try t.expectError(error.CapabilityUnavailable, c.executeWithOptions(t.allocator, .{
+            .memory = .{ .backing = backing, .provide_allocator = false },
+        }));
+        const limited = try c.executeWithOptions(t.allocator, .{
+            .memory = .{ .backing = backing, .limits = .{ .max_buffer_capacity = 2 }, .statistics = &stats },
+        });
         try t.expectEqual(@as(i64, 1), limited.value);
         try released(stats);
     }
@@ -48,9 +54,12 @@ test "source allocator forwarding growth and returned buffer slices agree across
 fn executeScenario(allocator: std.mem.Allocator, c: *language.Compilation) !void {
     var stats: memory.Statistics = .{};
     defer std.debug.assert(stats.created == stats.released);
-    try t.expectEqual(@as(i64, 19), (try c.executeWithOptions(allocator, .{ .memory_backing = .arena, .memory_statistics = &stats })).value);
+    try t.expectEqual(@as(i64, 19), (try c.executeWithOptions(allocator, .{
+        .memory = .{ .backing = .arena, .statistics = &stats },
+    })).value);
     try released(stats);
 }
+// spec: OWN-12
 test "arena VM releases backing and owners on every host allocation failure" {
     var c = try language.Compilation.init(t.allocator, "arena.my", source);
     defer c.deinit();
@@ -64,7 +73,7 @@ test "arena VM cleanup survives every instruction boundary including suspended r
     defer c.deinit();
     for (1..500) |budget| {
         var stats: memory.Statistics = .{};
-        const result = try c.executeWithOptions(t.allocator, .{ .memory_backing = .arena, .memory_statistics = &stats, .max_steps = budget });
+        const result = try c.executeWithOptions(t.allocator, .{ .memory = .{ .backing = .arena, .statistics = &stats }, .max_steps = budget });
         try released(stats);
         if (result == .value) {
             try t.expectEqual(@as(i64, 19), result.value);
@@ -76,12 +85,19 @@ test "arena VM cleanup survives every instruction boundary including suspended r
 }
 test "arena VM preserves immutable snapshots and cleans partial acquisition on propagation" {
     const fixed = "fn main() -> i64 { let mut a = new [3]i64 [2, 3, 5]; let before = a; borrow mut a[0..3] as all { write_slice(all, 1, 11); } return before[1] + a[1]; }";
-    const partial = "buffer B: i64; result R { ok: B, err: i64 } struct Pair { first: B, second: B } result P { ok: Pair, err: i64 } fn make(heap: allocator) -> P { return new P.ok(new Pair { first: try acquire_buffer<R>(heap, 2), second: try acquire_buffer<R>(heap, 2) }); } fn main(heap: allocator) -> i64 { acknowledge make(heap); match acquire_buffer<R>(heap, 1) { R.ok(discard) => { return 7; }, R.err(code) => { return code; } } }";
+    const partial = "buffer B: i64; result R { ok: B, err: i64 } struct Pair { first: B, second: B } " ++
+        "result P { ok: Pair, err: i64 } fn make(heap: allocator) -> P { return new P.ok(new " ++
+        "Pair { first: try acquire_buffer<R>(heap, 2), second: try acquire_buffer<R>(heap, 2) " ++
+        "}); } fn main(heap: allocator) -> i64 { acknowledge make(heap); match " ++
+        "acquire_buffer<R>(heap, 1) { R.ok(discard) => { return 7; }, R.err(code) => { return " ++
+        "code; } } }";
     for ([_][]const u8{ fixed, partial }, [_]i64{ 14, 7 }) |text, expected| {
         var c = try language.Compilation.init(t.allocator, "arena.my", text);
         defer c.deinit();
         var stats: memory.Statistics = .{};
-        try t.expectEqual(expected, (try c.executeWithOptions(t.allocator, .{ .memory_backing = .arena, .memory_statistics = &stats, .memory_limits = .{ .max_allocations = 1 } })).value);
+        try t.expectEqual(expected, (try c.executeWithOptions(t.allocator, .{
+            .memory = .{ .backing = .arena, .statistics = &stats, .limits = .{ .max_allocations = 1 } },
+        })).value);
         try released(stats);
     }
 }
@@ -90,6 +106,7 @@ test "separate arena VM executions reclaim their complete backing" {
     defer c.deinit();
     try c.emit();
     var limited: @import("test_support.zig").LimitedLiveAllocator = .{ .parent = t.allocator, .limit = 32768 };
+    defer limited.deinit();
     for (0..1000) |_| {
         try executeScenario(limited.allocator(), &c);
         try t.expectEqual(@as(usize, 0), limited.live);

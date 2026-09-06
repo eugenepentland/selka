@@ -1,9 +1,11 @@
+//! Near-duplicate discovery tests covering insertion reports, bounded work, deterministic indexing, and full-matrix comparison.
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const discovery = language.duplicates;
 const source = "fn a(x: i64) -> i64 { return x * 2 + 1; } fn copy(y: i64) -> i64 { return y * 2 + 1; } fn b(x: i64) -> i64 { return x * 2 + 3; } fn main() -> i64 { return 0; }";
 
+// spec: TOOL-2
 test "approximate discovery reports literal drift once per exact-group representative" {
     var c = try language.Compilation.init(t.allocator, "near.my", source);
     defer c.deinit();
@@ -46,7 +48,10 @@ test "near reports explain changed operators and resolved callees" {
     }
 }
 test "near search retains signature effect and nominal boundaries and excludes unrelated bodies" {
-    const text = "domain D: i64 {} fn a(x: i64) -> i64 { return x * 2 + 1; } fn b(x: i64) -> i64 effects() { return x * 2 + 3; } fn c(x: bool) -> bool { return !x; } fn d(x: D) -> D { return x; } fn e(x: i64) -> i64 { if x > 0 { return x; } return 0; } fn main() -> i64 { return 0; }";
+    const text = "domain D: i64 {} fn a(x: i64) -> i64 { return x * 2 + 1; } fn b(x: i64) -> i64 " ++
+        "effects() { return x * 2 + 3; } fn c(x: bool) -> bool { return !x; } fn d(x: D) -> D " ++
+        "{ return x; } fn e(x: i64) -> i64 { if x > 0 { return x; } return 0; } fn main() -> " ++
+        "i64 { return 0; }";
     var c = try language.Compilation.init(t.allocator, "near.my", text);
     defer c.deinit();
     try c.check();
@@ -63,12 +68,9 @@ test "line edit alignment describes inserted statements without relabeling them 
     defer result.deinit();
     try t.expectEqual(@as(usize, 0), result.groups.len);
     try t.expectEqual(@as(usize, 1), result.approximate.pairs.len);
-    var saw_insertion = false;
-    for (result.approximate.pairs[0].changes) |change| if (change.before == null) {
-        saw_insertion = true;
-    };
-    try t.expect(saw_insertion);
+    try t.expect(hasInsertion(result.approximate.pairs[0].changes));
 }
+// spec: TOOL-3
 test "bounded near discovery explicitly reports incomplete work and validates budgets" {
     var c = try language.Compilation.init(t.allocator, "near.my", source);
     defer c.deinit();
@@ -121,7 +123,7 @@ test "header index retains source pair order across interleaved buckets" {
     defer arena.deinit();
     const allocator = arena.allocator();
     var inputs: [5]near.Input = undefined;
-    for (&inputs, [_]usize{ 0, 1, 0, 1, 0 }, 0..) |*input, header, id| input.* = try indexedInput(allocator, id, header);
+    try fillIndexedInputs(allocator, &inputs, &.{ 0, 1, 0, 1, 0 });
     const result = try near.discover(allocator, t.allocator, &inputs, .{});
     try t.expect(!result.truncated);
     try t.expectEqual(@as(usize, 4), result.pairs.len);
@@ -140,7 +142,7 @@ test "header index discovers distant compatible functions within a subquadratic 
     defer arena.deinit();
     const allocator = arena.allocator();
     const inputs = try allocator.alloc(near.Input, 1024);
-    for (inputs, 0..) |*input, id| input.* = try indexedInput(allocator, id, if (id == inputs.len - 1) 0 else id);
+    try fillDistinctHeaders(allocator, inputs);
     const result = try near.discover(allocator, t.allocator, inputs, .{ .max_work = 250_000 });
     try t.expect(!result.truncated);
     try t.expect(result.work < 250_000);
@@ -206,7 +208,9 @@ fn compareWithFullMatrix(left: []const []const u8, right: []const []const u8, pe
     try t.expectEqualDeep(@as([]const near.Change, changes[0..count]), result.pairs[0].changes);
 }
 test "banded distance and edit explanations agree with a full matrix over short sequences" {
-    for (0..5) |left_length| for (0..5) |right_length| {
+    for (0..25) |length_pair| {
+        const left_length = length_pair / 5;
+        const right_length = length_pair % 5;
         for (0..@as(usize, 1) << @intCast(left_length)) |a| for (0..@as(usize, 1) << @intCast(right_length)) |b| {
             var left: [5][]const u8 = undefined;
             var right: [5][]const u8 = undefined;
@@ -216,7 +220,7 @@ test "banded distance and edit explanations agree with a full matrix over short 
             for (right[1 .. right_length + 1], 0..) |*line, bit| line.* = if (b & (@as(usize, 1) << @intCast(bit)) == 0) "a" else "b";
             for ([_]u8{ 1, 50, 80, 90, 99 }) |percent| try compareWithFullMatrix(left[0 .. left_length + 1], right[0 .. right_length + 1], percent);
         };
-    };
+    }
 }
 test "banded comparison finds long literal drift within the default work budget" {
     var arena = std.heap.ArenaAllocator.init(t.allocator);
@@ -237,4 +241,15 @@ test "banded comparison finds long literal drift within the default work budget"
     try t.expectEqual(@as(usize, 1), result.pairs[0].distance);
     try t.expectEqualStrings("a", result.pairs[0].changes[0].before.?);
     try t.expectEqualStrings("b", result.pairs[0].changes[0].after.?);
+}
+
+fn hasInsertion(changes: []const near.Change) bool {
+    for (changes) |change| if (change.before == null) return true;
+    return false;
+}
+fn fillIndexedInputs(allocator: std.mem.Allocator, inputs: []near.Input, headers: []const usize) !void {
+    for (inputs, headers, 0..) |*input, header, id| input.* = try indexedInput(allocator, id, header);
+}
+fn fillDistinctHeaders(allocator: std.mem.Allocator, inputs: []near.Input) !void {
+    for (inputs, 0..) |*input, id| input.* = try indexedInput(allocator, id, if (id == inputs.len - 1) 0 else id);
 }

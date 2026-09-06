@@ -44,7 +44,21 @@ const Fake = struct {
         return .{ .context = self, .acquire = acquire, .read = read, .write = write, .complete = complete, .release = release };
     }
 };
-const source = "resource File: filesystem; result Open { ok: File, err: i64 } struct Chunk { bytes: [0]u8, length: u64, eof: bool } result Read { ok: Chunk, err: i64 } result Written { ok: u64, err: i64 } struct Failure { resource: File, code: i64 } result Finish { ok: bool, err: Failure } struct Authority { fs: filesystem_cap } fn delegate(fs: filesystem_cap) -> Authority effects() { return new Authority { fs: restrict_resource<read>(fs) }; } fn widen(auth: Authority) -> filesystem_cap effects() { return restrict_resource<read, write, complete>(auth.fs); } fn main(fs: filesystem_cap) -> i64 { let limited = widen(delegate(fs)); match acquire_resource<Open>(limited, new [0]u8 []) { Open.ok(input) => { let mut file = input; acknowledge read_resource<Read>(file); match write_resource<Written>(file, new [0]u8 []) { Written.ok(count) => { discard count; return 99; }, Written.err(code) => { if code != 2 { return 98; } } } match complete_resource<Finish>(file) { Finish.ok(done) => { discard done; return 97; }, Finish.err(failure) => { return failure.code; } } }, Open.err(code) => { return -code; } } }";
+const source = "resource File: filesystem; result Open { ok: File, err: i64 } struct Chunk { bytes: " ++
+    "[0]u8, length: u64, eof: bool } result Read { ok: Chunk, err: i64 } result Written { " ++
+    "ok: u64, err: i64 } struct Failure { resource: File, code: i64 } result Finish { ok: " ++
+    "bool, err: Failure } struct Authority { fs: filesystem_cap } fn delegate(fs: " ++
+    "filesystem_cap) -> Authority effects() { return new Authority { fs: " ++
+    "restrict_resource<read>(fs) }; } fn widen(auth: Authority) -> filesystem_cap " ++
+    "effects() { return restrict_resource<read, write, complete>(auth.fs); } fn main(fs: " ++
+    "filesystem_cap) -> i64 { let limited = widen(delegate(fs)); match " ++
+    "acquire_resource<Open>(limited, new [0]u8 []) { Open.ok(input) => { let mut file = " ++
+    "input; acknowledge read_resource<Read>(file); match write_resource<Written>(file, " ++
+    "new [0]u8 []) { Written.ok(count) => { discard count; return 99; }, " ++
+    "Written.err(code) => { if code != 2 { return 98; } } } match " ++
+    "complete_resource<Finish>(file) { Finish.ok(done) => { discard done; return 97; }, " ++
+    "Finish.err(failure) => { return failure.code; } } }, Open.err(code) => { return " ++
+    "-code; } } }";
 fn scenario(allocator: std.mem.Allocator) !void {
     var fake: Fake = .{};
     defer std.debug.assert(fake.live == 0);
@@ -133,7 +147,10 @@ test "attenuated acquisition and denied completion clean up every failed allocat
     try t.checkAllAllocationFailures(no_resize.allocator(), scenario, .{});
 }
 test "emission and discovery preserve permission sets and reject invalid masks" {
-    var c = try language.Compilation.init(t.allocator, "duplicates.my", "fn a(fs: filesystem_cap) -> filesystem_cap { return restrict_resource<read, write>(fs); } fn b(dir: filesystem_cap) -> filesystem_cap { return restrict_resource<write, read>(dir); } fn c(fs: filesystem_cap) -> filesystem_cap { return restrict_resource<read>(fs); } fn main() -> i64 { return 0; }");
+    var c = try language.Compilation.init(t.allocator, "duplicates.my", "fn a(fs: filesystem_cap) -> filesystem_cap { return restrict_resource<read, " ++
+        "write>(fs); } fn b(dir: filesystem_cap) -> filesystem_cap { return " ++
+        "restrict_resource<write, read>(dir); } fn c(fs: filesystem_cap) -> filesystem_cap { " ++
+        "return restrict_resource<read>(fs); } fn main() -> i64 { return 0; }");
     defer c.deinit();
     try c.check();
     var discovery = try language.duplicates.discover(t.allocator, c.program.?, .{ .min_nodes = 1 });
@@ -141,12 +158,9 @@ test "emission and discovery preserve permission sets and reject invalid masks" 
     try t.expectEqual(@as(usize, 1), discovery.groups.len);
     try t.expectEqual(@as(usize, 2), discovery.groups[0].members.len);
     try c.emit();
-    for (@constCast(c.code.?.functions[0].instructions)) |*instruction| if (instruction.op == .restrict_resource) {
-        const original = instruction.*;
-        instruction.op.restrict_resource.permissions = 128;
-        try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
-        instruction.* = original;
-        return;
-    };
-    return error.TestUnexpectedResult;
+    const instruction = try @import("instruction_test.zig").find(@constCast(c.code.?.functions[0].scope.instructions), .restrict_resource);
+    const original = instruction.*;
+    instruction.op.restrict_resource.permissions = 128;
+    try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
+    instruction.* = original;
 }

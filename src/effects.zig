@@ -1,4 +1,10 @@
 //! Monotone effect inference over resolved calls, with finite witness paths.
+/// Failures returned by validate; callers must handle these boundary errors.
+pub const ValidateError = error{
+    InternalError,
+    OutOfMemory,
+};
+
 const std = @import("std");
 const typed = @import("typed.zig");
 const sets = @import("effect_set.zig");
@@ -55,6 +61,7 @@ const Graph = struct {
     }
 };
 
+/// Infer transitive effects and reject function bodies that exceed declared effect bounds.
 pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagnostic.Sink) diagnostic.Error!void {
     var graph = try Graph.init(allocator, program.functions.len);
     defer graph.deinit();
@@ -64,8 +71,8 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
     };
     defer allocator.free(cleanup_masks);
     for (program.functions, 0..) |function, index| {
-        seedOwnership(&graph, index, function.return_type, function.locals, function.declaration, cleanup_masks) catch unreachable;
-        var walker = try @import("typed_walk.zig").Walker.init(allocator, program, function.body);
+        try seedOwnership(&graph, index, function.signature.return_type, function.scope.locals, function.declaration, cleanup_masks);
+        var walker = try @import("typed_walk.zig").Walker.init(allocator, program, function.scope.body);
         defer walker.deinit();
         while (try walker.next()) |item| if (item == .statement) {
             const statement = program.statements[@backingInt(item.statement)];
@@ -75,7 +82,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
             switch (node.data) {
                 .acquire_resource => graph.direct(index, typed.resourceKind(typed.resultShape(node.ty, program.records).?.ok_type, program.records).?.effect(), node.span),
                 .complete_resource => graph.direct(index, typed.resourceKind(typed.completionShape(node.ty, program.records).?.resource_type, program.records).?.effect(), node.span),
-                .resource_io => |io| graph.direct(index, typed.resourceKind(function.locals[@backingInt(io.owner)].ty, program.records).?.effect(), node.span),
+                .resource_io => |io| graph.direct(index, typed.resourceKind(function.scope.locals[@backingInt(io.owner)].ty, program.records).?.effect(), node.span),
                 .environment_get => graph.direct(index, .environment, node.span),
                 .external_read => |read| graph.direct(index, read.kind.effect(), node.span),
                 .acquire_buffer, .acquire_pool => graph.direct(index, .allocation, node.span),
@@ -86,7 +93,32 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
                     error.OutOfMemory => return error.OutOfMemory,
                     error.InternalError => unreachable, // Resolved typed function identity.
                 },
-                .reset_arena, .pool_operation, .restrict_resource, .integer, .boolean, .local, .read_ref, .read_field, .take_field, .propagate, .read_slice, .len_slice, .cast, .wrap, .variant, .unwrap, .array, .index, .replace, .length, .record, .update, .field, .unary, .binary => {},
+                .reset_arena,
+                .pool_operation,
+                .restrict_resource,
+                .integer,
+                .boolean,
+                .local,
+                .read_ref,
+                .read_field,
+                .take_field,
+                .propagate,
+                .read_slice,
+                .len_slice,
+                .cast,
+                .wrap,
+                .variant,
+                .unwrap,
+                .array,
+                .index,
+                .replace,
+                .length,
+                .record,
+                .update,
+                .field,
+                .unary,
+                .binary,
+                => {},
             }
         };
         // Ownership-bearing signatures and locals conservatively include their
@@ -94,9 +126,9 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
     }
     try graph.infer();
     for (@constCast(program.functions), 0..) |*function, index| {
-        function.effects = graph.states[index].mask;
-        const bound = function.effect_bound orelse continue;
-        const forbidden = function.effects & ~bound.allowed;
+        function.policy.effects = graph.states[index].mask;
+        const bound = function.policy.effect_bound orelse continue;
+        const forbidden = function.policy.effects & ~bound.allowed;
         if (forbidden == 0) continue;
         for (std.meta.tags(sets.Effect)) |effect| {
             if (forbidden & sets.bit(effect) == 0) continue;
@@ -118,14 +150,14 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
 }
 
 /// Independently recompute effects from emitted operations, including all call forms.
-pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode.zig").Program) !void {
+pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.zig").Program) ValidateError!void {
     var graph = try Graph.init(allocator, program.functions.len);
     defer graph.deinit();
     const cleanup_masks = try cleanupMasks(allocator, program.records);
     defer allocator.free(cleanup_masks);
     for (program.functions, 0..) |function, index| {
-        try seedOwnership(&graph, index, function.return_type, function.locals, .{ .start = 0, .end = 0 }, cleanup_masks);
-        for (function.instructions) |instruction| switch (instruction.op) {
+        try seedOwnership(&graph, index, function.signature.return_type, function.scope.locals, .{ .start = 0, .end = 0 }, cleanup_masks);
+        for (function.scope.instructions) |instruction| switch (instruction.op) {
             .acquire_resource => |acquire| {
                 const shape = typed.resultShape(acquire.output, program.records) orelse return error.InternalError;
                 const kind = typed.resourceKind(shape.ok_type, program.records) orelse return error.InternalError;
@@ -136,8 +168,8 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode.zig").P
                 graph.direct(index, typed.resourceKind(shape.resource_type, program.records).?.effect(), instruction.span);
             },
             .resource_io => |io| {
-                if (@backingInt(io.owner) >= function.locals.len) return error.InternalError;
-                const kind = typed.resourceKind(function.locals[@backingInt(io.owner)].ty, program.records) orelse return error.InternalError;
+                if (@backingInt(io.owner) >= function.scope.locals.len) return error.InternalError;
+                const kind = typed.resourceKind(function.scope.locals[@backingInt(io.owner)].ty, program.records) orelse return error.InternalError;
                 graph.direct(index, kind.effect(), instruction.span);
             },
             .environment_get => graph.direct(index, .environment, instruction.span),
@@ -149,13 +181,66 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode.zig").P
             .call => |callee| try graph.call(index, @backingInt(callee), instruction.span),
             .call_refs => |call| try graph.call(index, @backingInt(call.function), instruction.span),
             .call_borrow => |call| try graph.call(index, @backingInt(call.function), instruction.span),
-            .reset_arena, .end_region, .pool_operation, .restrict_resource, .push_i64, .add_i64_checked, .sub_i64_checked, .mul_i64_checked, .div_i64_checked, .rem_i64_checked, .neg_i64_checked, .cmp_i64, .try_result, .push_bool, .push_integer, .cast_integer, .wrap_domain, .make_variant, .switch_variant, .cmp_enum, .cmp_handle, .unwrap_domain, .neg_integer, .binary_integer, .make_record, .update_record, .get_field, .get_index, .replace_index, .array_length, .begin_borrow, .begin_slice, .read_slice, .write_slice, .len_slice, .end_borrow, .read_ref, .read_field, .take_field, .write_ref, .move_local, .drop_local, .load_local, .store_local, .cmp_bool, .not_bool, .pop, .acknowledge, .jump, .jump_if_false, .ret, .ret_ref, .capture_ref => {},
+            .reset_arena,
+            .end_region,
+            .pool_operation,
+            .restrict_resource,
+            .push_i64,
+            .add_i64_checked,
+            .sub_i64_checked,
+            .mul_i64_checked,
+            .div_i64_checked,
+            .rem_i64_checked,
+            .neg_i64_checked,
+            .cmp_i64,
+            .try_result,
+            .push_bool,
+            .push_integer,
+            .cast_integer,
+            .wrap_domain,
+            .make_variant,
+            .switch_variant,
+            .cmp_enum,
+            .cmp_handle,
+            .unwrap_domain,
+            .neg_integer,
+            .binary_integer,
+            .make_record,
+            .update_record,
+            .get_field,
+            .get_index,
+            .replace_index,
+            .array_length,
+            .begin_borrow,
+            .begin_slice,
+            .read_slice,
+            .write_slice,
+            .len_slice,
+            .end_borrow,
+            .read_ref,
+            .read_field,
+            .take_field,
+            .write_ref,
+            .move_local,
+            .drop_local,
+            .load_local,
+            .store_local,
+            .cmp_bool,
+            .not_bool,
+            .pop,
+            .acknowledge,
+            .jump,
+            .jump_if_false,
+            .ret,
+            .ret_ref,
+            .capture_ref,
+            => {},
         };
     }
     try graph.infer();
     for (program.functions, graph.states) |function, state| {
-        if (function.effects != state.mask) return error.InternalError;
-        if (function.effect_bound) |bound| if (bound.allowed & ~sets.all != 0 or state.mask & ~bound.allowed != 0) return error.InternalError;
+        if (function.policy.effects != state.mask) return error.InternalError;
+        if (function.policy.effect_bound) |bound| if (bound.allowed & ~sets.all != 0 or state.mask & ~bound.allowed != 0) return error.InternalError;
     }
 }
 
@@ -174,7 +259,7 @@ test "effect lattice propagates independent effects through cycles without conta
     try graph.call(0, 1, span);
     try graph.call(1, 2, span);
     try graph.call(2, 1, span);
-    for (std.meta.tags(sets.Effect)) |effect| graph.direct(if (effect == .environment) 3 else 2, effect, span);
+    seedIndependentEffects(&graph, span);
     try graph.infer();
     for (graph.states[0..3]) |state| try t.expectEqual(sets.all & ~sets.bit(.environment), state.mask);
     try t.expectEqual(sets.bit(.environment), graph.states[3].mask);
@@ -195,10 +280,10 @@ fn cleanupMasks(allocator: std.mem.Allocator, records: []const typed.Record) ![]
     while (changed) {
         changed = false;
         for (records, 0..) |record, index| {
-            var mask: sets.Mask = if (record.resource) |kind| sets.bit(kind.effect()) else 0;
-            if (record.array) |array| {
+            var mask: sets.Mask = if (record.shape.resource) |kind| sets.bit(kind.effect()) else 0;
+            if (record.shape.array) |array| {
                 if (array.length != 0) mask |= try typeMask(array.element, masks);
-            } else if (record.variants) |variants| {
+            } else if (record.shape.variants) |variants| {
                 for (variants.cases) |case| if (case.payload) |payload| {
                     mask |= try typeMask(payload, masks);
                 };
@@ -221,4 +306,8 @@ fn seedOwnership(graph: *Graph, index: usize, result: typed.Type, locals: []cons
     for (std.meta.tags(sets.Effect)) |effect| if (mask & sets.bit(effect) != 0) {
         graph.direct(index, effect, span);
     };
+}
+
+fn seedIndependentEffects(graph: *Graph, span: Span) void {
+    for (std.meta.tags(sets.Effect)) |effect| graph.direct(if (effect == .environment) 3 else 2, effect, span);
 }

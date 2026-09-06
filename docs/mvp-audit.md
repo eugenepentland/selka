@@ -8,7 +8,7 @@ other quality contracts for later experiments. They are not implemented.
 The previous milestones established M0–M4. This audit inspects their actual
 source and adds missing boundary checks; checked plan boxes are not themselves
 evidence. Tests named below are in `src/compiler_test.zig` unless identified
-as CLI tests in `tests/integration.zig`.
+as CLI tests in `test/integration.zig`.
 
 | Requirement | Implementation and inspected evidence |
 | --- | --- |

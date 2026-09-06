@@ -3,6 +3,6 @@
     .version = "0.1.0",
     .fingerprint = 0xe12764e71b51fef7,
     .minimum_zig_version = "0.17.0-dev.1683+5ceec001b",
-    .dependencies = .{},
-    .paths = .{ "build.zig", "build.zig.zon", ".zigversion", "src", "tests", "examples", "docs", "README.md" },
+    .dependencies = .{ .guardian = .{ .path = "../guardian-zig" } },
+    .paths = .{ "build.zig", "build.zig.zon", ".zigversion", "src", "tests", "test", "guardian.toml", "SPEC.md", "examples", "docs", "README.md" },
 }

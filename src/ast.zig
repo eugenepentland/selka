@@ -3,12 +3,19 @@ const std = @import("std");
 const Acquisition = struct { ty: Span, allocator: NodeId, value: NodeId };
 const FieldAccess = struct { owner: Span, field: Span };
 const Span = @import("source.zig").Span;
+/// Index of a parsed expression in the syntax program.
 pub const NodeId = enum(usize) { _ };
+/// Index of a parsed statement in the syntax program.
 pub const StatementId = enum(usize) { _ };
+/// Parsed arithmetic, logical, and comparison operators before type checking.
 pub const BinaryOp = enum { add, sub, mul, div, rem, logical_and, logical_or, eq, ne, lt, le, gt, ge };
+/// Parsed simple, additive, and subtractive assignment forms.
 pub const AssignmentOp = enum { set, add, sub };
+/// Parsed negation and Boolean inversion operators.
 pub const UnaryOp = enum { neg, not };
+/// Source type spelling paired with an expression requiring that type.
 pub const TypedValue = struct { ty: Span, value: NodeId };
+/// Parsed expression with source-spelled names and unresolved operand identities.
 pub const Node = struct {
     span: Span,
     data: union(enum) {
@@ -48,6 +55,7 @@ pub const Node = struct {
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
     },
 };
+/// Parsed statement and control-flow structure before ownership and type checking.
 pub const Statement = struct {
     span: Span,
     data: union(enum) {
@@ -67,29 +75,58 @@ pub const Statement = struct {
         assignment: struct { name: Span, value: NodeId, op: AssignmentOp, op_span: Span },
     },
 };
+/// Source case spelling, optional payload binding, and arm body.
 pub const MatchArm = struct { ty: Span, name: Span, binding: ?Span, discard_payload: bool, body: StatementId };
+/// Source-spelled case name and optional payload type.
 pub const Variant = struct { name: Span, payload: ?Span };
+/// Parsed enum, union, or result declaration with its closed case list.
 pub const Variants = struct { fallible: bool = false, name: Span, is_union: bool, cases: []const Variant };
+/// Source field spelling and its initializer expression.
 pub const FieldInit = struct { name: Span, value: NodeId };
+/// Parsed record name and ordered field declarations.
 pub const Record = struct { name: Span, fields: []const Parameter };
+/// Parsed start and end expressions for a slice range.
 pub const Range = struct { start: NodeId, end: NodeId };
+/// Source name/type and optional reference or slice passing mode.
 pub const Parameter = struct { name: Span, ty: Span, reference: ?bool = null, slice: bool = false };
+/// Source names of a pool, its nominal handle, and its element type.
 pub const Pool = struct { name: Span, handle: Span, element: Span };
+/// Source-spelled wire type and domain decoder/encoder names.
 pub const Codec = struct { wire: Span, decode: Span, encode: Span };
+/// Nominal domain declaration with backing type and optional explicit codec.
 pub const Domain = struct { name: Span, backing: Span, codec: ?Codec = null };
+/// Declared caller parameter provenance of a returned reference or slice.
 pub const ReturnReference = struct { source: Span, mutable: bool, slice: bool };
-pub const Function = struct { effect_bound: ?@import("effect_set.zig").Bound = null, return_reference: ?ReturnReference = null, owner: ?Span = null, restricted: bool = false, conversion: bool = false, name: Span, parameters: []const Parameter, return_type: Span, body: StatementId };
+/// Parsed signature, visibility, effect bound, provenance annotation, and body.
+pub const Function = struct { policy: FunctionPolicy = .{}, signature: FunctionSignature, name: Span, body: StatementId };
+/// Source visibility and declared effect bound before name/type resolution.
+pub const FunctionPolicy = struct {
+    effect_bound: ?@import("effect_set.zig").Bound = null,
+    owner: ?Span = null,
+    restricted: bool = false,
+    conversion: bool = false,
+};
+/// Source parameter and result spellings with optional reference provenance.
+pub const FunctionSignature = struct { return_reference: ?ReturnReference = null, parameters: []const Parameter, return_type: Span };
+
+/// Fixed integer length or enum key spelling of an array/table type.
 pub const ArrayIndex = union(enum) { length: Span, enum_type: Span };
+/// Source-spelled array/table shape and element type.
 pub const ArrayType = struct { span: Span, index: ArrayIndex, element: Span };
+/// Parsed declaration and syntax collections allocated during one parse.
 pub const Program = struct {
+    types: TypeDeclarations = .{},
+    nodes: std.ArrayList(Node),
+    statements: std.ArrayList(Statement),
+    functions: []const Function,
+};
+/// Source type declarations collected separately from function bodies and expression tables.
+pub const TypeDeclarations = struct {
     pools: []const Pool = &.{},
     buffers: []const Domain = &.{},
     resources: []const Domain = &.{},
     domains: []const Domain = &.{},
     variants: []const Variants = &.{},
     array_types: []const ArrayType = &.{},
-    nodes: std.ArrayList(Node),
-    statements: std.ArrayList(Statement),
-    functions: []const Function,
-    records: []const Record,
+    records: []const Record = &.{},
 };

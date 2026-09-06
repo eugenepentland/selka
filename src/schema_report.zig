@@ -1,13 +1,20 @@
 //! Checked schema plus the exact loaded source snapshot that produced it.
+/// Failures returned by render; callers must handle these boundary errors.
+pub const RenderError = @import("schema.zig").RenderError || error{ IncompleteProject, InternalError };
+
 const std = @import("std");
 const receipt = @import("source_receipt.zig");
-pub fn render(allocator: std.mem.Allocator, compilation: *@import("project_compile.zig").Compilation, identity: receipt.Identity) ![]u8 {
+/// Allocate a checked schema receipt with compiler identity and source dependency evidence.
+pub fn render(allocator: std.mem.Allocator, compilation: *@import("project_compile.zig").Compilation, identity: receipt.Identity) RenderError![]u8 {
     try compilation.check();
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
     const scratch = arena.allocator();
     const bytes = try @import("schema.zig").render(scratch, compilation);
-    const schema = try std.json.parseFromSlice(std.json.Value, scratch, bytes, .{});
+    const schema = std.json.parseFromSlice(std.json.Value, scratch, bytes, .{}) catch |err| {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        return error.InternalError;
+    };
     defer schema.deinit();
     const source = .{
         .version = "schema-source-v1",

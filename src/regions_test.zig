@@ -25,17 +25,17 @@ fn scenario(allocator: std.mem.Allocator) !void {
     {
         const owner = try runtime.acquireAuthorized(pool_type, 2, &store, inner);
         defer owner.release(allocator);
-        const id = try owner.pool.perform(.insert, schema, &.{value});
-        snapshot = try owner.pool.perform(.read, schema, &.{id});
+        const id = try owner.owned.pool.perform(.insert, schema, &.{value});
+        snapshot = try owner.owned.pool.perform(.read, schema, &.{id});
         const buffer = try store.createAuthorized(inner, node_type, &.{value}, 1);
-        defer store.destroyForUnwind(buffer) catch unreachable;
         _ = try store.reserve(buffer, 3);
         try t.expectError(error.RegionInUse, store.endRegion(inner));
         try t.expectError(error.InvalidCapability, store.checkAllocationAllocator(buffer, root));
         try store.checkAllocationAllocator(buffer, inner);
         const replacement = try values.Value.create(allocator, node_type, &.{.{ .i64 = 9 }});
         defer replacement.release(allocator);
-        discardValue(try owner.pool.perform(.replace, schema, &.{ id, replacement }), allocator);
+        discardValue(try owner.owned.pool.perform(.replace, schema, &.{ id, replacement }), allocator);
+        try store.destroyForUnwind(buffer);
     }
     try store.endRegion(inner);
     try store.endRegion(outer);
@@ -107,7 +107,7 @@ test "arena reset rejects retained root pool backing before changing buffers" {
         try t.expectEqual(@as(i64, 4), value.i64);
     }
     try t.expect(try region.reset(.free_all));
-    try t.expectError(error.InvalidAllocation, region.store.info(buffer));
+    try t.expectError(error.InvalidAllocation, region.store.bufferInfo(buffer));
 }
 test "arena pool clear frees retained values with their parent allocator" {
     var region: arena.Arena = undefined;
@@ -119,16 +119,17 @@ test "arena pool clear frees retained values with their parent allocator" {
     {
         const value = try values.Value.create(t.allocator, node_type, &.{.{ .i64 = 7 }});
         defer value.release(t.allocator);
-        discardValue(try owner.pool.perform(.insert, schema, &.{value}), t.allocator);
+        discardValue(try owner.owned.pool.perform(.insert, schema, &.{value}), t.allocator);
     }
     // The pool now owns the only reference. Clearing must free parent-allocated
     // Aggregate and field storage, never pass them to the arena allocator.
-    discardValue(try owner.pool.perform(.clear, schema, &.{}), t.allocator);
-    try t.expectEqual(@as(usize, 0), owner.pool.registry.statistics.live);
+    discardValue(try owner.owned.pool.perform(.clear, schema, &.{}), t.allocator);
+    try t.expectEqual(@as(usize, 0), owner.owned.pool.registry.statistics.live);
 }
 
 test "region storage and registry slots remain bounded across ten thousand pool and buffer scopes" {
     var bounded: @import("test_support.zig").LimitedLiveAllocator = .{ .parent = t.allocator, .limit = 16 * 1024 };
+    defer bounded.deinit();
     {
         const allocator = bounded.allocator();
         var store = try memory.Store.initWithLimits(allocator, .{ .max_regions = 1 });
@@ -142,18 +143,18 @@ test "region storage and registry slots remain bounded across ten thousand pool 
                 defer owner.release(allocator);
                 const value = try values.Value.create(allocator, node_type, &.{.{ .i64 = @intCast(n) }});
                 defer value.release(allocator);
-                const id = try owner.pool.perform(.insert, schema, &.{value});
-                const snapshot = try owner.pool.perform(.read, schema, &.{id});
+                const id = try owner.owned.pool.perform(.insert, schema, &.{value});
+                const snapshot = try owner.owned.pool.perform(.read, schema, &.{id});
                 defer snapshot.release(allocator);
                 const buffer = try store.createAuthorized(region, node_type, &.{snapshot}, 1);
-                defer store.destroyForUnwind(buffer) catch unreachable;
                 const field = try snapshot.getField(0);
                 defer field.release(allocator);
                 try t.expectEqual(@as(i64, @intCast(n)), field.i64);
+                try store.destroyForUnwind(buffer);
             }
             try store.endRegion(region);
         }
-        try t.expectEqual(@as(usize, 0), store.regions.registry.statistics.live);
+        try t.expectEqual(@as(usize, 0), store.backing.regions.registry.statistics.live);
         try t.expectEqual(@as(u64, 10000), runtime.statistics.released);
         try t.expectEqual(@as(u64, 10000), store.statistics.released);
     }

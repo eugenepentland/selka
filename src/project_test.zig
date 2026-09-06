@@ -1,3 +1,4 @@
+//! Project loading tests for dependency graphs, bounded traversal, errors, and stable source receipts.
 const std = @import("std");
 const t = std.testing;
 const p = @import("project.zig");
@@ -40,6 +41,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
     try t.expect(std.mem.indexOf(u8, rendered, "import right as r") != null);
     try t.expectError(error.ProjectAlreadyLoaded, project.load(files.provider(), "main", .{}));
 }
+// spec: PROJ-1
 test "module diamond loads once in dependency order including allocation failures" {
     try scenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
@@ -66,6 +68,7 @@ test "module headers reject mismatch duplicate aliases duplicate imports and inv
         .{ .text = "module main; import", .code = "E_MODULE_HEADER" },
     }) |case| try rejection(&.{.{ .path = "main.my", .bytes = case.text }}, .{}, case.code);
 }
+// spec: PROJ-2
 test "module cycles report importing and related file locations" {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes = "module main;\nimport child;" },
@@ -153,11 +156,7 @@ test "module dependency traversal handles a long chain without recursive loading
     defer arena.deinit();
     const allocator = arena.allocator();
     const entries = try allocator.alloc(File, 600);
-    for (entries, 0..) |*file, i| {
-        const name = if (i == 0) "main" else try std.fmt.allocPrint(allocator, "m{d}", .{i});
-        file.path = try std.fmt.allocPrint(allocator, "{s}.my", .{name});
-        file.bytes = if (i + 1 == entries.len) try std.fmt.allocPrint(allocator, "module {s};", .{name}) else try std.fmt.allocPrint(allocator, "module {s}; import m{d};", .{ name, i + 1 });
-    }
+    try fillModuleChain(allocator, entries);
     var files: Files = .{ .entries = entries };
     var project = p.Project.init(t.allocator);
     defer project.deinit();
@@ -217,7 +216,10 @@ test "evaluation receipt keys include implementation identity and reject incompl
 fn schemaScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes = "module main; import data; fn main() -> i64 { return 0; }" },
-        .{ .path = "data.my", .bytes = "module data; export Point; export Choice; export Identity; export select; struct Point { x: u64, y: [2]bool } union Choice { empty, point: Point } domain Identity: i16 { private fn raw(x: i16) -> Identity { return wrap<Identity>(x); } } fn select(x: &Choice) -> &Choice from x { return x; } struct Hidden { secret: i8 }" },
+        .{ .path = "data.my", .bytes = "module data; export Point; export Choice; export Identity; export select; struct " ++
+            "Point { x: u64, y: [2]bool } union Choice { empty, point: Point } domain Identity: " ++
+            "i16 { private fn raw(x: i16) -> Identity { return wrap<Identity>(x); } } fn " ++
+            "select(x: &Choice) -> &Choice from x { return x; } struct Hidden { secret: i8 }" },
     } };
     var project = p.Project.init(allocator);
     defer project.deinit();
@@ -269,4 +271,23 @@ test "schema receipts retain checked source dependencies with allocation failure
     try schemaReceiptScenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), schemaReceiptScenario, .{});
+}
+
+fn fillModuleChain(allocator: std.mem.Allocator, entries: []File) !void {
+    for (entries, 0..) |*file, i| {
+        const name = if (i == 0) "main" else try std.fmt.allocPrint(allocator, "m{d}", .{i});
+        file.path = try std.fmt.allocPrint(allocator, "{s}.my", .{name});
+        file.bytes = if (i + 1 == entries.len) try std.fmt.allocPrint(allocator, "module {s};", .{name}) else try std.fmt.allocPrint(allocator, "module {s}; import m{d};", .{ name, i + 1 });
+    }
+}
+
+test "project lifecycle rejects invalid budgets repeated loading and absent diagnostics" {
+    var files: Files = .{ .entries = &diamond };
+    var project = p.Project.init(t.allocator);
+    defer project.deinit();
+    try t.expectError(error.NoProblem, project.renderProblem(t.allocator));
+    try t.expectError(error.InvalidModuleBudget, project.load(files.provider(), "main", .{ .max_modules = 0 }));
+    try t.expectEqual(@as(usize, 0), files.reads);
+    try t.expectError(error.ProjectAlreadyLoaded, project.load(files.provider(), "main", .{}));
+    try t.expectEqual(@as(usize, 0), files.reads);
 }

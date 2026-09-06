@@ -1,9 +1,13 @@
+//! Resource IO execution and metadata validation tests. Fake providers track exactly-once release and completion.
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const external = @import("external_capabilities.zig");
 const resources = @import("external_resources.zig");
-const declarations = "resource File: filesystem; result Open { ok: File, err: i64 } struct Chunk { eof: bool, bytes: [4]u8, length: u64 } result Read { ok: Chunk, err: i64 } result Written { ok: u64, err: i64 } struct Failure { resource: File, code: i64 } result Finish { ok: bool, err: Failure } result Status { ok: i64, err: i64 } ";
+const declarations = "resource File: filesystem; result Open { ok: File, err: i64 } struct Chunk { eof: " ++
+    "bool, bytes: [4]u8, length: u64 } result Read { ok: Chunk, err: i64 } result Written " ++
+    "{ ok: u64, err: i64 } struct Failure { resource: File, code: i64 } result Finish { " ++
+    "ok: bool, err: Failure } result Status { ok: i64, err: i64 } ";
 const Fake = struct {
     live: usize = 0,
     releases: usize = 0,
@@ -60,7 +64,16 @@ fn reject(text: []const u8, code: []const u8) !void {
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
-const source = declarations ++ "fn work(fs: filesystem_cap) -> Status { let mut file = try acquire_resource<Open>(fs, new [0]u8 []); let first = try read_resource<Read>(file); let second = try read_resource<Read>(file); let count = try write_resource<Written>(file, new [3]u8 [7u8, 8u8, 9u8]); match complete_resource<Finish>(file) { Finish.ok(done) => { discard done; }, Finish.err(failure) => { return new Status.err(failure.code); } } if first.eof || !second.eof { return new Status.err(99); } return new Status.ok(cast<i64>(first.bytes[1]) + cast<i64>(second.bytes[0]) + cast<i64>(first.bytes[3]) + cast<i64>(count)); } fn main(fs: filesystem_cap) -> i64 noalloc { match work(fs) { Status.ok(value) => { return value; }, Status.err(code) => { return -code; } } }";
+const source = declarations ++ "fn work(fs: filesystem_cap) -> Status { let mut file = try acquire_resource<Open>(fs," ++
+    " new [0]u8 []); let first = try read_resource<Read>(file); let second = try " ++
+    "read_resource<Read>(file); let count = try write_resource<Written>(file, new [3]u8 " ++
+    "[7u8, 8u8, 9u8]); match complete_resource<Finish>(file) { Finish.ok(done) => { " ++
+    "discard done; }, Finish.err(failure) => { return new Status.err(failure.code); } } " ++
+    "if first.eof || !second.eof { return new Status.err(99); } return new " ++
+    "Status.ok(cast<i64>(first.bytes[1]) + cast<i64>(second.bytes[0]) + " ++
+    "cast<i64>(first.bytes[3]) + cast<i64>(count)); } fn main(fs: filesystem_cap) -> i64 " ++
+    "noalloc { match work(fs) { Status.ok(value) => { return value; }, Status.err(code) " ++
+    "=> { return -code; } } }";
 fn scenario(allocator: std.mem.Allocator) !void {
     var fake: Fake = .{};
     defer std.debug.assert(fake.live == 0);
@@ -123,7 +136,9 @@ test "backend validates counts identity unsupported operations and zero capacity
 test "source read write require mutable live owners and cannot consume owner in write input" {
     try reject(declarations ++ "fn f(file: File) -> i64 { acknowledge read_resource<Read>(file); return 0; } fn main() -> i64 { return 0; }", "E_IMMUTABLE");
     try reject(declarations ++ "fn f(input: File) -> i64 { let mut file = input; discard file; acknowledge read_resource<Read>(file); return 0; } fn main() -> i64 { return 0; }", "E_OWNED_CONSUMED");
-    try reject(declarations ++ "fn bytes(file: File) -> [0]u8 { discard file; return new [0]u8 []; } fn f(input: File) -> i64 { let mut file = input; acknowledge write_resource<Written>(file, bytes(file)); return 0; } fn main() -> i64 { return 0; }", "E_OWNED_CONSUMED");
+    try reject(declarations ++ "fn bytes(file: File) -> [0]u8 { discard file; return new [0]u8 []; } fn f(input: " ++
+        "File) -> i64 { let mut file = input; acknowledge write_resource<Written>(file, " ++
+        "bytes(file)); return 0; } fn main() -> i64 { return 0; }", "E_OWNED_CONSUMED");
     try reject(declarations ++ "fn f(input: File) -> i64 { let mut file = input; acknowledge write_resource<Written>(file, new [1]i64 [7]); return 0; } fn main() -> i64 { return 0; }", "E_RESOURCE_BYTES");
     try reject(declarations ++ "fn f(input: File) -> i64 { let mut file = input; acknowledge read_resource<Written>(file); return 0; } fn main() -> i64 { return 0; }", "E_RESOURCE_IO_RESULT");
 }
@@ -145,15 +160,18 @@ test "all read write result and reporting allocation failures unwind provider ow
 test "source IO traps at every instruction boundary release or complete exactly once" {
     var c = try language.Compilation.init(t.allocator, "traps.my", source);
     defer c.deinit();
-    var budget: u64 = 1;
-    while (budget < 300) : (budget += 1) {
+    var completed = false;
+    for (1..300) |budget| {
         var fake: Fake = .{};
         const result = try c.executeWithOptions(t.allocator, .{ .resources = .{ .filesystem = fake.provider() }, .max_steps = budget });
         try t.expectEqual(@as(usize, 0), fake.live);
         try t.expect(fake.releases + fake.completions <= 1);
-        if (result == .value) break;
+        if (result == .value) {
+            completed = true;
+            break;
+        }
     }
-    try t.expect(budget < 300);
+    try t.expect(completed);
 }
 test "invalid provider progress is a host failure with resource cleanup" {
     var c = try language.Compilation.init(t.allocator, "invalid.my", source);
@@ -165,7 +183,12 @@ test "invalid provider progress is a host failure with resource cleanup" {
 }
 
 test "source write errors leave a resource available for explicit retry" {
-    const text = declarations ++ "fn work(fs: filesystem_cap) -> Status { let mut file = try acquire_resource<Open>(fs, new [0]u8 []); match write_resource<Written>(file, new [1]u8 [7u8]) { Written.ok(count) => { return new Status.ok(cast<i64>(count)); }, Written.err(code) => { acknowledge write_resource<Written>(file, new [1]u8 [7u8]); return new Status.err(code); } } } fn main(fs: filesystem_cap) -> i64 { match work(fs) { Status.ok(count) => { return count; }, Status.err(code) => { return -code; } } }";
+    const text = declarations ++ "fn work(fs: filesystem_cap) -> Status { let mut file = try acquire_resource<Open>(fs," ++
+        " new [0]u8 []); match write_resource<Written>(file, new [1]u8 [7u8]) { " ++
+        "Written.ok(count) => { return new Status.ok(cast<i64>(count)); }, Written.err(code) " ++
+        "=> { acknowledge write_resource<Written>(file, new [1]u8 [7u8]); return new " ++
+        "Status.err(code); } } } fn main(fs: filesystem_cap) -> i64 { match work(fs) { " ++
+        "Status.ok(count) => { return count; }, Status.err(code) => { return -code; } } }";
     var c = try language.Compilation.init(t.allocator, "write.my", text);
     defer c.deinit();
     var fake: Fake = .{ .failure = error.Failed };
@@ -175,11 +198,17 @@ test "source write errors leave a resource available for explicit retry" {
     try t.expectEqual(@as(usize, 0), fake.live);
 }
 test "source resource IO loops have bounded live result and registry storage" {
-    const text = declarations ++ "fn work(fs: filesystem_cap) -> Status { let mut file = try acquire_resource<Open>(fs, new [0]u8 []); let mut n = 0; while n < 10000 { acknowledge read_resource<Read>(file); acknowledge write_resource<Written>(file, new [1]u8 [7u8]); n += 1; } return new Status.ok(n); } fn main(fs: filesystem_cap) -> i64 { match work(fs) { Status.ok(count) => { return count; }, Status.err(code) => { return -code; } } }";
+    const text = declarations ++ "fn work(fs: filesystem_cap) -> Status { let mut file = try acquire_resource<Open>(fs," ++
+        " new [0]u8 []); let mut n = 0; while n < 10000 { acknowledge " ++
+        "read_resource<Read>(file); acknowledge write_resource<Written>(file, new [1]u8 " ++
+        "[7u8]); n += 1; } return new Status.ok(n); } fn main(fs: filesystem_cap) -> i64 { " ++
+        "match work(fs) { Status.ok(count) => { return count; }, Status.err(code) => { return " ++
+        "-code; } } }";
     var c = try language.Compilation.init(t.allocator, "loop.my", text);
     defer c.deinit();
     try c.emit();
     var limited: @import("test_support.zig").LimitedLiveAllocator = .{ .parent = t.allocator, .limit = 16 * 1024 };
+    defer limited.deinit();
     var fake: Fake = .{ .data = "" };
     try t.expectEqual(@as(i64, 10000), (try c.executeWithOptions(limited.allocator(), .{ .resources = .{ .filesystem = fake.provider(), .max_live_per_kind = 1 } })).value);
     try t.expectEqual(@as(usize, 10000), fake.reads);
@@ -191,15 +220,12 @@ test "emission rejects forged resource IO metadata before provider callbacks" {
     var c = try language.Compilation.init(t.allocator, "invalid.my", source);
     defer c.deinit();
     try c.emit();
-    for (@constCast(c.code.?.functions[0].instructions)) |*instruction| if (instruction.op == .resource_io) {
-        const original = instruction.*;
-        instruction.op.resource_io.owner = @fromBackingInt(std.math.maxInt(usize));
-        try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
-        instruction.* = original;
-        instruction.op.resource_io.output = .i64;
-        try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
-        instruction.* = original;
-        return;
-    };
-    return error.TestUnexpectedResult;
+    const instruction = try @import("instruction_test.zig").find(@constCast(c.code.?.functions[0].scope.instructions), .resource_io);
+    const original = instruction.*;
+    instruction.op.resource_io.owner = @fromBackingInt(std.math.maxInt(usize));
+    try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
+    instruction.* = original;
+    instruction.op.resource_io.output = .i64;
+    try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
+    instruction.* = original;
 }

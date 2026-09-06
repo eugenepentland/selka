@@ -43,6 +43,7 @@ test "mapped source locations survive parser checking lowering and VM traces wit
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
+// spec: PROJ-4
 test "mapped related diagnostics identify each original declaration" {
     var compilation = try mappedCompilation(t.allocator, &.{ "fn main() -> i64 { return 0; }", "\nfn main() -> i64 { return 1; }" });
     defer compilation.deinit();
@@ -98,8 +99,8 @@ test "quality metrics use combined line indices while reports use original paths
     try compilation.check();
     var analysis = try language.quality.analyze(t.allocator, compilation.program.?, compilation.src, .{});
     defer analysis.deinit();
-    try t.expectEqual(@as(usize, 3), analysis.functions[1].lines);
-    try t.expect(analysis.functions[1].longest_line < analysis.functions[0].longest_line);
+    try t.expectEqual(@as(usize, 3), analysis.functions[1].structure.lines);
+    try t.expect(analysis.functions[1].structure.longest_line < analysis.functions[0].structure.longest_line);
     const text = try language.quality.render(t.allocator, analysis, compilation.program.?, compilation.src);
     defer t.allocator.free(text);
     try t.expect(std.mem.indexOf(u8, text, "part1.my:1:") != null);

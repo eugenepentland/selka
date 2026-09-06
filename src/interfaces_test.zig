@@ -1,3 +1,7 @@
+//! Module interface and export privacy tests covering qualified names, semantic checking, execution, and allocation failures.
+const project_compile_module = @import("project_compile.zig");
+const units_path = "units.my";
+const duplicates_module = @import("duplicates.zig");
 const std = @import("std");
 const t = std.testing;
 const graph = @import("project.zig");
@@ -18,19 +22,21 @@ const Files = struct {
     }
 };
 const units = "module units; export Distance; domain Distance: i64 { private fn raw(x: i64) -> Distance { return wrap<Distance>(x); } fn make(x: i64) -> Distance { return Distance.raw(x); } } fn hidden() -> i64 { return 9; }";
-const entry = "module main; import units; export Sample; export echo; struct Sample { distance: units::Distance } fn echo(x: [2]units :: Distance) -> [2]units::Distance { return x; } fn main() -> i64 { let x = units::Distance.make(2); return 0; }";
+const entry = "module main; import units; export Sample; export echo; struct Sample { distance: " ++
+    "units::Distance } fn echo(x: [2]units :: Distance) -> [2]units::Distance { return x; " ++
+    "} fn main() -> i64 { let x = units::Distance.make(2); return 0; }";
 fn scenario(allocator: std.mem.Allocator) !void {
-    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = entry }, .{ .path = "units.my", .bytes = units } } };
+    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = entry }, .{ .path = units_path, .bytes = units } } };
     var project = graph.Project.init(allocator);
     defer project.deinit();
     try project.load(files.provider(), "main", .{});
     var index = try interfaces.build(&project);
-    const span = project.modules.items[0].declaration;
-    const distance = try index.resolve(0, "units", "Distance", .type, null, span);
+    const span = project.modules.items[0].header.declaration;
+    const distance = try index.resolve(.{ .from = 0, .alias = "units", .name = "Distance", .kind = .type, .owner = null, .span = span });
     try t.expectEqual(@as(usize, 1), distance.module);
-    _ = try index.resolve(0, "units", "Distance.make", .function, null, span);
-    _ = try index.resolve(1, null, "Distance.raw", .function, "Distance", span);
-    _ = try index.resolve(1, null, "hidden", .function, null, span);
+    _ = try index.resolve(.{ .from = 0, .alias = "units", .name = "Distance.make", .kind = .function, .owner = null, .span = span });
+    _ = try index.resolve(.{ .from = 1, .alias = null, .name = "Distance.raw", .kind = .function, .owner = "Distance", .span = span });
+    _ = try index.resolve(.{ .from = 1, .alias = null, .name = "hidden", .kind = .function, .owner = null, .span = span });
     const text = try index.render(allocator);
     defer allocator.free(text);
     try t.expect(std.mem.indexOf(u8, text, "export function Distance.make") != null);
@@ -51,7 +57,7 @@ test "module interfaces resolve nominal identities and exported domain methods w
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
 fn reject(body: []const u8, code: []const u8) !void {
-    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = body }, .{ .path = "units.my", .bytes = units } } };
+    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = body }, .{ .path = units_path, .bytes = units } } };
     var project = graph.Project.init(t.allocator);
     defer project.deinit();
     project.load(files.provider(), "main", .{}) catch |err| {
@@ -64,6 +70,7 @@ fn reject(body: []const u8, code: []const u8) !void {
     const message = try project.renderProblem(t.allocator);
     defer t.allocator.free(message);
 }
+// spec: PROJ-3
 test "module interfaces reject duplicate exports missing symbols and private type leaks" {
     try reject("module main; export Missing;", "E_UNKNOWN_EXPORT");
     try reject("module main; export X; export X; struct X {}", "E_DUPLICATE_EXPORT");
@@ -86,12 +93,12 @@ test "module privacy rejects direct private access wrong kinds and transitive im
         .{ .alias = null, .name = "Distance.raw", .kind = .function, .code = "E_PRIVATE_FUNCTION", .from = 1 },
     };
     for (cases) |case| {
-        var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = entry }, .{ .path = "units.my", .bytes = units } } };
+        var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = entry }, .{ .path = units_path, .bytes = units } } };
         var project = graph.Project.init(t.allocator);
         defer project.deinit();
         try project.load(files.provider(), "main", .{});
         var index = try interfaces.build(&project);
-        try t.expectError(error.SourceError, index.resolve(case.from, case.alias, case.name, case.kind, null, project.modules.items[case.from].declaration));
+        try t.expectError(error.SourceError, index.resolve(.{ .from = case.from, .alias = case.alias, .name = case.name, .kind = case.kind, .owner = null, .span = project.modules.items[case.from].header.declaration }));
         try t.expectEqualStrings(case.code, project.problem.?.code);
         const message = try project.renderProblem(t.allocator);
         defer t.allocator.free(message);
@@ -109,37 +116,17 @@ test "interface closure includes buffers pools domain backing and enum table key
 
 test "module grammar parses qualified variant match constructors and free calls" {
     const text = "module main; import units; fn main() -> i64 { let x = new units::Choice.a; let y = units::helper(); match x { units::Choice.a => { return y; } } }";
-    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = text }, .{ .path = "units.my", .bytes = "module units; export Choice; export helper; enum Choice { a } fn helper() -> i64 { return 1; }" } } };
+    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = text }, .{ .path = units_path, .bytes = "module units; export Choice; export helper; enum Choice { a } fn helper() -> i64 { return 1; }" } } };
     var project = graph.Project.init(t.allocator);
     defer project.deinit();
     try project.load(files.provider(), "main", .{});
     const index = try interfaces.build(&project);
     const src = project.modules.items[0].src;
-    var calls: usize = 0;
-    var variants: usize = 0;
-    var matches: usize = 0;
-    for (index.units[0].syntax.nodes.items) |node| switch (node.data) {
-        .call => |call| {
-            try t.expectEqualStrings("units::helper", src.text(call.name));
-            calls += 1;
-        },
-        .variant => |variant| {
-            try t.expectEqualStrings("units::Choice", src.text(variant.ty));
-            variants += 1;
-        },
-        else => {},
-    };
-    for (index.units[0].syntax.statements.items) |statement| if (statement.data == .match) {
-        try t.expectEqualStrings("units::Choice", src.text(statement.data.match.arms[0].ty));
-        matches += 1;
-    };
-    try t.expectEqual(@as(usize, 1), calls);
-    try t.expectEqual(@as(usize, 1), variants);
-    try t.expectEqual(@as(usize, 1), matches);
+    try expectQualifiedSyntax(index.units[0].syntax, src);
 }
 
 fn mergedScenario(allocator: std.mem.Allocator) !void {
-    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = entry }, .{ .path = "units.my", .bytes = units } } };
+    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = entry }, .{ .path = units_path, .bytes = units } } };
     var project = graph.Project.init(allocator);
     defer project.deinit();
     try project.load(files.provider(), "main", .{});
@@ -158,7 +145,7 @@ fn mergedScenario(allocator: std.mem.Allocator) !void {
             if (node.data == .call) for (node.data.call.arguments) |argument| try t.expect(@backingInt(argument) >= range.node_start and @backingInt(argument) < range.node_end);
         }
     }
-    try t.expectEqualStrings("units::Distance", merged.src.text(merged.syntax.records[0].fields[0].ty));
+    try t.expectEqualStrings("units::Distance", merged.src.text(merged.syntax.types.records[0].fields[0].ty));
     const original_span = index.units[1].syntax.functions[0].name;
     try t.expectEqualStrings("raw", project.modules.items[1].src.text(original_span));
     try t.expect(original_span.start < merged.syntax.functions[2].name.start);
@@ -170,12 +157,15 @@ test "module AST relocation retains source spelling namespace ownership and node
 }
 
 fn checkedScenario(allocator: std.mem.Allocator) !void {
-    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = "module main; import units; fn main() -> i64 { let x = units::Distance.make(12); return units::Distance.number(x); }" }, .{ .path = "units.my", .bytes = "module units; export Distance; domain Distance: i64 { private fn raw(x: i64) -> Distance { return wrap<Distance>(x); } fn make(x: i64) -> Distance { return Distance.raw(x); } fn number(x: Distance) -> i64 { return unwrap(x); } }" } } };
+    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = "module main; import units; fn main() -> i64 { let x = units::Distance.make(12); " ++
+        "return units::Distance.number(x); }" }, .{ .path = units_path, .bytes = "module units; export Distance; domain Distance: i64 { private fn raw(x: i64) -> " ++
+        "Distance { return wrap<Distance>(x); } fn make(x: i64) -> Distance { return " ++
+        "Distance.raw(x); } fn number(x: Distance) -> i64 { return unwrap(x); } }" } } };
     var project = graph.Project.init(allocator);
     defer project.deinit();
     try project.load(files.provider(), "main", .{});
     var index = try interfaces.build(&project);
-    var compilation = try @import("project_compile.zig").Compilation.init(&index);
+    var compilation = try project_compile_module.Compilation.init(&index);
     try compilation.emit();
     const result = try @import("vm.zig").runWithOptions(allocator, compilation.code.?, .{});
     try t.expectEqual(@as(i64, 12), result.value);
@@ -187,12 +177,12 @@ test "cross module domain factories type check and execute with allocation failu
 }
 
 fn rejectChecked(main: []const u8, dependency: []const u8, code: []const u8) !void {
-    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = main }, .{ .path = "units.my", .bytes = dependency } } };
+    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = main }, .{ .path = units_path, .bytes = dependency } } };
     var project = graph.Project.init(t.allocator);
     defer project.deinit();
     try project.load(files.provider(), "main", .{});
     var index = try interfaces.build(&project);
-    var compilation = try @import("project_compile.zig").Compilation.init(&index);
+    var compilation = try project_compile_module.Compilation.init(&index);
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqualStrings(code, compilation.diagnostics.items.items[0].code);
     const rendered = try compilation.diagnostics.items.items[0].render(t.allocator, compilation.src);
@@ -213,39 +203,46 @@ test "cross module bodies enforce private functions private types nominal identi
 test "shared record types cross module boundaries and hidden names do not shadow caller locals" {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes = "module main; import units; fn main() -> i64 { let hidden = 7; let x = units::make(hidden); return units::value(x); }" },
-        .{ .path = "units.my", .bytes = "module units; export X; export make; export value; struct X { number: i64 } fn hidden() -> i64 { return 99; } fn make(n: i64) -> X { return new X { number: n }; } fn value(x: X) -> i64 { return x.number; } fn main() -> i64 { return 88; }" },
+        .{ .path = units_path, .bytes = "module units; export X; export make; export value; struct X { number: i64 } fn " ++
+            "hidden() -> i64 { return 99; } fn make(n: i64) -> X { return new X { number: n }; } " ++
+            "fn value(x: X) -> i64 { return x.number; } fn main() -> i64 { return 88; }" },
     } };
     var project = graph.Project.init(t.allocator);
     defer project.deinit();
     try project.load(files.provider(), "main", .{});
     var index = try interfaces.build(&project);
-    var compilation = try @import("project_compile.zig").Compilation.init(&index);
+    var compilation = try project_compile_module.Compilation.init(&index);
     try compilation.emit();
     const result = try @import("vm.zig").runWithOptions(t.allocator, compilation.code.?, .{});
     try t.expectEqual(@as(i64, 7), result.value);
 }
 
 test "cross module effect and recoverable result obligations are enforced" {
-    try rejectChecked("module main; import units; fn main(a: allocator) -> i64 noalloc { return units::allocate(a); }", "module units; export allocate; buffer B: i64; result R { ok: B, err: i64 } fn allocate(a: allocator) -> i64 { acknowledge acquire_buffer<R>(a, 1); return 0; }", "E_EFFECT_BOUND");
-    try rejectChecked("module main; import units; fn main() -> i64 { discard units::fallible(); return 0; }", "module units; export R; export fallible; result R { ok: i64, err: i64 } fn fallible() -> R { return new R.ok(7); }", "E_RESULT_DISCARD");
+    try rejectChecked("module main; import units; fn main(a: allocator) -> i64 noalloc { return " ++
+        "units::allocate(a); }", "module units; export allocate; buffer B: i64; result R { ok: B, err: i64 } fn " ++
+        "allocate(a: allocator) -> i64 { acknowledge acquire_buffer<R>(a, 1); return 0; }", "E_EFFECT_BOUND");
+    try rejectChecked("module main; import units; fn main() -> i64 { discard units::fallible(); return 0; }", "module units; export R; export fallible; result R { ok: i64, err: i64 } fn " ++
+        "fallible() -> R { return new R.ok(7); }", "E_RESULT_DISCARD");
 }
 
 test "cross module returned slice references preserve caller mutation and snapshots" {
     var files: Files = .{ .entries = &.{
-        .{ .path = "main.my", .bytes = "module main; import units; fn main() -> i64 { let mut values = new [3]i64 [1, 2, 3]; let old = values; borrow mut values[0..3] as all { borrow mut units::middle(all) as selected { write_slice(selected, 0, 9); } } return old[1] + values[1]; }" },
-        .{ .path = "units.my", .bytes = "module units; export middle; fn middle(values: &mut []i64) -> &mut []i64 from values { borrow mut values[1..2] as selected { return selected; } }" },
+        .{ .path = "main.my", .bytes = "module main; import units; fn main() -> i64 { let mut values = new [3]i64 [1, 2, 3]; " ++
+            "let old = values; borrow mut values[0..3] as all { borrow mut units::middle(all) as " ++
+            "selected { write_slice(selected, 0, 9); } } return old[1] + values[1]; }" },
+        .{ .path = units_path, .bytes = "module units; export middle; fn middle(values: &mut []i64) -> &mut []i64 from values { borrow mut values[1..2] as selected { return selected; } }" },
     } };
     var project = graph.Project.init(t.allocator);
     defer project.deinit();
     try project.load(files.provider(), "main", .{});
     var index = try interfaces.build(&project);
-    var compilation = try @import("project_compile.zig").Compilation.init(&index);
+    var compilation = try project_compile_module.Compilation.init(&index);
     try compilation.emit();
     const result = try @import("vm.zig").runWithOptions(t.allocator, compilation.code.?, .{});
     try t.expectEqual(@as(i64, 11), result.value);
 }
 
-fn grouped(analysis: @import("duplicates.zig").Analysis, program: @import("typed.zig").Program, left: []const u8, right: []const u8) bool {
+fn grouped(analysis: duplicates_module.Analysis, program: @import("typed.zig").Program, left: []const u8, right: []const u8) bool {
     for (analysis.groups) |group| {
         var found_left = false;
         var found_right = false;
@@ -261,23 +258,30 @@ fn grouped(analysis: @import("duplicates.zig").Analysis, program: @import("typed
 fn discoveryScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes = "module main; import left; import right; fn main() -> i64 { return 0; }" },
-        .{ .path = "left.my", .bytes = "module left; import shared as s; struct Box { n: i64 } fn pure(x: i64) -> i64 { return x * 2 + 3; } fn nominal(x: Box) -> Box { return x; } fn helper(x: i64) -> i64 { return x + 1; } fn wrapper(x: i64) -> i64 { return helper(x); } fn shared_use(x: s::Box) -> i64 { return s::number(x); }" },
-        .{ .path = "right.my", .bytes = "module right; import shared as q; struct Box { n: i64 } fn pure(value: i64) -> i64 { return value * 2 + 3; } fn nominal(value: Box) -> Box { return value; } fn helper(value: i64) -> i64 { return value + 1; } fn wrapper(value: i64) -> i64 { return helper(value); } fn shared_use(value: q::Box) -> i64 { return q::number(value); }" },
+        .{ .path = "left.my", .bytes = "module left; import shared as s; struct Box { n: i64 } fn pure(x: i64) -> i64 { " ++
+            "return x * 2 + 3; } fn nominal(x: Box) -> Box { return x; } fn helper(x: i64) -> i64 " ++
+            "{ return x + 1; } fn wrapper(x: i64) -> i64 { return helper(x); } fn shared_use(x: " ++
+            "s::Box) -> i64 { return s::number(x); }" },
+        .{ .path = "right.my", .bytes = "module right; import shared as q; struct Box { n: i64 } fn pure(value: i64) -> i64 { " ++
+            "return value * 2 + 3; } fn nominal(value: Box) -> Box { return value; } fn " ++
+            "helper(value: i64) -> i64 { return value + 1; } fn wrapper(value: i64) -> i64 { " ++
+            "return helper(value); } fn shared_use(value: q::Box) -> i64 { return " ++
+            "q::number(value); }" },
         .{ .path = "shared.my", .bytes = "module shared; export Box; export number; struct Box { n: i64 } fn number(x: Box) -> i64 { return x.n; }" },
     } };
     var project = graph.Project.init(allocator);
     defer project.deinit();
     try project.load(files.provider(), "main", .{});
     var index = try interfaces.build(&project);
-    var compilation = try @import("project_compile.zig").Compilation.init(&index);
+    var compilation = try project_compile_module.Compilation.init(&index);
     try compilation.check();
-    var analysis = try @import("duplicates.zig").discover(allocator, compilation.program.?, .{ .min_nodes = 1, .approximate = true, .near_options = .{ .max_work = 10000 } });
+    var analysis = try duplicates_module.discover(allocator, compilation.program.?, .{ .min_nodes = 1, .approximate = true, .near_options = .{ .max_work = 10000 } });
     defer analysis.deinit();
     try t.expect(grouped(analysis, compilation.program.?, "left::pure", "right::pure"));
     try t.expect(grouped(analysis, compilation.program.?, "left::shared_use", "right::shared_use"));
     try t.expect(!grouped(analysis, compilation.program.?, "left::nominal", "right::nominal"));
     try t.expect(!grouped(analysis, compilation.program.?, "left::wrapper", "right::wrapper"));
-    const text = try @import("duplicates.zig").render(allocator, analysis, compilation.program.?, compilation.src);
+    const text = try duplicates_module.render(allocator, analysis, compilation.program.?, compilation.src);
     defer allocator.free(text);
     for ([_][]const u8{ "left.my:1:", "right.my:1:", "left::pure", "right::pure", "approximate near-v3" }) |part| try t.expect(std.mem.indexOf(u8, text, part) != null);
 }
@@ -290,13 +294,17 @@ test "module duplicate discovery preserves nominal types and callees while norma
 fn qualityScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes = "module main; import api; fn main() -> i64 { return api::used(); }" },
-        .{ .path = "api.my", .bytes = "module api; export used; export unused; export D; fn used() -> i64 { return 7; } fn unused() -> i64 { return helper(); } fn helper() -> i64 { return 2; } fn isolated() -> i64 { return 3; } fn cycle_a() -> i64 { return cycle_b(); } fn cycle_b() -> i64 { return cycle_a(); } domain D: i64 { private fn raw(x: i64) -> D { return wrap<D>(x); } fn make(x: i64) -> D { return D.raw(x); } }" },
+        .{ .path = "api.my", .bytes = "module api; export used; export unused; export D; fn used() -> i64 { return 7; } fn " ++
+            "unused() -> i64 { return helper(); } fn helper() -> i64 { return 2; } fn isolated() " ++
+            "-> i64 { return 3; } fn cycle_a() -> i64 { return cycle_b(); } fn cycle_b() -> i64 { " ++
+            "return cycle_a(); } domain D: i64 { private fn raw(x: i64) -> D { return wrap<D>(x); " ++
+            "} fn make(x: i64) -> D { return D.raw(x); } }" },
     } };
     var project = graph.Project.init(allocator);
     defer project.deinit();
     try project.load(files.provider(), "main", .{});
     var index = try interfaces.build(&project);
-    var compilation = try @import("project_compile.zig").Compilation.init(&index);
+    var compilation = try project_compile_module.Compilation.init(&index);
     const roots = try compilation.exportRoots(allocator);
     defer allocator.free(roots);
     try t.expectEqual(@as(usize, 3), roots.len);
@@ -313,7 +321,14 @@ fn qualityScenario(allocator: std.mem.Allocator) !void {
     }
     const text = try quality.render(allocator, analysis, compilation.program.?, compilation.src);
     defer allocator.free(text);
-    for ([_][]const u8{ "quality-modules-v1", "module-exported=true reachable-from-exports=true", "module-exported=false reachable-from-exports=true domain-private=true", "no call path from main or exported interfaces", "calls api::used at main.my:", "not evidence of external callers" }) |part| try t.expect(std.mem.indexOf(u8, text, part) != null);
+    for ([_][]const u8{
+        "quality-modules-v1",
+        "module-exported=true reachable-from-exports=true",
+        "module-exported=false reachable-from-exports=true domain-private=true",
+        "no call path from main or exported interfaces",
+        "calls api::used at main.my:",
+        "not evidence of external callers",
+    }) |part| try t.expect(std.mem.indexOf(u8, text, part) != null);
 }
 test "module quality reports distinguish main export and private helper reachability under allocation failure" {
     try qualityScenario(t.allocator);
@@ -330,7 +345,7 @@ fn nativeModuleScenario(allocator: std.mem.Allocator) !void {
     defer project.deinit();
     try project.load(files.provider(), "main", .{});
     var index = try interfaces.build(&project);
-    var compilation = try @import("project_compile.zig").Compilation.init(&index);
+    var compilation = try project_compile_module.Compilation.init(&index);
     const first = try compilation.emitC(allocator);
     defer allocator.free(first);
     const second = try compilation.emitC(allocator);
@@ -342,4 +357,65 @@ test "module native emission is deterministic and cleans all failed allocations"
     try nativeModuleScenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), nativeModuleScenario, .{});
+}
+
+fn expectQualifiedSyntax(syntax: @import("ast.zig").Program, src: @import("source.zig").Source) !void {
+    var calls: usize = 0;
+    var variants: usize = 0;
+    var matches: usize = 0;
+    for (syntax.nodes.items) |node| switch (node.data) {
+        .call => |call| {
+            try t.expectEqualStrings("units::helper", src.text(call.name));
+            calls += 1;
+        },
+        .variant => |variant| {
+            try t.expectEqualStrings("units::Choice", src.text(variant.ty));
+            variants += 1;
+        },
+        else => {},
+    };
+    for (syntax.statements.items) |statement| if (statement.data == .match) {
+        try t.expectEqualStrings("units::Choice", src.text(statement.data.match.arms[0].ty));
+        matches += 1;
+    };
+    try t.expectEqual(@as(usize, 1), calls);
+    try t.expectEqual(@as(usize, 1), variants);
+    try t.expectEqual(@as(usize, 1), matches);
+}
+
+test "AST relocation rejects dangling expression and statement identities" {
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = "module main;fn main()->i64{return 0;}" }} };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    const statements = index.units[0].syntax.statements.items;
+    const saved = statements[0];
+    statements[0].data = .{ .ret = @fromBackingInt(index.units[0].syntax.nodes.items.len) };
+    try t.expectError(error.InvalidNodeId, @import("project_syntax.zig").build(&index));
+    statements[0] = saved;
+    @constCast(index.units[0].syntax.functions)[0].body = @fromBackingInt(statements.len);
+    try t.expectError(error.InvalidStatementId, @import("project_syntax.zig").build(&index));
+}
+test "public type selection rejects private and unknown nominal types" {
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = "module main;struct Hidden{n:i64}fn main()->i64{return 0;}" }} };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try project_compile_module.Compilation.init(&index);
+    try t.expectError(error.UnknownPublicValueType, compilation.publicValueType("main::Hidden"));
+    try t.expectError(error.UnknownPublicValueType, compilation.publicValueType("main::Missing"));
+}
+
+test "schema rendering rejects an exported declaration missing its checked type" {
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = "module main;export Visible;struct Visible{n:i64}fn main()->i64{return 0;}" }} };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try project_compile_module.Compilation.init(&index);
+    try compilation.check();
+    compilation.program.?.records = &.{};
+    try t.expectError(error.InvalidCheckedType, @import("schema.zig").render(t.allocator, &compilation));
 }

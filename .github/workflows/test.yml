@@ -5,14 +5,27 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mylang
     strategy:
       matrix:
         mode: [Debug, ReleaseFast]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      # With no version override, setup-zig reads minimum_zig_version from build.zig.zon.
+        with:
+          path: mylang
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: eugenepentland/guardian-zig
+          ref: 9f32fe87a23ca90ae903fb29572290a7bd5bce84
+          path: guardian-zig
+      - name: Read pinned toolchain
+        id: toolchain
+        run: echo "version=$(cat .zigversion)" >> "$GITHUB_OUTPUT"
       - uses: mlugg/setup-zig@d1434d08867e3ee9daa34448df10607b98908d29 # v2
         with:
+          version: ${{ steps.toolchain.outputs.version }}
           cache-key: ${{ matrix.mode }}
       - name: Verify exact toolchain
         run: test "$(zig version)" = "$(cat .zigversion)"

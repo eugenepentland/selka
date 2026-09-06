@@ -1,4 +1,10 @@
 //! Iterative lowering with symbolic labels preserves stack shape and source evaluation order.
+/// Failures returned by lower; callers must handle these boundary errors.
+pub const LowerError = error{
+    InternalError,
+    OutOfMemory,
+};
+
 const std = @import("std");
 const typed = @import("typed.zig");
 const bc = @import("bytecode.zig");
@@ -342,14 +348,22 @@ const Emitter = struct {
             const target = self.labels.items[@backingInt(fixup.label)] orelse return error.InternalError;
             const inst = &self.code.items[fixup.instruction];
             // Dispatch arms were allocated by this emitter and are not shared yet.
-            if (fixup.propagation) inst.op.try_result.error_target = target else if (fixup.arm) |arm| @constCast(inst.op.switch_variant.arms)[arm].target = target else if (inst.op == .jump) inst.op.jump = target else inst.op.jump_if_false = target;
+            if (fixup.propagation) {
+                inst.op.try_result.error_target = target;
+            } else if (fixup.arm) |arm| {
+                @constCast(inst.op.switch_variant.arms)[arm].target = target;
+            } else if (inst.op == .jump) {
+                inst.op.jump = target;
+            } else {
+                inst.op.jump_if_false = target;
+            }
         }
         return self.code.toOwnedSlice(self.allocator);
     }
 };
 fn binaryInstruction(binary: anytype, nodes: []const typed.Node, records: []const typed.Record) bc.Instruction {
     const operand_type = nodes[@backingInt(binary.left)].ty;
-    if (operand_type.isAggregate() and records[operand_type.recordIndex()].handle_pool != null) return .{ .span = binary.op_span, .op = .{ .cmp_handle = .{ .ty = operand_type, .predicate = if (binary.op == .eq) .eq else .ne } } };
+    if (operand_type.isAggregate() and records[operand_type.recordIndex()].shape.handle_pool != null) return .{ .span = binary.op_span, .op = .{ .cmp_handle = .{ .ty = operand_type, .predicate = if (binary.op == .eq) .eq else .ne } } };
     if (operand_type.isAggregate()) return .{ .span = binary.op_span, .op = .{ .cmp_enum = .{ .ty = operand_type, .predicate = if (binary.op == .eq) .eq else .ne } } };
     if (operand_type.isInteger() and operand_type != .i64)
         return .{ .span = binary.op_span, .op = .{ .binary_integer = .{ .ty = operand_type, .op = binary.op } } };
@@ -367,11 +381,32 @@ fn binaryInstruction(binary: anytype, nodes: []const typed.Node, records: []cons
         .logical_and, .logical_or => unreachable,
     } };
 }
-pub fn lower(allocator: std.mem.Allocator, program: typed.Program) !bc.Program {
+/// Allocate and validate bytecode lowered from the checked typed program.
+pub fn lower(allocator: std.mem.Allocator, program: typed.Program) LowerError!bc.Program {
     const functions = try allocator.alloc(bc.Function, program.functions.len);
     for (program.functions, functions) |function, *out| {
         var emitter: Emitter = .{ .allocator = allocator, .program = program };
-        out.* = .{ .effect_bound = function.effect_bound, .effects = function.effects, .return_reference = function.return_reference, .references = function.references, .owner = function.owner, .restricted = function.restricted, .conversion = function.conversion, .id = function.id, .name = function.name, .locals = function.locals, .parameter_count = function.parameter_count, .return_type = function.return_type, .instructions = try emitter.finish(function.body) };
+        out.* = .{
+            .policy = .{
+                .effect_bound = function.policy.effect_bound,
+                .effects = function.policy.effects,
+                .owner = function.policy.owner,
+                .restricted = function.policy.restricted,
+                .conversion = function.policy.conversion,
+            },
+            .signature = .{
+                .return_reference = function.signature.return_reference,
+                .parameter_count = function.signature.parameter_count,
+                .return_type = function.signature.return_type,
+            },
+            .scope = .{
+                .references = function.scope.references,
+                .locals = function.scope.locals,
+                .instructions = try emitter.finish(function.scope.body),
+            },
+            .id = function.id,
+            .name = function.name,
+        };
     }
     const result: bc.Program = .{ .functions = functions, .main = program.main, .records = program.records };
     try bc.validate(allocator, result);

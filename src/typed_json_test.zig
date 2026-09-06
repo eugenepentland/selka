@@ -40,6 +40,7 @@ test "typed JSON materializes nominal values independently and cleans up every a
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
+// spec: WIRE-3
 test "typed JSON encodes independently constructed values without consuming ownership" {
     var compilation = try language.Compilation.init(t.allocator, "codec.my", "struct Pair { n: i16, ok: bool } fn main() -> i64 { return 0; }");
     defer compilation.deinit();
@@ -76,7 +77,9 @@ test "typed JSON budgets bound raw syntax and typed materialization separately" 
     try t.expectError(error.CodecValueLimit, parsed.decode(t.allocator, compilation.program.?.records, find(compilation.program.?.records, "Outcome")));
 }
 test "typed JSON rejects authority or private construction anywhere in the selected type graph" {
-    var compilation = try language.Compilation.init(t.allocator, "codec.my", "domain D: i64 { fn make(x: i64) -> D { return wrap<D>(x); } } union Maybe { none, some: D } buffer B: i64; resource F: filesystem; pool P(H): i64; struct Wrapped { data: [0]D } fn main() -> i64 { return 0; }");
+    var compilation = try language.Compilation.init(t.allocator, "codec.my", "domain D: i64 { fn make(x: i64) -> D { return wrap<D>(x); } } union Maybe { none, " ++
+        "some: D } buffer B: i64; resource F: filesystem; pool P(H): i64; struct Wrapped { " ++
+        "data: [0]D } fn main() -> i64 { return 0; }");
     defer compilation.deinit();
     try compilation.check();
     const records = compilation.program.?.records;
@@ -166,4 +169,27 @@ test "typed JSON location escaping truncation and mutated limits remain bounded"
     try t.expect(!location.has_path);
     try t.expectError(error.NoImplicitCodec, codec.encodeWithLocation(t.allocator, &.{}, .allocator, .{ .bool = false }, .{}, &location));
     try t.expectEqualStrings("/type", location.text());
+}
+
+test "typed JSON rejects incomplete unexpected and unknown wire fields with precise errors" {
+    var c = try language.Compilation.init(t.allocator, "wire-errors.my", source);
+    defer c.deinit();
+    try c.check();
+    const cases = .{
+        .{ "i64", "\"01\"", error.InvalidCodecInteger },
+        .{ "Point", "{}", error.IncompleteCodecValue },
+        .{ "Point", "{\"x\":\"0\",\"flags\":{\"yes\":true,\"no\":false},\"extra\":true}", error.UnexpectedCodecField },
+        .{ "Choice", "{\"case\":\"missing\"}", error.UnknownCodecCase },
+    };
+    inline for (cases) |case| {
+        const bytes = try std.fmt.allocPrint(t.allocator, "{{\"version\":\"typed-json-v1\",\"type\":\"{s}\",\"value\":{s}}}", .{ case[0], case[1] });
+        defer t.allocator.free(bytes);
+        var parsed = try codec.Document.parse(t.allocator, bytes, .{});
+        defer parsed.deinit();
+        const ty = typed.Type.fromName(case[0]) orelse find(c.program.?.records, case[0]);
+        try t.expectError(case[2], parsed.decode(t.allocator, c.program.?.records, ty));
+    }
+}
+test "typed JSON rejects UnsupportedCodecVersion before materialization" {
+    try t.expectError(error.UnsupportedCodecVersion, codec.Document.parse(t.allocator, "{\"version\":\"typed-json-v2\",\"type\":\"i64\",\"value\":\"0\"}", .{}));
 }

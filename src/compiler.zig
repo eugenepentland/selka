@@ -1,4 +1,57 @@
 //! One request owns source, syntax, semantic nodes, and lowered instructions.
+/// Failures returned by format; callers must handle these boundary errors.
+pub const FormatError = error{
+    OutOfMemory,
+    SourceError,
+    InternalError,
+};
+/// Failures returned by emit; callers must handle these boundary errors.
+pub const EmitError = error{
+    InternalError,
+    OutOfMemory,
+    SourceError,
+};
+/// Failures returned by emitC; callers must handle these boundary errors.
+pub const EmitCError = EmitError || error{
+    WriteFailed,
+};
+
+/// Failures returned by execute; callers must handle these boundary errors.
+pub const ExecuteError = EmitError || error{
+    BorrowConflict,
+    BorrowSuspended,
+    Bounds,
+    CapabilityUnavailable,
+    CapacityLimit,
+    ChildrenActive,
+    Closed,
+    Denied,
+    ExpiredBorrow,
+    Failed,
+    ForeignMemory,
+    IdentityExhausted,
+    InvalidAggregateType,
+    InvalidAllocation,
+    InvalidBudget,
+    InvalidCapability,
+    InvalidDataType,
+    InvalidDataValue,
+    InvalidOwner,
+    InvalidProvider,
+    InvalidValueLimits,
+    MemoryClosed,
+    NoCapacity,
+    NotDataType,
+    ReadOnly,
+    RegionInUse,
+    ResourceLimit,
+    TypeMismatch,
+    Unavailable,
+    ValueCountLimit,
+    ValueDepthLimit,
+    ValueTypeMismatch,
+};
+
 const std = @import("std");
 pub const codec_json = @import("codec_json.zig");
 pub const typed_json = @import("typed_json.zig");
@@ -9,7 +62,7 @@ pub const evaluation_report = @import("evaluation_report.zig");
 pub const evaluation = @import("evaluation.zig");
 pub const import_policy = @import("import_policy.zig");
 pub const project_compile = @import("project_compile.zig");
-pub const project_syntax = @import("project_syntax.zig");
+const project_syntax = @import("project_syntax.zig");
 pub const interfaces = @import("interfaces.zig");
 pub const project = @import("project.zig");
 pub const source = @import("source.zig");
@@ -26,6 +79,7 @@ pub const duplicates = @import("duplicates.zig");
 pub const vm = @import("vm.zig");
 const disassemble = @import("disassemble.zig");
 
+/// Owns one source unit and all parsed, checked, and lowered data in its arena.
 pub const Compilation = struct {
     arena: std.heap.ArenaAllocator,
     src: source.Source,
@@ -35,7 +89,8 @@ pub const Compilation = struct {
     program: ?typed.Program = null,
     code: ?bytecode.Program = null,
 
-    pub fn init(allocator: std.mem.Allocator, path: []const u8, bytes: []const u8) !Compilation {
+    /// Copy the source path and bytes into a new compilation arena; release with deinit.
+    pub fn init(allocator: std.mem.Allocator, path: []const u8, bytes: []const u8) std.mem.Allocator.Error!Compilation {
         var arena = std.heap.ArenaAllocator.init(allocator);
         errdefer arena.deinit();
         const src = try source.Source.init(arena.allocator(), path, bytes);
@@ -46,29 +101,32 @@ pub const Compilation = struct {
         self.arena.deinit();
     }
 
+    /// Lazily tokenize and parse the source, retaining syntax and source diagnostics.
     pub fn parse(self: *Compilation) diagnostic.Error!void {
         if (self.syntax != null) return;
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
         self.tokens = try lexer.lex(sink.allocator, self.src.bytes, &sink);
-        var p: parser.Parser = .{ .src = self.src, .allocator = sink.allocator, .tokens = self.tokens.?, .sink = &sink };
+        var p: parser.Parser = .{ .src = self.src, .arena = &self.arena, .tokens = self.tokens.?, .sink = &sink };
         self.syntax = try p.parse();
     }
 
-    pub fn format(self: *Compilation, allocator: std.mem.Allocator) ![]u8 {
+    pub fn format(self: *Compilation, allocator: std.mem.Allocator) FormatError![]u8 {
         try self.parse();
         return @import("formatter.zig").format(allocator, self.src.bytes, self.tokens.?);
     }
 
-    pub fn formatModule(self: *Compilation, allocator: std.mem.Allocator) ![]u8 {
+    /// Parse module syntax and allocate its canonical formatting with the caller allocator.
+    pub fn formatModule(self: *Compilation, allocator: std.mem.Allocator) FormatError![]u8 {
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
         const tokens = try lexer.lex(sink.allocator, self.src.bytes, &sink);
-        var p: parser.Parser = .{ .src = self.src, .allocator = sink.allocator, .tokens = tokens, .sink = &sink };
+        var p: parser.Parser = .{ .src = self.src, .arena = &self.arena, .tokens = tokens, .sink = &sink };
         _ = try p.parseModule();
         return @import("formatter.zig").format(allocator, self.src.bytes, tokens);
     }
 
+    /// Lazily type-check parsed syntax and retain the checked program.
     pub fn check(self: *Compilation) diagnostic.Error!void {
         if (self.program != null) return;
         try self.parse();
@@ -77,82 +135,34 @@ pub const Compilation = struct {
         self.program = try sema.check(sink.allocator, self.src, self.syntax.?, &sink);
     }
 
-    pub fn emit(self: *Compilation) !void {
+    /// Lazily lower the checked program into bytecode owned by the compilation.
+    pub fn emit(self: *Compilation) EmitError!void {
         try self.check();
         if (self.code == null) self.code = try lower.lower(self.arena.allocator(), self.program.?);
     }
 
-    pub fn execute(self: *Compilation, allocator: std.mem.Allocator) !vm.Result {
+    /// Execute the lowered entry point using the default VM limits and providers.
+    pub fn execute(self: *Compilation, allocator: std.mem.Allocator) ExecuteError!vm.Result {
         return self.executeWithOptions(allocator, .{});
     }
 
-    pub fn executeWithOptions(self: *Compilation, allocator: std.mem.Allocator, options: vm.Options) !vm.Result {
+    /// Execute the lowered entry point with explicit VM limits and host providers.
+    pub fn executeWithOptions(self: *Compilation, allocator: std.mem.Allocator, options: vm.Options) ExecuteError!vm.Result {
         try self.emit();
         return vm.runWithOptions(allocator, self.code.?, options);
     }
 
-    pub fn emitC(self: *Compilation, allocator: std.mem.Allocator) ![]u8 {
+    /// Validate native support and allocate C source with the caller allocator.
+    pub fn emitC(self: *Compilation, allocator: std.mem.Allocator) EmitCError![]u8 {
         try self.emit();
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
         return @import("native.zig").generate(allocator, self.code.?, self.src, &sink);
     }
 
-    pub fn dump(self: *Compilation, allocator: std.mem.Allocator) ![]u8 {
+    /// Allocate a source-annotated disassembly of the lowered program.
+    pub fn dump(self: *Compilation, allocator: std.mem.Allocator) EmitError![]u8 {
         try self.emit();
         return disassemble.dump(allocator, self.code.?, self.src);
     }
 };
-
-test {
-    _ = @import("import_policy_test.zig");
-    _ = @import("source_map_test.zig");
-    _ = @import("project_test.zig");
-    _ = @import("interfaces_test.zig");
-    _ = @import("compiler_test.zig");
-    _ = @import("duplicates_test.zig");
-    _ = @import("near_duplicates_test.zig");
-    _ = @import("quality_test.zig");
-    _ = @import("formatter_test.zig");
-    _ = @import("native_test.zig");
-    _ = @import("partial_fields_test.zig");
-    _ = @import("value_test.zig");
-    _ = @import("records_test.zig");
-    _ = @import("integers_test.zig");
-    _ = @import("arrays_test.zig");
-    _ = @import("domains_test.zig");
-    _ = @import("variants_test.zig");
-    _ = @import("tables_test.zig");
-    _ = @import("memory_test.zig");
-    _ = @import("owned_scope_test.zig");
-    _ = @import("buffers_test.zig");
-    _ = @import("pools_test.zig");
-    _ = @import("regions_test.zig");
-    _ = @import("arena_source_test.zig");
-    _ = @import("arena_reset_test.zig");
-    _ = @import("effects_test.zig");
-    _ = @import("evaluation_test.zig");
-    _ = @import("input_manifest_test.zig");
-    _ = @import("typed_json_test.zig");
-    _ = @import("allocator_capabilities_test.zig");
-    _ = @import("external_capabilities_test.zig");
-    _ = @import("external_resources_test.zig");
-    _ = @import("resource_source_test.zig");
-    _ = @import("field_reads_test.zig");
-    _ = @import("environment_test.zig");
-    _ = @import("resource_io_test.zig");
-    _ = @import("attenuation_test.zig");
-    _ = @import("resource_slice_test.zig");
-    _ = @import("typed_pool_test.zig");
-    _ = @import("arena_test.zig");
-    _ = @import("arena_execution_test.zig");
-    _ = @import("references_test.zig");
-    _ = @import("slices_test.zig");
-    _ = @import("returned_references_test.zig");
-    _ = @import("results_test.zig");
-    _ = @import("propagation_test.zig");
-    _ = @import("invocation_test.zig");
-    _ = @import("domain_codecs_test.zig");
-    _ = @import("codec_json_test.zig");
-    _ = @import("call_json_test.zig");
-}

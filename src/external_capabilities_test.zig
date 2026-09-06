@@ -30,7 +30,12 @@ fn reject(source: []const u8, code: []const u8) !void {
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
-const forwarded = declarations ++ "struct Authority { clock: clock_cap } fn read(auth: Authority) -> Time effects(clock) { return clock_now<Time>(auth.clock); } fn main(rng: random_cap, heap: allocator, clock: clock_cap) -> i64 noio { discard heap; match read(new Authority { clock: clock }) { Time.ok(now) => { match random_u64<Random>(rng) { Random.ok(word) => { if word == 18446744073709551615u64 { return now; } else { return 0; } }, Random.err(e) => { return e; } } }, Time.err(e) => { return e; } } }";
+const forwarded = declarations ++ "struct Authority { clock: clock_cap } fn read(auth: Authority) -> Time " ++
+    "effects(clock) { return clock_now<Time>(auth.clock); } fn main(rng: random_cap, " ++
+    "heap: allocator, clock: clock_cap) -> i64 noio { discard heap; match read(new " ++
+    "Authority { clock: clock }) { Time.ok(now) => { match random_u64<Random>(rng) { " ++
+    "Random.ok(word) => { if word == 18446744073709551615u64 { return now; } else { " ++
+    "return 0; } }, Random.err(e) => { return e; } } }, Time.err(e) => { return e; } } }";
 fn scenario(allocator: std.mem.Allocator) !void {
     var fake: Fake = .{};
     var c = try language.Compilation.init(allocator, "external.my", forwarded);
@@ -75,17 +80,24 @@ test "clock and random bounds propagate through calls independently of noio and 
     _ = try c.executeWithOptions(t.allocator, .{ .external = fake.providers() });
     try t.expectEqual(@as(usize, 2), fake.calls);
     const functions = @constCast(c.code.?.functions);
-    functions[0].effects = 0;
+    functions[0].policy.effects = 0;
     try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
 }
-const cleanup = declarations ++ "buffer B: i64; result Owned { ok: B, err: i64 } fn read(heap: allocator, c: clock_cap) -> Time { let b = try acquire_buffer<Owned>(heap, 1); let sample = try clock_now<Time>(c); discard b; return new Time.ok(sample); } fn main(heap: allocator, c: clock_cap) -> i64 { match read(heap, c) { Time.ok(v) => { return v; }, Time.err(e) => { return e; } } }";
+const cleanup = declarations ++ "buffer B: i64; result Owned { ok: B, err: i64 } fn read(heap: allocator, c: " ++
+    "clock_cap) -> Time { let b = try acquire_buffer<Owned>(heap, 1); let sample = try " ++
+    "clock_now<Time>(c); discard b; return new Time.ok(sample); } fn main(heap: allocator," ++
+    " c: clock_cap) -> i64 { match read(heap, c) { Time.ok(v) => { return v; }, " ++
+    "Time.err(e) => { return e; } } }";
 test "provider failures propagate recoverable codes and clean owned resources including host OOM" {
     var c = try language.Compilation.init(t.allocator, "external.my", cleanup);
     defer c.deinit();
     for ([_]external.CallError{ error.Unavailable, error.Denied, error.Failed, error.OutOfMemory }, 1..) |failure, code| {
         var fake: Fake = .{ .failure = failure };
         var stats: memory.Statistics = .{};
-        const options: language.vm.Options = .{ .external = fake.providers(), .memory_statistics = &stats };
+        const options: language.vm.Options = .{
+            .external = fake.providers(),
+            .memory = .{ .statistics = &stats },
+        };
         if (failure == error.OutOfMemory) {
             try t.expectError(error.OutOfMemory, c.executeWithOptions(t.allocator, options));
         } else try t.expectEqual(@as(i64, @intCast(code)), (try c.executeWithOptions(t.allocator, options)).value);
@@ -115,6 +127,7 @@ test "repeated provider reads have bounded live storage" {
     defer c.deinit();
     try c.emit();
     var limited: @import("test_support.zig").LimitedLiveAllocator = .{ .parent = t.allocator, .limit = 16 * 1024 };
+    defer limited.deinit();
     var fake: Fake = .{};
     try t.expectEqual(@as(i64, 10000), (try c.executeWithOptions(limited.allocator(), .{ .external = fake.providers() })).value);
     try t.expectEqual(@as(usize, 10000), fake.calls);
@@ -122,7 +135,10 @@ test "repeated provider reads have bounded live storage" {
 }
 
 test "clock preserves signed limits and short circuit skips provider calls" {
-    var c = try language.Compilation.init(t.allocator, "external.my", declarations ++ "fn positive(c: clock_cap) -> bool { match clock_now<Time>(c) { Time.ok(v) => { return v > 0; }, Time.err(e) => { discard e; return false; } } } fn main(c: clock_cap) -> i64 { discard false && positive(c); match clock_now<Time>(c) { Time.ok(v) => { return v; }, Time.err(e) => { return e; } } }");
+    var c = try language.Compilation.init(t.allocator, "external.my", declarations ++ "fn positive(c: clock_cap) -> bool { match clock_now<Time>(c) { Time.ok(v) => { " ++
+        "return v > 0; }, Time.err(e) => { discard e; return false; } } } fn main(c: " ++
+        "clock_cap) -> i64 { discard false && positive(c); match clock_now<Time>(c) { " ++
+        "Time.ok(v) => { return v; }, Time.err(e) => { return e; } } }");
     defer c.deinit();
     for ([_]i64{ std.math.minInt(i64), std.math.maxInt(i64) }) |time| {
         var fake: Fake = .{ .time = time };
@@ -135,7 +151,7 @@ test "external emission rejects wrong result shape and VM rejects wrong operand 
     defer c.deinit();
     try c.emit();
     var fake: Fake = .{};
-    for (@constCast(c.code.?.functions[0].instructions)) |*instruction| {
+    for (@constCast(c.code.?.functions[0].scope.instructions)) |*instruction| {
         const original = instruction.*;
         if (instruction.op == .external_read) {
             instruction.op.external_read.output = .i64;

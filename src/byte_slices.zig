@@ -1,8 +1,52 @@
 //! Stage host I/O through checked byte slices without exposing guest storage.
+/// Failures returned by init; callers must handle these boundary errors.
+pub const InitError = error{
+    BorrowConflict,
+    BorrowSuspended,
+    Bounds,
+    CapacityLimit,
+    ChildrenActive,
+    ExpiredBorrow,
+    ForeignMemory,
+    IdentityExhausted,
+    InternalError,
+    InvalidAggregateType,
+    InvalidAllocation,
+    InvalidCapability,
+    MemoryClosed,
+    NoCapacity,
+    OutOfMemory,
+    ReadOnly,
+    RegionInUse,
+    TypeMismatch,
+};
+/// Failures returned by commit; callers must handle these boundary errors.
+pub const CommitError = error{
+    BorrowConflict,
+    BorrowSuspended,
+    Bounds,
+    CapacityLimit,
+    ChildrenActive,
+    ExpiredBorrow,
+    ForeignMemory,
+    IdentityExhausted,
+    InternalError,
+    InvalidAllocation,
+    InvalidCapability,
+    MemoryClosed,
+    NoCapacity,
+    OutOfMemory,
+    ReadOnly,
+    RegionInUse,
+    TypeMismatch,
+};
+
 const std = @import("std");
 const memory = @import("memory.zig");
 const typed = @import("typed.zig");
+/// Guest byte borrow extent and whether direct backing access is available.
 pub const View = struct { lease: memory.Borrow, start: usize, length: usize, direct: bool };
+/// Prepared host byte storage and metadata for validating or committing a slice transfer.
 pub const Prepared = struct {
     allocator: std.mem.Allocator,
     store: *memory.Store,
@@ -10,7 +54,8 @@ pub const Prepared = struct {
     bytes: []u8,
     replacement: ?typed.Value = null,
     mutable: bool,
-    pub fn init(allocator: std.mem.Allocator, store: *memory.Store, view: View, mutable: bool, records: []const typed.Record) !Prepared {
+    /// Prepare validated slice bytes for host IO, allocating temporary storage when direct access is unavailable.
+    pub fn init(allocator: std.mem.Allocator, store: *memory.Store, view: View, mutable: bool, records: []const typed.Record) InitError!Prepared {
         const lease = try store.describe(view.lease);
         if (mutable and lease.kind != .exclusive) return error.ReadOnly;
         var prepared: Prepared = .{ .allocator = allocator, .store = store, .view = view, .bytes = try allocator.alloc(u8, view.length), .mutable = mutable };
@@ -40,7 +85,7 @@ pub const Prepared = struct {
     }
     /// Replace only the successfully read prefix. Metadata/backing preparation
     /// was done before the provider call; byte stores allocate no memory here.
-    pub fn commit(self: *Prepared, length: usize) !void {
+    pub fn commit(self: *Prepared, length: usize) CommitError!void {
         if (!self.mutable) return error.ReadOnly;
         if (length > self.bytes.len) return error.Bounds;
         if (length == 0) return;

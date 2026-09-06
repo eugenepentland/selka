@@ -27,7 +27,7 @@ const Analysis = struct {
         return self.locals[@backingInt(id)];
     }
     fn reference(self: Analysis, id: typed.ReferenceId) usize {
-        return self.local(self.function.references[@backingInt(id)].owner);
+        return self.local(self.function.scope.references[@backingInt(id)].owner);
     }
     fn arguments(self: Analysis, inputs: []const typed.NodeId) usize {
         var dependency: usize = 0;
@@ -42,7 +42,7 @@ const Analysis = struct {
     fn call(self: Analysis, invocation: @FieldType(@FieldType(typed.Node, "data"), "call")) usize {
         var dependency = self.arguments(invocation.arguments);
         for (invocation.references) |id| {
-            const ref = self.function.references[@backingInt(id)];
+            const ref = self.function.scope.references[@backingInt(id)];
             if (carries(ref.ty, self.types)) dependency = @max(dependency, self.reference(id));
         }
         return dependency;
@@ -50,7 +50,7 @@ const Analysis = struct {
     fn mutableArgument(self: Analysis, invocation: @FieldType(@FieldType(typed.Node, "data"), "call"), reference_index: usize) bool {
         const callee = self.program.functions[@backingInt(invocation.function)];
         var index: usize = 0;
-        for (callee.locals[0..callee.parameter_count]) |parameter| if (parameter.reference_parameter) |mutable| {
+        for (callee.scope.locals[0..callee.signature.parameter_count]) |parameter| if (parameter.parameter.reference_parameter) |mutable| {
             if (index == reference_index) return mutable;
             index += 1;
         };
@@ -82,17 +82,17 @@ const Analysis = struct {
         };
     }
     fn writeReference(self: Analysis, id: typed.ReferenceId, value: typed.NodeId) bool {
-        const ref = self.function.references[@backingInt(id)];
+        const ref = self.function.scope.references[@backingInt(id)];
         if (!carries(ref.ty, self.types)) return false;
-        const owner_type = self.function.locals[@backingInt(ref.owner)].ty;
-        if (owner_type.isAggregate() and self.program.records[owner_type.recordIndex()].buffer != null) return false;
+        const owner_type = self.function.scope.locals[@backingInt(ref.owner)].ty;
+        if (owner_type.isAggregate() and self.program.records[owner_type.recordIndex()].shape.buffer != null) return false;
         return grow(&self.locals[@backingInt(ref.owner)], self.node(value));
     }
     fn refLimit(self: Analysis, id: typed.ReferenceId) usize {
-        const ref = self.function.references[@backingInt(id)];
-        const owner = self.function.locals[@backingInt(ref.owner)];
-        if (owner.ty.isAggregate() and self.program.records[owner.ty.recordIndex()].buffer != null) return self.local(ref.owner);
-        return owner.arena_depth;
+        const ref = self.function.scope.references[@backingInt(id)];
+        const owner = self.function.scope.locals[@backingInt(ref.owner)];
+        if (owner.ty.isAggregate() and self.program.records[owner.ty.recordIndex()].shape.buffer != null) return self.local(ref.owner);
+        return owner.ownership.arena_depth;
     }
     fn requireLimit(dependency: usize, limit: usize, span: Span, sink: *diagnostic.Sink) diagnostic.Error!void {
         if (dependency > limit) return sink.fail("E_ARENA_ESCAPE", span, "value depends on a shorter-lived arena; keep its allocator and owned storage inside that scope");
@@ -113,7 +113,7 @@ const Analysis = struct {
             .call => |invocation| {
                 const dependency = self.call(invocation);
                 for (invocation.references, 0..) |id, reference_index| {
-                    const ref = self.function.references[@backingInt(id)];
+                    const ref = self.function.scope.references[@backingInt(id)];
                     if (self.mutableArgument(invocation, reference_index) and carries(ref.ty, self.types)) try requireLimit(dependency, self.refLimit(id), expression_node.span, sink);
                 }
             },
@@ -123,10 +123,11 @@ const Analysis = struct {
 };
 
 fn hasRegions(function: typed.Function) bool {
-    for (function.locals) |local| if (local.arena_depth != 0) return true;
+    for (function.scope.locals) |local| if (local.ownership.arena_depth != 0) return true;
     return false;
 }
 
+/// Validate that checked values and references do not escape their allocation regions.
 pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagnostic.Sink) diagnostic.Error!void {
     var any_regions = false;
     for (program.functions) |function| any_regions = any_regions or hasRegions(function);
@@ -138,16 +139,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
     while (changed) {
         changed = false;
         for (program.records, 0..) |record, index| {
-            var depends = record.buffer != null or record.pool != null;
-            if (record.array) |array| {
-                depends = array.length != 0 and carries(array.element, types);
-            } else if (record.variants) |variants| {
-                for (variants.cases) |case| if (case.payload) |payload| {
-                    depends = depends or carries(payload, types);
-                };
-            } else for (record.fields) |field| {
-                depends = depends or carries(field.ty, types);
-            }
+            const depends = recordDepends(record, types);
             if (depends and !types[index]) {
                 types[index] = true;
                 changed = true;
@@ -161,12 +153,12 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
         // A helper without local regions cannot introduce a shorter lifetime;
         // callers conservatively propagate all argument/reference dependencies.
         if (!hasRegions(function)) continue;
-        var walker = try walk.Walker.init(allocator, program, function.body);
+        var walker = try walk.Walker.init(allocator, program, function.scope.body);
         defer walker.deinit();
         var items: std.ArrayList(walk.Item) = .empty;
         defer items.deinit(allocator);
         while (try walker.next()) |item| try items.append(allocator, item);
-        const locals = try allocator.alloc(usize, function.locals.len);
+        const locals = try allocator.alloc(usize, function.scope.locals.len);
         defer allocator.free(locals);
         @memset(locals, 0);
         const analysis: Analysis = .{ .program = program, .function = function, .types = types, .nodes = nodes, .locals = locals };
@@ -176,34 +168,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
             var i = items.items.len;
             while (i != 0) {
                 i -= 1;
-                switch (items.items[i]) {
-                    .expression => |id| {
-                        const expression_node = program.nodes[@backingInt(id)];
-                        changed = grow(&nodes[@backingInt(id)], analysis.expression(expression_node)) or changed;
-                        if (expression_node.data == .call) {
-                            const invocation = expression_node.data.call;
-                            const dependency = analysis.call(invocation);
-                            for (invocation.references, 0..) |ref_id, reference_index| {
-                                const ref = function.references[@backingInt(ref_id)];
-                                const owner_type = function.locals[@backingInt(ref.owner)].ty;
-                                const buffer = owner_type.isAggregate() and program.records[owner_type.recordIndex()].buffer != null;
-                                if (analysis.mutableArgument(invocation, reference_index) and carries(ref.ty, types) and !buffer) changed = grow(&locals[@backingInt(ref.owner)], dependency) or changed;
-                            }
-                        }
-                    },
-                    .statement => |id| switch (program.statements[@backingInt(id)].data) {
-                        .arena_scope => |scope| changed = grow(&locals[@backingInt(scope.slot)], function.locals[@backingInt(scope.slot)].arena_depth) or changed,
-                        .initialize, .assign => |store| changed = grow(&locals[@backingInt(store.slot)], analysis.node(store.value)) or changed,
-                        .match => |match| for (match.arms) |arm| {
-                            if (arm.slot) |slot| if (carries(function.locals[@backingInt(slot)].ty, types)) {
-                                changed = grow(&locals[@backingInt(slot)], analysis.node(match.value)) or changed;
-                            };
-                        },
-                        .write_ref => |write| changed = analysis.writeReference(write.reference, write.value) or changed,
-                        .write_slice => |write| changed = analysis.writeReference(write.reference, write.value) or changed,
-                        else => {},
-                    },
-                }
+                changed = propagateDependencies(analysis, items.items[i]) or changed;
             }
         }
         for (items.items) |item| switch (item) {
@@ -213,7 +178,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
                 switch (statement.data) {
                     .ret => |value| try Analysis.requireLimit(analysis.node(value), 0, statement.span, sink),
                     .ret_ref => |ref| try Analysis.requireLimit(analysis.reference(ref), 0, statement.span, sink),
-                    .initialize, .assign => |store| try Analysis.requireLimit(analysis.node(store.value), function.locals[@backingInt(store.slot)].arena_depth, statement.span, sink),
+                    .initialize, .assign => |store| try Analysis.requireLimit(analysis.node(store.value), function.scope.locals[@backingInt(store.slot)].ownership.arena_depth, statement.span, sink),
                     .write_ref => |write| try Analysis.requireLimit(analysis.node(write.value), analysis.refLimit(write.reference), statement.span, sink),
                     .write_slice => |write| try Analysis.requireLimit(analysis.node(write.value), analysis.refLimit(write.reference), statement.span, sink),
                     else => {},
@@ -221,4 +186,56 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
             },
         };
     }
+}
+
+fn recordDepends(record: typed.Record, types: []const bool) bool {
+    var depends = record.shape.buffer != null or record.shape.pool != null;
+    if (record.shape.array) |array| {
+        depends = array.length != 0 and carries(array.element, types);
+    } else if (record.shape.variants) |variants| {
+        for (variants.cases) |case| if (case.payload) |payload| {
+            depends = depends or carries(payload, types);
+        };
+    } else for (record.fields) |field| {
+        depends = depends or carries(field.ty, types);
+    }
+    return depends;
+}
+
+fn propagateDependencies(analysis: Analysis, item: walk.Item) bool {
+    const program = analysis.program;
+    const function = analysis.function;
+    const types = analysis.types;
+    const nodes = analysis.nodes;
+    const locals = analysis.locals;
+    var changed = false;
+    switch (item) {
+        .expression => |id| {
+            const expression_node = program.nodes[@backingInt(id)];
+            changed = grow(&nodes[@backingInt(id)], analysis.expression(expression_node)) or changed;
+            if (expression_node.data == .call) {
+                const invocation = expression_node.data.call;
+                const dependency = analysis.call(invocation);
+                for (invocation.references, 0..) |ref_id, reference_index| {
+                    const ref = function.scope.references[@backingInt(ref_id)];
+                    const owner_type = function.scope.locals[@backingInt(ref.owner)].ty;
+                    const buffer = owner_type.isAggregate() and program.records[owner_type.recordIndex()].shape.buffer != null;
+                    if (analysis.mutableArgument(invocation, reference_index) and carries(ref.ty, types) and !buffer) changed = grow(&locals[@backingInt(ref.owner)], dependency) or changed;
+                }
+            }
+        },
+        .statement => |id| switch (program.statements[@backingInt(id)].data) {
+            .arena_scope => |scope| changed = grow(&locals[@backingInt(scope.slot)], function.scope.locals[@backingInt(scope.slot)].ownership.arena_depth) or changed,
+            .initialize, .assign => |store| changed = grow(&locals[@backingInt(store.slot)], analysis.node(store.value)) or changed,
+            .match => |match| for (match.arms) |arm| {
+                if (arm.slot) |slot| if (carries(function.scope.locals[@backingInt(slot)].ty, types)) {
+                    changed = grow(&locals[@backingInt(slot)], analysis.node(match.value)) or changed;
+                };
+            },
+            .write_ref => |write| changed = analysis.writeReference(write.reference, write.value) or changed,
+            .write_slice => |write| changed = analysis.writeReference(write.reference, write.value) or changed,
+            else => {},
+        },
+    }
+    return changed;
 }

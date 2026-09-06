@@ -1,16 +1,54 @@
 //! Opt-in dependency direction policy; never a language-validity rule.
+/// Failures returned by parse; callers must handle these boundary errors.
+pub const ParseError = error{
+    InternalError,
+    DuplicateField,
+    DuplicatePolicyRule,
+    InvalidCharacter,
+    InvalidEnumTag,
+    InvalidNumber,
+    InvalidPolicyPattern,
+    InvalidPolicyReason,
+    MissingField,
+    OutOfMemory,
+    Overflow,
+    PolicyTooLarge,
+    SyntaxError,
+    TooManyPolicyRules,
+    UnexpectedEndOfInput,
+    UnexpectedToken,
+    UnknownField,
+    UnsupportedPolicyVersion,
+};
+/// Failures returned by evaluate; callers must handle these boundary errors.
+pub const EvaluateError = error{
+    IncompleteProject,
+    OutOfMemory,
+};
+
 const std = @import("std");
 const graph = @import("project.zig");
 pub const version = "import-direction-v1";
+/// Allow or deny outcome applied to a resolved import edge.
 pub const Action = enum { allow, deny };
+/// Source/target namespace patterns and the documented reason for their action.
 pub const Rule = struct { from: []const u8, to: []const u8, action: Action, reason: []const u8 };
+/// Versioned ordered policy rules and the default edge action.
 pub const Document = struct { version: u32, default_action: Action, rules: []const Rule };
+/// Validated import policy owning the parsed document storage.
 pub const Policy = struct {
     parsed: std.json.Parsed(Document),
     digest: [32]u8,
-    pub fn parse(allocator: std.mem.Allocator, bytes: []const u8) !Policy {
+    /// Validate policy version, keys, patterns, duplicate rules, and required reasons.
+    pub fn parse(allocator: std.mem.Allocator, bytes: []const u8) ParseError!Policy {
         if (bytes.len > 1024 * 1024) return error.PolicyTooLarge;
-        const parsed = try std.json.parseFromSlice(Document, allocator, bytes, .{ .allocate = .alloc_always });
+        // parseFromSlice supplies complete input and uses its length as max_value_len.
+        // These concrete documents contain no fixed-size arrays; generic parser-only
+        // failures indicate an internal contract mismatch, not a caller input category.
+        const parsed = std.json.parseFromSlice(Document, allocator, bytes, .{ .allocate = .alloc_always }) catch |err| switch (err) {
+            error.BufferUnderrun, error.LengthMismatch, error.ValueTooLong => return error.InternalError,
+            else => |failure| return failure,
+        };
         errdefer parsed.deinit();
         if (parsed.value.version != 1) return error.UnsupportedPolicyVersion;
         if (parsed.value.rules.len > 1024) return error.TooManyPolicyRules;
@@ -30,12 +68,14 @@ pub const Policy = struct {
         self.parsed.deinit();
     }
 };
+/// Check a namespace pattern with supported segment wildcard syntax.
 pub fn validPattern(pattern: []const u8) bool {
     if (pattern.len > 256) return false;
     if (std.mem.eql(u8, pattern, "*")) return true;
     const name = if (std.mem.endsWith(u8, pattern, ".*")) pattern[0 .. pattern.len - 2] else pattern;
     return graph.validName(name);
 }
+/// Match a module name while respecting namespace segment boundaries.
 pub fn matches(pattern: []const u8, name: []const u8) bool {
     if (std.mem.eql(u8, pattern, "*")) return true;
     if (std.mem.endsWith(u8, pattern, ".*")) {
@@ -44,7 +84,9 @@ pub fn matches(pattern: []const u8, name: []const u8) bool {
     }
     return std.mem.eql(u8, pattern, name);
 }
+/// Resolved import edge and the first matching rule, or default action.
 pub const Decision = struct { module: usize, imported: usize, rule: ?usize, action: Action };
+/// Owned edge decisions and rule-match evidence for the reachable project graph.
 pub const Report = struct {
     arena: std.heap.ArenaAllocator,
     decisions: []const Decision,
@@ -54,8 +96,9 @@ pub const Report = struct {
         self.arena.deinit();
     }
 };
-pub fn evaluate(allocator: std.mem.Allocator, project: *const graph.Project, policy: Policy) !Report {
-    if (!project.complete or project.problem != null) return error.IncompleteProject;
+/// Apply ordered rules to the loaded graph without changing language semantics.
+pub fn evaluate(allocator: std.mem.Allocator, project: *const graph.Project, policy: Policy) EvaluateError!Report {
+    if (!project.progress.complete or project.problem != null) return error.IncompleteProject;
     var arena = std.heap.ArenaAllocator.init(allocator);
     errdefer arena.deinit();
     const scratch = arena.allocator();
@@ -81,11 +124,18 @@ pub fn evaluate(allocator: std.mem.Allocator, project: *const graph.Project, pol
     }
     return .{ .arena = arena, .decisions = try decisions.toOwnedSlice(scratch), .rule_hits = hits, .denied = denied };
 }
-pub fn render(allocator: std.mem.Allocator, report: Report, project: *const graph.Project, policy: Policy) ![]u8 {
+/// Allocate the edge decisions, source evidence, and policy identity as a text report.
+pub fn render(allocator: std.mem.Allocator, report: Report, project: *const graph.Project, policy: Policy) std.mem.Allocator.Error![]u8 {
     var output: std.Io.Writer.Allocating = .init(allocator);
     errdefer output.deinit();
     const writer = &output.writer;
-    writer.print("{s}: {s}; scope=reachable-import-graph; edges={d}; denied={d}; config-sha256={s}\n", .{ version, if (report.denied == 0) "passed" else "failed", report.decisions.len, report.denied, std.fmt.bytesToHex(policy.digest, .lower) }) catch return error.OutOfMemory;
+    writer.print("{s}: {s}; scope=reachable-import-graph; edges={d}; denied={d}; config-sha256={s}\n", .{
+        version,
+        if (report.denied == 0) "passed" else "failed",
+        report.decisions.len,
+        report.denied,
+        std.fmt.bytesToHex(policy.digest, .lower),
+    }) catch return error.OutOfMemory;
     writer.writeAll("Policy is separate from language validity; first matching rule wins.\n") catch return error.OutOfMemory;
     for (report.decisions) |decision| {
         const module = project.modules.items[decision.module];

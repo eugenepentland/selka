@@ -1,27 +1,30 @@
+//! Fixed-array construction, index bounds, copy behavior, and malformed native/VM metadata tests.
+const fixture_path = "arrays.my";
 const std = @import("std");
 const testing = std.testing;
 const language = @import("compiler.zig");
 const LimitedLiveAllocator = @import("test_support.zig").LimitedLiveAllocator;
 
 fn result(source: []const u8, expected: i64) !void {
-    var compilation = try language.Compilation.init(testing.allocator, "arrays.my", source);
+    var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
     defer compilation.deinit();
     try testing.expectEqual(expected, (try compilation.execute(testing.allocator)).value);
 }
 fn reject(source: []const u8, code: []const u8) !void {
-    var compilation = try language.Compilation.init(testing.allocator, "arrays.my", source);
+    var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
     defer compilation.deinit();
     try testing.expectError(error.SourceError, compilation.check());
     try testing.expectEqualStrings(code, compilation.diagnostics.items[0].code);
 }
 fn trapped(source: []const u8, code: []const u8, span: []const u8) !void {
-    var compilation = try language.Compilation.init(testing.allocator, "arrays.my", source);
+    var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
     defer compilation.deinit();
     const outcome = try compilation.execute(testing.allocator);
     try testing.expectEqualStrings(code, outcome.trap.code);
     try testing.expectEqualStrings(span, compilation.src.text(outcome.trap.span));
 }
 
+// spec: CORE-6
 test "fixed arrays have structural types preserve copies and support every integer index width" {
     try result("fn first(a: [2]i64) -> i64 { return a[0]; } fn main() -> i64 { let a: [02] i64 = new [2]i64 [3, 4]; let b = replace(a, 0, 8); return first(a) + b[0] + b[1]; }", 15);
     for ([_][]const u8{ "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64" }) |width| {
@@ -34,9 +37,18 @@ test "fixed arrays have structural types preserve copies and support every integ
 }
 
 test "nested arrays records and conversion field accounting compose" {
-    try result("struct Cell { n: i64 } struct Grid { rows: [2][1]Cell } fn id(a: [2][1]Cell) -> [2][1]Cell { return a; } fn main() -> i64 { let a = new Grid { rows: id(new [2][1]Cell [new [1]Cell [new Cell { n: 3 }], new [1]Cell [new Cell { n: 7 }]]) }; let b = update(a) { rows: replace(a.rows, 0, new [1]Cell [new Cell { n: 9 }]) }; return a.rows[0][0].n + b.rows[0][0].n + b.rows[1][0].n; }", 19);
-    try result("struct Source { values: [2]i64 } struct Target { total: i64 } conversion fn convert(src: Source) -> Target { return new Target { total: src.values[0] + src.values[1] }; } fn main() -> i64 { return convert(new Source { values: new [2]i64 [4, 7] }).total; }", 11);
-    try reject("struct Source { values: [2]i64, added: bool } struct Target { total: i64 } conversion fn convert(src: Source) -> Target { return new Target { total: src.values[0] }; } fn main() -> i64 { return 0; }", "E_INCOMPLETE_CONVERSION");
+    try result("struct Cell { n: i64 } struct Grid { rows: [2][1]Cell } fn id(a: [2][1]Cell) -> " ++
+        "[2][1]Cell { return a; } fn main() -> i64 { let a = new Grid { rows: id(new " ++
+        "[2][1]Cell [new [1]Cell [new Cell { n: 3 }], new [1]Cell [new Cell { n: 7 }]]) }; " ++
+        "let b = update(a) { rows: replace(a.rows, 0, new [1]Cell [new Cell { n: 9 }]) }; " ++
+        "return a.rows[0][0].n + b.rows[0][0].n + b.rows[1][0].n; }", 19);
+    try result("struct Source { values: [2]i64 } struct Target { total: i64 } conversion fn " ++
+        "convert(src: Source) -> Target { return new Target { total: src.values[0] + " ++
+        "src.values[1] }; } fn main() -> i64 { return convert(new Source { values: new [2]i64 " ++
+        "[4, 7] }).total; }", 11);
+    try reject("struct Source { values: [2]i64, added: bool } struct Target { total: i64 } " ++
+        "conversion fn convert(src: Source) -> Target { return new Target { total: " ++
+        "src.values[0] }; } fn main() -> i64 { return 0; }", "E_INCOMPLETE_CONVERSION");
 }
 
 test "array schemas reject type length shape and recursive layout errors" {
@@ -89,9 +101,11 @@ test "arrays evaluate base index and replacement in order and length retains eva
     try trapped("fn main() -> i64 { discard len(new [1]i64 [1 / 0]); return 0; }", "R_DIVISION_BY_ZERO", "/");
 }
 
-const allocation_source = "struct Box { n: i64 } fn id(a: [2]Box) -> [2]Box { return a; } fn main() -> i64 { let a = id(new [2]Box [new Box { n: 7 }, new Box { n: 9 }]); let b = replace(a, 1u8, new Box { n: 11 }); return a[1].n + b[1].n + cast<i64>(len(b)); }";
+const allocation_source = "struct Box { n: i64 } fn id(a: [2]Box) -> [2]Box { return a; } fn main() -> i64 { " ++
+    "let a = id(new [2]Box [new Box { n: 7 }, new Box { n: 9 }]); let b = replace(a, 1u8, " ++
+    "new Box { n: 11 }); return a[1].n + b[1].n + cast<i64>(len(b)); }";
 fn allocationScenario(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, "arrays.my", allocation_source);
+    var compilation = try language.Compilation.init(allocator, fixture_path, allocation_source);
     defer compilation.deinit();
     try testing.expectEqual(@as(i64, 22), (try compilation.execute(allocator)).value);
     const dump = try compilation.dump(allocator);
@@ -111,6 +125,7 @@ test "array replacement loops and traps release bounded runtime storage" {
     defer compilation.deinit();
     try compilation.emit();
     var limiter = LimitedLiveAllocator{ .parent = testing.allocator, .limit = 4096 };
+    defer limiter.deinit();
     try testing.expectEqual(@as(i64, 10007), (try compilation.execute(limiter.allocator())).value);
     try testing.expectEqual(@as(usize, 0), limiter.live);
     try testing.expectEqualStrings("R_STEP_LIMIT", (try compilation.executeWithOptions(limiter.allocator(), .{ .max_steps = 50 })).trap.code);
@@ -123,7 +138,11 @@ test "array replacement loops and traps release bounded runtime storage" {
 }
 
 test "array duplicate identity preserves length element type index replacement and order" {
-    const source = "fn a(x: [2]i64) -> i64 { return x[0]; } fn b(y: [02] i64) -> i64 { return y[0]; } fn c(x: [3]i64) -> i64 { return x[0]; } fn d(x: [2]i64) -> i64 { return x[1]; } fn e(x: [2]u8) -> i64 { return cast<i64>(x[0]); } fn f(x: [2]i64) -> i64 { return replace(x, 0, 1)[0]; } fn g() -> [2]i64 { return new [2]i64 [1, 2]; } fn h() -> [2]i64 { return new [2]i64 [2, 1]; } fn main() -> i64 { return 0; }";
+    const source = "fn a(x: [2]i64) -> i64 { return x[0]; } fn b(y: [02] i64) -> i64 { return y[0]; } fn " ++
+        "c(x: [3]i64) -> i64 { return x[0]; } fn d(x: [2]i64) -> i64 { return x[1]; } fn e(x: " ++
+        "[2]u8) -> i64 { return cast<i64>(x[0]); } fn f(x: [2]i64) -> i64 { return replace(x, " ++
+        "0, 1)[0]; } fn g() -> [2]i64 { return new [2]i64 [1, 2]; } fn h() -> [2]i64 { return " ++
+        "new [2]i64 [2, 1]; } fn main() -> i64 { return 0; }";
     var compilation = try language.Compilation.init(testing.allocator, "duplicates.my", source);
     defer compilation.deinit();
     try compilation.check();
@@ -150,11 +169,25 @@ test "array bytecode validates schema kinds stack counts and runtime element typ
     const bc = language.bytecode;
     const span: language.source.Span = .{ .start = 0, .end = 1 };
     const ty: typed.Type = @fromBackingInt(typed.Type.record_base);
-    const schema: typed.Record = .{ .id = ty, .name = "[1]i64", .declaration = span, .fields = &.{}, .array = .{ .element = .i64, .length = 1 } };
+    const schema: typed.Record = .{
+        .id = ty,
+        .name = "[1]i64",
+        .declaration = span,
+        .fields = &.{},
+        .shape = .{
+            .array = .{ .element = .i64, .length = 1 },
+        },
+    };
     const Op = @FieldType(bc.Instruction, "op");
     for ([_]Op{ .{ .get_index = .i64 }, .{ .array_length = ty }, .{ .replace_index = ty }, .{ .make_record = .{ .ty = ty, .fields = 2 } } }) |op| {
         const instructions = [_]bc.Instruction{ .{ .span = span, .op = op }, .{ .span = span, .op = .ret } };
-        const program: bc.Program = .{ .records = &.{schema}, .functions = &.{.{ .id = @fromBackingInt(0), .name = "main", .instructions = &instructions }} };
+        const program: bc.Program = .{ .records = &.{schema}, .functions = &.{.{
+            .id = @fromBackingInt(0),
+            .name = "main",
+            .scope = .{
+                .instructions = &instructions,
+            },
+        }} };
         try testing.expectError(error.InternalError, bc.validate(testing.allocator, program));
     }
     const invalid = [_]bc.Instruction{
@@ -164,6 +197,12 @@ test "array bytecode validates schema kinds stack counts and runtime element typ
         .{ .span = span, .op = .{ .get_index = ty } },
         .{ .span = span, .op = .ret },
     };
-    const program: bc.Program = .{ .records = &.{schema}, .functions = &.{.{ .id = @fromBackingInt(0), .name = "main", .instructions = &invalid }} };
+    const program: bc.Program = .{ .records = &.{schema}, .functions = &.{.{
+        .id = @fromBackingInt(0),
+        .name = "main",
+        .scope = .{
+            .instructions = &invalid,
+        },
+    }} };
     try testing.expectError(error.InternalError, language.vm.run(testing.allocator, program));
 }

@@ -1,12 +1,15 @@
 //! Iterative traversal of one checked function body; calls do not traverse callees.
 const std = @import("std");
 const typed = @import("typed.zig");
+/// Expression or statement identity yielded by an iterative checked-body traversal.
 pub const Item = union(enum) { expression: typed.NodeId, statement: typed.StatementId };
+/// Owns a pending traversal stack while borrowing the checked program.
 pub const Walker = struct {
     allocator: std.mem.Allocator,
     program: typed.Program,
     pending: std.ArrayList(Item) = .empty,
-    pub fn init(allocator: std.mem.Allocator, program: typed.Program, body: typed.StatementId) !Walker {
+    /// Seed an iterative traversal at one function body; release pending storage with deinit.
+    pub fn init(allocator: std.mem.Allocator, program: typed.Program, body: typed.StatementId) std.mem.Allocator.Error!Walker {
         var walker: Walker = .{ .allocator = allocator, .program = program };
         try walker.pending.append(allocator, .{ .statement = body });
         return walker;
@@ -34,7 +37,7 @@ pub const Walker = struct {
             try self.expr(values[i].value);
         }
     }
-    pub fn next(self: *Walker) !?Item {
+    pub fn next(self: *Walker) std.mem.Allocator.Error!?Item {
         const item = self.pending.pop() orelse return null;
         switch (item) {
             .expression => |id| switch (self.program.nodes[@backingInt(id)].data) {

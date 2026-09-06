@@ -1,8 +1,10 @@
+//! Owned-scope acquisition, moves, and cleanup tests covering allocator failures and nested resource lifetime transitions.
+const value_module = @import("value.zig");
 const std = @import("std");
 const t = std.testing;
 const memory = @import("memory.zig");
 const Scope = @import("owned_scope.zig").Scope;
-const Value = @import("value.zig").Value;
+const Value = value_module.Value;
 const LimitedLiveAllocator = @import("test_support.zig").LimitedLiveAllocator;
 
 test "buffer transfers consume identities and growth respects active views" {
@@ -43,7 +45,7 @@ test "buffer capacity never exposes uninitialized elements and quotas recover" {
     const b = try store.createWithCapacity(.bool, &.{}, 2);
     try t.expectError(error.CapacityLimit, store.reserve(a, 4));
     try t.expectError(error.CapacityLimit, store.create(.bool, &.{}));
-    try t.expectEqual(@as(usize, 3), (try store.info(a)).capacity);
+    try t.expectEqual(@as(usize, 3), (try store.bufferInfo(a)).capacity);
     try store.destroy(b);
     try t.expectError(error.CapacityLimit, store.reserve(a, 5));
     _ = try store.reserve(a, 4);
@@ -64,7 +66,7 @@ test "partial acquisition rollback releases in reverse order and can retry a blo
     const b = try scope.acquire(.i64, &.{}, 0);
     try t.expectError(error.CapacityLimit, scope.acquire(.i64, &.{}, 0));
     try t.expectError(error.BorrowConflict, scope.rollback());
-    try t.expectError(error.InvalidAllocation, store.info(b));
+    try t.expectError(error.InvalidAllocation, store.bufferInfo(b));
     try t.expectEqual(@as(u64, 1), store.statistics.released);
     try t.expectEqual(@as(usize, 1), scope.owners.items.len);
     try store.end(loan);
@@ -84,10 +86,10 @@ test "scope moves and adoption preserve one cleanup owner" {
     defer b.deinit();
     const external = try store.create(.i64, &.{.{ .i64 = 42 }});
     const adopted = try a.adopt(external);
-    try t.expectError(error.InvalidAllocation, store.info(external));
+    try t.expectError(error.InvalidAllocation, store.bufferInfo(external));
     const moved = try a.moveTo(adopted, &b);
     try t.expectError(error.NotOwned, a.release(adopted));
-    try t.expectError(error.InvalidAllocation, store.info(adopted));
+    try t.expectError(error.InvalidAllocation, store.bufferInfo(adopted));
     const self_moved = try b.moveTo(moved, &b);
     const taken = try b.take(self_moved);
     a.deinit();
@@ -133,7 +135,7 @@ test "failed reserve and destination bookkeeping preserve ownership; reserved op
     failing.fail_index = allocations_before;
     try t.expectError(error.OutOfMemory, store.reserve(owner, 4));
     try t.expectError(error.OutOfMemory, source.moveTo(owner, &destination));
-    try t.expectEqual(@as(usize, 3), (try store.info(owner)).capacity);
+    try t.expectEqual(@as(usize, 3), (try store.bufferInfo(owner)).capacity);
     try t.expectEqual(@as(usize, 2), source.owners.items.len);
     try t.expectEqual(@as(usize, 0), destination.owners.items.len);
     try store.appendWithinCapacity(owner, .{ .i64 = 2 });
@@ -142,7 +144,7 @@ test "failed reserve and destination bookkeeping preserve ownership; reserved op
     try store.resizeWithinCapacity(taken, 0, .{ .i64 = 0 });
     try store.destroy(taken);
     try source.rollback();
-    try t.expectError(error.InvalidAllocation, store.info(cleanup));
+    try t.expectError(error.InvalidAllocation, store.bufferInfo(cleanup));
     try t.expectEqual(@as(u64, 2), store.statistics.released);
     try t.expectEqual(allocations_before, failing.alloc_index);
 }
@@ -154,7 +156,7 @@ fn acquisitionScenario(allocator: std.mem.Allocator) !void {
     defer a.deinit();
     var b = Scope.init(&store);
     defer b.deinit();
-    const ty: @import("value.zig").Type = @fromBackingInt(@import("value.zig").Type.record_base);
+    const ty: value_module.Type = @fromBackingInt(value_module.Type.record_base);
     const snapshot = try Value.create(allocator, ty, &.{.{ .i64 = 7 }});
     defer snapshot.release(allocator);
     const first = try a.acquire(ty, &.{snapshot}, 2);
@@ -173,6 +175,7 @@ test "every allocation failure during resource acquisition growth move and unwin
 
 test "ten thousand acquire transfer and cleanup cycles use bounded live storage" {
     var limiter = LimitedLiveAllocator{ .parent = t.allocator, .limit = 16384 };
+    defer limiter.deinit();
     {
         var store = try memory.Store.init(limiter.allocator());
         defer store.deinit();
@@ -196,7 +199,7 @@ test "ten thousand acquire transfer and cleanup cycles use bounded live storage"
 }
 
 test "aggregate snapshots survive buffer growth shrink transfer and unwind" {
-    const ty: @import("value.zig").Type = @fromBackingInt(@import("value.zig").Type.record_base);
+    const ty: value_module.Type = @fromBackingInt(value_module.Type.record_base);
     var store = try memory.Store.init(t.allocator);
     defer store.deinit();
     var scope = Scope.init(&store);
@@ -251,7 +254,7 @@ test "failed second acquisition releases the first exactly once and successful t
     try t.expectError(error.CapacityLimit, scope.acquire(.bool, &.{.{ .bool = true }}, 1));
     try t.expectEqual(@as(u64, 1), store.statistics.created);
     scope.deinit();
-    try t.expectError(error.InvalidAllocation, store.info(a));
+    try t.expectError(error.InvalidAllocation, store.bufferInfo(a));
     try t.expectEqual(@as(u64, 1), store.statistics.released);
     const successful = try scope.acquire(.i64, &.{.{ .i64 = 9 }}, 1);
     const caller_owned = try scope.take(successful);

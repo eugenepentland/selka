@@ -1,12 +1,14 @@
 //! Live allocation budget that forwards storage to the caller's allocator.
 //! Returned storage can be freed directly by the parent after this wrapper dies.
 const std = @import("std");
+/// Forwarding allocator accounting for live codec bytes and enforcing the operation's memory limit.
 pub const Memory = struct {
     parent: std.mem.Allocator,
     limit: usize,
     live: usize = 0,
     peak: usize = 0,
     limit_failure: bool = false,
+    /// Borrow an allocator interface tied to this accounting object's lifetime.
     pub fn allocator(self: *Memory) std.mem.Allocator {
         return .{ .ptr = self, .vtable = &.{ .alloc = alloc, .resize = resize, .remap = remap, .free = free } };
     }

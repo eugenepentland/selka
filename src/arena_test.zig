@@ -22,8 +22,8 @@ test "arena reset rejects nested and empty live borrows without partial cleanup"
     try arena.store.write(root, 0, .{ .i64 = 11 });
     try arena.store.end(root);
     try t.expect(try arena.reset(.free_all));
-    try t.expectError(error.InvalidAllocation, arena.store.info(first));
-    try t.expectError(error.InvalidAllocation, arena.store.info(second));
+    try t.expectError(error.InvalidAllocation, arena.store.bufferInfo(first));
+    try t.expectError(error.InvalidAllocation, arena.store.bufferInfo(second));
     try t.expectError(error.ExpiredBorrow, arena.store.describe(root));
     try t.expectError(error.ExpiredBorrow, arena.store.describe(child));
 }
@@ -96,6 +96,7 @@ test "preheated arena region cycles reuse backing and registries without host al
 
 test "repeated arena regions have bounded live storage and independent lifetimes" {
     var limited: @import("test_support.zig").LimitedLiveAllocator = .{ .parent = t.allocator, .limit = 16384 };
+    defer limited.deinit();
     var arena: Arena = undefined;
     try arena.init(limited.allocator(), .{});
     defer arena.deinit();
@@ -108,9 +109,9 @@ test "repeated arena regions have bounded live storage and independent lifetimes
         const a = try arena.store.createWithCapacity(.i64, &.{.{ .i64 = 7 }}, 16);
         const b = try arena.store.create(.i64, &.{.{ .i64 = 9 }});
         _ = try arena.store.reserve(a, 32);
-        try t.expectError(error.ForeignMemory, other.store.info(a));
+        try t.expectError(error.ForeignMemory, other.store.bufferInfo(a));
         _ = try arena.reset(.retain_capacity);
-        try t.expectError(error.InvalidAllocation, arena.store.info(b));
+        try t.expectError(error.InvalidAllocation, arena.store.bufferInfo(b));
         try t.expectEqual(@as(usize, 0), arena.store.statistics.total_capacity);
     }
     try t.expectEqual(@as(i64, 41), (try other.store.read(independent_loan, 0)).i64);
@@ -127,7 +128,7 @@ test "ordinary memory reset does not allocate and preserves closed-store errors"
     failing.fail_index = failing.alloc_index;
     try store.reset();
     try store.reset();
-    try t.expectError(error.InvalidAllocation, store.info(owner));
+    try t.expectError(error.InvalidAllocation, store.bufferInfo(owner));
     try t.expectEqual(@as(u64, 1), store.statistics.released);
     store.deinit();
     try t.expectError(error.MemoryClosed, store.reset());

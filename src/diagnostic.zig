@@ -2,9 +2,13 @@
 const std = @import("std");
 const source = @import("source.zig");
 
+/// Distinguishes rejecting errors from advisory diagnostics.
 pub const Severity = enum { err, warning };
+/// Additional source span and explanatory message attached to a diagnostic.
 pub const Related = struct { span: source.Span, message: []const u8 };
+/// Guest function and source span recorded in a bounded runtime stack trace.
 pub const Trace = struct { function: []const u8, span: source.Span };
+/// Structured source diagnostic with optional related evidence and a bounded guest trace.
 pub const Diagnostic = struct {
     code: []const u8,
     severity: Severity = .err,
@@ -12,11 +16,10 @@ pub const Diagnostic = struct {
     message: []const u8,
     related: ?Related = null,
     // Bounded by-value guest trace needs no separate cleanup on trap paths.
-    trace: [16]Trace = undefined,
-    trace_len: usize = 0,
-    trace_omitted: usize = 0,
+    stack: struct { frames: [16]Trace = undefined, len: usize = 0, omitted: usize = 0 } = .{},
 
-    pub fn render(self: Diagnostic, allocator: std.mem.Allocator, src: source.Source) ![]u8 {
+    /// Allocate a human-readable diagnostic mapped back to original source paths.
+    pub fn render(self: Diagnostic, allocator: std.mem.Allocator, src: source.Source) std.mem.Allocator.Error![]u8 {
         const loc = src.locate(self.span.start);
         const padding = try allocator.alloc(u8, loc.column - 1);
         defer allocator.free(padding);
@@ -37,25 +40,35 @@ pub const Diagnostic = struct {
             const at = src.locate(related.span.start);
             output.writer.print("  note: {s}:{d}:{d}: {s}\n", .{ at.path, at.line, at.column, related.message }) catch return error.OutOfMemory;
         }
-        for (self.trace[0..self.trace_len]) |entry| {
+        for (self.stack.frames[0..self.stack.len]) |entry| {
             const at = src.locate(entry.span.start);
             output.writer.print("  in {s} at {s}:{d}:{d}\n", .{ entry.function, at.path, at.line, at.column }) catch return error.OutOfMemory;
         }
-        if (self.trace_omitted != 0) output.writer.print("  ... {d} older frames omitted\n", .{self.trace_omitted}) catch return error.OutOfMemory;
+        if (self.stack.omitted != 0) output.writer.print("  ... {d} older frames omitted\n", .{self.stack.omitted}) catch return error.OutOfMemory;
         return output.toOwnedSlice();
     }
 };
 
-pub const Error = std.mem.Allocator.Error || error{SourceError};
+pub const Error = std.mem.Allocator.Error || error{ SourceError, InternalError };
+/// Allocator-backed collector used by lexical, syntax, and semantic validation.
 pub const Sink = struct {
     items: std.ArrayList(Diagnostic) = .empty,
     allocator: std.mem.Allocator,
 
+    /// Append an error with a related location and return SourceError, preserving allocator failure.
+    /// Release the collected diagnostic array; diagnostic text continues to borrow source storage.
+    pub fn deinit(self: *Sink) void {
+        self.items.deinit(self.allocator);
+        self.items = .empty;
+    }
+
+    /// Append a primary diagnostic together with a related source location.
     pub fn failRelated(self: *Sink, code: []const u8, span: source.Span, message: []const u8, related: Related) Error {
         self.items.append(self.allocator, .{ .code = code, .span = span, .message = message, .related = related }) catch return error.OutOfMemory;
         return error.SourceError;
     }
 
+    /// Append a source error and return SourceError, preserving allocator failure.
     pub fn fail(self: *Sink, code: []const u8, span: source.Span, message: []const u8) Error {
         self.items.append(self.allocator, .{ .code = code, .span = span, .message = message }) catch return error.OutOfMemory;
         return error.SourceError;

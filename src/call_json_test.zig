@@ -2,7 +2,17 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const codec = language.codec_json;
-const source = "module data;export D;export R;export Output;export combine;export fail;export constant;export view;export cap;export clock;export Time;export loop;result R{ok:D,err:i64}domain D:i64{codec i64{decode:dec,encode:enc}private fn raw(x:i64)->D{return wrap<D>(x);}fn dec(x:i64)->R{if x<=0{return new R.err(-1);}return new R.ok(D.raw(x));}fn enc(x:D)->i64{return unwrap(x);}}struct Output{value:D,total:i64}fn combine(left:D,right:i64)->Output{return new Output{value:left,total:D.enc(left)+right};}fn fail(x:i64)->R{return new R.err(x);}fn constant()->u64{return 18446744073709551615u64;}fn view(x:&i64)->i64{return read_ref(x);}fn cap(x:allocator)->i64{return 0;}result Time{ok:i64,err:i64}fn clock(c:clock_cap)->Time{return clock_now<Time>(c);}fn hidden()->i64{return 1;}fn loop(x:i64)->i64{return loop(x);}";
+const source = "module data;export D;export R;export Output;export combine;export fail;export " ++
+    "constant;export view;export cap;export clock;export Time;export loop;result R{ok:D," ++
+    "err:i64}domain D:i64{codec i64{decode:dec,encode:enc}private fn raw(x:i64)->D{return " ++
+    "wrap<D>(x);}fn dec(x:i64)->R{if x<=0{return new R.err(-1);}return new R.ok(D.raw(x));" ++
+    "}fn enc(x:D)->i64{return unwrap(x);}}struct Output{value:D,total:i64}fn " ++
+    "combine(left:D,right:i64)->Output{return new Output{value:left," ++
+    "total:D.enc(left)+right};}fn fail(x:i64)->R{return new R.err(x);}fn " ++
+    "constant()->u64{return 18446744073709551615u64;}fn view(x:&i64)->i64{return " ++
+    "read_ref(x);}fn cap(x:allocator)->i64{return 0;}result Time{ok:i64,err:i64}fn " ++
+    "clock(c:clock_cap)->Time{return clock_now<Time>(c);}fn hidden()->i64{return 1;}fn " ++
+    "loop(x:i64)->i64{return loop(x);}";
 const Provider = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main;import data;fn main()->i64{return 0;}");
@@ -45,6 +55,7 @@ test "JSON function calls execute named domain arguments and typed results under
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
+// spec: WIRE-6
 test "JSON function calls reject stale schemas visibility effects references and malformed arguments before execution" {
     var project = language.project.Project.init(t.allocator);
     defer project.deinit();
@@ -73,7 +84,7 @@ test "JSON function calls reject stale schemas visibility effects references and
     const stale = try request(t.allocator, &c, "data::combine", "{\"left\":\"0\",\"right\":\"5\"}");
     defer t.allocator.free(stale);
     const hash_start = std.mem.indexOf(u8, stale, "schema_sha256\":\"").? + "schema_sha256\":\"".len;
-    stale[hash_start] = if (stale[hash_start] == '0') '1' else '0';
+    stale[hash_start] = '0' + @as(u8, @intFromBool(stale[hash_start] == '0'));
     try t.expectError(error.InvocationSchemaMismatch, codec.invokeProject(t.allocator, &c, stale, .{ .statistics = &stats }, &failure));
     try t.expectEqual(@as(usize, 0), stats.calls);
     try t.expectEqualStrings("/schema_sha256", failure.location.text());
@@ -112,7 +123,7 @@ test "JSON function call budgets span decoding execution and encoding with locat
     try t.expectError(error.InvocationTrap, codec.invokeProject(t.allocator, &c, loop, .{ .max_frames = 2 }, &failure));
     try t.expectEqualStrings("/function", failure.location.text());
     try t.expectEqualStrings("R_FRAME_LIMIT", failure.execution.trap.?.code);
-    try t.expectEqualStrings("data::loop", failure.execution.trap.?.trace[0].function);
+    try t.expectEqualStrings("data::loop", failure.execution.trap.?.stack.frames[0].function);
     const constant = try request(t.allocator, &c, "data::constant", "{}");
     defer t.allocator.free(constant);
     const number = try codec.invokeProject(t.allocator, &c, constant, .{ .max_calls = 1 }, &failure);
@@ -163,4 +174,19 @@ test "JSON function call argument envelope depth preserves the 128 level value b
             try t.expect(std.mem.startsWith(u8, failure.location.text(), "/arguments/x/next/"));
         }
     }
+}
+
+test "JSON calls reject UnsupportedInvocationVersion before codecs execute" {
+    var project = language.project.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(.{ .context = null, .read = Provider.read }, "main", .{});
+    var index = try language.interfaces.build(&project);
+    var c = try language.project_compile.Compilation.init(&index);
+    var failure: codec.Failure = .{};
+    defer failure.deinit(t.allocator);
+    var stats: codec.Statistics = .{};
+    const input = "{\"version\":\"typed-call-v2\",\"schema_sha256\":\"\",\"function\":\"data::combine\",\"arguments\":{}}";
+    try t.expectError(error.UnsupportedInvocationVersion, codec.invokeProject(t.allocator, &c, input, .{ .statistics = &stats }, &failure));
+    try t.expectEqual(@as(usize, 0), stats.calls);
+    try t.expectEqualStrings("/version", failure.location.text());
 }

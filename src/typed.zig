@@ -1,18 +1,31 @@
 //! Checked nodes use declaration identities, concrete types, and local slots.
 const std = @import("std");
+const external_resources = @import("external_resources.zig");
+const values = @import("value.zig");
 const Acquisition = struct { allocator: NodeId, capacity: NodeId };
 const FieldAccess = struct { owner: LocalId, field: usize };
 const Span = @import("source.zig").Span;
+/// Index of a checked expression in Program.nodes.
 pub const NodeId = enum(usize) { _ };
+/// Index of a checked statement in Program.statements.
 pub const StatementId = enum(usize) { _ };
+/// Index of a resolved function in Program.functions.
 pub const FunctionId = enum(usize) { _ };
+/// Index of a function-local reference descriptor.
 pub const ReferenceId = enum(usize) { _ };
-pub const Reference = struct { slice: bool = false, parameter: bool = false, name: []const u8, declaration: Span, owner: LocalId, parent: ?ReferenceId, ty: Type, mutable: bool };
+/// Checked borrow provenance, owner slot, element type, and mutability metadata.
+pub const Reference = struct { mode: ReferenceMode = .{}, name: []const u8, declaration: Span, owner: LocalId, parent: ?ReferenceId, ty: Type, mutable: bool };
+/// Distinguish slice views and incoming parameter loans from local whole-value loans.
+pub const ReferenceMode = struct { slice: bool = false, parameter: bool = false };
+/// Index of a function-local value slot.
 pub const LocalId = enum(usize) { _ };
-pub const Type = @import("value.zig").Type;
-pub const Value = @import("value.zig").Value;
+pub const Type = values.Type;
+pub const Value = values.Value;
+/// Checked arithmetic, logical, and comparison operation categories.
 pub const BinaryOp = enum { add, sub, mul, div, rem, logical_and, logical_or, eq, ne, lt, le, gt, ge };
+/// Checked numeric negation and Boolean inversion operations.
 pub const UnaryOp = enum { neg, not };
+/// Typed expression with resolved operands and source location.
 pub const Node = struct {
     ty: Type,
     span: Span,
@@ -30,8 +43,8 @@ pub const Node = struct {
         pool_operation: struct { kind: @import("pool_operations.zig").Kind, owner: LocalId, arguments: []const NodeId },
         acquire_resource: struct { capability: NodeId, request: NodeId },
         complete_resource: NodeId,
-        resource_io: struct { reference: ?ReferenceId = null, kind: @import("external_resources.zig").IoKind, owner: LocalId, value: ?NodeId },
-        restrict_resource: struct { permissions: @import("external_resources.zig").Permissions, value: NodeId },
+        resource_io: struct { reference: ?ReferenceId = null, kind: external_resources.IoKind, owner: LocalId, value: ?NodeId },
+        restrict_resource: struct { permissions: external_resources.Permissions, value: NodeId },
         environment_get: struct { capability: NodeId, name: NodeId },
         external_read: struct { kind: @import("external_capabilities.zig").Kind, capability: NodeId },
         acquire_pool: Acquisition,
@@ -53,50 +66,77 @@ pub const Node = struct {
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
     },
 };
+/// Resolved aggregate field index and the expression supplying its value.
 pub const FieldInit = struct { index: usize, value: NodeId };
+/// Named aggregate field with its declaration location and resolved type.
 pub const Field = struct { name: []const u8, declaration: Span, ty: Type };
+/// Named closed variant case and its optional resolved payload type.
 pub const Variant = struct { name: []const u8, declaration: Span, payload: ?Type };
+/// Closed case set distinguishing enums, unions, and fallible results.
 pub const Variants = struct { fallible: bool = false, is_union: bool, cases: []const Variant };
+/// Fixed element count and type, with an optional enum key for tables.
 pub const Array = struct { element: Type, length: usize, key: ?Type = null };
 // Aggregate schemas retain nominal record identities and intern structural arrays.
-pub const Pool = struct { element: Type, handle: Type };
+/// Resolved pool element type and its nominal handle type.
+pub const Pool = values.PoolSchema;
+/// Declared domain wire type and resolved decoder/encoder function identities.
 pub const Codec = struct { wire: Type, decode: FunctionId, encode: FunctionId };
+/// Nominal aggregate schema and associated array, domain, pool, or variant metadata.
 pub const Record = struct {
-    codec: ?Codec = null,
-    pool: ?Pool = null,
-    handle_pool: ?Type = null,
-    buffer: ?Type = null,
-    resource: ?@import("external_resources.zig").Kind = null,
-    move_only: bool = false,
-    requires_handling: bool = false,
     id: Type,
     name: []const u8,
     declaration: Span,
     fields: []const Field,
+    shape: RecordShape = .{},
+    contract: RecordContract = .{},
+    /// Return the enum key type for a table, or null for other aggregates.
+    pub fn tableKey(self: Record) ?Type {
+        return if (self.shape.array) |a| a.key else null;
+    }
+    /// Identify a plain record rather than a specialized aggregate schema.
+    pub fn isRecord(self: Record) bool {
+        return !self.shape.hasRuntimeIdentity() and !self.shape.hasValueRepresentation();
+    }
+    /// Identify a payload-free enum schema.
+    pub fn isEnum(self: Record) bool {
+        return if (self.shape.variants) |v| !v.is_union else false;
+    }
+    /// Return the number of statically addressable aggregate elements.
+    pub fn count(self: Record) usize {
+        return if (self.shape.array) |a| a.length else if (self.shape.domain != null) 1 else self.fields.len;
+    }
+    /// Resolve a field or array element type by its checked index.
+    pub fn elementType(self: Record, index: usize) Type {
+        return if (self.shape.array) |a| a.element else self.shape.domain orelse self.fields[index].ty;
+    }
+};
+/// Optional specialized representations; bytecode validation rejects incompatible combinations.
+pub const RecordShape = struct {
     array: ?Array = null,
     domain: ?Type = null,
     variants: ?Variants = null,
-    pub fn tableKey(self: Record) ?Type {
-        return if (self.array) |a| a.key else null;
+    pool: ?Pool = null,
+    handle_pool: ?Type = null,
+    buffer: ?Type = null,
+    resource: ?external_resources.Kind = null,
+    /// Identify representations carrying a buffer, resource, pool, or handle identity.
+    pub fn hasRuntimeIdentity(self: RecordShape) bool {
+        return self.pool != null or self.handle_pool != null or self.buffer != null or self.resource != null;
     }
-    pub fn isRecord(self: Record) bool {
-        return self.pool == null and self.handle_pool == null and self.resource == null and self.buffer == null and self.array == null and self.domain == null and self.variants == null;
-    }
-    pub fn isEnum(self: Record) bool {
-        return if (self.variants) |v| !v.is_union else false;
-    }
-    pub fn count(self: Record) usize {
-        return if (self.array) |a| a.length else if (self.domain != null) 1 else self.fields.len;
-    }
-    pub fn elementType(self: Record, index: usize) Type {
-        return if (self.array) |a| a.element else self.domain orelse self.fields[index].ty;
+    fn hasValueRepresentation(self: RecordShape) bool {
+        return self.array != null or self.domain != null or self.variants != null;
     }
 };
+/// Checked move/result obligations and an optional explicit domain wire contract.
+pub const RecordContract = struct { codec: ?Codec = null, move_only: bool = false, requires_handling: bool = false };
+/// Payload types and case tags of a checked ok/err result schema.
 pub const ResultShape = struct { ok_type: Type, error_type: Type, ok_tag: usize, error_tag: usize };
+/// Recognize a valid fallible result and return its payload types and tags.
 pub fn resultShape(ty: Type, records: []const Record) ?ResultShape {
     if (!ty.isAggregate() or ty.recordIndex() >= records.len) return null;
-    const variants = records[ty.recordIndex()].variants orelse return null;
-    if (!variants.fallible or !variants.is_union or variants.cases.len != 2) return null;
+    const variants = records[ty.recordIndex()].shape.variants orelse return null;
+    if (!variants.fallible or !variants.is_union) return null;
+    if (variants.cases.len != 2) return null;
     var ok: ?usize = null;
     var err: ?usize = null;
     for (variants.cases, 0..) |case, tag| {
@@ -106,16 +146,21 @@ pub fn resultShape(ty: Type, records: []const Record) ?ResultShape {
     }
     return .{ .ok_type = variants.cases[ok orelse return null].payload.?, .error_type = variants.cases[err orelse return null].payload.?, .ok_tag = ok.?, .error_tag = err.? };
 }
+/// Determine whether a type carries ownership that forbids implicit copying.
 pub fn moveOnly(ty: Type, records: []const Record) bool {
-    return ty.isAggregate() and records[ty.recordIndex()].move_only;
+    return ty.isAggregate() and records[ty.recordIndex()].contract.move_only;
 }
+/// Determine whether a value contains an unacknowledged fallible result obligation.
 pub fn requiresHandling(ty: Type, records: []const Record) bool {
-    return ty.isAggregate() and records[ty.recordIndex()].requires_handling;
+    return ty.isAggregate() and records[ty.recordIndex()].contract.requires_handling;
 }
+/// Return the scalar spelling or borrowed nominal schema name of a type.
 pub fn typeName(ty: Type, records: []const Record) []const u8 {
     return if (ty.isAggregate()) records[ty.recordIndex()].name else @tagName(ty);
 }
+/// Resolved local assignment target and the expression being stored.
 pub const Store = struct { slot: LocalId, value: NodeId };
+/// Checked control flow, ownership operations, and expression statements.
 pub const Statement = struct {
     span: Span,
     terminates: bool,
@@ -139,38 +184,75 @@ pub const Statement = struct {
         assign: Store,
     },
 };
+/// Resolved case tag, optional payload local, and checked arm body.
 pub const MatchArm = struct { tag: usize, slot: ?LocalId, body: StatementId };
+/// Checked expressions supplying the start and end of a slice.
 pub const Range = struct { start: NodeId, end: NodeId };
-pub const Local = struct { arena_depth: usize = 0, partial_fields: []const bool = &.{}, transfer_available: bool = false, slice_parameter: bool = false, reference_parameter: ?bool = null, name: []const u8, declaration: Span, ty: Type, mutable: bool, mutable_borrow: bool = false, reads: usize = 0, writes: usize = 0 };
+/// Local type, declaration, usage counts, and tracked ownership/borrow state.
+pub const Local = struct {
+    ownership: LocalOwnership = .{},
+    parameter: LocalParameter = .{},
+    usage: LocalUsage = .{},
+    name: []const u8,
+    declaration: Span,
+    ty: Type,
+    mutable: bool,
+};
+/// Compile-time ownership availability, partial moves, and arena provenance.
+pub const LocalOwnership = struct { arena_depth: usize = 0, partial_fields: []const bool = &.{}, transfer_available: bool = false };
+/// Passing convention for a reference or slice parameter binding.
+pub const LocalParameter = struct { slice_parameter: bool = false, reference_parameter: ?bool = null };
+/// Static binding reads, writes, and mutability evidence used by quality diagnostics.
+pub const LocalUsage = struct { mutable_borrow: bool = false, reads: usize = 0, writes: usize = 0 };
+
+/// Caller parameter provenance and mutability of a returned reference or slice.
 pub const ReturnReference = struct { parameter: LocalId, mutable: bool, slice: bool };
+/// Checked function signature, local/reference metadata, effects, and body identity.
 pub const Function = struct {
-    effect_bound: ?@import("effect_set.zig").Bound = null,
-    effects: @import("effect_set.zig").Mask = 0,
-    return_reference: ?ReturnReference = null,
-    references: []const Reference = &.{},
-    owner: ?Type = null,
-    restricted: bool = false,
-    conversion: bool = false,
+    policy: FunctionPolicy = .{},
+    signature: FunctionSignature = .{},
+    scope: FunctionScope,
     id: FunctionId,
     name: []const u8,
     declaration: Span,
-    return_type: Type,
-    parameter_count: usize,
-    body: StatementId,
-    locals: []const Local,
 };
+/// Declared visibility and effect policy, with its inferred execution effects.
+pub const FunctionPolicy = struct {
+    effect_bound: ?@import("effect_set.zig").Bound = null,
+    effects: @import("effect_set.zig").Mask = 0,
+    owner: ?Type = null,
+    restricted: bool = false,
+    conversion: bool = false,
+};
+/// Resolved value result, parameter count, and optional returned-reference contract.
+pub const FunctionSignature = struct {
+    return_type: Type = .i64,
+    parameter_count: usize = 0,
+    return_reference: ?ReturnReference = null,
+};
+/// Checked function body and its lexical local/reference tables.
+pub const FunctionScope = struct {
+    body: StatementId,
+    locals: []const Local = &.{},
+    references: []const Reference = &.{},
+};
+/// Borrowed checked expression, statement, function, and nominal schema tables.
 pub const Program = struct { nodes: []const Node, statements: []const Statement, functions: []const Function, main: FunctionId, records: []const Record = &.{} };
 
-pub fn resourceKind(ty: Type, records: []const Record) ?@import("external_resources.zig").Kind {
+/// Identify the external provider family associated with a type.
+pub fn resourceKind(ty: Type, records: []const Record) ?external_resources.Kind {
     if (!ty.isAggregate() or ty.recordIndex() >= records.len) return null;
-    return records[ty.recordIndex()].resource;
+    return records[ty.recordIndex()].shape.resource;
 }
+/// Check whether a type has the byte-array representation required by provider requests.
 pub fn byteRequest(ty: Type, records: []const Record) bool {
     if (!ty.isAggregate() or ty.recordIndex() >= records.len) return false;
-    const array = records[ty.recordIndex()].array orelse return false;
+    const array = records[ty.recordIndex()].shape.array orelse return false;
     return array.element == .u8 and array.key == null;
 }
+/// Result schema and fields needed to preserve a resource on failed completion.
 pub const CompletionShape = struct { result: ResultShape, resource_type: Type, resource_field: usize, code_field: usize };
+/// Recognize the resource-preserving completion result layout.
 pub fn completionShape(ty: Type, records: []const Record) ?CompletionShape {
     const result = resultShape(ty, records) orelse return null;
     if (result.ok_type != .bool or !result.error_type.isAggregate() or result.error_type.recordIndex() >= records.len) return null;
@@ -186,10 +268,13 @@ pub fn completionShape(ty: Type, records: []const Record) ?CompletionShape {
     return .{ .result = result, .resource_type = schema.fields[resource].ty, .resource_field = resource, .code_field = code_field orelse return null };
 }
 
+/// Result payload layout containing bytes, a length, and a status flag.
 pub const ByteResultShape = struct { result: ResultShape, bytes_type: Type, bytes_field: usize, length_field: usize, flag_field: usize };
+/// Recognize the required environment lookup result layout.
 pub fn environmentShape(ty: Type, records: []const Record) ?ByteResultShape {
     return byteResultShape(ty, records, "present");
 }
+/// Recognize the required fixed-buffer resource read result layout.
 pub fn resourceReadShape(ty: Type, records: []const Record) ?ByteResultShape {
     return byteResultShape(ty, records, "eof");
 }
@@ -210,7 +295,9 @@ fn byteResultShape(ty: Type, records: []const Record, flag_name: []const u8) ?By
     return .{ .result = result, .bytes_type = schema.fields[byte_field].ty, .bytes_field = byte_field, .length_field = length orelse return null, .flag_field = present orelse return null };
 }
 
+/// Result fields describing the count and EOF state of a read into a slice.
 pub const SliceReadShape = struct { result: ResultShape, length_field: usize, eof_field: usize };
+/// Recognize the result layout for a resource read into caller-owned storage.
 pub fn resourceSliceReadShape(ty: Type, records: []const Record) ?SliceReadShape {
     const result = resultShape(ty, records) orelse return null;
     if (result.error_type != .i64 or !result.ok_type.isAggregate() or result.ok_type.recordIndex() >= records.len) return null;

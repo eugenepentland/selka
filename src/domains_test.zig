@@ -1,21 +1,28 @@
+//! Domain invariants, explicit wrapping, nominal conversions, and backend schema rejection tests.
+const fixture_path = "domains.my";
 const std = @import("std");
 const testing = std.testing;
 const language = @import("compiler.zig");
 const LimitedLiveAllocator = @import("test_support.zig").LimitedLiveAllocator;
 
 fn result(source: []const u8, expected: i64) !void {
-    var compilation = try language.Compilation.init(testing.allocator, "domains.my", source);
+    var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
     defer compilation.deinit();
     try testing.expectEqual(expected, (try compilation.execute(testing.allocator)).value);
 }
 fn reject(source: []const u8, code: []const u8) !void {
-    var compilation = try language.Compilation.init(testing.allocator, "domains.my", source);
+    var compilation = try language.Compilation.init(testing.allocator, fixture_path, source);
     defer compilation.deinit();
     try testing.expectError(error.SourceError, compilation.check());
     try testing.expectEqualStrings(code, compilation.diagnostics.items[0].code);
 }
-const units = "domain Millimeters: i64 { private fn raw(n: i64) -> Millimeters { return wrap<Millimeters>(n); } fn from(n: i64) -> Millimeters { if n < 0 { return Millimeters.raw(0); } return Millimeters.raw(n); } fn number(n: Millimeters) -> i64 { return unwrap(n); } } domain Seconds: i64 { fn from(n: i64) -> Seconds { return wrap<Seconds>(n); } fn number(n: Seconds) -> i64 { return unwrap(n); } } ";
+const units = "domain Millimeters: i64 { private fn raw(n: i64) -> Millimeters { return " ++
+    "wrap<Millimeters>(n); } fn from(n: i64) -> Millimeters { if n < 0 { return " ++
+    "Millimeters.raw(0); } return Millimeters.raw(n); } fn number(n: Millimeters) -> i64 " ++
+    "{ return unwrap(n); } } domain Seconds: i64 { fn from(n: i64) -> Seconds { return " ++
+    "wrap<Seconds>(n); } fn number(n: Seconds) -> i64 { return unwrap(n); } } ";
 
+// spec: CORE-7
 test "nominal domains prevent mixing units and preserve validated factory values" {
     try result(units ++ "fn main() -> i64 { return Millimeters.number(Millimeters.from(-8)) + Seconds.number(Seconds.from(3)); }", 3);
     try reject(units ++ "fn move(distance: Millimeters) -> i64 { return Millimeters.number(distance); } fn main() -> i64 { return move(Seconds.from(3)); }", "E_TYPE");
@@ -23,7 +30,11 @@ test "nominal domains prevent mixing units and preserve validated factory values
     try reject(units ++ "fn main() -> i64 { return Millimeters.number(4); }", "E_TYPE");
     try reject(units ++ "fn main() -> i64 { return Millimeters.from(4); }", "E_TYPE");
     try reject(units ++ "fn main() -> i64 { discard Millimeters.from(4) + Millimeters.from(2); return 0; }", "E_TYPE");
-    const conversion = "domain Seconds: u64 { fn from(n: u64) -> Seconds { return wrap<Seconds>(n); } fn number(n: Seconds) -> u64 { return unwrap(n); } } domain Millimeters: u8 { fn from(n: u8) -> Millimeters { return wrap<Millimeters>(n); } fn number(n: Millimeters) -> u8 { return unwrap(n); } } fn distance(time: Seconds) -> Millimeters { return Millimeters.from(cast<u8>(Seconds.number(time) * 10u64)); } ";
+    const conversion = "domain Seconds: u64 { fn from(n: u64) -> Seconds { return wrap<Seconds>(n); } fn " ++
+        "number(n: Seconds) -> u64 { return unwrap(n); } } domain Millimeters: u8 { fn " ++
+        "from(n: u8) -> Millimeters { return wrap<Millimeters>(n); } fn number(n: " ++
+        "Millimeters) -> u8 { return unwrap(n); } } fn distance(time: Seconds) -> Millimeters " ++
+        "{ return Millimeters.from(cast<u8>(Seconds.number(time) * 10u64)); } ";
     try result(conversion ++ "fn main() -> i64 { return cast<i64>(Millimeters.number(distance(Seconds.from(7u64)))); }", 70);
     var overflow = try language.Compilation.init(testing.allocator, "conversion.my", conversion ++ "fn main() -> i64 { discard distance(Seconds.from(26u64)); return 0; }");
     defer overflow.deinit();
@@ -62,7 +73,9 @@ test "raw domain construction projection and private factories cannot escape the
 
 test "domain backing types require built-in scalars and exact wrapping types" {
     for ([_][]const u8{ "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64" }) |width| {
-        const source = try std.fmt.allocPrint(testing.allocator, "domain Count: {s} {{ fn from(n: {s}) -> Count {{ return wrap<Count>(n); }} fn number(n: Count) -> {s} {{ return unwrap(n); }} }} fn main() -> i64 {{ return cast<i64>(Count.number(Count.from(7{s}))); }}", .{ width, width, width, width });
+        const source = try std.fmt.allocPrint(testing.allocator, "domain Count: {s} {{ fn from(n: {s}) -> Count {{ return wrap<Count>(n); }} fn " ++
+            "number(n: Count) -> {s} {{ return unwrap(n); }} }} fn main() -> i64 {{ return " ++
+            "cast<i64>(Count.number(Count.from(7{s}))); }}", .{ width, width, width, width });
         defer testing.allocator.free(source);
         try result(source, 7);
     }
@@ -77,7 +90,10 @@ test "domain backing types require built-in scalars and exact wrapping types" {
 }
 
 test "domain namespaces support forward calls recursion private helpers and shared member names" {
-    try result("fn from(n: i64) -> i64 { return n + 1; } domain D: i64 { fn from(n: i64) -> D { if n > 0 { return D.from(n - 1); } return D.raw(from(7)); } private fn raw(n: i64) -> D { return wrap<D>(n); } fn number(n: D) -> i64 { return unwrap(n); } } fn main() -> i64 { return D . number(D . from(20)); }", 8);
+    try result("fn from(n: i64) -> i64 { return n + 1; } domain D: i64 { fn from(n: i64) -> D { if n " ++
+        "> 0 { return D.from(n - 1); } return D.raw(from(7)); } private fn raw(n: i64) -> D { " ++
+        "return wrap<D>(n); } fn number(n: D) -> i64 { return unwrap(n); } } fn main() -> i64 " ++
+        "{ return D . number(D . from(20)); }", 8);
     try reject("domain D: i64 { fn f() -> i64 { return 0; } fn f() -> i64 { return 1; } } fn main() -> i64 { return 0; }", "E_DUPLICATE_FUNCTION");
     try reject("domain D: i64 {} domain D: i64 {} fn main() -> i64 { return 0; }", "E_DUPLICATE_TYPE");
     try reject("domain D: i64 {} struct D {} fn main() -> i64 { return 0; }", "E_DUPLICATE_TYPE");
@@ -90,13 +106,19 @@ test "domain namespaces support forward calls recursion private helpers and shar
 }
 
 test "domain values survive nested aggregates conversions replacement and return" {
-    try result(units ++ "struct Source { distance: Millimeters, elapsed: Seconds } struct Target { distances: [2]Millimeters } conversion fn convert(src: Source) -> Target { discard src.elapsed; return new Target { distances: new [2]Millimeters [src.distance, Millimeters.from(10)] }; } fn main() -> i64 { let a = convert(new Source { distance: Millimeters.from(3), elapsed: Seconds.from(2) }); let b = update(a) { distances: replace(a.distances, 0, Millimeters.from(8)) }; return Millimeters.number(a.distances[0]) + Millimeters.number(b.distances[0]); }", 11);
+    try result(units ++ "struct Source { distance: Millimeters, elapsed: Seconds } struct Target { distances: " ++
+        "[2]Millimeters } conversion fn convert(src: Source) -> Target { discard src.elapsed; " ++
+        "return new Target { distances: new [2]Millimeters [src.distance, " ++
+        "Millimeters.from(10)] }; } fn main() -> i64 { let a = convert(new Source { distance: " ++
+        "Millimeters.from(3), elapsed: Seconds.from(2) }); let b = update(a) { distances: " ++
+        "replace(a.distances, 0, Millimeters.from(8)) }; return " ++
+        "Millimeters.number(a.distances[0]) + Millimeters.number(b.distances[0]); }", 11);
     try reject(units ++ "fn main() -> i64 { let a = new [1]Millimeters [Millimeters.from(1)]; discard replace(a, 0, Seconds.from(1)); return 0; }", "E_TYPE");
 }
 
 const allocation_source = units ++ "fn main() -> i64 { let a = new [2]Millimeters [Millimeters.from(3), Millimeters.from(8)]; let b = replace(a, 0, Millimeters.from(-1)); return Millimeters.number(a[0]) + Millimeters.number(b[0]); }";
 fn allocationScenario(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, "domains.my", allocation_source);
+    var compilation = try language.Compilation.init(allocator, fixture_path, allocation_source);
     defer compilation.deinit();
     try testing.expectEqual(@as(i64, 3), (try compilation.execute(allocator)).value);
     const dump = try compilation.dump(allocator);
@@ -111,10 +133,14 @@ test "domain factories accessors qualified names and discovery clean up on alloc
 }
 
 test "domain creation loops and factory traps release bounded runtime storage" {
-    var compilation = try language.Compilation.init(testing.allocator, "domains.my", units ++ "fn main() -> i64 { let mut current = Millimeters.from(0); while Millimeters.number(current) < 10000 { current = Millimeters.from(Millimeters.number(current) + 1); } return Millimeters.number(current); }");
+    var compilation = try language.Compilation.init(testing.allocator, fixture_path, units ++ "fn main() -> i64 { let mut current = Millimeters.from(0); while " ++
+        "Millimeters.number(current) < 10000 { current = " ++
+        "Millimeters.from(Millimeters.number(current) + 1); } return " ++
+        "Millimeters.number(current); }");
     defer compilation.deinit();
     try compilation.emit();
     var limiter = LimitedLiveAllocator{ .parent = testing.allocator, .limit = 4096 };
+    defer limiter.deinit();
     try testing.expectEqual(@as(i64, 10000), (try compilation.execute(limiter.allocator())).value);
     try testing.expectEqual(@as(usize, 0), limiter.live);
     try testing.expectEqualStrings("R_STEP_LIMIT", (try compilation.executeWithOptions(limiter.allocator(), .{ .max_steps = 50 })).trap.code);
@@ -124,12 +150,16 @@ test "domain creation loops and factory traps release bounded runtime storage" {
     try trapped.emit();
     const outcome = try trapped.execute(limiter.allocator());
     try testing.expectEqualStrings("R_OVERFLOW", outcome.trap.code);
-    try testing.expectEqualStrings("Byte.from", outcome.trap.trace[0].function);
+    try testing.expectEqualStrings("Byte.from", outcome.trap.stack.frames[0].function);
     try testing.expectEqual(@as(usize, 0), limiter.live);
 }
 
 test "duplicate discovery preserves domain ownership visibility and qualified callees" {
-    const source = "domain none: i64 { fn a(n: i64) -> i64 { return n + 1; } fn b(x: i64) -> i64 { return x + 1; } private fn c(n: i64) -> i64 { return n + 1; } } domain Other: i64 { fn a(n: i64) -> i64 { return n + 1; } } fn a(n: i64) -> i64 { return n + 1; } fn b(n: i64) -> i64 { return none.a(n); } fn c(n: i64) -> i64 { return Other.a(n); } fn main() -> i64 { return 0; }";
+    const source = "domain none: i64 { fn a(n: i64) -> i64 { return n + 1; } fn b(x: i64) -> i64 { " ++
+        "return x + 1; } private fn c(n: i64) -> i64 { return n + 1; } } domain Other: i64 { " ++
+        "fn a(n: i64) -> i64 { return n + 1; } } fn a(n: i64) -> i64 { return n + 1; } fn " ++
+        "b(n: i64) -> i64 { return none.a(n); } fn c(n: i64) -> i64 { return Other.a(n); } fn " ++
+        "main() -> i64 { return 0; }";
     var compilation = try language.Compilation.init(testing.allocator, "duplicates.my", source);
     defer compilation.deinit();
     try compilation.check();
@@ -147,16 +177,46 @@ test "domain bytecode rejects unowned representation access and private calls" {
     const typed = @import("typed.zig");
     const span: language.source.Span = .{ .start = 0, .end = 1 };
     const ty: typed.Type = @fromBackingInt(typed.Type.record_base);
-    const schema: typed.Record = .{ .id = ty, .name = "D", .declaration = span, .fields = &.{}, .domain = .i64 };
+    const schema: typed.Record = .{
+        .id = ty,
+        .name = "D",
+        .declaration = span,
+        .fields = &.{},
+        .shape = .{
+            .domain = .i64,
+        },
+    };
     const Op = @FieldType(bc.Instruction, "op");
     for ([_]Op{ .{ .wrap_domain = ty }, .{ .unwrap_domain = ty }, .{ .make_record = .{ .ty = ty, .fields = 1 } } }) |op| {
         const instructions = [_]bc.Instruction{ .{ .span = span, .op = .{ .push_i64 = 1 } }, .{ .span = span, .op = op }, .{ .span = span, .op = .ret } };
-        const program: bc.Program = .{ .records = &.{schema}, .functions = &.{.{ .id = @fromBackingInt(0), .name = "main", .instructions = &instructions }} };
+        const program: bc.Program = .{ .records = &.{schema}, .functions = &.{.{
+            .id = @fromBackingInt(0),
+            .name = "main",
+            .scope = .{
+                .instructions = &instructions,
+            },
+        }} };
         try testing.expectError(error.InternalError, bc.validate(testing.allocator, program));
     }
     const program: bc.Program = .{ .records = &.{schema}, .functions = &.{
-        .{ .id = @fromBackingInt(0), .name = "main", .instructions = &.{ .{ .span = span, .op = .{ .call = @fromBackingInt(1) } }, .{ .span = span, .op = .ret } } },
-        .{ .id = @fromBackingInt(1), .owner = ty, .restricted = true, .name = "D.private", .instructions = &.{ .{ .span = span, .op = .{ .push_i64 = 1 } }, .{ .span = span, .op = .ret } } },
+        .{
+            .id = @fromBackingInt(0),
+            .name = "main",
+            .scope = .{
+                .instructions = &.{ .{ .span = span, .op = .{ .call = @fromBackingInt(1) } }, .{ .span = span, .op = .ret } },
+            },
+        },
+        .{
+            .id = @fromBackingInt(1),
+            .policy = .{
+                .owner = ty,
+                .restricted = true,
+            },
+            .name = "D.private",
+            .scope = .{
+                .instructions = &.{ .{ .span = span, .op = .{ .push_i64 = 1 } }, .{ .span = span, .op = .ret } },
+            },
+        },
     } };
     try testing.expectError(error.InternalError, bc.validate(testing.allocator, program));
 }

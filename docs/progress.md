@@ -2474,3 +2474,46 @@ this milestone supplies the schema-checked call protocol they need. Source codec
 operations, native ABI integration, richer inputs, and the other unfinished roadmap
 requirements remain open. Schema pins establish interface compatibility, not fixed
 implementation semantics. Guardian was not exercised; hosted CI has not run.
+
+## 2026-09-06: Guardian compiler-quality integration
+
+Guardian now gates the Zig compiler implementation on build, test, run, and local
+commits. The configuration selects strict policy, blocking builds, and disabled
+violation baselines. Unit and CLI test roots are registered explicitly, both use
+Guardian's counting runner, and SPEC.md links 45 implemented behavior contracts
+to regression tests. The local commit hook is installed; other clones install it
+with the documented command. Hosted CI checks out the pinned Guardian sibling.
+
+Three sub-agents helped refactor semantic checking, runtime ownership, dependency
+structure, test organization, and integration, with an independent review of VM,
+parser, CLI, and quality-analysis changes. Large dispatchers now delegate focused
+operations; recursive runtime types share one model; metadata groups express
+ownership, signatures, policy, and runtime storage. Public error sets are explicit,
+cleanup paths preserve failures, and malformed-input/ownership/budget tests cover
+newly exposed boundaries. Existing arena quotas and assertions were preserved;
+a value-layout regression caught during validation was fixed to retain 48-byte
+VM slots.
+
+A genuine Guardian accessor false positive was fixed separately: a method named
+allocator or gpa no longer counts as an owned allocator field. The Guardian fix
+passed all 1,391 tests and is committed as 9f32fe8. Its required feedback is recorded
+and committed in Guardian. The language's full gate passes all 88 checks, and the
+live debt report finds no frozen items or ratchet ceilings. Recommended size and
+line-length advice remains report-only; passing the gate is not a claim of zero
+advice or production readiness.
+
+Acceptance validation also exposed an independent cache-reader mismatch in the
+pre-existing Python wrapper work. The cache now accepts and validates both legacy
+reports and the complete optional wrapper-metadata pair, with checksum-valid
+corruption coverage. Earlier wrapper generation/runtime edits remain separate.
+CLI fixtures moved with their test root, including the native driver's shared
+fixture references.
+
+Debug and ReleaseFast validation cover 580 Zig tests (523 core, 57 CLI), the
+2,490 VM/native comparisons, 236 native allocation-failure cases with sanitizers,
+192 application oracle checks per mode, and all existing Python acceptance drivers.
+Formatting, build, run, and complete-test compilation pass. The independent cache
+fix also passes against a staged export containing the original generator/runtime.
+The workflow's
+Guardian revision is local and must be published before hosted CI can fetch it;
+no hosted CI run or language remote exists. The language roadmap remains open.

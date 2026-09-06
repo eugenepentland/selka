@@ -2,18 +2,22 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const typed = @import("typed.zig");
-const source = "struct Wire{n:i64} result Decoded{ok:Positive,err:i64} domain Positive:i64{codec Wire{decode:from_wire,encode:to_wire} private fn raw(x:i64)->Positive{return wrap<Positive>(x);} fn from_wire(x:Wire)->Decoded{if x.n<=0{return new Decoded.err(-1);}return new Decoded.ok(Positive.raw(x.n));} fn to_wire(x:Positive)->Wire{return new Wire{n:unwrap(x)};}}";
+const source = "struct Wire{n:i64} result Decoded{ok:Positive,err:i64} domain Positive:i64{codec " ++
+    "Wire{decode:from_wire,encode:to_wire} private fn raw(x:i64)->Positive{return " ++
+    "wrap<Positive>(x);} fn from_wire(x:Wire)->Decoded{if x.n<=0{return new " ++
+    "Decoded.err(-1);}return new Decoded.ok(Positive.raw(x.n));} fn " ++
+    "to_wire(x:Positive)->Wire{return new Wire{n:unwrap(x)};}}";
 fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "codec.my", source ++ "fn main()->i64{return 0;}");
     defer c.deinit();
     try c.emit();
     const code = c.code.?;
     var domain: typed.Type = undefined;
-    for (code.records) |record| if (record.codec != null) {
+    for (code.records) |record| if (record.contract.codec != null) {
         domain = record.id;
         break;
     };
-    const codec = code.records[domain.recordIndex()].codec.?;
+    const codec = code.records[domain.recordIndex()].contract.codec.?;
     try t.expectEqualStrings("Wire", typed.typeName(codec.wire, code.records));
     for ([_]i64{ 7, 0, -1 }) |number| {
         const wire = try typed.Value.create(allocator, codec.wire, &.{.{ .i64 = number }});
@@ -49,6 +53,7 @@ fn reject(bytes: []const u8, expected: []const u8) !void {
 }
 const prefix = "result R{ok:D,err:i64} domain D:i64{";
 const suffix = "fn dec(x:i64)->R{return new R.ok(wrap<D>(x));} fn enc(x:D)->i64{return unwrap(x);}}fn main()->i64{return 0;}";
+// spec: WIRE-4
 test "domain codec declarations reject duplicate missing unknown and private entries" {
     try reject(prefix ++ "codec i64{decode:dec,decode:dec,encode:enc}" ++ suffix, "E_DUPLICATE_CODEC_KEY");
     try reject(prefix ++ "codec i64{decode:dec}" ++ suffix, "E_INCOMPLETE_CODEC");
@@ -69,7 +74,9 @@ test "domain codec contracts require exact value signatures and ordinary complet
     try reject("domain D:i64{codec i64{decode:dec,encode:enc}fn dec(x:i64)->D{return wrap<D>(x);}fn enc(x:D)->i64{return unwrap(x);}}fn main()->i64{return 0;}", "E_CODEC_SIGNATURE");
     try reject(prefix ++ "codec i64{decode:dec,encode:enc}fn dec(x:&i64)->R{return new R.ok(wrap<D>(read_ref(x)));}fn enc(x:D)->i64{return unwrap(x);}}fn main()->i64{return 0;}", "E_CODEC_SIGNATURE");
     try reject("result R{ok:D,err:D} domain D:i64{codec i64{decode:dec,encode:enc}fn dec(x:i64)->R{return new R.ok(wrap<D>(x));}fn enc(x:D)->i64{return unwrap(x);}}fn main()->i64{return 0;}", "E_CODEC_DATA");
-    try reject("result Time{ok:i64,err:i64}" ++ prefix ++ "codec i64{decode:dec,encode:enc}fn dec(c:clock_cap)->R{acknowledge clock_now<Time>(c);return new R.err(0);}fn enc(x:D)->i64{return unwrap(x);}}fn main()->i64{return 0;}", "E_CODEC_EFFECT");
+    try reject("result Time{ok:i64,err:i64}" ++ prefix ++ "codec i64{decode:dec,encode:enc}fn dec(c:clock_cap)->R{acknowledge " ++
+        "clock_now<Time>(c);return new R.err(0);}fn enc(x:D)->i64{return unwrap(x);}}fn " ++
+        "main()->i64{return 0;}", "E_CODEC_EFFECT");
 }
 const Provider = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {

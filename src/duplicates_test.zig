@@ -12,6 +12,7 @@ fn groups(source: []const u8, expected: usize) !void {
     try testing.expect(compilation.code == null);
 }
 
+// spec: TOOL-1
 test "exact discovery normalizes binding spelling but retains binding identity" {
     try groups("fn a(x: i64, y: i64) -> i64 { let first = x - y; return first * 2; } fn b(left: i64, right: i64) -> i64 { let second = left - right; return second * 2; } fn main() -> i64 { return a(8, 3); }", 1);
     try groups("fn a(x: i64, y: i64) -> i64 { return x - y; } fn b(x: i64, y: i64) -> i64 { return y - x; } fn main() -> i64 { return a(8, 3); }", 0);

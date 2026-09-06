@@ -2,6 +2,7 @@
 //! payloads and registries so independent snapshots can survive a region reset.
 const std = @import("std");
 const memory = @import("memory.zig");
+/// Chunked guest backing allocator used to reclaim region storage as a unit.
 pub const Arena = struct {
     backing: std.heap.ArenaAllocator,
     store: memory.Store,
@@ -11,7 +12,7 @@ pub const Arena = struct {
     pub fn init(self: *Arena, parent: std.mem.Allocator, limits: memory.Limits) memory.Error!void {
         const store = try memory.Store.initWithLimits(parent, limits);
         self.* = .{ .backing = .init(parent), .store = store };
-        self.store.backing_allocator = self.backing.allocator();
+        self.store.backing.allocator = self.backing.allocator();
     }
     /// Failure due to outstanding borrows leaves the entire region unchanged.
     /// On success all owners are invalidated even if capacity retention returns

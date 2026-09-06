@@ -21,6 +21,7 @@ fn trapped(expression: []const u8, code: []const u8) !void {
     try testing.expect(outcome.trap.span.start < text.len);
 }
 
+// spec: CORE-4
 test "all integer widths accept their limits and reject one-past literals" {
     const widths = [_]Type{ .i8, .i16, .i32, .i64, .u8, .u16, .u32, .u64 };
     for (widths) |ty| {
@@ -67,7 +68,10 @@ test "integer casts check narrowing signedness and retain operand traps" {
 }
 
 test "integer widths remain distinct in functions records compound assignment and conversions" {
-    const source = "struct Small { n: u8 } struct Wide { n: u64 } conversion fn widen(x: Small) -> Wide { return new Wide { n: cast<u64>(x.n) }; } fn bump(n: u8) -> u8 { let mut result = n; result += 1u8; result -= 2u8; return result; } fn main() -> i64 { return cast<i64>(widen(new Small { n: bump(9u8) }).n); }";
+    const source = "struct Small { n: u8 } struct Wide { n: u64 } conversion fn widen(x: Small) -> Wide " ++
+        "{ return new Wide { n: cast<u64>(x.n) }; } fn bump(n: u8) -> u8 { let mut result = n;" ++
+        " result += 1u8; result -= 2u8; return result; } fn main() -> i64 { return " ++
+        "cast<i64>(widen(new Small { n: bump(9u8) }).n); }";
     var compilation = try language.Compilation.init(testing.allocator, "widths.my", source);
     defer compilation.deinit();
     try testing.expectEqual(@as(i64, 8), (try compilation.execute(testing.allocator)).value);
@@ -114,7 +118,9 @@ test "integer widths casts and record values release storage under allocation fa
 }
 
 test "integer widths and casts remain distinct in duplicate discovery" {
-    var compilation = try language.Compilation.init(testing.allocator, "duplicates.my", "fn a(n: u8) -> u8 { return n + 1u8; } fn b(n: i8) -> i8 { return n + 1i8; } fn c(n: u8) -> u16 { return cast<u16>(n); } fn d(n: u8) -> u32 { return cast<u32>(n); } fn main() -> i64 { return 0; }");
+    var compilation = try language.Compilation.init(testing.allocator, "duplicates.my", "fn a(n: u8) -> u8 { return n + 1u8; } fn b(n: i8) -> i8 { return n + 1i8; } fn c(n: " ++
+        "u8) -> u16 { return cast<u16>(n); } fn d(n: u8) -> u32 { return cast<u32>(n); } fn " ++
+        "main() -> i64 { return 0; }");
     defer compilation.deinit();
     try compilation.check();
     var analysis = try language.duplicates.discover(testing.allocator, compilation.program.?, .{ .min_nodes = 1 });

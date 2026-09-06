@@ -1,13 +1,17 @@
 //! Effects describe language-visible authority, not VM implementation allocation.
 const std = @import("std");
 pub const Mask = u8;
+/// Independent capability effects tracked by source checking and interface reports.
 pub const Effect = enum(u3) { allocation, filesystem, network, clock, random, environment };
 pub const all: Mask = 0b111111;
 pub const io: Mask = bit(.filesystem) | bit(.network);
+/// Declared allowed-effect mask and the source annotation that imposed it.
 pub const Bound = struct { allowed: Mask, span: @import("source.zig").Span };
+/// Return the mask bit corresponding to one effect category.
 pub fn bit(effect: Effect) Mask {
     return @as(Mask, 1) << @backingInt(effect);
 }
+/// Write the named effects present in a mask to the supplied writer.
 pub fn write(writer: *std.Io.Writer, mask: Mask) std.Io.Writer.Error!void {
     try writer.writeByte('{');
     var separator = false;

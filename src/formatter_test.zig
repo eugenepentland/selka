@@ -39,6 +39,7 @@ fn roundTrip(allocator: std.mem.Allocator, text: []const u8) !void {
     }
     while (after_comments.next()) |line| try t.expect(std.mem.indexOf(u8, line, "//") == null);
 }
+// spec: TOOL-4
 test "formatter canonical indentation preserves inline standalone and trailing comments" {
     const text = "// heading\r\nfn main( )->i64{ // body\r\nlet x=1; // value\n// return note\nreturn x+2;} // end";
     const expected = "// heading\nfn main() -> i64 { // body\n    let x = 1; // value\n    // return note\n    return x + 2;\n} // end\n";
@@ -59,6 +60,7 @@ test "formatter preserves ambiguous operators literal spellings and aggregate ty
     try roundTrip(t.allocator, "domain D:i64{fn make(x:i64)->D{return wrap<D>(x);}} fn main()->i64{return 0;}");
     try roundTrip(t.allocator, "fn main()->i64{ // empty comments\n// before return\nreturn 0;// after return\n// before close\n}\n// final\n");
 }
+// spec: TOOL-5
 test "formatting accepts incomplete semantic work but rejects invalid syntax" {
     var c = try language.Compilation.init(t.allocator, "fmt.my", "fn unfinished()->Unknown{return missing;} ");
     defer c.deinit();

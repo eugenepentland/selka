@@ -1,15 +1,54 @@
 //! Typed scalar input declarations with deterministic, injection-free module output.
+/// Failures returned by parse; callers must handle these boundary errors.
+pub const ParseError = error{
+    InternalError,
+    DuplicateField,
+    DuplicateInputName,
+    InputValueOutOfRange,
+    InvalidCharacter,
+    InvalidInputModule,
+    InvalidInputName,
+    InvalidInputType,
+    InvalidInputValue,
+    InvalidNumber,
+    ManifestTooLarge,
+    MissingField,
+    OutOfMemory,
+    Overflow,
+    SyntaxError,
+    TooManyInputs,
+    UnexpectedEndOfInput,
+    UnexpectedToken,
+    UnknownField,
+    UnsupportedInputVersion,
+};
+/// Failures returned by generate; callers must handle these boundary errors.
+pub const GenerateError = error{
+    OutOfMemory,
+    WriteFailed,
+};
+
 const std = @import("std");
 const lexer = @import("lexer.zig");
 const Type = @import("typed.zig").Type;
+/// Named scalar input with explicit type and canonical textual value.
 pub const Entry = struct { name: []const u8, type: []const u8, value: []const u8 };
+/// Versioned generated-module input manifest containing named scalar values.
 pub const Document = struct { version: u32, module: []const u8, values: []const Entry };
+/// Parsed and validated manifest owning its JSON parse storage.
 pub const Manifest = struct {
     parsed: std.json.Parsed(Document),
     digest: [32]u8,
-    pub fn parse(allocator: std.mem.Allocator, bytes: []const u8) !Manifest {
+    /// Validate manifest keys, scalar spellings, ranges, and duplicate input names.
+    pub fn parse(allocator: std.mem.Allocator, bytes: []const u8) ParseError!Manifest {
         if (bytes.len > 1024 * 1024) return error.ManifestTooLarge;
-        const parsed = try std.json.parseFromSlice(Document, allocator, bytes, .{ .allocate = .alloc_always });
+        // parseFromSlice supplies complete input and uses its length as max_value_len.
+        // These concrete documents contain no fixed-size arrays; generic parser-only
+        // failures indicate an internal contract mismatch, not a caller input category.
+        const parsed = std.json.parseFromSlice(Document, allocator, bytes, .{ .allocate = .alloc_always }) catch |err| switch (err) {
+            error.BufferUnderrun, error.LengthMismatch, error.ValueTooLong, error.InvalidEnumTag => return error.InternalError,
+            else => |failure| return failure,
+        };
         errdefer parsed.deinit();
         const document = parsed.value;
         if (document.version != 1) return error.UnsupportedInputVersion;
@@ -31,7 +70,8 @@ pub const Manifest = struct {
     pub fn deinit(self: *Manifest) void {
         self.parsed.deinit();
     }
-    pub fn generate(self: Manifest, allocator: std.mem.Allocator) ![]u8 {
+    /// Allocate source for the manifest's checked constant input module.
+    pub fn generate(self: Manifest, allocator: std.mem.Allocator) GenerateError![]u8 {
         return self.generateInner(allocator) catch |err| switch (err) {
             error.WriteFailed => error.OutOfMemory,
             else => return err,

@@ -1,11 +1,17 @@
 //! Allocators used to verify bounded live runtime storage.
 const std = @import("std");
+/// Test allocator enforcing a live-byte bound; resize/remap deliberately force fallback paths.
 pub const LimitedLiveAllocator = struct {
     parent: std.mem.Allocator,
     limit: usize,
     live: usize = 0,
+    /// Borrow an allocator interface that charges allocations and refunds frees to this object's live count.
     pub fn allocator(self: *LimitedLiveAllocator) std.mem.Allocator {
         return .{ .ptr = self, .vtable = &.{ .alloc = alloc, .resize = resize, .remap = remap, .free = free } };
+    }
+    /// Verify that every allocation was freed; this adapter owns no separate backing storage.
+    pub fn deinit(self: *LimitedLiveAllocator) void {
+        std.debug.assert(self.live == 0);
     }
     fn alloc(context: *anyopaque, len: usize, alignment: std.mem.Alignment, ret_addr: usize) ?[*]u8 {
         const self: *LimitedLiveAllocator = @ptrCast(@alignCast(context));

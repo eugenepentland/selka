@@ -1,3 +1,4 @@
+//! Guest allocation identity and dynamic borrow tests, including lease growth failures and recovery after allocation errors.
 const std = @import("std");
 const testing = std.testing;
 const memory = @import("memory.zig");
@@ -164,6 +165,7 @@ test "guest memory allocation failures clean up nested cells and active leases" 
 
 test "memory registries recycle allocation and lease slots under a fixed live budget" {
     var limiter = LimitedLiveAllocator{ .parent = testing.allocator, .limit = 4096 };
+    defer limiter.deinit();
     var store = try memory.Store.init(limiter.allocator());
     defer store.deinit();
     for (0..10000) |i| {
@@ -194,9 +196,7 @@ test "failed root and child borrow allocation leaves existing access and lifetim
     const other = try store.create(.i64, &.{.{ .i64 = 9 }});
     var fillers: std.ArrayList(memory.Borrow) = .empty;
     defer fillers.deinit(testing.allocator);
-    while (store.leases.entries.items.len < store.leases.entries.capacity) {
-        try fillers.append(testing.allocator, try store.borrow(other, 0, 1, .shared));
-    }
+    try fillLeaseCapacity(&store, other, &fillers);
     failing.fail_index = failing.alloc_index;
     try testing.expectError(error.OutOfMemory, store.reborrow(root, 0, 1, .shared));
     failing.fail_index = std.math.maxInt(usize);
@@ -206,4 +206,10 @@ test "failed root and child borrow allocation leaves existing access and lifetim
     for (fillers.items) |filler| try store.end(filler);
     try store.destroy(owner);
     try store.destroy(other);
+}
+
+fn fillLeaseCapacity(store: *memory.Store, other: memory.Allocation, fillers: *std.ArrayList(memory.Borrow)) !void {
+    while (store.leases.entries.items.len < store.leases.entries.capacity) {
+        try fillers.append(testing.allocator, try store.borrow(other, 0, 1, .shared));
+    }
 }

@@ -306,7 +306,9 @@ def load_cached(path, request):
             raise ValueError('cache request mismatch')
         source = payload['source'].encode('utf-8')
         report = payload['report']
-        if set(report) != {'version', 'schema_sha256', 'generator_sha256', 'sha256', 'bytes', 'supported_types', 'unsupported_types'}:
+        report_fields = {'version', 'schema_sha256', 'generator_sha256', 'sha256', 'bytes', 'supported_types', 'unsupported_types'}
+        wrapper_fields = {'callable_functions', 'unsupported_functions'}
+        if set(report) not in (report_fields, report_fields | wrapper_fields):
             raise ValueError('invalid cached report')
         if report['version'] != 'python-bindings-v1' or report['schema_sha256'] != request['schema_sha256'] or report['generator_sha256'] != request['generator_sha256']:
             raise ValueError('cached identity mismatch')
@@ -317,6 +319,12 @@ def load_cached(path, request):
         unsupported = report['unsupported_types']
         if type(unsupported) is not list or any(type(name) is not str for name in unsupported) or unsupported != sorted(set(unsupported)):
             raise ValueError('invalid cached unsupported types')
+        if wrapper_fields <= report.keys():
+            if type(report['callable_functions']) is not int or report['callable_functions'] < 0:
+                raise ValueError('invalid cached callable count')
+            functions = report['unsupported_functions']
+            if type(functions) is not dict or any(type(name) is not str or not name or type(reason) is not str or not reason for name, reason in functions.items()):
+                raise ValueError('invalid cached unsupported functions')
         compile(source, '<cached-bindings>', 'exec')
         return (source, report), 'matching-request'
     except (ValueError, KeyError, TypeError, AttributeError, SyntaxError, RecursionError):

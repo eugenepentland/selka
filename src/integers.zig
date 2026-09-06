@@ -2,14 +2,17 @@
 const typed = @import("typed.zig");
 pub const Error = error{ Overflow, DivisionByZero, InternalError };
 
+/// Construct an integer value only when the mathematical value fits the destination width.
 pub fn cast(ty: typed.Type, value: i128) Error!typed.Value {
     if (!ty.isInteger()) return error.InternalError;
     if (!ty.fits(value)) return error.Overflow;
     return typed.Value.number(ty, value);
 }
 
+/// Evaluate checked integer arithmetic and report overflow or invalid division.
 pub fn binary(ty: typed.Type, op: typed.BinaryOp, left: i128, right: i128) Error!typed.Value {
-    if (!ty.isInteger() or !ty.fits(left) or !ty.fits(right)) return error.InternalError;
+    if (!ty.isInteger()) return error.InternalError;
+    if (!ty.fits(left) or !ty.fits(right)) return error.InternalError;
     switch (op) {
         .eq => return .{ .bool = left == right },
         .ne => return .{ .bool = left != right },

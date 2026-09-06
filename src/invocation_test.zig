@@ -7,7 +7,10 @@ fn find(program: language.bytecode.Program, name: []const u8) typed.FunctionId {
     for (program.functions) |function| if (std.mem.eql(u8, function.name, name)) return function.id;
     unreachable;
 }
-const domain_source = "result Decoded{ok:Positive,err:i64} domain Positive:i64{private fn raw(x:i64)->Positive{return wrap<Positive>(x);} fn decode(x:i64)->Decoded{if x<=0{return new Decoded.err(-1);}return new Decoded.ok(Positive.raw(x));} fn encode(x:Positive)->i64{return unwrap(x);}}";
+const domain_source = "result Decoded{ok:Positive,err:i64} domain Positive:i64{private fn " ++
+    "raw(x:i64)->Positive{return wrap<Positive>(x);} fn decode(x:i64)->Decoded{if " ++
+    "x<=0{return new Decoded.err(-1);}return new Decoded.ok(Positive.raw(x));} fn " ++
+    "encode(x:Positive)->i64{return unwrap(x);}}";
 fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "invoke.my", domain_source ++ " fn main()->i64{return 5;}");
     defer c.deinit();
@@ -40,7 +43,7 @@ test "typed invocation copies aggregate arguments across allocators and preserve
     defer c.deinit();
     try c.emit();
     const id = find(c.code.?, "change");
-    const ty = c.code.?.functions[@backingInt(id)].return_type;
+    const ty = c.code.?.functions[@backingInt(id)].signature.return_type;
     const array_ty = c.code.?.records[ty.recordIndex()].fields[0].ty;
     var arguments = std.heap.ArenaAllocator.init(t.allocator);
     const owned = blk: {
@@ -57,7 +60,9 @@ test "typed invocation copies aggregate arguments across allocators and preserve
     try t.expectEqual(@as(i64, 8), owned.aggregate.fields[0].aggregate.fields[1].i64);
 }
 test "typed invocation rejects authority effects references private methods and malformed arguments" {
-    var c = try language.Compilation.init(t.allocator, "invalid.my", domain_source ++ " result Time{ok:i64,err:i64} fn clock(c:clock_cap)->Time{return clock_now<Time>(c);} fn cap(x:allocator)->i64{return 0;} fn ref(x:&i64)->i64{return read_ref(x);} fn small(x:u8)->u8{return x;} fn main()->i64{return 0;}");
+    var c = try language.Compilation.init(t.allocator, "invalid.my", domain_source ++ " result Time{ok:i64,err:i64} fn clock(c:clock_cap)->Time{return clock_now<Time>(c);} " ++
+        "fn cap(x:allocator)->i64{return 0;} fn ref(x:&i64)->i64{return read_ref(x);} fn " ++
+        "small(x:u8)->u8{return x;} fn main()->i64{return 0;}");
     defer c.deinit();
     try c.emit();
     const code = c.code.?;
@@ -77,7 +82,7 @@ test "typed invocation reports exact execution budgets and bounds argument trave
     try c.emit();
     const code = c.code.?;
     const pair = find(code, "pair");
-    const ty = code.functions[@backingInt(pair)].locals[0].ty;
+    const ty = code.functions[@backingInt(pair)].scope.locals[0].ty;
     const input = try typed.Value.create(t.allocator, ty, &.{.{ .i64 = 7 }});
     defer input.release(t.allocator);
     try t.expectError(error.ValueCountLimit, vm.invoke(t.allocator, code, pair, &.{ input, input }, .{ .arguments = .{ .max_values = 3 } }));
@@ -103,8 +108,8 @@ test "typed invocation reports exact execution budgets and bounds argument trave
     try t.expect(finished);
     const failed = try vm.invoke(t.allocator, code, find(code, "loop"), &.{.{ .i64 = 1 }}, .{ .max_frames = 2 });
     try t.expectEqualStrings("R_FRAME_LIMIT", failed.trap.code);
-    try t.expectEqual(@as(usize, 2), failed.trap.trace_len);
-    try t.expectEqualStrings("loop", failed.trap.trace[0].function);
+    try t.expectEqual(@as(usize, 2), failed.trap.stack.len);
+    try t.expectEqualStrings("loop", failed.trap.stack.frames[0].function);
     try t.expectError(error.InvalidBudget, vm.invoke(t.allocator, code, pair, &.{ input, input }, .{ .max_steps = 0 }));
     try t.expectError(error.InvalidValueLimits, vm.invoke(t.allocator, code, find(code, "main"), &.{}, .{ .arguments = .{ .max_depth = 0 } }));
 }
@@ -143,7 +148,7 @@ fn aggregateCopyScenario(allocator: std.mem.Allocator) !void {
     defer c.deinit();
     try c.emit();
     const id = find(c.code.?, "pass");
-    const ty = c.code.?.functions[@backingInt(id)].return_type;
+    const ty = c.code.?.functions[@backingInt(id)].signature.return_type;
     const array_ty = c.code.?.records[ty.recordIndex()].fields[0].ty;
     const array = try typed.Value.create(t.allocator, array_ty, &.{ .{ .i64 = 7 }, .{ .i64 = 8 } });
     defer array.release(t.allocator);

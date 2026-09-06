@@ -463,8 +463,8 @@ Create these modules as the corresponding milestone needs them; empty scaffoldin
 | `src/bytecode.zig`, `src/lower.zig` | Instruction definitions and lowering |
 | `src/vm.zig` | Frames, checked execution, and guest traps |
 | `src/disassemble.zig` | Stable, human-readable instruction dump |
-| `tests/fixtures/` | Accepted, rejected, and trapping source programs |
-| `tests/integration.zig` | CLI fixture runner |
+| `test/fixtures/` | Accepted, rejected, and trapping source programs |
+| `test/integration.zig` | CLI fixture runner |
 | `examples/` | Small programs users can edit and run |
 | `docs/semantics.md` | Rules actually implemented |
 | `README.md` | Exact Zig version, commands, limitations, next milestone |
@@ -669,6 +669,13 @@ After that works, proceed milestone by milestone. Keep any design change in `doc
 ## 17. Implementation references and status
 
 The scalar syntax, VM format, semantics, and budgets in sections 4–13 are implemented in the sibling `mylang` repository. See [mvp-audit.md](mvp-audit.md) for the requirement-by-requirement evidence and [progress.md](progress.md) for milestone verification. M0–M5 are complete. Post-MVP implementation progress is tracked in section 15 and the experiment records; other features remain proposals. No performance claims are made.
+
+Guardian now checks the Zig implementation itself on build, test, run, and local
+commits. The strict policy blocks violations with baselines disabled; no frozen
+violations are accepted. Compiler/runtime refactors remove blocking complexity,
+dependency, ownership, and test-quality findings. This host-code gate is separate
+from the language's own source checks. See the compiler-quality milestone in
+[progress.md](progress.md) for validation and integration limits.
 
 Official Zig reference checked for the host arithmetic mechanisms:
 

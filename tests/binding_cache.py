@@ -15,6 +15,46 @@ driver = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(driver)
 
 
+def check_wrapper_report_compatibility(path, stored, request):
+    """Optional wrapper metadata must be complete and valid after checksum verification."""
+    legacy = json.loads(stored)
+    legacy['payload']['report'].pop('callable_functions', None)
+    legacy['payload']['report'].pop('unsupported_functions', None)
+
+    def check(document, accepted):
+        document['sha256'] = driver.digest(document['payload'])
+        path.write_text(driver.canonical(document))
+        loaded, reason = driver.load_cached(path, request)
+        if accepted:
+            assert reason == 'matching-request' and loaded is not None
+            assert loaded == (document['payload']['source'].encode(), document['payload']['report'])
+        else:
+            assert reason == 'invalid-cache' and loaded is None
+
+    check(legacy, True)
+    extended = json.loads(driver.canonical(legacy))
+    extended['payload']['report'].update(callable_functions=0, unsupported_functions={})
+    check(extended, True)
+    extended['payload']['report']['unsupported_functions'] = {'main::read': 'effectful function'}
+    check(extended, True)
+    for field, invalid in (
+        ('callable_functions', True), ('callable_functions', -1), ('callable_functions', '0'),
+        ('unsupported_functions', []), ('unsupported_functions', {'main::read': 1}),
+        ('unsupported_functions', {'': 'effectful function'}), ('unsupported_functions', {'main::read': ''}),
+    ):
+        document = json.loads(driver.canonical(extended))
+        document['payload']['report'][field] = invalid
+        check(document, False)
+    for field in ('callable_functions', 'unsupported_functions'):
+        document = json.loads(driver.canonical(extended))
+        del document['payload']['report'][field]
+        check(document, False)
+    document = json.loads(driver.canonical(extended))
+    document['payload']['report']['unknown_metadata'] = 0
+    check(document, False)
+    path.write_bytes(stored)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True)
@@ -56,6 +96,7 @@ def main():
         assert key == hashlib.sha256(driver.canonical(first['request']).encode()).hexdigest()
         path = cache / (key + '.json')
         stored = path.read_bytes()
+        check_wrapper_report_compatibility(path, stored, first['request'])
         corruptions = [b'not json', b'[]', b'{"version":1,"version":2}']
         document = json.loads(stored)
         document['payload']['source'] += '# checksum mismatch'

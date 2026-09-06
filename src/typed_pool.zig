@@ -2,14 +2,7 @@
 //! references escape. Source-language schemas and allocator scopes are separate.
 const std = @import("std");
 pub const Error = std.mem.Allocator.Error || error{ PoolClosed, ForeignPool, InvalidHandle, CapacityLimit, IdentityExhausted };
-var identities: std.atomic.Value(u64) = .init(1);
-fn nextIdentity(counter: *std.atomic.Value(u64)) Error!u64 {
-    var current = counter.load(.monotonic);
-    while (true) {
-        if (current == std.math.maxInt(u64)) return error.IdentityExhausted;
-        if (counter.cmpxchgWeak(current, current + 1, .monotonic, .monotonic)) |observed| current = observed else return current;
-    }
-}
+const identities = @import("wiring/identity.zig");
 /// Tag establishes a nominal handle category without depending on the node layout.
 /// Recursive graphs can put Handle(NodeTag) in Node before defining Pool(NodeTag, Node).
 pub fn Handle(comptime Tag: type) type {
@@ -20,6 +13,7 @@ pub fn Handle(comptime Tag: type) type {
         generation: u64,
     };
 }
+/// Live/retired slot counts and cumulative insertion/removal counts for typed pools.
 pub const Statistics = struct { live: usize = 0, retired: usize = 0, inserted: u64 = 0, removed: u64 = 0 };
 /// T must be copyable under Hooks. Retain/release must not fail or reenter the pool.
 /// Default hooks suit plain values/handles; reference-counted values supply hooks.
@@ -46,8 +40,8 @@ pub fn Pool(comptime Tag: type, comptime T: type) type {
             return value;
         }
         fn releasePlain(_: T, _: std.mem.Allocator) void {}
-        pub fn init(allocator: std.mem.Allocator, max_slots: usize, hooks: Hooks) Error!Self {
-            return .{ .allocator = allocator, .identity = try nextIdentity(&identities), .max_slots = max_slots, .hooks = hooks };
+        pub fn init(allocator: std.mem.Allocator, max_slots: usize, hooks: Hooks) error{IdentityExhausted}!Self {
+            return .{ .allocator = allocator, .identity = try identities.acquire(), .max_slots = max_slots, .hooks = hooks };
         }
         /// Prepares registry capacity. Slot identities and live values are unchanged
         /// on allocation failure. max_slots bounds issued slots, including retired ones.
@@ -115,6 +109,9 @@ pub fn Pool(comptime Tag: type, comptime T: type) type {
         /// release in descending slot order; graph edges are inert typed IDs.
         pub fn clear(self: *Self) Error!void {
             if (self.identity == 0) return error.PoolClosed;
+            self.clearLive();
+        }
+        fn clearLive(self: *Self) void {
             var index = self.entries.items.len;
             while (index != 0) {
                 index -= 1;
@@ -123,17 +120,11 @@ pub fn Pool(comptime Tag: type, comptime T: type) type {
         }
         pub fn deinit(self: *Self) void {
             if (self.identity == 0) return;
-            self.clear() catch unreachable;
+            self.clearLive();
             self.entries.deinit(self.allocator);
             self.entries = .empty;
             self.free_head = null;
             self.identity = 0;
         }
     };
-}
-
-test "pool identity allocation never wraps" {
-    var counter: std.atomic.Value(u64) = .init(std.math.maxInt(u64) - 1);
-    try std.testing.expectEqual(std.math.maxInt(u64) - 1, try nextIdentity(&counter));
-    try std.testing.expectError(error.IdentityExhausted, nextIdentity(&counter));
 }

@@ -12,6 +12,7 @@ pub const Scope = struct {
     store: *memory.Store,
     owners: std.ArrayList(memory.Allocation) = .empty,
 
+    /// Create an empty ownership scope borrowing its guest memory store.
     pub fn init(store: *memory.Store) Scope {
         return .{ .store = store };
     }
@@ -21,7 +22,7 @@ pub const Scope = struct {
         while (self.owners.pop()) |owner| {
             // A closed store already cleaned everything. A stale owner must
             // never destroy a newer generation owned somewhere else.
-            self.store.destroyForUnwind(owner) catch {};
+            _ = self.store.destroyIfLiveForUnwind(owner);
         }
         self.owners.deinit(self.store.allocator);
         self.owners = .empty;
@@ -30,6 +31,7 @@ pub const Scope = struct {
         for (self.owners.items, 0..) |item, index| if (std.meta.eql(item, owner)) return index;
         return error.NotOwned;
     }
+    /// Create an allocation and register its owner for scope cleanup.
     pub fn acquire(self: *Scope, element_type: values.Type, inputs: []const values.Value, capacity: usize) Error!memory.Allocation {
         try self.owners.ensureUnusedCapacity(self.store.allocator, 1);
         const owner = try self.store.createWithCapacity(element_type, inputs, capacity);
@@ -43,26 +45,20 @@ pub const Scope = struct {
         self.owners.appendAssumeCapacity(moved);
         return moved;
     }
+    /// Remove an owner from this scope and transfer cleanup responsibility to the caller.
     pub fn take(self: *Scope, owner: memory.Allocation) Error!memory.Allocation {
         const index = try self.indexOf(owner);
         const moved = try self.store.transfer(owner);
         _ = self.owners.orderedRemove(index);
         return moved;
     }
+    /// Transfer an owner between scopes without releasing its guest allocation.
     pub fn moveTo(self: *Scope, owner: memory.Allocation, destination: *Scope) Error!memory.Allocation {
         const index = try self.indexOf(owner);
         if (self.store != destination.store) return error.ForeignMemory;
-        if (self == destination) {
-            const moved = try self.store.transfer(owner);
-            self.owners.items[index] = moved;
-            return moved;
-        }
-        try destination.owners.ensureUnusedCapacity(self.store.allocator, 1);
-        const moved = try self.store.transfer(owner);
-        _ = self.owners.orderedRemove(index);
-        destination.owners.appendAssumeCapacity(moved);
-        return moved;
+        return @import("owner_transfer.zig").between(memory.Allocation, Error, self.store, &self.owners, index, &destination.owners);
     }
+    /// Remove a tracked owner and destroy its guest allocation.
     pub fn release(self: *Scope, owner: memory.Allocation) Error!void {
         const index = try self.indexOf(owner);
         try self.store.destroy(owner);

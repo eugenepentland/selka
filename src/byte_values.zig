@@ -1,9 +1,22 @@
 //! Checked adapters between fixed guest byte arrays and borrowed host byte slices.
+/// Failures returned by toOwnedBytes; callers must handle these boundary errors.
+pub const ToOwnedBytesError = error{
+    InternalError,
+    OutOfMemory,
+};
+/// Failures returned by fromBytes; callers must handle these boundary errors.
+pub const FromBytesError = error{
+    InternalError,
+    InvalidAggregateType,
+    OutOfMemory,
+};
+
 const std = @import("std");
 const typed = @import("typed.zig");
-pub fn toOwnedBytes(allocator: std.mem.Allocator, value: typed.Value, ty: typed.Type, records: []const typed.Record) ![]u8 {
+/// Validate a typed byte aggregate and allocate its contiguous host byte representation.
+pub fn toOwnedBytes(allocator: std.mem.Allocator, value: typed.Value, ty: typed.Type, records: []const typed.Record) ToOwnedBytesError![]u8 {
     if (!typed.byteRequest(ty, records) or value != .aggregate or value.typeOf() != ty) return error.InternalError;
-    const length = records[ty.recordIndex()].array.?.length;
+    const length = records[ty.recordIndex()].shape.array.?.length;
     if (value.aggregate.fields.len != length) return error.InternalError;
     const bytes = try allocator.alloc(u8, length);
     errdefer allocator.free(bytes);
@@ -13,8 +26,9 @@ pub fn toOwnedBytes(allocator: std.mem.Allocator, value: typed.Value, ty: typed.
     }
     return bytes;
 }
-pub fn fromBytes(allocator: std.mem.Allocator, bytes: []const u8, ty: typed.Type, records: []const typed.Record) !typed.Value {
-    if (!typed.byteRequest(ty, records) or records[ty.recordIndex()].array.?.length != bytes.len) return error.InternalError;
+/// Allocate a typed byte aggregate from host bytes using the supplied nominal schema.
+pub fn fromBytes(allocator: std.mem.Allocator, bytes: []const u8, ty: typed.Type, records: []const typed.Record) FromBytesError!typed.Value {
+    if (!typed.byteRequest(ty, records) or records[ty.recordIndex()].shape.array.?.length != bytes.len) return error.InternalError;
     const fields = try allocator.alloc(typed.Value, bytes.len);
     defer allocator.free(fields);
     for (bytes, fields) |byte, *field| field.* = typed.Value.number(.u8, byte);

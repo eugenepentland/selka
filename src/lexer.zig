@@ -2,6 +2,7 @@
 const std = @import("std");
 const Span = @import("source.zig").Span;
 const diagnostic = @import("diagnostic.zig");
+/// Lexical token categories, including keywords, punctuation, literals, and end of input.
 pub const Tag = enum {
     eof,
     ident,
@@ -116,19 +117,101 @@ pub const Tag = enum {
     gt,
     ge,
 };
+/// Token category paired with its byte span in the original source.
 pub const Token = struct { tag: Tag, span: Span };
 fn keyword(word: []const u8) Tag {
-    const words = .{ "fn", "return", "let", "mut", "true", "false", "i64", "bool", "if", "else", "while", "discard", "struct", "new", "update", "conversion", "i8", "i16", "i32", "u8", "u16", "u32", "u64", "allocator", "filesystem_cap", "network_cap", "acquire_resource", "complete_resource", "environment_cap", "environment_get", "restrict_resource", "read_resource_slice", "write_resource_slice", "read_resource", "write_resource", "clock_cap", "random_cap", "clock_now", "random_u64", "len_buffer", "capacity_buffer", "read_buffer", "write_buffer", "append_buffer", "resize_buffer", "reserve_buffer", "len_pool", "capacity_pool", "insert_pool", "read_pool", "replace_pool", "remove_pool", "clear_pool", "acquire_pool", "acquire_buffer", "cast", "replace", "len", "domain", "private", "wrap", "unwrap", "enum", "union", "match", "reset_arena", "arena", "borrow", "as", "read_field", "take_field", "read_ref", "write_ref", "read_slice", "write_slice", "len_slice", "acknowledge", "try" };
+    const words = .{
+        "fn",
+        "return",
+        "let",
+        "mut",
+        "true",
+        "false",
+        "i64",
+        "bool",
+        "if",
+        "else",
+        "while",
+        "discard",
+        "struct",
+        "new",
+        "update",
+        "conversion",
+        "i8",
+        "i16",
+        "i32",
+        "u8",
+        "u16",
+        "u32",
+        "u64",
+        "allocator",
+        "filesystem_cap",
+        "network_cap",
+        "acquire_resource",
+        "complete_resource",
+        "environment_cap",
+        "environment_get",
+        "restrict_resource",
+        "read_resource_slice",
+        "write_resource_slice",
+        "read_resource",
+        "write_resource",
+        "clock_cap",
+        "random_cap",
+        "clock_now",
+        "random_u64",
+        "len_buffer",
+        "capacity_buffer",
+        "read_buffer",
+        "write_buffer",
+        "append_buffer",
+        "resize_buffer",
+        "reserve_buffer",
+        "len_pool",
+        "capacity_pool",
+        "insert_pool",
+        "read_pool",
+        "replace_pool",
+        "remove_pool",
+        "clear_pool",
+        "acquire_pool",
+        "acquire_buffer",
+        "cast",
+        "replace",
+        "len",
+        "domain",
+        "private",
+        "wrap",
+        "unwrap",
+        "enum",
+        "union",
+        "match",
+        "reset_arena",
+        "arena",
+        "borrow",
+        "as",
+        "read_field",
+        "take_field",
+        "read_ref",
+        "write_ref",
+        "read_slice",
+        "write_slice",
+        "len_slice",
+        "acknowledge",
+        "try",
+    };
     inline for (words) |w| {
         if (std.mem.eql(u8, word, w)) return @field(Tag, "kw_" ++ w);
     }
     return .ident;
 }
+/// Check the identifier spelling rules without accepting reserved keywords.
 pub fn isIdentifier(word: []const u8) bool {
     if (word.len == 0 or !(std.ascii.isAlphabetic(word[0]) or word[0] == '_')) return false;
     for (word[1..]) |byte| if (!(std.ascii.isAlphanumeric(byte) or byte == '_')) return false;
     return keyword(word) == .ident;
 }
+/// Allocate source-spanned tokens and report invalid input through the supplied diagnostic sink.
 pub fn lex(allocator: std.mem.Allocator, bytes: []const u8, sink: *diagnostic.Sink) diagnostic.Error![]Token {
     var tokens: std.ArrayList(Token) = .empty;
     var i: usize = 0;

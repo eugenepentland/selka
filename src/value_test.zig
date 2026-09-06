@@ -29,8 +29,36 @@ const code = [_]language.bytecode.Instruction{
     instruction(.ret),
 };
 const program: language.bytecode.Program = .{ .records = &.{schema}, .functions = &.{
-    .{ .id = @fromBackingInt(0), .name = "main", .locals = &.{.{ .name = "record", .declaration = span, .ty = record_type, .mutable = true }}, .instructions = &code },
-    .{ .id = @fromBackingInt(1), .name = "identity", .parameter_count = 1, .return_type = record_type, .locals = &.{.{ .name = "argument", .declaration = span, .ty = record_type, .mutable = false }}, .instructions = &.{ instruction(.{ .load_local = @fromBackingInt(0) }), instruction(.ret) } },
+    .{
+        .id = @fromBackingInt(0),
+        .name = "main",
+        .scope = .{
+            .locals = &.{.{ .name = "record", .declaration = span, .ty = record_type, .mutable = true }},
+            .instructions = &code,
+        },
+    },
+    .{
+        .id = @fromBackingInt(1),
+        .name = "identity",
+        .signature = .{
+            .parameter_count = 1,
+            .return_type = record_type,
+        },
+        .scope = .{
+            .locals = &.{.{
+                .name = "argument",
+                .declaration = span,
+                .ty = record_type,
+                .mutable = false,
+            }},
+            .instructions = &.{
+                instruction(.{
+                    .load_local = @fromBackingInt(0),
+                }),
+                instruction(.ret),
+            },
+        },
+    },
 } };
 
 test "aggregate copies survive overwritten locals calls returns projection and discard" {
@@ -81,7 +109,9 @@ test "internal field and scalar type errors release popped aggregate operands" {
         const bad: language.bytecode.Program = .{ .records = &.{schema}, .functions = &.{.{
             .id = @fromBackingInt(0),
             .name = "main",
-            .instructions = &.{ instruction(.{ .push_i64 = 7 }), instruction(.{ .make_record = .{ .ty = record_type, .fields = 1 } }), instruction(op), instruction(.ret) },
+            .scope = .{
+                .instructions = &.{ instruction(.{ .push_i64 = 7 }), instruction(.{ .make_record = .{ .ty = record_type, .fields = 1 } }), instruction(op), instruction(.ret) },
+            },
         }} };
         try testing.expectError(error.InternalError, language.vm.run(testing.allocator, bad));
     }
@@ -91,6 +121,7 @@ test "repeated record allocation retains bounded live storage" {
     // 10,000 overwrites at one local slot. A fixed live-memory allocator would
     // be obscured by allocation strategy, so cap outstanding bytes directly.
     var limiter = LimitedLiveAllocator{ .parent = testing.allocator, .limit = 4096 };
+    defer limiter.deinit();
     var live: Value = .{ .i64 = 0 };
     defer live.release(limiter.allocator());
     for (0..10_000) |i| {
@@ -107,31 +138,42 @@ test "VM loop construction and overwrite fit a fixed live byte budget" {
     const loop: language.bytecode.Program = .{ .records = &.{schema}, .functions = &.{.{
         .id = @fromBackingInt(0),
         .name = "main",
-        .locals = &.{ .{ .name = "i", .declaration = span, .ty = .i64, .mutable = true }, .{ .name = "record", .declaration = span, .ty = record_type, .mutable = true } },
-        .instructions = &.{
-            instruction(.{ .push_i64 = 0 }),
-            instruction(.{ .store_local = @fromBackingInt(0) }),
-            instruction(.{ .push_i64 = 0 }),
-            instruction(.{ .make_record = .{ .ty = record_type, .fields = 1 } }),
-            instruction(.{ .store_local = @fromBackingInt(1) }),
-            instruction(.{ .load_local = @fromBackingInt(0) }),
-            instruction(.{ .push_i64 = 10_000 }),
-            instruction(.{ .cmp_i64 = .lt }),
-            instruction(.{ .jump_if_false = 17 }),
-            instruction(.{ .load_local = @fromBackingInt(0) }),
-            instruction(.{ .make_record = .{ .ty = record_type, .fields = 1 } }),
-            instruction(.{ .store_local = @fromBackingInt(1) }),
-            instruction(.{ .load_local = @fromBackingInt(0) }),
-            instruction(.{ .push_i64 = 1 }),
-            instruction(.add_i64_checked),
-            instruction(.{ .store_local = @fromBackingInt(0) }),
-            instruction(.{ .jump = 5 }),
-            instruction(.{ .load_local = @fromBackingInt(1) }),
-            instruction(.{ .get_field = 0 }),
-            instruction(.ret),
+        .scope = .{
+            .locals = &.{ .{ .name = "i", .declaration = span, .ty = .i64, .mutable = true }, .{ .name = "record", .declaration = span, .ty = record_type, .mutable = true } },
+            .instructions = &.{
+                instruction(.{ .push_i64 = 0 }),
+                instruction(.{ .store_local = @fromBackingInt(0) }),
+                instruction(.{ .push_i64 = 0 }),
+                instruction(.{ .make_record = .{ .ty = record_type, .fields = 1 } }),
+                instruction(.{ .store_local = @fromBackingInt(1) }),
+                instruction(.{ .load_local = @fromBackingInt(0) }),
+                instruction(.{ .push_i64 = 10_000 }),
+                instruction(.{ .cmp_i64 = .lt }),
+                instruction(.{ .jump_if_false = 17 }),
+                instruction(.{ .load_local = @fromBackingInt(0) }),
+                instruction(.{ .make_record = .{ .ty = record_type, .fields = 1 } }),
+                instruction(.{ .store_local = @fromBackingInt(1) }),
+                instruction(.{ .load_local = @fromBackingInt(0) }),
+                instruction(.{ .push_i64 = 1 }),
+                instruction(.add_i64_checked),
+                instruction(.{ .store_local = @fromBackingInt(0) }),
+                instruction(.{ .jump = 5 }),
+                instruction(.{ .load_local = @fromBackingInt(1) }),
+                instruction(.{ .get_field = 0 }),
+                instruction(.ret),
+            },
         },
     }} };
     var limiter = LimitedLiveAllocator{ .parent = testing.allocator, .limit = 4096 };
+    defer limiter.deinit();
     try testing.expectEqual(@as(i64, 9999), (try language.vm.run(limiter.allocator(), loop)).value);
     try testing.expectEqual(@as(usize, 0), limiter.live);
+}
+
+test "aggregate construction rejects scalar type identity" {
+    try testing.expectError(error.InvalidAggregateType, Value.create(testing.allocator, .i64, &.{}));
+}
+test "data graph validation rejects a nominal identity outside the schema table" {
+    const unknown: values.Type = @fromBackingInt(values.Type.record_base);
+    try testing.expectError(error.InvalidDataType, @import("data_type.zig").check(testing.allocator, &.{}, unknown, true));
 }

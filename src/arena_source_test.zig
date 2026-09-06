@@ -1,3 +1,4 @@
+//! Source arena allocation tests covering region entry, ownership cleanup, capability lifetime, and repeated execution.
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
@@ -42,8 +43,11 @@ fn scenario(allocator: std.mem.Allocator) !void {
     defer c.deinit();
     var buffers: memory.Statistics = .{};
     var registry: pools.Statistics = .{};
-    const result = c.executeWithOptions(allocator, .{ .memory_statistics = &buffers, .pool_statistics = &registry }) catch |err| {
-        if (err != error.OutOfMemory) for (c.diagnostics.items) |d| std.debug.print("{s}: {s}\n", .{ d.code, d.message });
+    const result = c.executeWithOptions(allocator, .{
+        .memory = .{ .statistics = &buffers },
+        .pools = .{ .statistics = &registry },
+    }) catch |err| {
+        if (err != error.OutOfMemory) @import("diagnostics_test.zig").report(c.diagnostics.items);
         return err;
     };
     try t.expectEqual(@as(i64, 50), result.value);
@@ -55,7 +59,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
 test "nested source arenas support helpers pool snapshots buffers and borrowed views" {
     try scenario(t.allocator);
 }
-test "source arena bookkeeping storage and snapshots unwind on every allocation failure" {
+test "executeBeginRegion bookkeeping and snapshots unwind on every allocation failure" {
     var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(no_resize.allocator(), scenario, .{});
 }
@@ -66,21 +70,35 @@ fn reject(text: []const u8, code: []const u8) !void {
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
 const declarations = "buffer B: i64; result Open { ok: B, err: i64 } ";
+// spec: OWN-6
 test "source arena capabilities owners and wrappers cannot escape through returns and assignments" {
     try reject("fn f(heap: allocator) -> allocator { arena heap as scratch { return scratch; } } fn main() -> i64 { return 0; }", "E_ARENA_ESCAPE");
     try reject("fn f(heap: allocator) -> allocator { let mut outside = heap; arena heap as scratch { outside = scratch; } return outside; } fn main() -> i64 { return 0; }", "E_ARENA_ESCAPE");
     try reject(declarations ++ "fn f(heap: allocator) -> Open { arena heap as scratch { return acquire_buffer<Open>(scratch, 1); } } fn main() -> i64 { return 0; }", "E_ARENA_ESCAPE");
-    try reject(declarations ++ "struct Box { owned: B } result BoxResult { ok: Box, err: i64 } fn f(heap: allocator) -> BoxResult { arena heap as scratch { return new BoxResult.ok(new Box { owned: try acquire_buffer<Open>(scratch, 1) }); } } fn main() -> i64 { return 0; }", "E_ARENA_ESCAPE");
+    try reject(declarations ++ "struct Box { owned: B } result BoxResult { ok: Box, err: i64 } fn f(heap: allocator) " ++
+        "-> BoxResult { arena heap as scratch { return new BoxResult.ok(new Box { owned: try " ++
+        "acquire_buffer<Open>(scratch, 1) }); } } fn main() -> i64 { return 0; }", "E_ARENA_ESCAPE");
     try reject("fn identity(input: allocator) -> allocator { return input; } fn f(heap: allocator) -> allocator { arena heap as scratch { return identity(scratch); } } fn main() -> i64 { return 0; }", "E_ARENA_ESCAPE");
     try reject("struct Box { cap: allocator } fn f(heap: allocator) -> Box { arena heap as scratch { return new Box { cap: scratch }; } } fn main() -> i64 { return 0; }", "E_ARENA_ESCAPE");
     try reject("fn f(heap: allocator) -> i64 { arena heap as scratch {} discard scratch; return 0; } fn main() -> i64 { return 0; }", "E_UNKNOWN_NAME");
 }
 test "arena escape checks include mutable references helper writes and container storage" {
-    try reject("fn set(dest: &mut allocator, cap: allocator) -> i64 { write_ref(dest, cap); return 0; } fn main(heap: allocator) -> i64 { let mut outside = heap; borrow mut outside as dest { arena heap as scratch { discard set(dest, scratch); } } return 0; }", "E_ARENA_ESCAPE");
+    try reject("fn set(dest: &mut allocator, cap: allocator) -> i64 { write_ref(dest, cap); return 0;" ++
+        " } fn main(heap: allocator) -> i64 { let mut outside = heap; borrow mut outside as " ++
+        "dest { arena heap as scratch { discard set(dest, scratch); } } return 0; }", "E_ARENA_ESCAPE");
     try reject("fn main(heap: allocator) -> i64 { let mut outside = new [1]allocator[heap]; borrow mut outside[0..1] as dest { arena heap as scratch { write_slice(dest, 0, scratch); } } return 0; }", "E_ARENA_ESCAPE");
-    try reject("buffer Caps: allocator; result Open { ok: Caps, err: i64 } result Change { ok: bool, err: i64 } fn f(heap: allocator) -> Change { let mut caps = try acquire_buffer<Open>(heap, 1); arena heap as scratch { return append_buffer<Change>(caps, scratch); } } fn main() -> i64 { return 0; }", "E_ARENA_ESCAPE");
-    try reject("pool Caps(Id): allocator; result Open { ok: Caps, err: i64 } result Insert { ok: Id, err: i64 } fn f(heap: allocator) -> Insert { let mut caps = try acquire_pool<Open>(heap, 1); arena heap as scratch { return insert_pool<Insert>(caps, scratch); } } fn main() -> i64 { return 0; }", "E_ARENA_ESCAPE");
-    try reject("fn set(dest: &mut allocator, cap: allocator) -> i64 { write_ref(dest, cap); return 0; } fn f(heap: allocator) -> allocator { arena heap as scratch { let mut inside = heap; borrow mut inside as dest { discard set(dest, scratch); } return inside; } } fn main() -> i64 { return 0; }", "E_ARENA_ESCAPE");
+    try reject("buffer Caps: allocator; result Open { ok: Caps, err: i64 } result Change { ok: bool, " ++
+        "err: i64 } fn f(heap: allocator) -> Change { let mut caps = try " ++
+        "acquire_buffer<Open>(heap, 1); arena heap as scratch { return " ++
+        "append_buffer<Change>(caps, scratch); } } fn main() -> i64 { return 0; }", "E_ARENA_ESCAPE");
+    try reject("pool Caps(Id): allocator; result Open { ok: Caps, err: i64 } result Insert { ok: Id, " ++
+        "err: i64 } fn f(heap: allocator) -> Insert { let mut caps = try " ++
+        "acquire_pool<Open>(heap, 1); arena heap as scratch { return insert_pool<Insert>(caps," ++
+        " scratch); } } fn main() -> i64 { return 0; }", "E_ARENA_ESCAPE");
+    try reject("fn set(dest: &mut allocator, cap: allocator) -> i64 { write_ref(dest, cap); return 0;" ++
+        " } fn f(heap: allocator) -> allocator { arena heap as scratch { let mut inside = " ++
+        "heap; borrow mut inside as dest { discard set(dest, scratch); } return inside; } } " ++
+        "fn main() -> i64 { return 0; }", "E_ARENA_ESCAPE");
 }
 
 test "source arena cleanup survives every instruction boundary with both execution backings" {
@@ -91,7 +109,7 @@ test "source arena cleanup survives every instruction boundary with both executi
         for (1..500) |budget| {
             var buffers: memory.Statistics = .{};
             var registry: pools.Statistics = .{};
-            const result = try c.executeWithOptions(t.allocator, .{ .memory_statistics = &buffers, .pool_statistics = &registry, .memory_backing = backing, .max_steps = budget });
+            const result = try c.executeWithOptions(t.allocator, .{ .memory = .{ .statistics = &buffers, .backing = backing }, .pools = .{ .statistics = &registry }, .max_steps = budget });
             try t.expectEqual(buffers.created, buffers.released);
             try t.expectEqual(registry.acquired, registry.released);
             if (result == .value) {
@@ -108,26 +126,55 @@ fn expectResult(text: []const u8, expected: i64, options: language.vm.Options) !
     var c = try language.Compilation.init(t.allocator, "arena-flow.my", text);
     defer c.deinit();
     const result = c.executeWithOptions(t.allocator, options) catch |err| {
-        for (c.diagnostics.items) |d| std.debug.print("{s}: {s}\n", .{ d.code, d.message });
+        @import("diagnostics_test.zig").report(c.diagnostics.items);
         return err;
     };
     try t.expectEqual(expected, result.value);
 }
 test "return and propagation close frame regions after releasing owners" {
-    try expectResult(declarations ++ "result Work { ok: i64, err: i64 } fn f(heap: allocator) -> Work { arena heap as outer { arena outer as inner { let buffer = try acquire_buffer<Open>(inner, 1); return new Work.ok(9); } } } fn main(heap: allocator) -> i64 { acknowledge f(heap); arena heap as outer { arena outer as inner { return 7; } } }", 7, .{ .memory_limits = .{ .max_regions = 2, .max_allocations = 1 } });
-    try expectResult(declarations ++ "result Work { ok: i64, err: i64 } fn f(heap: allocator) -> Work { arena heap as scratch { let first = try acquire_buffer<Open>(scratch, 1); let second = try acquire_buffer<Open>(scratch, 1); return new Work.ok(99); } } fn main(heap: allocator) -> i64 { match f(heap) { Work.ok(discard) => { return 98; }, Work.err(code) => { if code != 1 { return 97; } } } arena heap as scratch { match acquire_buffer<Open>(scratch, 1) { Open.ok(discard) => { return 8; }, Open.err(discard) => { return 96; } } } }", 8, .{ .memory_limits = .{ .max_regions = 1, .max_allocations = 1 } });
+    try expectResult(declarations ++ "result Work { ok: i64, err: i64 } fn f(heap: allocator) -> Work { arena heap as " ++
+        "outer { arena outer as inner { let buffer = try acquire_buffer<Open>(inner, 1); " ++
+        "return new Work.ok(9); } } } fn main(heap: allocator) -> i64 { acknowledge f(heap); " ++
+        "arena heap as outer { arena outer as inner { return 7; } } }", 7, .{
+        .memory = .{ .limits = .{ .max_regions = 2, .max_allocations = 1 } },
+    });
+    try expectResult(declarations ++ "result Work { ok: i64, err: i64 } fn f(heap: allocator) -> Work { arena heap as " ++
+        "scratch { let first = try acquire_buffer<Open>(scratch, 1); let second = try " ++
+        "acquire_buffer<Open>(scratch, 1); return new Work.ok(99); } } fn main(heap: " ++
+        "allocator) -> i64 { match f(heap) { Work.ok(discard) => { return 98; }, " ++
+        "Work.err(code) => { if code != 1 { return 97; } } } arena heap as scratch { match " ++
+        "acquire_buffer<Open>(scratch, 1) { Open.ok(discard) => { return 8; }, " ++
+        "Open.err(discard) => { return 96; } } } }", 8, .{
+        .memory = .{ .limits = .{ .max_regions = 1, .max_allocations = 1 } },
+    });
 }
 test "heap owners plain snapshots and inert IDs can leave an arena scope" {
-    try expectResult(declarations ++ "fn f(heap: allocator) -> Open { arena heap as scratch { return acquire_buffer<Open>(heap, 2); } } fn main(heap: allocator) -> i64 { match f(heap) { Open.ok(buffer) => { return cast<i64>(capacity_buffer(buffer)); }, Open.err(code) => { return code; } } }", 2, .{});
+    try expectResult(declarations ++ "fn f(heap: allocator) -> Open { arena heap as scratch { return " ++
+        "acquire_buffer<Open>(heap, 2); } } fn main(heap: allocator) -> i64 { match f(heap) { " ++
+        "Open.ok(buffer) => { return cast<i64>(capacity_buffer(buffer)); }, Open.err(code) => " ++
+        "{ return code; } } }", 2, .{});
     try expectResult("struct Plain { value: i64 } fn main(heap: allocator) -> i64 { let mut outside = new Plain { value: 0 }; arena heap as scratch { outside = new Plain { value: 11 }; } return outside.value; }", 11, .{});
-    try expectResult("pool P(Id): i64; result Open { ok: P, err: i64 } result Insert { ok: Id, err: i64 } result Read { ok: i64, err: i64 } fn make(heap: allocator) -> Insert { arena heap as scratch { let mut pool = try acquire_pool<Open>(scratch, 1); return insert_pool<Insert>(pool, 7); } } fn work(heap: allocator) -> Read { let old = try make(heap); let pool = try acquire_pool<Open>(heap, 1); return read_pool<Read>(pool, old); } fn main(heap: allocator) -> i64 { match work(heap) { Read.ok(v) => { return v; }, Read.err(e) => { return e; } } }", 2, .{});
+    try expectResult("pool P(Id): i64; result Open { ok: P, err: i64 } result Insert { ok: Id, err: i64 } " ++
+        "result Read { ok: i64, err: i64 } fn make(heap: allocator) -> Insert { arena heap as " ++
+        "scratch { let mut pool = try acquire_pool<Open>(scratch, 1); return " ++
+        "insert_pool<Insert>(pool, 7); } } fn work(heap: allocator) -> Read { let old = try " ++
+        "make(heap); let pool = try acquire_pool<Open>(heap, 1); return read_pool<Read>(pool, " ++
+        "old); } fn main(heap: allocator) -> i64 { match work(heap) { Read.ok(v) => { return " ++
+        "v; }, Read.err(e) => { return e; } } }", 2, .{});
 }
 test "arena escape analysis includes propagation payloads branches loops and borrowed buffer storage" {
     try reject("result R { ok: i64, err: allocator } fn f(heap: allocator) -> R { arena heap as scratch { discard try new R.err(scratch); } return new R.ok(0); } fn main() -> i64 { return 0; }", "E_ARENA_ESCAPE");
     try reject("fn f(heap: allocator, flag: bool) -> allocator { let mut outside = heap; arena heap as scratch { if flag { outside = scratch; } } return outside; } fn main() -> i64 { return 0; }", "E_ARENA_ESCAPE");
     try reject("fn f(heap: allocator) -> allocator { let mut outside = heap; arena heap as scratch { while false { outside = scratch; } } return outside; } fn main() -> i64 { return 0; }", "E_ARENA_ESCAPE");
-    try reject("buffer Caps: allocator; result Open { ok: Caps, err: i64 } result Change { ok: bool, err: i64 } fn f(heap: allocator) -> Change { let mut caps = try acquire_buffer<Open>(heap, 1); discard try append_buffer<Change>(caps, heap); borrow mut caps[0..1] as dest { arena heap as scratch { write_slice(dest, 0, scratch); } } return new Change.ok(true); } fn main() -> i64 { return 0; }", "E_ARENA_ESCAPE");
-    try reject("fn set(dest: &mut allocator, source: &allocator) -> i64 { write_ref(dest, read_ref(source)); return 0; } fn main(heap: allocator) -> i64 { let mut outside = heap; borrow mut outside as dest { arena heap as scratch { borrow scratch as input { discard set(dest, input); } } } return 0; }", "E_ARENA_ESCAPE");
+    try reject("buffer Caps: allocator; result Open { ok: Caps, err: i64 } result Change { ok: bool, " ++
+        "err: i64 } fn f(heap: allocator) -> Change { let mut caps = try " ++
+        "acquire_buffer<Open>(heap, 1); discard try append_buffer<Change>(caps, heap); borrow " ++
+        "mut caps[0..1] as dest { arena heap as scratch { write_slice(dest, 0, scratch); } } " ++
+        "return new Change.ok(true); } fn main() -> i64 { return 0; }", "E_ARENA_ESCAPE");
+    try reject("fn set(dest: &mut allocator, source: &allocator) -> i64 { write_ref(dest, " ++
+        "read_ref(source)); return 0; } fn main(heap: allocator) -> i64 { let mut outside = " ++
+        "heap; borrow mut outside as dest { arena heap as scratch { borrow scratch as input { " ++
+        "discard set(dest, input); } } } return 0; }", "E_ARENA_ESCAPE");
 }
 test "arena scope authority effect bounds and region limits are explicit" {
     try reject("fn main(heap: allocator) -> i64 noalloc { arena heap as scratch {} return 0; }", "E_EFFECT_BOUND");
@@ -135,23 +182,35 @@ test "arena scope authority effect bounds and region limits are explicit" {
     try reject("fn main(heap: allocator) -> i64 { arena heap as heap {} return 0; }", "E_SHADOWING");
     var c = try language.Compilation.init(t.allocator, "arena-limit.my", "fn main(heap: allocator) -> i64 { arena heap as outer { arena outer as inner {} } return 0; }");
     defer c.deinit();
-    const result = try c.executeWithOptions(t.allocator, .{ .memory_limits = .{ .max_regions = 1 } });
+    const result = try c.executeWithOptions(t.allocator, .{
+        .memory = .{ .limits = .{ .max_regions = 1 } },
+    });
     try t.expectEqualStrings("R_REGION_LIMIT", result.trap.code);
 }
 test "ten thousand source arena scopes reclaim mixed backing within bounded live storage" {
-    const text = comptime program[0..std.mem.indexOf(u8, program, "fn work").?] ++ "fn work(heap: allocator) -> Work { let mut n = 0; while n < 10000 { arena heap as scratch { let node = try snapshot(scratch); let buffer = try acquire_buffer<OpenBuffer>(scratch, 1); if node.value != 42 { return new Work.err(99); } } n += 1; } return new Work.ok(n); } fn main(heap: allocator) -> i64 { match work(heap) { Work.ok(v) => { return v; }, Work.err(e) => { return e; } } }";
+    const text = comptime program[0..std.mem.indexOf(u8, program, "fn work").?] ++ "fn work(heap: allocator) -> Work { let mut n = 0; while n < 10000 { arena heap as " ++
+        "scratch { let node = try snapshot(scratch); let buffer = try " ++
+        "acquire_buffer<OpenBuffer>(scratch, 1); if node.value != 42 { return new " ++
+        "Work.err(99); } } n += 1; } return new Work.ok(n); } fn main(heap: allocator) -> i64 " ++
+        "{ match work(heap) { Work.ok(v) => { return v; }, Work.err(e) => { return e; } } }";
     var c = try language.Compilation.init(t.allocator, "arena-loop.my", text);
     defer c.deinit();
     try c.emit();
     for ([_]language.vm.MemoryBacking{ .general, .arena }) |backing| {
         var limited: @import("test_support.zig").LimitedLiveAllocator = .{ .parent = t.allocator, .limit = 16 * 1024 };
-        const result = try c.executeWithOptions(limited.allocator(), .{ .memory_backing = backing, .memory_limits = .{ .max_regions = 1 } });
+        defer limited.deinit();
+        const result = try c.executeWithOptions(limited.allocator(), .{
+            .memory = .{ .backing = backing, .limits = .{ .max_regions = 1 } },
+        });
         try t.expectEqual(@as(i64, 10000), result.value);
         try t.expectEqual(@as(usize, 0), limited.live);
     }
 }
 test "duplicate discovery preserves arena boundaries while normalizing allocator names" {
-    var c = try language.Compilation.init(t.allocator, "arena-duplicates.my", "fn a(heap: allocator) -> i64 { arena heap as scratch { discard scratch; } return 7; } fn b(parent: allocator) -> i64 { arena parent as region { discard region; } return 7; } fn c(heap: allocator) -> i64 { discard heap; return 7; } fn main() -> i64 { return 0; }");
+    var c = try language.Compilation.init(t.allocator, "arena-duplicates.my", "fn a(heap: allocator) -> i64 { arena heap as scratch { discard scratch; } return 7; }" ++
+        " fn b(parent: allocator) -> i64 { arena parent as region { discard region; } return " ++
+        "7; } fn c(heap: allocator) -> i64 { discard heap; return 7; } fn main() -> i64 { " ++
+        "return 0; }");
     defer c.deinit();
     try c.check();
     var found = try language.duplicates.discover(t.allocator, c.program.?, .{ .min_nodes = 1 });
@@ -168,7 +227,7 @@ test "bytecode rejects invalid arena targets and runtime rejects mismatched regi
     var checked = false;
     for (c.code.?.functions) |function| {
         var first_slot: ?@import("typed.zig").LocalId = null;
-        for (@constCast(function.instructions)) |*instruction| {
+        for (@constCast(function.scope.instructions)) |*instruction| {
             const saved = instruction.*;
             defer instruction.* = saved;
             if (instruction.op == .begin_region) {
@@ -180,7 +239,10 @@ test "bytecode rejects invalid arena targets and runtime rejects mismatched regi
                 instruction.op.end_region = first_slot.?;
                 var buffers: memory.Statistics = .{};
                 var registry: pools.Statistics = .{};
-                try t.expectError(error.InternalError, c.executeWithOptions(t.allocator, .{ .memory_statistics = &buffers, .pool_statistics = &registry }));
+                try t.expectError(error.InternalError, c.executeWithOptions(t.allocator, .{
+                    .memory = .{ .statistics = &buffers },
+                    .pools = .{ .statistics = &registry },
+                }));
                 try t.expectEqual(buffers.created, buffers.released);
                 try t.expectEqual(registry.acquired, registry.released);
                 checked = true;
@@ -191,8 +253,22 @@ test "bytecode rejects invalid arena targets and runtime rejects mismatched regi
 }
 
 test "arena-local capability containers work while plain pool snapshots survive scope exit" {
-    try expectResult("fn inspect(outer: &allocator, inner: &allocator) -> i64 { return 7; } fn main(heap: allocator) -> i64 { let mut outside = heap; borrow mut outside as dest { arena heap as scratch { borrow scratch as input { return inspect(dest, input); } } } }", 7, .{});
-    try expectResult("pool Caps(Id): allocator; result Open { ok: Caps, err: i64 } result Insert { ok: Id, err: i64 } result Read { ok: allocator, err: i64 } buffer B: i64; result Buffer { ok: B, err: i64 } result Work { ok: i64, err: i64 } fn set(dest: &mut allocator, cap: allocator) -> i64 { write_ref(dest, cap); return 0; } fn work(heap: allocator) -> Work { arena heap as scratch { let mut alias = heap; borrow mut alias as dest { discard set(dest, scratch); } let mut caps = try acquire_pool<Open>(scratch, 1); let id = try insert_pool<Insert>(caps, alias); let from_pool = try read_pool<Read>(caps, id); let buffer = try acquire_buffer<Buffer>(from_pool, 3); return new Work.ok(cast<i64>(capacity_buffer(buffer))); } } fn main(heap: allocator) -> i64 { match work(heap) { Work.ok(v) => { return v; }, Work.err(e) => { return e; } } }", 3, .{});
-    const source = comptime program[0..std.mem.indexOf(u8, program, "fn work").?] ++ "fn work(heap: allocator) -> Work { let mut outside = new Node { value: 0 }; arena heap as scratch { outside = try snapshot(scratch); } return new Work.ok(outside.value); } fn main(heap: allocator) -> i64 { match work(heap) { Work.ok(v) => { return v; }, Work.err(e) => { return e; } } }";
+    try expectResult("fn inspect(outer: &allocator, inner: &allocator) -> i64 { return 7; } fn main(heap: " ++
+        "allocator) -> i64 { let mut outside = heap; borrow mut outside as dest { arena heap " ++
+        "as scratch { borrow scratch as input { return inspect(dest, input); } } } }", 7, .{});
+    try expectResult("pool Caps(Id): allocator; result Open { ok: Caps, err: i64 } result Insert { ok: Id, " ++
+        "err: i64 } result Read { ok: allocator, err: i64 } buffer B: i64; result Buffer { " ++
+        "ok: B, err: i64 } result Work { ok: i64, err: i64 } fn set(dest: &mut allocator, " ++
+        "cap: allocator) -> i64 { write_ref(dest, cap); return 0; } fn work(heap: allocator) " ++
+        "-> Work { arena heap as scratch { let mut alias = heap; borrow mut alias as dest { " ++
+        "discard set(dest, scratch); } let mut caps = try acquire_pool<Open>(scratch, 1); let " ++
+        "id = try insert_pool<Insert>(caps, alias); let from_pool = try read_pool<Read>(caps, " ++
+        "id); let buffer = try acquire_buffer<Buffer>(from_pool, 3); return new " ++
+        "Work.ok(cast<i64>(capacity_buffer(buffer))); } } fn main(heap: allocator) -> i64 { " ++
+        "match work(heap) { Work.ok(v) => { return v; }, Work.err(e) => { return e; } } }", 3, .{});
+    const source = comptime program[0..std.mem.indexOf(u8, program, "fn work").?] ++ "fn work(heap: allocator) -> Work { let mut outside = new Node { value: 0 }; arena " ++
+        "heap as scratch { outside = try snapshot(scratch); } return new " ++
+        "Work.ok(outside.value); } fn main(heap: allocator) -> i64 { match work(heap) { " ++
+        "Work.ok(v) => { return v; }, Work.err(e) => { return e; } } }";
     try expectResult(source, 42, .{});
 }
