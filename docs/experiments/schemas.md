@@ -78,7 +78,8 @@ codec, or external-data validator. Explicit effect bounds are not emitted separa
 from inferred effects. [Ordinary typed JSON serialization/deserialization](typed-json.md) now uses this
 checked type model. [Generated Python data bindings](python-bindings.md) now consume the checked public
 schema. Domain codec declarations, external key mappings, callable foreign wrappers,
-and generation receipt/cache integration remain roadmap work. Consumers must not treat an opaque type as safely
+and full source-snapshot generation receipts remain roadmap work.
+[Binding artifact reuse](binding-cache.md) now caches generated Python output after fresh checks. Consumers must not treat an opaque type as safely
 constructible from its descriptive metadata.
 
 ## Acceptance

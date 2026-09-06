@@ -2004,3 +2004,49 @@ receipt/cache integration, finer incremental compilation, generics, wider native
 operations, ordinary-program review, and all other unfinished roadmap work remain
 pending. Guardian was not exercised; hosted CI has not run. The full roadmap goal
 remains active.
+
+## 2026-09-06: Checked incremental binding artifact reuse
+
+Added optional --cache-dir to the binding generator and a versioned generation
+request covering the returned public schema, one captured generator/runtime snapshot,
+selected compiler executable, Python implementation/version/cache tag/optimization,
+and output byte limit. The compiler checks current source before every lookup; its
+selected executable hash is compared before/after checking and a detected replacement
+rejects generation. Returned schemas, rather than paths or timestamps, determine the
+public-contract input. Compiler timeout/capture limits apply freshly before lookup.
+
+Successful artifacts are stored in checksummed, bounded-read cache envelopes. Hits
+verify the full request, source/report identities and size, metadata, and Python syntax
+without executing the artifact. Corrupt/mismatched entries regenerate; other filesystem
+failures remain host errors. The generated source uses the same captured runtime input
+as the request. Cache and destination writes are atomic, and invalid source/generation
+cannot supply new artifacts. Cache storage is trusted local build storage, not an
+authenticated distribution channel.
+
+Before either cached or generated output is installed, complete byte equality now
+preserves an unchanged destination's inode and modification time. Stale/deleted output
+can be restored from a verified cache hit. This avoids file rewrites even when caching
+is disabled or a changed compiler/limit produces identical artifact bytes. The new
+python-bindings-run-v1 report distinguishes fresh frontend checking, hit/miss/disabled
+cache status, actual generation execution/skips, and replaced/unchanged installation.
+
+All 18 build steps pass in Debug and ReleaseFast. The unchanged 525 Zig tests (468 core,
+57 CLI) reuse their successful cached results. The new binding cache driver, existing
+29 compiler/Python wire comparisons, eight verification-driver tests, all codec/schema/
+input/receipt/cache/module/duplicate acceptance, and 392 VM/native comparisons per host
+mode pass. Cache evidence includes actual checked cold/warm execution counts, inode/
+mtime preservation, stale/deleted output restoration, corrupt JSON/checksum/report/
+request/syntax repair, schema/runtime/compiler/limit invalidation, detected compiler
+replacement during checking, rejection of invalid private bodies, disabled-cache no-op
+installation, and cache write failure preservation/cleanup. The example produces a
+cold miss then a warm generation skip and executes its generated bindings correctly.
+Python syntax, Zig formatting, and whitespace checks pass; documentation and both
+plan copies are synchronized.
+
+This implements binding artifact reuse and avoids unchanged-output rewrite triggers.
+It does not skip the compiler frontend, provide a full source-snapshot generation
+receipt, or establish a measured end-to-end speedup. Full generation source receipts,
+finer incremental compilation, domain codecs, callable foreign wrappers, source/input
+integration, generics, wider native support, ordinary-program review, and all other
+unfinished roadmap requirements remain pending. Guardian was not exercised; hosted CI
+has not run. The full roadmap goal remains active.

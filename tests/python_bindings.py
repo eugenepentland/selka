@@ -72,11 +72,11 @@ struct Hidden { private_data: bool }
         assert report['bytes'] == len(original)
         assert report['unsupported_types'] == ['data::Maybe', 'data::Opaque']
         assert 'Hidden' not in original.decode()
-        assert generate() == report and output.read_bytes() == original
+        assert generate() == dict(report, installation='unchanged') and output.read_bytes() == original
         # Private bodies, comments, aliases, and import order do not change bindings.
         data.write_text(source + '\n// private change\nfn unused() -> i64 { return 3; }')
         entry.write_text('module main; import peer as p; import data as d; fn main() -> i64 { return 1; }')
-        assert generate() == report and output.read_bytes() == original
+        assert generate() == dict(report, installation='unchanged') and output.read_bytes() == original
         bindings = load_module(output, 'generated_bindings_acceptance')
         assert bindings.SCHEMA_SHA256 == report['schema_sha256']
         assert bindings.GENERATOR_SHA256 == report['generator_sha256']

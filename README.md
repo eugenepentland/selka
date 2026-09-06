@@ -316,3 +316,10 @@ bounded typed JSON codecs using only Python's standard library. Generation repor
 unsupported opaque types explicitly and preserves existing output on failure. See
 [Python bindings](docs/experiments/python-bindings.md) for naming, constructors,
 wire parity, limits, and remaining foreign-function/domain integration.
+
+Binding generation now supports `--cache-dir=.mylang-cache/bindings`. It always checks
+the current project, validates cached artifact identities, and reports whether actual
+generation ran. Identical output preserves its modification time with or without a
+cache, avoiding unnecessary downstream rebuild triggers. See
+[binding artifact reuse](docs/experiments/binding-cache.md) for request identities,
+corruption handling, and the remaining frontend incremental work.

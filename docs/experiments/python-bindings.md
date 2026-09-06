@@ -108,14 +108,17 @@ explicit domain codecs, and source-level codec operations remain separate work.
 The generated module embeds `BINDINGS_VERSION`, `SCHEMA_SHA256`, and
 `GENERATOR_SHA256`. The schema hash covers the compact checked schema, including its
 public function metadata. The generator hash covers generator-file bytes, a separator,
-and the runtime template bytes read during generation. Stdout reports those hashes,
-the final output hash/size, supported type count, and sorted unsupported type names.
+and the runtime template bytes read during generation. The `python-bindings-run-v1` stdout report includes those hashes, the final output
+hash/size, supported type count, unsupported type names, and generation/cache/installation
+status. [Incremental artifact reuse](binding-cache.md) now records the full generation
+request and supports an optional persistent cache.
 
 Generation is deterministic for those inputs and independent of checkout paths.
 Import aliases/order, comments, and private changes leave the generated artifact
 unchanged when the public schema is unchanged. A public schema change regenerates
-new classes/metadata. These hashes are artifact input identities, not a full source
-snapshot/compiler-executable receipt or an incremental compilation cache.
+new classes/metadata. The optional cache adds compiler/Python/output-limit identities and fresh schema
+checking. It reuses generated artifacts; it is not frontend incremental compilation
+or a full source-snapshot generation receipt.
 
 Defaults are a 90-second compiler subprocess deadline, 16 MiB combined captured
 schema/diagnostics, and 16 MiB final generated output. Flags `--timeout`,
@@ -125,8 +128,8 @@ Timed-out or oversized compiler children are terminated and reaped. These contro
 do not establish a strict total memory/disk quota for the entire generation pipeline.
 
 The generated source is compiled for syntax before output installation. Installation
-uses a temporary file in the destination directory, flush/fsync, and atomic replace.
-The parent directory must already exist. Compiler, schema, generation, and write
+uses a temporary file in the destination directory, flush/fsync, and atomic replace. Exact byte matches now skip installation to preserve modification
+times, with or without a cache. The parent directory must already exist. Compiler, schema, generation, and write
 failures preserve an existing destination and clean up the temporary output. The
 entry, compiler, and generator files cannot be selected as output. Source rejection
 exits 1; host/configuration/generation failure exits 2. Success exits 0.
@@ -143,6 +146,6 @@ private edits, regeneration after public changes, existing-file preservation, at
 write failure cleanup, and termination/reaping after time/capture limits.
 
 The driver is part of `zig build test` in Debug and ReleaseFast. Other language
-bindings, callable foreign function wrappers, explicit domain codecs, generation
-receipts/cache integration, and the remaining compiler roadmap work are not delivered
+bindings, callable foreign function wrappers, explicit domain codecs, full source-snapshot generation
+receipts, broader incremental compilation, and the remaining compiler roadmap work are not delivered
 by this data-binding milestone.
