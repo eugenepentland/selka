@@ -357,5 +357,11 @@ remain pending.
 
 Domains can now declare [explicit codec contracts](docs/experiments/domain-codecs.md)
 linking an ordinary wire type to checked public decoder/encoder methods. The schema
-records those contracts while preserving opaque backing; codec-aware JSON execution
-and callable bindings remain pending. See [the example](examples/domain-codecs/main.my).
+records those contracts while preserving opaque backing. [Executed JSON codecs](docs/experiments/domain-json.md)
+now use them with shared budgets; callable bindings remain pending. See [the example](examples/domain-codecs/main.my).
+
+Try a declared domain codec with:
+
+```sh
+zig-out/bin/mylang check-value-project examples/domain-codecs/main.my --value=examples/domain-codecs/value.json
+```

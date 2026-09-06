@@ -2,6 +2,12 @@
 const std = @import("std");
 const typed = @import("typed.zig");
 pub fn check(allocator: std.mem.Allocator, records: []const typed.Record, root: typed.Type, allow_domains: bool) !void {
+    return checkMode(allocator, records, root, if (allow_domains) .backing else .reject);
+}
+pub fn checkCodecs(allocator: std.mem.Allocator, records: []const typed.Record, root: typed.Type) !void {
+    return checkMode(allocator, records, root, .wire);
+}
+fn checkMode(allocator: std.mem.Allocator, records: []const typed.Record, root: typed.Type, mode: enum { reject, backing, wire }) !void {
     var pending: std.ArrayList(typed.Type) = .empty;
     defer pending.deinit(allocator);
     const seen = try allocator.alloc(bool, typed.Type.record_base + records.len);
@@ -17,8 +23,18 @@ pub fn check(allocator: std.mem.Allocator, records: []const typed.Record, root: 
         const record = records[ty.recordIndex()];
         if (record.buffer != null or record.resource != null or record.pool != null or record.handle_pool != null or record.move_only) return error.NotDataType;
         if (record.domain) |backing| {
-            if (!allow_domains) return error.NotDataType;
-            try pending.append(allocator, backing);
+            const next = switch (mode) {
+                .reject => return error.NotDataType,
+                .backing => backing,
+                .wire => wire: {
+                    const wire_type = (record.codec orelse return error.NotDataType).wire;
+                    // The source contract requires an ordinary wire graph. Recheck
+                    // here before traversal, including for host-supplied catalogs.
+                    try checkMode(allocator, records, wire_type, .reject);
+                    break :wire wire_type;
+                },
+            };
+            try pending.append(allocator, next);
         } else if (record.array) |array| {
             try pending.append(allocator, array.element);
             if (array.key) |key| try pending.append(allocator, key);

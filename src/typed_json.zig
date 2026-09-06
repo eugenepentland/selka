@@ -4,6 +4,7 @@ const typed = @import("typed.zig");
 const Type = typed.Type;
 const Value = typed.Value;
 const Json = std.json.Value;
+const Execution = @import("codec_execution.zig").Execution;
 const Part = union(enum) { key: []const u8, index: usize };
 /// Owned diagnostic prefix: independent of document/catalog lifetimes. Path capture
 /// allocates nothing and never replaces a data failure with an allocation failure.
@@ -83,7 +84,7 @@ pub const Limits = struct {
     max_values: usize = 65536,
     max_tokens: usize = 262144,
     max_depth: u8 = 64,
-    fn check(self: Limits) !void {
+    pub fn check(self: Limits) !void {
         if (self.max_bytes == 0 or self.max_values == 0 or self.max_tokens == 0 or self.max_depth == 0 or self.max_depth > 128) return error.InvalidCodecLimits;
     }
 };
@@ -123,7 +124,20 @@ pub const Document = struct {
             if (location) |out| out.field("type");
             return error.ValueTypeMismatch;
         }
-        var decoder: Decoder = .{ .allocator = allocator, .records = records, .budget = .{ .limits = self.limits }, .trace = .init(location) };
+        var budget: Budget = .{ .limits = self.limits };
+        var decoder: Decoder = .{ .allocator = allocator, .records = records, .budget = &budget, .trace = .init(location) };
+        return decoder.value(ty, self.parsed.value.value, 1);
+    }
+    /// Internal operation entry: the caller shares traversal/execution budgets.
+    pub fn decodeWithCodecs(self: Document, allocator: std.mem.Allocator, execution: *Execution, ty: Type, budget: *Budget, location: *Location) !Value {
+        const records = execution.program.records;
+        location.* = .{};
+        try checkCodecType(allocator, records, ty, location);
+        if (!std.mem.eql(u8, self.parsed.value.type, typed.typeName(ty, records))) {
+            location.field("type");
+            return error.ValueTypeMismatch;
+        }
+        var decoder: Decoder = .{ .allocator = allocator, .records = records, .budget = budget, .execution = execution, .trace = .init(location) };
         return decoder.value(ty, self.parsed.value.value, 1);
     }
 };
@@ -160,12 +174,29 @@ pub fn checkType(allocator: std.mem.Allocator, records: []const typed.Record, ro
     };
 }
 
-const Budget = struct {
+fn checkCodecType(allocator: std.mem.Allocator, records: []const typed.Record, ty: Type, location: *Location) !void {
+    @import("data_type.zig").checkCodecs(allocator, records, ty) catch |err| {
+        if (err != error.OutOfMemory) location.field("type");
+        return switch (err) {
+            error.NotDataType => error.NoImplicitCodec,
+            error.InvalidDataType => error.InvalidCodecType,
+            else => err,
+        };
+    };
+}
+
+pub const WorkBudget = struct { limit: usize, values: usize = 0 };
+pub const Budget = struct {
+    work: ?*WorkBudget = null,
     limits: Limits,
     values: usize = 0,
     fn take(self: *Budget, depth: usize) !void {
         if (depth > self.limits.max_depth) return error.CodecDepthLimit;
         if (self.values == self.limits.max_values) return error.CodecValueLimit;
+        if (self.work) |work| {
+            if (work.values == work.limit) return error.CodecWorkLimit;
+            work.values += 1;
+        }
         self.values += 1;
     }
 };
@@ -183,7 +214,8 @@ fn tagFor(cases: []const typed.Variant, name: []const u8) !usize {
 const Decoder = struct {
     allocator: std.mem.Allocator,
     records: []const typed.Record,
-    budget: Budget,
+    budget: *Budget,
+    execution: ?*Execution = null,
     trace: Trace,
     fn child(self: *Decoder, ty: Type, json: Json, depth: usize, part: Part) anyerror!Value {
         self.trace.push(part);
@@ -201,6 +233,13 @@ const Decoder = struct {
         if (ty.isInteger()) return if (json == .string) integer(ty, json.string) else error.ValueTypeMismatch;
         if (ty == .bool) return if (json == .bool) .{ .bool = json.bool } else error.ValueTypeMismatch;
         const record = self.records[ty.recordIndex()];
+        if (record.domain != null) {
+            const execution = self.execution orelse return error.NoImplicitCodec;
+            const codec = record.codec orelse return error.NoImplicitCodec;
+            const wire = try self.value(codec.wire, json, depth);
+            defer wire.release(self.allocator);
+            return execution.decode(self.allocator, ty, wire);
+        }
         if (record.variants) |variants| {
             if (!variants.is_union) {
                 if (json != .string) return error.ValueTypeMismatch;
@@ -255,7 +294,9 @@ const Decoder = struct {
 const Encoder = struct {
     allocator: std.mem.Allocator,
     records: []const typed.Record,
-    budget: Budget,
+    budget: *Budget,
+    execution: ?*Execution = null,
+    execution_allocator: ?std.mem.Allocator = null,
     trace: Trace,
     fn child(self: *Encoder, ty: Type, input: Value, depth: usize, part: Part) anyerror!Json {
         self.trace.push(part);
@@ -280,6 +321,15 @@ const Encoder = struct {
         if (input != .aggregate or input.aggregate.moved_fields != null) return error.InvalidCodecValue;
         const record = self.records[ty.recordIndex()];
         const fields = input.aggregate.fields;
+        if (record.domain != null) {
+            const execution = self.execution orelse return error.NoImplicitCodec;
+            const codec = record.codec orelse return error.NoImplicitCodec;
+            if (self.budget.values == self.budget.limits.max_values) return error.CodecValueLimit;
+            const runtime_allocator = self.execution_allocator.?;
+            const wire = try execution.encode(runtime_allocator, ty, input);
+            defer wire.release(runtime_allocator);
+            return self.value(codec.wire, wire, depth);
+        }
         if (record.variants) |variants| {
             const tag = input.aggregate.active_tag orelse return error.InvalidCodecValue;
             if (tag >= variants.cases.len) return error.InvalidCodecValue;
@@ -325,8 +375,27 @@ fn encodeLocatedInner(allocator: std.mem.Allocator, records: []const typed.Recor
     try checkLocatedType(allocator, records, ty, location);
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
-    var encoder: Encoder = .{ .allocator = arena.allocator(), .records = records, .budget = .{ .limits = limits }, .trace = .init(location) };
+    var budget: Budget = .{ .limits = limits };
+    var encoder: Encoder = .{ .allocator = arena.allocator(), .records = records, .budget = &budget, .trace = .init(location) };
     const document: Envelope = .{ .version = "typed-json-v1", .type = typed.typeName(ty, records), .value = try encoder.value(ty, input, 1) };
+    return serialize(allocator, document, limits);
+}
+pub fn encodeWithCodecs(allocator: std.mem.Allocator, execution: *Execution, ty: Type, input: Value, budget: *Budget, location: *Location) ![]u8 {
+    location.* = .{};
+    return encodeCodecsInner(allocator, execution, ty, input, budget, location) catch |err| {
+        if (err != error.OutOfMemory and !location.has_path) location.capture(&.{});
+        return err;
+    };
+}
+fn encodeCodecsInner(allocator: std.mem.Allocator, execution: *Execution, ty: Type, input: Value, budget: *Budget, location: *Location) ![]u8 {
+    try checkCodecType(allocator, execution.program.records, ty, location);
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    var encoder: Encoder = .{ .allocator = arena.allocator(), .records = execution.program.records, .budget = budget, .execution = execution, .execution_allocator = allocator, .trace = .init(location) };
+    const document: Envelope = .{ .version = "typed-json-v1", .type = typed.typeName(ty, execution.program.records), .value = try encoder.value(ty, input, 1) };
+    return serialize(allocator, document, budget.limits);
+}
+fn serialize(allocator: std.mem.Allocator, document: Envelope, limits: Limits) ![]u8 {
     var counter = std.Io.Writer.Discarding.init(&.{});
     std.json.Stringify.value(document, .{}, &counter.writer) catch unreachable;
     if (counter.fullCount() > limits.max_bytes) return error.CodecByteLimit;

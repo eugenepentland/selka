@@ -1,5 +1,6 @@
 //! One request owns source, syntax, semantic nodes, and lowered instructions.
 const std = @import("std");
+pub const codec_json = @import("codec_json.zig");
 pub const typed_json = @import("typed_json.zig");
 pub const schema_report = @import("schema_report.zig");
 pub const schema = @import("schema.zig");
@@ -152,4 +153,5 @@ test {
     _ = @import("propagation_test.zig");
     _ = @import("invocation_test.zig");
     _ = @import("domain_codecs_test.zig");
+    _ = @import("codec_json_test.zig");
 }

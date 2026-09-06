@@ -37,7 +37,7 @@ The wire type need not equal the private backing type. It deliberately describes
 ordinary external data; dependencies on other domains must be converted explicitly
 by the methods into ordinary wire fields. This avoids implicit backing access and
 recursive codec lookup inside a declared wire representation. Domain composition
-in application values will require the codec-aware JSON traversal still pending.
+in application values is supported by [executed JSON traversal](domain-json.md).
 
 Method names resolve within the declaring domain rather than through ambient
 function lookup. Module relocation retains their original spans and qualified
@@ -60,12 +60,12 @@ The contract does not prove predicate strength, encoder/decoder inverses, canoni
 wire choices, or successful termination. The author supplies validation behavior;
 callers must inspect decoder errors and enforce execution/resource limits.
 
-This milestone implements declaration checking, metadata, and public schemas. It
-does not yet implement codec-aware JSON decoding/encoding, whole-operation budgets,
-source serialization operations, or generated callable bindings. The existing
+This milestone implements declaration checking, metadata, and public schemas.
+[Executed JSON codecs and shared budgets](domain-json.md) are now implemented.
+Source serialization operations and generated callable bindings remain pending. The existing
 representation-only typed_json API continues returning NoImplicitCodec for domains,
-including ones with declarations. Future decoding must execute the declared decoder
-and inspect its result; no backing-value shortcut is authorized by this metadata.
+including ones with declarations. Execution-aware decoding executes the declared decoder
+and inspects its result; no backing-value shortcut is authorized by this metadata.
 
 Acceptance covers single-file and module resolution, successful/error factory
 execution selected from metadata, exact signatures, private/missing methods,

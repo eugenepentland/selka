@@ -2380,3 +2380,53 @@ bindings still treat them as unsupported. Codec-aware traversal/execution, share
 whole-operation budgets, source codec operations, callable bindings, and the other
 pending roadmap work remain open. Contracts do not prove validation predicates or
 round-trip laws. Guardian was not exercised; hosted CI has not run.
+
+## 2026-09-06: Executed domain JSON with shared operation budgets
+
+Added codec_json decode/encode/project-round-trip APIs and integrated them into
+check-value-project. Ordinary traversal now executes the declared decoder/encoder
+at domain occurrences in records, arrays, enum-indexed tables, and variant payloads.
+Wire values are checked before calling factories; decoder typed errors remain owned
+values with domain identity and JSON pointers, and traps retain source frames.
+Complete type checks reject missing codecs in inactive variants/zero arrays and
+reject recursive host wire metadata before traversal. Representation-only typed_json
+APIs keep rejecting domains.
+
+An operation shares guest steps, call attempts, requested live allocation bytes,
+and traversal work across domain occurrences and both round-trip directions. Existing
+per-direction JSON value/depth/byte/token limits remain intact. The forwarding
+allocator includes parse/materialization, validation, invocation copies/bookkeeping,
+results, serialization temporaries, and returned buffers, while excluding existing
+caller inputs and frontend/source storage. It preserves caller allocator ownership
+and distinguishes a quota denial from host OutOfMemory. Codec invocations during
+encoding use reclaiming storage separate from the JSON arena. Optional statistics
+report actual steps, calls, work values, and peak requested live bytes.
+
+CLI options expose step/frame/call/memory/work limits. Defaults are one million
+steps, 256 frames, 4096 call attempts, 32 MiB live requested bytes, and 131072 total
+traversal values, plus the unchanged 65536-value per-direction JSON limit. The initial
+16 MiB default passed the large ordinary JSON boundary in Debug but rejected it in
+ReleaseFast and Python binding parity. Direct release measurements confirmed failure
+at 16 MiB and success at 24/32 MiB; the default now uses 32 MiB. This does not remove
+the enforced quota or imply every structurally valid input fits every memory limit.
+Lower quotas can also change arena growth decisions, so a measured successful peak
+is not necessarily a minimum budget.
+
+Seven new Zig tests cover nested success/rejection, owned typed errors and reuse
+protection, exact shared steps/calls/work, memory limits versus host allocation
+failures, frame traces, private-storage-independent wire depth, maximum u64 values,
+complete-graph rejection, and allocation failures through project round trips.
+The existing CLI driver now covers domain roots, arrays, unions, tables, malformed
+wire values, typed rejection output, JSON paths, limit/option validation, and declared
+normalization (19 to 10). Ordinary JSON and binding boundary fixtures remain required.
+
+Full Debug and ReleaseFast validation pass all 21 build steps and 553 Zig tests
+(496 core, 57 CLI). Existing 2490 VM/native comparisons, 236 native allocation-
+failure cases, 192 application oracle checks per host mode, eight verification
+tests, 29 Python/compiler wire comparisons, and schema/input/cache/module/duplicate
+acceptance also pass. Focused tests, CLI examples, Python syntax, Zig formatting,
+and whitespace checks pass. Documentation and both plan copies describe the new
+API/CLI behavior, ownership, limits, and remaining work; a sample wire document is
+checked in with the domain-codec example. Source serialization operations, generated
+callable bindings, richer input integration, and the other pending roadmap work
+remain unfinished. Guardian was not exercised; hosted CI has not run.

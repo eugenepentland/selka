@@ -59,5 +59,6 @@ unchanged integer main entry. Ordinary codec type checks now share a representat
 independent complete-graph checker while retaining their existing error categories.
 
 [Explicit codec declarations and schema metadata](domain-codecs.md) are now
-implemented. Whole-codec budgets, JSON integration, source codec operations,
-generated callable wrappers, and other pending roadmap work remain open. This API is an embedding interface, not a foreign ABI or a new CLI mode.
+implemented, as are [executed JSON codecs and shared budgets](domain-json.md).
+Source codec operations, generated callable wrappers, and other pending roadmap
+work remain open. This API is an embedding interface, not a foreign ABI or a new CLI mode.

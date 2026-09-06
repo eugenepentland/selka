@@ -166,9 +166,47 @@ struct Private { hidden: bool }
         module.write_text(source)
         run(2, ['--evaluation-request'])
         run(2, ['--value=' + str(path)])
+        fixture = Path(__file__).resolve().parents[1] / 'examples' / 'domain-codecs' / 'data.my'
+        domains = fixture.read_text().replace('module data;', 'module data; export Pair; export Choice; export Key; export Table;')
+        domains += 'struct Pair{items:[2]Positive}union Choice{none,some:Positive}enum Key{a,b}struct Table{items:[Key]Positive}'
+        module.write_text(domains)
+        check('data::Positive', {'n': '7'})
+        pair = {'items': [{'n': '7'}, {'n': '9'}]}
+        check('data::Pair', pair)
+        check('data::Choice', {'case': 'none'})
+        check('data::Choice', {'case': 'some', 'value': {'n': '7'}})
+        check('data::Table', {'items': {'a': {'n': '7'}, 'b': {'n': '9'}}})
+        reject('data::Pair', {'items': [{'n': '7'}, {'n': '0'}]}, 'DomainCodecRejected', '/value/items/1')
+        message = run(1)
+        assert 'codec rejection:' in message and '"value":"-1"' in message, message
+        reject('data::Choice', {'case': 'some', 'value': {'n': '0'}}, 'DomainCodecRejected', '/value/value')
+        reject('data::Table', {'items': {'a': {'n': '7'}, 'b': {'n': '0'}}}, 'DomainCodecRejected', '/value/items/b')
+        reject('data::Positive', {'n': True}, 'ValueTypeMismatch', '/value/n')
+        check('data::Pair', pair)
+        for flag, code in (
+            ('--max-codec-calls=3', 'CodecCallLimit'),
+            ('--max-codec-values=15', 'CodecWorkLimit'),
+            ('--max-codec-steps=1', 'R_STEP_LIMIT'),
+            ('--max-codec-frames=1', 'R_FRAME_LIMIT'),
+            ('--max-codec-bytes=1', 'CodecMemoryLimit'),
+        ):
+            message = run(1, [flag])
+            assert code in message, message
+        assert json.loads(run(0, ['--max-codec-calls=4', '--max-codec-values=16']))['value'] == pair
+        for flag in ('--max-codec-steps', '--max-codec-frames', '--max-codec-calls', '--max-codec-bytes', '--max-codec-values'):
+            for value in ('0', '-1', '', '18446744073709551616'):
+                run(2, [flag + '=' + value])
+            run(2, [flag + '=1', flag + '=2'])
+            misplaced = subprocess.run([compiler, 'check-project', str(entry), flag + '=1'], capture_output=True)
+            assert misplaced.returncode == 2 and not misplaced.stdout
+        # A declared decoder may deliberately canonicalize wire data. Execute both
+        # methods rather than merely validating or echoing the incoming document.
+        module.write_text(domains.replace('x.n <= 0', 'x.n < 10').replace('Positive.raw(x.n)', 'Positive.raw(x.n / 10 * 10)'))
+        check('data::Positive', {'n': '19'}, {'version': 'typed-json-v1', 'type': 'data::Positive', 'value': {'n': '10'}})
+        module.write_text(domains)
         path.unlink()
         run(2)
-    print('typed JSON acceptance: scalar ranges, aggregate/variant/table round trips, nominal visibility, opaque rejection, strict keys, byte/value/depth boundaries, schema changes, and CLI failures passed')
+    print('typed JSON acceptance: scalar ranges, aggregate/variant/table round trips, nominal visibility, opaque rejection, strict keys, byte/value/depth boundaries, schema changes, explicit domain execution/shared budgets, and CLI failures passed')
 
 
 if __name__ == '__main__':
