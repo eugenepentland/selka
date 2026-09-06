@@ -2655,3 +2655,26 @@ pass, retaining the successful core-test results.
 
 Native arenas, pools, external resources, generics, source serialization, and the
 other pending roadmap requirements remain open.
+
+## 2026-09-06: Native lexical arenas
+
+Native arena entry/exit and reset now use aligned chunk backing, checked allocator
+identities, a bounded registry with fresh identities on slot reuse, parent/child
+lifetime accounting, and live-owner reset guards. Buffer reserve retains its
+original allocator. Independent aggregate snapshots can survive arena teardown.
+Normal scope exit, function return, propagation, traps, and host allocation failure
+release the appropriate ownership and backing storage.
+
+Debug and ReleaseFast pass all 28 build steps: 530 core tests reused after a successful
+fresh run, 60 CLI tests, 2,568 VM/native comparisons, and 380 injected allocation
+failures under address/undefined sanitizers at both C optimization levels. Coverage
+includes region limits, root reset rejection, zero-capacity owners, wrong-region
+reserve, returned snapshots, partial-acquisition propagation, and 20,000 iterations
+of bounded arena allocation/reset. Formatting and all 88 Guardian checks pass.
+The original Debug run passed its other checks but retained an outdated CLI
+expectation rejecting arena-reset emission. That test now verifies successful
+emission and retains its semantic rejection checks. The corrected complete Debug
+and ReleaseFast runs pass.
+
+Native pools and external resources remain unsupported, and the other pending
+roadmap tracks remain open.

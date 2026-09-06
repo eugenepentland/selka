@@ -191,6 +191,9 @@ fn checkFunction(layout: native_layout.Layout, function: bc.Function, sink: *dia
         .move_local,
         .load_local,
         .acquire_buffer,
+        .begin_region,
+        .end_region,
+        .reset_arena,
         .buffer_operation,
         .store_local,
         .add_i64_checked,
@@ -312,6 +315,17 @@ fn writeOperation(context: InstructionOutput) !bool {
         .array_length => try w.writeAll("array_length();\n"),
         .read_field => |read| try w.print("push_value(field_value(local_access({d}, 0)->value, {d}));\n", .{ @backingInt(read.owner), read.field }),
         .take_field => |take| try w.print("take_field({d}, {d});\n", .{ @backingInt(take.owner), take.field }),
+        .begin_region => |slot| try w.print("begin_region({d});\n", .{@backingInt(slot)}),
+        .end_region => |slot| try w.print("end_region({d});\n", .{@backingInt(slot)}),
+        .reset_arena => |ty| {
+            try w.writeAll("int status = reset_arena(); Slot value = (Slot){status ? status : 1, NULL};\n");
+            const shape = typed.resultShape(ty, program.records).?;
+            try w.writeAll("if (status) { push_value(");
+            try variantValue(w, layout, ty, shape.error_tag, shape.error_type);
+            try w.writeAll("); } else { push_value(");
+            try variantValue(w, layout, ty, shape.ok_tag, shape.ok_type);
+            try w.writeAll("); }\n");
+        },
         .acquire_buffer => |ty| {
             const shape = typed.resultShape(ty, program.records).?;
             try w.print("push_value(acquire_buffer({d}, {d}));\n", .{ shape.ok_tag, shape.error_tag });

@@ -202,3 +202,18 @@ test "native buffer emission supports allocator entry and owned results with all
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), bufferScenario, .{});
 }
+
+fn arenaScenario(allocator: std.mem.Allocator) !void {
+    var compilation = try language.Compilation.init(allocator, "arenas.my", "result S{ok:bool,err:i64} fn main(heap:allocator)->i64{arena heap as scratch{acknowledge reset_arena<S>(scratch);}return 7;}");
+    defer compilation.deinit();
+    const output = try compilation.emitC(allocator);
+    defer allocator.free(output);
+    try t.expect(std.mem.indexOf(u8, output, "begin_region(1);") != null);
+    try t.expect(std.mem.indexOf(u8, output, "int status = reset_arena();") != null);
+}
+// spec: NATIVE-ARENA-1
+test "native arena emission supports lexical scopes and reset with allocation cleanup" {
+    try arenaScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), arenaScenario, .{});
+}

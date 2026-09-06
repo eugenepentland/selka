@@ -70,3 +70,5 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [CLI-5] Persistent checking sessions reuse unchanged parses and allow clearing retained cache storage between requests.
 
 - [NATIVE-BUFFER-1] Native emission supports root allocator parameters and owned buffer results while cleaning failed compiler allocations.
+
+- [NATIVE-ARENA-1] Native arena scopes preserve allocator lifetime, reset rejection, and cleanup on returns and failures.

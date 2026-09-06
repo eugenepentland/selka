@@ -823,5 +823,13 @@ Evaluate these experiments by the errors prevented, the clarity of diagnostics, 
 
 Root allocator parameters, owned buffers, mutations, reserve, and borrowed buffer
 slices now emit native C. Debug and ReleaseFast pass all 28 build steps, including
-2,538 VM/native comparisons and 322 allocation-failure cases. Native arenas, pools, external resources,
+2,538 VM/native comparisons and 322 allocation-failure cases. Native pools and external resources,
 and the remaining roadmap requirements are still open.
+
+
+## Native lexical arenas
+
+Native arena scopes, chunk backing, allocator identity, reset, and frame cleanup
+are implemented. Debug and ReleaseFast pass all 28 build steps, including 2,568
+VM/native comparisons and 380 allocation-failure cases. Native pools, external resources, and
+the other unfinished roadmap requirements remain open.

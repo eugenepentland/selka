@@ -20,5 +20,6 @@ step/frame limits. Debug and ReleaseFast pass all 28 build steps (529 cached cor
 tests after fresh successful runs, plus 60 CLI tests), including 2,538 VM/native comparisons across 71 single-file and 14 module
 fixtures. Formatting and the strict Guardian gate pass without frozen violations.
 
-Native lexical arenas, pools, external resources, and provider capabilities
+[Native lexical arenas](native-arenas.md) now add chunk backing, reset, and
+allocator lifetimes. Native pools, external resources, and provider capabilities
 remain pending. Root allocator support does not imply support for those types.

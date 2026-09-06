@@ -669,7 +669,11 @@ test "CLI executes typed arena resets and checks result obligations consistently
     try invoke("run", source, 0, "3\n", "");
     try invokeOptions("run", source, &.{"--memory=arena"}, 0, "3\n", "");
     try invoke("check", source, 0, "", "");
-    try invoke("emit-c", source, 1, "", "error[E_NATIVE_FEATURE]");
+    const generated = try runFixture("emit-c", source, &.{});
+    defer testing.allocator.free(generated.stdout);
+    defer testing.allocator.free(generated.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, generated.term);
+    try testing.expect(std.mem.indexOf(u8, generated.stdout, "int status = reset_arena();") != null);
     const invalid = "result R { ok: bool, err: i64 } fn main(heap: allocator) -> i64 { discard reset_arena<R>(heap); return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates", "report-quality", "emit-c" }) |command| try invoke(command, invalid, 1, "", "error[E_RESULT_DISCARD]");
     const dumped = try runFixture("dump-bytecode", source, &.{});

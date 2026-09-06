@@ -151,7 +151,7 @@ def main():
     compiler = args.compiler.resolve()
     root = Path(__file__).resolve().parents[1]
     fixtures = [(name, (root / "test" / "fixtures" / f"{name}.my").read_text()) for name in ("arithmetic", "sum", "gcd")]
-    fixtures += [(name, (root / "examples" / f"{name}.my").read_text()) for name in ("arrays", "records", "conversions", "tables", "references", "reference-parameters", "slices", "returned-references", "propagation", "buffers", "buffer-views", "allocator-capabilities")]
+    fixtures += [(name, (root / "examples" / f"{name}.my").read_text()) for name in ("arrays", "records", "conversions", "tables", "references", "reference-parameters", "slices", "returned-references", "propagation", "buffers", "buffer-views", "allocator-capabilities", "arena-reset")]
     fixtures.append(("integers", "fn widen(x: u32) -> u64 { return cast<u64>(x); } fn main() -> i64 { let a = 127i8; let b = 255u8; let c = 32767i16; let d = 65535u16; let e = 2147483647i32; let f = 4294967295u32; return cast<i64>(a) + cast<i64>(b) + cast<i64>(c) + cast<i64>(d) + cast<i64>(e) + cast<i64>(widen(f)); }"))
     expressions = ["9223372036854775807 + 1", "-9223372036854775808 - 1", "3037000500 * 3037000500", "-(-9223372036854775808)", "-9223372036854775808 / -1", "-9223372036854775808 % -1", "1 / 0", "1 % 0", "-7 / 3", "-7 % 3", "cast<i64>(255u8 + 1u8)", "cast<i64>(127i8 + 1i8)", "cast<i64>(18446744073709551615u64 * 18446744073709551615u64)", "cast<i64>(cast<u8>(-1))"]
     fixtures += [(f"arithmetic-{i}", f"fn main() -> i64 {{ return {expr}; }}") for i, expr in enumerate(expressions)]
@@ -215,6 +215,12 @@ def main():
         ("reference-shared", "fn sum(a:&i64,b:&i64)->i64{return read_ref(a)+read_ref(b);} fn main()->i64{let x=7;borrow x as r{borrow r as child{return read_ref(r)+sum(child,r);}}}"),
         ("reference-recursive", "fn count(n:i64,x:&mut i64)->i64{if n==0{return read_ref(x);}write_ref(x,read_ref(x)+1);return count(n-1,x);} fn main()->i64{let mut x=0;borrow mut x as r{return count(40,r);}}"),
         ("reference-return-whole", "struct R{x:i64} fn same(x:&mut R)->&mut R from x{return x;} fn main()->i64{let mut x=new R{x:7};let old=x;borrow mut x as r{borrow mut same(r) as selected{write_ref(selected,new R{x:9});}}return old.x+x.x;}"),
+    ]
+    fixtures += [
+        ("arena-limit", "fn count(heap:allocator,n:i64)->i64{if n==0{return 7;}arena heap as scratch{return count(scratch,n-1);}}fn main(heap:allocator)->i64{return count(heap,260);}"),
+        ("arena-empty-owner", "buffer B:i64;result A{ok:B,err:i64}result S{ok:bool,err:i64}fn main(heap:allocator)->i64{arena heap as scratch{match acquire_buffer<A>(scratch,0){A.ok(b)=>{match reset_arena<S>(scratch){S.err(e)=>{discard b;return e;},S.ok(discard)=>{discard b;return 9;}}},A.err(e)=>{return e;}}}}"),
+        ("arena-wrong-growth", "buffer B:i64;result A{ok:B,err:i64}result S{ok:bool,err:i64}fn main(heap:allocator)->i64{arena heap as scratch{match acquire_buffer<A>(scratch,1){A.ok(acquired)=>{let mut b=acquired;acknowledge reserve_buffer<S>(b,heap,1);return 0;},A.err(e)=>{return e;}}}}"),
+        ("arena-root-reset", "result S{err:i64,ok:bool}fn main(heap:allocator)->i64{match reset_arena<S>(heap){S.err(e)=>{return e;},S.ok(discard)=>{return 0;}}}"),
     ]
     buffer_prefix = "buffer B:i64; result A{err:i64,ok:B} result S{err:i64,ok:bool} fn code(s:S)->i64{match s{S.ok(discard)=>{return 0;},S.err(e)=>{return e;}}} "
     for name, body in (

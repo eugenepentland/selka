@@ -20,11 +20,23 @@ static V variant_payload(V value, unsigned tag_bits, unsigned payload_bits, int 
         return -(V)(((U)1 << payload_bits) - payload);
     return (V)payload;
 }
+typedef struct Region Region;
+typedef struct Chunk Chunk;
+struct Chunk { Chunk *next; size_t used, capacity; max_align_t alignment; unsigned char bytes[]; };
+struct Region { uint64_t identity; Region *parent; size_t users, children, slot; Chunk *chunks; };
+static Region regions[256];
+static Region *active_regions[256];
+static size_t nr;
+static uint64_t next_region_identity = 2;
+static void clear_region_chunks(Region *region) {
+    while (region->chunks) { Chunk *next = region->chunks->next; free(region->chunks); region->chunks = next; }
+}
 typedef struct Aggregate Aggregate;
 typedef struct { V number; Aggregate *object; } Slot;
 struct Aggregate {
     size_t refs, count, tag, capacity;
     int buffer;
+    Region *region;
     Aggregate *previous, *next, *pending;
     Slot fields[];
 };
@@ -39,7 +51,7 @@ struct Reference {
 typedef struct {
     Local *locals;
     Reference *references;
-    size_t base, target, function, call_site, local_count, reference_count;
+    size_t base, target, function, call_site, local_count, reference_count, region_base;
     Reference *return_destination, *return_parent;
     Reference captured;
     int return_mutable, has_capture;
@@ -58,7 +70,8 @@ static void cleanup(void) {
     while (nf) { --nf; free(frames[nf].references); free(frames[nf].locals); }
     /* All heap objects are registered, including temporary and partial values.
        Emergency cleanup frees the registry directly without traversing edges. */
-    while (objects) { Aggregate *next = objects->next; free(objects); objects = next; }
+    while (objects) { Aggregate *next = objects->next; if (!objects->region) free(objects); objects = next; }
+    for (size_t i = 0; i < 256; ++i) clear_region_chunks(&regions[i]);
     free(frames); free(values);
     frames = NULL; values = NULL;
 }
@@ -111,19 +124,50 @@ static void release_value(Slot value) {
         else objects = object->next;
         if (object->next) object->next->previous = object->previous;
         if (object->buffer) guest_capacity -= object->capacity;
-        free(object);
+        if (object->region) --object->region->users; else free(object);
     }
 }
-static Aggregate *new_object(size_t count, size_t tag) {
+static Region *find_region(V authority) {
+    for (size_t i = 0; i < 256; ++i)
+        if (regions[i].identity && (V)regions[i].identity == authority) return &regions[i];
+    return NULL;
+}
+static Region *allocator_region(V authority) {
+    if (authority == 1) return NULL;
+    Region *region = find_region(authority);
+    if (!region) trap("R_CAPABILITY");
+    return region;
+}
+static void *region_allocate(Region *region, size_t size) {
+    const size_t alignment = _Alignof(max_align_t);
+    if (size > SIZE_MAX - alignment) host_failure("OutOfMemory");
+    size_t aligned = (size + alignment - 1) / alignment * alignment;
+    Chunk *chunk = region->chunks;
+    if (!chunk || aligned > chunk->capacity - chunk->used) {
+        size_t capacity = aligned < 4096 ? 4096 : aligned;
+        if (capacity > SIZE_MAX - sizeof(Chunk)) host_failure("OutOfMemory");
+        chunk = malloc(sizeof(Chunk) + capacity);
+        if (!chunk) host_failure("OutOfMemory");
+        *chunk = (Chunk){.next=region->chunks, .capacity=capacity};
+        region->chunks = chunk;
+    }
+    void *memory = chunk->bytes + chunk->used;
+    chunk->used += aligned; memset(memory, 0, size); return memory;
+}
+static Aggregate *new_object_in(size_t count, size_t tag, Region *region) {
     if (count > (SIZE_MAX - sizeof(Aggregate)) / sizeof(Slot)) host_failure("OutOfMemory");
-    Aggregate *object = calloc(1, sizeof(Aggregate) + count * sizeof(Slot));
+    size_t size = sizeof(Aggregate) + count * sizeof(Slot);
+    Aggregate *object = region ? region_allocate(region, size) : calloc(1, size);
     if (!object) host_failure("OutOfMemory");
     object->refs = 1; object->count = count; object->capacity = count; object->tag = tag;
+    object->region = region;
+    if (region) ++region->users;
     object->next = objects;
     if (objects) objects->previous = object;
     objects = object;
     return object;
 }
+static Aggregate *new_object(size_t count, size_t tag) { return new_object_in(count, tag, NULL); }
 static Slot clone_value(Slot value) {
     if (!value.object || value.object->buffer) host_failure("InternalError");
     Aggregate *object = new_object(value.object->count, value.object->tag);
@@ -156,6 +200,34 @@ static Local *local_access(size_t index, int write) {
 static void store_local(size_t index, Slot value) {
     Local *local = local_access(index, 1);
     release_value(local->value); local->value = value;
+}
+static void close_region(Region *region) {
+    if (region->children || region->users) trap("R_REGION_IN_USE");
+    if (region->parent) --region->parent->children;
+    clear_region_chunks(region); *region = (Region){0};
+}
+static void begin_region(size_t slot) {
+    Region *parent = allocator_region(pop());
+    if (nr == 256) trap("R_REGION_LIMIT");
+    if (next_region_identity == UINT64_MAX) host_failure("IdentityExhausted");
+    Region *region = NULL;
+    for (size_t i = 0; i < 256; ++i) if (!regions[i].identity) { region = &regions[i]; break; }
+    if (!region) trap("R_REGION_LIMIT");
+    *region = (Region){.identity=next_region_identity++, .parent=parent, .slot=slot};
+    if (parent) ++parent->children;
+    active_regions[nr++] = region;
+    store_local(slot, (Slot){(V)region->identity, NULL});
+}
+static void end_region(size_t slot) {
+    if (nr <= frames[nf-1].region_base || active_regions[nr-1]->slot != slot) host_failure("InternalError");
+    close_region(active_regions[--nr]); store_local(slot, (Slot){0});
+}
+static int reset_arena(void) {
+    Region *region = find_region(pop());
+    if (!region) return 3;
+    if (region->children) return 2;
+    if (region->users) return 1;
+    clear_region_chunks(region); return 0;
 }
 static void load_local(size_t index) { push_value(copy_value(local_access(index, 0)->value)); }
 static void move_local(size_t index) {
@@ -234,10 +306,10 @@ static Aggregate *buffer_owner(size_t owner, int write) {
 }
 static Slot acquire_buffer(size_t ok, size_t error) {
     V capacity = pop(), authority = pop();
-    if (authority != 1) host_failure("InternalError");
+    Region *region = allocator_region(authority);
     if (capacity < 0 || (U)capacity > guest_capacity_limit() - guest_capacity)
         return boxed_variant(error, (Slot){1, NULL}, 1);
-    Aggregate *buffer = new_object((size_t)capacity, 0);
+    Aggregate *buffer = new_object_in((size_t)capacity, 0, region);
     buffer->count = 0; buffer->buffer = 1;
     guest_capacity += (size_t)capacity;
     return boxed_variant(ok, (Slot){0, buffer}, 1);
@@ -274,12 +346,13 @@ static int buffer_resize(size_t owner) {
 static int buffer_reserve(size_t owner) {
     V capacity = pop(), authority = pop();
     Aggregate *old = buffer_owner(owner, 1);
-    if (authority != 1 || old->refs != 1) host_failure("InternalError");
+    if (allocator_region(authority) != old->region) trap("R_CAPABILITY");
+    if (old->refs != 1) host_failure("InternalError");
     if (capacity < 0 || (U)capacity > guest_capacity_limit()) return 1;
     if ((U)capacity <= old->capacity) return 0;
     size_t increase = (size_t)capacity - old->capacity;
     if (increase > guest_capacity_limit() - guest_capacity) return 1;
-    Aggregate *grown = new_object((size_t)capacity, 0);
+    Aggregate *grown = new_object_in((size_t)capacity, 0, old->region);
     grown->count = old->count; grown->buffer = 1;
     memcpy(grown->fields, old->fields, old->count * sizeof(Slot));
     /* Transfer initialized children once. No borrowed view can be active here. */
@@ -396,7 +469,7 @@ static void enter(size_t function, size_t locals, size_t arguments, size_t targe
     size_t base = nv - arguments;
     for (size_t i = 0; i < arguments; ++i) storage[slots ? slots[i] : i].value = values[base + i];
     frames[nf++] = (Frame){.locals=storage, .base=base, .target=target, .function=function,
-        .call_site=site, .local_count=locals, .reference_count=references};
+        .call_site=site, .local_count=locals, .reference_count=references, .region_base=nr};
     nv = base;
     if (references) {
         frames[nf-1].references = calloc(references, sizeof(Reference));
@@ -428,7 +501,9 @@ static Frame leave_frame(void) {
         if (frame.locals[i].exclusive || frame.locals[i].shared) trap("R_BORROW_CONFLICT");
         release_value(frame.locals[i].value);
     }
-    free(frame.references); free(frame.locals); --nf; clear_values(frame.base);
+    clear_values(frame.base);
+    while (nr > frame.region_base) close_region(active_regions[--nr]);
+    free(frame.references); free(frame.locals); --nf;
     return frame;
 }
 static size_t leave(Slot result) {
