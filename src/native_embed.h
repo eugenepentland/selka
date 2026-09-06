@@ -24,4 +24,18 @@ typedef struct {
    Callbacks must return normally and obey the provider ABI's ownership rules.
    The result pointer is required and must not alias options or provider storage. */
 int mylang_native_run_v1(const MylangRunOptions *options, MylangRunResult *result);
+/* Scalar bits use unsigned magnitude for unsigned integers and sign-extended
+   two's-complement bits for signed integers. Boolean bits are 0 or 1.
+   Type names are exact builtin names, e.g. "i64" or "bool". */
+typedef struct { const char *type; uint64_t bits; } MylangScalar;
+typedef struct { MylangRunResult execution; MylangScalar value; } MylangCallResult;
+/* Module-qualified exported function name; private functions and internal
+   generic instances are unavailable. The current call ABI accepts builtin
+   integer/Boolean signatures without references or capability parameters.
+   Unsupported public signatures return UnsupportedSignature; unknown/private
+   names return UnknownFunction. Invalid scalar types/ranges/counts return
+   InvalidArgument. Arguments are borrowed only for the synchronous call.
+   Result storage must not alias any call input or another active result. */
+int mylang_native_call_v1(const char *name, const MylangScalar *arguments,
+    size_t count, const MylangRunOptions *options, MylangCallResult *result);
 #endif

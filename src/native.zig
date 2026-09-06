@@ -104,12 +104,16 @@ fn predicate(op: typed.BinaryOp) []const u8 {
 }
 /// Validate supported bytecode and allocate standalone C source; report unsupported features through the sink.
 pub fn generate(allocator: std.mem.Allocator, program: bc.Program, src: Source, sink: *diagnostic.Sink) GenerateError![]u8 {
-    return generateInner(allocator, program, src, sink) catch |err| switch (err) {
+    return generateWithExports(allocator, program, src, sink, &.{});
+}
+/// Generate native C retaining only explicitly selected public function roots.
+pub fn generateWithExports(allocator: std.mem.Allocator, program: bc.Program, src: Source, sink: *diagnostic.Sink, roots: []const typed.FunctionId) GenerateError![]u8 {
+    return generateInner(allocator, program, src, sink, roots) catch |err| switch (err) {
         error.WriteFailed => error.OutOfMemory,
         else => err,
     };
 }
-fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source, sink: *diagnostic.Sink) ![]u8 {
+fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source, sink: *diagnostic.Sink, roots: []const typed.FunctionId) ![]u8 {
     try bc.validate(allocator, program);
     var layout = try native_layout.Layout.init(allocator, program.records);
     defer layout.deinit();
@@ -143,8 +147,10 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
         try string(w, src.locate(ins.span.start).path);
         try w.writeAll(",\n");
     };
-    try w.writeAll("};\n#ifdef MYLANG_EMBED\nstatic int execute_entry(void) {\n#else\nint main(int argc, char **argv) {\n#endif\nsource_paths = paths; function_names = names; source_lines = lines; source_columns = columns;\n" ++
+    try w.writeAll("};\n#ifdef MYLANG_EMBED\nstatic int execute_entry(const char *entry_name, const MylangScalar *arguments, size_t argument_count) {\n" ++
+        "#else\nint main(int argc, char **argv) {\n#endif\nsource_paths = paths; function_names = names; source_lines = lines; source_columns = columns;\n" ++
         "#ifndef MYLANG_EMBED\noptions(argc, argv); providers = mylang_native_providers();\n#endif\nvalidate_resource_providers(); size_t return_target = 0;\n");
+    try writeExports(w, program, offsets, roots);
     const main_index = @backingInt(program.main);
     for (program.functions[main_index].scope.locals[0..program.functions[main_index].signature.parameter_count]) |parameter| {
         switch (parameter.ty) {
@@ -185,6 +191,54 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     try w.writeAll("default: host_failure(\"InternalError\"); } return 2;\n}\n");
     try w.writeAll(@embedFile("native_embed.c"));
     return output.toOwnedSlice();
+}
+
+fn scalarSignature(function: bc.Function) bool {
+    if (function.signature.return_reference != null) return false;
+    if (!scalarType(function.signature.return_type)) return false;
+    for (function.scope.locals[0..function.signature.parameter_count]) |local| {
+        if (local.parameter.reference_parameter != null or !scalarType(local.ty)) return false;
+    }
+    return true;
+}
+fn scalarType(ty: typed.Type) bool {
+    return ty.isInteger() or ty == .bool;
+}
+fn writeExports(w: *std.Io.Writer, program: bc.Program, offsets: []const usize, roots: []const typed.FunctionId) !void {
+    try w.writeAll("#ifdef MYLANG_EMBED\nif (entry_name) {\n");
+    for (roots) |root| {
+        const index = @backingInt(root);
+        if (index >= program.functions.len) return error.InternalError;
+        const function = program.functions[index];
+        try w.writeAll("if (!strcmp(entry_name, ");
+        try string(w, function.name);
+        try w.writeAll(")) {\n");
+        if (scalarSignature(function)) {
+            try w.print("if (argument_count != {d}) host_failure(\"InvalidArgument\");\n", .{function.signature.parameter_count});
+            for (function.scope.locals[0..function.signature.parameter_count], 0..) |local, i| {
+                try w.print("if (!arguments[{d}].type || strcmp(arguments[{d}].type, ", .{ i, i });
+                try string(w, typed.typeName(local.ty, program.records));
+                try w.writeAll(")) host_failure(\"InvalidArgument\");\n");
+                try w.print("{{ V value = (V)arguments[{d}].bits;\n", .{i});
+                const integer = local.ty.integer();
+                if (integer != null and integer.?.signed) try w.writeAll("if ((U)value >> 63) value -= (V)((U)1 << 64);\n");
+                const minimum = if (integer != null) local.ty.min() else 0;
+                const maximum = if (integer != null) local.ty.max() else 1;
+                try w.writeAll("if (value < ");
+                try literal(w, minimum);
+                try w.writeAll(" || value > ");
+                try literal(w, maximum);
+                try w.writeAll(") host_failure(\"InvalidArgument\"); push(value); }\n");
+            }
+            try w.writeAll("native_type = ");
+            try string(w, typed.typeName(function.signature.return_type, program.records));
+            try w.writeAll(";\n");
+            try enter(w, function, 0);
+            try w.print(jump_format, .{offsets[index]});
+        } else try w.writeAll("host_failure(\"UnsupportedSignature\");\n");
+        try w.writeAll("}\n");
+    }
+    try w.writeAll("host_failure(\"UnknownFunction\");\n}\n#endif\n");
 }
 
 fn checkFunction(layout: native_layout.Layout, function: bc.Function, sink: *diagnostic.Sink) !void {
@@ -499,7 +553,8 @@ fn writeOperation(context: InstructionOutput) !bool {
         },
         .ret => {
             try w.writeAll("Slot result = pop_value(); size_t target = leave(result); if (!nf) {\n" ++
-                "#ifdef MYLANG_EMBED\nnative_value = (int64_t)result.number;\n#else\nprintf(\"%\" PRId64 \"\\n\", (int64_t)result.number);\n#endif\ncleanup(); return 0; }\nreturn_target = target; goto dispatch_return;\n");
+                "#ifdef MYLANG_EMBED\nnative_value = (int64_t)result.number; native_bits = (uint64_t)(U)result.number;\n" ++
+                "#else\nprintf(\"%\" PRId64 \"\\n\", (int64_t)result.number);\n#endif\ncleanup(); return 0; }\nreturn_target = target; goto dispatch_return;\n");
             falls_through = false;
         },
     }

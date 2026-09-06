@@ -13,7 +13,7 @@ not a claim that the full future language has been delivered.
 | C, ownership/capabilities/effects | Owned buffers, queries/mutations, checked views, moves/wrappers, and partial-construction cleanup, and transitive allocation bounds, and explicit allocator capabilities implemented; clock/random capabilities and effects implemented; source filesystem/network resource acquisition/completion, owned error returns, and cleanup effects implemented; bounded environment lookup implemented; fixed-byte-array resource reads/writes implemented; resource permission attenuation implemented; borrowed slice I/O implemented; typed-handle pool and arena-reset backends plus execution-lifetime VM/CLI arena selection implemented; partial field moves implemented; source pools/handles, checked shared region backing, lexical source arenas, and conservative escape checking implemented; explicit source reset results implemented | Allocator and clock/random authority/effects pass acceptance; source resource lifecycle and cleanup effects pass; bounded environment lookup passes; resource reads/writes pass; permission attenuation passes; borrowed slice I/O passes; lexical arena acceptance passes under the documented conservative lifetime rules; explicit reset result acceptance passes. |
 | D, errors and abstraction | In progress: typed results, checked handling/transfer, acknowledgement, and propagation implemented; typed-handle pool backend implemented; source handles implemented; generic syntax, builtin requirement resolution, and initial pure symbolic body/call checking and executable specialization implemented; broader generic contracts and tooling pending | Require handling/propagation/explicit acknowledgement without erasing evaluation or ownership obligations. |
 | M, modules/interfaces | Implemented experimental scope: bounded imports, exports/privacy, source maps, module checking/VM execution, direction policy, default-limit graph/tooling acceptance, and initial ordinary-application corpus review | Shared-domain execution, direction policy, 256-module/4096-import boundaries, and invoice/packet application acceptance pass; production-user corpus evidence remains unmeasured. |
-| E, native execution | Scalar, domain, enum, record/array/table, conversion/update, packed/boxed union/result, and ordinary-value borrowing/slice and root-allocator owned-buffer/lexical-arena/pool C emission, explicit clock/random/environment provider adapters, and pinned-Zig native builder implemented for single-file and module projects; scalar semantic/trap/path/trace parity passes | Ordinary value acceptance and native allocation-failure cleanup implemented; All current bytecode operations have native emission; explicit resource ABI v4 and lifecycle/I/O/generation/quota acceptance pass. Scalar native entry embedding and shared-library builds pass focused acceptance; arbitrary exported native bindings and broader compilation performance remain open. |
+| E, native execution | Scalar, domain, enum, record/array/table, conversion/update, packed/boxed union/result, and ordinary-value borrowing/slice and root-allocator owned-buffer/lexical-arena/pool C emission, explicit clock/random/environment provider adapters, and pinned-Zig native builder implemented for single-file and module projects; scalar semantic/trap/path/trace parity passes | Ordinary value acceptance and native allocation-failure cleanup implemented; All current bytecode operations have native emission; explicit resource ABI v4 and lifecycle/I/O/generation/quota acceptance pass. Scalar native entry embedding and shared-library builds pass focused acceptance; exported scalar native calls now pass acceptance; aggregate native bindings and broader compilation performance remain open. |
 | F, compile-time/schema/incremental work | In progress: restricted effect-free project evaluation with step/frame/VM-memory budgets and source/implementation dependency receipts plus request identity before execution and persistent successful VM-result reuse with bounded field-level request comparisons implemented; typed scalar input manifest validation/module generation and fresh in-memory evaluation/cache bindings for multiple bounded manifests implemented; checked public type/function schema derivation and bounded ordinary typed JSON serialization/deserialization with owned failure locations and standalone Python data bindings with checked persistent artifact reuse and unchanged-output preservation implemented; checked full source receipts for schema/binding generation and exported effect-free typed invocation with owned argument copies implemented; explicit domain codec declarations and schema contracts implemented; executed domain JSON with shared operation budgets implemented; schema-pinned public JSON invocation implemented; generated Python callable wrappers and domain wire objects plus fresh manifest inputs for schema generation and calls implemented; automatic content polling through a persistent check session implemented; native ABI bindings and finer incremental compilation pending | Reject duplicate schema keys and undeclared inputs; explain invalidation and evaluation budgets. |
 | T, formatter/reference reports/verification | Canonical single-file/module formatter and reachable-project formatting checks, resolved function-call/binding reports including module main/export roots, configurable structural metrics, and separate manifest verification driver implemented | Extend reference/specification identities and entry roots with modules/schemas, and parity fixtures with native execution. |
 
@@ -589,7 +589,29 @@ Focused acceptance passed 24 host programs across -O0/-O2 with undefined-behavio
 sanitization, repeated calls, frame/step budgets, reentry/concurrent rejection,
 live-resource trap cleanup and allocation-failure recovery. Independent public-header hosts
 linked and ran Debug/ReleaseFast shared libraries and verified unchanged rebuilds.
-All 586 ReleaseFast core tests also passed; full Debug regression validation is
-in progress. Arbitrary exported native calls,
+All 586 ReleaseFast core tests passed; the full Debug regression command also
+completed successfully, including 586 core and 60 CLI tests. Arbitrary exported native calls,
 aggregate native arguments/results, generated native callable bindings, finer
 incremental compilation and the other pending roadmap requirements remain open.
+
+
+### Exported native scalar invocation — 2026-09-06
+
+Module native emission now retains resolved export roots and exposes
+`mylang_native_call_v1`. Hosts call qualified public names with exact typed scalar
+bits; integer widths, full u64 results, Booleans, counts and ranges are checked.
+Private helpers and internal generic instances remain unavailable. Located traps,
+budgets, cleanup and repeated-call recovery share the native entry machinery.
+The public C headers work with independently linked shared-library hosts. See
+`docs/experiments/native-calls.md` for the contract.
+
+Validation: 587 core tests passed in both Debug and ReleaseFast; all 60 CLI
+tests and formatting passed. Native parity
+passed 2682 comparisons across 93 single-file and 16 module fixtures, and all 24
+embedding host programs passed. Named-call acceptance passed -O0/-O2 sanitizer
+runs and Debug/ReleaseFast shared-library host links, covering visibility, every
+scalar boundary, invalid inputs, trap locations, allocation failures and recovery.
+Guardian passed all 88 checks without baselines. The earlier full Debug embedding
+suite also completed successfully before this API extension. Aggregate/domain
+native wire values, borrowed/capability signatures, generated native callable
+bindings, incremental compilation and the other pending roadmap items remain open.

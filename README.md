@@ -227,6 +227,9 @@ resources, with VM/native parity and allocation-failure acceptance.
 with `python3 scripts/native.py examples/sum.my --library -o /tmp/libsum.so`.
 A C host supplies providers and budgets and receives a scalar result or bounded
 diagnostic through `mylang_native_run_v1`; calls return without printing or exiting.
+Module libraries also support [exported scalar calls](docs/experiments/native-calls.md)
+by qualified name through `mylang_native_call_v1`, with checked integer/Boolean
+arguments and full-width results.
 
 [Partial record field moves](docs/experiments/partial-fields.md) use
 `take_field(owner, field)` to transfer individual fields immediately while preserving

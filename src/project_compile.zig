@@ -115,7 +115,9 @@ pub const Compilation = struct {
     /// Allocate native C output after checking and lowering the complete project.
     pub fn emitC(self: *Compilation, allocator: @import("std").mem.Allocator) EmitCError![]u8 {
         try self.emit();
-        return @import("native.zig").generate(allocator, self.code.?, self.src, &self.diagnostics);
+        const roots = try self.exportRoots(allocator);
+        defer allocator.free(roots);
+        return @import("native.zig").generateWithExports(allocator, self.code.?, self.src, &self.diagnostics, roots);
     }
     /// Allocate the function identities exposed by the checked public interface.
     pub fn exportRoots(self: *Compilation, allocator: @import("std").mem.Allocator) CheckError![]typed.FunctionId {

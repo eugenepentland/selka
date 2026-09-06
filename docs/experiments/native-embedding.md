@@ -52,10 +52,10 @@ program is supported per linked library. Concurrent or callback-reentrant calls
 to that program return `Busy`; they do not execute guest code or disturb the
 active invocation. The host chooses its own printing and error policy.
 
-This API invokes the source `main` with capability entry parameters and returns
-its scalar result. Arbitrary exported-function calls, typed aggregate arguments
-and results, generated native callable bindings, and parallel per-call runtime
-contexts remain unfinished. This is a foundation for those roadmap requirements.
+The entry API invokes the source `main` with capability entry parameters and returns
+its scalar result. [Exported scalar calls](native-calls.md) now have a separate versioned API.
+Typed aggregate arguments/results, generated native callable bindings, and
+parallel per-call runtime contexts remain unfinished. This is a foundation for those roadmap requirements.
 
 ## Acceptance
 

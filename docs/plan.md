@@ -1208,7 +1208,29 @@ Focused acceptance passed 24 host programs across -O0/-O2 with undefined-behavio
 sanitization, repeated calls, frame/step budgets, reentry/concurrent rejection,
 live-resource trap cleanup and allocation-failure recovery. Independent public-header hosts
 linked and ran Debug/ReleaseFast shared libraries and verified unchanged rebuilds.
-All 586 ReleaseFast core tests also passed; full Debug regression validation is
-in progress. Arbitrary exported native calls,
+All 586 ReleaseFast core tests passed; the full Debug regression command also
+completed successfully, including 586 core and 60 CLI tests. Arbitrary exported native calls,
 aggregate native arguments/results, generated native callable bindings, finer
 incremental compilation and the other pending roadmap requirements remain open.
+
+
+### Exported native scalar invocation — 2026-09-06
+
+Module native emission now retains resolved export roots and exposes
+`mylang_native_call_v1`. Hosts call qualified public names with exact typed scalar
+bits; integer widths, full u64 results, Booleans, counts and ranges are checked.
+Private helpers and internal generic instances remain unavailable. Located traps,
+budgets, cleanup and repeated-call recovery share the native entry machinery.
+The public C headers work with independently linked shared-library hosts. See
+`docs/experiments/native-calls.md` for the contract.
+
+Validation: 587 core tests passed in both Debug and ReleaseFast; all 60 CLI
+tests and formatting passed. Native parity
+passed 2682 comparisons across 93 single-file and 16 module fixtures, and all 24
+embedding host programs passed. Named-call acceptance passed -O0/-O2 sanitizer
+runs and Debug/ReleaseFast shared-library host links, covering visibility, every
+scalar boundary, invalid inputs, trap locations, allocation failures and recovery.
+Guardian passed all 88 checks without baselines. The earlier full Debug embedding
+suite also completed successfully before this API extension. Aggregate/domain
+native wire values, borrowed/capability signatures, generated native callable
+bindings, incremental compilation and the other pending roadmap items remain open.

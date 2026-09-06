@@ -56,6 +56,11 @@ pub fn build(b: *std.Build) void {
     const driver_tests = b.addSystemCommand(&.{ "python3", "-m", "unittest", "discover", "-s", "tests/verification", "-p", "test_driver.py" });
     driver_tests.setCwd(b.path("."));
     test_step.dependOn(&driver_tests.step);
+    const native_calls = b.addSystemCommand(&.{ "python3", "tests/native_calls.py", "--compiler" });
+    native_calls.addFileArg(exe.getEmittedBin());
+    native_calls.addArgs(&.{ "--zig", b.graph.zig_exe });
+    native_calls.setCwd(b.path("."));
+    test_step.dependOn(&native_calls.step);
     const embedding_tests = b.addSystemCommand(&.{ "python3", "tests/native_embedding.py", "--compiler" });
     embedding_tests.addFileArg(exe.getEmittedBin());
     embedding_tests.addArgs(&.{ "--zig", b.graph.zig_exe });

@@ -15,6 +15,8 @@ MylangNativeProviders mylang_native_providers(void) { return (MylangNativeProvid
 static jmp_buf entry_escape;
 static MylangRunResult *active_result;
 static int64_t native_value;
+static uint64_t native_bits;
+static const char *native_type;
 #endif
 static MylangNativeProviders providers;
 typedef __int128 V;
