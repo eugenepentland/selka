@@ -36,8 +36,8 @@ that depend on a VM instruction encoding or the host's incidental memory layout.
 | Mutation and effects | Require visible mutation and authority for external operations; enforce effect bounds transitively through helpers, host calls and cleanup. |
 
 Extend existing implementations rather than treating this table as a fresh feature
-list. Concrete generic local views are implemented. Generic arena/reset origins remain
-a known checking gap.
+list. Concrete generic local views and arena/reset origin checks are implemented.
+Structural generic type/codec constraints remain open.
 Keep unsupported programs rejected until their rules are implemented. Prefer
 local inference and explicit public contracts; evaluate confusing interactions
 and boilerplate as design costs. Duplication/size reports remain advisory and

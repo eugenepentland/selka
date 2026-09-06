@@ -54,7 +54,7 @@ test "generic owned transfers partial extraction replacement and cleanup survive
 }
 test "generic owned signatures cannot grant operations or local region escape rules" {
     try reject(schema ++ "fn f<T:copy>(heap:allocator)->A noalloc{return acquire_buffer<A>(heap,1);}fn main()->i64{return 0;}", "E_EFFECT_BOUND");
-    try reject(schema ++ "fn f<T:copy>(heap:allocator)->i64{arena heap as scratch{return 0;}}fn main()->i64{return 0;}", "E_GENERIC_BODY_UNSUPPORTED");
+    try reject(schema ++ "fn f<T:copy>(heap:allocator)->allocator{arena heap as scratch{return scratch;}}fn main()->i64{return 0;}", "E_ARENA_ESCAPE");
 }
 
 test "generic pool owners transfer while handles retain ordinary copy identity" {

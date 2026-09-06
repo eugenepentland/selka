@@ -1061,3 +1061,28 @@ test "CLI generic array input slices retain module provenance and VM memory mode
     try testing.expect(std.mem.indexOf(u8, rejected.stderr, "E_RETURN_LIFETIME") != null);
     try testing.expect(std.mem.indexOf(u8, rejected.stderr, "api.my") != null);
 }
+
+test "CLI generic module arenas reset safely and reject allocator escape" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input;import helper;fn main(heap:allocator)->i64{return helper::work::<i8>(heap,7i8);}" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper;export work;result Status{ok:bool,err:i64}fn work<T:integer>(heap:allocator,n:T)->i64{arena heap as scratch{let copy=scratch;match reset_arena<Status>(copy){Status.ok(discard)=>{return cast<i64>(n);},Status.err(code)=>{return code;}}}}" });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    for ([_][]const u8{ "--memory=general", "--memory=arena" }) |mode| {
+        const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path, mode } });
+        defer testing.allocator.free(outcome.stdout);
+        defer testing.allocator.free(outcome.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+        try testing.expectEqualStrings("7\n", outcome.stdout);
+        try testing.expectEqualStrings("", outcome.stderr);
+    }
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper;export work;fn work<T:integer>(heap:allocator,n:T)->i64{let mut escaped=heap;arena heap as scratch{escaped=scratch;return cast<i64>(n);}}" });
+    const rejected = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-project", path } });
+    defer testing.allocator.free(rejected.stdout);
+    defer testing.allocator.free(rejected.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
+    try testing.expectEqualStrings("", rejected.stdout);
+    try testing.expect(std.mem.indexOf(u8, rejected.stderr, "E_ARENA_ESCAPE") != null);
+    try testing.expect(std.mem.indexOf(u8, rejected.stderr, "helper.my") != null);
+}

@@ -3,6 +3,7 @@ test {
     _ = @import("generic_returned_references_test.zig");
     _ = @import("generic_borrows_test.zig");
     _ = @import("generic_local_views_test.zig");
+    _ = @import("generic_regions_test.zig");
     _ = @import("generic_slices_test.zig");
     _ = @import("generic_references_test.zig");
     _ = @import("generic_execution_test.zig");

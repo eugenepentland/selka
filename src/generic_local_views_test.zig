@@ -2,7 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
-const schema = "buffer B:i64;result A{ok:B,err:i64}result S{ok:bool,err:i64}result R{ok:i64,err:i64}";
+const schema = @import("fixture_declarations_test.zig").generic_buffer_results;
 const functions =
     "fn tail<T:copy>(a:&mut [3]i64)->&mut []i64 from a{borrow mut a[1..3] as s{return s;}}" ++
     "fn arrays<T:integer>(n:T)->i64{let mut a=new [3]i64[1,2,3];let original=a;" ++

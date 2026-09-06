@@ -61,6 +61,6 @@ allocation-failure acceptance.
 state, cleanup and transitive cleanup-effect bounds. [Buffer/pool acquisition and mutation](generic-runtime.md) now check explicit
 authority and effects. [Provider operations](generic-providers.md) now enforce capability/result/effect
 contracts. [Concrete local array/buffer views](generic-local-views.md) now preserve
-owner access and input provenance. Local arena/reset scopes still need allocator
-origin and escape checking before being enabled. Generic result constructors and
+owner access and input provenance. [Generic arena/reset scopes](generic-regions.md)
+now track allocator origins and reject escapes. Generic result constructors and
 associated success/error constraints remain pending independently.

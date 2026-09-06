@@ -6,7 +6,8 @@ const typed = @import("typed.zig");
 const walk = @import("typed_walk.zig");
 const diagnostic = @import("diagnostic.zig");
 const Span = @import("source.zig").Span;
-fn carries(ty: typed.Type, types: []const bool) bool {
+/// Whether a concrete value can retain arena authority or arena-owned storage.
+pub fn carries(ty: typed.Type, types: []const bool) bool {
     return ty == .allocator or (ty.isAggregate() and types[ty.recordIndex()]);
 }
 fn grow(target: *usize, dependency: usize) bool {
@@ -94,9 +95,6 @@ const Analysis = struct {
         if (owner.ty.isAggregate() and self.program.records[owner.ty.recordIndex()].shape.buffer != null) return self.local(ref.owner);
         return owner.ownership.arena_depth;
     }
-    fn requireLimit(dependency: usize, limit: usize, span: Span, sink: *diagnostic.Sink) diagnostic.Error!void {
-        if (dependency > limit) return sink.fail("E_ARENA_ESCAPE", span, "value depends on a shorter-lived arena; keep its allocator and owned storage inside that scope");
-    }
     fn validateExpression(self: Analysis, expression_node: typed.Node, sink: *diagnostic.Sink) diagnostic.Error!void {
         switch (expression_node.data) {
             .propagate => |propagate| {
@@ -132,20 +130,9 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
     var any_regions = false;
     for (program.functions) |function| any_regions = any_regions or hasRegions(function);
     if (!any_regions) return;
-    const types = try allocator.alloc(bool, program.records.len);
+    const types = try typeDependencies(allocator, program.records);
     defer allocator.free(types);
-    @memset(types, false);
-    var changed = true;
-    while (changed) {
-        changed = false;
-        for (program.records, 0..) |record, index| {
-            const depends = recordDepends(record, types);
-            if (depends and !types[index]) {
-                types[index] = true;
-                changed = true;
-            }
-        }
-    }
+    var changed = false;
     const nodes = try allocator.alloc(usize, program.nodes.len);
     defer allocator.free(nodes);
     @memset(nodes, 0);
@@ -176,16 +163,33 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
             .statement => |id| {
                 const statement = program.statements[@backingInt(id)];
                 switch (statement.data) {
-                    .ret => |value| try Analysis.requireLimit(analysis.node(value), 0, statement.span, sink),
-                    .ret_ref => |ref| try Analysis.requireLimit(analysis.reference(ref), 0, statement.span, sink),
-                    .initialize, .assign => |store| try Analysis.requireLimit(analysis.node(store.value), function.scope.locals[@backingInt(store.slot)].ownership.arena_depth, statement.span, sink),
-                    .write_ref => |write| try Analysis.requireLimit(analysis.node(write.value), analysis.refLimit(write.reference), statement.span, sink),
-                    .write_slice => |write| try Analysis.requireLimit(analysis.node(write.value), analysis.refLimit(write.reference), statement.span, sink),
+                    .ret => |value| try requireLimit(analysis.node(value), 0, statement.span, sink),
+                    .ret_ref => |ref| try requireLimit(analysis.reference(ref), 0, statement.span, sink),
+                    .initialize, .assign => |store| try requireLimit(analysis.node(store.value), function.scope.locals[@backingInt(store.slot)].ownership.arena_depth, statement.span, sink),
+                    .write_ref => |write| try requireLimit(analysis.node(write.value), analysis.refLimit(write.reference), statement.span, sink),
+                    .write_slice => |write| try requireLimit(analysis.node(write.value), analysis.refLimit(write.reference), statement.span, sink),
                     else => {},
                 }
             },
         };
     }
+}
+
+/// Compute transitive arena-bearing concrete types for ordinary and generic checking.
+pub fn typeDependencies(allocator: std.mem.Allocator, records: []const typed.Record) std.mem.Allocator.Error![]bool {
+    const types = try allocator.alloc(bool, records.len);
+    @memset(types, false);
+    var changed = true;
+    while (changed) {
+        changed = false;
+        for (records, 0..) |record, index| {
+            if (recordDepends(record, types) and !types[index]) {
+                types[index] = true;
+                changed = true;
+            }
+        }
+    }
+    return types;
 }
 
 fn recordDepends(record: typed.Record, types: []const bool) bool {
@@ -238,4 +242,9 @@ fn propagateDependencies(analysis: Analysis, item: walk.Item) bool {
         },
     }
     return changed;
+}
+
+/// Reject a value whose arena dependency exceeds its destination lifetime.
+pub fn requireLimit(dependency: usize, limit: usize, span: Span, sink: *diagnostic.Sink) diagnostic.Error!void {
+    if (dependency > limit) return sink.fail("E_ARENA_ESCAPE", span, "value depends on a shorter-lived arena; keep its allocator and owned storage inside that scope");
 }

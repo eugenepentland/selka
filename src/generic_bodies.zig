@@ -14,6 +14,8 @@ const eResultOperation = diagnostic.result_operation;
 const eResultPath = diagnostic.result_path;
 const eTryReturn = "E_TRY_RETURN";
 const eUnsupported = "E_GENERIC_BODY_UNSUPPORTED";
+const region_check = @import("region_check.zig");
+const Regions = @import("generic_regions.zig");
 const Catalog = @import("records.zig").Catalog;
 const Symbolic = union(enum) { concrete: typed.Type, parameter: usize };
 const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
@@ -24,6 +26,8 @@ const Local = struct {
     name: source.Span,
     ty: Symbolic,
     mutable: bool,
+    origin: usize = 0,
+    arena_depth: usize = 0,
     available: bool = true,
     fields: []const bool = &.{},
     reference: ?bool = null,
@@ -36,6 +40,11 @@ const Local = struct {
 const Checker = struct {
     allocator: std.mem.Allocator,
     field_arena: std.heap.ArenaAllocator,
+    regions: Regions.Graph,
+    region_types: []const bool,
+    region_inputs: ?usize = null,
+    last_origin: usize = 0,
+    arena_depth: usize = 0,
     src: source.Source,
     program: ast.Program,
     catalog: Catalog,
@@ -58,6 +67,28 @@ const Checker = struct {
     work: usize = 0,
     expression_depth: usize = 0,
     temporary_results: usize = 0,
+    fn carriesRegion(self: *Checker, value: Symbolic) bool {
+        return switch (value) {
+            .concrete => |ty_value| region_check.carries(ty_value, self.region_types),
+            .parameter => |index| !self.parameters[index].requirements.contains(.equality),
+        };
+    }
+    fn regionRead(self: *Checker, binding: Local) Error!void {
+        if (!self.carriesRegion(binding.ty)) return;
+        const origin = if (binding.root) |root| self.locals.items[root].origin else binding.origin;
+        try self.regions.flow(origin, self.region_inputs.?);
+    }
+    fn referenceLimit(self: *Checker, binding: Local) Regions.Limit {
+        const owner = self.locals.items[binding.root.?];
+        if (owner.ty == .concrete and owner.ty.concrete.isAggregate() and self.catalog.records[owner.ty.concrete.recordIndex()].shape.buffer != null) return .{ .node = owner.origin };
+        return .{ .depth = owner.arena_depth };
+    }
+    fn regionWrite(self: *Checker, binding: Local, value: usize, span: source.Span) Error!void {
+        if (!self.carriesRegion(binding.ty)) return;
+        const limit = self.referenceLimit(binding);
+        try self.regions.require(value, limit, span);
+        if (limit == .depth) try self.regions.flow(value, self.locals.items[binding.root.?].origin);
+    }
     fn enter(self: *Checker, span: source.Span) Error!void {
         if (self.depth == 256 or self.work == 100000) return self.sink.fail("E_GENERIC_BODY_LIMIT", span, "generic body exceeds checking depth/work budget");
         self.depth += 1;
@@ -176,6 +207,7 @@ const Checker = struct {
             if (!binding.available) return self.sink.fail(if (self.moveOnly(binding.ty)) diagnostic.owned_consumed else "E_RESULT_CONSUMED", span, "binding was already transferred");
             binding.available = false;
         }
+        try self.regionRead(binding.*);
         return binding.ty;
     }
     fn ownerAccess(self: *Checker, binding: Local, write: bool, span: source.Span) Error!void {
@@ -250,7 +282,11 @@ const Checker = struct {
             self.expression_depth -= 1;
             self.temporary_results = before_temporaries;
         }
+        const previous_inputs = self.region_inputs;
+        self.region_inputs = try self.regions.add(0);
+        defer self.region_inputs = previous_inputs;
         const result = try self.call(node.data.call, node.span, true);
+        self.region_inputs = previous_inputs;
         const function = try self.callTarget(node.data.call);
         const contract = (try self.provenance(function)) orelse return self.sink.fail(diagnostic.reference_result, node.span, "borrow result requires a reference-returning function");
         if (borrow.mutable and !contract.mutable) return self.sink.fail(diagnostic.reference_read_only, borrow.name, "shared result cannot be borrowed exclusively");
@@ -265,7 +301,11 @@ const Checker = struct {
             const ref = try self.reference(node.data.name, contract.mutable, contract.slice);
             if (ref.root != contract.parameter) return self.sink.fail(diagnostic.return_lifetime, node.span, "returned reference does not originate from the declared input");
             try self.same(ref.ty, self.result, span);
-        } else try self.same(try self.expression(value), self.result, span);
+            try self.regions.require(self.locals.items[ref.root.?].origin, .{ .depth = 0 }, span);
+        } else {
+            try self.same(try self.expression(value), self.result, span);
+            try self.regions.require(self.last_origin, .{ .depth = 0 }, span);
+        }
         try self.requireHandled(0, span);
     }
     fn topLevel(self: *Checker, span: source.Span) Error!bool {
@@ -284,7 +324,7 @@ const Checker = struct {
         if (self.active.contains(text)) return self.sink.fail(eShadowing, name, "binding shadows an active template binding");
         for (self.parameters) |parameter| if (std.mem.eql(u8, text, self.src.text(parameter.name))) return self.sink.fail(eShadowing, name, "binding shadows a template type parameter");
         try self.active.put(self.allocator, text, self.locals.items.len);
-        try self.locals.append(self.allocator, .{ .name = name, .ty = ty_value, .mutable = mutable });
+        try self.locals.append(self.allocator, .{ .name = name, .ty = ty_value, .mutable = mutable, .origin = try self.regions.add(0), .arena_depth = self.arena_depth });
         self.seedCleanup(ty_value);
     }
     fn callTarget(self: *Checker, invocation: Call) Error!ast.Function {
@@ -345,12 +385,19 @@ const Checker = struct {
                 if (node.data != .name) return self.sink.fail("E_REFERENCE_ARGUMENT", node.span, "reference parameter requires an active reference name");
                 const ref = try self.reference(node.data.name, mutable, parameter.slice);
                 try self.same(ref.ty, expected, node.span);
+                try self.regionRead(ref.*);
                 try self.enter(node.span);
                 self.depth -= 1;
                 const loan = try loans.getOrPut(self.allocator, ref.root.?);
                 if (loan.found_existing and (loan.value_ptr.* or ref.reference.?)) return self.sink.fail("E_BORROW_CONFLICT", node.span, "call cannot alias an exclusive reference argument");
                 loan.value_ptr.* = ref.reference.?;
             } else try self.same(try self.expression(input), expected, node.span);
+        }
+        for (invocation.arguments, signature.parameters) |input, parameter| {
+            if (parameter.reference == true) {
+                const ref = try self.local(self.program.nodes.items[@backingInt(input)].data.name);
+                try self.regionWrite(ref.*, self.region_inputs.?, span);
+            }
         }
         return self.substituted(signature.return_type, signature.type_parameters, arguments);
     }
@@ -359,7 +406,15 @@ const Checker = struct {
         self.expression_depth += 1;
         defer self.expression_depth -= 1;
         errdefer self.temporary_results = before;
+        const previous_inputs = self.region_inputs;
+        const inputs = try self.regions.add(0);
+        self.region_inputs = inputs;
+        defer self.region_inputs = previous_inputs;
         const result = try self.expressionValue(id);
+        const output = try self.regions.add(0);
+        if (self.carriesRegion(result)) try self.regions.flow(inputs, output);
+        if (previous_inputs) |parent| try self.regions.flow(output, parent);
+        self.last_origin = output;
         self.temporary_results = before;
         if (self.expression_depth > 1 and self.requiresHandling(result)) self.temporary_results += 1;
         return result;
@@ -370,6 +425,11 @@ const Checker = struct {
         defer self.depth -= 1;
         return switch (node.data) {
             .name => |name| try self.namedValue(name),
+            .reset_arena => |reset| result: {
+                const output = try self.operationResult(reset.ty, .bool, "E_ARENA_RESULT");
+                try self.same(try self.expression(reset.value), .{ .concrete = .allocator }, node.span);
+                break :result output;
+            },
             .read_field, .take_field => |access| try self.fieldValue(access, node.data == .take_field),
             .acquire_buffer, .acquire_pool => |acquire| try self.acquireValue(acquire, node.data == .acquire_pool, node.span),
             .buffer_operation => |operation| try self.bufferValue(operation),
@@ -389,6 +449,7 @@ const Checker = struct {
                 const ref = try self.reference(read.name, false, true);
                 try self.supports(try self.expression(read.index), .integer, node.span);
                 try self.supports(ref.ty, .copy, read.name);
+                try self.regionRead(ref.*);
                 break :result ref.ty;
             },
             .len_slice => |name| result: {
@@ -398,6 +459,7 @@ const Checker = struct {
             .read_ref => |name| result: {
                 const ref = try self.reference(name, false, false);
                 try self.supports(ref.ty, .copy, name);
+                try self.regionRead(ref.*);
                 break :result ref.ty;
             },
             .call => |invocation| try self.call(invocation, node.span, false),
@@ -540,6 +602,7 @@ const Checker = struct {
         const owner = try self.local(operation.owner);
         const ty_value = try self.concreteValue(owner.ty, operation.owner);
         if (owner.reference != null or !ty_value.isAggregate()) return self.sink.fail("E_BUFFER_TYPE", operation.owner, "operation requires a buffer value binding");
+        try self.regionRead(owner.*);
         const element = self.catalog.records[ty_value.recordIndex()].shape.buffer orelse return self.sink.fail("E_BUFFER_TYPE", operation.owner, "operation requires a buffer value binding");
         for (operation.arguments, 0..) |input, index| {
             const value = try self.expression(input);
@@ -549,6 +612,7 @@ const Checker = struct {
                 try self.same(value, .{ .concrete = .allocator }, at);
             } else if (operation.kind == .append or writes_element) {
                 try self.same(value, .{ .concrete = element }, at);
+                try self.regions.require(self.last_origin, .{ .node = owner.origin }, at);
             } else try self.supports(value, .integer, at);
         }
         try self.runtimeOwner(operation.owner, operation.kind.mutates());
@@ -560,10 +624,13 @@ const Checker = struct {
         const owner = try self.local(operation.owner);
         const ty_value = try self.concreteValue(owner.ty, operation.owner);
         if (owner.reference != null or !ty_value.isAggregate()) return self.sink.fail("E_POOL_TYPE", operation.owner, "operation requires a pool value binding");
+        try self.regionRead(owner.*);
         const pool = self.catalog.records[ty_value.recordIndex()].shape.pool orelse return self.sink.fail("E_POOL_TYPE", operation.owner, "operation requires a pool value binding");
         for (operation.arguments, 0..) |input, index| {
             const expected = if (operation.kind == .insert or index == 1) pool.element else pool.handle;
-            try self.same(try self.expression(input), .{ .concrete = expected }, self.program.nodes.items[@backingInt(input)].span);
+            const at = self.program.nodes.items[@backingInt(input)].span;
+            try self.same(try self.expression(input), .{ .concrete = expected }, at);
+            if (operation.kind == .insert or index == 1) try self.regions.require(self.last_origin, .{ .node = owner.origin }, at);
         }
         try self.runtimeOwner(operation.owner, operation.kind.mutates());
         return self.operationResult(operation.result, operation.kind.output(pool), "E_POOL_RESULT");
@@ -584,6 +651,7 @@ const Checker = struct {
     fn fieldValue(self: *Checker, access: @FieldType(@FieldType(ast.Node, "data"), "read_field"), taking: bool) Error!Symbolic {
         const binding = try self.local(access.owner);
         if (binding.reference != null) return self.sink.fail("E_TYPE", access.owner, "field access requires a value binding, not a reference");
+        try self.regionRead(binding.*);
         const owner_type = try self.concreteValue(binding.ty, access.owner);
         const index = try self.catalog.field(owner_type, self.src, access.field, self.sink);
         const fields = self.catalog.records[owner_type.recordIndex()].fields;
@@ -606,6 +674,7 @@ const Checker = struct {
         const temporaries = self.temporary_results;
         const value = try self.concreteValue(try self.expression(operand), span);
         const input = typed.resultShape(value, self.catalog.records) orelse return self.sink.fail("E_TRY_TYPE", span, "try requires a declared result");
+        if (self.carriesRegion(.{ .concrete = input.error_type })) try self.regions.require(self.last_origin, .{ .depth = 0 }, span);
         const return_type = switch (self.result) {
             .concrete => |ty_value| ty_value,
             .parameter => return self.sink.fail(eTryReturn, span, "try requires a concrete declared result return type"),
@@ -628,6 +697,7 @@ const Checker = struct {
     }
     fn matchValue(self: *Checker, match: @FieldType(@FieldType(ast.Statement, "data"), "match"), span: source.Span) Error!bool {
         const value = try self.expression(match.value);
+        const origin = self.last_origin;
         const ty_value = try self.concreteValue(value, span);
         const variants = try self.catalog.variants(ty_value, span, self.sink);
         const seen = try self.allocator.alloc(bool, variants.cases.len);
@@ -649,7 +719,10 @@ const Checker = struct {
             if ((payload != null) != (arm.binding != null or arm.discard_payload)) return self.sink.fail("E_PATTERN_PAYLOAD", arm.name, "payload cases require a binding or discard; empty cases take neither");
             const before = self.locals.items.len;
             defer self.endScope(before);
-            if (arm.binding) |binding| try self.bind(binding, .{ .concrete = payload.? }, false);
+            if (arm.binding) |binding| {
+                try self.bind(binding, .{ .concrete = payload.? }, false);
+                if (self.carriesRegion(.{ .concrete = payload.? })) try self.regions.flow(origin, self.locals.items[before].origin);
+            }
             const returns = try self.statement(arm.body);
             if (!returns) {
                 try self.requireHandled(before, arm.name);
@@ -749,6 +822,17 @@ const Checker = struct {
         defer self.depth -= 1;
         switch (statement_value.data) {
             .block => |statements| return self.block(statements),
+            .arena_scope => |scope| {
+                try self.same(try self.expression(scope.parent), .{ .concrete = .allocator }, statement_value.span);
+                const before = self.locals.items.len;
+                self.arena_depth += 1;
+                defer self.arena_depth -= 1;
+                try self.bind(scope.name, .{ .concrete = .allocator }, false);
+                defer self.endScope(before);
+                try self.regions.flow(try self.regions.add(self.arena_depth), self.locals.items[before].origin);
+                self.seedEffect(.allocation);
+                return self.statement(scope.body);
+            },
             .match => |match| return self.matchValue(match, statement_value.span),
             .borrow => |borrow| return self.borrowScope(borrow),
             .borrow_call => |borrow| return self.borrowCall(borrow),
@@ -760,6 +844,9 @@ const Checker = struct {
                 const value = try self.expression(binding.value);
                 if (binding.annotation) |annotation| try self.same(value, try self.ty(annotation), annotation);
                 try self.bind(binding.name, value, binding.mutable);
+                const local_value = self.locals.items[self.locals.items.len - 1];
+                try self.regions.flow(self.last_origin, local_value.origin);
+                try self.regions.require(self.last_origin, .{ .depth = local_value.arena_depth }, binding.name);
             },
             .assignment => |assignment| {
                 const target = try self.local(assignment.name);
@@ -767,6 +854,8 @@ const Checker = struct {
                 try self.ownerAccess(target.*, true, assignment.name);
                 const value = try self.expression(assignment.value);
                 try self.same(value, target.ty, assignment.op_span);
+                try self.regions.flow(self.last_origin, target.origin);
+                try self.regions.require(self.last_origin, .{ .depth = target.arena_depth }, assignment.name);
                 if (assignment.op != .set) try self.supports(target.ty, .integer, assignment.op_span);
                 if (self.transfers(target.ty)) {
                     if (self.pendingObligation(target.*)) return self.sink.fail("E_RESULT_OVERWRITE", assignment.name, "assignment would overwrite an unhandled result");
@@ -778,10 +867,12 @@ const Checker = struct {
                 const ref = try self.reference(write.name, true, true);
                 try self.supports(try self.expression(write.index), .integer, statement_value.span);
                 try self.same(try self.expression(write.value), ref.ty, statement_value.span);
+                try self.regionWrite(ref.*, self.last_origin, statement_value.span);
             },
             .write_ref => |write| {
                 const ref = try self.reference(write.name, true, false);
                 try self.same(try self.expression(write.value), ref.ty, statement_value.span);
+                try self.regionWrite(ref.*, self.last_origin, statement_value.span);
             },
             .acknowledge => |value| {
                 if (!self.requiresHandling(try self.expression(value))) return self.sink.fail("E_ACKNOWLEDGE_TYPE", statement_value.span, "acknowledge requires a result-bearing value");
@@ -800,7 +891,6 @@ const Checker = struct {
                 if (!try self.statement(loop.body)) try self.samePending(before, statement_value.span, diagnostic.result_loop);
                 self.restorePending(before);
             },
-            else => return self.sink.fail(eUnsupported, statement_value.span, "this statement still needs abstract generic body checking"),
         }
         return false;
     }
@@ -823,6 +913,8 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
         break;
     };
     if (!has_generic) return;
+    const region_types = try region_check.typeDependencies(allocator, catalog.records);
+    defer allocator.free(region_types);
     const cleanup_masks = try effects.cleanupMasks(allocator, catalog.records);
     defer allocator.free(cleanup_masks);
     const effect_masks = try allocator.alloc(effect_set.Mask, program.functions.len);
@@ -856,6 +948,8 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
         var checker: Checker = .{
             .allocator = allocator,
             .field_arena = std.heap.ArenaAllocator.init(allocator),
+            .regions = .{ .allocator = allocator },
+            .region_types = region_types,
             .src = src,
             .program = program,
             .catalog = catalog,
@@ -873,6 +967,7 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
             .owner = function.policy.owner,
         };
         defer checker.field_arena.deinit();
+        defer checker.regions.deinit();
         defer checker.locals.deinit(allocator);
         defer checker.active.deinit(allocator);
         if (function.policy.conversion) return sink.fail(eUnsupported, function.name, "generic conversions still need abstract checking");
@@ -894,6 +989,7 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
             try checker.same(returned, checker.result, function.signature.return_type);
         }
         if (!try checker.statement(function.body)) return sink.fail("E_MISSING_RETURN", function.name, "template may fall through without returning its declared type");
+        try checker.regions.check(sink);
     }
     try effects.checkAbstract(allocator, program.functions, effect_masks, effect_calls.items, sink);
 }

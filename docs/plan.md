@@ -46,8 +46,8 @@ explicit types, schemas, and interfaces where that improves the program.
 1. Use the implemented interpreter acceptance workflow (`zig build test` or
    `test-interpreter`); native integration is optional (`test-native`, with
    `test-all` combining both). Local array/buffer views and concrete array-input slice results
-   are implemented. Next implement region-origin checks for local arenas/reset; keep
-   unsupported cases explicit until lifetime checks are in place.
+   are implemented, along with arena/reset origin and escape checks.
+   Keep unsupported structural operations explicit until their rules are in place.
 2. Improve structured diagnostics and repair examples alongside those features:
    stable codes and source locations, plus creation, borrow, move, and conflicting
    use locations where relevant. Audit optional-value ergonomics using the
@@ -1830,3 +1830,42 @@ checks. Symbolic array/buffer constructors and structural constraints, generic
 codec contracts, public generic tooling, typed host registration and the real
 application/repair trial remain open. Native work is excluded from the active
 goal.
+
+
+### Generic arena scopes and reset — 2026-09-06
+
+Generic bodies now create lexical arenas and call typed reset operations with
+explicit allocator authority and checked results. Arena creation seeds allocation
+effects through the abstract call graph. A stable dependency graph preserves
+arena origins through assignments, aggregates, match payloads, partial fields,
+loops, references and conservative helper writes; escape constraints are checked
+after a monotone fixed point. Ordinary and abstract checking share concrete
+arena-bearing type classification and the E_ARENA_ESCAPE contract. Current
+equality/integer requirements prove that a symbolic value cannot carry an arena;
+a copy requirement alone does not.
+
+Returns, propagated errors, outer bindings and longer-lived buffer/pool storage
+reject shorter-lived dependencies before instantiation. Heap-backed owners,
+plain snapshots and inert handles can leave an arena scope under their ordinary
+rules. Reset retains runtime checks for live storage and child regions. See
+[the generic region contract](experiments/generic-regions.md) and
+`examples/generic-regions.my` (3).
+
+Validation: final Debug `zig build test` passes 27/27 steps and 714/714 core/CLI
+tests; final ReleaseFast `test-interpreter` passes 28/28 steps and the same 714
+tests (652 core, 62 CLI). Interpreter/tooling drivers pass, including the eight
+verification-driver unit tests and 96 independent corpus comparisons. Focused
+generic acceptance passes 108 tests. Coverage includes allocation failures,
+every VM step-budget boundary in both execution backings, module-local escape
+diagnostics, reset/reuse, dependency cycles and positive heap/snapshot/handle cases.
+Review also removed an over-conservative equality-parameter classification and
+added a regression. The rebuilt CLI example, formatting and all 88 Guardian
+checks pass with baselines disabled; existing report-only size/line findings remain.
+Four explicit-error-set ROI subjects were labelled useful-review; uncertain
+subjects remain pending. No native execution acceptance was run.
+
+Next: diagnostic creation/borrow/move/conflict provenance and repair fixtures,
+then typed host registration and the board/constraint-processing trial. Structural
+generic types, codec constraints, public generic tooling, source serialization
+and finer incremental checking remain open; native execution remains excluded
+from the active goal.

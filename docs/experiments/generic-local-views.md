@@ -35,8 +35,8 @@ A view of a local array or buffer cannot escape by claiming an input lifetime.
 
 This adds concrete array-to-slice reference results. Symbolic shape-dependent
 results remain unsupported until structural requirements have explicit rules.
-Local arena/reset scopes also remain pending: their allocator origins and escape
-constraints need independent abstract checking.
+[Local arena/reset scopes](generic-regions.md) now have independent abstract
+allocator-origin and escape checking.
 
 ## Acceptance
 
