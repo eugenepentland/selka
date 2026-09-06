@@ -1221,3 +1221,8 @@ test "CLI reports unused nominal template requirement errors before unsupported 
     try invokeOptions("check", "struct Key<T:equality>{value:T}struct Bad<U:copy>{key:Key<U>}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_REQUIREMENT\"");
     try invokeOptions("check", "struct Bad<T:copy>{value:Missing}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_UNKNOWN_TYPE\"");
 }
+
+test "CLI rejects recursive nominal layouts but preserves finite nested and phantom forms" {
+    try invokeOptions("check", "struct Node<T:copy>{next:Node<T>}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_RECURSIVE_RECORD\"");
+    try invokeOptions("check", "struct Box<T:copy>{value:T}struct Empty<T:copy>{}struct Finite<U:copy>{nested:Box<Box<U>>,phantom:Empty<Finite<[1]U>>}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_TYPE_UNSUPPORTED\"");
+}

@@ -1,5 +1,5 @@
 //! Recursive descent for statements; precedence climbing for expressions.
-const eGenericLimit = "E_GENERIC_LIMIT";
+const eGenericLimit = diagnostic.generic_limit;
 const external_resources = @import("external_resources.zig");
 const std = @import("std");
 const effects = @import("effect_set.zig");

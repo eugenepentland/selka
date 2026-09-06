@@ -145,6 +145,12 @@ pub const Index = struct {
         }
         self.declarations.items[id].fields = resolved;
     }
+    fn backing(self: *Index, name: Span, span: Span) Error!void {
+        const id = try self.lookup(name);
+        const field = try self.context.allocator.alloc(Field, 1);
+        field[0] = .{ .name = span, .ty = try self.expression(span, &.{}) };
+        self.declarations.items[id].fields = field;
+    }
     /// Operation guarantees are independent of layout IDs; aggregate equality is never inferred.
     pub fn guarantees(self: Index, value: Expression, parameters: []const requirements.Parameter) requirements.Set {
         return switch (value) {
@@ -263,6 +269,8 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     for (program.types.expressions.applications) |syntax| try index.syntax.applications.put(allocator, syntax.span.start, syntax);
     for (program.types.records) |declaration| try index.fields(declaration.name, declaration.fields);
     for (program.types.variants) |declaration| try index.fields(declaration.name, declaration.cases);
+    for (program.types.buffers) |declaration| try index.backing(declaration.name, declaration.backing);
+    for (program.types.pools) |declaration| try index.backing(declaration.name, declaration.element);
     try index.inferGuarantees();
     for (index.declarations.items) |declaration| for (declaration.fields) |field| if (field.ty) |value| try index.checkArguments(value, declaration.parameters);
     return index;

@@ -75,7 +75,9 @@ explicit types, schemas, and interfaces where that improves the program.
    [Nominal template syntax/interfaces](experiments/nominal-type-syntax.md) are
    implemented as groundwork. [Declaration checking](experiments/nominal-template-checks.md)
    now validates unused fields/payloads, identities and argument requirements;
-   finite layouts, concrete specialization and execution remain open.
+   [finite layout checking](experiments/nominal-layouts.md) now validates stored
+   dependencies while preserving phantom arguments. Concrete catalog specialization
+   and execution remain open.
    These remain open; completing all
    abstraction experiments is not a prerequisite for starting the trial.
 
@@ -2522,3 +2524,64 @@ Next: finite layout validation and concrete nominal instance interning in the
 shared catalog, then symbolic construction/projection/update/match/result rules
 and the unchanged board trial. The measured repair study, serialization,
 incremental tooling and remaining roadmap requirements stay open.
+
+
+## Finite nominal template storage graphs — 2026-09-06
+
+[Finite layout checking](experiments/nominal-layouts.md) now validates the storage
+of unused and imported nominal templates before executable specialization. Its
+canonical identities retain declaration identity, parameter scope and ordered
+arguments. Repeated applications share an identity without merging unrelated
+nominal declarations or replacing parameters with representative scalar types.
+
+The graph expands stored fields, payloads and array/buffer/pool elements. It
+interns phantom arguments without expanding their storage. This admits finite
+`Box<Box<T>>` nesting and `Empty<Finite<[1]T>>` phantom arguments while rejecting
+actual stored recursion. Pool handles remain leaves, and zero-length arrays
+retain the existing finite-type rule. The template metadata now also retains
+buffer and pool element expressions for this check.
+
+Worklist expansion and iterative DFS avoid host recursion along long declaration
+chains. Direct, indirect, argument-permuting and array/result/owner cycles report
+`E_RECURSIVE_RECORD` at their closing edge, with a related layout site and original
+module locations. Argument-growing families stop at explicit limits: 4096
+argument-bearing nominal identities, 4096 array identities and 100000 expansion
+operations. Generic declaration roots count toward the nominal identity limit.
+These are compiler limits, not claims that every rejected family is cyclic.
+
+The graph owns its keys, edges and worklists, borrows the declaration index and
+diagnostic sink, and cleans up success and partial failures. Eight new core tests
+cover finite/recursive forms, ordered identity reuse/separation, independent
+expansion limits, a 1200-type finite chain, allocation failures with separate
+graph storage, and private imported cycle diagnostics. One CLI test verifies
+recursive rejection and preserves the remaining execution boundary for finite
+nested/phantom forms.
+
+The finite storage-dependency portion is implemented. Graph IDs remain distinct
+from executable type IDs; unexpanded phantom identities must not be converted to
+empty runtime schemas. Concrete catalog materialization, parameterized
+record/variant operations, ownership/borrowing/arena behavior for those operations
+and board `Slot<T>` consolidation remain pending. Well-formed finite templates
+still report `E_GENERIC_TYPE_UNSUPPORTED` before typed IR or bytecode. No native
+guest backend work was added.
+
+Validation: Debug interpreter acceptance passes 34/34 steps and 814/814 Zig
+tests (739 core, 71 actual CLI, four board integration), plus all 21 Python
+drivers. The final 58 nominal-selected tests pass in Debug and ReleaseFast,
+including additional exact-cap acceptance and first-excess rejection assertions.
+The board trial retains 147 matching comparisons, 18 malformed transports and
+three seeded static errors. The gated install passes 8/8 steps and formatting
+passes. Repair harness fixtures remain distinct from actual agent repair results.
+
+Guardian passes all 88 checks with baselines disabled and existing report-only
+findings retained. Its ownership check prompted explicit graph cleanup and
+standalone allocation-failure coverage. Hash/equality documentation, diagnostic
+formatting and a shared generic-limit code also received useful-review labels;
+two extra gate cycles were recorded once each. These findings prompted design
+and maintainability improvements rather than exposing an existing runtime bug.
+Mandatory feedback records the outcomes.
+
+Next: concrete nominal catalog specialization that preserves these semantic
+identities and complete stored-value layouts, then symbolic field/payload
+operations and the board trial. The measured repair study, source serialization,
+incremental tooling and remaining roadmap requirements remain active.

@@ -320,8 +320,10 @@ construction, nested substitution, nominal-ID membership and borrowed views.
 `examples/generic-arrays.my` returns `3`; parameterized records and unions remain open.
 [Nominal template syntax and interfaces](docs/experiments/nominal-type-syntax.md)
 now retain declarations and nested applications. [Declaration checking](docs/experiments/nominal-template-checks.md)
-validates unused template fields, identities and argument requirements; concrete
-layout specialization and execution remain explicitly unavailable.
+validates unused template fields, identities and argument requirements.
+[Finite layout checking](docs/experiments/nominal-layouts.md) now distinguishes
+stored recursion from finite nesting and phantom arguments. Concrete catalog
+specialization and execution remain explicitly unavailable.
 
 [Lexical arenas](docs/experiments/source-arenas.md) use `arena heap as scratch { ... }`
 with conservative escape checks and cleanup across returns/errors.

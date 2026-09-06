@@ -19,6 +19,8 @@ pub const owned_consumed = "E_OWNED_CONSUMED";
 pub const immutable = "E_IMMUTABLE";
 /// Shared code for a malformed resource acquisition result.
 pub const resource_result = "E_RESOURCE_RESULT";
+/// Shared diagnostic code for bounded generic parsing, checking and specialization.
+pub const generic_limit = "E_GENERIC_LIMIT";
 const std = @import("std");
 const source = @import("source.zig");
 const value_declared_here = "value declared here";

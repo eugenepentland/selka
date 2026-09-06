@@ -2,7 +2,8 @@
 
 Parameterized records and variants now have declaration-scoped semantic metadata.
 The checker validates their fields and payloads even when no function uses them.
-**Concrete layout specialization and execution are still pending.** A valid
+**Concrete layout specialization and execution are still pending.** The subsequent
+[layout-checking stage](nominal-layouts.md) now verifies finite storage dependencies. A valid
 nominal template still ends with `E_GENERIC_TYPE_UNSUPPORTED`; malformed
 metadata reports the specific error first. No typed IR or bytecode is emitted.
 
@@ -61,8 +62,9 @@ failure propagates without leaving an executable program. Metadata uses the
 explicit compilation allocator even when the diagnostic sink has a separate
 allocator; tests sweep that ownership boundary as well.
 
-These guarantees are conditional on a valid finite type layout. The collector
-**does not yet prove by-value finiteness**, allocate concrete instance IDs, check
+These guarantees are conditional on a valid finite type layout. This metadata collector
+does not itself prove by-value finiteness; [the layout graph](nominal-layouts.md)
+now supplies that separate check. It does not allocate executable instance IDs, check
 function-body uses of parameterized fields/payloads, or establish borrowing and
 arena behavior for those operations. It cannot be used as a full program
 acceptance verdict. The existing lowering boundary remains in place until those
@@ -77,7 +79,7 @@ cross-module diagnostic locations. They include allocation-failure sweeps and a
 1,200-record reverse-ordered dependency chain. An actual CLI test checks structured
 requirement and unknown-type errors from unused templates.
 
-Next: finite layout validation and concrete instance interning, followed by
+Next: concrete catalog specialization using the finite layout graph, followed by
 symbolic record/variant operations and the board trial's shared `Slot<T>` types.
 This checkpoint does not complete the nominal-type roadmap item or the measured
 agent-repair study. Native guest compilation remains outside the active goal.

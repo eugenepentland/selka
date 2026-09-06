@@ -15,7 +15,9 @@ pub fn requireImplemented(allocator: std.mem.Allocator, src: source.Source, prog
     }
     if (first == null and program.types.expressions.applications.len != 0) first = program.types.expressions.applications[0].span;
     if (first) |span| {
-        _ = try @import("nominal_templates.zig").collect(allocator, src, program, sink, names);
+        const index = try @import("nominal_templates.zig").collect(allocator, src, program, sink, names);
+        var graph = try @import("nominal_layouts.zig").collect(allocator, &index, sink);
+        defer graph.deinit();
         return sink.fail("E_GENERIC_TYPE_UNSUPPORTED", span, "nominal type specialization and executable layouts are not implemented yet");
     }
 }
