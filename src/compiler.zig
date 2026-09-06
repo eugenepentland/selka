@@ -71,6 +71,8 @@ pub const source = @import("source.zig");
 pub const diagnostic = @import("diagnostic.zig");
 /// Versioned diagnostic rendering for CLI and tool consumers.
 pub const diagnostic_output = @import("diagnostic_output.zig");
+/// Trusted typed host registration and copied-value callback boundary.
+pub const host_functions = @import("host_functions.zig");
 const lexer = @import("lexer.zig");
 const parser = @import("parser.zig");
 const ast = @import("ast.zig");

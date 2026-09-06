@@ -53,7 +53,7 @@ and executed-repair acceptance, including arena origins and returned-input contr
 [Versioned CLI diagnostics](json-diagnostics.md) now expose the same evidence;
 application repair outcomes remain unmeasured.
 
-## Typed host-library interface — pending
+## Typed host-library interface — in progress
 
 Start with a few explicit, synchronous registrations and handwritten Zig wrappers.
 Language callers see ordinary typed operations, for example board/options to a
@@ -61,7 +61,10 @@ routing result or declared error. They should not need to know which native
 implementation language supplies the operation. Heavy geometry may remain in
 Zig, C or Rust without a native compiler for guest programs.
 
-Before implementation, specify and test:
+The [registry boundary](host-functions.md) now implements exact registration,
+copied ordinary values, typed results, explicit grants and bounded sessions.
+Guest declarations, program linking and VM dispatch remain pending. Complete
+integration must satisfy these contracts:
 
 - Registration identity, exact parameter/result types, declared effects and
   required capabilities. Reject unknown registrations and mismatched contracts

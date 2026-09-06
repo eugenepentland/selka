@@ -58,7 +58,9 @@ explicit types, schemas, and interfaces where that improves the program.
 3. Add a small, explicitly registered typed host-library interface into the VM,
    with handwritten Zig wrappers, declared effects, ownership, borrowed-buffer
    lifetimes, and typed failures. Existing built-in providers are a starting
-   point; general domain-function registration is still pending.
+   point. The [trusted registration boundary](experiments/host-functions.md) now
+   validates copied values, signatures, grants and session budgets; guest
+   declarations, program linking and VM dispatch remain pending.
 4. Run a board-validation or constraint-processing trial in the language, keeping
    expensive geometry/routing kernels in Zig (or C/Rust behind a wrapper). Begin
    with an explicit input snapshot and add only host operations the trial needs.
@@ -2025,4 +2027,41 @@ was run.
 Next: typed registered VM host functions with explicit contracts and deterministic
 fake-host tests, then the board/constraint application and measured repair trial.
 Broader abstraction/tooling requirements remain pending. Native execution remains
+outside the active roadmap-completion goal.
+
+
+## Trusted host registry foundation — 2026-09-06
+
+The [host-function boundary](experiments/host-functions.md) now provides owned
+registration snapshots, exact nominal signatures and explicit effect grants.
+Every declaration must be bound before a synchronous session begins. Unknown,
+duplicate, mismatched, borrowed and authority-bearing contracts reject before
+callback execution. Ordinary input/output graphs are validated and independently
+copied, including declared result success/error payloads. Call, cooperative-work,
+shared input/output value-count and depth limits bound the interface; reentry,
+stale sessions and generation wrap reject. Wrappers remain trusted and must use
+the execution allocator for owned outputs and release partial outputs on errors.
+
+Nine new registry tests include deterministic fake callbacks, signature-storage
+mutation, preflight with an unused missing binding, output-type failures, invalid
+arguments, all session limits, ignored cooperative-budget errors, aggregate
+independence and allocation-failure cleanup through typed success/error results.
+Debug `zig build test` passes 28/28 steps and 747/747 tests; ReleaseFast
+`test-interpreter` passes 29/29 steps and the same 747 tests (682 core, 65 CLI).
+All 18 interpreter/tooling driver invocations and 96 independent VM corpus
+comparisons pass in both modes. Formatting and all 88 Guardian checks pass with
+baselines disabled; existing report-only size/line findings remain.
+
+Guardian prompted explicit generation-exhaustion coverage and clearer cleanup
+failure reports in fixtures. Its allocator-ownership inference incorrectly
+required a destructor on the borrowed call context; an allocator accessor through
+the session removes that inference without inventing ownership. The observation
+was labelled false-positive; the two test improvements were labelled useful-review.
+Other uncertain ROI subjects remain pending. No native execution suite was run.
+
+Next: explicit guest host declarations, visible/transitive host effects, binding
+against the same checked program and VM dispatch through one bounded session.
+Those integrations remain pending; this checkpoint does not complete the typed
+host-interface milestone. The board/constraint trial, measured agent repairs and
+broader abstraction/tooling work remain open. Native guest execution stays
 outside the active roadmap-completion goal.

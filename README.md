@@ -106,6 +106,10 @@ cache is ignored.
 
 ## Current implementation
 
+The [typed host registry](docs/experiments/host-functions.md) now validates exact
+contracts and copies ordinary values through bounded synchronous sessions. Guest
+host declarations and VM dispatch are the next integration work.
+
 The scalar MVP (M0–M5) is implemented and audited: owned source buffers, source locations, lexer,
 parser, separate untyped/typed representations, per-function instructions,
 an iterative VM with typed locals, jumps, and explicit call frames, deterministic dumps, binding diagnostics, and actual-CLI tests.
