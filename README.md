@@ -417,3 +417,8 @@ Long-lived Zig embedding hosts can reuse unchanged module parse tables through
 each fresh project; all semantic checking still runs. See
 [incremental module syntax](docs/experiments/incremental-syntax.md) for limits,
 observations, and the remaining incremental-compilation work.
+
+Use `mylang check-session path/to/main.my` for a persistent checking process. Send
+`check`, `clear`, or `quit` lines on stdin; each reply reports status and parse reuse
+as JSON. Files and `--inputs` manifests are loaded afresh on every check. See
+[persistent checking sessions](docs/experiments/check-session.md).

@@ -106,6 +106,10 @@ pub fn build(b: *std.Build) void {
     call_inputs.addFileArg(exe.getEmittedBin());
     call_inputs.setCwd(b.path("."));
     test_step.dependOn(&call_inputs.step);
+    const check_session = b.addSystemCommand(&.{ "python3", "tests/check_session.py", "--compiler" });
+    check_session.addFileArg(exe.getEmittedBin());
+    check_session.setCwd(b.path("."));
+    test_step.dependOn(&check_session.step);
     const binding_cache = b.addSystemCommand(&.{ "python3", "tests/binding_cache.py", "--compiler" });
     binding_cache.addFileArg(exe.getEmittedBin());
     binding_cache.setCwd(b.path("."));

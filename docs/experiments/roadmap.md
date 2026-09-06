@@ -255,4 +255,9 @@ finer frontend incremental work remain pending.
 [Bounded incremental module syntax](incremental-syntax.md) now reuses exact parse
 tables across fresh embedding projects, with owned copies, retention limits,
 invalidation/eviction observations, and fresh semantic checks. Persistent and
-semantic query caching, CLI sessions, and the rest of F remain pending.
+semantic query caching, automatic watching, and the rest of F remain pending.
+
+[Persistent checking sessions](check-session.md) now expose syntax reuse through
+a serial check/clear/quit CLI protocol, with fresh source/manifests, status and
+cache observations, error recovery, and bounded request framing. Semantic query
+reuse and persistent storage remain pending.

@@ -2609,3 +2609,28 @@ This implements the first frontend query-reuse component. Persistent syntax and
 semantic queries, finer invalidation, CLI sessions, native incremental linking,
 generics, source serialization, and other pending roadmap requirements remain open.
 Hosted CI remains unexecuted.
+
+## 2026-09-06: Persistent CLI checking sessions
+
+Added check-session with a serial check/clear/quit stdin protocol and one JSON
+status/reuse/cache reply per command. Each check reloads files and selected input
+manifests, creates fresh request/project storage, and reruns interface and semantic
+checks through the bounded syntax cache. Source and host failures can be corrected
+without restarting; clear releases retained syntax. EOF, unknown commands, final
+lines without newline, and oversized requests have explicit behavior. Diagnostics
+remain on stderr; the command is a checker, not a guest execution server or LSP.
+
+The actual-process Python driver verifies cold/warm reuse, one-module edits,
+semantic errors on warm cache hits, privacy/removal recovery, cache clearing,
+repeated checks, request limits, unsupported VM options, and fresh manifests.
+Two Zig CLI regressions cover redirected session input/output, reuse/clearing,
+and host-failure recovery. The driver runs in the standard build in both modes.
+Debug and ReleaseFast pass all 28 build steps, covering the 528 core tests
+(cached) and 60 CLI tests, the new session driver, native parity/sanitizer cases,
+and existing Python/application acceptance. Formatting passes. Guardian passes
+all 88 checks without frozen violations.
+
+This exposes the existing frontend reuse component through a persistent CLI.
+Persistent/semantic query caches, automatic watching, structured diagnostic framing,
+native expansion, generics, source serialization, and other pending roadmap items
+remain open. Hosted CI remains unexecuted.

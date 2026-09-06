@@ -50,9 +50,10 @@ still costs work, and header lexing and semantic passes remain uncached.
 cache clearing before use, every allocation failure, deterministic eviction, source
 and expanded-AST byte-budget bypass, fresh signature/privacy errors on warm caches,
 failed-parse recovery, and provider bounds. Existing source relocation and full
-compiler suites exercise the shared copier. CLI invocations currently use independent
-uncached projects; a long-lived embedding host opts into reuse explicitly.
+compiler suites exercise the shared copier. Ordinary CLI invocations use independent uncached projects; embedding hosts opt
+in explicitly, and [check-session](check-session.md) retains a cache across CLI
+requests while reloading source and input manifests.
 
 This is the first frontend query-reuse component. Persistent syntax storage, semantic
-query/dependency caching, CLI session/watch integration, finer invalidation reports,
+query/dependency caching, automatic watch integration, finer invalidation reports,
 and native incremental linking remain open. It does not complete the F roadmap track.

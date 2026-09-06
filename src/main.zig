@@ -25,7 +25,7 @@ const usage = "usage: mylang " ++
     "signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  " ++
     "fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: " ++
     "--check (otherwise writes formatted source to " ++
-    "stdout)\n";
+    "stdout)\n  check-session: persistent check/clear/quit lines on stdin; JSON status on stdout; --inputs supported\n";
 
 /// Dispatch compiler commands, reporting usage/source/IO failures through process exit status.
 pub fn main(init: std.process.Init) void {
@@ -45,7 +45,9 @@ fn dispatch(init: std.process.Init) !u8 {
         try std.Io.File.stderr().writeStreamingAll(init.io, usage);
         return 2;
     };
+    if (parsed.command == .@"check-session") return checkSession(init, parsed);
     switch (parsed.command) {
+        .@"check-session",
         .@"invoke-project",
         .@"check-value-project",
         .@"schema-project",
@@ -102,6 +104,7 @@ fn dispatch(init: std.process.Init) !u8 {
     const check_ns = if (parsed.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
     if (parsed.command != .@"emit-c") try report(init, &compilation);
     switch (parsed.command) {
+        .@"check-session",
         .@"invoke-project",
         .@"check-value-project",
         .@"schema-project",
@@ -194,6 +197,7 @@ fn report(init: std.process.Init, compilation: *const language.Compilation) !voi
 }
 
 const Command = enum {
+    @"check-session",
     @"invoke-project",
     @"check-value-project",
     @"schema-project",
@@ -326,7 +330,7 @@ const ArgumentParser = struct {
     fn evaluationOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
         if (std.mem.startsWith(u8, arg, inputs_prefix)) {
             switch (self.command) {
-                .@"eval-project", .@"schema-project", .@"invoke-project", .@"check-value-project" => {},
+                .@"eval-project", .@"schema-project", .@"invoke-project", .@"check-value-project", .@"check-session" => {},
                 else => return error.Usage,
             }
             if (self.input_count == self.inputs.len or arg.len == inputs_prefix.len) return error.Usage;
@@ -501,6 +505,9 @@ const ModuleFiles = struct {
     }
 };
 fn listModules(init: std.process.Init, parsed: Parsed) !u8 {
+    return listModulesWithCache(init, parsed, null);
+}
+fn listModulesWithCache(init: std.process.Init, parsed: Parsed, cache: ?*language.syntax_cache.Cache) !u8 {
     const frontend_start = if (parsed.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
     const path = parsed.path;
     const basename = std.fs.path.basename(path);
@@ -524,7 +531,7 @@ fn listModules(init: std.process.Init, parsed: Parsed) !u8 {
     if (!try checkImportedInputs(init, files.inputs, &project)) return 2;
     if (parsed.command == .@"fmt-project") return formatProject(init, &project);
     const output = if (parsed.command != .@"list-modules") result: {
-        var index = language.interfaces.build(&project) catch |err| switch (err) {
+        var index = language.interfaces.buildWithCache(&project, cache) catch |err| switch (err) {
             error.SourceError => {
                 const message = try project.renderProblem(init.gpa);
                 defer init.gpa.free(message);
@@ -821,4 +828,69 @@ fn validEntryBasename(basename: []const u8) bool {
     const name = basename[0 .. basename.len - 3];
     if (!language.project.validName(name)) return false;
     return std.mem.indexOfScalar(u8, name, '.') == null;
+}
+
+fn checkSession(init: std.process.Init, parsed: Parsed) !u8 {
+    if (!validEntryBasename(std.fs.path.basename(parsed.path))) {
+        try std.Io.File.stderr().writeStreamingAll(init.io, "check-session: entry must be an identifier.my file\n");
+        return 2;
+    }
+    var cache = language.syntax_cache.Cache.init(init.gpa, .{});
+    defer cache.deinit();
+    var buffer: [256]u8 = undefined;
+    var input = std.Io.File.stdin().readerStreaming(init.io, &buffer);
+    while (true) {
+        const line = input.interface.takeDelimiter('\n') catch |err| switch (err) {
+            error.StreamTooLong => {
+                try sessionReply(init, "invalid", 2, "RequestTooLong", cache.statistics, &cache);
+                return 2;
+            },
+            else => return err,
+        } orelse return 0;
+        if (line.len > 128) {
+            try sessionReply(init, "invalid", 2, "RequestTooLong", cache.statistics, &cache);
+            return 2;
+        }
+        const action = std.mem.trim(u8, line, " \t\r");
+        const before = cache.statistics;
+        if (std.mem.eql(u8, action, "quit")) {
+            try sessionReply(init, "quit", 0, null, before, &cache);
+            return 0;
+        }
+        if (std.mem.eql(u8, action, "clear")) {
+            cache.clear();
+            try sessionReply(init, "clear", 0, null, before, &cache);
+        } else if (std.mem.eql(u8, action, "check")) {
+            try sessionCheck(init, parsed, &cache);
+        } else {
+            try sessionReply(init, "invalid", 2, "UnknownSessionCommand", before, &cache);
+        }
+    }
+}
+fn sessionCheck(init: std.process.Init, parsed: Parsed, cache: *language.syntax_cache.Cache) !void {
+    var arena = std.heap.ArenaAllocator.init(init.gpa);
+    defer arena.deinit();
+    var request_init = init;
+    request_init.arena = &arena;
+    var request = parsed;
+    request.command = .@"check-project";
+    const before = cache.statistics;
+    const status = listModulesWithCache(request_init, request, cache) catch |err| {
+        try sessionReply(init, "check", 2, @errorName(err), before, cache);
+        return;
+    };
+    try sessionReply(init, "check", status, null, before, cache);
+}
+fn sessionReply(init: std.process.Init, action: []const u8, status: u8, failure: ?[]const u8, before: language.syntax_cache.Statistics, cache: *const language.syntax_cache.Cache) !void {
+    const text = try std.json.Stringify.valueAlloc(init.gpa, .{
+        .version = "check-session-v1",
+        .action = action,
+        .status = status,
+        .failure = failure,
+        .reuse = .{ .hits = cache.statistics.hits - before.hits, .misses = cache.statistics.misses - before.misses },
+        .cache = cache.statistics,
+    }, .{});
+    defer init.gpa.free(text);
+    try std.Io.File.stdout().writeStreamingAll(init.io, text);
+    try std.Io.File.stdout().writeStreamingAll(init.io, "\n");
 }

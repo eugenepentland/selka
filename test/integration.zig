@@ -987,3 +987,42 @@ test "CLI schema inputs load fresh generated modules and reject malformed manife
     try invokeOptions("schema-project", source, &.{option}, 2, "", "MissingField");
     try invokeOptions("schema-project", source, &.{ option, option }, 2, "", "usage:");
 }
+
+fn sessionScript(script: []const u8, flags: []const []const u8, expected_status: u8) ![]u8 {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input;fn main()->i64{return 0;}" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "commands", .data = script });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const input = try temp.dir.openFile(testing.io, "commands", .{});
+    defer input.close(testing.io);
+    const output = try temp.dir.createFile(testing.io, "replies", .{});
+    defer output.close(testing.io);
+    var args: std.ArrayList([]const u8) = .empty;
+    defer args.deinit(testing.allocator);
+    try args.appendSlice(testing.allocator, &.{ compiler_path, "check-session", path });
+    try args.appendSlice(testing.allocator, flags);
+    var child = try std.process.spawn(testing.io, .{ .argv = args.items, .stdin = .{ .file = input }, .stdout = .{ .file = output }, .stderr = .ignore });
+    defer child.kill(testing.io);
+    try testing.expectEqual(std.process.Child.Term{ .exited = expected_status }, try child.wait(testing.io));
+    return temp.dir.readFileAlloc(testing.io, "replies", testing.allocator, .limited(16384));
+}
+
+// spec: CLI-5
+test "CLI check session reuses parses and clears retained storage" {
+    const replies = try sessionScript("check\ncheck\nclear\ncheck\nquit\n", &.{}, 0);
+    defer testing.allocator.free(replies);
+    try testing.expect(std.mem.indexOf(u8, replies, "\"version\":\"check-session-v1\"") != null);
+    try testing.expect(std.mem.indexOf(u8, replies, "\"reuse\":{\"hits\":1,\"misses\":0}") != null);
+    try testing.expect(std.mem.indexOf(u8, replies, "\"retained_bytes\":0") != null);
+    try testing.expect(std.mem.indexOf(u8, replies, "\"status\":1") == null);
+    try testing.expect(std.mem.indexOf(u8, replies, "\"status\":2") == null);
+}
+
+test "CLI sessionCheck returns host failure without terminating the session" {
+    const replies = try sessionScript("check\nclear\nquit\n", &.{"--inputs=/nonexistent-mylang-manifest/inputs.json"}, 0);
+    defer testing.allocator.free(replies);
+    try testing.expect(std.mem.indexOf(u8, replies, "\"failure\":\"FileNotFound\"") != null);
+    try testing.expect(std.mem.indexOf(u8, replies, "\"action\":\"quit\",\"status\":0") != null);
+}
