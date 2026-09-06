@@ -54,6 +54,6 @@ undefined-behavior sanitization. Separate hosts link against Debug/ReleaseFast
 shared libraries using only the public headers. The driver runs under
 `zig build test`; compiler allocation-failure tests cover export emission.
 
-This establishes executable public scalar invocation. Aggregate native wire
-values, domain codec invocation at the native boundary, borrowed/capability
-signatures and generated native callable bindings remain unfinished.
+This establishes executable public scalar invocation. [Ordinary aggregate values](native-wire.md)
+now use a separate bounded wire API. Domain codec invocation at the native boundary,
+borrowed/capability signatures and generated native callable bindings remain unfinished.

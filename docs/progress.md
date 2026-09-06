@@ -3174,3 +3174,30 @@ Guardian passed all 88 checks without baselines. The earlier full Debug embeddin
 suite also completed successfully before this API extension. Aggregate/domain
 native wire values, borrowed/capability signatures, generated native callable
 bindings, incremental compilation and the other pending roadmap items remain open.
+
+
+### Native ordinary aggregate value calls — 2026-09-06
+
+`mylang_native_call_values_v1` now copies checked preorder scalar, record,
+fixed-array/table, enum, packed/boxed variant and typed-result values across the
+native host boundary. Inputs become guest-owned copies; outputs use caller-owned
+nodes and retain no guest allocation. Counts, type names, tags and scalar ranges
+are validated; the scalar call API shares that range implementation. Output
+capacity failures report the required size without writing output. Domains,
+resources and other runtime identities remain opaque. See
+`docs/experiments/native-wire.md` for the positional schema and ownership contract.
+
+Acceptance passes address/undefined-behavior sanitizer runs in -O0/-O2 and
+independent Debug/ReleaseFast shared-library hosts. Tests cover snapshots,
+empty values, nested packed/boxed payloads, enum tables, typed results, malformed
+inputs, opaque signatures, output capacity, traps, allocation failures, recovery,
+exact 128-level and 100000-node limits, and cross-API Busy rejection. Full core
+runs passed 587 tests in Debug/ReleaseFast, all 60 CLI tests passed, and native
+parity passed 2682 comparisons. All 24 embedding cases and scalar native-call
+acceptance passed. Final shared-range refactoring is checked by both native call
+drivers and focused compiler allocation tests. Guardian passed all 88 checks with
+baselines disabled. A variant-input regression exposed and corrected use of a
+guest-frame-only stack helper before entry-frame creation; this was test-derived
+evidence. Native domain codecs, generated schema-pinned native bindings,
+borrowed/capability signatures, incremental compilation and other roadmap items
+remain unfinished.

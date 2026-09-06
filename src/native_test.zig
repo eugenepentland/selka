@@ -300,16 +300,18 @@ test "native resource array and slice IO emission cleans failed compiler allocat
 }
 
 fn exportedScenario(allocator: std.mem.Allocator) !void {
-    var c = try language.Compilation.init(allocator, "native.my", "fn echo(x:u64)->u64{return x;}fn main()->i64{return 0;}");
+    var c = try language.Compilation.init(allocator, "native.my", "struct R{a:[2]i64}union U{empty,value:R}domain D:i64{}fn echo(x:u64)->u64{return x;}" ++
+        "fn envelope(r:R)->U{return new U.value(r);}fn main()->i64{return 0;}");
     defer c.deinit();
     try c.emit();
     var sink: @import("diagnostic.zig").Sink = .{ .allocator = allocator };
     defer sink.deinit();
-    const generated = try @import("native.zig").generateWithExports(allocator, c.code.?, c.src, &sink, &.{c.code.?.functions[0].id});
+    const generated = try @import("native.zig").generateWithExports(allocator, c.code.?, c.src, &sink, &.{ c.code.?.functions[0].id, c.code.?.functions[1].id });
     defer allocator.free(generated);
 }
 // spec: NATIVE-CALL-1
-test "native public scalar emission releases storage at every allocation failure" {
+// spec: NATIVE-WIRE-1
+test "native public value emission releases storage at every allocation failure" {
     try exportedScenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), exportedScenario, .{});

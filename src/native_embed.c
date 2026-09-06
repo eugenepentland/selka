@@ -2,12 +2,13 @@
 #ifdef MYLANG_EMBED
 static atomic_flag entry_busy = ATOMIC_FLAG_INIT;
 static int run_embedding(const char *name, const MylangScalar *arguments, size_t count,
-    const MylangRunOptions *configuration, MylangRunResult *result, MylangScalar *scalar) {
+    const MylangRunOptions *configuration, MylangRunResult *result, MylangScalar *scalar, WireCall *wire) {
     if (!result) return 2;
     *result = (MylangRunResult){0};
     if (atomic_flag_test_and_set_explicit(&entry_busy, memory_order_acquire)) {
         result->status = 2; result->code = "Busy"; return 2;
     }
+    wire_call = wire;
     max_steps = configuration && configuration->max_steps ? configuration->max_steps : 10000000;
     max_frames = configuration && configuration->max_frames ? configuration->max_frames : 1024;
     providers = configuration && configuration->providers ? *configuration->providers : (MylangNativeProviders){0};
@@ -23,12 +24,12 @@ static int run_embedding(const char *name, const MylangScalar *arguments, size_t
     }
     if (scalar && result->status == 0) *scalar = (MylangScalar){native_type, native_bits};
     result->steps = steps;
-    active_result = NULL;
+    active_result = NULL; wire_call = NULL;
     atomic_flag_clear_explicit(&entry_busy, memory_order_release);
     return result->status;
 }
 int mylang_native_run_v1(const MylangRunOptions *options, MylangRunResult *result) {
-    return run_embedding(NULL, NULL, 0, options, result, NULL);
+    return run_embedding(NULL, NULL, 0, options, result, NULL, NULL);
 }
 int mylang_native_call_v1(const char *name, const MylangScalar *arguments, size_t count,
     const MylangRunOptions *options, MylangCallResult *result) {
@@ -37,6 +38,22 @@ int mylang_native_call_v1(const char *name, const MylangScalar *arguments, size_
     if (!name || (count && !arguments)) {
         result->execution.status = 2; result->execution.code = "InvalidArgument"; return 2;
     }
-    return run_embedding(name, arguments, count, options, &result->execution, &result->value);
+    return run_embedding(name, arguments, count, options, &result->execution, &result->value, NULL);
+}
+int mylang_native_call_values_v1(const char *name, const MylangWireNode *arguments,
+    size_t node_count, MylangWireNode *output, size_t capacity,
+    const MylangRunOptions *options, MylangWireResult *result) {
+    if (!result) return 2;
+    *result = (MylangWireResult){0};
+    if (!name || (node_count && !arguments) || (capacity && !output)) {
+        result->execution.status=2; result->execution.code="InvalidArgument"; return 2;
+    }
+    if (node_count > 100000 || capacity > 100000) {
+        result->execution.status=2; result->execution.code="WireLimit"; return 2;
+    }
+    WireCall wire={.input=arguments,.count=node_count,.output=output,.capacity=capacity};
+    int status=run_embedding(name, NULL, 0, options, &result->execution, NULL, &wire);
+    result->node_count=wire.needed;
+    return status;
 }
 #endif

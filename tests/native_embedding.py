@@ -60,6 +60,8 @@ static MylangClockResult clock_value(void *context) {
     assert(!strcmp(nested.code,"Busy"));
     MylangCallResult named;
     assert(mylang_native_call_v1("missing",NULL,0,NULL,&named)==2 && !strcmp(named.execution.code,"Busy"));
+    MylangWireResult wire;
+    assert(mylang_native_call_values_v1("missing",NULL,0,NULL,0,NULL,&wire)==2 && !strcmp(wire.execution.code,"Busy"));
     pthread_t thread; assert(!pthread_create(&thread,NULL,overlap,NULL)); assert(!pthread_join(thread,NULL));
     return (MylangClockResult){MYLANG_PROVIDER_OK,7};
 }

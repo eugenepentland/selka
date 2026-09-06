@@ -38,4 +38,19 @@ typedef struct { MylangRunResult execution; MylangScalar value; } MylangCallResu
    Result storage must not alias any call input or another active result. */
 int mylang_native_call_v1(const char *name, const MylangScalar *arguments,
     size_t count, const MylangRunOptions *options, MylangCallResult *result);
+/* Preorder value forest: one root per argument. Scalars have no children;
+   records/arrays list fields/elements in schema order with bits=0; variants
+   use bits as the declared case index and zero or one payload child.
+   Node type names must match the checked schema exactly. */
+typedef struct { const char *type; uint64_t bits; size_t children; } MylangWireNode;
+typedef struct { MylangRunResult execution; size_t node_count; } MylangWireResult;
+/* Copies ordinary values into guest storage and writes the returned tree into
+   caller-owned output. On OutputTooSmall, node_count is the required capacity
+   and output is unchanged; the function has already executed. Other failures
+   leave node_count zero. Input/output/result/options must not alias.
+   At most 100000 input/output nodes and 128 levels are supported. Domains and
+   runtime identities are opaque until an explicit native codec ABI exists. */
+int mylang_native_call_values_v1(const char *name, const MylangWireNode *arguments,
+    size_t node_count, MylangWireNode *output, size_t capacity,
+    const MylangRunOptions *options, MylangWireResult *result);
 #endif
