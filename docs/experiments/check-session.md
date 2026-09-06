@@ -9,8 +9,8 @@ is retained between requests; only the owned parse cache survives.
 printf 'check\ncheck\nclear\ncheck\nquit\n' | zig-out/bin/mylang check-session examples/corpus/invoice/main.my
 ```
 
-For an editor or development loop, start the process once and send `check` after
-saving source changes. The synchronous line protocol has three commands:
+For automatic checks after saving, use the [watch driver](watch.md). Editors can
+also start the process once and send `check` after source changes. The synchronous line protocol has three commands:
 
 - `check`: reread project files and input manifests, reuse exact syntax matches,
   and rerun interface and semantic checking without executing the guest program.
@@ -49,6 +49,6 @@ and host-error recovery through redirected request/reply files. The standard bui
 runs these tests in Debug and ReleaseFast.
 
 This exposes incremental syntax reuse through a long-lived CLI. Persistent disk
-storage, semantic query reuse, automatic filesystem watching, structured diagnostic
+storage, semantic query reuse, structured diagnostic
 frames, and incremental native linking remain open work; this is not completion
 of the incremental-compilation roadmap.

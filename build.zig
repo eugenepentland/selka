@@ -125,6 +125,10 @@ pub fn build(b: *std.Build) void {
     check_session.addFileArg(exe.getEmittedBin());
     check_session.setCwd(b.path("."));
     test_step.dependOn(&check_session.step);
+    const watch = b.addSystemCommand(&.{ "python3", "tests/watch.py", "--compiler" });
+    watch.addFileArg(exe.getEmittedBin());
+    watch.setCwd(b.path("."));
+    test_step.dependOn(&watch.step);
     const binding_cache = b.addSystemCommand(&.{ "python3", "tests/binding_cache.py", "--compiler" });
     binding_cache.addFileArg(exe.getEmittedBin());
     binding_cache.setCwd(b.path("."));

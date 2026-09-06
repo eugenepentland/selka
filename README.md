@@ -435,3 +435,7 @@ Use `mylang check-session path/to/main.my` for a persistent checking process. Se
 `check`, `clear`, or `quit` lines on stdin; each reply reports status and parse reuse
 as JSON. Files and `--inputs` manifests are loaded afresh on every check. See
 [persistent checking sessions](docs/experiments/check-session.md).
+
+Automatic project checking: `python3 scripts/watch.py examples/modules/main.my`
+reuses one compiler session and rechecks source/manifest content changes. See
+[watch behavior and bounds](docs/experiments/watch.md).

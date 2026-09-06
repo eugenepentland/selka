@@ -2867,3 +2867,23 @@ passes two outcomes and 30 allocation failures. Guardian passes all 88 checks wi
 baselines disabled. This follow-up used focused acceptance; the prior full-suite
 baseline remains 31 steps and 595 core/CLI tests. Native embedding/performance,
 generics, source serialization, and finer incremental compilation remain open.
+
+
+### Automatic project checking — 2026-09-06
+
+Implemented `scripts/watch.py`: one persistent compiler session checks initially
+and after content changes to module sources or declared manifests. Bounded polling
+handles atomic replacement, deletion/recreation, nested imports, same-size edits
+with preserved timestamps, and changes during an active check. Source/input
+errors remain recoverable. Reply limits, timeout, SIGINT/SIGTERM, and child reaping
+are explicit. The standard test build includes end-to-end watch acceptance.
+See [watch behavior and acceptance](experiments/watch.md) for conservative
+whole-source-tree invalidation and polling limits. Semantic query reuse,
+persistent query storage, native incremental compilation/embedding, generics,
+source serialization, and other unfinished roadmap requirements remain open.
+
+Validation: the full ReleaseFast build passed all 32 steps (unchanged core/CLI test
+steps reused cached results). Final focused watch acceptance passed with Debug
+and ReleaseFast compiler builds. Guardian passed all 88 checks with baselines
+disabled. Native resource acceptance passed 116 outcomes, 106 VM trace comparisons,
+392 allocation failures, and six registry sanitizer cases.
