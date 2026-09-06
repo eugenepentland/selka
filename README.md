@@ -247,7 +247,8 @@ cyclic graphs, snapshot reads, checked IDs, and shared execution quotas. Run
 Source arena scopes and pure generic specialization are implemented.
 [Concrete generic records and arrays](docs/experiments/generic-concrete.md) now
 support fixed data schemas alongside symbolic parameters; broader generic
-contracts remain pending.
+contracts remain pending. [Generic aggregate updates](docs/experiments/generic-updates.md)
+preserve record, array and enum-table snapshots.
 
 [Lexical arenas](docs/experiments/source-arenas.md) use `arena heap as scratch { ... }`
 with conservative escape checks and cleanup across returns/errors.

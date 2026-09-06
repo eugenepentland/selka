@@ -1,0 +1,22 @@
+struct Pair {
+    values: [2]i64,
+    flag: bool
+}
+enum Key { first, second }
+fn change<T: integer>(pair: Pair, index: T, value: i64) -> Pair {
+    return update(pair) { values: replace(pair.values, index, value) };
+}
+fn put<T: integer>(table: [Key]i64, key: Key, value: T) -> [Key]i64 {
+    return replace(table, key, cast<i64>(value));
+}
+fn main() -> i64 {
+    let original = new Pair { values: new [2]i64[7, 8], flag: true };
+    let changed = change::<u8>(original, 0u8, 20);
+    let old = new [Key]i64 { first: 1, second: 2 };
+    let table = put::<u8>(old, new Key.first, 8u8);
+    if changed.flag {
+        return original.values[0] + changed.values[0] + changed.values[1]
+            + old[new Key.first] + table[new Key.first];
+    }
+    return 0;
+}

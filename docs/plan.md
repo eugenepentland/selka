@@ -1451,3 +1451,28 @@ requirements, aggregate updates, variants/results/ownership abstract rules,
 source codec constraints, public generic tooling and the remaining roadmap
 requirements stay open. This is not completion of the full generic language or
 a claim of a new full build-test run.
+
+
+### Generic aggregate updates — 2026-09-06
+
+Generic bodies now support partial updates of concrete copyable records and
+replacement of fixed-array or enum-table elements. Construction/update field
+validation and indexing/replacement index validation share helpers. Updates
+preserve untouched fields, require unique known fields with exact types, and
+cannot infer a record shape from a symbolic parameter. Table keys retain nominal
+enum identity. Ordinary specialization/lowering retains snapshots, evaluation
+order and runtime bounds. See `docs/experiments/generic-updates.md` and
+`examples/generic-updates.my`, which returns 44 while reading original and updated
+record/table values.
+
+All 601 core tests pass in Debug/ReleaseFast; all 60 CLI tests and 2724 VM/native
+comparisons across 116 fixtures pass. Allocation sweeps cover record/table snapshot
+updates and native emission. Uncalled-template tests reject malformed fields,
+indices, elements and enum keys; imported native fixtures cover empty-array and
+maximum-u64 replacement traps. Formatting and all 88 Guardian checks pass with
+baselines disabled. Uncertain ROI subjects remain pending, and no new full
+build-test run is claimed.
+
+Concrete variant construction/matching, result/ownership abstract rules,
+parameter-dependent structural types, codec constraints, public generic tooling,
+source JSON serialization and all other pending roadmap requirements remain open.

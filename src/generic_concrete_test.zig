@@ -46,3 +46,35 @@ test "generic concreteType signatures preserve result and runtime ownership excl
     try reject("buffer B:u8;fn f<T:copy>(x:B)->i64{return 0;}fn main()->i64{return 0;}", "E_GENERIC_BODY_UNSUPPORTED");
     try reject("domain D:i64{}fn f<T:copy>(x:D)->i64{return x+1;}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
 }
+
+const updates = "struct Pair{values:[2]i64,flag:bool}" ++
+    "fn change<T:integer>(p:Pair,index:T,value:i64)->Pair{return update(p){values:replace(p.values,index,value)};}" ++
+    "fn main()->i64{let original=new Pair{values:new [2]i64[7,8],flag:true};let changed=change::<u8>(original,0u8,20);" ++
+    "if changed.flag{return original.values[0]+changed.values[0]+changed.values[1];}return 0;}";
+fn updateScenario(allocator: std.mem.Allocator) !void {
+    var c = try language.Compilation.init(allocator, "updates.my", updates);
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 35), (try c.execute(allocator)).value);
+    const generated = try c.emitC(allocator);
+    defer allocator.free(generated);
+    var table = try language.Compilation.init(allocator, "table-update.my", "enum Key{first,second}" ++
+        "fn put<T:integer>(p:[Key]i64,key:Key,value:T)->[Key]i64{return replace(p,key,cast<i64>(value));}" ++
+        "fn main()->i64{let old=new [Key]i64{first:1,second:2};let changed=put::<u8>(old,new Key.first,8u8);return old[new Key.first]+changed[new Key.first];}");
+    defer table.deinit();
+    try t.expectEqual(@as(i64, 9), (try table.execute(allocator)).value);
+}
+// spec: GENERIC-UPDATE-1
+test "generic record updates and array replacement preserve snapshots under allocation failures" {
+    try updateScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), updateScenario, .{});
+}
+test "generic aggregate updates reject malformed changes in uncalled templates" {
+    try reject("struct P{n:i64}fn f<T:copy>(p:P)->P{return update(p){n:1,n:2};}fn main()->i64{return 0;}", "E_DUPLICATE_FIELD");
+    try reject("struct P{n:i64}fn f<T:copy>(p:P)->P{return update(p){other:1};}fn main()->i64{return 0;}", "E_UNKNOWN_FIELD");
+    try reject("struct P{n:i64}fn f<T:copy>(p:P)->P{return update(p){n:true};}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
+    try reject("fn f<T:copy>(p:[2]i64)->[2]i64{return replace(p,true,1);}fn main()->i64{return 0;}", "E_GENERIC_OPERATION");
+    try reject("fn f<T:copy>(p:[2]i64)->[2]i64{return replace(p,0,true);}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
+    try reject("fn f<T:copy>(p:T)->T{return update(p){};}fn main()->i64{return 0;}", "E_GENERIC_BODY_UNSUPPORTED");
+    try reject("enum A{a}enum B{a}fn f<T:copy>(p:[A]i64,key:B)->[A]i64{return replace(p,key,1);}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
+}

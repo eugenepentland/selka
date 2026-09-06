@@ -292,6 +292,17 @@ const Checker = struct {
             .binary => |operation| try self.binary(operation),
             .record => |record| try self.recordValue(record, node.span),
             .array => |array| try self.arrayValue(array, node.span),
+            .update => |update| result: {
+                const base = try self.expression(update.base);
+                try self.recordFields(try self.concreteValue(base, node.span), update.fields, false, node.span);
+                break :result base;
+            },
+            .replace => |replacement| result: {
+                const base = try self.expression(replacement.base);
+                const shape = try self.arrayIndex(base, replacement.index, node.span);
+                try self.same(try self.expression(replacement.value), .{ .concrete = shape.element }, node.span);
+                break :result base;
+            },
             .field => |field| result: {
                 const base = try self.concreteValue(try self.expression(field.base), node.span);
                 const index = try self.catalog.field(base, self.src, field.name, self.sink);
@@ -303,10 +314,7 @@ const Checker = struct {
                 break :result .{ .concrete = .u64 };
             },
             .index => |access| result: {
-                const base = try self.concreteValue(try self.expression(access.base), node.span);
-                const shape = try self.catalog.array(base, node.span, self.sink);
-                const index = try self.expression(access.index);
-                if (shape.key) |key| try self.same(index, .{ .concrete = key }, node.span) else try self.supports(index, .integer, node.span);
+                const shape = try self.arrayIndex(try self.expression(access.base), access.index, node.span);
                 break :result .{ .concrete = shape.element };
             },
             .cast => |cast| result: {
@@ -318,6 +326,12 @@ const Checker = struct {
             },
             else => self.sink.fail(eUnsupported, node.span, "this operation still needs abstract generic body checking"),
         };
+    }
+    fn arrayIndex(self: *Checker, base: Symbolic, input: ast.NodeId, span: source.Span) Error!typed.Array {
+        const shape = try self.catalog.array(try self.concreteValue(base, span), span, self.sink);
+        const index = try self.expression(input);
+        if (shape.key) |key| try self.same(index, .{ .concrete = key }, span) else try self.supports(index, .integer, span);
+        return shape;
     }
     fn arrayValue(self: *Checker, array: @FieldType(@FieldType(ast.Node, "data"), "array"), span: source.Span) Error!Symbolic {
         const result = try self.ty(array.ty);
@@ -331,18 +345,23 @@ const Checker = struct {
     fn recordValue(self: *Checker, record: @FieldType(@FieldType(ast.Node, "data"), "record"), span: source.Span) Error!Symbolic {
         const result = try self.ty(record.name);
         const ty_value = try self.concreteValue(result, span);
+        try self.recordFields(ty_value, record.fields, true, span);
+        return result;
+    }
+    fn recordFields(self: *Checker, ty_value: typed.Type, fields: []const ast.FieldInit, complete: bool, span: source.Span) Error!void {
         const shape = try self.catalog.record(ty_value, span, self.sink);
         const seen = try self.allocator.alloc(bool, shape.fields.len);
         defer self.allocator.free(seen);
         @memset(seen, false);
-        for (record.fields) |field| {
+        for (fields) |field| {
             const index = try self.catalog.field(ty_value, self.src, field.name, self.sink);
             if (seen[index]) return self.sink.fail("E_DUPLICATE_FIELD", field.name, "record field is initialized more than once");
             seen[index] = true;
             try self.same(try self.expression(field.value), .{ .concrete = shape.fields[index].ty }, field.name);
         }
-        for (seen) |present| if (!present) return self.sink.fail("E_MISSING_FIELD", span, "record construction must initialize every field");
-        return result;
+        if (complete) for (seen) |present| {
+            if (!present) return self.sink.fail("E_MISSING_FIELD", span, "record construction must initialize every field");
+        };
     }
     fn binary(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "binary")) Error!Symbolic {
         const left = try self.expression(operation.left);

@@ -112,6 +112,12 @@ def project_cases(compiler, zig, root, temp):
         "main.my": "module main;import helpers as h;fn main()->i64{return h::at::<i64>(new [2]i64[7,8],-1);}",
         "helpers.my": "module helpers;export at;fn at<T:integer>(values:[2]i64,index:T)->i64{return values[index];}",
     }))
+    for count, index in ((0, "0u64"), (2, "18446744073709551615u64")):
+        elements = "" if count == 0 else "7,8"
+        fixtures.append(("generic-replace-trap-" + str(count), {
+            "main.my": f"module main;import helpers as h;fn main()->i64{{let p=h::change::<u64>(new [{count}]i64[{elements}],{index});return cast<i64>(len(p));}}",
+            "helpers.my": f"module helpers;export change;fn change<T:integer>(p:[{count}]i64,index:T)->[{count}]i64{{return replace(p,index,9);}}",
+        }))
     codec_root = root / "examples" / "domain-codecs"
     fixtures.append(("domain-codecs", {name: (codec_root / name).read_text().replace("domain Positive:", "fn unused<T:copy>(x:T)->T{return x;}domain Positive:") for name in ("main.my", "data.my")}))
     pairs = 0
@@ -175,7 +181,7 @@ def main():
     compiler = args.compiler.resolve()
     root = Path(__file__).resolve().parents[1]
     fixtures = [(name, (root / "test" / "fixtures" / f"{name}.my").read_text()) for name in ("arithmetic", "sum", "gcd")]
-    fixtures += [(name, (root / "examples" / f"{name}.my").read_text()) for name in ("arrays", "records", "conversions", "tables", "references", "reference-parameters", "slices", "returned-references", "propagation", "buffers", "buffer-views", "allocator-capabilities", "arena-reset", "pools", "arenas", "generics", "generic-references", "generic-slices", "generic-borrows", "generic-returned-references", "generic-records")]
+    fixtures += [(name, (root / "examples" / f"{name}.my").read_text()) for name in ("arrays", "records", "conversions", "tables", "references", "reference-parameters", "slices", "returned-references", "propagation", "buffers", "buffer-views", "allocator-capabilities", "arena-reset", "pools", "arenas", "generics", "generic-references", "generic-slices", "generic-borrows", "generic-returned-references", "generic-records", "generic-updates")]
     for index in ("-1i8", "18446744073709551615u64"):
         index_type = "i8" if index.startswith("-") else "u64"
         fixtures.append(("generic-slice-bounds-" + index_type, "fn at<T:copy,I:integer>(s:&[]T,i:I)->T{return read_slice(s,i);}fn main()->i64{let values=new [1]i64 [7];borrow values[0..1] as s{return at::<i64," + index_type + ">(s," + index + ");}}"))
