@@ -3,7 +3,8 @@
 Run `python3 scripts/watch.py path/to/main.my --compiler zig-out/bin/mylang` to
 check immediately and recheck after source changes. The driver keeps one
 `check-session` compiler process, preserving its bounded syntax cache while every
-request reloads inputs and reruns semantic checking. It never executes the guest.
+request reloads inputs. Exact successful snapshots may reuse a checked verdict;
+changed snapshots rerun semantic checking. It never executes the guest.
 Repeated `--inputs=manifest.json` options watch the same declared manifests used
 by ordinary checks, including paths outside the source directory.
 

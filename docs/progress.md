@@ -3334,3 +3334,31 @@ operations still need bounded buffer/slice contracts, allocation authority and
 typed malformed-input handling. Generic codec constraints, borrowed/capability
 native invocation, finer incremental compilation and all other outstanding
 roadmap work remain open.
+
+
+### Exact successful project-check reuse — 2026-09-06
+
+Persistent checking sessions now retain one bounded successful verdict alongside
+the syntax cache. Every request freshly loads files, module headers and generated
+manifest inputs before comparing complete module names, paths and source bytes.
+An exact hit replays owned warnings and skips interface/semantic work. Changed
+snapshots check afresh; failed checks are never retained. Clearing drops both
+caches. Cumulative `semantic` JSON observations distinguish hits, misses, storage,
+bypass and retained bytes from actual syntax reuse.
+
+Verdict retention is limited to a separate 16 MiB arena, for up to 32 MiB combined
+syntax/verdict entry storage. Oversized entries bypass storage; failed replacement
+allocations preserve the prior successful verdict. This is in-process whole-project
+reuse, with no hash-only key or persistent disk verdicts. See
+`docs/experiments/check-session.md` for the protocol and trust boundary.
+
+Full core suites passed 595 tests in Debug/ReleaseFast; final five-test cache runs
+add explicit failed-replacement preservation. All 60 CLI tests pass. Persistent
+session and watch acceptance pass exact warm hits, identical warning replay,
+source/type/privacy/deleted-file recovery, changed/invalid manifests, clear,
+retention bounds and protocol/child cleanup. Guardian passes all 88 checks without
+baselines; its complexity finding prompted shared loading/input-validation and
+verdict helpers and was labeled useful-review. The cache behavior was labeled
+intentional-change; uncertain subjects remain pending. No new full build-test run
+is claimed. Finer semantic queries, persistent reuse, incremental native linking,
+source JSON byte serialization and all other pending roadmap items remain open.

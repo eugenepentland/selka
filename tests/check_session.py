@@ -16,7 +16,7 @@ def main():
         root = Path(directory)
         entry, data = root / 'main.my', root / 'data.my'
         entry.write_text('module main;import data;fn main()->i64{return data::value();}')
-        valid = 'module data;export value;fn value()->i64{return 7;}'
+        valid = 'module data;export value;fn value()->i64{let unused=3;return 7;}'
         data.write_text(valid)
         with tempfile.TemporaryFile() as diagnostics:
             process = subprocess.Popen([compiler, 'check-session', str(entry)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=diagnostics)
@@ -31,11 +31,19 @@ def main():
                     assert response['version'] == 'check-session-v1'
                     assert response['status'] == status, response
                     assert response['cache']['retained_bytes'] <= 16 * 1024 * 1024
+                    assert response['semantic']['retained_bytes'] <= 16 * 1024 * 1024
                     return response
 
                 try:
                     assert request('check')['reuse'] == {'hits': 0, 'misses': 2}
-                    assert request('check')['reuse'] == {'hits': 2, 'misses': 0}
+                    warm = request('check')
+                    assert warm['reuse'] == {'hits': 0, 'misses': 0} and warm['semantic']['hits'] == 1
+                    diagnostics.seek(0)
+                    warnings = diagnostics.read()
+                    assert warnings.count(b'W_UNUSED_BINDING') == 2
+                    half = len(warnings) // 2
+                    assert warnings[:half] == warnings[half:]
+                    diagnostics.seek(0, 2)
                     data.write_text(valid.replace('return 7', 'return 9'))
                     assert request('check')['reuse'] == {'hits': 1, 'misses': 1}
                     data.write_text(valid.replace('return 7', 'return true'))
@@ -48,11 +56,12 @@ def main():
                     data.write_text(valid)
                     request('check')
                     cleared = request('clear')
-                    assert cleared['cache']['retained_bytes'] == 0
+                    assert cleared['cache']['retained_bytes'] == 0 and cleared['semantic']['retained_bytes'] == 0
                     assert request('check')['reuse'] == {'hits': 0, 'misses': 2}
                     assert request('not-a-command', 2)['failure'] == 'UnknownSessionCommand'
                     for _ in range(20):
-                        assert request('check')['reuse'] == {'hits': 2, 'misses': 0}
+                        warm = request('check')
+                        assert warm['reuse'] == {'hits': 0, 'misses': 0} and warm['semantic']['retained_bytes'] > 0
                     request('quit')
                     assert process.wait(timeout=10) == 0
                 finally:
@@ -80,6 +89,12 @@ def main():
                 process.stdin.write(b'check\n')
                 process.stdin.flush()
                 assert json.loads(process.stdout.readline())['status'] == 0
+                process.stdin.write(b'check\n');process.stdin.flush()
+                assert json.loads(process.stdout.readline())['semantic']['hits'] == 1
+                manifest.write_text(json.dumps({'version': 1, 'module': 'config', 'values': [{'name': 'value', 'type': 'i64', 'value': '9'}]}))
+                process.stdin.write(b'check\n');process.stdin.flush()
+                changed = json.loads(process.stdout.readline())
+                assert changed['status'] == 0 and changed['semantic']['misses'] == 2
                 manifest.write_text('{}')
                 process.stdin.write(b'check\nquit\n')
                 process.stdin.flush()
@@ -92,7 +107,7 @@ def main():
                 if process.poll() is None:
                     process.kill()
                     process.wait()
-    print('Checking session: cold/warm reuse, source/privacy/removal recovery, bounded retention, clear, invalid commands, EOF, line limits and fresh manifests passed')
+    print('Checking session: exact successful verdict reuse, warning replay, source/privacy/removal recovery, fresh manifest edits, bounded retention, clear and protocol limits passed')
 
 
 if __name__ == '__main__':

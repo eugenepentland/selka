@@ -446,8 +446,9 @@ each fresh project; all semantic checking still runs. See
 observations, and the remaining incremental-compilation work.
 
 Use `mylang check-session path/to/main.my` for a persistent checking process. Send
-`check`, `clear`, or `quit` lines on stdin; each reply reports status and parse reuse
-as JSON. Files and `--inputs` manifests are loaded afresh on every check. See
+`check`, `clear`, or `quit` lines on stdin; each reply reports status, parse reuse
+and successful-verdict reuse as JSON. Exact successful snapshots skip semantic
+checking and replay their warnings; changed snapshots are checked afresh. Files and `--inputs` manifests are loaded afresh on every check. See
 [persistent checking sessions](docs/experiments/check-session.md).
 
 Automatic project checking: `python3 scripts/watch.py examples/modules/main.my`

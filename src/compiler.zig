@@ -64,6 +64,7 @@ pub const import_policy = @import("import_policy.zig");
 pub const project_compile = @import("project_compile.zig");
 const project_syntax = @import("project_syntax.zig");
 pub const interfaces = @import("interfaces.zig");
+pub const check_cache = @import("check_cache.zig");
 pub const syntax_cache = @import("syntax_cache.zig");
 pub const project = @import("project.zig");
 pub const source = @import("source.zig");

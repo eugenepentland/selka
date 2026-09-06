@@ -1016,7 +1016,7 @@ test "CLI check session reuses parses and clears retained storage" {
     const replies = try sessionScript("check\ncheck\nclear\ncheck\nquit\n", &.{}, 0);
     defer testing.allocator.free(replies);
     try testing.expect(std.mem.indexOf(u8, replies, "\"version\":\"check-session-v1\"") != null);
-    try testing.expect(std.mem.indexOf(u8, replies, "\"reuse\":{\"hits\":1,\"misses\":0}") != null);
+    try testing.expect(std.mem.indexOf(u8, replies, "\"semantic\":{\"hits\":1,\"misses\":1") != null);
     try testing.expect(std.mem.indexOf(u8, replies, "\"retained_bytes\":0") != null);
     try testing.expect(std.mem.indexOf(u8, replies, "\"status\":1") == null);
     try testing.expect(std.mem.indexOf(u8, replies, "\"status\":2") == null);
