@@ -515,3 +515,22 @@ module fixtures with -O0/-O2 and undefined-behavior sanitization. Guardian passe
 all 88 checks with baselines disabled. Allocation-failure coverage includes slice
 forwarding and module-backed execution/schema generation. Generic lexical borrow
 scopes and returned-reference contracts remain unverified and unfinished.
+
+
+### Generic lexical borrowing and narrowing — 2026-09-06
+
+Generic bodies now borrow copyable local values, reborrow references, and narrow
+known slice inputs. Root identities, loan counts and parent child counts enforce
+owner access and exclusive-parent suspension without scanning every local. Scope
+exit restores access and removes names on returns and failures. Recursive generic
+slice helpers execute through VM/C with runtime subrange bounds checks. Generic
+reference-result provenance, abstract whole-value range shape, broader ownership
+and effects, and other roadmap requirements remain unfinished. See
+`docs/experiments/generic-borrows.md` for current scope and acceptance.
+
+Validation: all 582 core tests passed in Debug and ReleaseFast, all 60 CLI tests
+passed, and native parity passed 2676 comparisons across 92 single-file and 16
+module fixtures with -O0/-O2 and undefined-behavior sanitization. Guardian passed
+all 88 checks with baselines disabled. Allocation-failure tests cover recursive
+borrows and imported narrowing helpers. These results do not establish generic
+reference-result provenance or completion of the broader roadmap.

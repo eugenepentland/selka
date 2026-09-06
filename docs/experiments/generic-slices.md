@@ -34,8 +34,8 @@ failures. An imported generic slice helper executes through a concrete module
 wrapper without becoming an internal schema root. Native fixtures exercise slice
 mutation and bounds traps in both C optimization modes.
 
-Lexical borrowing and narrowing inside a template, reference/slice results and
-provenance, general move-only requirements, and broader abstract effect/ownership
+[Lexical borrowing and narrowing](generic-borrows.md) now have acceptance.
+Reference/slice results and provenance, general move-only requirements, and broader abstract effect/ownership
 rules remain unfinished. This extension handles slice inputs and operations;
 it does not establish completion of the generic or wider language roadmap.
 

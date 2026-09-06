@@ -12,7 +12,7 @@ const eUnsupported = "E_GENERIC_BODY_UNSUPPORTED";
 const Symbolic = union(enum) { builtin: typed.Type, parameter: usize };
 const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
 const FunctionMap = std.StringHashMapUnmanaged(usize);
-const Local = struct { name: source.Span, ty: Symbolic, mutable: bool, reference: ?bool = null, slice: bool = false };
+const Local = struct { name: source.Span, ty: Symbolic, mutable: bool, reference: ?bool = null, slice: bool = false, root: ?usize = null, children: usize = 0, shared: usize = 0, exclusive: usize = 0 };
 const Checker = struct {
     allocator: std.mem.Allocator,
     src: source.Source,
@@ -64,6 +64,7 @@ const Checker = struct {
     fn reference(self: *Checker, span: source.Span, mutable: bool, slice: bool) Error!*Local {
         const value = try self.local(span);
         const exclusive = value.reference orelse return self.sink.fail("E_REFERENCE_SCOPE", span, "operation requires an active reference");
+        if (exclusive and value.children != 0) return self.sink.fail("E_BORROW_SUSPENDED", span, "exclusive reference is suspended while a child borrow is active");
         if (value.slice != slice) return self.sink.fail("E_REFERENCE_KIND", span, "whole-value references and slices are distinct");
         if (mutable and !exclusive) return self.sink.fail("E_REFERENCE_READ_ONLY", span, "write or exclusive forwarding requires an exclusive reference");
         return value;
@@ -71,7 +72,47 @@ const Checker = struct {
     fn namedValue(self: *Checker, span: source.Span) Error!Symbolic {
         const binding = try self.local(span);
         if (binding.reference != null) return self.sink.fail("E_REFERENCE_VALUE", span, "references require read_ref or an explicit reference parameter");
+        try self.ownerAccess(binding.*, false, span);
         return binding.ty;
+    }
+    fn ownerAccess(self: *Checker, binding: Local, write: bool, span: source.Span) Error!void {
+        if (binding.exclusive != 0 or (write and binding.shared != 0)) return self.sink.fail("E_BORROW_CONFLICT", span, "owner access conflicts with an active borrow");
+    }
+    fn endScope(self: *Checker, before: usize) void {
+        for (self.locals.items[before..]) |item| _ = self.active.remove(self.src.text(item.name));
+        self.locals.shrinkRetainingCapacity(before);
+    }
+    fn borrowScope(self: *Checker, borrow: @FieldType(@FieldType(ast.Statement, "data"), "borrow")) Error!bool {
+        if (borrow.range) |range| {
+            try self.supports(try self.expression(range.start), .integer, borrow.owner);
+            try self.supports(try self.expression(range.end), .integer, borrow.owner);
+        }
+        const binding = (try self.local(borrow.owner)).*;
+        const owner_index = self.active.get(self.src.text(borrow.owner)).?;
+        const parent: ?usize = if (binding.reference != null) owner_index else null;
+        if (parent != null) {
+            _ = try self.reference(borrow.owner, borrow.mutable, binding.slice);
+        } else {
+            if (borrow.mutable and !binding.mutable) return self.sink.fail("E_IMMUTABLE", borrow.owner, "exclusive borrowing requires a mutable owner");
+            try self.ownerAccess(binding, borrow.mutable, borrow.owner);
+        }
+        if (borrow.range != null and !binding.slice) return self.sink.fail(eUnsupported, borrow.owner, "generic range borrowing requires a known slice input");
+        try self.supports(binding.ty, .copy, borrow.owner);
+        const root = binding.root orelse owner_index;
+        const before = self.locals.items.len;
+        try self.bind(borrow.name, binding.ty, false);
+        defer self.endScope(before);
+        const child = &self.locals.items[before];
+        child.reference = borrow.mutable;
+        child.slice = binding.slice;
+        child.root = root;
+        if (borrow.mutable) self.locals.items[root].exclusive += 1 else self.locals.items[root].shared += 1;
+        if (parent) |id| self.locals.items[id].children += 1;
+        defer {
+            if (borrow.mutable) self.locals.items[root].exclusive -= 1 else self.locals.items[root].shared -= 1;
+            if (parent) |id| self.locals.items[id].children -= 1;
+        }
+        return self.statement(borrow.body);
     }
     fn topLevel(self: *Checker, span: source.Span) Error!bool {
         if (self.module_names) |names| return names.topLevel(span);
@@ -137,7 +178,7 @@ const Checker = struct {
                 .{ .span = parameter.name, .message = "required type parameter declared here" },
             );
         }
-        var loans: std.StringHashMapUnmanaged(void) = .empty;
+        var loans: std.AutoHashMapUnmanaged(usize, bool) = .empty;
         defer loans.deinit(self.allocator);
         for (invocation.arguments, signature.parameters) |input, parameter| {
             const expected = try self.substituted(parameter.ty, signature.type_parameters, arguments);
@@ -148,8 +189,9 @@ const Checker = struct {
                 try self.same(ref.ty, expected, node.span);
                 try self.enter(node.span);
                 self.depth -= 1;
-                const loan = try loans.getOrPut(self.allocator, self.src.text(node.data.name));
-                if (loan.found_existing and ref.reference.?) return self.sink.fail("E_BORROW_CONFLICT", node.span, "call cannot alias an exclusive reference argument");
+                const loan = try loans.getOrPut(self.allocator, ref.root.?);
+                if (loan.found_existing and (loan.value_ptr.* or ref.reference.?)) return self.sink.fail("E_BORROW_CONFLICT", node.span, "call cannot alias an exclusive reference argument");
+                loan.value_ptr.* = ref.reference.?;
             } else try self.same(try self.expression(input), expected, node.span);
         }
         return self.substituted(signature.return_type, signature.type_parameters, arguments);
@@ -214,10 +256,7 @@ const Checker = struct {
     }
     fn block(self: *Checker, statements: []const ast.StatementId) Error!bool {
         const before = self.locals.items.len;
-        defer {
-            for (self.locals.items[before..]) |item| _ = self.active.remove(self.src.text(item.name));
-            self.locals.shrinkRetainingCapacity(before);
-        }
+        defer self.endScope(before);
         var terminated = false;
         for (statements) |id| {
             if (terminated) return self.sink.fail("E_UNREACHABLE", self.program.statements.items[@backingInt(id)].span, "statement follows an unconditional return");
@@ -231,6 +270,7 @@ const Checker = struct {
         defer self.depth -= 1;
         switch (statement_value.data) {
             .block => |statements| return self.block(statements),
+            .borrow => |borrow| return self.borrowScope(borrow),
             .ret => |value| {
                 try self.same(try self.expression(value), self.result, statement_value.span);
                 return true;
@@ -243,6 +283,7 @@ const Checker = struct {
             .assignment => |assignment| {
                 const target = try self.local(assignment.name);
                 if (!target.mutable) return self.sink.fail("E_IMMUTABLE", assignment.name, "assignment requires a mutable binding");
+                try self.ownerAccess(target.*, true, assignment.name);
                 const value = try self.expression(assignment.value);
                 try self.same(value, target.ty, assignment.op_span);
                 if (assignment.op != .set) try self.supports(target.ty, .integer, assignment.op_span);
@@ -329,6 +370,7 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
             try checker.bind(parameter.name, try checker.ty(parameter.ty), false);
             checker.locals.items[checker.locals.items.len - 1].reference = parameter.reference;
             checker.locals.items[checker.locals.items.len - 1].slice = parameter.slice;
+            if (parameter.reference != null) checker.locals.items[checker.locals.items.len - 1].root = checker.locals.items.len - 1;
         }
         if (!try checker.statement(function.body)) return sink.fail("E_MISSING_RETURN", function.name, "template may fall through without returning its declared type");
     }

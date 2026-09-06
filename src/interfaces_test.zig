@@ -529,7 +529,7 @@ fn genericExecutionScenario(allocator: std.mem.Allocator) !void {
             "fn main()->i64{let mut x=0;borrow mut x as r{discard units::set::<i64>(r,2);}" ++
             "let values=new [1]i64 [x];borrow values[0..1] as s{return units::run()+id::<i64>(units::head::<i64>(s));}}" },
         .{ .path = units_path, .bytes = "module units;export run;export id;export set;export head;" ++
-            "fn head<T:copy>(s:&[]T)->T{return read_slice(s,0);}" ++
+            "fn head<T:copy>(s:&[]T)->T{borrow s[0..1] as first{return read_slice(first,0);}}" ++
             "fn set<T:copy>(x:&mut T,y:T)->T{write_ref(x,y);return read_ref(x);}fn id<T:copy>(x:T)->T{return x;}fn run()->i64{if id::<bool>(true){return id::<i64>(5);}return 0;}" },
     } };
     var project = graph.Project.init(allocator);
