@@ -315,6 +315,9 @@ ownership/access checks before instantiation. The VM example
 [Generic arena scopes/reset](docs/experiments/generic-regions.md) now preserve
 allocator origins through aggregates, references and helper writes, rejecting
 escapes before instantiation. `examples/generic-regions.my` returns `3`.
+[Generic fixed arrays](docs/experiments/generic-arrays.md) now support `[N]T`
+construction, nested substitution, nominal-ID membership and borrowed views.
+`examples/generic-arrays.my` returns `3`; parameterized records and unions remain open.
 
 [Lexical arenas](docs/experiments/source-arenas.md) use `arena heap as scratch { ... }`
 with conservative escape checks and cleanup across returns/errors.

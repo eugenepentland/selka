@@ -45,8 +45,10 @@ explicit types, schemas, and interfaces where that improves the program.
 
 1. Use the implemented interpreter acceptance workflow (`zig build test` or
    `test-interpreter`); native integration is optional (`test-native`, with
-   `test-all` combining both). Local array/buffer views and concrete array-input slice results
-   are implemented, along with arena/reset origin and escape checks.
+   `test-all` combining both). Local array/buffer views and concrete or generic fixed-array input slice
+   results are implemented, along with arena/reset origin and escape checks.
+   [Generic fixed arrays](experiments/generic-arrays.md) now support nested `[N]T`
+   construction and substitution with explicit numeric lengths.
    Keep unsupported structural operations explicit until their rules are in place.
 2. Improve structured diagnostics and repair examples alongside those features.
    Whole-value/partial-field moves, borrow conflicts, arena escapes and invalid
@@ -68,7 +70,7 @@ explicit types, schemas, and interfaces where that improves the program.
    cases after sealing. Actual agent repair attempts remain pending.
 5. The first trial-driven simplification, [scalar domain equality](experiments/domain-equality.md),
    removes nominal-ID comparison helpers while preserving type isolation. Use
-   further evidence to prioritize parameterized composite types, generic
+   further evidence to prioritize parameterized records/unions, generic
    constraints/tooling, bounded source serialization, and finer incremental checks.
    These remain open; completing all
    abstraction experiments is not a prerequisite for starting the trial.
@@ -2326,3 +2328,65 @@ Next: complete the matched repair study when fresh-participant authorization is
 available, then prioritize parameterized composite types, serialization and
 incremental tooling using that evidence and a real project pilot. The pending
 agent study has not been run; the broader roadmap remains open.
+
+## Generic fixed arrays — 2026-09-06
+
+The next collection-abstraction layer now supports fixed numeric arrays whose
+elements depend on function type parameters: `[2]T`, nested `[2][2]T`, array
+parameters/results and annotations, construction, indexing, length, replacement,
+whole-value references, local slices and returned input slices. Explicit calls
+can substitute composite arguments such as `pair::<[2]T>(...)`. The example
+[`generic-arrays.my`](../examples/generic-arrays.my) uses one membership function
+for component and net IDs and returns `3`; their nominal identities remain
+incompatible. See [the array contract](experiments/generic-arrays.md).
+
+Universal checking preserves element requirements and exact shapes before any
+instantiation. Uncalled invalid templates reject, arrays acquire neither scalar
+equality nor arithmetic, and copy/result obligations, snapshots, borrowing and
+arena-origin checks remain in force. Imported public generic functions resolve
+array types through module/source relocation, and formatting round-trips them.
+
+The catalog defers only enclosing declared type variables; unknown names still
+fail. Concrete specializations intern arrays by length and resolved element
+identity and reuse existing concrete shapes. Downstream checking and lowering
+use the grown catalog. Additional shapes are capped at 4096 independently of the
+existing 4096 function-specialization limit. Array type traversal is bounded;
+ordinary expression/statement work accounting retains its previous boundary.
+No guest-native backend implementation or acceptance work was added.
+
+Ten focused tests cover nominal-ID reuse, nested/cross-call substitution,
+concrete helper compatibility, empty arrays, malformed uncalled templates,
+length/type requirements, copy/result boundaries, arena escape, mutable/shared
+views and returned lifetimes, bounds source locations, imported declarations,
+formatting, identity reuse, allocation failures and both expansion budgets.
+The CLI test executes a generic array computation and checks a structured error
+from an uncalled template. Existing generic regressions also cover provider
+calls, effects, result handling and ownership around these changes.
+
+Validation: Debug interpreter acceptance passes 34/34 build steps and 786/786
+Zig tests (714 core, 68 actual CLI, four board integration), plus the 21 Python
+drivers. All 121 generic regressions pass in Debug and ReleaseFast. The final
+focused array tests, including the additional independent shape-budget check,
+pass in both modes (ten array tests plus four imported runtime tests). The
+ReleaseFast gated install passes 8/8 steps, the formatted example returns `3`,
+and the board driver passes 147 comparisons, 18 malformed transports and three
+seeded static-error checks. The repair-study harness's fixture regressions pass;
+actual agent repair attempts remain pending.
+
+Guardian passes all 88 checks with baselines disabled. Its type-size finding
+prompted cohesive `ArrayCatalog` state, and a long conditional was split to fit
+the hard line limit. The type-size subject is labeled useful-review locally;
+existing report-only findings remain. The wider generic tests caught and helped
+fix a temporary work-budget regression without relaxing their existing boundary.
+
+This completes the numeric fixed-array portion of parameterized composites.
+Parameterized records, optional-slot unions/results, named buffers, numeric
+length parameters and broader structural constraints remain open. Symbolic
+enum-keyed tables reject explicitly with `E_GENERIC_ARRAY_KEY`. The board trial's
+optional-slot contract still requires separate component/net membership routines
+until parameterized unions are implemented. The fixed trial contract is unchanged.
+
+Next: parameterized nominal records and unions, plus actual matched repair
+attempts when fresh-participant authorization is available. Source serialization,
+public generic tooling, finer incremental checking and the other pending roadmap
+requirements remain active; native execution remains excluded.

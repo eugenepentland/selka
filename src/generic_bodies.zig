@@ -18,7 +18,8 @@ const eUnsupported = "E_GENERIC_BODY_UNSUPPORTED";
 const region_check = @import("region_check.zig");
 const Regions = @import("generic_regions.zig");
 const Catalog = @import("records.zig").Catalog;
-const Symbolic = union(enum) { concrete: typed.Type, parameter: usize };
+const symbolic = @import("symbolic_types.zig");
+const Symbolic = symbolic.Value;
 const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
 const FunctionMap = std.StringHashMapUnmanaged(usize);
 const Return = struct { parameter: usize, mutable: bool, slice: bool };
@@ -74,6 +75,7 @@ const Checker = struct {
         return switch (value) {
             .concrete => |ty_value| region_check.carries(ty_value, self.region_types),
             .parameter => |index| !self.parameters[index].requirements.contains(.equality),
+            .array => |shape| shape.length != 0 and self.carriesRegion(shape.element),
         };
     }
     fn regionRead(self: *Checker, binding: Local) Error!void {
@@ -98,9 +100,22 @@ const Checker = struct {
         self.work += 1;
     }
     fn ty(self: *Checker, span: source.Span) Error!Symbolic {
+        if (self.catalog.arrays.templates.get(span.start)) |template| {
+            try self.enter(span);
+            defer self.depth -= 1;
+            return self.arrayType(template.length, try self.ty(template.syntax.element));
+        }
         const text = self.src.text(span);
         for (self.parameters, 0..) |parameter, index| if (std.mem.eql(u8, text, self.src.text(parameter.name))) return .{ .parameter = index };
         return self.concreteType(span);
+    }
+    fn arrayType(self: *Checker, length: usize, element: Symbolic) Error!Symbolic {
+        const shape = try self.field_arena.allocator().create(symbolic.Array);
+        shape.* = .{ .length = length, .element = element };
+        return .{ .array = shape };
+    }
+    fn arrayShape(self: *Checker, value: Symbolic, span: source.Span) Error!symbolic.Array {
+        return symbolic.array(value, self.catalog.records) orelse self.sink.fail("E_TYPE", span, "operation requires a fixed array value");
     }
     fn concreteType(self: *Checker, span: source.Span) Error!Symbolic {
         return .{ .concrete = try self.catalog.resolve(self.src, span, self.sink) };
@@ -109,6 +124,7 @@ const Checker = struct {
         return switch (value) {
             .concrete => |ty_value| typed.moveOnly(ty_value, self.catalog.records),
             .parameter => false,
+            .array => |shape| shape.length != 0 and self.moveOnly(shape.element),
         };
     }
     fn transfers(self: *Checker, value: Symbolic) bool {
@@ -121,6 +137,7 @@ const Checker = struct {
         return switch (value) {
             .concrete => |ty_value| typed.requiresHandling(ty_value, self.catalog.records),
             .parameter => false,
+            .array => |shape| shape.length != 0 and self.requiresHandling(shape.element),
         };
     }
     fn seedEffect(self: *Checker, effect: effect_set.Effect) void {
@@ -170,21 +187,14 @@ const Checker = struct {
     fn concreteValue(self: *Checker, value: Symbolic, span: source.Span) Error!typed.Type {
         return switch (value) {
             .concrete => |ty_value| ty_value,
-            .parameter => self.sink.fail(eUnsupported, span, "structural operations require a concrete type; parameter shapes need declared constraints"),
+            .parameter, .array => self.sink.fail(eUnsupported, span, "structural operations require a concrete type; parameter shapes need declared constraints"),
         };
     }
     fn same(self: *Checker, actual: Symbolic, expected: Symbolic, span: source.Span) Error!void {
-        if (!std.meta.eql(actual, expected)) return self.sink.fail("E_GENERIC_TYPE", span, "types differ; distinct type parameters remain distinct even with identical requirements");
+        if (!symbolic.same(actual, expected, self.catalog.records)) return self.sink.fail("E_GENERIC_TYPE", span, "types differ; distinct type parameters remain distinct even with identical requirements");
     }
     fn supports(self: *Checker, ty_value: Symbolic, requirement: requirements.Requirement, span: source.Span) Error!void {
-        const supported = switch (ty_value) {
-            .parameter => |index| self.parameters[index].requirements.contains(requirement),
-            .concrete => |builtin| result: {
-                var required: requirements.Set = .{};
-                required.include(requirement);
-                break :result required.accepts(builtin, self.catalog.records);
-            },
-        };
+        const supported = symbolic.supports(ty_value, requirement, self.parameters, self.catalog.records);
         if (!supported) {
             const message = try std.fmt.allocPrint(self.sink.allocator, "operation requires declared {s} support", .{@tagName(requirement)});
             return self.sink.fail("E_GENERIC_OPERATION", span, message);
@@ -244,6 +254,7 @@ const Checker = struct {
         self.locals.shrinkRetainingCapacity(before);
     }
     fn sliceType(self: *Checker, value: Symbolic, span: source.Span) Error!Symbolic {
+        if (value == .array) return value.array.element;
         const owner_type = try self.concreteValue(value, span);
         const element = typed.sliceElement(owner_type, self.catalog.records) orelse return self.sink.fail("E_SLICE_TYPE", span, "slicing requires a fixed numeric array, buffer, or existing slice");
         return .{ .concrete = element };
@@ -380,6 +391,11 @@ const Checker = struct {
         return function;
     }
     fn substituted(self: *Checker, span: source.Span, parameters: []const ast.TypeParameter, arguments: []const Symbolic) Error!Symbolic {
+        if (self.catalog.arrays.templates.get(span.start)) |template| {
+            try self.enter(span);
+            defer self.depth -= 1;
+            return self.arrayType(template.length, try self.substituted(template.syntax.element, parameters, arguments));
+        }
         const text = self.src.text(span);
         for (parameters, arguments) |parameter, argument| if (std.mem.eql(u8, text, self.src.text(parameter.name))) return argument;
         return self.concreteType(span);
@@ -400,6 +416,7 @@ const Checker = struct {
             const satisfies = switch (argument.*) {
                 .parameter => |index| self.parameters[index].requirements.implies(parameter.requirements),
                 .concrete => |builtin| parameter.requirements.accepts(builtin, self.catalog.records),
+                .array => symbolic.supports(argument.*, .copy, self.parameters, self.catalog.records) and !parameter.requirements.contains(.equality),
             };
             if (!satisfies) return self.sink.failRelated(
                 "E_GENERIC_ARGUMENT",
@@ -519,8 +536,8 @@ const Checker = struct {
             .replace => |replacement| result: {
                 const base = try self.expression(replacement.base);
                 const shape = try self.arrayIndex(base, replacement.index, node.span);
-                if (self.requiresHandling(.{ .concrete = shape.element })) return self.sink.fail(eResultOperation, node.span, "replacement would drop a result-bearing element");
-                try self.same(try self.expression(replacement.value), .{ .concrete = shape.element }, node.span);
+                if (self.requiresHandling(shape.element)) return self.sink.fail(eResultOperation, node.span, "replacement would drop a result-bearing element");
+                try self.same(try self.expression(replacement.value), shape.element, node.span);
                 break :result base;
             },
             .field => |field| result: {
@@ -532,15 +549,15 @@ const Checker = struct {
                 break :result .{ .concrete = self.catalog.records[base.recordIndex()].fields[index].ty };
             },
             .length => |input| result: {
-                const base = try self.concreteValue(try self.expression(input), node.span);
-                _ = try self.catalog.array(base, node.span, self.sink);
-                if (self.requiresHandling(.{ .concrete = base })) return self.sink.fail(eResultOperation, node.span, "length would drop result-bearing elements");
+                const base = try self.expression(input);
+                _ = try self.arrayShape(base, node.span);
+                if (self.requiresHandling(base)) return self.sink.fail(eResultOperation, node.span, "length would drop result-bearing elements");
                 break :result .{ .concrete = .u64 };
             },
             .index => |access| result: {
                 const shape = try self.arrayIndex(try self.expression(access.base), access.index, node.span);
-                if (shape.length != 1 and self.requiresHandling(.{ .concrete = shape.element })) return self.sink.fail(eResultOperation, node.span, "indexing would drop other result-bearing elements");
-                break :result .{ .concrete = shape.element };
+                if (shape.length != 1 and self.requiresHandling(shape.element)) return self.sink.fail(eResultOperation, node.span, "indexing would drop other result-bearing elements");
+                break :result shape.element;
             },
             .cast => |cast| result: {
                 const operand = try self.expression(cast.value);
@@ -705,7 +722,7 @@ const Checker = struct {
         if (self.carriesRegion(.{ .concrete = input.error_type })) try self.regions.require(self.last_origin, .{ .depth = 0 }, span);
         const return_type = switch (self.result) {
             .concrete => |ty_value| ty_value,
-            .parameter => return self.sink.fail(eTryReturn, span, "try requires a concrete declared result return type"),
+            .parameter, .array => return self.sink.fail(eTryReturn, span, "try requires a concrete declared result return type"),
         };
         const output = typed.resultShape(return_type, self.catalog.records) orelse return self.sink.fail(eTryReturn, span, "try requires a result return type");
         if (self.return_reference != null) return self.sink.fail(eTryReturn, span, "try cannot propagate through a reference return");
@@ -762,19 +779,18 @@ const Checker = struct {
         if (continuation) |state| self.restorePending(state);
         return terminated;
     }
-    fn arrayIndex(self: *Checker, base: Symbolic, input: ast.NodeId, span: source.Span) Error!typed.Array {
-        const shape = try self.catalog.array(try self.concreteValue(base, span), span, self.sink);
+    fn arrayIndex(self: *Checker, base: Symbolic, input: ast.NodeId, span: source.Span) Error!symbolic.Array {
+        const shape = try self.arrayShape(base, span);
         const index = try self.expression(input);
         if (shape.key) |key| try self.same(index, .{ .concrete = key }, span) else try self.supports(index, .integer, span);
         return shape;
     }
     fn arrayValue(self: *Checker, array: @FieldType(@FieldType(ast.Node, "data"), "array"), span: source.Span) Error!Symbolic {
         const result = try self.ty(array.ty);
-        const ty_value = try self.concreteValue(result, span);
-        const shape = try self.catalog.array(ty_value, span, self.sink);
+        const shape = try self.arrayShape(result, span);
         if (shape.key != null) return self.sink.fail("E_TYPE", span, "enum-indexed tables require named construction");
         if (array.values.len != shape.length) return self.sink.fail("E_ARRAY_LENGTH", span, "array construction must supply its declared number of elements");
-        for (array.values) |value| try self.same(try self.expression(value), .{ .concrete = shape.element }, span);
+        for (array.values) |value| try self.same(try self.expression(value), shape.element, span);
         return result;
     }
     fn recordValue(self: *Checker, record: @FieldType(@FieldType(ast.Node, "data"), "record"), span: source.Span) Error!Symbolic {

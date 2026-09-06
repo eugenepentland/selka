@@ -33,8 +33,9 @@ must match the input array's element type and its permissions cannot exceed the
 input's. The origin remains the declared input through helper calls and modules.
 A view of a local array or buffer cannot escape by claiming an input lifetime.
 
-This adds concrete array-to-slice reference results. Symbolic shape-dependent
-results remain unsupported until structural requirements have explicit rules.
+[Generic fixed arrays](generic-arrays.md) now extend these rules to `[N]T`
+inputs, local arrays and returned `&[]T` slices. An opaque type parameter still
+needs a structural requirement before its shape can be inspected.
 [Local arena/reset scopes](generic-regions.md) now have independent abstract
 allocator-origin and escape checking.
 

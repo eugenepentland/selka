@@ -1,5 +1,6 @@
 //! Unit test entry point, separate from the production compiler module.
 test {
+    _ = @import("generic_arrays_test.zig");
     _ = @import("domain_equality_test.zig");
     _ = @import("host_functions_test.zig");
     _ = @import("vm_host_test.zig");

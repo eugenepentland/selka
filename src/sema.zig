@@ -92,10 +92,18 @@ const Checker = struct {
         return output.toOwnedSlice();
     }
     fn functionType(self: *Checker, id: typed.FunctionId, span: source.Span) Error!typed.Type {
+        return self.functionTypeDepth(id, span, 0);
+    }
+    fn functionTypeDepth(self: *Checker, id: typed.FunctionId, span: source.Span, depth: usize) Error!typed.Type {
+        if (depth == 256) return self.sink.fail("E_GENERIC_LIMIT", span, "generic array type exceeds 256 nesting levels");
         const key = self.instance_keys.items[@backingInt(id)];
         const function = self.syntax.functions[@backingInt(key.declaration)];
         for (function.signature.type_parameters, key.arguments) |parameter, argument| {
             if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(span))) return argument;
+        }
+        if (self.catalog.arrays.templates.get(span.start)) |template| {
+            const element = try self.functionTypeDepth(id, template.syntax.element, depth + 1);
+            return self.catalog.instantiateArray(self.allocator, element, template.length, span, self.sink);
         }
         return self.catalog.resolve(self.src, span, self.sink);
     }
@@ -1397,7 +1405,7 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
     var checker: Checker = .{ .allocator = allocator, .src = src, .syntax = program, .sink = sink, .resolved = resolved, .catalog = catalog, .ordinary_ids = ordinary_ids };
     for (program.functions, 0..) |function, i| {
         const name = if (module_names) |names| try names.functionDeclaration(function.policy.owner, function.name) else try functionName(allocator, src, function.policy.owner, function.name);
-        if (catalog.names.contains(name)) return sink.fail("E_DUPLICATE_NAME", function.name, "function name conflicts with a declared type");
+        if (checker.catalog.names.contains(name)) return sink.fail("E_DUPLICATE_NAME", function.name, "function name conflicts with a declared type");
         if (checker.functions.get(name)) |previous| return sink.failRelated(
             "E_DUPLICATE_FUNCTION",
             function.name,
@@ -1444,8 +1452,8 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
         checker.return_reference = try checker.returnContract(@fromBackingInt(i));
         try checker.bindParameters(function);
         if (function.policy.host != null) {
-            try checkHostType(allocator, catalog.records, checker.return_type, function.signature.return_type, sink);
-            for (checker.locals.items) |local| try checkHostType(allocator, catalog.records, local.ty, local.declaration, sink);
+            try checkHostType(allocator, checker.catalog.records, checker.return_type, function.signature.return_type, sink);
+            for (checker.locals.items) |local| try checkHostType(allocator, checker.catalog.records, local.ty, local.declaration, sink);
         }
         checker.conversion_fields = null;
         if (function.policy.conversion) {
@@ -1454,15 +1462,15 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
                 function.name,
                 "a complete conversion requires one source record parameter",
             );
-            const source_record = try catalog.record(checker.locals.items[0].ty, function.signature.parameters[0].ty, sink);
-            _ = try catalog.record(checker.return_type, function.signature.return_type, sink);
+            const source_record = try checker.catalog.record(checker.locals.items[0].ty, function.signature.parameters[0].ty, sink);
+            _ = try checker.catalog.record(checker.return_type, function.signature.return_type, sink);
             try conversionBody(src, program, function, sink);
             checker.conversion_fields = try allocator.alloc(bool, source_record.fields.len);
             @memset(checker.conversion_fields.?, false);
         }
         const body = try checker.statement(function.body);
         if (checker.conversion_fields) |seen| {
-            const source_record = catalog.records[checker.locals.items[0].ty.recordIndex()];
+            const source_record = checker.catalog.records[checker.locals.items[0].ty.recordIndex()];
             for (seen, source_record.fields) |accounted, field| {
                 if (!accounted) {
                     const message = try std.fmt.allocPrint(allocator, "source field `{s}` is not accounted for; use it in the destination or explicitly discard that named field", .{field.name});
@@ -1502,10 +1510,10 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
     const functions = try checked_functions.toOwnedSlice(allocator);
     var executable_names: std.StringHashMapUnmanaged(typed.FunctionId) = .empty;
     for (functions) |function| try executable_names.put(allocator, function.name, function.id);
-    const checked: typed.Program = .{ .nodes = try checker.nodes.toOwnedSlice(allocator), .statements = try checker.statements.toOwnedSlice(allocator), .functions = functions, .main = main, .records = catalog.records };
+    const checked: typed.Program = .{ .nodes = try checker.nodes.toOwnedSlice(allocator), .statements = try checker.statements.toOwnedSlice(allocator), .functions = functions, .main = main, .records = checker.catalog.records };
     try @import("region_check.zig").check(allocator, checked, sink);
     try @import("effects.zig").check(allocator, checked, sink);
-    try @import("domain_codecs.zig").check(allocator, src, program.types.domains, catalog, .{ .items = functions, .names = executable_names }, sink);
+    try @import("domain_codecs.zig").check(allocator, src, program.types.domains, checker.catalog, .{ .items = functions, .names = executable_names }, sink);
     try warnBindings(allocator, functions, sink);
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
     return checked;

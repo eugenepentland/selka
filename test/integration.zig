@@ -1205,3 +1205,8 @@ test "CLI returned lifetime notes map the borrow owner and required input to ori
     try testing.expectEqualStrings("9\n", accepted.stdout);
     try testing.expectEqualStrings("", accepted.stderr);
 }
+
+test "CLI executes generic fixed arrays and reports uncalled template shape errors" {
+    try invoke("run", "fn twice<T:integer>(x:T)->[2]T{return new [2]T[x,x+x];}fn main()->i64{return twice::<i64>(6)[1];}", 0, "12\n", "");
+    try invokeOptions("check", "fn bad<T:copy>(a:[2]T)->[3]T{return a;}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_TYPE\"");
+}

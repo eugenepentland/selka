@@ -2,7 +2,7 @@
 const previousTypeDeclaration = "previous type declaration";
 const eDuplicateType = "E_DUPLICATE_TYPE";
 const typeIsAlreadyDeclared = "type is already declared";
-const eArrayLength = "E_ARRAY_LENGTH";
+const generic_arrays = @import("generic_arrays.zig");
 const std = @import("std");
 const ast = @import("ast.zig");
 const typed = @import("typed.zig");
@@ -12,21 +12,55 @@ const diagnostic = @import("diagnostic.zig");
 const Error = diagnostic.Error;
 const Names = @import("module_names.zig").Names;
 
+const ArrayCatalog = struct {
+    resolved: std.AutoHashMapUnmanaged(usize, typed.Type) = .empty,
+    templates: std.AutoHashMapUnmanaged(usize, generic_arrays.Template) = .empty,
+    shapes: std.AutoHashMapUnmanaged(typed.Array, typed.Type) = .empty,
+    specialized: usize = 0,
+};
+
 /// Arena-owned type identities, field indexes, and resolved aggregate layouts.
 pub const Catalog = struct {
     module_names: ?*Names = null,
     records: []typed.Record,
     names: std.StringHashMapUnmanaged(typed.Type),
-    array_types: std.AutoHashMapUnmanaged(usize, typed.Type) = .empty,
+    arrays: ArrayCatalog = .{},
+    record_capacity: usize = 0,
     field_names: []std.StringHashMapUnmanaged(usize),
 
     /// Resolve a source type name or interned array span, diagnosing unknown types.
     pub fn resolve(self: Catalog, src: Source, span: Span, sink: *diagnostic.Sink) Error!typed.Type {
-        if (self.array_types.get(span.start)) |ty| return ty;
+        if (self.arrays.resolved.get(span.start)) |ty| return ty;
         const name = src.text(span);
         if (typed.Type.fromName(name)) |builtin| return builtin;
         const key = if (self.module_names) |names| try names.reference(span, .type, null, null, sink) else name;
         return self.names.get(key) orelse sink.fail("E_UNKNOWN_TYPE", span, "type is not declared");
+    }
+    /// Intern a specialized numeric array while retaining declaration-based element identity.
+    pub fn instantiateArray(self: *Catalog, allocator: std.mem.Allocator, element: typed.Type, length: usize, span: Span, sink: *diagnostic.Sink) Error!typed.Type {
+        const shape: typed.Array = .{ .element = element, .length = length };
+        if (self.arrays.shapes.get(shape)) |found| return found;
+        if (self.arrays.specialized == 4096) return sink.fail("E_GENERIC_LIMIT", span, "generic array specialization exceeds 4096 distinct shapes");
+        const id: typed.Type = @fromBackingInt(self.records.len + typed.Type.record_base);
+        const name = try std.fmt.allocPrint(allocator, "[{d}]{s}", .{ length, typed.typeName(element, self.records) });
+        const schema: typed.Record = .{
+            .id = id,
+            .name = name,
+            .declaration = span,
+            .fields = &.{},
+            .shape = .{ .array = shape },
+            .contract = .{ .move_only = length != 0 and typed.moveOnly(element, self.records), .requires_handling = length != 0 and typed.requiresHandling(element, self.records) },
+        };
+        var storage: std.ArrayList(typed.Record) = .{ .items = self.records, .capacity = self.record_capacity };
+        defer {
+            self.records = storage.items;
+            self.record_capacity = storage.capacity;
+        }
+        try storage.ensureUnusedCapacity(allocator, 1);
+        try self.arrays.shapes.put(allocator, shape, id);
+        storage.appendAssumeCapacity(schema);
+        self.arrays.specialized += 1;
+        return id;
     }
     /// Require a record type and return its declared field layout.
     pub fn record(self: Catalog, ty: typed.Type, span: Span, sink: *diagnostic.Sink) Error!typed.Record {
@@ -79,7 +113,7 @@ pub fn collectWithNames(allocator: std.mem.Allocator, src: Source, program: ast.
     const pool_base = declarations.len + domains.len + variant_types.len + buffers.len + resources.len;
     const named_count = pool_base + pools.len * 2;
     const storage = try allocator.alloc(typed.Record, named_count + arrays.len);
-    var catalog: Catalog = .{ .module_names = module_names, .records = storage[0..named_count], .names = .empty, .field_names = try allocator.alloc(std.StringHashMapUnmanaged(usize), named_count) };
+    var catalog: Catalog = .{ .module_names = module_names, .records = storage[0..named_count], .record_capacity = storage.len, .names = .empty, .field_names = try allocator.alloc(std.StringHashMapUnmanaged(usize), named_count) };
     @memset(catalog.field_names, .empty);
     var collector: Collector = .{ .allocator = allocator, .src = src, .program = program, .sink = sink, .catalog = &catalog, .storage = storage };
     try collector.declareNames();
@@ -228,17 +262,20 @@ const Collector = struct {
         const catalog = self.catalog;
         const storage = self.storage;
         const arrays = self.program.types.array_types;
-        var interned: std.AutoHashMapUnmanaged(typed.Array, typed.Type) = .empty;
         for (arrays) |syntax| {
+            const depends = generic_arrays.parameter(src, self.program, syntax.element) or catalog.arrays.templates.contains(syntax.element.start);
+            if (syntax.index == .enum_type and (depends or generic_arrays.parameter(src, self.program, syntax.index.enum_type))) return sink.fail(
+                "E_GENERIC_ARRAY_KEY",
+                syntax.span,
+                "parameterized arrays currently require a fixed numeric length",
+            );
+            if (depends) {
+                try catalog.arrays.templates.put(allocator, syntax.span.start, .{ .syntax = syntax, .length = try generic_arrays.length(src, syntax.index.length, sink) });
+                continue;
+            }
             var enum_key: ?typed.Type = null;
             const length: usize = switch (syntax.index) {
-                .length => |span| length: {
-                    const digits = src.text(span);
-                    for (digits) |c| if (!std.ascii.isDigit(c)) return sink.fail(eArrayLength, span, "array length must be an unsuffixed decimal integer");
-                    const count = std.fmt.parseInt(usize, digits, 10) catch return sink.fail(eArrayLength, span, "array length exceeds the host index range");
-                    if (count > std.math.maxInt(usize) / @sizeOf(typed.Value)) return sink.fail(eArrayLength, span, "array value storage exceeds the host address range");
-                    break :length count;
-                },
+                .length => |span| try generic_arrays.length(src, span, sink),
                 .enum_type => |span| length: {
                     const ty = try catalog.resolve(src, span, sink);
                     if (!ty.isAggregate() or !catalog.records[ty.recordIndex()].isEnum()) return sink.fail("E_TABLE_KEY", span, "table key must be a closed enum type");
@@ -248,7 +285,7 @@ const Collector = struct {
             };
             const element = try catalog.resolve(src, syntax.element, sink);
             const key: typed.Array = .{ .element = element, .length = length, .key = enum_key };
-            const entry = try interned.getOrPut(allocator, key);
+            const entry = try catalog.arrays.shapes.getOrPut(allocator, key);
             if (!entry.found_existing) {
                 const index = catalog.records.len;
                 const id: typed.Type = @fromBackingInt(index + typed.Type.record_base);
@@ -285,7 +322,7 @@ const Collector = struct {
                 catalog.records = storage[0 .. index + 1];
                 entry.value_ptr.* = id;
             }
-            try catalog.array_types.put(allocator, syntax.span.start, entry.value_ptr.*);
+            try catalog.arrays.resolved.put(allocator, syntax.span.start, entry.value_ptr.*);
         }
     }
     fn resolveFields(self: *Collector) Error!void {
