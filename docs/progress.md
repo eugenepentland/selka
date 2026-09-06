@@ -2853,3 +2853,17 @@ Execution remains bounded at 90 seconds, with sanitizers and memory checks intac
 Generation-exhaustion/stale-owner and simultaneous per-kind quota stress remain
 pending, as do native embedding/performance, generics, source serialization, finer
 incremental compilation, and the remaining roadmap requirements.
+
+
+### Native resource registry stress — 2026-09-06
+
+Completed generation-exhaustion, stale-owner, registry-growth, and simultaneous
+per-kind quota stress in the native runtime acceptance harness. Six O0/O2
+sanitizer runs pass with zero retained allocations; mutation checks reject
+unchecked generation wrap and stale-token release. Mirrored source quota fixtures
+pass four exact VM/native trace comparisons, including acquisition from the other
+provider family while one is full and reuse after cleanup. Mixed-store acceptance
+passes two outcomes and 30 allocation failures. Guardian passes all 88 checks with
+baselines disabled. This follow-up used focused acceptance; the prior full-suite
+baseline remains 31 steps and 595 core/CLI tests. Native embedding/performance,
+generics, source serialization, and finer incremental compilation remain open.

@@ -86,9 +86,26 @@ separate 300-second C compilation budget and a 90-second execution budget. No
 sanitizer or runtime memory check was removed. These are acceptance costs, not a
 claim of production compilation performance.
 
+## Registry stress follow-up
+
+Focused acceptance now adds mirrored filesystem/network quota cases: each fills
+one registry, successfully acquires in the other, rejects overflow without a
+provider call, releases all owners, and repeats. All four O0/O2 executions match
+exact VM callback traces. Their sanitized O2 compilations took 112 and 117 seconds.
+The existing mixed-store fixture also passed both modes and 30 allocation failures.
+These are focused results after the complete-suite baseline above.
+
+A separate internal C harness runs automatically in resource acceptance. Six
+sanitizer executions cover both families' stale lookup rejection, stale release
+isolation, registry relocation, final-generation reuse and retirement, and both
+registries simultaneously holding 1024 owners. Overflow invokes no callback;
+release restores capacity. Stale lookup is an internal InvalidOwner host failure,
+not a claim about malformed bytecode parity with the VM. All paths end with zero
+tracked allocations. Deliberately allowing generation wrap or ignoring generation
+on release causes regression assertions to fail.
+
 ## Remaining work
 
-Generation-exhaustion/stale-owner stress, simultaneous per-kind quota stress,
-broader native compilation performance, and native embedding/bindings remain
+Broader native compilation performance and native embedding/bindings remain
 open. Generics, source serialization, finer incremental compilation, and the
 other requirements in the [roadmap](roadmap.md) remain open as well.

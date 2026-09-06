@@ -155,6 +155,23 @@ def io_cases(prefix, finish):
     return result
 
 
+def generation_stress(root, directory, zig):
+    for mode in ("-O0", "-O2"):
+        executable = directory / "generations"
+        built = invoke([zig, "cc", "-std=c11", mode, "-fsanitize=address,undefined",
+                        "-fno-sanitize-recover=undefined", root / "tests/native_resource_generations.c",
+                        "-o", executable], timeout=300)
+        assert built.returncode == 0, built.stderr
+        result = invoke([executable])
+        assert result.returncode == 0, result.stderr
+        memory(result)
+        for kind in (0, 1):
+            stale = invoke([executable, f"stale-{kind}"])
+            assert stale.returncode == 2 and b"host failure: InvalidOwner" in stale.stderr, stale.stderr
+            memory(stale)
+    print("native resource generations: 6 sanitizer runs passed", flush=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--compiler", type=Path, required=True)
@@ -186,10 +203,11 @@ def main():
                       0 if status < 4 else 2, f"{status}\n".encode() if status < 4 else b"",
                       b"OutOfMemory" if status == 4 else b"InvalidProvider" if status == 99 else None))
     cases.extend(io_cases(prefix, finish))
-    acquisitions = ",".join("try acquire_resource<A>(fs,new [0]u8[])" for _ in range(1025))
-    quota = prefix + "fn work(fs:filesystem_cap)->Run{let held=new [1025]File[" + acquisitions + "];discard held;return new Run.ok(0);}fn main(fs:filesystem_cap)->i64{match work(fs){Run.ok(n)=>{return n;},Run.err(first)=>{match work(fs){Run.ok(n)=>{return n;},Run.err(second)=>{return first+second;}}}}}"
+    acquisitions = ",".join("try acquire_resource<A>(fs,new [0]u8[])" for _ in range(1024))
+    quota = prefix + "resource Socket:network;result N{ok:Socket,err:i64}fn work(fs:filesystem_cap,net:network_cap)->Run{let held=new [1024]File[" + acquisitions + "];let other=try acquire_resource<N>(net,new [0]u8[]);let overflow=try acquire_resource<A>(fs,new [0]u8[]);discard overflow;discard other;discard held;return new Run.ok(0);}fn main(fs:filesystem_cap,net:network_cap)->i64{match work(fs,net){Run.ok(n)=>{return n;},Run.err(first)=>{match work(fs,net){Run.ok(n)=>{return n;},Run.err(second)=>{return first+second;}}}}}"
+    network_quota = quota.replace("filesystem", "RESOURCE_KIND").replace("network", "filesystem").replace("RESOURCE_KIND", "network")
     mixed = prefix + "resource Socket:network;result N{ok:Socket,err:i64}struct Pair{left:File,right:Socket}fn work(fs:filesystem_cap,net:network_cap)->Run{let socket=try acquire_resource<N>(net,new [0]u8[]);let file=try acquire_resource<A>(fs,new [0]u8[]);let pair=new Pair{right:socket,left:file};discard pair;return new Run.ok(9);}fn main(fs:filesystem_cap,net:network_cap)->i64{match work(fs,net){Run.ok(n)=>{return n;},Run.err(e)=>{return e;}}}"
-    cases.extend([("quota-reuse", quota, {}, 0, b"8\n", None), ("mixed", mixed, {}, 0, b"9\n", None)])
+    cases.extend([("quota-reuse", quota, {}, 0, b"8\n", None), ("quota-network", network_quota, {}, 0, b"8\n", None), ("mixed", mixed, {}, 0, b"9\n", None)])
     if args.case:
         selected = set(args.case)
         cases = [case for case in cases if case[0] in selected]
@@ -198,6 +216,7 @@ def main():
     comparisons = failures = 0
     with tempfile.TemporaryDirectory(prefix="mylang-native-resources-") as directory:
         directory = Path(directory)
+        generation_stress(root, directory, args.zig)
         oracle = vm_oracle(root, directory, args.zig, cases)
         for case_index, (name, source, settings, code, output, error) in enumerate(cases):
             path = directory / "case.my"
@@ -217,8 +236,8 @@ def main():
                                 "-fno-sanitize-recover=undefined", "-DMYLANG_NATIVE_PROVIDER=1",
                                 "-I" + str(root / "src"), generated, root / "tests/native_resources.c", "-o", executable], timeout=300)
                 assert built.returncode == 0, (name, built.stderr)
-                if name == "quota-reuse":
-                    print(f"native quota C compilation {mode}: {time.monotonic() - started:.1f}s", flush=True)
+                if name in ("quota-reuse", "quota-network"):
+                    print(f"native {name} C compilation {mode}: {time.monotonic() - started:.1f}s", flush=True)
                 result = invoke([executable], settings)
                 assert (result.returncode, result.stdout) == (code, output), (name, result.stderr)
                 if error:
@@ -227,6 +246,11 @@ def main():
                 pending_points = [int(point) for point in re.findall(rb"resource-pending: (\d+)", result.stderr)]
                 trace = events(result)
                 balanced(trace)
+                if name in ("quota-reuse", "quota-network"):
+                    full_kind = b"0" if name == "quota-reuse" else b"1"
+                    acquired = [event for event in trace if event[0] == b"A"]
+                    assert len(acquired) == 2050, (name, len(acquired))
+                    assert sum(event[1] == full_kind for event in acquired) == 2048, name
                 if case_index in oracle:
                     assert trace == oracle[case_index], (name, trace, oracle[case_index])
                 if name == "reordered":
