@@ -1,0 +1,160 @@
+{
+  "inputs": {
+    "acceptance": {
+      "kind": "file",
+      "path": "/home/epentland/ai/canopy/mylang/experiments/validation/planner-chain-20260907/receipt.json",
+      "sha256": "ee4617c58fa1efa1eb4240c620823f4290371461add1c470116ba092def6bb7e"
+    },
+    "baseline:eda:my": {
+      "kind": "directory",
+      "path": "/home/epentland/ai/canopy/mylang/experiments/application_comparison/baselines/eda/my",
+      "sha256": "b33c09dcce15950524844f789728f99a2f449f79c39f15d7402eec19165181ea"
+    },
+    "baseline:eda:python": {
+      "kind": "directory",
+      "path": "/home/epentland/ai/canopy/mylang/experiments/application_comparison/baselines/eda/python",
+      "sha256": "fb6e16048531668ed0802453efa3baa542c37ae62bdd08d694937638a9f3a049"
+    },
+    "baseline:eda:zig": {
+      "kind": "directory",
+      "path": "/home/epentland/ai/canopy/mylang/experiments/application_comparison/baselines/eda/zig",
+      "sha256": "23b1579ceb0545d5e742cb5fa182c45098f243b331e743183a4f7d45edfb625c"
+    },
+    "baseline:planner:my": {
+      "kind": "directory",
+      "path": "/home/epentland/ai/canopy/mylang/experiments/application_comparison/baselines/planner/my",
+      "sha256": "391e6749427dc5daafff554d50b8a7a078900f463e6cbbb65c261bfcf708e6c8"
+    },
+    "baseline:planner:python": {
+      "kind": "directory",
+      "path": "/home/epentland/ai/canopy/mylang/experiments/application_comparison/baselines/planner/python",
+      "sha256": "8cc16f929739593589253effad6509a12530f32cbd00f077fff04043f11cbc18"
+    },
+    "baseline:planner:zig": {
+      "kind": "directory",
+      "path": "/home/epentland/ai/canopy/mylang/experiments/application_comparison/baselines/planner/zig",
+      "sha256": "ae7eb362f7777595443d512144c69db0ba20f4353f2386156f9b6999c0c4cc32"
+    },
+    "byte_io": {
+      "kind": "file",
+      "path": "/home/epentland/ai/canopy/application-trials/planner-chain-20260907/toolchain/bin/mylang-io",
+      "sha256": "6c5252c167eb33abb658e756817a769967e4683e10a6ecbf357afb2e644c6ec7"
+    },
+    "case_generator": {
+      "kind": "file",
+      "path": "/home/epentland/ai/canopy/mylang/experiments/application_comparison/pilot_cases.py",
+      "sha256": "692ca5b2cf55a4710c78391ec3d656f3ad93de2746a7fafa091efc6d4fef7eb4"
+    },
+    "chain_lag_brief": {
+      "kind": "file",
+      "path": "/home/epentland/ai/canopy/mylang/experiments/application_comparison/pilot_tasks/planner-dependency-lags.md",
+      "sha256": "30dce0102450a484b52f023506f911ae032863e289d87427736c010b3465bdf5"
+    },
+    "chain_slack_brief": {
+      "kind": "file",
+      "path": "/home/epentland/ai/canopy/mylang/experiments/application_comparison/pilot_tasks/planner-slack.md",
+      "sha256": "63d3a82a049332e849cb0d63efe07e4dcb31ea98e502f028a7f216a8e7b4a7b7"
+    },
+    "compiler": {
+      "kind": "file",
+      "path": "/home/epentland/ai/canopy/application-trials/planner-chain-20260907/toolchain/bin/mylang",
+      "sha256": "4a794215a8085f62c2daff6bc7987bb578e1b60de288f57fa30652b2ab7236a8"
+    },
+    "contract:eda": {
+      "kind": "file",
+      "path": "/home/epentland/ai/canopy/mylang/experiments/application_comparison/contracts/eda-inspector-v1.md",
+      "sha256": "17464d9522080ee699e04e8414f9599100bba83d135be372c7e3a5374cc28da2"
+    },
+    "contract:planner": {
+      "kind": "file",
+      "path": "/home/epentland/ai/canopy/mylang/experiments/application_comparison/contracts/workflow-planner-v1.md",
+      "sha256": "5376bebb0bb91837eba2753a25d24fbd5a9b1c445db2c0cc6bbc19c97c26bda2"
+    },
+    "dependency_inventory": {
+      "kind": "file",
+      "path": "/home/epentland/ai/canopy/mylang/experiments/validation/planner-chain-20260907/dependencies.json",
+      "sha256": "4edacca00580bd79ed617234752d2500192df0310d0ea5f93ebb3e35a59d2f70"
+    },
+    "independent_reference": {
+      "kind": "file",
+      "path": "/home/epentland/ai/canopy/mylang/tests/application_comparison/test_planner_chain_reference.py",
+      "sha256": "fad99d0876a2ad43b2835383c9dcbc56b402cbb77383492320cd32a969bb7d8d"
+    },
+    "integer_extrema_fixture": {
+      "kind": "file",
+      "path": "/home/epentland/ai/canopy/mylang/src/stdlib/fixtures/integer_extrema.my",
+      "sha256": "bc56b4d84af83ea8510378da9d19d31cfef55f2eb5a7c34663e767e9ff5d4ce6"
+    },
+    "library_reference": {
+      "kind": "file",
+      "path": "/home/epentland/ai/canopy/mylang/docs/stdlib-application-parity.md",
+      "sha256": "68f12b7bff8576fea09c59f8d5f7ec6b5ffcc2af683ff5784d6dd7194164b323"
+    },
+    "matrix": {
+      "kind": "file",
+      "path": "/home/epentland/ai/canopy/mylang/experiments/application_comparison/stdlib-parity-planner-dependency-lags-20260907.json",
+      "sha256": "0f474dee813a3d53c67f409b5683688d29947bc66bc8e88070749caf57b61ddb"
+    },
+    "oracle": {
+      "kind": "file",
+      "path": "/home/epentland/ai/canopy/mylang/experiments/application_comparison/planner_pilot_oracle.py",
+      "sha256": "9c8cbaf62ca80c107f06a3a992834b0bcc414f2955fbf53ac03b1aa1a0265b81"
+    },
+    "previous_acceptance": {
+      "kind": "file",
+      "path": "/home/epentland/ai/canopy/mylang/experiments/validation/stdlib-parity-20260907/receipt.json",
+      "sha256": "ccd4e9cd611e3e96e0302d14cb5dd049edbb7b0179cb203dbb38a9a26ba826eb"
+    },
+    "python": {
+      "kind": "file",
+      "path": "/usr/bin/python3.14",
+      "sha256": "b8d8288faefdd300201f43fcf00f6f539a27218eeed3a3dff5ab10b9c4c99700"
+    },
+    "python_stdlib": {
+      "bytes": 27934238,
+      "entries": 1420,
+      "path": "/usr/lib/python3.14",
+      "sha256": "a2ec45281c33e3ff015ca8d30592a1c687d6bd97180137d509ff99a7dbfda8f7"
+    },
+    "readiness_checker": {
+      "kind": "file",
+      "path": "/home/epentland/ai/canopy/mylang/experiments/application_comparison/parity_readiness.py",
+      "sha256": "b351f81e30c425eb23bbe9332f50227ba0beccc000f8688d36e271042986cd2b"
+    },
+    "seed_recipe": {
+      "kind": "file",
+      "path": "/home/epentland/ai/canopy/mylang/experiments/application_comparison/seeded_regressions.py",
+      "sha256": "579e38fe8e525d4dafc102924f2ef986d536c2206711343b58965294f3c42558"
+    },
+    "signed_order": {
+      "kind": "directory",
+      "path": "/home/epentland/ai/canopy/mylang/experiments/validation/portable-trials-20260907/signed-order",
+      "sha256": "4ad20d28633d25e21c882b4e5ef3fb1b0243c560c497a02436cf1a5fb9f73e0b"
+    },
+    "stdlib": {
+      "kind": "directory",
+      "path": "/home/epentland/ai/canopy/mylang/src/stdlib",
+      "sha256": "4ffd03d8e622d29ea7fb44b2063ab6e985a05b055f0b42ba0e29d32debe2bff7"
+    },
+    "stdlib_registry": {
+      "kind": "file",
+      "path": "/home/epentland/ai/canopy/mylang/src/standard_library.zig",
+      "sha256": "77136c0b9d5fa8cbd3f55264ae62f405139466706e527f89f3402ea753a855a3"
+    },
+    "task_scope": {
+      "kind": "file",
+      "path": "/home/epentland/ai/canopy/mylang/docs/experiments/planner-chain-preparation-20260907.md",
+      "sha256": "0313e856a24dba6983994169d1050e04f331eb588e9470ecf12c8e83290f9ae8"
+    },
+    "zig": {
+      "bytes": 372011585,
+      "entries": 20905,
+      "path": "/home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b",
+      "sha256": "450619c8b1e9e17720ad6b9e9e5944c430718b66cea4c86015707ea76dc60540"
+    }
+  },
+  "review_scope": "declared capability coverage and pinned inputs; not independent proof or launch authorization",
+  "scored_launch_authorized": false,
+  "sha256": "9163dadc88d0cdaf0af967b93bbd89c20289ecb0d8d7d34c08f7216828e7b9ff",
+  "version": "stdlib-parity-readiness-v1"
+}

@@ -1,0 +1,386 @@
+{
+  "eda:my": {
+    "version": "application-dependency-inventory-v1",
+    "language": "my",
+    "entry": "main.my",
+    "files": {
+      "main.my": "9ecb0a144833b5e5973d7425fcf199eabafbf6ac39ec19fecbdf2b7670009053",
+      "@stdlib/std_collections.my": "b0d237cb9a00580aa7c105751a960d5cf70c881246a30de756a9e76c55a46623",
+      "@stdlib/std_order.my": "429033bdc004a093fa1cbbc33205f24cdf4cc7b686a42ef9b5b1ecd305932b0a",
+      "@stdlib/std_ascii.my": "969f84e63f030ab794e405c749ce985446f7aba8c81303e0ea4ad54f29b3f466",
+      "@stdlib/std_text.my": "b2524742023440d4c2ce2b3383890b558365f0a309075c2d87a0d16e30a39b09",
+      "@stdlib/std_json.my": "f374551d4660359f660e8331e26c7a363c6e6f503f23ca9a19e4661686f86b5c",
+      "io.my": "318bf703f8fa8e1fe706d7211b226c19ea60f9e885ef06da4279a8970df395e9"
+    },
+    "edges": [
+      {
+        "file": "main.my",
+        "target": "io",
+        "kind": "local"
+      },
+      {
+        "file": "main.my",
+        "target": "std_json",
+        "kind": "stdlib"
+      },
+      {
+        "file": "main.my",
+        "target": "std_text",
+        "kind": "stdlib"
+      },
+      {
+        "file": "main.my",
+        "target": "std_ascii",
+        "kind": "stdlib"
+      },
+      {
+        "file": "main.my",
+        "target": "std_order",
+        "kind": "stdlib"
+      },
+      {
+        "file": "main.my",
+        "target": "std_collections",
+        "kind": "stdlib"
+      },
+      {
+        "file": "@stdlib/std_text.my",
+        "target": "io",
+        "kind": "local"
+      },
+      {
+        "file": "@stdlib/std_text.my",
+        "target": "std_json",
+        "kind": "stdlib"
+      },
+      {
+        "file": "io.my",
+        "target": "length",
+        "kind": "host-declaration"
+      },
+      {
+        "file": "io.my",
+        "target": "byte",
+        "kind": "host-declaration"
+      },
+      {
+        "file": "io.my",
+        "target": "put",
+        "kind": "host-declaration"
+      }
+    ],
+    "review_required": [],
+    "scope": "static imports reachable from application entry, including explicitly supplied embedded my modules; auxiliary test tools excluded",
+    "stdlib_only_proven": false,
+    "sha256": "6f0af833160c617db8aa5fce2b3264f951b258b1edbf3f831eceb9d22ec047d5"
+  },
+  "eda:python": {
+    "version": "application-dependency-inventory-v1",
+    "language": "python",
+    "entry": "inspector.py",
+    "files": {
+      "inspector.py": "681093d34b807977f19d607ccd9a3fd029c744e4d534e639daacc86e7a1e3076"
+    },
+    "edges": [
+      {
+        "file": "inspector.py",
+        "target": "json",
+        "kind": "stdlib"
+      },
+      {
+        "file": "inspector.py",
+        "target": "math",
+        "kind": "stdlib"
+      },
+      {
+        "file": "inspector.py",
+        "target": "re",
+        "kind": "stdlib"
+      },
+      {
+        "file": "inspector.py",
+        "target": "sys",
+        "kind": "stdlib"
+      },
+      {
+        "file": "inspector.py",
+        "target": "collections",
+        "kind": "stdlib"
+      },
+      {
+        "file": "inspector.py",
+        "target": "itertools",
+        "kind": "stdlib"
+      }
+    ],
+    "review_required": [],
+    "scope": "static imports reachable from application entry, including explicitly supplied embedded my modules; auxiliary test tools excluded",
+    "stdlib_only_proven": false,
+    "sha256": "c4367fcbe047d93ae65586f0bd83d1aed5eb7bf05447f546209932d122d48063"
+  },
+  "eda:zig": {
+    "version": "application-dependency-inventory-v1",
+    "language": "zig",
+    "entry": "main.zig",
+    "files": {
+      "main.zig": "b2905e4666b0b34031b77e56485251f866a7d88c7ea42b0a19adeed00e068776",
+      "src/main.zig": "b0106c199d85abed86f85a365402a1e859b216bf5fbc2cbd77c39432a966a5d3"
+    },
+    "edges": [
+      {
+        "file": "main.zig",
+        "target": "src/main.zig",
+        "kind": "local"
+      },
+      {
+        "file": "main.zig",
+        "target": "src/main.zig",
+        "kind": "local"
+      },
+      {
+        "file": "src/main.zig",
+        "target": "std",
+        "kind": "stdlib"
+      }
+    ],
+    "review_required": [],
+    "scope": "static imports reachable from application entry, including explicitly supplied embedded my modules; auxiliary test tools excluded",
+    "stdlib_only_proven": false,
+    "sha256": "5b6bd23819020bb377da12fc53de3309720bb8dd61682871ef35cbd93bb86755"
+  },
+  "planner:my": {
+    "version": "application-dependency-inventory-v1",
+    "language": "my",
+    "entry": "main.my",
+    "files": {
+      "main.my": "07a543d5f8d04b265da49802f3905fd4d5a5afb116734e2b962c21f4fe80de86",
+      "@stdlib/std_text.my": "b2524742023440d4c2ce2b3383890b558365f0a309075c2d87a0d16e30a39b09",
+      "@stdlib/std_json.my": "f374551d4660359f660e8331e26c7a363c6e6f503f23ca9a19e4661686f86b5c",
+      "io.my": "318bf703f8fa8e1fe706d7211b226c19ea60f9e885ef06da4279a8970df395e9",
+      "output.my": "9072918f78a7449a42c4bb48565e0c62932f6a34d0449713f5c807b65fd54b7c",
+      "json.my": "c4ff44f1102c4f8406bd79167003fc26c376bf6c1383d2482e631f7323267e99",
+      "@stdlib/std_ascii.my": "969f84e63f030ab794e405c749ce985446f7aba8c81303e0ea4ad54f29b3f466",
+      "planner.my": "c8bea6a405e0ae539f193ed73977c927612c49f3e7415f16cd2bc98e5abc8f1d",
+      "@stdlib/std_math.my": "6b2bd80f071226eced14bfc142f457a8a6c8f554071c909d74cb55f8aa541239",
+      "@stdlib/std_graph.my": "075d0d2d01ddd5646e36b6d0c889113d5fa15e41909920b42c6d82a26a494709",
+      "@stdlib/std_order.my": "429033bdc004a093fa1cbbc33205f24cdf4cc7b686a42ef9b5b1ecd305932b0a",
+      "@stdlib/std_collections.my": "b0d237cb9a00580aa7c105751a960d5cf70c881246a30de756a9e76c55a46623",
+      "schema.my": "e89d70ffba58e933cb456fccb916e033d18847b70fe5b3b2f0ca239e30283d56"
+    },
+    "edges": [
+      {
+        "file": "main.my",
+        "target": "json",
+        "kind": "local"
+      },
+      {
+        "file": "main.my",
+        "target": "schema",
+        "kind": "local"
+      },
+      {
+        "file": "main.my",
+        "target": "planner",
+        "kind": "local"
+      },
+      {
+        "file": "main.my",
+        "target": "output",
+        "kind": "local"
+      },
+      {
+        "file": "main.my",
+        "target": "std_json",
+        "kind": "stdlib"
+      },
+      {
+        "file": "main.my",
+        "target": "std_text",
+        "kind": "stdlib"
+      },
+      {
+        "file": "@stdlib/std_text.my",
+        "target": "io",
+        "kind": "local"
+      },
+      {
+        "file": "@stdlib/std_text.my",
+        "target": "std_json",
+        "kind": "stdlib"
+      },
+      {
+        "file": "io.my",
+        "target": "length",
+        "kind": "host-declaration"
+      },
+      {
+        "file": "io.my",
+        "target": "byte",
+        "kind": "host-declaration"
+      },
+      {
+        "file": "io.my",
+        "target": "put",
+        "kind": "host-declaration"
+      },
+      {
+        "file": "output.my",
+        "target": "json",
+        "kind": "local"
+      },
+      {
+        "file": "json.my",
+        "target": "io",
+        "kind": "local"
+      },
+      {
+        "file": "json.my",
+        "target": "std_json",
+        "kind": "stdlib"
+      },
+      {
+        "file": "json.my",
+        "target": "std_text",
+        "kind": "stdlib"
+      },
+      {
+        "file": "json.my",
+        "target": "std_ascii",
+        "kind": "stdlib"
+      },
+      {
+        "file": "planner.my",
+        "target": "json",
+        "kind": "local"
+      },
+      {
+        "file": "planner.my",
+        "target": "schema",
+        "kind": "local"
+      },
+      {
+        "file": "planner.my",
+        "target": "output",
+        "kind": "local"
+      },
+      {
+        "file": "planner.my",
+        "target": "std_collections",
+        "kind": "stdlib"
+      },
+      {
+        "file": "planner.my",
+        "target": "std_order",
+        "kind": "stdlib"
+      },
+      {
+        "file": "planner.my",
+        "target": "std_json",
+        "kind": "stdlib"
+      },
+      {
+        "file": "planner.my",
+        "target": "std_graph",
+        "kind": "stdlib"
+      },
+      {
+        "file": "planner.my",
+        "target": "std_math",
+        "kind": "stdlib"
+      },
+      {
+        "file": "schema.my",
+        "target": "json",
+        "kind": "local"
+      },
+      {
+        "file": "schema.my",
+        "target": "std_json",
+        "kind": "stdlib"
+      }
+    ],
+    "review_required": [],
+    "scope": "static imports reachable from application entry, including explicitly supplied embedded my modules; auxiliary test tools excluded",
+    "stdlib_only_proven": false,
+    "sha256": "79407beb59c0035bb812ffd2540944b20b2d8d254bbd7de035de736108529440"
+  },
+  "planner:python": {
+    "version": "application-dependency-inventory-v1",
+    "language": "python",
+    "entry": "planner.py",
+    "files": {
+      "planner.py": "f01b3052938a586ee74ecc42a1247b273bbc2c051b0fe4694c0c266e60b03ff8"
+    },
+    "edges": [
+      {
+        "file": "planner.py",
+        "target": "collections",
+        "kind": "stdlib"
+      },
+      {
+        "file": "planner.py",
+        "target": "dataclasses",
+        "kind": "stdlib"
+      },
+      {
+        "file": "planner.py",
+        "target": "heapq",
+        "kind": "stdlib"
+      },
+      {
+        "file": "planner.py",
+        "target": "json",
+        "kind": "stdlib"
+      },
+      {
+        "file": "planner.py",
+        "target": "math",
+        "kind": "stdlib"
+      },
+      {
+        "file": "planner.py",
+        "target": "re",
+        "kind": "stdlib"
+      },
+      {
+        "file": "planner.py",
+        "target": "sys",
+        "kind": "stdlib"
+      }
+    ],
+    "review_required": [],
+    "scope": "static imports reachable from application entry, including explicitly supplied embedded my modules; auxiliary test tools excluded",
+    "stdlib_only_proven": false,
+    "sha256": "a304cf99162051b65a5452f7c508216acfe0947ffba829cae899141b5d515291"
+  },
+  "planner:zig": {
+    "version": "application-dependency-inventory-v1",
+    "language": "zig",
+    "entry": "main.zig",
+    "files": {
+      "main.zig": "b2905e4666b0b34031b77e56485251f866a7d88c7ea42b0a19adeed00e068776",
+      "src/main.zig": "a4cd7a8ac270755d858d8e742d8ff4cd5996e76a809690dbb488afec80219637"
+    },
+    "edges": [
+      {
+        "file": "main.zig",
+        "target": "src/main.zig",
+        "kind": "local"
+      },
+      {
+        "file": "main.zig",
+        "target": "src/main.zig",
+        "kind": "local"
+      },
+      {
+        "file": "src/main.zig",
+        "target": "std",
+        "kind": "stdlib"
+      }
+    ],
+    "review_required": [],
+    "scope": "static imports reachable from application entry, including explicitly supplied embedded my modules; auxiliary test tools excluded",
+    "stdlib_only_proven": false,
+    "sha256": "b4d00575d34fabd098507ccb059eba8fe67b553fa7fcac0df662ad45498a3743"
+  }
+}

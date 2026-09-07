@@ -33,7 +33,8 @@ class TaskPackTests(unittest.TestCase):
                     task_pack.create(pack, task=task, hidden_seed='fixture-private-never-score')
 
     def test_each_feature_pack_rejects_unchanged_v1_behavior(self):
-        for task in ('planner-priority', 'planner-cycle-groups', 'eda-pin-roles', 'eda-rotation'):
+        for task in ('planner-priority', 'planner-cycle-groups', 'eda-pin-roles', 'eda-rotation',
+                     'planner-dependency-lags', 'planner-slack'):
             oracle = planner_oracle if task.startswith('planner-') else eda_oracle
             cases = pilot_cases.build(task, seed='fixture-noop')
             distinguishes = False

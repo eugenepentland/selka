@@ -1,0 +1,17 @@
+test_cycle (test_cli.Contract.test_cycle) ... ok
+test_depth (test_cli.Contract.test_depth) ... ok
+test_empty (test_cli.Contract.test_empty) ... ok
+test_escaped (test_cli.Contract.test_escaped) ... ok
+test_example (test_cli.Contract.test_example) ... ok
+test_invalid (test_cli.Contract.test_invalid) ... ok
+test_limits (test_cli.Contract.test_limits) ... ok
+test_numbers (test_cli.Contract.test_numbers) ... ok
+test_priority (test_cli.Contract.test_priority) ... ok
+test_schema (test_cli.Contract.test_schema) ... ok
+test_source_order_permutations (test_cli.Contract.test_source_order_permutations) ... ok
+test_standard_transport_boundaries (test_cli.Contract.test_standard_transport_boundaries) ... ok
+
+----------------------------------------------------------------------
+Ran 12 tests in 2.452s
+
+OK
