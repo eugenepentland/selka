@@ -1,0 +1,51 @@
+module std_iter;
+export Pairs;
+export pairs;
+export next_pair;
+struct Pairs {
+    size: u64,
+    first: u64,
+    second: u64,
+    done: bool
+}
+fn pairs(size: u64) -> Pairs noalloc {
+    return new Pairs {
+        size: size,
+        first: 0u64,
+        second: 1u64,
+        done: size < 2u64
+    };
+}
+fn ended(state: Pairs) -> Pairs noalloc {
+    return new Pairs {
+        size: state.size,
+        first: state.first,
+        second: state.second,
+        done: true
+    };
+}
+fn next_pair(state: Pairs) -> Pairs noalloc {
+    if state.done {
+        return state;
+    }
+    if state.first >= state.size || state.second >= state.size || state.first >= state.second {
+        return ended(state);
+    }
+    if state.second < state.size - 1u64 {
+        return new Pairs {
+            size: state.size,
+            first: state.first,
+            second: state.second + 1u64,
+            done: false
+        };
+    }
+    if state.first >= state.size - 2u64 {
+        return ended(state);
+    }
+    return new Pairs {
+        size: state.size,
+        first: state.first + 1u64,
+        second: state.first + 2u64,
+        done: false
+    };
+}

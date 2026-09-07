@@ -149,3 +149,10 @@ test "standard text hash and JSON builders compose into a bounded word histogram
 test "owned collection library preserves values across replacement failure and removal" {
     try runLibrary(@embedFile("stdlib/fixtures/owned_collections.my"), 42);
 }
+
+// spec: STANDARD-PARITY-1
+// spec: STANDARD-PARITY-2
+// spec: STANDARD-PARITY-3
+test "application library parity sorting priority queues ASCII classes and pair iteration" {
+    try runLibrary(@embedFile("stdlib/fixtures/library_parity.my"), 42);
+}

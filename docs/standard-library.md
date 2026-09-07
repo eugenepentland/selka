@@ -10,6 +10,7 @@ in use; this document describes the source tree.
 | Bytes and text | `std_bytes`, `std_text`, `std_strings` | Byte comparison/search, UTF-8 validation, decimal integers, escaping, prefix/suffix, ASCII trim, byte-delimited splitting as index ranges, replacement, bounded builders and base 2–36 integer formatting |
 | Formatting | `std_math`, `std_format` | Nominal binary64 arithmetic, bounded decimal parsing and fixed-point formatting |
 | Collections | `std_collections`, `std_map`, `std_set`, `std_borrowed_set`, `std_queue` | Bounded vectors, linear maps/sets, queues, borrowed lookup/mutation, append-many, clear, stable filtering/deduplication, sorting/search |
+| Application primitives | `std_order`, `std_counter`, `std_ascii`, `std_iter`, `std_graph` | Range-key sorting/search and heaps, bounded frequencies, ASCII classes, distinct pairs and directed graph readiness |
 | Owned collections | `std_owned`, `std_owned_map` | Storable owned vectors and linear maps, consuming insertion/replacement, extraction, shrink-only truncation and deterministic cleanup |
 | Hashing | `std_hash`, `std_hash_map`, `std_hash_set`, `std_hash_bytes`, `std_hash_byte_set` | Deterministic hashes, bounded u64-key and inline byte-key tables, deletion/tombstones, replacement and explicit slot iteration |
 | Data interchange | `std_json`, `std_json_view`, `std_json_builder`, `std_encoding` | Typed/document JSON, checked node access, nested JSON construction, endian integers, hex and canonical padded base64 |
@@ -60,3 +61,6 @@ most 256 bytes. Decimal float parsing has documented precision/range limits and
 is not correctly rounded for arbitrary decimal input. Argument parsing receives
 already-separated tokens and does not perform shell parsing. Wall-clock instants
 are not monotonic timers, and the deterministic generator is not cryptographic.
+
+See [application library parity](stdlib-application-parity.md) for ordering,
+counting, character classes, pair iteration and graph contracts.

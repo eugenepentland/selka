@@ -390,3 +390,9 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [SCOPED-DIRECTORY-2] Failed directory snapshot construction releases partial bytes and open directories before returning; allocation failures never publish a live snapshot handle.
 
 - [STANDARD-DIRECTORY-1] Standard metadata and listing APIs decode versioned bounded copied streams into typed kinds, u64 size, entry counts and name spans, validating framing. Opaque backslash names remain enumerable even though strict path APIs will not open them; byte offsets never borrow provider memory.
+
+## Application library parity
+
+- [STANDARD-PARITY-1] std_order provides bounded lexicographic range-key heapsort, binary search, equal-run counts and min-priority heap operations over caller-owned Item slices; invalid sort ranges and full pushes leave storage unchanged; byte-key counters preserve their prior value on full or overflow.
+- [STANDARD-PARITY-2] std_ascii matches explicit ASCII identifier classes and length bounds over integer slices; std_iter visits each distinct index pair once in lexicographic order without allocation.
+- [STANDARD-PARITY-3] std_graph prepares caller-owned indegrees from bounded directed edges, reserves ready vertices, completes each once, and distinguishes finished and cyclically stalled graphs; state and edges must retain their prepared correspondence.

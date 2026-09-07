@@ -2,6 +2,12 @@
 const std = @import("std");
 const Module = struct { path: []const u8, text: []const u8 };
 const modules = [_]Module{
+    .{ .path = "std_counter.my", .text = @embedFile("stdlib/std_counter.my") },
+    .{ .path = "std_graph.my", .text = @embedFile("stdlib/std_graph.my") },
+    .{ .path = "std_order.my", .text = @embedFile("stdlib/std_order.my") },
+    .{ .path = "std_ascii.my", .text = @embedFile("stdlib/std_ascii.my") },
+    .{ .path = "std_iter.my", .text = @embedFile("stdlib/std_iter.my") },
+
     .{ .path = "std_math.my", .text = @embedFile("stdlib/std_math.my") },
     .{ .path = "std_json.my", .text = @embedFile("stdlib/std_json.my") },
     .{ .path = "std_text.my", .text = @embedFile("stdlib/std_text.my") },

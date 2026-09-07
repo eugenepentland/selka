@@ -91,6 +91,11 @@
     "std_fs",
     "std_owned",
     "std_owned_map",
+    "std_order",
+    "std_ascii",
+    "std_iter",
+    "std_graph",
+    "std_counter",
     "scoped-filesystem-metadata-and-listings"
   ],
   "unsupported": [

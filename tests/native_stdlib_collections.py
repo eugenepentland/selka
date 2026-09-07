@@ -20,7 +20,7 @@ def main():
     failures = 0
     with tempfile.TemporaryDirectory(prefix='stdlib-collections-') as temp:
         temp = Path(temp)
-        for fixture in ('collection_borrows', 'hash_collections', 'word_counts', 'owned_collections', 'owned_buffer_mutations'):
+        for fixture in ('collection_borrows', 'hash_collections', 'word_counts', 'owned_collections', 'owned_buffer_mutations', 'library_parity'):
             source = temp / 'main.my'
             text = (root / 'src/stdlib/fixtures' / (fixture + '.my')).read_bytes()
             source.write_bytes(text if text.startswith(b'module ') else b'module main;\n' + text)
