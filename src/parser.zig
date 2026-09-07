@@ -158,6 +158,20 @@ pub const Parser = struct {
         var resources: std.ArrayList(ast.Domain) = .empty;
         var variants: std.ArrayList(ast.Variants) = .empty;
         while (self.current().tag != .eof) {
+            if (self.take(.kw_const)) {
+                const name = (try self.expect(.ident)).span;
+                _ = try self.expect(.colon);
+                const ty = try self.typeName();
+                _ = try self.expect(.equal);
+                const value = try self.expression(0);
+                const end = (try self.expect(.semicolon)).span;
+                const ret = try self.addStatement(.{ .span = .join(name, end), .data = .{ .ret = value } });
+                const statements = try self.arena.allocator().alloc(ast.StatementId, 1);
+                statements[0] = ret;
+                const body = try self.addStatement(.{ .span = .join(name, end), .data = .{ .block = statements } });
+                try functions.append(self.arena.allocator(), .{ .policy = .{ .constant = true, .effect_bound = .{ .allowed = 0, .span = name } }, .signature = .{ .parameters = &.{}, .return_type = ty }, .name = name, .body = body });
+                continue;
+            }
             if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "pool")) {
                 self.cursor.pos += 1;
                 const name = try self.expect(.ident);

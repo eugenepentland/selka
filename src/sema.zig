@@ -71,6 +71,8 @@ const Checker = struct {
         const sink = self.sink;
         self.current_function = @fromBackingInt(i);
         const function = self.syntaxFunction(@fromBackingInt(i));
+        const constant_context: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = self.sink };
+        const constant = if (function.policy.constant) try constant_context.evaluate(@backingInt(self.instance_keys.items[i].declaration)) else null;
         for (self.resolved_nodes.items) |node| self.resolved[node] = null;
         self.resolved_nodes.clearRetainingCapacity();
         self.locals = .empty;
@@ -98,7 +100,16 @@ const Checker = struct {
             self.conversion_fields = try allocator.alloc(bool, source_record.fields.len);
             @memset(self.conversion_fields.?, false);
         }
-        const body = try self.statement(function.body);
+        // Type-check even unevaluated short-circuit operands before replacing the
+        // immutable initializer with its checked literal value.
+        var body = try self.statement(function.body);
+        if (constant) |value| {
+            const node_id: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+            try self.nodes.append(allocator, .{ .span = function.name, .ty = value.typeOf(), .data = if (value == .bool) .{ .boolean = value.bool } else .{ .integer = if (value == .i64) value.i64 else value.integer.value } });
+            const statement_id: typed.StatementId = @fromBackingInt(self.statements.items.len);
+            try self.statements.append(allocator, .{ .span = function.name, .terminates = true, .data = .{ .ret = node_id } });
+            body = .{ .id = statement_id, .terminates = true };
+        }
         if (self.conversion_fields) |seen| {
             const source_record = self.catalog.records[self.locals.items[0].ty.recordIndex()];
             for (seen, source_record.fields) |accounted, field| {
@@ -761,6 +772,15 @@ const Checker = struct {
     }
     fn checkName(self: *Checker, _: ast.Node, name: @FieldType(@FieldType(ast.Node, "data"), "name"), out: *typed.Node) Error!void {
         if (self.active_refs.contains(self.src.text(name))) return self.sink.fail("E_REFERENCE_VALUE", name, "references cannot be copied, stored, returned, or passed to value parameters; use read_ref to copy the referenced value");
+        if (!self.active.contains(self.src.text(name))) {
+            const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = self.sink };
+            if (try constants.lookup(name)) |index| {
+                const value = try constants.evaluate(index);
+                out.ty = value.typeOf();
+                out.data = .{ .call = .{ .function = self.ordinary_ids[index] orelse return error.InternalError, .arguments = &.{} } };
+                return;
+            }
+        }
         const slot = try self.resolve(name);
         if (field_moves.first(self.locals.items[@backingInt(slot)].ownership.partial_fields)) |at| return self.sink.failPartialMove(
             name,
@@ -1632,7 +1652,7 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
     };
     const entry = program.functions[@backingInt(main_declaration)];
     const main = ordinary_ids[@backingInt(main_declaration)] orelse return sink.fail("E_MAIN", entry.name, "main cannot have type parameters");
-    if (entry.policy.host != null) return sink.fail("E_MAIN", entry.name, "main must have a guest body");
+    if (entry.policy.host != null or entry.policy.constant) return sink.fail("E_MAIN", entry.name, "main must have a guest function body");
     if (entry.signature.return_reference != null) return sink.fail("E_MAIN", entry.name, "main must return an i64 value");
     var entry_capabilities: u8 = 0;
     for (entry.signature.parameters) |parameter| {

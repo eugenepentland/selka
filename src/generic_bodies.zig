@@ -278,6 +278,10 @@ const Checker = struct {
         return value;
     }
     fn namedValue(self: *Checker, span: source.Span) Error!Symbolic {
+        if (!self.active.contains(self.src.text(span))) {
+            const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.program, .names = self.module_names, .sink = self.sink };
+            if (try constants.lookup(span)) |index| return .{ .concrete = (try constants.evaluate(index)).typeOf() };
+        }
         const binding = try self.local(span);
         if (binding.reference != null) return self.sink.fail("E_REFERENCE_VALUE", span, "references require read_ref or an explicit reference parameter");
         try self.ownerAccess(binding.*, (try self.transfers(binding.ty)), span);
