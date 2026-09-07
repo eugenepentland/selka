@@ -396,6 +396,7 @@ const Checker = struct {
             try self.supports(try self.expression(range.start), .integer, borrow.owner);
             try self.supports(try self.expression(range.end), .integer, borrow.owner);
         }
+        const slicing = borrow.range != null or borrow.whole_slice;
         const binding = (try self.local(borrow.owner)).*;
         const owner_index = self.active.get(self.src.text(borrow.owner)).?;
         const parent: ?usize = if (binding.reference != null) owner_index else null;
@@ -409,13 +410,13 @@ const Checker = struct {
         if ((try self.transfers(binding.ty)) and !binding.available) return self.sink.failTransfer(diagnostic.owned_consumed, borrow.owner, binding.name, binding.transfer_span);
         if ((try self.properties(binding.ty)).requires_handling) return self.sink.fail(diagnostic.result_borrow, borrow.owner, "result-bearing values must transfer their handling obligation by value");
         if (field_moves.first(binding.fields) != null) return self.sink.fail(diagnostic.result_borrow, borrow.owner, "a partially moved owner cannot be borrowed whole");
-        if (buffer_owner and borrow.range != null) {
+        if (buffer_owner and slicing) {
             if (binding.reference != null and !binding.slice) return self.sink.fail("E_SLICE_TYPE", borrow.owner, "borrow buffer elements directly from the owner in a separate lexical scope");
         }
-        const element = if (borrow.range != null and !binding.slice) try self.sliceType(binding.ty, borrow.owner) else binding.ty;
+        const element = if (slicing and !binding.slice) try self.sliceType(binding.ty, borrow.owner) else binding.ty;
         if ((try self.properties(element)).requires_handling) return self.sink.fail(diagnostic.result_borrow, borrow.owner, "result obligations cannot be exposed through references");
-        if (borrow.range != null or binding.slice) try self.supports(element, .copy, borrow.owner);
-        return self.loanScope(.{ .name = borrow.name, .ty = element, .mutable = false, .reference = borrow.mutable, .slice = borrow.range != null or binding.slice, .root = binding.root orelse owner_index }, parent, borrow.body);
+        if (slicing or binding.slice) try self.supports(element, .copy, borrow.owner);
+        return self.loanScope(.{ .name = borrow.name, .ty = element, .mutable = false, .reference = borrow.mutable, .slice = slicing or binding.slice, .root = binding.root orelse owner_index }, parent, borrow.body);
     }
 
     fn loanScope(self: *Checker, child: Local, parent: ?usize, body: ast.StatementId) Error!bool {

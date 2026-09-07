@@ -529,6 +529,69 @@ pub const Parser = struct {
             .data = .{ .borrow = .{ .owner = owner, .name = left, .mutable = true, .body = body, .split = .{ .right = right, .middle = middle } } },
         });
     }
+    fn borrowClause(self: *Parser, first: Span) diagnostic.Error!ast.Statement {
+        const mutable = self.take(.kw_mut);
+        const owner_position = self.cursor.pos;
+        const owner = try self.expect(.ident);
+        if (self.borrowCallSuffix()) {
+            self.cursor.pos = owner_position;
+            const call = try self.expression(0);
+            _ = try self.expect(.kw_as);
+            const name = try self.expect(.ident);
+            return .{ .span = first, .data = .{ .borrow_call = .{ .call = call, .name = name.span, .mutable = mutable, .body = undefined } } };
+        }
+        var range: ?ast.Range = null;
+        var whole_slice = false;
+        if (self.take(.lbracket)) {
+            if (self.take(.dot_dot)) {
+                whole_slice = true;
+            } else {
+                const start = try self.expression(0);
+                _ = try self.expect(.dot_dot);
+                range = .{ .start = start, .end = try self.expression(0) };
+            }
+            _ = try self.expect(.rbracket);
+        }
+        _ = try self.expect(.kw_as);
+        const name = try self.expect(.ident);
+        return .{ .span = first, .data = .{ .borrow = .{
+            .owner = owner.span,
+            .name = name.span,
+            .mutable = mutable,
+            .body = undefined,
+            .range = range,
+            .whole_slice = whole_slice,
+        } } };
+    }
+    fn borrowStatement(self: *Parser, first: Span) diagnostic.Error!ast.StatementId {
+        var clauses: std.ArrayList(ast.Statement) = .empty;
+        // Charge lowered scopes to the existing nesting bound too: a flat list
+        // must not create unbounded recursion in downstream syntax consumers.
+        const depth = self.cursor.depth;
+        defer self.cursor.depth = depth;
+        var beginning = first;
+        while (true) {
+            if (clauses.items.len != 0) try self.enter();
+            try clauses.append(self.arena.allocator(), try self.borrowClause(beginning));
+            if (!self.take(.comma)) break;
+            beginning = self.current().span;
+        }
+        var body = try self.block();
+        const end = self.syntax.statements.items[@backingInt(body)].span;
+        var i = clauses.items.len;
+        while (i > 0) {
+            i -= 1;
+            var clause = clauses.items[i];
+            clause.span = .join(clause.span, end);
+            switch (clause.data) {
+                .borrow => |*borrow| borrow.body = body,
+                .borrow_call => |*borrow| borrow.body = body,
+                else => unreachable,
+            }
+            body = try self.addStatement(clause);
+        }
+        return body;
+    }
     fn statement(self: *Parser) diagnostic.Error!ast.StatementId {
         try self.enter();
         defer self.cursor.depth -= 1;
@@ -545,40 +608,7 @@ pub const Parser = struct {
             self.cursor.pos += 1;
             return self.splitBorrow(first.span);
         }
-        if (self.take(.kw_borrow)) {
-            const mutable = self.take(.kw_mut);
-            const owner_position = self.cursor.pos;
-            const owner = try self.expect(.ident);
-            if (self.borrowCallSuffix()) {
-                self.cursor.pos = owner_position;
-                const call = try self.expression(0);
-                _ = try self.expect(.kw_as);
-                const name = try self.expect(.ident);
-                const body = try self.block();
-                return self.addStatement(.{ .span = .join(first.span, self.syntax.statements.items[@backingInt(body)].span), .data = .{ .borrow_call = .{ .call = call, .name = name.span, .mutable = mutable, .body = body } } });
-            }
-            var range: ?ast.Range = null;
-            if (self.take(.lbracket)) {
-                const start = try self.expression(0);
-                _ = try self.expect(.dot_dot);
-                const end = try self.expression(0);
-                _ = try self.expect(.rbracket);
-                range = .{ .start = start, .end = end };
-            }
-            _ = try self.expect(.kw_as);
-            const name = try self.expect(.ident);
-            const body = try self.block();
-            return self.addStatement(.{
-                .span = .join(first.span, self.syntax.statements.items[@backingInt(body)].span),
-                .data = .{ .borrow = .{
-                    .owner = owner.span,
-                    .name = name.span,
-                    .mutable = mutable,
-                    .body = body,
-                    .range = range,
-                } },
-            });
-        }
+        if (self.take(.kw_borrow)) return self.borrowStatement(first.span);
         if (self.take(.kw_match)) {
             const value = try self.expression(0);
             _ = try self.expect(.lbrace);

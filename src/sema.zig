@@ -1511,6 +1511,19 @@ const Checker = struct {
         flow.terminates = body.terminates;
         return .{ .borrow = .{ .reference = left, .body = body.id, .split = .{ .right = right, .middle = middle } } };
     }
+    fn wholeBorrowRange(self: *Checker, owner: typed.LocalId, parent: ?typed.ReferenceId, source_type: typed.Type, parent_slice: bool, span: source.Span) Error!typed.Range {
+        const start: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = span, .ty = .u64, .data = .{ .integer = 0 } });
+        const end: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        const data: @FieldType(typed.Node, "data") = if (parent_slice)
+            .{ .len_slice = parent.? }
+        else if (self.catalog.records[source_type.recordIndex()].shape.array) |array|
+            .{ .integer = array.length }
+        else
+            .{ .buffer_operation = .{ .kind = .length, .owner = owner, .arguments = &.{} } };
+        try self.nodes.append(self.allocator, .{ .span = span, .ty = .u64, .data = data });
+        return .{ .start = start, .end = end };
+    }
     fn statementBorrow(self: *Checker, _: ast.Statement, borrow: @FieldType(@FieldType(ast.Statement, "data"), "borrow"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         if (borrow.split != null) return self.statementSplitBorrow(borrow, flow);
         const name = self.src.text(borrow.name);
@@ -1548,16 +1561,18 @@ const Checker = struct {
         for (self.locals.items[@backingInt(owner)].ownership.partial_fields) |moved| if (moved != null) return self.sink.fail(eResultBorrow, borrow.owner, "a partially moved owner cannot be borrowed whole");
         const source_type = if (parent) |id| self.references.items[@backingInt(id)].ty else self.locals.items[@backingInt(owner)].ty;
         const parent_slice = if (parent) |id| self.references.items[@backingInt(id)].mode.slice else false;
-        const owner_subslice = range != null and parent != null and !parent_slice;
+        const slicing = range != null or borrow.whole_slice;
+        const owner_subslice = slicing and parent != null and !parent_slice;
         if (owner_subslice and source_type.isAggregate()) {
             if (self.catalog.records[source_type.recordIndex()].shape.buffer != null)
                 return self.sink.fail("E_SLICE_TYPE", borrow.owner, "borrow buffer elements directly from the owner in a separate lexical scope");
         }
-        const element = if (range != null and !parent_slice) try self.sliceElement(source_type, borrow.owner) else source_type;
-        if (self.requiresHandling(element) or ((range != null or parent_slice) and self.transfers(element)))
+        const element = if (slicing and !parent_slice) try self.sliceElement(source_type, borrow.owner) else source_type;
+        if (self.requiresHandling(element) or ((slicing or parent_slice) and self.transfers(element)))
             return self.sink.fail(eResultBorrow, borrow.owner, "result obligations and owned slice elements cannot be exposed through references");
+        if (borrow.whole_slice) range = try self.wholeBorrowRange(owner, parent, source_type, parent_slice, borrow.owner);
         const id: typed.ReferenceId = @fromBackingInt(self.references.items.len);
-        try self.references.append(self.allocator, .{ .mode = .{ .slice = range != null or parent_slice }, .name = name, .declaration = borrow.name, .owner = owner, .parent = parent, .ty = element, .mutable = borrow.mutable });
+        try self.references.append(self.allocator, .{ .mode = .{ .slice = slicing or parent_slice }, .name = name, .declaration = borrow.name, .owner = owner, .parent = parent, .ty = element, .mutable = borrow.mutable });
         try self.active_refs.put(self.allocator, name, id);
         defer _ = self.active_refs.remove(name);
         const body = try self.statement(borrow.body);
