@@ -240,3 +240,11 @@ sessions; editing guest files requires no Zig rebuild or language Guardian run.
 - [LITERAL-SLICE-3] Literal-backed call references release their backing before the next call, including loops, allocation failures and frame unwinding.
 - [STANDARD-TEXT-1] The raw-byte text library emits byte strings and decimal signed integers including i64 minimum and maximum without intermediate signed overflow.
 - [PLAIN-JSON-5] Plain document parsing works in generic bodies with a concrete document result, rejects non-document results, and revalidates its decode-only operation at the bytecode boundary.
+
+## Guest application test tool
+
+The `scripts/test_project.py` runner discovers checked exported `test_` functions,
+invokes them with schema-pinned typed JSON, and compares structured expectations.
+It distinguishes skips, empty selections, traps, assertion failures and setup
+failures. It grants no host capabilities. Source/compiler changes invalidate
+results. See `docs/experiments/guest-tests.md` and `tests/guest_tests.py`.
