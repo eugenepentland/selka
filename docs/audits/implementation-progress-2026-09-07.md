@@ -1,32 +1,41 @@
 # Feature audit implementation progress
 
-Authorized implementation baseline: `1db5520` (all pre-existing updates committed).
-Work proceeds in independent worktrees; integration uses normal Guardian gates.
-A staged implementation does not mark its larger audit item complete.
+Authorized baseline: `1db5520` (all pre-existing updates committed). Implementations
+are developed in independent worktrees and integrated through normal Guardian gates.
+This table separates delivered scope from conditional extensions and remaining work.
+The original audit remains a historical baseline, not a current feature inventory.
 
-| Item | State | Evidence / remaining work |
+| Item | Delivered scope | Remaining work / limits |
 | --- | --- | --- |
-| F01 current reference | In progress | Current reference and installed feature report; acceptance running |
-| F02 diagnostics | Agent implementing | Safe independent function recovery |
-| F03 generic containers | Agent implementing | Generic buffers/pools and collection library |
-| F04 owned borrowing | Pending | Static/runtime ownership changes required |
-| F05 text/JSON | Agent implementing | Typed accessors, text helpers and writer |
-| F06 standard errors | Agent implementing | Reusable result/option and error adapters |
-| F07 value/control syntax | Pending | Unit/constants/loop exits then iteration/match/aliases |
-| F08 bulk I/O | Queued | Copied blocks and configurable budgets |
-| F09 scoped providers | Pending | Directory/endpoint grants and integration |
-| F10 guest tests | First stage committed | c89ad5a: discovery/assertions/filtering/inputs; custom provider injection remains |
-| F11 safety campaigns | Pending | Reproducible feature interaction campaigns |
-| F12 split borrows | Pending | Checked partition static/runtime protocol |
-| F13 lifetimes | Pending | Return provenance before stored views |
-| F14 generic contracts | Agent implementing subset | Container ownership contracts; length parameters remain |
-| F15 callbacks | Pending | Effects and runtime indirect calls |
-| F16 numeric extensions | Pending | Integer extensions, then specified float behavior |
-| F17 packages | Pending | Local locked roots and nominal identity |
-| F18 allocator budgets | Pending | Accounting and attenuated child quotas |
-| F19 agent experiments | Pending | Holes/explanations/replay/contracts and outcome measurement |
-| F20 semantic reuse | Pending | Dependency-correct semantic cache and fresh equivalence |
-| F21 native coverage | Pending | Current-language parity through C backend |
-| F22 concurrency | Pending | Bounded isolated execution design and implementation |
-| F23 compile-time source | Pending | Bounded explicit source evaluation |
-| F24 maintenance trials | Pending | Repeated independent measured tasks |
+| F01 current reference | Current reference and installed feature/compiler identity | Refresh acceptance receipts after final integration |
+| F02 diagnostics | Independent ordinary/generic function errors with safe recovery | Invalid graph prerequisites remain fail-fast |
+| F03 containers | Generic copyable buffers/pools; bounded map/set/queue and algorithms | Owned elements intentionally deferred |
+| F04 owned borrowing | Shared/exclusive whole owners and owner-bearing record inspection | Result obligations cannot be discharged by borrowing |
+| F05 text/JSON | Typed checked accessors, byte/UTF-8 helpers, bounded escaped builder | No universal Unicode string abstraction |
+| F06 standard errors | Option/Result conventions, named categories, owned error context | Generic owned payload constraints remain bounded |
+| F07 value/control syntax | Unit, constants, break/continue, range-for, value matches, aliases | Aliases nonparameterized; iteration ascending half-open |
+| F08 bulk I/O | Copied blocks, partial-write semantics, configurable budgets and benchmark | Borrowed host ABI separate |
+| F09 scoped providers | Directory/endpoint providers and CLI grants | Synchronous numeric TCP; no TLS/DNS/async |
+| F10 guest tests | Discovery, structured expected values, filters/skips, locations | Custom deterministic provider injection remains |
+| F11 safety campaigns | Retained seeded Debug/ReleaseFast generated/mutated campaigns | Ongoing assurance; broaden host/JSON interactions |
+| F12 split borrows | Checked nested/empty disjoint partitions, suspended parents, VM/native cleanup | No arbitrary overlap theorem proving |
+| F13 lifetimes | Direct and selected-field immutable return provenance | Stored views/multiple-origin lifetimes remain conditional |
+| F14 generic contracts | Composite fields/operations and owner-reference parameters | Const lengths being implemented |
+| F15 callbacks | Design and implementation active | Noncapturing typed guest callbacks; closures deferred |
+| F16 numerics | All-width bitwise/shifts/wrapping/saturation; nominal binary64 math | Named F64 operations; no primitive decimal float syntax |
+| F17 packages | Offline local locked roots, source hashes and nominal namespaces | No registry/version solver |
+| F18 memory budgets | Nested byte limits; logical capacity, backing and bookkeeping reports | Child budget API is host-facing; no source quota syntax |
+| F19 agent tools | Typed holes, bounded VM traces, in-memory host replay, named sampled laws | Matched outcome measurement pending; no proof claims |
+| F20 semantic reuse | Agent implementing function-body reuse with conservative dependencies | Fresh equivalence and edit latency evidence pending |
+| F21 native coverage | Host ABI and ordinary/typed/domain JSON through existing C backend | Combined latest native acceptance pending |
+| F22 concurrency | Bounded isolated process workers, copied typed messages, cancellation/join | Host-facing API; no guest shared-memory threads |
+| F23 source evaluation | Bounded scalar source functions in constants; fixed-width semantics | No aggregate generation or unrestricted macros |
+| F24 maintenance trials | Previous three exploratory blocks/nine sessions preserved | New matched owner/generic maintenance trials pending |
+
+Integration evidence so far: the earlier combined core run passed 896 tests;
+subsequent changes have focused Debug/optimized/native and allocation-failure checks.
+Every integrated commit passes Guardian's 88 checks. A later broad acceptance run
+found a reserved `split` compatibility regression (fixed with contextual syntax),
+obsolete native rejection expectations, and scheduler timing failures under load.
+A fresh full pass is still required; historical/partial runs do not constitute it.
+No comparative agent productivity advantage has been established.

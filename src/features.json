@@ -1,7 +1,7 @@
 {
   "language_version": "0.1.0",
   "primary_backend": "vm",
-  "native_backend": "partial-c",
+  "native_backend": "c-with-host-and-json-support",
   "implemented": [
     "fixed-width-integers",
     "std_math-binary64-domain",
@@ -40,27 +40,47 @@
     "structured-loop-exits",
     "integer-range-iteration",
     "value-producing-matches",
-    "transparent-type-aliases"
+    "transparent-type-aliases",
+    "whole-owned-container-references",
+    "checked-disjoint-split-borrows",
+    "selected-field-return-provenance",
+    "composite-structural-signatures",
+    "std_bytes",
+    "std_json_view",
+    "std_result",
+    "std_map",
+    "std_set",
+    "std_queue",
+    "scoped-directory-and-endpoint-providers",
+    "local-locked-packages",
+    "nested-runtime-byte-budgets",
+    "memory-accounting-categories",
+    "typed-holes",
+    "bounded-vm-trace",
+    "in-memory-host-replay",
+    "named-executable-laws",
+    "isolated-process-workers",
+    "bounded-scalar-source-evaluation"
   ],
   "unsupported": [
-    "floats",
+    "builtin-f64-syntax",
     "function-values",
     "stored-reference-fields",
-    "guest-threads",
-    "general-comptime",
-    "disjoint-split-borrows"
+    "guest-shared-memory-threads",
+    "unrestricted-comptime",
+    "capturing-closures"
   ],
-  "native_exclusions": [
-    "host-declarations",
-    "source-json"
-  ],
+  "native_exclusions": [],
   "limits": {
-    "borrow_conflicts": "whole-allocation",
+    "borrow_conflicts": "whole-allocation-except-explicit-checked-split",
     "generic_calls": "explicit-type-arguments",
     "container_elements": "copyable-no-owned-or-must-handle",
     "noalloc": "guest-backing-operations-only",
     "type_aliases": "non-parameterized",
-    "constants": "bounded-scalar-source-functions-with-acyclic-constant-dependencies",
-    "iteration": "ascending-half-open-integer-ranges"
+    "constants": "bounded-scalar-expressions-and-nongeneric-source-functions",
+    "iteration": "ascending-half-open-integer-ranges",
+    "native_runtime": "JSON support linked through pinned Zig object; host effects require explicit ABI registration",
+    "workers": "host-facing copied typed messages; no guest spawn syntax",
+    "floating_point": "std_math::F64 nominal domain with named operations and bit codecs"
   }
 }
