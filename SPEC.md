@@ -291,3 +291,5 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [SCOPED-PROVIDERS-3] The packaged synchronous TCP adapter connects only after an exact endpoint grant match, transfers bounded byte chunks with reported progress, and closes the connection on completion or cleanup.
 
 - [SCOPED-PROVIDERS-4] mylang-io provisions directory and numeric endpoint capabilities only with explicit --allow-dir=PATH and --allow-endpoint=IP:PORT arguments; directories default to read-only and --allow-write requires a directory grant. Unknown, duplicate directory, invalid endpoint and unscoped write grants reject before invocation.
+
+- [LOOP-EXIT-1] break and continue are terminating statements targeting the nearest enclosing while loop. They reject outside loops, retain must-handle obligations, conservatively preserve ownership of outer locals, and clean up exited borrows, owned values and nested arenas before jumping. Generic bodies enforce the same contracts. Loops remain conservatively fallthrough-capable for return checking.

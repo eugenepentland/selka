@@ -404,6 +404,7 @@ const CanonicalWriter = struct {
                 try work.append(allocator, .{ .statement = branch.then_body });
                 try work.append(allocator, .{ .expression = branch.condition });
             },
+            .loop_exit => |exit| writer.print("continue {}\n", .{exit.continuing}) catch return error.OutOfMemory,
             .loop => |loop| {
                 try work.append(allocator, .{ .statement = loop.body });
                 try work.append(allocator, .{ .expression = loop.condition });

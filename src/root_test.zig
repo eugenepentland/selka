@@ -101,4 +101,5 @@ test {
     _ = @import("json_document_test.zig");
     _ = @import("standard_library_test.zig");
     _ = @import("unit_convention_test.zig");
+    _ = @import("loop_exit_test.zig");
 }

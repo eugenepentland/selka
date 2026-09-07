@@ -76,6 +76,7 @@ const Checker = struct {
     work: usize = 0,
     expression_depth: usize = 0,
     temporary_results: usize = 0,
+    loop_pending: ?[]const Pending = null,
     fn checkFunction(self: *Checker, function: ast.Function) Error!void {
         const sink = self.sink;
         if (function.policy.conversion) return sink.fail(eUnsupported, function.name, "generic conversions still need abstract checking");
@@ -1140,11 +1141,20 @@ const Checker = struct {
                 if (ty_value == .parameter) try self.supports(ty_value, .copy, statement_value.span);
             },
             .branch => |branch| return self.branchValue(branch, statement_value.span),
+            .loop_exit => {
+                const before = self.loop_pending orelse return self.sink.fail("E_LOOP_EXIT", statement_value.span, "break and continue require an enclosing loop");
+                try self.requireHandled(before.len, statement_value.span);
+                try self.samePending(before, statement_value.span, diagnostic.result_loop);
+                return true;
+            },
             .loop => |loop| {
                 const before = try self.pendingState(self.locals.items.len);
                 defer self.allocator.free(before);
                 try self.same(try self.expression(loop.condition), .{ .concrete = .bool }, statement_value.span);
                 try self.samePending(before, statement_value.span, diagnostic.result_loop);
+                const previous = self.loop_pending;
+                self.loop_pending = before;
+                defer self.loop_pending = previous;
                 if (!try self.statement(loop.body)) try self.samePending(before, statement_value.span, diagnostic.result_loop);
                 self.restorePending(before);
             },

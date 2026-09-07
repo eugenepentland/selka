@@ -104,7 +104,7 @@ pub const Walker = struct {
                     }
                 },
                 .ret, .discard, .acknowledge => |value| try self.expr(value),
-                .ret_ref => {},
+                .ret_ref, .loop_exit => {},
                 .initialize, .assign => |s| try self.expr(s.value),
                 .borrow_call => |b| {
                     try self.stmt(b.body);

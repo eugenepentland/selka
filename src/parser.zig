@@ -569,6 +569,10 @@ pub const Parser = struct {
                 self.cursor.pos += 1;
                 break :discard .{ .discard = try self.expression(0) };
             },
+            .kw_break, .kw_continue => exit: {
+                self.cursor.pos += 1;
+                break :exit .{ .loop_exit = first.tag == .kw_continue };
+            },
             .kw_return => ret: {
                 self.cursor.pos += 1;
                 break :ret .{ .ret = try self.expression(0) };

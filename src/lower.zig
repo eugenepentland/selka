@@ -23,6 +23,7 @@ const Fixup = struct { instruction: usize, label: Label, arm: ?usize = null, pro
 const Emitter = struct {
     allocator: std.mem.Allocator,
     program: typed.Program,
+    loops: std.AutoHashMapUnmanaged(usize, struct { start: Label, end: Label }) = .empty,
     code: std.ArrayList(bc.Instruction) = .empty,
     work: std.ArrayList(Work) = .empty,
     labels: std.ArrayList(?usize) = .empty,
@@ -156,9 +157,17 @@ const Emitter = struct {
                 try self.push(.{ .jump = .{ .target = otherwise, .conditional = true, .span = self.program.nodes[@backingInt(branch.condition)].span } });
                 try self.push(.{ .expression = branch.condition });
             },
+            .loop_exit => |exit| {
+                const target = self.loops.get(exit.target) orelse return error.InternalError;
+                try self.push(.{ .jump = .{ .target = if (exit.continuing) target.start else target.end, .span = stmt.span } });
+                for (exit.regions) |slot| try self.instruction(stmt.span, .{ .end_region = slot });
+                for (stmt.owned_cleanup) |slot| try self.instruction(stmt.span, .{ .drop_local = slot });
+                for (stmt.cleanup) |reference| try self.instruction(stmt.span, .{ .end_borrow = reference });
+            },
             .loop => |loop| {
                 const start = try self.label();
                 const end = try self.label();
+                try self.loops.put(self.allocator, loop.id, .{ .start = start, .end = end });
                 try self.push(.{ .mark = end });
                 if (!self.program.statements[@backingInt(loop.body)].terminates)
                     try self.push(.{ .jump = .{ .target = start, .span = stmt.span } });
@@ -410,6 +419,7 @@ pub fn lower(allocator: std.mem.Allocator, program: typed.Program) LowerError!bc
     const functions = try allocator.alloc(bc.Function, program.functions.len);
     for (program.functions, functions) |function, *out| {
         var emitter: Emitter = .{ .allocator = allocator, .program = program };
+        defer emitter.loops.deinit(allocator);
         out.* = .{
             .policy = .{
                 .host = function.policy.host,

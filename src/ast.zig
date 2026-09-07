@@ -63,6 +63,7 @@ pub const Statement = struct {
         arena_scope: struct { parent: NodeId, name: Span, body: StatementId },
         block: []const StatementId,
         ret: NodeId,
+        loop_exit: bool,
         borrow_call: struct { call: NodeId, name: Span, mutable: bool, body: StatementId },
         borrow: struct { owner: Span, name: Span, mutable: bool, body: StatementId, range: ?Range = null },
         write_slice: struct { name: Span, index: NodeId, value: NodeId },

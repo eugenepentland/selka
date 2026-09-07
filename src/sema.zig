@@ -27,6 +27,7 @@ const records = @import("records.zig");
 const Error = diagnostic.Error;
 const instances = @import("generic_instances.zig");
 const Names = @import("module_names.zig").Names;
+const LoopScope = struct { id: usize, before: []const Pending, references: usize, arena_depth: usize };
 const Pending = struct { available: bool, fields: field_moves.State, transfer_span: ?source.Span };
 const Work = struct { id: ast.NodeId, emit: bool = false, checkpoint: bool = false, verify: ?[]const Pending = null };
 const CheckedStatement = struct { id: typed.StatementId, terminates: bool };
@@ -54,6 +55,7 @@ const Checker = struct {
     ordinary_ids: []?typed.FunctionId,
     ordinary_count: usize = 0,
     current_function: ?typed.FunctionId = null,
+    loops: struct { active: std.ArrayList(LoopScope) = .empty, next: usize = 0 } = .{},
     return_type: typed.Type = .i64,
     arena_depth: usize = 0,
     catalog: records.Catalog,
@@ -1376,10 +1378,35 @@ const Checker = struct {
         const condition = try self.expression(loop.condition);
         try self.require(self.nodes.items[@backingInt(condition)].ty, .bool, self.syntax.nodes.items[@backingInt(loop.condition)].span);
         try self.samePending(before, stmt.span, eResultLoop);
+        const loop_id = self.loops.next;
+        self.loops.next += 1;
+        try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .references = self.references.items.len, .arena_depth = self.arena_depth });
+        defer _ = self.loops.active.pop();
         const body = try self.statement(loop.body);
         if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
         self.restorePending(before);
-        return .{ .loop = .{ .condition = condition, .body = body.id } };
+        return .{ .loop = .{ .id = loop_id, .condition = condition, .body = body.id } };
+    }
+    fn statementLoopExit(self: *Checker, stmt: ast.Statement, continuing: bool, flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
+        if (self.loops.active.items.len == 0) return self.sink.fail("E_LOOP_EXIT", stmt.span, "break and continue require an enclosing loop");
+        const loop = self.loops.active.items[self.loops.active.items.len - 1];
+        try self.requireHandled(loop.before.len, stmt.span);
+        try self.samePending(loop.before, stmt.span, eResultLoop);
+        var owned: std.ArrayList(typed.LocalId) = .empty;
+        var regions: std.ArrayList(typed.LocalId) = .empty;
+        var refs: std.ArrayList(typed.ReferenceId) = .empty;
+        for (self.locals.items[loop.before.len..], loop.before.len..) |local, index| {
+            if (typed.moveOnly(local.ty, self.catalog.records)) try owned.append(self.allocator, @fromBackingInt(index));
+            if (local.ty == .allocator and local.ownership.arena_depth > loop.arena_depth and self.active.get(local.name) == @as(typed.LocalId, @fromBackingInt(index)))
+                try regions.append(self.allocator, @fromBackingInt(index));
+        }
+        for (self.references.items[loop.references..], loop.references..) |ref, index| {
+            if (self.active_refs.get(ref.name) == @as(typed.ReferenceId, @fromBackingInt(index))) try refs.append(self.allocator, @fromBackingInt(index));
+        }
+        flow.terminates = true;
+        flow.owned_cleanup = try owned.toOwnedSlice(self.allocator);
+        flow.cleanup = try refs.toOwnedSlice(self.allocator);
+        return .{ .loop_exit = .{ .target = loop.id, .continuing = continuing, .regions = try regions.toOwnedSlice(self.allocator) } };
     }
     fn statementRet(self: *Checker, stmt: ast.Statement, expr: @FieldType(@FieldType(ast.Statement, "data"), "ret"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         var value: ?typed.NodeId = null;
@@ -1526,6 +1553,7 @@ const Checker = struct {
             .branch => |branch| try self.statementBranch(stmt, branch, &flow),
             .loop => |loop| try self.statementLoop(stmt, loop, &flow),
             .ret => |expr| try self.statementRet(stmt, expr, &flow),
+            .loop_exit => |continuing| try self.statementLoopExit(stmt, continuing, &flow),
             .binding => |b| try self.statementBinding(stmt, b, &flow),
             .assignment => |a| try self.statementAssignment(stmt, a, &flow),
         };
