@@ -6,6 +6,7 @@ from pathlib import Path
 import random
 import shutil
 import sys
+import time
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
@@ -21,7 +22,10 @@ BUDGET = {'tool_invocations': 20, 'edited_submissions': 5, 'wall_seconds': 900}
 
 def authoring_receipt():
     files = source_files(HERE, max_files=64, max_bytes=2 * 1024 * 1024)
-    return inventory({name: data for name, data in files.items() if '__pycache__' not in name.split('/')})
+    files = {name: data for name, data in files.items() if '__pycache__' not in name.split('/')}
+    for name in ('storage.py', 'isolation.py', 'isolation_bootstrap.py', 'isolation_launcher.py', 'runtime_policy.py'):
+        files['_shared/' + name] = (ROOT / 'experiments/application_comparison' / name).read_bytes()
+    return inventory(files)
 
 
 def source_receipt(directory):
@@ -52,13 +56,22 @@ def prepare(directory, compiler, stage, participant, model, kind, previous=None)
     public = directory / 'public'
     public.mkdir()
     start = snapshot(baseline, public / 'work')
-    for name in ('check.py', 'cases.json'):
-        shutil.copyfile(HERE / 'public' / name, public / name)
+    checker = (HERE / 'public/check.py').read_text().replace('STAGE = 1', 'STAGE = ' + str(stage))
+    checker = checker.replace('EXTRA_ARGUMENT = False', 'EXTRA_ARGUMENT = ' + str(stage >= 2))
+    if stage == 1:
+        checker = checker.replace("    if extra_argument:\n        arguments += f\",{case['ceiling']}\"\n", '')
+    (public / 'check.py').write_text(checker)
+    public_cases = read_json(HERE / 'public/cases.json')
+    for case in public_cases:
+        case['expected'] = oracle_fields(stage, case)
+        if stage == 1:
+            del case['ceiling']
+    write_json(public / 'cases.json', public_cases)
     contract = (HERE / 'public/contract.md').read_text()
     common = contract.split('Stage 1 —')[0]
     brief = 'Stage ' + str(stage) + ' —' + contract.split('Stage ' + str(stage) + ' —')[1].split('\nStage ')[0]
     brief = brief.split('\nYour coordinator')[0]
-    (public / 'TASK.md').write_text(common + brief + '\n\nCheck: python3 check.py --compiler COMPILER --stage ' + str(stage) + '\n')
+    (public / 'TASK.md').write_text(common + brief + '\n\nRun every command through the coordinator gateway. Use its check operation for public cases.\n')
     fixed = {name: (public / name).read_bytes() for name in ('check.py', 'cases.json', 'TASK.md')}
     authoring = authoring_receipt()
     setup = {'version': 'maintenance-sequence-v1', 'stage': stage, 'participant': participant,
@@ -70,7 +83,7 @@ def prepare(directory, compiler, stage, participant, model, kind, previous=None)
     return setup
 
 
-def seal(directory, reason, transcript):
+def seal(directory, reason, transcript=None):
     if (directory / 'seal.json').exists():
         raise ValueError('submission already sealed')
     setup = read_json(directory / 'setup.json')
@@ -78,11 +91,25 @@ def seal(directory, reason, transcript):
     fixed = {name: (public / name).read_bytes() for name in setup['public_fixed']}
     if inventory(fixed) != setup['public_fixed']:
         raise ValueError('public instructions or tests changed')
-    source_receipt(public / 'work')
+    current = source_receipt(public / 'work')
+    metrics = None
+    if setup['kind'] == 'agent':
+        state = read_json(directory / 'gateway.json')
+        if state['pending'] is not None or not state['has_check'] or current != state['last_checked']:
+            raise ValueError('agent sealing requires an intact last gateway-checked submission')
+        transcript = directory / 'gateway.jsonl'
+        metrics = {'tool_invocations': state['requests'], 'executed_commands': state['commands'], 'edited_submissions': state['edited_checks'],
+                   'model_tokens': None, 'scope': 'gateway-observed commands only',
+                   'wall_seconds_at_seal': time.time() - state['started_unix'],
+                   'command_seconds': sum(read_json(directory / 'commands' / f'{i:03}' / 'result.json')['duration_seconds']
+                                          for i in range(1, state['commands'] + 1))}
+    if transcript is None:
+        raise ValueError('fixture transcript required')
     captured = snapshot(public / 'work', directory / 'sealed')
     shutil.copyfile(transcript, directory / 'transcript.jsonl')
     result = {'reason': reason, 'source': captured, 'transcript': path_identity(directory / 'transcript.jsonl'),
-              'budget_review': 'coordinator-required', 'structure_review': 'coordinator-required'}
+              'gateway_metrics': metrics, 'budget_review': 'gateway-enforced; review bypasses' if metrics else 'fixture',
+              'structure_review': 'coordinator-required'}
     write_json(directory / 'seal.json', result)
     return result
 
@@ -100,7 +127,7 @@ def hidden_cases(seed):
     return cases
 
 
-def oracle(stage, case):
+def oracle_fields(stage, case):
     # Independent scalar reference: does not call public expected() or guest code.
     count, amount = 0, 0
     for value in case['input']:
@@ -111,8 +138,8 @@ def oracle(stage, case):
             value = case['ceiling']
         amount += value
     if stage == 3:
-        return amount * 100 + count * 10 + (4 - count)
-    return amount * 100 + count
+        return {'report': amount * 100 + count * 10 + (4 - count), 'net': amount, 'accepted': count, 'rejected': 4 - count}
+    return {'report': amount * 100 + count, 'total': amount, 'count': count}
 
 
 def grade(directory, seed):
@@ -127,16 +154,17 @@ def grade(directory, seed):
         raise ValueError('compiler changed since preparation')
     cases, outcomes = hidden_cases(seed), []
     for index, case in enumerate(cases):
-        for direct in (False, True):
-            result = checks.observe(compiler, directory / 'sealed', setup['stage'], case, direct)
-            expected = str(oracle(setup['stage'], case)) + '\n'
-            outcomes.append({'case': index, 'direct': direct, 'expected': expected,
+        for field, value in oracle_fields(setup['stage'], case).items():
+            result = checks.observe(compiler, directory / 'sealed', setup['stage'] >= 2, case, None if field == 'report' else field)
+            expected = str(value) + '\n'
+            outcomes.append({'case': index, 'field': field, 'expected': expected,
                              'passed': result['returncode'] == 0 and result['stdout'] == expected, **result})
     verify_snapshot(directory / 'sealed', sealed['source'])
     report = {'version': 'maintenance-grade-v1', 'kind': setup['kind'], 'stage': setup['stage'],
               'source': sealed['source'], 'private_seed': seed, 'cases_sha256': digest(cases),
               'behavior_passed': all(item['passed'] for item in outcomes), 'outcomes': outcomes,
-              'budget_review': 'coordinator-required', 'structure_review': 'coordinator-required'}
+              'gateway_metrics': sealed.get('gateway_metrics'),
+              'budget_review': sealed['budget_review'], 'structure_review': 'coordinator-required'}
     write_json(directory / 'grade.json', report)
     return report
 
@@ -162,8 +190,8 @@ def main():
                          args.model, args.kind, args.previous)
         print(json.dumps({'stage': result['stage'], 'status': result['status']}))
     elif args.command == 'seal':
-        if not args.reason or not args.transcript:
-            parser.error('seal requires reason and transcript')
+        if not args.reason:
+            parser.error('seal requires reason (fixtures also require transcript)')
         result = seal(args.directory, args.reason, args.transcript)
         print(json.dumps({'source': result['source'], 'reason': result['reason']}))
     else:

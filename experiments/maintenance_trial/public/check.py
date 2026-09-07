@@ -5,17 +5,18 @@ from pathlib import Path
 import subprocess
 import tempfile
 
+STAGE = 1
+EXTRA_ARGUMENT = False
 FILES = ('ledger.my', 'model.my', 'report.my')
 
 
-def observe(compiler, directory, stage, case, direct=False):
+def observe(compiler, directory, extra_argument, case, field=None):
     values = ','.join(str(n) for n in case['input'])
     arguments = f"heap,new [4]i64[{values}],{case['floor']}"
-    if stage >= 2:
+    if extra_argument:
         arguments += f",{case['ceiling']}"
-    if direct:
-        fields = ('reply.total*100+cast<i64>(reply.count)' if stage < 3 else
-                  'reply.net*100+cast<i64>(reply.accepted)*10+cast<i64>(reply.rejected)')
+    if field:
+        fields = 'cast<i64>(reply.' + field + ')'
         body = ('match ledger::summarize(' + arguments + ') {' +
                 'model::Answer.ok(reply)=>{return ' + fields + ';},' +
                 'model::Answer.err(code)=>{return -9000000+code;}}')
@@ -38,26 +39,21 @@ def observe(compiler, directory, stage, case, direct=False):
                 'stderr': result.stderr.decode(errors='replace')}
 
 
-def expected(stage, case):
-    accepted = [n for n in case['input'] if n >= case['floor']]
-    total = sum(accepted if stage == 1 else [min(n, case['ceiling']) for n in accepted])
-    count = len(accepted)
-    return total * 100 + (count if stage < 3 else count * 10 + 4 - count)
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', type=Path, required=True)
     parser.add_argument('--source', type=Path, default=Path(__file__).parent / 'work')
-    parser.add_argument('--stage', type=int, choices=(1, 2, 3), required=True)
+    parser.add_argument('--stage', type=int, default=STAGE)
     args = parser.parse_args()
+    if args.stage != STAGE:
+        parser.error('checker belongs to a different stage')
     cases = json.loads(Path(__file__).with_name('cases.json').read_text())
     results = []
     for index, case in enumerate(cases):
-        for direct in (False, True):
-            actual = observe(args.compiler.resolve(), args.source.resolve(), args.stage, case, direct)
-            wanted = str(expected(args.stage, case)) + '\n'
-            results.append({'case': index, 'direct': direct, 'expected': wanted,
+        for field, expected in case['expected'].items():
+            actual = observe(args.compiler.resolve(), args.source.resolve(), EXTRA_ARGUMENT, case, None if field == 'report' else field)
+            wanted = str(expected) + '\n'
+            results.append({'case': index, 'field': field, 'expected': wanted,
                             'passed': actual['returncode'] == 0 and actual['stdout'] == wanted, **actual})
     print(json.dumps({'stage': args.stage, 'checks': results}))
     raise SystemExit(0 if all(item['passed'] for item in results) else 1)

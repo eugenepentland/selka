@@ -46,13 +46,18 @@ def main():
             prepare(directory, args.compiler.resolve(), stage, 'fixture-one', 'not-an-agent', 'fixture', previous)
             work = directory / 'public/work'
             if stage == 1:
-                actual = checks.observe(args.compiler.resolve(), work, stage,
+                actual = checks.observe(args.compiler.resolve(), work, stage >= 2,
                                         {'input': [1, 2, 3, 4], 'floor': 0, 'ceiling': 3})
                 assert actual['stdout'] == '603\n' and actual['returncode'] == 0
             task = (directory / 'public/TASK.md').read_text()
             assert ('Stage ' + str(stage) + ' —') in task
             if stage < 3:
                 assert ('Stage ' + str(stage + 1) + ' —') not in task
+            if stage == 1:
+                assert 'ceiling' not in (directory / 'public/check.py').read_text()
+                assert 'ceiling' not in (directory / 'public/cases.json').read_text()
+            if stage < 3:
+                assert '"rejected"' not in (directory / 'public/cases.json').read_text()
             repair(work, stage)
             seal(directory, 'completed', transcript)
             frozen = source_receipt(directory / 'sealed')
@@ -60,7 +65,7 @@ def main():
             (work / 'ledger.my').write_text('broken after sealing')
             result = grade(directory, 'fixture-only-never-score-this-seed')
             assert result['kind'] == 'fixture' and result['behavior_passed'], result
-            assert len(result['outcomes']) == 96
+            assert len(result['outcomes']) == (192 if stage == 3 else 144)
             assert source_receipt(directory / 'sealed') == frozen
             try:
                 grade(directory, 'another-seed')
@@ -68,6 +73,23 @@ def main():
                 pass
             else:
                 raise AssertionError('regrading must fail')
+            if stage in (1, 3):
+                adversarial = temporary / ('compensating-' + str(stage))
+                if stage == 1:
+                    prepare(adversarial, args.compiler.resolve(), stage, 'fixture-one', 'not-an-agent', 'fixture')
+                    repair(adversarial / 'public/work', 1)
+                    replace(adversarial / 'public/work/ledger.my', 'total: total, count: count',
+                            'total: total - 1, count: count + 100u64')
+                else:
+                    prepare(adversarial, args.compiler.resolve(), stage, 'fixture-one', 'not-an-agent', 'fixture', temporary / '2')
+                    repair(adversarial / 'public/work', 3)
+                    replace(adversarial / 'public/work/ledger.my', 'net: total, accepted: count, rejected: 4u64 - count',
+                            'net: total - 1, accepted: count, rejected: 104u64 - count')
+                seal(adversarial, 'completed', transcript)
+                rejected = grade(adversarial, 'fixture-only-never-score-this-seed')
+                assert not rejected['behavior_passed']
+                assert all(row['passed'] for row in rejected['outcomes'] if row['field'] == 'report')
+                assert any(not row['passed'] for row in rejected['outcomes'] if row['field'] != 'report')
             previous = directory
         wrong = temporary / 'wrong-participant'
         try:
@@ -76,7 +98,7 @@ def main():
             pass
         else:
             raise AssertionError('cross-participant continuation must fail')
-        print('Maintenance fixtures: seeded failure, three passing stages, 288 heldout checks, sealed isolation, continuation identity and regrade rejection passed')
+        print('Maintenance fixtures: seeded failure, three passing stages, 480 heldout checks and compensating-field rejection, sealed isolation, continuation identity and regrade rejection passed')
 
 
 if __name__ == '__main__':

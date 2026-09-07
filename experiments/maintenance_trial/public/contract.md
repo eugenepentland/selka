@@ -10,9 +10,8 @@ its mutable borrow, and the model/ledger/report module boundary.
 Edit only ledger.my, model.my and report.my. Do not edit tools, cases, compiler,
 dependencies or task instructions; do not replace the application with constant
 answers or test-specific behavior. Use language checking, run and navigation
-commands. Public checks are available through the coordinator. Each stage allows
-20 tool invocations, 5 edited submissions and 15 minutes; record every invocation
-and candidate check, including failed checks. Start each new stage from your own
+commands. All commands, including reads, edits and public checks, must use the coordinator command gateway. Direct filesystem/tool access is a protocol violation. Each stage allows
+20 tool invocations, 5 edited submissions and 15 minutes; the gateway records every invocation and candidate check, including failed checks. Use the check operation after each edited candidate; unchanged checks consume tool invocations but not edited submissions. Start each new stage from your own
 sealed prior-stage submission. An unfinished stage remains an observed failure;
 do not substitute another participant's solution.
 

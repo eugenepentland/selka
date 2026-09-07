@@ -36,15 +36,23 @@ Record review/calibration decisions separately. A changed brief, budget, compile
 or grader starts a new cohort. Keep fixture seeds out of scored trials.
 
 Per stage: 20 participant tool invocations, 5 edited submissions and 900 seconds.
-The coordinator counts every tool invocation and candidate check, retains raw
-transcripts/diagnostics, and stops at the first exhausted bound. A public-check
-invocation runs all eight public observations but counts as one participant tool
-invocation. Tool calls used to edit or inspect source also count. Budget accounting
-is explicit coordinator review, not automatically enforced by pack.py. Capture
-start/stop timestamps, model settings, token usage when available, each submitted
-source hash, check time and whether the immediately following edit fixes the
-reported diagnostic. Missing metrics remain unknown. Wall time includes pauses;
-report active tool time separately. Keep failed, abandoned and budget outcomes.
+The command gateway enforces these bounds and logs every request, accepted
+command, before/after source snapshot, raw output, duration and exit status.
+A public-check invocation counts as one tool invocation. A changed source checked
+through its check operation counts as an edited submission, including failures.
+Read/edit commands count as tool invocations. Indirect public checks through run
+are protocol violations because they do not register submissions. The first
+exhausted bound stops further commands. Agent seals must match the last checked
+source. Rejected requests remain recorded. Model token counts remain unknown.
+
+Use [the exact launch prompt and gateway commands](LAUNCH.md). The wrapper reuses
+the existing Linux namespace executor, mounting only the public projection and
+read-only approved tools/docs. Review inherited-tool bypasses; this does not
+claim whole-agent isolation when the participant retains unrestricted tools.
+Keep failed, abandoned and budget outcomes. Commands have an additional 60-second
+wall limit and 2 MiB output bound; command durations exclude gateway setup/hash
+work, while the stage deadline includes that overhead and time between commands.
+
 
 ## Commands
 
@@ -57,7 +65,7 @@ python3 experiments/maintenance_trial/pack.py prepare /private/trial-a-stage1 \
   --compiler zig-out/bin/mylang --stage 1 --participant fresh-a \
   --model recorded-model-configuration --kind agent
 cd /private/trial-a-stage1/public
-python3 check.py --compiler /absolute/pinned/mylang --stage 1
+# Use gateway.py begin/check/run as shown in LAUNCH.md; no direct tool access.
 ```
 
 Record the unchanged seeded failure before editing. After the participant stops,
@@ -65,7 +73,7 @@ seal its source with the transcript, even if the candidate is incomplete:
 
 ```sh
 python3 experiments/maintenance_trial/pack.py seal /private/trial-a-stage1 \
-  --reason completed --transcript /private/transcripts/a-stage1.jsonl
+  --reason completed
 python3 experiments/maintenance_trial/pack.py prepare /private/trial-a-stage2 \
   --compiler zig-out/bin/mylang --stage 2 --participant fresh-a \
   --model recorded-model-configuration --kind agent --previous /private/trial-a-stage1
@@ -87,7 +95,7 @@ python3 experiments/maintenance_trial/pack.py grade /private/trial-b-stage1 \
   --seed-file /private/grading/stage1-seed.txt
 ```
 
-Each report records 48 private cases through two call paths, their digest, all
+Each report records 48 private cases through the reporting API and each individual summary field, their digest, all
 outcomes and the sealed source identity. Compiler and authoring hashes must match
 preparation. Regrading completed reports is refused. A timeout or launch failure
 is infrastructure failure; retain it and investigate rather than silently
@@ -97,13 +105,13 @@ starting a new seed. This small adapter does not provide interrupted-case resume
 
 ```sh
 python3 experiments/maintenance_trial/selftest.py --compiler zig-out/bin/mylang
+python3 experiments/maintenance_trial/gateway_test.py --compiler zig-out/bin/mylang
 ```
 
 Known restorations verify the seeded wrong result and all three passing stages,
-288 heldout observations, snapshot isolation and regrade rejection. These are
+480 heldout observations, snapshot isolation and regrade rejection. These are
 explicitly `fixture` outcomes and must never appear as agent performance results.
-Public checks and hidden grading share only transport/driver generation; their
-expected-value implementations are separate.
+Compensating-field fixtures prove that incorrect summary fields cannot pass by preserving the combined report score. Public projections contain only current-stage transport, fields and expected public outputs. The private oracle is independent of the guest implementation.
 
 For each actual participant/stage report final behavioral success, structure and
 budget review, first submitted repair success, tool/edited-submission counts,
