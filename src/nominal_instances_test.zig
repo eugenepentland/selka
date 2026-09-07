@@ -152,18 +152,20 @@ test "nominal instances cross typed host calls without erasing result or payload
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), hostScenario, .{});
 }
-test "nominal exported type constructors require explicit schema tooling rather than invalid checked types" {
+test "nominal exported type constructors are symbolic schema templates rather than concrete callable roots" {
     var project = language.project.Project.init(t.allocator);
     defer project.deinit();
     try project.load(.{ .context = null, .read = Modules.read }, "main", .{});
     var index = try language.interfaces.build(&project);
     var compilation = try language.project_compile.Compilation.init(&index);
-    try t.expectError(error.SourceError, language.schema.render(t.allocator, &compilation));
-    try t.expectEqualStrings("E_SCHEMA_GENERIC_TYPE", compilation.diagnostics.items.items[0].code);
-    try t.expectEqualStrings("Box", compilation.src.text(compilation.diagnostics.items.items[0].span));
-    const roots = try compilation.exportRoots(t.allocator);
-    defer t.allocator.free(roots);
-    try t.expectError(error.UnsupportedGenericTypeExport, @import("schema_graph.zig").render(t.allocator, &index, compilation.program.?, roots));
+    const bytes = try language.schema.render(t.allocator, &compilation);
+    defer t.allocator.free(bytes);
+    const parsed = try std.json.parseFromSlice(std.json.Value, t.allocator, bytes, .{});
+    defer parsed.deinit();
+    const templates = parsed.value.object.get("generic_templates").?.array.items;
+    try t.expect(templates.len >= 1);
+    try t.expect(!templates[0].object.get("contract").?.object.get("callable").?.bool);
+    try t.expect(templates[0].object.get("contract").?.object.get("requires_explicit_instantiation").?.bool);
 }
 
 fn catalogCategories(allocator: std.mem.Allocator) !void {

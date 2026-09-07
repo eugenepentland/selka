@@ -1,0 +1,386 @@
+module layout_routes;
+import layout as l;
+import circuit as c;
+import text;
+import ports as p;
+export Segment;
+export Segments;
+export Routed;
+export build;
+export external;
+struct Segment {
+    x1: i64,
+    y1: i64,
+    x2: i64,
+    y2: i64,
+    net: text::Span,
+    junction: bool,
+    terminal: bool
+}
+buffer Segments: Segment;
+result Routed {
+    ok: Segments,
+    err: i64
+}
+result Mutation {
+    ok: bool,
+    err: i64
+}
+fn ground(span: text::Span) -> bool {
+    let word = "GND";
+    borrow word[0..len(word)] as bytes {
+        return text::matches(span, bytes);
+    }
+}
+fn distance(a: l::Point, b: l::Point) -> i64 {
+    let mut x = a.x - b.x;
+    let mut y = a.y - b.y;
+    if x < 0 {
+        x = - x;
+    }
+    if y < 0 {
+        y = - y;
+    }
+    return x + y;
+}
+fn external(net: text::Span, connections: &[]p::Port) -> bool {
+    let target = new p::Port {
+        prefix: text::empty(),
+        name: net,
+        direction: text::empty()
+    };
+    let mut i = 0;
+    while i < cast<i64>(len_slice(connections)) {
+        if p::equal(target, read_slice(connections, i)) {
+            return true;
+        }
+        i += 1;
+    }
+    return false;
+}
+fn decoupling(pin: c::Pin, parts: &[]c::Part, pins: &[]c::Pin) -> bool {
+    if !ground(pin.net) || read_slice(parts, pin.part).kind != 1 {
+        return false;
+    }
+    let mut i = 0;
+    while i < cast<i64>(len_slice(pins)) {
+        let other = read_slice(pins, i);
+        if other.part == pin.part && other.number != pin.number {
+            let display = c::displayNet(other.net, parts, pins);
+            return l::rail(display) && !ground(display) && !text::equal(display, other.net);
+        }
+        i += 1;
+    }
+    return false;
+}
+fn blocked(a: l::Point, b: l::Point, net: text::Span, parts: &[]c::Part, pins: &[]c::Pin, points: &[]l::Point) -> bool {
+    let mut i = 0;
+    while i < cast<i64>(len_slice(pins)) {
+        let pin = read_slice(pins, i);
+        let q = read_slice(points, i);
+        if !pin.nc && !text::equal(net, c::displayNet(pin.net, parts, pins)) {
+            if a.x == b.x && q.x == a.x &&((q.y >= a.y && q.y <= b.y) ||(q.y >= b.y && q.y <= a.y)) {
+                return true;
+            }
+            if a.y == b.y && q.y == a.y &&((q.x >= a.x && q.x <= b.x) ||(q.x >= b.x && q.x <= a.x)) {
+                return true;
+            }
+        }
+        i += 1;
+    }
+    return false;
+}
+fn build(heap: allocator, parts: &[]c::Part, pins: &[]c::Pin, points: &[]l::Point, connections: &[]p::Port) -> Routed {
+    let mut out = try acquire_buffer<Routed>(heap, 4096);
+    let mut i = 0;
+    while i < cast<i64>(len_slice(pins)) {
+        let pin = read_slice(pins, i);
+        let point = read_slice(points, i);
+        if !pin.nc {
+            let display = c::displayNet(pin.net, parts, pins);
+            let isGround = ground(pin.net);
+            let coupledGround = decoupling(pin, parts, pins);
+            let localGround = isGround && read_slice(parts, pin.part).kind != 0 && !coupledGround;
+            let isRail = l::rail(display) && !isGround;
+            let standaloneRail = isRail && read_slice(parts, pin.part).kind != 0 && text::equal(pin.net, display);
+            let mut nearest = - 1;
+            let mut shortest = 1000000;
+            let mut count = 0;
+            let mut j = 0;
+            while j < cast<i64>(len_slice(pins)) {
+                let other = read_slice(pins, j);
+                let otherPoint = read_slice(points, j);
+                let otherStandalone = isRail && read_slice(parts, other.part).kind != 0 && text::equal(other.net, display);
+                let allowed =(!isGround ||(coupledGround && decoupling(other, parts, pins)) ||(!coupledGround && read_slice(parts, other.part).kind == 0)) && !otherStandalone;
+                if !other.nc && allowed && text::equal(display, c::displayNet(other.net, parts, pins)) {
+                    count += 1;
+                    if j < i && distance(point, otherPoint) < shortest {
+                        nearest = j;
+                        shortest = distance(point, otherPoint);
+                    }
+                }
+                j += 1;
+            }
+            if nearest < 0 && count > 1 &&(isGround || isRail) && !localGround && !standaloneRail {
+                let mut low = point.y;
+                let mut high = point.y;
+                let mut k = 0;
+                while k < cast<i64>(len_slice(pins)) {
+                    let other = read_slice(pins, k);
+                    if !other.nc &&((coupledGround && decoupling(other, parts, pins)) ||(!coupledGround && read_slice(parts, other.part).kind == 0)) && text::equal(display, c::displayNet(other.net, parts, pins)) {
+                        let q = read_slice(points, k);
+                        if q.y < low {
+                            low = q.y;
+                        }
+                        if q.y > high {
+                            high = q.y;
+                        }
+                    }
+                    k += 1;
+                }
+                let mut side = - 1;
+                if point.x > 442 {
+                    side = 1;
+                }
+                let mut y =(low + high) / 2;
+                if isRail {
+                    y = low - 20;
+                }
+                if coupledGround {
+                    y = high;
+                }
+                let mut bus = point.x + side * 40;
+                if coupledGround {
+                    bus = point.x + side * 20;
+                }
+                discard try append_buffer<Mutation>(out, new Segment {
+                    x1: bus,
+                    y1: point.y,
+                    x2: bus,
+                    y2: y,
+                    net: display,
+                    junction: false,
+                    terminal: false
+                });
+                let mut reach = 100;
+                if coupledGround {
+                    reach = 10;
+                }
+                discard try append_buffer<Mutation>(out, new Segment {
+                    x1: bus,
+                    y1: y,
+                    x2: bus + side * reach,
+                    y2: y,
+                    net: display,
+                    junction: false,
+                    terminal: true
+                });
+            }
+            if nearest < 0 && count > 1 && !isGround && !isRail && external(display, connections) {
+                let mut dx = 24;
+                if point.x < 442 {
+                    dx = - 24;
+                }
+                discard try append_buffer<Mutation>(out, new Segment {
+                    x1: point.x,
+                    y1: point.y,
+                    x2: point.x + dx,
+                    y2: point.y,
+                    net: display,
+                    junction: false,
+                    terminal: true
+                });
+            }
+            if localGround || standaloneRail || count == 1 {
+                let mut dx = 24;
+                if read_slice(parts, pin.part).kind == 0 {
+                    dx = 140;
+                    if !external(display, connections) && !isRail && !isGround {
+                        dx = 50;
+                    }
+                }
+                if point.x < 442 {
+                    dx = - dx;
+                }
+                discard try append_buffer<Mutation>(out, new Segment {
+                    x1: point.x,
+                    y1: point.y,
+                    x2: point.x + dx,
+                    y2: point.y,
+                    net: display,
+                    junction: false,
+                    terminal: true
+                });
+            } else if nearest >= 0 {
+                let previous = read_slice(points, nearest);
+                if isGround ||(point.x == previous.x &&(point.x == 352 || point.x == 532)) {
+                    let mut bus = point.x - 40;
+                    if point.x > 442 {
+                        bus = point.x + 40;
+                    }
+                    if coupledGround {
+                        bus = point.x - 20;
+                        if point.x > 442 {
+                            bus = point.x + 20;
+                        }
+                    }
+                    discard try append_buffer<Mutation>(out, new Segment {
+                        x1: point.x,
+                        y1: point.y,
+                        x2: bus,
+                        y2: point.y,
+                        net: display,
+                        junction: false,
+                        terminal: false
+                    });
+                    discard try append_buffer<Mutation>(out, new Segment {
+                        x1: bus,
+                        y1: point.y,
+                        x2: bus,
+                        y2: previous.y,
+                        net: display,
+                        junction: true,
+                        terminal: false
+                    });
+                    discard try append_buffer<Mutation>(out, new Segment {
+                        x1: bus,
+                        y1: previous.y,
+                        x2: previous.x,
+                        y2: previous.y,
+                        net: display,
+                        junction: false,
+                        terminal: false
+                    });
+                } else if isRail && read_slice(parts, pin.part).kind != 0 {
+                    let mut bus = 302;
+                    if point.x > 442 {
+                        bus = 582;
+                    }
+                    discard try append_buffer<Mutation>(out, new Segment {
+                        x1: point.x,
+                        y1: point.y,
+                        x2: bus,
+                        y2: point.y,
+                        net: display,
+                        junction: false,
+                        terminal: false
+                    });
+                    discard try append_buffer<Mutation>(out, new Segment {
+                        x1: bus,
+                        y1: point.y,
+                        x2: bus,
+                        y2: previous.y,
+                        net: display,
+                        junction: false,
+                        terminal: false
+                    });
+                    discard try append_buffer<Mutation>(out, new Segment {
+                        x1: bus,
+                        y1: previous.y,
+                        x2: previous.x,
+                        y2: previous.y,
+                        net: display,
+                        junction: false,
+                        terminal: false
+                    });
+                } else if read_slice(parts, read_slice(pins, nearest).part).kind == 0 && point.y != previous.y {
+                    let mut side = 1;
+                    if previous.x < 442 {
+                        side = - 1;
+                    }
+                    let bus = previous.x + side * 50;
+                    discard try append_buffer<Mutation>(out, new Segment {
+                        x1: point.x,
+                        y1: point.y,
+                        x2: bus,
+                        y2: point.y,
+                        net: display,
+                        junction: false,
+                        terminal: false
+                    });
+                    discard try append_buffer<Mutation>(out, new Segment {
+                        x1: bus,
+                        y1: point.y,
+                        x2: bus,
+                        y2: previous.y,
+                        net: display,
+                        junction: false,
+                        terminal: false
+                    });
+                    discard try append_buffer<Mutation>(out, new Segment {
+                        x1: bus,
+                        y1: previous.y,
+                        x2: previous.x,
+                        y2: previous.y,
+                        net: display,
+                        junction: false,
+                        terminal: false
+                    });
+                } else if point.x == previous.x && blocked(point, previous, display, parts, pins, points) {
+                    let mut offset = 16;
+                    let mut lane = point.x + offset;
+                    while blocked(new l::Point {
+                        x: lane,
+                        y: point.y
+                    }, new l::Point {
+                        x: lane,
+                        y: previous.y
+                    }, display, parts, pins, points) && offset < 160 {
+                        offset += 16;
+                        lane = point.x + offset;
+                    }
+                    discard try append_buffer<Mutation>(out, new Segment {
+                        x1: point.x,
+                        y1: point.y,
+                        x2: lane,
+                        y2: point.y,
+                        net: display,
+                        junction: false,
+                        terminal: false
+                    });
+                    discard try append_buffer<Mutation>(out, new Segment {
+                        x1: lane,
+                        y1: point.y,
+                        x2: lane,
+                        y2: previous.y,
+                        net: display,
+                        junction: false,
+                        terminal: false
+                    });
+                    discard try append_buffer<Mutation>(out, new Segment {
+                        x1: lane,
+                        y1: previous.y,
+                        x2: previous.x,
+                        y2: previous.y,
+                        net: display,
+                        junction: false,
+                        terminal: false
+                    });
+                } else {
+                    discard try append_buffer<Mutation>(out, new Segment {
+                        x1: point.x,
+                        y1: point.y,
+                        x2: previous.x,
+                        y2: point.y,
+                        net: display,
+                        junction: count > 2,
+                        terminal: false
+                    });
+                    if point.y != previous.y {
+                        discard try append_buffer<Mutation>(out, new Segment {
+                            x1: previous.x,
+                            y1: point.y,
+                            x2: previous.x,
+                            y2: previous.y,
+                            net: display,
+                            junction: count > 2,
+                            terminal: false
+                        });
+                    }
+                }
+            }
+        }
+        i += 1;
+    }
+    return new Routed.ok(out);
+}

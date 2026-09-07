@@ -16,6 +16,8 @@ const bindingDeclaredHere = "binding declared here";
 const ePoolResult = "E_POOL_RESULT";
 const eImmutable = diagnostic.immutable;
 const std = @import("std");
+const eReferenceArgument = diagnostic.reference_argument;
+const source_json = @import("source_json.zig");
 const ast = @import("ast.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
@@ -127,6 +129,12 @@ const Checker = struct {
                 .{ .span = parameter.name, .message = "required type parameter declared here" },
             );
         }
+        for (required, arguments) |parameter, argument| try (@import("structural_constraints.zig").Context{
+            .src = self.src,
+            .catalog = self.catalog,
+            .program = self.syntax,
+            .sink = self.sink,
+        }).accepts(argument, parameter, function.signature.type_parameters, arguments);
         const instance = self.generic_registry.intern(self.allocator, .{ .declaration = declaration, .arguments = arguments }) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => return self.sink.fail("E_GENERIC_LIMIT", span, "generic specialization exceeds instance or type argument budget"),
@@ -215,7 +223,15 @@ const Checker = struct {
         const current_owner = if (self.owner) |domain| self.catalog.records[domain.recordIndex()].name else null;
         const bare_owner = if (current_owner) |name| (if (std.mem.lastIndexOf(u8, name, "::")) |at| name[at + 2 ..] else name) else null;
         const member = if (call.owner != null) call.name else null;
-        const name = if (self.catalog.module_names) |names|
+        var symbolic_owner = false;
+        if (call.owner) |owner_span| if (self.current_function) |id| {
+            for (self.syntaxFunction(id).signature.type_parameters) |parameter| {
+                if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(owner_span))) symbolic_owner = true;
+            }
+        };
+        const name = if (symbolic_owner)
+            try std.fmt.allocPrint(self.allocator, "{s}.{s}", .{ self.catalog.records[owner.?.recordIndex()].name, self.src.text(call.name) })
+        else if (self.catalog.module_names) |names|
             try names.reference(call.owner orelse call.name, .function, member, bare_owner, self.sink)
         else
             try functionName(self.allocator, self.src, call.owner, call.name);
@@ -471,13 +487,21 @@ const Checker = struct {
             },
             .call => |call| {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
+                if (call.owner == null and source_json.operation(self.src.text(call.name)) != null) {
+                    var index = call.arguments.len;
+                    while (index > 0) {
+                        index -= 1;
+                        try work.append(self.allocator, .{ .id = call.arguments[index] });
+                    }
+                    return true;
+                }
                 const target = try self.callTarget(call, node.span);
                 const signature = self.syntaxFunction(target);
                 if (signature.signature.return_reference != null and !(allow_reference)) return self.sink.fail(eReferenceResult, node.span, "reference-returning calls require a borrow scope");
                 var i = call.arguments.len;
                 while (i > 0) {
                     i -= 1;
-                    if (signature.signature.parameters[i].reference == null) try work.append(self.allocator, .{ .id = call.arguments[i] });
+                    if (signature.signature.parameters[i].reference == null or self.syntax.nodes.items[@backingInt(call.arguments[i])].data == .bytes) try work.append(self.allocator, .{ .id = call.arguments[i] });
                 }
                 return true;
             },
@@ -686,14 +710,26 @@ const Checker = struct {
         out.data = .{ .local = slot };
     }
     fn checkCall(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
+        if (call.owner == null) if (source_json.operation(self.src.text(call.name))) |decode| return self.checkJson(call, decode, out);
         const function = try self.callTarget(call, node.span);
         const signature = self.syntaxFunction(function);
         var arguments: std.ArrayList(typed.NodeId) = .empty;
         var loans: std.ArrayList(typed.ReferenceId) = .empty;
+        var literals: std.ArrayList(typed.LiteralArgument) = .empty;
         for (call.arguments, signature.signature.parameters) |arg, parameter| {
             const argument = self.syntax.nodes.items[@backingInt(arg)];
             if (parameter.reference) |mutable| {
-                if (argument.data != .name) return self.sink.fail("E_REFERENCE_ARGUMENT", argument.span, "reference parameter requires an active reference name");
+                if (argument.data == .bytes) {
+                    if (mutable or !parameter.slice or try self.functionType(function, parameter.ty) != .u8)
+                        return self.sink.fail(eReferenceArgument, argument.span, "byte literals require a readonly u8 slice parameter");
+                    if (signature.signature.return_reference != null)
+                        return self.sink.fail(eReferenceArgument, argument.span, "a call borrowing a byte literal cannot return a reference");
+                    const temporary = try self.literalArgument(arg, argument.span);
+                    try loans.append(self.allocator, temporary.reference);
+                    try literals.append(self.allocator, temporary);
+                    continue;
+                }
+                if (argument.data != .name) return self.sink.fail(eReferenceArgument, argument.span, "reference parameter requires an active reference name");
                 const id = try self.reference(argument.data.name);
                 const ref = self.references.items[@backingInt(id)];
                 try self.requireReferenceKind(id, parameter.slice, argument.span);
@@ -719,7 +755,33 @@ const Checker = struct {
             }
         }
         out.ty = try self.functionType(function, signature.signature.return_type);
-        out.data = .{ .call = .{ .function = function, .arguments = try arguments.toOwnedSlice(self.allocator), .references = try loans.toOwnedSlice(self.allocator) } };
+        out.data = .{ .call = .{ .function = function, .arguments = try arguments.toOwnedSlice(self.allocator), .references = try loans.toOwnedSlice(self.allocator), .literals = try literals.toOwnedSlice(self.allocator) } };
+    }
+    fn literalArgument(self: *Checker, arg: ast.NodeId, span: source.Span) Error!typed.LiteralArgument {
+        const value = self.resolved[@backingInt(arg)].?;
+        const value_type = self.nodes.items[@backingInt(value)].ty;
+        const owner: typed.LocalId = @fromBackingInt(self.locals.items.len);
+        const reference_id: typed.ReferenceId = @fromBackingInt(self.references.items.len);
+        try self.locals.append(self.allocator, .{ .name = "<literal>", .declaration = span, .ty = value_type, .mutable = false, .usage = .{ .reads = 1, .temporary = true } });
+        try self.references.append(self.allocator, .{ .name = "<literal>", .declaration = span, .owner = owner, .parent = null, .ty = .u8, .mutable = false, .mode = .{ .slice = true, .temporary = true } });
+        return .{ .value = value, .owner = owner, .reference = reference_id, .length = self.catalog.records[value_type.recordIndex()].shape.array.?.length };
+    }
+    fn checkJson(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call"), decode: bool, out: *typed.Node) Error!void {
+        if (call.type_arguments.len != 1 or call.arguments.len != 3) return self.sink.fail("E_JSON_ARITY", call.name, "JSON operation requires one result type and allocator, value, byte-limit arguments");
+        out.ty = try self.ty(call.type_arguments[0]);
+        const shape = typed.resultShape(out.ty, self.catalog.records) orelse return self.sink.fail("E_JSON_RESULT", call.name, "JSON operation requires a checked result with i64 error");
+        if (shape.error_type != .i64) return self.sink.fail("E_JSON_RESULT", call.name, "JSON operation requires a checked result with i64 error");
+        var arguments: [3]typed.NodeId = undefined;
+        for (call.arguments, &arguments) |input, *output| output.* = self.resolved[@backingInt(input)].?;
+        try self.require(self.nodes.items[@backingInt(arguments[0])].ty, .allocator, call.name);
+        try self.requireInteger(self.nodes.items[@backingInt(arguments[2])].ty, call.name);
+        const input = self.nodes.items[@backingInt(arguments[1])].ty;
+        const codec = source_json;
+        if (!codec.byteBuffer(if (decode) input else shape.ok_type, self.catalog.records)) return self.sink.fail("E_JSON_BYTES", call.name, "JSON wire bytes require an owned u8 buffer");
+        const document = codec.isDocument(self.src.text(call.name));
+        if (document and !codec.wordBuffer(shape.ok_type, self.catalog.records)) return self.sink.fail("E_JSON_DOCUMENT", call.name, "plain JSON parsing requires an owned i64 document buffer success");
+        if (!document and !codec.supportsCodec(if (decode) shape.ok_type else input, self.catalog.records)) return self.sink.fail("E_JSON_CODEC", call.name, "JSON values require ordinary data and explicit codecs for every domain");
+        out.data = .{ .json_codec = .{ .document = document, .decode = decode, .arguments = arguments } };
     }
     fn byteValues(self: *Checker, bytes: []const u8, span: source.Span) Error![]const typed.NodeId {
         const values = try self.allocator.alloc(typed.NodeId, bytes.len);
@@ -983,6 +1045,7 @@ const Checker = struct {
             }
             const out = try self.checkedExpression(node, minimum_literal, temporaries.items);
             const consumed: usize = if (node.data == .bytes) 0 else switch (out.data) {
+                .json_codec => 3,
                 .integer, .boolean, .local, .read_ref, .read_field, .take_field, .len_slice => 0,
                 .reset_arena, .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .external_read, .complete_resource, .restrict_resource => 1,
                 .acquire_buffer, .acquire_pool, .acquire_resource, .environment_get => 2,
@@ -992,7 +1055,7 @@ const Checker = struct {
                 .array => |values| values.len,
                 .record => |initializers| initializers.len,
                 .update => |update| update.fields.len + 1,
-                .call => |call| call.arguments.len,
+                .call => |call| call.arguments.len + call.literals.len,
                 .pool_operation => |operation| operation.arguments.len,
                 .buffer_operation => |operation| operation.arguments.len,
                 .resource_io => |io| if (io.value != null) 1 else 0,
@@ -1421,6 +1484,7 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
     @memset(ordinary_ids, null);
     var checker: Checker = .{ .allocator = allocator, .src = src, .syntax = program, .sink = sink, .resolved = resolved, .catalog = catalog, .ordinary_ids = ordinary_ids };
     for (program.functions, 0..) |function, i| {
+        if (function.policy.owner == null and source_json.operation(src.text(function.name)) != null) return sink.fail("E_RESERVED_FUNCTION", function.name, "JSON operation names are reserved compiler intrinsics");
         const name = if (module_names) |names| try names.functionDeclaration(function.policy.owner, function.name) else try functionName(allocator, src, function.policy.owner, function.name);
         if (checker.catalog.names.contains(name) or checker.catalog.templates.names.contains(name)) return sink.fail("E_DUPLICATE_NAME", function.name, "function name conflicts with a declared type");
         if (checker.functions.get(name)) |previous| return sink.failRelated(

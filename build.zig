@@ -49,6 +49,20 @@ pub fn build(b: *std.Build) void {
         .imports = &.{.{ .name = "mylang", .module = core }},
     }) });
     b.installArtifact(schematic_runner);
+    const byte_io_runner = b.addExecutable(.{ .name = "mylang-io", .root_module = b.createModule(.{
+        .root_source_file = b.path("src/byte_io/runner.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{.{ .name = "mylang", .module = core }},
+    }) });
+    b.installArtifact(byte_io_runner);
+    const byte_io_unit = b.addTest(.{ .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
+        .root_source_file = b.path("src/byte_io/tests.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{.{ .name = "mylang", .module = core }},
+    }) });
+    guardian.enableTestDiagnostics(byte_io_unit.root_module);
     guardian.addAllChecks(b, guardian_exe, b.getInstallStep(), .{});
     const board_unit = b.addTest(.{ .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
         .root_source_file = b.path("src/board_trial/tests.zig"),
@@ -78,6 +92,7 @@ pub fn build(b: *std.Build) void {
     compile_tests.dependOn(&unit.step);
     compile_tests.dependOn(&board_unit.step);
     compile_tests.dependOn(&schematic_unit.step);
+    compile_tests.dependOn(&byte_io_unit.step);
     compile_tests.dependOn(&integration.step);
     const run_integration = b.addRunArtifact(integration);
     const test_step = b.step("test", "Run interpreter, checker, CLI, and tooling regression tests");
@@ -89,6 +104,16 @@ pub fn build(b: *std.Build) void {
     all_tests.dependOn(native_step);
     guardian.addAllChecks(b, guardian_exe, test_step, .{});
     test_step.dependOn(&b.addRunArtifact(unit).step);
+    const byte_io_step = b.step("test-byte-io", "Verify raw guest stdin/stdout and host bounds");
+    const run_byte_io_unit = b.addRunArtifact(byte_io_unit);
+    byte_io_step.dependOn(&run_byte_io_unit.step);
+    test_step.dependOn(&run_byte_io_unit.step);
+    const byte_io_cli = b.addSystemCommand(&.{ "python3", "tests/byte_io.py", "--runner" });
+    byte_io_cli.addFileArg(byte_io_runner.getEmittedBin());
+    byte_io_cli.setCwd(b.path("."));
+    byte_io_step.dependOn(&byte_io_cli.step);
+    test_step.dependOn(&byte_io_cli.step);
+    guardian.addAllChecks(b, guardian_exe, byte_io_step, .{});
     test_step.dependOn(&run_integration.step);
     const run_board_unit = b.addRunArtifact(board_unit);
     test_step.dependOn(&run_board_unit.step);
@@ -235,6 +260,10 @@ pub fn build(b: *std.Build) void {
     input_manifests.addFileArg(exe.getEmittedBin());
     input_manifests.setCwd(b.path("."));
     test_step.dependOn(&input_manifests.step);
+    const navigation_tests = b.addSystemCommand(&.{ "python3", "tests/navigation_client.py", "--compiler" });
+    navigation_tests.addFileArg(exe.getEmittedBin());
+    navigation_tests.setCwd(b.path("."));
+    test_step.dependOn(&navigation_tests.step);
     const schemas = b.addSystemCommand(&.{ "python3", "tests/schemas.py", "--compiler" });
     schemas.addFileArg(exe.getEmittedBin());
     schemas.setCwd(b.path("."));

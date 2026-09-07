@@ -1,0 +1,36 @@
+buffer Bytes: u8;
+result Encoded {
+    ok: Bytes,
+    err: i64
+}
+struct Item {
+    count: u64,
+    ready: bool
+}
+result Decoded {
+    ok: Item,
+    err: i64
+}
+fn encode < T: codec >(heap: allocator, value: T) -> Encoded {
+    return json_encode::< Encoded >(heap, value, 4096);
+}
+fn roundtrip(heap: allocator) -> Decoded {
+    let bytes = try encode::< Item >(heap, new Item {
+        count: 42u64,
+        ready: true
+    });
+    return json_decode::< Decoded >(heap, bytes, 4096);
+}
+fn main(heap: allocator) -> i64 {
+    match roundtrip(heap) {
+        Decoded.ok(item) => {
+            if item.ready {
+                return cast<i64>(item.count);
+            }
+            return 0;
+        },
+        Decoded.err(code) => {
+            return code;
+        }
+    }
+}

@@ -188,7 +188,7 @@ test "codec execution rejects exhausted steps and forged wire contracts" {
     var failure: runtime.Failure = .{};
     defer failure.deinit(t.allocator);
     var execution: runtime.Execution = .{
-        .program = c.code.?,
+        .backend = .{ .dispatch = @import("vm.zig").invoke, .program = c.code.? },
         .max_steps = 0,
         .max_frames = 256,
         .max_calls = 10,

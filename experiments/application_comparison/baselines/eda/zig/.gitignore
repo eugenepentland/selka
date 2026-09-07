@@ -1,0 +1,6 @@
+.zig-cache/
+zig-out/
+eda-inspector
+eda-inspector-debug
+*.o
+__pycache__/

@@ -3,198 +3,14 @@ import ports as p;
 import sexpr as s;
 import circuit as c;
 import text;
+import draw as d;
+import layout as l;
+import layout_routes as r;
 export render;
-fn rect(x: i64, y: i64, w: i64, h: i64) -> i64 {
-    {
-        let literal = "<rect class=\"panel\" x=\"";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::decimal(x);
-    {
-        let literal = "\" y=\"";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::decimal(y);
-    {
-        let literal = "\" width=\"";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::decimal(w);
-    {
-        let literal = "\" height=\"";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::decimal(h);
-    {
-        let literal = "\" rx=\"12\"/>";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    return 0;
-}
-fn line(x1: i64, y1: i64, x2: i64, y2: i64) -> i64 {
-    {
-        let literal = "<line x1=\"";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::decimal(x1);
-    {
-        let literal = "\" y1=\"";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::decimal(y1);
-    {
-        let literal = "\" x2=\"";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::decimal(x2);
-    {
-        let literal = "\" y2=\"";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::decimal(y2);
-    {
-        let literal = "\"/>";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    return 0;
-}
-fn labelStart(x: i64, y: i64, anchor: i64) -> i64 {
-    {
-        let literal = "<text x=\"";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::decimal(x);
-    {
-        let literal = "\" y=\"";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::decimal(y);
-    {
-        let literal = "\" text-anchor=\"";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    if anchor == 0 {
-        {
-            let literal = "start";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-    } else if anchor == 1 {
-        {
-            let literal = "middle";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-    } else {
-        {
-            let literal = "end";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-    }
-    {
-        let literal = "\">";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    return 0;
-}
-fn labelEnd() -> i64 {
-    {
-        let literal = "</text>";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    return 0;
-}
-fn label(x: i64, y: i64, anchor: i64, value: text::Span) -> i64 {
-    discard labelStart(x, y, anchor);
-    discard text::escaped(value);
-    return labelEnd();
-}
-fn symbol(kind: i64, x: i64, y: i64) -> i64 {
-    discard line(x - 55, y, x - 20, y);
-    discard line(x + 20, y, x + 55, y);
-    if kind == 1 {
-        discard line(x - 7, y - 14, x - 7, y + 14);
-        discard line(x + 7, y - 14, x + 7, y + 14);
-        discard line(x - 20, y, x - 7, y);
-        discard line(x + 7, y, x + 20, y);
-    } else if kind == 2 {
-        {
-            let literal = "<rect class=\"resistor\" x=\"";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-        discard text::decimal(x - 20);
-        {
-            let literal = "\" y=\"";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-        discard text::decimal(y - 9);
-        {
-            let literal = "\" width=\"40\" height=\"18\"/>";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-    } else {
-        {
-            let literal = "<path d=\"M ";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-        discard text::decimal(x - 20);
-        {
-            let literal = " ";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-        discard text::decimal(y);
-        {
-            let literal = " c 0,-18 10,-18 10,0 c 0,-18 10,-18 10,0 c 0,-18 10,-18 10,0 c 0,-18 10,-18 10,0\"/>";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-    }
-    return 0;
+export Rendered;
+result Rendered {
+    ok: bool,
+    err: i64
 }
 fn instanceStart(item: c::Part) -> i64 {
     {
@@ -247,7 +63,7 @@ fn instanceStart(item: c::Part) -> i64 {
     }
     return 0;
 }
-fn pinStart(pin: c::Pin, display: text::Span) -> i64 {
+fn pinStart(pin: c::Pin, display: text::Span, point: l::Point) -> i64 {
     {
         let literal = "<g data-pin=\"";
         borrow literal[0..len(literal)] as bytes {
@@ -255,6 +71,20 @@ fn pinStart(pin: c::Pin, display: text::Span) -> i64 {
         }
     }
     discard text::decimal(pin.number);
+    {
+        let literal = "\" data-x=\"";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    discard text::decimal(point.x);
+    {
+        let literal = "\" data-y=\"";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    discard text::decimal(point.y);
     if pin.nc {
         {
             let literal = "\" data-nc=\"true\"><title>";
@@ -302,194 +132,183 @@ fn finishGroup() -> i64 {
     }
     return 0;
 }
-fn passive(item: c::Part, index: i64, pins: &[]c::Pin, parts: &[]c::Part, x: i64, y: i64) -> i64 {
-    discard instanceStart(item);
-    discard symbol(item.kind, x + 300, y);
-    discard label(x + 300, y - 23, 1, item.ref);
-    discard label(x + 300, y + 27, 1, item.value);
+fn displayRef(parts: &[]c::Part, index: i64) -> i64 {
+    let item = read_slice(parts, index);
+    let mut n = 0;
+    let mut i = 0;
+    while i <= index {
+        if read_slice(parts, i).kind == item.kind {
+            n += 1;
+        }
+        i += 1;
+    }
+    if item.kind == 0 {
+        {
+            let literal = "U";
+            borrow literal[0..len(literal)] as bytes {
+                discard text::write(bytes);
+            }
+        }
+    } else if item.kind == 1 {
+        {
+            let literal = "C";
+            borrow literal[0..len(literal)] as bytes {
+                discard text::write(bytes);
+            }
+        }
+    } else if item.kind == 2 {
+        {
+            let literal = "R";
+            borrow literal[0..len(literal)] as bytes {
+                discard text::write(bytes);
+            }
+        }
+    } else {
+        {
+            let literal = "L";
+            borrow literal[0..len(literal)] as bytes {
+                discard text::write(bytes);
+            }
+        }
+    }
+    return text::decimal(n);
+}
+fn passive(index: i64, parts: &[]c::Part, pins: &[]c::Pin, points: &[]l::Point) -> i64 {
+    let item = read_slice(parts, index);
+    let mut a = new l::Point {
+        x: 0,
+        y: 0
+    };
+    let mut b = a;
     let mut i = 0;
     while i < cast<i64>(len_slice(pins)) {
         let pin = read_slice(pins, i);
         if pin.part == index {
-            let display = c::displayNet(pin.net, parts, pins);
-            discard pinStart(pin, display);
-            let mut px = x + 90;
-            let mut end = x + 245;
-            let mut anchor = 0;
-            let mut lx = x + 20;
-            if pin.number == 2 {
-                px = x + 510;
-                end = x + 355;
-                anchor = 2;
-                lx = x + 580;
+            if pin.number == 1 {
+                a = read_slice(points, i);
+            } else {
+                b = read_slice(points, i);
             }
-            discard line(px, y, end, y);
-            discard label(lx, y + 17, anchor, display);
-            discard labelStart(px, y - 7, 1);
-            discard text::decimal(pin.number);
-            discard labelEnd();
+        }
+        i += 1;
+    }
+    let x =(a.x + b.x) / 2;
+    let y =(a.y + b.y) / 2;
+    discard instanceStart(item);
+    {
+        let literal = "<g transform=\"translate(";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    discard text::decimal(x);
+    {
+        let literal = " ";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    discard text::decimal(y);
+    {
+        let literal = ")";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    if a.x == b.x {
+        {
+            let literal = " rotate(90)";
+            borrow literal[0..len(literal)] as bytes {
+                discard text::write(bytes);
+            }
+        }
+    }
+    {
+        let literal = "\"><rect class=\"symbol-clear\" x=\"-20\" y=\"-9\" width=\"40\" height=\"18\"/>";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    discard d::symbol(item.kind);
+    discard finishGroup();
+    if a.x == b.x {
+        let mut top = a.y;
+        let mut bottom = b.y;
+        if top > bottom {
+            top = b.y;
+            bottom = a.y;
+        }
+        discard d::line(x, top, x, y - 20);
+        discard d::line(x, y + 20, x, bottom);
+        discard d::labelStart(x + 10, y + 3, 0);
+    } else {
+        let mut left = a.x;
+        let mut right = b.x;
+        if left > right {
+            left = b.x;
+            right = a.x;
+        }
+        discard d::line(left, y, x - 20, y);
+        discard d::line(x + 20, y, right, y);
+        discard d::labelStart(x, y - 14, 1);
+    }
+    discard displayRef(parts, index);
+    {
+        let literal = " ";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    discard text::escaped(item.value);
+    discard d::labelEnd();
+    i = 0;
+    while i < cast<i64>(len_slice(pins)) {
+        let pin = read_slice(pins, i);
+        if pin.part == index {
+            discard pinStart(pin, c::displayNet(pin.net, parts, pins), read_slice(points, i));
             discard finishGroup();
         }
         i += 1;
     }
     return finishGroup();
 }
-fn chip(item: c::Part, index: i64, pins: &[]c::Pin, pinout: &[]s::Node, parts: &[]c::Part) -> i64 {
-    discard rect(35, 160, 765, 1260);
-    discard instanceStart(item);
-    discard label(415, 207, 1, item.ref);
-    discard label(415, 231, 1, item.family);
+fn chip(index: i64, parts: &[]c::Part, pins: &[]c::Pin, points: &[]l::Point, pinout: &[]s::Node) -> i64 {
+    discard instanceStart(read_slice(parts, index));
+    discard d::rect(352, 20, 180, l::height(points) - 40);
+    discard d::labelStart(442, 38, 1);
+    discard displayRef(parts, index);
     {
-        let literal = "<rect class=\"chip\" x=\"300\" y=\"262\" width=\"235\" height=\"1075\"/>";
+        let literal = " ";
         borrow literal[0..len(literal)] as bytes {
             discard text::write(bytes);
         }
     }
-    let mut number = 1;
-    while number <= 128 {
-        let mut i = 0;
-        while i < cast<i64>(len_slice(pins)) {
-            let pin = read_slice(pins, i);
-            if pin.part == index && pin.number == number {
-                let mut y = 290 +(number - 1) * 49;
-                let mut x1 = 245;
-                let mut x2 = 300;
-                let mut namex = 310;
-                let mut netx = 235;
-                let mut anchor = 2;
-                let mut nameAnchor = 0;
-                if number > 20 {
-                    y = 290 +(number - 21) * 49;
-                    x1 = 535;
-                    x2 = 590;
-                    namex = 525;
-                    netx = 600;
-                    anchor = 0;
-                    nameAnchor = 2;
+    discard text::escaped(read_slice(parts, index).family);
+    discard d::labelEnd();
+    let mut i = 0;
+    while i < cast<i64>(len_slice(pins)) {
+        let pin = read_slice(pins, i);
+        if pin.part == index {
+            let point = read_slice(points, i);
+            discard pinStart(pin, c::displayNet(pin.net, parts, pins), read_slice(points, i));
+            if !pin.nc {
+                let mut side = - 1;
+                let mut anchor = 0;
+                if point.x > 442 {
+                    side = 1;
+                    anchor = 2;
                 }
-                let display = c::displayNet(pin.net, parts, pins);
-                discard pinStart(pin, display);
-                discard line(x1, y, x2, y);
-                discard label(namex, y + 5, nameAnchor, c::label(pinout, number));
-                discard labelStart((x1 + x2) / 2, y - 7, 1);
-                discard text::decimal(number);
-                discard labelEnd();
-                if pin.nc {
-                    discard line(x1, y - 5, x1 + 10, y + 5);
-                    discard line(x1, y + 5, x1 + 10, y - 5);
-                    discard labelStart(netx, y + 5, anchor);
-                    {
-                        let literal = "NC";
-                        borrow literal[0..len(literal)] as bytes {
-                            discard text::write(bytes);
-                        }
-                    }
-                    discard labelEnd();
-                } else {
-                    discard label(netx, y + 5, anchor, display);
-                }
-                discard finishGroup();
+                discard d::line(point.x, point.y, point.x + side * 40, point.y);
+                discard d::label(point.x - side * 8, point.y + 4, anchor, c::label(pinout, pin.number));
+                discard d::labelStart(point.x + side * 3, point.y - 3, 1);
+                discard text::decimal(pin.number);
+                discard d::labelEnd();
             }
-            i += 1;
+            discard finishGroup();
         }
-        number += 1;
+        i += 1;
     }
-    discard labelStart(60, 1380, 0);
-    {
-        let literal = "Supply branches share their base rail label; full net names are retained in SVG metadata";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard labelEnd();
     return finishGroup();
-}
-fn firstGroup(nodes: &[]s::Node, parts: &[]c::Part, index: i64) -> bool {
-    let target = c::group(nodes, read_slice(parts, index).ref);
-    let mut i = 0;
-    while i < index {
-        let item = read_slice(parts, i);
-        if item.kind != 0 && text::equal(target, c::group(nodes, item.ref)) {
-            return false;
-        }
-        i += 1;
-    }
-    return true;
-}
-fn groupCount(nodes: &[]s::Node, parts: &[]c::Part, target: text::Span) -> i64 {
-    let mut count = 0;
-    let mut i = 0;
-    while i < cast<i64>(len_slice(parts)) {
-        let item = read_slice(parts, i);
-        if item.kind != 0 && text::equal(target, c::group(nodes, item.ref)) {
-            count += 1;
-        }
-        i += 1;
-    }
-    return count;
-}
-fn panels(nodes: &[]s::Node, parts: &[]c::Part, pins: &[]c::Pin, draw: bool) -> i64 {
-    let mut left = 160;
-    let mut right = 160;
-    let mut i = 0;
-    while i < cast<i64>(len_slice(parts)) {
-        let item = read_slice(parts, i);
-        if item.kind != 0 && firstGroup(nodes, parts, i) {
-            let target = c::group(nodes, item.ref);
-            let count = groupCount(nodes, parts, target);
-            let height = 75 + count * 76;
-            let mut x = 835;
-            let mut y = left;
-            if right < left {
-                x = 1495;
-                y = right;
-                right += height + 25;
-            } else {
-                left += height + 25;
-            }
-            if draw {
-                discard rect(x, y, 630, height);
-                {
-                    let literal = "<g class=\"group-heading\">";
-                    borrow literal[0..len(literal)] as bytes {
-                        discard text::write(bytes);
-                    }
-                }
-                discard labelStart(x + 25, y + 32, 0);
-                if target.start == target.end {
-                    {
-                        let literal = "Control / standalone";
-                        borrow literal[0..len(literal)] as bytes {
-                            discard text::write(bytes);
-                        }
-                    }
-                } else {
-                    discard text::escaped(target);
-                }
-                discard labelEnd();
-                discard finishGroup();
-                let mut j = 0;
-                let mut row = 0;
-                while j < cast<i64>(len_slice(parts)) {
-                    let component = read_slice(parts, j);
-                    if component.kind != 0 && text::equal(target, c::group(nodes, component.ref)) {
-                        discard passive(component, j, pins, parts, x + 15, y + 76 + row * 76);
-                        row += 1;
-                    }
-                    j += 1;
-                }
-            }
-        }
-        i += 1;
-    }
-    let mut height = 1450;
-    if left > height {
-        height = left;
-    }
-    if right > height {
-        height = right;
-    }
-    return height;
 }
 fn portName(item: p::Port) -> i64 {
     if item.prefix.start != item.prefix.end {
@@ -503,21 +322,10 @@ fn portName(item: p::Port) -> i64 {
     }
     return text::escaped(item.name);
 }
-fn ports(connections: &[]p::Port, y: i64) -> i64 {
-    discard rect(35, y, 2090, 80 +((cast<i64>(len_slice(connections)) + 8) / 9) * 70);
-    discard labelStart(60, y + 32, 0);
-    {
-        let literal = "Subcircuit interface";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard labelEnd();
-    let mut n = 0;
-    while n < cast<i64>(len_slice(connections)) {
-        let item = read_slice(connections, n);
-        let x = 60 +(n % 9) * 230;
-        let row = y + 78 +(n / 9) * 70;
+fn ports(connections: &[]p::Port) -> i64 {
+    let mut i = 0;
+    while i < cast<i64>(len_slice(connections)) {
+        let item = read_slice(connections, i);
         {
             let literal = "<g class=\"port\" data-port=\"";
             borrow literal[0..len(literal)] as bytes {
@@ -533,73 +341,146 @@ fn ports(connections: &[]p::Port, y: i64) -> i64 {
         }
         discard text::escaped(item.direction);
         {
+            let literal = "\"><title>";
+            borrow literal[0..len(literal)] as bytes {
+                discard text::write(bytes);
+            }
+        }
+        discard portName(item);
+        {
+            let literal = "</title></g>";
+            borrow literal[0..len(literal)] as bytes {
+                discard text::write(bytes);
+            }
+        }
+        i += 1;
+    }
+    return 0;
+}
+fn ground(net: text::Span) -> bool {
+    let word = "GND";
+    borrow word[0..len(word)] as bytes {
+        return text::matches(net, bytes);
+    }
+}
+fn routes(segments: &[]r::Segment, connections: &[]p::Port) -> i64 {
+    let mut i = 0;
+    while i < cast<i64>(len_slice(segments)) {
+        let item = read_slice(segments, i);
+        {
+            let literal = "<g class=\"wire\" data-net=\"";
+            borrow literal[0..len(literal)] as bytes {
+                discard text::write(bytes);
+            }
+        }
+        discard text::escaped(item.net);
+        {
             let literal = "\">";
             borrow literal[0..len(literal)] as bytes {
                 discard text::write(bytes);
             }
         }
-        discard labelStart(x, row, 0);
-        discard portName(item);
-        discard labelEnd();
-        discard label(x, row + 25, 0, item.direction);
+        discard d::line(item.x1, item.y1, item.x2, item.y2);
+        if item.terminal {
+            if ground(item.net) {
+                {
+                    let literal = "<g class=\"ground\">";
+                    borrow literal[0..len(literal)] as bytes {
+                        discard text::write(bytes);
+                    }
+                }
+                discard d::line(item.x2, item.y2, item.x2, item.y2 + 6);
+                discard d::line(item.x2 - 7, item.y2 + 6, item.x2 + 7, item.y2 + 6);
+                discard d::line(item.x2 - 4, item.y2 + 9, item.x2 + 4, item.y2 + 9);
+                discard d::line(item.x2 - 1, item.y2 + 12, item.x2 + 1, item.y2 + 12);
+                discard finishGroup();
+            } else if !r::external(item.net, connections) && !l::rail(item.net) {
+                {
+                    let literal = "<g class=\"dangling-marker\">";
+                    borrow literal[0..len(literal)] as bytes {
+                        discard text::write(bytes);
+                    }
+                }
+                discard d::line(item.x2 - 4, item.y2 - 4, item.x2 + 4, item.y2 + 4);
+                discard d::line(item.x2 - 4, item.y2 + 4, item.x2 + 4, item.y2 - 4);
+                discard finishGroup();
+            } else {
+                let mut side = 1;
+                let mut anchor = 0;
+                if item.x2 < 442 {
+                    side = - 1;
+                    anchor = 2;
+                }
+                {
+                    let literal = "<g class=\"net-label\">";
+                    borrow literal[0..len(literal)] as bytes {
+                        discard text::write(bytes);
+                    }
+                }
+                discard d::label(item.x2 + side * 12, item.y2 + 4, anchor, item.net);
+                discard finishGroup();
+            }
+        }
         discard finishGroup();
-        n += 1;
+        i += 1;
     }
     return 0;
 }
-fn render(nodes: &[]s::Node, parts: &[]c::Part, pins: &[]c::Pin, pinout: &[]s::Node, connections: &[]p::Port) -> i64 {
-    let bottom = panels(nodes, parts, pins, false);
-    {
-        let literal = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 2160 ";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
+fn render(heap: allocator, nodes: &[]s::Node, parts: &[]c::Part, pins: &[]c::Pin, pinout: &[]s::Node, connections: &[]p::Port) -> Rendered {
+    let placed = try l::build(heap, parts, pins);
+    borrow placed[0..len_buffer(placed)] as points {
+        let routed = try r::build(heap, parts, pins, points, connections);
+        borrow routed[0..len_buffer(routed)] as segments {
+            {
+                let literal = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 884 ";
+                borrow literal[0..len(literal)] as bytes {
+                    discard text::write(bytes);
+                }
+            }
+            discard text::decimal(l::height(points));
+            {
+                let literal = "\" width=\"884\" height=\"";
+                borrow literal[0..len(literal)] as bytes {
+                    discard text::write(bytes);
+                }
+            }
+            discard text::decimal(l::height(points));
+            {
+                let literal = "\" role=\"img\"><title>";
+                borrow literal[0..len(literal)] as bytes {
+                    discard text::write(bytes);
+                }
+            }
+            discard text::escaped(c::title(nodes));
+            {
+                let literal = "</title><style>svg{background:#0d1117}text{font-family:Arial,sans-serif;font-size:11px;fill:#aaa;stroke:none}line,path{stroke:#4a9;stroke-width:1.5;fill:none}.chip{fill:#16213e;stroke:#4a9eff;stroke-width:2}.symbol rect,.symbol path,.symbol line{fill:none;stroke:#8888cc;stroke-width:1.5}.component>text{font-size:9px;fill:#888}.component>text:first-of-type{font-size:9px}.component:has(.chip)>text{fill:#4a9eff;font-size:12px;font-weight:bold}[data-pin]>line{stroke:#666}[data-pin]>text{font-size:12px}[data-pin]>text:last-child{font-size:9px;fill:#666}.symbol-clear{fill:#0d1117;stroke:none}.ground line{stroke:#d6bb24}.dangling-marker line{stroke:#666}.net-label text{fill:#4a9eff;font-size:11px;font-weight:bold}[data-nc]{display:none}</style><rect width=\"100%\" height=\"100%\" fill=\"#0d1117\"/>";
+                borrow literal[0..len(literal)] as bytes {
+                    discard text::write(bytes);
+                }
+            }
+            discard routes(segments, connections);
+            let mut i = 0;
+            while i < cast<i64>(len_slice(parts)) {
+                if read_slice(parts, i).kind == 0 {
+                    discard chip(i, parts, pins, points, pinout);
+                }
+                i += 1;
+            }
+            i = 0;
+            while i < cast<i64>(len_slice(parts)) {
+                if read_slice(parts, i).kind != 0 {
+                    discard passive(i, parts, pins, points);
+                }
+                i += 1;
+            }
+            discard ports(connections);
+            {
+                let literal = "</svg>";
+                borrow literal[0..len(literal)] as bytes {
+                    discard text::write(bytes);
+                }
+            }
         }
     }
-    discard text::decimal(bottom + 160 +((cast<i64>(len_slice(connections)) + 8) / 9) * 70);
-    {
-        let literal = "\" role=\"img\"><title>";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::escaped(c::title(nodes));
-    {
-        let literal = "</title><style>svg{background:#f5f7fa}.heading text{font-size:30px;font-weight:bold}.group-heading text{font-size:18px;font-weight:bold}text{font-family:Lato,sans-serif;font-size:13px;fill:#203047;stroke:none}line,path{stroke:#245d78;stroke-width:1.8;fill:none}.panel{fill:white;stroke:#d4dde6;stroke-width:1.2}.chip{fill:#edf4f8;stroke:#245d78;stroke-width:2}.resistor{fill:white;stroke:#245d78;stroke-width:1.8}</style><rect width=\"100%\" height=\"100%\" fill=\"#f5f7fa\"/>";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    {
-        let literal = "<g class=\"heading\">";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard label(40, 65, 0, c::title(nodes));
-    discard finishGroup();
-    discard labelStart(40, 105, 0);
-    {
-        let literal = "Named nets connect identically labelled terminals · NC = deliberate no-connect";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard labelEnd();
-    let mut i = 0;
-    while i < cast<i64>(len_slice(parts)) {
-        let item = read_slice(parts, i);
-        if item.kind == 0 {
-            discard chip(item, i, pins, pinout, parts);
-        }
-        i += 1;
-    }
-    discard panels(nodes, parts, pins, true);
-    discard ports(connections, bottom + 10);
-    {
-        let literal = "</svg>";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    return 0;
+    return new Rendered.ok(true);
 }

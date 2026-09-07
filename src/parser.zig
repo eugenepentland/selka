@@ -1,4 +1,5 @@
 //! Recursive descent for statements; precedence climbing for expressions.
+const eRequirement = diagnostic.generic_requirement;
 const eGenericLimit = diagnostic.generic_limit;
 const external_resources = @import("external_resources.zig");
 const std = @import("std");
@@ -326,18 +327,60 @@ pub const Parser = struct {
             for (parameters.items) |previous| if (std.mem.eql(u8, self.src.text(previous.name), self.src.text(name))) return self.sink.fail("E_GENERIC_PARAMETER", name, "duplicate type parameter");
             _ = try self.expect(.colon);
             var requirements: std.ArrayList(Span) = .empty;
+            var fields: std.ArrayList(ast.Parameter) = .empty;
+            var operations: std.ArrayList(ast.Operation) = .empty;
             while (true) {
                 const requirement = (try self.expect(.ident)).span;
-                if (requirements.items.len == 16) return self.sink.fail(eGenericLimit, requirement, "at most 16 requirements are permitted");
-                for (requirements.items) |previous| if (std.mem.eql(u8, self.src.text(previous), self.src.text(requirement))) return self.sink.fail("E_GENERIC_REQUIREMENT", requirement, "duplicate type requirement");
-                try requirements.append(self.arena.allocator(), requirement);
+                if (requirements.items.len + fields.items.len + operations.items.len == 16) return self.sink.fail(eGenericLimit, requirement, "at most 16 requirements are permitted");
+                if (std.mem.eql(u8, self.src.text(requirement), "field")) {
+                    _ = try self.expect(.lparen);
+                    const field = try self.constraintParameter();
+                    _ = try self.expect(.rparen);
+                    if (field.reference != null) return self.sink.fail(eRequirement, field.name, "structural fields are copied values, not references");
+                    try fields.append(self.arena.allocator(), field);
+                } else if (std.mem.eql(u8, self.src.text(requirement), "op")) {
+                    try operations.append(self.arena.allocator(), try self.operationConstraint());
+                } else {
+                    for (requirements.items) |previous| if (std.mem.eql(u8, self.src.text(previous), self.src.text(requirement))) return self.sink.fail(eRequirement, requirement, "duplicate type requirement");
+                    try requirements.append(self.arena.allocator(), requirement);
+                }
                 if (!self.take(.plus)) break;
             }
-            try parameters.append(self.arena.allocator(), .{ .name = name, .requirements = try requirements.toOwnedSlice(self.arena.allocator()) });
+            try parameters.append(self.arena.allocator(), .{
+                .name = name,
+                .requirements = try requirements.toOwnedSlice(self.arena.allocator()),
+                .field_requirements = try fields.toOwnedSlice(self.arena.allocator()),
+                .operation_requirements = try operations.toOwnedSlice(self.arena.allocator()),
+            });
             if (!self.take(.comma)) break;
         }
         _ = try self.expect(.gt);
         return parameters.toOwnedSlice(self.arena.allocator());
+    }
+    fn constraintParameter(self: *Parser) diagnostic.Error!ast.Parameter {
+        const name = (try self.expect(.ident)).span;
+        _ = try self.expect(.colon);
+        const reference: ?bool = if (self.take(.ampersand)) self.take(.kw_mut) else null;
+        if (self.current().tag == .lbracket) return self.sink.fail(eRequirement, self.current().span, "structural signatures currently require named types, not arrays or slices");
+        return .{ .name = name, .ty = try self.typeName(), .reference = reference };
+    }
+    fn operationConstraint(self: *Parser) diagnostic.Error!ast.Operation {
+        _ = try self.expect(.lparen);
+        const name = (try self.expect(.ident)).span;
+        _ = try self.expect(.lparen);
+        var parameters: std.ArrayList(ast.Parameter) = .empty;
+        if (self.current().tag != .rparen) while (true) {
+            if (parameters.items.len == 16) return self.sink.fail(eGenericLimit, self.current().span, "at most 16 structural operation parameters are permitted");
+            try parameters.append(self.arena.allocator(), try self.constraintParameter());
+            if (!self.take(.comma)) break;
+        };
+        _ = try self.expect(.rparen);
+        _ = try self.expect(.arrow);
+        if (self.current().tag == .ampersand or self.current().tag == .lbracket) return self.sink.fail(eRequirement, self.current().span, "structural operation results currently require named value types");
+        const result = try self.typeName();
+        const bound = try self.effectBound() orelse return self.sink.fail(eRequirement, name, "structural operations require an explicit effects bound");
+        _ = try self.expect(.rparen);
+        return .{ .name = name, .parameters = try parameters.toOwnedSlice(self.arena.allocator()), .return_type = result, .effect_bound = bound };
     }
     fn borrowCallSuffix(self: *Parser) bool {
         return switch (self.current().tag) {

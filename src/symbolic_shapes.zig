@@ -96,6 +96,19 @@ pub const Context = struct {
             nominal_value.schema = resolved;
             return resolved.*;
         }
+        if (value == .parameter and self.parameters[value.parameter].field_requirements.len != 0) {
+            const declared = self.parameters[value.parameter].field_requirements;
+            const fields = try self.arena.allocator().alloc(symbolic.Field, declared.len);
+            for (declared, fields) |field, *out| {
+                var field_type: ?Value = null;
+                for (self.parameters, 0..) |parameter, i| if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(field.ty))) {
+                    field_type = .{ .parameter = i };
+                    break;
+                };
+                out.* = .{ .name = self.src.text(field.name), .span = field.name, .ty = field_type orelse .{ .concrete = try self.catalog.resolve(self.src, field.ty, self.sink) } };
+            }
+            return .{ .kind = .record, .fields = fields };
+        }
         if (value != .concrete) return self.sink.fail("E_GENERIC_BODY_UNSUPPORTED", span, "structural operations on a type parameter require declared constraints");
         if (!value.concrete.isAggregate()) return self.sink.fail("E_TYPE", span, "operation requires a declared record or variant type");
         const record = self.catalog.records[value.concrete.recordIndex()];
@@ -111,6 +124,7 @@ pub const Context = struct {
     }
     /// Require a record, permitting enum-indexed tables only for complete construction.
     pub fn requireRecord(self: Context, value: Value, span: source.Span, complete: bool) Error!Schema {
+        if (complete and value == .parameter) return self.sink.fail("E_GENERIC_BODY_UNSUPPORTED", span, "structural fields do not describe a complete record constructor");
         const shape = try self.schema(value, span);
         if (shape.kind != .record or (!complete and shape.key != null)) return self.sink.fail("E_TYPE", span, "operation requires a record value");
         return shape;
@@ -128,7 +142,10 @@ pub const Context = struct {
     }
     fn leaf(self: Context, value: Value) ?Properties {
         return switch (value) {
-            .parameter => |id| .{ .region = !self.parameters[id].requirements.contains(.equality) },
+            .parameter => |id| .{
+                .region = !self.parameters[id].requirements.contains(.equality) and !self.parameters[id].requirements.contains(.codec),
+                .requires_handling = self.parameters[id].requirements.contains(.codec) and !self.parameters[id].requirements.contains(.copy),
+            },
             .concrete => |ty| .{
                 .move_only = typed.moveOnly(ty, self.catalog.records),
                 .requires_handling = typed.requiresHandling(ty, self.catalog.records),

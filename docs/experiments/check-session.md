@@ -37,7 +37,7 @@ execution flags are rejected because a checking session does not run programs.
 Unrecoverable stream/output failures may terminate the process with host failure.
 
 Each check has a fresh request arena and Project. A verdict miss copies unchanged
-parses into the fresh project. Syntax retention allows 64 entries and 16 MiB of
+parses into the fresh project. Syntax retention allows 256 entries and 16 MiB of
 entry arena capacity, with oldest-insertion eviction. The verdict cache retains
 one successful source snapshot plus rendered warnings, under a separate 16 MiB
 arena-capacity limit. Oversized entries bypass retention. Allocation failures

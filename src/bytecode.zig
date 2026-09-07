@@ -19,6 +19,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
     if (@backingInt(program.main) >= program.functions.len) return error.InternalError;
     try @import("effects.zig").validate(allocator, program);
     try validateRecords(program);
+    try @import("codec_bytecode.zig").validate(allocator, program);
     try validateEntry(program);
     for (program.functions, 0..) |function, index| {
         try validateFunction(program, function, index);
@@ -153,6 +154,7 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
         .acquire_resource => |acquire| try validateOpAcquireResource(program, acquire),
         .external_read => |read| try validateOpExternalRead(program, read),
         .acquire_pool => |ty| try validateOpAcquirePool(program, ty),
+        .json_codec => |codec| try @import("codec_bytecode.zig").operation(allocator, program, codec),
         .acquire_buffer => |ty| try validateOpAcquireBuffer(program, ty),
         .cast_integer, .neg_integer => |ty| if (!ty.isInteger()) {
             return error.InternalError;
@@ -468,7 +470,7 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
                 if (height < record.fields) return error.InternalError;
                 height = height - record.fields + 1;
             },
-            .replace_index => {
+            .json_codec, .replace_index => {
                 if (height < 3) return error.InternalError;
                 height -= 2;
             },

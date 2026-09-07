@@ -192,3 +192,51 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 ## Interpreted schematic pilot
 
 - [SCHEMATIC-1] The guest S-expression parser, circuit model, interface expansion and SVG renderer execute in the bytecode VM. A typed scalar host boundary exposes only bounded UTF-8 source bytes and unpublished output. Invalid inputs, unsupported forms, incomplete or duplicate pads and invalid ports reject without publishing partial SVG. The pilot supports one parameterless module with one 41-pad IC and supported two-terminal primitives; its documented limits and metadata exclusions are not a general Netlisp evaluator or electrical sign-off.
+
+
+- [NAVIGATION-1] Compiler navigation indexes module-qualified declaration identities, original source ranges, signatures, effects, concrete call/read/write/field/type relationships and bounded source excerpts without VM execution. Every result carries compiler and loaded-source identities. Static relationships do not establish runtime coverage. Failed body checking emits declarations without checked relationships; lexical recovery after body syntax errors emits explicitly unchecked candidates.
+- [GENERIC-API-1] Checked public schemas expose generic templates separately from concrete callable functions and data types, preserving parameter requirements, symbolic signatures, fields/cases, module import scope, effect/reference contracts and source identity. Templates require explicit specialization and cannot be invoked as concrete values through the JSON API.
+- [STRUCTURAL-FIELD-1] Copy-constrained function parameters may require named fields with exact named types, including another declared type parameter. Concrete satisfaction and symbolic forwarding preserve nominal identity and checked field reads/updates. Structural fields do not expose opaque domain backing or permit incomplete construction of an unknown record.
+- [STRUCTURAL-OP-1] Function parameters may require public nongeneric domain operations with explicit parameter/result types, reference permissions and an effect ceiling. Type-owned generic calls check declared contracts before specialization; concrete operations must satisfy signature, visibility and effects, and borrowed calls retain alias and lifetime rules.
+- [STRUCTURAL-LIMIT-1] Structural requirements currently apply to function templates with copy guarantees and named type expressions. Nominal type declarations, unknown complete constructors and operation reference results reject explicitly.
+- [SOURCE-JSON-1] Source JSON encoding/decoding uses the versioned typed-json-v1 wire representation, an explicit allocator and owned u8 buffers with checked results; successful values and failed operations release storage correctly under allocation failure.
+- [SOURCE-JSON-2] Malformed data and byte quotas return defined checked errors; source limits are bounded by one MiB and invalid requested limits return an invalid-budget error.
+- [SOURCE-JSON-3] Domain serialization uses declared, checked, effect-free codec operations and preserves factory rejection without exposing private backing values.
+- [SOURCE-JSON-4] Source JSON calls enforce result shapes, allocator authority, serializable data eligibility, allocation effects and ownership transfer before execution.
+- [SOURCE-JSON-5] Source JSON byte/value work and codec execution consume the caller's VM step budget, and owned output storage respects buffer capacity constraints.
+- [SOURCE-JSON-6] Source JSON decoding rejects wrong versions/types, duplicate or unknown fields, trailing data and malformed values. Reserved codec calls and consumed input buffers retain ordinary call and ownership checks.
+- [SOURCE-JSON-7] Nested domain codec execution shares the remaining frame budget with active parent guest frames; nested quota exhaustion cannot exceed the outer VM limits.
+- [SOURCE-JSON-8] Bytecode validation rejects forged source JSON operand/result types and invalid domain codec function identities/signatures before execution.
+- [GENERIC-JSON-1] The codec requirement proves ordinary serializable data or explicit domain codec eligibility. Uncalled generic bodies and forwarded requirements are checked symbolically, including possible result-handling obligations, without substituting a representative concrete type.
+- [INCREMENTAL-CAPACITY-1] The syntax cache retains at most 256 modules within its unchanged byte budget; edits can reuse exact unchanged module syntax while complete semantic checking and diagnostic equivalence remain required.
+
+
+### Disk application raw byte host
+
+- [BYTE-IO-1] The raw byte host preserves arbitrary input, enforces bounds and publishes output only on successful guest exit.
+
+The `mylang-io --project DIRECTORY` host compiles `main.my` and its imports from
+disk into bytecode. It supplies only `io::length() -> i64`,
+`io::byte(index: i64) -> u8`, and `io::put(value: u8) -> i64`, each with host effects.
+Input bytes are passed untouched, including invalid UTF-8 and NUL. The guest owns
+parsing, validation, algorithms, and serialization. Input is bounded at 2 MiB;
+output at 128 MiB; a put returns zero on success. Negative/out-of-range reads and
+output exhaustion fail the host call. Output is published only after guest main
+returns zero, never after traps or nonzero exits. The host supplies no external
+filesystem, network, environment or process authority to the guest. Host calls/work
+are bounded at 300 million each and VM execution at 2 billion steps; the coordinator
+also enforces wall/CPU/memory limits. The executable is built outside application
+sessions; editing guest files requires no Zig rebuild or language Guardian run.
+
+- [LITERAL-SLICE-1] A byte-string literal may be passed directly to a readonly u8 slice parameter. Its temporary is borrowed only for that call, then released. Mutable references, other element types and reference-returning calls reject this shorthand.
+- [PLAIN-JSON-1] json_parse consumes an owned u8 buffer under explicit allocator authority and returns a checked owned i64 document tape. Plain JSON rejects duplicate decoded keys, invalid Unicode, integers outside i64, nonfinite numbers, trailing data and container depth over 64. Its byte budget is at most 1 MiB; scratch, VM work and output allocation remain bounded.
+- [STANDARD-MODULES-1] Reserved std_json and std_text sources load identically through all project providers and participate in source budgets, dependency graphs and digests. std_text requires explicit io host registration.
+
+- [PLAIN-JSON-2] Ordinary JSON validation applies to every subtree, including unused fields: decoded duplicate keys, malformed UTF-8, out-of-range integers, nonfinite floats, trailing bytes and excessive nesting reject.
+- [PLAIN-JSON-3] Failed document parsing releases partially allocated DOM, tape and text storage.
+- [PLAIN-JSON-4] The VM document operation returns quota errors for output capacity exhaustion and releases consumed input and partial output on all exits.
+- [STANDARD-MODULES-2] Embedded standard source bytes count against the same per-file and total project source budgets as user modules.
+- [LITERAL-SLICE-2] Concrete and abstract generic checking reject literal arguments to mutable or non-byte references and any reference-returning call.
+- [LITERAL-SLICE-3] Literal-backed call references release their backing before the next call, including loops, allocation failures and frame unwinding.
+- [STANDARD-TEXT-1] The raw-byte text library emits byte strings and decimal signed integers including i64 minimum and maximum without intermediate signed overflow.
+- [PLAIN-JSON-5] Plain document parsing works in generic bodies with a concrete document result, rejects non-document results, and revalidates its decode-only operation at the bytecode boundary.

@@ -1,0 +1,21 @@
+{
+  "captured": "2026-09-07",
+  "requested_url": "https://netlisp.eugenepentland.dev/schematics/straps-synth-lmx2595",
+  "capture_url": "http://127.0.0.1:7059/schematics/straps-synth-lmx2595",
+  "live_authenticated_page_verified": false,
+  "source": "Existing local Netlisp binary, matching local design library, default Functional view; renderer returned inline SVG. Production endpoint required Ward authentication.",
+  "eda_checkout_commit": "fdffb99bffaab38f923b095ec62a33109f31775d",
+  "binary_sha256": "4ae17978b6695ce5fb93135a50fd7192a99f2c22ad31c0c5d56066b8641df3a8",
+  "files": {
+    "geometry.json": "f32d9eeb6ce716d2b4f5902c98f6d231f5ae81c43d37d3ab7e7a811ed7141816",
+    "straps-synth-lmx2595.svg": "d6f70f127e0b3d800fbdf967ff0db9c0c33f546cdb93c769e9ca2085d1c59951",
+    "straps-synth-lmx2595.png": "77d3bea1e38de23dc0793a74f1eca158fdbec3fca9acd8fbefd4f47ad95d832d"
+  },
+  "capture_notes": [
+    "SVG keeps visual SVG CSS only, removes inline handlers and cursor styles; sets explicit 884x1144 size and dark background.",
+    "PNG rasterized from cleaned SVG with local Playwright Chromium; no Netlisp rebuild or Guardian invocation.",
+    "Geometry documents reference alias labels U1/R1 etc, not original fixture instance names.",
+    "Web renderer excludes NC pads 5, 28, 30, 32; the language tool may retain them explicitly.",
+    "Reference scene-graph CLI uses older layout; this capture uses actual default webpage SVG."
+  ]
+}

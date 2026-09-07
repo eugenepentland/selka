@@ -8,6 +8,7 @@ export Ports;
 export Collected;
 export collect;
 export validate;
+export equal;
 struct Port {
     prefix: text::Span,
     name: text::Span,

@@ -192,6 +192,13 @@ pub const Index = struct {
             const src = project.modules.items[module].src;
             const name = if (function.policy.owner) |owner| try std.fmt.allocPrint(allocator, "{s}.{s}", .{ src.text(owner), src.text(function.name) }) else src.text(function.name);
             if (!unit.symbols.items[unit.names.get(name).?].exported) continue;
+            for (function.signature.type_parameters) |parameter| {
+                for (parameter.field_requirements) |field| try self.genericSignatureType(module, field.ty, function.signature.type_parameters);
+                for (parameter.operation_requirements) |operation| {
+                    for (operation.parameters) |input| try self.genericSignatureType(module, input.ty, function.signature.type_parameters);
+                    try self.genericSignatureType(module, operation.return_type, function.signature.type_parameters);
+                }
+            }
             for (function.signature.parameters) |parameter| try self.genericSignatureType(module, parameter.ty, function.signature.type_parameters);
             try self.genericSignatureType(module, function.signature.return_type, function.signature.type_parameters);
         }

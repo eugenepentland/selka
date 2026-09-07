@@ -63,6 +63,7 @@ const Analysis = struct {
             .read_slice => |read| self.reference(read.reference),
             .read_field, .take_field => |read| self.local(read.owner),
             .acquire_buffer, .acquire_pool => |acquire| self.node(acquire.allocator),
+            .json_codec => |codec| self.node(codec.arguments[0]),
             .reset_arena, .cast, .wrap, .unwrap, .length, .complete_resource => |value| self.node(value),
             .propagate => |propagate| self.node(propagate.value),
             .variant => |variant| if (variant.value) |value| self.node(value) else .{},

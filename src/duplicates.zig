@@ -276,6 +276,10 @@ const CanonicalWriter = struct {
                 writer.print("external {s}\n", .{@tagName(read.kind)}) catch return error.OutOfMemory;
                 try work.append(allocator, .{ .expression = read.capability });
             },
+            .json_codec => |codec| {
+                writer.print("json document {} decode {}\n", .{ codec.document, codec.decode }) catch return error.OutOfMemory;
+                for (codec.arguments) |argument| try work.append(allocator, .{ .expression = argument });
+            },
             .acquire_buffer, .acquire_pool => |acquire| {
                 try work.append(allocator, .{ .expression = acquire.capacity });
                 try work.append(allocator, .{ .expression = acquire.allocator });
@@ -322,6 +326,7 @@ const CanonicalWriter = struct {
                     writer.print("callee {d}:{s}\n", .{ callee.len, callee }) catch return error.OutOfMemory;
                 }
                 writer.print("args {d} references {any}\n", .{ call.arguments.len, call.references }) catch return error.OutOfMemory;
+                for (call.literals) |temporary| try work.append(allocator, .{ .expression = temporary.value });
                 var i = call.arguments.len;
                 while (i > 0) {
                     i -= 1;

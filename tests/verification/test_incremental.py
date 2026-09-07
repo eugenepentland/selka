@@ -140,6 +140,23 @@ class Incremental(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.run_jobs()
 
+    def test_standard_library_graph_caches_only_with_matching_compiler(self):
+        if COMPILER is None:
+            self.skipTest("supply --compiler to exercise actual compiler receipt")
+        import subprocess
+        (self.root / "main.my").write_text("module main;import std_json;fn main()->i64{return 0;}")
+        process = subprocess.run([str(COMPILER), "project-dependencies", str(self.root / "main.my")],
+                                 capture_output=True, check=True)
+        (self.root / "graph.json").write_bytes(process.stdout)
+        self.data["steps"][0].update(module_graph="graph.json", tools=[str(COMPILER)])
+        first = self.run_jobs()
+        self.assertTrue(first["inventory"]["a"]["complete"])
+        self.assertEqual(self.run_jobs()["steps"][0]["status"], "cached")
+        self.data["steps"][0]["tools"] = []
+        unpinned = self.run_jobs()
+        self.assertFalse(unpinned["inventory"]["a"]["complete"])
+        self.assertEqual(unpinned["steps"][0]["status"], "executed")
+
     def test_real_compiler_graph_invalidates_imported_module(self):
         if COMPILER is None:
             self.skipTest("supply --compiler to exercise actual compiler receipt")

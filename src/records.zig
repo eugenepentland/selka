@@ -94,7 +94,7 @@ const Collector = struct {
             const index = declarations.len + offset;
             const id: typed.Type = @fromBackingInt(index + typed.Type.record_base);
             try catalog.names.put(allocator, name, id);
-            storage[index] = .{ .id = id, .name = name, .declaration = declaration.name, .fields = &.{} };
+            storage[index] = .{ .id = id, .name = name, .declaration = declaration.name, .fields = &.{}, .contract = .{ .codec_declared = declaration.codec != null } };
         }
         for (variant_types, 0..) |declaration, offset| {
             const name = if (module_names) |names| try names.declaration(declaration.name) else src.text(declaration.name);

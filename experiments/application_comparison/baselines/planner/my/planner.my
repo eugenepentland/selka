@@ -1,0 +1,359 @@
+module planner;
+import json;
+import schema;
+import output;
+export run;
+buffer Numbers: i64;
+result Acquired {
+    ok: Numbers,
+    err: i64
+}
+result Changed {
+    ok: bool,
+    err: i64
+}
+result Outcome {
+    ok: i64,
+    err: i64
+}
+fn allocate(heap: allocator, size: i64) -> Acquired {
+    let mut values = try acquire_buffer<Acquired>(heap, size);
+    discard try resize_buffer<Changed>(values, size, 0);
+    return new Acquired.ok(values);
+}
+fn sift(a: &mut []i64, root: i64, n: i64) -> i64 {
+    let mut r = root;
+    while r * 2 + 1 < n {
+        let mut c = r * 2 + 1;
+        if c + 1 < n && json::less(read_slice(a, c), read_slice(a, c + 1)) {
+            c += 1;
+        }
+        if !json::less(read_slice(a, r), read_slice(a, c)) {
+            return 0;
+        }
+        let v = read_slice(a, r);
+        write_slice(a, r, read_slice(a, c));
+        write_slice(a, c, v);
+        r = c;
+    }
+    return 0;
+}
+fn sort(a: &mut []i64, n: i64) -> i64 {
+    let mut i = n / 2;
+    while i > 0 {
+        i -= 1;
+        discard sift(a, i, n);
+    }
+    i = n;
+    while i > 1 {
+        i -= 1;
+        let v = read_slice(a, 0);
+        write_slice(a, 0, read_slice(a, i));
+        write_slice(a, i, v);
+        discard sift(a, 0, i);
+    }
+    return 0;
+}
+fn emit(a: &[]i64, n: i64) -> i64 {
+    let mut i = 0;
+    let mut prev = - 1;
+    while i < n {
+        let v = read_slice(a, i);
+        if prev < 0 || !json::equal(prev, v) {
+            if prev >= 0 {
+                discard output::comma();
+            }
+            discard json::quoted(v);
+            prev = v;
+        }
+        i += 1;
+    }
+    discard output::close();
+    return 0;
+}
+fn lookup(ids: &[]i64, n: i64, p: i64) -> i64 {
+    let mut lo = 0;
+    let mut hi = n;
+    while lo < hi {
+        let mid =(lo + hi) / 2;
+        let v = read_slice(ids, mid);
+        if json::equal(v, p) {
+            return mid;
+        }
+        if json::less(v, p) {
+            lo = mid + 1;
+        } else {
+            hi = mid;
+        }
+    }
+    return - 1;
+}
+fn ready(ids: &[]i64, needs: &[]i64, done: &[]i64, n: i64, j: i64) -> bool {
+    let mut p = json::ws(read_slice(needs, j) + 1);
+    while json::at(p) != 93 {
+        let dep = lookup(ids, n, p);
+        if read_slice(done, dep) == 0 {
+            return false;
+        }
+        p = json::next(p);
+    }
+    return true;
+}
+// Complete each validation phase before emitting a result.
+fn work(a: i64, ids: &mut []i64, durations: &mut []i64, needs: &mut []i64, done: &mut []i64, finish: &mut []i64, unknown: &mut []i64, scratch: &mut []i64) -> i64 {
+    let id = "id";
+    let dur = "duration";
+    let dep = "needs";
+    let n = schema::count(a);
+    let mut p = json::ws(a + 1);
+    let mut i = 0;
+    while i < n {
+        let mut v = 0;
+        borrow id[0..len(id)] as b {
+            v = schema::field(p, b);
+        }
+        write_slice(ids, i, v);
+        p = json::next(p);
+        i += 1;
+    }
+    discard sort(ids, n);
+    let mut repeated = 0;
+    i = 1;
+    while i < n {
+        if json::equal(read_slice(ids, i - 1), read_slice(ids, i)) {
+            write_slice(unknown, repeated, read_slice(ids, i));
+            repeated += 1;
+        }
+        i += 1;
+    }
+    if repeated > 0 {
+        discard output::dup_id();
+        return emit(unknown, repeated);
+    }
+    p = json::ws(a + 1);
+    while json::at(p) != 93 {
+        let mut x = 0;
+        borrow id[0..len(id)] as b {
+            x = schema::field(p, b);
+        }
+        let j = lookup(ids, n, x);
+        let mut d = 0;
+        let mut nd = 0;
+        borrow dur[0..len(dur)] as b {
+            d = json::integer(schema::field(p, b));
+        }
+        borrow dep[0..len(dep)] as b {
+            nd = schema::field(p, b);
+        }
+        write_slice(durations, j, d);
+        write_slice(needs, j, nd);
+        p = json::next(p);
+    }
+    i = 0;
+    while i < n {
+        let mut x = json::ws(read_slice(needs, i) + 1);
+        let mut count = 0;
+        while json::at(x) != 93 {
+            write_slice(scratch, count, x);
+            count += 1;
+            x = json::next(x);
+        }
+        discard sort(scratch, count);
+        let mut j = 1;
+        while j < count {
+            if json::equal(read_slice(scratch, j - 1), read_slice(scratch, j)) {
+                write_slice(done, i, 1);
+            }
+            j += 1;
+        }
+        i += 1;
+    }
+    i = 0;
+    while i < n {
+        if read_slice(done, i) == 1 {
+            write_slice(unknown, repeated, read_slice(ids, i));
+            repeated += 1;
+            write_slice(done, i, 0);
+        }
+        i += 1;
+    }
+    if repeated > 0 {
+        discard output::dup_dep();
+        return emit(unknown, repeated);
+    }
+    i = 0;
+    while i < n {
+        let mut x = json::ws(read_slice(needs, i) + 1);
+        while json::at(x) != 93 {
+            if lookup(ids, n, x) < 0 {
+                write_slice(unknown, repeated, x);
+                repeated += 1;
+            }
+            x = json::next(x);
+        }
+        i += 1;
+    }
+    if repeated > 0 {
+        discard sort(unknown, repeated);
+        discard output::unknown();
+        return emit(unknown, repeated);
+    }
+    let mut removed = 0;
+    let mut progress = true;
+    while progress {
+        progress = false;
+        i = 0;
+        while i < n {
+            if read_slice(done, i) == 0 && ready(ids, needs, done, n, i) {
+                write_slice(done, i, 1);
+                removed += 1;
+                progress = true;
+            }
+            i += 1;
+        }
+    }
+    if removed < n {
+        i = 0;
+        while i < n {
+            if read_slice(done, i) == 0 {
+                write_slice(unknown, repeated, read_slice(ids, i));
+                repeated += 1;
+            }
+            i += 1;
+        }
+        discard output::cycle();
+        return emit(unknown, repeated);
+    }
+    i = 0;
+    while i < n {
+        write_slice(done, i, 0);
+        i += 1;
+    }
+    discard output::order();
+    removed = 0;
+    while removed < n {
+        let mut chosen = - 1;
+        i = 0;
+        while i < n && chosen < 0 {
+            if read_slice(done, i) == 0 && ready(ids, needs, done, n, i) {
+                chosen = i;
+            }
+            i += 1;
+        }
+        if removed > 0 {
+            discard output::comma();
+        }
+        discard json::quoted(read_slice(ids, chosen));
+        let mut start = 0;
+        let mut d = json::ws(read_slice(needs, chosen) + 1);
+        while json::at(d) != 93 {
+            let f = read_slice(finish, lookup(ids, n, d));
+            if f > start {
+                start = f;
+            }
+            d = json::next(d);
+        }
+        write_slice(finish, chosen, start + read_slice(durations, chosen));
+        write_slice(done, chosen, 1);
+        removed += 1;
+    }
+    discard output::layers();
+    i = 0;
+    while i < n {
+        write_slice(done, i, 0);
+        i += 1;
+    }
+    removed = 0;
+    let mut rounds = 0;
+    while removed < n {
+        if rounds > 0 {
+            discard output::comma();
+        }
+        discard output::open();
+        let mut count = 0;
+        i = 0;
+        while i < n {
+            if read_slice(done, i) == 0 && ready(ids, needs, done, n, i) {
+                write_slice(unknown, count, i);
+                count += 1;
+            }
+            i += 1;
+        }
+        i = 0;
+        while i < count {
+            if i > 0 {
+                discard output::comma();
+            }
+            let j = read_slice(unknown, i);
+            discard json::quoted(read_slice(ids, j));
+            write_slice(done, j, 1);
+            i += 1;
+        }
+        removed += count;
+        rounds += 1;
+        discard output::shut();
+    }
+    discard output::timings();
+    let mut makespan = 0;
+    i = 0;
+    while i < n {
+        if i > 0 {
+            discard output::comma();
+        }
+        discard output::id();
+        discard json::quoted(read_slice(ids, i));
+        discard output::start();
+        let f = read_slice(finish, i);
+        discard json::number(f - read_slice(durations, i));
+        discard output::finish();
+        discard json::number(f);
+        discard output::brace();
+        if f > makespan {
+            makespan = f;
+        }
+        i += 1;
+    }
+    discard output::makespan();
+    discard json::number(makespan);
+    discard output::brace();
+    return 0;
+}
+// Owned buffers keep mutable scratch writes proportional to the changed element.
+fn run(heap: allocator, p: i64) -> i64 {
+    let a = schema::manifest(p);
+    if a < 0 {
+        return output::invalid_manifest();
+    }
+    match storage(heap, a) {
+        Outcome.ok(value) => {
+            return value;
+        },
+        Outcome.err(discard) => {
+            return 1;
+        }
+    }
+}
+fn storage(heap: allocator, a: i64) -> Outcome {
+    let mut ids = try allocate(heap, 128);
+    let mut durations = try allocate(heap, 128);
+    let mut needs = try allocate(heap, 128);
+    let mut done = try allocate(heap, 128);
+    let mut finish = try allocate(heap, 128);
+    let mut unknown = try allocate(heap, 16384);
+    let mut scratch = try allocate(heap, 128);
+    borrow mut ids[0..len_buffer(ids)] as ids_view {
+        borrow mut durations[0..len_buffer(durations)] as durations_view {
+            borrow mut needs[0..len_buffer(needs)] as needs_view {
+                borrow mut done[0..len_buffer(done)] as done_view {
+                    borrow mut finish[0..len_buffer(finish)] as finish_view {
+                        borrow mut unknown[0..len_buffer(unknown)] as unknown_view {
+                            borrow mut scratch[0..len_buffer(scratch)] as scratch_view {
+                                return new Outcome.ok(work(a, ids_view, durations_view, needs_view, done_view, finish_view, unknown_view, scratch_view));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

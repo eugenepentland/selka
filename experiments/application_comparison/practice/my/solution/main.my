@@ -1,0 +1,59 @@
+module main;
+import io;
+import helper;
+
+enum DigitError { invalid }
+result ParsedDigit { ok: i64, err: DigitError }
+
+fn parse_digit(count: i64) -> ParsedDigit effects(host) {
+    if count != 2 {
+        return new ParsedDigit.err(new DigitError.invalid);
+    }
+    let value = io::byte(1);
+    if value < 48u8 || value > 57u8 {
+        return new ParsedDigit.err(new DigitError.invalid);
+    }
+    return new ParsedDigit.ok(cast<i64>(value) - 48);
+}
+
+fn answer() -> i64 effects(host) {
+    let nine = 9;
+    let count = io::length();
+    if count == 0 || count > 256 {
+        return -1;
+    }
+    let command = io::byte(0);
+    if command == 109u8 && count == 1 {
+        return helper::multiply(7);
+    }
+    if command == 100u8 && count == 1 {
+        return nine;
+    }
+    if command == 102u8 {
+        match parse_digit(count) {
+            ParsedDigit.ok(value) => { return value; },
+            ParsedDigit.err(discard) => { return -1; }
+        }
+    }
+    return -1;
+}
+
+fn write_digits(value: i64) -> i64 effects(host) {
+    if value >= 10 {
+        discard write_digits(value / 10);
+    }
+    discard io::put(cast<u8>(48 + value % 10));
+    return 0;
+}
+
+fn main() -> i64 effects(host) {
+    let value = answer();
+    if value < 0 {
+        discard io::put(45u8);
+        discard write_digits(0 - value);
+    } else {
+        discard write_digits(value);
+    }
+    discard io::put(10u8);
+    return 0;
+}

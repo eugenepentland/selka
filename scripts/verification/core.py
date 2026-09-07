@@ -31,7 +31,8 @@ def module_graph(root, filename):
             if path.is_absolute() or ".." in path.parts:
                 raise ValueError("external receipt input")
             generated_source = item in receipt["inputs"] and item["module"] in generated
-            if not generated_source and file_hash(root / path) != item["sha256"]:
+            compiler_source = item in receipt["inputs"] and item["path"].startswith("@stdlib/")
+            if not generated_source and not compiler_source and file_hash(root / path) != item["sha256"]:
                 raise ValueError("stale or external receipt input")
             if any(edge["module"] not in modules for edge in item.get("imports", [])):
                 raise ValueError("incomplete import graph")

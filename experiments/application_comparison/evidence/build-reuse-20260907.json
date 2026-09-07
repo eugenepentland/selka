@@ -1,0 +1,43 @@
+{
+  "build_executions": 1,
+  "build_seconds": 11.681393604027107,
+  "groups": 21,
+  "limitation": "before/after single samples with unchanged practice source; workflow comparison, not language productivity evidence",
+  "passed": true,
+  "prior_cold_build_executions": 21,
+  "prior_cold_build_seconds": 260.0424761029426,
+  "run_executions": 21,
+  "run_seconds": 1.658117981045507,
+  "source_sha256": "49c08e23fd1638f648fd9d1028cf7854e89197df39323927760fe75577a596c6",
+  "verified_build_reuses": 20,
+  "wall_seconds": 25.737820766982622,
+  "targeted_tests": {
+    "passed": 51,
+    "seconds": 100.922,
+    "modules": [
+      "build_reuse",
+      "public_verification",
+      "pack_grading",
+      "grading",
+      "isolation",
+      "participant_gateway",
+      "preparation_gateway",
+      "session_driver",
+      "scheduled_grading",
+      "verified_grading",
+      "tool_metrics",
+      "coordinator_receipt",
+      "fresh_coordinator"
+    ]
+  },
+  "implementation_sha256": {
+    "experiments/application_comparison/build_reuse.py": "c0a886b8c43c34ad5b7edf79cbf8157026e95d37a829e50687d833601ba676f0",
+    "experiments/application_comparison/execution.py": "d95ece48ab9a70eacbe2f46197cca622600ce3c773282862c008b5070344e003",
+    "experiments/application_comparison/public_verification.py": "944cecb6b1b03a088e4ff22cfb616bb6e3b19bdb253d74795fc776dc36935bf7",
+    "experiments/application_comparison/pack_grading.py": "5cbd71046154b315f9d64a24b0ef380d1b44bd280048f4b5a4534dce085895e2",
+    "experiments/application_comparison/grading.py": "0b7fc901a25fdb7b4e05d3c7de93527bc7f10102e0cf0551ebacb6cd36574a5f",
+    "experiments/application_comparison/isolation_bootstrap.py": "8da96a6b7422b8071051301b75c30019e7eabe83e4c3010d5b25107fc3def194",
+    "tests/application_comparison/test_build_reuse.py": "904c1959c4148e4146aae63ae61fe791eab2101edf63ef6f033c8c39f6a5f780",
+    "tests/application_comparison/test_pack_grading.py": "3402f2e625840e9f1b2e0f807f4fd684df1cbbf1e37f0c22cbffaafda902e27b"
+  }
+}

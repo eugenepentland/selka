@@ -2,7 +2,6 @@
 /// Failures returned by render; callers must handle these boundary errors.
 pub const RenderError = error{
     InvalidCheckedType,
-    UnsupportedGenericTypeExport,
     OutOfMemory,
     SourceError,
     InternalError,
@@ -128,9 +127,7 @@ pub fn render(allocator: std.mem.Allocator, index: *interfaces.Index, program: t
             const name = try std.fmt.allocPrint(scratch, "{s}::{s}", .{ index.project.modules.items[module].name, symbol.name });
             const ty = nominal.get(name) orelse {
                 // A public template is a type constructor, not a concrete schema root.
-                inline for (.{ "records", "variants" }) |category| for (@field(unit.syntax.types, category)) |declaration| {
-                    if (declaration.name.start == symbol.span.start and declaration.type_parameters.len != 0) return error.UnsupportedGenericTypeExport;
-                };
+                if (@import("generic_api.zig").isConstructor(unit, symbol.span)) continue;
                 return error.InvalidCheckedType;
             };
             try roots.append(scratch, try graph.reference(ty));
@@ -171,5 +168,7 @@ pub fn render(allocator: std.mem.Allocator, index: *interfaces.Index, program: t
         .exports = roots.items,
         .functions = functions,
         .types = definitions.items,
+        .generic_templates_version = "generic-templates-v1",
+        .generic_templates = try @import("generic_api.zig").collect(scratch, index),
     }, .{ .emit_null_optional_fields = false });
 }

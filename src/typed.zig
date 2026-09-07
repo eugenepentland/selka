@@ -17,7 +17,7 @@ pub const ReferenceId = enum(usize) { _ };
 /// Checked borrow provenance, owner slot, element type, and mutability metadata.
 pub const Reference = struct { mode: ReferenceMode = .{}, name: []const u8, declaration: Span, owner: LocalId, parent: ?ReferenceId, ty: Type, mutable: bool };
 /// Distinguish slice views and incoming parameter loans from local whole-value loans.
-pub const ReferenceMode = struct { slice: bool = false, parameter: bool = false };
+pub const ReferenceMode = struct { temporary: bool = false, slice: bool = false, parameter: bool = false };
 /// Index of a function-local value slot.
 pub const LocalId = enum(usize) { _ };
 pub const Type = values.Type;
@@ -50,6 +50,7 @@ pub const Node = struct {
         external_read: struct { kind: @import("external_capabilities.zig").Kind, capability: NodeId },
         acquire_pool: Acquisition,
         acquire_buffer: Acquisition,
+        json_codec: struct { document: bool = false, decode: bool, arguments: [3]NodeId },
         reset_arena: NodeId,
         cast: NodeId,
         wrap: NodeId,
@@ -62,7 +63,7 @@ pub const Node = struct {
         record: []const FieldInit,
         update: struct { base: NodeId, fields: []const FieldInit },
         field: struct { base: NodeId, index: usize },
-        call: struct { function: FunctionId, arguments: []const NodeId, references: []const ReferenceId = &.{} },
+        call: struct { function: FunctionId, arguments: []const NodeId, references: []const ReferenceId = &.{}, literals: []const LiteralArgument = &.{} },
         unary: struct { op: UnaryOp, operand: NodeId, op_span: Span },
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
     },
@@ -129,7 +130,7 @@ pub const RecordShape = struct {
     }
 };
 /// Checked obligations, type-argument visibility and an optional explicit domain wire contract.
-pub const RecordContract = struct { public_arguments: bool = true, codec: ?Codec = null, move_only: bool = false, requires_handling: bool = false };
+pub const RecordContract = struct { public_arguments: bool = true, codec: ?Codec = null, codec_declared: bool = false, move_only: bool = false, requires_handling: bool = false };
 /// Payload types and case tags of a checked ok/err result schema.
 pub const ResultShape = struct { ok_type: Type, error_type: Type, ok_tag: usize, error_tag: usize };
 /// Recognize a valid fallible result and return its payload types and tags.
@@ -212,6 +213,8 @@ pub const Statement = struct {
 pub const MatchArm = struct { tag: usize, slot: ?LocalId, body: StatementId };
 /// Checked expressions supplying the start and end of a slice.
 pub const Range = struct { start: NodeId, end: NodeId };
+/// A byte literal materialized and borrowed only for the duration of one call.
+pub const LiteralArgument = struct { value: NodeId, owner: LocalId, reference: ReferenceId, length: usize };
 /// Local type, declaration, usage counts, and tracked ownership/borrow state.
 pub const Local = struct {
     ownership: LocalOwnership = .{},
@@ -227,7 +230,7 @@ pub const LocalOwnership = struct { transfer_span: ?Span = null, arena_depth: us
 /// Passing convention for a reference or slice parameter binding.
 pub const LocalParameter = struct { slice_parameter: bool = false, reference_parameter: ?bool = null };
 /// Static binding reads, writes, and mutability evidence used by quality diagnostics.
-pub const LocalUsage = struct { mutable_borrow: bool = false, reads: usize = 0, writes: usize = 0 };
+pub const LocalUsage = struct { temporary: bool = false, mutable_borrow: bool = false, reads: usize = 0, writes: usize = 0 };
 
 /// Caller parameter provenance and mutability of a returned reference or slice.
 pub const ReturnReference = struct { parameter: LocalId, mutable: bool, slice: bool };

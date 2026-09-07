@@ -86,7 +86,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
                 .resource_io => |io| graph.direct(index, typed.resourceKind(function.scope.locals[@backingInt(io.owner)].ty, program.records).?.effect(), node.span),
                 .environment_get => graph.direct(index, .environment, node.span),
                 .external_read => |read| graph.direct(index, read.kind.effect(), node.span),
-                .acquire_buffer, .acquire_pool => graph.direct(index, .allocation, node.span),
+                .json_codec, .acquire_buffer, .acquire_pool => graph.direct(index, .allocation, node.span),
                 .buffer_operation => |op| if (op.kind.allocates()) {
                     graph.direct(index, .allocation, node.span);
                 },
@@ -204,7 +204,7 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
             },
             .environment_get => graph.direct(index, .environment, instruction.span),
             .external_read => |read| graph.direct(index, read.kind.effect(), instruction.span),
-            .begin_region, .acquire_buffer, .acquire_pool => graph.direct(index, .allocation, instruction.span),
+            .begin_region, .json_codec, .acquire_buffer, .acquire_pool => graph.direct(index, .allocation, instruction.span),
             .buffer_operation => |op| if (op.kind.allocates()) {
                 graph.direct(index, .allocation, instruction.span);
             },

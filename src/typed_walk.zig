@@ -66,7 +66,11 @@ pub const Walker = struct {
                 .record => |values| try self.fields(values),
                 .pool_operation => |op| try self.arguments(op.arguments),
                 .buffer_operation => |op| try self.arguments(op.arguments),
-                .call => |call| try self.arguments(call.arguments),
+                .call => |call| {
+                    try self.arguments(call.arguments);
+                    for (call.literals) |literal| try self.expr(literal.value);
+                },
+                .json_codec => |codec| try self.arguments(&codec.arguments),
                 .field => |field| try self.expr(field.base),
                 .unary => |u| try self.expr(u.operand),
                 .binary => |b| {

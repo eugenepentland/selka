@@ -91,14 +91,15 @@ pub const Project = struct {
         try self.names.put(allocator, owned_name, id);
         const site = origin orelse Site{ .module = id, .span = .{ .start = 0, .end = 0 } };
         const limit = @min(options.max_file_bytes, options.max_total_bytes - self.counts.bytes);
-        const bytes = provider.read(provider.context, allocator, path, limit) catch |err| {
+        const bytes = if (@import("standard_library.zig").source(path)) |library| try allocator.dupe(u8, library) else provider.read(provider.context, allocator, path, limit) catch |err| {
             if (err == error.OutOfMemory) return error.OutOfMemory;
             return self.fail(if (err == error.TooLarge) "E_PROJECT_BYTES" else "E_MODULE_READ", try std.fmt.allocPrint(allocator, "cannot load {s}: {s}", .{ path, @errorName(err) }), site, null);
         };
         defer allocator.free(bytes);
         if (bytes.len > limit) return self.fail("E_PROJECT_BYTES", "provider exceeded the source byte budget", site, null);
         self.counts.bytes += bytes.len;
-        self.modules.items[id].src = try source.Source.init(allocator, path, bytes);
+        const source_path = if (@import("standard_library.zig").source(path) != null) try std.fmt.allocPrint(allocator, "@stdlib/{s}", .{path}) else path;
+        self.modules.items[id].src = try source.Source.init(allocator, source_path, bytes);
         std.crypto.hash.sha2.Sha256.hash(bytes, &self.modules.items[id].digest, .{});
         try self.header(id, options);
         return id;

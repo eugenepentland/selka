@@ -1,0 +1,35 @@
+info(verbose): /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -OReleaseFast --dep mylang -Mroot=src/byte_io/runner.zig -OReleaseFast -Mmylang=src/compiler.zig --cache-dir /tmp/my-compiler-source-validation-p941pued/cache --global-cache-dir /home/epentland/.cache/zig --name mylang-io --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+info(verbose): /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -OReleaseFast --dep mylang -Mroot=src/board_trial/runner.zig -OReleaseFast -Mmylang=src/compiler.zig --cache-dir /tmp/my-compiler-source-validation-p941pued/cache --global-cache-dir /home/epentland/.cache/zig --name board-trial --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+info(verbose): /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -OReleaseFast --dep mylang -Mroot=src/main.zig -OReleaseFast -Mmylang=src/compiler.zig --cache-dir /tmp/my-compiler-source-validation-p941pued/cache --global-cache-dir /home/epentland/.cache/zig --name mylang --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+info(verbose): ../guardian-zig/zig-out/bin/guardian-check selfcheck ../guardian-zig
+info(verbose): /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/zig build-exe -OReleaseFast --dep mylang -Mroot=src/schematic/runner.zig -OReleaseFast -Mmylang=src/compiler.zig --cache-dir /tmp/my-compiler-source-validation-p941pued/cache --global-cache-dir /home/epentland/.cache/zig --name schematic-svg --zig-lib-dir /home/epentland/zig-toolchains/0.17.0-dev.1683+5ceec001b/lib/ --listen=-
+guardian: selfcheck: prebuilt guardian-check matches ../guardian-zig (source d2ec9a489e00)
+info(verbose): ../guardian-zig/zig-out/bin/guardian-check all . --quiet
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+info(verbose): install -C /tmp/my-compiler-source-validation-p941pued/cache/o/d3b152e51ed4b55aaa6bbbf8d35004c3/mylang-io /tmp/my-compiler-source-validation-p941pued/install/bin/mylang-io
+info(verbose): install -C /tmp/my-compiler-source-validation-p941pued/cache/o/d91837830530fc5fb2b478e885993b41/schematic-svg /tmp/my-compiler-source-validation-p941pued/install/bin/schematic-svg
+info(verbose): install -C /tmp/my-compiler-source-validation-p941pued/cache/o/5f86d0edf5c0aed2903034e64d1c7778/board-trial /tmp/my-compiler-source-validation-p941pued/install/bin/board-trial
+info(verbose): install -C /tmp/my-compiler-source-validation-p941pued/cache/o/4bac140ecf692de4f254d5be4b345dc3/mylang /tmp/my-compiler-source-validation-p941pued/install/bin/mylang
+Build Summary: 12/12 steps succeeded
+install success
++- install mylang success
+|  +- compile exe mylang fast native success 45s MaxRSS:1G
+|  +- run ../guardian-zig/zig-out/bin/guardian-check success 22ms
+|     +- guardian-selfcheck success
+|        +- run ../guardian-zig/zig-out/bin/guardian-check success 5ms
++- install board-trial success
+|  +- compile exe board-trial fast native success 33s MaxRSS:938M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install schematic-svg success
+|  +- compile exe schematic-svg fast native success 32s MaxRSS:921M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- install mylang-io success
+|  +- compile exe mylang-io fast native success 32s MaxRSS:912M
+|  +- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
++- run ../guardian-zig/zig-out/bin/guardian-check (+1 more reused dependencies)
+
+........
+----------------------------------------------------------------------
+Ran 8 tests in 4.815s
+
+OK

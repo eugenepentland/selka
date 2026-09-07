@@ -6,3 +6,4 @@ __pycache__/
 .mylang-cache/
 
 .guardian/cache/
+experiments/application_comparison/baselines/*/zig/.guardian/cache/

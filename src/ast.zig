@@ -109,7 +109,19 @@ pub const FunctionPolicy = struct {
     conversion: bool = false,
 };
 /// Named type variable with explicit source-spelled requirements.
-pub const TypeParameter = struct { name: Span, requirements: []const Span };
+pub const TypeParameter = struct {
+    name: Span,
+    requirements: []const Span,
+    field_requirements: []const Parameter = &.{},
+    operation_requirements: []const Operation = &.{},
+};
+/// Explicit public domain operation required by a structural generic contract.
+pub const Operation = struct {
+    name: Span,
+    parameters: []const Parameter,
+    return_type: Span,
+    effect_bound: @import("effect_set.zig").Bound,
+};
 /// Source parameter and result spellings with optional reference provenance.
 pub const FunctionSignature = struct { type_parameters: []const TypeParameter = &.{}, return_reference: ?ReturnReference = null, parameters: []const Parameter, return_type: Span };
 

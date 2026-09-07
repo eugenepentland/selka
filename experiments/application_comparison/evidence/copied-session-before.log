@@ -1,0 +1,18 @@
+test_abandoned_registered_trio_remains_in_fresh_hidden_grading (test_scheduled_grading.ScheduledGradingTests.test_abandoned_registered_trio_remains_in_fresh_hidden_grading) ... FAIL
+
+======================================================================
+FAIL: test_abandoned_registered_trio_remains_in_fresh_hidden_grading (test_scheduled_grading.ScheduledGradingTests.test_abandoned_registered_trio_remains_in_fresh_hidden_grading)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang/tests/application_comparison/test_scheduled_grading.py", line 87, in test_abandoned_registered_trio_remains_in_fresh_hidden_grading
+    self.assertEqual(rejected['outcome'], 'failed')
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'completed' != 'failed'
+- completed
++ failed
+
+
+----------------------------------------------------------------------
+Ran 1 test in 47.613s
+
+FAILED (failures=1)

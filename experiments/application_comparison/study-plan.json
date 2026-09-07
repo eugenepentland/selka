@@ -1,0 +1,391 @@
+{
+  "application_dependencies": "standard-library-only",
+  "applications": [
+    "eda-project-inspector",
+    "workflow-dependency-planner"
+  ],
+  "baseline_construction": {
+    "eda": {
+      "my": "implemented; independent tests, isolated conformance and common 55MB fixture pass after host runtime allocator fix",
+      "python": "implemented; independent tests and isolated conformance including high-output fixture pass",
+      "zig": "implemented; strict Guardian 88 checks, Debug tests, ReleaseSafe build and 64-case conformance pass through isolated main adapter; no freezes"
+    },
+    "large_workload_growth": "pending; compact v1 baselines are construction starting points",
+    "planner": {
+      "my": "implemented; independent functional and full graph-storage stress pass; isolated generated conformance pass",
+      "python": "implemented; independent tests and isolated conformance pass",
+      "zig": "implemented; strict Guardian 88 checks, Debug tests, ReleaseSafe build and 64-case conformance pass through isolated main adapter; no freezes"
+    },
+    "scored_sessions": 0
+  },
+  "calibration_lifecycle": {
+    "grading_reporting": "three abandoned calibration attempts through local HTTP, fresh scheduled grading and cohort summary; failures/unlaunched repetitions retained; fixture grading rejects calibration",
+    "live_requests": 0,
+    "remaining": "Three direct-agent exploratory blocks completed (nine sessions); remaining catalog tasks/repetitions and larger-tier decision remain. No scored pilot launch; API transport optional.",
+    "reservation_namespace": "calibration-reservations",
+    "setup_cli": "calibration_setup freezes selected small pilot blocks, all language/arm tools, curricula, private task packs and coordinator v2 policy; explicit model/budgets required; zero model calls and no reservations",
+    "status": "fresh-calibration-transport-implemented-local-http-validation",
+    "transport": "credential pipe to verified fresh worker; frozen Responses transport identity and mandatory per-phase reported-token limit; local HTTP fixtures only",
+    "usage_policy": "optional frozen max_reported_tokens_per_phase; response-boundary stop before tools, recorded overshoot, missing/inconsistent usage stops phase; not a hard billing cap"
+  },
+  "cohort_session_provisioning": {
+    "attempt_matching": "pair_id rejects mixed repetitions; atomic per-arm reservations prevent duplicate provisioning",
+    "remaining": "actual model configuration and budget selection; launch review and explicit interruption recovery",
+    "scored_sessions": 0,
+    "status": "fixture and v5 calibration provisioning implemented; CLI selects kind explicitly",
+    "task_sources": "scheduled repair variants and identical protected public files; hidden receipts outside participant mounts"
+  },
+  "comparative_claims": [],
+  "coordinator_provenance": {
+    "fresh_process": "verified in-memory source imports for probes, fixture replay, calibration transport and unscored grading; only local HTTP fixture calls tested",
+    "live_calls": 0,
+    "loaded_code_attested": false,
+    "outer_worker": "durable request/launch/PID/output/outcome records; bounded wall/output; parent-death and process-group cleanup; four focused tests pass",
+    "remaining": "actual model calibration; explicit interruption recovery policy; independent result analysis",
+    "status": "cohort-v5-bound-with-fresh-import-requirement-and-grading-evidence",
+    "validated": "39 top-level modules plus Python executable and stdlib captured and reverified; two drift tests pass"
+  },
+  "dependency_inventory": {
+    "boundary_review": "evidence/baseline-boundary-review.json; six current inventories unchanged; full Python entry inspection and targeted Zig/my boundary inspection; no external helper observed; independent provenance and binary attestation remain open",
+    "evidence": "evidence/baseline-dependency-inventory.json",
+    "flagged_declarations": 0,
+    "json_api_review": "installed-json-boundary-probe.json: three installed VM probes agree with typed-envelope API documentation; existing typed decoder is not a direct replacement for ordinary benchmark JSON; source-library alternatives not ruled out",
+    "native_boundary_review": "raw-host-boundary-review.json: only scalar byte callbacks found; installed-binary rejection/publication tests pass; not independent blinded review or fresh build attestation",
+    "remaining": "independent source origin/vendoring review; full Zig/my semantic boundary review; freeze reviewed audit and tool-source evidence with actual trial inputs",
+    "status": "six-application-entry-static-inventories-recorded",
+    "stdlib_only_proven": false,
+    "tests_passed": 3
+  },
+  "direct_agent_calibration": {
+    "artifact_directory": "/home/epentland/ai/canopy/application-trials/direct-20260907",
+    "cohort": "direct-20260907",
+    "execution": "fresh coding subagents through local participant gateway; no API key",
+    "hidden_case_groups": 7,
+    "hidden_malformed_requests": 4,
+    "hidden_manifests": 138,
+    "isolation": "namespace isolation for gateway commands; whole-agent host access restricted by instruction only",
+    "main_arm": "Zig Guardian enabled; my installed compiler/navigation enabled",
+    "preparation_seconds": 1200,
+    "remaining": "First priority block retained under historical repeated-cold-build policy; next EDA repair block completed with suite build reuse. Do not pool raw timing across policies.",
+    "report": "docs/experiments/direct-agent-calibration-20260907.md",
+    "results": {
+      "my": {
+        "failed_public_submissions": 0,
+        "hidden": {
+          "accepted": true,
+          "failed_cases": []
+        },
+        "practice_outcome": "passed",
+        "preparation_seconds": 26.279545402,
+        "public_submissions": 1,
+        "seal_reason": "completed",
+        "task_seconds": 133.447701488
+      },
+      "python": {
+        "failed_public_submissions": 0,
+        "hidden": {
+          "accepted": true,
+          "failed_cases": []
+        },
+        "practice_outcome": "passed",
+        "preparation_seconds": 24.677034189,
+        "public_submissions": 1,
+        "seal_reason": "completed",
+        "task_seconds": 95.680320842
+      },
+      "zig": {
+        "failed_public_submissions": 2,
+        "hidden": {
+          "accepted": true,
+          "failed_cases": []
+        },
+        "practice_outcome": "passed",
+        "preparation_seconds": 305.908253829,
+        "public_submissions": 3,
+        "seal_reason": "completed",
+        "task_seconds": 248.991813775
+      }
+    },
+    "scored": false,
+    "sessions": 3,
+    "status": "completed-and-privately-graded",
+    "task": "planner-priority",
+    "task_seconds": 1800,
+    "tokens_and_cost": "unavailable"
+  },
+  "direct_agent_pin_roles_calibration": {
+    "artifact_directory": "/home/epentland/ai/canopy/application-trials/direct-20260907-pin-roles",
+    "baseline": "original reviewed EDA v1, no prior participant changes; independent block, not longitudinal maintenance",
+    "build_policy": "suite-build-reuse-v1",
+    "cohort": "direct-20260907-pin-roles",
+    "family": "shared-contract",
+    "hidden_case_groups": 7,
+    "hidden_malformed_requests": 4,
+    "hidden_manifests": 142,
+    "preparation_seconds": 1200,
+    "remaining": "Remaining catalog tasks: planner-input-boundary, planner-cycle-groups, eda-rotation; then fresh repetitions under fixed build policy and review before medium/large tiers.",
+    "report": "docs/experiments/direct-agent-pin-roles-20260907.md",
+    "results": {
+      "my": {
+        "failed_public_submissions": 0,
+        "hidden": {
+          "accepted": true,
+          "failed_cases": []
+        },
+        "practice_outcome": "passed",
+        "preparation_seconds": 26.926931846,
+        "public_submissions": 2,
+        "seal_reason": "completed",
+        "task_seconds": 198.71103098
+      },
+      "python": {
+        "failed_public_submissions": 0,
+        "hidden": {
+          "accepted": true,
+          "failed_cases": []
+        },
+        "practice_outcome": "passed",
+        "preparation_seconds": 26.685202019,
+        "public_submissions": 1,
+        "seal_reason": "completed",
+        "task_seconds": 122.910526536
+      },
+      "zig": {
+        "failed_public_submissions": 1,
+        "hidden": {
+          "accepted": true,
+          "failed_cases": []
+        },
+        "practice_outcome": "passed",
+        "preparation_seconds": 60.073831425,
+        "public_submissions": 2,
+        "seal_reason": "completed",
+        "task_seconds": 254.487598879
+      }
+    },
+    "scored": false,
+    "sessions": 3,
+    "status": "completed-and-privately-graded",
+    "task": "eda-pin-roles",
+    "task_seconds": 1800
+  },
+  "direct_agent_repair_calibration": {
+    "artifact_directory": "/home/epentland/ai/canopy/application-trials/direct-20260907-clearance",
+    "cohort": "direct-20260907-clearance",
+    "execution_policy": "suite-build-reuse-v1",
+    "hidden_case_groups": 9,
+    "hidden_malformed_requests": 4,
+    "hidden_manifests": 142,
+    "preparation_seconds": 1200,
+    "remaining": "Continue remaining shared-contract/feature tasks and repetitions; two exploratory blocks do not justify large-codebase or productivity claims.",
+    "report": "docs/experiments/direct-agent-clearance-20260907.md",
+    "results": {
+      "my": {
+        "failed_public_submissions": 0,
+        "hidden": {
+          "accepted": true,
+          "failed_cases": []
+        },
+        "practice_outcome": "passed",
+        "preparation_seconds": 22.059451522,
+        "public_submissions": 1,
+        "seal_reason": "completed",
+        "task_seconds": 89.6317111
+      },
+      "python": {
+        "failed_public_submissions": 0,
+        "hidden": {
+          "accepted": true,
+          "failed_cases": []
+        },
+        "practice_outcome": "passed",
+        "preparation_seconds": 24.204752399,
+        "public_submissions": 1,
+        "seal_reason": "completed",
+        "task_seconds": 67.487168025
+      },
+      "zig": {
+        "failed_public_submissions": 0,
+        "hidden": {
+          "accepted": true,
+          "failed_cases": []
+        },
+        "practice_outcome": "passed",
+        "preparation_seconds": 59.078007713,
+        "public_submissions": 1,
+        "seal_reason": "completed",
+        "task_seconds": 97.423747027
+      }
+    },
+    "scored": false,
+    "sessions": 3,
+    "status": "completed-and-privately-graded",
+    "task": "eda-clearance-boundary",
+    "task_seconds": 1800
+  },
+  "environment_receipts": {
+    "full_system_capture": "explicit runtime mounts captured and reverified; original broad /usr mount replaced in execution and scanner",
+    "remaining": "full toolchain receipts for actual trial configurations; frozen grader runtime and transport/coordinator provenance; host remains mutable",
+    "scored_launch_authorized": false,
+    "session_binding": "v3 freezes every arm/task/language receipt and provisions required identity; driver verifies before and after outside clocks; grading requires consistent retained evidence",
+    "status": "cohort-v3-binding-and-grading-evidence-implemented",
+    "verified": "five focused tests; local Python, Zig, mylang-io and Guardian executable receipts captured and reverified",
+    "version": "application-environment-v2"
+  },
+  "grader_runtime": {
+    "behavior": "all declared grader tool mounts and full system coverage required; drift retains intermediate results but no verified final report",
+    "derivation": "implemented: three frozen task configurations yield grader adapters and environment; matching app/arm/system required; no recapture during derivation",
+    "remaining": "calibration with actual participant-produced submissions and installed tools; scored launch and independent result analysis",
+    "status": "scheduled-fresh-fixture-and-calibration-grading-implemented"
+  },
+  "guardian_trial_adapter": {
+    "cache_policy": "fresh coordinator-created gate project; participant cache claims discarded",
+    "participant_policy_edits": "reject",
+    "policy": "guardian_policy/guardian.toml",
+    "remaining": "cohort freeze and trusted cross-session cache policy",
+    "scored_sessions": 0,
+    "status": "implemented and isolated construction checks pass for both Zig baselines"
+  },
+  "harness_regression": {
+    "elapsed_seconds": 209.827,
+    "evidence": "evidence/harness-regression-current-v2.json",
+    "modules": 39,
+    "previous_evidence": "evidence/harness-regression-118-tests.json",
+    "scope": "harness/oracles/isolation/calibration/grading/reporting/recovery; application and compiler rebuild checks excluded",
+    "sources_unchanged": true,
+    "status": "passed",
+    "tests": 141
+  },
+  "interruption_recovery": {
+    "adjudication": "adjudication module CLI; numbered hash-linked corrections; session/evidence/policy identities; no grade mutation or retry authorization; two tests pass",
+    "policy": "recovery-policy.md",
+    "policy_binding": "coordinator v2 retains complete policy text and hash; cohort freezes receipt; fresh calibration requires v2; runtime verification detects changed policy",
+    "process_identity": "new launch records capture PID/boot/namespace/kernel start ticks; read-only CLI distinguishes live, exited, reused identity and unknown; six process/launcher tests pass; never signals or authorizes retry",
+    "remaining": "predeclared scored replacement rules if needed; actual launch review; automated recovery remains disabled",
+    "rules": "retain all assigned attempts; no silent model resume or budget reset; record unknown liveness/usage explicitly; replacements disabled for scored trials",
+    "status": "protocol-and-append-only-human-review-records-implemented"
+  },
+  "languages": [
+    "my",
+    "python",
+    "zig"
+  ],
+  "main_study": {
+    "applications": 2,
+    "repetitions": 2,
+    "sessions": 144,
+    "task_families": [
+      "local-boundary",
+      "shared-contract",
+      "feature",
+      "rule-refactor"
+    ],
+    "tiers": [
+      "small",
+      "medium",
+      "large"
+    ]
+  },
+  "main_zig_guardian": true,
+  "measured_agent_sessions": 0,
+  "my_execution": "installed-bytecode-vm",
+  "optional_followup_sessions": 48,
+  "optional_live_team_sessions": 60,
+  "participant_runtime": {
+    "gateway": "commands/public checks/completion implemented; phase deadlines and immutable configuration tested",
+    "http_transport": "implemented; loopback fixture tests pass; live API compatibility unverified",
+    "live_access": "OPENAI_API_KEY still absent at 2026-09-07 reinspection; model/project clarification pending",
+    "model_loop": "implemented; fixture responses drive real isolated gateway checks",
+    "preparation": "separate pinned practice checker and preparation model loop implemented; checked source transition, failed/budget retention, history continuation and separate usage tested with fixture responses",
+    "public_verification": "complete named packs supported in preparation and task gateways; immutable source/shared deadline, all-case failure accounting, bounded diagnostics and simulated session integration tested",
+    "scheduled_driver": "fixture/calibration reservation binding with frozen tools, prompts, model and budgets; Python repair and local HTTP integration tests",
+    "scored_launch_enabled": false,
+    "session_driver": "fixture and calibration preparation/task drivers implemented; provenance, own-history continuation, separate usage and interrupted phase retention"
+  },
+  "pilot": {
+    "languages_per_block": 3,
+    "model_configuration": null,
+    "preparation_seconds_provisional": 1200,
+    "repetitions": 2,
+    "sessions": 36,
+    "task_blocks": 6,
+    "task_seconds_provisional": 1800,
+    "token_budget": null
+  },
+  "pilot_task_construction": {
+    "catalog": "pilot_tasks/catalog.json",
+    "grading_packs": "draft public/private packs implemented; four independent Python feature references pass all 37 pack checks; full contract review and calibration pending",
+    "oracles": "all six task expectations implemented; independent reference review pending",
+    "reference_solutions": "references/README.md; independently authored feature solutions and separate original-baseline repair checks; construction only",
+    "repair_variants": "two equivalent regression recipes across all three languages; isolated failure and repair checks pass",
+    "scored_sessions": 0
+  },
+  "practice_curricula": {
+    "binding": "cohort v2 captures all language packs, derives practice inputs and retains protected guide/contract in task",
+    "pack": "practice_pack.py captures only starter/guide and common contract/cases; tampering checks pass",
+    "remaining": "unscored onboarding calibration and complete cohort launch review",
+    "review": "independent fairness review confirmed three intended repairs; finite host envelope and hint specificity corrected; all three solutions pass 2MiB envelope check",
+    "scored_sessions": 0,
+    "status": "three language-specific starter/guide and separate solution drafts implemented from common three-exercise contract",
+    "validation": "all 63 shared isolated solution checks pass; independent builder tests demonstrate three intended faults"
+  },
+  "raw_byte_bridge": {
+    "executable": "zig-out/bin/mylang-io",
+    "full_eda_amplification": "passes identical 55087501-byte output fixture under 4GiB AS and unchanged VM limits; initial arena OOM preserved",
+    "source_validation": "evidence/byte-runtime-source-validation.json: clean local-cache ReleaseFast build/test succeeded; captured Zig/build/test inputs unchanged; emitted runtime byte-for-byte matches installed mylang-io; existing installed binary not replaced",
+    "status": "implemented and installed ReleaseFast; raw byte and reload isolation tests pass"
+  },
+  "required_launch_evidence": [
+    "all participant tools routed through verified isolation",
+    "frozen model, documentation, system and toolchain identities",
+    "measured usage and phase deadline enforcement",
+    "six reviewed standard-library-only application baselines",
+    "independent graders and frozen task contracts",
+    "main Zig Guardian policy enforced without participant weakening",
+    "unscored calibration and published common budgets"
+  ],
+  "result_analysis": {
+    "comparative_claims": false,
+    "export": "cohort_summary module CLI exports JSON and refuses an existing output path",
+    "human_failure_labels": "optional reviews directory; latest identity-matching label with current evidence; stale labels explicit without fallback; chain head recorded; grading/denominators unchanged",
+    "language_tool_use": "per-phase direct declared navigation/compiler operation counts and failed counts; installed gateway probe recorded in evidence/navigation-metrics-probe.json; relevance, successful repair and cache attribution remain unknown",
+    "measures": "assigned/graded/accepted counts; status categories; separate preparation/task observations; reported tokens and completeness; artifact identities checked",
+    "paired": "descriptive matched acceptance counts and differences; both-accepted task-time ratios with observed/missing counts; incomplete pairs retained",
+    "partial_usage": "completed phase time, stops and hashed usage receipts retained without final driver report; partial token totals separated from completed driver totals; unfinished-phase usage remains unknown",
+    "remaining": "navigation and diagnostic repair metrics; cache/queue intervals; monetary costs; blinded quality labels; paired statistical analysis; actual comparative trials",
+    "status": "descriptive-unscored-cohort-summary-implemented",
+    "stop_reasons": "per-attempt preparation/task stop, seal reason and recorded interruption type/phase; per-language counts with explicit missing observations; independent failure attribution remains pending",
+    "tool_work": "per-attempt observed command/search/output counts, interval unions, task checks, unchanged-source checks and check latency; uncommitted records visible; unknown cache/queue/relevance attribution"
+  },
+  "scored_launch_enabled": false,
+  "status": "infrastructure-in-progress",
+  "suite_build_reuse": {
+    "evidence": "experiments/application_comparison/evidence/build-reuse-20260907.json",
+    "invalidation": "source, full adapter/tool/policy identities and limits; live identities verified for each case",
+    "policy": "suite-build-reuse-v1",
+    "scope": "one frozen verification/grading suite; fresh process/work/cache copy per input; no behavioral-result caching",
+    "status": "implemented-and-validated",
+    "targeted_tests": 51,
+    "zig_practice_probe": {
+      "build_reuses": 20,
+      "build_seconds_after": 11.681393604027107,
+      "build_seconds_before": 260.0424761029426,
+      "cold_builds_after": 1,
+      "cold_builds_before": 21,
+      "groups": 21,
+      "suite_wall_seconds_after": 25.737820766982622
+    }
+  },
+  "trial_configurations": {
+    "compiler_source_validation": "evidence/navigation-compiler-source-validation.json: 12/12 ReleaseFast build steps and 8 navigation tests pass; emitted compiler exactly matches installed; captured source and Zig stdlib unchanged",
+    "coverage": "two unit tests cover twelve app/language/arm combinations; four installed planner configurations captured and reverified",
+    "installed_v2_validation": "both installed my/planner arms captured and reverified; evidence/my-tooling-configurations-v2.json links full configurations and runtime receipts; no model calls or compiler rebuild",
+    "my_tools": "main: installed byte host, compiler, bounded navigation client; language-focused: byte host; complete tool identities captured for practice/task/grading",
+    "navigation_probe": "evidence/isolated-navigation-trial-probe.json: installed tools located planner::run under participant isolation without compiler rebuild; not a productivity measurement",
+    "remaining": "choose model and calibrate common budgets; freeze actual configurations; scored launch remains disabled",
+    "scored_launch_authorized": false,
+    "status": "configuration-v2-includes-main-my-compiler-and-navigation",
+    "validation": "exact condition/command/limit/tool-inventory validation; three tests including seven rehashed-invalid variants; four retained installed configurations pass metadata validation"
+  },
+  "version": "application-study-plan-v2"
+}

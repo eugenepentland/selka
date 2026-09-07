@@ -139,3 +139,11 @@ pub const Sink = struct {
 
 /// Owned/result references remain restricted to supported copyable buffer views.
 pub const result_borrow = "E_RESULT_BORROW";
+
+/// Stable code for malformed or undeclared generic capability contracts.
+pub const generic_requirement = "E_GENERIC_REQUIREMENT";
+/// Stable code for a concrete or forwarded generic contract mismatch.
+pub const generic_argument = "E_GENERIC_ARGUMENT";
+
+/// Invalid argument to a reference parameter.
+pub const reference_argument = "E_REFERENCE_ARGUMENT";

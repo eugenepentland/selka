@@ -48,6 +48,8 @@ pub const Index = struct {
 
     fn add(self: *Index, name: Span, parameters: []const ast.TypeParameter, kind: Kind) Error!void {
         const ctx = self.context;
+        for (parameters) |contract| if (contract.field_requirements.len != 0 or contract.operation_requirements.len != 0)
+            return ctx.sink.fail("E_GENERIC_REQUIREMENT", contract.name, "structural requirements currently belong to function templates, not nominal type declarations");
         const key = if (ctx.names) |names| try names.declaration(name) else ctx.src.text(name);
         if (self.names.get(key)) |previous| return ctx.sink.failRelated("E_DUPLICATE_TYPE", name, "type is already declared", .{ .span = self.declarations.items[previous].name, .message = "previous type declaration" });
         const entry: Declaration = .{ .name = name, .parameters = try requirements.resolve(ctx.allocator, ctx.src, parameters, ctx.sink), .kind = kind };

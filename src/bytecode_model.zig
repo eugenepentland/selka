@@ -57,6 +57,7 @@ pub const Instruction = struct {
         external_read: struct { kind: @import("external_capabilities.zig").Kind, output: typed.Type },
         acquire_pool: typed.Type,
         acquire_buffer: typed.Type,
+        json_codec: struct { document: bool = false, decode: bool, input: typed.Type, output: typed.Type },
         move_local: typed.LocalId,
         drop_local: typed.LocalId,
         load_local: typed.LocalId,

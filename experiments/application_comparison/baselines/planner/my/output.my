@@ -1,0 +1,135 @@
+module output;
+import json;
+export invalid_request;
+export invalid_manifest;
+export results;
+export close;
+export dup_id;
+export dup_dep;
+export unknown;
+export cycle;
+export order;
+export layers;
+export timings;
+export id;
+export start;
+export finish;
+export makespan;
+export brace;
+export comma;
+export open;
+export shut;
+fn invalid_request() -> i64 {
+    let s = "{\"error\":\"invalid-request\"}";
+    borrow s[0..len(s)] as b {
+        return json::text(b);
+    }
+}
+fn invalid_manifest() -> i64 {
+    let s = "{\"error\":\"invalid-manifest\"}";
+    borrow s[0..len(s)] as b {
+        return json::text(b);
+    }
+}
+fn results() -> i64 {
+    let s = "{\"results\":[";
+    borrow s[0..len(s)] as b {
+        return json::text(b);
+    }
+}
+fn close() -> i64 {
+    let s = "]}";
+    borrow s[0..len(s)] as b {
+        return json::text(b);
+    }
+}
+fn dup_id() -> i64 {
+    let s = "{\"error\":\"duplicate-id\",\"ids\":[";
+    borrow s[0..len(s)] as b {
+        return json::text(b);
+    }
+}
+fn dup_dep() -> i64 {
+    let s = "{\"error\":\"duplicate-dependency\",\"jobs\":[";
+    borrow s[0..len(s)] as b {
+        return json::text(b);
+    }
+}
+fn unknown() -> i64 {
+    let s = "{\"error\":\"unknown-dependency\",\"ids\":[";
+    borrow s[0..len(s)] as b {
+        return json::text(b);
+    }
+}
+fn cycle() -> i64 {
+    let s = "{\"error\":\"cycle\",\"blocked\":[";
+    borrow s[0..len(s)] as b {
+        return json::text(b);
+    }
+}
+fn order() -> i64 {
+    let s = "{\"order\":[";
+    borrow s[0..len(s)] as b {
+        return json::text(b);
+    }
+}
+fn layers() -> i64 {
+    let s = "],\"layers\":[";
+    borrow s[0..len(s)] as b {
+        return json::text(b);
+    }
+}
+fn timings() -> i64 {
+    let s = "],\"timings\":[";
+    borrow s[0..len(s)] as b {
+        return json::text(b);
+    }
+}
+fn id() -> i64 {
+    let s = "{\"id\":";
+    borrow s[0..len(s)] as b {
+        return json::text(b);
+    }
+}
+fn start() -> i64 {
+    let s = ",\"start\":";
+    borrow s[0..len(s)] as b {
+        return json::text(b);
+    }
+}
+fn finish() -> i64 {
+    let s = ",\"finish\":";
+    borrow s[0..len(s)] as b {
+        return json::text(b);
+    }
+}
+fn makespan() -> i64 {
+    let s = "],\"makespan\":";
+    borrow s[0..len(s)] as b {
+        return json::text(b);
+    }
+}
+fn brace() -> i64 {
+    let s = "}";
+    borrow s[0..len(s)] as b {
+        return json::text(b);
+    }
+}
+fn comma() -> i64 {
+    let s = ",";
+    borrow s[0..len(s)] as b {
+        return json::text(b);
+    }
+}
+fn open() -> i64 {
+    let s = "[";
+    borrow s[0..len(s)] as b {
+        return json::text(b);
+    }
+}
+fn shut() -> i64 {
+    let s = "]";
+    borrow s[0..len(s)] as b {
+        return json::text(b);
+    }
+}

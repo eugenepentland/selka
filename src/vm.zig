@@ -9,6 +9,7 @@ const host = @import("host_functions.zig");
 const vm_host = @import("vm_host.zig");
 const value_copy = @import("value_copy.zig");
 const std = @import("std");
+const invocation_contract = @import("invocation_contract.zig");
 const bc = @import("bytecode.zig");
 const integers = @import("integers.zig");
 const typed = @import("typed.zig");
@@ -20,44 +21,9 @@ const pool_runtime = @import("pool_runtime.zig");
 const resource_runtime = @import("resource_runtime.zig");
 /// Select independent general allocations or arena-backed VM storage.
 /// Host failures and invalid checked execution state returned by the VM.
-pub const RunError = error{
-    BorrowConflict,
-    BorrowSuspended,
-    Bounds,
-    CapabilityUnavailable,
-    CapacityLimit,
-    ChildrenActive,
-    Closed,
-    Denied,
-    ExpiredBorrow,
-    Failed,
-    ForeignMemory,
-    IdentityExhausted,
-    InternalError,
-    InvalidAggregateType,
-    InvalidAllocation,
-    InvalidBudget,
-    InvalidCapability,
-    InvalidDataType,
-    InvalidDataValue,
-    InvalidOwner,
-    InvalidProvider,
-    InvalidValueLimits,
-    MemoryClosed,
-    NoCapacity,
-    NotDataType,
-    OutOfMemory,
-    ReadOnly,
-    RegionInUse,
-    ResourceLimit,
-    TypeMismatch,
-    Unavailable,
-    ValueCountLimit,
-    ValueDepthLimit,
-    ValueTypeMismatch,
-};
+pub const RunError = invocation_contract.RunError;
 /// Invocation additionally checks exported function identity and argument contracts.
-pub const InvokeError = RunError || error{ InvocationArity, InvocationEffects, InvocationReference, PrivateInvocationFunction, UnknownInvocationFunction };
+pub const InvokeError = invocation_contract.InvokeError;
 /// Select general allocation or arena backing for a VM execution.
 pub const MemoryBacking = enum { general, arena };
 /// Execution quotas, optional statistics, and explicitly supplied host authority.
@@ -86,14 +52,9 @@ pub const PoolOptions = struct {
 pub const Result = union(enum) { value: i64, trap: Diagnostic };
 pub const Value = typed.Value;
 /// Owned typed invocation result or a source-located runtime trap.
-pub const ValueResult = union(enum) { value: Value, trap: Diagnostic };
+pub const ValueResult = invocation_contract.ValueResult;
 /// Authority-free invocation limits and checked argument-copy limits.
-pub const InvokeOptions = struct {
-    max_steps: u64 = 1_000_000,
-    max_frames: u64 = 256,
-    arguments: value_copy.Limits = .{},
-    steps_executed: ?*u64 = null,
-};
+pub const InvokeOptions = invocation_contract.InvokeOptions;
 fn integer(value: typed.Value, allocator: std.mem.Allocator) error{InternalError}!i64 {
     defer value.release(allocator);
     if (value != .i64) return error.InternalError;
@@ -314,6 +275,7 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
         .allocator = allocator,
         .program = program,
         .options = options,
+        .steps = &steps,
         .storage = storage,
         .pools = &pools,
         .providers = .{ .host = entry_request.host, .environment = &environment_execution, .resources = &resource_execution, .external = &external_runtime },
@@ -375,6 +337,7 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
             .external_read => step.executeExternalRead(),
             .acquire_pool => step.executeAcquirePool(),
             .acquire_buffer => step.executeAcquireBuffer(),
+            .json_codec => step.executeJson(),
             .move_local => step.executeMoveLocal(),
             .drop_local => step.executeDropLocal(),
             .take_field => step.executeTakeField(),
@@ -425,6 +388,7 @@ const Execution = struct {
     allocator: std.mem.Allocator,
     program: bc.Program,
     options: Options,
+    steps: *u64,
     storage: *memory.Store,
     pools: *pool_runtime.Runtime,
     providers: Providers,
@@ -1398,6 +1362,30 @@ const Step = struct {
         return null;
     }
 
+    fn executeJson(self: *Step) !?ValueResult {
+        const execution = self.execution;
+        const allocator = execution.allocator;
+        const stack = execution.state.stack;
+        const limit = try numeric(stack, self.frame.operand_base, null, allocator);
+        const input = try pop(stack, self.frame.operand_base);
+        defer input.release(allocator);
+        const authority = try pop(stack, self.frame.operand_base);
+        defer authority.release(allocator);
+        const outcome = @import("runtime_json.zig").run(allocator, .{
+            .program = execution.program,
+            .storage = execution.storage,
+            .steps = execution.options.max_steps - execution.steps.*,
+            .frames = execution.options.max_frames - execution.state.frames.items.len,
+            .dispatch = invoke,
+        }, .{ .op = self.instruction.op.json_codec, .authority = authority, .input = input, .limit = limit }) catch |err| switch (err) {
+            error.CodecFrameLimit => return trap("R_FRAME_LIMIT", "JSON codec active frame budget exhausted", self.instruction.span, execution.state.frames.items, execution.program),
+            error.CodecStepLimit => return trap("R_STEP_LIMIT", "JSON codec instruction budget exhausted", self.instruction.span, execution.state.frames.items, execution.program),
+            else => |failure| return failure,
+        };
+        execution.steps.* += outcome.steps;
+        try pushOwned(stack, allocator, outcome.value);
+        return null;
+    }
     fn executeAcquireBuffer(self: *Step) !?ValueResult {
         const allocator = self.execution.allocator;
         const program = self.execution.program;
@@ -1453,7 +1441,10 @@ const Step = struct {
         const frame = self.frame;
         const slot = self.instruction.op.drop_local;
         const index = frame.local_base + @backingInt(slot);
-        if (owners.contains(index)) return error.InternalError;
+        if (owners.get(index)) |owner| {
+            self.execution.storage.destroy(owner) catch |err| return memoryFailure(err, self.instruction, self.execution.state.frames.items, self.execution.program);
+            _ = owners.remove(index);
+        }
         if (locals.items[index]) |value| value.release(allocator);
         locals.items[index] = null;
         return null;

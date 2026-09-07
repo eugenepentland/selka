@@ -59,7 +59,7 @@ const Operation = struct {
         return .{
             .memory = .{ .parent = allocator, .limit = options.max_bytes },
             .execution = .{
-                .program = program,
+                .backend = .{ .dispatch = @import("vm.zig").invoke, .program = program },
                 .max_steps = options.max_steps,
                 .max_frames = options.max_frames,
                 .max_calls = options.max_calls,

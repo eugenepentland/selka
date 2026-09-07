@@ -144,6 +144,7 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
         .acquire_resource => |acquire| try writer.print("ACQUIRE_RESOURCE -> {s}", .{typed.typeName(acquire.output, program.records)}),
         .external_read => |read| try writer.print("EXTERNAL_{s} -> {s}", .{ @tagName(read.kind), typed.typeName(read.output, program.records) }),
         .acquire_pool => |ty| try writer.print("ACQUIRE_POOL {f}", .{ty}),
+        .json_codec => |codec| try writer.print("JSON_CODEC document={} decode={} input={f} output={f}", .{ codec.document, codec.decode, codec.input, codec.output }),
         .acquire_buffer => |ty| try writer.print("ACQUIRE_BUFFER {f}", .{ty}),
         .move_local => |slot| try writer.print("MOVE_LOCAL {d}", .{@backingInt(slot)}),
         .drop_local => |slot| try writer.print("DROP_LOCAL {d}", .{@backingInt(slot)}),

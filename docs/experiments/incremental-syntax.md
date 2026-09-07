@@ -34,7 +34,7 @@ because those semantic checks always run again.
 
 Exact byte equality is required; no hash collision can create a false hit. Old source
 versions may remain reusable until deterministic oldest-insertion eviction. Default
-retention is 64 entries and 16 MiB of entry arena capacity. Entries exceeding the
+retention is 256 entries and 16 MiB of entry arena capacity. Entries exceeding the
 byte budget are bypassed; zero entries disables retention. The byte limit measures
 retained arena capacity, including source/syntax allocations, but excludes the bounded
 entry index and transient construction/caller copy storage. It is not a whole-process

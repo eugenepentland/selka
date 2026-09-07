@@ -74,15 +74,15 @@ def schematic_edits(binary, directory):
     shutil.copytree(original, changed)
     renderer = changed / "svg.my"
     before = renderer.read_text()
-    assert "#f5f7fa" in before
-    renderer.write_text(before.replace("#f5f7fa", "#123abc"))
+    assert "#0d1117" in before
+    renderer.write_text(before.replace("#0d1117", "#123abc"))
     fixtures = ROOT / "experiments/schematic/fixtures"
     manifest = json.loads((fixtures / "manifest.json").read_text())
     inputs = [fixtures / entry["file"] for entry in manifest["files"]]
     with ThreadPoolExecutor(max_workers=2) as pool:
         outputs = list(pool.map(lambda project: success(run(binary, project, inputs, directory)), (original, changed)))
     assert outputs[0] == (fixtures.parent / "straps-synth-lmx2595.svg").read_bytes()
-    assert outputs[1] == outputs[0].replace(b"#f5f7fa", b"#123abc")
+    assert outputs[1] == outputs[0].replace(b"#0d1117", b"#123abc")
 
 
 def board_edits(binary, directory):

@@ -359,8 +359,28 @@ resource/environment result wrappers and fully substituted byte-array inputs.
 Generic functions can also call codecs for concrete domains while preserving
 factory/accessor privacy. The [board trial](experiments/board_trial/README.md)
 now uses one optional `Slot<T>` union and one membership helper for distinct IDs.
-Public generic schema tooling and codec constraints
-on arbitrary type parameters remain pending.
+[Structural generic constraints](docs/experiments/structural-constraints.md) now
+support named fields and public domain operations. [Public generic tooling](docs/experiments/generic-public-tooling.md)
+exposes symbolic templates separately from concrete callable exports.
+[Generic codec constraints and source serialization](docs/experiments/source-json.md)
+let `.my` programs encode and decode typed JSON through owned byte buffers.
+`examples/structural-constraints.my` returns `12`; `examples/source-json.my` returns `42`.
+
+[Compiler navigation](docs/experiments/navigation-client.md) finds qualified
+symbols, callers, references, types, effects and bounded source context:
+
+```sh
+zig-out/bin/mylang index-project src/schematic/guest/main.my
+python3 scripts/navigate.py --compiler zig-out/bin/mylang \
+  --entry src/schematic/guest/main.my --symbol layout::build --relation context \
+  --cache-dir /tmp/mylang-navigation
+```
+
+Indexes carry source/compiler receipts, and failed bodies expose unchecked
+partial declarations. The optional bounded cache supports equivalent worktrees.
+[Larger-project measurements](docs/experiments/large-project-checking.md) justified
+retaining 256 parsed modules within the existing memory budget; semantic reuse
+below module/project granularity remains conditional on demonstrated cost.
 
 [Lexical arenas](docs/experiments/source-arenas.md) use `arena heap as scratch { ... }`
 with conservative escape checks and cleanup across returns/errors.
@@ -411,8 +431,8 @@ Try `examples/native-enums.my` with the native builder.
 
 `eval-project` provides [restricted evaluation](docs/experiments/restricted-evaluation.md)
 for effect-free, parameter-free project entry points, with explicit step, frame,
-and VM-memory budgets. This is the compile-time evaluator foundation; schema
-generation and finer incremental compilation remain pending.
+and VM-memory budgets. Checked schemas and exact successful-check caching are
+implemented below; finer semantic reuse remains measurement-driven.
 
 Use `eval-project --evaluation-report` for a JSON [dependency receipt](docs/experiments/evaluation-reports.md)
 containing the exact result, source/import hashes, budgets, and running compiler identity.

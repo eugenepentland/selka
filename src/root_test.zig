@@ -47,6 +47,11 @@ test {
     _ = @import("duplicates_test.zig");
     _ = @import("near_duplicates_test.zig");
     _ = @import("quality_test.zig");
+    _ = @import("navigation_test.zig");
+    _ = @import("generic_api_test.zig");
+    _ = @import("syntax_cache_large_test.zig");
+    _ = @import("structural_constraints_test.zig");
+    _ = @import("source_json_test.zig");
     _ = @import("formatter_test.zig");
     _ = @import("native_test.zig");
     _ = @import("partial_fields_test.zig");
@@ -90,4 +95,7 @@ test {
     _ = @import("codec_json_test.zig");
     _ = @import("call_json_test.zig");
     _ = @import("runtime_values_test.zig");
+    _ = @import("literal_arguments_test.zig");
+    _ = @import("json_document_test.zig");
+    _ = @import("standard_library_test.zig");
 }

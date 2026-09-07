@@ -16,6 +16,13 @@ gates while shadow evidence is gathered. Profiling is implemented; finer semanti
 query reuse remains conditional because measured schematic checks are already small.
 The linked plan and runtime guides specify limitations and acceptance evidence.
 
+Next evaluation priority: [stdlib-only application maintenance comparison](application-comparison.md)
+against Python and Zig, with Guardian enabled for Zig in the main workflow.
+The proposed sequence starts with six reviewed small baselines and 36 pilot
+sessions before expanding to meaningful larger codebases, maintenance chains
+and measured concurrent-agent work. These are planned studies, not collected
+comparative agent results.
+
 The user authorized duplicate discovery and post-MVP experiments on 2026-09-05.
 The scalar MVP remains the tested baseline. This is implementation tracking,
 not a claim that the full future language has been delivered.
@@ -32,7 +39,7 @@ See [the current design and acceptance criteria](interpreter-first.md).
 | 2 | Move/borrow and lifetime provenance, executed repair fixtures, and [versioned CLI diagnostics](json-diagnostics.md) implemented | The board/constraint application now has VM/oracle comparison evidence; measured repair attempts remain pending. The initial [optional-value audit](optional-values.md) retains named unions/results; application usability and agent repair success remain unmeasured. |
 | 3 | Initial typed VM host functions implemented | [Guest declarations and program-bound registrations](host-functions.md) enforce exact signatures/grants, transitive effects, owned copies, typed results, bounded sessions and located VM failures. Imported/generic calls and cleanup have deterministic fake-wrapper acceptance. Borrowed/runtime-owned boundary signatures reject explicitly. |
 | 4 | Board-validation trial and matched repair harness implemented | The [bounded keepout application](../../experiments/board_trial/README.md) agrees with an independent Zig baseline on 87 fixed and 60 transformed cases, rejects 18 malformed transports, and catches three seeded static mistakes. The repair harness has five matched task pairs and fresh grading; actual agent attempts remain pending. The [schematic pilot](../../experiments/schematic/README.md) now exercises a real local Netlisp subcircuit in the VM with independent connectivity acceptance. |
-| 5 | Trial-driven language/tooling refinement | Scalar domain equality and numeric generic arrays are implemented. [Concrete nominal instances](nominal-instances.md) now execute on the VM; [symbolic nominal bodies](nominal-bodies.md) now preserve fields, variants, ownership and lifetimes before specialization. Board `Slot<T>` consolidation and provider-specific symbolic shapes are implemented. Quoted byte arrays support the schematic parser/renderer. Public generic tooling, remaining structural/codec constraints, source serialization and finer incremental checking remain open. |
+| 5 | Trial-driven language/tooling refinement | Scalar domain equality and numeric generic arrays are implemented. [Concrete nominal instances](nominal-instances.md) now execute on the VM; [symbolic nominal bodies](nominal-bodies.md) now preserve fields, variants, ownership and lifetimes before specialization. Board `Slot<T>` consolidation and provider-specific symbolic shapes are implemented. Quoted byte arrays support the schematic parser/renderer. Structural field/operation constraints, generic codec constraints, public generic schema inventories and source typed JSON byte serialization are now implemented. Compiler navigation provides source-pinned queries. Larger-project measurements justified syntax-cache capacity tuning; finer semantic reuse remains conditional. |
 | Deferred | Further native compilation, native ABI expansion, LLVM/direct x86_64 Linux, Wasm/JIT | Revisit only for demonstrated application needs; no current deadline or completion gate. |
 
 The host-function milestone is guest-to-host library calling through the VM.
@@ -52,11 +59,11 @@ its C compilation requires `--native --zig`. Shared core/CLI roots are unchanged
 | A2, nominal domains and exhaustive mappings | Implemented: domains/private construction, closed enums/tagged unions, exhaustive matching, and complete enum-indexed tables | A2 unit, privacy, added-variant match/table, and explicit unknown-code handling experiments pass. |
 | B, borrowing | Implemented: memory/lease registry, scoped references, reference/slice parameters, bounded views, and explicit returned-reference provenance | B acceptance passes; carry borrowing and snapshot rules into resource ownership. |
 | C, ownership/capabilities/effects | Owned buffers, queries/mutations, checked views, moves/wrappers, and partial-construction cleanup, and transitive allocation bounds, and explicit allocator capabilities implemented; clock/random capabilities and effects implemented; source filesystem/network resource acquisition/completion, owned error returns, and cleanup effects implemented; bounded environment lookup implemented; fixed-byte-array resource reads/writes implemented; resource permission attenuation implemented; borrowed slice I/O implemented; typed-handle pool and arena-reset backends plus execution-lifetime VM/CLI arena selection implemented; partial field moves implemented; source pools/handles, checked shared region backing, lexical source arenas, and conservative escape checking implemented; explicit source reset results implemented | Allocator and clock/random authority/effects pass acceptance; source resource lifecycle and cleanup effects pass; bounded environment lookup passes; resource reads/writes pass; permission attenuation passes; borrowed slice I/O passes; lexical arena acceptance passes under the documented conservative lifetime rules; explicit reset result acceptance passes. |
-| D, errors and abstraction | In progress: typed results, checked handling/transfer, acknowledgement, and propagation implemented; typed-handle pool backend implemented; source handles implemented; generic syntax, builtin requirements, pure symbolic body/call checking and executable specialization implemented; borrowed inputs/slices/lexical reborrows/reference provenance, concrete record/array updates, enum/union construction and exhaustive matching implemented; concrete result transfer/acknowledgement/propagation and path obligations implemented; partial field moves and remaining-field obligations implemented; concrete owned transfer and cleanup-effect inference implemented; buffer/pool acquisition and operations with allocation effects implemented; provider capability/result/effect operations implemented; local array/buffer views and concrete array-input slice results implemented; local arena/reset scopes with monotone origin and escape checks implemented; concrete nominal record/union/result/enum instances implemented; symbolic nominal fields/variants/results/ownership/borrowing implemented; structural constraints, provider-specific symbolic shapes and public generic tooling pending | Use the application trial to prioritize further structural/codec abstractions; diagnostic repair quality is next in the interpreter-first order. |
+| D, errors and abstraction | In progress: typed results, checked handling/transfer, acknowledgement, and propagation implemented; typed-handle pool backend implemented; source handles implemented; generic syntax, builtin requirements, pure symbolic body/call checking and executable specialization implemented; borrowed inputs/slices/lexical reborrows/reference provenance, concrete record/array updates, enum/union construction and exhaustive matching implemented; concrete result transfer/acknowledgement/propagation and path obligations implemented; partial field moves and remaining-field obligations implemented; concrete owned transfer and cleanup-effect inference implemented; buffer/pool acquisition and operations with allocation effects implemented; provider capability/result/effect operations implemented; local array/buffer views and concrete array-input slice results implemented; local arena/reset scopes with monotone origin and escape checks implemented; concrete nominal record/union/result/enum instances implemented; symbolic nominal fields/variants/results/ownership/borrowing implemented; provider-specific symbolic shapes, copy-constrained structural field/operation requirements, generic codec requirements and public generic schema inventories implemented | Exercise these bounded abstractions on application code; diagnostic repair quality and measured agent development outcomes remain next. |
 | M, modules/interfaces | Implemented experimental scope: bounded imports, exports/privacy, source maps, module checking/VM execution, direction policy, default-limit graph/tooling acceptance, and initial ordinary-application corpus review | Shared-domain execution, direction policy, 256-module/4096-import boundaries, and invoice/packet application acceptance pass; production-user corpus evidence remains unmeasured. |
 | E, native execution — deferred | C emission, native builder, provider adapters, embedding, value/domain ABIs and generated bindings have historical acceptance evidence. | Retain existing assets. Further coverage, borrowed/capability native calls, native performance, LLVM and direct x86_64 Linux output are outside current milestones. |
-| F, compile-time/schema/incremental work | In progress: restricted effect-free project evaluation with step/frame/VM-memory budgets and source/implementation dependency receipts plus request identity before execution and persistent successful VM-result reuse with bounded field-level request comparisons implemented; typed scalar input manifest validation/module generation and fresh in-memory evaluation/cache bindings for multiple bounded manifests implemented; checked public type/function schema derivation and bounded ordinary typed JSON serialization/deserialization with owned failure locations and standalone Python data bindings with checked persistent artifact reuse and unchanged-output preservation implemented; checked full source receipts for schema/binding generation and exported effect-free typed invocation with owned argument copies implemented; explicit domain codec declarations and schema contracts implemented; executed domain JSON with shared operation budgets implemented; schema-pinned public JSON invocation implemented; generated Python callable wrappers and domain wire objects plus fresh manifest inputs for schema generation and calls implemented; automatic content polling through a persistent check session and bounded exact successful-verdict reuse with warning replay implemented; native value/domain ABI bindings implemented; native borrowed/capability bindings deferred; source byte serialization and finer incremental checking remain pending | Prioritize bounded source byte serialization and finer semantic reuse when the interpreter trial needs them; preserve input/schema and budget checks. |
-| T, formatter/reference reports/verification | Canonical single-file/module formatter and reachable-project formatting checks, resolved function-call/binding reports including module main/export roots, configurable structural metrics, and separate manifest verification driver implemented | Extend reference/specification identities and entry roots as needed by the trial; evaluate duplication usefulness and diagnostic repair outcomes. |
+| F, compile-time/schema/incremental work | In progress: restricted effect-free project evaluation with step/frame/VM-memory budgets and source/implementation dependency receipts plus request identity before execution and persistent successful VM-result reuse with bounded field-level request comparisons implemented; typed scalar input manifest validation/module generation and fresh in-memory evaluation/cache bindings for multiple bounded manifests implemented; checked public type/function schema derivation and bounded ordinary typed JSON serialization/deserialization with owned failure locations and standalone Python data bindings with checked persistent artifact reuse and unchanged-output preservation implemented; checked full source receipts for schema/binding generation and exported effect-free typed invocation with owned argument copies implemented; explicit domain codec declarations and schema contracts implemented; executed domain JSON with shared operation budgets implemented; schema-pinned public JSON invocation implemented; generated Python callable wrappers and domain wire objects plus fresh manifest inputs for schema generation and calls implemented; automatic content polling through a persistent check session and bounded exact successful-verdict reuse with warning replay implemented; native value/domain ABI bindings implemented; native borrowed/capability bindings deferred; source typed JSON byte serialization implemented; finer semantic checking remains conditional after larger-project measurement and syntax-cache capacity tuning | Exercise source codecs on application data; add finer semantic reuse only when measured checking cost justifies its invalidation complexity. |
+| T, formatter/reference reports/verification | Canonical single-file/module formatter and reachable-project formatting checks, resolved function-call/binding reports including module main/export roots, configurable structural metrics, and separate manifest verification driver implemented | Compiler navigation now adds qualified declarations, checked static relationships, focused context queries and exact shared index caching. Evaluate time-to-definition, duplication usefulness and diagnostic repair outcomes. |
 
 ## Historical implementation checkpoints
 
@@ -1141,3 +1148,110 @@ uses synchronous requests with fresh guest state, not state migration. A five-sa
 ReleaseFast schematic profile recorded median checks of 8.23 ms cold, 1.07 ms exact
 warm verdict and 3.91 ms after a body edit. Finer semantic query caching remains
 conditional on larger measured bottlenecks. Native execution remains deferred.
+
+
+### Functional schematic SVG and shared verification trial — 2026-09-07
+
+The disk-loaded `.my` schematic application now follows the local Netlisp webpage’s
+Functional hub view: dark theme, source-derived pin groups, passive chains and
+bridge components, shared supply/ground buses, and typed interface labels.
+All 37 visible IC pin coordinates and the 884 × 1144 dimensions match the retained
+independent reference. Four NC pads remain in metadata. Native work is unchanged
+and remains deferred.
+
+Independent acceptance preserves 30 components, 95 connected pads, four NC pads,
+nine ports and all 34 raw Netlisp nets. New physical geometry checks cover visible
+signal connectivity, foreign-net pad contacts and chip occlusion. A real DSL
+rewire changes the drawing; an intentionally broken `.my` wire emitter retains
+metadata but is rejected by the geometry oracle. All 23 existing malformed-input
+cases still reject with located diagnostics and no partial SVG. Browser inspection
+confirmed the final rendering and no text outside its viewBox.
+
+Three subagents split layout, drawing/reference work and verification experiments.
+The final shared-cache trial executed two suites cold in 2.44 seconds; warm and
+equivalent-root checks reused both receipts in 0.21 seconds. Four simultaneous
+clients requesting eight suites caused only two executions and six coalesced
+deliveries. Renderer-only affected selection omitted the fixture suite, and
+failed renderers reran instead of borrowing a successful receipt. This is a
+declared-suite experiment using isolated copied roots, not semantic per-function
+testing or combined-merge verification.
+
+The actual schematic also completed a same-process VM reload cycle: a guest edit
+changed the output, a broken edit retained the last good preview, and repair
+restored the original. The installed binary stayed unchanged throughout; no Zig
+build or Guardian invocation was needed. See the [pilot and reproducible evidence](../../experiments/schematic/README.md).
+
+
+## Agent navigation and generic/codec language batch — 2026-09-07
+
+Three subagents implemented structural contracts, source codecs, and public
+schema/cache tooling while the integration track added compiler navigation.
+The bytecode VM remains the runtime; native implementation remains deferred.
+
+- [Structural requirements](structural-constraints.md) check named fields and
+  public domain operations symbolically, including forwarded requirements,
+  exact types, reference permissions and effect ceilings. This first scope is
+  copy-constrained function templates; unsupported structural type constructors
+  and reference-returning operations reject explicitly.
+- [Source typed JSON](source-json.md) gives `.my` programs allocator-authorized
+  encoding and decoding through owned byte buffers and checked results. Generic
+  `codec` requirements prove serializability, including declared domain codecs.
+  Byte, value, memory, codec-call and remaining VM step/frame limits apply.
+- [Public generic tooling](generic-public-tooling.md) reports templates separately
+  from concrete callable exports, with symbolic contracts, fields/cases, import
+  scope and source identities. Uninstantiated templates are not JSON-callable.
+- [Compiler navigation](navigation-client.md) indexes original source locations,
+  qualified declarations, signatures, effects and resolved static relationships.
+  Queries find definitions, callers, references, types, effects, bounded context
+  and possible impact. Broken bodies expose explicitly unchecked declarations.
+  Optional bounded disk receipts share exact indexes across equivalent worktrees.
+- [Larger-project checking](large-project-checking.md) found a 64-entry cache
+  repeatedly reparsing all 97 modules despite using under 2 MiB. Raising capacity
+  to 256 within the existing 16 MiB budget retains at least 96 unchanged modules
+  across a leaf edit. Semantic checking still runs completely for changed
+  projects. Measured edited checks around 11–15 ms do not yet justify a new
+  per-function semantic cache. Exact navigation caching has separate measured
+  benefit: 944 ms fresh versus 53 ms validated warm on the generated workload.
+
+The next useful trial is to use navigation and these language features during
+matched application changes, recording search time, context bytes, successful
+repair cycles and independently checked behavior. Existing measurements establish
+cache behavior and feature correctness; they do not yet establish that agents
+build higher-quality applications faster than Python or Zig.
+
+
+Final validation for this batch: the full Debug interpreter gate passed 42/42
+steps and 901/901 Zig tests, together with all Python acceptance drivers,
+including eight actual-compiler navigation tests and 43 verification/cache/
+scheduler tests. Focused ReleaseFast source-codec and structural roots passed
+13 and 14 tests respectively (including their imported support tests). The
+ReleaseFast installation passed 10/10 steps; both new examples return their
+expected values using the installed binary. On the real schematic, navigation
+finds `layout::build` at `layout.my:464`, returns byte-exact original source, and
+finds `svg::render` as its caller through a validated warm receipt.
+
+All 88 Guardian checks pass with baselines disabled; report-only findings remain.
+The gate prompted dependency separation and simpler interfaces. Independent
+review/tests caught scoped navigation ID collisions, generic effect aggregation
+loss, original-source/UTF-8 excerpt errors, and a host codec error-contract
+regression. Those correctness findings are not attributed to Guardian's style
+or architecture checks. No native runtime work was added.
+
+## Completed: application ergonomics follow-up (2026-09-07)
+
+The pin-role application now uses ordinary JSON parsing and compiler-supplied
+std_json/std_text helpers. Readonly byte-slice parameters accept string
+literals with call-bounded cleanup in concrete and generic code. Reserved
+library modules participate in source budgets and compiler-pinned navigation
+and verification receipts.
+
+The separate completed application shrank from 1,582 to 720 lines, with 129
+reusable .my library lines accounted separately. All seven existing private
+groups and the unchanged large-output stress case passed. The original agent
+trials remain sealed: this coordinator refactor provides behavioral and code-size
+evidence, not a new development-speed comparison.
+
+See [API and ownership rules](plain-json-ergonomics.md) and
+[application accounting](../../experiments/ergonomics/pin-roles/README.md).
+Native compilation remains deferred. The next measurement should use fresh
+matched maintenance tasks with this library documented for participants.

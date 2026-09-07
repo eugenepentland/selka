@@ -39,6 +39,28 @@ const Emitter = struct {
     fn instruction(self: *Emitter, span: Span, op: @FieldType(bc.Instruction, "op")) !void {
         try self.push(.{ .instruction = .{ .span = span, .op = op } });
     }
+    fn emitCall(self: *Emitter, span: Span, call: @FieldType(@FieldType(typed.Node, "data"), "call")) !void {
+        for (call.literals) |literal| {
+            try self.instruction(span, .{ .drop_local = literal.owner });
+            try self.instruction(span, .{ .end_borrow = literal.reference });
+        }
+        try self.instruction(span, if (call.references.len == 0) .{ .call = call.function } else .{ .call_refs = .{ .function = call.function, .references = call.references } });
+        var n = call.literals.len;
+        while (n > 0) {
+            n -= 1;
+            const literal = call.literals[n];
+            try self.instruction(span, .{ .begin_slice = literal.reference });
+            try self.instruction(span, .{ .push_i64 = @intCast(literal.length) });
+            try self.instruction(span, .{ .push_i64 = 0 });
+            try self.instruction(span, .{ .store_local = literal.owner });
+            try self.push(.{ .expression = literal.value });
+        }
+        var i = call.arguments.len;
+        while (i > 0) {
+            i -= 1;
+            try self.push(.{ .expression = call.arguments[i] });
+        }
+    }
     fn emitStatement(self: *Emitter, id: typed.StatementId) !void {
         const stmt = self.program.statements[@backingInt(id)];
         switch (stmt.data) {
@@ -273,20 +295,21 @@ const Emitter = struct {
                 try self.instruction(node.span, .{ .external_read = .{ .kind = read.kind, .output = node.ty } });
                 try self.push(.{ .expression = read.capability });
             },
+            .json_codec => |codec| {
+                try self.instruction(node.span, .{ .json_codec = .{ .document = codec.document, .decode = codec.decode, .input = self.program.nodes[@backingInt(codec.arguments[1])].ty, .output = node.ty } });
+                var index: usize = 3;
+                while (index > 0) {
+                    index -= 1;
+                    try self.push(.{ .expression = codec.arguments[index] });
+                }
+            },
             .acquire_buffer, .acquire_pool => |acquire| {
                 try self.instruction(node.span, if (node.data == .acquire_pool) .{ .acquire_pool = node.ty } else .{ .acquire_buffer = node.ty });
                 try self.push(.{ .expression = acquire.capacity });
                 try self.push(.{ .expression = acquire.allocator });
             },
             .local => |slot| try self.instruction(node.span, if (typed.moveOnly(node.ty, self.program.records) or typed.requiresHandling(node.ty, self.program.records)) .{ .move_local = slot } else .{ .load_local = slot }),
-            .call => |call| {
-                try self.instruction(node.span, if (call.references.len == 0) .{ .call = call.function } else .{ .call_refs = .{ .function = call.function, .references = call.references } });
-                var i = call.arguments.len;
-                while (i > 0) {
-                    i -= 1;
-                    try self.push(.{ .expression = call.arguments[i] });
-                }
-            },
+            .call => |call| try self.emitCall(node.span, call),
             .unary => |u| {
                 try self.instruction(u.op_span, if (u.op == .not) .not_bool else if (node.ty == .i64) .neg_i64_checked else .{ .neg_integer = node.ty });
                 try self.push(.{ .expression = u.operand });

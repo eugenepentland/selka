@@ -1,0 +1,6 @@
+test_abandoned_registered_trio_remains_in_fresh_hidden_grading (test_scheduled_grading.ScheduledGradingTests.test_abandoned_registered_trio_remains_in_fresh_hidden_grading) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 41.630s
+
+OK

@@ -1,0 +1,46 @@
+// Text helpers for the explicitly registered raw-byte "io" host.
+module std_text;
+import io;
+import std_json;
+export read;
+export emit;
+export number;
+fn read(heap: allocator, limit: i64) -> std_json::Input {
+    let size = io::length();
+    if size < 0 || size > limit {
+        return new std_json::Input.err(2);
+    }
+    let mut bytes = try acquire_buffer<std_json::Input>(heap, size);
+    discard try resize_buffer<std_json::Status>(bytes, size, 0u8);
+    borrow mut bytes[0..len_buffer(bytes)] as view {
+        let mut i = 0;
+        while i < size {
+            write_slice(view, i, io::byte(i));
+            i += 1;
+        }
+    }
+    return new std_json::Input.ok(bytes);
+}
+fn emit(text: &[]u8) -> i64 {
+    let mut i = 0u64;
+    while i < len_slice(text) {
+        discard io::put(read_slice(text, i));
+        i += 1u64;
+    }
+    return 0;
+}
+fn number(value: i64) -> i64 {
+    if value < 0 {
+        discard io::put(45u8);
+        return digits(value);
+    }
+    return digits(- value);
+}
+// Negative arithmetic also represents i64's asymmetric minimum.
+fn digits(value: i64) -> i64 {
+    if value <= - 10 {
+        discard digits(value / 10);
+    }
+    discard io::put(cast<u8>(48 - value % 10));
+    return 0;
+}

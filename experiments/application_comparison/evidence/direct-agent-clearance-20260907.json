@@ -1,0 +1,256 @@
+{
+  "cohort": "direct-20260907-clearance",
+  "comparative_claim": false,
+  "hidden_case_groups": 9,
+  "participants": {
+    "my": {
+      "failed_public_submissions": 0,
+      "hidden": {
+        "accepted": true,
+        "failed_cases": []
+      },
+      "metrics": {
+        "adjacent_unchanged_task_checks": 0,
+        "cache_hits": null,
+        "limitations": [
+          "Direct search counts exclude searches embedded in shells or scripts.",
+          "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+          "Output bytes are captured command output, not source bytes read or model context.",
+          "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+        ],
+        "phases": {
+          "preparing": {
+            "captured_output_bytes": 7174,
+            "command_count": 3,
+            "command_interval_seconds": 0.284041837,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          },
+          "working": {
+            "captured_output_bytes": 25230,
+            "command_count": 9,
+            "command_interval_seconds": 1.757854006,
+            "direct_search_commands": 0,
+            "failed_commands": 1,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {
+              "compiler-check": 1
+            }
+          }
+        },
+        "queue_wait_seconds": null,
+        "relevant_location_seconds": null,
+        "session_sha256": "4a3d0cfee0f866302535398dea4c06330c73d86dd2cb6aff2b2a3771fe5c9cec",
+        "submission_to_check_seconds": [
+          0.297140505
+        ],
+        "task_checks": 1,
+        "uncommitted_command_records": [],
+        "version": "observed-tool-metrics-v1"
+      },
+      "practice_outcome": "passed",
+      "preparation_seconds": 22.059451522,
+      "public_submissions": 1,
+      "seal_reason": "completed",
+      "source": {
+        "files": {
+          ".trial-public/CONTRACT.md": "17464d9522080ee699e04e8414f9599100bba83d135be372c7e3a5374cc28da2",
+          ".trial-public/GUIDE.md": "5f98618e9d4d5ffedd0a3e8bb045b3b5968a6aec4f9b8915bed21266e6242c95",
+          ".trial-public/brief.md": "2f35481eb657a5c9afef8ccc264738e7d6eb12e56b106d37159cf53586fbcc93",
+          ".trial-public/cases.json": "430569d40a1d002baff5f7b4a2fe92e7db263807ea01e8ad85f2775d98500369",
+          "README.md": "37c4c32c4d849b5d798f9bbe5b9922fe15ab580e69de8f2df3910c8b17a74379",
+          "io.my": "318bf703f8fa8e1fe706d7211b226c19ea60f9e885ef06da4279a8970df395e9",
+          "main.my": "58d90c4a967df9c858745b059be661a8e7a6ce0cfb90d92fa37c076a23c0e6b3",
+          "test_clearance.py": "ced404ac6f6ab8eec1c463a5e4f6d517f9a42e0cb24c0bfd6239c33a767d5bb7",
+          "test_cli.py": "55b16c28ced70c8e5ea1f030e6383f22f3b2f77551cb4e8142d10b213f347d14"
+        },
+        "sha256": "7993a3cffe61046b770760319cfccfbd92f39cdbe056b725835f1a7dc31db1ba"
+      },
+      "task_seconds": 89.6317111
+    },
+    "python": {
+      "failed_public_submissions": 0,
+      "hidden": {
+        "accepted": true,
+        "failed_cases": []
+      },
+      "metrics": {
+        "adjacent_unchanged_task_checks": 0,
+        "cache_hits": null,
+        "limitations": [
+          "Direct search counts exclude searches embedded in shells or scripts.",
+          "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+          "Output bytes are captured command output, not source bytes read or model context.",
+          "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+        ],
+        "phases": {
+          "preparing": {
+            "captured_output_bytes": 5596,
+            "command_count": 3,
+            "command_interval_seconds": 0.250807232,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          },
+          "working": {
+            "captured_output_bytes": 37148,
+            "command_count": 6,
+            "command_interval_seconds": 0.718909004,
+            "direct_search_commands": 0,
+            "failed_commands": 2,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          }
+        },
+        "queue_wait_seconds": null,
+        "relevant_location_seconds": null,
+        "session_sha256": "1af6be8f3ae6f916f653eb7b06267ebd18c14d187ad23e2711e9c10b1fd3c5ba",
+        "submission_to_check_seconds": [
+          0.190257628
+        ],
+        "task_checks": 1,
+        "uncommitted_command_records": [],
+        "version": "observed-tool-metrics-v1"
+      },
+      "practice_outcome": "passed",
+      "preparation_seconds": 24.204752399,
+      "public_submissions": 1,
+      "seal_reason": "completed",
+      "source": {
+        "files": {
+          ".trial-public/CONTRACT.md": "17464d9522080ee699e04e8414f9599100bba83d135be372c7e3a5374cc28da2",
+          ".trial-public/GUIDE.md": "0064b749274929e815b7fc2ad255278fafb2ce828acfc1efeb7bd20a29860bbf",
+          ".trial-public/brief.md": "2f35481eb657a5c9afef8ccc264738e7d6eb12e56b106d37159cf53586fbcc93",
+          ".trial-public/cases.json": "430569d40a1d002baff5f7b4a2fe92e7db263807ea01e8ad85f2775d98500369",
+          "README.md": "63abe5e9e4ba222ea645239cc4134b5c9f928867950a61ddd90198b920c1d1e9",
+          "inspector.py": "681093d34b807977f19d607ccd9a3fd029c744e4d534e639daacc86e7a1e3076",
+          "test_inspector.py": "75e42489c58dd033460472c297151ccde40c030de658faa7c45a8bf1044d2014"
+        },
+        "sha256": "f678a24e9712429c5367df9cfd7ab0d67d28ba5b0b9db3fa21e280fe2d36e589"
+      },
+      "task_seconds": 67.487168025
+    },
+    "zig": {
+      "failed_public_submissions": 0,
+      "hidden": {
+        "accepted": true,
+        "failed_cases": []
+      },
+      "metrics": {
+        "adjacent_unchanged_task_checks": 0,
+        "cache_hits": null,
+        "limitations": [
+          "Direct search counts exclude searches embedded in shells or scripts.",
+          "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+          "Output bytes are captured command output, not source bytes read or model context.",
+          "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+        ],
+        "phases": {
+          "preparing": {
+            "captured_output_bytes": 5872,
+            "command_count": 3,
+            "command_interval_seconds": 0.264727715,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          },
+          "working": {
+            "captured_output_bytes": 29443,
+            "command_count": 6,
+            "command_interval_seconds": 3.389176848,
+            "direct_search_commands": 0,
+            "failed_commands": 2,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          }
+        },
+        "queue_wait_seconds": null,
+        "relevant_location_seconds": null,
+        "session_sha256": "f3097612505177c1cfdb18d4f928d7ffb13c0166d5075c807fcbb11133a27338",
+        "submission_to_check_seconds": [
+          21.741593701
+        ],
+        "task_checks": 1,
+        "uncommitted_command_records": [],
+        "version": "observed-tool-metrics-v1"
+      },
+      "practice_outcome": "passed",
+      "preparation_seconds": 59.078007713,
+      "public_submissions": 1,
+      "seal_reason": "completed",
+      "source": {
+        "files": {
+          ".gitignore": "9f469df552c39b29a7864b596e8cbdd534ce7c01affef1ff7884e7c21c7b779a",
+          ".trial-public/CONTRACT.md": "17464d9522080ee699e04e8414f9599100bba83d135be372c7e3a5374cc28da2",
+          ".trial-public/GUIDE.md": "5b5e7616843a0076288a820473ec38468bd5dd4a4f2da6ec363fc3d91cb14566",
+          ".trial-public/brief.md": "2f35481eb657a5c9afef8ccc264738e7d6eb12e56b106d37159cf53586fbcc93",
+          ".trial-public/cases.json": "430569d40a1d002baff5f7b4a2fe92e7db263807ea01e8ad85f2775d98500369",
+          "README.md": "5b88a39e1683adb8ce3dc027383ce693465f663d058483bb5b4dab6ea0fec9f7",
+          "SPEC.md": "11abc0ab0f00583e0392b2285f7402865173d05fde8a3b1b0b5e7bf16b8eaed3",
+          "eda-inspector": "77d83ce475c0ffb9caae42ee00eeb1e95ac4382db9dc327431bdd6b0fc48d4d9",
+          "eda-inspector-debug": "2946d13cd8eff588ee3ef8fdf174248fe2f38a8a029f6a381ebb358d51164498",
+          "guardian.toml": "6dd2284ec72311629d1dd8bba482b755720f555b48eca3f4ba73a56a1410035a",
+          "main.zig": "b2905e4666b0b34031b77e56485251f866a7d88c7ea42b0a19adeed00e068776",
+          "src/main.zig": "74eb512b60b15b99477b0c6f1907934023408399ad112bfb67e8cbbdf24f44f6",
+          "test_stdin.py": "b0244a607f72df2c833ece37e1893cf50dbf5aa1cdd51c99c6460431cdf985ef"
+        },
+        "sha256": "8a13cf7bd1d03d956dbcf5ddfbf6d9c491b666dda4b86cfc30d43f7b33c3d6ad"
+      },
+      "task_seconds": 97.423747027
+    }
+  },
+  "protocol": {
+    "bridge_sha256": "3d1ba3bc6c836f8656da063524c22ffdb4e9f2caa36ec14e26cea5387727a47b",
+    "build_policy": "suite-build-reuse-v1",
+    "deviations": [
+      "Whole-agent host access restricted by instruction, not enforced by runtime; all participant commands use namespace gateway.",
+      "Exact agent model ID, token use and cost unavailable.",
+      "Concurrent shared-host execution can confound elapsed time.",
+      "One draft repair task, one participant per language; exploratory only.",
+      "No API driver provenance; configurations and coordinator source inventory retained separately.",
+      "Prior cohort used repeated cold builds; do not pool its raw timing with this policy."
+    ],
+    "languages": [
+      "my",
+      "python",
+      "zig"
+    ],
+    "main_arm": "Guardian for Zig; compiler/navigation for my",
+    "mode": "direct-coding-subagents",
+    "preparation_seconds": 1200,
+    "scored": false,
+    "setup_sha256": "2e769274428e8e0c33625138ad1268d7982be6b2638eb9f40ffab07c41faa162",
+    "task": "eda-clearance-boundary",
+    "task_seconds": 1800
+  },
+  "scored": false,
+  "task": "eda-clearance-boundary",
+  "verification_counts": {
+    "practice": {
+      "guardian": 0,
+      "check": 0,
+      "build": 1,
+      "run": 21,
+      "build_reuses": 20
+    },
+    "public": {
+      "guardian": 1,
+      "check": 1,
+      "build": 1,
+      "run": 2,
+      "build_reuses": 1
+    },
+    "hidden": {
+      "guardian": 1,
+      "check": 1,
+      "build": 1,
+      "run": 9,
+      "build_reuses": 8
+    }
+  },
+  "guardian_feedback_commit": "f634dec"
+}

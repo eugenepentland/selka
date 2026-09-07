@@ -318,5 +318,5 @@ Reproduce the measured check loop:
 ```sh
 python3 scripts/profile_development.py --compiler zig-out/bin/mylang \
   --entry src/schematic/guest/main.my --edit-module svg.my \
-  --before '#f5f7fa' --after '#123abc' --repeats 5 --output /tmp/check-profile.json
+  --before '#0d1117' --after '#123abc' --repeats 5 --output /tmp/check-profile.json
 ```

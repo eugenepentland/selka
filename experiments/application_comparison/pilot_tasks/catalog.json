@@ -1,0 +1,56 @@
+{
+  "version": "pilot-task-catalog-v1",
+  "status": "draft-packs-and-independent-feature-references-validated; full-review-and-calibration-pending",
+  "scored_launch_enabled": false,
+  "blocks": [
+    {
+      "id": "planner-input-boundary",
+      "application": "planner",
+      "tier": "small",
+      "family": "local-boundary"
+    },
+    {
+      "id": "planner-priority",
+      "application": "planner",
+      "tier": "small",
+      "family": "shared-contract"
+    },
+    {
+      "id": "planner-cycle-groups",
+      "application": "planner",
+      "tier": "small",
+      "family": "feature"
+    },
+    {
+      "id": "eda-clearance-boundary",
+      "application": "eda",
+      "tier": "small",
+      "family": "local-boundary"
+    },
+    {
+      "id": "eda-pin-roles",
+      "application": "eda",
+      "tier": "small",
+      "family": "shared-contract"
+    },
+    {
+      "id": "eda-rotation",
+      "application": "eda",
+      "tier": "small",
+      "family": "feature"
+    }
+  ],
+  "pending": [
+    "full contract coverage and baseline review",
+    "unscored calibration"
+  ],
+  "construction_checks": {
+    "oracles": "planner and EDA pilot expectations implemented; 22 oracle tests pass",
+    "repair_variants": "six seeded variants execute in isolation, produce the exact intended boundary error, and pass after exact repair; baseline source receipts unchanged",
+    "scored_sessions": 0,
+    "task_packs": "six deterministic public/private draft packs; exact inventories and public-only projection; private seed and authoring receipts; fixture suite aggregation and resume tested",
+    "targeted_review": "independent coverage review found and verified fixes for UTF-8 boundary, large SCC, and large clearance arithmetic gaps; full study review remains pending",
+    "feature_references": "four independently authored stdlib-only Python references: 23 builder tests and all 37 isolated public/private draft-pack checks pass; no grader access during authorship",
+    "guardian": "both Zig main adapters pass 88-check strict policy, Debug tests, ReleaseSafe build and generated conformance in isolation"
+  }
+}

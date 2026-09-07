@@ -5,13 +5,17 @@ model, expands the SPI interface, lays out the component groups and writes SVG
 while running on its bytecode VM. The Zig host supplies four typed byte-I/O
 operations. It does not call Netlisp's parser, circuit evaluator or SVG renderer.
 
-[Open the generated Straps LMX2595 schematic](straps-synth-lmx2595.svg).
+[Open the generated Straps LMX2595 schematic](straps-synth-lmx2595.svg)
+([PNG preview](straps-synth-lmx2595.png)).
 It contains 30 components, 95 connected pads, four deliberate no-connects and
-nine interface signals. Identical net labels connect terminals. Per-pin supply
+nine interface signals. The functional hub view uses a dark theme, grouped IC
+pins, passive symbols and orthogonal wires, following the local webpage renderer. Per-pin supply
 branches display their base rail only when the named host pad and an existing
 trunk net establish Netlisp's branch convention. Raw branch names remain in SVG
 `data-net` attributes; `data-electrical-net` records the display connection.
-Component references retain the source names such as `C_VCCDIG`.
+Visible references use the webpage’s sequential aliases (`C1`, `R1`, and so on);
+component metadata retains source names such as `C_VCCDIG`. Declared no-connects
+and interface declarations remain in metadata without a separate legend panel.
 
 ## Reproduce
 
@@ -23,7 +27,8 @@ zig-out/bin/schematic-svg --project src/schematic/guest \
   experiments/schematic/fixtures/straps-synth-lmx2595.sexp \
   experiments/schematic/fixtures/lmx2595rhar.sexp \
   experiments/schematic/fixtures/spi.sexp > /tmp/straps-synth-lmx2595.svg
-zig build test-schematic -Doptimize=ReleaseFast --summary all
+python3 tests/schematic_svg.py --runner zig-out/bin/schematic-svg
+python3 tests/schematic_layout.py --runner zig-out/bin/schematic-svg
 ```
 
 After the initial host build, edit any file in `src/schematic/guest/` and rerun
@@ -59,7 +64,8 @@ The application is in [`src/schematic/guest`](../../src/schematic/guest):
 `sexpr.my` handles tokenization and nested lists, `circuit.my` constructs and
 queries the model, `validate.my` checks the supported declarations and pins,
 `ports.my` expands interface declarations, `text.my` handles byte text and XML
-escaping, and `svg.my` draws the schematic. The wrapper explicitly registers
+escaping, `layout_graph.my` and `layout.my` derive functional groups and positions from
+connectivity, and the SVG drawing modules emit the schematic. The wrapper explicitly registers
 `length`, `byte`, `put` and `issue`; output remains owned by the caller.
 The board trial and this tool share the Zig project-compilation lifecycle.
 
@@ -70,8 +76,9 @@ This first project pilot supports one parameterless `defmodule` with one
 `cap-0603`, `res-0402` and `ind-0402` two-terminal instances. IC family and pinout
 identity must match, ignoring ASCII case. Every pad needs a connection or an
 explicit IC `nc-ok` reason. Multiple numeric pads in one `pin` form are supported.
-The renderer uses simple named-net rows grouped by `rough` declarations; it is
-not Netlisp's existing automatic wiring/layout algorithm.
+The renderer implements a bounded functional hub layout in `.my`. It does not
+call Netlisp at runtime or embed a pre-rendered circuit. Layout changes follow
+source connectivity; this is not a port of every Netlisp layout mode.
 
 Direct ports and peripheral-direction `port-group` interfaces support explicit
 lane `rename` forms. Unknown lanes, duplicate expanded ports and ports with no
@@ -102,6 +109,12 @@ value, pad and NC reason with a separate Python fixture reader. It also maps
 source references to Netlisp's sequential references and compares all 34 raw
 nets against the retained **independent Netlisp `netlist-dump` output**. Source
 mutation tests verify changed output and located rejection with empty stdout.
+`tests/schematic_layout.py` independently checks physical signal connectivity,
+wrong-net pad contacts and bounds, rewires a real DSL endpoint, and rejects a
+seeded drawing defect even when the net metadata remains valid. The ordinary
+SVG acceptance command also invokes the geometry oracle.
+`tests/schematic_reload.py` changes, breaks and repairs this actual guest through
+one persistent host, checking that a failed edit retains the last good preview.
 The Zig boundary tests exercise invalid input, host index bounds, allocation
 failure cleanup, first-error retention and fresh sessions after a VM trap.
 
@@ -119,3 +132,34 @@ The generated file represents the captured local source, not a verified snapshot
 of the authenticated website. To refresh it, review source changes, recapture the
 three fixtures and their hashes, regenerate the independent Netlisp dump, then
 run acceptance before replacing the checked-in SVG.
+
+## Webpage comparison and concurrent verification
+
+The webpage uses inline SVG, rather than canvas. The independently captured
+[reference](reference/straps-synth-lmx2595.svg) and Chromium screenshot preserve
+the default Functional view from the existing local EDA binary. All 37 visible
+IC pin positions and the 884 × 1144 viewBox match that independent reference.
+The drawing follows its symbols and palette; wire routing is a bounded `.my`
+implementation, not a claim of pixel-identical rendering for arbitrary circuits.
+[Provenance](reference/provenance.json) records the source and artifact hashes;
+the authenticated production page was not verified.
+
+The [verification trial](verification-trial.md) runs the real disk-loaded guest
+with shared successful-result caching and concurrent scheduler clients. Its
+baseline and final JSON records identify the guest sources and unchanged runner.
+This exercises declared suite dependencies and shared execution; it does not
+claim semantic per-function testing or a Git merge trial.
+
+Final validation also runs without a build:
+
+```sh
+python3 tests/schematic_reload.py --runner zig-out/bin/schematic-svg
+python3 tests/schematic_verification.py --runner zig-out/bin/schematic-svg \
+  --output /tmp/schematic-verification.json
+```
+
+`reload-trial.json` records the real application’s unchanged runner and successful
+edit/failure/repair cycle. Geometry tests exposed and helped fix incorrect passive
+placement, RF wire-to-pad contacts, and connections hidden by the chip border.
+These were application drawing defects; the language’s static checker did not
+prove the layout correct.

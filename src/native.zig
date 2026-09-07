@@ -293,6 +293,7 @@ fn checkFunction(layout: native_layout.Layout, function: bc.Function, sink: *dia
     for (function.scope.locals) |local| if (!layout.supports(local.ty)) return sink.fail(unsupported_feature, local.declaration, "native execution requires supported value locals and parameters");
     for (function.scope.references) |reference| if (!layout.supports(reference.ty)) return sink.fail(unsupported_feature, reference.declaration, "native references require supported value types");
     for (function.scope.instructions) |instruction| switch (instruction.op) {
+        .json_codec => return sink.fail(unsupported_feature, instruction.span, "source JSON byte codecs currently require the interpreter"),
         .cmp_domain => return sink.fail(unsupported_feature, instruction.span, "domain equality is supported by the bytecode VM; native emission is deferred"),
         .make_variant => |variant| {
             if (!layout.supports(variant.ty)) return sink.fail(unsupported_feature, instruction.span, "native variant representation requires supported payloads");
@@ -501,6 +502,7 @@ fn writeOperation(context: InstructionOutput) !bool {
             try w.writeAll("int status = reset_arena(); Slot value = (Slot){status ? status : 1, NULL};\n");
             try statusResult(w, layout, ty);
         },
+        .json_codec => return error.InternalError,
         .acquire_buffer => |ty| {
             const shape = typed.resultShape(ty, program.records).?;
             try w.print("push_value(acquire_buffer({d}, {d}));\n", .{ shape.ok_tag, shape.error_tag });

@@ -1,5 +1,7 @@
 //! Symbolic template checking preserves types, ownership and effects without representative substitution.
 const std = @import("std");
+const source_json = @import("source_json.zig");
+const eReferenceArgument = diagnostic.reference_argument;
 const ast = @import("ast.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
@@ -14,6 +16,8 @@ const eShadowing = diagnostic.shadowing;
 const eResultOperation = diagnostic.result_operation;
 const eResultPath = diagnostic.result_path;
 const eTryReturn = "E_TRY_RETURN";
+const eArgument = diagnostic.generic_argument;
+const eBorrowConflict = "E_BORROW_CONFLICT";
 const eUnsupported = "E_GENERIC_BODY_UNSUPPORTED";
 const region_check = @import("region_check.zig");
 const Regions = @import("generic_regions.zig");
@@ -148,6 +152,21 @@ const Checker = struct {
     fn seedCleanup(self: *Checker, value: Symbolic) Error!void {
         self.effect_masks[self.function_index] |= (try self.properties(value)).cleanup;
     }
+    fn definiteHandling(self: *Checker, value: Symbolic, span: source.Span) Error!bool {
+        try self.enter(span);
+        defer self.depth -= 1;
+        return switch (value) {
+            .parameter => false,
+            .concrete => |ty_value| typed.requiresHandling(ty_value, self.catalog.records),
+            .array => |array| array.length != 0 and try self.definiteHandling(array.element, span),
+            .nominal => result: {
+                const shape = try self.shapes().schema(value, span);
+                if (shape.kind == .result) break :result true;
+                for (shape.fields) |field| if (field.ty) |field_type| if (try self.definiteHandling(field_type, span)) break :result true;
+                break :result false;
+            },
+        };
+    }
     fn requiresHandling(self: *Checker, value: Symbolic) Error!bool {
         return (try self.properties(value)).requires_handling;
     }
@@ -251,7 +270,7 @@ const Checker = struct {
         const root = self.active.get(self.src.text(binding.name)).?;
         for (self.locals.items) |loan| {
             if (loan.root == root and loan.parent == null and (write or loan.reference == true)) return self.sink.failProvenance(
-                "E_BORROW_CONFLICT",
+                eBorrowConflict,
                 span,
                 "owner access conflicts with an active borrow",
                 .{ .span = loan.name, .message = "conflicting borrow starts here" },
@@ -425,6 +444,8 @@ const Checker = struct {
         return codec.resolve(self.src, self.program, self.catalog, invocation, self.sink);
     }
     fn call(self: *Checker, input_call: Call, span: source.Span, allow_reference: bool) Error!Symbolic {
+        if (input_call.owner == null) if (source_json.operation(self.src.text(input_call.name))) |decode| return self.jsonCall(input_call, decode);
+        if (try self.operationCall(input_call)) |result| return result;
         const invocation = try self.resolveCall(input_call);
         const function = try self.callTarget(invocation, input_call.name);
         const signature = function.signature;
@@ -444,26 +465,34 @@ const Checker = struct {
                 .array, .nominal => supportsSet(argument.*, parameter.requirements, self.parameters, self.catalog),
             };
             if (!satisfies) return self.sink.failRelated(
-                "E_GENERIC_ARGUMENT",
+                eArgument,
                 argument_span,
                 "type argument does not satisfy the callee's declared requirements",
                 .{ .span = parameter.name, .message = "required type parameter declared here" },
             );
         }
+        for (required, arguments) |parameter, argument| try self.structural(argument, parameter, signature.type_parameters, arguments);
         var loans: std.AutoHashMapUnmanaged(usize, bool) = .empty;
         defer loans.deinit(self.allocator);
         for (invocation.arguments, signature.parameters) |input, parameter| {
             const expected = try self.substituted(parameter.ty, signature.type_parameters, arguments);
             const node = self.program.nodes.items[@backingInt(input)];
             if (parameter.reference) |mutable| {
-                if (node.data != .name) return self.sink.fail("E_REFERENCE_ARGUMENT", node.span, "reference parameter requires an active reference name");
+                if (node.data == .bytes) {
+                    const valid_slice = !mutable and parameter.slice and expected == .concrete;
+                    if (!valid_slice or expected.concrete != .u8 or signature.return_reference != null)
+                        return self.sink.fail(eReferenceArgument, node.span, "byte literals require readonly u8 slice parameters and a value return");
+                    _ = try self.expression(input);
+                    continue;
+                }
+                if (node.data != .name) return self.sink.fail(eReferenceArgument, node.span, "reference parameter requires an active reference name");
                 const ref = try self.reference(node.data.name, mutable, parameter.slice);
                 try self.same(ref.ty, expected, node.span);
                 try self.regionRead(ref.*);
                 try self.enter(node.span);
                 self.depth -= 1;
                 const loan = try loans.getOrPut(self.allocator, ref.root.?);
-                if (loan.found_existing and (loan.value_ptr.* or ref.reference.?)) return self.sink.fail("E_BORROW_CONFLICT", node.span, "call cannot alias an exclusive reference argument");
+                if (loan.found_existing and (loan.value_ptr.* or ref.reference.?)) return self.sink.fail(eBorrowConflict, node.span, "call cannot alias an exclusive reference argument");
                 loan.value_ptr.* = ref.reference.?;
             } else try self.same(try self.expression(input), expected, node.span);
         }
@@ -474,6 +503,113 @@ const Checker = struct {
             }
         }
         return self.substituted(signature.return_type, signature.type_parameters, arguments);
+    }
+    fn jsonCall(self: *Checker, invocation: Call, decode: bool) Error!Symbolic {
+        if (invocation.type_arguments.len != 1 or invocation.arguments.len != 3) return self.sink.fail("E_JSON_ARITY", invocation.name, "JSON operation requires one result type and allocator, value, byte-limit arguments");
+        const result = try self.ty(invocation.type_arguments[0]);
+        const shape = try self.resultShape(result, invocation.name, "E_JSON_RESULT");
+        try self.same(shape.error_type, .{ .concrete = .i64 }, invocation.name);
+        try self.same(try self.expression(invocation.arguments[0]), .{ .concrete = .allocator }, invocation.name);
+        const input = try self.expression(invocation.arguments[1]);
+        try self.supports(try self.expression(invocation.arguments[2]), .integer, invocation.name);
+        const wire = if (decode) input else shape.ok_type;
+        if (wire != .concrete or !source_json.byteBuffer(wire.concrete, self.catalog.records)) return self.sink.fail("E_JSON_BYTES", invocation.name, "JSON wire bytes require an owned u8 buffer");
+        const value = if (decode) shape.ok_type else input;
+        const document = source_json.isDocument(self.src.text(invocation.name));
+        if (document and (value != .concrete or !source_json.wordBuffer(value.concrete, self.catalog.records)))
+            return self.sink.fail("E_JSON_DOCUMENT", invocation.name, "plain JSON parsing requires an owned i64 document buffer success");
+        if (!document and !symbolic.supports(value, .codec, self.parameters, self.catalog)) return self.sink.fail("E_JSON_CODEC", invocation.name, "generic JSON values require a codec contract or a concrete codec-safe type");
+        self.seedEffect(.allocation);
+        return result;
+    }
+    fn operationCall(self: *Checker, invocation: Call) Error!?Symbolic {
+        const owner = invocation.owner orelse return null;
+        var contract: ?ast.Operation = null;
+        var symbolic_owner = false;
+        for (self.parameters) |parameter| if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(owner))) {
+            symbolic_owner = true;
+            for (parameter.operation_requirements) |operation| if (std.mem.eql(u8, self.src.text(operation.name), self.src.text(invocation.name))) {
+                contract = operation;
+                break;
+            };
+        };
+        if (!symbolic_owner) return null;
+        const operation = contract orelse return self.sink.fail("E_GENERIC_REQUIREMENT", invocation.name, "type parameter does not declare this operation");
+        if (invocation.type_arguments.len != 0 or invocation.arguments.len != operation.parameters.len)
+            return self.sink.fail("E_ARITY", invocation.name, "structural operation requires its declared value/reference arguments and no type arguments");
+        var loans: std.AutoHashMapUnmanaged(usize, bool) = .empty;
+        defer loans.deinit(self.allocator);
+        for (invocation.arguments, operation.parameters) |input, parameter| {
+            const expected = try self.ty(parameter.ty);
+            const node = self.program.nodes.items[@backingInt(input)];
+            if (parameter.reference) |mutable| {
+                if (node.data != .name) return self.sink.fail(eReferenceArgument, node.span, "operation reference argument must name an active borrow");
+                const ref = try self.reference(node.data.name, mutable, false);
+                try self.same(ref.ty, expected, node.span);
+                try self.regionRead(ref.*);
+                const loan = try loans.getOrPut(self.allocator, ref.root.?);
+                if (loan.found_existing and (loan.value_ptr.* or ref.reference.?)) return self.sink.fail(eBorrowConflict, node.span, "operation cannot alias an exclusive argument");
+                loan.value_ptr.* = ref.reference.?;
+            } else try self.same(try self.expression(input), expected, node.span);
+        }
+        for (invocation.arguments, operation.parameters) |input, parameter| if (parameter.reference == true) {
+            const ref = try self.local(self.program.nodes.items[@backingInt(input)].data.name);
+            try self.regionWrite(ref.*, self.region_inputs.?, invocation.name);
+        };
+        self.effect_masks[self.function_index] |= operation.effect_bound.allowed;
+        const result = try self.ty(operation.return_type);
+        return result;
+    }
+    fn structural(self: *Checker, argument: Symbolic, required: requirements.Parameter, parameters: []const ast.TypeParameter, arguments: []const Symbolic) Error!void {
+        if (required.field_requirements.len != 0) {
+            const shape = try self.shapes().requireRecord(argument, required.name, false);
+            for (required.field_requirements) |field| {
+                const index = try self.shapes().memberIndex(shape, field.name);
+                try self.same(shape.fields[index].ty.?, try self.substituted(field.ty, parameters, arguments), field.name);
+            }
+        }
+        for (required.operation_requirements) |operation| {
+            var actual: ?ast.Operation = null;
+            var concrete = false;
+            switch (argument) {
+                .parameter => |index| for (self.parameters[index].operation_requirements) |provided| {
+                    if (std.mem.eql(u8, self.src.text(provided.name), self.src.text(operation.name))) {
+                        actual = provided;
+                        break;
+                    }
+                },
+                .concrete => |target| {
+                    const function = try (@import("structural_constraints.zig").Context{ .src = self.src, .catalog = self.catalog, .program = self.program, .sink = self.sink }).method(target, operation.name);
+                    actual = .{ .name = function.name, .parameters = function.signature.parameters, .return_type = function.signature.return_type, .effect_bound = function.policy.effect_bound.? };
+                    concrete = true;
+                },
+                else => {},
+            }
+            const provided = actual orelse return self.sink.fail(eArgument, operation.name, "forwarded type does not promise the required operation");
+            if (provided.effect_bound.allowed & ~operation.effect_bound.allowed != 0 or provided.parameters.len != operation.parameters.len)
+                return self.sink.fail(eArgument, operation.name, "forwarded operation arity or effects do not imply the contract");
+            for (provided.parameters, operation.parameters) |input, expected| {
+                if (input.reference != expected.reference or input.slice != expected.slice) return self.sink.fail(eArgument, operation.name, "forwarded operation reference permission differs");
+                const actual_type = if (concrete) try self.concreteType(input.ty) else try self.ty(input.ty);
+                try self.same(actual_type, try self.substituted(expected.ty, parameters, arguments), expected.name);
+            }
+            const result = if (concrete) try self.concreteType(provided.return_type) else try self.ty(provided.return_type);
+            try self.same(result, try self.substituted(operation.return_type, parameters, arguments), operation.name);
+        }
+    }
+    fn validateStructural(self: *Checker) Error!void {
+        for (self.parameters) |parameter| {
+            for (parameter.field_requirements) |field| {
+                if (try self.transfers(try self.ty(field.ty))) return self.sink.fail("E_GENERIC_REQUIREMENT", field.ty, "structural fields require a copyable field type without result obligations");
+            }
+            for (parameter.operation_requirements) |operation| {
+                _ = try self.ty(operation.return_type);
+                for (operation.parameters) |input| {
+                    const value = try self.ty(input.ty);
+                    if (input.reference != null and try self.transfers(value)) return self.sink.fail(diagnostic.result_borrow, input.ty, "structural operation cannot borrow owned or result-bearing values");
+                }
+            }
+        }
     }
     fn expression(self: *Checker, id: ast.NodeId) Error!Symbolic {
         const before = self.temporary_results;
@@ -961,7 +1097,10 @@ const Checker = struct {
                 try self.regionWrite(ref.*, self.last_origin, statement_value.span);
             },
             .acknowledge => |value| {
-                if (!(try self.requiresHandling(try self.expression(value)))) return self.sink.fail("E_ACKNOWLEDGE_TYPE", statement_value.span, "acknowledge requires a result-bearing value");
+                const acknowledged = try self.expression(value);
+                if (acknowledged == .parameter and self.parameters[acknowledged.parameter].requirements.contains(.codec) and !self.parameters[acknowledged.parameter].requirements.contains(.copy))
+                    return self.sink.fail("E_GENERIC_BODY_UNSUPPORTED", statement_value.span, "a codec contract does not promise that every value is a result obligation");
+                if (!(try self.definiteHandling(acknowledged, statement_value.span))) return self.sink.fail("E_ACKNOWLEDGE_TYPE", statement_value.span, "acknowledge requires a result-bearing value");
             },
             .discard => |value| {
                 const ty_value = try self.expression(value);
@@ -1065,6 +1204,7 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
         defer checker.active.deinit(allocator);
         if (function.policy.conversion) return sink.fail(eUnsupported, function.name, "generic conversions still need abstract checking");
         for (parameters) |parameter| if (try checker.topLevel(parameter.name)) return sink.fail(eShadowing, parameter.name, "type parameter shadows a top-level declaration or import");
+        try checker.validateStructural();
         checker.result = try checker.ty(function.signature.return_type);
         try checker.seedCleanup(checker.result);
         for (function.signature.parameters) |parameter| {

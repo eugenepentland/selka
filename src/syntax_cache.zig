@@ -4,7 +4,7 @@ const ast = @import("ast.zig");
 const source = @import("source.zig");
 const copy = @import("ast_copy.zig");
 /// Maximum retained parse arenas and entry count; zero disables retention.
-pub const Limits = struct { max_entries: usize = 64, max_bytes: usize = 16 * 1024 * 1024 };
+pub const Limits = struct { max_entries: usize = 256, max_bytes: usize = 16 * 1024 * 1024 };
 /// Completed lookup/copy outcomes and retained arena capacity, excluding index storage.
 pub const Statistics = struct {
     hits: usize = 0,

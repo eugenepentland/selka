@@ -1,0 +1,1827 @@
+{
+  "date_utc": "2026-09-07T12:46:52.763370+00:00",
+  "repository": "/home/epentland/ai/canopy/mylang",
+  "head": "226e4d5a3816e94574e1cf7c588a4e2480133cd8",
+  "dirty_status": " M .gitignore\n M README.md\n M SPEC.md\n M build.zig\n M docs/experiments/check-session.md\n M docs/experiments/incremental-development.md\n M docs/experiments/incremental-syntax.md\n M docs/experiments/roadmap.md\n M experiments/schematic/README.md\n M experiments/schematic/straps-synth-lmx2595.svg\n M guardian.toml\n M scripts/verification/core.py\n M src/ast.zig\n M src/bytecode.zig\n M src/bytecode_model.zig\n M src/codec_execution.zig\n M src/codec_json.zig\n M src/codec_json_test.zig\n M src/compiler.zig\n M src/diagnostic.zig\n M src/disassemble.zig\n M src/duplicates.zig\n M src/effects.zig\n M src/generic_bodies.zig\n M src/generic_requirements.zig\n M src/interfaces.zig\n M src/lower.zig\n M src/main.zig\n M src/native.zig\n M src/nominal_instances_test.zig\n M src/nominal_templates.zig\n M src/parser.zig\n M src/project.zig\n M src/records.zig\n M src/region_check.zig\n M src/root_test.zig\n M src/schema.zig\n M src/schema_graph.zig\n M src/schematic/guest/main.my\n M src/schematic/guest/ports.my\n M src/schematic/guest/svg.my\n M src/sema.zig\n M src/symbolic_shapes.zig\n M src/syntax_cache.zig\n M src/typed.zig\n M src/typed_json.zig\n M src/typed_walk.zig\n M src/vm.zig\n M test/integration.zig\n M tests/disk_projects.py\n M tests/schematic_svg.py\n M tests/verification/test_incremental.py\n?? docs/experiments/application-comparison.md\n?? docs/experiments/direct-agent-calibration-20260907.md\n?? docs/experiments/direct-agent-clearance-20260907.md\n?? docs/experiments/direct-agent-pin-roles-20260907.md\n?? docs/experiments/generic-public-tooling.md\n?? docs/experiments/large-project-checking.md\n?? docs/experiments/navigation-client.md\n?? docs/experiments/plain-json-ergonomics.md\n?? docs/experiments/source-json.md\n?? docs/experiments/structural-constraints.md\n?? examples/source-json.my\n?? examples/structural-constraints.my\n?? experiments/application_comparison/\n?? experiments/ergonomics/\n?? experiments/large-check-48.json\n?? experiments/large-check-96-retained.json\n?? experiments/large-check-96.json\n?? experiments/navigation-profile.json\n?? experiments/schematic/reference/\n?? experiments/schematic/reload-trial.json\n?? experiments/schematic/straps-synth-lmx2595.png\n?? experiments/schematic/verification-baseline.json\n?? experiments/schematic/verification-final.json\n?? experiments/schematic/verification-trial.md\n?? scripts/navigate.py\n?? scripts/profile_large_project.py\n?? scripts/profile_navigation.py\n?? src/byte_io/\n?? src/codec_bytecode.zig\n?? src/generic_api.zig\n?? src/generic_api_test.zig\n?? src/invocation_contract.zig\n?? src/json_document.zig\n?? src/json_document_test.zig\n?? src/literal_arguments_test.zig\n?? src/navigation.zig\n?? src/navigation_partial.zig\n?? src/navigation_test.zig\n?? src/runtime_json.zig\n?? src/schematic/guest/draw.my\n?? src/schematic/guest/layout.my\n?? src/schematic/guest/layout_graph.my\n?? src/schematic/guest/layout_routes.my\n?? src/source_json.zig\n?? src/source_json_test.zig\n?? src/standard_library.zig\n?? src/standard_library_test.zig\n?? src/stdlib/\n?? src/structural_constraints.zig\n?? src/structural_constraints_test.zig\n?? src/structural_declarations.zig\n?? src/syntax_cache_large_test.zig\n?? tests/application_comparison/\n?? tests/byte_io.py\n?? tests/navigation_client.py\n?? tests/schematic_layout.py\n?? tests/schematic_reload.py\n?? tests/schematic_verification.py\n",
+  "source_hashes": {
+    ".zigversion": "55514671f203f691ba0fae90c7b7d8740256222cfa6f7512b71b04cd1316eb2d",
+    "README.md": "71823fa57f9412c866aed4ab76ddd1c1ed98fa9cafaf4bac47a96ea7969a89e2",
+    "SPEC.md": "e0570f57b8c11e04138cb23a4a7af407a28e9ff9a4215644caf779162b17f8a5",
+    "build.zig": "c3cde9210e662d5dbfc9a9db8aa8e9ad398b90fa919239f2967bd6c4bada8ba9",
+    "docs/experiments/aggregates.md": "07b7167fc5096d3359491bf287bf423bff0c924e64b49b1a3b657cba16ff5f1e",
+    "docs/experiments/allocator-capabilities.md": "cc39a54a9d4c3e53b50507102b122df92033cf5eebfba11dbbc7613dc65b2936",
+    "docs/experiments/application-comparison.md": "df477af6e7c6f28ab02fa1bc8284976ecf7608b228e72bd4307334e657a1f3dd",
+    "docs/experiments/approximate-discovery.md": "bfdba82dd2b81c863852ba1586d523692d80ddb72c839f5256cee1d157ab73c8",
+    "docs/experiments/arena-execution.md": "946a203f21c6c8da3166475ca5d3b5373b7daecdf8625cf21aaf08c13fb895f9",
+    "docs/experiments/arena-reset.md": "6a5a8ff85bc64b46c7e88a4aa65af9ce458542c16cacc732e9216fe440c2eb2d",
+    "docs/experiments/arenas.md": "ca83e2e38765d5d9e82a50ec83572ab3cfdd626ea7d879b3d2f65589b70711a6",
+    "docs/experiments/arrays.md": "ae74e982302819a5bec6b863beb546f90a2c5cebee117febf203f391301d2f8c",
+    "docs/experiments/attenuation.md": "933abb14ef30f443a6f8b9e3e45f165c3501ce2c0052dc03f62ac149e0715b8e",
+    "docs/experiments/b-audit.md": "9984908593b294dd4ad5568d3473204b0ec1948580607fe7805dd2a009927d50",
+    "docs/experiments/binding-cache.md": "6d476ddcc12253264a2ec5c8756fde5f944df9e5b0d9676a8959c90295c2c1a2",
+    "docs/experiments/borrowing.md": "8a7d26349c8845ca754b2533c5b16404512056f5dc813b7724f56bf2069a85bc",
+    "docs/experiments/buffer-operations.md": "e69e654eb5d117f3a530874ebb33b1c92ee16a22d8ff8b008c63a2be7dfa4731",
+    "docs/experiments/call-inputs.md": "08fb6752806ad3875cb4f9c790199e72f951e6ba838ceed322de07c8d71ebec1",
+    "docs/experiments/check-session.md": "f857dd8667c312833a8ff3c89086410223c211219a4a63211230340b227cf77f",
+    "docs/experiments/checked-calls.md": "fdebaea1680c54ae9184b3b98c5d5e592c5744aa759b80a3ac95e8b1be288f60",
+    "docs/experiments/codec-diagnostics.md": "3f58e16f26df18d5a4b345fcb1d8e7d8383c8a613a34fdbd7011b927959d829d",
+    "docs/experiments/development-host.md": "22c03ab3d29a5953fae5f3eafeabb5040b1a8d12d7621f4bda9cee1296e83771",
+    "docs/experiments/diagnostic-provenance.md": "5d7e68116c4d07441d58f0b3a4b541eca143dc2a555e0f9b2dda22e169642e93",
+    "docs/experiments/direct-agent-calibration-20260907.md": "068c71aa1542476bf5d36e937e29e5d58135c7d942651bc369490265eb3c1770",
+    "docs/experiments/direct-agent-clearance-20260907.md": "0d88d8f08ae4b8c72d42fc999c4265ad90468913474da608a092da23c8340b98",
+    "docs/experiments/direct-agent-pin-roles-20260907.md": "b52260b9827b56897c5d0e26930283e4becb89fb6c81e0e3542f3143f309d655",
+    "docs/experiments/discovery-baseline.json": "66c9073356c66ec8bdff9ddd714fab6246c8f72e40370707c1ea0a61703c6924",
+    "docs/experiments/domain-codecs.md": "5d4854163395760ef80a2e74d8a436cdf38c46fdd794c456ac48c3a064aba236",
+    "docs/experiments/domain-equality.md": "54505fb96558f957996fa2d067983a94fb26a73a8955af8cc2fae817b413cd34",
+    "docs/experiments/domain-json.md": "ba7fde6bf44f316abb6ffd0c78596482e597e71ad1595a9880d9afeb0905e04f",
+    "docs/experiments/domains.md": "3740fce119ca5efca3f570fd3acdf78329cb74ae4cae4769fdde24c551d7f1ee",
+    "docs/experiments/duplicate-discovery.md": "7788dc70e9472fe7303f3651ac886227da9c90d17f0ab27df899c72955248302",
+    "docs/experiments/effects.md": "38e1950dc3e3225bfabe68d8e92a434738d67229270334d830e766bad567b091",
+    "docs/experiments/environment.md": "775faa73be7ad511c2537d4c5037b3a813a73d474d4fa1752c64a98bd321c94c",
+    "docs/experiments/evaluation-cache.md": "220b669f91a472cae0abce64e1c4a97aafeec8b55e6aa0b731addefac700255e",
+    "docs/experiments/evaluation-reports.md": "958847fb797fcf314beff132cec06a6bc537cbac3b496889b1bc94b3de187eeb",
+    "docs/experiments/external-capabilities.md": "92f9a04a8318212869a5d06acdad83429f9719b063f613c9672e6ff79f1d174b",
+    "docs/experiments/external-resources.md": "3401c9044be930552006b1ebd5a88160388a8b8465c253fa84b8f01413fde3c0",
+    "docs/experiments/formatter.md": "e5b8101ae7758e96d113a24ba8b37d50d80e79ff6e1028cea808809ead62effb",
+    "docs/experiments/generic-arrays.md": "8bf67fdb5cbaa281ec879c088bce507ed8afeb13d5184258140d448f56ea7531",
+    "docs/experiments/generic-bodies.md": "baac87a652bd54057a69478554c917c1601a48b4a99a6129a3fa005c3dcd585a",
+    "docs/experiments/generic-borrows.md": "6b59ac02d4af86c0b1cd6b9d8aec3e7935345b73b0f7be7fa53556eb9cf2c291",
+    "docs/experiments/generic-calls.md": "24ddb7218343f80d4013f7e0ed18cb471b280d9a2af4ac773ead02b26a68026c",
+    "docs/experiments/generic-concrete.md": "31016e4716fc0296fe73cd2aed121d1164bc219eaf8c80770eb1c5f2341e3135",
+    "docs/experiments/generic-diagnostics.md": "43783a6e1ca90a724afad4d435dd683a3bbb90b23b053a81d600c9e3e71b3abe",
+    "docs/experiments/generic-execution.md": "8d944cfbcd2962221af8193eb60fad771fdb5519df007f37a56555890e0ea692",
+    "docs/experiments/generic-fields.md": "a98fe2eac24ebccf0b23f8c93c3dbef5fed64b1caf80f0204e67f7af445a172c",
+    "docs/experiments/generic-instances.md": "91d0c0fcbd77fc351a578a08cadac7d3f2566ab2a5d866ccd9a05dd25a7ba38a",
+    "docs/experiments/generic-local-views.md": "f6d622a500d8573d7ff58a0327840802e8951f9dc0175595b1f8ef494d249db2",
+    "docs/experiments/generic-owned.md": "1da761554e2f39bc9ae39f831379d17eba241c949f5aec2173db4f609f3330bc",
+    "docs/experiments/generic-providers.md": "4df6d656c28a7eea340e3b82b0c1a49da03fbbbc1f5254a92e4edbe119517018",
+    "docs/experiments/generic-public-tooling.md": "bda7f82b638609e560bf062cad269723192cf4415a2ced036908618456370073",
+    "docs/experiments/generic-references.md": "9fe917b3cf4bf2f312c1a60ee46f91a4cc6bc18d853aaaf7f22c595ad71283d3",
+    "docs/experiments/generic-regions.md": "139da02fc35a8c898700105ab85c482936971beb72331791d07b3c4caac6472b",
+    "docs/experiments/generic-requirements.md": "f2944bfd9c0eb789876b9d57ee1b6a4df6105d56e8c8cfe83575b4b10ed10d79",
+    "docs/experiments/generic-results-plan.md": "f87a002aee391ee5dfe91f10cba7d45320e83ad1acd2aa3d374758d614d81b61",
+    "docs/experiments/generic-results.md": "b2c6b3e659ca7088f9fb59d4226127015865a050c7af65fdf6273307ddbd5a0f",
+    "docs/experiments/generic-returned-references.md": "5cc6a6146d214592465a5cd2d50d7f35a031649f0c388067e2c99642e65119f9",
+    "docs/experiments/generic-runtime.md": "868d871a5d90b0adb651690c608faad49424a5d9cddba2c30960be96e329645c",
+    "docs/experiments/generic-slices.md": "34b3913d3e3c622f3d7fec995681b5715601380f504826921346cdb1b42d280c",
+    "docs/experiments/generic-syntax.md": "7727588fdc815522b91600c58bb48876f59798771ce19c2fc11cd997b90af85e",
+    "docs/experiments/generic-updates.md": "c837e977a65e0f8a643aee7dec7be0f32fde30ce801bd58c30de4e3b886875fd",
+    "docs/experiments/generic-variants.md": "fe61e6fe67864affeadd8b6309fb2be060ba196defa1f999bd20b7fff9f46892",
+    "docs/experiments/host-functions.md": "6b677ca9b2b035a6c67dc8f6f37c7cc054a404d04631308acd375f14094580fc",
+    "docs/experiments/import-policy.md": "4a45ae066bbdfc9b2d8fc4977fe01975dd56895e61b5583dc4b2e7610f9ae638",
+    "docs/experiments/incremental-development.md": "a7218da8cf6daaa402d14f81c15b199f3f32c97894c61caeb43d2a092a749965",
+    "docs/experiments/incremental-syntax.md": "2cc4347060e70aeebed4e812c3e4f00d20d6a755b768175ff9ca664a09abf19c",
+    "docs/experiments/input-manifests.md": "1732ce176c1b304f1276b3d9d1b03e0fd12c1e544c4f2ecffce2785aaadea431",
+    "docs/experiments/integers.md": "a8e0c32f5666e985babaac9c2c2c7b9f9649c8a920e60678b25c922281f36d10",
+    "docs/experiments/interpreter-first.md": "d230e082c370b5761d9791d805b7c43a5fc7af29f4a1fc69a0b8205a7f26d489",
+    "docs/experiments/json-diagnostics.md": "e8b04bc4d4893fb4b907c2c4494773ccf487ef9336d008635076a675f7b47e95",
+    "docs/experiments/large-project-checking.md": "e17b05525e01baac88b5d0a041e280cf6e19a68762ced4869c9430303d194d10",
+    "docs/experiments/module-discovery.md": "3c0b4bf0d6a7bfe43f80fb801b627730310bf921f9829937c1f6e09d7e6ef87e",
+    "docs/experiments/module-duplicates.md": "b20aee67ee0d01786aed87dac07a049ea10dd54600c2634294b3ce883cc75402",
+    "docs/experiments/module-execution.md": "8afa4519f988c5c1862f2c9b418c42127dc96bb0a31e7faeed6304ee7ce222b1",
+    "docs/experiments/module-formatting.md": "b843eb1f51ad0b1850a2449621a07b39fcc33280814385aab55e2ba91690c20f",
+    "docs/experiments/module-interfaces.md": "41649d52366ed33b4064242ff36a567a62e6fb3e30c2b2b151d7075b23c2f0e3",
+    "docs/experiments/module-native.md": "429e961a39fd2dd5c32a4cfcf97a7af8c63a776b32a8b5c743c4f30403ae5949",
+    "docs/experiments/module-quality.md": "3cb1facc59c8422381b44dbb8fbbc7a2c0bdb5f20ac4d968c4c0476def16292f",
+    "docs/experiments/module-scaling.md": "cc6ea9f229b049006ce3c0307cb7df1b45d062ce4331ed2aaf969624eb33c62f",
+    "docs/experiments/module-source-mapping.md": "e55a5b526733da8877da00df777c2955b5ce74f59ddce3d56d21be69e8b6f4d0",
+    "docs/experiments/native-aggregates.md": "24934e15bead1bd1125548142de0d577a1347144077d23c262d3b1608582ef39",
+    "docs/experiments/native-arenas.md": "cefbf6d532cea30fc6dddaaa6215b57491ca45bb4931bc0c408f204042bf77aa",
+    "docs/experiments/native-bindings.md": "e53d0724e86ab46b0cc85328807fc8f742139903015ed3026664a9434b0bb68d",
+    "docs/experiments/native-buffers.md": "efd72a8cb693f9e39bd86b92faee747b8345cd2dee7ce8e33bff3aec1d429396",
+    "docs/experiments/native-build-publication.md": "e1deed19410922c533c02a1a9f191818e011d1b734830e4fe9451336243eab28",
+    "docs/experiments/native-calls.md": "a004538ad2fa1027987eaa7ec92391a52ef7623bf91e1dbf92af8caa0ca46c42",
+    "docs/experiments/native-codec-dispatch.md": "4bf9cd15f8e397077780c4770879fb310c346de7852667a52ccd83df501ebded",
+    "docs/experiments/native-codec-wire.md": "1132963dd35f55cb76cf9c7f34347eabb785f399c89f6e8d5dfd55bdd25446d2",
+    "docs/experiments/native-domains.md": "135e7f94a2b4c3b21d7c763255b1a3da48a2e0355ae09c0451554c900c48b53f",
+    "docs/experiments/native-embedding.md": "1dd14da6ab5a423943c4a2937957c482419f79fcf0dff6f69ef4eca55369586a",
+    "docs/experiments/native-enums.md": "718c15a769c5b9de521ba5b4925e5ee203457692f175275440bf1a6ad00d821c",
+    "docs/experiments/native-environment.md": "dfd99ccc00b61433d184f65ae1a8b26ccb0a845daa71530f76bc8cdac18feca4",
+    "docs/experiments/native-execution.md": "f165252530c9f5988e94171e3da81c1f9836dcf00c7672054adc37ae02eda9cc",
+    "docs/experiments/native-pools.md": "5583562983c957c928c29f3a89c02ed22158de2ada3c25538f4dfc75050c9df9",
+    "docs/experiments/native-providers.md": "a65b7fe28a6c7fcdd1af309bab8746688ffacc27b8ed5aa5430a6fa69babe62e",
+    "docs/experiments/native-references.md": "9bfc18066e755eb35442faf5c7363d84ab5c52303fbce120aa0913a2a7c05e89",
+    "docs/experiments/native-resources.md": "1e6e8029f3bf32abc86f19f0d6337faad9e6f2ce7c30a5a59c9d6c2506eb28bc",
+    "docs/experiments/native-variants.md": "fa09ae207cbc6790aada4dd476ca3c9fccd8868a8ca2c5b4a22cd3b6a86ab2ec",
+    "docs/experiments/native-wire.md": "5f6be73dd6835c22900abf9db16a1b089b4b3501224f19d9aa8c7c8d87825c73",
+    "docs/experiments/navigation-client.md": "4bf557c5c0e237351087f4fbdfa470cb8e4e6381d827380cbc8adef12cdb35f4",
+    "docs/experiments/nominal-bodies.md": "6bc1a01c652d9d8f68acefc11807d6789aa5dd149a3e80791c308571bb0b195b",
+    "docs/experiments/nominal-instances.md": "c7d98c184ce101537d7c23086aa9ed4fbcd54ca6c0f423b53aec8928eac95f1d",
+    "docs/experiments/nominal-layouts.md": "b80ccfe7a6dc1b39a3664003dee57d8d624b03a891023228178f8f88ea29b117",
+    "docs/experiments/nominal-providers.md": "ef1e42dca35fd12f7de100880b07bd0bd5e74a35df2d629ff12bd546e0082f2c",
+    "docs/experiments/nominal-template-checks.md": "c579d51d1b518c0ee1c482f8a8a055879026b38d30ff5323c624aeb0dadff80d",
+    "docs/experiments/nominal-type-syntax.md": "119c659dbf70a4334738727b788213a7e531f910c880fef8fe89f7e1b8016a3c",
+    "docs/experiments/optional-values.md": "a167b9a95398656ef456971d2724dbde59e36f7ed9c3d6b0cefc5b2607695bde",
+    "docs/experiments/owned-buffers.md": "b1159775a4e4fbcd5e1c2879bc83a4fbbcb8bf34aedf582b32ce013325d10403",
+    "docs/experiments/owned-field-reads.md": "af5a85d23139fe4eccfb4a302f8fee009906c30bc827c105517ce337bb739454",
+    "docs/experiments/ownership.md": "1e58d64890410f2ca21769fbe8f5f03158f905ff9e368e552871d03ef06807de",
+    "docs/experiments/partial-fields.md": "246a2b786077485687b1c0d6c695530dfca8e3f3b9f479c3f64eaea11a344ff7",
+    "docs/experiments/plain-json-ergonomics.md": "bd4857db99a725f618563a8764f82a8fd80768e71239130c87f29d3eec265b8d",
+    "docs/experiments/propagation.md": "1fa223d0e3aa912542b9334c7727ca5afbe7a7dc3d8d96154af20c9437f908e5",
+    "docs/experiments/python-bindings.md": "512695a0d7df38ef55cfc9b5412ca305fc6250b84f62ec7ea45fa955535e3c5a",
+    "docs/experiments/python-calls.md": "dbfbec87bf76639e5cbaac45f229d4a19b13d1c8d92619d1f9c5bda1517fde4f",
+    "docs/experiments/quality-reports.md": "591f85235220ec230b87c01d6b408e12c7f7ba6ab074e4d754c890a540d803a8",
+    "docs/experiments/region-backing.md": "6345494098f6d62b2fcf08644e733847a255b58dcf118c3ef26cdc7a1c110b57",
+    "docs/experiments/resource-io.md": "6c5ad30f73f8b4751dcf88a040d6dc01670ad9f1ec9ef00227abc04d66da7128",
+    "docs/experiments/resource-slices.md": "97e5614a549c1fbd12d0925f6d3c2fbebef314844eddd7d4d66627d34a242106",
+    "docs/experiments/restricted-evaluation.md": "a542c51023a7cb8b568b13a231a2f23c28c286f8f0ff445109ee39c83aa5a925",
+    "docs/experiments/results.md": "448df7cb2e4b8c8161236df888cb72453e8d9f00244a13073306dc863c574533",
+    "docs/experiments/returned-references.md": "71d39150bfb2f361dd2a5ea65f0f020865ad49a4473a1fc894894fb74fd24cbd",
+    "docs/experiments/roadmap.md": "b7d13651d531c5918b20864cd18adbd7cba2fe45a476a721e85d2cc88a4cecf3",
+    "docs/experiments/schema-receipts.md": "013990efb71d9b09bdec32b37ddb5e6354d62f75a6f7bceed8fabd1cede48069",
+    "docs/experiments/schemas.md": "98035b74a1253c163b841470e74d0c727a1f448243bebef3a9ffffce03d885f9",
+    "docs/experiments/slices.md": "9898f151a910dea7125e4020a6dca5a1657aa1d8a5904560c98ef45da055cd9d",
+    "docs/experiments/source-arenas.md": "ae48b0b1af37bc17d498558f0c85ecc9ab26c3fc0c1d9b976e4f3e32c0919589",
+    "docs/experiments/source-codecs.md": "b77960282049310e61e9ae8ed45792c3283fc947a4a83bc443830aa1ffb1b554",
+    "docs/experiments/source-json.md": "92336fd98b236773699edacee2772cf776109c935e457fba2cadc5c6105fa9c4",
+    "docs/experiments/source-pools.md": "a1056e70f749660169b6bb5cbc0189b9d01d6ea5f7957b39ff754198169b889f",
+    "docs/experiments/source-resources.md": "6789b14fd8adb8ae777f4984503b57062936a57706963ece8a92541c348fe460",
+    "docs/experiments/structural-constraints.md": "e3904961bd981dc163dd0eba8556070ce23da4eb92eebbe715f26f94bd29296a",
+    "docs/experiments/tables.md": "6aa8e8412b4fb4aabb784fbdc389f9ebbd7429ae6e733ad2b9e5c7d159a2b875",
+    "docs/experiments/typed-invocation.md": "c7d6cc14434c0f299e63637b6a86fed5a317cc4cc9b19faa9d34e9061daa4019",
+    "docs/experiments/typed-json.md": "2693cdba5d0344320c4b026dee466e8375f140a4b68f80b16a8469170ce43204",
+    "docs/experiments/typed-pools.md": "1aeb7822c4239e627879466ef009c1089bf3ad67e006fa84d5005251da54c1b0",
+    "docs/experiments/variants.md": "c7b939a775528f0a414ca5f8270960e58e6624682eb3a0225c92827056eb4d3f",
+    "docs/experiments/verification-driver.md": "161da8d95533c2d577fd516aefd6a0a4d52f79fec0f42c4d158bd93be33bf1f3",
+    "docs/experiments/verification-runtime.md": "1ecdddef009685332c17d3a40ad21323610de30c24d2edeedd2c1bd4323ff1f8",
+    "docs/experiments/watch.md": "98f9d2be6c66af5f8cc494ec91e7f29439ebeed9cb67da3d4035f3301c08ecee",
+    "docs/mvp-audit.md": "afbbc0f90b34bbef4806b900ef9d710cfcc078de4b06385fdd8c6d6e84a2e7c5",
+    "docs/plan.md": "63a16a198df86fa23bca82ce4a17667d189762cfe0b28edb2a827b23568f3be9",
+    "docs/progress.md": "878807469120130efc915d33b831c91480e704ffa72c93a2959526951a54afd7",
+    "docs/semantics.md": "d713e23f48f3c57e795cd7f8dc6d7cd78f80afe6460e925afcd8d7245ca82cfc",
+    "src/allocator_capabilities_test.zig": "3b0023fd3dfdc24be653de4023557faae387ed074eeff9fdebb1f9341bd3c23b",
+    "src/arena.zig": "093b40a0cfa38b529621b9e931091cd4e327034a51d04e2b831c791575667d5f",
+    "src/arena_execution_test.zig": "2f26333c96a17b305c95d7d513f7350c050f950dfc7bd4fc0c3abeb90e9e0b67",
+    "src/arena_reset_test.zig": "132a0c57e175d168c1d3e5754a4f0e4cb3b316220f99648b3bcdbb973496a000",
+    "src/arena_source_test.zig": "a64e2cbe76d08ccdf123bc638b5d852570850cbc15ef4a79dbebfb36edc5cb9d",
+    "src/arena_test.zig": "a0512f15f7a6f7f0b1d9251a49d0459f6117076ba8dde5678fb4903eef76ef3d",
+    "src/arrays_test.zig": "d6860df63cdbe5c896bcef043353b0fec787e5568e3912271cf7bb0f938ff6d7",
+    "src/ast.zig": "7d9fe5e810294e83c5a4506c70018c006fcfea60ad7d704cbc66bb04d8879e24",
+    "src/ast_copy.zig": "a671021801ba8eac9d61ede3731e93c810892c8fc901ef6453ea924a6e6cc6b0",
+    "src/attenuation_test.zig": "aaecfb100cc3385c3b32bc46c000262ff3f64b1ce4cfd8b08ece2bf42a94b515",
+    "src/board_trial/app.zig": "d8c14a50acdd88fbad83cca60abd23f517b0e65bbbd6e1efffe8006c9c35b6bc",
+    "src/board_trial/baseline.zig": "72a4629cd6c750f82e169fde239f96cffbc4bbd71643e50eaead8a3ff26ad490",
+    "src/board_trial/fixtures.zig": "9b0a6f7928c7291f200ba69921a91492d5271d095160c8ecef5a0e4f97144c9b",
+    "src/board_trial/geometry.zig": "88537f5e068579673be8bd40357df2f034c886629ca8eb3bbebf7ca571355546",
+    "src/board_trial/guest/bounds.my": "13b2295ce644216c33e4c8c6dc018129492b5c0038ed6a3c21e8e4d346510716",
+    "src/board_trial/guest/checks.my": "e511b3dcaef14a935f94f40639a980e5616e0be9355ea214ba829a13ca0bcbf5",
+    "src/board_trial/guest/geometry.my": "5dbab86014625606893dd26d3c7af1d5db13bc3cbc1320d5515597933e3595f0",
+    "src/board_trial/guest/ids.my": "510f156cff2224c29413fd3674a74b9fe0933e116af408857148dcdbf93dc03a",
+    "src/board_trial/guest/inventory.my": "8c42e98c36bac3ad8280c708ffd0ee78d3cd0cd29528093cfcc02059a9ec43c4",
+    "src/board_trial/guest/main.my": "2a35ed528ce6f88e7cdefdac0cd5bebd566827b210d6d124a9bc5af81820952e",
+    "src/board_trial/guest/model.my": "534d90b1b9760dca222822cf9aa6d27d27e00657d0e2ea713638d923767ea327",
+    "src/board_trial/guest/policy.my": "5c4d2f7e28b3fbad8766f9b5d4dd77e5b01bc27eeeeefee59065ebf5f7f02ad3",
+    "src/board_trial/guest/units.my": "f1bf837ecb4b0e89af426e32b1404ec349350c3293648a9448c80ee671ce0f30",
+    "src/board_trial/guest/validation.my": "5fdc1150ddb37b1158283852c778a49726ac74886aa1a29f947721fff6bd444b",
+    "src/board_trial/input.zig": "dd18eb0b40dfed21f5b05cedcd171f4813e9e604165294b349d83dc5f4a27d6a",
+    "src/board_trial/kernel.zig": "c439092a0132299fbc0d596d2e56aa83590c57498843255459705b99f189a9b0",
+    "src/board_trial/model.zig": "0fb086ffcb3c1e253f7497eedd41a3ebd0d5d1ccf9aca4652e08030c435db099",
+    "src/board_trial/runner.zig": "382e22ea877d99c5fff76cb4ca80c888ea3015abc637fa532829f147bbd879d3",
+    "src/board_trial/tests.zig": "c789dadb45a35b4f58e642f044feefb23135ecde78b049440067d9a2c039cd9e",
+    "src/board_trial/values.zig": "6fcbf9f7d518698a82529f17a4df72877f477db8792b82abcf4d616ed784e008",
+    "src/buffer_operations.zig": "3aec608fca9abcee637242d2ddbd924650132a477d5e2407c2ab4810d49acd7c",
+    "src/buffers_test.zig": "b6fc0b1a0485caa42edb9a39878eacf9fcba3139ba8247b301677e4d1f4a26f0",
+    "src/byte_io/host.zig": "148bb761f8b3283e314c25a43f1ed4a4f1496d56ff9e66c8b96929924f8b894b",
+    "src/byte_io/runner.zig": "8ca9411c1fc6d4cec476e177ec10df94389236a4f0e628c03b09c85de755f008",
+    "src/byte_io/tests.zig": "0f1ff5cecbbcc99a9a7f633d4f8334d09e01ea0a30bd10183c2a3b31f9137753",
+    "src/byte_literal.zig": "e415ac54c616870eb4e76a7e1a97dcc0948bbfccbb32396e02e971e7f39ca9df",
+    "src/byte_literal_test.zig": "a4a17861c79c1d871c6f077273a39948918c7ab416df7d02fe1002ed2678778a",
+    "src/byte_slices.zig": "9de65eee2fb3c4c0bd770e666d7789ba4591233d50b2a58104780a3aff2bdef2",
+    "src/byte_values.zig": "410015fe230ffc9c5e0b665d10f2da9e19bff671bbdd63dd291be3dccbab6691",
+    "src/bytecode.zig": "80abeea532692ec1bc0e09739f67120354f0815878f4d323f5995767d318f886",
+    "src/bytecode_model.zig": "55f03fb828fba6758f1a56bcfac80a51e5b2e2312d8af27992d26c246516244b",
+    "src/call_json_test.zig": "0101973c3395ca27041f058783142ac731dcfd4a884eb8009df9454a529129f7",
+    "src/check_cache.zig": "6e612fdf61e802f4f1fd02629d427ca913c2d9d05558de3aad60aa3d511ed857",
+    "src/check_cache_test.zig": "6c4d74c4ab0b4855c843389911f2949e46ff1714f0e299d10a276ee04d64d7ab",
+    "src/codec_bytecode.zig": "9f875b58f601775c010b4f92d9e1f9b5d87ae01c09a5e64b846db2a8ce9efd29",
+    "src/codec_execution.zig": "83ea1fd5249e434860ae5e1b673b503e68604578bdd8117171ead6510c42af65",
+    "src/codec_json.zig": "441021781d6f4c5f6de5754865428102ae7a2d40e50f656a6e59eb2b6e15760e",
+    "src/codec_json_test.zig": "80090f236e2e8ac8fc15b7b9f5adeffef68ce86c0d773b0d421728a7724b5c39",
+    "src/codec_memory.zig": "5302d0f25f15e10c261c5ce8ab4f718e167d7f8b4b4cd47eceb0513f3006f4d7",
+    "src/compiler.zig": "a79e335e1aa942e9cb3a8b3dc4da1ca3b06ff499db81b4ca295a9a98b5cd73cf",
+    "src/compiler_test.zig": "592405b03061b9c5c74eb412d323fe51a3516caab63d1f70d465768dd8bc1f4f",
+    "src/data_type.zig": "d567187b902fdb3a7f5db256f253d0a105d343ecf2e7956b299a4ee291352b7c",
+    "src/dependency_report.zig": "3fb93da0a5d6a6e09ad5959e412583b3138a636d6b06e0721f875f8909d00e99",
+    "src/diagnostic.zig": "fb8a120701eda3721d62052e1bd3a5a57e42a3f9845e64d43405d6ae40ba6208",
+    "src/diagnostic_output.zig": "5b3e2b37926cafb58d4b8ed24434204d43b642d31cbaef17caa63ea8960c3f67",
+    "src/diagnostic_output_test.zig": "16f9167db4f9ce25c31bd4f39637759769d9ed1363d253fe4c2e0caec8c59fd8",
+    "src/diagnostics_test.zig": "9f15b9bc2b6b93593e5aa5003a37403e4cc11db3c1e27debcc582fe432c1f5c2",
+    "src/disassemble.zig": "b9cbaaa4c7ea4ed4e986141d165b1d8b29e32bc9ad86e1e47d90b1e59c33c1c5",
+    "src/domain_codecs.zig": "6132daf7fb2f9681895427b365f3954d9ffb5874735ba6b84690ed46f4909b07",
+    "src/domain_codecs_test.zig": "b8f495db972fae4b193018353139662c3fded22bcfe8c486a813f7384f50ac45",
+    "src/domain_equality_test.zig": "0a7ff8248f3ab6eeefc33179141869d5f2e6fb1889c313aba7238bd36b52a570",
+    "src/domains_test.zig": "36e7a66923cc24d09898b63b61b9406c59d5370d99470c826beba226d2e8d2f9",
+    "src/duplicates.zig": "92763cee8029fda19a404cd2601480fb667e52caeba49b61a63a9731ca7f39b0",
+    "src/duplicates_test.zig": "3d7c0e6b7246a59aad1b4620f65c09daff84be2498c6190d0956ebed10ea51db",
+    "src/effect_set.zig": "244185ba4ccd0688937ca909a51b7d2e738b0312e28617e9da1a5866bfa2a382",
+    "src/effects.zig": "c381ea431ef1a783a9e558423519490c625047941ed5d4e1089b66402573c195",
+    "src/effects_test.zig": "d0c75fdc6ba85a2a15ee2d920bb9ac7d2c58e9120f0481196fbd4aeb3d0168bc",
+    "src/embedded_project.zig": "29962ff9ac62f4056d451862585094b4fde22543c36a86913e20f4e7892c4494",
+    "src/environment.zig": "7db62ef9dbcd654d70671d414527cba6dec6a12d6d5f69cc15d5bce1353e6c54",
+    "src/environment_test.zig": "6e2e277bf52111f1bc41313e7d8ff020d9506161e551025df724d4186ddc1b32",
+    "src/evaluation.zig": "753a9506c1359b4043e150053a06e7a4277ba34f9b4e17463b384b6af64b23b2",
+    "src/evaluation_report.zig": "ea89f8b27e849938a9baa63bb2a6866bf7b2a54d854336aa519db36559ac6396",
+    "src/evaluation_test.zig": "5138f5d2811716209e178b24c6e44928a17d3949471f67d866ed41f10f051e98",
+    "src/external_capabilities.zig": "6f20c351137b4744b33aad7edf989adcae8f4f6054118252807522ba80af6a10",
+    "src/external_capabilities_test.zig": "5149580def111f431db9ecfd9118d3196e11bcf25bc3b9ba4f401b023df67ccf",
+    "src/external_resources.zig": "e96042ff9b05adac41b80a4a663599ab08c123687276be7079a77a67c793fefb",
+    "src/external_resources_test.zig": "cc86bd7247923ae5a86cd1bc16f71430f7e85abf60743a5ac57bff4cea2dbd9e",
+    "src/field_moves.zig": "62f70f256a96edf5dbe7cc89fa747d22df41ffc550ea3ea681767ff8219545a2",
+    "src/field_reads_test.zig": "4c480af4a5559e05b68e1e7c9ddb771401ebcb0a70381c01c7dba4ebbc142d34",
+    "src/fixture_declarations_test.zig": "a067d31f8d5eed06db4091e531043156417696163941edcde7760cad418bb6e8",
+    "src/formatter.zig": "1a0e4067d49dcc3e222e78241e8e8cdc97136b70e8a38bf654839c25858e91f7",
+    "src/formatter_test.zig": "df377f7c1dedf9583ff4c60598f6d5293151b0bbd199e318390dbd971f0f9499",
+    "src/function_identity.zig": "5724cc772df1cf5d9054ebf898cbbef99506b04c3d78a3f36cf74d96f5f5db65",
+    "src/generic_api.zig": "552b7816ed437bb514a258c9d0b0583560985e219d3050475e3e2a8a28316ff4",
+    "src/generic_api_test.zig": "b40955dbfb98b39fee2c2f23c4dc71c36267bd17c6b1ac29b65d6d80381b8683",
+    "src/generic_arrays.zig": "d838565f0bcf5da783798f73ee5cdbb0808c4ee81401be09ebf8106b10b96678",
+    "src/generic_arrays_test.zig": "2c74ea1242d65704229bec17e63b0afab77768cb5c59b86efdc18064e8c0150c",
+    "src/generic_bodies.zig": "1c23f7ce3e6affd5ef90b5507d4063664c5703a8187f4b02989388a4df7e32d3",
+    "src/generic_bodies_test.zig": "0d31010cba047c5644ac0ab75c536616afb3bc6b014f493d29a5a64e241a1479",
+    "src/generic_borrows_test.zig": "48c8901cc057345dd6a1c5eb984c2dc274cb648c63bc7040144cfdf0e451b8ab",
+    "src/generic_calls_test.zig": "0d76a4f06bc24b8c507d2b80fc0596c85c7cf5790b20635325128243873735fa",
+    "src/generic_codecs_test.zig": "9332aa40bd0e4047794369fd40d2321a7c4361c89e22c5caf06d373a49cba235",
+    "src/generic_concrete_test.zig": "81a693e17ff95d80ed41d7be0ff4ccf2770dbdbbd5ac89d5dc5bd826e25162cd",
+    "src/generic_execution_test.zig": "6b27ec8f7287770ba497d227ad53fd80a53747ad1afd96dac54bb909ec43e348",
+    "src/generic_fields_test.zig": "894d456e7de3797495ee915eb92462e178d8caeecb8fd0fff41b10ff625650b7",
+    "src/generic_instances.zig": "c35cdbc83fe46b851641bbf74dc320870ebfdeb35496b50699cb1475035e7b74",
+    "src/generic_instances_test.zig": "739eb00ccc8551da346667375910590b01d1759a5b2fae22074865be32e416f9",
+    "src/generic_local_views_test.zig": "bb43b6cf71835a242b6f320d4a02059cf230d55203d2f5935b60cab406389002",
+    "src/generic_owned_test.zig": "1efa61f5b827ea0f62b85a614c8f6e5bea4d2abc3856c34175e2fd96ca687792",
+    "src/generic_providers_test.zig": "5e2baf93a9b73c69f82599383bd4e0fbe515ae427d36f9c16c0e1fbb9b35b099",
+    "src/generic_references_test.zig": "01a99f0ab11181d9964669667061744d77ba2bd4b33eba74d06050e48f6618d5",
+    "src/generic_regions.zig": "7e2e74556e9965b8cde3398ef9df833fe2e1da3925a56e7835114ea7b719e180",
+    "src/generic_regions_test.zig": "28e1e3775907a66856308dcfa9e849b0d6ac165bb8441a29f428007f9120efe6",
+    "src/generic_requirements.zig": "69d1562d399d96c47c35b49ec54d60b954a6ea95d5ab64c40692429adf2015ee",
+    "src/generic_requirements_test.zig": "e2090382355baf04191d13f9a614b2ee2c1e426cc6832d19a5d4053120dc28c4",
+    "src/generic_results_test.zig": "5949e25a9bfa9e712d929dbfe8c12252789159c04a83fe3ced2f9d65336e2619",
+    "src/generic_returned_references_test.zig": "2870479a1d399720442ceb1fb2163cb84f46e635fb067300bcfc37d16ddb7cd1",
+    "src/generic_runtime_test.zig": "b7f80c5646f0db2ee533c976de2b3732f5e9b0d8093683511b33a81974131701",
+    "src/generic_slices_test.zig": "c6b826574f4ed726aa4640f27c64f1ea79478d3cdb853e393c14329d4612482e",
+    "src/generic_syntax_test.zig": "2750f60a4f897078cdaff2a7b8c65816b2345831b8b078d9567e199a78c0087f",
+    "src/host_declarations_test.zig": "f29db7fa11b9ba6c0e540d388bfd3883ec3bec267149850dc8cdc83c791b7916",
+    "src/host_functions.zig": "3cf87d062ae47c5c8f0ae743dac7260839be9a2cb5037b54cbfa2b558126419c",
+    "src/host_functions_test.zig": "dac79d71612242e0380249c248954e14554cb69ff021541a25f50152c8e70855",
+    "src/host_invocation_test.zig": "f666152747bbefb1e93dcdd7a299de1853c8d026d894789f75b0a7697e34f5f9",
+    "src/import_policy.zig": "83770c073452a6d2179279450fd92fd11557e2ab7cd1f95f4809cc6f888d1ba4",
+    "src/import_policy_test.zig": "d9ca13f90c2e2178cd9e54e7391ff20a2db8a4a9e93bf3c9b700ee162e072d48",
+    "src/input_manifest.zig": "f66f1221425bff2a6c6638d9edfce4271a2907cb22011e6b656c84a91e792f13",
+    "src/input_manifest_test.zig": "9244d63f7a5ca7ae08dd85ce771a8090d37bfcff3fba68ea421cbda7c4cbc073",
+    "src/instruction_test.zig": "fea5fd1970191994d1c79d3407ce7b37d4f007b84d4a63222657bb2af2dccba3",
+    "src/integer_literal.zig": "790afeb80ce17658520935ca3a834ffd71acbe10e6e48f14f7f79439b038cff4",
+    "src/integers.zig": "f6ee33ed8ed2a75bc5847cf2aca056fb10998782d6c3e496a576bc2780dca297",
+    "src/integers_test.zig": "d2cfd3bef4b245a58cf2726e1e27a3bafed74c15db221867839580209e691768",
+    "src/interfaces.zig": "bbfab034f14040480e082083168a3fee0148b299f4e51f37b28fe4fc1e41d690",
+    "src/interfaces_test.zig": "21c56891591fc373b53c505bbb01314c72f4676368ad180104e91cb2b6ab1835",
+    "src/invocation_contract.zig": "38d200ec9bd43e8b9ca6a3a6a95e0b905ae71b2e7739e666303fe63087349af4",
+    "src/invocation_test.zig": "50105b7f319f11902c5d36fc08c45cbfe98260c140cf14da1e4f9ba5e7887380",
+    "src/json_document.zig": "cc745d22842e9d1b9126dfe6ad814ff85c463de3359526f3040054a577e0bdd5",
+    "src/json_document_test.zig": "64d65223bedde6b90f6d9a82b12743f3e8a8d9f930dde2dec5b89d43e120bdfa",
+    "src/lexer.zig": "a1054ee544be83976c5353f68eff978d61f889b2b8a03565c0097e4b223b7802",
+    "src/lifetime_provenance_test.zig": "81654e52af9fa0707a91faddce2029623556d0903573836d1e4f619078b4d231",
+    "src/literal_arguments_test.zig": "131efdf216fe5b863c6f74e9a6684cfe5e3e9371a5ba0b175f7e0513a46ea818",
+    "src/lower.zig": "9559c597ebcb161768d8aaf7de2a2f88e1438878084da327db669a88203663c2",
+    "src/main.zig": "a679171368204279748a042586881b934486205c862a38df9dc633a94b02a7fd",
+    "src/memory.zig": "c192239b61b7ba4c9cc0ca2b0a11e45fdb0d9a33fd847a94f6d9bdf6832537e5",
+    "src/memory_test.zig": "21ba7be2f2aa498a92523ad412c59978247a4ec60546261113a5a29014ad7eb0",
+    "src/module_names.zig": "c922672d8dcef98ac4963dc257ea8fc185029269c910f62ac53394bfce936582",
+    "src/native.zig": "9d63af7cad705c7f115283d4de6b6ef9544f6dfba5421dfc9583a2626472ee8a",
+    "src/native_embed.c": "5e0f989595957ae105321249e76bdca6a15fcd6091b91991c2459f67e826f456",
+    "src/native_embed.h": "bb8d45cf470a0f13cac7a34814b15997447c92bf8bae387f76c8a9b1e148d920",
+    "src/native_layout.zig": "ef5c1a46bdddbf032e94f1144d24aa8b894c8f5e975f0e54f149c771a00eba3c",
+    "src/native_providers.h": "e6367c75d190146461bb822de9f4210fd9bda6129f4b8f8f060507a21fbc1292",
+    "src/native_resources.c": "64559d1059f66dac987a2bb34166189331b19be202d65fb29102055206cd483a",
+    "src/native_runtime.c": "1d78391285ce521198b4a817ee3f7410f33e6325a1af19d22f45952c1c81a5f2",
+    "src/native_test.zig": "eed98a713b86af68b0dde2bead46041c3652f6ae7ba2da2cd2d75a67670955a0",
+    "src/native_wire.c": "b30011d7e7c1766f9fa27171588c11ba9e163117567ccdb08cd6674873620c59",
+    "src/native_wire.zig": "af785334791eefb10a3c456c645be0dfe03a77ab9ee743ff505257aa92a2f24c",
+    "src/navigation.zig": "b5118601eeb61a05f0af5308a7d1920eb4de26a05c608a005042dae0fafc9ede",
+    "src/navigation_partial.zig": "82ef6e9fba21ff14500badf1c39c2c95e76bc728150a9f758681c7767d7ec573",
+    "src/navigation_test.zig": "a3187317788ba67fdc629ff6a20671c90fa1e80441f7a40316ff93b0548f4a8f",
+    "src/near_duplicates.zig": "d5b2e170c71efae3eaffdcdd21dafcfb1ea8ba48f3419e1312949bc551ecd84c",
+    "src/near_duplicates_test.zig": "aeba86aac1791240ec4bcb40d61d75eed67780a67f943da1f715675857e0fc2c",
+    "src/nominal_bodies_test.zig": "d140c1adfffc2cfe0119240f5c1a16cf35a53089ebc449217867f0c4d2c7d478",
+    "src/nominal_catalog.zig": "c98b54e60a84dd85ee5eef3b501c20e414f942d700a7df73aa487e06a6c1d838",
+    "src/nominal_environment_test.zig": "6ad36cd84391a74955d306c72faad1bd68a2b544caefb9845bd78db85a211c37",
+    "src/nominal_instances_test.zig": "04e5eceeb1db6a56fa5e2626aac10ad20d3196c57da95fa7d6cd4da2c54fb378",
+    "src/nominal_layouts.zig": "13449489571c8aa6c2ca5babaf4b928eef1b3b60fd79203839a6757fb3d83a1d",
+    "src/nominal_layouts_test.zig": "fe7e0f3ca86c47f536074a5a84f3843b66c706af68eb546250857572d5f05f7a",
+    "src/nominal_provider_contracts_test.zig": "c94dd83a2125eef529e25f6abc82465a1abd11c4cfb785aaf803dafb186638b6",
+    "src/nominal_provider_fixture.zig": "1436de493153a9bdf297445dff556620e1fcb065eea38a7b469dbbce74c962c2",
+    "src/nominal_providers_test.zig": "fb492d9c0bf90b8fbbd1abd7708ee0b1fbe1e575ef54c92671503c0ac4b43351",
+    "src/nominal_sources.zig": "f96fe1d0720dad0ba233661d51763e5bfdf5dbc0744419c2014de98645dce6bf",
+    "src/nominal_state.zig": "5d11e613c26244eddb0ba5f9c4ab452d8015da2eab8210011e7971a17329c591",
+    "src/nominal_templates.zig": "33ee9361ee03ab9dda2282d12cfba2badbcc05160270d18280f477afe56c9dde",
+    "src/nominal_templates_test.zig": "d9e6050aa68a426cc91bde58df3a9cec0ea4e7d429a93f17226ac26632332980",
+    "src/nominal_type_syntax.zig": "26f97706b4c7450ac0b6f18c6c020886ac13b9d6f38ba94d59a69185e22c5221",
+    "src/nominal_type_syntax_test.zig": "10cb9827edc6d5517dcb680b0f8a4f8c01d1a4b0bbee6b0e8d0f3b72aa229125",
+    "src/owned_scope.zig": "01baa5f0cdde7bede4f0ed6d328176810d90891493956ea48396c63eaa9d5940",
+    "src/owned_scope_test.zig": "c1d14b2e4ec18bf75c46eba26c232a36fbc666b423215bad5175bb9094025f86",
+    "src/owner_transfer.zig": "235ef3af057e602c0f6f955432ad7666c1498b00c80f44096f2cdc30ab9ab5ee",
+    "src/parser.zig": "eec00c2f543f82c07f82023760108b551fd830dff63f66964b88fd1fdb1d3a86",
+    "src/partial_fields_test.zig": "d4acc2a5ab9401602db79696e7d11651bbc5e7f7bfa662c1d2f4eabacd5bddff",
+    "src/pool_operations.zig": "c23df5c596bbc50ce74f96a41012bab28dce575a57471967f092ab6372415a0d",
+    "src/pool_runtime.zig": "2b6bd0ac94e3e83f68891c3999d51743a5fb09dff0e1462e6d36430f654ea3d0",
+    "src/pools_test.zig": "74b55ac826eee9783b57589920b037622c8513711c65592ad998a761cd2976a4",
+    "src/project.zig": "b9bbb876b5340ac39444c4162e3f8aefdff5d374b36496a6e479a8c97e04c425",
+    "src/project_compile.zig": "9712aa61f8e76fa95d2e0686121f37422d28da9cb44b97e92db319bafd45c474",
+    "src/project_files.zig": "b3d042c3ee2cd8c119e21c17b9423500a243085946745bc5c5a1f5ff7d9f0e5c",
+    "src/project_syntax.zig": "8501217a3ff2e6f3eab19b69f3559e6314c6df9c27d0373e4423becd59eb6d6b",
+    "src/project_test.zig": "f89d454b7aa9825a76fad3fc383ccba4a789e8fad27ffca2988aa6d14c52ad7f",
+    "src/propagation_test.zig": "8a1a3305db8e5f7333ae65a6e28fc0b43daf77f231b15822558518ddb5bbd83c",
+    "src/provenance_test.zig": "cdb1ce80b6b33cb3ddd9dadf5f8a8d8a3fbe31f5381ff26a9bcd09b2ce71196d",
+    "src/provider_contracts.zig": "ef7ee1056a611bb92225e3e2e94932f74be548610bf7d0fd8639948f526489b3",
+    "src/quality.zig": "b6b92b6b8d433a5b464279f63779e245008e63abe7b97ddc6c5acddf350689d1",
+    "src/quality_test.zig": "a77388d9f6232fd02292d267a21daaf9c2c0f7a1f6250349451a814e509cf22e",
+    "src/record_layouts.zig": "ed2a9b8ec6986d7bf5c2c90a810a424293fce1e23f722f288f58cce598018627",
+    "src/records.zig": "258dc774d20981d0b1803f910739103178f1d9eb7b870a7aa10cac60af77f33c",
+    "src/records_test.zig": "ab6f94729ec498dee62894e0dcba70e460719e54673c69554df4907e1da9f442",
+    "src/references_test.zig": "4ec9ef0152cbc44ba0119c4196824195fbc48e828f3688a53dc69c9a33abb267",
+    "src/region_check.zig": "82dbbb36ee5712e701d3c56b64fcf5a01ef448712090c09fca336480e02d40f7",
+    "src/region_origin.zig": "2c146473e4a6b2b2fdc09103730ca924ef83c42dc93dc0df8a840e732ee96037",
+    "src/regions.zig": "fae441853b15145c23fbbd7692b65c08a63f899c704ed8aed79d1dd87609bb27",
+    "src/regions_test.zig": "274104f16577ae8a3d9dbde4d62c01c4ff2dc503e2933bf80e9a934ce8094949",
+    "src/resource_io_test.zig": "b8f8fe5105fd44a92d6307ed7adcd0af19c595ac1b1313c9f4ad5bebd1bef69d",
+    "src/resource_runtime.zig": "c789e6aeed47669d734a824359961b50059300736ca8130ecddb640783b04365",
+    "src/resource_slice_test.zig": "dd2653f6d626d6da2c193f1d891378929f622623b0f1a11c27742d9a1cad0b2b",
+    "src/resource_source_test.zig": "217e0c2c9d15f5c1ef14893b1ddd8845fec5e143f61b7ea9e382b9ecc5877ea4",
+    "src/results_test.zig": "a03057018ac4727acb57b869ea69227b4d9f6b698ff1ad22939771615d291a90",
+    "src/returned_references_test.zig": "3b620f9ea71a2c51437b5601a3bb507061506587dc132c045edfb06b0ec1a823",
+    "src/root_test.zig": "4dd56845c4aa6a4ea29f2d37c5d69c2f9d3b2c9e8b20c1475e0ce9874e5a5cdb",
+    "src/runtime_json.zig": "8f47713eeaa568b4e9fdcdc70d1023360037ec2016aa54bbbef3a872a25f23c8",
+    "src/runtime_values.zig": "77f53939bfa879310775a00483643f462a282081811e451bdbdda0b0519d61c8",
+    "src/runtime_values_test.zig": "9389b520ee749ffef78ecba91ebe48454fbf3a9b400cd6457db4961d03d82f56",
+    "src/schema.zig": "7c94137df383e4ebf6c0ece1956751f07aeb5cdf33575a594b11432b595034ac",
+    "src/schema_graph.zig": "b5facf6c63df0e3845fc1ee6c55757ae94274d3addd9fadb02d868116808eb9c",
+    "src/schema_report.zig": "96c7271fe590394446ed19480ad4a0fa4a836c443dec2dfd283dc95188e0dadf",
+    "src/schematic/app.zig": "ef02469ce38c605f965cdc77e2d96ce05e16415faf2facf70e78446165abb026",
+    "src/schematic/dev_session.zig": "f9b3e3edb38fa2a95edced1de9fd66efbfaad4e9cd770d159ade9185d4d88b2a",
+    "src/schematic/diagnostics.zig": "22e4d33f8b61611d5bf52130bf59f806f6cd0b6eeefbdcb41ee92d1096479b5f",
+    "src/schematic/guest/circuit.my": "0079b4994c5a34e29e1c3c3a42f3ade8f10e93b31a373cb4bdc868e4dba7c52f",
+    "src/schematic/guest/draw.my": "289b51c09da554cb65f94e0c80b3f530fa08cc47c8aa943eb931297a2e30f59e",
+    "src/schematic/guest/io.my": "7a6cb2da13ad855a05de3709bc42709abdd2bff8a2367d5d668edc8de27bcbab",
+    "src/schematic/guest/layout.my": "7ebd7cd91bed9bb25ea5f5b07c697ebe798b10912ee2c1864879a6e262c5df61",
+    "src/schematic/guest/layout_graph.my": "8ca4a28c9ab9a70d73db9be9a396eb7cad35c4d63b85f1cb9393b799b9525235",
+    "src/schematic/guest/layout_routes.my": "8851ad863f24050804c92fd0d5bfec19891dd2e30db8623893c84e774869b352",
+    "src/schematic/guest/main.my": "3778300c2918fb0160cea9733e6048ad196fad476358d6570b02bc69bd9f6954",
+    "src/schematic/guest/ports.my": "b6f935097d1bb6968adf8f9b62950dce1823c3a3fe41830a96a88b0c3fd52fa3",
+    "src/schematic/guest/sexpr.my": "6ce5502e743617c9194536212edaea36ebbf7c28df5cf13ef1d39e446197ad50",
+    "src/schematic/guest/svg.my": "66b41891572d2fda6a17062d50260dcceaa7b2a921e341e5da6207c4c0f64880",
+    "src/schematic/guest/text.my": "a49ee65c95ac57bbe382135df23d1d6288ab1a74a16adbcaab4a48db2b1b33bc",
+    "src/schematic/guest/validate.my": "4e46d85ba570e080f9fe9fd1f0521204bc160b4194a7f034ad25a4d283b9d095",
+    "src/schematic/host.zig": "468b83b5532a218d91b14f197b2ba72a86d0fb41c61dec7328dfce5081169783",
+    "src/schematic/runner.zig": "2ea09598b80fec787b6f0fc705a1e339435ef259e1d775cddeea2c5018de2e79",
+    "src/schematic/tests.zig": "6e34d9a8c658943c0ad83f290b4f37082392a9b34aabe4fbbcef925868ccceb0",
+    "src/sema.zig": "f5e94dbd324fa3df505a90ff77f939aed457ba05658176c0d703c4c812216961",
+    "src/slices_test.zig": "13cab9c9f2d286e862fce7cb180b57a48692aca136ab69cf2bcf9ba53dad8946",
+    "src/source.zig": "cf0a8a370f079b5beccb270fa927c85deae5b5d333c338dc5a1e61003cc7ef81",
+    "src/source_codec.zig": "ff9d2b2dc876af6ca08617d8cc828440585383801dfcfc41bc1838b84084216f",
+    "src/source_json.zig": "1a44ad0c9f76269bc2d46cc31ba99c7cde22427324998a2fe8ca98353028fd30",
+    "src/source_json_test.zig": "8fa447ade76b624f61438a86afa9bfb022b31bad40b386728b1c59b84e6abc65",
+    "src/source_map_test.zig": "bbad37f89ef8b020fe54b3754f8e7616492fcc8edf8ed4ed090cb3c3523c3000",
+    "src/source_receipt.zig": "aa1f08cb25c62f24ddda66464f745662a26e6bc0a9984e028ce3bb9abcb12c50",
+    "src/standard_library.zig": "f5a3c61ddf3288e32beda0adacb6a6c7583e147f9e5b8a32a89495ba17c9a50e",
+    "src/standard_library_test.zig": "6d34bfcdad55b3dd794a7bfc072cf6c45f8f8f6081c159b4c0f5c57ec2cf8c7f",
+    "src/stdlib/std_json.my": "f374551d4660359f660e8331e26c7a363c6e6f503f23ca9a19e4661686f86b5c",
+    "src/stdlib/std_text.my": "b2524742023440d4c2ce2b3383890b558365f0a309075c2d87a0d16e30a39b09",
+    "src/structural_constraints.zig": "c23c92b9c5c019a807998d8b2b94a0b1402711af4289234544a683f86293c405",
+    "src/structural_constraints_test.zig": "8d93a6184d4353454190ba2b0bc522131e8bd3527010cbe52629b2db167ef35e",
+    "src/structural_declarations.zig": "c1542136da30b70b602b26a9afe29d136b513a60b7bdae8a91c30f9fad95211a",
+    "src/symbolic_providers.zig": "56d86d6acea27a57cfe44c8d62e20f36482ee15bd0977f90be76f3d414f9a550",
+    "src/symbolic_shapes.zig": "2d4bfd890daca3ac957a3bac817acee99af399961c9ddf128bfe6e2805975646",
+    "src/symbolic_types.zig": "d3c6834c20bf768f1cd4af060945aad5cf2f942ab588da0ce747e19c61e0667b",
+    "src/syntax_cache.zig": "e0a3d371f596ca7d6d735e8e57f0bba75ee6721ff3f6d1851bfbaf9f4e4255ab",
+    "src/syntax_cache_large_test.zig": "8cf9afa565d17ddcd02eaac1b907b4bf930e782fd185036067ff1339fe96e3a4",
+    "src/syntax_cache_test.zig": "18568fc2b522c2ffbb6f75938e6e11fec415c9f16ed5c99c9905bc0a47093d82",
+    "src/tables_test.zig": "f42f01246668a5eb193409f2294cce95e45c3a42cae9c537a0b2f13300f10e8a",
+    "src/test_support.zig": "af3ea6f0b0000ff726bf585aabdec805a48afecb13bc96de0d8d0043e66774e2",
+    "src/type_catalog.zig": "06929f1bfbe212ad3e561adf34fafb35c087216fe7b7873f059dede02e98aee0",
+    "src/typed.zig": "100b6e69357e980bd098fc6f762726b0f07ec04933a8b988674506749b4e45cd",
+    "src/typed_json.zig": "051c3a2c1e9c61faeed21f8ac4571336cfd362205b02411fae496aa41f14c1c7",
+    "src/typed_json_test.zig": "e92dbf2b51475f1e2c43ff5b7ed0eb1557853d6ce19f74fb7ac0aabc3f83da97",
+    "src/typed_pool.zig": "db891e670cd609987de889d1e5badf80d147e7acf5780a59de50401a968f07ae",
+    "src/typed_pool_test.zig": "90dfa91c86bb88391515afdac65021525ef43435661b3cf3c6d536ca9c6eb01c",
+    "src/typed_walk.zig": "dccba9d0c3c424b698782051d011dbe6ccc3762d8f20c7d7d53787c1bf913e38",
+    "src/value.zig": "3f4ce0e3e6365201703fcb239167e665ff3bc3023e0785872dcc17363f252212",
+    "src/value_copy.zig": "681c07196e1240c83329ce2ccbf4ccabf25947f3bfbc679f4241b5d7bd51ffad",
+    "src/value_test.zig": "0c6fc5496dfe8f8d595a3391de4dda8c080c299f0474aa710f4a8a64b0c334fa",
+    "src/variants_test.zig": "881999eca032ba2843587779e9a4f2af8e4c93bf77e5021e72e3bef1d2817a2f",
+    "src/vm.zig": "0efda4b3d5a75d180e1e9e0abd402dc82e43aa0662768f9e3099e419311afc93",
+    "src/vm_host.zig": "3d3eb2a2c1db13f40371ad56edff42c6190e16a9c359b1c412b870bead5a204d",
+    "src/vm_host_test.zig": "90859fc5da9aa24e561e2519bbe05f41e40c535dde47d44f716eb90224f37bc8",
+    "src/wiring/identity.zig": "e8f2b63363405bd2da5b610d7767e545a46806802f2cf0365720184d5663ab0a",
+    "test/fixtures/allocator-capabilities.my": "9bf6b70f6163721ff3081cf0e8e695541821f191979fa9058d5f9a7fa5b603b7",
+    "test/fixtures/arena-reset.my": "b182b8cceb783a7b7adf61a06536e7d33a0d11a38f7b6445cab10c827674bd98",
+    "test/fixtures/arenas.my": "3bb9d7ccd6c109878e4bb162c281d06527684cc54bf3a85cafa858a091e2fcff",
+    "test/fixtures/arithmetic.dump": "b7cb0978f36429e706a17f9789134df96861f392142d3b5939bf5a24c3ff7ec1",
+    "test/fixtures/arithmetic.my": "7d3ffa9344cbe7ddda1a54bc52755d408fa1308689c23d856060fe54f47eb85c",
+    "test/fixtures/arrays.my": "3f74fa24b8e7631489e62fc796bb63d00bf46366fe0f0968baef8c4cf1d61aa7",
+    "test/fixtures/attenuation.my": "a62d385b1a6b0726ab5da84576511cf6fd3fa7381023b171317fb934bb79300a",
+    "test/fixtures/buffer-views.my": "26d45a6b45b31ea3f010fb6fed2b42e8d0de3b63b093fb67d6a63e875ab4ec00",
+    "test/fixtures/buffers.my": "0390bfe55605d7f64ad05038b56062923948e20a0fdc0f18c1d7d0e92042265c",
+    "test/fixtures/conversions.my": "ce712a69fc38d6b0ba82eefc027cb4df066f2e6e443454c98b0297ad02c8e49a",
+    "test/fixtures/domains.my": "c387d7d1e86d07b6a2783e8798ae05b3c4287c44b8bdf64a17c2918387b67beb",
+    "test/fixtures/effects.my": "dfd10b6459594a047ee1b03361124478f24b5973d039a177dd111ef8ce6b5769",
+    "test/fixtures/environment.my": "484060eedea9adcc0e49824c9dc34805fa0993a721ae6a6aadf4f65cc148e6b6",
+    "test/fixtures/external-capabilities.my": "1b62428ccabc623cc44ae24616b4d3499c32806c1464a02174abee3a2bdf6bf9",
+    "test/fixtures/gcd.my": "4858d2b4441f21da1be882cfb49c0119a4404aa4438b09b517b35bcc30360493",
+    "test/fixtures/integers.my": "db858fe93d397ef9852af1b65dcacda673ada6963d6bff95183d398c67f4c631",
+    "test/fixtures/partial-fields.my": "2aa8428b8bd559a7d3865816a90a17d7969d616d4b17c5131a0721c1a6c923a7",
+    "test/fixtures/pools.my": "559d0dbdd8ff6817e446e5e48bde398f6e6df87df42c420e55e86c8a76baca20",
+    "test/fixtures/propagation.my": "ef76b489601df7b5e8a258e73038f27560ff6f3e59df495a7af094aac0d799cb",
+    "test/fixtures/records.my": "f885881422477d45ceabb80a116f07def680fbb39c35bff4399a99c7dde787aa",
+    "test/fixtures/reference-parameters.my": "f6bf06748222197c8129d8d8f6c43714bbfb83bbafa85c031c6af10d6669045e",
+    "test/fixtures/references.my": "38f972dd0f2fb1a2511227adffaaa17e9904915f22078f5ef7d64d047499b14d",
+    "test/fixtures/rejected.my": "107e577baf3564640b074ab3d531c38c915279f921d4fa0a3c135bc3989f8722",
+    "test/fixtures/resource-io.my": "595c2ee1c670a38048285e9516527f20d0cd63c6b7d3b847825198338af4b2e7",
+    "test/fixtures/resource-slices.my": "825966009fc1385b2c5472832cbfe5643d80a72398681c43cea2ef8c1afe4d76",
+    "test/fixtures/resources.my": "d393f918ff66551dc5aa957c04b2a1bb1717d0f97e247a9ce13bccb59ce752db",
+    "test/fixtures/results.my": "5831cddba0064c341a8f8a149bad702e1ebbdc50ab132f70643543fc42391f17",
+    "test/fixtures/returned-references.my": "2b0b431bf812495e76c6347521de7a773e2a580130a81e6ce7864ec09906a35e",
+    "test/fixtures/slices.my": "ee9750c4e1842fe96da1b897827e7f0b8b1c98a58af93d66114a5a1bd1eb25d0",
+    "test/fixtures/sum.my": "874311312259d0ad25be4845c58b81332fd80888d75a323e17c9900b7b7badbe",
+    "test/fixtures/tables.my": "ea8c3a4ff806dc5755c978ddc71d7185356af353b2793c51c8f0201d8e025da8",
+    "test/fixtures/trap.my": "3618d34a4413108fa6b391f4d9078d6acc402dd0525b8005d60e8d4c3021bd8e",
+    "test/fixtures/variants.my": "79fc88063e762fe9969b278347190cae20d05ceb47d535e9f7de37fb6832f326",
+    "test/fixtures/warnings.dump": "3539fcdc1144759e20ec80aa8f86bfaca7e8c9433e90b9b33956496eb18382bf",
+    "test/fixtures/warnings.my": "280c96c92d9ff89a8f227e42326bae95d320f04242c816ce209b216dbc2f50a0",
+    "test/integration.zig": "70f99ef612688fa024e8adb0e5d2f2b76a1d36fd8f08775e39d50e57e49aa9f6",
+    "tests/application_comparison/test_adjudication.py": "67c0eb6046ea63c6cc3a48db4c0b223289ec22ae064f5e0df3634d46374441d2",
+    "tests/application_comparison/test_build_reuse.py": "904c1959c4148e4146aae63ae61fe791eab2101edf63ef6f033c8c39f6a5f780",
+    "tests/application_comparison/test_byte_io_host.py": "ca5c67c8d736c2d525844a347bf2a1479de395fec50abc6a1759bf55e425ad05",
+    "tests/application_comparison/test_calibration_identity.py": "f349532bab5e52b625c0b6f77f4af3c46afc0ee17f2f9bfdc9e2471b742a6f49",
+    "tests/application_comparison/test_calibration_launch.py": "22b67f9c48e20e8249573a57740cc1c8ff654cc061077128a0416d570d0c2d98",
+    "tests/application_comparison/test_calibration_setup.py": "41ad7bcb98dcfaca8b04af1f6b7cceb9b698afccdc3998fe2e4db5306e6c7094",
+    "tests/application_comparison/test_cohort.py": "9eb4135dc706bd5ea43dc8ffc862f439538ef95109aa2fca80663e61f61c34b2",
+    "tests/application_comparison/test_cohort_sessions.py": "96a21ce89ce5f409da772accacc337a238e906e45e7f4638514da830408e7a35",
+    "tests/application_comparison/test_cohort_summary.py": "8b63042393a203e2406fefdc484fc32aca748967067b3ca367cc871f94d5f1b0",
+    "tests/application_comparison/test_coordinator_receipt.py": "443f8108494581b01a0b8a6dd72e1ce6a8808b8cfb12e00d3d27ffdf2c065386",
+    "tests/application_comparison/test_coordinator_run.py": "2505f858137ae8e19226398cb9bc634049664b0f85f4f26600fd782b976fa02a",
+    "tests/application_comparison/test_dependency_audit.py": "2d710620b6284f93c3a8eba9cca7b3f32cb7297f26007f9972761ce49467ce18",
+    "tests/application_comparison/test_eda_oracle.py": "c220012e3a84e10bd9004ff2e830550480b2bc70f45f0600d05f7680b19012b9",
+    "tests/application_comparison/test_eda_pilot_oracle.py": "37183d891df760aa86a4ed27022e7e508373290d695728d28f33864ed94f9d8c",
+    "tests/application_comparison/test_environment_cohort.py": "2779678a61d684a7510660dd30e30b9a7d702dc74115cd376182d8521aacedc0",
+    "tests/application_comparison/test_environment_receipt.py": "badb210238bada45652772cb915fe78a654053001635a124c578305cbf7ab7f3",
+    "tests/application_comparison/test_fresh_coordinator.py": "f939664c534179b72d9cd415268f16debc2267ad93e53a3552d09e48dfd3cb45",
+    "tests/application_comparison/test_grader_configuration.py": "9c1879b3d30f313ce480396f45585c137cefcb42978b9d099867e0823b88f8fc",
+    "tests/application_comparison/test_grading.py": "af646fd5fd433715b88bd9963d41f96cffef65666c14519ac87d9a95b31190df",
+    "tests/application_comparison/test_guardian_runner.py": "de3c94d29a6898bc430f6939d81a9ab4b0d111ca500488d160107cfcdf6d9487",
+    "tests/application_comparison/test_inputs.py": "e6eea42de01be10aa9e2e3e6ad51c282706c6a5168a1878b06ac950ff5704eb9",
+    "tests/application_comparison/test_isolation.py": "31acf76668875bd9ff128aeb00b67d35d9e9b8d8a3625678e00f44f4f7bc7b12",
+    "tests/application_comparison/test_model_loop.py": "6cb776c9c82f0f9190031505e175d61152a6c2318b1107a2a8806cb0fcecadfe",
+    "tests/application_comparison/test_my_baselines.py": "e8b3179a4a823f4048dfc49611e31634893727dbc2c36ac7722682a65a1ee857",
+    "tests/application_comparison/test_oracle_transport.py": "24748983cae34b9e3253560630d9aaad85642607e79fe0a52f53e3157dd0f68a",
+    "tests/application_comparison/test_pack_grading.py": "3402f2e625840e9f1b2e0f807f4fd684df1cbbf1e37f0c22cbffaafda902e27b",
+    "tests/application_comparison/test_participant_gateway.py": "a572fa0221e2c0a745786ae207b595efe0ec3ceae2d45da732bcc13a3cbadadb",
+    "tests/application_comparison/test_planner_oracle.py": "0ecbbec473967cbe148a14661382aa4a578ffce492f53b36f3f7e0234d9c58cf",
+    "tests/application_comparison/test_planner_pilot_oracle.py": "6714e6d0bafa72e8f71fde8a830f4c26fc6611356c3cbe0a2e456481348e83d8",
+    "tests/application_comparison/test_practice_pack.py": "6cf1acf39f01d6859b93481021795de44e0f760e774bdb0489de7fa700465090",
+    "tests/application_comparison/test_preparation_gateway.py": "e11eeef8c5385d74037a86d69188822b085743c69cbcd9800e3fcecc3a6bbea0",
+    "tests/application_comparison/test_process_identity.py": "2da26bbc02aceaeef2b2d14faeceb365b741ddf4e1e94c0c5e4dfcd7e8e7ce9a",
+    "tests/application_comparison/test_public_verification.py": "76277af8dfca19abf5d7cf2b531752a89f3eefe00ddaeef70be0f8eaa72fe053",
+    "tests/application_comparison/test_python_baselines.py": "6886889c897d728b275617bf3d23c0e05cc97fe9eb5df7a990611c73839ba320",
+    "tests/application_comparison/test_reference_validation.py": "e80a335135700de7bb1026c045de89c67efd9a305f67dab3a241d85f81b05def",
+    "tests/application_comparison/test_responses_transport.py": "a80848eed92711f0b285bdc11a7f551b61339f917172cc4ecf9f3cf9788b9386",
+    "tests/application_comparison/test_scheduled_driver.py": "1fbfad6d7443b257911b31dd3588de5724fdafacfbbf3e57484be135e1e9477a",
+    "tests/application_comparison/test_scheduled_grading.py": "d1de4ce547821bd0c0a8c1c8f4326d95180b425e1bf9eb196d37906c07231bd2",
+    "tests/application_comparison/test_seeded_regressions.py": "b27768872df85f25503537a5dfd0d13ec18d888e95d5fad876f6e43b1e54459f",
+    "tests/application_comparison/test_session.py": "ca59c1d3f943ffde9822354c7e1e7bb3da200daaf4a274de14b2750e5d3735a6",
+    "tests/application_comparison/test_session_driver.py": "b71bf02071020be0e1a56f762781ea98e11174a98323054c901e5a43175949b6",
+    "tests/application_comparison/test_task_pack.py": "5bd3e03e7e36dc0513f4677f7217ae17de63f243dfa9a6e682d0cb806436df20",
+    "tests/application_comparison/test_tool_metrics.py": "e6c63402d7bb6804252115d7fced4deaa0e8e77683526d434ec356d93f72d5dd",
+    "tests/application_comparison/test_toolchains.py": "ff1f1c2338afc01ce064066ef42ec5b52dc1d35c1acd774d9c92cb87310fd8f7",
+    "tests/application_comparison/test_trial_configuration.py": "b09693e04fde38e3b89ff67cc116f1d36215d05998709136980d74cbcb8924f8",
+    "tests/application_comparison/test_verified_grading.py": "d02d7be58c19831717406622926a351bdb6f4f82f8312f10be279a95ef228ca4",
+    "tests/application_comparison/test_zig_baselines.py": "c0ed4dea6ba277ba1c4e2a4a0d165fcf7dd392380eb13fe358e805abfb50ee3f",
+    "tests/binding_cache.py": "82ec99890ece5352f2245c0c8f37bb854de64cc8f4ed5bff5603c0d0ef6fab32",
+    "tests/board_trial.py": "391d256c31ff97c61f1d48caee3176589d5af5b8c13c116b98a8df8d235c8eb9",
+    "tests/byte_io.py": "bbc117adef64e2ba39609670638a3b924b13c347ecff22b1c1b13107e30d9a91",
+    "tests/call_inputs.py": "ef126bafb4f02384764fb4071ac8dce522c77a08b8b8a621711890c7478c76d6",
+    "tests/call_json.py": "e5250824fba092403eb5755bad722044c47581e30b54059c90ad03a736e3ab95",
+    "tests/check_session.py": "48d28b41ce7bd4e681b5e08936c5691af112ab30a4ee6d4ede7c666ab395a1b9",
+    "tests/corpus_review.py": "a3d2d01fc3c35cb19d50a99df1d326484b854729197d6a583f116d3b78771ed9",
+    "tests/dev_reload.py": "ca5c9f16456387b9f564226406875ab843f6e5deb8a79cb167a923b3960439c6",
+    "tests/diagnostic_output.py": "c5ddd5d6ec8a5cfd914ba809affe3847cf926f1797237ed75bc02e4155422439",
+    "tests/disk_projects.py": "dbcb72fa950b5f27daad9778b91a5bce2e25dd9f1ff93790c6745199686f2211",
+    "tests/duplicate_scaling.py": "6602438afca8203b75d16c468c3f46a948b9f6f72813948d3c6bd633682fda1b",
+    "tests/evaluation_cache.py": "dbe51515ea847c6c49ed25db6bc252154e747181218862c553ab1e994f65a3f5",
+    "tests/evaluation_reports.py": "66d989547d5879f106411c9501260555e4ce60cfb7dac7d4936dc898608c463a",
+    "tests/input_manifests.py": "20338d7eb85415917222da0a32f02cdd496e7a7c772d6f7fbae790f447024eef",
+    "tests/module_scaling.py": "de4d231dca4121f187892878765f956d4476500979acc0e0ccc6afe7d57f9d2f",
+    "tests/native_builder.py": "b0a84cd42bd88182e884f93414a35cf257940344f73b4a35c585248e70b87683",
+    "tests/native_calls.py": "080b63879b7ad3309899600ad2e11a7c360ca87d1709d8c94e9c6ab4e0226427",
+    "tests/native_cases.py": "750f8b72bf69352eae5090ac4e0c8556eed79c7fa12451ec83241a6fef3d8040",
+    "tests/native_cleanup.c": "e195236ebee39521efe211d58c9793c2f1f56cb2e472439efff82aab0acf6e0f",
+    "tests/native_codec_dispatch.py": "80d1da9c31343f0f26c5844d85527558e620cc645a01632ef8a217edb11b6168",
+    "tests/native_codec_wire.py": "9161f30d55ae8ad982e3a8ccd93835df4a2dd5ea519f31d6316bc6fb5cec7442",
+    "tests/native_embedding.py": "25dc53aa069738d0bd6f8af92b264c999e8528ef8f210a31d7f04432a00d44ee",
+    "tests/native_environment.c": "854085b13e0e69be4bf6b3d640634c07ee4846c21ac7852bfb639dca537b75e7",
+    "tests/native_environment.py": "177c6e09b3de77296b527fb0d125f39d2076727bc394bad4d4d9b6d72c0c4ff1",
+    "tests/native_memory.h": "0bbbd2905cb4ffd573c72601d105b8fec0a2778edf113d6ae4e68037984b74e9",
+    "tests/native_memory.py": "2c54618f7ec4aa0442fff2329eed78f1d3d109cba81ae38f7337ab4e8910e74d",
+    "tests/native_provider.c": "8837405f18a3e412f11c4b4be67a6c412b37731298c69cb22cafb82fdf5f8097",
+    "tests/native_providers.py": "7c4acd9a8b11b76708b8c7792eb603c4a2fd2ab9235dcfb2e6140c6aae191205",
+    "tests/native_resource_generations.c": "710358849ff8cd10869235938b23e9b2987b762473c1fb1cda1b1b6944912434",
+    "tests/native_resources.c": "edc6ae07af7edf2bd3dfe09f39e56b39f0261c33ed4ad943a990cb7649d066ac",
+    "tests/native_resources.py": "0cbfd67a78dc7b95ea54c757b17f37bc111cfc72b74fe6c8117dd1ce259af241",
+    "tests/native_schema.py": "9aff498668ca0c836078e7a31ecdef71e78a5f85b170cae9ad44ab656e280ec1",
+    "tests/native_wire.py": "70f600fd562983611dec67dcc9002af28b9dea4dde32b6c80ec903b0013a408e",
+    "tests/navigation_client.py": "098c29f8208b92787832702a99ccb1fc38f078330e7f76a5a310dac2e43f4eda",
+    "tests/project_dependencies.py": "00c8f7aa864f367b65f715f55ea2fad22f659b8e1db2a7b32bf1cf1e930c95a2",
+    "tests/python_bindings.py": "2b82381d466239cc6affa65faf71ec0f4f4298a883429f046d20915b6f41dba5",
+    "tests/python_calls.py": "157c3fa5400dda55b296111e37719117886894d06b7c732db10cf36a81e27a24",
+    "tests/python_native_calls.py": "127c5df1062e596baf51023a72427610a7c87c4b9e39c4e5321e056574b751a1",
+    "tests/schema_reports.py": "6412ceb81aef833941ec53b024fcb2b02d50a6b2ba71f4daae400845c83ec39c",
+    "tests/schemas.py": "0fb0eedcf80ca4a69694a1ea40d50534e81a85aeb7974871e2445985534b22c1",
+    "tests/schematic_layout.py": "08de01e9a8a6db9a6ebd46beafaa69f98aa4865e000d08400b4f17ee061b177c",
+    "tests/schematic_reload.py": "32a7f7e703e99161d6d86aae843edab6f68a094433cd2acf676d7ed6defe971a",
+    "tests/schematic_svg.py": "1f183aa68833acb6864fb862b9ef0d65cc71c92964fd57ce791ef57e489f5858",
+    "tests/schematic_verification.py": "60673fe9ef2f4662c44778d6064dc45e62de1ab4da126fc86dab880565e64d1f",
+    "tests/typed_json.py": "53531688f63b7979c2779ad62fb8b3a1aeef3173a57916c21fdd098fa7f07c51",
+    "tests/verification/immutable.my": "d5a99194843fa0cc62bb4c90c259fb41c54807e3ce27fe2d43b6f1d7f6bfbc43",
+    "tests/verification/run_tests.py": "243aad2081590d8ec5c03b3ecf01bc113acda79515e0cd1bb22fb0110d26e605",
+    "tests/verification/smoke.my": "f7ccb4839c818ba7837a4d30df124d138543ce80966f1280938242a739bc3a2a",
+    "tests/verification/test_driver.py": "aa0788f722b8cf570593bb8a9e2cedc3204a3a5a73282cd84b3f49e1f61e677f",
+    "tests/verification/test_incremental.py": "e61981f2101fa3a1491f4ac5544f165fe34c7381060d9394aa713d9b4f378ef2",
+    "tests/verification/test_merge.py": "9961c4522382aaa90f1eaaf0fb99dfc04d40806fafc828e19833d09367a72433",
+    "tests/verification/test_scheduler.py": "9543427f82ce4b419572ff9f33c5357b974b6255e64c98df7ca643f59a7b560e",
+    "tests/watch.py": "fc6a81e8cba159efac56b95079895820ab683dbd2e216b08126803a3ada0220b"
+  },
+  "tools": {
+    "zig-out/bin/mylang": {
+      "sha256": "af6eef0c99cdff43694327cc9570a69dff7d9cd69ce272d323805bc484f721b8",
+      "size": 13078880
+    },
+    "zig-out/bin/mylang-io": {
+      "sha256": "9f0c34cb02f12915180953f3631cae156f2c1def0d4f2017d59587cdd5ffefc8",
+      "size": 9327696
+    }
+  },
+  "scope": "Installed binary probes only; no build, Guardian invocation, full test suite, or binary/source equivalence claim.",
+  "probes": [
+    {
+      "id": "scalar",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "run",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/scalar.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "scalar.my": "fn main()->i64{return 42;}\n"
+      },
+      "returncode": 0,
+      "stdout": "42\n",
+      "stdout_bytes": 3,
+      "stderr": "",
+      "diagnostics": []
+    },
+    {
+      "id": "byte_literal",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "run",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/byte_literal.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "byte_literal.my": "fn size(s:&[]u8)->i64{return cast<i64>(len_slice(s));}fn main()->i64{return size(\"abc\");}\n"
+      },
+      "returncode": 0,
+      "stdout": "3\n",
+      "stdout_bytes": 2,
+      "stderr": "",
+      "diagnostics": []
+    },
+    {
+      "id": "generic_record",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "run",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/generic_record.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "generic_record.my": "struct Box<T:copy>{value:T}fn main()->i64{let box=new Box<i64>{value:7};return box.value;}\n"
+      },
+      "returncode": 0,
+      "stdout": "7\n",
+      "stdout_bytes": 2,
+      "stderr": "",
+      "diagnostics": []
+    },
+    {
+      "id": "multiple_errors",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/multiple_errors.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "multiple_errors.my": "fn first()->i64{return missing_a;}fn second()->i64{return missing_b;}fn main()->i64{return 0;}\n"
+      },
+      "returncode": 1,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_UNKNOWN_NAME\",\"severity\":\"error\",\"message\":\"name is not defined in this scope\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/multiple_errors.my\",\"start\":{\"line\":1,\"column\":24},\"end\":{\"line\":1,\"column\":33},\"bytes\":{\"start\":23,\"end\":32}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "E_UNKNOWN_NAME",
+            "severity": "error",
+            "message": "name is not defined in this scope",
+            "location": {
+              "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/multiple_errors.my",
+              "start": {
+                "line": 1,
+                "column": 24
+              },
+              "end": {
+                "line": 1,
+                "column": 33
+              },
+              "bytes": {
+                "start": 23,
+                "end": 32
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "typed_hole",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/typed_hole.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "typed_hole.my": "fn main()->i64{return ?answer;}\n"
+      },
+      "returncode": 1,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TOKEN\",\"severity\":\"error\",\"message\":\"unexpected character in source\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/typed_hole.my\",\"start\":{\"line\":1,\"column\":23},\"end\":{\"line\":1,\"column\":24},\"bytes\":{\"start\":22,\"end\":23}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "E_TOKEN",
+            "severity": "error",
+            "message": "unexpected character in source",
+            "location": {
+              "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/typed_hole.my",
+              "start": {
+                "line": 1,
+                "column": 23
+              },
+              "end": {
+                "line": 1,
+                "column": 24
+              },
+              "bytes": {
+                "start": 22,
+                "end": 23
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "float_type",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/float_type.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "float_type.my": "fn value(x:f64)->f64{return x;}fn main()->i64{return 0;}\n"
+      },
+      "returncode": 1,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_UNKNOWN_TYPE\",\"severity\":\"error\",\"message\":\"type is not declared\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/float_type.my\",\"start\":{\"line\":1,\"column\":18},\"end\":{\"line\":1,\"column\":21},\"bytes\":{\"start\":17,\"end\":20}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "E_UNKNOWN_TYPE",
+            "severity": "error",
+            "message": "type is not declared",
+            "location": {
+              "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/float_type.my",
+              "start": {
+                "line": 1,
+                "column": 18
+              },
+              "end": {
+                "line": 1,
+                "column": 21
+              },
+              "bytes": {
+                "start": 17,
+                "end": 20
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "unit_type",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/unit_type.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "unit_type.my": "fn act()->void{return 0;}fn main()->i64{return 0;}\n"
+      },
+      "returncode": 1,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_UNKNOWN_TYPE\",\"severity\":\"error\",\"message\":\"type is not declared\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/unit_type.my\",\"start\":{\"line\":1,\"column\":11},\"end\":{\"line\":1,\"column\":15},\"bytes\":{\"start\":10,\"end\":14}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "E_UNKNOWN_TYPE",
+            "severity": "error",
+            "message": "type is not declared",
+            "location": {
+              "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/unit_type.my",
+              "start": {
+                "line": 1,
+                "column": 11
+              },
+              "end": {
+                "line": 1,
+                "column": 15
+              },
+              "bytes": {
+                "start": 10,
+                "end": 14
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "bitwise",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/bitwise.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "bitwise.my": "fn main()->i64{return 1 & 3;}\n"
+      },
+      "returncode": 1,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"unexpected token; expected semicolon\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/bitwise.my\",\"start\":{\"line\":1,\"column\":25},\"end\":{\"line\":1,\"column\":26},\"bytes\":{\"start\":24,\"end\":25}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "E_SYNTAX",
+            "severity": "error",
+            "message": "unexpected token; expected semicolon",
+            "location": {
+              "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/bitwise.my",
+              "start": {
+                "line": 1,
+                "column": 25
+              },
+              "end": {
+                "line": 1,
+                "column": 26
+              },
+              "bytes": {
+                "start": 24,
+                "end": 25
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "break",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/break.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "break.my": "fn main()->i64{while true{break;}return 0;}\n"
+      },
+      "returncode": 1,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_EXPLICIT_DISCARD_REQUIRED\",\"severity\":\"error\",\"message\":\"a standalone value requires explicit discard\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/break.my\",\"start\":{\"line\":1,\"column\":27},\"end\":{\"line\":1,\"column\":32},\"bytes\":{\"start\":26,\"end\":31}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "E_EXPLICIT_DISCARD_REQUIRED",
+            "severity": "error",
+            "message": "a standalone value requires explicit discard",
+            "location": {
+              "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/break.my",
+              "start": {
+                "line": 1,
+                "column": 27
+              },
+              "end": {
+                "line": 1,
+                "column": 32
+              },
+              "bytes": {
+                "start": 26,
+                "end": 31
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "continue",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/continue.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "continue.my": "fn main()->i64{let mut i=0;while i<2{i+=1;continue;}return i;}\n"
+      },
+      "returncode": 1,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_EXPLICIT_DISCARD_REQUIRED\",\"severity\":\"error\",\"message\":\"a standalone value requires explicit discard\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/continue.my\",\"start\":{\"line\":1,\"column\":43},\"end\":{\"line\":1,\"column\":51},\"bytes\":{\"start\":42,\"end\":50}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "E_EXPLICIT_DISCARD_REQUIRED",
+            "severity": "error",
+            "message": "a standalone value requires explicit discard",
+            "location": {
+              "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/continue.my",
+              "start": {
+                "line": 1,
+                "column": 43
+              },
+              "end": {
+                "line": 1,
+                "column": 51
+              },
+              "bytes": {
+                "start": 42,
+                "end": 50
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "for_loop",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/for_loop.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "for_loop.my": "fn main()->i64{let a=new [2]i64[1,2];for a as x{discard x;}return 0;}\n"
+      },
+      "returncode": 1,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_EXPLICIT_DISCARD_REQUIRED\",\"severity\":\"error\",\"message\":\"a standalone value requires explicit discard\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/for_loop.my\",\"start\":{\"line\":1,\"column\":38},\"end\":{\"line\":1,\"column\":41},\"bytes\":{\"start\":37,\"end\":40}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "E_EXPLICIT_DISCARD_REQUIRED",
+            "severity": "error",
+            "message": "a standalone value requires explicit discard",
+            "location": {
+              "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/for_loop.my",
+              "start": {
+                "line": 1,
+                "column": 38
+              },
+              "end": {
+                "line": 1,
+                "column": 41
+              },
+              "bytes": {
+                "start": 37,
+                "end": 40
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "function_value",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/function_value.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "function_value.my": "fn id(x:i64)->i64{return x;}fn main()->i64{let f=id;return f(1);}\n"
+      },
+      "returncode": 1,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_UNKNOWN_NAME\",\"severity\":\"error\",\"message\":\"name is not defined in this scope\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/function_value.my\",\"start\":{\"line\":1,\"column\":50},\"end\":{\"line\":1,\"column\":52},\"bytes\":{\"start\":49,\"end\":51}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "E_UNKNOWN_NAME",
+            "severity": "error",
+            "message": "name is not defined in this scope",
+            "location": {
+              "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/function_value.my",
+              "start": {
+                "line": 1,
+                "column": 50
+              },
+              "end": {
+                "line": 1,
+                "column": 52
+              },
+              "bytes": {
+                "start": 49,
+                "end": 51
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "type_alias",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/type_alias.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "type_alias.my": "type Count=i64;fn main()->i64{return 0;}\n"
+      },
+      "returncode": 1,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"unexpected token; expected kw_fn\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/type_alias.my\",\"start\":{\"line\":1,\"column\":1},\"end\":{\"line\":1,\"column\":5},\"bytes\":{\"start\":0,\"end\":4}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "E_SYNTAX",
+            "severity": "error",
+            "message": "unexpected token; expected kw_fn",
+            "location": {
+              "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/type_alias.my",
+              "start": {
+                "line": 1,
+                "column": 1
+              },
+              "end": {
+                "line": 1,
+                "column": 5
+              },
+              "bytes": {
+                "start": 0,
+                "end": 4
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "module_constant",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/module_constant.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "module_constant.my": "let answer=42;fn main()->i64{return answer;}\n"
+      },
+      "returncode": 1,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"unexpected token; expected kw_fn\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/module_constant.my\",\"start\":{\"line\":1,\"column\":1},\"end\":{\"line\":1,\"column\":4},\"bytes\":{\"start\":0,\"end\":3}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "E_SYNTAX",
+            "severity": "error",
+            "message": "unexpected token; expected kw_fn",
+            "location": {
+              "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/module_constant.my",
+              "start": {
+                "line": 1,
+                "column": 1
+              },
+              "end": {
+                "line": 1,
+                "column": 4
+              },
+              "bytes": {
+                "start": 0,
+                "end": 3
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "generic_buffer",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/generic_buffer.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "generic_buffer.my": "buffer Vec<T:copy>:T;fn main()->i64{return 0;}\n"
+      },
+      "returncode": 1,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_SYNTAX\",\"severity\":\"error\",\"message\":\"unexpected token; expected colon\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/generic_buffer.my\",\"start\":{\"line\":1,\"column\":11},\"end\":{\"line\":1,\"column\":12},\"bytes\":{\"start\":10,\"end\":11}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "E_SYNTAX",
+            "severity": "error",
+            "message": "unexpected token; expected colon",
+            "location": {
+              "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/generic_buffer.my",
+              "start": {
+                "line": 1,
+                "column": 11
+              },
+              "end": {
+                "line": 1,
+                "column": 12
+              },
+              "bytes": {
+                "start": 10,
+                "end": 11
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "implicit_type_argument",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/implicit_type_argument.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "implicit_type_argument.my": "fn id<T:copy>(x:T)->T{return x;}fn main()->i64{return id(7);}\n"
+      },
+      "returncode": 1,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_GENERIC_ARITY\",\"severity\":\"error\",\"message\":\"explicit type argument count does not match generic parameters\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/implicit_type_argument.my\",\"start\":{\"line\":1,\"column\":55},\"end\":{\"line\":1,\"column\":60},\"bytes\":{\"start\":54,\"end\":59}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "E_GENERIC_ARITY",
+            "severity": "error",
+            "message": "explicit type argument count does not match generic parameters",
+            "location": {
+              "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/implicit_type_argument.my",
+              "start": {
+                "line": 1,
+                "column": 55
+              },
+              "end": {
+                "line": 1,
+                "column": 60
+              },
+              "bytes": {
+                "start": 54,
+                "end": 59
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "owned_reference",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/owned_reference.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "owned_reference.my": "buffer B:i64;fn inspect(x:&B)->i64{return 0;}fn main()->i64{return 0;}\n"
+      },
+      "returncode": 1,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_RESULT_BORROW\",\"severity\":\"error\",\"message\":\"owned and result-bearing parameters must currently transfer by value\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/owned_reference.my\",\"start\":{\"line\":1,\"column\":28},\"end\":{\"line\":1,\"column\":29},\"bytes\":{\"start\":27,\"end\":28}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "E_RESULT_BORROW",
+            "severity": "error",
+            "message": "owned and result-bearing parameters must currently transfer by value",
+            "location": {
+              "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/owned_reference.my",
+              "start": {
+                "line": 1,
+                "column": 28
+              },
+              "end": {
+                "line": 1,
+                "column": 29
+              },
+              "bytes": {
+                "start": 27,
+                "end": 28
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "disjoint_borrows",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/disjoint_borrows.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "disjoint_borrows.my": "fn main()->i64{let mut a=new [2]i64[1,2];borrow mut a[0..1] as left{borrow a[1..2] as right{write_slice(left,0,3);return read_slice(right,0);}}}\n"
+      },
+      "returncode": 1,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_BORROW_CONFLICT\",\"severity\":\"error\",\"message\":\"owner access conflicts with an active borrow\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/disjoint_borrows.my\",\"start\":{\"line\":1,\"column\":76},\"end\":{\"line\":1,\"column\":77},\"bytes\":{\"start\":75,\"end\":76}},\"notes\":[{\"role\":\"related\",\"message\":\"conflicting borrow starts here\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/disjoint_borrows.my\",\"start\":{\"line\":1,\"column\":64},\"end\":{\"line\":1,\"column\":68},\"bytes\":{\"start\":63,\"end\":67}}},{\"role\":\"origin\",\"message\":\"value declared here\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/disjoint_borrows.my\",\"start\":{\"line\":1,\"column\":24},\"end\":{\"line\":1,\"column\":25},\"bytes\":{\"start\":23,\"end\":24}}}],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "E_BORROW_CONFLICT",
+            "severity": "error",
+            "message": "owner access conflicts with an active borrow",
+            "location": {
+              "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/disjoint_borrows.my",
+              "start": {
+                "line": 1,
+                "column": 76
+              },
+              "end": {
+                "line": 1,
+                "column": 77
+              },
+              "bytes": {
+                "start": 75,
+                "end": 76
+              }
+            },
+            "notes": [
+              {
+                "role": "related",
+                "message": "conflicting borrow starts here",
+                "location": {
+                  "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/disjoint_borrows.my",
+                  "start": {
+                    "line": 1,
+                    "column": 64
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 68
+                  },
+                  "bytes": {
+                    "start": 63,
+                    "end": 67
+                  }
+                }
+              },
+              {
+                "role": "origin",
+                "message": "value declared here",
+                "location": {
+                  "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/disjoint_borrows.my",
+                  "start": {
+                    "line": 1,
+                    "column": 24
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 25
+                  },
+                  "bytes": {
+                    "start": 23,
+                    "end": 24
+                  }
+                }
+              }
+            ],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "reference_field",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/reference_field.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "reference_field.my": "struct View{data:&i64}fn main()->i64{return 0;}\n"
+      },
+      "returncode": 1,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_TYPE\",\"severity\":\"error\",\"message\":\"expected a built-in, declared, fixed array, or enum-indexed table type\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/reference_field.my\",\"start\":{\"line\":1,\"column\":18},\"end\":{\"line\":1,\"column\":19},\"bytes\":{\"start\":17,\"end\":18}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "E_TYPE",
+            "severity": "error",
+            "message": "expected a built-in, declared, fixed array, or enum-indexed table type",
+            "location": {
+              "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/reference_field.my",
+              "start": {
+                "line": 1,
+                "column": 18
+              },
+              "end": {
+                "line": 1,
+                "column": 19
+              },
+              "bytes": {
+                "start": 17,
+                "end": 18
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "noalloc_guard",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/noalloc_guard.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "noalloc_guard.my": "buffer B:i64;result Open{ok:B,err:i64}fn main(heap:allocator)->i64 noalloc{acknowledge acquire_buffer<Open>(heap,4);return 0;}\n"
+      },
+      "returncode": 1,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_EFFECT_BOUND\",\"severity\":\"error\",\"message\":\"effect `allocation` exceeds declared bound: main\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/noalloc_guard.my\",\"start\":{\"line\":1,\"column\":68},\"end\":{\"line\":1,\"column\":75},\"bytes\":{\"start\":67,\"end\":74}},\"notes\":[{\"role\":\"related\",\"message\":\"effect originates at this operation or owned type\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/noalloc_guard.my\",\"start\":{\"line\":1,\"column\":88},\"end\":{\"line\":1,\"column\":116},\"bytes\":{\"start\":87,\"end\":115}}}],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "E_EFFECT_BOUND",
+            "severity": "error",
+            "message": "effect `allocation` exceeds declared bound: main",
+            "location": {
+              "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/noalloc_guard.my",
+              "start": {
+                "line": 1,
+                "column": 68
+              },
+              "end": {
+                "line": 1,
+                "column": 75
+              },
+              "bytes": {
+                "start": 67,
+                "end": 74
+              }
+            },
+            "notes": [
+              {
+                "role": "related",
+                "message": "effect originates at this operation or owned type",
+                "location": {
+                  "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/noalloc_guard.my",
+                  "start": {
+                    "line": 1,
+                    "column": 88
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 116
+                  },
+                  "bytes": {
+                    "start": 87,
+                    "end": 115
+                  }
+                }
+              }
+            ],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "filesystem_provider",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "run",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/filesystem_provider.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "filesystem_provider.my": "fn main(fs:filesystem_cap)->i64 effects(){return 0;}\n"
+      },
+      "returncode": 2,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"W_UNUSED_BINDING\",\"severity\":\"warning\",\"message\":\"binding is never read; use it or remove it, preserving initializer effects with discard when needed\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/filesystem_provider.my\",\"start\":{\"line\":1,\"column\":9},\"end\":{\"line\":1,\"column\":11},\"bytes\":{\"start\":8,\"end\":10}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n{\"version\":\"diagnostic-v1\",\"kind\":\"message\",\"message\":\"mylang: host failure: CapabilityUnavailable\\n\"}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "W_UNUSED_BINDING",
+            "severity": "warning",
+            "message": "binding is never read; use it or remove it, preserving initializer effects with discard when needed",
+            "location": {
+              "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/filesystem_provider.my",
+              "start": {
+                "line": 1,
+                "column": 9
+              },
+              "end": {
+                "line": 1,
+                "column": 11
+              },
+              "bytes": {
+                "start": 8,
+                "end": 10
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        },
+        {
+          "version": "diagnostic-v1",
+          "kind": "message",
+          "message": "mylang: host failure: CapabilityUnavailable\n"
+        }
+      ]
+    },
+    {
+      "id": "native_host_call",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "emit-c",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/native_host_call.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "native_host_call.my": "host fn external(x:i64)->i64 effects(host);fn main()->i64{return external(1);}\n"
+      },
+      "returncode": 1,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_NATIVE_FEATURE\",\"severity\":\"error\",\"message\":\"host declarations currently execute only in the bytecode VM\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/native_host_call.my\",\"start\":{\"line\":1,\"column\":1},\"end\":{\"line\":1,\"column\":5},\"bytes\":{\"start\":0,\"end\":4}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "E_NATIVE_FEATURE",
+            "severity": "error",
+            "message": "host declarations currently execute only in the bytecode VM",
+            "location": {
+              "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/native_host_call.my",
+              "start": {
+                "line": 1,
+                "column": 1
+              },
+              "end": {
+                "line": 1,
+                "column": 5
+              },
+              "bytes": {
+                "start": 0,
+                "end": 4
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "arenas",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang/examples/arenas.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "examples/arenas.my": "pool Nodes(NodeId): Node;\nstruct Node { value: i64 }\nresult OpenPool { ok: Nodes, err: i64 }\nresult Insert { ok: NodeId, err: i64 }\nresult Read { ok: Node, err: i64 }\nbuffer B: i64;\nresult OpenBuffer { ok: B, err: i64 }\nresult Change { ok: bool, err: i64 }\nresult Work { ok: i64, err: i64 }\nfn snapshot(heap: allocator) -> Read {\n    let mut nodes = try acquire_pool<OpenPool>(heap, 1);\n    let id = try insert_pool<Insert>(nodes, new Node { value: 42 });\n    return read_pool<Read>(nodes, id);\n}\nfn work(heap: allocator) -> Work {\n    let mut value = 0;\n    arena heap as outer {\n        arena outer as inner {\n            let retained = try snapshot(inner);\n            let mut buffer = try acquire_buffer<OpenBuffer>(inner, 2);\n            discard try append_buffer<Change>(buffer, 8);\n            borrow buffer[0..1] as view {\n                value = retained.value + read_slice(view, 0);\n            }\n        }\n    }\n    return new Work.ok(value);\n}\nfn main(heap: allocator) -> i64 {\n    match work(heap) { Work.ok(value) => { return value; }, Work.err(code) => { return code; } }\n}\n"
+      },
+      "returncode": 0,
+      "stdout": "50\n",
+      "stdout_bytes": 3,
+      "stderr": "",
+      "diagnostics": []
+    },
+    {
+      "id": "structural_contracts",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang/examples/structural-constraints.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "examples/structural-constraints.my": "struct Reading {\n    value: i64\n}\nstruct TaggedReading {\n    tag: bool,\n    value: i64\n}\nfn value < T: copy + field(value: i64) >(item: T) -> i64 {\n    return read_field(item, value);\n}\nfn forward < U: copy + field(value: i64) >(item: U) -> i64 {\n    return value::< U >(item);\n}\ndomain Counter: i64 {\n    fn make(n: i64) -> Counter {\n        return wrap<Counter>(n);\n    }\n    fn score(item: Counter) -> i64 effects() {\n        return unwrap(item);\n    }\n}\nfn score < T: copy + op(score(item: T) -> i64 effects()) >(item: T) -> i64 effects() {\n    return T.score(item);\n}\nfn main() -> i64 {\n    return value::< Reading >(new Reading {\n        value: 2\n    }) + forward::< TaggedReading >(new TaggedReading {\n        tag: true,\n        value: 3\n    }) + score::< Counter >(Counter.make(7));\n}\n"
+      },
+      "returncode": 0,
+      "stdout": "12\n",
+      "stdout_bytes": 3,
+      "stderr": "",
+      "diagnostics": []
+    },
+    {
+      "id": "source_json",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "run",
+        "/home/epentland/ai/canopy/mylang/examples/source-json.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "examples/source-json.my": "buffer Bytes: u8;\nresult Encoded {\n    ok: Bytes,\n    err: i64\n}\nstruct Item {\n    count: u64,\n    ready: bool\n}\nresult Decoded {\n    ok: Item,\n    err: i64\n}\nfn encode < T: codec >(heap: allocator, value: T) -> Encoded {\n    return json_encode::< Encoded >(heap, value, 4096);\n}\nfn roundtrip(heap: allocator) -> Decoded {\n    let bytes = try encode::< Item >(heap, new Item {\n        count: 42u64,\n        ready: true\n    });\n    return json_decode::< Decoded >(heap, bytes, 4096);\n}\nfn main(heap: allocator) -> i64 {\n    match roundtrip(heap) {\n        Decoded.ok(item) => {\n            if item.ready {\n                return cast<i64>(item.count);\n            }\n            return 0;\n        },\n        Decoded.err(code) => {\n            return code;\n        }\n    }\n}\n"
+      },
+      "returncode": 0,
+      "stdout": "42\n",
+      "stdout_bytes": 3,
+      "stderr": "",
+      "diagnostics": []
+    },
+    {
+      "id": "modules",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "run-project",
+        "/home/epentland/ai/canopy/mylang/examples/modules/main.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "examples/modules/main.my": "module main;\nimport shared.units;\nexport Measurement;\nstruct Measurement {\n    distance: units::Distance\n}\n// The imported factory enforces Distance construction in its defining module.\nfn main() -> i64 {\n    let measurement = new Measurement {\n        distance: units::Distance.make(12)\n    };\n    return units::Distance.number(measurement.distance);\n}\n"
+      },
+      "returncode": 0,
+      "stdout": "12\n",
+      "stdout_bytes": 3,
+      "stderr": "",
+      "diagnostics": []
+    },
+    {
+      "id": "stdlib_io",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang-io",
+        "--project",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/io"
+      ],
+      "files": {
+        "main.my": "module main;import std_text;fn main()->i64{discard std_text::emit(\"ok\");return 0;}\n",
+        "io.my": "module io;export length;export byte;export put;host fn length()->i64 effects(host);host fn byte(index:i64)->u8 effects(host);host fn put(value:u8)->i64 effects(host);\n"
+      },
+      "returncode": 0,
+      "stdout": "ok",
+      "stdout_bytes": 2,
+      "stderr": "",
+      "diagnostics": []
+    },
+    {
+      "id": "plain_json_setup_module_mismatch",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "run-project",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/plain_json.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "plain_json.my": "module main;\nimport std_json;\nfn parse(heap: allocator) -> std_json::Parsed {\n    let text = \"{\\\"answer\\\":42}\";\n    let mut bytes = try acquire_buffer<std_json::Input>(heap, len(text));\n    borrow text[0..len(text)] as view {\n        let mut i = 0u64;\n        while i < len_slice(view) {\n            discard try append_buffer<std_json::Status>(bytes, read_slice(view, i));\n            i += 1u64;\n        }\n    }\n    return std_json::parse(heap, bytes, 4096);\n}\nfn main(heap: allocator) -> i64 {\n    match parse(heap) {\n        std_json::Parsed.err(code) => { return code; },\n        std_json::Parsed.ok(document) => {\n            borrow document[0..len_buffer(document)] as view {\n                let answer = std_json::field(view, 1, \"answer\");\n                return std_json::get(view, answer, 5);\n            }\n        }\n    }\n}\n"
+      },
+      "returncode": 1,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_MODULE_NAME\",\"severity\":\"error\",\"message\":\"declared module name does not match its requested path\",\"location\":{\"path\":\"plain_json.my\",\"start\":{\"line\":1,\"column\":8},\"end\":{\"line\":1,\"column\":12},\"bytes\":{\"start\":7,\"end\":11}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "E_MODULE_NAME",
+            "severity": "error",
+            "message": "declared module name does not match its requested path",
+            "location": {
+              "path": "plain_json.my",
+              "start": {
+                "line": 1,
+                "column": 8
+              },
+              "end": {
+                "line": 1,
+                "column": 12
+              },
+              "bytes": {
+                "start": 7,
+                "end": 11
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        }
+      ],
+      "interpretation": "Audit fixture setup error: module main did not match plain_json.my. Corrected in the following probe; not an implementation defect."
+    },
+    {
+      "id": "multiple_errors_after_first_fix",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "check",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/multiple_errors_after_first_fix.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "multiple_errors_after_first_fix.my": "fn first()->i64{return 1;}fn second()->i64{return missing_b;}fn main()->i64{return 0;}\n"
+      },
+      "returncode": 1,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_UNKNOWN_NAME\",\"severity\":\"error\",\"message\":\"name is not defined in this scope\",\"location\":{\"path\":\"/tmp/mylang-feature-audit-20260907-ut729xjb/multiple_errors_after_first_fix.my\",\"start\":{\"line\":1,\"column\":51},\"end\":{\"line\":1,\"column\":60},\"bytes\":{\"start\":50,\"end\":59}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "E_UNKNOWN_NAME",
+            "severity": "error",
+            "message": "name is not defined in this scope",
+            "location": {
+              "path": "/tmp/mylang-feature-audit-20260907-ut729xjb/multiple_errors_after_first_fix.my",
+              "start": {
+                "line": 1,
+                "column": 51
+              },
+              "end": {
+                "line": 1,
+                "column": 60
+              },
+              "bytes": {
+                "start": 50,
+                "end": 59
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "native_source_json",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "emit-c",
+        "/home/epentland/ai/canopy/mylang/examples/source-json.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "source-json.my": "buffer Bytes: u8;\nresult Encoded {\n    ok: Bytes,\n    err: i64\n}\nstruct Item {\n    count: u64,\n    ready: bool\n}\nresult Decoded {\n    ok: Item,\n    err: i64\n}\nfn encode < T: codec >(heap: allocator, value: T) -> Encoded {\n    return json_encode::< Encoded >(heap, value, 4096);\n}\nfn roundtrip(heap: allocator) -> Decoded {\n    let bytes = try encode::< Item >(heap, new Item {\n        count: 42u64,\n        ready: true\n    });\n    return json_decode::< Decoded >(heap, bytes, 4096);\n}\nfn main(heap: allocator) -> i64 {\n    match roundtrip(heap) {\n        Decoded.ok(item) => {\n            if item.ready {\n                return cast<i64>(item.count);\n            }\n            return 0;\n        },\n        Decoded.err(code) => {\n            return code;\n        }\n    }\n}\n"
+      },
+      "returncode": 1,
+      "stdout": "",
+      "stdout_bytes": 0,
+      "stderr": "{\"version\":\"diagnostic-v1\",\"kind\":\"diagnostic\",\"diagnostic\":{\"code\":\"E_NATIVE_FEATURE\",\"severity\":\"error\",\"message\":\"source JSON byte codecs currently require the interpreter\",\"location\":{\"path\":\"/home/epentland/ai/canopy/mylang/examples/source-json.my\",\"start\":{\"line\":22,\"column\":12},\"end\":{\"line\":22,\"column\":55},\"bytes\":{\"start\":438,\"end\":481}},\"notes\":[],\"stack\":{\"frames\":[],\"omitted\":0}}}\n",
+      "diagnostics": [
+        {
+          "version": "diagnostic-v1",
+          "kind": "diagnostic",
+          "diagnostic": {
+            "code": "E_NATIVE_FEATURE",
+            "severity": "error",
+            "message": "source JSON byte codecs currently require the interpreter",
+            "location": {
+              "path": "/home/epentland/ai/canopy/mylang/examples/source-json.my",
+              "start": {
+                "line": 22,
+                "column": 12
+              },
+              "end": {
+                "line": 22,
+                "column": 55
+              },
+              "bytes": {
+                "start": 438,
+                "end": 481
+              }
+            },
+            "notes": [],
+            "stack": {
+              "frames": [],
+              "omitted": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "plain_json",
+      "command": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+        "run-project",
+        "/tmp/mylang-feature-audit-20260907-ut729xjb/plain_json.my",
+        "--diagnostics=json"
+      ],
+      "files": {
+        "plain_json.my": "module plain_json;\nimport std_json;\nfn parse(heap: allocator) -> std_json::Parsed {\n    let text = \"{\\\"answer\\\":42}\";\n    let mut bytes = try acquire_buffer<std_json::Input>(heap, len(text));\n    borrow text[0..len(text)] as view {\n        let mut i = 0u64;\n        while i < len_slice(view) {\n            discard try append_buffer<std_json::Status>(bytes, read_slice(view, i));\n            i += 1u64;\n        }\n    }\n    return std_json::parse(heap, bytes, 4096);\n}\nfn main(heap: allocator) -> i64 {\n    match parse(heap) {\n        std_json::Parsed.err(code) => { return code; },\n        std_json::Parsed.ok(document) => {\n            borrow document[0..len_buffer(document)] as view {\n                let answer = std_json::field(view, 1, \"answer\");\n                return std_json::get(view, answer, 5);\n            }\n        }\n    }\n}\n"
+      },
+      "returncode": 0,
+      "stdout": "42\n",
+      "stdout_bytes": 3,
+      "stderr": "",
+      "diagnostics": []
+    }
+  ],
+  "source_files_changed_during_probes": [],
+  "source_files_changed_since_inventory": [],
+  "tool_files_changed_since_inventory": [],
+  "completed_utc": "2026-09-07T12:55:03.459569+00:00",
+  "summary": {
+    "invocations": 31,
+    "successful_controls": 9,
+    "setup_failures_retained": 1,
+    "feature_or_control_invocations": 30,
+    "build_or_guardian_executed": false,
+    "binary_source_equivalence_established": false
+  }
+}

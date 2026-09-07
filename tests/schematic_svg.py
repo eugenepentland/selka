@@ -11,6 +11,8 @@ import subprocess
 import tempfile
 import xml.etree.ElementTree as ET
 
+from schematic_layout import geometry
+
 FIXTURES = Path(__file__).resolve().parents[1] / "experiments/schematic/fixtures"
 PROJECT = FIXTURES.parents[2] / "src/schematic/guest"
 NS = {"s": "http://www.w3.org/2000/svg"}
@@ -90,6 +92,28 @@ def inspect_svg(svg):
     return root, components, pads, nc, ports
 
 
+
+def compare_reference_layout(root):
+    """Compare hub geometry with an independently captured default webpage SVG."""
+    reference = json.loads((FIXTURES.parent / "reference/geometry.json").read_text())
+    assert root.attrib["viewBox"] == reference["viewBox"]
+    chip = root.find(".//s:g[@data-ref='U1']/s:rect[@class='chip']", NS)
+    left = float(chip.attrib["x"])
+    right = left + float(chip.attrib["width"])
+    actual = {}
+    for pin in root.findall(".//s:g[@data-ref='U1']/s:g[@data-pin]", NS):
+        if "data-nc" not in pin.attrib:
+            actual[pin.attrib["data-pin"]] = (float(pin.attrib["data-x"]), float(pin.attrib["data-y"]))
+    expected = {}
+    for pin in reference["pins"]:
+        line = pin["line"]
+        endpoints = {float(line["x1"]), float(line["x2"])}
+        edge = left if left in endpoints else right
+        assert edge in endpoints
+        expected[pin["pad"]] = (edge, float(line["y1"]))
+    assert actual == expected, "IC pin layout differs from captured functional webpage view"
+
+
 def execute(runner, docs):
     with tempfile.TemporaryDirectory(prefix="mylang-schematic-") as directory:
         paths = []
@@ -110,6 +134,8 @@ def acceptance(runner, output):
     result = execute(runner, docs)
     assert result.returncode == 0, result.stderr.decode()
     root, parts, pads, nc, ports = inspect_svg(result.stdout)
+    geometry(root)
+    compare_reference_layout(root)
     expected_parts, aliases, expected_pads, expected_nc = fixture_model(docs[0])
     assert parts == expected_parts and pads == expected_pads and nc == expected_nc
     assert (len(parts), len(pads), len(nc)) == (30, 95, 4)
@@ -125,7 +151,7 @@ def acceptance(runner, output):
         assert int(count.removeprefix("pads=")) == len(members)
         oracle[net] = set(members)
     assert len(oracle) == 34 and dict(actual_nets) == oracle
-    branches = root.findall(".//s:g[@data-net]", NS)
+    branches = root.findall(".//s:g[@data-pin][@data-net]", NS)
     folded = [p for p in branches if p.attrib["data-net"] != p.attrib["data-electrical-net"]]
     assert len(folded) == 12
     assert {p.attrib["data-electrical-net"] for p in folded} == {"V_3V3"}
@@ -141,6 +167,7 @@ def acceptance(runner, output):
     updated = execute(runner, changed)
     assert updated.returncode == 0, updated.stderr.decode()
     changed_root, changed_parts, changed_pads, _, changed_ports = inspect_svg(updated.stdout)
+    geometry(changed_root)
     assert changed_parts["C_LF1"][1] == changed_value
     assert changed_ports["SPI_CLOCK"] == "in" and "SPI_SCK" not in changed_ports
     assert "CPOUT_ALT" in " ".join(changed_root.itertext())

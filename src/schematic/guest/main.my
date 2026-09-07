@@ -37,7 +37,7 @@ fn render(heap: allocator) -> Done {
                             if validPorts != 0 {
                                 return new Done.err(validPorts);
                             }
-                            discard svg::render(nodes, parts, pins, pin_names, connections);
+                            discard try svg::render(heap, nodes, parts, pins, pin_names, connections);
                         }
                     }
                 }

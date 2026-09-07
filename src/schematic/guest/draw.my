@@ -1,0 +1,184 @@
+module draw;
+import text;
+export rect;
+export line;
+export labelStart;
+export labelEnd;
+export label;
+export symbol;
+fn rect(x: i64, y: i64, w: i64, h: i64) -> i64 {
+    {
+        let literal = "<rect class=\"chip\" x=\"";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    discard text::decimal(x);
+    {
+        let literal = "\" y=\"";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    discard text::decimal(y);
+    {
+        let literal = "\" width=\"";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    discard text::decimal(w);
+    {
+        let literal = "\" height=\"";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    discard text::decimal(h);
+    {
+        let literal = "\" rx=\"6\"/>";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    return 0;
+}
+fn line(x1: i64, y1: i64, x2: i64, y2: i64) -> i64 {
+    {
+        let literal = "<line x1=\"";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    discard text::decimal(x1);
+    {
+        let literal = "\" y1=\"";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    discard text::decimal(y1);
+    {
+        let literal = "\" x2=\"";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    discard text::decimal(x2);
+    {
+        let literal = "\" y2=\"";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    discard text::decimal(y2);
+    {
+        let literal = "\"/>";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    return 0;
+}
+fn labelStart(x: i64, y: i64, anchor: i64) -> i64 {
+    {
+        let literal = "<text x=\"";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    discard text::decimal(x);
+    {
+        let literal = "\" y=\"";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    discard text::decimal(y);
+    {
+        let literal = "\" text-anchor=\"";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    if anchor == 0 {
+        {
+            let literal = "start";
+            borrow literal[0..len(literal)] as bytes {
+                discard text::write(bytes);
+            }
+        }
+    } else if anchor == 1 {
+        {
+            let literal = "middle";
+            borrow literal[0..len(literal)] as bytes {
+                discard text::write(bytes);
+            }
+        }
+    } else {
+        {
+            let literal = "end";
+            borrow literal[0..len(literal)] as bytes {
+                discard text::write(bytes);
+            }
+        }
+    }
+    {
+        let literal = "\">";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    return 0;
+}
+fn labelEnd() -> i64 {
+    {
+        let literal = "</text>";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    return 0;
+}
+fn label(x: i64, y: i64, anchor: i64, value: text::Span) -> i64 {
+    discard labelStart(x, y, anchor);
+    discard text::escaped(value);
+    return labelEnd();
+}
+fn symbol(kind: i64) -> i64 {
+    {
+        let literal = "<g class=\"symbol\">";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    discard line(- 20, 0, - 12, 0);
+    discard line(12, 0, 20, 0);
+    if kind == 1 {
+        discard line(- 3, - 6, - 3, 6);
+        discard line(3, - 6, 3, 6);
+        discard line(- 12, 0, - 3, 0);
+        discard line(3, 0, 12, 0);
+    } else if kind == 2 {
+        {
+            let literal = "<rect x=\"-12\" y=\"-5\" width=\"24\" height=\"10\"/>";
+            borrow literal[0..len(literal)] as bytes {
+                discard text::write(bytes);
+            }
+        }
+    } else {
+        {
+            let literal = "<path d=\"M -12 0 c 0,-7 6,-7 6,0 c 0,-7 6,-7 6,0 c 0,-7 6,-7 6,0 c 0,-7 6,-7 6,0\"/>";
+            borrow literal[0..len(literal)] as bytes {
+                discard text::write(bytes);
+            }
+        }
+    }
+    {
+        let literal = "</g>";
+        borrow literal[0..len(literal)] as bytes {
+            discard text::write(bytes);
+        }
+    }
+    return 0;
+}

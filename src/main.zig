@@ -27,7 +27,7 @@ const usage = "usage: mylang " ++
     "signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  " ++
     "fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: " ++
     "--check (otherwise writes formatted source to " ++
-    "stdout)\n  project-dependencies: checked module graph and hashes; --inputs supported\n" ++
+    "stdout)\n  index-project: JSON symbols, references and pinned source snapshot\n  project-dependencies: checked module graph and hashes; --inputs supported\n" ++
     "  all commands: --diagnostics=text|json (stderr JSON Lines; stdout unchanged)\n" ++
     "  check-session: persistent check/clear/quit lines on stdin; JSON status on stdout; --inputs supported\n";
 
@@ -72,6 +72,7 @@ fn run(init: Context, parsed: Parsed) !u8 {
     const allocator = init.gpa;
     if (parsed.command == .@"check-session") return checkSession(init, parsed);
     switch (parsed.command) {
+        .@"index-project",
         .@"project-dependencies",
         .@"check-session",
         .@"invoke-project",
@@ -130,6 +131,7 @@ fn run(init: Context, parsed: Parsed) !u8 {
     const check_ns = if (parsed.reporting.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
     if (parsed.command != .@"emit-c") try report(init, &compilation);
     switch (parsed.command) {
+        .@"index-project",
         .@"project-dependencies",
         .@"check-session",
         .@"invoke-project",
@@ -224,6 +226,7 @@ fn report(init: Context, compilation: *const language.Compilation) !void {
 }
 
 const Command = enum {
+    @"index-project",
     @"project-dependencies",
     @"check-session",
     @"invoke-project",
@@ -550,9 +553,10 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     if (parsed.command == .@"fmt-project") return formatProject(init, &project);
     if (try replayCheck(init, parsed.command, &project, verdict)) return 0;
     const output = if (parsed.command != .@"list-modules") result: {
-        var index = (try buildIndex(init, &project, cache)) orelse return 1;
+        var index = (try buildIndex(init, &project, cache)) orelse return partialNavigation(init, &project, parsed.command);
         if (parsed.command == .@"list-interfaces") break :result try index.render(init.gpa);
         var compilation = try language.project_compile.Compilation.init(&index);
+        if (parsed.command == .@"index-project") break :result try renderNavigation(init, &compilation);
         compilation.check() catch |err| switch (err) {
             error.SourceError => {
                 try reportProject(init, &compilation);
@@ -560,18 +564,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
             },
             else => return err,
         };
-        if (parsed.command == .@"emit-project-c") {
-            const generated = compilation.emitC(init.gpa) catch |err| switch (err) {
-                error.SourceError => {
-                    try reportProject(init, &compilation);
-                    return 1;
-                },
-                else => return err,
-            };
-            errdefer init.gpa.free(generated);
-            try reportProject(init, &compilation);
-            break :result generated;
-        }
+        if (parsed.command == .@"emit-project-c") break :result (try emitProjectC(init, &compilation)) orelse return 1;
         if (parsed.command != .@"eval-project") try reportProject(init, &compilation);
         if (parsed.command == .@"project-dependencies") break :result try dependencyReport(init, &compilation, files.inputs);
         if (parsed.command == .@"check-project") return rememberCheck(verdict, &project, &compilation);
@@ -615,6 +608,36 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     defer init.gpa.free(output);
     try std.Io.File.stdout().writeStreamingAll(init.io, output);
     return 0;
+}
+
+fn emitProjectC(init: Context, compilation: *language.project_compile.Compilation) !?[]u8 {
+    const generated = compilation.emitC(init.gpa) catch |err| switch (err) {
+        error.SourceError => {
+            try reportProject(init, compilation);
+            return null;
+        },
+        else => return err,
+    };
+    errdefer init.gpa.free(generated);
+    try reportProject(init, compilation);
+    return generated;
+}
+
+fn partialNavigation(init: Context, project: *language.project.Project, command: Command) !u8 {
+    if (command != .@"index-project") return 1;
+    const output = try language.navigation_partial.render(init.gpa, project, try compilerIdentity(init.io));
+    defer init.gpa.free(output);
+    try std.Io.File.stdout().writeStreamingAll(init.io, output);
+    return 0;
+}
+
+fn renderNavigation(init: Context, compilation: *language.project_compile.Compilation) ![]u8 {
+    compilation.check() catch |err| switch (err) {
+        error.SourceError => {},
+        else => return err,
+    };
+    try reportProject(init, compilation);
+    return language.navigation.render(init.gpa, compilation, try compilerIdentity(init.io), .{});
 }
 
 fn loadModules(init: Context, project: *language.project.Project, files: *ModuleFiles, basename: []const u8) !?u8 {

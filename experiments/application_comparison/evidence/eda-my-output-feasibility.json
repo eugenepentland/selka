@@ -1,0 +1,51 @@
+{
+  "version": "eda-output-feasibility-v1",
+  "record_kind": "fixture",
+  "comparative_claim": false,
+  "language": "my",
+  "passed": true,
+  "input_bytes": 701963,
+  "expected_output_bytes": 55087501,
+  "source_sha256": "07b582a451a7258768b58da0ce2a9661a00aa7a527dd073b9965ff2c8e8fd03a",
+  "adapter_sha256": "9ce3504f47552fb922979e7aaea6843fde6e478b7a2f0a0d84c19600100e3092",
+  "request_sha256": "644c80e5a68b953fb6dbacce7634846b667dbdc4198599cfd31adc8eb4d32a17",
+  "limits": {
+    "wall_seconds": 180,
+    "output_bytes": 134217728,
+    "memory_bytes": 4294967296,
+    "file_bytes": 268435456,
+    "cpu_seconds": 180
+  },
+  "steps": [
+    {
+      "version": "comparison-execution-v1",
+      "isolated": true,
+      "outcome": "exited",
+      "returncode": 0,
+      "elapsed_seconds": 54.482592095038854,
+      "argv": [
+        "/tools/byte_io",
+        "--project",
+        "/work"
+      ],
+      "bootstrap_sha256": "0f367a0e006651693339c8694476443d14d4c1acdcf0ddfe77f198bfeb05f398",
+      "launcher_sha256": "978612fd3c034985975da85b8350c6e30fd360b829680d1187d75839fa6f2a62",
+      "limits": {
+        "wall_seconds": 180,
+        "output_bytes": 134217728,
+        "memory_bytes": 4294967296,
+        "file_bytes": 268435456,
+        "cpu_seconds": 180
+      },
+      "resource_scope": "per-process rlimits plus command wall/output bounds",
+      "phase": "run"
+    }
+  ],
+  "failure": null,
+  "diagnostics": [
+    {
+      "phase": "run",
+      "stderr_tail": ""
+    }
+  ]
+}

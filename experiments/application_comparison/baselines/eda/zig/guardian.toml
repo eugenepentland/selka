@@ -1,0 +1,17 @@
+spec_file = "SPEC.md"
+required_inputs = ["src/main.zig", "main.zig", "SPEC.md"]
+
+[policy]
+profile = "strict"
+
+[gate]
+on_build = "block"
+
+[baseline]
+enabled = false
+
+[test_reachability]
+roots = ["src/main.zig"]
+
+[orphan_files]
+roots = ["src/main.zig"]

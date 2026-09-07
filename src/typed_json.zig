@@ -208,7 +208,7 @@ pub const Document = struct {
     }
     /// Internal operation entry: the caller shares traversal/execution budgets.
     pub fn decodeWithCodecs(self: Document, allocator: std.mem.Allocator, execution: *Execution, ty: Type, budget: *Budget, location: *Location) ValueError!Value {
-        const records = execution.program.records;
+        const records = execution.backend.program.records;
         location.* = .{};
         try checkCodecType(allocator, records, ty, location);
         if (!std.mem.eql(u8, self.parsed.value.type, typed.typeName(ty, records))) {
@@ -225,7 +225,7 @@ pub fn decodeArgument(allocator: std.mem.Allocator, execution: *Execution, argum
     trace.parts[0] = .{ .key = "arguments" };
     trace.parts[1] = .{ .key = argument.name };
     trace.len = 2;
-    var decoder: Decoder = .{ .allocator = allocator, .records = execution.program.records, .execution = execution, .budget = budget, .trace = trace };
+    var decoder: Decoder = .{ .allocator = allocator, .records = execution.backend.program.records, .execution = execution, .budget = budget, .trace = trace };
     return decoder.value(argument.ty, argument.value, 1);
 }
 // Scan before building a JSON DOM: even invalid/unused subtrees are subject to
@@ -237,6 +237,11 @@ fn scan(allocator: std.mem.Allocator, bytes: []const u8, limits: Limits) !void {
 pub fn scanRequest(allocator: std.mem.Allocator, bytes: []const u8, limits: Limits) ScanRequestError!void {
     try limits.check();
     return scanDepth(allocator, bytes, limits, @as(usize, limits.max_depth) + 2);
+}
+/// Validate ordinary JSON with the exact container depth budget and no envelope allowance.
+pub fn scanDocument(allocator: std.mem.Allocator, bytes: []const u8, limits: Limits) ScanRequestError!void {
+    try limits.check();
+    return scanDepth(allocator, bytes, limits, limits.max_depth);
 }
 fn scanDepth(allocator: std.mem.Allocator, bytes: []const u8, limits: Limits, container_depth: usize) !void {
     if (bytes.len > limits.max_bytes) return error.CodecByteLimit;
@@ -492,11 +497,11 @@ pub fn encodeWithCodecs(allocator: std.mem.Allocator, execution: *Execution, ty:
     };
 }
 fn encodeCodecsInner(allocator: std.mem.Allocator, execution: *Execution, ty: Type, input: Value, budget: *Budget, location: *Location) ![]u8 {
-    try checkCodecType(allocator, execution.program.records, ty, location);
+    try checkCodecType(allocator, execution.backend.program.records, ty, location);
     var arena = std.heap.ArenaAllocator.init(allocator);
     defer arena.deinit();
-    var encoder: Encoder = .{ .allocator = arena.allocator(), .records = execution.program.records, .budget = budget, .execution = execution, .execution_allocator = allocator, .trace = .init(location) };
-    const document: Envelope = .{ .version = wire_version, .type = typed.typeName(ty, execution.program.records), .value = try encoder.value(ty, input, 1) };
+    var encoder: Encoder = .{ .allocator = arena.allocator(), .records = execution.backend.program.records, .budget = budget, .execution = execution, .execution_allocator = allocator, .trace = .init(location) };
+    const document: Envelope = .{ .version = wire_version, .type = typed.typeName(ty, execution.backend.program.records), .value = try encoder.value(ty, input, 1) };
     return serialize(allocator, document, budget.limits);
 }
 fn serialize(allocator: std.mem.Allocator, document: Envelope, limits: Limits) ![]u8 {
