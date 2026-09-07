@@ -63,7 +63,36 @@ def main():
         assert sum(row['event'] == 'start' for row in records) == 4
         assert sum(row['event'] == 'end' for row in records) == 4
         assert sum(row['event'] == 'budget-rejection' for row in records) == 3
-        print('Gateway fixtures: isolated commands, public checks, measured source/output receipts, all budgets, unchecked-seal refusal and exact request counts passed')
+        for scenario in ('budget', 'abandoned'):
+            other = Path(temp) / scenario
+            prepare(other, args.compiler.resolve(), 1, 'fixture-gateway', 'fixture', 'agent')
+            begin(other)
+            if scenario == 'budget':
+                command(other, 'check', [])
+                setup = read_json(other / 'setup.json')
+                setup['budget']['tool_invocations'] = 2
+                write_json(other / 'setup.json', setup)
+                edited = command(other, 'run', ['/usr/bin/python3', '-c',
+                    "from pathlib import Path;p=Path('work/ledger.my');p.write_text(p.read_text().replace('while i < 3u64','while i < 4u64'))"])
+                assert edited['returncode'] == 0
+                denied(lambda: command(other, 'check', []))
+            denied(lambda: seal(other, 'completed'))
+            state = read_json(other / 'gateway.json')
+            state['pending'] = 999
+            write_json(other / 'gateway.json', state)
+            denied(lambda: seal(other, scenario))
+            state['pending'] = None
+            write_json(other / 'gateway.json', state)
+            captured = seal(other, scenario)
+            assert captured['final_checked'] is False
+            if scenario == 'budget':
+                assert captured['last_checked'] is not None and captured['source'] != captured['last_checked']
+            else:
+                assert captured['last_checked'] is None
+            continuation = Path(temp) / (scenario + '-next')
+            setup = prepare(continuation, args.compiler.resolve(), 2, 'fixture-gateway', 'fixture', 'agent', other)
+            assert setup['start'] == captured['source']
+        print('Gateway fixtures: isolated commands, public checks, measured source/output receipts, all budgets, completed-check requirement, retained unchecked budget/abandoned sources and exact request counts passed')
 
 
 if __name__ == '__main__':

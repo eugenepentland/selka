@@ -11,7 +11,7 @@ import time
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 from experiments.application_comparison.storage import (
-    digest, inventory, path_identity, read_json, snapshot, source_files, verify_snapshot, write_json,
+    digest, inventory, locked, path_identity, read_json, snapshot, source_files, verify_snapshot, write_json,
 )
 HERE = Path(__file__).resolve().parent
 spec = importlib.util.spec_from_file_location('ledger_public', HERE / 'public/check.py')
@@ -84,6 +84,13 @@ def prepare(directory, compiler, stage, participant, model, kind, previous=None)
 
 
 def seal(directory, reason, transcript=None):
+    with locked(directory):
+        return seal_locked(directory, reason, transcript)
+
+
+def seal_locked(directory, reason, transcript):
+    if reason not in ('completed', 'budget', 'abandoned'):
+        raise ValueError('unknown stopping reason')
     if (directory / 'seal.json').exists():
         raise ValueError('submission already sealed')
     setup = read_json(directory / 'setup.json')
@@ -92,11 +99,15 @@ def seal(directory, reason, transcript=None):
     if inventory(fixed) != setup['public_fixed']:
         raise ValueError('public instructions or tests changed')
     current = source_receipt(public / 'work')
-    metrics = None
+    metrics, final_checked, last_checked = None, None, None
     if setup['kind'] == 'agent':
         state = read_json(directory / 'gateway.json')
-        if state['pending'] is not None or not state['has_check'] or current != state['last_checked']:
-            raise ValueError('agent sealing requires an intact last gateway-checked submission')
+        if state['pending'] is not None or current != state['expected_source']:
+            raise ValueError('agent sealing requires intact recorded source and no pending command')
+        last_checked = state['last_checked'] if state['has_check'] else None
+        final_checked = last_checked is not None and current == last_checked
+        if reason == 'completed' and not final_checked:
+            raise ValueError('completed sealing requires a matching final gateway check')
         transcript = directory / 'gateway.jsonl'
         metrics = {'tool_invocations': state['requests'], 'executed_commands': state['commands'], 'edited_submissions': state['edited_checks'],
                    'model_tokens': None, 'scope': 'gateway-observed commands only',
@@ -107,7 +118,7 @@ def seal(directory, reason, transcript=None):
         raise ValueError('fixture transcript required')
     captured = snapshot(public / 'work', directory / 'sealed')
     shutil.copyfile(transcript, directory / 'transcript.jsonl')
-    result = {'reason': reason, 'source': captured, 'transcript': path_identity(directory / 'transcript.jsonl'),
+    result = {'reason': reason, 'final_checked': final_checked, 'last_checked': last_checked, 'source': captured, 'transcript': path_identity(directory / 'transcript.jsonl'),
               'gateway_metrics': metrics, 'budget_review': 'gateway-enforced; review bypasses' if metrics else 'fixture',
               'structure_review': 'coordinator-required'}
     write_json(directory / 'seal.json', result)
@@ -161,7 +172,7 @@ def grade(directory, seed):
                              'passed': result['returncode'] == 0 and result['stdout'] == expected, **result})
     verify_snapshot(directory / 'sealed', sealed['source'])
     report = {'version': 'maintenance-grade-v1', 'kind': setup['kind'], 'stage': setup['stage'],
-              'source': sealed['source'], 'private_seed': seed, 'cases_sha256': digest(cases),
+              'source': sealed['source'], 'final_checked': sealed['final_checked'], 'last_checked': sealed['last_checked'], 'private_seed': seed, 'cases_sha256': digest(cases),
               'behavior_passed': all(item['passed'] for item in outcomes), 'outcomes': outcomes,
               'gateway_metrics': sealed.get('gateway_metrics'),
               'budget_review': sealed['budget_review'], 'structure_review': 'coordinator-required'}

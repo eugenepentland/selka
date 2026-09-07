@@ -52,10 +52,10 @@ participant outcomes:
 > an additional 60-second limit and bounded output. Gateway JSON reports actual
 > counts, diagnostics and remaining time. Stop when finished or when a budget
 > refuses work; state completed, budget or abandoned and any unresolved issue.
-> Your final source must match your last gateway check. The coordinator seals it.
+> For completed work, your final source must match your last gateway check. If a budget stops you after an edit, or you abandon before checking, the coordinator preserves that recorded source and labels it unchecked.
 > Do not report guessed token counts or claim hidden-test success.
 
-After the participant stops, the coordinator seals with gateway evidence:
+After the participant stops, the coordinator seals with gateway evidence (use budget or abandoned for unfinished work):
 
 ```sh
 python3 experiments/maintenance_trial/pack.py seal /private/trial-a-stage1 --reason completed

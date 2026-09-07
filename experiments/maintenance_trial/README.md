@@ -42,8 +42,11 @@ A public-check invocation counts as one tool invocation. A changed source checke
 through its check operation counts as an edited submission, including failures.
 Read/edit commands count as tool invocations. Indirect public checks through run
 are protocol violations because they do not register submissions. The first
-exhausted bound stops further commands. Agent seals must match the last checked
-source. Rejected requests remain recorded. Model token counts remain unknown.
+exhausted bound stops further commands. Completed agent seals must match the last checked
+source. Budget and abandoned seals retain the final recorded source even when
+unchecked, with final_checked=false and the previous check receipt recorded
+separately. Pending commands or source changes outside the gateway still block
+sealing. Rejected requests remain recorded. Model token counts remain unknown.
 
 Use [the exact launch prompt and gateway commands](LAUNCH.md). The wrapper reuses
 the existing Linux namespace executor, mounting only the public projection and
