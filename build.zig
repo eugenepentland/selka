@@ -272,6 +272,10 @@ pub fn build(b: *std.Build) void {
     input_manifests.addFileArg(exe.getEmittedBin());
     input_manifests.setCwd(b.path("."));
     test_step.dependOn(&input_manifests.step);
+    const law_tests = b.addSystemCommand(&.{ "python3", "tests/laws.py", "--compiler" });
+    law_tests.addFileArg(exe.getEmittedBin());
+    law_tests.setCwd(b.path("."));
+    test_step.dependOn(&law_tests.step);
     const package_tests = b.addSystemCommand(&.{ "python3", "tests/packages.py", "--compiler" });
     package_tests.addFileArg(exe.getEmittedBin());
     package_tests.setCwd(b.path("."));
