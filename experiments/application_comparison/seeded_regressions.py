@@ -6,7 +6,7 @@ from .storage import digest, inventory, snapshot, source_files, verify_snapshot
 RECIPES = {
     ('planner-input-boundary', 'python'): ('planner.py', 'if len(payload) > MAX_INPUT_BYTES:', 'if len(payload) >= MAX_INPUT_BYTES:'),
     ('planner-input-boundary', 'zig'): ('src/main.zig', 'input.len > max_input)', 'input.len >= max_input)'),
-    ('planner-input-boundary', 'my'): ('json.my', 'if io::length() > 1048576 {', 'if io::length() >= 1048576 {'),
+    ('planner-input-boundary', 'my'): ('main.my', 'std_text::read(heap, 1048576)', 'std_text::read(heap, 1048575)'),
     ('eda-clearance-boundary', 'python'): ('inspector.py', 'gap_x * gap_x + gap_y * gap_y < clearance * clearance:', 'gap_x * gap_x + gap_y * gap_y <= clearance * clearance:'),
     ('eda-clearance-boundary', 'zig'): ('src/main.zig', 'gx * gx + gy * gy < @as(i128, clearance) * clearance)', 'gx * gx + gy * gy <= @as(i128, clearance) * clearance)'),
     ('eda-clearance-boundary', 'my'): ('main.my', 'gx * gx + gy * gy < clearance * clearance ||', 'gx * gx + gy * gy <= clearance * clearance ||'),

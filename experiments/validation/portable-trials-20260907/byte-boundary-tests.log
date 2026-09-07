@@ -1,0 +1,6 @@
+test_my_planner_seed_changes_only_exact_byte_boundary (tests.application_comparison.test_seeded_regressions.SeededRegressionTests.test_my_planner_seed_changes_only_exact_byte_boundary) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 2.076s
+
+OK

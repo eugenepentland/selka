@@ -9,7 +9,6 @@ Preserve strict JSON, Unicode scalar, nesting, integer and schema rules. Do not
 increase the input budget or accept/truncate only a prefix of an oversized request.
 The command must still exit zero for defined request errors.
 
-Coordinator authoring: this task requires a narrowly seeded inclusive-boundary
-regression in each baseline. Include valid requests just below/at/above the limit,
-malformed requests at the boundary, multi-byte text and actual stdin execution.
-The seeded variants and independent grading packs are not implemented yet.
+Add regression coverage for requests just below, at and above the limit, including
+multi-byte text and actual stdin execution. Preserve rejection of malformed JSON
+at the boundary.

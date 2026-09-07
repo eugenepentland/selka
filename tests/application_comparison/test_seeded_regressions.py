@@ -1,6 +1,8 @@
 from pathlib import Path
 import copy
+import json
 import shutil
+import subprocess
 import tempfile
 import unittest
 from experiments.application_comparison import seeded_regressions as seeds
@@ -27,6 +29,33 @@ def adapter(application, language):
 
 
 class SeededRegressionTests(unittest.TestCase):
+    def test_my_planner_seed_changes_only_exact_byte_boundary(self):
+        # A multibyte manifest is schema-invalid but transport-valid. Below the
+        # byte limit it must reach per-manifest validation, not envelope rejection.
+        valid = '{"cases":["é"]}'.encode()
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            receipt = snapshot(BASELINES / 'planner/my', root / 'original')
+            seeds.create(root / 'original', root / 'seeded', receipt,
+                         task='planner-input-boundary', language='my')
+            for size in (1048575, 1048576, 1048577):
+                raw = valid + b' ' * (size - len(valid))
+                for variant, limit in (('original', 1048576), ('seeded', 1048575)):
+                    with self.subTest(size=size, variant=variant):
+                        run = subprocess.run([str(ROOT / 'zig-out/bin/mylang-io'),
+                                              '--project', str(root / variant)],
+                                             input=raw, capture_output=True, timeout=60)
+                        self.assertEqual(run.returncode, 0, run.stderr)
+                        self.assertEqual(json.loads(run.stdout), {'results': [{'error': 'invalid-manifest'}]} if size <= limit
+                                         else {'error': 'invalid-request'})
+            malformed = valid + b' ' * (1048576 - len(valid) - 1) + b'!'
+            for variant in ('original', 'seeded'):
+                run = subprocess.run([str(ROOT / 'zig-out/bin/mylang-io'),
+                                      '--project', str(root / variant)],
+                                     input=malformed, capture_output=True, timeout=60)
+                self.assertEqual(run.returncode, 0, run.stderr)
+                self.assertEqual(json.loads(run.stdout), {'error': 'invalid-request'})
+
     def test_six_variants_expose_boundary_bug_and_exact_repair_passes(self):
         planner = b'{"cases":[]}'
         planner += b' ' * (1048576 - len(planner))
