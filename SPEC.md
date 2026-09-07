@@ -353,3 +353,10 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [RUNTIME-CATEGORIES-1] VM guest backing may use a separately budgeted allocator from metadata and independent snapshots. Reports distinguish requested backing bytes (including retained arena chunks) from logical live/peak buffer and pool slots; nested regions use the supplied backing budget and failed acquisitions do not increase logical accounting.
 
 - [CONST-LENGTH-1] Generic functions and nominal declarations accept explicit const N:u64 parameters, used as array lengths, forwarded constant arguments and u64 values in function bodies. Literal lengths are bounded to 1048576 and participate in specialization identity separately from type arguments. Symbolic checking preserves unknown lengths and rejects invalid unused templates, including type/value confusion and array literals whose length cannot be proved.
+- [SEMANTIC-CACHE-1] Supported changed-source checks reuse independently owned checked function bodies with relocated spans, nodes, statements, locals and borrow metadata; failed checks or snapshot allocation failures do not replace the last complete snapshot.
+- [SEMANTIC-CACHE-2] Declaration/type/import identities invalidate body reuse, generic/constant/alias configurations conservatively check fresh, and complete region/effect/codec passes rerun after every body edit.
+- [SEMANTIC-CACHE-3] Cached source spans and node/statement identities must belong to unchanged mapped intervals and their function's tables; invalid relocation falls back instead of trusting stale references.
+
+- [SEMANTIC-CACHE-4] Reusing a caller body never reuses transitive effect verdicts; a callee's new allocation rejects an unchanged noalloc caller.
+- [SEMANTIC-CACHE-5] Failed cache publication releases only its pending snapshot; the previous successful function queries remain reusable after OutOfMemory.
+- [SEMANTIC-CACHE-6] Project queries include module paths, import/export text, signatures and type catalogs, preserving fresh/cached diagnostics and execution through source relocation and changed module interfaces.

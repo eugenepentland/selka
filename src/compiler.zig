@@ -71,6 +71,8 @@ pub const project_compile = @import("project_compile.zig");
 const project_syntax = @import("project_syntax.zig");
 pub const interfaces = @import("interfaces.zig");
 pub const check_cache = @import("check_cache.zig");
+/// Changed-source semantic function queries with fresh global validation.
+pub const semantic_cache = @import("semantic_cache.zig");
 pub const syntax_cache = @import("syntax_cache.zig");
 pub const project = @import("project.zig");
 pub const source = @import("source.zig");
@@ -146,12 +148,16 @@ pub const Compilation = struct {
 
     /// Lazily type-check parsed syntax and retain the checked program.
     pub fn check(self: *Compilation) diagnostic.Error!void {
+        return self.checkWithCache(null);
+    }
+    /// Reuse independently owned checked bodies after supported source edits.
+    pub fn checkWithCache(self: *Compilation, cache: ?*semantic_cache.Cache) diagnostic.Error!void {
         if (self.program != null) return;
         for (self.diagnostics.items) |item| if (item.severity == .err) return error.SourceError;
         try self.parse();
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;
-        self.program = try sema.check(sink.allocator, self.src, self.syntax.?, &sink);
+        self.program = try sema.checkCached(sink.allocator, self.src, self.syntax.?, &sink, null, cache);
     }
 
     /// Lazily lower the checked program into bytecode owned by the compilation.

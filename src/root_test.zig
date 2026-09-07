@@ -51,6 +51,8 @@ test {
     _ = @import("generic_syntax_test.zig");
     _ = @import("syntax_cache_test.zig");
     _ = @import("check_cache_test.zig");
+    _ = @import("semantic_cache_test.zig");
+    _ = @import("semantic_project_test.zig");
     _ = @import("import_policy_test.zig");
     _ = @import("source_map_test.zig");
     _ = @import("project_test.zig");

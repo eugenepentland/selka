@@ -108,10 +108,14 @@ pub const Compilation = struct {
     }
     /// Type-check merged module bodies and enforce exported signature boundaries.
     pub fn check(self: *Compilation) CheckError!void {
+        return self.checkWithCache(null);
+    }
+    /// Reuse supported function queries while checking fresh module/type/effect dependencies.
+    pub fn checkWithCache(self: *Compilation, cache: ?*@import("semantic_cache.zig").Cache) CheckError!void {
         if (self.program != null) return;
         for (self.diagnostics.items.items) |item| if (item.severity == .err) return error.SourceError;
         var names: Names = .{ .index = self.index, .src = self.src };
-        self.program = try @import("sema.zig").checkWithNames(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names);
+        self.program = try @import("sema.zig").checkCached(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names, cache);
     }
     /// Allocate native C output after checking and lowering the complete project.
     pub fn emitC(self: *Compilation, allocator: @import("std").mem.Allocator) EmitCError![]u8 {

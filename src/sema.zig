@@ -1821,8 +1821,13 @@ fn checkGenericContracts(src: source.Source, program: ast.Program, sink: *diagno
 }
 /// Type-check linked module names and validate ownership, effects, and domain codecs.
 pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!typed.Program {
+    return checkCached(allocator, src, program, sink, module_names, null);
+}
+/// Reuse supported checked bodies, then rerun all cross-function validation passes.
+pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names, cache: ?*@import("semantic_cache.zig").Cache) Error!typed.Program {
     defer normalizeDiagnostics(sink);
     const catalog = try records.collectWithNames(allocator, src, program, sink, module_names);
+    var session = if (cache) |c| try c.begin(allocator, src, program, catalog.records) else null;
     var failed = false;
     checkGenericContracts(src, program, sink, catalog) catch |err| switch (err) {
         error.SourceError => failed = true,
@@ -1874,12 +1879,24 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
     var checked_functions: std.ArrayList(typed.Function) = .empty;
     var i: usize = 0;
     while (i < checker.instance_keys.items.len and (!contracts_failed or i < checker.ordinary_count)) : (i += 1) {
-        const function = checker.checkFunction(i) catch |err| switch (err) {
+        const start_nodes = checker.nodes.items.len;
+        const start_statements = checker.statements.items.len;
+        const reused = if (session) |*queries| try queries.lookup(allocator, i, &checker.nodes, &checker.statements) else null;
+        if (reused == null) if (cache) |c| {
+            c.statistics.checked += 1;
+        };
+        const function = reused orelse checker.checkFunction(i) catch |err| switch (err) {
             error.SourceError => {
                 failed = true;
                 continue;
             },
             else => return err,
+        };
+        if (session) |*queries| if (i < queries.ranges.len) {
+            queries.ranges[i] = .{
+                .nodes = .{ .start = start_nodes, .end = checker.nodes.items.len },
+                .statements = .{ .start = start_statements, .end = checker.statements.items.len },
+            };
         };
         try checked_functions.append(allocator, function);
     }
@@ -1895,6 +1912,7 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
     try @import("domain_codecs.zig").check(allocator, src, program.types.domains, checker.catalog, .{ .items = functions, .names = executable_names }, sink);
     try warnBindings(allocator, functions, sink);
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
+    if (session) |*queries| try queries.remember(checked);
     return checked;
 }
 

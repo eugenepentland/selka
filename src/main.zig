@@ -539,9 +539,9 @@ const ModuleFiles = struct {
     }
 };
 fn listModules(init: Context, parsed: Parsed) !u8 {
-    return listModulesWithCache(init, parsed, null, null);
+    return listModulesWithCache(init, parsed, null, null, null);
 }
-fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_cache.Cache, verdict: ?*language.check_cache.Cache) !u8 {
+fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_cache.Cache, verdict: ?*language.check_cache.Cache, functions: ?*language.semantic_cache.Cache) !u8 {
     const frontend_start = if (parsed.reporting.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
     const path = parsed.path;
     const basename = std.fs.path.basename(path);
@@ -561,7 +561,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         if (parsed.command == .@"list-interfaces") break :result try index.render(init.gpa);
         var compilation = try language.project_compile.Compilation.init(&index);
         if (parsed.command == .@"index-project") break :result try renderNavigation(init, &compilation);
-        compilation.check() catch |err| switch (err) {
+        compilation.checkWithCache(functions) catch |err| switch (err) {
             error.SourceError => {
                 try reportProject(init, &compilation);
                 return 1;
@@ -916,7 +916,7 @@ fn validEntryBasename(basename: []const u8) bool {
     return std.mem.indexOfScalar(u8, name, '.') == null;
 }
 
-const SessionCache = struct { syntax: language.syntax_cache.Cache, semantic: language.check_cache.Cache };
+const SessionCache = struct { syntax: language.syntax_cache.Cache, semantic: language.check_cache.Cache, functions: language.semantic_cache.Cache };
 fn checkSession(init: Context, parsed: Parsed) !u8 {
     if (!validEntryBasename(std.fs.path.basename(parsed.path))) {
         try init.text("check-session: entry must be an identifier.my file\n");
@@ -925,9 +925,11 @@ fn checkSession(init: Context, parsed: Parsed) !u8 {
     var cache: SessionCache = .{
         .syntax = language.syntax_cache.Cache.init(init.gpa, .{}),
         .semantic = language.check_cache.Cache.init(init.gpa, 16 * 1024 * 1024),
+        .functions = language.semantic_cache.Cache.init(init.gpa, 16 * 1024 * 1024),
     };
     defer cache.syntax.deinit();
     defer cache.semantic.deinit();
+    defer cache.functions.deinit();
     cache.semantic.format = init.diagnostics;
     var buffer: [256]u8 = undefined;
     var input = std.Io.File.stdin().readerStreaming(init.io, &buffer);
@@ -952,6 +954,7 @@ fn checkSession(init: Context, parsed: Parsed) !u8 {
         if (std.mem.eql(u8, action, "clear")) {
             cache.syntax.clear();
             cache.semantic.clear();
+            cache.functions.clear();
             try sessionReply(init, "clear", 0, null, before, &cache);
         } else if (std.mem.eql(u8, action, "check")) {
             try sessionCheck(init, parsed, &cache);
@@ -968,7 +971,7 @@ fn sessionCheck(init: Context, parsed: Parsed, cache: *SessionCache) !void {
     var request = parsed;
     request.command = .@"check-project";
     const before = cache.syntax.statistics;
-    const status = listModulesWithCache(request_init, request, &cache.syntax, &cache.semantic) catch |err| {
+    const status = listModulesWithCache(request_init, request, &cache.syntax, &cache.semantic, &cache.functions) catch |err| {
         try sessionReply(init, "check", 2, @errorName(err), before, cache);
         return;
     };
@@ -983,6 +986,7 @@ fn sessionReply(init: Context, action: []const u8, status: u8, failure: ?[]const
         .reuse = .{ .hits = cache.syntax.statistics.hits - before.hits, .misses = cache.syntax.statistics.misses - before.misses },
         .cache = cache.syntax.statistics,
         .semantic = cache.semantic.statistics,
+        .functions = cache.functions.statistics,
     }, .{});
     defer init.gpa.free(text);
     try std.Io.File.stdout().writeStreamingAll(init.io, text);

@@ -42,7 +42,12 @@ pub const Mapper = struct {
                 for (input, output) |item, *out| out.* = try self.value(allocator, pointer.child, item);
                 break :result output;
             },
-            .@"enum", .int, .bool, .void => input,
+            .array => |array| result: {
+                var output: T = undefined;
+                for (input, &output) |item, *out| out.* = try self.value(allocator, array.child, item);
+                break :result output;
+            },
+            .@"enum", .int, .float, .bool, .void => input,
             else => @compileError("AST field needs an explicit relocation rule: " ++ @typeName(T)),
         };
     }

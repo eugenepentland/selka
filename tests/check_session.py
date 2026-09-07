@@ -35,7 +35,9 @@ def main():
                     return response
 
                 try:
-                    assert request('check')['reuse'] == {'hits': 0, 'misses': 2}
+                    cold = request('check')
+                    assert cold['reuse'] == {'hits': 0, 'misses': 2}
+                    assert cold['functions']['checked'] == 2 and cold['functions']['reused'] == 0
                     warm = request('check')
                     assert warm['reuse'] == {'hits': 0, 'misses': 0} and warm['semantic']['hits'] == 1
                     diagnostics.seek(0)
@@ -45,7 +47,9 @@ def main():
                     assert warnings[:half] == warnings[half:]
                     diagnostics.seek(0, 2)
                     data.write_text(valid.replace('return 7', 'return 9'))
-                    assert request('check')['reuse'] == {'hits': 1, 'misses': 1}
+                    edited = request('check')
+                    assert edited['reuse'] == {'hits': 1, 'misses': 1}
+                    assert edited['functions']['checked'] == 3 and edited['functions']['reused'] == 1
                     data.write_text(valid.replace('return 7', 'return true'))
                     assert request('check', 1)['reuse'] == {'hits': 1, 'misses': 1}
                     assert request('check', 1)['reuse'] == {'hits': 2, 'misses': 0}
@@ -57,6 +61,7 @@ def main():
                     request('check')
                     cleared = request('clear')
                     assert cleared['cache']['retained_bytes'] == 0 and cleared['semantic']['retained_bytes'] == 0
+                    assert cleared['functions']['retained_bytes'] == 0
                     assert request('check')['reuse'] == {'hits': 0, 'misses': 2}
                     assert request('not-a-command', 2)['failure'] == 'UnknownSessionCommand'
                     for _ in range(20):
