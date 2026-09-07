@@ -11,5 +11,6 @@ pub fn source(path: []const u8) ?[]const u8 {
     if (std.mem.eql(u8, path, "std_queue.my")) return @embedFile("stdlib/std_queue.my");
     if (std.mem.eql(u8, path, "std_map.my")) return @embedFile("stdlib/std_map.my");
     if (std.mem.eql(u8, path, "std_set.my")) return @embedFile("stdlib/std_set.my");
+    if (std.mem.eql(u8, path, "std_unit.my")) return @embedFile("stdlib/std_unit.my");
     return null;
 }

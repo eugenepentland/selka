@@ -285,3 +285,4 @@ supersede it. The manifest records implementation coverage, not a test certifica
   rejected mutations. Existing map keys replace, set insertion deduplicates, queue
   removal is FIFO, full insertion preserves content, and removal frees capacity.
   Operations never grow implicitly and preserve cleanup on every branch.
+- [UNIT-CONVENTION-1] Reserved std_unit exports the empty ordinary record Unit and noalloc unit()->Unit constructor. Unit is a copyable normal value accepted by generic functions and result payloads; successful operations with no useful payload need no dummy integer. Fallible Result<Unit,E> keeps its must-handle obligation.

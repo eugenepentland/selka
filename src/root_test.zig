@@ -99,4 +99,5 @@ test {
     _ = @import("literal_arguments_test.zig");
     _ = @import("json_document_test.zig");
     _ = @import("standard_library_test.zig");
+    _ = @import("unit_convention_test.zig");
 }
