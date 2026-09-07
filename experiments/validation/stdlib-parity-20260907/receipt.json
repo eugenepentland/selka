@@ -1,0 +1,42 @@
+{
+  "version": "stdlib-parity-preparation-v1",
+  "comparative_claim": false,
+  "application_trial_seconds": 0,
+  "source_commit": "8e02e2e69ffb5f80c6e5779e22a4e1724eaa820f",
+  "compiler_sha256": "bd81661dce4fbef3bbd3324c4ab3739af2b1c618f0372deacc4ddf818bc971cf",
+  "byte_io_sha256": "802444e61e5e611b296108c31dc564b7c6b2b0200ddf01811a6ebd376c076a5c",
+  "build": "ReleaseFast; normal Guardian88passed;12/12steps",
+  "checks": {
+    "common_unittest": {
+      "passed": 15,
+      "command": "python3 -m unittest tests.application_comparison.test_my_baselines tests.application_comparison.test_python_baselines tests.application_comparison.test_zig_baselines tests.application_comparison.test_dependency_audit tests.application_comparison.test_parity_readiness -v"
+    },
+    "planner_cli_groups": 12,
+    "planner_maximum_cases": 2,
+    "eda_stress_output_bytes": 57692813,
+    "library_focused_zig_tests": 3,
+    "library_native_fixtures": 6,
+    "library_native_allocation_failure_positions": 3568,
+    "guest_test_runner": "passed (pre-module-addition optimized compiler; existing test-runner/compiler behavior unchanged)",
+    "dependency_audit_after_alias_support": "5tests passed; six inventories no flagged declarations; static review is not a proof against dynamic loading"
+  },
+  "independent_review": {
+    "reviewer": "eda_parity agent",
+    "library": "No actionable flaw found in ordering, graph sequencing, overflow, ranges and forged pair state under documented preconditions.",
+    "readiness": "Reported ignored matrix top-level status/policy/version metadata; fixed with regression.",
+    "scope": "Review and tests, not productivity evidence."
+  },
+  "historical_failure": "Initial JSON-only EDA migration hit60s with Debughost on16384references; retained under evidence/stdlib-parity-eda. Final optimized integrated tests passed unchanged bounds.",
+  "logs": {
+    "common-acceptance.log": "e33a65b496be4de56ce7f09bdd004e5124d7718b5d7a976f3070cca66a236931",
+    "dependencies.json": "3c9a28bdfb93b41e7014febea90e503352ce2a5a0f0ad4bf286ec7ca908adc46",
+    "dependency-audit.log": "8cc9181669ca8abf0756643dc862bc31646ecf52fdc7c59f1955e79ed841063f",
+    "eda-cli-stress.log": "71d3a73c60227e7a84665316d7674c3b809490a9a0540432653460aec5dc6e63",
+    "guest-tests.log": "148b99ad68de31e9948b8196a0a3e4390bae316b8d0e75dcb9349da265fc56ae",
+    "integrated-build.log": "4b743e2d59565051adcccb805892f98e36f4e6427e0f15cfb45f8600d55ca2cb",
+    "library-native.log": "2bc36a3848ddd122daf6f7750ae23732b38cc3ecb750dafb943b5e1278927452",
+    "library-tests.log": "0a52819038873e63289868d001e52e316bd450618e9fcf34b00fddf773ae61ef",
+    "planner-cli.log": "1d8268de3c14ebbe8b702277ca980ec2dbb1e63eed4afdbdae6bdc45dc8b5dc0",
+    "planner-stress.log": "bbf3bbe42a8688406ece65bffa2ca93455a42785b0ede1a0c40d59b10adec74b"
+  }
+}

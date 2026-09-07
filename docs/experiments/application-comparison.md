@@ -1,11 +1,12 @@
 # Application maintenance comparison: .my, Python and Zig
 
-Status: proposed experiment, 2026-09-07. This document specifies work to implement;
-it does not report comparative agent results. Implementation has started in the
-[comparison coordinator](../../experiments/application_comparison/README.md); its
-fixture acceptance is tracked separately from the pending participant study. The existing repair harness has
-fixture acceptance, but no measured participant attempts. Native compilation of
-`.my` remains outside this experiment: freeze the installed bytecode interpreter.
+Status: continuing evaluation plan, updated 2026-09-07. Standard-library parity
+preparation is required before new timed application cohorts. This document
+specifies the protocol; dated calibration reports retain earlier observations.
+The [comparison coordinator](../../experiments/application_comparison/README.md)
+tracks infrastructure acceptance separately from exploratory participant results
+and the pending scored study. Native compilation of `.my` remains outside this
+experiment: freeze the installed bytecode interpreter.
 
 ## 1. Decision and scope
 
@@ -14,9 +15,12 @@ correct changes, especially as applications grow and several agents edit them.
 Compare against Python and Zig separately. A win against one is not a win against
 both, and a small-program result does not establish large-project usefulness.
 
-The principal outcome is independently accepted changes per unit of total effort
-and cost, with final defect rate reported alongside it. Compiler rejection counts,
-lines of code, number of tests and an agent's confidence are explanatory evidence,
+The principal application outcome is independently accepted changes per unit of
+application-development effort and cost after library parity preparation, with
+final defect rate and independently reviewed code quality reported alongside it.
+Report total adoption effort, including library development, as a separate outcome.
+Compiler rejection counts, lines of code, number of tests and an agent's confidence
+are explanatory evidence,
 not standalone measures of success.
 
 Run a small calibration/pilot before building a large benchmark. Extend only when
@@ -30,9 +34,11 @@ All contribute to an adoption decision; setup is not silently treated as free.
 ### Application dependencies
 
 Only each language's standard library, compiler/runtime and application source
-are allowed. Freeze an explicit `.my` standard-library/runtime inventory before
-writing scored tasks. A benchmark helper cannot become a free standard-library
-feature after we discover that a task needs it.
+are allowed. Before timing application work, inventory the general-purpose
+facilities available in the pinned Python and Zig standard libraries that the
+planned workload needs, and implement any missing equivalents in `.my` first.
+Freeze the reviewed `.my` standard-library/runtime inventory before scored tasks
+and participant sessions. The parity process below defines this prerequisite.
 
 - Python may use its actual standard library, including `json`, `dataclasses`,
   `enum`, `typing`, `collections` and `unittest`. No pip dependencies, mypy,
@@ -42,20 +48,92 @@ feature after we discover that a task needs it.
 - `.my` may use its frozen runtime, source facilities and audited basic I/O
   bridge. No Zig/Python helper may perform its parsing, geometry, graph algorithms,
   validation, rendering or other application business logic.
-- Application code may implement missing facilities, and its development and
-  maintenance cost counts. Do not force Python or Zig to duplicate `.my`'s
-  allocation model, module layout or error syntax. Use idiomatic, reviewed code.
+  General-purpose compiler/runtime intrinsics exposed through the frozen standard
+  library (such as ordinary JSON parsing) are allowed, just as comparator standard
+  libraries may use native implementations. The raw byte bridge must not add
+  application-specific parsing, schema validation or algorithms.
+- If a needed general-purpose facility is supplied by the pinned standard library
+  of either comparator, `.my` must provide a tested, reusable equivalent before
+  application timing starts. Do not charge its initial implementation as `.my`
+  application work. Application-specific logic remains timed. Do not force Python
+  or Zig to duplicate `.my`'s allocation model, module layout or error syntax.
+  Use idiomatic, reviewed code.
 - No vendoring, foreign-function escape hatch, external command used as a domain
   library, or network service may evade the dependency restriction. The evaluator
   and agent tooling are separate from the application, not callable shortcuts.
 
-Standard libraries differ in breadth. That difference is part of this adoption
-comparison. These results will concern language + stdlib + allowed tools, not a
-perfectly isolated estimate of syntax or type-system quality. Python annotations
-alone do not enforce types at runtime; do not report them as a static checker.
+The primary comparison measures application development with the required
+standard-library capabilities already available. It concerns language + prepared
+stdlib + allowed tools, not a perfectly isolated estimate of syntax or type-system
+quality. Differences in library investment remain in the separate adoption ledger.
+Python annotations alone do not enforce types at runtime; do not report them as a static checker.
 See the [Python typing documentation](https://docs.python.org/3/library/typing.html).
 Allow normal runtime validation and strong tests rather than an intentionally weak
 Python implementation.
+
+### Standard-library parity before application timing
+
+This rule applies to bug repairs, features, refactors and any future application
+construction trials, including exploratory calibration. It covers the union of
+needed capabilities supplied by **either** pinned comparator's standard library;
+it does not require cloning every Python and Zig module before any experiment.
+Verify availability against the actual pinned toolchain documentation/source.
+Third-party packages remain outside the comparison.
+
+1. **Inventory before tasks.** From the language-neutral workload contract and
+   baseline dependency review, create a capability matrix listing the Python/Zig
+   API and version, required behavior and limits, `.my` API or gap, implementation
+   commit, documentation, independent acceptance evidence and readiness status.
+   Include routine parsing/serialization, text/formatting, collections, sorting,
+   general graph utilities where applicable, files/paths, time/random and testing
+   support. Required semantics, not matching function names, determine parity.
+2. **Implement missing library facilities first.** Build general-purpose `.my`
+   modules and any necessary compiler/runtime support outside application clocks.
+   Put reusable operations in the real standard library, with public contracts,
+   examples, boundary/error tests and ownership/resource cleanup coverage. Use
+   unrelated fixtures and an independent review; library authors must not receive
+   hidden tasks, graders or task-specific solutions. EDA rules, planner policies
+   and benchmark-specific wrappers cannot be relabeled as standard-library work.
+3. **Prove workload sufficiency.** Check required input sizes, Unicode/number
+   behavior, capacity, failure semantics and resource authority. A bounded API
+   qualifies only if it covers the agreed workload. For example, the current
+   256-byte hash keys and bounded decimal float parser require explicit review;
+   their existence alone does not establish parity. Do not silently narrow the
+   common contract to make an unsupported `.my` operation pass.
+4. **Prepare and freeze.** Review all baselines for idiomatic use of their allowed
+   libraries; replace baseline-local `.my` substitutes with the new APIs where
+   appropriate. Count that migration as baseline preparation, not timed maintenance.
+   Re-run common conformance and regression checks. Freeze library/compiler/bridge
+   hashes, baseline snapshots, guides, build/cache policy and the capability matrix.
+   Only then author/seal fresh scored tasks and launch fresh participants. Runtime
+   implementation can differ, but application business logic stays in its language.
+5. **Handle a newly discovered gap without editing the stopwatch.** Record the
+   affected attempt and all matched attempts under that cohort's frozen rules.
+   Do not pause a timed `.my` session, build a library, resume and subtract the time.
+   Close the affected matched block as a parity-incomplete protocol observation,
+   retain it in assigned-attempt accounting, implement and validate the gap, then
+   launch a separately identified fresh matched block in all languages. Use unseen
+   equivalent tasks and new participants; report restart cost and never pool its
+   timing with the interrupted block. A library defect likewise requires a new
+   library version and cohort; runtime defects remain reliability evidence.
+
+Keep separate ledgers for **library/compiler preparation**, **baseline construction
+and migration**, **agent familiarization**, **timed application work**, and
+**independent grading/review**. Each records wall time, agent turns, tokens/compute
+cost and human effort where observable; unavailable telemetry is unknown. The
+primary application result excludes the first two ledgers. Also publish the full
+adoption total and any amortization over an explicitly stated number of accepted
+changes. Python/Zig's historical library investment is not reconstructed or charged
+to their application clock; `.my` preparation is reported transparently rather
+than treated as nonexistent.
+
+The capability matrix and `parity_readiness.py` now check declared readiness and
+bind its reviewed evidence to tools, libraries, all comparator baselines and
+contracts. The direct exploratory setup verifies this receipt before preparation.
+This is not automatic semantic proof; full scored-cohort binding remains pending.
+Exploratory launch still requires the retained readiness review. Existing
+calibration results keep their original library/build conditions and cannot be
+retroactively presented as parity-prepared measurements.
 
 ### Developer tools and study arms
 
@@ -194,7 +272,8 @@ would make the result a selected safety-feature demonstration.
 
 ## 6. Participant and grading protocol
 
-1. Freeze clean, fully accepted baselines, tool identities, task variants, budgets,
+1. Complete and retain the standard-library parity review, then freeze clean,
+   fully accepted baselines, tool identities, task variants, budgets,
    public development tests and the hidden grader/generator before the cohort.
 2. Create a matched three-language block for each task, tier, application and
    repetition. Randomize dispatch order and machine/time slots. Fresh participants
@@ -240,8 +319,12 @@ a patch. Calibrate a generous ceiling on unrelated tasks before scoring. If almo
 everything times out, the study cannot distinguish much; change the next cohort's
 budget for all languages rather than extending only `.my` after seeing results.
 
-Use explicit clock boundaries:
+Use explicit clock boundaries. Library parity and baseline migration must be
+complete before either familiarization or task work begins:
 
+- **Library preparation:** starts at capability inventory/implementation and ends
+  at reviewed library readiness; includes compiler fixes, tests and documentation.
+  Baseline migration has its own ledger. Neither is application-development time.
 - **Familiarization:** starts when the agent receives the language/tool guide;
   ends when it finishes the practice exercises or reaches the preparation cap.
 - **Task work:** starts before the agent can read the scored issue or repository;
@@ -309,6 +392,9 @@ its task corpus and dependencies are not being adopted here.
 | Time to an accepted submission | Elapsed time to the submitted candidate later verified correct; summarize alongside failures, not only successful runs |
 | Delivery throughput | Accepted changes per fixed experiment wall-time window or human oversight hour, especially for concurrent waves |
 | First repair after a diagnostic | First edited submission following that specific diagnostic passes its target and regression tests; distinguish repeated unchanged checks |
+| Agent turns and repair loops | Count participant model responses in the task phase, tool calls separately, and edited candidate/check cycles to independent acceptance; report failures and missing turn telemetry, not just successful attempts |
+| Reviewed code quality | Predeclared rubric for API clarity, cohesion, duplication, error/resource handling and test relevance; independent reviewers inspect sealed source, then follow-up tasks test maintenance cost |
+| Library parity preparation | Missing capabilities, implementation/review time, defects, migration cost and frozen readiness evidence; separate from application speed and included in adoption accounting |
 | Navigation effort | Search/read commands, source/context bytes and tokens, irrelevant files opened, and time to first recorded relevant location |
 | Verification delay | Actual check execution, queue wait, repeated work, cold/warm cache hits, stale hits rejected and dependency-selection misses |
 | Maintenance disruption | Necessary versus unrelated edits, duplicated decision rules, weakened contracts, special-case workarounds and downstream edits needed |
@@ -385,7 +471,7 @@ never be presented as ten live agents developing concurrently.
 
 | Stage | Proposed scope | Exit condition |
 | --- | --- | --- |
-| 0. Feasibility and calibration | Six small baselines: two apps × three languages; no scored development claims | Behavioral parity, dependency audit, working isolation, fair commands and frozen budgets; list unsupported features |
+| 0. Library parity, feasibility and calibration | Inventory needed comparator stdlib facilities; implement/test missing `.my` equivalents; migrate/review six small baselines | Reviewed capability matrix, common conformance, frozen libraries/guides/build policy, working isolation and calibrated budgets; unresolved gaps block timing |
 | 1. Pilot | Six new small/medium task blocks × three languages × two independent attempts = 36 sessions | Reliable telemetry/grading, task difficulty calibration and explicit failure review; exploratory results only |
 | 2. Main maintenance study | Two apps × three tiers × four task families × three languages × two repetitions = 144 sessions | Matched results with uncertainty, size/impact breakdown and separately reported Python/Zig comparisons |
 | 3. Follow-up maintenance | Eight preselected medium/large task chains × three languages × two repetitions = 48 additional sessions | Whether early patches reduce or increase later change cost |
@@ -463,9 +549,11 @@ and total team elapsed time separate unless a conversion is explicitly chosen.
 2. Implement process/filesystem isolation and a minimal audited `.my` byte-I/O
    bridge. Add harness acceptance for timeout, tampering, changed tools, interrupted
    grading, source races, hidden-data access, stale receipts and unequal dispatch.
-3. Write the two contracts and independent graders; construct/review the six small
-   baselines with stdlib-only dependency manifests. Move shared native business
-   logic into the language implementations. Freeze before selecting scored tasks.
+3. Use the two contracts and dependency manifests to review the capability matrix.
+   Implement and independently test missing `.my` standard-library equivalents
+   first, then migrate/review the six small baselines and run common conformance.
+   Move shared native business logic into the language implementations. Freeze
+   library readiness and all source/tool identities before selecting scored tasks.
 4. Register the six pilot tasks, common budgets and outcome schema. Run 36 fresh
    sessions. Publish every attempt and failure class, costs and protocol deviations.
 5. Use the pilot to decide whether building the medium/large releases is justified.
@@ -479,6 +567,9 @@ Proposed artifacts:
   resource envelopes, task families and acceptance predicates.
 - `experiments/application_comparison/study-plan.json`: versioned cohort design,
   randomization, frozen identities, budgets, metrics and stopping rules.
+- A versioned capability matrix and library-readiness receipt, linked to API docs,
+  commits, independent acceptance and separately recorded preparation costs; cohort
+  validation must reject unresolved required gaps before scored launch.
 - A stdlib-only coordinator/adapter/reporting package and public acceptance tests;
   grader data, answers and sealed participant artifacts stored outside worker mounts.
 - A report with raw per-run records, paired comparisons, uncertainty, size/impact
@@ -489,6 +580,34 @@ and calibration status is recorded in `study-plan.json` and the dated experiment
 reports; draft fixture validation and exploratory sessions are distinct from the
 scored pilot.
 
+
+## Next continuation: evaluate after library preparation
+
+The [standard-library expansion](../standard-library.md) is implemented and its
+[combined acceptance receipt](../../experiments/validation/stdlib-20260907/receipt.json)
+records 73/73 build steps and 1071/1071 Zig tests, plus native/application suites.
+That validates implementation coverage; it does not establish workload parity or
+faster application development.
+
+1. Audit the existing EDA/planner baselines against the expanded library and make
+   the capability matrix. Fill remaining comparator-stdlib gaps before any new
+   timed application block; retain costs and migrate reusable baseline helpers.
+2. Refresh the installed trial compiler/byte host, guides, dependency inventories
+   and frozen environment receipts to the reviewed version. Revalidate isolation,
+   public/private graders and the same suite-build-reuse policy for every language.
+3. Run fresh matched bug-fix, shared-contract and feature blocks with the same
+   model/settings and common budgets. Previously exposed planner/EDA tasks may
+   calibrate the harness, but scored tasks and variants must be unseen. Keep the
+   planned 36-session pilot provisional until this readiness review is complete.
+4. Report acceptance, root-cause defects/severity, application time, turns/repair
+   loops, compute cost and independent quality review together. Keep preparation
+   and total adoption results beside them. Compare Python and Zig separately;
+   preserve failed, interrupted and parity-incomplete attempts.
+5. Only after usable pilot evidence, grow medium/large workloads, repeat the
+   capability review before freezing each cohort, and run follow-up maintenance
+   and concurrent-agent trials. New application construction can be a separate
+   matched study with the same library-first rule; do not mix its times with
+   maintenance sessions or silently add it to existing sample totals.
 
 ## Direct coding-agent calibration (2026-09-07)
 

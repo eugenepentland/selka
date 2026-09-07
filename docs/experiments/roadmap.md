@@ -18,6 +18,11 @@ The linked plan and runtime guides specify limitations and acceptance evidence.
 
 Next evaluation priority: [stdlib-only application maintenance comparison](application-comparison.md)
 against Python and Zig, with Guardian enabled for Zig in the main workflow.
+Before new application timing, inventory needed Python/Zig standard-library
+capabilities, implement/test missing `.my` equivalents, and review/freeze library
+readiness and migrated baselines. Track this preparation separately from timed
+application work; report both application outcomes and total adoption cost.
+The expanded library is implemented, but workload parity still requires review.
 The proposed sequence starts with six reviewed small baselines and 36 pilot
 sessions before expanding to meaningful larger codebases, maintenance chains
 and measured concurrent-agent work. These are planned studies, not collected

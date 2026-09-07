@@ -39,8 +39,9 @@ Comparison cost also includes common key prefix lengths. This supports the
 workloads' identifier and identifier-pair ordering, equivalent to the needed
 `sorted`, `heapq`, `bisect` and `std.mem.sort` behavior. General callback sorting
 with borrowed context remains a compiler limitation: callback parameters currently
-accept values, not borrowed slices. Descriptor preparation is untimed library
-migration; arbitrary user-defined comparator breadth is not claimed.
+accept values, not borrowed slices. The initial baseline descriptor migration is untimed preparation. Subsequent
+application descriptor changes remain on the task clock; arbitrary user-defined
+comparator breadth is not claimed.
 
 ## Counting, character classes and pairs
 

@@ -1,0 +1,10 @@
+test_comments_do_not_create_dependencies_and_escapes_reject (tests.application_comparison.test_dependency_audit.DependencyAuditTests.test_comments_do_not_create_dependencies_and_escapes_reject) ... ok
+test_embedded_inventory_does_not_whitelist_prefixes_or_host_helpers (tests.application_comparison.test_dependency_audit.DependencyAuditTests.test_embedded_inventory_does_not_whitelist_prefixes_or_host_helpers) ... ok
+test_embedded_modules_are_explicit_transitive_and_hashed (tests.application_comparison.test_dependency_audit.DependencyAuditTests.test_embedded_modules_are_explicit_transitive_and_hashed) ... ok
+test_my_host_declaration_requires_review (tests.application_comparison.test_dependency_audit.DependencyAuditTests.test_my_host_declaration_requires_review) ... ok
+test_python_shadowing_and_dynamic_loading_are_not_hidden (tests.application_comparison.test_dependency_audit.DependencyAuditTests.test_python_shadowing_and_dynamic_loading_are_not_hidden) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.002s
+
+OK

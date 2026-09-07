@@ -14,20 +14,35 @@ def tokens(source):
             if not match.group().startswith(('//', '/*', '\\\\'))]
 
 
-def audit(root, language, entry):
+def audit(root, language, entry, *, standard_modules=None):
     root = Path(root).resolve(strict=True)
     if language not in ('python', 'zig', 'my'):
         raise ValueError('unsupported audit language')
+    standard_modules = {} if standard_modules is None else standard_modules
+    if not isinstance(standard_modules, dict) or (standard_modules and language != 'my'):
+        raise ValueError('explicit standard modules are supported only for my')
+    embedded = {}
+    for name, data in standard_modules.items():
+        if (not isinstance(name, str) or re.fullmatch(r'std_[a-z0-9_]+', name) is None or
+                not isinstance(data, bytes)):
+            raise ValueError('standard modules require explicit names and source bytes')
+        words = tokens(data.decode('utf-8'))
+        if words[:3] != ['module', name, ';']:
+            raise ValueError('standard module declaration mismatch')
+        embedded['@stdlib/' + name + '.my'] = data
     queue, visited, edges, review = [entry], {}, [], []
     while queue:
         name = queue.pop()
-        path = (root / name).resolve(strict=True)
-        if not path.is_relative_to(root):
-            raise ValueError('application dependency leaves source root')
-        relative = path.relative_to(root).as_posix()
+        if name in embedded:
+            relative, data, path = name, embedded[name], root / name
+        else:
+            path = (root / name).resolve(strict=True)
+            if not path.is_relative_to(root):
+                raise ValueError('application dependency leaves source root')
+            relative = path.relative_to(root).as_posix()
+            data = path.read_bytes()
         if relative in visited:
             continue
-        data = path.read_bytes()
         source = data.decode('utf-8')
         visited[relative] = hashlib.sha256(data).hexdigest()
         imports = []
@@ -78,7 +93,11 @@ def audit(root, language, entry):
                 elif language == 'zig' and word == 'extern':
                     review.append({'file': relative, 'reason': 'external Zig symbol declaration'})
                 elif language == 'my' and word == 'import':
-                    if index + 2 < len(words) and words[index + 2] == ';':
+                    ending = index + 2
+                    if words[ending:ending + 1] == ['as']:
+                        ending += 2
+                    if (ending < len(words) and words[ending] == ';' and
+                            re.fullmatch(r'[A-Za-z_][A-Za-z_0-9]*', words[index + 1]) is not None):
                         imports.append(words[index + 1])
                     else:
                         review.append({'file': relative, 'reason': 'unrecognized .my import'})
@@ -88,7 +107,12 @@ def audit(root, language, entry):
                         if relative != 'io.my' or words[index + 2] not in ('length', 'byte', 'put'):
                             review.append({'file': relative, 'reason': 'host declaration outside raw byte interface'})
             for target in imports:
-                if language == 'zig' and target in ('std', 'builtin'):
+                if language == 'my' and target in standard_modules:
+                    kind = 'stdlib'
+                    queue.append('@stdlib/' + target + '.my')
+                    if (root / (target + '.my')).exists():
+                        review.append({'file': relative, 'reason': 'local file conflicts with reserved standard module', 'module': target})
+                elif language == 'zig' and target in ('std', 'builtin'):
                     kind = 'stdlib'
                 else:
                     local = path.parent / target if language == 'zig' else root / (target + '.my')
@@ -103,6 +127,6 @@ def audit(root, language, entry):
                 edges.append({'file': relative, 'target': target, 'kind': kind})
     body = {'version': 'application-dependency-inventory-v1', 'language': language, 'entry': entry,
             'files': visited, 'edges': edges, 'review_required': review,
-            'scope': 'static imports reachable from application entry; auxiliary test tools excluded',
+            'scope': 'static imports reachable from application entry, including explicitly supplied embedded my modules; auxiliary test tools excluded',
             'stdlib_only_proven': False}
     return dict(body, sha256=digest(body))

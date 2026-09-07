@@ -1,5 +1,15 @@
 # Application comparison coordinator v2
 
+Current stdlib-parity checkpoint (2026-09-07): both `.my` baselines now use
+embedded JSON, text, descriptor ordering and character classes; the planner also
+uses generic graph readiness. Five new modules fill required library gaps before
+application timing. The [capability matrix](stdlib-parity.json) and
+[preparation evidence](../validation/stdlib-parity-20260907/receipt.json) record
+common six-baseline conformance, maximum-size regressions and independent review.
+`parity_readiness.py` binds a reviewed decision to actual inputs; it does not prove
+semantic equivalence or authorize scored launch. Earlier calibration remains under
+its original library conditions. A new rotation feature block is being prepared.
+
 Current checkpoint (2026-09-07): suite-local verified Zig build reuse is implemented,
 51 targeted checks and the real 21-input practice probe passed, and three direct
 coding-agent blocks (nine sessions, no API key) have completed private grading.

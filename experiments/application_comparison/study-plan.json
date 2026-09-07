@@ -21,7 +21,7 @@
   "calibration_lifecycle": {
     "grading_reporting": "three abandoned calibration attempts through local HTTP, fresh scheduled grading and cohort summary; failures/unlaunched repetitions retained; fixture grading rejects calibration",
     "live_requests": 0,
-    "remaining": "Three direct-agent exploratory blocks completed (nine sessions); remaining catalog tasks/repetitions and larger-tier decision remain. No scored pilot launch; API transport optional.",
+    "remaining": "Current EDA/planner library readiness reviewed; next fresh rotation matched calibration being prepared. Historical nine sessions retain original conditions; scored pilot count remains zero.",
     "reservation_namespace": "calibration-reservations",
     "setup_cli": "calibration_setup freezes selected small pilot blocks, all language/arm tools, curricula, private task packs and coordinator v2 policy; explicit model/budgets required; zero model calls and no reservations",
     "status": "fresh-calibration-transport-implemented-local-http-validation",
@@ -36,6 +36,13 @@
     "task_sources": "scheduled repair variants and identical protected public files; hidden receipts outside participant mounts"
   },
   "comparative_claims": [],
+  "continuation_sequence": [
+    "audit expanded stdlib against EDA/planner comparator dependencies; fill remaining gaps before timing",
+    "migrate/review baselines, refresh pinned trial tools/guides/receipts and rerun conformance",
+    "calibrate fresh matched blocks under one library/build policy, then freeze unseen tasks for the provisional 36-session pilot",
+    "report application speed, turns, defects and reviewed quality alongside separate preparation/adoption cost",
+    "expand workloads and follow-up/team studies only after pilot evidence; repeat parity review per cohort"
+  ],
   "coordinator_provenance": {
     "fresh_process": "verified in-memory source imports for probes, fixture replay, calibration transport and unscored grading; only local HTTP fixture calls tested",
     "live_calls": 0,
@@ -51,8 +58,9 @@
     "flagged_declarations": 0,
     "json_api_review": "installed-json-boundary-probe.json: three installed VM probes agree with typed-envelope API documentation; existing typed decoder is not a direct replacement for ordinary benchmark JSON; source-library alternatives not ruled out",
     "native_boundary_review": "raw-host-boundary-review.json: only scalar byte callbacks found; installed-binary rejection/publication tests pass; not independent blinded review or fresh build attestation",
-    "remaining": "independent source origin/vendoring review; full Zig/my semantic boundary review; freeze reviewed audit and tool-source evidence with actual trial inputs",
+    "remaining": "Freeze current inventory with trial; arbitrary dynamic-loading/semantic proof still outside static scanner",
     "status": "six-application-entry-static-inventories-recorded",
+    "stdlib_module_support": "explicit registry source bytes traversed and hashed, aliases recognized, transitive io declarations inspected; prefix alone never whitelisted",
     "stdlib_only_proven": false,
     "tests_passed": 3
   },
@@ -336,6 +344,7 @@
     "status": "implemented and installed ReleaseFast; raw byte and reload isolation tests pass"
   },
   "required_launch_evidence": [
+    "reviewed standard-library capability matrix with no unresolved required gaps; frozen readiness and separate preparation-cost receipt",
     "all participant tools routed through verified isolation",
     "frozen model, documentation, system and toolchain identities",
     "measured usage and phase deadline enforcement",
@@ -352,12 +361,52 @@
     "measures": "assigned/graded/accepted counts; status categories; separate preparation/task observations; reported tokens and completeness; artifact identities checked",
     "paired": "descriptive matched acceptance counts and differences; both-accepted task-time ratios with observed/missing counts; incomplete pairs retained",
     "partial_usage": "completed phase time, stops and hashed usage receipts retained without final driver report; partial token totals separated from completed driver totals; unfinished-phase usage remains unknown",
+    "planned_parity_measures": "Task-phase model responses, separate tool calls and edited check cycles; root-cause defects/severity; independent quality rubric; library preparation and baseline migration ledgers. Telemetry/enforcement extensions remain pending; unknown values are not zero.",
     "remaining": "navigation and diagnostic repair metrics; cache/queue intervals; monetary costs; blinded quality labels; paired statistical analysis; actual comparative trials",
     "status": "descriptive-unscored-cohort-summary-implemented",
     "stop_reasons": "per-attempt preparation/task stop, seal reason and recorded interruption type/phase; per-language counts with explicit missing observations; independent failure attribution remains pending",
     "tool_work": "per-attempt observed command/search/output counts, interval unions, task checks, unchanged-source checks and check latency; uncommitted records visible; unknown cache/queue/relevance attribution"
   },
   "scored_launch_enabled": false,
+  "standard_library_parity": {
+    "adoption_accounting": "Report actual preparation and migration costs separately and in total adoption cost; any amortization names its denominator.",
+    "anti_task_leakage": "Library authors use general requirements and unrelated fixtures, without hidden tasks/graders; application-specific rules remain application work.",
+    "automatic_launch_gate_implemented": false,
+    "current_implementation": "34embeddedmodules; both baselines migrated; experiments/validation/stdlib-parity-20260907/receipt.json records common conformance, stress and independent review",
+    "historical_results": "Keep old calibration clocks and library conditions unchanged; do not pool as parity-prepared observations.",
+    "late_gap_policy": "Retain all matched attempts as parity-incomplete observations; no pause/subtraction/resume. Implement and review the gap outside application timing, then run a new cohort/block with fresh participants and unseen equivalent tasks in all languages.",
+    "ledgers": [
+      "library/compiler preparation",
+      "baseline construction/migration",
+      "agent familiarization",
+      "application work",
+      "independent grading/review"
+    ],
+    "library_defects": "Retain as reliability evidence; fixes require a new frozen version/cohort.",
+    "matrix": "stdlib-parity.json",
+    "matrix_fields": [
+      "capability",
+      "comparator_api_and_version",
+      "required_behavior_and_limits",
+      "my_api_or_gap",
+      "implementation_commit",
+      "documentation",
+      "acceptance_evidence",
+      "readiness_status"
+    ],
+    "policy": "stdlib-parity-before-application-timing-v1",
+    "primary_application_clock": "Starts before scored issue/repository access, after library readiness and baseline migration; includes reading, coding, builds, gates, tests and normal queues.",
+    "readiness_tool": "parity_readiness.py: completed review/capabilities/versions plus complete tool, stdlib, baseline, contract and evidence identities; rejects changed inputs; no automatic semantic proof or scored launch",
+    "required_before_timing": [
+      "verify comparator APIs and versions against pinned sources/docs",
+      "implement missing reusable my standard-library equivalents and compiler prerequisites",
+      "independently validate required semantics, limits, errors and cleanup",
+      "review and migrate baselines; rerun common conformance",
+      "freeze capability matrix, library/compiler/bridge hashes, guides, baseline and build policy"
+    ],
+    "scope": "Needed general-purpose facilities supplied by either pinned Python or Zig standard library; applies to calibration, repairs, features, refactors and future construction trials.",
+    "status": "current-v1-workloads-reviewed; direct-calibration-readiness-preflight-implemented; scored-cohort-binding-pending"
+  },
   "status": "infrastructure-in-progress",
   "suite_build_reuse": {
     "evidence": "experiments/application_comparison/evidence/build-reuse-20260907.json",
@@ -387,5 +436,5 @@
     "status": "configuration-v2-includes-main-my-compiler-and-navigation",
     "validation": "exact condition/command/limit/tool-inventory validation; three tests including seven rehashed-invalid variants; four retained installed configurations pass metadata validation"
   },
-  "version": "application-study-plan-v2"
+  "version": "application-study-plan-v3"
 }
