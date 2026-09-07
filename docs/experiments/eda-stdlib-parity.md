@@ -87,5 +87,5 @@ bytes. The output fixture completed in 40.908 verification seconds. The final
 independent oracle comparison passed 192 generated boards and seven transport
 probes; `validation.json` and `stress-receipt.json` pin the exact source, host and
 temporary module copies. This remains provisional evidence until root integration
-revalidates the embedded modules. No Guardian gate was exercised by this worktree;
-only the prebuilt compiler and host were used.
+revalidates the embedded modules. Application validation used only the prebuilt compiler and host. The commit hook
+then exercised the normal Guardian gate: all 88 checks passed; policy was unchanged.
