@@ -21,5 +21,10 @@ pub fn source(path: []const u8) ?[]const u8 {
     if (std.mem.eql(u8, path, "std_borrowed_set.my")) return @embedFile("stdlib/std_borrowed_set.my");
     if (std.mem.eql(u8, path, "std_hash_set.my")) return @embedFile("stdlib/std_hash_set.my");
     if (std.mem.eql(u8, path, "std_hash_byte_set.my")) return @embedFile("stdlib/std_hash_byte_set.my");
+    if (std.mem.eql(u8, path, "std_strings.my")) return @embedFile("stdlib/std_strings.my");
+    if (std.mem.eql(u8, path, "std_encoding.my")) return @embedFile("stdlib/std_encoding.my");
+    if (std.mem.eql(u8, path, "std_format.my")) return @embedFile("stdlib/std_format.my");
+    if (std.mem.eql(u8, path, "std_args.my")) return @embedFile("stdlib/std_args.my");
+    if (std.mem.eql(u8, path, "std_json_builder.my")) return @embedFile("stdlib/std_json_builder.my");
     return null;
 }

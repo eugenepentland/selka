@@ -111,3 +111,32 @@ test "collection owners unwind cleanly on every runtime allocation failure" {
         try t.checkAllAllocationFailures(no_resize.allocator(), collectionFailureRun, .{program.compilation.code.?});
     }
 }
+
+// spec: STDLIB-TEXT-DATA-1
+test "text data modules expose byte prefixes and bounded split ranges" {
+    try runLibrary("module main;import std_strings;import std_encoding;import std_format;" ++
+        "fn main()->i64{if !std_strings::starts_with(\"abc\",\"ab\") || std_strings::ends_with(\"a\",\"ab\"){return -1;}" ++
+        "let range=std_strings::trim(\" \\t a \\n\");return cast<i64>(range.end-range.start);}", 1);
+}
+test "text data codecs and builders handle integer extremes and format escaped objects" {
+    try runLibrary(@embedFile("stdlib/fixtures/text_data.my"), 42);
+}
+test "text data failures reject malformed codecs preserve negative zero and build nested JSON" {
+    try runLibrary(@embedFile("stdlib/fixtures/text_data_errors.my"), 42);
+}
+fn textRuntimeAllocation(allocator: std.mem.Allocator, code: language.bytecode.Program) !void {
+    const outcome = try language.vm.run(allocator, code);
+    if (outcome.value == -99) return error.OutOfMemory;
+    try t.expectEqual(@as(i64, 42), outcome.value);
+}
+test "text data builder partial allocation failures release nested owned values" {
+    var fixture: Fixture = .{ .text = @embedFile("stdlib/fixtures/text_data.my") };
+    var program: language.embedded_project.Program = undefined;
+    try program.init(t.allocator, .{ .context = &fixture, .read = Fixture.load });
+    defer program.deinit();
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), textRuntimeAllocation, .{program.compilation.code.?});
+}
+test "text data fixed formatting truncates exact binary fractions across limb boundaries" {
+    try runLibrary(@embedFile("stdlib/fixtures/text_data_float_edges.my"), 42);
+}

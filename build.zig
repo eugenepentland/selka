@@ -230,6 +230,11 @@ pub fn build(b: *std.Build) void {
     native_tests.addArgs(&.{ "--zig", b.graph.zig_exe });
     native_tests.setCwd(b.path("."));
     native_step.dependOn(&native_tests.step);
+    const native_text = b.addSystemCommand(&.{ "python3", "tests/native_stdlib_text.py", "--compiler" });
+    native_text.addFileArg(exe.getEmittedBin());
+    native_text.addArgs(&.{ "--zig", b.graph.zig_exe });
+    native_text.setCwd(b.path("."));
+    native_step.dependOn(&native_text.step);
     const native_memory = b.addSystemCommand(&.{ "python3", "tests/native_memory.py", "--compiler" });
     native_memory.addFileArg(exe.getEmittedBin());
     native_memory.addArgs(&.{ "--zig", b.graph.zig_exe });

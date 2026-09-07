@@ -1,0 +1,111 @@
+module main;
+import std_bytes as b;
+import std_strings as s;
+import std_encoding as e;
+import std_format as f;
+import std_math as m;
+import std_json_builder as j;
+import std_args as a;
+import std_result as r;
+fn malformed(value: b::Built) -> bool {
+    match value {
+        b::Built.ok(discard) => {
+            return false;
+        },
+        b::Built.err(error) => {
+            return error.category == new r::Category.malformed;
+        }
+    }
+}
+fn capacity(value: b::Built) -> bool {
+    match value {
+        b::Built.ok(discard) => {
+            return false;
+        },
+        b::Built.err(error) => {
+            return error.category == new r::Category.capacity;
+        }
+    }
+}
+fn bad_float(text: &[]u8, category: r::Category) -> bool {
+    match f::parse_float(text) {
+        r::Result<m::F64, r::Error>.ok(discard) => {
+            return false;
+        },
+        r::Result<m::F64, r::Error>.err(error) => {
+            return error.category == category;
+        }
+    }
+}
+fn checks(heap: allocator) -> r::Result<i64, r::Error> {
+    if !malformed(e::hex_decode(heap, "0", 4)) || !malformed(e::hex_decode(heap, "gg", 4)) || !malformed(e::base64_decode(heap, "Zh==", 4)) || !malformed(e::base64_decode(heap, "Zm9=", 4)) || !malformed(e::base64_decode(heap, "Zg==AAAA", 8)) || !malformed(e::base64_decode(heap, "Zg=", 4)) || !malformed(e::base64_decode(heap, " Zg=", 4)) {
+        return new r::Result<i64, r::Error>.ok(- 1);
+    }
+    if !malformed(s::replace_all(heap, "abc", "", "x", 10)) || !malformed(s::unsigned(heap, 1u64, 1u64, 10)) || !capacity(e::base64_encode(heap, "a", 3)) || !capacity(s::signed(heap, - 1, 10u64, 1)) {
+        return new r::Result<i64, r::Error>.ok(- 2);
+    }
+    let malformed_category = new r::Category.malformed;
+    let overflow_category = new r::Category.overflow;
+    if !bad_float("", malformed_category) || !bad_float("1.", malformed_category) || !bad_float(".1", malformed_category) || !bad_float("1e", malformed_category) || !bad_float("1e+", malformed_category) || !bad_float("1x", malformed_category) || !bad_float("NaN", malformed_category) || !bad_float(" 1", malformed_category) || !bad_float("+1", malformed_category) {
+        return new r::Result<i64, r::Error>.ok(- 3);
+    }
+    if !bad_float("1e309", overflow_category) || !bad_float("1e-309", overflow_category) || !bad_float("99999999999999999999", overflow_category) || !bad_float("9e308", overflow_category) {
+        return new r::Result<i64, r::Error>.ok(- 4);
+    }
+    let zero = try f::parse_float("-0.0");
+    if m::bits(zero) != 9223372036854775808u64 {
+        return new r::Result<i64, r::Error>.ok(- 5);
+    }
+    let zero_text = try f::fixed(heap, zero, 2u64, 5);
+    borrow zero_text[0..len_buffer(zero_text)] as text {
+        if b::compare(text, "-0.00") != 0 {
+            return new r::Result<i64, r::Error>.ok(- 6);
+        }
+    }
+    if !malformed(f::fixed(heap, m::from_bits(9218868437227405312u64), 2u64, 30)) || !malformed(f::fixed(heap, zero, 10u64, 30)) {
+        return new r::Result<i64, r::Error>.ok(- 7);
+    }
+    let mut octets = new [2]u8[7u8, 8u8];
+    borrow mut octets[0..2] as out {
+        match e::write_uint(out, 0u64, 1u64, true, 256u64) {
+            r::Result<bool, r::Error>.ok(discard) => {
+                return new r::Result<i64, r::Error>.ok(- 8);
+            },
+            r::Result<bool, r::Error>.err(error) => {
+                if error.category != overflow_category {
+                    return new r::Result<i64, r::Error>.ok(- 9);
+                }
+            }
+        }
+    }
+    if octets[0] != 7u8 || octets[1] != 8u8 {
+        return new r::Result<i64, r::Error>.ok(- 10);
+    }
+    let mut inner = try j::object(heap, 32);
+    inner = try j::bool_field(heap, inner, "ok", false);
+    let mut list = try j::array(heap, 64);
+    list = try j::array_object(list, inner);
+    list = try j::array_null(list);
+    let mut outer = try j::object(heap, 128);
+    outer = try j::array_field(heap, outer, "items", list);
+    let result = try j::finish(outer);
+    borrow result[0..len_buffer(result)] as text {
+        if b::compare(text, "{\"items\":[{\"ok\":false},null]}") != 0 {
+            return new r::Result<i64, r::Error>.ok(- 11);
+        }
+    }
+    if !a::is_flag("--verbose", a::classify("--verbose", true), "verbose") ||(try a::integer_value("--n=-42", a::classify("--n=-42", true))) != - 42 || a::classify("--n=4", false).kind != new a::Kind.positional {
+        return new r::Result<i64, r::Error>.ok(- 12);
+    }
+    return new r::Result<i64, r::Error>.ok(42);
+}
+fn main(heap: allocator) -> i64 {
+    match checks(heap) {
+        r::Result<i64, r::Error>.ok(n) => {
+            return n;
+        },
+        r::Result<i64, r::Error>.err(discard) => {
+            return - 99;
+        }
+    }
+}

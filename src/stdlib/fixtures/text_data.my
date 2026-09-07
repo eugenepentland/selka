@@ -1,0 +1,114 @@
+module main;
+import std_bytes as b;
+import std_strings as s;
+import std_encoding as e;
+import std_format as f;
+import std_math as m;
+import std_json_builder as j;
+import std_args as a;
+import std_result as r;
+fn same(value: b::Bytes, expected: &[]u8) -> bool {
+    borrow value[0..len_buffer(value)] as text {
+        return b::compare(text, expected) == 0;
+    }
+}
+fn checks(heap: allocator) -> r::Result<i64, r::Error> {
+    if !s::starts_with("abc", "") || !s::ends_with("abc", "bc") || s::starts_with("a", "ab") {
+        return new r::Result<i64, r::Error>.ok(- 1);
+    }
+    let trimmed = s::trim(" \t hello\r\n");
+    if trimmed.start != 3u64 || trimmed.end != 8u64 {
+        return new r::Result<i64, r::Error>.ok(- 2);
+    }
+    let first = try s::split_next("a,,", 44u8, 0u64);
+    let second = try s::split_next("a,,", 44u8, first.next);
+    let last = try s::split_next("a,,", 44u8, second.next);
+    if first.part.end != 1u64 || second.part.start != second.part.end || !last.done || last.part.start != 3u64 {
+        return new r::Result<i64, r::Error>.ok(- 3);
+    }
+    if !same(try s::replace_all(heap, "aaaa", "aa", "b", 2), "bb") || !same(try s::signed(heap, - 9223372036854775808, 16u64, 17), "-8000000000000000") || !same(try s::unsigned(heap, 18446744073709551615u64, 16u64, 16), "ffffffffffffffff") {
+        return new r::Result<i64, r::Error>.ok(- 4);
+    }
+    if !same(try e::hex_encode(heap, "Hi", 4), "4869") || !same(try e::hex_decode(heap, "4869", 2), "Hi") {
+        return new r::Result<i64, r::Error>.ok(- 5);
+    }
+    if !same(try e::base64_encode(heap, "f", 4), "Zg==") || !same(try e::base64_encode(heap, "fo", 4), "Zm8=") || !same(try e::base64_decode(heap, "Zm9v", 3), "foo") {
+        return new r::Result<i64, r::Error>.ok(- 6);
+    }
+    let mut octets = new [8]u8[0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8];
+    borrow mut octets[0..8] as out {
+        discard try e::write_uint(out, 0u64, 8u64, true, 18446744073709551615u64);
+    }
+    borrow octets[0..8] as bytes {
+        if (try e::read_uint(bytes, 0u64, 8u64, false)) != 18446744073709551615u64 {
+            return new r::Result<i64, r::Error>.ok(- 7);
+        }
+    }
+    let value = try f::parse_float("-1.25e1");
+    if !m::eq(value, m::div(m::from_i64(- 25), m::from_i64(2))) || !same(try f::fixed(heap, value, 2u64, 6), "-12.50") {
+        return new r::Result<i64, r::Error>.ok(- 8);
+    }
+    let token = a::classify("--limit=42", true);
+    if !a::name_is("--limit=42", token, "limit") || !token.has_value || token.value.start != 8u64 || a::classify("--", true).kind != new a::Kind.terminator {
+        return new r::Result<i64, r::Error>.ok(- 9);
+    }
+    let mut object = try j::object(heap, 128);
+    object = try j::string_field(heap, object, "name", "a\"");
+    object = try j::integer_field(heap, object, "n", - 3);
+    object = try j::bool_field(heap, object, "ok", true);
+    object = try j::null_field(heap, object, "x");
+    if !same(try j::finish(object), "{\"name\":\"a\\\"\",\"n\":-3,\"ok\":true,\"x\":null}") {
+        return new r::Result<i64, r::Error>.ok(- 10);
+    }
+    if !same(try e::base64_decode(heap, "Zg==", 1), "f") || !same(try e::base64_decode(heap, "Zm8=", 2), "fo") || !same(try e::base64_decode(heap, "", 0), "") || !same(try s::unsigned(heap, 35u64, 36u64, 1), "z") || !same(try s::unsigned(heap, 0u64, 2u64, 1), "0") {
+        return new r::Result<i64, r::Error>.ok(- 11);
+    }
+    let piece = try s::append_range(try b::create(heap, 2), "abcd", new s::Range {
+        start: 1u64,
+        end: 3u64
+    });
+    if !same(piece, "bc") {
+        return new r::Result<i64, r::Error>.ok(- 12);
+    }
+    borrow mut octets[0..8] as bytes {
+        discard try e::write_uint(bytes, 1u64, 2u64, true, 258u64);
+    }
+    borrow octets[0..8] as bytes {
+        if (try e::read_uint(bytes, 1u64, 2u64, false)) != 513u64 {
+            return new r::Result<i64, r::Error>.ok(- 13);
+        }
+    }
+    let mut array = try j::array(heap, 128);
+    array = try j::array_string(heap, array, "a");
+    array = try j::array_integer(heap, array, - 1);
+    array = try j::array_bool(array, true);
+    array = try j::array_array(array, try j::array(heap, 2));
+    if !same(try j::finish_array(array), "[\"a\",-1,true,[]]") {
+        return new r::Result<i64, r::Error>.ok(- 14);
+    }
+    let values = new [2]i64[1, - 2];
+    let mut record = try j::object(heap, 128);
+    record = try j::object_field(heap, record, "child", try j::object(heap, 2));
+    borrow values[0..2] as view {
+        record = try j::integers_field(heap, record, "values", view);
+    }
+    if !same(try j::finish(record), "{\"child\":{},\"values\":[1,-2]}") {
+        return new r::Result<i64, r::Error>.ok(- 15);
+    }
+    let small = try f::parse_float("1e-308");
+    let large = try f::parse_float("1e308");
+    if !m::is_finite(large) || !m::lt(m::from_u64(0u64), small) {
+        return new r::Result<i64, r::Error>.ok(- 16);
+    }
+    return new r::Result<i64, r::Error>.ok(42);
+}
+fn main(heap: allocator) -> i64 {
+    match checks(heap) {
+        r::Result<i64, r::Error>.ok(n) => {
+            return n;
+        },
+        r::Result<i64, r::Error>.err(discard) => {
+            return - 99;
+        }
+    }
+}
