@@ -1,0 +1,23 @@
+1/22 root_test.test_0...OK
+2/22 callbacks_test.test.callbacks infer function values and invoke passed exact signatures...OK
+3/22 callbacks_test.test.callbacks retain values through records arrays and ordinary generic forwarding...OK
+4/22 callbacks_test.test.callbacks transfer owned arguments and preserve result handling...OK
+5/22 callbacks_test.test.callbacks reject signature effect ownership and unsupported capture mismatches...OK
+6/22 callbacks_test.test.callbacks compile format execute and emit under every failed allocation...OK
+7/22 callbacks_test.test.callbacks drive standard library sorting and visitors across module boundaries...OK
+8/22 callbacks_test.test.callbacks reject forged target signatures and invalid dynamic calls...OK
+9/22 callbacks_test.test.callbacks preserve early result propagation and recursive frame limits...OK
+10/22 callbacks_test.test.callbacks reject malformed invoke metadata and dynamically mismatched signatures...OK
+11/22 host_functions_test.test.host registration rejects unknown duplicate mismatched and denied contracts before callbacks...OK
+12/22 host_functions_test.test.host callbacks cannot reenter close rebind or swallow an exceeded cooperative budget...OK
+13/22 vm_host_test.test.VM host preflight requires unused declarations before any callback and rejects invalid budgets...OK
+14/22 host_invocation_test.test.host typed invocation rejects hidden entries invalid arguments and absent registrations before callbacks...OK
+15/22 host_invocation_test.test.host typed invocation accounts steps and independent input and callback budgets...OK
+16/22 semantic_cache_test.test.semantic cache keeps inferred callback schemas fresh across changed bodies...OK
+17/22 external_capabilities_test.test.external runtime rejects foreign cross-kind and closed grants before callbacks...OK
+18/22 external_capabilities_test.test.external emission rejects wrong result shape and VM rejects wrong operand without callback...OK
+19/22 external_capabilities_test.test.generic provider reads preserve values callback counts and allocation cleanup...OK
+20/22 environment_test.test.generic environment lookup preserves bounded bytes and callback allocation failures...OK
+21/22 resource_io_test.test.source IO participates in noio bounds and missing callbacks are explicit errors...OK
+22/22 resource_io_test.test.emission rejects forged resource IO metadata before provider callbacks...OK
+All 22 tests passed.
