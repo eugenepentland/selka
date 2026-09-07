@@ -31,38 +31,39 @@ def main():
             cfile = directory / 'guest.c'
             cfile.write_bytes((root / 'tests/native_memory.h').read_bytes() + b'\n' + emitted.stdout)
             binary = directory / 'guest'
-            built = invoke([args.zig, 'cc', '-std=c11', '-O1', '-fsanitize=address,undefined',
-                            '-fno-sanitize-recover=undefined', '-DMYLANG_NATIVE_PROVIDER=1', '-I', root / 'src',
-                            cfile, root / 'tests/standard_io_provider.c', '-o', binary])
-            assert built.returncode == 0, built.stderr
-            scenarios = [({}, {'read': 3, 'collect': 99, 'write': 5}[fixture])]
-            if fixture == 'read':
-                scenarios += [({'IO_READ_FAIL': '1', 'IO_STALL': '1'}, 10), ({'IO_READ_FAIL': '2'}, 22)]
-            if fixture == 'write':
-                scenarios += [({'IO_WRITE_FAIL': '2'}, 5), ({'IO_WRITE_FAIL': '1', 'IO_STALL': '1'}, 5)]
-            for settings, expected in scenarios:
-                environment = {key: value for key, value in os.environ.items() if not key.startswith('IO_') and key != 'NATIVE_FAIL_ALLOCATION'}
-                environment.update(settings)
-                result = invoke([binary], environment)
-                assert result.returncode == 0 and result.stdout == f'{expected}\n'.encode(), result
-                assert b'io-live: 0 acquired: 1 released: 1' in result.stderr, result.stderr
+            for mode in ('-O0', '-O2'):
+                built = invoke([args.zig, 'cc', '-std=c11', mode, '-fsanitize=address,undefined',
+                                '-fno-sanitize-recover=undefined', '-DMYLANG_NATIVE_PROVIDER=1', '-I', root / 'src',
+                                cfile, root / 'tests/standard_io_provider.c', '-o', binary])
+                assert built.returncode == 0, built.stderr
+                scenarios = [({}, {'read': 3, 'collect': 99, 'write': 5}[fixture])]
+                if fixture == 'read':
+                    scenarios += [({'IO_READ_FAIL': '1', 'IO_STALL': '1'}, 10), ({'IO_READ_FAIL': '2'}, 22)]
                 if fixture == 'write':
-                    assert b'output: hello' in result.stderr, result.stderr
-                attempts, _ = memory(result)
-                count += 1
-            if fixture == 'read':
-                environment = {key: value for key, value in os.environ.items() if not key.startswith('IO_') and key != 'NATIVE_FAIL_ALLOCATION'}
-                baseline = invoke([binary], environment)
-                attempts, _ = memory(baseline)
-                for failure in range(1, attempts + 1):
-                    environment['NATIVE_FAIL_ALLOCATION'] = str(failure)
+                    scenarios += [({'IO_WRITE_FAIL': '2'}, 5), ({'IO_WRITE_FAIL': '1', 'IO_STALL': '1'}, 5)]
+                for settings, expected in scenarios:
+                    environment = {key: value for key, value in os.environ.items() if not key.startswith('IO_') and key != 'NATIVE_FAIL_ALLOCATION'}
+                    environment.update(settings)
                     result = invoke([binary], environment)
-                    if result.returncode == 0:
-                        assert result.stdout == b'3\n', (failure, result)
-                    else:
-                        assert result.returncode == 2 and b'OutOfMemory' in result.stderr, (failure, result)
-                    memory(result)
-                    allocation_positions += 1
+                    assert result.returncode == 0 and result.stdout == f'{expected}\n'.encode(), result
+                    assert b'io-live: 0 acquired: 1 released: 1' in result.stderr, result.stderr
+                    if fixture == 'write':
+                        assert b'output: hello' in result.stderr, result.stderr
+                    attempts, _ = memory(result)
+                    count += 1
+                if fixture == 'read':
+                    environment = {key: value for key, value in os.environ.items() if not key.startswith('IO_') and key != 'NATIVE_FAIL_ALLOCATION'}
+                    baseline = invoke([binary], environment)
+                    attempts, _ = memory(baseline)
+                    for failure in range(1, attempts + 1):
+                        environment['NATIVE_FAIL_ALLOCATION'] = str(failure)
+                        result = invoke([binary], environment)
+                        if result.returncode == 0:
+                            assert result.stdout == b'3\n', (failure, result)
+                        else:
+                            assert result.returncode == 2 and b'OutOfMemory' in result.stderr, (failure, result)
+                        memory(result)
+                        allocation_positions += 1
         print(f'Standard I/O native: {count} value/error/partial-progress comparisons and {allocation_positions} allocation failure positions passed')
 
 
