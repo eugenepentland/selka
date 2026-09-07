@@ -1,0 +1,1 @@
+buffer B:u8;result Open{ok:B,err:i64}buffer Vec<T:storable>:T;result Created<T:storable>{ok:Vec<T>,err:i64}result Taken<T:storable>{ok:T,err:i64}result Status{ok:bool,err:i64}buffer Bad:[1]Status;fn main()->i64{return 0;}

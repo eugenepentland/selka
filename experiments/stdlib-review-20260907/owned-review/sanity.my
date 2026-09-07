@@ -1,0 +1,3 @@
+buffer B:u8;result Open{ok:B,err:i64}buffer Vec<T:storable>:T;result Created<T:storable>{ok:Vec<T>,err:i64}result Taken<T:storable>{ok:T,err:i64}result Status{ok:bool,err:i64}
+fn work(heap:allocator)->Status{let mut outer=try acquire_buffer<Created<B>>(heap,1);let inner=try acquire_buffer<Open>(heap,2);discard try append_buffer<Status>(outer,inner);let got=try take_buffer<Taken<B>>(outer,0);return new Status.ok(capacity_buffer(got)==2u64);}
+fn main(heap:allocator)->i64{match work(heap){Status.ok(value)=>{if value{return 42;}return 0;},Status.err(code)=>{return code;}}}
