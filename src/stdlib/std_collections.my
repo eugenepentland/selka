@@ -9,6 +9,8 @@ export contains;
 export reverse;
 export sort;
 export lower_bound;
+export sort_by_i64;
+export transform_i64;
 
 buffer Vector<T:copy>:T;
 result Created<T:copy>{ok:Vector<T>,err:i64}
@@ -78,4 +80,31 @@ fn lower_bound<T:integer>(values:&[]T, needle:T)->u64 noalloc {
         else { right = middle; }
     }
     return left;
+}
+
+fn sort_by_i64(values:&mut []i64,before:fn(i64,i64)->bool effects())->u64 {
+    let length=len_slice(values);
+    let mut i=1u64;
+    while i<length {
+        let value=read_slice(values,i);
+        let mut at=i;
+        while at>0u64 {
+            let previous=read_slice(values,at-1u64);
+            if !before(value,previous) { break; }
+            write_slice(values,at,previous);
+            at-=1u64;
+        }
+        write_slice(values,at,value);
+        i+=1u64;
+    }
+    return length;
+}
+
+fn transform_i64(values:&mut []i64,apply:fn(i64)->i64 effects())->u64 {
+    let mut i=0u64;
+    while i<len_slice(values) {
+        write_slice(values,i,apply(read_slice(values,i)));
+        i+=1u64;
+    }
+    return i;
 }

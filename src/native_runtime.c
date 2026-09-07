@@ -670,6 +670,15 @@ static void begin_reference(size_t id, size_t owner, size_t parent_id, int mutab
         *destination = (Reference){.owner=local, .start=start, .length=length, .active=1, .mutable=mutable, .slice=slice};
     }
 }
+static V callback_target(size_t arguments) {
+    if (nv <= arguments) host_failure("InternalError");
+    size_t index = nv - arguments - 1;
+    Slot value = values[index];
+    if (value.object) host_failure("InternalError");
+    memmove(&values[index], &values[index+1], arguments * sizeof(Slot));
+    --nv;
+    return value.number;
+}
 static void split_reference(size_t parent_id, size_t left_id, size_t right_id) {
     Frame *frame = &frames[nf-1];
     Reference *parent = usable_reference(&frame->references[parent_id]);

@@ -335,6 +335,16 @@ const Emitter = struct {
                 try self.push(.{ .expression = acquire.allocator });
             },
             .local => |slot| try self.instruction(node.span, if (typed.moveOnly(node.ty, self.program.records) or typed.requiresHandling(node.ty, self.program.records)) .{ .move_local = slot } else .{ .load_local = slot }),
+            .function_value => |target| try self.instruction(node.span, .{ .function_value = .{ .ty = node.ty, .function = target } }),
+            .invoke => |call| {
+                try self.instruction(node.span, .{ .invoke = self.program.nodes[@backingInt(call.callee)].ty });
+                var i = call.arguments.len;
+                while (i > 0) {
+                    i -= 1;
+                    try self.push(.{ .expression = call.arguments[i] });
+                }
+                try self.push(.{ .expression = call.callee });
+            },
             .call => |call| try self.emitCall(node.span, call),
             .unary => |u| {
                 try self.instruction(u.op_span, if (u.op != .neg and u.op != .not) .{ .unary_float = u.op } else if (u.op == .not) .not_bool else if (node.ty == .i64) .neg_i64_checked else .{ .neg_integer = node.ty });

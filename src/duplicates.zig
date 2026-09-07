@@ -320,6 +320,11 @@ const CanonicalWriter = struct {
                 try work.append(allocator, .{ .expression = binary.right });
                 try work.append(allocator, .{ .expression = binary.left });
             },
+            .function_value => |target| writer.print("function {s}\n", .{program.functions[@backingInt(target)].name}) catch return error.OutOfMemory,
+            .invoke => |call| {
+                try work.append(allocator, .{ .expression = call.callee });
+                for (call.arguments) |argument| try work.append(allocator, .{ .expression = argument });
+            },
             .call => |call| {
                 // Normalize only direct self-recursion. Other callees retain
                 // resolved names; mutual-recursion components are not renamed.

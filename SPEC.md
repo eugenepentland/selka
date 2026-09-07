@@ -360,3 +360,6 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [SEMANTIC-CACHE-4] Reusing a caller body never reuses transitive effect verdicts; a callee's new allocation rejects an unchanged noalloc caller.
 - [SEMANTIC-CACHE-5] Failed cache publication releases only its pending snapshot; the previous successful function queries remain reusable after OutOfMemory.
 - [SEMANTIC-CACHE-6] Project queries include module paths, import/export text, signatures and type catalogs, preserving fresh/cached diagnostics and execution through source relocation and changed module interfaces.
+- [CALLBACK-1] Noncapturing function values have exact concrete value parameter/result signatures and declared effect ceilings. Creation stores an immediate function identity; invocation validates the target and preserves ordinary ownership/result obligations. Borrowed and parameter-dependent callback signatures remain unsupported.
+
+- [SEMANTIC-CALLBACK-1] Function-name values may infer callback schemas while checking bodies, so semantic body reuse stays disabled for these programs until snapshots can safely remap their inferred types. Fresh and changed-source callback execution retain identical signatures and outcomes.

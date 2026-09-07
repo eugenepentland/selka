@@ -21,6 +21,7 @@ pub const Parser = struct {
         nodes: std.ArrayList(ast.Node) = .empty,
         statements: std.ArrayList(ast.Statement) = .empty,
         array_types: std.ArrayList(ast.ArrayType) = .empty,
+        callbacks: std.ArrayList(ast.CallbackType) = .empty,
         applications: std.ArrayList(ast.TypeApplication) = .empty,
         aliases: std.ArrayList(ast.TypeAlias) = .empty,
     } = .{},
@@ -53,6 +54,7 @@ pub const Parser = struct {
         try self.enter();
         defer self.cursor.depth -= 1;
         const token = self.current();
+        if (self.take(.kw_fn)) return self.callbackType(token.span);
         if (self.take(.lbracket)) {
             const index: ast.ArrayIndex = if (self.current().tag == .integer) .{ .length = (try self.expect(.integer)).span } else .{ .enum_type = try self.typeName() };
             _ = try self.expect(.rbracket);
@@ -86,6 +88,22 @@ pub const Parser = struct {
     fn genericArgument(self: *Parser) diagnostic.Error!Span {
         if (self.current().tag == .integer) return (try self.expect(.integer)).span;
         return self.typeName();
+    }
+    fn callbackType(self: *Parser, first: Span) diagnostic.Error!Span {
+        _ = try self.expect(.lparen);
+        var parameters: std.ArrayList(Span) = .empty;
+        if (self.current().tag != .rparen) while (true) {
+            if (parameters.items.len == 16) return self.sink.fail(eGenericLimit, first, "callbacks support at most 16 value parameters");
+            try parameters.append(self.arena.allocator(), try self.typeName());
+            if (!self.take(.comma)) break;
+        };
+        _ = try self.expect(.rparen);
+        _ = try self.expect(.arrow);
+        const result = try self.typeName();
+        const bound = try self.effectBound() orelse return self.sink.fail("E_CALLBACK_EFFECTS", first, "callback types require an explicit effects ceiling");
+        const span: Span = .join(first, self.tokens[self.cursor.pos - 1].span);
+        try self.syntax.callbacks.append(self.arena.allocator(), .{ .span = span, .parameters = try parameters.toOwnedSlice(self.arena.allocator()), .return_type = result, .effect_bound = bound });
+        return span;
     }
     fn nominalTypeName(self: *Parser) diagnostic.Error!Span {
         const token = try self.expect(.ident);
@@ -278,6 +296,7 @@ pub const Parser = struct {
                 .variants = try variants.toOwnedSlice(self.arena.allocator()),
                 .domains = try domains.toOwnedSlice(self.arena.allocator()),
                 .expressions = .{
+                    .callbacks = try self.syntax.callbacks.toOwnedSlice(self.arena.allocator()),
                     .arrays = try self.syntax.array_types.toOwnedSlice(self.arena.allocator()),
                     .applications = try self.syntax.applications.toOwnedSlice(self.arena.allocator()),
                     .aliases = try self.syntax.aliases.toOwnedSlice(self.arena.allocator()),

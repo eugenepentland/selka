@@ -2,6 +2,7 @@
 test {
     _ = @import("const_lengths_test.zig");
     _ = @import("source_evaluation_test.zig");
+    _ = @import("callbacks_test.zig");
     _ = @import("vm_trace_test.zig");
     _ = @import("host_replay_test.zig");
     _ = @import("typed_holes_test.zig");

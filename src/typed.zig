@@ -1,4 +1,5 @@
 //! Checked nodes use declaration identities, concrete types, and local slots.
+const effect_set = @import("effect_set.zig");
 const std = @import("std");
 const provider_contracts = @import("provider_contracts.zig");
 const external_resources = @import("external_resources.zig");
@@ -66,6 +67,8 @@ pub const Node = struct {
         integer: i128,
         boolean: bool,
         block_value: struct { body: StatementId, value: NodeId },
+        function_value: FunctionId,
+        invoke: struct { callee: NodeId, arguments: []const NodeId },
         local: LocalId,
         read_ref: ReferenceId,
         read_field: FieldAccess,
@@ -163,7 +166,10 @@ pub const RecordShape = struct {
     }
 };
 /// Checked obligations, type-argument visibility and an optional explicit domain wire contract.
-pub const RecordContract = struct { public_arguments: bool = true, codec: ?Codec = null, codec_declared: bool = false, move_only: bool = false, requires_handling: bool = false };
+/// Exact value parameter/result types and declared callback effect ceiling.
+pub const Callable = struct { parameters: []const Type, return_type: Type, effects: effect_set.Mask };
+/// Ownership and public schema policy for each concrete type.
+pub const RecordContract = struct { callback: ?Callable = null, public_arguments: bool = true, codec: ?Codec = null, codec_declared: bool = false, move_only: bool = false, requires_handling: bool = false };
 /// Payload types and case tags of a checked ok/err result schema.
 pub const ResultShape = struct { ok_type: Type, error_type: Type, ok_tag: usize, error_tag: usize };
 /// Recognize a valid fallible result and return its payload types and tags.
@@ -202,6 +208,7 @@ pub fn supportsEquality(ty: Type, records: []const Record) bool {
     if (ty.isInteger() or ty == .bool) return true;
     if (!ty.isAggregate()) return false;
     const record = records[ty.recordIndex()];
+    if (record.contract.callback != null) return false;
     return record.isEnum() or record.shape.handle_pool != null or record.shape.domain != null;
 }
 /// Determine whether a type carries ownership that forbids implicit copying.
@@ -282,8 +289,8 @@ pub const Function = struct {
 /// Declared visibility and effect policy, with its inferred execution effects.
 pub const FunctionPolicy = struct {
     host: ?Span = null,
-    effect_bound: ?@import("effect_set.zig").Bound = null,
-    effects: @import("effect_set.zig").Mask = 0,
+    effect_bound: ?effect_set.Bound = null,
+    effects: effect_set.Mask = 0,
     owner: ?Type = null,
     restricted: bool = false,
     conversion: bool = false,

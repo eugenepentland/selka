@@ -1,4 +1,5 @@
 //! Scope and type checking use resolved binding identities, including advisory use counts.
+const callback_type_code = "E_CALLBACK_TYPE";
 const eResultOperation = diagnostic.result_operation;
 const eOwnedConsumed = diagnostic.owned_consumed;
 const eReferenceResult = diagnostic.reference_result;
@@ -592,7 +593,7 @@ const Checker = struct {
             },
             .call => |call| {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
-                if (call.owner == null and source_json.operation(self.src.text(call.name)) != null) {
+                if (call.owner == null and (self.active.contains(self.src.text(call.name)) or source_json.operation(self.src.text(call.name)) != null)) {
                     var index = call.arguments.len;
                     while (index > 0) {
                         index -= 1;
@@ -801,6 +802,42 @@ const Checker = struct {
         out.ty = self.catalog.records[record_type.recordIndex()].fields[field_index].ty;
         out.data = .{ .field = .{ .base = base, .index = field_index } };
     }
+    fn functionValue(self: *Checker, name: source.Span, out: *typed.Node) Error!bool {
+        const key = if (self.catalog.module_names) |names| module: {
+            if (!try names.topLevel(name) and std.mem.indexOf(u8, self.src.text(name), "::") == null) return false;
+            break :module try names.reference(name, .function, null, null, self.sink);
+        } else self.src.text(name);
+        const declaration = self.functions.get(key) orelse return false;
+        const function = self.syntax.functions[@backingInt(declaration)];
+        if (function.policy.owner != null or function.signature.type_parameters.len != 0) return self.sink.fail(callback_type_code, name, "function values require a nongeneric free function");
+        if (function.signature.return_reference != null) return self.sink.fail(callback_type_code, name, "callback values cannot return borrowed references");
+        const bound = function.policy.effect_bound orelse return self.sink.fail("E_CALLBACK_EFFECTS", name, "function values require a declared effect ceiling");
+        const parameters = try self.allocator.alloc(typed.Type, function.signature.parameters.len);
+        for (function.signature.parameters, parameters) |input, *parameter| {
+            if (input.reference != null) return self.sink.fail(callback_type_code, name, "callback values currently accept value parameters only");
+            parameter.* = try self.catalog.resolve(self.src, input.ty, self.sink);
+        }
+        const result = try self.catalog.resolve(self.src, function.signature.return_type, self.sink);
+        out.ty = try @import("callables.zig").intern(self.allocator, &self.catalog, .{ .parameters = parameters, .return_type = result, .effects = bound.allowed }, name, self.sink);
+        out.data = .{ .function_value = self.ordinary_ids[@backingInt(declaration)] orelse return error.InternalError };
+        return true;
+    }
+    fn indirectCall(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
+        const slot = try self.resolve(call.name);
+        const contract = @import("callables.zig").signature(self.locals.items[@backingInt(slot)].ty, self.catalog.records) orelse return self.sink.fail(callback_type_code, call.name, "called local is not a function value");
+        if (call.type_arguments.len != 0 or call.arguments.len != contract.parameters.len) return self.sink.fail("E_ARITY", call.name, "callback argument count must match its signature");
+        try self.ownerAccess(slot, false, call.name);
+        self.locals.items[@backingInt(slot)].usage.reads += 1;
+        const callee: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = call.name, .ty = self.locals.items[@backingInt(slot)].ty, .data = .{ .local = slot } });
+        const arguments = try self.allocator.alloc(typed.NodeId, call.arguments.len);
+        for (call.arguments, contract.parameters, arguments) |input, expected, *argument| {
+            argument.* = self.resolved[@backingInt(input)].?;
+            try self.require(self.nodes.items[@backingInt(argument.*)].ty, expected, node.span);
+        }
+        out.ty = contract.return_type;
+        out.data = .{ .invoke = .{ .callee = callee, .arguments = arguments } };
+    }
     fn checkName(self: *Checker, _: ast.Node, name: @FieldType(@FieldType(ast.Node, "data"), "name"), out: *typed.Node) Error!void {
         if (self.current_function) |id| {
             const key = self.instance_keys.items[@backingInt(id)];
@@ -821,6 +858,7 @@ const Checker = struct {
                 return;
             }
         }
+        if (!self.active.contains(self.src.text(name)) and try self.functionValue(name, out)) return;
         const slot = try self.resolve(name);
         if (field_moves.first(self.locals.items[@backingInt(slot)].ownership.partial_fields)) |at| return self.sink.failPartialMove(
             name,
@@ -844,6 +882,7 @@ const Checker = struct {
         out.data = .{ .local = slot };
     }
     fn checkCall(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
+        if (call.owner == null and self.active.contains(self.src.text(call.name))) return self.indirectCall(node, call, out);
         if (call.owner == null) if (source_json.operation(self.src.text(call.name))) |decode| return self.checkJson(call, decode, out);
         const function = try self.callTarget(call, node.span);
         const signature = self.syntaxFunction(function);
@@ -1196,7 +1235,7 @@ const Checker = struct {
             const out = try self.checkedExpression(node, minimum_literal, temporaries.items);
             const consumed: usize = if (node.data == .bytes) 0 else switch (out.data) {
                 .json_codec => 3,
-                .integer, .boolean, .local, .read_ref, .read_field, .take_field, .len_slice, .block_value => 0,
+                .function_value, .integer, .boolean, .local, .read_ref, .read_field, .take_field, .len_slice, .block_value => 0,
                 .reset_arena, .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .external_read, .complete_resource, .restrict_resource => 1,
                 .acquire_buffer, .acquire_pool, .acquire_resource, .environment_get => 2,
                 .index, .binary => 2,
@@ -1205,6 +1244,7 @@ const Checker = struct {
                 .array => |values| values.len,
                 .record => |initializers| initializers.len,
                 .update => |update| update.fields.len + 1,
+                .invoke => |call| call.arguments.len,
                 .call => |call| call.arguments.len + call.literals.len,
                 .pool_operation => |operation| operation.arguments.len,
                 .buffer_operation => |operation| operation.arguments.len,

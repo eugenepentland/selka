@@ -29,6 +29,10 @@ const Builder = struct {
         var array_prefix: ?[]u8 = null;
         defer if (array_prefix) |prefix| allocator.free(prefix);
         switch (node.key.base) {
+            .callback => |mask| {
+                array_prefix = try std.fmt.allocPrint(allocator, "fn@{d}:", .{mask});
+                base = array_prefix.?;
+            },
             .parameter => return,
             .length => |value| {
                 self.identities.items.items[id].name = try std.fmt.allocPrint(allocator, "{d}", .{value});
@@ -119,6 +123,18 @@ const Builder = struct {
                     identity.ty = found;
                     continue;
                 }
+            }
+            if (node.key.base == .callback) {
+                var parameters: [16]typed.Type = undefined;
+                for (node.key.arguments[0 .. node.key.arguments.len - 1], 0..) |argument, argument_index| parameters[argument_index] = try self.runtimeType(argument);
+                const contract: typed.Callable = .{ .parameters = parameters[0 .. node.key.arguments.len - 1], .return_type = try self.runtimeType(node.key.arguments[node.key.arguments.len - 1]), .effects = node.key.base.callback };
+                for (storage.items) |record| if (record.contract.callback) |existing| {
+                    if (@import("callables.zig").equal(existing, contract)) {
+                        identity.ty = record.id;
+                        break;
+                    }
+                };
+                if (identity.ty != null) continue;
             }
             const ty: typed.Type = @fromBackingInt(typed.Type.record_base + storage.items.len);
             try storage.append(allocator, .{
@@ -216,6 +232,13 @@ const Builder = struct {
             const ty = self.identities.items.items[i].ty orelse continue;
             if (!ty.isAggregate() or ty.recordIndex() < first) continue;
             const schema = &self.catalog.records[ty.recordIndex()];
+            if (node.key.base == .callback) {
+                const parameters = try self.context.allocator.alloc(typed.Type, node.key.arguments.len - 1);
+                for (node.key.arguments[0..parameters.len], parameters) |id, *out| out.* = try self.runtimeType(id);
+                schema.shape.domain = .u64;
+                schema.contract.callback = .{ .parameters = parameters, .return_type = try self.runtimeType(node.key.arguments[parameters.len]), .effects = node.key.base.callback };
+                continue;
+            }
             if (node.key.base == .array) {
                 try self.fillArray(node, schema);
                 continue;

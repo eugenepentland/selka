@@ -66,6 +66,11 @@ pub const Index = struct {
     }
     fn signatureType(self: *Index, module: usize, span: source.Span) diagnostic.Error!void {
         const syntax = self.units[module].syntax;
+        for (syntax.types.expressions.callbacks) |callback| {
+            if (callback.span.start != span.start or callback.span.end != span.end) continue;
+            for (callback.parameters) |parameter| try self.signatureType(module, parameter);
+            return self.signatureType(module, callback.return_type);
+        }
         for (syntax.types.expressions.arrays) |array| {
             if (array.span.start != span.start or array.span.end != span.end) continue;
             if (array.index == .enum_type) try self.signatureType(module, array.index.enum_type);
@@ -157,6 +162,11 @@ pub const Index = struct {
         for (parameters) |parameter| if (std.mem.eql(u8, src.text(parameter.name), src.text(span))) return;
         for (self.units[module].syntax.types.expressions.applications) |application| {
             if (application.span.start == span.start and application.span.end == span.end) return self.applicationType(module, application, parameters);
+        }
+        for (self.units[module].syntax.types.expressions.callbacks) |callback| {
+            if (callback.span.start != span.start or callback.span.end != span.end) continue;
+            for (callback.parameters) |parameter| try self.genericSignatureType(module, parameter, parameters);
+            return self.genericSignatureType(module, callback.return_type, parameters);
         }
         for (self.units[module].syntax.types.expressions.arrays) |array| {
             if (array.span.start != span.start or array.span.end != span.end) continue;

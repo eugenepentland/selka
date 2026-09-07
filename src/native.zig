@@ -1,4 +1,6 @@
 //! Scalar C emission: direct labels/branches, explicit frames, checked arithmetic.
+const native_host = @import("native_host.zig");
+const callables = @import("callables.zig");
 const jump_format = "goto L{d};\n";
 const unsupported_feature = "E_NATIVE_FEATURE";
 const binary_format = "V b = pop(), a = pop(); push(a {s} b);\n";
@@ -143,7 +145,7 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     try w.writeAll(@embedFile("native_runtime.c"));
     try w.writeAll(@embedFile("native_resources.c"));
     if (hasFloatSupport(program)) try w.writeAll(@embedFile("native_math.c"));
-    try @import("native_host.zig").emit(w, layout, program);
+    try native_host.emit(w, layout, program);
     if (hasJsonSupport(program)) {
         try @import("native_json_schema.zig").emit(w, program);
         try w.writeAll(@embedFile("native_json.c"));
@@ -204,7 +206,7 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
         }
     }
     try w.writeAll("dispatch_return: switch (return_target) {\n");
-    for (program.functions, offsets) |function, offset| for (function.scope.instructions, 0..) |ins, pc| if (ins.op == .call or ins.op == .call_refs or ins.op == .call_borrow) {
+    for (program.functions, offsets) |function, offset| for (function.scope.instructions, 0..) |ins, pc| if (ins.op == .call or ins.op == .call_refs or ins.op == .call_borrow or ins.op == .invoke) {
         try w.print("case {d}: goto L{d};\n", .{ offset + pc + 1, offset + pc + 1 });
     };
     try w.writeAll("default: host_failure(\"InternalError\"); } return 2;\n}\n");
@@ -325,6 +327,7 @@ fn checkFunction(layout: native_layout.Layout, function: bc.Function, sink: *dia
         .get_index, .replace_index, .array_length => |ty| {
             if (!layout.supports(ty)) return sink.fail(unsupported_feature, instruction.span, "native arrays require supported elements");
         },
+        .function_value, .invoke => {},
         .get_field, .read_field, .take_field, .split_borrow, .begin_borrow, .begin_slice, .end_borrow, .read_ref, .write_ref, .read_slice, .write_slice, .len_slice, .call_refs, .call_borrow, .capture_ref, .ret_ref => {},
         .cmp_enum,
         .wrap_domain,
@@ -381,6 +384,25 @@ const InstructionOutput = struct {
     position: struct { offset: usize, location: usize },
     instruction: bc.Instruction,
 };
+fn writeIndirect(context: InstructionOutput, ty: typed.Type) !void {
+    const w = context.writer;
+    const program = context.program;
+    const offsets = context.offsets;
+    const location = context.position.location;
+    const contract = callables.signature(ty, program.records).?;
+    try w.print("switch (callback_target({d})) {{\n", .{contract.parameters.len});
+    for (program.functions, 0..) |target, target_id| {
+        if (!callables.accepts(contract, target)) continue;
+        try w.print("case {d}: ", .{target_id});
+        if (target.policy.host != null) {
+            try w.print("host_invoke({d}); goto L{d};\n", .{ native_host.declarationIndex(program.functions, target_id), location + 1 });
+        } else {
+            try enter(w, target, location + 1);
+            try w.print("goto L{d};\n", .{offsets[target_id]});
+        }
+    }
+    try w.writeAll("default: host_failure(\"InternalError\");\n}\n");
+}
 fn writeOperation(context: InstructionOutput) !bool {
     const w = context.writer;
     const layout = context.layout;
@@ -628,6 +650,11 @@ fn writeOperation(context: InstructionOutput) !bool {
             falls_through = false;
         },
         .jump_if_false => |target| try w.print("if (!pop()) goto L{d};\n", .{offset + target}),
+        .function_value => |value| try w.print("push({d});\n", .{@backingInt(value.function)}),
+        .invoke => |ty| {
+            try writeIndirect(context, ty);
+            falls_through = false;
+        },
         .call, .call_refs, .call_borrow => {
             const callee_id = switch (ins.op) {
                 .call => |id| id,
@@ -644,7 +671,7 @@ fn writeOperation(context: InstructionOutput) !bool {
             const callee = @backingInt(callee_id);
             const target = program.functions[callee];
             if (target.policy.host != null) {
-                try w.print("host_invoke({d});\n", .{@import("native_host.zig").declarationIndex(program.functions, callee)});
+                try w.print("host_invoke({d});\n", .{native_host.declarationIndex(program.functions, callee)});
                 return true;
             }
             try enter(w, target, location + 1);

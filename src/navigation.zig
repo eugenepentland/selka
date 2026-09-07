@@ -192,6 +192,7 @@ const Builder = struct {
     fn expression(self: *Builder, program: typed.Program, function: typed.Function, owner: []const u8, node: typed.Node) Error!void {
         try self.edge(owner, self.typeId(program, node.ty), uses_type, node.span);
         switch (node.data) {
+            .function_value => |target| try self.edge(owner, self.id(program.functions[@backingInt(target)].declaration), "function_value", node.span),
             .call => |call| try self.edge(owner, self.id(program.functions[@backingInt(call.function)].declaration), "call", node.span),
             .local => |local| try self.edge(owner, self.id(function.scope.locals[@backingInt(local)].declaration), "read", node.span),
             .read_ref => |reference| try self.edge(owner, self.id(function.scope.references[@backingInt(reference)].declaration), "read", node.span),

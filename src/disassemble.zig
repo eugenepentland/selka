@@ -193,6 +193,8 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
             program.functions[@backingInt(call.function)].name,
             call.references,
         }),
+        .function_value => |value| try writer.print("FUNCTION_VALUE {d} type {d}", .{ @backingInt(value.function), @backingInt(value.ty) }),
+        .invoke => |ty| try writer.print("INVOKE type {d}", .{@backingInt(ty)}),
         .call => |id| try writer.print("CALL {d} ({s})", .{ @backingInt(id), program.functions[@backingInt(id)].name }),
         .ret => try writer.writeAll("RET"),
     }

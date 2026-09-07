@@ -15,9 +15,10 @@ const Field = struct { name: []const u8, type: []const u8 };
 const Case = struct { name: []const u8, payload: ?[]const u8 };
 const Codec = struct { wire: []const u8, decode: []const u8, encode: []const u8, error_type: []const u8 };
 const Definition = struct {
+    callback: ?struct { parameters: []const []const u8, result: []const u8, effects: u8 } = null,
     codec: ?Codec = null,
     name: []const u8,
-    kind: enum { integer, boolean, capability, record, array, table, domain, enumeration, tagged_union, result, buffer, resource, pool, handle },
+    kind: enum { callback, integer, boolean, capability, record, array, table, domain, enumeration, tagged_union, result, buffer, resource, pool, handle },
     move_only: bool = false,
     requires_handling: bool = false,
     @"opaque": bool = false,
@@ -64,6 +65,14 @@ const Graph = struct {
         if (!ty.isAggregate()) return .{ .name = name, .kind = if (ty == .bool) .boolean else .capability, .@"opaque" = ty != .bool };
         const record = self.records[ty.recordIndex()];
         var out: Definition = .{ .name = name, .kind = .record, .move_only = record.contract.move_only, .requires_handling = record.contract.requires_handling };
+        if (record.contract.callback) |contract| {
+            const parameters = try self.allocator.alloc([]const u8, contract.parameters.len);
+            for (contract.parameters, parameters) |parameter, *out_type| out_type.* = try self.reference(parameter);
+            out.kind = .callback;
+            out.@"opaque" = true;
+            out.callback = .{ .parameters = parameters, .result = try self.reference(contract.return_type), .effects = contract.effects };
+            return out;
+        }
         // Domains may only be constructed through their checked factories. Runtime
         // owners/handles/capabilities have no portable reconstruction operation.
         if (record.shape.domain != null or record.shape.hasRuntimeIdentity()) {

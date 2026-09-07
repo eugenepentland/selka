@@ -1,4 +1,5 @@
 //! Untyped expression and statement tables preserve source spelling and locations.
+const effect_set = @import("effect_set.zig");
 const std = @import("std");
 const Acquisition = struct { ty: Span, allocator: NodeId, value: NodeId };
 const FieldAccess = struct { owner: Span, field: Span };
@@ -141,7 +142,7 @@ pub const Function = struct { policy: FunctionPolicy = .{}, signature: FunctionS
 pub const FunctionPolicy = struct {
     constant: bool = false,
     host: ?Span = null,
-    effect_bound: ?@import("effect_set.zig").Bound = null,
+    effect_bound: ?effect_set.Bound = null,
     owner: ?Span = null,
     restricted: bool = false,
     conversion: bool = false,
@@ -159,7 +160,7 @@ pub const Operation = struct {
     name: Span,
     parameters: []const Parameter,
     return_type: Span,
-    effect_bound: @import("effect_set.zig").Bound,
+    effect_bound: effect_set.Bound,
 };
 /// Source parameter and result spellings with optional reference provenance.
 pub const FunctionSignature = struct { type_parameters: []const TypeParameter = &.{}, return_reference: ?ReturnReference = null, parameters: []const Parameter, return_type: Span };
@@ -192,4 +193,7 @@ pub const TypeApplication = struct { span: Span, name: Span, arguments: []const 
 /// Transparent non-parameterized alias; the target retains its source type spelling.
 pub const TypeAlias = struct { name: Span, target: Span };
 /// Structural type syntax, concrete nominal applications and transparent aliases.
-pub const TypeExpressions = struct { arrays: []const ArrayType = &.{}, applications: []const TypeApplication = &.{}, aliases: []const TypeAlias = &.{} };
+/// Noncapturing callable value signature with an explicit effect ceiling.
+pub const CallbackType = struct { span: Span, parameters: []const Span, return_type: Span, effect_bound: effect_set.Bound };
+/// Source catalog of structural types and nominal type applications.
+pub const TypeExpressions = struct { callbacks: []const CallbackType = &.{}, arrays: []const ArrayType = &.{}, applications: []const TypeApplication = &.{}, aliases: []const TypeAlias = &.{} };

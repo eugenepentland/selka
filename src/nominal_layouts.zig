@@ -11,6 +11,7 @@ const Span = source.Span;
 pub const Id = enum(usize) { _ };
 /// Semantic identity category; parameters remain scoped to their declaring template.
 pub const Base = union(enum) {
+    callback: @import("effect_set.zig").Mask,
     builtin: typed.Type,
     length: usize,
     parameter: struct { declaration: usize, index: usize },
@@ -93,6 +94,11 @@ pub const Graph = struct {
         defer self.budget.depth -= 1;
         return switch (value) {
             .length => |length| self.intern(.{ .base = .{ .length = length }, .arguments = &.{} }, span),
+            .callback => |callback| result: {
+                var arguments_out: [17]Id = undefined;
+                for (callback.arguments, 0..) |argument, i| arguments_out[i] = try self.resolve(argument, arguments, callback.syntax.span);
+                break :result self.intern(.{ .base = .{ .callback = callback.syntax.effect_bound.allowed }, .arguments = arguments_out[0..callback.arguments.len] }, callback.syntax.span);
+            },
             .builtin => |ty| self.intern(.{ .base = .{ .builtin = ty }, .arguments = &.{} }, span),
             .parameter => |index| arguments[index],
             .named => |id| self.intern(.{ .base = .{ .named = id }, .arguments = &.{} }, span),
@@ -160,6 +166,10 @@ pub const Graph = struct {
                         try self.need(child);
                         try edges.append(self.allocator, .{ .target = child, .span = field.name });
                     };
+                },
+                .callback => for (node.key.arguments) |argument| {
+                    try self.need(argument);
+                    try edges.append(self.allocator, .{ .target = argument, .span = node.site });
                 },
                 .array => |array| {
                     if (array.key) |key| try self.need(key);

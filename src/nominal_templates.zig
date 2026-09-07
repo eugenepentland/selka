@@ -11,6 +11,7 @@ const Error = diagnostic.Error;
 const Span = source.Span;
 /// A type variable is local to its enclosing declaration; named identities index declarations.
 pub const Expression = union(enum) {
+    callback: *const Callback,
     builtin: typed.Type,
     length: usize,
     parameter: usize,
@@ -18,6 +19,8 @@ pub const Expression = union(enum) {
     array: *const Array,
     application: *const Application,
 };
+/// Resolved callable argument/result expressions without representative runtime types.
+pub const Callback = struct { syntax: ast.CallbackType, arguments: []const Expression };
 /// Retain both numeric and closed-enum array syntax for later concrete layout resolution.
 pub const Array = struct { syntax: ast.ArrayType, length: ?usize, length_parameter: ?usize = null, element: Expression, key: ?Expression };
 /// Ordered type arguments retain their nominal base identity and diagnostic sites.
@@ -36,6 +39,7 @@ pub const Declaration = struct {
 };
 const Alias = struct { declaration: ast.TypeAlias, visiting: bool = false };
 const Syntax = struct {
+    callbacks: std.AutoHashMapUnmanaged(usize, ast.CallbackType) = .empty,
     aliases: std.StringHashMapUnmanaged(Alias) = .empty,
     arrays: std.AutoHashMapUnmanaged(usize, ast.ArrayType) = .empty,
     applications: std.AutoHashMapUnmanaged(usize, ast.TypeApplication) = .empty,
@@ -87,6 +91,15 @@ pub const Index = struct {
         self.budget.depth += 1;
         self.budget.work += 1;
         defer self.budget.depth -= 1;
+        if (self.syntax.callbacks.get(span.start)) |syntax| {
+            const arguments = try ctx.allocator.alloc(Expression, syntax.parameters.len + 1);
+            for (syntax.parameters, arguments[0..syntax.parameters.len]) |input, *out| out.* = try self.expression(input, parameters);
+            arguments[syntax.parameters.len] = try self.expression(syntax.return_type, parameters);
+            for (arguments) |argument| if (depends(argument)) return ctx.sink.fail("E_CALLBACK_TYPE", span, "callback signatures currently require concrete parameter and result types");
+            const callback = try ctx.allocator.create(Callback);
+            callback.* = .{ .syntax = syntax, .arguments = arguments };
+            return .{ .callback = callback };
+        }
         if (self.syntax.arrays.get(span.start)) |syntax| {
             const element = try self.expression(syntax.element, parameters);
             var enum_key: ?Expression = null;
@@ -191,6 +204,7 @@ pub const Index = struct {
     pub fn guarantees(self: Index, value: Expression, parameters: []const requirements.Parameter) requirements.Set {
         return switch (value) {
             .length => .{},
+            .callback => copyGuarantee(),
             .builtin => |ty| builtinGuarantees(ty),
             .parameter => |id| parameters[id].requirements,
             .named => |id| self.declarations.items[id].guarantees,
@@ -308,6 +322,7 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
         try index.syntax.aliases.put(allocator, key, .{ .declaration = alias });
     }
     try index.checkParameters(program);
+    for (program.types.expressions.callbacks) |syntax| try index.syntax.callbacks.put(allocator, syntax.span.start, syntax);
     for (program.types.expressions.arrays) |syntax| try index.syntax.arrays.put(allocator, syntax.span.start, syntax);
     for (program.types.expressions.applications) |syntax| try index.syntax.applications.put(allocator, syntax.span.start, syntax);
     for (program.types.records) |declaration| try index.fields(declaration.name, declaration.fields);

@@ -1,0 +1,10 @@
+struct Pair{values:[2]i64}
+fn build(n:i64)->Pair effects(){return new Pair{values:new [2]i64 [n,n+1]};}
+fn apply(callback:fn(i64)->Pair effects(),n:i64)->Pair{return callback(n);}
+fn identity(callback:fn(i64)->Pair effects())->fn(i64)->Pair effects(){return callback;}
+fn main()->i64 {
+    let callback=identity(build);
+    let a=apply(callback,7);
+    let b=callback(9);
+    return a.values[0]+b.values[1];
+}

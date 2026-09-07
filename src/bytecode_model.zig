@@ -77,6 +77,8 @@ pub const Instruction = struct {
         acknowledge: typed.Type,
         jump: usize,
         jump_if_false: usize,
+        function_value: struct { ty: typed.Type, function: typed.FunctionId },
+        invoke: typed.Type,
         call: typed.FunctionId,
         call_refs: struct { function: typed.FunctionId, references: []const typed.ReferenceId },
         ret,

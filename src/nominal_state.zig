@@ -34,6 +34,12 @@ pub const Store = struct {
         if (self.semantic(ty)) |id| return id;
         if (depth == 256) return self.context.sink.fail(diagnostic.generic_limit, span, "nominal argument shape exceeds 256 levels");
         const id = if (!ty.isAggregate()) try self.graph.materialize(.{ .builtin = ty }, span) else array: {
+            if (records[ty.recordIndex()].contract.callback) |contract| {
+                var arguments: [17]layouts.Id = undefined;
+                for (contract.parameters, 0..) |parameter, i| arguments[i] = try self.typeArgument(records, parameter, span, depth + 1);
+                arguments[contract.parameters.len] = try self.typeArgument(records, contract.return_type, span, depth + 1);
+                break :array try self.graph.materializeKey(.{ .base = .{ .callback = contract.effects }, .arguments = arguments[0 .. contract.parameters.len + 1] }, span);
+            }
             const shape = records[ty.recordIndex()].shape.array orelse return error.InternalError;
             const element = try self.typeArgument(records, shape.element, span, depth + 1);
             const key = if (shape.key) |key_type| try self.typeArgument(records, key_type, span, depth + 1) else null;

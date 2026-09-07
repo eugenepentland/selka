@@ -110,3 +110,13 @@ test "semantic cache keeps previous committed bodies when remember reports OutOf
     try compare(t.allocator, &cache, prefix ++ suffix, 42);
     try t.expectEqual(previous_hits + 3, cache.statistics.reused);
 }
+
+// spec: SEMANTIC-CALLBACK-1
+test "semantic cache keeps inferred callback schemas fresh across changed bodies" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const caller = "fn main()->i64{let cb=helper;return cb(40);}";
+    try compare(t.allocator, &cache, "fn helper(n:i64)->i64 effects(){return n+1;}" ++ caller, 41);
+    try compare(t.allocator, &cache, "fn helper(n:i64)->i64 effects(){return n+2;}" ++ caller, 42);
+    try t.expectEqual(@as(usize, 0), cache.statistics.reused);
+}

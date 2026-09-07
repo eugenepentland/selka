@@ -75,6 +75,8 @@ const Analysis = struct {
     fn expression(self: Analysis, expression_node: typed.Node) Dependency {
         if (!carries(expression_node.ty, self.types)) return .{};
         return switch (expression_node.data) {
+            .function_value => .{},
+            .invoke => |invocation| self.arguments(invocation.arguments),
             .local => |id| self.local(id),
             .read_ref => |id| self.reference(id),
             .read_slice => |read| self.reference(read.reference),

@@ -44,6 +44,7 @@ pub const Context = struct {
         const store = self.catalog.templates.store.?;
         return switch (expression_value) {
             .length => |value| .{ .length = value },
+            .callback => |callback| .{ .concrete = try self.catalog.resolve(self.src, callback.syntax.span, self.sink) },
             .builtin => |ty| .{ .concrete = ty },
             .parameter => |id| arguments[id],
             .named => |declaration| .{ .concrete = store.runtime(store.graph.index.get(.{ .base = .{ .named = declaration }, .arguments = &.{} }).?) orelse return error.InternalError },

@@ -1,4 +1,5 @@
 //! Structural and control-flow validation for the checked instruction model.
+const callables = @import("callables.zig");
 const std = @import("std");
 const typed = @import("typed.zig");
 const external_resources = @import("external_resources.zig");
@@ -41,6 +42,7 @@ fn validateRecords(program: Program) Error!void {
         try validateBufferRecord(program, record);
         if (record.shape.variants) |variants| try validateVariantRecord(program, record, variants);
         try validateDomainRecord(record);
+        try validateCallableRecord(program, record);
         try validateArrayRecord(program, record);
         for (record.fields) |field| if (!validType(field.ty, program)) {
             return error.InternalError;
@@ -116,8 +118,17 @@ fn validateHostType(allocator: std.mem.Allocator, records: []const typed.Record,
     };
 }
 
+fn validateFunctionValue(program: Program, ty: typed.Type, target: typed.FunctionId) Error!void {
+    const contract = callables.signature(ty, program.records) orelse return error.InternalError;
+    if (@backingInt(target) >= program.functions.len) return error.InternalError;
+    if (!callables.accepts(contract, program.functions[@backingInt(target)])) return error.InternalError;
+}
 fn validateInstruction(allocator: std.mem.Allocator, program: Program, function: Function, instruction: Instruction) Error!void {
     switch (instruction.op) {
+        .invoke => |ty| {
+            _ = callables.signature(ty, program.records) orelse return error.InternalError;
+        },
+        .function_value => |value| try validateFunctionValue(program, value.ty, value.function),
         .make_variant => |variant| try validateOpMakeVariant(program, variant),
         .reset_arena => |output| try validateOpResetArena(program, output),
         .begin_region, .end_region => |slot| try validateOpBeginRegion(function, slot),
@@ -472,7 +483,7 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
         const instruction = function.scope.instructions[pc];
         var height = heights[pc].?;
         switch (instruction.op) {
-            .push_i64, .push_bool, .push_integer, .load_local, .move_local, .read_ref, .read_field, .take_field, .len_slice => height += 1,
+            .function_value, .push_i64, .push_bool, .push_integer, .load_local, .move_local, .read_ref, .read_field, .take_field, .len_slice => height += 1,
             .drop_local, .end_region => {},
             .resource_io => |io| {
                 height = try resourceIoHeight(io, height);
@@ -542,6 +553,11 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
             .unwrap_domain,
             => if (height == 0) {
                 return error.InternalError;
+            },
+            .invoke => |ty| {
+                const contract = callables.signature(ty, program.records) orelse return error.InternalError;
+                if (height <= contract.parameters.len) return error.InternalError;
+                height -= contract.parameters.len;
             },
             .call, .call_refs, .call_borrow => {
                 const id = switch (instruction.op) {
@@ -721,6 +737,13 @@ fn validateBufferRecord(program: Program, record: typed.Record) Error!void {
     }
 }
 
+fn validateCallableRecord(program: Program, record: typed.Record) Error!void {
+    const contract = record.contract.callback orelse return;
+    if (record.shape.domain != .u64) return error.InternalError;
+    if (contract.parameters.len > 16 or !validType(contract.return_type, program)) return error.InternalError;
+    if (contract.effects & ~@import("effect_set.zig").all != 0) return error.InternalError;
+    for (contract.parameters) |parameter| if (!validType(parameter, program)) return error.InternalError;
+}
 fn validateDomainRecord(record: typed.Record) Error!void {
     if (record.shape.domain) |backing| {
         if ((!backing.isInteger() and backing != .bool)) return error.InternalError;

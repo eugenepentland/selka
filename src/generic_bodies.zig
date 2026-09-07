@@ -576,11 +576,21 @@ const Checker = struct {
         if (target != .concrete) return self.sink.fail(eUnsupported, invocation.type_arguments[0], "codec operations on type parameters require declared codec constraints");
         return codec.resolve(self.src, self.program, self.catalog, invocation, self.sink);
     }
+    fn indirectCall(self: *Checker, invocation: Call) Error!Symbolic {
+        const value = try self.namedValue(invocation.name);
+        const ty_value = try self.concreteValue(value, invocation.name);
+        const contract = @import("callables.zig").signature(ty_value, self.catalog.records) orelse return self.sink.fail("E_CALLBACK_TYPE", invocation.name, "called local is not a function value");
+        if (invocation.type_arguments.len != 0 or invocation.arguments.len != contract.parameters.len) return self.sink.fail("E_ARITY", invocation.name, "callback arguments must match its declared value parameters");
+        for (invocation.arguments, contract.parameters) |input, parameter| try self.same(try self.expression(input), .{ .concrete = parameter }, invocation.name);
+        self.effect_masks[self.function_index] |= contract.effects;
+        return .{ .concrete = contract.return_type };
+    }
     fn call(self: *Checker, input_call: Call, span: source.Span, allow_reference: bool) Error!Symbolic {
         if (std.mem.eql(u8, self.src.text(input_call.name), "todo") and input_call.owner == null) {
             _ = try self.ty(input_call.type_arguments[0]);
             return self.sink.typedHole(input_call.name, input_call.type_arguments[0]);
         }
+        if (input_call.owner == null and self.active.contains(self.src.text(input_call.name))) return self.indirectCall(input_call);
         if (input_call.owner == null) if (source_json.operation(self.src.text(input_call.name))) |decode| return self.jsonCall(input_call, decode);
         if (try self.operationCall(input_call)) |result| return result;
         const invocation = try self.resolveCall(input_call);

@@ -55,7 +55,7 @@ fn less(_: void, a: Scope, b: Scope) bool {
 pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, index: *templates.Index, graph: *layouts.Graph, sink: *diagnostic.Sink) diagnostic.Error!Sources {
     var result: Sources = .{};
     try result.addScopes(allocator, src, program, sink);
-    inline for (.{ "applications", "arrays" }) |category| for (@field(program.types.expressions, category)) |syntax| {
+    inline for (.{ "applications", "arrays", "callbacks" }) |category| for (@field(program.types.expressions, category)) |syntax| {
         const scope = result.scope(syntax.span);
         const parameters: []const requirements.Parameter = if (scope) |found| found.parameters else &.{};
         const expression = try index.expression(syntax.span, parameters);

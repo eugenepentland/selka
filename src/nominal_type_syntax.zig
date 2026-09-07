@@ -8,5 +8,6 @@ pub fn present(program: ast.Program) bool {
     for (program.functions) |function| for (function.signature.type_parameters) |parameter| {
         if (parameter.constant_length) return true;
     };
+    if (program.types.expressions.callbacks.len != 0) return true;
     return program.types.expressions.applications.len != 0 or program.types.expressions.aliases.len != 0;
 }

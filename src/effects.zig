@@ -90,6 +90,10 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
                 .buffer_operation => |op| if (op.kind.allocates()) {
                     graph.direct(index, .allocation, node.span);
                 },
+                .invoke => |call| {
+                    const contract = @import("callables.zig").signature(program.nodes[@backingInt(call.callee)].ty, program.records).?;
+                    inline for (std.meta.tags(sets.Effect)) |effect| if (contract.effects & sets.bit(effect) != 0) graph.direct(index, effect, node.span);
+                },
                 .call => |call| graph.call(index, @backingInt(call.function), node.span) catch |err| switch (err) {
                     error.OutOfMemory => return error.OutOfMemory,
                     error.InternalError => unreachable, // Resolved typed function identity.
@@ -97,6 +101,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
                 .reset_arena,
                 .pool_operation,
                 .restrict_resource,
+                .function_value,
                 .integer,
                 .boolean,
                 .local,
@@ -209,6 +214,10 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
             .buffer_operation => |op| if (op.kind.allocates()) {
                 graph.direct(index, .allocation, instruction.span);
             },
+            .invoke => |ty| {
+                const contract = @import("callables.zig").signature(ty, program.records) orelse return error.InternalError;
+                inline for (std.meta.tags(sets.Effect)) |effect| if (contract.effects & sets.bit(effect) != 0) graph.direct(index, effect, instruction.span);
+            },
             .call => |callee| try graph.call(index, @backingInt(callee), instruction.span),
             .call_refs => |call| try graph.call(index, @backingInt(call.function), instruction.span),
             .call_borrow => |call| try graph.call(index, @backingInt(call.function), instruction.span),
@@ -216,6 +225,7 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
             .end_region,
             .pool_operation,
             .restrict_resource,
+            .function_value,
             .push_i64,
             .add_i64_checked,
             .sub_i64_checked,

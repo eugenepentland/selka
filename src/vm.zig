@@ -1,4 +1,5 @@
 //! Typed local/operand storage and explicitly checked guest arithmetic in every host mode.
+const callables = @import("callables.zig");
 const capability_code = "R_CAPABILITY";
 const slice_bounds_code = "R_SLICE_BOUNDS";
 const overflow_code = "R_OVERFLOW";
@@ -320,6 +321,8 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
             .unwrap_domain => step.executeUnwrapDomain(),
             .get_field => step.executeGetField(),
             .push_integer => step.executePushInteger(),
+            .function_value => step.executeFunctionValue(),
+            .invoke => step.executeCall(),
             .unary_float => step.executeUnaryFloat(),
             .cast_integer, .neg_integer => step.executeCastInteger(),
             .binary_integer => step.executeBinaryInteger(),
@@ -1618,6 +1621,24 @@ const Step = struct {
         };
         return trap(code, @errorName(err), self.instruction.span, self.execution.state.frames.items, self.execution.program);
     }
+    fn executeFunctionValue(self: *Step) !?ValueResult {
+        const value = self.instruction.op.function_value;
+        try self.execution.state.stack.append(self.execution.allocator, .{ .integer = .{ .ty = value.ty, .value = @backingInt(value.function) } });
+        return null;
+    }
+    fn indirectTarget(self: *Step, ty: typed.Type) !typed.FunctionId {
+        const contract = callables.signature(ty, self.execution.program.records) orelse return error.InternalError;
+        const stack = self.execution.state.stack;
+        if (stack.items.len <= contract.parameters.len + self.frame.operand_base) return error.InternalError;
+        const value = stack.orderedRemove(stack.items.len - contract.parameters.len - 1);
+        defer value.release(self.execution.allocator);
+        if (value.typeOf() != ty) return error.InternalError;
+        const target = try value.asInteger();
+        if (target < 0 or target >= self.execution.program.functions.len) return error.InternalError;
+        const id: typed.FunctionId = @fromBackingInt(@as(usize, @intCast(target)));
+        if (!callables.accepts(contract, self.execution.program.functions[@backingInt(id)])) return error.InternalError;
+        return id;
+    }
     fn executeCall(self: *Step) !?ValueResult {
         const allocator = self.execution.allocator;
         const program = self.execution.program;
@@ -1632,12 +1653,14 @@ const Step = struct {
         const instruction = self.instruction;
         const function = self.execution.program.functions[@backingInt(self.frame.function)];
         const id = switch (instruction.op) {
+            .invoke => |ty| try self.indirectTarget(ty),
             .call => |id| id,
             .call_refs => |call| call.function,
             .call_borrow => |call| call.function,
             else => unreachable,
         };
         const loan_arguments: []const typed.ReferenceId = switch (instruction.op) {
+            .invoke => &.{},
             .call => &.{},
             .call_refs => |call| call.references,
             .call_borrow => |call| call.references,
