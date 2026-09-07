@@ -5,6 +5,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const walk = @import("typed_walk.zig");
 const diagnostic = @import("diagnostic.zig");
+const projections = @import("region_returns.zig");
 const origin = @import("region_origin.zig");
 const Dependency = origin.Dependency;
 const grow = origin.grow;
@@ -19,7 +20,7 @@ const Analysis = struct {
     types: []const bool,
     nodes: []Dependency,
     locals: []Dependency,
-    returns: []const ?usize,
+    provenance: struct { returns: []const ?projections.Origin, bindings: []const ?typed.NodeId },
     fn node(self: Analysis, id: typed.NodeId) Dependency {
         return self.nodes[@backingInt(id)];
     }
@@ -48,8 +49,19 @@ const Analysis = struct {
         return dependency;
     }
     fn resultDependency(self: Analysis, invocation: @FieldType(@FieldType(typed.Node, "data"), "call")) Dependency {
-        if (self.returns[@backingInt(invocation.function)]) |parameter| return self.node(invocation.arguments[parameter]);
+        if (self.provenance.returns[@backingInt(invocation.function)]) |summary| {
+            const input = invocation.arguments[summary.parameter];
+            return self.project(input, summary.fields[0..summary.count]);
+        }
         return self.call(invocation);
+    }
+    fn project(self: Analysis, id: typed.NodeId, path: []const usize) Dependency {
+        const selected = projections.select(self.program, self.provenance.bindings, id, path, 0) orelse id;
+        return self.node(selected);
+    }
+    fn localField(self: Analysis, slot: typed.LocalId, field: usize) Dependency {
+        if (self.provenance.bindings[@backingInt(slot)]) |value| return self.project(value, &.{field});
+        return self.local(slot);
     }
     fn mutableArgument(self: Analysis, invocation: @FieldType(@FieldType(typed.Node, "data"), "call"), reference_index: usize) bool {
         const callee = self.program.functions[@backingInt(invocation.function)];
@@ -66,7 +78,7 @@ const Analysis = struct {
             .local => |id| self.local(id),
             .read_ref => |id| self.reference(id),
             .read_slice => |read| self.reference(read.reference),
-            .read_field, .take_field => |read| self.local(read.owner),
+            .read_field, .take_field => |read| self.localField(read.owner, read.field),
             .acquire_buffer, .acquire_pool => |acquire| self.node(acquire.allocator),
             .json_codec => |codec| self.node(codec.arguments[0]),
             .reset_arena, .cast, .wrap, .unwrap, .length, .complete_resource => |value| self.node(value),
@@ -76,7 +88,7 @@ const Analysis = struct {
             .array => |inputs| self.arguments(inputs),
             .record => |inputs| self.fields(inputs),
             .update => |update| origin.combine(self.node(update.base), self.fields(update.fields)),
-            .field => |field| self.node(field.base),
+            .field => |field| self.project(field.base, &.{field.index}),
             .index => |index| self.node(index.base),
             .replace => |replace| origin.combine(self.node(replace.base), self.node(replace.value)),
             .call => |invocation| self.resultDependency(invocation),
@@ -137,7 +149,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
     if (!any_regions) return;
     const types = try typeDependencies(allocator, program.records);
     defer allocator.free(types);
-    const returns = try directReturns(allocator, program);
+    const returns = try projections.collect(allocator, program);
     defer allocator.free(returns);
     var changed = false;
     const nodes = try allocator.alloc(Dependency, program.nodes.len);
@@ -155,7 +167,9 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
         const locals = try allocator.alloc(Dependency, function.scope.locals.len);
         defer allocator.free(locals);
         @memset(locals, .{});
-        const analysis: Analysis = .{ .program = program, .function = function, .types = types, .nodes = nodes, .locals = locals, .returns = returns };
+        const bindings = try projections.definitions(allocator, program, function);
+        defer allocator.free(bindings);
+        const analysis: Analysis = .{ .program = program, .function = function, .types = types, .nodes = nodes, .locals = locals, .provenance = .{ .returns = returns, .bindings = bindings } };
         changed = true;
         while (changed) {
             changed = false;
@@ -252,38 +266,4 @@ fn propagateDependencies(analysis: Analysis, item: walk.Item) bool {
         },
     }
     return changed;
-}
-
-// Only prove direct immutable parameter returns. Unrecognized bodies retain the
-// existing conservative summary, including early propagation and host calls.
-fn directReturns(allocator: std.mem.Allocator, program: typed.Program) std.mem.Allocator.Error![]?usize {
-    const summaries = try allocator.alloc(?usize, program.functions.len);
-    errdefer allocator.free(summaries);
-    for (program.functions, summaries) |function, *summary| summary.* = try directReturn(allocator, program, function);
-    return summaries;
-}
-fn directReturn(allocator: std.mem.Allocator, program: typed.Program, function: typed.Function) std.mem.Allocator.Error!?usize {
-    if (function.policy.host != null or function.signature.return_reference != null) return null;
-    for (function.scope.locals[0..function.signature.parameter_count]) |parameter| {
-        if (parameter.parameter.reference_parameter != null) return null;
-    }
-    var walker = try walk.Walker.init(allocator, program, function.scope.body);
-    defer walker.deinit();
-    var selected: ?usize = null;
-    while (try walker.next()) |item| switch (item) {
-        .expression => |id| if (program.nodes[@backingInt(id)].data == .propagate) return null,
-        .statement => |id| {
-            const statement = program.statements[@backingInt(id)];
-            if (statement.data != .ret) continue;
-            const node = program.nodes[@backingInt(statement.data.ret)];
-            if (node.data != .local) return null;
-            const index = @backingInt(node.data.local);
-            if (index >= function.signature.parameter_count) return null;
-            const local = function.scope.locals[index];
-            if (local.mutable or local.usage.writes != 0 or local.usage.mutable_borrow) return null;
-            if (selected) |previous| if (previous != index) return null;
-            selected = index;
-        },
-    };
-    return selected;
 }

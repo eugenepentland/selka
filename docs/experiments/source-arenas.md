@@ -114,3 +114,20 @@ Other expressions, multiple possible parameter origins, reference parameters,
 host calls and early `try` propagation keep the conservative result summary.
 Mutable argument effects remain conservative even when the result is precise.
 Stored views and field-sensitive aggregate summaries remain separate work.
+
+## Selected-field return provenance
+
+The concrete region pass can prove return origins through immutable local aliases,
+record field reads/takes, and value wrappers. It follows up to 16 nested record
+fields and 256 expression levels, with a bounded per-function proof budget.
+At the call site it selects the matching field from immutable construction or
+update expressions. For example, returning `pair.outer` does not retain
+`pair.scratch` when the caller supplied separate allocator authorities. Owned
+field extraction gets the same proof, and cleanup still drops remaining fields.
+Generic function specializations use their concrete field identities.
+
+An unknown or mutable source falls back to the complete source dependency. Host
+calls, borrowed-parameter functions, ambiguous return origins, and functions with
+early result propagation keep the existing conservative summary. This stage does
+not add stored references or arbitrary conditional lifetime unions; symbolic
+arena analysis inside an uninstantiated generic body remains conservative.

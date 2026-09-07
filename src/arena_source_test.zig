@@ -310,3 +310,44 @@ test "multiple possible returned parameters conservatively retain scratch depend
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings("E_ARENA_ESCAPE", c.diagnostics.items[0].code);
 }
+
+const field_provenance =
+    \\struct Pair<T:copy>{outer:allocator,scratch:allocator,tag:T}
+    \\fn choose<T:copy>(pair:Pair<T>)->allocator{let alias=pair;return alias.outer;}
+    \\fn work(heap:allocator)->allocator{
+    \\    let mut selected=heap;
+    \\    arena heap as scratch{
+    \\        let pair=new Pair<bool>{outer:heap,scratch:scratch,tag:true};
+    \\        selected=choose::<bool>(pair);
+    \\    }
+    \\    return selected;
+    \\}
+    \\fn main(heap:allocator)->i64{discard work(heap);return 9;}
+;
+fn fieldProvenanceScenario(allocator: std.mem.Allocator) !void {
+    var c = try language.Compilation.init(allocator, "field-provenance.my", field_provenance);
+    defer c.deinit();
+    const result = try c.execute(allocator);
+    try t.expectEqual(@as(i64, 9), result.value);
+}
+// spec: REGION-PROJECTION-1
+test "field provenance follows generic immutable aliases without unrelated scratch fields" {
+    try fieldProvenanceScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), fieldProvenanceScenario, .{});
+    const bad = try std.mem.replaceOwned(u8, t.allocator, field_provenance, "return alias.outer", "return alias.scratch");
+    defer t.allocator.free(bad);
+    try reject(bad, "E_ARENA_ESCAPE");
+}
+
+test "field provenance lets selected owned fields escape while dropping scratch siblings" {
+    const source = "buffer B:i64;result A{ok:B,err:i64}struct Pair{outer:B,scratch:B}" ++
+        "fn choose(pair:Pair)->B{return take_field(pair,outer);}" ++
+        "fn work(heap:allocator)->A{let outer=try acquire_buffer<A>(heap,1);arena heap as scratch{" ++
+        "let inner=try acquire_buffer<A>(scratch,1);let pair=new Pair{outer:outer,scratch:inner};return new A.ok(choose(pair));}}" ++
+        "fn main(heap:allocator)->i64{match work(heap){A.ok(b)=>{return cast<i64>(capacity_buffer(b));},A.err(e)=>{return e;}}}";
+    try expectResult(source, 1, .{});
+    const bad = try std.mem.replaceOwned(u8, t.allocator, source, "take_field(pair,outer)", "take_field(pair,scratch)");
+    defer t.allocator.free(bad);
+    try reject(bad, "E_ARENA_ESCAPE");
+}

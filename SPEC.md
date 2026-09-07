@@ -344,3 +344,5 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [FLOAT-DOMAIN-1] std_math::F64 supplies explicit IEEE binary64 operations over a nominal u64 representation, canonical arithmetic NaNs, numeric comparisons, checked integer conversion and exact bit serialization; builtin f64 syntax is not introduced.
 
 - [STRUCTURAL-COMPOSITE-1] Structural field and operation signatures substitute fixed arrays and nominal applications. Slice and whole-owner reference parameters preserve their declared permissions and effect ceiling; result obligations remain transferred by value. Invalid unused templates still reject.
+
+- [REGION-PROJECTION-1] Proven immutable aliases and record field selections retain only the selected input authority. Generic specializations use the same field identities. Unknown, mutable, ambiguous, host, borrowed-parameter and early-propagation return flows retain conservative all-input provenance.
