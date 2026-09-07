@@ -17,7 +17,9 @@ def main():
     parser.add_argument('--zig', type=Path, required=True)
     args = parser.parse_args()
     root = Path(__file__).resolve().parents[1]
-    with tempfile.TemporaryDirectory(dir=root / '.mylang-cache/validation/tmp', prefix='stdlib-io-') as tmp:
+    temporary_root = root / '.mylang-cache/validation/tmp'
+    temporary_root.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=temporary_root, prefix='stdlib-io-') as tmp:
         directory = Path(tmp)
         count = 0
         allocation_positions = 0
