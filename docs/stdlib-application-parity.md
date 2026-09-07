@@ -88,3 +88,28 @@ remain application decisions. The state and edges must keep their correspondence
 from `prepare`: do not directly modify state or change edges mid-run. State -2
 means reserved and -1 completed. A completion with an out-of-range endpoint is
 rejected before mutation; valid graph state is required for arithmetic invariants.
+
+
+## Integer extrema
+
+`std_math::min<T:integer>(a,b)` and `max<T:integer>(a,b)` return the
+smaller/larger operand at the same integer type. They compare directly without
+subtracting operands or changing signedness, so full-width i64/u64 extrema are
+supported. These operations are separate from the existing nominal F64 API.
+
+`std_math::min_or<T:integer>(values:&[]T,fallback:T)` and `max_or<T:integer>`
+scan an immutable slice in O(n) time with no explicit allocation. The fallback
+is used **only when the slice is empty**. A nonempty slice ignores the fallback,
+even if it is smaller/larger than every element: `max_or([-9,-1,-5],1000)` is
+`-1`, and `min_or([-9,-1,-5],-1000)` is `-9`.
+
+This supplies the bounded integer behavior needed from Python's `min`/`max`
+(including their `default=` argument) and Zig's `@min`/`@max` and
+`std.mem.min`/`std.mem.max`. The .my slice functions return an explicit caller
+fallback for empty input, whereas Zig's slice extrema require a nonempty slice.
+Arbitrary key callbacks and mixed numeric types are not claimed.
+
+The planner baseline's prerequisite finish and makespan maxima use the pairwise
+API. Dependency lag validation, weighted finish-time recurrence, reverse-DAG
+latest-start/slack calculations and critical-job classification remain
+application rules; these generic extrema helpers contain no scheduling policy.

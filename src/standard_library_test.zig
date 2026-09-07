@@ -156,3 +156,8 @@ test "owned collection library preserves values across replacement failure and r
 test "application library parity sorting priority queues ASCII classes and pair iteration" {
     try runLibrary(@embedFile("stdlib/fixtures/library_parity.my"), 42);
 }
+
+// spec: STANDARD-INTEGER-EXTREMA-1
+test "integer extrema cover all widths empty defaults and full signed ranges" {
+    try runLibrary(@embedFile("stdlib/fixtures/integer_extrema.my"), 42);
+}

@@ -6,6 +6,7 @@ import std_collections;
 import std_order;
 import std_json;
 import std_graph;
+import std_math;
 export run;
 result Outcome {
     ok: i64,
@@ -234,9 +235,7 @@ fn work(t: &[]i64, a: i64, ids: &mut []std_order::Item, durations: &mut []i64, n
         let mut d = read_slice(needs, chosen) + 1;
         while d < json::next(t, read_slice(needs, chosen)) {
             let f = read_slice(finish, lookup(t, ids, n, d));
-            if f > start {
-                start = f;
-            }
+            start = std_math::max::< i64 >(start, f);
             d = json::next(t, d);
         }
         write_slice(finish, chosen, start + read_slice(durations, chosen));
@@ -292,9 +291,7 @@ fn work(t: &[]i64, a: i64, ids: &mut []std_order::Item, durations: &mut []i64, n
         discard output::finish();
         discard json::number(f);
         discard output::brace();
-        if f > makespan {
-            makespan = f;
-        }
+        makespan = std_math::max::< i64 >(makespan, f);
         i += 1;
     }
     discard output::makespan();

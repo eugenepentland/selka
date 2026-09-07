@@ -8,7 +8,7 @@ in use; this document describes the source tree.
 | Area | Modules | Available operations |
 | --- | --- | --- |
 | Bytes and text | `std_bytes`, `std_text`, `std_strings` | Byte comparison/search, UTF-8 validation, decimal integers, escaping, prefix/suffix, ASCII trim, byte-delimited splitting as index ranges, replacement, bounded builders and base 2–36 integer formatting |
-| Formatting | `std_math`, `std_format` | Nominal binary64 arithmetic, bounded decimal parsing and fixed-point formatting |
+| Formatting | `std_math`, `std_format` | Integer extrema and empty-default reductions, nominal binary64 arithmetic, bounded decimal parsing and fixed-point formatting |
 | Collections | `std_collections`, `std_map`, `std_set`, `std_borrowed_set`, `std_queue` | Bounded vectors, linear maps/sets, queues, borrowed lookup/mutation, append-many, clear, stable filtering/deduplication, sorting/search |
 | Application primitives | `std_order`, `std_counter`, `std_ascii`, `std_iter`, `std_graph` | Range-key sorting/search and heaps, bounded frequencies, ASCII classes, distinct pairs and directed graph readiness |
 | Owned collections | `std_owned`, `std_owned_map` | Storable owned vectors and linear maps, consuming insertion/replacement, extraction, shrink-only truncation and deterministic cleanup |
