@@ -1,6 +1,6 @@
 //! Guest width bounds, independent of host optimization and physical storage width.
 const typed = @import("typed.zig");
-pub const Error = error{ Overflow, DivisionByZero, InvalidShift, InternalError };
+pub const Error = error{ Overflow, DivisionByZero, InvalidShift, FloatConversion, InternalError };
 
 /// Construct an integer value only when the mathematical value fits the destination width.
 pub fn cast(ty: typed.Type, value: i128) Error!typed.Value {
@@ -38,6 +38,10 @@ pub fn binary(ty: typed.Type, op: typed.BinaryOp, left: i128, right: i128) Error
             return cast(ty, result[0]);
         },
         .bit_and, .bit_or, .bit_xor, .shift_left, .shift_right, .wrapping_add, .wrapping_sub, .wrapping_mul, .saturating_add, .saturating_sub, .saturating_mul => return extended(ty, op, left, right),
+        .f64_add, .f64_sub, .f64_mul, .f64_div, .f64_eq, .f64_lt, .f64_le => {
+            if (ty != .u64) return error.InternalError;
+            return @import("floats.zig").binary(op, @intCast(left), @intCast(right));
+        },
         .logical_and, .logical_or => return error.InternalError,
     }
 }

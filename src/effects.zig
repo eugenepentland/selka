@@ -222,6 +222,7 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
             .mul_i64_checked,
             .div_i64_checked,
             .rem_i64_checked,
+            .unary_float,
             .neg_i64_checked,
             .cmp_i64,
             .try_result,

@@ -76,7 +76,7 @@ def compile_native(zig, mode, temporary, provider, candidate, library=False):
                     '-c', str(provider.resolve()), '-o', str(adapter)], env=provider_env):
             return False
         objects.append(str(adapter))
-    return run([optimize, *(['-shared'] if library else []), *objects, '-o', str(candidate)])
+    return run([optimize, *(['-shared'] if library else []), *objects, '-lm', '-o', str(candidate)])
 
 
 def main():

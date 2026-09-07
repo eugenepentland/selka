@@ -734,7 +734,26 @@ pub const Parser = struct {
                 const close = try self.expect(.rparen);
                 break :read try self.append(.{ .span = .join(token.span, close.span), .data = .{ .read_ref = name.span } });
             },
-            .kw_bit_and, .kw_bit_or, .kw_bit_xor, .kw_shift_left, .kw_shift_right, .kw_wrapping_add, .kw_wrapping_sub, .kw_wrapping_mul, .kw_saturating_add, .kw_saturating_sub, .kw_saturating_mul => try self.parseIntegerOperation(token),
+            .kw_f64_add,
+            .kw_f64_sub,
+            .kw_f64_mul,
+            .kw_f64_div,
+            .kw_f64_eq,
+            .kw_f64_lt,
+            .kw_f64_le,
+            .kw_bit_and,
+            .kw_bit_or,
+            .kw_bit_xor,
+            .kw_shift_left,
+            .kw_shift_right,
+            .kw_wrapping_add,
+            .kw_wrapping_sub,
+            .kw_wrapping_mul,
+            .kw_saturating_add,
+            .kw_saturating_sub,
+            .kw_saturating_mul,
+            => try self.parseIntegerOperation(token),
+            .kw_f64_sqrt, .kw_f64_floor, .kw_f64_ceil, .kw_f64_trunc, .kw_f64_abs, .kw_f64_neg, .kw_f64_from_u64, .kw_f64_to_u64 => try self.parseFloatUnary(token),
             .kw_reset_arena, .kw_cast, .kw_wrap, .kw_acquire_buffer, .kw_acquire_pool => try self.parseCast(token),
             .kw_new => try self.parseRecord(token),
             .kw_match => try self.parseMatchExpression(token),
@@ -1037,6 +1056,18 @@ pub const Parser = struct {
         return self.append(.{ .span = .join(token.span, self.tokens[self.cursor.pos - 1].span), .data = .{ .record = .{ .name = name, .fields = fields } } });
     }
 
+    fn parseFloatUnary(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
+        self.cursor.pos += 1;
+        _ = try self.expect(.lparen);
+        const operand = try self.expression(0);
+        const close = try self.expect(.rparen);
+        const op = std.meta.stringToEnum(ast.UnaryOp, @tagName(token.tag)[3..]).?;
+        return self.append(.{ .span = .join(token.span, close.span), .data = .{ .unary = .{
+            .op = op,
+            .operand = operand,
+            .op_span = token.span,
+        } } });
+    }
     fn parseIntegerOperation(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.pos += 1;
         _ = try self.expect(.lparen);

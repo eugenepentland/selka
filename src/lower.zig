@@ -337,7 +337,7 @@ const Emitter = struct {
             .local => |slot| try self.instruction(node.span, if (typed.moveOnly(node.ty, self.program.records) or typed.requiresHandling(node.ty, self.program.records)) .{ .move_local = slot } else .{ .load_local = slot }),
             .call => |call| try self.emitCall(node.span, call),
             .unary => |u| {
-                try self.instruction(u.op_span, if (u.op == .not) .not_bool else if (node.ty == .i64) .neg_i64_checked else .{ .neg_integer = node.ty });
+                try self.instruction(u.op_span, if (u.op != .neg and u.op != .not) .{ .unary_float = u.op } else if (u.op == .not) .not_bool else if (node.ty == .i64) .neg_i64_checked else .{ .neg_integer = node.ty });
                 try self.push(.{ .expression = u.operand });
             },
             .binary => |b| {
@@ -423,7 +423,25 @@ fn binaryInstruction(binary: anytype, nodes: []const typed.Node, records: []cons
         .mul => .mul_i64_checked,
         .div => .div_i64_checked,
         .rem => .rem_i64_checked,
-        .bit_and, .bit_or, .bit_xor, .shift_left, .shift_right, .wrapping_add, .wrapping_sub, .wrapping_mul, .saturating_add, .saturating_sub, .saturating_mul => .{ .binary_integer = .{ .ty = operand_type, .op = binary.op } },
+        .f64_add,
+        .f64_sub,
+        .f64_mul,
+        .f64_div,
+        .f64_eq,
+        .f64_lt,
+        .f64_le,
+        .bit_and,
+        .bit_or,
+        .bit_xor,
+        .shift_left,
+        .shift_right,
+        .wrapping_add,
+        .wrapping_sub,
+        .wrapping_mul,
+        .saturating_add,
+        .saturating_sub,
+        .saturating_mul,
+        => .{ .binary_integer = .{ .ty = operand_type, .op = binary.op } },
         .eq, .ne => if (nodes[@backingInt(binary.left)].ty == .bool)
             .{ .cmp_bool = if (binary.op == .eq) .eq else .ne }
         else

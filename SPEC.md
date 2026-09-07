@@ -341,3 +341,4 @@ supersede it. The manifest records implementation coverage, not a test certifica
   bounds, snapshot semantics, ownership exclusion and allocation-failure cleanup.
 
 - [SPLIT-SOURCE-1] `split view at midpoint as left, right { ... }` creates checked disjoint exclusive slices. Siblings may be supplied to the same call, including generic calls. Parent access is suspended for their lexical scope.
+- [FLOAT-DOMAIN-1] std_math::F64 supplies explicit IEEE binary64 operations over a nominal u64 representation, canonical arithmetic NaNs, numeric comparisons, checked integer conversion and exact bit serialization; builtin f64 syntax is not introduced.

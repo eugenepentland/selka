@@ -82,6 +82,7 @@ fn writeFunction(writer: *std.Io.Writer, program: bc.Program, src: Source, funct
 fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, instruction: bc.Instruction, i: usize) std.Io.Writer.Error!void {
     try writer.print("  {d:0>4}  ", .{i});
     switch (instruction.op) {
+        .unary_float => |op| try writer.print("unary_float {s}", .{@tagName(op)}),
         .push_i64 => |value| try writer.print("PUSH_I64 {d}", .{value}),
         .make_record => |record| try writer.print("MAKE_RECORD type#{d} fields={d} order={any}", .{ @backingInt(record.ty), record.fields, record.order }),
         .update_record => |update| try writer.print("UPDATE_RECORD type#{d} fields={any}", .{ @backingInt(update.ty), update.indices }),

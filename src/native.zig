@@ -142,6 +142,7 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     try w.writeAll(@embedFile("native_embed.h"));
     try w.writeAll(@embedFile("native_runtime.c"));
     try w.writeAll(@embedFile("native_resources.c"));
+    if (hasFloatSupport(program)) try w.writeAll(@embedFile("native_math.c"));
     try @import("native_host.zig").emit(w, layout, program);
     if (hasJsonSupport(program)) {
         try @import("native_json_schema.zig").emit(w, program);
@@ -357,6 +358,7 @@ fn checkFunction(layout: native_layout.Layout, function: bc.Function, sink: *dia
         .mul_i64_checked,
         .div_i64_checked,
         .rem_i64_checked,
+        .unary_float,
         .neg_i64_checked,
         .cmp_i64,
         .cmp_bool,
@@ -558,6 +560,10 @@ fn writeOperation(context: InstructionOutput) !bool {
         .not_bool => try w.writeAll("push(!pop());\n"),
         .cmp_i64 => |op| try w.print(binary_format, .{predicate(std.meta.stringToEnum(typed.BinaryOp, @tagName(op)).?)}),
         .cmp_bool => |op| try w.print(binary_format, .{if (op == .eq) "==" else "!="}),
+        .unary_float => |op| {
+            const code = floatUnaryCode(op);
+            try w.print("push(float_unary({d}, (uint64_t)pop()));\n", .{code});
+        },
         .cast_integer, .neg_integer, .neg_i64_checked => {
             const ty = switch (ins.op) {
                 .cast_integer, .neg_integer => |ty| ty,
@@ -580,6 +586,10 @@ fn writeOperation(context: InstructionOutput) !bool {
             try w.writeAll("V b = pop(), a = pop(); ");
             switch (operation) {
                 .eq, .ne, .lt, .le, .gt, .ge => try w.print("push(a {s} b);\n", .{predicate(operation)}),
+                .f64_add, .f64_sub, .f64_mul, .f64_div, .f64_eq, .f64_lt, .f64_le => {
+                    const code = floatBinaryCode(operation);
+                    try w.print("push(float_binary({d}, (uint64_t)a, (uint64_t)b));\n", .{code});
+                },
                 .bit_and, .bit_or, .bit_xor, .shift_left, .shift_right, .wrapping_add, .wrapping_sub, .wrapping_mul, .saturating_add, .saturating_sub, .saturating_mul => {
                     const code: usize = switch (operation) {
                         .bit_and => 0,
@@ -703,4 +713,41 @@ fn writeJsonSupport(w: *std.Io.Writer) error{WriteFailed}!void {
     }
     const digest = hash.finalResult();
     try w.print("#define MYLANG_NATIVE_JSON 1\n#define MYLANG_NATIVE_JSON_SUPPORT_SHA256 \"{s}\"\n", .{std.fmt.bytesToHex(digest, .lower)});
+}
+
+fn hasFloatSupport(program: bc.Program) bool {
+    for (program.functions) |function| {
+        for (function.scope.instructions) |instruction| {
+            if (instruction.op == .unary_float) return true;
+            if (instruction.op == .binary_integer and std.mem.startsWith(u8, @tagName(instruction.op.binary_integer.op), "f64_")) return true;
+        }
+    }
+    return false;
+}
+
+fn floatUnaryCode(op: typed.UnaryOp) usize {
+    return switch (op) {
+        .f64_sqrt => 0,
+        .f64_floor => 1,
+        .f64_ceil => 2,
+        .f64_trunc => 3,
+        .f64_abs => 4,
+        .f64_neg => 5,
+        .f64_from_u64 => 6,
+        .f64_to_u64 => 7,
+        else => unreachable,
+    };
+}
+
+fn floatBinaryCode(operation: typed.BinaryOp) usize {
+    return switch (operation) {
+        .f64_add => 0,
+        .f64_sub => 1,
+        .f64_mul => 2,
+        .f64_div => 3,
+        .f64_eq => 4,
+        .f64_lt => 5,
+        .f64_le => 6,
+        else => unreachable,
+    };
 }

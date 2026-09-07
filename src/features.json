@@ -4,6 +4,7 @@
   "native_backend": "partial-c",
   "implemented": [
     "fixed-width-integers",
+    "std_math-binary64-domain",
     "named-integer-bitwise-shifts",
     "wrapping-saturating-integers",
     "booleans",

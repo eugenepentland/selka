@@ -33,11 +33,18 @@ pub const BinaryOp = enum {
     saturating_add,
     saturating_sub,
     saturating_mul,
+    f64_add,
+    f64_sub,
+    f64_mul,
+    f64_div,
+    f64_eq,
+    f64_lt,
+    f64_le,
 };
 /// Parsed simple, additive, and subtractive assignment forms.
 pub const AssignmentOp = enum { set, add, sub };
 /// Parsed negation and Boolean inversion operators.
-pub const UnaryOp = enum { neg, not };
+pub const UnaryOp = enum { neg, not, f64_sqrt, f64_floor, f64_ceil, f64_trunc, f64_abs, f64_neg, f64_from_u64, f64_to_u64 };
 /// Source type spelling paired with an expression requiring that type.
 pub const TypedValue = struct { ty: Span, value: NodeId };
 /// Parsed expression with source-spelled names and unresolved operand identities.

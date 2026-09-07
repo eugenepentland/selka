@@ -318,6 +318,7 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
             .unwrap_domain => step.executeUnwrapDomain(),
             .get_field => step.executeGetField(),
             .push_integer => step.executePushInteger(),
+            .unary_float => step.executeUnaryFloat(),
             .cast_integer, .neg_integer => step.executeCastInteger(),
             .binary_integer => step.executeBinaryInteger(),
             .push_i64 => step.executePushI64(),
@@ -812,6 +813,17 @@ const Step = struct {
         return null;
     }
 
+    fn executeUnaryFloat(self: *Step) !?ValueResult {
+        const allocator = self.execution.allocator;
+        const stack = self.execution.state.stack;
+        const operand = try numeric(stack, self.frame.operand_base, .u64, allocator);
+        const value = @import("floats.zig").unary(self.instruction.op.unary_float, @intCast(operand)) catch |err| switch (err) {
+            error.FloatConversion => return trap("R_FLOAT_CONVERSION", "floating value is outside the unsigned integer range", self.instruction.span, self.execution.state.frames.items, self.execution.program),
+            else => return error.InternalError,
+        };
+        try stack.append(allocator, Value.number(.u64, value));
+        return null;
+    }
     fn executePushInteger(self: *Step) !?ValueResult {
         const allocator = self.execution.allocator;
         const stack = self.execution.state.stack;

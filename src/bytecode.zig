@@ -135,6 +135,7 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
             if ((try variantSchema(comparison.ty, program)).is_union) return error.InternalError;
         },
         .switch_variant => |dispatch| try validateOpSwitchVariant(program, function, dispatch),
+        .unary_float => |op| try validateFloatUnary(op),
         .push_integer => |number| {
             if (!number.ty.isInteger() or !number.ty.fits(number.value)) return error.InternalError;
         },
@@ -161,6 +162,7 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
         },
         .binary_integer => |binary| {
             if (!binary.ty.isInteger() or binary.op == .logical_and or binary.op == .logical_or) return error.InternalError;
+            try validateFloatBinary(binary.ty, binary.op);
         },
         .split_borrow => |pair| try validateSplit(function, pair.left, pair.right),
         .begin_borrow, .begin_slice, .end_borrow, .read_ref, .write_ref, .read_slice, .write_slice, .len_slice => |id| try validateOpBeginBorrow(program, function, instruction, id),
@@ -524,7 +526,21 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
                 if (height < 2) return error.InternalError;
                 height -= 1;
             },
-            .reset_arena, .restrict_resource, .complete_resource, .external_read, .read_slice, .neg_i64_checked, .not_bool, .get_field, .cast_integer, .neg_integer, .array_length, .wrap_domain, .unwrap_domain => if (height == 0) {
+            .reset_arena,
+            .restrict_resource,
+            .complete_resource,
+            .external_read,
+            .read_slice,
+            .unary_float,
+            .neg_i64_checked,
+            .not_bool,
+            .get_field,
+            .cast_integer,
+            .neg_integer,
+            .array_length,
+            .wrap_domain,
+            .unwrap_domain,
+            => if (height == 0) {
                 return error.InternalError;
             },
             .call, .call_refs, .call_borrow => {
@@ -745,4 +761,12 @@ fn validateReferenceOrigin(function: Function, reference: typed.Reference, index
     if (@backingInt(reference.owner) >= function.signature.parameter_count) return error.InternalError;
     if (local.parameter.reference_parameter != reference.mutable) return error.InternalError;
     if (local.parameter.slice_parameter != reference.mode.slice) return error.InternalError;
+}
+
+fn validateFloatUnary(op: typed.UnaryOp) Error!void {
+    if (op == .neg or op == .not) return error.InternalError;
+}
+
+fn validateFloatBinary(ty: typed.Type, op: typed.BinaryOp) Error!void {
+    if (std.mem.startsWith(u8, @tagName(op), "f64_") and ty != .u64) return error.InternalError;
 }

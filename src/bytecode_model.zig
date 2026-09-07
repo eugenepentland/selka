@@ -69,6 +69,7 @@ pub const Instruction = struct {
         div_i64_checked,
         rem_i64_checked,
         neg_i64_checked,
+        unary_float: typed.UnaryOp,
         cmp_i64: Predicate,
         cmp_bool: Equality,
         not_bool,

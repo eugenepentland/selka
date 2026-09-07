@@ -106,6 +106,7 @@ const Evaluator = struct {
         return self.context.sink.fail("E_CONSTANT_ARITHMETIC", span, switch (err) {
             error.Overflow => "constant arithmetic overflows its integer type",
             error.DivisionByZero => "constant arithmetic divides by zero",
+            error.FloatConversion => "constant floating conversion is outside the integer range",
             error.InvalidShift => "constant shift count is outside its integer width",
             error.InternalError => "constant operation requires matching scalar operand types",
         });
@@ -137,6 +138,11 @@ const Evaluator = struct {
                     return integers.cast(literal.ty, -literal.value) catch |err| return self.failure(node.span, err);
                 }
                 const value = try self.expression(unary.operand, depth + 1);
+                if (unary.op != .neg and unary.op != .not) {
+                    if (value.typeOf() != .u64) return self.context.sink.fail("E_TYPE", node.span, "floating representation requires u64");
+                    const converted = @import("floats.zig").unary(std.meta.stringToEnum(typed.UnaryOp, @tagName(unary.op)).?, @intCast(integer(value))) catch |err| return self.failure(node.span, err);
+                    return typed.Value.number(.u64, converted);
+                }
                 if (unary.op == .not and value.typeOf() == .bool) return .{ .bool = !value.bool };
                 if (unary.op == .neg and value.typeOf().isInteger()) return integers.cast(value.typeOf(), -integer(value)) catch |err| return self.failure(node.span, err);
                 return self.context.sink.fail("E_TYPE", node.span, "invalid constant unary operand");

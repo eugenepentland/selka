@@ -790,7 +790,7 @@ const Checker = struct {
                     .{ .concrete = (try @import("integer_literal.zig").parse(self.src, child.data.integer, true, self.sink)).ty }
                 else
                     try self.expression(unary.operand);
-                if (unary.op == .neg) try self.supports(operand, .integer, unary.op_span) else try self.same(operand, .{ .concrete = .bool }, unary.op_span);
+                if (unary.op == .neg) try self.supports(operand, .integer, unary.op_span) else try self.same(operand, .{ .concrete = if (unary.op == .not) .bool else .u64 }, unary.op_span);
                 break :result operand;
             },
             .binary => |operation| try self.binary(operation),
@@ -1141,12 +1141,33 @@ const Checker = struct {
         if (state) |snapshot| try self.samePending(snapshot, operation.op_span, eResultPath);
         try self.same(right, left, operation.op_span);
         switch (operation.op) {
+            .f64_add, .f64_sub, .f64_mul, .f64_div, .f64_eq, .f64_lt, .f64_le => try self.same(left, .{ .concrete = .u64 }, operation.op_span),
             .logical_and, .logical_or => try self.same(left, .{ .concrete = .bool }, operation.op_span),
             .eq, .ne => try self.supports(left, .equality, operation.op_span),
             else => try self.supports(left, .integer, operation.op_span),
         }
         return switch (operation.op) {
-            .add, .sub, .mul, .div, .rem, .bit_and, .bit_or, .bit_xor, .shift_left, .shift_right, .wrapping_add, .wrapping_sub, .wrapping_mul, .saturating_add, .saturating_sub, .saturating_mul => left,
+            .f64_add,
+            .f64_sub,
+            .f64_mul,
+            .f64_div,
+            .add,
+            .sub,
+            .mul,
+            .div,
+            .rem,
+            .bit_and,
+            .bit_or,
+            .bit_xor,
+            .shift_left,
+            .shift_right,
+            .wrapping_add,
+            .wrapping_sub,
+            .wrapping_mul,
+            .saturating_add,
+            .saturating_sub,
+            .saturating_mul,
+            => left,
             else => .{ .concrete = .bool },
         };
     }

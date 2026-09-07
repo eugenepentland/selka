@@ -48,9 +48,16 @@ pub const BinaryOp = enum {
     saturating_add,
     saturating_sub,
     saturating_mul,
+    f64_add,
+    f64_sub,
+    f64_mul,
+    f64_div,
+    f64_eq,
+    f64_lt,
+    f64_le,
 };
 /// Checked numeric negation and Boolean inversion operations.
-pub const UnaryOp = enum { neg, not };
+pub const UnaryOp = enum { neg, not, f64_sqrt, f64_floor, f64_ceil, f64_trunc, f64_abs, f64_neg, f64_from_u64, f64_to_u64 };
 /// Typed expression with resolved operands and source location.
 pub const Node = struct {
     ty: Type,

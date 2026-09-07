@@ -27,7 +27,7 @@ The detailed [SPEC](../SPEC.md) and focused experiment references describe
 operation contracts and their tests. [semantics.md](semantics.md) preserves
 historical checkpoints and must not be read as one current feature inventory.
 
-Absent features include floating point, function values, guest threads, arbitrary
+Absent features include builtin floating-point syntax, function values, guest threads, arbitrary
 stored reference lifetimes, disjoint split borrows and general source compile-time
 execution. The [feature audit](audits/feature-completeness-2026-09-07.md) proposes
 extensions; their presence in that backlog does not claim implementation.
@@ -37,3 +37,5 @@ generations and leases. The VM is single-threaded. `noalloc` restricts guest
 backing allocations, not all compiler/VM/host allocation. Host callbacks are
 trusted implementations of documented contracts. These limits are part of the
 current model, not guarantees supplied by a future backend or thread system.
+
+`std_math::F64` provides named IEEE binary64 arithmetic, basic math, checked integer conversion and exact bit codecs; see [floating-point.md](floating-point.md).

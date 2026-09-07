@@ -1096,9 +1096,9 @@ const Checker = struct {
             .call => |call| try self.checkCall(node, call, &out),
             .unary => |u| {
                 const operand = self.resolved[@backingInt(u.operand)].?;
-                out.ty = if (u.op == .neg) self.nodes.items[@backingInt(operand)].ty else .bool;
-                if (u.op == .neg) try self.requireInteger(out.ty, u.op_span) else try self.require(self.nodes.items[@backingInt(operand)].ty, .bool, u.op_span);
-                out.data = .{ .unary = .{ .op = if (u.op == .neg) .neg else .not, .operand = operand, .op_span = u.op_span } };
+                out.ty = if (u.op == .not) .bool else self.nodes.items[@backingInt(operand)].ty;
+                if (u.op == .neg) try self.requireInteger(out.ty, u.op_span) else try self.require(self.nodes.items[@backingInt(operand)].ty, if (u.op == .not) .bool else .u64, u.op_span);
+                out.data = .{ .unary = .{ .op = std.meta.stringToEnum(typed.UnaryOp, @tagName(u.op)).?, .operand = operand, .op_span = u.op_span } };
             },
             .binary => |b| {
                 const left = self.resolved[@backingInt(b.left)].?;
@@ -1107,6 +1107,14 @@ const Checker = struct {
                 const rt = self.nodes.items[@backingInt(right)].ty;
                 try self.require(rt, lt, b.op_span);
                 switch (b.op) {
+                    .f64_eq, .f64_lt, .f64_le => {
+                        try self.require(lt, .u64, b.op_span);
+                        out.ty = .bool;
+                    },
+                    .f64_add, .f64_sub, .f64_mul, .f64_div => {
+                        try self.require(lt, .u64, b.op_span);
+                        out.ty = .u64;
+                    },
                     .logical_and, .logical_or => {
                         try self.require(lt, .bool, b.op_span);
                         out.ty = .bool;
