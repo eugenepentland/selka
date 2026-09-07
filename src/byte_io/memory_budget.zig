@@ -39,10 +39,17 @@ pub const Config = struct {
 fn statistic(budget: Memory) struct { limit: usize, live: usize, peak: usize } {
     return .{ .limit = budget.limit, .live = budget.live, .peak = budget.peak };
 }
+/// Subcategories share the VM parent budget; logical capacity counts slots, not bytes.
+pub const Observations = struct {
+    backing: Memory,
+    bookkeeping: Memory,
+    buffers: @import("mylang").memory.Statistics = .{},
+    pools: @import("mylang").pool_runtime.Statistics = .{},
+};
 /// Emit best-effort accounting after resource cleanup without allocating memory.
-pub fn report(io: std.Io, config: Config, total: Memory, vm: Memory, host: Memory) void {
+pub fn report(io: std.Io, config: Config, total: Memory, vm: Memory, host: Memory, observations: Observations) void {
     if (!config.output) return;
-    var buffer: [1024]u8 = undefined;
+    var buffer: [2048]u8 = undefined;
     var writer = std.Io.Writer.fixed(&buffer);
     std.json.Stringify.value(.{
         .version = "runtime-memory-v1",
@@ -50,6 +57,8 @@ pub fn report(io: std.Io, config: Config, total: Memory, vm: Memory, host: Memor
         .total = statistic(total),
         .vm = statistic(vm),
         .host = statistic(host),
+        .vm_categories = .{ .guest_backing = statistic(observations.backing), .bookkeeping_and_snapshots = statistic(observations.bookkeeping) },
+        .logical_slots = .{ .buffers = observations.buffers, .pools = observations.pools },
     }, .{}, &writer) catch return;
     writer.writeByte('\n') catch return;
     std.Io.File.stderr().writeStreamingAll(io, writer.buffered()) catch return;

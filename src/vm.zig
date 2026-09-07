@@ -39,6 +39,8 @@ pub const Options = struct {
 /// Backing policy, owner quotas, and optional execution-memory observations.
 pub const MemoryOptions = struct {
     backing: MemoryBacking = .general,
+    /// Optional guest buffer/pool backing allocator; excludes snapshots and VM metadata.
+    backing_allocator: ?std.mem.Allocator = null,
     limits: memory.Limits = .{},
     statistics: ?*memory.Statistics = null,
     provide_allocator: bool = true,
@@ -211,9 +213,9 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
         if (function.policy.host) |span| return trap("R_HOST_REGISTRATION", "program requires explicitly registered host functions", span, &.{}, program);
     };
     var region: @import("arena.zig").Arena = undefined;
-    try region.init(allocator, options.memory.limits);
+    try region.initWithBacking(allocator, options.memory.backing_allocator orelse allocator, options.memory.limits);
     const storage = &region.store;
-    if (options.memory.backing == .general) storage.backing.allocator = null;
+    if (options.memory.backing == .general) storage.backing.allocator = options.memory.backing_allocator;
     defer {
         region.deinit();
         if (options.memory.statistics) |statistics| statistics.* = storage.statistics;

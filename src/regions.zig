@@ -16,6 +16,8 @@ const Registry = pools.Pool(Tag, *Region);
 pub const RegionStore = struct {
     allocator: std.mem.Allocator,
     registry: Registry,
+    /// Optional chunk allocator; metadata continues to use allocator.
+    backing_allocator: ?std.mem.Allocator = null,
 
     /// Initialize an empty region registry with a maximum number of live region slots.
     pub fn init(allocator: std.mem.Allocator, max_regions: usize) Error!RegionStore {
@@ -36,7 +38,7 @@ pub const RegionStore = struct {
         errdefer self.allocator.destroy(region);
         // Each arena owns independent chunks from the execution allocator. The
         // parent relation constrains lifetime, not the allocator of those chunks.
-        region.* = .{ .arena = .init(self.allocator), .parent = parent };
+        region.* = .{ .arena = .init(self.backing_allocator orelse self.allocator), .parent = parent };
         const id = self.registry.insert(region) catch |err| return switch (err) {
             error.OutOfMemory => error.OutOfMemory,
             error.CapacityLimit => error.CapacityLimit,
@@ -73,7 +75,7 @@ pub const RegionStore = struct {
         if (region.children != 0) return error.ChildrenActive;
         if (region.users != 0) return error.RegionInUse;
         region.arena.deinit();
-        region.arena = .init(self.allocator);
+        region.arena = .init(self.backing_allocator orelse self.allocator);
     }
     /// Preflight all lifetime constraints; rejection leaves authority and backing
     /// unchanged. Success invalidates the capability even if its slot is reused.

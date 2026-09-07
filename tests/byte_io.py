@@ -25,7 +25,17 @@ def main():
         accounting = json.loads(measured.stderr)
         assert accounting['version'] == 'runtime-memory-v1'
         assert accounting['total']['live'] == 0
+        assert accounting['vm_categories']['guest_backing']['live'] == 0
+        assert accounting['vm_categories']['bookkeeping_and_snapshots']['peak'] > 0
+        assert accounting['logical_slots']['buffers']['total_capacity'] == 0
         assert accounting['vm']['peak'] > 0 and accounting['host']['peak'] > 0
+        backed = run('buffer B:i64;result R{ok:B,err:i64}fn main(a:allocator)->i64{arena a as child{match acquire_buffer<R>(child,8){R.ok(b)=>{discard b;},R.err(e)=>{return e;}}}return 0;}', flags=('--memory-report',))
+        assert backed.returncode == 0, backed.stderr
+        backing_report = json.loads(backed.stderr)
+        assert backing_report['vm_categories']['guest_backing']['peak'] > 0
+        assert backing_report['vm_categories']['guest_backing']['live'] == 0
+        assert backing_report['logical_slots']['buffers']['peak_capacity'] == 8
+        assert backing_report['logical_slots']['buffers']['total_capacity'] == 0
         for flag in ('--max-runtime-bytes=0', '--max-vm-bytes=0', '--max-host-bytes=0'):
             exhausted = run('fn main()->i64{discard io::put(65u8);return 0;}', flags=(flag, '--memory-report'))
             assert exhausted.returncode != 0 and not exhausted.stdout, exhausted

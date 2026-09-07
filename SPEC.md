@@ -349,3 +349,5 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [SOURCE-EVAL-1] Scalar module constants may invoke nongeneric source functions with scalar arguments, locals, branches, loops and recursion. Static validation rejects external effects and unsupported memory/aggregate operations even in untaken paths. Evaluation is limited to 256 nesting levels and 65536 expression, statement and lookup work units, with located errors and no executable publication on failure. Every compilation reevaluates from its complete source/input snapshot with fixed-width target-independent scalar semantics.
 
 - [SPLIT-CONTEXTUAL-1] `split` introduces a partition only at statement start followed by its view identifier; it remains available as a function, local, field or reference identifier elsewhere.
+
+- [RUNTIME-CATEGORIES-1] VM guest backing may use a separately budgeted allocator from metadata and independent snapshots. Reports distinguish requested backing bytes (including retained arena chunks) from logical live/peak buffer and pool slots; nested regions use the supplied backing budget and failed acquisitions do not increase logical accounting.

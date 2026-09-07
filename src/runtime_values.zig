@@ -346,7 +346,7 @@ pub const Memory = struct {
         max_allocations: usize = std.math.maxInt(usize),
     };
     /// Current backing usage and cumulative guest owner lifecycle counters.
-    pub const Statistics = struct { live_allocations: usize = 0, total_capacity: usize = 0, created: u64 = 0, released: u64 = 0, transfers: u64 = 0 };
+    pub const Statistics = struct { live_allocations: usize = 0, total_capacity: usize = 0, created: u64 = 0, released: u64 = 0, transfers: u64 = 0, peak_capacity: usize = 0, peak_allocations: usize = 0 };
     /// Element type, initialized length, and reserved capacity of a live allocation.
     pub const BufferInfo = struct { element_type: Type, length: usize, capacity: usize };
     /// Whether a reservation required replacement backing storage.
@@ -622,6 +622,8 @@ pub const Memory = struct {
             const token = try self.cells.insert(self.allocator, owned);
             self.statistics.live_allocations += 1;
             self.statistics.total_capacity += capacity;
+            self.statistics.peak_capacity = @max(self.statistics.peak_capacity, self.statistics.total_capacity);
+            self.statistics.peak_allocations = @max(self.statistics.peak_allocations, self.statistics.live_allocations);
             self.statistics.created +|= 1;
             return .{ .memory = self.identity, .token = token };
         }
@@ -653,6 +655,7 @@ pub const Memory = struct {
             owned.backing.allocator.free(owned.values);
             owned.values = grown;
             self.statistics.total_capacity += increase;
+            self.statistics.peak_capacity = @max(self.statistics.peak_capacity, self.statistics.total_capacity);
             return .allocated;
         }
         /// Append a typed value without allocating additional capacity.
@@ -925,7 +928,7 @@ pub const Pools = struct {
     /// Bounds on pool count, individual capacity, and total reserved slots.
     pub const Limits = struct { max_pools: usize = 64, max_pool_slots: usize = 4096, max_total_slots: usize = 16384 };
     /// Current pool backing usage and cumulative owner lifecycle counters.
-    pub const Statistics = struct { live_pools: usize = 0, reserved_slots: usize = 0, acquired: u64 = 0, released: u64 = 0 };
+    pub const Statistics = struct { live_pools: usize = 0, reserved_slots: usize = 0, acquired: u64 = 0, released: u64 = 0, peak_slots: usize = 0, peak_pools: usize = 0 };
     /// Owns typed pool registries and tracks their aggregate capacity limits.
     pub const Runtime = struct {
         allocator: std.mem.Allocator,
@@ -952,6 +955,8 @@ pub const Pools = struct {
             try owner.registry.reserve(capacity);
             self.statistics.live_pools += 1;
             self.statistics.reserved_slots += capacity;
+            self.statistics.peak_slots = @max(self.statistics.peak_slots, self.statistics.reserved_slots);
+            self.statistics.peak_pools = @max(self.statistics.peak_pools, self.statistics.live_pools);
             self.statistics.acquired +|= 1;
             return .{ .owned = .{ .pool = owner } };
         }

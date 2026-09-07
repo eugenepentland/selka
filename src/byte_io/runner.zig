@@ -26,8 +26,12 @@ fn run(init: std.process.Init) !void {
     var total: language.allocation_budget.Memory = .{ .parent = init.gpa, .limit = options.memory.total };
     var vm_budget = total.child(options.memory.vm);
     var host_budget = total.child(options.memory.host);
-    defer @import("memory_budget.zig").report(init.io, options.memory, total, vm_budget, host_budget);
-    const runtime_allocator = vm_budget.allocator();
+    var observations: @import("memory_budget.zig").Observations = .{
+        .backing = vm_budget.child(options.memory.vm),
+        .bookkeeping = vm_budget.child(options.memory.vm),
+    };
+    defer @import("memory_budget.zig").report(init.io, options.memory, total, vm_budget, host_budget, observations);
+    const runtime_allocator = observations.bookkeeping.allocator();
     var context: bridge.Context = .{ .allocator = host_budget.allocator(), .input = input, .output_limit = options.output };
     defer context.deinit();
     var registry = try language.vm_host.Registry.init(runtime_allocator, program.compilation.code.?);
@@ -38,6 +42,9 @@ fn run(init: std.process.Init) !void {
     defer grants.deinit();
     var vm_options = grants.options();
     vm_options.max_steps = options.execution.steps;
+    vm_options.memory.backing_allocator = observations.backing.allocator();
+    vm_options.memory.statistics = &observations.buffers;
+    vm_options.pools.statistics = &observations.pools;
     const result = try language.vm.runWithHost(runtime_allocator, program.compilation.code.?, vm_options, &registry, .{ .max_calls = options.execution.calls, .max_work = options.execution.work });
     switch (result) {
         .trap => |trap| {
