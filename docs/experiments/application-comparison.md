@@ -655,5 +655,10 @@ passed private grading for all three languages. `.my` and Python each took about
 117 seconds of application work; Zig with Guardian took 214 seconds. Library
 preparation was excluded and recorded separately. This fixed-order exploratory
 block has no established productivity/defect-rate advantage and is not pooled
-with older calibration. Next fix portable test launching and telemetry, then
-repeat matched task families before deciding larger-tier work.
+with older calibration. The [portable planner follow-up](portable-planner-trials-20260907.md)
+now adds nine fresh repair/shared-contract/feature sessions: all private packs and
+prelaunch cycle limit checks passed. Preparation and application clocks remain
+separate; there are 21 exploratory sessions overall and zero scored sessions.
+Next prepare a medium-size maintenance workload with the same library-first rule;
+verifiable model/turn/usage telemetry and enforced participant confinement remain
+prerequisites for scored claims.

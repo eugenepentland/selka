@@ -30,6 +30,10 @@ exploratory sessions are recorded separately.
 The [first library-prepared rotation block](stdlib-parity-rotation-20260907.md)
 now passes for all three languages; its exploratory timings remain separate from
 older cohorts and do not establish a general advantage.
+The [portable planner follow-up](portable-planner-trials-20260907.md) adds nine fresh
+repair/contract/feature sessions with passing private packs and cycle limit checks.
+Prepare medium-size maintenance next, reviewing and filling library gaps before
+application timing; scored work still needs verifiable telemetry and confinement.
 
 The user authorized duplicate discovery and post-MVP experiments on 2026-09-05.
 The scalar MVP remains the tested baseline. This is implementation tracking,

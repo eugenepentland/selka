@@ -1,0 +1,1588 @@
+{
+  "version": "portable-planner-exploratory-v1",
+  "scored": false,
+  "comparative_claim": false,
+  "record_count": 9,
+  "prior_rotation_not_modified_or_pooled": true,
+  "library_preparation": "docs/experiments/portable-planner-preparation-20260907.md",
+  "readiness_receipt": "experiments/application_comparison/evidence/portable-planner-readiness-20260907.json",
+  "exact_model_id": null,
+  "model_turns": null,
+  "tokens": null,
+  "compute_cost": null,
+  "blocks": {
+    "planner-input-boundary": {
+      "protocol": {
+        "bridge_sha256": "3d1ba3bc6c836f8656da063524c22ffdb4e9f2caa36ec14e26cea5387727a47b",
+        "build_policy": "suite-build-reuse-v1",
+        "deviations": [
+          "Whole-agent host access restricted by instruction, not enforced by runtime; all participant commands use namespace gateway.",
+          "Exact agent model ID, turn count, token use and cost unavailable.",
+          "Sequential dispatch due thread capacity; cyclic language order across three blocks; shared-host effects remain possible.",
+          "One draft task per family, one fresh participant per language; exploratory only.",
+          "No API driver provenance; configurations and coordinator source inventory retained separately.",
+          "Earlier calibration used different library/baseline versions; do not pool raw times or claim a causal before/after effect."
+        ],
+        "dispatch_order": [
+          "python",
+          "my",
+          "zig"
+        ],
+        "languages": [
+          "my",
+          "python",
+          "zig"
+        ],
+        "main_arm": "Guardian for Zig; compiler/navigation for my",
+        "mode": "direct-coding-subagents",
+        "preparation_seconds": 1200,
+        "readiness_sha256": "365df1cfa0345d671fe12da0eaeab4d38007481426deaf10c2802747fd08a9d5",
+        "scored": false,
+        "setup_sha256": "7a2b25af6d8ac1d09e407c1b13296c750a1f8bcbce43549263c80408c3b7cb6a",
+        "stdlib_parity_policy": "stdlib-parity-before-application-timing-v1",
+        "task": "planner-input-boundary",
+        "task_seconds": 1800
+      },
+      "private_groups": 14,
+      "participants": {
+        "my": {
+          "failed_public_submissions": 0,
+          "hidden": {
+            "accepted": true,
+            "failed_cases": []
+          },
+          "metrics": {
+            "adjacent_unchanged_task_checks": 0,
+            "cache_hits": null,
+            "limitations": [
+              "Direct search counts exclude searches embedded in shells or scripts.",
+              "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+              "Output bytes are captured command output, not source bytes read or model context.",
+              "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+            ],
+            "phases": {
+              "preparing": {
+                "captured_output_bytes": 7219,
+                "command_count": 3,
+                "command_interval_seconds": 0.278004292,
+                "direct_search_commands": 0,
+                "failed_commands": 0,
+                "failed_language_tool_commands": {},
+                "language_tool_commands": {}
+              },
+              "working": {
+                "captured_output_bytes": 59444,
+                "command_count": 8,
+                "command_interval_seconds": 8.43441339,
+                "direct_search_commands": 0,
+                "failed_commands": 3,
+                "failed_language_tool_commands": {},
+                "language_tool_commands": {}
+              }
+            },
+            "queue_wait_seconds": null,
+            "relevant_location_seconds": null,
+            "session_sha256": "54ddccf1faf681db88bed0e7d8fc7266fd3afb14d084f77816e4f2b0d303c4fb",
+            "submission_to_check_seconds": [
+              1.273663674
+            ],
+            "task_checks": 1,
+            "uncommitted_command_records": [],
+            "version": "observed-tool-metrics-v1"
+          },
+          "practice_outcome": "passed",
+          "preparation_seconds": 27.874025856,
+          "public_submissions": 1,
+          "seal_reason": "completed",
+          "source": {
+            "files": {
+              ".trial-public/CONTRACT.md": "5376bebb0bb91837eba2753a25d24fbd5a9b1c445db2c0cc6bbc19c97c26bda2",
+              ".trial-public/GUIDE.md": "5f98618e9d4d5ffedd0a3e8bb045b3b5968a6aec4f9b8915bed21266e6242c95",
+              ".trial-public/LIBRARY.md": "ec83bd4d60c19fa915e970e4beca42d632e6f6ca1a191135fcca548228a982a7",
+              ".trial-public/brief.md": "195922b4461659759e1d2fde4ed0dd9752e70d788387d46b463bbf904949848e",
+              ".trial-public/cases.json": "56613b89801687966a1bc32efdd3231fd4cad06f2d80a85b6b9f5d121e8abd0f",
+              "README.md": "6ba36a8b2caa42b0346a595437b1ff9cf6e42cc36171828868346c992590a340",
+              "io.my": "318bf703f8fa8e1fe706d7211b226c19ea60f9e885ef06da4279a8970df395e9",
+              "json.my": "c4ff44f1102c4f8406bd79167003fc26c376bf6c1383d2482e631f7323267e99",
+              "main.my": "07a543d5f8d04b265da49802f3905fd4d5a5afb116734e2b962c21f4fe80de86",
+              "output.my": "9072918f78a7449a42c4bb48565e0c62932f6a34d0449713f5c807b65fd54b7c",
+              "planner.my": "bdf84544f00894b54106da2254c35e861af9a1eda139b85b2c8ffea25762f1f3",
+              "probes/buffer/io.my": "318bf703f8fa8e1fe706d7211b226c19ea60f9e885ef06da4279a8970df395e9",
+              "probes/buffer/main.my": "cf53137ee3d6a694a0a150c2a061bbbb20ec0caeba7e37f5264c950f57d3192b",
+              "schema.my": "e89d70ffba58e933cb456fccb916e033d18847b70fe5b3b2f0ca239e30283d56",
+              "stress_cli.py": "9e8d330d34a9800e85dccbdb742f99fdb6669d47f7da770d2ec0fb7e182b8323",
+              "test_cli.py": "1ef08e343fcd91ed31db09d256de77d6617cd43e9b0a61ce2288afebb728d8de"
+            },
+            "sha256": "8f9457f28a90ca9bbafe0e168aa83ba8068de895294ad0bc80bc4b725ae1984c"
+          },
+          "task_seconds": 95.026027434
+        },
+        "python": {
+          "failed_public_submissions": 0,
+          "hidden": {
+            "accepted": true,
+            "failed_cases": []
+          },
+          "metrics": {
+            "adjacent_unchanged_task_checks": 0,
+            "cache_hits": null,
+            "limitations": [
+              "Direct search counts exclude searches embedded in shells or scripts.",
+              "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+              "Output bytes are captured command output, not source bytes read or model context.",
+              "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+            ],
+            "phases": {
+              "preparing": {
+                "captured_output_bytes": 5366,
+                "command_count": 3,
+                "command_interval_seconds": 0.25867515,
+                "direct_search_commands": 0,
+                "failed_commands": 0,
+                "failed_language_tool_commands": {},
+                "language_tool_commands": {}
+              },
+              "working": {
+                "captured_output_bytes": 28172,
+                "command_count": 5,
+                "command_interval_seconds": 1.787583115,
+                "direct_search_commands": 0,
+                "failed_commands": 0,
+                "failed_language_tool_commands": {},
+                "language_tool_commands": {}
+              }
+            },
+            "queue_wait_seconds": null,
+            "relevant_location_seconds": null,
+            "session_sha256": "79bde9446683f83cab4bac912c3e0226aa617d88ae9b2ff4a8b11f2300292ff1",
+            "submission_to_check_seconds": [
+              0.394885161
+            ],
+            "task_checks": 1,
+            "uncommitted_command_records": [],
+            "version": "observed-tool-metrics-v1"
+          },
+          "practice_outcome": "passed",
+          "preparation_seconds": 29.92050251,
+          "public_submissions": 1,
+          "seal_reason": "completed",
+          "source": {
+            "files": {
+              ".trial-public/CONTRACT.md": "5376bebb0bb91837eba2753a25d24fbd5a9b1c445db2c0cc6bbc19c97c26bda2",
+              ".trial-public/GUIDE.md": "0064b749274929e815b7fc2ad255278fafb2ce828acfc1efeb7bd20a29860bbf",
+              ".trial-public/LIBRARY.md": "d826e55ab844c4c399fa7967f46cf5eaa0ee81338a2e842403ab7b53a87c65ea",
+              ".trial-public/brief.md": "195922b4461659759e1d2fde4ed0dd9752e70d788387d46b463bbf904949848e",
+              ".trial-public/cases.json": "56613b89801687966a1bc32efdd3231fd4cad06f2d80a85b6b9f5d121e8abd0f",
+              "README.md": "c27651e53f92bda4125ad643ca9430da7b14f9d1b1cfc09d782d8290af26b283",
+              "planner.py": "f01b3052938a586ee74ecc42a1247b273bbc2c051b0fe4694c0c266e60b03ff8",
+              "test_input_boundary.py": "8ca7d012ca306d140ce05d67fc8de4bef82d213af9c51c75850c3ef0b96b28b3",
+              "test_planner.py": "ce3a4ed0606b87759299eb572fe4f616799e247a728c00e0aa6c5d4d10b1cbd8"
+            },
+            "sha256": "6a476a0ca724720c8930eb1d4530af5fb5e5ec6fc697c00638241fb29d8c1623"
+          },
+          "task_seconds": 70.067025765
+        },
+        "zig": {
+          "failed_public_submissions": 0,
+          "hidden": {
+            "accepted": true,
+            "failed_cases": []
+          },
+          "metrics": {
+            "adjacent_unchanged_task_checks": 0,
+            "cache_hits": null,
+            "limitations": [
+              "Direct search counts exclude searches embedded in shells or scripts.",
+              "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+              "Output bytes are captured command output, not source bytes read or model context.",
+              "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+            ],
+            "phases": {
+              "preparing": {
+                "captured_output_bytes": 5642,
+                "command_count": 3,
+                "command_interval_seconds": 0.277306527,
+                "direct_search_commands": 0,
+                "failed_commands": 0,
+                "failed_language_tool_commands": {},
+                "language_tool_commands": {}
+              },
+              "working": {
+                "captured_output_bytes": 39194,
+                "command_count": 7,
+                "command_interval_seconds": 22.188384671,
+                "direct_search_commands": 0,
+                "failed_commands": 0,
+                "failed_language_tool_commands": {},
+                "language_tool_commands": {}
+              }
+            },
+            "queue_wait_seconds": null,
+            "relevant_location_seconds": null,
+            "session_sha256": "b2324edf9ca21159df739c1484afb30db8565f3920da314d5c9fbc5c49964f33",
+            "submission_to_check_seconds": [
+              26.662191947
+            ],
+            "task_checks": 1,
+            "uncommitted_command_records": [],
+            "version": "observed-tool-metrics-v1"
+          },
+          "practice_outcome": "passed",
+          "preparation_seconds": 58.459492825,
+          "public_submissions": 1,
+          "seal_reason": "completed",
+          "source": {
+            "files": {
+              ".gitignore": "c85a503351d7e626444f29d090918a430ac5a0be1acaa8f616d4e657a79ebc73",
+              ".trial-public/CONTRACT.md": "5376bebb0bb91837eba2753a25d24fbd5a9b1c445db2c0cc6bbc19c97c26bda2",
+              ".trial-public/GUIDE.md": "5b5e7616843a0076288a820473ec38468bd5dd4a4f2da6ec363fc3d91cb14566",
+              ".trial-public/LIBRARY.md": "d826e55ab844c4c399fa7967f46cf5eaa0ee81338a2e842403ab7b53a87c65ea",
+              ".trial-public/brief.md": "195922b4461659759e1d2fde4ed0dd9752e70d788387d46b463bbf904949848e",
+              ".trial-public/cases.json": "56613b89801687966a1bc32efdd3231fd4cad06f2d80a85b6b9f5d121e8abd0f",
+              "README.md": "158ee8c67ff9bfde7356558c962080471cb2b65b7701257593b95de81d406962",
+              "SPEC.md": "6cf68b2cc38755236d23dd156dcbb51056edbca0f662471e073d901049c60f31",
+              "guardian.toml": "6dd2284ec72311629d1dd8bba482b755720f555b48eca3f4ba73a56a1410035a",
+              "main.zig": "b2905e4666b0b34031b77e56485251f866a7d88c7ea42b0a19adeed00e068776",
+              "planner": "4a40c3d05fe6d2cef8b5b2d1e2576ea7d7cbabaab6a016ba11959d487b37dd04",
+              "src/main.zig": "e43b04b2303e752305bc2f7628e4979458d02b43eda6de1ba3358f19848f6897",
+              "tests/input_boundary.py": "06cab180bfec0601c48c58e82865f72e09402e54ac563026d277e34ea6b46e9f"
+            },
+            "sha256": "dcb305897196c90cf7c0d299561c6861b7cef22f7b4ac01ad8b17761341ca2b1"
+          },
+          "task_seconds": 155.923416179
+        }
+      },
+      "artifact_directory": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-input-boundary",
+      "summary_sha256": "674f8f839930af32b85ff0174f5cc010a8053c8015bbf603b90ad2ed551d32ad",
+      "review": {
+        "version": "planner-input-boundary-source-review-v1",
+        "rubric_version": "planner-quality-review-v1",
+        "reviewer": "library_parity",
+        "scope": "Sealed source and baseline-to-sealed deltas against public input-boundary brief and workflow planner v1 contract.",
+        "blinding": {
+          "read_scope": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-input-boundary/source-review",
+          "timings_read": false,
+          "session_metadata_read": false,
+          "grading_results_read": false,
+          "private_cases_read": false,
+          "applications_executed": false
+        },
+        "limits": [
+          "Static review only: no claim that authored tests were executed or passed.",
+          "No independent root-cause defect identified is not proof of complete application correctness.",
+          "Review focuses on the input-boundary change and its consumers, not an exhaustive audit of unchanged scheduling algorithms.",
+          "Embedded .my standard-library implementation and host executable were outside the allowed review bundle and were not inspected; conclusions about the call boundary rely on the public standard-library contract.",
+          "Scores describe concrete source properties, not syntax, line counts, comparative speed or causal productivity."
+        ],
+        "languages": {
+          "my": {
+            "defects": [],
+            "correctness_conclusion": "No independent root-cause defect identified in the sealed change.",
+            "scores": {
+              "clarity": 2,
+              "consistency": 2,
+              "testing": 2
+            },
+            "evidence": [
+              {
+                "path": "my/main.my",
+                "lines": [
+                  9,
+                  16
+                ],
+                "observation": "The sole production delta restores the std_text::read byte ceiling from 1048575 to 1048576. Read failure still maps to whole-request invalid-request, and the complete returned byte owner is passed to the unchanged std_json parser."
+              },
+              {
+                "path": "my/main.my",
+                "lines": [
+                  18,
+                  32
+                ],
+                "observation": "Parsing completes before request envelope processing and result emission; the change introduces no truncation, alternate validation path or partial result emission."
+              },
+              {
+                "path": "my/test_cli.py",
+                "lines": [
+                  24,
+                  28
+                ],
+                "observation": "New tests call the actual byte host subprocess with raw stdin and assert zero process exit and decoded output, retaining the portable host resolver."
+              },
+              {
+                "path": "my/test_cli.py",
+                "lines": [
+                  74,
+                  93
+                ],
+                "observation": "Independent literal 1048576 limit; below/at/above cases include empty envelope, valid empty plan and multibyte Unicode schema-invalid content, with mixed trailing JSON whitespace counted as bytes."
+              },
+              {
+                "path": "my/test_cli.py",
+                "lines": [
+                  95,
+                  113
+                ],
+                "observation": "Explicit boundary-final garbage and invalid UTF-8, incomplete JSON, and an oversized valid prefix followed by garbage challenge both strict parsing and prefix truncation. Existing strict transport and graph assertions remain in the supplied patch."
+              }
+            ],
+            "score_rationale": {
+              "clarity": "Clear named standard-library read followed by parse; one localized budget correction.",
+              "consistency": "All inputs retain the same read/parse/envelope path and explicit failure handling.",
+              "testing": "Meaningful independent exact-byte boundary expectations plus real-stdin malformed-boundary and truncation checks supplement retained regression assertions."
+            }
+          },
+          "python": {
+            "defects": [],
+            "correctness_conclusion": "No independent root-cause defect identified in the sealed change.",
+            "scores": {
+              "clarity": 2,
+              "consistency": 2,
+              "testing": 2
+            },
+            "evidence": [
+              {
+                "path": "python/planner.py",
+                "lines": [
+                  86,
+                  101
+                ],
+                "observation": "The localized >= to > fix checks raw byte length before UTF-8 decoding. Existing depth, duplicate-key, signed integer, finite float, strict JSON and Unicode scalar validation remains after the size check."
+              },
+              {
+                "path": "python/planner.py",
+                "lines": [
+                  206,
+                  218
+                ],
+                "observation": "The response adapter retains whole-request errors; stdin reads the shared MAX_INPUT_BYTES constant plus one, so an oversized request cannot be mistaken for a valid allowed-length prefix."
+              },
+              {
+                "path": "python/test_input_boundary.py",
+                "lines": [
+                  12,
+                  34
+                ],
+                "observation": "Tests pin an independent contract limit and route each case through both respond and an actual stdin subprocess, asserting exit zero and newline-terminated JSON output."
+              },
+              {
+                "path": "python/test_input_boundary.py",
+                "lines": [
+                  36,
+                  63
+                ],
+                "observation": "Below/at/above tests include a valid plan and substantial multibyte text with decoded character length below the byte ceiling; additional oversized whitespace and second-document suffixes challenge truncation."
+              },
+              {
+                "path": "python/test_input_boundary.py",
+                "lines": [
+                  65,
+                  81
+                ],
+                "observation": "Boundary-sized malformed documents cover duplicate keys, invalid UTF-8, unpaired surrogates, integer overflow, nonfinite values and excessive nesting, including a bad final byte."
+              }
+            ],
+            "score_rationale": {
+              "clarity": "A named input constant and one explicit inclusive-boundary comparison express the contract directly.",
+              "consistency": "Direct calls and stdin share parse_request/respond and the same size constant; the one-extra-byte reader retains oversized detection.",
+              "testing": "Independent numeric limits, multiple valid and malformed boundaries, byte-versus-character discrimination and actual stdin coverage supplement original tests."
+            }
+          },
+          "zig": {
+            "defects": [],
+            "correctness_conclusion": "No independent root-cause defect identified in the sealed change.",
+            "scores": {
+              "clarity": 2,
+              "consistency": 2,
+              "testing": 2
+            },
+            "evidence": [
+              {
+                "path": "zig/src/main.zig",
+                "lines": [
+                  6,
+                  26
+                ],
+                "observation": "The stdin reader retains the shared max_input plus one bound; StreamTooLong yields whole-request invalid-request and a successful return. Otherwise the complete acquired slice goes to respond."
+              },
+              {
+                "path": "zig/src/main.zig",
+                "lines": [
+                  98,
+                  118
+                ],
+                "observation": "The localized >= to > fix preserves the byte-based inclusive bound. UTF-8, depth, duplicate-key JSON parsing, numeric validation and envelope checks remain unchanged afterward."
+              },
+              {
+                "path": "zig/src/main.zig",
+                "lines": [
+                  400,
+                  406
+                ],
+                "observation": "The direct-response test now checks below, at and above the limit, preserving explicit expected response strings."
+              },
+              {
+                "path": "zig/src/main.zig",
+                "lines": [
+                  499,
+                  519
+                ],
+                "observation": "Additional direct tests exercise Unicode byte boundaries and malformed or final-garbage documents at the exact ceiling."
+              },
+              {
+                "path": "zig/tests/input_boundary.py",
+                "lines": [
+                  10,
+                  52
+                ],
+                "observation": "A separate literal contract limit drives actual compiled stdin execution, with exit-zero/newline checks, empty envelopes, a nonempty successful plan, oversize requests and substantial multibyte strings."
+              },
+              {
+                "path": "zig/tests/input_boundary.py",
+                "lines": [
+                  54,
+                  73
+                ],
+                "observation": "Independent boundary expectations retain strict parsing, surrogate, UTF-8, integer, nonfinite and nesting rejection and explicitly reject an oversized valid prefix."
+              }
+            ],
+            "score_rationale": {
+              "clarity": "Named max_input and one explicit comparison make the corrected boundary clear.",
+              "consistency": "Both stdin acquisition and respond use the same max_input; overlong acquisition and overlong slices converge on whole-request invalid-request.",
+              "testing": "New direct and actual-stdin tests combine independent limits, byte/character distinction, successful plans, malformed exact-boundary input and oversize-prefix regression coverage."
+            }
+          }
+        }
+      }
+    },
+    "planner-priority": {
+      "protocol": {
+        "bridge_sha256": "3d1ba3bc6c836f8656da063524c22ffdb4e9f2caa36ec14e26cea5387727a47b",
+        "build_policy": "suite-build-reuse-v1",
+        "deviations": [
+          "Whole-agent host access restricted by instruction, not enforced by runtime; all participant commands use namespace gateway.",
+          "Exact agent model ID, turn count, token use and cost unavailable.",
+          "Sequential dispatch due thread capacity; cyclic language order across three blocks; shared-host effects remain possible.",
+          "One draft task per family, one fresh participant per language; exploratory only.",
+          "No API driver provenance; configurations and coordinator source inventory retained separately.",
+          "Earlier calibration used different library/baseline versions; do not pool raw times or claim a causal before/after effect."
+        ],
+        "dispatch_order": [
+          "my",
+          "zig",
+          "python"
+        ],
+        "languages": [
+          "my",
+          "python",
+          "zig"
+        ],
+        "main_arm": "Guardian for Zig; compiler/navigation for my",
+        "mode": "direct-coding-subagents",
+        "preparation_seconds": 1200,
+        "readiness_sha256": "365df1cfa0345d671fe12da0eaeab4d38007481426deaf10c2802747fd08a9d5",
+        "scored": false,
+        "setup_sha256": "c719dbb8e6498ec51269217e7446e3c64dbd8c5b81e20380db0d7e7a530e7db3",
+        "stdlib_parity_policy": "stdlib-parity-before-application-timing-v1",
+        "task": "planner-priority",
+        "task_seconds": 1800
+      },
+      "private_groups": 7,
+      "participants": {
+        "my": {
+          "failed_public_submissions": 0,
+          "hidden": {
+            "accepted": true,
+            "failed_cases": []
+          },
+          "metrics": {
+            "adjacent_unchanged_task_checks": 0,
+            "cache_hits": null,
+            "limitations": [
+              "Direct search counts exclude searches embedded in shells or scripts.",
+              "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+              "Output bytes are captured command output, not source bytes read or model context.",
+              "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+            ],
+            "phases": {
+              "preparing": {
+                "captured_output_bytes": 6904,
+                "command_count": 3,
+                "command_interval_seconds": 0.440366381,
+                "direct_search_commands": 0,
+                "failed_commands": 0,
+                "failed_language_tool_commands": {},
+                "language_tool_commands": {}
+              },
+              "working": {
+                "captured_output_bytes": 52987,
+                "command_count": 10,
+                "command_interval_seconds": 3.066352426,
+                "direct_search_commands": 1,
+                "failed_commands": 2,
+                "failed_language_tool_commands": {},
+                "language_tool_commands": {}
+              }
+            },
+            "queue_wait_seconds": null,
+            "relevant_location_seconds": null,
+            "session_sha256": "ad15a16f43c81c45c3c5c7f733b874eafecd2df68a09d34f186a131d49e03b68",
+            "submission_to_check_seconds": [
+              0.274125974,
+              0.259931365
+            ],
+            "task_checks": 2,
+            "uncommitted_command_records": [],
+            "version": "observed-tool-metrics-v1"
+          },
+          "practice_outcome": "passed",
+          "preparation_seconds": 31.867875812,
+          "public_submissions": 2,
+          "seal_reason": "completed",
+          "source": {
+            "files": {
+              ".trial-public/CONTRACT.md": "5376bebb0bb91837eba2753a25d24fbd5a9b1c445db2c0cc6bbc19c97c26bda2",
+              ".trial-public/GUIDE.md": "5f98618e9d4d5ffedd0a3e8bb045b3b5968a6aec4f9b8915bed21266e6242c95",
+              ".trial-public/LIBRARY.md": "ec83bd4d60c19fa915e970e4beca42d632e6f6ca1a191135fcca548228a982a7",
+              ".trial-public/brief.md": "6d5b7ad160d4ea67b9dbde8311616eeb77e1646e39c370e551caedd96e200fff",
+              ".trial-public/cases.json": "769c173e0f822f2299e0388be4fc0ea078e21fb7e2dafc27c09b04da5b3feab0",
+              "README.md": "f9b3a1ffca948a68744a5e82a10450a56f622c6b2d198e31b9677a3f454d8f7f",
+              "io.my": "318bf703f8fa8e1fe706d7211b226c19ea60f9e885ef06da4279a8970df395e9",
+              "json.my": "c4ff44f1102c4f8406bd79167003fc26c376bf6c1383d2482e631f7323267e99",
+              "main.my": "07a543d5f8d04b265da49802f3905fd4d5a5afb116734e2b962c21f4fe80de86",
+              "output.my": "9072918f78a7449a42c4bb48565e0c62932f6a34d0449713f5c807b65fd54b7c",
+              "planner.my": "624747de3c0ad31a17316996023e0eead7e1b3d0abf55aed0b1c7840aa44c615",
+              "probes/buffer/io.my": "318bf703f8fa8e1fe706d7211b226c19ea60f9e885ef06da4279a8970df395e9",
+              "probes/buffer/main.my": "cf53137ee3d6a694a0a150c2a061bbbb20ec0caeba7e37f5264c950f57d3192b",
+              "schema.my": "b596f5522015e0de5a15961bea23807ddc3c4b47085db59b98e0a52d75ff6ab1",
+              "stress_cli.py": "9e8d330d34a9800e85dccbdb742f99fdb6669d47f7da770d2ec0fb7e182b8323",
+              "test_cli.py": "d24754fc97e09dc1c09bcd0fddbd4d55f305b3210dd09be882846b68b9836258",
+              "test_priority.py": "c2a189d0a023719e1c973ea92ce56b8f4da4e47874d741bfe5d7ebf9f6ce8e3c"
+            },
+            "sha256": "97c04c828f48b632009d0876c2489a4ba018b76ba3ff124cf92e6c92054983cc"
+          },
+          "task_seconds": 132.638051235
+        },
+        "python": {
+          "failed_public_submissions": 0,
+          "hidden": {
+            "accepted": true,
+            "failed_cases": []
+          },
+          "metrics": {
+            "adjacent_unchanged_task_checks": 0,
+            "cache_hits": null,
+            "limitations": [
+              "Direct search counts exclude searches embedded in shells or scripts.",
+              "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+              "Output bytes are captured command output, not source bytes read or model context.",
+              "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+            ],
+            "phases": {
+              "preparing": {
+                "captured_output_bytes": 5327,
+                "command_count": 3,
+                "command_interval_seconds": 0.255813848,
+                "direct_search_commands": 0,
+                "failed_commands": 0,
+                "failed_language_tool_commands": {},
+                "language_tool_commands": {}
+              },
+              "working": {
+                "captured_output_bytes": 28898,
+                "command_count": 8,
+                "command_interval_seconds": 0.772816594,
+                "direct_search_commands": 0,
+                "failed_commands": 1,
+                "failed_language_tool_commands": {},
+                "language_tool_commands": {}
+              }
+            },
+            "queue_wait_seconds": null,
+            "relevant_location_seconds": null,
+            "session_sha256": "88c4d91f8143dbd971e518b1d80dcb26f37d5de12d026179adca523a05fbdd6f",
+            "submission_to_check_seconds": [
+              0.215532474
+            ],
+            "task_checks": 1,
+            "uncommitted_command_records": [],
+            "version": "observed-tool-metrics-v1"
+          },
+          "practice_outcome": "passed",
+          "preparation_seconds": 25.356586055,
+          "public_submissions": 1,
+          "seal_reason": "completed",
+          "source": {
+            "files": {
+              ".trial-public/CONTRACT.md": "5376bebb0bb91837eba2753a25d24fbd5a9b1c445db2c0cc6bbc19c97c26bda2",
+              ".trial-public/GUIDE.md": "0064b749274929e815b7fc2ad255278fafb2ce828acfc1efeb7bd20a29860bbf",
+              ".trial-public/LIBRARY.md": "d826e55ab844c4c399fa7967f46cf5eaa0ee81338a2e842403ab7b53a87c65ea",
+              ".trial-public/brief.md": "6d5b7ad160d4ea67b9dbde8311616eeb77e1646e39c370e551caedd96e200fff",
+              ".trial-public/cases.json": "769c173e0f822f2299e0388be4fc0ea078e21fb7e2dafc27c09b04da5b3feab0",
+              "README.md": "de181b756b718ffd6318d9a25f31eb5b6abf7022f47b7c2ccef32de5267adc93",
+              "planner.py": "cfd6e3643f9986f144a07222db91b5e059ea79ca45ee256917c53fd9c1e3429e",
+              "test_planner.py": "ce3a4ed0606b87759299eb572fe4f616799e247a728c00e0aa6c5d4d10b1cbd8",
+              "test_priority.py": "a2b228db85c4a59bd42057c003c72ef837057c47c8aaf4501e36fdbfab7c4b85"
+            },
+            "sha256": "53612dc161ca2ffe2e88c648dce5666c1e59fffedcb04c0994d227fa73f693e0"
+          },
+          "task_seconds": 110.680380705
+        },
+        "zig": {
+          "failed_public_submissions": 2,
+          "hidden": {
+            "accepted": true,
+            "failed_cases": []
+          },
+          "metrics": {
+            "adjacent_unchanged_task_checks": 0,
+            "cache_hits": null,
+            "limitations": [
+              "Direct search counts exclude searches embedded in shells or scripts.",
+              "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+              "Output bytes are captured command output, not source bytes read or model context.",
+              "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+            ],
+            "phases": {
+              "preparing": {
+                "captured_output_bytes": 5601,
+                "command_count": 3,
+                "command_interval_seconds": 0.277836698,
+                "direct_search_commands": 0,
+                "failed_commands": 0,
+                "failed_language_tool_commands": {},
+                "language_tool_commands": {}
+              },
+              "working": {
+                "captured_output_bytes": 49397,
+                "command_count": 11,
+                "command_interval_seconds": 6.830252313,
+                "direct_search_commands": 0,
+                "failed_commands": 3,
+                "failed_language_tool_commands": {},
+                "language_tool_commands": {}
+              }
+            },
+            "queue_wait_seconds": null,
+            "relevant_location_seconds": null,
+            "session_sha256": "bfe1d6771917dfdd1f4180ec3c765173ca1ef6409d91a7ff6c1f12cece5389fd",
+            "submission_to_check_seconds": [
+              1.707752482,
+              1.715172525,
+              19.198909956
+            ],
+            "task_checks": 3,
+            "uncommitted_command_records": [],
+            "version": "observed-tool-metrics-v1"
+          },
+          "practice_outcome": "passed",
+          "preparation_seconds": 60.67522018,
+          "public_submissions": 3,
+          "seal_reason": "completed",
+          "source": {
+            "files": {
+              ".gitignore": "c85a503351d7e626444f29d090918a430ac5a0be1acaa8f616d4e657a79ebc73",
+              ".trial-public/CONTRACT.md": "5376bebb0bb91837eba2753a25d24fbd5a9b1c445db2c0cc6bbc19c97c26bda2",
+              ".trial-public/GUIDE.md": "5b5e7616843a0076288a820473ec38468bd5dd4a4f2da6ec363fc3d91cb14566",
+              ".trial-public/LIBRARY.md": "d826e55ab844c4c399fa7967f46cf5eaa0ee81338a2e842403ab7b53a87c65ea",
+              ".trial-public/brief.md": "6d5b7ad160d4ea67b9dbde8311616eeb77e1646e39c370e551caedd96e200fff",
+              ".trial-public/cases.json": "769c173e0f822f2299e0388be4fc0ea078e21fb7e2dafc27c09b04da5b3feab0",
+              "README.md": "6f170a0638a9852bbe91f251149dfd3857a317f1e6f90f091ed027bbd56f6813",
+              "SPEC.md": "36534615f38afad13b81863ab1744e139d569361343ea32e15e6baf55c600789",
+              "guardian.toml": "6dd2284ec72311629d1dd8bba482b755720f555b48eca3f4ba73a56a1410035a",
+              "main.zig": "b2905e4666b0b34031b77e56485251f866a7d88c7ea42b0a19adeed00e068776",
+              "planner": "4a40c3d05fe6d2cef8b5b2d1e2576ea7d7cbabaab6a016ba11959d487b37dd04",
+              "src/main.zig": "73d28de019de020dcb38ef32d8efb413412dd6967f04000f441193a16efe5f62"
+            },
+            "sha256": "277b9845228d8a26b1ae597019285d66536a0a1d66dfa854ae766e0c03c355e0"
+          },
+          "task_seconds": 287.96694517
+        }
+      },
+      "artifact_directory": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-priority",
+      "summary_sha256": "8e35743da4c176b836cd0f7b4e6782d304250c3fb8ca01c935dca5fad1623bf7",
+      "review": {
+        "version": "planner-priority-source-review-v1",
+        "rubric_version": "planner-quality-review-v1",
+        "reviewer": "library_parity",
+        "scope": "Sealed source and baseline-to-sealed deltas against the public priority brief and workflow planner v1 contract.",
+        "blinding": {
+          "read_scope": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-priority/source-review",
+          "timings_read": false,
+          "session_metadata_read": false,
+          "grading_results_read": false,
+          "private_cases_read": false,
+          "applications_executed": false
+        },
+        "limits": [
+          "Static review only; authored tests were inspected, not executed.",
+          "No identified defect is not proof of complete correctness or a runtime acceptance result.",
+          "External .my standard-library/compiler/host implementations were not inspected; their public contracts are assumed.",
+          "Review focuses on priority schema, readiness selection and affected reports rather than an exhaustive audit of unchanged transport and graph code.",
+          "Scores describe source evidence, not syntax, line counts, comparative runtime or development speed."
+        ],
+        "languages": {
+          "my": {
+            "defects": [],
+            "correctness_conclusion": "No independent root-cause defect identified in the sealed priority change.",
+            "scores": {
+              "clarity": 2,
+              "consistency": 2,
+              "testing": 2
+            },
+            "evidence": [
+              {
+                "path": "my/schema.my",
+                "lines": [
+                  34,
+                  53
+                ],
+                "observation": "Priority presence changes the exact field count from three to four; a numeric integer tag and inclusive -1000..1000 bounds reject booleans, floats, null and out-of-range values. Original required fields remain validated."
+              },
+              {
+                "path": "my/planner.my",
+                "lines": [
+                  97,
+                  140
+                ],
+                "observation": "IDs remain ASCII-sorted; each parsed priority is stored at the ID lookup index, avoiding a source-order/ID-order mismatch."
+              },
+              {
+                "path": "my/planner.my",
+                "lines": [
+                  328,
+                  350
+                ],
+                "observation": "A fresh zero-filled priority buffer supplies omitted defaults independently for each manifest and is passed with the other owned scratch buffers."
+              },
+              {
+                "path": "my/planner.my",
+                "lines": [
+                  193,
+                  253
+                ],
+                "observation": "Cycle feasibility is checked before order output. Every order iteration scans all currently ready vertices and replaces a candidate only for strictly greater priority, retaining the earliest ASCII ID on ties; completion then updates readiness."
+              },
+              {
+                "path": "my/planner.my",
+                "lines": [
+                  241,
+                  310
+                ],
+                "observation": "Finish times still depend only on prerequisites and duration. Layers rebuild graph readiness and snapshot each round independently of priority; timing output retains ID traversal."
+              },
+              {
+                "path": "my/test_priority.py",
+                "lines": [
+                  11,
+                  33
+                ],
+                "observation": "Literal expectations exercise negative/default/equal/extreme priorities and ASCII report arrays, newly ready high priority across job/dependency permutations, and prerequisites overriding priority."
+              },
+              {
+                "path": "my/test_priority.py",
+                "lines": [
+                  35,
+                  76
+                ],
+                "observation": "Tests cover wrong types, required and extra fields, duplicate/escaped priority keys, transport overflow, negative zero, validation phase ordering, cyclic blocked output and explicit-zero legacy equivalence."
+              }
+            ],
+            "score_rationale": {
+              "clarity": "Clear comments state the ready-scan and tie-break invariant; priority handling is localized to schema, storage and candidate selection.",
+              "consistency": "ID ordering remains the common report invariant; priority affects only ready candidate selection and defaults are initialized uniformly.",
+              "testing": "Independent expected order/error arrays and boundary values supplement retained regression coverage; permutation, dependency, cycle and legacy-zero cases are meaningful."
+            },
+            "quality_observations": [
+              "The change adds one parallel owned priority buffer and another work parameter; ID-index association is explicit through lookup rather than relying on input order.",
+              "The newly-ready test derives unchanged non-order reports from the legacy path, so those particular expectations are metamorphic rather than independent; literal ordering, boundary and error assertions provide independent coverage.",
+              "Ready selection is a bounded scan, not a new application-specific heap implementation. No performance conclusion is drawn."
+            ]
+          },
+          "python": {
+            "defects": [],
+            "correctness_conclusion": "No independent root-cause defect identified in the sealed priority change.",
+            "scores": {
+              "clarity": 2,
+              "consistency": 2,
+              "testing": 2
+            },
+            "evidence": [
+              {
+                "path": "python/planner.py",
+                "lines": [
+                  126,
+                  140
+                ],
+                "observation": "Required-key subset and allowed-key superset checks preserve the original fields while allowing only priority; exact int type and inclusive bounds reject bool and float values."
+              },
+              {
+                "path": "python/planner.py",
+                "lines": [
+                  144,
+                  169
+                ],
+                "observation": "Priority is carried in a frozen Job with default zero; complete schema and duplicate/missing dependency phases still precede scheduling."
+              },
+              {
+                "path": "python/planner.py",
+                "lines": [
+                  172,
+                  195
+                ],
+                "observation": "Both initial and newly-ready heap entries use (-priority, ID), ensuring highest priority first and ASCII ties. Dependents enter the heap only when their remaining prerequisite count reaches zero."
+              },
+              {
+                "path": "python/planner.py",
+                "lines": [
+                  188,
+                  207
+                ],
+                "observation": "Timings remain prerequisite-based; round depth is derived from dependencies and layers/timings are constructed by sorted IDs. Cyclic blocked IDs remain sorted independently of heap order."
+              },
+              {
+                "path": "python/test_priority.py",
+                "lines": [
+                  16,
+                  51
+                ],
+                "observation": "Tests use literal expected priority order, layers, timing values and makespan; all job permutations and dependency spellings are checked, with mixed explicit/default zero legacy compatibility."
+              },
+              {
+                "path": "python/test_priority.py",
+                "lines": [
+                  53,
+                  103
+                ],
+                "observation": "Schema/transport boundary tests distinguish per-manifest failure from whole-request failure; precedence and cyclic/downstream/self-cycle reports are challenged across permutations."
+              }
+            ],
+            "score_rationale": {
+              "clarity": "The named Job.priority field and comment explaining negation make the heap ordering rule explicit.",
+              "consistency": "The same tuple key is used for initial readiness and subsequent releases; unrelated report arrays retain sorted-ID construction.",
+              "testing": "Literal full-report expectations, bounds, permutations, legacy defaults and cycle/validation regressions provide independent behavioral coverage."
+            },
+            "quality_observations": [
+              "Initial heap construction and incremental insertion repeat the same small tuple expression; they are visibly consistent in this delta.",
+              "New priority tests primarily exercise plan/respond directly rather than adding a new stdin test; actual stdin was not specifically required by this priority brief. No runtime success is inferred."
+            ]
+          },
+          "zig": {
+            "defects": [],
+            "correctness_conclusion": "No independent root-cause defect identified in the sealed priority change.",
+            "scores": {
+              "clarity": 2,
+              "consistency": 2,
+              "testing": 2
+            },
+            "evidence": [
+              {
+                "path": "zig/src/main.zig",
+                "lines": [
+                  173,
+                  203
+                ],
+                "observation": "The extracted parseJob helper distinguishes absent optional priority from present JSON null, validates inclusive integer bounds, checks exact field count and explicitly retrieves every required field before returning Job."
+              },
+              {
+                "path": "zig/src/main.zig",
+                "lines": [
+                  204,
+                  227
+                ],
+                "observation": "Jobs remain ID-sorted before duplicate/dependency validation, preserving priority-independent report ordering."
+              },
+              {
+                "path": "zig/src/main.zig",
+                "lines": [
+                  245,
+                  276
+                ],
+                "observation": "The scheduler rescans ready jobs after each removal and replaces the selected candidate only for greater priority; the ID-sorted traversal breaks ties. No candidate yields the existing sorted blocked report."
+              },
+              {
+                "path": "zig/src/main.zig",
+                "lines": [
+                  270,
+                  310
+                ],
+                "observation": "Start/finish/makespan use prerequisites and durations. The removed set resets for dependency-round layers, and timing reports traverse the ID-sorted jobs."
+              },
+              {
+                "path": "zig/src/main.zig",
+                "lines": [
+                  513,
+                  579
+                ],
+                "observation": "A literal full expected report covers negative, default and explicit-zero ties, both priority endpoints and a newly-ready high-priority job. Tests reverse dependency spelling and try pairwise input-job swaps."
+              },
+              {
+                "path": "zig/src/main.zig",
+                "lines": [
+                  582,
+                  740
+                ],
+                "observation": "Additional tests distinguish schema types/bounds/required fields from whole-request duplicate keys and numeric overflow, and retain ASCII order for duplicate, missing-reference and cycle/downstream reports."
+              }
+            ],
+            "score_rationale": {
+              "clarity": "Named parseJob centralizes schema construction, and comments clearly describe the ID-sorted tie-break invariant.",
+              "consistency": "Priority is stored on Job and applied only at ready selection; the shared ID-sorted collection still drives reports and layered traversal.",
+              "testing": "Literal complete reports and boundary/error assertions plus dependency/job reorderings and retained legacy tests meet independent boundary and regression coverage."
+            },
+            "quality_observations": [
+              "The schema refactor removes the old inline parsing block rather than retaining two competing validators.",
+              "The new ordering permutation test exercises every pairwise job swap, not every possible permutation; this is useful but should not be reported as exhaustive permutation coverage.",
+              "No new actual-stdin priority test is present in the supplied delta; direct respond tests satisfy the stated source-review rubric, and no execution result is claimed."
+            ]
+          }
+        }
+      }
+    },
+    "planner-cycle-groups": {
+      "protocol": {
+        "bridge_sha256": "3d1ba3bc6c836f8656da063524c22ffdb4e9f2caa36ec14e26cea5387727a47b",
+        "build_policy": "suite-build-reuse-v1",
+        "deviations": [
+          "Whole-agent host access restricted by instruction, not enforced by runtime; all participant commands use namespace gateway.",
+          "Exact agent model ID, turn count, token use and cost unavailable.",
+          "Sequential dispatch due thread capacity; cyclic language order across three blocks; shared-host effects remain possible.",
+          "One draft task per family, one fresh participant per language; exploratory only.",
+          "No API driver provenance; configurations and coordinator source inventory retained separately.",
+          "Earlier calibration used different library/baseline versions; do not pool raw times or claim a causal before/after effect."
+        ],
+        "dispatch_order": [
+          "zig",
+          "python",
+          "my"
+        ],
+        "languages": [
+          "my",
+          "python",
+          "zig"
+        ],
+        "main_arm": "Guardian for Zig; compiler/navigation for my",
+        "mode": "direct-coding-subagents",
+        "preparation_seconds": 1200,
+        "readiness_sha256": "365df1cfa0345d671fe12da0eaeab4d38007481426deaf10c2802747fd08a9d5",
+        "scored": false,
+        "setup_sha256": "d7177138fccf89236d0ab218bcc26bf03cff3f11c0799f409aee5b595a5acd17",
+        "stdlib_parity_policy": "stdlib-parity-before-application-timing-v1",
+        "task": "planner-cycle-groups",
+        "task_seconds": 1800
+      },
+      "private_groups": 8,
+      "participants": {
+        "my": {
+          "failed_public_submissions": 0,
+          "hidden": {
+            "accepted": true,
+            "failed_cases": []
+          },
+          "metrics": {
+            "adjacent_unchanged_task_checks": 0,
+            "cache_hits": null,
+            "limitations": [
+              "Direct search counts exclude searches embedded in shells or scripts.",
+              "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+              "Output bytes are captured command output, not source bytes read or model context.",
+              "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+            ],
+            "phases": {
+              "preparing": {
+                "captured_output_bytes": 6904,
+                "command_count": 3,
+                "command_interval_seconds": 0.273040561,
+                "direct_search_commands": 0,
+                "failed_commands": 0,
+                "failed_language_tool_commands": {},
+                "language_tool_commands": {}
+              },
+              "working": {
+                "captured_output_bytes": 52160,
+                "command_count": 9,
+                "command_interval_seconds": 9.186818897,
+                "direct_search_commands": 0,
+                "failed_commands": 1,
+                "failed_language_tool_commands": {},
+                "language_tool_commands": {}
+              }
+            },
+            "queue_wait_seconds": null,
+            "relevant_location_seconds": null,
+            "session_sha256": "c634ea4089630c23d9e4d9f8d6e9dfd16f10d9046b617a4b00bf8dec26aeabf3",
+            "submission_to_check_seconds": [
+              0.274628313
+            ],
+            "task_checks": 1,
+            "uncommitted_command_records": [],
+            "version": "observed-tool-metrics-v1"
+          },
+          "practice_outcome": "passed",
+          "preparation_seconds": 27.172266464,
+          "public_submissions": 1,
+          "seal_reason": "completed",
+          "source": {
+            "files": {
+              ".trial-public/CONTRACT.md": "5376bebb0bb91837eba2753a25d24fbd5a9b1c445db2c0cc6bbc19c97c26bda2",
+              ".trial-public/GUIDE.md": "5f98618e9d4d5ffedd0a3e8bb045b3b5968a6aec4f9b8915bed21266e6242c95",
+              ".trial-public/LIBRARY.md": "ec83bd4d60c19fa915e970e4beca42d632e6f6ca1a191135fcca548228a982a7",
+              ".trial-public/brief.md": "72cb5a44d28ca16387a7bfe88a7ce2cedf783cd845e33abc70a1fcf69193ecd5",
+              ".trial-public/cases.json": "599e512c0f08f3a9cf289030012278bba8f8fabce4bc1f7146d80ee62cedc7df",
+              "README.md": "6ba36a8b2caa42b0346a595437b1ff9cf6e42cc36171828868346c992590a340",
+              "cycles.my": "e54d8dc8068bded651597dcd96eb42aeea46efd4f89fdb7ede5cab48f97f49a0",
+              "io.my": "318bf703f8fa8e1fe706d7211b226c19ea60f9e885ef06da4279a8970df395e9",
+              "json.my": "c4ff44f1102c4f8406bd79167003fc26c376bf6c1383d2482e631f7323267e99",
+              "main.my": "07a543d5f8d04b265da49802f3905fd4d5a5afb116734e2b962c21f4fe80de86",
+              "output.my": "9072918f78a7449a42c4bb48565e0c62932f6a34d0449713f5c807b65fd54b7c",
+              "planner.my": "ac9046ebedae0ef14561e81ce7fc9b9faa164e59279ef6093881de088be436cb",
+              "probes/buffer/io.my": "318bf703f8fa8e1fe706d7211b226c19ea60f9e885ef06da4279a8970df395e9",
+              "probes/buffer/main.my": "cf53137ee3d6a694a0a150c2a061bbbb20ec0caeba7e37f5264c950f57d3192b",
+              "schema.my": "e89d70ffba58e933cb456fccb916e033d18847b70fe5b3b2f0ca239e30283d56",
+              "stress_cli.py": "9e8d330d34a9800e85dccbdb742f99fdb6669d47f7da770d2ec0fb7e182b8323",
+              "test_cli.py": "1b10b3312b8aaaf4b47faab953d02295a6def7b416ad53cf4c1912f3f534a247",
+              "test_cycles.py": "3539fc2df7451bef46bb084288e4e4925763b34d6cb1dd2491e3129296800cd2"
+            },
+            "sha256": "d87235346f115372eb8e1af4b1359c3e3285aa9478b45d199203411aba1eb8bc"
+          },
+          "task_seconds": 147.458232963
+        },
+        "python": {
+          "failed_public_submissions": 0,
+          "hidden": {
+            "accepted": true,
+            "failed_cases": []
+          },
+          "metrics": {
+            "adjacent_unchanged_task_checks": 0,
+            "cache_hits": null,
+            "limitations": [
+              "Direct search counts exclude searches embedded in shells or scripts.",
+              "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+              "Output bytes are captured command output, not source bytes read or model context.",
+              "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+            ],
+            "phases": {
+              "preparing": {
+                "captured_output_bytes": 5327,
+                "command_count": 3,
+                "command_interval_seconds": 0.25593375,
+                "direct_search_commands": 0,
+                "failed_commands": 0,
+                "failed_language_tool_commands": {},
+                "language_tool_commands": {}
+              },
+              "working": {
+                "captured_output_bytes": 28343,
+                "command_count": 7,
+                "command_interval_seconds": 0.683081998,
+                "direct_search_commands": 2,
+                "failed_commands": 2,
+                "failed_language_tool_commands": {},
+                "language_tool_commands": {}
+              }
+            },
+            "queue_wait_seconds": null,
+            "relevant_location_seconds": null,
+            "session_sha256": "c21473dbb49faa5bb66b98c1099a72eb4ae609dcd5fcba52eeb07a1d192c1c13",
+            "submission_to_check_seconds": [
+              0.221656691
+            ],
+            "task_checks": 1,
+            "uncommitted_command_records": [],
+            "version": "observed-tool-metrics-v1"
+          },
+          "practice_outcome": "passed",
+          "preparation_seconds": 24.76914198,
+          "public_submissions": 1,
+          "seal_reason": "completed",
+          "source": {
+            "files": {
+              ".trial-public/CONTRACT.md": "5376bebb0bb91837eba2753a25d24fbd5a9b1c445db2c0cc6bbc19c97c26bda2",
+              ".trial-public/GUIDE.md": "0064b749274929e815b7fc2ad255278fafb2ce828acfc1efeb7bd20a29860bbf",
+              ".trial-public/LIBRARY.md": "d826e55ab844c4c399fa7967f46cf5eaa0ee81338a2e842403ab7b53a87c65ea",
+              ".trial-public/brief.md": "72cb5a44d28ca16387a7bfe88a7ce2cedf783cd845e33abc70a1fcf69193ecd5",
+              ".trial-public/cases.json": "599e512c0f08f3a9cf289030012278bba8f8fabce4bc1f7146d80ee62cedc7df",
+              "README.md": "513b474f48eaa3d82039dae068ec746eac77d74f9306813e22c4d10b9d36303f",
+              "planner.py": "c3e87b51888a669f68ed546ff815154260d7cec34d07d45b6576e926b422f8e6",
+              "test_cycles.py": "ad7f7e53871738e19ca3e0d16c7ba2b99ae00da25796cff3e4c7581c2b88371e",
+              "test_planner.py": "c281aeafab4ca3bf0aea377b44bfd41174d8d1bb8b31d029607c9c0de95e4541"
+            },
+            "sha256": "0ddcda960029bc0e6ed0211bd52fd975844dd7295c2ac4f3f9098e43dcb0131a"
+          },
+          "task_seconds": 100.528112131
+        },
+        "zig": {
+          "failed_public_submissions": 0,
+          "hidden": {
+            "accepted": true,
+            "failed_cases": []
+          },
+          "metrics": {
+            "adjacent_unchanged_task_checks": 0,
+            "cache_hits": null,
+            "limitations": [
+              "Direct search counts exclude searches embedded in shells or scripts.",
+              "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+              "Output bytes are captured command output, not source bytes read or model context.",
+              "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+            ],
+            "phases": {
+              "preparing": {
+                "captured_output_bytes": 5642,
+                "command_count": 3,
+                "command_interval_seconds": 0.271141164,
+                "direct_search_commands": 0,
+                "failed_commands": 0,
+                "failed_language_tool_commands": {},
+                "language_tool_commands": {}
+              },
+              "working": {
+                "captured_output_bytes": 40676,
+                "command_count": 6,
+                "command_interval_seconds": 3.364132014,
+                "direct_search_commands": 0,
+                "failed_commands": 0,
+                "failed_language_tool_commands": {},
+                "language_tool_commands": {}
+              }
+            },
+            "queue_wait_seconds": null,
+            "relevant_location_seconds": null,
+            "session_sha256": "de19cb46d7381777e9c26900e0ad4d7e2511dc3078e8e46e3057a928b285f5a1",
+            "submission_to_check_seconds": [
+              19.232921509
+            ],
+            "task_checks": 1,
+            "uncommitted_command_records": [],
+            "version": "observed-tool-metrics-v1"
+          },
+          "practice_outcome": "passed",
+          "preparation_seconds": 56.514756426,
+          "public_submissions": 1,
+          "seal_reason": "completed",
+          "source": {
+            "files": {
+              ".gitignore": "c85a503351d7e626444f29d090918a430ac5a0be1acaa8f616d4e657a79ebc73",
+              ".trial-public/CONTRACT.md": "5376bebb0bb91837eba2753a25d24fbd5a9b1c445db2c0cc6bbc19c97c26bda2",
+              ".trial-public/GUIDE.md": "5b5e7616843a0076288a820473ec38468bd5dd4a4f2da6ec363fc3d91cb14566",
+              ".trial-public/LIBRARY.md": "d826e55ab844c4c399fa7967f46cf5eaa0ee81338a2e842403ab7b53a87c65ea",
+              ".trial-public/brief.md": "72cb5a44d28ca16387a7bfe88a7ce2cedf783cd845e33abc70a1fcf69193ecd5",
+              ".trial-public/cases.json": "599e512c0f08f3a9cf289030012278bba8f8fabce4bc1f7146d80ee62cedc7df",
+              "README.md": "4d42e19bea1fc79dd64fd5e275b2dfc4db2caa24fb639cf9d2ddbc7987e75ad1",
+              "SPEC.md": "39ff6fc7bee295573c0514f6130f82b4a7c9b96e8b58c0675cf39d820507df2e",
+              "guardian.toml": "6dd2284ec72311629d1dd8bba482b755720f555b48eca3f4ba73a56a1410035a",
+              "main.zig": "b2905e4666b0b34031b77e56485251f866a7d88c7ea42b0a19adeed00e068776",
+              "planner": "4a40c3d05fe6d2cef8b5b2d1e2576ea7d7cbabaab6a016ba11959d487b37dd04",
+              "src/main.zig": "270156d532f426e970c4aed50b8612be9bbb212a34e7879c13ddb944f0930d7f"
+            },
+            "sha256": "a8db9a0aadbc61858affed28cdcb7180bc3325d6bf90ae491a6b37ca3b024437"
+          },
+          "task_seconds": 97.567055928
+        }
+      },
+      "artifact_directory": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-cycle-groups",
+      "summary_sha256": "ab9863f98b79cac5a494cdf13b2e3e2155ae407f574115cc7efc44c602c12943",
+      "review": {
+        "version": "planner-cycle-groups-source-review-v1",
+        "rubric_version": "planner-quality-review-v1",
+        "reviewer": "library_parity",
+        "scope": "Sealed SCC membership, self-loop inclusion, downstream exclusion, ordering, validation precedence and bounded-state review against the public cycle-groups brief and v1 contract.",
+        "blinding": {
+          "read_scope": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-cycle-groups/source-review",
+          "timings_read": false,
+          "session_metadata_read": false,
+          "grading_results_read": false,
+          "private_cases_read": false,
+          "supplemental_cases_read": false,
+          "applications_executed": false
+        },
+        "limits": [
+          "Static source review only: tests were inspected but not run, and no runtime acceptance result is claimed.",
+          "No identified defect is not proof of correctness for every supported request.",
+          "External compiler, standard-library and host implementations were outside the review bundle and not inspected. Runtime instruction/frame limits and wall-time feasibility are not established by this review.",
+          "Supported bounds are 128 jobs per manifest and 64 cases subject also to the total 1 MiB input budget; not every product of maximum dimensions fits that byte budget.",
+          "No authored new test explicitly exercises a full 64-case batch of maximum-size cyclic graphs. This is a coverage limitation, not an observed failure.",
+          "Scores describe source observations, not syntax/LOC rankings or development/runtime comparisons."
+        ],
+        "languages": {
+          "my": {
+            "defects": [],
+            "correctness_conclusion": "No independent root-cause defect identified in the sealed cycle-group change.",
+            "scores": {
+              "clarity": 2,
+              "consistency": 2,
+              "testing": 2
+            },
+            "evidence": [
+              {
+                "path": "my/cycles.my",
+                "lines": [
+                  8,
+                  36
+                ],
+                "observation": "Kosaraju first-pass DFS marks before recursion and appends vertices on return; the second pass follows transposed edges only into unassigned vertices. This computes complete SCCs rather than isolated back-edge paths."
+              },
+              {
+                "path": "my/cycles.my",
+                "lines": [
+                  50,
+                  70
+                ],
+                "observation": "Seen and group arrays reset for the current graph; all vertices participate in the first pass and reverse finishing order drives the second pass. Each component gets a distinct root label."
+              },
+              {
+                "path": "my/cycles.my",
+                "lines": [
+                  72,
+                  118
+                ],
+                "observation": "Blocked output still comes from the completed scheduling state. Components are emitted only at the first ID-sorted member, with every member ID-scanned in order. Size-one components require a self-loop, excluding downstream-only singleton components."
+              },
+              {
+                "path": "my/planner.my",
+                "lines": [
+                  175,
+                  209
+                ],
+                "observation": "Unknown references return before graph construction. SCC reporting occurs only on the existing cycle error branch after removable work is exhausted, and the caller returns immediately after reusing scheduling scratch."
+              },
+              {
+                "path": "my/planner.my",
+                "lines": [
+                  313,
+                  333
+                ],
+                "observation": "The reused durations, finish and needs buffers each hold 128 elements; graph edges retain their own storage and are not overwritten by the SCC passes."
+              },
+              {
+                "path": "my/test_cycles.py",
+                "lines": [
+                  6,
+                  70
+                ],
+                "observation": "An independently structured transitive-closure oracle accompanies literal independent-cycle, one-way bridge, merged component, self-loop, ASCII and precedence examples."
+              },
+              {
+                "path": "my/test_cycles.py",
+                "lines": [
+                  74,
+                  102
+                ],
+                "observation": "Random small graphs are compared with reachability in batches of 48; separate authored tests cover a 128-job dense SCC and a 128-job ring reaching maximal DFS depth."
+              }
+            ],
+            "score_rationale": {
+              "clarity": "Named visit/assign/self_loop helpers and comments explain traversal orientation, scratch reuse and canonical output ordering.",
+              "consistency": "Original scheduling state remains the blocked source while SCC labels independently define cycles; both consume the same ID-indexed graph and emit consistent ASCII order.",
+              "testing": "Independent expected SCCs, a distinct closure oracle, randomized permutations, and explicit dense/deep 128-job tests provide semantic and size-boundary coverage alongside retained regressions."
+            },
+            "quality_observations": [
+              "Scratch reuse is confined to an immediate-return error branch, so overwritten duration/dependency buffers cannot affect a successful plan.",
+              "Although it uses Kosaraju, adjacency is found by scanning the entire edge slice at every DFS vertex; the traversal costs O(V*E), not adjacency-list O(V+E). At 128 vertices and 16384 edges, each pass can examine about 2.1 million edges.",
+              "The DFS recursion depth is bounded by 128 vertices at source level; compatibility with external VM frame/instruction budgets was not independently checked.",
+              "New SCC tests are actual subprocess-driver tests, but their execution outcomes were not accessed."
+            ],
+            "supported_bounds_review": {
+              "vertex_storage": "Three reused 128-element arrays; each vertex is appended to finishing order once and assigned once. No new smaller vertex cap is introduced.",
+              "case_state": "Buffers are allocated per manifest and SCC state is reinitialized; no new global mutable state or case coupling appears.",
+              "authored_limit_tests": "Dense 128-job SCC, 128-job ring and 48-case randomized batches; no new 64-case maximal cyclic batch."
+            }
+          },
+          "python": {
+            "defects": [],
+            "correctness_conclusion": "No independent root-cause defect identified in the sealed cycle-group change.",
+            "scores": {
+              "clarity": 2,
+              "consistency": 2,
+              "testing": 2
+            },
+            "evidence": [
+              {
+                "path": "python/planner.py",
+                "lines": [
+                  148,
+                  165
+                ],
+                "observation": "Complete schema, duplicate-ID, repeated-dependency and missing-reference phases still precede plan_graph and SCC traversal."
+              },
+              {
+                "path": "python/planner.py",
+                "lines": [
+                  169,
+                  203
+                ],
+                "observation": "Tarjan uses discovery indices, lowlinks and an active stack. Child lowlinks and active-neighbor discovery indices are handled separately; a root pops the full SCC. Singleton roots are included only for an actual self-dependency."
+              },
+              {
+                "path": "python/planner.py",
+                "lines": [
+                  197,
+                  203
+                ],
+                "observation": "Each emitted component and the outer groups list are explicitly sorted. Traversing job-to-prerequisite edges is the transpose of readiness propagation but preserves strong connectivity."
+              },
+              {
+                "path": "python/planner.py",
+                "lines": [
+                  206,
+                  244
+                ],
+                "observation": "The existing remaining-count blocked set is unchanged. cyclic_groups is invoked only on the cycle-error return, leaving successful reports and non-cycle errors unchanged."
+              },
+              {
+                "path": "python/test_cycles.py",
+                "lines": [
+                  12,
+                  69
+                ],
+                "observation": "Literal examples cover independent cycles, one-way connections, reverse connections that merge groups, overlapping cycles, self-loops, removable ancestors, downstream tails, ASCII sorting and a 128-job ring."
+              },
+              {
+                "path": "python/test_cycles.py",
+                "lines": [
+                  72,
+                  103
+                ],
+                "observation": "Every directed graph on three vertices, including self edges, is compared against an independent positive-length transitive-closure computation; acyclic cases must not receive a cycles field."
+              }
+            ],
+            "score_rationale": {
+              "clarity": "The named cyclic_groups helper isolates Tarjan state and documents why prerequisite traversal is valid.",
+              "consistency": "Blocked membership remains tied to scheduling residuals while cyclic membership uses SCCs; explicit sorting preserves the distinct report contracts.",
+              "testing": "Independent literal examples and exhaustive three-vertex closure comparisons challenge whole-component correctness, with a 128-job recursion-depth case and retained validation/success regressions."
+            },
+            "quality_observations": [
+              "The traversal visits each vertex/edge once before canonical sorting, using local per-call state; active-stack membership prevents cross-component visited edges from merging completed SCCs.",
+              "The maximum ring test covers recursive depth, but there is no new maximum-density SCC test or 64-case cyclic batch test.",
+              "New tests call plan/respond directly; no new actual-stdin SCC test was required by the public brief, and no execution is claimed."
+            ],
+            "supported_bounds_review": {
+              "vertex_storage": "Dictionary/list/set state is bounded by the existing 128-job schema; recursive DFS depth is at most 128 job visits.",
+              "case_state": "cyclic_groups allocates fresh local state on each call, and respond retains per-manifest processing.",
+              "authored_limit_tests": "128-job ring and all 512 three-vertex directed graphs; a mixed cycle/empty request is also authored, but no new 64-case cyclic batch."
+            }
+          },
+          "zig": {
+            "defects": [],
+            "correctness_conclusion": "No independent root-cause defect identified in the sealed cycle-group change.",
+            "scores": {
+              "clarity": 2,
+              "consistency": 2,
+              "testing": 2
+            },
+            "evidence": [
+              {
+                "path": "zig/src/main.zig",
+                "lines": [
+                  174,
+                  216
+                ],
+                "observation": "Schema validation and duplicate/dependency phases remain unchanged and precede schedule; jobs are ASCII-sorted once before graph construction."
+              },
+              {
+                "path": "zig/src/main.zig",
+                "lines": [
+                  219,
+                  243
+                ],
+                "observation": "cycleGroups copies the prerequisite matrix and computes positive-length transitive closure without adding an identity diagonal. Therefore a diagonal becomes true exactly for cyclic membership, including actual self-loops."
+              },
+              {
+                "path": "zig/src/main.zig",
+                "lines": [
+                  244,
+                  259
+                ],
+                "observation": "Mutual reachability collects each complete SCC; assigned prevents repeated groups. ID-sorted traversal emits members and groups in canonical order, and noncyclic downstream vertices fail the diagonal test."
+              },
+              {
+                "path": "zig/src/main.zig",
+                "lines": [
+                  280,
+                  285
+                ],
+                "observation": "The cycles field is added only to the existing cycle failure, retaining blocked residual membership and excluding any partial successful order from the returned result."
+              },
+              {
+                "path": "zig/src/main.zig",
+                "lines": [
+                  423,
+                  429
+                ],
+                "observation": "The existing downstream/upstream cycle regression is updated with the expected singleton cycle group."
+              },
+              {
+                "path": "zig/src/main.zig",
+                "lines": [
+                  530,
+                  553
+                ],
+                "observation": "Three new independent literal fixtures cover disjoint and one-way-connected SCCs, complete merged groups including bridge vertices, self-loop versus noncyclic singleton membership, ASCII ordering and downstream exclusion."
+              }
+            ],
+            "score_rationale": {
+              "clarity": "A named cycleGroups helper and comments explain positive-length reachability and why first-member emission yields lexicographic order.",
+              "consistency": "Cycle groups derive from the original graph while blocked derives from the removal state; the shared ID-sorted jobs give consistent canonical arrays.",
+              "testing": "Independent expected arrays exercise the semantic boundaries between singleton/self-loop, one-way-connected/merged SCCs and blocked/cyclic membership, alongside retained regressions. This score does not imply maximum-size or exhaustive coverage."
+            },
+            "quality_observations": [
+              "The fixed 128-by-128 boolean matrix matches the schema bound; cubic closure performs at most 128^3 inner updates per invocation, with an early skip for unreachable pivots.",
+              "The new SCC tests are small hand-authored graphs. Unlike the other sealed submissions, this delta adds no 128-job cyclic case or independently generated closure cross-check.",
+              "Existing 128-job and 64-case tests exercise an acyclic chain and envelope behavior, respectively; they do not validate the new SCC path at those limits.",
+              "No timing feasibility or memory-allocation-failure behavior of the added SCC output construction was exercised in this static review."
+            ],
+            "supported_bounds_review": {
+              "vertex_storage": "Matrix and assigned array use max_jobs=128, and closure loops stop at validated graph.count. The matrix is local to cycleGroups.",
+              "case_state": "SCC working state is local to each invocation; caller-arena results follow the existing per-request allocation pattern. No new case cap appears.",
+              "authored_limit_tests": "Retained 128-job acyclic and 64-case envelope tests; no newly authored full-size SCC or 64-case cyclic batch."
+            }
+          }
+        }
+      }
+    }
+  },
+  "limits": [
+    "Draft tasks reused with fresh participants and fresh private seeds; no unseen scored cohort.",
+    "Sequential fixed cyclic language order; shared-host confounding remains possible.",
+    "Instruction-only whole-agent isolation; namespace isolation for executed commands.",
+    "One participant per language/task; no population productivity, defect-rate, or causal library advantage claim."
+  ],
+  "supplemental_cycle_limits": {
+    "case_count": 5,
+    "outcomes": {
+      "my": {
+        "accepted": true,
+        "failed_cases": []
+      },
+      "python": {
+        "accepted": true,
+        "failed_cases": []
+      },
+      "zig": {
+        "accepted": true,
+        "failed_cases": []
+      }
+    },
+    "frozen_pack_sha256": "79dd5a40a48584c5bb33f6788da51011cf6bbca88fb93cf8358e6ce77ae2ca12",
+    "comparative_claim": false,
+    "artifact": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-cycle-groups/supplemental-grading/result.json",
+    "sha256": "267a1d8ce32145c6c2f133714f40e2aac8f18adcdad2bf33ff1501fbd763d95f",
+    "cases": [
+      {
+        "name": "maximum-ring",
+        "accepted": {
+          "my": true,
+          "python": true,
+          "zig": true
+        }
+      },
+      {
+        "name": "maximum-dense",
+        "accepted": {
+          "my": true,
+          "python": true,
+          "zig": true
+        }
+      },
+      {
+        "name": "maximum-independent-loops",
+        "accepted": {
+          "my": true,
+          "python": true,
+          "zig": true
+        }
+      },
+      {
+        "name": "maximum-downstream-tail",
+        "accepted": {
+          "my": true,
+          "python": true,
+          "zig": true
+        }
+      },
+      {
+        "name": "maximum-case-count-rings",
+        "accepted": {
+          "my": true,
+          "python": true,
+          "zig": true
+        }
+      }
+    ]
+  },
+  "supplemental_cycle_protocol": {
+    "frozen_at": "2026-09-07T21:23:56.019822+00:00",
+    "files": {
+      "protocol.json": "e346d319624800aa3480d5f3fbdbb519a177338557f73b72825e836aee3e8360",
+      "supplemental-limits.json": "a7ffb3f1abf5667b5aa8d80b791c2e647dec75c43d52c1e9e479f9c5a390a318",
+      "freeze_limits.py": "6301dd4fb84b70e3486478493e37be2988ddd588920b540b50403b5d29d6e915",
+      "grade_limits.py": "9e375d0e36d2ac911062b37976bc372ef5ce73f03e688d54d0007b99e9466068"
+    },
+    "note": "Additive prelaunch limit checks, results reported separately; original task pack, adapters, budgets and participant instructions unchanged."
+  },
+  "guardian_observations": [
+    {
+      "task": "planner-input-boundary",
+      "submission": "000",
+      "log": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-input-boundary/zig/submissions/000/check/002/00.stderr",
+      "excerpt": ""
+    },
+    {
+      "task": "planner-priority",
+      "submission": "000",
+      "log": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-priority/zig/submissions/000/check/000/00.stderr",
+      "excerpt": "guardian: run-all: whole-tree run \u2014 uncommitted guardian.toml / .guardian change \u2014 every file must be re-judged\nguardian: cold gate \u2014 no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm\nguardian: run-all: 3/88 failed (spec, cognitive-complexity, line-length)\nguardian: failures grouped by check (3):\n  spec (3 findings)\n    - unverified: Successful result - [PLANNER-ORDER] `order`: a topological order choosing the highest-priority *currently ready* job,\n    - unlinked tag: Successful result - [PLANNER-ORDER] `order`: a topological order choosing the ASCII-smallest *currently ready* job in src/main.zig\n    - unlinked tag: Successful result - [PLANNER-ORDER] in src/main.zig\n  cognitive-complexity (1 finding)\n    - src/main.zig: fn plan cognitive complexity 27 (limit: 25)\n      fix: extract helpers; reduce nested control flow.\n  line-length (6 findings)\n    - src/main.zig:511: line is 360 chars (hard limit 240)\n      fix: split the expression when doing so improves readability\n    - src/main.zig:512: line is 361 chars (hard limit 240)\n    - src/main.zig:568: line is 355 chars (hard limit 240)\n    - +3 more \u2014 use --verbose for full detail\n  caution: zig-out binaries predate this failed run (installs are gated on green) \u2014 rebuild green before running them\n"
+    },
+    {
+      "task": "planner-priority",
+      "submission": "001",
+      "log": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-priority/zig/submissions/001/check/000/00.stderr",
+      "excerpt": "guardian: run-all: whole-tree run \u2014 uncommitted guardian.toml / .guardian change \u2014 every file must be re-judged\nguardian: cold gate \u2014 no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm\nguardian: line-length: 18 finding(s) \u2014 report-only (--verbose for detail)\nguardian: run-all: 1/88 failed (spec)\nguardian: failures grouped by check (1):\n  spec (3 findings)\n    - duplicate tag: successful result - [planner-order] `order`: a topological order choosing the highest-priority *currently ready* job,\n    - in: src/main.zig\n    - in: src/main.zig\n  caution: zig-out binaries predate this failed run (installs are gated on green) \u2014 rebuild green before running them\n"
+    },
+    {
+      "task": "planner-priority",
+      "submission": "002",
+      "log": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-priority/zig/submissions/002/check/000/00.stderr",
+      "excerpt": "guardian: run-all: whole-tree run \u2014 uncommitted guardian.toml / .guardian change \u2014 every file must be re-judged\nguardian: cold gate \u2014 no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm\nguardian: line-length: 18 finding(s) \u2014 report-only (--verbose for detail)\nguardian: run-all: 88 check(s) passed\n"
+    },
+    {
+      "task": "planner-cycle-groups",
+      "submission": "000",
+      "log": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-cycle-groups/zig/submissions/000/check/000/00.stderr",
+      "excerpt": "guardian: run-all: whole-tree run \u2014 uncommitted guardian.toml / .guardian change \u2014 every file must be re-judged\nguardian: cold gate \u2014 no prior green stamp on this tree; a re-run after a green will skip via the cache and confirm\nguardian: run-all: 88 check(s) passed\n"
+    }
+  ],
+  "readiness_after_all_grading": "{'status': 'verified', 'sha256': '365df1cfa0345d671fe12da0eaeab4d38007481426deaf10c2802747fd08a9d5', 'scored_launch_authorized': False}\n",
+  "final_integrity": {
+    "planner-input-boundary": {
+      "actual_order": [
+        "python",
+        "my",
+        "zig"
+      ],
+      "protected_zig_policy_and_wrapper": "identical",
+      "all_scope_violations": [],
+      "participants_did_not_overlap": true
+    },
+    "planner-priority": {
+      "actual_order": [
+        "my",
+        "zig",
+        "python"
+      ],
+      "protected_zig_policy_and_wrapper": "identical",
+      "all_scope_violations": [],
+      "participants_did_not_overlap": true
+    },
+    "planner-cycle-groups": {
+      "actual_order": [
+        "zig",
+        "python",
+        "my"
+      ],
+      "protected_zig_policy_and_wrapper": "identical",
+      "all_scope_violations": [],
+      "participants_did_not_overlap": true
+    }
+  }
+}
