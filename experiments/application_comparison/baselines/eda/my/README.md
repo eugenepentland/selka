@@ -86,3 +86,28 @@ rejects input over the application contract's 1 MiB limit. Its token allocation
 reserves six words per input byte plus sentinels and the bounded hash table;
 there are no native parsing/geometry/serialization helpers. No Guardian gate was
 run, no language checkout build was needed, and no gate-feedback entry applies.
+
+
+## Untimed ordinary JSON API migration
+
+Schema and envelope validation now use `std_json_view` typed nodes, named kinds,
+required fields, checked integer/count bounds and cursors that skip nested values.
+Application schemas still finish before duplicate-ID and reference checks. Required
+fields plus exact object counts reject unknown fields; no defaults are introduced.
+The existing geometry, finding order, SVG output and clearance comparison remain
+unchanged. Validated report sorting still uses raw document descriptors internally;
+this migration does not claim every tape operation has been removed.
+
+Literal output fragments are passed directly to `std_text::emit`; the I/O module retains the length/byte/put declarations used transitively by
+`std_text`. `verify.json` lists
+the original CLI tests and extra schema/subtree cases as separate portable steps
+for `scripts/project.py`. Set `MYLANG_IO` for an explicit host, or use the existing
+`/tools/byte_io`/checkout discovery. For direct validation run:
+
+```
+python3 -B test_cli.py
+python3 -B test_schema.py
+```
+
+These checks are preparation evidence, not application-development timing trials.
+The optional large stress cases remain available through `test_cli.py --stress`.

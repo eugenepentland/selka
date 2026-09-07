@@ -1,6 +1,8 @@
 module main;
 import io;
 import std_json;
+import std_json_view as json_view;
+import std_result as r;
 import std_text;
 import std_ascii;
 import std_order;
@@ -65,12 +67,11 @@ fn execute(heap: allocator) -> Status {
     }
     return new Status.ok(true);
 }
-fn integer(t: &[]i64, n: i64, low: i64, high: i64) -> bool {
-    return std_json::get(t, n, 0) == 4 && std_json::get(t, n, 5) >= low && std_json::get(t, n, 5) <= high;
-}
-fn identifier(t: &[]i64, n: i64) -> bool {
-    if std_json::get(t, n, 0) != 3 {
-        return false;
+// Checked schema helpers run to completion before board-level semantic phases.
+fn identifier(t: &[]i64, node: json_view::Node) -> r::Result<bool, r::Error> {
+    let size = try json_view::text_length(t, node);
+    if size < 1 || size > 32 {
+        return new r::Result<bool, r::Error>.ok(false);
     }
     let head = new std_ascii::Class {
         lower: true,
@@ -86,82 +87,113 @@ fn identifier(t: &[]i64, n: i64) -> bool {
         underscore: true,
         hyphen: true
     };
-    borrow t[std_json::get(t, n, 1)..std_json::get(t, n, 2)] as text {
-        return std_ascii::matches::< i64 >(text, head, tail, 1u64, 32u64);
+    if !std_ascii::contains::< u8 >(head, try json_view::text_byte(t, node, 0)) {
+        return new r::Result<bool, r::Error>.ok(false);
     }
+    let mut i = 1;
+    while i < size {
+        if !std_ascii::contains::< u8 >(tail, try json_view::text_byte(t, node, i)) {
+            return new r::Result<bool, r::Error>.ok(false);
+        }
+        i += 1;
+    }
+    return new r::Result<bool, r::Error>.ok(true);
 }
-fn array(t: &[]i64, n: i64, limit: i64) -> bool {
-    return std_json::get(t, n, 0) == 2 && std_json::get(t, n, 4) <= limit;
+fn object(t: &[]i64, node: json_view::Node, size: i64) -> r::Result<bool, r::Error> {
+    return new r::Result<bool, r::Error>.ok(try json_view::kind(t, node) == new json_view::Kind.object && try json_view::count_between(t, node, size, size) == size);
 }
-fn object(t: &[]i64, n: i64, size: i64) -> bool {
-    return std_json::get(t, n, 0) == 1 && std_json::get(t, n, 4) == size;
+fn array(t: &[]i64, node: json_view::Node, limit: i64) -> r::Result<json_view::Cursor, r::Error> {
+    if try json_view::kind(t, node) != new json_view::Kind.array {
+        return new r::Result<json_view::Cursor, r::Error>.err(new r::Error {
+            category: new r::Category.wrong_type,
+            code: 0
+        });
+    }
+    discard try json_view::count_between(t, node, 0, limit);
+    return json_view::children(t, node);
+}
+fn component_schema(t: &[]i64, node: json_view::Node) -> r::Result<bool, r::Error> {
+    if !(try object(t, node, 6)) || !(try identifier(t, try json_view::required(t, node, "id"))) {
+        return new r::Result<bool, r::Error>.ok(false);
+    }
+    discard try json_view::integer_between(t, try json_view::required(t, node, "x"), - 1000000, 1000000);
+    discard try json_view::integer_between(t, try json_view::required(t, node, "y"), - 1000000, 1000000);
+    discard try json_view::integer_between(t, try json_view::required(t, node, "width"), 1, 1000000);
+    discard try json_view::integer_between(t, try json_view::required(t, node, "height"), 1, 1000000);
+    let pins = try json_view::required(t, node, "pins");
+    let mut cursor = try array(t, pins, 32);
+    let mut index = 0;
+    while !cursor.done {
+        let pin = try json_view::current(t, cursor);
+        if !(try identifier(t, pin)) {
+            return new r::Result<bool, r::Error>.ok(false);
+        }
+        let mut previous = 0;
+        while previous < index {
+            let other = try json_view::at(t, pins, previous);
+            if std_json::equal(t, pin.id, other.id) {
+                return new r::Result<bool, r::Error>.ok(false);
+            }
+            previous += 1;
+        }
+        index += 1;
+        cursor = try json_view::advance(t, cursor);
+    }
+    return new r::Result<bool, r::Error>.ok(true);
+}
+fn net_schema(t: &[]i64, node: json_view::Node) -> r::Result<bool, r::Error> {
+    if !(try object(t, node, 2)) || !(try identifier(t, try json_view::required(t, node, "id"))) {
+        return new r::Result<bool, r::Error>.ok(false);
+    }
+    let mut cursor = try array(t, try json_view::required(t, node, "members"), 128);
+    while !cursor.done {
+        let member_node = try json_view::current(t, cursor);
+        if !(try object(t, member_node, 2)) || !(try identifier(t, try json_view::required(t, member_node, "component"))) || !(try identifier(t, try json_view::required(t, member_node, "pin"))) {
+            return new r::Result<bool, r::Error>.ok(false);
+        }
+        cursor = try json_view::advance(t, cursor);
+    }
+    return new r::Result<bool, r::Error>.ok(true);
+}
+fn checked_schema(t: &[]i64, node: json_view::Node) -> r::Result<bool, r::Error> {
+    if !(try object(t, node, 7)) {
+        return new r::Result<bool, r::Error>.ok(false);
+    }
+    discard try json_view::integer_between(t, try json_view::required(t, node, "version"), 1, 1);
+    let unit_node = try json_view::required(t, node, "unit");
+    if !(try json_view::textis(t, unit_node, "um")) && !(try json_view::textis(t, unit_node, "mm")) {
+        return new r::Result<bool, r::Error>.ok(false);
+    }
+    discard try json_view::integer_between(t, try json_view::required(t, node, "width"), 1, 1000000);
+    discard try json_view::integer_between(t, try json_view::required(t, node, "height"), 1, 1000000);
+    discard try json_view::integer_between(t, try json_view::required(t, node, "clearance"), 0, 1000000);
+    let mut components = try array(t, try json_view::required(t, node, "components"), 128);
+    let mut nets = try array(t, try json_view::required(t, node, "nets"), 128);
+    while !components.done {
+        if !(try component_schema(t, try json_view::current(t, components))) {
+            return new r::Result<bool, r::Error>.ok(false);
+        }
+        components = try json_view::advance(t, components);
+    }
+    while !nets.done {
+        if !(try net_schema(t, try json_view::current(t, nets))) {
+            return new r::Result<bool, r::Error>.ok(false);
+        }
+        nets = try json_view::advance(t, nets);
+    }
+    return new r::Result<bool, r::Error>.ok(true);
 }
 fn schema(t: &[]i64, b: i64) -> bool {
-    if !object(t, b, 7) || !integer(t, std_json::field(t, b, "version"), 1, 1) {
-        return false;
-    }
-    let u = std_json::field(t, b, "unit");
-    let um = "um";
-    let mm = "mm";
-    let mut unit = false;
-    borrow um[0..len(um)] as s {
-        unit = std_json::textis(t, u, s);
-    }
-    borrow mm[0..len(mm)] as s {
-        unit = unit || std_json::textis(t, u, s);
-    }
-    if !unit || !integer(t, std_json::field(t, b, "width"), 1, 1000000) || !integer(t, std_json::field(t, b, "height"), 1, 1000000) || !integer(t, std_json::field(t, b, "clearance"), 0, 1000000) {
-        return false;
-    }
-    let cs = std_json::field(t, b, "components");
-    let ns = std_json::field(t, b, "nets");
-    if !array(t, cs, 128) || !array(t, ns, 128) {
-        return false;
-    }
-    let mut c = cs + 1;
-    while c < std_json::get(t, cs, 3) {
-        if !object(t, c, 6) || !identifier(t, std_json::field(t, c, "id")) || !integer(t, std_json::field(t, c, "x"), - 1000000, 1000000) || !integer(t, std_json::field(t, c, "y"), - 1000000, 1000000) || !integer(t, std_json::field(t, c, "width"), 1, 1000000) || !integer(t, std_json::field(t, c, "height"), 1, 1000000) {
+    match checked_schema(t, new json_view::Node {
+        id: b
+    }) {
+        r::Result<bool, r::Error>.ok(valid) => {
+            return valid;
+        },
+        r::Result<bool, r::Error>.err(discard) => {
             return false;
         }
-        let ps = std_json::field(t, c, "pins");
-        if !array(t, ps, 32) {
-            return false;
-        }
-        let mut p = ps + 1;
-        while p < std_json::get(t, ps, 3) {
-            if !identifier(t, p) {
-                return false;
-            }
-            let mut q = ps + 1;
-            while q < p {
-                if std_json::equal(t, p, q) {
-                    return false;
-                }
-                q += 1;
-            }
-            p += 1;
-        }
-        c = std_json::get(t, c, 3);
     }
-    let mut n = ns + 1;
-    while n < std_json::get(t, ns, 3) {
-        if !object(t, n, 2) || !identifier(t, std_json::field(t, n, "id")) {
-            return false;
-        }
-        let ms = std_json::field(t, n, "members");
-        if !array(t, ms, 128) {
-            return false;
-        }
-        let mut m = ms + 1;
-        while m < std_json::get(t, ms, 3) {
-            if !object(t, m, 2) || !identifier(t, std_json::field(t, m, "component")) || !identifier(t, std_json::field(t, m, "pin")) {
-                return false;
-            }
-            m = std_json::get(t, m, 3);
-        }
-        n = std_json::get(t, n, 3);
-    }
-    return true;
 }
 fn sort(t: &[]i64, w: &mut []i64, items: &mut []std_order::Item, base: i64, size: i64, mode: i64) -> i64 {
     let mut i = 0;
@@ -222,15 +254,9 @@ fn rawid(t: &[]i64, n: i64) -> i64 {
     return 0;
 }
 fn member(t: &[]i64, m: i64) -> i64 {
-    let a = "{\"component\":";
-    borrow a[0..len(a)] as s {
-        discard std_text::emit(s);
-    }
+    discard std_text::emit("{\"component\":");
     discard quote(t, std_json::field(t, m, "component"));
-    let b = ",\"pin\":";
-    borrow b[0..len(b)] as s {
-        discard std_text::emit(s);
-    }
+    discard std_text::emit(",\"pin\":");
     discard quote(t, std_json::field(t, m, "pin"));
     discard io::put(125u8);
     return 0;
@@ -308,55 +334,31 @@ fn finding(t: &[]i64, code: i64, a: i64, b: i64, first: bool) -> i64 {
     if !first {
         discard io::put(44u8);
     }
-    let prefix = "{\"code\":\"";
-    borrow prefix[0..len(prefix)] as s {
-        discard std_text::emit(s);
-    }
+    discard std_text::emit("{\"code\":\"");
     if code == 0 {
-        let x = "clearance";
-        borrow x[0..len(x)] as s {
-            discard std_text::emit(s);
-        }
+        discard std_text::emit("clearance");
     }
     if code == 1 {
-        let x = "outside-board";
-        borrow x[0..len(x)] as s {
-            discard std_text::emit(s);
-        }
+        discard std_text::emit("outside-board");
     }
     if code == 2 {
-        let x = "unconnected-pin";
-        borrow x[0..len(x)] as s {
-            discard std_text::emit(s);
-        }
+        discard std_text::emit("unconnected-pin");
     }
     if code == 3 {
-        let x = "underconnected-net";
-        borrow x[0..len(x)] as s {
-            discard std_text::emit(s);
-        }
+        discard std_text::emit("underconnected-net");
     }
-    let middle = "\",\"subjects\":[";
-    borrow middle[0..len(middle)] as s {
-        discard std_text::emit(s);
-    }
+    discard std_text::emit("\",\"subjects\":[");
     discard quote(t, a);
     if b != 0 {
         discard io::put(44u8);
         discard quote(t, b);
     }
-    let end = "]}";
-    borrow end[0..len(end)] as s {
-        discard std_text::emit(s);
-    }
+    discard std_text::emit("]}");
     return 0;
 }
 fn board(t: &[]i64, w: &mut []i64, items: &mut []std_order::Item, b: i64) -> i64 {
     if !schema(t, b) {
-        let a = "{\"error\":\"invalid-board\"}";
-        borrow a[0..len(a)] as s {
-            discard std_text::emit(s);
-        }
+        discard std_text::emit("{\"error\":\"invalid-board\"}");
         return 0;
     }
     let nc = collect(t, w, 0, std_json::field(t, b, "components"));
@@ -379,10 +381,7 @@ fn board(t: &[]i64, w: &mut []i64, items: &mut []std_order::Item, b: i64) -> i64
         i += 1;
     }
     if duplicate {
-        let a = "{\"error\":\"duplicate-id\",\"components\":[";
-        borrow a[0..len(a)] as s {
-            discard std_text::emit(s);
-        }
+        discard std_text::emit("{\"error\":\"duplicate-id\",\"components\":[");
         let mut ns = 0;
         while ns < 2 {
             let mut base = 0;
@@ -405,17 +404,11 @@ fn board(t: &[]i64, w: &mut []i64, items: &mut []std_order::Item, b: i64) -> i64
                 i += 1;
             }
             if ns == 0 {
-                let separator = "],\"nets\":[";
-                borrow separator[0..len(separator)] as s {
-                    discard std_text::emit(s);
-                }
+                discard std_text::emit("],\"nets\":[");
             }
             ns += 1;
         }
-        let z = "]}";
-        borrow z[0..len(z)] as s {
-            discard std_text::emit(s);
-        }
+        discard std_text::emit("]}");
         return 0;
     }
     let mut nr = 0;
@@ -440,15 +433,9 @@ fn board(t: &[]i64, w: &mut []i64, items: &mut []std_order::Item, b: i64) -> i64
     }
     if unknown || reused {
         if unknown {
-            let a = "{\"error\":\"unknown-pin\",\"refs\":[";
-            borrow a[0..len(a)] as s {
-                discard std_text::emit(s);
-            }
+            discard std_text::emit("{\"error\":\"unknown-pin\",\"refs\":[");
         } else {
-            let a = "{\"error\":\"reused-pin\",\"refs\":[";
-            borrow a[0..len(a)] as s {
-                discard std_text::emit(s);
-            }
+            discard std_text::emit("{\"error\":\"reused-pin\",\"refs\":[");
         }
         let mut first = true;
         i = 0;
@@ -470,10 +457,7 @@ fn board(t: &[]i64, w: &mut []i64, items: &mut []std_order::Item, b: i64) -> i64
             }
             i += 1;
         }
-        let z = "]}";
-        borrow z[0..len(z)] as s {
-            discard std_text::emit(s);
-        }
+        discard std_text::emit("]}");
         return 0;
     }
     let mut mul = 1;
@@ -500,10 +484,7 @@ fn board(t: &[]i64, w: &mut []i64, items: &mut []std_order::Item, b: i64) -> i64
         write_slice(w, base + 4, std_json::field(t, component_node, "id"));
         i += 1;
     }
-    let prefix = "{\"unit\":\"um\",\"findings\":[";
-    borrow prefix[0..len(prefix)] as s {
-        discard std_text::emit(s);
-    }
+    discard std_text::emit("{\"unit\":\"um\",\"findings\":[");
     let mut first = true;
     i = 0;
     while i < nc {
@@ -567,25 +548,16 @@ fn board(t: &[]i64, w: &mut []i64, items: &mut []std_order::Item, b: i64) -> i64
         }
         i += 1;
     }
-    let middle = "],\"nets\":[";
-    borrow middle[0..len(middle)] as s {
-        discard std_text::emit(s);
-    }
+    discard std_text::emit("],\"nets\":[");
     i = 0;
     while i < nn {
         let net = read_slice(w, 128 + i);
         if i > 0 {
             discard io::put(44u8);
         }
-        let a = "{\"id\":";
-        borrow a[0..len(a)] as s {
-            discard std_text::emit(s);
-        }
+        discard std_text::emit("{\"id\":");
         discard quote(t, std_json::field(t, net, "id"));
-        let m = ",\"members\":[";
-        borrow m[0..len(m)] as s {
-            discard std_text::emit(s);
-        }
+        discard std_text::emit(",\"members\":[");
         let nm = collect(t, w, 16640, std_json::field(t, net, "members"));
         discard sort(t, w, items, 16640, nm, 1);
         let mut lx = 0;
@@ -615,102 +587,82 @@ fn board(t: &[]i64, w: &mut []i64, items: &mut []std_order::Item, b: i64) -> i64
             }
             j += 1;
         }
-        let z = "],\"span\":";
-        borrow z[0..len(z)] as s {
-            discard std_text::emit(s);
-        }
+        discard std_text::emit("],\"span\":");
         discard std_text::number((hx - lx + hy - ly + 1) / 2);
         discard io::put(125u8);
         i += 1;
     }
-    let svg = "],\"svg\":\"<svg xmlns=\\\"http://www.w3.org/2000/svg\\\" viewBox=\\\"0 0 ";
-    borrow svg[0..len(svg)] as s {
-        discard std_text::emit(s);
-    }
+    discard std_text::emit("],\"svg\":\"<svg xmlns=\\\"http://www.w3.org/2000/svg\\\" viewBox=\\\"0 0 ");
     discard std_text::number(width);
     discard io::put(32u8);
     discard std_text::number(height);
-    let rect = "\\\"><rect x=\\\"0\\\" y=\\\"0\\\" width=\\\"";
-    borrow rect[0..len(rect)] as s {
-        discard std_text::emit(s);
-    }
+    discard std_text::emit("\\\"><rect x=\\\"0\\\" y=\\\"0\\\" width=\\\"");
     discard std_text::number(width);
-    let h = "\\\" height=\\\"";
-    borrow h[0..len(h)] as s {
-        discard std_text::emit(s);
-    }
+    discard std_text::emit("\\\" height=\\\"");
     discard std_text::number(height);
-    let fill = "\\\" fill=\\\"white\\\" stroke=\\\"black\\\"/>";
-    borrow fill[0..len(fill)] as s {
-        discard std_text::emit(s);
-    }
+    discard std_text::emit("\\\" fill=\\\"white\\\" stroke=\\\"black\\\"/>");
     i = 0;
     while i < nc {
         let c = read_slice(w, i);
-        let r = "<rect id=\\\"";
-        borrow r[0..len(r)] as s {
-            discard std_text::emit(s);
-        }
+        discard std_text::emit("<rect id=\\\"");
         discard rawid(t, std_json::field(t, c, "id"));
-        let x = "\\\" x=\\\"";
-        borrow x[0..len(x)] as s {
-            discard std_text::emit(s);
-        }
+        discard std_text::emit("\\\" x=\\\"");
         discard std_text::number(distance(t, c, "x", mul));
-        let y = "\\\" y=\\\"";
-        borrow y[0..len(y)] as s {
-            discard std_text::emit(s);
-        }
+        discard std_text::emit("\\\" y=\\\"");
         discard std_text::number(distance(t, c, "y", mul));
-        let cw = "\\\" width=\\\"";
-        borrow cw[0..len(cw)] as s {
-            discard std_text::emit(s);
-        }
+        discard std_text::emit("\\\" width=\\\"");
         discard std_text::number(distance(t, c, "width", mul));
-        borrow h[0..len(h)] as s {
-            discard std_text::emit(s);
-        }
+        discard std_text::emit("\\\" height=\\\"");
         discard std_text::number(distance(t, c, "height", mul));
-        let f = "\\\" fill=\\\"none\\\" stroke=\\\"black\\\"/>";
-        borrow f[0..len(f)] as s {
-            discard std_text::emit(s);
-        }
+        discard std_text::emit("\\\" fill=\\\"none\\\" stroke=\\\"black\\\"/>");
         i += 1;
     }
-    let end = "</svg>\"}";
-    borrow end[0..len(end)] as s {
-        discard std_text::emit(s);
-    }
+    discard std_text::emit("</svg>\"}");
     return 0;
 }
-fn request(t: &[]i64, w: &mut []i64, items: &mut []std_order::Item) -> i64 {
-    let cases = std_json::field(t, 1, "cases");
-    if !object(t, 1, 1) || !array(t, cases, 64) {
-        let a = "{\"error\":\"invalid-request\"}";
-        borrow a[0..len(a)] as s {
-            discard std_text::emit(s);
-        }
-        return 0;
+fn envelope(t: &[]i64) -> r::Result<json_view::Cursor, r::Error> {
+    let root = try json_view::root(t);
+    if !(try object(t, root, 1)) {
+        return new r::Result<json_view::Cursor, r::Error>.err(new r::Error {
+            category: new r::Category.wrong_type,
+            code: 0
+        });
     }
-    let a = "{\"results\":[";
-    borrow a[0..len(a)] as s {
-        discard std_text::emit(s);
-    }
-    let mut c = cases + 1;
+    return array(t, try json_view::required(t, root, "cases"), 64);
+}
+fn checked_request(t: &[]i64, w: &mut []i64, items: &mut []std_order::Item, cases: json_view::Cursor) -> r::Result<i64, r::Error> {
+    discard std_text::emit("{\"results\":[");
+    let mut cursor = cases;
     let mut first = true;
-    while c < std_json::get(t, cases, 3) {
+    while !cursor.done {
         if !first {
             discard io::put(44u8);
         }
-        discard board(t, w, items, c);
+        let case_node = try json_view::current(t, cursor);
+        discard board(t, w, items, case_node.id);
         first = false;
-        c = std_json::get(t, c, 3);
+        cursor = try json_view::advance(t, cursor);
     }
-    let z = "]}";
-    borrow z[0..len(z)] as s {
-        discard std_text::emit(s);
+    discard std_text::emit("]}");
+    return new r::Result<i64, r::Error>.ok(0);
+}
+fn request(t: &[]i64, w: &mut []i64, items: &mut []std_order::Item) -> i64 {
+    match envelope(t) {
+        r::Result<json_view::Cursor, r::Error>.err(discard) => {
+            discard std_text::emit("{\"error\":\"invalid-request\"}");
+            return 0;
+        },
+        r::Result<json_view::Cursor, r::Error>.ok(cases) => {
+            match checked_request(t, w, items, cases) {
+                r::Result<i64, r::Error>.ok(answer) => {
+                    return answer;
+                },
+                r::Result<i64, r::Error>.err(discard) => {
+                    return 1;
+                }
+            }
+        }
     }
-    return 0;
 }
 // IEEE binary64 overflow midpoint: 2^1024 - 2^970. Compare the normalized
 // decimal significand exactly; truncation to 17 digits misclassifies neighbors.
