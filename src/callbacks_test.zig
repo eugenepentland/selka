@@ -141,3 +141,35 @@ test "callbacks preserve early result propagation and recursive frame limits" {
     const outcome = try c.executeWithOptions(t.allocator, .{ .max_frames = 8 });
     try t.expectEqualStrings("R_FRAME_LIMIT", outcome.trap.code);
 }
+
+test "callbacks reject malformed invoke metadata and dynamically mismatched signatures" {
+    const source = "fn f(x:i64)->i64 effects(){return x;}fn g(x:bool)->i64 effects(){return 0;}" ++
+        "fn main()->i64{let unused=g;discard unused;let cb=f;return cb(1);}";
+    var c = try language.Compilation.init(t.allocator, "malformed-invoke.my", source);
+    defer c.deinit();
+    try c.emit();
+    var program = c.code.?;
+    const functions = try t.allocator.dupe(language.bytecode.Function, program.functions);
+    defer t.allocator.free(functions);
+    const main_index = @backingInt(program.main);
+    const instructions = try t.allocator.dupe(language.bytecode.Instruction, functions[main_index].scope.instructions);
+    defer t.allocator.free(instructions);
+    functions[main_index].scope.instructions = instructions;
+    program.functions = functions;
+    const other_signature = (try functionInstruction(instructions)).op.function_value.ty;
+    for (instructions) |*instruction| {
+        if (instruction.op != .invoke) continue;
+        const saved = instruction.*;
+        instruction.op.invoke = .i64;
+        try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, program));
+        instruction.op.invoke = other_signature;
+        // Stack-height validation cannot prove a dynamically selected callback's type.
+        try language.bytecode.validate(t.allocator, program);
+        try t.expectError(error.InternalError, language.vm.run(t.allocator, program));
+        instruction.* = saved;
+        const outcome = try language.vm.run(t.allocator, program);
+        try t.expectEqual(@as(i64, 1), outcome.value);
+        return;
+    }
+    try t.expect(false);
+}
