@@ -1,0 +1,10 @@
+{
+  "compiler_sha256": "d24cb29facc3e6383e290a6141058e9fef9944cdbde2d2299981a633bc22e202",
+  "compiler_path": "/home/epentland/ai/canopy/application-trials/maintenance-20260907/tools/mylang",
+  "source_revision": "021e4fa",
+  "model_configuration": "fresh subagents inheriting the root configuration; exact serving model identifier and token/cost telemetry unavailable",
+  "comparison": "repeated same-language maintenance; no cross-language or tooling-treatment comparison",
+  "participants_planned": 2,
+  "stages_per_participant": 3,
+  "status": "tool snapshot prepared; no participants launched"
+}

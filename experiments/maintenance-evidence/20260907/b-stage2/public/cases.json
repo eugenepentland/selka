@@ -1,0 +1,1 @@
+[{"ceiling":3,"expected":{"count":4,"report":904,"total":9},"floor":0,"input":[1,2,3,4]},{"ceiling":5,"expected":{"count":3,"report":703,"total":7},"floor":0,"input":[-2,0,2,7]},{"ceiling":-2,"expected":{"count":3,"report":-897,"total":-9},"floor":-4,"input":[-8,-4,-3,-1]},{"ceiling":9,"expected":{"count":0,"report":0,"total":0},"floor":6,"input":[5,5,5,5]}]

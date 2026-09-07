@@ -600,3 +600,5 @@ reuses one compiler session and rechecks source/manifest content changes. See
 Native builds support `--report` for emission/C build timings and publication
 status. Failed builds preserve the last executable; byte-identical successful
 builds preserve its timestamp. See [native publication](docs/experiments/native-build-publication.md).
+
+The [owner/generic maintenance calibration](docs/experiments/direct-agent-maintenance-20260907.md) records two fresh agents completing three sequential stages each, with preserved command and grading evidence. It establishes feasibility on small tasks, not a language productivity advantage.

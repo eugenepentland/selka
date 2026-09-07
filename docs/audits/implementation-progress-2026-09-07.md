@@ -25,12 +25,12 @@ The original audit remains a historical baseline, not a current feature inventor
 | F16 numerics | All-width bitwise/shifts/wrapping/saturation; nominal binary64 math | Named F64 operations; no primitive decimal float syntax |
 | F17 packages | Offline local locked roots, source hashes and nominal namespaces | No registry/version solver |
 | F18 memory budgets | Nested byte limits; logical capacity, backing and bookkeeping reports | Child budget API is host-facing; no source quota syntax |
-| F19 agent tools | Typed holes, bounded VM traces, in-memory host replay, named sampled laws | Matched outcome measurement pending; no proof claims |
+| F19 agent tools | Typed holes, bounded VM traces, in-memory host replay, named sampled laws | Tools implemented; separate feature-treatment benefit unmeasured; sampled laws are not proofs |
 | F20 semantic reuse | Function-body reuse, fresh global checks, equivalence tests and p50/p95 benchmark | Modest synthetic improvement; generics/constants/callback schemas fall back |
 | F21 native coverage | Host ABI and ordinary/typed/domain JSON through existing C backend | 22-step native acceptance passed before latest callback/length integrations; final combined run pending |
 | F22 concurrency | Bounded isolated process workers, copied typed messages, cancellation/join | Host-facing API; no guest shared-memory threads |
 | F23 source evaluation | Bounded scalar source functions in constants; fixed-width semantics | No aggregate generation or unrestricted macros |
-| F24 maintenance trials | Previous three exploratory blocks/nine sessions preserved | Reviewed trial pack preparation underway; actual fresh sessions pending |
+| F24 maintenance trials | Prior records preserved; two new fresh-agent three-stage owner/generic sequences, 960 private observations | Tiny same-language calibration; no comparative advantage established |
 
 Integration evidence so far: the earlier combined core run passed 896 tests;
 subsequent changes have focused Debug/optimized/native and allocation-failure checks.

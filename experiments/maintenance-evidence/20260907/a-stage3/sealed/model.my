@@ -1,0 +1,11 @@
+module model;
+export Vec;
+export Open;
+export Status;
+export Reply;
+export Answer;
+buffer Vec<T: copy>: T;
+result Open<T: copy> { ok: Vec<T>, err: i64 }
+result Status { ok: bool, err: i64 }
+struct Reply { net: i64, accepted: u64, rejected: u64 }
+result Answer { ok: Reply, err: i64 }

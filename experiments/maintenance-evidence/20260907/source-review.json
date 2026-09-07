@@ -1,0 +1,168 @@
+{
+  "version": "maintenance-independent-source-review-v1",
+  "reviewed_at_utc": "2026-09-07T15:42:12.939733+00:00",
+  "reviewer": "codex /root/diagnostics",
+  "cohort": "/home/epentland/ai/canopy/application-trials/maintenance-20260907",
+  "mode": "unscored calibration",
+  "hidden_grades_consulted": false,
+  "application_sources_modified": false,
+  "overall_source_review": "pass",
+  "findings": [],
+  "method": "Verified both participants sealed bytes against receipts and exact per-stage equality, then manually reviewed participant A sources and current-stage TASK for all three stages. Inspected all 24 recorded command arguments and checked request/start/end, before/after source snapshots and sealed transcript identities.",
+  "shared_requirements": {
+    "ownership": "pass: each summarize acquires Vec<i64> through the supplied allocator with capacity 4; four append calls occur in a lexical mutable borrow; reads occur after the borrow ends; the owned local remains subject to language cleanup.",
+    "generic_append": "pass: append<T: copy>(&mut model::Vec<T>, T) -> model::Status noalloc still forwards append_buffer and is called through append::<i64>.",
+    "errors": "pass by source inspection: acquire_buffer and append use try, preserving i64 errors through model::Answer; discard applies only to the successful append payload. report matches Answer.err and retains the existing error-code encoding.",
+    "module_boundaries": "pass: model declares and exports types; ledger imports model and exports summarize; report calls imported ledger::summarize and consumes model::Answer.",
+    "shortcuts": "none found: every input is copied through the owned buffer and summarized through a four-iteration loop using floor/ceiling predicates; no case-specific branches, constants replacing results, external capabilities, or test inspection in guest source."
+  },
+  "stages": [
+    {
+      "stage": 1,
+      "participants_have_identical_bytes": true,
+      "status": "pass",
+      "reply_fields": {
+        "total": "i64",
+        "count": "u64"
+      },
+      "details": "Both loops visit all four entries. n >= floor increments total and count; empty acceptance leaves both zero. Existing signatures and total*100+count report encoding preserved."
+    },
+    {
+      "stage": 2,
+      "participants_have_identical_bytes": true,
+      "status": "pass",
+      "reply_fields": {
+        "total": "i64",
+        "count": "u64"
+      },
+      "details": "ceiling:i64 follows floor in summarize and score and is forwarded between modules. Acceptance uses original n >= floor; accepted values contribute ceiling if n > ceiling, otherwise n; every accepted value increments count."
+    },
+    {
+      "stage": 3,
+      "participants_have_identical_bytes": true,
+      "status": "pass",
+      "reply_fields": {
+        "net": "i64",
+        "accepted": "u64",
+        "rejected": "u64"
+      },
+      "obsolete_reply_fields_absent": true,
+      "details": "Reply has exactly net, accepted and rejected with required types; all constructors and consumers migrated. rejected=4u64-accepted; report uses net*100+accepted*10+rejected. Stage-2 arguments, cap logic and error paths retained."
+    }
+  ],
+  "runs": [
+    {
+      "participant": "a",
+      "stage": 1,
+      "source_sha256": "df413d0a2678a329c1e005d11b410d901d9df3fe03928fb8c25823f6886e284a",
+      "sealed_identity_verified": true,
+      "transcript_identity_verified": true,
+      "command_snapshot_chain_verified": true,
+      "own_prior_stage_continuity_verified": true,
+      "recorded_commands": 4,
+      "edited_submissions": 1,
+      "all_recorded_commands_isolated": true,
+      "boundary_violations": [],
+      "recorded_protocol_violations": [],
+      "final_checked": true,
+      "evidence_directory": "/home/epentland/ai/canopy/application-trials/maintenance-20260907/a-stage1"
+    },
+    {
+      "participant": "a",
+      "stage": 2,
+      "source_sha256": "6af8be6a101fb7771b15660a0744ef8120e678d7d5c0dd4a1ccedc545879befd",
+      "sealed_identity_verified": true,
+      "transcript_identity_verified": true,
+      "command_snapshot_chain_verified": true,
+      "own_prior_stage_continuity_verified": true,
+      "recorded_commands": 4,
+      "edited_submissions": 1,
+      "all_recorded_commands_isolated": true,
+      "boundary_violations": [],
+      "recorded_protocol_violations": [],
+      "final_checked": true,
+      "evidence_directory": "/home/epentland/ai/canopy/application-trials/maintenance-20260907/a-stage2"
+    },
+    {
+      "participant": "a",
+      "stage": 3,
+      "source_sha256": "ec39e9c5a5a007d9516a0936d0d6dbf67523fc5fc45e8326cff6912afddbb91b",
+      "sealed_identity_verified": true,
+      "transcript_identity_verified": true,
+      "command_snapshot_chain_verified": true,
+      "own_prior_stage_continuity_verified": true,
+      "recorded_commands": 4,
+      "edited_submissions": 1,
+      "all_recorded_commands_isolated": true,
+      "boundary_violations": [],
+      "recorded_protocol_violations": [],
+      "final_checked": true,
+      "evidence_directory": "/home/epentland/ai/canopy/application-trials/maintenance-20260907/a-stage3"
+    },
+    {
+      "participant": "b",
+      "stage": 1,
+      "source_sha256": "df413d0a2678a329c1e005d11b410d901d9df3fe03928fb8c25823f6886e284a",
+      "sealed_identity_verified": true,
+      "transcript_identity_verified": true,
+      "command_snapshot_chain_verified": true,
+      "own_prior_stage_continuity_verified": true,
+      "recorded_commands": 4,
+      "edited_submissions": 1,
+      "all_recorded_commands_isolated": true,
+      "boundary_violations": [],
+      "recorded_protocol_violations": [],
+      "final_checked": true,
+      "evidence_directory": "/home/epentland/ai/canopy/application-trials/maintenance-20260907/b-stage1"
+    },
+    {
+      "participant": "b",
+      "stage": 2,
+      "source_sha256": "6af8be6a101fb7771b15660a0744ef8120e678d7d5c0dd4a1ccedc545879befd",
+      "sealed_identity_verified": true,
+      "transcript_identity_verified": true,
+      "command_snapshot_chain_verified": true,
+      "own_prior_stage_continuity_verified": true,
+      "recorded_commands": 4,
+      "edited_submissions": 1,
+      "all_recorded_commands_isolated": true,
+      "boundary_violations": [],
+      "recorded_protocol_violations": [],
+      "final_checked": true,
+      "evidence_directory": "/home/epentland/ai/canopy/application-trials/maintenance-20260907/b-stage2"
+    },
+    {
+      "participant": "b",
+      "stage": 3,
+      "source_sha256": "ec39e9c5a5a007d9516a0936d0d6dbf67523fc5fc45e8326cff6912afddbb91b",
+      "sealed_identity_verified": true,
+      "transcript_identity_verified": true,
+      "command_snapshot_chain_verified": true,
+      "own_prior_stage_continuity_verified": true,
+      "recorded_commands": 4,
+      "edited_submissions": 1,
+      "all_recorded_commands_isolated": true,
+      "boundary_violations": [],
+      "recorded_protocol_violations": [],
+      "final_checked": true,
+      "evidence_directory": "/home/epentland/ai/canopy/application-trials/maintenance-20260907/b-stage3"
+    }
+  ],
+  "recorded_protocol_review": {
+    "status": "pass within recorded commands",
+    "sequence_per_run": [
+      "gateway check of initial source",
+      "cat current TASK and three editable sources",
+      "Python edits restricted to editable source paths",
+      "gateway check of edited source"
+    ],
+    "total_recorded_commands": 24,
+    "indirect_public_checker_invocations": 0,
+    "observed_external_scope_access": 0
+  },
+  "limits": [
+    "Gateway evidence cannot establish absence of unlogged inherited host-tool calls; separate agent-history review is required for that claim.",
+    "This review inspects source structure and recorded command evidence; it does not independently exercise allocation-failure paths or replace hidden behavioral grading.",
+    "Identical final sources are verified, but matching bytes alone do not establish participant independence or language superiority."
+  ]
+}
