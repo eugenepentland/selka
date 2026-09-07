@@ -88,6 +88,14 @@ pub const Sink = struct {
         self.items = .empty;
     }
 
+    /// Reject an explicit typed implementation obligation with its declared type.
+    pub fn typedHole(self: *Sink, at: source.Span, target: source.Span) Error {
+        return self.failRelated("E_TYPED_HOLE", at, "unresolved implementation obligation; fill this hole before checking or execution", .{
+            .span = target,
+            .message = "required result type declared here",
+        });
+    }
+
     /// Append a primary diagnostic together with a related source location.
     pub fn failRelated(self: *Sink, code: []const u8, span: source.Span, message: []const u8, related: Related) Error {
         self.items.append(self.allocator, .{ .code = code, .span = span, .message = message, .related = related }) catch return error.OutOfMemory;

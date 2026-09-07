@@ -304,6 +304,10 @@ const Checker = struct {
         return self.sink.fail(eReturnLifetime, contract.source, "result lifetime names no parameter");
     }
     fn callTarget(self: *Checker, input: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span) Error!typed.FunctionId {
+        if (std.mem.eql(u8, self.src.text(input.name), "todo") and input.owner == null) {
+            _ = try self.ty(input.type_arguments[0]);
+            return self.sink.typedHole(input.name, input.type_arguments[0]);
+        }
         const call = try @import("source_codec.zig").resolve(self.src, self.syntax, self.catalog, input, self.sink);
         const owner = if (call.owner) |name| try self.ty(name) else null;
         if (owner) |domain_type| _ = try self.catalog.domain(domain_type, call.owner.?, self.sink);

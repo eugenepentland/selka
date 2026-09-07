@@ -482,6 +482,10 @@ const Checker = struct {
         return codec.resolve(self.src, self.program, self.catalog, invocation, self.sink);
     }
     fn call(self: *Checker, input_call: Call, span: source.Span, allow_reference: bool) Error!Symbolic {
+        if (std.mem.eql(u8, self.src.text(input_call.name), "todo") and input_call.owner == null) {
+            _ = try self.ty(input_call.type_arguments[0]);
+            return self.sink.typedHole(input_call.name, input_call.type_arguments[0]);
+        }
         if (input_call.owner == null) if (source_json.operation(self.src.text(input_call.name))) |decode| return self.jsonCall(input_call, decode);
         if (try self.operationCall(input_call)) |result| return result;
         const invocation = try self.resolveCall(input_call);

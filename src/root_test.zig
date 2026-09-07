@@ -1,5 +1,6 @@
 //! Unit test entry point, separate from the production compiler module.
 test {
+    _ = @import("typed_holes_test.zig");
     _ = @import("allocation_budget_test.zig");
     _ = @import("native_typed_json.zig");
     _ = @import("native_json_bridge.zig");
