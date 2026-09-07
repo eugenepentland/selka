@@ -1,0 +1,18 @@
+{
+  "executable_sha256": "36d9e389ea8ffe8bce60927d7bd42d9550ba1b5746591583fee541e84298b2b5",
+  "source_sha256": "9ecb0a144833b5e5973d7425fcf199eabafbf6ac39ec19fecbdf2b7670009053",
+  "local_library_sources": {
+    "std_order.my": "8c4399173fb716f586b2300ef9d4454f5c6dd5cceef56ab70208e9ebcd7ad180",
+    "std_ascii.my": "cc75c47fc7a53b91d8a4090ae653bf82a615b38366297f76a77ef17dfe194920"
+  },
+  "kind": "untimed-stress-validation",
+  "passed": true,
+  "command": "python3 experiments/application_comparison/baselines/eda/my/test_cli.py --stress",
+  "build_mode": "ReleaseFast (root-provided build)",
+  "input_bytes": 841355,
+  "output_bytes": 57692813,
+  "verification_seconds": 40.908,
+  "source_module_mode": "temporary ordinary source copies, excluded from committed application",
+  "log_sha256": "471b45a0f072f9f16ef8eaf2def4ed616cdf379f368fe771c208f51fce874e86",
+  "application_development_timing": false
+}

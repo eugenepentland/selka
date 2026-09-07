@@ -13,42 +13,40 @@ python3 experiments/application_comparison/baselines/eda/my/test_cli.py
 python3 experiments/application_comparison/baselines/eda/my/test_cli.py --stress
 ```
 
-`main.my` owns UTF-8 and JSON parsing, scalar-value validation of decoded strings,
-escape normalization, duplicate object keys, signed-64 integer limits, finite
-binary64-number range validation, depth limits, envelope and board schemas,
-validation precedence, reference resolution, geometry, connectivity, deterministic
-JSON serialization, and the exact SVG export. `io.my` declares only input length,
-raw input byte lookup, and output byte append. The Python standard-library test
-script is a CLI fixture/assertion driver and is not an application dependency.
+The current baseline was migrated in untimed preparation on 2026-09-07. See
+[the parity audit](../../../../../docs/experiments/eda-stdlib-parity.md). Its original
+independent construction provenance and dated calibration receipts remain historical;
+the migrated version has subsequently been checked against the public construction oracle.
+
+`std_text::read` acquires at most 1 MiB of raw input, and `std_json::parse` performs
+strict JSON/UTF-8 transport decoding through the shared language runtime. The
+application owns envelope and board schemas, validation precedence, reference
+resolution, geometry, connectivity, report structure, and exact SVG layout.
+`io.my` still declares only input length, raw byte lookup, and output byte append.
+The Python test driver is evaluator tooling, never an application dependency.
 
 ## Implementation
 
-The guest uses a preorder JSON tree in an owned numeric buffer, accessed through
-mutable slices. Each node occupies six words: kind, source start/end, subtree end,
-child count, and integer value. Object-key nodes reuse the last two words for
-hash-chain links and a parent-tagged recognized-field code. Equality and hashing
-operate on decoded scalar values, so differently escaped duplicate keys collide
-correctly. The hash table uses at most 262,147 buckets; collisions retain exact
-comparison. Hashing avoids a quadratic scan over ordinary large unknown objects,
-though adversarial hash collisions still have a finite quadratic worst case.
+The JSON document is an owned standard-library numeric tape with decoded UTF-8
+bytes and six-word nodes. Queries use `std_json::get/field/equal/compare/textis`;
+no local JSON parser, numeric lexer, duplicate-key hash table, or Unicode decoder
+remains. Schema-validated ASCII identifiers can be emitted directly in JSON and
+SVG attributes. General decimal emission uses `std_text::number`, including its
+signed-minimum-safe implementation. Fixed output text uses `std_text::emit`.
 
-Board processing uses a separate 17,536-word workspace. Component and net indices,
-references, and pins are sorted by guest heapsort. Binary searches resolve
-components and connected pins. Normalized component rectangles are cached once
-before the pair scan. All distance and squared-gap arithmetic is signed 64-bit;
-the contract's micrometer conversion and coordinate bounds keep the sum of two
-squared gaps within that range. Findings stream in the required code/subject
-order. Net spans use doubled centers and round the half-span upward.
+Board processing uses a 17,536-word scratch workspace. Components, nets, references,
+and pins are sorted through `std_order::sort` using precomputed application keys
+and a reusable 16,384-item scratch buffer. `std_ascii::matches` checks the explicit
+identifier grammar. Binary searches resolve components
+and connected pins. Normalized rectangles are cached before the pair scan. Exact
+signed 64-bit geometry remains application logic; the common contract bounds keep
+squared gaps in range. Findings stream in code/subject order, and net spans use
+doubled centers with upward rounding. The raw-byte VM host buffers output and
+publishes it only after zero return; parsing completes before report emission.
 
-Decimal floating input is grammar-checked without using a host numeric parser.
-Its normalized magnitude is compared against the exact binary64 overflow midpoint
-`2^1024 - 2^970`, including all digits at the boundary. Underflow to finite zero
-is allowed. Floats remain schema-invalid wherever integers are required. Unpaired
-UTF-16 surrogate escapes reject the entire transport; valid pairs are decoded.
-
-Successful output is emitted directly through byte calls. The VM host buffers
-these bytes and publishes them only after a zero return. The application parses
-and validates the entire transport before emitting any case result.
+The following section records the **original construction**, before this migration.
+Its old parser representation, timings, and executable hashes do not describe the
+current source. New validation is recorded separately in the parity audit.
 
 ## Independent validation and feasibility
 

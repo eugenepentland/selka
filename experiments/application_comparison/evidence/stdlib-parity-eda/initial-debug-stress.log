@@ -1,0 +1,30 @@
+independent CLI cases passed
+one-MiB whitespace 1048576 input bytes 52.627 seconds
+50000 unique keys 538903 input bytes 26.179 seconds
+long duplicate keys 200022 input bytes 9.012 seconds
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang-parity-eda/experiments/application_comparison/baselines/eda/my/test_cli.py", line 121, in <module>
+    stress()
+    ~~~~~~^^
+  File "/home/epentland/ai/canopy/mylang-parity-eda/experiments/application_comparison/baselines/eda/my/test_cli.py", line 100, in stress
+    assert result(repeated) == {'error': 'reused-pin', 'refs': [{'component': 'a', 'pin': 'p'}]}
+           ~~~~~~^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-parity-eda/experiments/application_comparison/baselines/eda/my/test_cli.py", line 32, in result
+    return invoke({'cases': [b]})['results'][0]
+           ~~~~~~^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang-parity-eda/experiments/application_comparison/baselines/eda/my/test_cli.py", line 16, in invoke
+    run = subprocess.run([str(EXE), '--project', str(HERE)], input=raw, capture_output=True, timeout=timeout)
+  File "/usr/lib/python3.14/subprocess.py", line 557, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1221, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 2154, in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1268, in _check_timeout
+    raise TimeoutExpired(
+    ...<2 lines>...
+            stderr=b''.join(stderr_seq) if stderr_seq else None)
+subprocess.TimeoutExpired: Command '['/home/epentland/ai/canopy/mylang-parity-eda/zig-out/bin/mylang-io', '--project', '/home/epentland/ai/canopy/mylang-parity-eda/experiments/application_comparison/baselines/eda/my']' timed out after 60 seconds

@@ -1,5 +1,10 @@
 module main;
 import io;
+import std_json;
+import std_text;
+import std_ascii;
+import std_order;
+import std_collections;
 buffer Words: i64;
 result Acquired {
     ok: Words,
@@ -9,921 +14,224 @@ result Status {
     ok: bool,
     err: i64
 }
-fn emit(s: &[]u8) -> i64 {
-    let mut i = 0u64;
-    while i < len_slice(s) {
-        discard io::put(read_slice(s, i));
-        i += 1u64;
-    }
-    return 0;
-}
-fn byte(p: i64) -> i64 {
-    if p >= io::length() {
-        return - 1;
-    }
-    return cast<i64>(io::byte(p));
-}
-fn space(p: i64) -> i64 {
-    let mut q = p;
-    let mut c = byte(q);
-    while c == 32 || c == 9 || c == 10 || c == 13 {
-        q += 1;
-        c = byte(q);
-    }
-    return q;
-}
-fn digit(c: i64) -> bool {
-    return c >= 48 && c <= 57;
-}
-fn hex(c: i64) -> i64 {
-    if c >= 48 && c <= 57 {
-        return c - 48;
-    }
-    if c >= 65 && c <= 70 {
-        return c - 55;
-    }
-    if c >= 97 && c <= 102 {
-        return c - 87;
-    }
-    return - 1;
-}
-struct Char {
-    value: i64,
-    next: i64
-}
-fn character(p: i64) -> Char {
-    let c = byte(p);
-    if c == 92 {
-        let e = byte(p + 1);
-        if e == 34 || e == 92 || e == 47 {
-            return new Char {
-                value: e,
-                next: p + 2
-            };
-        }
-        if e == 98 {
-            return new Char {
-                value: 8,
-                next: p + 2
-            };
-        }
-        if e == 102 {
-            return new Char {
-                value: 12,
-                next: p + 2
-            };
-        }
-        if e == 110 {
-            return new Char {
-                value: 10,
-                next: p + 2
-            };
-        }
-        if e == 114 {
-            return new Char {
-                value: 13,
-                next: p + 2
-            };
-        }
-        if e == 116 {
-            return new Char {
-                value: 9,
-                next: p + 2
-            };
-        }
-        if e != 117 {
-            return new Char {
-                value: - 1,
-                next: p
-            };
-        }
-        let mut v = 0;
-        let mut j = p + 2;
-        while j < p + 6 {
-            let h = hex(byte(j));
-            if h < 0 {
-                return new Char {
-                    value: - 1,
-                    next: p
-                };
-            }
-            v = v * 16 + h;
-            j += 1;
-        }
-        if v >= 55296 && v <= 56319 {
-            if byte(j) != 92 || byte(j + 1) != 117 {
-                return new Char {
-                    value: - 1,
-                    next: p
-                };
-            }
-            let mut w = 0;
-            let mut k = j + 2;
-            while k < j + 6 {
-                let h = hex(byte(k));
-                if h < 0 {
-                    return new Char {
-                        value: - 1,
-                        next: p
-                    };
-                }
-                w = w * 16 + h;
-                k += 1;
-            }
-            if w < 56320 || w > 57343 {
-                return new Char {
-                    value: - 1,
-                    next: p
-                };
-            }
-            return new Char {
-                value: 65536 +(v - 55296) * 1024 + w - 56320,
-                next: k
-            };
-        }
-        if v >= 56320 && v <= 57343 {
-            return new Char {
-                value: - 1,
-                next: p
-            };
-        }
-        return new Char {
-            value: v,
-            next: j
-        };
-    }
-    if c < 32 {
-        return new Char {
-            value: - 1,
-            next: p
-        };
-    }
-    if c < 128 {
-        return new Char {
-            value: c,
-            next: p + 1
-        };
-    }
-    let mut count = 0;
-    let mut value = 0;
-    let mut minimum = 0;
-    if c >= 194 && c <= 223 {
-        count = 1;
-        value = c - 192;
-        minimum = 128;
-    }
-    if c >= 224 && c <= 239 {
-        count = 2;
-        value = c - 224;
-        minimum = 2048;
-    }
-    if c >= 240 && c <= 244 {
-        count = 3;
-        value = c - 240;
-        minimum = 65536;
-    }
-    if count == 0 {
-        return new Char {
-            value: - 1,
-            next: p
-        };
-    }
-    let mut q = p + 1;
-    while q <= p + count {
-        let b = byte(q);
-        if b < 128 || b > 191 {
-            return new Char {
-                value: - 1,
-                next: p
-            };
-        }
-        value = value * 64 + b - 128;
-        q += 1;
-    }
-    if value < minimum || value > 1114111 ||(value >= 55296 && value <= 57343) {
-        return new Char {
-            value: - 1,
-            next: p
-        };
-    }
-    return new Char {
-        value: value,
-        next: q
-    };
-}
-// Six words per preorder node: kind, source start, source end, subtree end,
-// immediate child count, integer value. Node zero is a sentinel.
-fn get(t: &[]i64, n: i64, f: i64) -> i64 {
-    return read_slice(t, n * 6 + f);
-}
-fn set(t: &mut []i64, n: i64, f: i64, v: i64) -> i64 {
-    write_slice(t, n * 6 + f, v);
-    return 0;
-}
-fn equal(t: &[]i64, a: i64, b: i64) -> bool {
-    if get(t, a, 0) != 3 || get(t, b, 0) != 3 {
-        return false;
-    }
-    let mut p = get(t, a, 1) + 1;
-    let mut q = get(t, b, 1) + 1;
-    let ae = get(t, a, 2) - 1;
-    let be = get(t, b, 2) - 1;
-    while p < ae && q < be {
-        let x = decoded(p);
-        let y = decoded(q);
-        if x.value != y.value {
-            return false;
-        }
-        p = x.next;
-        q = y.next;
-    }
-    return p == ae && q == be;
-}
-fn compare(t: &[]i64, a: i64, b: i64) -> i64 {
-    let mut p = get(t, a, 1) + 1;
-    let mut q = get(t, b, 1) + 1;
-    let ae = get(t, a, 2) - 1;
-    let be = get(t, b, 2) - 1;
-    while p < ae && q < be {
-        let x = decoded(p);
-        let y = decoded(q);
-        if x.value < y.value {
-            return - 1;
-        }
-        if x.value > y.value {
-            return 1;
-        }
-        p = x.next;
-        q = y.next;
-    }
-    if p == ae && q == be {
-        return 0;
-    }
-    if p == ae {
-        return - 1;
-    }
-    return 1;
-}
-fn textis(t: &[]i64, n: i64, s: &[]u8) -> bool {
-    if get(t, n, 0) != 3 {
-        return false;
-    }
-    let mut p = get(t, n, 1) + 1;
-    let e = get(t, n, 2) - 1;
-    let mut i = 0u64;
-    while p < e && i < len_slice(s) {
-        let c = decoded(p);
-        if c.value != cast<i64>(read_slice(s, i)) {
-            return false;
-        }
-        p = c.next;
-        i += 1u64;
-    }
-    return p == e && i == len_slice(s);
-}
-struct Parsed {
-    end: i64,
-    next: i64,
-    good: bool
-}
-fn parse(t: &mut []i64, p0: i64, n: i64, depth: i64, hb: i64) -> Parsed {
-    let p = space(p0);
-    let c = byte(p);
-    discard set(t, n, 1, p);
-    let mut q = p;
-    let mut next = n + 1;
-    let mut kind = 0;
-    let mut count = 0;
-    let mut val = 0;
-    if c == 123 || c == 91 {
-        if depth >= 64 {
-            return new Parsed {
-                end: p,
-                next: next,
-                good: false
-            };
-        }
-        kind = 1;
-        let mut close = 125;
-        if c == 91 {
-            kind = 2;
-            close = 93;
-        }
-        q = space(p + 1);
-        if byte(q) != close {
-            let mut done = false;
-            while !done {
-                let key = next;
-                if kind == 1 {
-                    if byte(q) != 34 {
-                        return new Parsed {
-                            end: q,
-                            next: next,
-                            good: false
-                        };
-                    }
-                    let k = parse(t, q, next, depth + 1, hb);
-                    if !k.good {
-                        return k;
-                    }
-                    let bucket = hb + keyhash(t, key, n);
-                    let mut prior = read_slice(t, bucket);
-                    while prior != 0 {
-                        if get(t, prior, 5) / 16 == n && equal(t, prior, key) {
-                            return new Parsed {
-                                end: q,
-                                next: next,
-                                good: false
-                            };
-                        }
-                        prior = get(t, prior, 4);
-                    }
-                    discard set(t, key, 4, read_slice(t, bucket));
-                    write_slice(t, bucket, key);
-                    discard set(t, key, 5, keycode(t, key) + 16 * n);
-                    q = space(k.end);
-                    next = k.next;
-                    if byte(q) != 58 {
-                        return new Parsed {
-                            end: q,
-                            next: next,
-                            good: false
-                        };
-                    }
-                    q += 1;
-                }
-                let v = parse(t, q, next, depth + 1, hb);
-                if !v.good {
-                    return v;
-                }
-                q = space(v.end);
-                next = v.next;
-                count += 1;
-                if byte(q) == close {
-                    done = true;
-                } else {
-                    if byte(q) != 44 {
-                        return new Parsed {
-                            end: q,
-                            next: next,
-                            good: false
-                        };
-                    }
-                    q = space(q + 1);
-                }
-            }
-        }
-        q += 1;
-    } else {
-        if c == 34 {
-            kind = 3;
-            q = p + 1;
-            while byte(q) != 34 {
-                let ch = character(q);
-                if ch.value < 0 {
-                    return new Parsed {
-                        end: q,
-                        next: next,
-                        good: false
-                    };
-                }
-                q = ch.next;
-            }
-            q += 1;
-        } else {
-            if c == 45 || digit(c) {
-                kind = 4;
-                q = p;
-                let negative = c == 45;
-                if negative {
-                    q += 1;
-                }
-                if !digit(byte(q)) {
-                    return new Parsed {
-                        end: q,
-                        next: next,
-                        good: false
-                    };
-                }
-                let begin = q;
-                if byte(q) == 48 {
-                    q += 1;
-                } else {
-                    while digit(byte(q)) {
-                        q += 1;
-                    }
-                }
-                let int_end = q;
-                let mut frac = 0;
-                if byte(q) == 46 {
-                    kind = 5;
-                    q += 1;
-                    let f = q;
-                    while digit(byte(q)) {
-                        q += 1;
-                    }
-                    frac = q - f;
-                    if frac == 0 {
-                        return new Parsed {
-                            end: q,
-                            next: next,
-                            good: false
-                        };
-                    }
-                }
-                let mant_end = q;
-                let mut exponent = 0;
-                let mut expnegative = false;
-                if byte(q) == 101 || byte(q) == 69 {
-                    kind = 5;
-                    q += 1;
-                    if byte(q) == 45 || byte(q) == 43 {
-                        expnegative = byte(q) == 45;
-                        q += 1;
-                    }
-                    let e = q;
-                    while digit(byte(q)) {
-                        if exponent < 2000000 {
-                            exponent = exponent * 10 + byte(q) - 48;
-                        }
-                        q += 1;
-                    }
-                    if e == q {
-                        return new Parsed {
-                            end: q,
-                            next: next,
-                            good: false
-                        };
-                    }
-                }
-                if kind == 4 {
-                    let mut j = begin;
-                    while j < int_end {
-                        let d = byte(j) - 48;
-                        if val < - 922337203685477580 ||(val == - 922337203685477580 &&(d > 7 && !negative || d > 8)) {
-                            return new Parsed {
-                                end: q,
-                                next: next,
-                                good: false
-                            };
-                        }
-                        val = val * 10 - d;
-                        j += 1;
-                    }
-                    if !negative {
-                        val = 0 - val;
-                    }
-                } else {
-                    if expnegative {
-                        exponent = 0 - exponent;
-                    }
-                    let mut j = begin;
-                    let mut significant = 0;
-                    let mut first = 0;
-                    let mut kept = 0;
-                    while j < mant_end {
-                        let b = byte(j);
-                        if digit(b) {
-                            if b != 48 || significant > 0 {
-                                significant += 1;
-                                if kept < 17 {
-                                    first = first * 10 + b - 48;
-                                    kept += 1;
-                                }
-                            }
-                        }
-                        j += 1;
-                    }
-                    if significant > 0 {
-                        let order = significant - frac + exponent - 1;
-                        if order > 308 {
-                            return new Parsed {
-                                end: q,
-                                next: next,
-                                good: false
-                            };
-                        }
-                        if order == 308 && !finite_edge(begin, mant_end) {
-                            return new Parsed {
-                                end: q,
-                                next: next,
-                                good: false
-                            };
-                        }
-                    }
-                }
-            } else {
-                kind = 6;
-                if c == 116 && byte(p + 1) == 114 && byte(p + 2) == 117 && byte(p + 3) == 101 {
-                    q = p + 4;
-                } else {
-                    if c == 102 && byte(p + 1) == 97 && byte(p + 2) == 108 && byte(p + 3) == 115 && byte(p + 4) == 101 {
-                        q = p + 5;
-                    } else {
-                        if c == 110 && byte(p + 1) == 117 && byte(p + 2) == 108 && byte(p + 3) == 108 {
-                            q = p + 4;
-                        } else {
-                            return new Parsed {
-                                end: p,
-                                next: next,
-                                good: false
-                            };
-                        }
-                    }
-                }
-            }
-        }
-    }
-    discard set(t, n, 0, kind);
-    discard set(t, n, 2, q);
-    discard set(t, n, 3, next);
-    discard set(t, n, 4, count);
-    discard set(t, n, 5, val);
-    return new Parsed {
-        end: q,
-        next: next,
-        good: true
-    };
-}
-fn main(alloc: allocator) -> i64 {
-    let n = io::length();
-    if n > 1048576 {
-        let s = "{\"error\":\"invalid-request\"}";
-        borrow s[0..len(s)] as v {
-            discard emit(v);
-        }
-        return 0;
-    }
-    match acquire_buffer<Acquired>(alloc,(n + 2) * 6 + min(262147, n + 2)) {
-        Acquired.err(e) => {
-            return e;
+fn main(heap: allocator) -> i64 {
+    match execute(heap) {
+        Status.ok(discard) => {
+            return 0;
         },
-        Acquired.ok(storage) => {
-            let mut words = storage;
-            let mut i = 0;
-            while i <(n + 2) * 6 + min(262147, n + 2) {
-                match append_buffer<Status>(words, 0) {
-                    Status.ok(discard) => {},
-                    Status.err(e) => {
-                        return e;
-                    }
-                }
-                i += 1;
-            }
-            borrow mut words[0..len_buffer(words)] as t {
-                let r = parse(t, 0, 1, 0,(n + 2) * 6);
-                if !r.good || space(r.end) != n {
-                    let s = "{\"error\":\"invalid-request\"}";
-                    borrow s[0..len(s)] as v {
-                        discard emit(v);
-                    }
-                    return 0;
-                }
-                match acquire_buffer<Acquired>(alloc, 17536) {
-                    Acquired.err(e) => {
-                        return e;
-                    },
-                    Acquired.ok(scratch) => {
-                        let mut work = scratch;
-                        let mut j = 0;
-                        while j < 17536 {
-                            match append_buffer<Status>(work, 0) {
-                                Status.ok(discard) => {},
-                                Status.err(e) => {
-                                    return e;
+        Status.err(code) => {
+            return code;
+        }
+    }
+}
+fn execute(heap: allocator) -> Status {
+    match std_text::read(heap, 1048576) {
+        std_json::Input.err(discard) => {
+            discard std_text::emit("{\"error\":\"invalid-request\"}");
+        },
+        std_json::Input.ok(bytes) => {
+            match std_json::parse(heap, bytes, 1048576) {
+                std_json::Parsed.err(discard) => {
+                    discard std_text::emit("{\"error\":\"invalid-request\"}");
+                },
+                std_json::Parsed.ok(document) => {
+                    let mut work = try acquire_buffer<Acquired>(heap, 17536);
+                    discard try resize_buffer<Status>(work, 17536, 0);
+                    let empty = new std_order::Item {
+                        value: 0,
+                        first: 0u64,
+                        first_len: 0u64,
+                        second: 0u64,
+                        second_len: 0u64
+                    };
+                    match std_collections::filled::< std_order::Item >(heap, 16384u64, empty) {
+                        std_collections::Created<std_order::Item>.err(code) => {
+                            return new Status.err(code);
+                        },
+                        std_collections::Created<std_order::Item>.ok(storage) => {
+                            let mut sorting = storage;
+                            borrow mut sorting[0..len_buffer(sorting)] as items {
+                                borrow document[0..len_buffer(document)] as t {
+                                    borrow mut work[0..len_buffer(work)] as w {
+                                        discard request(t, w, items);
+                                    }
                                 }
                             }
-                            j += 1;
-                        }
-                        borrow mut work[0..len_buffer(work)] as w {
-                            discard request(t, w);
                         }
                     }
                 }
             }
         }
     }
-    return 0;
-}
-fn keycode(t: &[]i64, k: i64) -> i64 {
-    let a = "cases";
-    borrow a[0..len(a)] as s {
-        if textis(t, k, s) {
-            return 1;
-        }
-    }
-    let b = "version";
-    borrow b[0..len(b)] as s {
-        if textis(t, k, s) {
-            return 2;
-        }
-    }
-    let c = "unit";
-    borrow c[0..len(c)] as s {
-        if textis(t, k, s) {
-            return 3;
-        }
-    }
-    let d = "width";
-    borrow d[0..len(d)] as s {
-        if textis(t, k, s) {
-            return 4;
-        }
-    }
-    let e = "height";
-    borrow e[0..len(e)] as s {
-        if textis(t, k, s) {
-            return 5;
-        }
-    }
-    let f = "clearance";
-    borrow f[0..len(f)] as s {
-        if textis(t, k, s) {
-            return 6;
-        }
-    }
-    let g = "components";
-    borrow g[0..len(g)] as s {
-        if textis(t, k, s) {
-            return 7;
-        }
-    }
-    let h = "nets";
-    borrow h[0..len(h)] as s {
-        if textis(t, k, s) {
-            return 8;
-        }
-    }
-    let i = "id";
-    borrow i[0..len(i)] as s {
-        if textis(t, k, s) {
-            return 9;
-        }
-    }
-    let j = "x";
-    borrow j[0..len(j)] as s {
-        if textis(t, k, s) {
-            return 10;
-        }
-    }
-    let l = "y";
-    borrow l[0..len(l)] as s {
-        if textis(t, k, s) {
-            return 11;
-        }
-    }
-    let m = "pins";
-    borrow m[0..len(m)] as s {
-        if textis(t, k, s) {
-            return 12;
-        }
-    }
-    let n = "members";
-    borrow n[0..len(n)] as s {
-        if textis(t, k, s) {
-            return 13;
-        }
-    }
-    let o = "component";
-    borrow o[0..len(o)] as s {
-        if textis(t, k, s) {
-            return 14;
-        }
-    }
-    let p = "pin";
-    borrow p[0..len(p)] as s {
-        if textis(t, k, s) {
-            return 15;
-        }
-    }
-    return 0;
-}
-fn field(t: &[]i64, n: i64, code: i64) -> i64 {
-    if get(t, n, 0) != 1 {
-        return 0;
-    }
-    let mut k = n + 1;
-    while k < get(t, n, 3) {
-        if get(t, k, 5) % 16 == code {
-            return k + 1;
-        }
-        k = get(t, k + 1, 3);
-    }
-    return 0;
+    return new Status.ok(true);
 }
 fn integer(t: &[]i64, n: i64, low: i64, high: i64) -> bool {
-    return get(t, n, 0) == 4 && get(t, n, 5) >= low && get(t, n, 5) <= high;
+    return std_json::get(t, n, 0) == 4 && std_json::get(t, n, 5) >= low && std_json::get(t, n, 5) <= high;
 }
 fn identifier(t: &[]i64, n: i64) -> bool {
-    if get(t, n, 0) != 3 {
+    if std_json::get(t, n, 0) != 3 {
         return false;
     }
-    let mut p = get(t, n, 1) + 1;
-    let end = get(t, n, 2) - 1;
-    let mut count = 0;
-    while p < end {
-        let c = decoded(p);
-        if count == 0 {
-            if c.value < 97 || c.value > 122 {
-                return false;
-            }
-        } else {
-            if !(c.value >= 97 && c.value <= 122) && !digit(c.value) && c.value != 95 && c.value != 45 {
-                return false;
-            }
-        }
-        count += 1;
-        p = c.next;
+    let head = new std_ascii::Class {
+        lower: true,
+        upper: false,
+        digit: false,
+        underscore: false,
+        hyphen: false
+    };
+    let tail = new std_ascii::Class {
+        lower: true,
+        upper: false,
+        digit: true,
+        underscore: true,
+        hyphen: true
+    };
+    borrow t[std_json::get(t, n, 1)..std_json::get(t, n, 2)] as text {
+        return std_ascii::matches::< i64 >(text, head, tail, 1u64, 32u64);
     }
-    return count >= 1 && count <= 32;
 }
 fn array(t: &[]i64, n: i64, limit: i64) -> bool {
-    return get(t, n, 0) == 2 && get(t, n, 4) <= limit;
+    return std_json::get(t, n, 0) == 2 && std_json::get(t, n, 4) <= limit;
 }
 fn object(t: &[]i64, n: i64, size: i64) -> bool {
-    return get(t, n, 0) == 1 && get(t, n, 4) == size;
+    return std_json::get(t, n, 0) == 1 && std_json::get(t, n, 4) == size;
 }
 fn schema(t: &[]i64, b: i64) -> bool {
-    if !object(t, b, 7) || !integer(t, field(t, b, 2), 1, 1) {
+    if !object(t, b, 7) || !integer(t, std_json::field(t, b, "version"), 1, 1) {
         return false;
     }
-    let u = field(t, b, 3);
+    let u = std_json::field(t, b, "unit");
     let um = "um";
     let mm = "mm";
     let mut unit = false;
     borrow um[0..len(um)] as s {
-        unit = textis(t, u, s);
+        unit = std_json::textis(t, u, s);
     }
     borrow mm[0..len(mm)] as s {
-        unit = unit || textis(t, u, s);
+        unit = unit || std_json::textis(t, u, s);
     }
-    if !unit || !integer(t, field(t, b, 4), 1, 1000000) || !integer(t, field(t, b, 5), 1, 1000000) || !integer(t, field(t, b, 6), 0, 1000000) {
+    if !unit || !integer(t, std_json::field(t, b, "width"), 1, 1000000) || !integer(t, std_json::field(t, b, "height"), 1, 1000000) || !integer(t, std_json::field(t, b, "clearance"), 0, 1000000) {
         return false;
     }
-    let cs = field(t, b, 7);
-    let ns = field(t, b, 8);
+    let cs = std_json::field(t, b, "components");
+    let ns = std_json::field(t, b, "nets");
     if !array(t, cs, 128) || !array(t, ns, 128) {
         return false;
     }
     let mut c = cs + 1;
-    while c < get(t, cs, 3) {
-        if !object(t, c, 6) || !identifier(t, field(t, c, 9)) || !integer(t, field(t, c, 10), - 1000000, 1000000) || !integer(t, field(t, c, 11), - 1000000, 1000000) || !integer(t, field(t, c, 4), 1, 1000000) || !integer(t, field(t, c, 5), 1, 1000000) {
+    while c < std_json::get(t, cs, 3) {
+        if !object(t, c, 6) || !identifier(t, std_json::field(t, c, "id")) || !integer(t, std_json::field(t, c, "x"), - 1000000, 1000000) || !integer(t, std_json::field(t, c, "y"), - 1000000, 1000000) || !integer(t, std_json::field(t, c, "width"), 1, 1000000) || !integer(t, std_json::field(t, c, "height"), 1, 1000000) {
             return false;
         }
-        let ps = field(t, c, 12);
+        let ps = std_json::field(t, c, "pins");
         if !array(t, ps, 32) {
             return false;
         }
         let mut p = ps + 1;
-        while p < get(t, ps, 3) {
+        while p < std_json::get(t, ps, 3) {
             if !identifier(t, p) {
                 return false;
             }
             let mut q = ps + 1;
             while q < p {
-                if equal(t, p, q) {
+                if std_json::equal(t, p, q) {
                     return false;
                 }
                 q += 1;
             }
             p += 1;
         }
-        c = get(t, c, 3);
+        c = std_json::get(t, c, 3);
     }
     let mut n = ns + 1;
-    while n < get(t, ns, 3) {
-        if !object(t, n, 2) || !identifier(t, field(t, n, 9)) {
+    while n < std_json::get(t, ns, 3) {
+        if !object(t, n, 2) || !identifier(t, std_json::field(t, n, "id")) {
             return false;
         }
-        let ms = field(t, n, 13);
+        let ms = std_json::field(t, n, "members");
         if !array(t, ms, 128) {
             return false;
         }
         let mut m = ms + 1;
-        while m < get(t, ms, 3) {
-            if !object(t, m, 2) || !identifier(t, field(t, m, 14)) || !identifier(t, field(t, m, 15)) {
+        while m < std_json::get(t, ms, 3) {
+            if !object(t, m, 2) || !identifier(t, std_json::field(t, m, "component")) || !identifier(t, std_json::field(t, m, "pin")) {
                 return false;
             }
-            m = get(t, m, 3);
+            m = std_json::get(t, m, 3);
         }
-        n = get(t, n, 3);
+        n = std_json::get(t, n, 3);
     }
     return true;
 }
-fn nodecmp(t: &[]i64, a: i64, b: i64, mode: i64) -> i64 {
-    if mode == 0 {
-        return compare(t, field(t, a, 9), field(t, b, 9));
-    }
-    if mode == 2 {
-        return compare(t, a, b);
-    }
-    let c = compare(t, field(t, a, 14), field(t, b, 14));
-    if c != 0 {
-        return c;
-    }
-    return compare(t, field(t, a, 15), field(t, b, 15));
-}
-fn sift(t: &[]i64, w: &mut []i64, base: i64, size: i64, root: i64, mode: i64) -> i64 {
-    let mut r = root;
-    let mut running = true;
-    while r * 2 + 1 < size && running {
-        let mut c = r * 2 + 1;
-        if c + 1 < size && nodecmp(t, read_slice(w, base + c), read_slice(w, base + c + 1), mode) < 0 {
-            c += 1;
+fn sort(t: &[]i64, w: &mut []i64, items: &mut []std_order::Item, base: i64, size: i64, mode: i64) -> i64 {
+    let mut i = 0;
+    while i < size {
+        let node = read_slice(w, base + i);
+        let mut first = node;
+        let mut second = 0;
+        if mode == 0 {
+            first = std_json::field(t, node, "id");
         }
-        if nodecmp(t, read_slice(w, base + r), read_slice(w, base + c), mode) >= 0 {
-            running = false;
-        } else {
-            let tmp = read_slice(w, base + r);
-            write_slice(w, base + r, read_slice(w, base + c));
-            write_slice(w, base + c, tmp);
-            r = c;
+        if mode == 1 {
+            first = std_json::field(t, node, "component");
+            second = std_json::field(t, node, "pin");
         }
+        let start = std_json::get(t, first, 1);
+        let next = std_json::get(t, second, 1);
+        write_slice(items, i, new std_order::Item {
+            value: node,
+            first: cast<u64>(start),
+            first_len: cast<u64>(std_json::get(t, first, 2) - start),
+            second: cast<u64>(next),
+            second_len: cast<u64>(std_json::get(t, second, 2) - next)
+        });
+        i += 1;
     }
-    return 0;
-}
-fn sort(t: &[]i64, w: &mut []i64, base: i64, size: i64, mode: i64) -> i64 {
-    let mut i = size / 2;
-    while i > 0 {
-        i -= 1;
-        discard sift(t, w, base, size, i, mode);
-    }
-    i = size;
-    while i > 1 {
-        i -= 1;
-        let tmp = read_slice(w, base);
-        write_slice(w, base, read_slice(w, base + i));
-        write_slice(w, base + i, tmp);
-        discard sift(t, w, base, i, 0, mode);
+    discard std_order::sort(t, items, 0u64, cast<u64>(size));
+    i = 0;
+    while i < size {
+        write_slice(w, base + i, read_slice(items, i).value);
+        i += 1;
     }
     return 0;
 }
 fn collect(t: &[]i64, w: &mut []i64, base: i64, a: i64) -> i64 {
     let mut n = a + 1;
     let mut i = 0;
-    while n < get(t, a, 3) {
+    while n < std_json::get(t, a, 3) {
         write_slice(w, base + i, n);
         i += 1;
-        n = get(t, n, 3);
+        n = std_json::get(t, n, 3);
     }
     return i;
 }
 fn quote(t: &[]i64, n: i64) -> i64 {
     discard io::put(34u8);
-    let mut p = get(t, n, 1) + 1;
-    let e = get(t, n, 2) - 1;
-    while p < e {
-        let ch = io::byte(p);
-        if ch == 92u8 {
-            let c = character(p);
-            discard io::put(cast<u8>(c.value));
-            p = c.next;
-        } else {
-            discard io::put(ch);
-            p += 1;
-        }
-    }
+    discard rawid(t, n);
     discard io::put(34u8);
     return 0;
 }
+// Schema-validated ASCII identifiers are safe in both JSON and SVG attributes.
 fn rawid(t: &[]i64, n: i64) -> i64 {
-    let mut p = get(t, n, 1) + 1;
-    let e = get(t, n, 2) - 1;
-    while p < e {
-        let ch = io::byte(p);
-        if ch == 92u8 {
-            let c = character(p);
-            discard io::put(cast<u8>(c.value));
-            p = c.next;
-        } else {
-            discard io::put(ch);
-            p += 1;
-        }
+    let mut p = std_json::get(t, n, 1);
+    let end = std_json::get(t, n, 2);
+    while p < end {
+        discard io::put(cast<u8>(read_slice(t, p)));
+        p += 1;
     }
-    return 0;
-}
-fn number(n: i64) -> i64 {
-    if n < 0 {
-        discard io::put(45u8);
-        return number(0 - n);
-    }
-    if n >= 10 {
-        discard number(n / 10);
-    }
-    discard io::put(cast<u8>(48 + n % 10));
     return 0;
 }
 fn member(t: &[]i64, m: i64) -> i64 {
     let a = "{\"component\":";
     borrow a[0..len(a)] as s {
-        discard emit(s);
+        discard std_text::emit(s);
     }
-    discard quote(t, field(t, m, 14));
+    discard quote(t, std_json::field(t, m, "component"));
     let b = ",\"pin\":";
     borrow b[0..len(b)] as s {
-        discard emit(s);
+        discard std_text::emit(s);
     }
-    discard quote(t, field(t, m, 15));
+    discard quote(t, std_json::field(t, m, "pin"));
     discard io::put(125u8);
     return 0;
 }
@@ -932,27 +240,27 @@ fn findcomponent(t: &[]i64, w: &[]i64, nc: i64, id: i64) -> i64 {
     let mut hi = nc;
     while lo < hi {
         let mid =(lo + hi) / 2;
-        let c = compare(t, field(t, read_slice(w, mid), 9), id);
+        let c = std_json::compare(t, std_json::field(t, read_slice(w, mid), "id"), id);
         if c < 0 {
             lo = mid + 1;
         } else {
             hi = mid;
         }
     }
-    if lo < nc && equal(t, field(t, read_slice(w, lo), 9), id) {
+    if lo < nc && std_json::equal(t, std_json::field(t, read_slice(w, lo), "id"), id) {
         return read_slice(w, lo);
     }
     return 0;
 }
 fn known(t: &[]i64, w: &[]i64, nc: i64, m: i64) -> bool {
-    let c = findcomponent(t, w, nc, field(t, m, 14));
+    let c = findcomponent(t, w, nc, std_json::field(t, m, "component"));
     if c == 0 {
         return false;
     }
-    let pins = field(t, c, 12);
+    let pins = std_json::field(t, c, "pins");
     let mut p = pins + 1;
-    while p < get(t, pins, 3) {
-        if equal(t, p, field(t, m, 15)) {
+    while p < std_json::get(t, pins, 3) {
+        if std_json::equal(t, p, std_json::field(t, m, "pin")) {
             return true;
         }
         p += 1;
@@ -965,9 +273,9 @@ fn haspin(t: &[]i64, w: &[]i64, nr: i64, c: i64, p: i64) -> bool {
     while lo < hi {
         let mid =(lo + hi) / 2;
         let m = read_slice(w, 256 + mid);
-        let mut cmp = compare(t, field(t, m, 14), c);
+        let mut cmp = std_json::compare(t, std_json::field(t, m, "component"), c);
         if cmp == 0 {
-            cmp = compare(t, field(t, m, 15), p);
+            cmp = std_json::compare(t, std_json::field(t, m, "pin"), p);
         }
         if cmp < 0 {
             lo = mid + 1;
@@ -979,10 +287,10 @@ fn haspin(t: &[]i64, w: &[]i64, nr: i64, c: i64, p: i64) -> bool {
         return false;
     }
     let m = read_slice(w, 256 + lo);
-    return equal(t, field(t, m, 14), c) && equal(t, field(t, m, 15), p);
+    return std_json::equal(t, std_json::field(t, m, "component"), c) && std_json::equal(t, std_json::field(t, m, "pin"), p);
 }
-fn distance(t: &[]i64, n: i64, code: i64, mul: i64) -> i64 {
-    return get(t, field(t, n, code), 5) * mul;
+fn distance(t: &[]i64, n: i64, key: &[]u8, mul: i64) -> i64 {
+    return std_json::get(t, std_json::field(t, n, key), 5) * mul;
 }
 fn min(a: i64, b: i64) -> i64 {
     if a < b {
@@ -1002,35 +310,35 @@ fn finding(t: &[]i64, code: i64, a: i64, b: i64, first: bool) -> i64 {
     }
     let prefix = "{\"code\":\"";
     borrow prefix[0..len(prefix)] as s {
-        discard emit(s);
+        discard std_text::emit(s);
     }
     if code == 0 {
         let x = "clearance";
         borrow x[0..len(x)] as s {
-            discard emit(s);
+            discard std_text::emit(s);
         }
     }
     if code == 1 {
         let x = "outside-board";
         borrow x[0..len(x)] as s {
-            discard emit(s);
+            discard std_text::emit(s);
         }
     }
     if code == 2 {
         let x = "unconnected-pin";
         borrow x[0..len(x)] as s {
-            discard emit(s);
+            discard std_text::emit(s);
         }
     }
     if code == 3 {
         let x = "underconnected-net";
         borrow x[0..len(x)] as s {
-            discard emit(s);
+            discard std_text::emit(s);
         }
     }
     let middle = "\",\"subjects\":[";
     borrow middle[0..len(middle)] as s {
-        discard emit(s);
+        discard std_text::emit(s);
     }
     discard quote(t, a);
     if b != 0 {
@@ -1039,22 +347,22 @@ fn finding(t: &[]i64, code: i64, a: i64, b: i64, first: bool) -> i64 {
     }
     let end = "]}";
     borrow end[0..len(end)] as s {
-        discard emit(s);
+        discard std_text::emit(s);
     }
     return 0;
 }
-fn board(t: &[]i64, w: &mut []i64, b: i64) -> i64 {
+fn board(t: &[]i64, w: &mut []i64, items: &mut []std_order::Item, b: i64) -> i64 {
     if !schema(t, b) {
         let a = "{\"error\":\"invalid-board\"}";
         borrow a[0..len(a)] as s {
-            discard emit(s);
+            discard std_text::emit(s);
         }
         return 0;
     }
-    let nc = collect(t, w, 0, field(t, b, 7));
-    let nn = collect(t, w, 128, field(t, b, 8));
-    discard sort(t, w, 0, nc, 0);
-    discard sort(t, w, 128, nn, 0);
+    let nc = collect(t, w, 0, std_json::field(t, b, "components"));
+    let nn = collect(t, w, 128, std_json::field(t, b, "nets"));
+    discard sort(t, w, items, 0, nc, 0);
+    discard sort(t, w, items, 128, nn, 0);
     let mut duplicate = false;
     let mut i = 1;
     while i < nc {
@@ -1073,7 +381,7 @@ fn board(t: &[]i64, w: &mut []i64, b: i64) -> i64 {
     if duplicate {
         let a = "{\"error\":\"duplicate-id\",\"components\":[";
         borrow a[0..len(a)] as s {
-            discard emit(s);
+            discard std_text::emit(s);
         }
         let mut ns = 0;
         while ns < 2 {
@@ -1091,7 +399,7 @@ fn board(t: &[]i64, w: &mut []i64, b: i64) -> i64 {
                     if !first {
                         discard io::put(44u8);
                     }
-                    discard quote(t, field(t, current, 9));
+                    discard quote(t, std_json::field(t, current, "id"));
                     first = false;
                 }
                 i += 1;
@@ -1099,24 +407,24 @@ fn board(t: &[]i64, w: &mut []i64, b: i64) -> i64 {
             if ns == 0 {
                 let separator = "],\"nets\":[";
                 borrow separator[0..len(separator)] as s {
-                    discard emit(s);
+                    discard std_text::emit(s);
                 }
             }
             ns += 1;
         }
         let z = "]}";
         borrow z[0..len(z)] as s {
-            discard emit(s);
+            discard std_text::emit(s);
         }
         return 0;
     }
     let mut nr = 0;
     i = 0;
     while i < nn {
-        nr += collect(t, w, 256 + nr, field(t, read_slice(w, 128 + i), 13));
+        nr += collect(t, w, 256 + nr, std_json::field(t, read_slice(w, 128 + i), "members"));
         i += 1;
     }
-    discard sort(t, w, 256, nr, 1);
+    discard sort(t, w, items, 256, nr, 1);
     let mut unknown = false;
     let mut reused = false;
     i = 0;
@@ -1134,12 +442,12 @@ fn board(t: &[]i64, w: &mut []i64, b: i64) -> i64 {
         if unknown {
             let a = "{\"error\":\"unknown-pin\",\"refs\":[";
             borrow a[0..len(a)] as s {
-                discard emit(s);
+                discard std_text::emit(s);
             }
         } else {
             let a = "{\"error\":\"reused-pin\",\"refs\":[";
             borrow a[0..len(a)] as s {
-                discard emit(s);
+                discard std_text::emit(s);
             }
         }
         let mut first = true;
@@ -1164,37 +472,37 @@ fn board(t: &[]i64, w: &mut []i64, b: i64) -> i64 {
         }
         let z = "]}";
         borrow z[0..len(z)] as s {
-            discard emit(s);
+            discard std_text::emit(s);
         }
         return 0;
     }
     let mut mul = 1;
     let mm = "mm";
     borrow mm[0..len(mm)] as s {
-        if textis(t, field(t, b, 3), s) {
+        if std_json::textis(t, std_json::field(t, b, "unit"), s) {
             mul = 1000;
         }
     }
-    let width = distance(t, b, 4, mul);
-    let height = distance(t, b, 5, mul);
-    let clearance = distance(t, b, 6, mul);
+    let width = distance(t, b, "width", mul);
+    let height = distance(t, b, "height", mul);
+    let clearance = distance(t, b, "clearance", mul);
     // Cache normalized rectangles once, before the quadratic pair scan.
     i = 0;
     while i < nc {
         let component_node = read_slice(w, i);
         let base = 16768 + i * 6;
-        let px = distance(t, component_node, 10, mul);
-        let py = distance(t, component_node, 11, mul);
+        let px = distance(t, component_node, "x", mul);
+        let py = distance(t, component_node, "y", mul);
         write_slice(w, base, px);
         write_slice(w, base + 1, py);
-        write_slice(w, base + 2, px + distance(t, component_node, 4, mul));
-        write_slice(w, base + 3, py + distance(t, component_node, 5, mul));
-        write_slice(w, base + 4, field(t, component_node, 9));
+        write_slice(w, base + 2, px + distance(t, component_node, "width", mul));
+        write_slice(w, base + 3, py + distance(t, component_node, "height", mul));
+        write_slice(w, base + 4, std_json::field(t, component_node, "id"));
         i += 1;
     }
     let prefix = "{\"unit\":\"um\",\"findings\":[";
     borrow prefix[0..len(prefix)] as s {
-        discard emit(s);
+        discard std_text::emit(s);
     }
     let mut first = true;
     i = 0;
@@ -1225,10 +533,10 @@ fn board(t: &[]i64, w: &mut []i64, b: i64) -> i64 {
     i = 0;
     while i < nc {
         let c = read_slice(w, i);
-        let x = distance(t, c, 10, mul);
-        let y = distance(t, c, 11, mul);
-        if x < 0 || y < 0 || x + distance(t, c, 4, mul) > width || y + distance(t, c, 5, mul) > height {
-            discard finding(t, 1, field(t, c, 9), 0, first);
+        let x = distance(t, c, "x", mul);
+        let y = distance(t, c, "y", mul);
+        if x < 0 || y < 0 || x + distance(t, c, "width", mul) > width || y + distance(t, c, "height", mul) > height {
+            discard finding(t, 1, std_json::field(t, c, "id"), 0, first);
             first = false;
         }
         i += 1;
@@ -1236,9 +544,9 @@ fn board(t: &[]i64, w: &mut []i64, b: i64) -> i64 {
     i = 0;
     while i < nc {
         let c = read_slice(w, i);
-        let id = field(t, c, 9);
-        let np = collect(t, w, 16640, field(t, c, 12));
-        discard sort(t, w, 16640, np, 2);
+        let id = std_json::field(t, c, "id");
+        let np = collect(t, w, 16640, std_json::field(t, c, "pins"));
+        discard sort(t, w, items, 16640, np, 2);
         let mut j = 0;
         while j < np {
             let p = read_slice(w, 16640 + j);
@@ -1253,15 +561,15 @@ fn board(t: &[]i64, w: &mut []i64, b: i64) -> i64 {
     i = 0;
     while i < nn {
         let net = read_slice(w, 128 + i);
-        if get(t, field(t, net, 13), 4) < 2 {
-            discard finding(t, 3, field(t, net, 9), 0, first);
+        if std_json::get(t, std_json::field(t, net, "members"), 4) < 2 {
+            discard finding(t, 3, std_json::field(t, net, "id"), 0, first);
             first = false;
         }
         i += 1;
     }
     let middle = "],\"nets\":[";
     borrow middle[0..len(middle)] as s {
-        discard emit(s);
+        discard std_text::emit(s);
     }
     i = 0;
     while i < nn {
@@ -1271,15 +579,15 @@ fn board(t: &[]i64, w: &mut []i64, b: i64) -> i64 {
         }
         let a = "{\"id\":";
         borrow a[0..len(a)] as s {
-            discard emit(s);
+            discard std_text::emit(s);
         }
-        discard quote(t, field(t, net, 9));
+        discard quote(t, std_json::field(t, net, "id"));
         let m = ",\"members\":[";
         borrow m[0..len(m)] as s {
-            discard emit(s);
+            discard std_text::emit(s);
         }
-        let nm = collect(t, w, 16640, field(t, net, 13));
-        discard sort(t, w, 16640, nm, 1);
+        let nm = collect(t, w, 16640, std_json::field(t, net, "members"));
+        discard sort(t, w, items, 16640, nm, 1);
         let mut lx = 0;
         let mut hx = 0;
         let mut ly = 0;
@@ -1291,9 +599,9 @@ fn board(t: &[]i64, w: &mut []i64, b: i64) -> i64 {
                 discard io::put(44u8);
             }
             discard member(t, ref);
-            let c = findcomponent(t, w, nc, field(t, ref, 14));
-            let x = 2 * distance(t, c, 10, mul) + distance(t, c, 4, mul);
-            let y = 2 * distance(t, c, 11, mul) + distance(t, c, 5, mul);
+            let c = findcomponent(t, w, nc, std_json::field(t, ref, "component"));
+            let x = 2 * distance(t, c, "x", mul) + distance(t, c, "width", mul);
+            let y = 2 * distance(t, c, "y", mul) + distance(t, c, "height", mul);
             if j == 0 {
                 lx = x;
                 hx = x;
@@ -1309,156 +617,113 @@ fn board(t: &[]i64, w: &mut []i64, b: i64) -> i64 {
         }
         let z = "],\"span\":";
         borrow z[0..len(z)] as s {
-            discard emit(s);
+            discard std_text::emit(s);
         }
-        discard number((hx - lx + hy - ly + 1) / 2);
+        discard std_text::number((hx - lx + hy - ly + 1) / 2);
         discard io::put(125u8);
         i += 1;
     }
     let svg = "],\"svg\":\"<svg xmlns=\\\"http://www.w3.org/2000/svg\\\" viewBox=\\\"0 0 ";
     borrow svg[0..len(svg)] as s {
-        discard emit(s);
+        discard std_text::emit(s);
     }
-    discard number(width);
+    discard std_text::number(width);
     discard io::put(32u8);
-    discard number(height);
+    discard std_text::number(height);
     let rect = "\\\"><rect x=\\\"0\\\" y=\\\"0\\\" width=\\\"";
     borrow rect[0..len(rect)] as s {
-        discard emit(s);
+        discard std_text::emit(s);
     }
-    discard number(width);
+    discard std_text::number(width);
     let h = "\\\" height=\\\"";
     borrow h[0..len(h)] as s {
-        discard emit(s);
+        discard std_text::emit(s);
     }
-    discard number(height);
+    discard std_text::number(height);
     let fill = "\\\" fill=\\\"white\\\" stroke=\\\"black\\\"/>";
     borrow fill[0..len(fill)] as s {
-        discard emit(s);
+        discard std_text::emit(s);
     }
     i = 0;
     while i < nc {
         let c = read_slice(w, i);
         let r = "<rect id=\\\"";
         borrow r[0..len(r)] as s {
-            discard emit(s);
+            discard std_text::emit(s);
         }
-        discard rawid(t, field(t, c, 9));
+        discard rawid(t, std_json::field(t, c, "id"));
         let x = "\\\" x=\\\"";
         borrow x[0..len(x)] as s {
-            discard emit(s);
+            discard std_text::emit(s);
         }
-        discard number(distance(t, c, 10, mul));
+        discard std_text::number(distance(t, c, "x", mul));
         let y = "\\\" y=\\\"";
         borrow y[0..len(y)] as s {
-            discard emit(s);
+            discard std_text::emit(s);
         }
-        discard number(distance(t, c, 11, mul));
+        discard std_text::number(distance(t, c, "y", mul));
         let cw = "\\\" width=\\\"";
         borrow cw[0..len(cw)] as s {
-            discard emit(s);
+            discard std_text::emit(s);
         }
-        discard number(distance(t, c, 4, mul));
+        discard std_text::number(distance(t, c, "width", mul));
         borrow h[0..len(h)] as s {
-            discard emit(s);
+            discard std_text::emit(s);
         }
-        discard number(distance(t, c, 5, mul));
+        discard std_text::number(distance(t, c, "height", mul));
         let f = "\\\" fill=\\\"none\\\" stroke=\\\"black\\\"/>";
         borrow f[0..len(f)] as s {
-            discard emit(s);
+            discard std_text::emit(s);
         }
         i += 1;
     }
     let end = "</svg>\"}";
     borrow end[0..len(end)] as s {
-        discard emit(s);
+        discard std_text::emit(s);
     }
     return 0;
 }
-fn request(t: &[]i64, w: &mut []i64) -> i64 {
-    let cases = field(t, 1, 1);
+fn request(t: &[]i64, w: &mut []i64, items: &mut []std_order::Item) -> i64 {
+    let cases = std_json::field(t, 1, "cases");
     if !object(t, 1, 1) || !array(t, cases, 64) {
         let a = "{\"error\":\"invalid-request\"}";
         borrow a[0..len(a)] as s {
-            discard emit(s);
+            discard std_text::emit(s);
         }
         return 0;
     }
     let a = "{\"results\":[";
     borrow a[0..len(a)] as s {
-        discard emit(s);
+        discard std_text::emit(s);
     }
     let mut c = cases + 1;
     let mut first = true;
-    while c < get(t, cases, 3) {
+    while c < std_json::get(t, cases, 3) {
         if !first {
             discard io::put(44u8);
         }
-        discard board(t, w, c);
+        discard board(t, w, items, c);
         first = false;
-        c = get(t, c, 3);
+        c = std_json::get(t, c, 3);
     }
     let z = "]}";
     borrow z[0..len(z)] as s {
-        discard emit(s);
+        discard std_text::emit(s);
     }
     return 0;
 }
 // IEEE binary64 overflow midpoint: 2^1024 - 2^970. Compare the normalized
 // decimal significand exactly; truncation to 17 digits misclassifies neighbors.
-fn finite_edge(begin: i64, end: i64) -> bool {
-    let limit = "179769313486231580793728971405303415079934132710037826936173778980444968292764750946649017977587207096330286416692887910946555547851940402630657488671505820681908902000708383676273854845817711531764475730270069855571366959622842914819860834936475292719074168444365510704342711559699508093042880177904174497792";
-    let mut p = begin;
-    let mut index = 0u64;
-    let mut started = false;
-    borrow limit[0..len(limit)] as digits {
-        while p < end {
-            let c = byte(p);
-            if digit(c) &&(started || c != 48) {
-                started = true;
-                let mut expected = 48;
-                if index < len_slice(digits) {
-                    expected = cast<i64>(read_slice(digits, index));
-                }
-                if c < expected {
-                    return true;
-                }
-                if c > expected {
-                    return false;
-                }
-                index += 1u64;
-            }
-            p += 1;
-        }
-        while index < len_slice(digits) {
-            if read_slice(digits, index) != 48u8 {
-                return true;
-            }
-            index += 1u64;
-        }
+fn nodecmp(t: &[]i64, a: i64, b: i64, mode: i64) -> i64 {
+    if mode == 0 {
+        return std_json::compare(t, std_json::field(t, a, "id"), std_json::field(t, b, "id"));
     }
-    return false;
-}
-fn keyhash(t: &[]i64, key: i64, parent: i64) -> i64 {
-    let modulus = min(262147, io::length() + 2);
-    let mut hash = parent % modulus;
-    let mut p = get(t, key, 1) + 1;
-    let end = get(t, key, 2) - 1;
-    while p < end {
-        let c = decoded(p);
-        hash =(hash * 131 + c.value) % modulus;
-        p = c.next;
+    if mode == 2 {
+        return std_json::compare(t, a, b);
     }
-    return hash;
-}
-// Only used after transport validation, so this first byte is in bounds.
-fn decoded(p: i64) -> Char {
-    let c = cast<i64>(io::byte(p));
-    if c < 128 && c != 92 {
-        return new Char {
-            value: c,
-            next: p + 1
-        };
+    let first = std_json::compare(t, std_json::field(t, a, "component"), std_json::field(t, b, "component"));
+    if first != 0 {
+        return first;
     }
-    return character(p);
+    return std_json::compare(t, std_json::field(t, a, "pin"), std_json::field(t, b, "pin"));
 }
