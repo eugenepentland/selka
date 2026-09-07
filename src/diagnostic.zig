@@ -157,3 +157,6 @@ pub const generic_argument = "E_GENERIC_ARGUMENT";
 
 /// Invalid argument to a reference parameter.
 pub const reference_argument = "E_REFERENCE_ARGUMENT";
+
+/// Constant generic length syntax, kind or specialization-bound failure.
+pub const generic_length = "E_GENERIC_LENGTH";

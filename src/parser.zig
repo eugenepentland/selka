@@ -83,13 +83,17 @@ pub const Parser = struct {
         if (self.current().tag == .ident) return self.nominalTypeName();
         return self.sink.fail("E_TYPE", token.span, "expected a built-in, declared, fixed array, or enum-indexed table type");
     }
+    fn genericArgument(self: *Parser) diagnostic.Error!Span {
+        if (self.current().tag == .integer) return (try self.expect(.integer)).span;
+        return self.typeName();
+    }
     fn nominalTypeName(self: *Parser) diagnostic.Error!Span {
         const token = try self.expect(.ident);
         const name = try self.qualifiedTail(token.span);
         if (!self.take(.lt)) return name;
         var arguments: std.ArrayList(Span) = .empty;
         while (true) {
-            const argument = try self.typeName();
+            const argument = try self.genericArgument();
             if (arguments.items.len == 16) return self.sink.fail(eGenericLimit, argument, "at most 16 type arguments are permitted");
             try arguments.append(self.arena.allocator(), argument);
             if (!self.take(.comma)) break;
@@ -352,10 +356,17 @@ pub const Parser = struct {
         if (!self.take(.lt)) return &.{};
         var parameters: std.ArrayList(ast.TypeParameter) = .empty;
         while (true) {
+            const constant_length = self.take(.kw_const);
             const name = (try self.expect(.ident)).span;
             if (parameters.items.len == 16) return self.sink.fail(eGenericLimit, name, "at most 16 type parameters are permitted");
             for (parameters.items) |previous| if (std.mem.eql(u8, self.src.text(previous.name), self.src.text(name))) return self.sink.fail("E_GENERIC_PARAMETER", name, "duplicate type parameter");
             _ = try self.expect(.colon);
+            if (constant_length) {
+                _ = try self.expect(.kw_u64);
+                try parameters.append(self.arena.allocator(), .{ .name = name, .requirements = &.{}, .constant_length = true });
+                if (!self.take(.comma)) break;
+                continue;
+            }
             var requirements: std.ArrayList(Span) = .empty;
             var fields: std.ArrayList(ast.Parameter) = .empty;
             var operations: std.ArrayList(ast.Operation) = .empty;
@@ -429,7 +440,7 @@ pub const Parser = struct {
         self.cursor.pos += 3;
         var arguments: std.ArrayList(Span) = .empty;
         while (true) {
-            const argument = try self.typeName();
+            const argument = try self.genericArgument();
             if (arguments.items.len == 16) return self.sink.fail(eGenericLimit, argument, "at most 16 type arguments are permitted");
             try arguments.append(self.arena.allocator(), argument);
             if (!self.take(.comma)) break;

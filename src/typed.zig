@@ -290,6 +290,7 @@ pub const FunctionPolicy = struct {
 };
 /// Resolved value result, parameter count, and optional returned-reference contract.
 pub const FunctionSignature = struct {
+    constant_arguments: []const ?usize = &.{},
     return_type: Type = .i64,
     parameter_count: usize = 0,
     return_reference: ?ReturnReference = null,

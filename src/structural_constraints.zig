@@ -13,8 +13,9 @@ pub const Context = struct {
     catalog: *@import("type_catalog.zig").Catalog,
     program: ast.Program,
     sink: *diagnostic.Sink,
+    lengths: []const ?usize = &.{},
     fn ty(self: Context, allocator: std.mem.Allocator, span: source.Span, parameters: []const ast.TypeParameter, arguments: []const typed.Type) Error!typed.Type {
-        return @import("generic_substitution.zig").resolve(allocator, self.catalog, self.src, self.sink, .{ .span = span, .parameters = parameters, .arguments = arguments });
+        return @import("generic_substitution.zig").resolve(allocator, self.catalog, self.src, self.sink, .{ .span = span, .parameters = parameters, .arguments = arguments, .lengths = self.lengths });
     }
     /// Resolve an explicitly public, nongeneric domain method with a declared effect ceiling.
     pub fn method(self: Context, target: typed.Type, name: source.Span) Error!ast.Function {

@@ -13,6 +13,7 @@
     "tagged-unions",
     "checked-results",
     "generic-functions",
+    "const-length-generics",
     "generic-nominals",
     "structural-contracts",
     "buffers",

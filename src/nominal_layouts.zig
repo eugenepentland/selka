@@ -12,9 +12,10 @@ pub const Id = enum(usize) { _ };
 /// Semantic identity category; parameters remain scoped to their declaring template.
 pub const Base = union(enum) {
     builtin: typed.Type,
+    length: usize,
     parameter: struct { declaration: usize, index: usize },
     named: usize,
-    array: struct { length: usize, key: ?Id },
+    array: struct { length: usize, key: ?Id, length_parameter: ?Id = null },
 };
 /// Ordered semantic identity accepted by layout materialization.
 pub const Key = struct { base: Base, arguments: []const Id };
@@ -91,6 +92,7 @@ pub const Graph = struct {
         self.budget.depth += 1;
         defer self.budget.depth -= 1;
         return switch (value) {
+            .length => |length| self.intern(.{ .base = .{ .length = length }, .arguments = &.{} }, span),
             .builtin => |ty| self.intern(.{ .base = .{ .builtin = ty }, .arguments = &.{} }, span),
             .parameter => |index| arguments[index],
             .named => |id| self.intern(.{ .base = .{ .named = id }, .arguments = &.{} }, span),
@@ -102,8 +104,15 @@ pub const Graph = struct {
             .array => |array| array: {
                 const element = try self.resolve(array.element, arguments, array.syntax.element);
                 const key = if (array.key) |key| try self.resolve(key, arguments, array.syntax.index.enum_type) else null;
-                const length = array.length orelse self.templates.declarations.items[self.nodes.items[@backingInt(key.?)].key.base.named].fields.len;
-                break :array self.intern(.{ .base = .{ .array = .{ .length = length, .key = key } }, .arguments = &.{element} }, array.syntax.span);
+                var deferred_length: ?Id = null;
+                const length = if (array.length_parameter) |index| length: {
+                    const argument = self.nodes.items[@backingInt(arguments[index])].key.base;
+                    if (argument == .length) break :length argument.length;
+                    if (argument != .parameter) return self.sink.fail(diagnostic.generic_length, array.syntax.span, "array length parameter requires a constant length argument");
+                    deferred_length = arguments[index];
+                    break :length 0;
+                } else array.length orelse self.templates.declarations.items[self.nodes.items[@backingInt(key.?)].key.base.named].fields.len;
+                break :array self.intern(.{ .base = .{ .array = .{ .length = length, .key = key, .length_parameter = deferred_length } }, .arguments = &.{element} }, array.syntax.span);
             },
         };
     }

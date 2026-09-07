@@ -148,6 +148,7 @@ pub const FunctionPolicy = struct {
 };
 /// Named type variable with explicit source-spelled requirements.
 pub const TypeParameter = struct {
+    constant_length: bool = false,
     name: Span,
     requirements: []const Span,
     field_requirements: []const Parameter = &.{},

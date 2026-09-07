@@ -30,6 +30,10 @@ const Builder = struct {
         defer if (array_prefix) |prefix| allocator.free(prefix);
         switch (node.key.base) {
             .parameter => return,
+            .length => |value| {
+                self.identities.items.items[id].name = try std.fmt.allocPrint(allocator, "{d}", .{value});
+                return;
+            },
             .builtin => |ty| {
                 self.identities.items.items[id].name = @tagName(ty);
                 self.identities.items.items[id].ty = ty;
@@ -37,6 +41,7 @@ const Builder = struct {
             },
             .named => |declaration| base = try self.declarationName(self.index.declarations.items[declaration].name),
             .array => |array| {
+                if (array.length_parameter != null) return;
                 if (array.key) |key| {
                     const key_name = self.identities.items.items[@backingInt(key)].name orelse return;
                     array_prefix = try std.fmt.allocPrint(allocator, "[{s}]", .{key_name});
@@ -101,6 +106,7 @@ const Builder = struct {
         }
         for (self.graph.nodes.items, 0..) |node, i| {
             const identity = &self.identities.items.items[i];
+            if (node.key.base == .length) continue;
             if (identity.ty != null or identity.name == null or node.state != .complete) continue;
             if (node.key.base == .array) {
                 const array = node.key.base.array;
@@ -261,12 +267,16 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     return catalog;
 }
 
-/// Materialize a nominal application discovered while specializing a function.
-pub fn instantiate(catalog: *Catalog, declaration: usize, arguments: []const typed.Type, span: source.Span) Error!typed.Type {
+/// Materialize ordered type identities and their optional constant length values.
+pub fn instantiateLengths(catalog: *Catalog, declaration: usize, arguments: []const typed.Type, lengths: []const ?usize, span: source.Span) Error!typed.Type {
     const state = catalog.templates.store orelse return error.InternalError;
     if (arguments.len != state.index.declarations.items[declaration].parameters.len) return error.InternalError;
     var ids: [16]layouts.Id = undefined;
-    for (arguments, 0..) |argument, i| ids[i] = try state.typeArgument(catalog.records, argument, span, 0);
+    for (arguments, 0..) |argument, i| {
+        if (lengths.len != 0 and lengths[i] != null) {
+            ids[i] = try state.graph.materialize(.{ .length = lengths[i].? }, span);
+        } else ids[i] = try state.typeArgument(catalog.records, argument, span, 0);
+    }
     const id = try state.graph.materializeKey(.{ .base = .{ .named = declaration }, .arguments = ids[0..arguments.len] }, span);
     var builder: Builder = .{ .context = state.context, .index = state.index, .graph = state.graph, .catalog = catalog, .identities = &state.identities };
     try builder.complete();

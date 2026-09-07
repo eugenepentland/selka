@@ -38,6 +38,7 @@ pub const Set = struct {
 };
 /// Resolved local type-variable identity and its declared operation contract.
 pub const Parameter = struct {
+    constant_length: bool = false,
     name: source.Span,
     requirements: Set,
     field_requirements: []const ast.Parameter = &.{},
@@ -55,6 +56,7 @@ pub fn resolve(allocator: std.mem.Allocator, src: source.Source, parameters: []c
         for (parameters[0..index]) |previous| if (std.mem.eql(u8, name, src.text(previous.name))) return sink.fail("E_GENERIC_PARAMETER", parameter.name, "duplicate type parameter");
         out.* = .{
             .name = parameter.name,
+            .constant_length = parameter.constant_length,
             .requirements = try resolveRequirements(src, parameter, sink),
             .field_requirements = parameter.field_requirements,
             .operation_requirements = parameter.operation_requirements,
@@ -64,6 +66,7 @@ pub fn resolve(allocator: std.mem.Allocator, src: source.Source, parameters: []c
     return resolved;
 }
 fn resolveRequirements(src: source.Source, parameter: ast.TypeParameter, sink: *diagnostic.Sink) diagnostic.Error!Set {
+    if (parameter.constant_length) return .{};
     if (parameter.requirements.len == 0) return sink.fail(eRequirement, parameter.name, "type parameter requires an explicit requirement");
     if (parameter.requirements.len > 16) return sink.fail("E_GENERIC_LIMIT", parameter.requirements[16], "at most 16 requirements are permitted");
     var result: Set = .{};

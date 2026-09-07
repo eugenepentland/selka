@@ -351,3 +351,5 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [SPLIT-CONTEXTUAL-1] `split` introduces a partition only at statement start followed by its view identifier; it remains available as a function, local, field or reference identifier elsewhere.
 
 - [RUNTIME-CATEGORIES-1] VM guest backing may use a separately budgeted allocator from metadata and independent snapshots. Reports distinguish requested backing bytes (including retained arena chunks) from logical live/peak buffer and pool slots; nested regions use the supplied backing budget and failed acquisitions do not increase logical accounting.
+
+- [CONST-LENGTH-1] Generic functions and nominal declarations accept explicit const N:u64 parameters, used as array lengths, forwarded constant arguments and u64 values in function bodies. Literal lengths are bounded to 1048576 and participate in specialization identity separately from type arguments. Symbolic checking preserves unknown lengths and rejects invalid unused templates, including type/value confusion and array literals whose length cannot be proved.

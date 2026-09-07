@@ -135,6 +135,7 @@ const Checker = struct {
                 .conversion = function.policy.conversion,
             },
             .signature = .{
+                .constant_arguments = self.instance_keys.items[i].lengths,
                 .return_reference = self.return_reference,
                 .return_type = self.return_type,
                 .parameter_count = function.signature.parameters.len,
@@ -151,6 +152,11 @@ const Checker = struct {
         };
     }
     fn topLevel(self: *Checker, span: source.Span) error{InternalError}!bool {
+        if (self.current_function) |id| {
+            for (self.syntaxFunction(id).signature.type_parameters) |parameter| {
+                if (parameter.constant_length and std.mem.eql(u8, self.src.text(parameter.name), self.src.text(span))) return true;
+            }
+        }
         if (self.catalog.module_names) |names| return names.topLevel(span);
         const name = self.src.text(span);
         return self.functions.contains(name) or self.catalog.names.contains(name) or self.catalog.templates.names.contains(name);
@@ -175,7 +181,9 @@ const Checker = struct {
         output.writer.print("{s}::<", .{base}) catch return error.OutOfMemory;
         for (arguments, 0..) |argument, index| {
             if (index != 0) output.writer.writeByte(',') catch return error.OutOfMemory;
-            output.writer.writeAll(typed.typeName(argument, self.catalog.records)) catch return error.OutOfMemory;
+            if (self.instance_keys.items[@backingInt(id)].length(index)) |length| {
+                output.writer.print("{d}", .{length}) catch return error.OutOfMemory;
+            } else output.writer.writeAll(typed.typeName(argument, self.catalog.records)) catch return error.OutOfMemory;
         }
         output.writer.writeByte('>') catch return error.OutOfMemory;
         return output.toOwnedSlice();
@@ -186,7 +194,18 @@ const Checker = struct {
     fn functionTypeDepth(self: *Checker, id: typed.FunctionId, span: source.Span, depth: usize) Error!typed.Type {
         const key = self.instance_keys.items[@backingInt(id)];
         const function = self.syntax.functions[@backingInt(key.declaration)];
-        return @import("generic_substitution.zig").resolve(self.allocator, &self.catalog, self.src, self.sink, .{ .span = span, .parameters = function.signature.type_parameters, .arguments = key.arguments, .depth = depth });
+        return @import("generic_substitution.zig").resolve(self.allocator, &self.catalog, self.src, self.sink, .{
+            .span = span,
+            .parameters = function.signature.type_parameters,
+            .arguments = key.arguments,
+            .lengths = key.lengths,
+            .depth = depth,
+        });
+    }
+    fn lengthArgument(self: *Checker, span: source.Span) Error!usize {
+        const id = self.current_function orelse return @import("generic_lengths.zig").literal(self.src, span, self.sink);
+        const key = self.instance_keys.items[@backingInt(id)];
+        return @import("generic_lengths.zig").resolve(self.src, span, self.syntaxFunction(id).signature.type_parameters, key.lengths, self.sink);
     }
     fn specialize(self: *Checker, declaration: instances.DeclarationId, call: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span) Error!typed.FunctionId {
         const function = self.syntax.functions[@backingInt(declaration)];
@@ -194,7 +213,14 @@ const Checker = struct {
         if (self.ordinary_ids[@backingInt(declaration)]) |id| return id;
         const required = try @import("generic_requirements.zig").resolve(self.allocator, self.src, function.signature.type_parameters, self.sink);
         const arguments = try self.allocator.alloc(typed.Type, required.len);
-        for (call.type_arguments, required, arguments) |at, parameter, *argument| {
+        const lengths = try self.allocator.alloc(?usize, required.len);
+        @memset(lengths, null);
+        for (call.type_arguments, required, arguments, 0..) |at, parameter, *argument, argument_index| {
+            if (parameter.constant_length) {
+                lengths[argument_index] = try self.lengthArgument(at);
+                argument.* = .u64;
+                continue;
+            }
             argument.* = try self.ty(at);
             if (!parameter.requirements.accepts(argument.*, self.catalog.records)) return self.sink.failRelated(
                 "E_GENERIC_ARGUMENT",
@@ -208,8 +234,9 @@ const Checker = struct {
             .catalog = &self.catalog,
             .program = self.syntax,
             .sink = self.sink,
+            .lengths = lengths,
         }).accepts(self.allocator, argument, parameter, function.signature.type_parameters, arguments);
-        const instance = self.generic_registry.intern(self.allocator, .{ .declaration = declaration, .arguments = arguments }) catch |err| switch (err) {
+        const instance = self.generic_registry.intern(self.allocator, .{ .declaration = declaration, .arguments = arguments, .lengths = lengths }) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => return self.sink.fail("E_GENERIC_LIMIT", span, "generic specialization exceeds instance or type argument budget"),
         };
@@ -775,6 +802,15 @@ const Checker = struct {
         out.data = .{ .field = .{ .base = base, .index = field_index } };
     }
     fn checkName(self: *Checker, _: ast.Node, name: @FieldType(@FieldType(ast.Node, "data"), "name"), out: *typed.Node) Error!void {
+        if (self.current_function) |id| {
+            const key = self.instance_keys.items[@backingInt(id)];
+            for (self.syntaxFunction(id).signature.type_parameters, 0..) |parameter, index| {
+                if (!parameter.constant_length or !std.mem.eql(u8, self.src.text(parameter.name), self.src.text(name))) continue;
+                out.ty = .u64;
+                out.data = .{ .integer = key.length(index) orelse return error.InternalError };
+                return;
+            }
+        }
         if (self.active_refs.contains(self.src.text(name))) return self.sink.fail("E_REFERENCE_VALUE", name, "references cannot be copied, stored, returned, or passed to value parameters; use read_ref to copy the referenced value");
         if (!self.active.contains(self.src.text(name))) {
             const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = self.sink, .catalog = self.catalog };

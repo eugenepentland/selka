@@ -24,7 +24,8 @@ still fails type checking.
 
 ## Rules
 
-`[N]T` requires an explicit unsuffixed numeric length. `T` can appear in nested
+`[N]T` accepts an explicit unsuffixed numeric length or a declared `const N:u64`
+parameter; see [constant length generics](../const-length-generics.md). `T` can appear in nested
 arrays, function parameters/results, local annotations, constructors, reference
 and slice contracts, and explicit arguments such as `pair::<[2]T>(...)`.
 Every use retains its declared element identity and length. Independently
@@ -61,8 +62,8 @@ checking depth/work limits; expanding generic recursion fails explicitly.
 
 This is the fixed-array part of parameterized composites. Parameterized records
 and unions/results now follow [nominal body checking](nominal-bodies.md). Generic
-named buffers, length parameters and structural requirements on an otherwise
-opaque `T` remain open. A parameter-dependent enum-keyed table
+named buffers, explicit constant lengths and declared structural field/operation
+requirements are now supported; undeclared operations on an opaque `T` remain excluded. A parameter-dependent enum-keyed table
 rejects with `E_GENERIC_ARRAY_KEY`; existing concrete enum tables remain usable.
 The [board trial](../../experiments/board_trial/README.md) now uses a shared
 optional-slot union and one equality-constrained membership routine, preserving

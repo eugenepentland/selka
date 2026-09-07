@@ -6,19 +6,32 @@ pub const DeclarationId = enum(usize) { _ };
 /// Stable ordinal assigned when a concrete specialization is first discovered.
 pub const InstanceId = enum(usize) { _ };
 /// Resolved declaration and ordered concrete type identities; names and layouts are not keys.
-pub const Key = struct { declaration: DeclarationId, arguments: []const typed.Type };
+pub const Key = struct {
+    declaration: DeclarationId,
+    arguments: []const typed.Type,
+    lengths: []const ?usize = &.{},
+    /// Read a constant argument value; ordinary type arguments have no scalar length.
+    pub fn length(self: Key, index: usize) ?usize {
+        return if (self.lengths.len == 0) null else self.lengths[index];
+    }
+};
 const Context = struct {
     /// Hash declaration and ordered identities without borrowing pointer identity.
     pub fn hash(_: Context, key: Key) u64 {
         var hasher = std.hash.Wyhash.init(0);
         std.hash.autoHash(&hasher, key.declaration);
         std.hash.autoHash(&hasher, key.arguments.len);
-        for (key.arguments) |argument| std.hash.autoHash(&hasher, argument);
+        for (key.arguments, 0..) |argument, i| {
+            std.hash.autoHash(&hasher, argument);
+            std.hash.autoHash(&hasher, key.length(i));
+        }
         return hasher.final();
     }
     /// Compare resolved identities; nominal layout equivalence does not merge keys.
     pub fn eql(_: Context, a: Key, b: Key) bool {
-        return a.declaration == b.declaration and std.mem.eql(typed.Type, a.arguments, b.arguments);
+        if (a.declaration != b.declaration or !std.mem.eql(typed.Type, a.arguments, b.arguments)) return false;
+        for (a.arguments, 0..) |_, i| if (a.length(i) != b.length(i)) return false;
+        return true;
     }
 };
 const Index = std.HashMapUnmanaged(Key, InstanceId, Context, std.hash_map.default_max_load_percentage);
@@ -32,7 +45,10 @@ pub const Registry = struct {
     index: Index = .empty,
     /// Release all owned argument copies and index storage using the insertion allocator.
     pub fn deinit(self: *Registry, allocator: std.mem.Allocator) void {
-        for (self.entries.items) |key| allocator.free(key.arguments);
+        for (self.entries.items) |key| {
+            allocator.free(key.arguments);
+            allocator.free(key.lengths);
+        }
         self.entries.deinit(allocator);
         self.index.deinit(allocator);
         self.* = .{};
@@ -40,12 +56,15 @@ pub const Registry = struct {
     /// Intern a resolved key transactionally. Allocation failure preserves IDs and contents.
     /// Empty arguments represent an ordinary function in the same eventual discovery queue.
     pub fn intern(self: *Registry, allocator: std.mem.Allocator, key: Key) error{ OutOfMemory, TooManyInstances, TooManyTypeArguments }!InstanceId {
+        if (key.lengths.len != 0 and key.lengths.len != key.arguments.len) return error.TooManyTypeArguments;
         if (key.arguments.len > max_arguments) return error.TooManyTypeArguments;
         if (self.index.get(key)) |id| return id;
         if (self.entries.items.len == max_instances) return error.TooManyInstances;
         try self.entries.ensureUnusedCapacity(allocator, 1);
         try self.index.ensureUnusedCapacity(allocator, 1);
-        const owned: Key = .{ .declaration = key.declaration, .arguments = try allocator.dupe(typed.Type, key.arguments) };
+        const lengths = try allocator.dupe(?usize, key.lengths);
+        errdefer allocator.free(lengths);
+        const owned: Key = .{ .declaration = key.declaration, .arguments = try allocator.dupe(typed.Type, key.arguments), .lengths = lengths };
         const id: InstanceId = @fromBackingInt(self.entries.items.len);
         self.entries.appendAssumeCapacity(owned);
         self.index.putAssumeCapacityNoClobber(owned, id);

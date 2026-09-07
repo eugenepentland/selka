@@ -146,17 +146,37 @@ const Checker = struct {
             try self.enter(span);
             defer self.depth -= 1;
             var arguments: [16]Symbolic = undefined;
-            for (template.syntax.arguments, 0..) |argument, i| arguments[i] = try self.ty(argument);
+            const required = self.catalog.templates.store.?.index.declarations.items[template.declaration].parameters;
+            for (template.syntax.arguments, required, 0..) |argument, parameter, i| arguments[i] = if (parameter.constant_length) try self.lengthType(argument) else try self.ty(argument);
             return self.shapes().nominal(template.declaration, arguments[0..template.arguments.len]);
         }
         if (self.catalog.arrays.templates.get(span.start)) |template| {
             try self.enter(span);
             defer self.depth -= 1;
-            return self.arrayType(template.length, try self.ty(template.syntax.element));
+            const length: Symbolic = if (template.length_parameter) |at| try self.lengthType(at) else .{ .length = template.length };
+            return self.arrayWithLength(length, try self.ty(template.syntax.element), span);
         }
         const text = self.src.text(span);
-        for (self.parameters, 0..) |parameter, index| if (std.mem.eql(u8, text, self.src.text(parameter.name))) return .{ .parameter = index };
+        for (self.parameters, 0..) |parameter, index| if (std.mem.eql(u8, text, self.src.text(parameter.name))) {
+            if (parameter.constant_length) return self.sink.fail(diagnostic.generic_length, span, "const length parameters are values, not types");
+            return .{ .parameter = index };
+        };
         return self.concreteType(span);
+    }
+    fn lengthType(self: *Checker, span: source.Span) Error!Symbolic {
+        for (self.parameters, 0..) |parameter, index| {
+            if (!std.mem.eql(u8, self.src.text(parameter.name), self.src.text(span))) continue;
+            if (!parameter.constant_length) return self.sink.fail(diagnostic.generic_length, span, "expected a const length argument, not a type parameter");
+            return .{ .length_parameter = index };
+        }
+        return .{ .length = try @import("generic_lengths.zig").literal(self.src, span, self.sink) };
+    }
+    fn arrayWithLength(self: *Checker, length: Symbolic, element: Symbolic, span: source.Span) Error!Symbolic {
+        if (length == .length) return self.arrayType(length.length, element);
+        if (length != .length_parameter) return self.sink.fail(diagnostic.generic_length, span, "array requires a const length value");
+        const shape = try self.field_arena.allocator().create(symbolic.Array);
+        shape.* = .{ .length = 0, .length_parameter = length.length_parameter, .element = element };
+        return .{ .array = shape };
     }
     fn arrayType(self: *Checker, length: usize, element: Symbolic) Error!Symbolic {
         const shape = try self.field_arena.allocator().create(symbolic.Array);
@@ -183,9 +203,9 @@ const Checker = struct {
         try self.enter(span);
         defer self.depth -= 1;
         return switch (value) {
-            .parameter => false,
+            .length, .length_parameter, .parameter => false,
             .concrete => |ty_value| typed.requiresHandling(ty_value, self.catalog.records),
-            .array => |array| array.length != 0 and try self.definiteHandling(array.element, span),
+            .array => |array| (array.length_parameter != null or array.length != 0) and try self.definiteHandling(array.element, span),
             .nominal => result: {
                 const shape = try self.shapes().schema(value, span);
                 if (shape.kind == .result) break :result true;
@@ -244,7 +264,7 @@ const Checker = struct {
     fn concreteValue(self: *Checker, value: Symbolic, span: source.Span) Error!typed.Type {
         return switch (value) {
             .concrete => |ty_value| ty_value,
-            .parameter, .array, .nominal => self.sink.fail(eUnsupported, span, "structural operations require a concrete type; parameter shapes need declared constraints"),
+            .length, .length_parameter, .parameter, .array, .nominal => self.sink.fail(eUnsupported, span, "structural operations require a concrete type; parameter shapes need declared constraints"),
         };
     }
     fn same(self: *Checker, actual: Symbolic, expected: Symbolic, span: source.Span) Error!void {
@@ -280,6 +300,9 @@ const Checker = struct {
         return value;
     }
     fn namedValue(self: *Checker, span: source.Span) Error!Symbolic {
+        for (self.parameters) |parameter| {
+            if (parameter.constant_length and std.mem.eql(u8, self.src.text(parameter.name), self.src.text(span))) return .{ .concrete = .u64 };
+        }
         if (!self.active.contains(self.src.text(span))) {
             const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.program, .names = self.module_names, .sink = self.sink, .catalog = self.catalog };
             if (try constants.lookup(span)) |index| return .{ .concrete = (try constants.evaluate(index)).typeOf() };
@@ -504,18 +527,42 @@ const Checker = struct {
         }
         return function;
     }
+    fn substitutedLength(self: *Checker, span: source.Span, parameters: []const ast.TypeParameter, arguments: []const Symbolic) Error!Symbolic {
+        for (parameters, arguments) |parameter, argument| {
+            if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(span))) {
+                if (!parameter.constant_length) return self.sink.fail(diagnostic.generic_length, span, "expected a constant parameter");
+                return argument;
+            }
+        }
+        return self.lengthType(span);
+    }
     fn substituted(self: *Checker, span: source.Span, parameters: []const ast.TypeParameter, arguments: []const Symbolic) Error!Symbolic {
         if (self.catalog.templates.applications.get(span.start)) |template| {
             try self.enter(span);
             defer self.depth -= 1;
             var values: [16]Symbolic = undefined;
-            for (template.syntax.arguments, 0..) |argument, i| values[i] = try self.substituted(argument, parameters, arguments);
+            const required = self.catalog.templates.store.?.index.declarations.items[template.declaration].parameters;
+            for (template.syntax.arguments, required, 0..) |argument, parameter, i| {
+                values[i] = if (parameter.constant_length) try self.substitutedLength(argument, parameters, arguments) else try self.substituted(argument, parameters, arguments);
+            }
             return self.shapes().nominal(template.declaration, values[0..template.arguments.len]);
         }
         if (self.catalog.arrays.templates.get(span.start)) |template| {
             try self.enter(span);
             defer self.depth -= 1;
-            return self.arrayType(template.length, try self.substituted(template.syntax.element, parameters, arguments));
+            var length: Symbolic = .{ .length = template.length };
+            if (template.length_parameter) |at| {
+                var found = false;
+                for (parameters, arguments) |parameter, argument| {
+                    if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(at))) {
+                        length = argument;
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) length = try self.lengthType(at);
+            }
+            return self.arrayWithLength(length, try self.substituted(template.syntax.element, parameters, arguments), span);
         }
         const text = self.src.text(span);
         for (parameters, arguments) |parameter, argument| if (std.mem.eql(u8, text, self.src.text(parameter.name))) return argument;
@@ -548,8 +595,9 @@ const Checker = struct {
         const arguments = try self.allocator.alloc(Symbolic, required.len);
         defer self.allocator.free(arguments);
         for (invocation.type_arguments, required, arguments) |argument_span, parameter, *argument| {
-            argument.* = try self.ty(argument_span);
+            argument.* = if (parameter.constant_length) try self.lengthType(argument_span) else try self.ty(argument_span);
             const satisfies = switch (argument.*) {
+                .length, .length_parameter => parameter.constant_length,
                 .parameter => |index| self.parameters[index].requirements.implies(parameter.requirements),
                 .concrete => |builtin| parameter.requirements.accepts(builtin, self.catalog.records),
                 .array, .nominal => supportsSet(argument.*, parameter.requirements, self.parameters, self.catalog),
@@ -1106,6 +1154,7 @@ const Checker = struct {
         const result = try self.ty(array.ty);
         const shape = try self.arrayShape(result, span);
         if (shape.key != null) return self.sink.fail("E_TYPE", span, "enum-indexed tables require named construction");
+        if (shape.length_parameter != null) return self.sink.fail(diagnostic.generic_length, span, "array literal construction requires a fixed length in an uncalled template");
         if (array.values.len != shape.length) return self.sink.fail("E_ARRAY_LENGTH", span, "array construction must supply its declared number of elements");
         for (array.values) |value| try self.same(try self.expression(value), shape.element, span);
         return result;

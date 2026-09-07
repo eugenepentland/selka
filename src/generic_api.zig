@@ -4,7 +4,7 @@ const ast = @import("ast.zig");
 const source = @import("source.zig");
 const interfaces = @import("interfaces.zig");
 const effects = @import("effect_set.zig");
-const Parameter = struct { name: []const u8, requirements: []const []const u8, field_requirements: []const Value, operation_requirements: []const Operation };
+const Parameter = struct { constant_length: bool, name: []const u8, requirements: []const []const u8, field_requirements: []const Value, operation_requirements: []const Operation };
 const Operation = struct { name: []const u8, parameters: []const Value, result: []const u8, declared_effects: []const []const u8 };
 const Value = struct { name: []const u8, type: []const u8, reference: ?bool, slice: bool };
 const Case = struct { name: []const u8, payload: ?[]const u8 };
@@ -61,6 +61,7 @@ const Context = struct {
             };
             item.* = .{
                 .name = self.src().text(parameter.name),
+                .constant_length = parameter.constant_length,
                 .requirements = requirements,
                 .field_requirements = try self.values(parameter.field_requirements),
                 .operation_requirements = operations,

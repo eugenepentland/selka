@@ -47,3 +47,4 @@ Run `python3 tests/feature_surface.py --compiler zig-out/bin/mylang --output rec
 to execute the documented binary64/constant/split examples and verify explicit
 unsupported syntax and unresolved-hole rejection. The receipt pins the executable,
 feature report and case source hashes; it complements the broader acceptance suite.
+Generic functions and nominal declarations support explicit `const N:u64` length parameters; see [const-length-generics.md](const-length-generics.md).

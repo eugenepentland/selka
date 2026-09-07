@@ -12,13 +12,14 @@ const Span = source.Span;
 /// A type variable is local to its enclosing declaration; named identities index declarations.
 pub const Expression = union(enum) {
     builtin: typed.Type,
+    length: usize,
     parameter: usize,
     named: usize,
     array: *const Array,
     application: *const Application,
 };
 /// Retain both numeric and closed-enum array syntax for later concrete layout resolution.
-pub const Array = struct { syntax: ast.ArrayType, length: ?usize, element: Expression, key: ?Expression };
+pub const Array = struct { syntax: ast.ArrayType, length: ?usize, length_parameter: ?usize = null, element: Expression, key: ?Expression };
 /// Ordered type arguments retain their nominal base identity and diagnostic sites.
 pub const Application = struct { syntax: ast.TypeApplication, declaration: usize, arguments: []const Expression };
 /// Named record field or closed variant case, including payload-free cases.
@@ -59,6 +60,17 @@ pub const Index = struct {
         try self.names.put(ctx.allocator, key, self.declarations.items.len);
         try self.declarations.append(ctx.allocator, entry);
     }
+    fn lengthParameter(self: *Index, span: Span, parameters: []const requirements.Parameter) ?usize {
+        const id = self.parameter(span, parameters) orelse return null;
+        return if (parameters[id].constant_length) id else null;
+    }
+    fn lengthExpression(self: *Index, span: Span, parameters: []const requirements.Parameter) Error!Expression {
+        if (self.parameter(span, parameters)) |index| {
+            if (!parameters[index].constant_length) return self.context.sink.fail(diagnostic.generic_length, span, "length argument must be a const length parameter or decimal literal");
+            return .{ .parameter = index };
+        }
+        return .{ .length = try @import("generic_lengths.zig").literal(self.context.src, span, self.context.sink) };
+    }
     fn lookup(self: *Index, span: Span) Error!usize {
         const ctx = self.context;
         const key = if (ctx.names) |names| try names.reference(span, .type, null, null, ctx.sink) else ctx.src.text(span);
@@ -78,9 +90,14 @@ pub const Index = struct {
         if (self.syntax.arrays.get(span.start)) |syntax| {
             const element = try self.expression(syntax.element, parameters);
             var enum_key: ?Expression = null;
-            const length = switch (syntax.index) {
+            var length_parameter: ?usize = null;
+            const length: ?usize = switch (syntax.index) {
                 .length => |at| try @import("generic_arrays.zig").length(ctx.src, at, ctx.sink),
                 .enum_type => |at| length: {
+                    if (self.lengthParameter(at, parameters)) |id| {
+                        length_parameter = id;
+                        break :length null;
+                    }
                     const key = try self.expression(at, parameters);
                     enum_key = key;
                     if (depends(element) or depends(key)) return ctx.sink.fail("E_GENERIC_ARRAY_KEY", syntax.span, "parameterized arrays currently require a fixed numeric length");
@@ -94,7 +111,7 @@ pub const Index = struct {
                 },
             };
             const array = try ctx.allocator.create(Array);
-            array.* = .{ .syntax = syntax, .length = length, .element = element, .key = enum_key };
+            array.* = .{ .syntax = syntax, .length = length, .length_parameter = length_parameter, .element = element, .key = enum_key };
             return .{ .array = array };
         }
         if (self.syntax.applications.get(span.start)) |syntax| {
@@ -102,12 +119,17 @@ pub const Index = struct {
             const id = try self.lookup(syntax.name);
             if (syntax.arguments.len != self.declarations.items[id].parameters.len) return ctx.sink.fail("E_GENERIC_ARITY", syntax.span, "type application requires exactly the declared number of arguments");
             const arguments = try ctx.allocator.alloc(Expression, syntax.arguments.len);
-            for (syntax.arguments, arguments) |argument, *out| out.* = try self.expression(argument, parameters);
+            for (syntax.arguments, self.declarations.items[id].parameters, arguments) |argument, required, *out| {
+                out.* = if (required.constant_length) try self.lengthExpression(argument, parameters) else try self.expression(argument, parameters);
+            }
             const application = try ctx.allocator.create(Application);
             application.* = .{ .syntax = syntax, .declaration = id, .arguments = arguments };
             return .{ .application = application };
         }
-        if (self.parameter(span, parameters)) |id| return .{ .parameter = id };
+        if (self.parameter(span, parameters)) |id| {
+            if (parameters[id].constant_length) return ctx.sink.fail(diagnostic.generic_length, span, "a const length parameter is a value, not a type");
+            return .{ .parameter = id };
+        }
         if (typed.Type.fromName(ctx.src.text(span))) |ty| return .{ .builtin = ty };
         if (self.syntax.aliases.count() != 0) {
             const alias_name = if (ctx.names) |names| try names.reference(span, .type, null, null, ctx.sink) else ctx.src.text(span);
@@ -168,11 +190,12 @@ pub const Index = struct {
     /// Operation guarantees are independent of layout IDs; aggregate equality is never inferred.
     pub fn guarantees(self: Index, value: Expression, parameters: []const requirements.Parameter) requirements.Set {
         return switch (value) {
+            .length => .{},
             .builtin => |ty| builtinGuarantees(ty),
             .parameter => |id| parameters[id].requirements,
             .named => |id| self.declarations.items[id].guarantees,
             .application => |application| self.declarations.items[application.declaration].guarantees,
-            .array => |array| if (array.length == 0 or self.guarantees(array.element, parameters).contains(.copy)) copyGuarantee() else .{},
+            .array => |array| if ((array.length_parameter == null and array.length == 0) or self.guarantees(array.element, parameters).contains(.copy)) copyGuarantee() else .{},
         };
     }
     fn inferGuarantees(self: *Index) Error!void {
@@ -259,7 +282,7 @@ fn builtinGuarantees(ty: typed.Type) requirements.Set {
 pub fn depends(value: Expression) bool {
     return switch (value) {
         .parameter => true,
-        .array => |array| depends(array.element),
+        .array => |array| array.length_parameter != null or depends(array.element),
         .application => |application| dependent: {
             for (application.arguments) |argument| if (depends(argument)) break :dependent true;
             break :dependent false;

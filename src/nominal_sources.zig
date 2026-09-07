@@ -66,8 +66,12 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
                 try result.nominal_templates.put(allocator, syntax.span.start, expression.application);
                 continue;
             }
-            if (expression != .array or expression.array.length == null) return error.InternalError;
-            try result.array_templates.put(allocator, syntax.span.start, .{ .syntax = expression.array.syntax, .length = expression.array.length.? });
+            if (expression != .array) return error.InternalError;
+            try result.array_templates.put(allocator, syntax.span.start, .{
+                .syntax = expression.array.syntax,
+                .length = expression.array.length orelse 0,
+                .length_parameter = if (expression.array.length_parameter != null) expression.array.syntax.index.enum_type else null,
+            });
             continue;
         }
         try result.resolved.put(allocator, syntax.span.start, try graph.materialize(expression, syntax.span));

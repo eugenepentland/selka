@@ -30,11 +30,20 @@ pub const Context = struct {
         node.* = .{ .declaration = declaration, .arguments = try self.arena.allocator().dupe(Value, arguments) };
         return .{ .nominal = node };
     }
+    fn lengthArgument(self: Context, span: source.Span) Error!Value {
+        for (self.parameters, 0..) |parameter, index| {
+            if (!std.mem.eql(u8, self.src.text(parameter.name), self.src.text(span))) continue;
+            if (!parameter.constant_length) return self.sink.fail(diagnostic.generic_length, span, "expected a const length parameter");
+            return .{ .length_parameter = index };
+        }
+        return .{ .length = try @import("generic_lengths.zig").literal(self.src, span, self.sink) };
+    }
     fn expression(self: Context, expression_value: templates.Expression, arguments: []const Value, depth: usize, span: source.Span) Error!Value {
         try self.charge(span);
         if (depth == 256) return self.sink.fail(body_limit, span, "generic nominal expression exceeds 256 levels");
         const store = self.catalog.templates.store.?;
         return switch (expression_value) {
+            .length => |value| .{ .length = value },
             .builtin => |ty| .{ .concrete = ty },
             .parameter => |id| arguments[id],
             .named => |declaration| .{ .concrete = store.runtime(store.graph.index.get(.{ .base = .{ .named = declaration }, .arguments = &.{} }).?) orelse return error.InternalError },
@@ -45,12 +54,15 @@ pub const Context = struct {
             },
             .array => |array| result: {
                 const shape = try self.arena.allocator().create(symbolic.Array);
-                const key = switch (array.syntax.index) {
+                const key = if (array.length_parameter != null) null else switch (array.syntax.index) {
                     .enum_type => |key_span| try self.catalog.resolve(self.src, key_span, self.sink),
                     .length => null,
                 };
+                const length: Value = if (array.length_parameter) |i| arguments[i] else .{ .length = array.length orelse self.catalog.records[key.?.recordIndex()].shape.variants.?.cases.len };
+                if (length != .length and length != .length_parameter) return self.sink.fail(diagnostic.generic_length, span, "array length requires a const argument");
                 shape.* = .{
-                    .length = array.length orelse self.catalog.records[key.?.recordIndex()].shape.variants.?.cases.len,
+                    .length = if (length == .length) length.length else 0,
+                    .length_parameter = if (length == .length_parameter) length.length_parameter else null,
                     .element = try self.expression(array.element, arguments, depth + 1, span),
                     .key = key,
                 };
@@ -62,16 +74,21 @@ pub const Context = struct {
         try self.charge(span);
         if (depth == 256) return self.sink.fail(body_limit, span, "structural field type exceeds 256 levels");
         for (self.parameters, 0..) |parameter, i| {
-            if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(span))) return .{ .parameter = i };
+            if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(span))) {
+                if (parameter.constant_length) return self.sink.fail(diagnostic.generic_length, span, "const length parameters are values, not types");
+                return .{ .parameter = i };
+            }
         }
         if (self.catalog.templates.applications.get(span.start)) |template| {
             var arguments: [16]Value = undefined;
-            for (template.syntax.arguments, 0..) |argument, i| arguments[i] = try self.sourceType(argument, depth + 1);
+            const required = self.catalog.templates.store.?.index.declarations.items[template.declaration].parameters;
+            for (template.syntax.arguments, required, 0..) |argument, parameter, i| arguments[i] = if (parameter.constant_length) try self.lengthArgument(argument) else try self.sourceType(argument, depth + 1);
             return self.nominal(template.declaration, arguments[0..template.arguments.len]);
         }
         if (self.catalog.arrays.templates.get(span.start)) |template| {
             const array = try self.arena.allocator().create(symbolic.Array);
-            array.* = .{ .length = template.length, .element = try self.sourceType(template.syntax.element, depth + 1) };
+            const size: Value = if (template.length_parameter) |at| try self.lengthArgument(at) else .{ .length = template.length };
+            array.* = .{ .length = if (size == .length) size.length else 0, .length_parameter = if (size == .length_parameter) size.length_parameter else null, .element = try self.sourceType(template.syntax.element, depth + 1) };
             return .{ .array = array };
         }
         return .{ .concrete = try self.catalog.resolve(self.src, span, self.sink) };
@@ -169,6 +186,7 @@ pub const Context = struct {
     }
     fn leaf(self: Context, value: Value) ?Properties {
         return switch (value) {
+            .length, .length_parameter => .{},
             .parameter => |id| .{
                 .region = !self.parameters[id].requirements.contains(.equality) and !self.parameters[id].requirements.contains(.codec),
                 .requires_handling = self.parameters[id].requirements.contains(.codec) and !self.parameters[id].requirements.contains(.copy),
@@ -189,7 +207,7 @@ pub const Context = struct {
     }
     fn child(self: Context, value: Value, cursor: *usize, result: *Properties, span: source.Span) Error!?Value {
         if (value == .array) {
-            if (cursor.* != 0 or value.array.length == 0) return null;
+            if (cursor.* != 0 or (value.array.length_parameter == null and value.array.length == 0)) return null;
             cursor.* += 1;
             return value.array.element;
         }

@@ -6,7 +6,7 @@ const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
 const eArrayLength = "E_ARRAY_LENGTH";
 /// Numeric array syntax whose element depends on an enclosing type parameter.
-pub const Template = struct { syntax: ast.ArrayType, length: usize };
+pub const Template = struct { syntax: ast.ArrayType, length: usize, length_parameter: ?source.Span = null };
 /// Match a leaf only against type parameters of its enclosing function.
 pub fn parameter(src: source.Source, program: ast.Program, span: source.Span) bool {
     for (program.functions) |function| {
