@@ -1,5 +1,7 @@
 //! Unit test entry point, separate from the production compiler module.
 test {
+    _ = @import("vm_trace_test.zig");
+    _ = @import("host_replay_test.zig");
     _ = @import("typed_holes_test.zig");
     _ = @import("allocation_budget_test.zig");
     _ = @import("native_typed_json.zig");

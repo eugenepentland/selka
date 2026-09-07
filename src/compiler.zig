@@ -76,6 +76,7 @@ pub const diagnostic = @import("diagnostic.zig");
 /// Versioned diagnostic rendering for CLI and tool consumers.
 pub const diagnostic_output = @import("diagnostic_output.zig");
 /// Trusted typed host registration and copied-value callback boundary.
+pub const host_replay = @import("host_replay.zig");
 pub const host_functions = @import("host_functions.zig");
 /// Program-bound registration adapter for explicitly declared VM host functions.
 pub const vm_host = @import("vm_host.zig");
@@ -90,6 +91,7 @@ pub const navigation_partial = @import("navigation_partial.zig");
 pub const navigation = @import("navigation.zig");
 pub const quality = @import("quality.zig");
 pub const duplicates = @import("duplicates.zig");
+pub const vm_trace = @import("vm_trace.zig");
 pub const vm = @import("vm.zig");
 const disassemble = @import("disassemble.zig");
 

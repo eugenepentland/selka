@@ -13,7 +13,7 @@ pub const Signature = struct { parameters: []const Parameter, result: Parameter,
 /// A compiler-resolved declaration; registration copies its name and parameter descriptors.
 pub const Declaration = struct { name: []const u8, signature: Signature };
 /// Callback failures are distinct from recoverable errors represented by returned guest results.
-pub const CallbackError = copy.Error || error{ HostFailure, HostWorkLimit, HostSessionClosed, HostReentrant };
+pub const CallbackError = copy.Error || error{ HostFailure, HostWorkLimit, HostSessionClosed, HostReentrant, HostReplayMismatch };
 /// Registration, session, authority, and boundary-validation failures.
 pub const Error = CallbackError || data_type.CheckError || error{
     HostUnknownFunction,
@@ -167,6 +167,10 @@ pub const Call = struct {
     pub fn allocator(self: *const Call) std.mem.Allocator {
         std.debug.assert(self.session.registry.state.phase == .callback);
         return self.session.registry.state.allocator.?;
+    }
+    /// Inspect cooperative work remaining for a recording adapter.
+    pub fn remainingWork(self: *const Call) u64 {
+        return self.session.registry.state.work_remaining;
     }
     /// Charge bounded native work cooperatively; the VM cannot preempt arbitrary callback code.
     pub fn consume(self: *Call, units: u64) CallbackError!void {

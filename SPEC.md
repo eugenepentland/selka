@@ -325,3 +325,11 @@ supersede it. The manifest records implementation coverage, not a test certifica
 ## Explicit implementation obligations
 
 - [TYPED-HOLES-1] `todo<T>()` declares an unresolved implementation obligation with a checked required type and a located `E_TYPED_HOLE` diagnostic plus related type span. Ordinary and uncalled generic function bodies report independent holes at safe recovery boundaries. Formatting retains them. No checked program, bytecode or executable is published until every hole is replaced. This is an explicit declared type, not inferred expected-type completion.
+
+## Bounded host replay
+
+- [HOST-REPLAY-1] In-memory host transcripts wrap explicit copied-value registrations without adding authority. They record bounded calls, argument fingerprints, copied outcomes and cooperative work; replay checks exact sequence/schema identity and never reinvokes providers. Missing/extra/changed calls invalidate replay. Recording exhaustion or allocation failure leaves an incomplete transcript. Transcripts borrow the checked schema and own their copies; all registrations close before transcript destruction. They are single-threaded debugging artifacts, not portable or secret-free logs.
+
+## Bounded VM explanations
+
+- [VM-TRACE-1] Optional `memory.trace` observations record instruction/source identity and the top operand before execution into a caller-owned bounded buffer. Scalar values can explain branch conditions; aggregates record only type identity. Full buffers count omitted events without changing guest work/steps or retaining guest owners. Traces are debugging samples, not complete causal proofs or portable replay logs.

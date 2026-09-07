@@ -42,6 +42,7 @@ pub const MemoryOptions = struct {
     limits: memory.Limits = .{},
     statistics: ?*memory.Statistics = null,
     provide_allocator: bool = true,
+    trace: ?*@import("vm_trace.zig").Trace = null,
 };
 /// Pool quotas and optional observations copied after execution cleanup.
 pub const PoolOptions = struct {
@@ -290,6 +291,7 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
         const instruction = function.scope.instructions[frame.pc];
         if (steps == options.max_steps) return trap("R_STEP_LIMIT", "instruction budget exhausted", instruction.span, frames.items, program);
         steps += 1;
+        if (options.memory.trace) |trace| trace.record(frame.function, frame.pc, steps, instruction, stack.items[frame.operand_base..]);
         frames.items[frame_index].pc += 1;
         var step: Step = .{ .execution = &execution, .frame = frame, .frame_index = frame_index, .instruction = instruction };
         const outcome = try switch (instruction.op) {
