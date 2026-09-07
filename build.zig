@@ -260,6 +260,10 @@ pub fn build(b: *std.Build) void {
     input_manifests.addFileArg(exe.getEmittedBin());
     input_manifests.setCwd(b.path("."));
     test_step.dependOn(&input_manifests.step);
+    const package_tests = b.addSystemCommand(&.{ "python3", "tests/packages.py", "--compiler" });
+    package_tests.addFileArg(exe.getEmittedBin());
+    package_tests.setCwd(b.path("."));
+    test_step.dependOn(&package_tests.step);
     const guest_tests = b.addSystemCommand(&.{ "python3", "tests/guest_tests.py", "--compiler" });
     guest_tests.addFileArg(exe.getEmittedBin());
     guest_tests.setCwd(b.path("."));
