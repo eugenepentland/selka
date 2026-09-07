@@ -581,6 +581,24 @@ fn writeOperation(context: InstructionOutput) !bool {
             try w.writeAll("V b = pop(), a = pop(); ");
             switch (operation) {
                 .eq, .ne, .lt, .le, .gt, .ge => try w.print("push(a {s} b);\n", .{predicate(operation)}),
+                .bit_and, .bit_or, .bit_xor, .shift_left, .shift_right, .wrapping_add, .wrapping_sub, .wrapping_mul, .saturating_add, .saturating_sub, .saturating_mul => {
+                    const code: usize = switch (operation) {
+                        .bit_and => 0,
+                        .bit_or => 1,
+                        .bit_xor => 2,
+                        .shift_left => 3,
+                        .shift_right => 4,
+                        .wrapping_add => 5,
+                        .wrapping_sub => 6,
+                        .wrapping_mul => 7,
+                        .saturating_add => 8,
+                        .saturating_sub => 9,
+                        .saturating_mul => 10,
+                        else => unreachable,
+                    };
+                    const info = ty.integer().?;
+                    try w.print("push(integer_extended({d}, a, b, {d}, {d}));\n", .{ code, info.bits, @intFromBool(info.signed) });
+                },
                 else => {
                     const code: usize = switch (operation) {
                         .add => 0,

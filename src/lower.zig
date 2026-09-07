@@ -415,6 +415,7 @@ fn binaryInstruction(binary: anytype, nodes: []const typed.Node, records: []cons
         .mul => .mul_i64_checked,
         .div => .div_i64_checked,
         .rem => .rem_i64_checked,
+        .bit_and, .bit_or, .bit_xor, .shift_left, .shift_right, .wrapping_add, .wrapping_sub, .wrapping_mul, .saturating_add, .saturating_sub, .saturating_mul => .{ .binary_integer = .{ .ty = operand_type, .op = binary.op } },
         .eq, .ne => if (nodes[@backingInt(binary.left)].ty == .bool)
             .{ .cmp_bool = if (binary.op == .eq) .eq else .ne }
         else

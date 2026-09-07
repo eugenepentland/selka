@@ -106,6 +106,7 @@ const Evaluator = struct {
         return self.context.sink.fail("E_CONSTANT_ARITHMETIC", span, switch (err) {
             error.Overflow => "constant arithmetic overflows its integer type",
             error.DivisionByZero => "constant arithmetic divides by zero",
+            error.InvalidShift => "constant shift count is outside its integer width",
             error.InternalError => "constant operation requires matching scalar operand types",
         });
     }

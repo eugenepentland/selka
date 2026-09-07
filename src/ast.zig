@@ -8,7 +8,32 @@ pub const NodeId = enum(usize) { _ };
 /// Index of a parsed statement in the syntax program.
 pub const StatementId = enum(usize) { _ };
 /// Parsed arithmetic, logical, and comparison operators before type checking.
-pub const BinaryOp = enum { add, sub, mul, div, rem, logical_and, logical_or, eq, ne, lt, le, gt, ge };
+pub const BinaryOp = enum {
+    add,
+    sub,
+    mul,
+    div,
+    rem,
+    logical_and,
+    logical_or,
+    eq,
+    ne,
+    lt,
+    le,
+    gt,
+    ge,
+    bit_and,
+    bit_or,
+    bit_xor,
+    shift_left,
+    shift_right,
+    wrapping_add,
+    wrapping_sub,
+    wrapping_mul,
+    saturating_add,
+    saturating_sub,
+    saturating_mul,
+};
 /// Parsed simple, additive, and subtractive assignment forms.
 pub const AssignmentOp = enum { set, add, sub };
 /// Parsed negation and Boolean inversion operators.

@@ -4,6 +4,8 @@
   "native_backend": "partial-c",
   "implemented": [
     "fixed-width-integers",
+    "named-integer-bitwise-shifts",
+    "wrapping-saturating-integers",
     "booleans",
     "byte-literals",
     "nominal-records",

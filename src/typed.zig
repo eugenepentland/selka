@@ -23,7 +23,32 @@ pub const LocalId = enum(usize) { _ };
 pub const Type = values.Type;
 pub const Value = values.Value;
 /// Checked arithmetic, logical, and comparison operation categories.
-pub const BinaryOp = enum { add, sub, mul, div, rem, logical_and, logical_or, eq, ne, lt, le, gt, ge };
+pub const BinaryOp = enum {
+    add,
+    sub,
+    mul,
+    div,
+    rem,
+    logical_and,
+    logical_or,
+    eq,
+    ne,
+    lt,
+    le,
+    gt,
+    ge,
+    bit_and,
+    bit_or,
+    bit_xor,
+    shift_left,
+    shift_right,
+    wrapping_add,
+    wrapping_sub,
+    wrapping_mul,
+    saturating_add,
+    saturating_sub,
+    saturating_mul,
+};
 /// Checked numeric negation and Boolean inversion operations.
 pub const UnaryOp = enum { neg, not };
 /// Typed expression with resolved operands and source location.

@@ -1098,7 +1098,7 @@ const Checker = struct {
             else => try self.supports(left, .integer, operation.op_span),
         }
         return switch (operation.op) {
-            .add, .sub, .mul, .div, .rem => left,
+            .add, .sub, .mul, .div, .rem, .bit_and, .bit_or, .bit_xor, .shift_left, .shift_right, .wrapping_add, .wrapping_sub, .wrapping_mul, .saturating_add, .saturating_sub, .saturating_mul => left,
             else => .{ .concrete = .bool },
         };
     }

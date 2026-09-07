@@ -849,6 +849,7 @@ const Step = struct {
         const left = try numeric(stack, frame.operand_base, binary.ty, allocator);
         const value = integers.binary(binary.ty, binary.op, left, right) catch |err| switch (err) {
             error.Overflow => return trap(overflow_code, "integer arithmetic exceeds its declared width", instruction.span, frames.items, program),
+            error.InvalidShift => return trap("R_INVALID_SHIFT", "shift count must be nonnegative and smaller than the integer width", instruction.span, frames.items, program),
             error.DivisionByZero => return trap("R_DIVISION_BY_ZERO", "division or remainder by zero", instruction.span, frames.items, program),
             else => return error.InternalError,
         };

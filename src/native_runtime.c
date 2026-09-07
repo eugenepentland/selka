@@ -796,6 +796,39 @@ static V arithmetic(int operation, V a, V b, V minimum, V maximum) {
     if (overflow) trap("R_OVERFLOW");
     return checked(result, minimum, maximum);
 }
+static V integer_extended(int operation, V a, V b, unsigned bits, int is_signed) {
+    typedef unsigned __int128 U;
+    V modulus = (V)1 << bits;
+    V maximum = (modulus >> is_signed) - 1;
+    V minimum = is_signed ? -(modulus >> 1) : 0;
+    U mask = (U)modulus - 1;
+    U x = (U)a & mask, y = (U)b & mask, raw = 0;
+    V result = 0;
+    switch (operation) {
+        case 0: raw = x & y; break;
+        case 1: raw = x | y; break;
+        case 2: raw = x ^ y; break;
+        case 3: case 4:
+            if (b < 0 || b >= bits) trap("R_INVALID_SHIFT");
+            if (operation == 3) raw = (x << (unsigned)b) & mask;
+            else {
+                V divisor = (V)1 << (unsigned)b;
+                return a < 0 ? -1 - ((-1 - a) / divisor) : a / divisor;
+            }
+            break;
+        case 5: raw = (U)(a + b) & mask; break;
+        case 6: raw = (U)(a - b) & mask; break;
+        case 7: raw = (x * y) & mask; break;
+        case 8: case 9: case 10:
+            if (operation == 8) result = a + b;
+            else if (operation == 9) result = a - b;
+            else if (__builtin_mul_overflow(a, b, &result)) return maximum;
+            return result < minimum ? minimum : result > maximum ? maximum : result;
+        default: host_failure("InternalError");
+    }
+    result = (V)raw;
+    return is_signed && result > maximum ? result - modulus : result;
+}
 static uint64_t budget(const char *text) {
     uint64_t result = 0;
     if (!*text) host_failure("InvalidBudget");

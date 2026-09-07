@@ -4,6 +4,7 @@ test {
     _ = @import("native_typed_json.zig");
     _ = @import("native_json_bridge.zig");
     _ = @import("scoped_providers_test.zig");
+    _ = @import("integer_operations_test.zig");
     _ = @import("byte_literal_test.zig");
     _ = @import("nominal_provider_contracts_test.zig");
     _ = @import("nominal_environment_test.zig");
