@@ -381,7 +381,7 @@ test "function signatures entry points and all uncalled bodies are checked" {
         .{ .text = "fn f() -> i64 { return 1; } fn f() -> bool { return true; } fn main() -> i64 { return 0; }", .code = "E_DUPLICATE_FUNCTION" },
         .{ .text = "fn main(n: i64) -> i64 { return n; }", .code = "E_MAIN" },
         .{ .text = "fn main() -> i64 { return missing(); }", .code = "E_UNKNOWN_FUNCTION" },
-        .{ .text = "fn main() -> i64 { let f = 1; return f(); }", .code = "E_UNKNOWN_FUNCTION" },
+        .{ .text = "fn main() -> i64 { let f = 1; return f(); }", .code = "E_CALLBACK_TYPE" },
         .{ .text = "fn f(n: i64) -> i64 { return n; } fn main() -> i64 { return f(); }", .code = "E_ARITY" },
         .{ .text = "fn f(n: i64) -> i64 { return n; } fn main() -> i64 { return f(1, 2); }", .code = "E_ARITY" },
         .{ .text = "fn f(n: i64) -> i64 { return n; } fn main() -> i64 { return f(true); }", .code = "E_TYPE" },
