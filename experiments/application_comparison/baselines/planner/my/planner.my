@@ -3,49 +3,43 @@ import json;
 import schema;
 import output;
 import std_collections;
+import std_order;
+import std_json;
+import std_graph;
 export run;
 result Outcome {
     ok: i64,
     err: i64
 }
-fn sift(t: &[]i64, a: &mut []i64, root: i64, n: i64) -> i64 {
-    let mut r = root;
-    while r * 2 + 1 < n {
-        let mut c = r * 2 + 1;
-        if c + 1 < n && json::less(t, read_slice(a, c), read_slice(a, c + 1)) {
-            c += 1;
-        }
-        if !json::less(t, read_slice(a, r), read_slice(a, c)) {
-            return 0;
-        }
-        let v = read_slice(a, r);
-        write_slice(a, r, read_slice(a, c));
-        write_slice(a, c, v);
-        r = c;
-    }
+fn item(t: &[]i64, node: i64) -> std_order::Item {
+    let start = std_json::get(t, node, 1);
+    let end = std_json::get(t, node, 2);
+    return new std_order::Item {
+        value: node,
+        first: cast<u64>(start),
+        first_len: cast<u64>(end - start),
+        second: 0u64,
+        second_len: 0u64
+    };
+}
+fn marker(value: i64) -> std_order::Item {
+    return new std_order::Item {
+        value: value,
+        first: 0u64,
+        first_len: 0u64,
+        second: 0u64,
+        second_len: 0u64
+    };
+}
+fn sort(t: &[]i64, a: &mut []std_order::Item, n: i64) -> i64 {
+    discard std_order::sort(t, a, 0u64, cast<u64>(n));
     return 0;
 }
-fn sort(t: &[]i64, a: &mut []i64, n: i64) -> i64 {
-    let mut i = n / 2;
-    while i > 0 {
-        i -= 1;
-        discard sift(t, a, i, n);
-    }
-    i = n;
-    while i > 1 {
-        i -= 1;
-        let v = read_slice(a, 0);
-        write_slice(a, 0, read_slice(a, i));
-        write_slice(a, i, v);
-        discard sift(t, a, 0, i);
-    }
-    return 0;
-}
-fn emit(t: &[]i64, a: &[]i64, n: i64) -> i64 {
+fn emit(t: &[]i64, a: &[]std_order::Item, n: i64) -> i64 {
     let mut i = 0;
     let mut prev = - 1;
     while i < n {
-        let v = read_slice(a, i);
+        let v = read_slice(a, i).value;
         if prev < 0 || !json::equal(t, prev, v) {
             if prev >= 0 {
                 discard output::comma();
@@ -58,36 +52,42 @@ fn emit(t: &[]i64, a: &[]i64, n: i64) -> i64 {
     discard output::close();
     return 0;
 }
-fn lookup(t: &[]i64, ids: &[]i64, n: i64, p: i64) -> i64 {
-    let mut lo = 0;
-    let mut hi = n;
-    while lo < hi {
-        let mid =(lo + hi) / 2;
-        let v = read_slice(ids, mid);
-        if json::equal(t, v, p) {
-            return mid;
-        }
-        if json::less(t, v, p) {
-            lo = mid + 1;
-        } else {
-            hi = mid;
-        }
+fn lookup(t: &[]i64, ids: &[]std_order::Item, n: i64, p: i64) -> i64 {
+    let at = std_order::lower_bound(t, ids, 0u64, cast<u64>(n), item(t, p));
+    if at < cast<u64>(n) && json::equal(t, read_slice(ids, at).value, p) {
+        return cast<i64>(at);
     }
     return - 1;
 }
-fn ready(t: &[]i64, ids: &[]i64, needs: &[]i64, done: &[]i64, n: i64, j: i64) -> bool {
-    let mut p = read_slice(needs, j) + 1;
-    while p < json::next(t, read_slice(needs, j)) {
-        let dep = lookup(t, ids, n, p);
-        if read_slice(done, dep) == 0 {
-            return false;
+// Resolve application identifier dependencies into reusable graph edges.
+fn graph(t: &[]i64, ids: &[]std_order::Item, needs: &[]i64, n: i64, edges: &mut []std_graph::Edge) -> i64 {
+    let mut i = 0;
+    let mut at = 0u64;
+    while i < n {
+        let mut p = read_slice(needs, i) + 1;
+        while p < json::next(t, read_slice(needs, i)) {
+            write_slice(edges, at, new std_graph::Edge {
+                from: cast<u64>(lookup(t, ids, n, p)),
+                to: cast<u64>(i)
+            });
+            at += 1u64;
+            p = json::next(t, p);
         }
+        i += 1;
+    }
+    return 0;
+}
+fn edge_count(t: &[]i64, jobs: i64) -> u64 {
+    let mut count = 0u64;
+    let mut p = jobs + 1;
+    while p < json::next(t, jobs) {
+        count += cast<u64>(schema::count(t, schema::field(t, p, "needs")));
         p = json::next(t, p);
     }
-    return true;
+    return count;
 }
 // Complete each validation phase before emitting a result.
-fn work(t: &[]i64, a: i64, ids: &mut []i64, durations: &mut []i64, needs: &mut []i64, done: &mut []i64, finish: &mut []i64, unknown: &mut []i64, scratch: &mut []i64) -> i64 {
+fn work(t: &[]i64, a: i64, ids: &mut []std_order::Item, durations: &mut []i64, needs: &mut []i64, done: &mut []i64, finish: &mut []i64, unknown: &mut []std_order::Item, scratch: &mut []std_order::Item, edges: &mut []std_graph::Edge) -> i64 {
     let id = "id";
     let dur = "duration";
     let dep = "needs";
@@ -99,7 +99,7 @@ fn work(t: &[]i64, a: i64, ids: &mut []i64, durations: &mut []i64, needs: &mut [
         borrow id[0..len(id)] as b {
             v = schema::field(t, p, b);
         }
-        write_slice(ids, i, v);
+        write_slice(ids, i, item(t, v));
         p = json::next(t, p);
         i += 1;
     }
@@ -107,7 +107,7 @@ fn work(t: &[]i64, a: i64, ids: &mut []i64, durations: &mut []i64, needs: &mut [
     let mut repeated = 0;
     i = 1;
     while i < n {
-        if json::equal(t, read_slice(ids, i - 1), read_slice(ids, i)) {
+        if json::equal(t, read_slice(ids, i - 1).value, read_slice(ids, i).value) {
             write_slice(unknown, repeated, read_slice(ids, i));
             repeated += 1;
         }
@@ -141,14 +141,14 @@ fn work(t: &[]i64, a: i64, ids: &mut []i64, durations: &mut []i64, needs: &mut [
         let mut x = read_slice(needs, i) + 1;
         let mut count = 0;
         while x < json::next(t, read_slice(needs, i)) {
-            write_slice(scratch, count, x);
+            write_slice(scratch, count, item(t, x));
             count += 1;
             x = json::next(t, x);
         }
         discard sort(t, scratch, count);
         let mut j = 1;
         while j < count {
-            if json::equal(t, read_slice(scratch, j - 1), read_slice(scratch, j)) {
+            if json::equal(t, read_slice(scratch, j - 1).value, read_slice(scratch, j).value) {
                 write_slice(done, i, 1);
             }
             j += 1;
@@ -173,7 +173,7 @@ fn work(t: &[]i64, a: i64, ids: &mut []i64, durations: &mut []i64, needs: &mut [
         let mut x = read_slice(needs, i) + 1;
         while x < json::next(t, read_slice(needs, i)) {
             if lookup(t, ids, n, x) < 0 {
-                write_slice(unknown, repeated, x);
+                write_slice(unknown, repeated, item(t, x));
                 repeated += 1;
             }
             x = json::next(t, x);
@@ -185,14 +185,17 @@ fn work(t: &[]i64, a: i64, ids: &mut []i64, durations: &mut []i64, needs: &mut [
         discard output::unknown();
         return emit(t, unknown, repeated);
     }
+    discard graph(t, ids, needs, n, edges);
+    discard std_graph::prepare(done, edges);
     let mut removed = 0;
     let mut progress = true;
     while progress {
         progress = false;
         i = 0;
         while i < n {
-            if read_slice(done, i) == 0 && ready(t, ids, needs, done, n, i) {
-                write_slice(done, i, 1);
+            if std_graph::ready(done, cast<u64>(i)) {
+                discard std_graph::take_ready(done, cast<u64>(i));
+                discard std_graph::complete(done, edges, cast<u64>(i));
                 removed += 1;
                 progress = true;
             }
@@ -202,7 +205,7 @@ fn work(t: &[]i64, a: i64, ids: &mut []i64, durations: &mut []i64, needs: &mut [
     if removed < n {
         i = 0;
         while i < n {
-            if read_slice(done, i) == 0 {
+            if read_slice(done, i) != - 1 {
                 write_slice(unknown, repeated, read_slice(ids, i));
                 repeated += 1;
             }
@@ -211,18 +214,14 @@ fn work(t: &[]i64, a: i64, ids: &mut []i64, durations: &mut []i64, needs: &mut [
         discard output::cycle();
         return emit(t, unknown, repeated);
     }
-    i = 0;
-    while i < n {
-        write_slice(done, i, 0);
-        i += 1;
-    }
+    discard std_graph::prepare(done, edges);
     discard output::order();
     removed = 0;
     while removed < n {
         let mut chosen = - 1;
         i = 0;
         while i < n && chosen < 0 {
-            if read_slice(done, i) == 0 && ready(t, ids, needs, done, n, i) {
+            if std_graph::ready(done, cast<u64>(i)) {
                 chosen = i;
             }
             i += 1;
@@ -230,7 +229,7 @@ fn work(t: &[]i64, a: i64, ids: &mut []i64, durations: &mut []i64, needs: &mut [
         if removed > 0 {
             discard output::comma();
         }
-        discard json::quoted(t, read_slice(ids, chosen));
+        discard json::quoted(t, read_slice(ids, chosen).value);
         let mut start = 0;
         let mut d = read_slice(needs, chosen) + 1;
         while d < json::next(t, read_slice(needs, chosen)) {
@@ -241,15 +240,12 @@ fn work(t: &[]i64, a: i64, ids: &mut []i64, durations: &mut []i64, needs: &mut [
             d = json::next(t, d);
         }
         write_slice(finish, chosen, start + read_slice(durations, chosen));
-        write_slice(done, chosen, 1);
+        discard std_graph::take_ready(done, cast<u64>(chosen));
+        discard std_graph::complete(done, edges, cast<u64>(chosen));
         removed += 1;
     }
     discard output::layers();
-    i = 0;
-    while i < n {
-        write_slice(done, i, 0);
-        i += 1;
-    }
+    discard std_graph::prepare(done, edges);
     removed = 0;
     let mut rounds = 0;
     while removed < n {
@@ -260,8 +256,8 @@ fn work(t: &[]i64, a: i64, ids: &mut []i64, durations: &mut []i64, needs: &mut [
         let mut count = 0;
         i = 0;
         while i < n {
-            if read_slice(done, i) == 0 && ready(t, ids, needs, done, n, i) {
-                write_slice(unknown, count, i);
+            if std_graph::ready(done, cast<u64>(i)) {
+                write_slice(unknown, count, marker(i));
                 count += 1;
             }
             i += 1;
@@ -271,9 +267,10 @@ fn work(t: &[]i64, a: i64, ids: &mut []i64, durations: &mut []i64, needs: &mut [
             if i > 0 {
                 discard output::comma();
             }
-            let j = read_slice(unknown, i);
-            discard json::quoted(t, read_slice(ids, j));
-            write_slice(done, j, 1);
+            let j = read_slice(unknown, i).value;
+            discard json::quoted(t, read_slice(ids, j).value);
+            discard std_graph::take_ready(done, cast<u64>(j));
+            discard std_graph::complete(done, edges, cast<u64>(j));
             i += 1;
         }
         removed += count;
@@ -288,7 +285,7 @@ fn work(t: &[]i64, a: i64, ids: &mut []i64, durations: &mut []i64, needs: &mut [
             discard output::comma();
         }
         discard output::id();
-        discard json::quoted(t, read_slice(ids, i));
+        discard json::quoted(t, read_slice(ids, i).value);
         discard output::start();
         let f = read_slice(finish, i);
         discard json::number(f - read_slice(durations, i));
@@ -321,21 +318,27 @@ fn run(heap: allocator, t: &[]i64, p: i64) -> i64 {
     }
 }
 fn storage(t: &[]i64, heap: allocator, a: i64) -> Outcome {
-    let mut ids = try std_collections::filled::< i64 >(heap, 128u64, 0);
+    let mut ids = try std_collections::filled::< std_order::Item >(heap, 128u64, marker(0));
     let mut durations = try std_collections::filled::< i64 >(heap, 128u64, 0);
     let mut needs = try std_collections::filled::< i64 >(heap, 128u64, 0);
-    let mut done = try std_collections::filled::< i64 >(heap, 128u64, 0);
+    let mut done = try std_collections::filled::< i64 >(heap, cast<u64>(schema::count(t, a)), 0);
     let mut finish = try std_collections::filled::< i64 >(heap, 128u64, 0);
-    let mut unknown = try std_collections::filled::< i64 >(heap, 16384u64, 0);
-    let mut scratch = try std_collections::filled::< i64 >(heap, 128u64, 0);
-    borrow mut ids[0..len_buffer(ids)] as ids_view {
-        borrow mut durations[0..len_buffer(durations)] as durations_view {
-            borrow mut needs[0..len_buffer(needs)] as needs_view {
-                borrow mut done[0..len_buffer(done)] as done_view {
-                    borrow mut finish[0..len_buffer(finish)] as finish_view {
-                        borrow mut unknown[0..len_buffer(unknown)] as unknown_view {
-                            borrow mut scratch[0..len_buffer(scratch)] as scratch_view {
-                                return new Outcome.ok(work(t, a, ids_view, durations_view, needs_view, done_view, finish_view, unknown_view, scratch_view));
+    let mut unknown = try std_collections::filled::< std_order::Item >(heap, 16384u64, marker(0));
+    let mut scratch = try std_collections::filled::< std_order::Item >(heap, 128u64, marker(0));
+    let mut edges = try std_collections::filled::< std_graph::Edge >(heap, edge_count(t, a), new std_graph::Edge {
+        from: 0u64,
+        to: 0u64
+    });
+    borrow mut edges[0..len_buffer(edges)] as edges_view {
+        borrow mut ids[0..len_buffer(ids)] as ids_view {
+            borrow mut durations[0..len_buffer(durations)] as durations_view {
+                borrow mut needs[0..len_buffer(needs)] as needs_view {
+                    borrow mut done[0..len_buffer(done)] as done_view {
+                        borrow mut finish[0..len_buffer(finish)] as finish_view {
+                            borrow mut unknown[0..len_buffer(unknown)] as unknown_view {
+                                borrow mut scratch[0..len_buffer(scratch)] as scratch_view {
+                                    return new Outcome.ok(work(t, a, ids_view, durations_view, needs_view, done_view, finish_view, unknown_view, scratch_view, edges_view));
+                                }
                             }
                         }
                     }

@@ -3,6 +3,7 @@ module json;
 import io;
 import std_json;
 import std_text;
+import std_ascii;
 export equal;
 export integer;
 export text;
@@ -32,24 +33,23 @@ fn identifier(t: &[]i64, p: i64) -> bool {
     }
     let start = std_json::get(t, p, 1);
     let end = std_json::get(t, p, 2);
-    if end - start < 1 || end - start > 32 {
-        return false;
+    let head = new std_ascii::Class {
+        lower: true,
+        upper: false,
+        digit: false,
+        underscore: false,
+        hyphen: false
+    };
+    let tail = new std_ascii::Class {
+        lower: true,
+        upper: false,
+        digit: true,
+        underscore: true,
+        hyphen: true
+    };
+    borrow t[cast<u64>(start)..cast<u64>(end)] as name {
+        return std_ascii::matches::< i64 >(name, head, tail, 1u64, 32u64);
     }
-    let mut i = start;
-    while i < end {
-        let c = read_slice(t, i);
-        if i == start {
-            if c < 97 || c > 122 {
-                return false;
-            }
-        } else {
-            if !(c >= 97 && c <= 122) && !(c >= 48 && c <= 57) && c != 45 && c != 95 {
-                return false;
-            }
-        }
-        i += 1;
-    }
-    return true;
 }
 fn text(s: &[]u8) -> i64 {
     return std_text::emit(s);

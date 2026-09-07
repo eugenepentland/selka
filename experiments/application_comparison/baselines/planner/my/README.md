@@ -29,7 +29,8 @@ Python is used exclusively for independent subprocess tests; it is not imported,
   through standard JSON tape queries. Node zero represents a missing field.
 - `planner.my` resolves names, completes ordered validation phases and computes
   the contractual lexicographic order, synchronous layers and critical-path times.
-  Its seven bounded scratch buffers use `std_collections::filled`.
+  Its bounded scratch buffers use `std_collections::filled`; `std_order` handles
+  descriptor sorting/name lookup and `std_graph` handles dependency readiness.
 - `output.my` holds the fixed application report punctuation and error messages.
 - `test_cli.py` retains independent construction expectations and adds migration
   boundaries; `stress_cli.py` preserves upper-bound resource reproducers.
@@ -41,9 +42,10 @@ bounds, depth 64, and finite binary64 decimals including extreme underflow.
 The bounded `std_format` decimal parser is not used here. This migration does not
 move any planner policy into a native host bridge.
 
-Seven owned graph buffers have capacities 128 for IDs, durations, dependencies,
-completion state, finish times and temporary sorting, plus 16,384 for unknown
-references. The input is capped at 1 MiB; JSON tape storage is separately bounded
+Eight owned graph buffers cover up to 128 jobs and 16,384 dependency references.
+IDs and sorting scratch use `std_order::Item` descriptors, state is sized to the
+actual job count, and `std_graph::Edge` storage to the actual reference count.
+`std_ascii::matches` recognizes the exact bounded identifier pattern. The input is capped at 1 MiB; JSON tape storage is separately bounded
 by the standard parser. Allocation failure remains a nonzero application status
 for scratch allocation so the host discards buffered output. Input/parser errors
 produce the contract's whole-request error before any result publication.

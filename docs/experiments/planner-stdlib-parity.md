@@ -1,6 +1,6 @@
 # Planner standard-library preparation — 2026-09-07
 
-Status: baseline migration in progress; **not a timed application trial and not a
+Status: baseline migration implemented; **not a timed application trial and not a
 scored-cohort readiness receipt**. This audit follows the standard-library-first
 rule in [the comparison plan](application-comparison.md). Original calibration
 snapshots, task observations and timings remain unchanged.
@@ -40,10 +40,10 @@ Actual comparator implementations reviewed:
 | Structural JSON access | dict/list; `std.json.Value` | `std_json::get/field/equal/compare`; immutable preorder nodes plus decoded UTF-8 |
 | Output representation | `json.dump`; `std.json.Stringify.valueAlloc` | General `std_json_builder` exists; this schema-specific renderer retains fixed punctuation and ASCII-only identifier quoting, using `std_text` number/output primitives |
 | Scratch lists | list; `std.ArrayList`/arena | `std_collections::filled<i64>` creates bounded owned scratch; 16,384 references fit the contract |
-| Lexicographic sorting with document context | `sorted`; `std.mem.sort` | Contextual standard sorting is being prepared separately; migration must retain O(n log n) behavior for 16,384 unknown names |
+| Lexicographic sorting with document context | `sorted`; `std.mem.sort` | `std_order::sort/lower_bound` over decoded-range descriptors; removed local sorting/binary-search algorithms; sort retains O(n log n) behavior for 16,384 names |
 | Counters and membership | `Counter`, set/dict; Zig loops | Bounded byte hash APIs cover 32-byte application identifiers; reusable counter API is being prepared separately. Node indices are not string equality keys |
-| Ready queue and dependency ordering | `heapq`; generic Python `graphlib` available | Standard priority/readiness APIs are being prepared separately; planner policy (validation precedence, lexical tie-break, layers, times) remains application code |
-| Identifier recognition | Python's fixed `re` pattern; Zig byte predicates | Explicit bounded ASCII application predicate. General regex equivalence is not claimed |
+| Ready queue and dependency ordering | `heapq`; generic Python `graphlib` available | `std_graph::prepare/ready/take_ready/complete` now supplies readiness and cycle-state propagation; `std_order` supplies an available priority queue. Application scans ready sorted IDs to implement its lexical policy |
+| Identifier recognition | Python's fixed `re` pattern; Zig byte predicates | `std_ascii::matches` supplies bounded head/tail character-class recognition for the exact required pattern. General regex equivalence is not claimed |
 | Data model and tests | dataclass/tuple; Zig structs and `std.testing` | Language records/buffers plus compiler and public byte-host checks; coordinator testing is separate infrastructure |
 
 The reusable JSON implementation lives in
@@ -94,9 +94,39 @@ belong to **library/compiler preparation**. Total agent wall time, turns, tokens
 compute cost and human effort were not captured by a trial ledger and remain
 unknown; test-process durations above must not substitute for those costs.
 
-Before timing, complete contextual sorting and other required generic APIs,
-independently review the dependency matrix and retained renderer choices, rerun
+Before timing, independently review contextual sorting and other required generic APIs,
+review the dependency matrix and retained renderer choices, rerun
 common three-language conformance, verify maximum workload quotas, and freeze
 compiler/library/bridge/source hashes. Review whether regex or richer graph
 requirements in future tasks expand the capability inventory before task authoring.
 Passing this migration's checks alone does not authorize a scored cohort.
+
+## Final source-level library integration check
+
+The follow-up migration uses `std_order::Item` descriptors for IDs and sorting
+scratch, with the JSON node as payload and its decoded range as key. Generic
+sort/lower-bound implementations replace application algorithms. Three separate
+`std_graph` passes implement validation, lexical order and synchronous layers;
+application timing/precedence policy is unchanged. The identifier pattern is now
+two `std_ascii::Class` values and a `matches` call. The language currently cannot
+pass borrowed document context through an indirect comparator callback, so the
+library uses explicit descriptors instead of a private compiler exception.
+
+The graph has eight owned scratch buffers: IDs and sorting descriptors (128,
+128 and 16,384), three 128-word timing/dependency arrays, a state array sized to
+the actual job count and an edge array sized to actual references (at most
+16,384). Edges are resolved only after unknown-dependency validation, and remain
+unchanged during each graph pass. General integer counters and hash maps are
+available library choices; this baseline retains the sort-and-scan validation
+strategy also used by the Zig baseline, without reimplementing a counter or heap.
+
+[Retained source-level check evidence](../../experiments/validation/planner-parity-20260907/receipt.json)
+records the ReleaseFast host and new-module hashes. All 12 CLI groups passed
+(1.566 seconds); dense-cycle and maximum-distinct-unknown checks passed (3.478 and
+5.958 seconds). New modules were temporarily loaded from the library worktree as
+source, not embedded in that host; those temporary files are not committed into
+the application. Hashes are observed after the checks rather than a claim of a
+sealed module snapshot during concurrent library work. Repeat common conformance
+against the final embedded libraries before freezing a cohort. Optimization and
+representation changed between preparation stages: these durations must not be
+used as a causal performance comparison.
