@@ -36,3 +36,12 @@ Debug and ReleaseFast, including nested variants and zero-length arrays. Domain
 codec execution is still rejected before emission: implementing it requires
 compiled codec calls and recoverable traps with preserved caller state. Thus
 native coverage of the current language remains incomplete.
+
+`tests/native_json_benchmark.py --compiler zig-out/bin/mylang --zig PATH` measures
+200 nested composite roundtrips, checks the same checksum, and reports three-sample
+median process times separately from native compilation. A local run measured
+0.111 s for the supplied development VM binary, 0.00264 s for ReleaseFast native,
+and 2.88 s to generate/build native code. These are workload observations, not a
+backend-only speed comparison: VM timings include loading, checking and compiling
+the source, and optimization settings differ. Rerun on the intended toolchain and
+machine before making performance decisions.
