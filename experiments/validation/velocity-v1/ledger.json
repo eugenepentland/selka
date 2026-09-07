@@ -1,0 +1,14 @@
+{
+  "version": "velocity-iteration-v1",
+  "started_utc": "2026-09-07T23:41:57Z",
+  "base_revision": "ed99a52",
+  "status": "implementing",
+  "scored": false,
+  "exact_model_id": null,
+  "model_turns": null,
+  "tokens": null,
+  "cost": null,
+  "preparation_events": [],
+  "validation": [],
+  "trials": []
+}

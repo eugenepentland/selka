@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "/home/epentland/ai/canopy/mylang/tests/diagnostic_output.py", line 149, in <module>
+    main()
+    ~~~~^^
+  File "/home/epentland/ai/canopy/mylang/tests/diagnostic_output.py", line 143, in main
+    export_placement(compiler, root)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^
+  File "/home/epentland/ai/canopy/mylang/tests/diagnostic_output.py", line 75, in export_placement
+    error = problem(messages, 'E_EXPORT_PLACEMENT')
+  File "/home/epentland/ai/canopy/mylang/tests/diagnostic_output.py", line 24, in problem
+    assert len(found) == 1, (code, messages)
+           ^^^^^^^^^^^^^^^
+AssertionError: ('E_EXPORT_PLACEMENT', [{'version': 'diagnostic-v1', 'kind': 'diagnostic', 'diagnostic': {'code': 'E_SYNTAX', 'severity': 'error', 'message': 'unexpected token; expected kw_fn', 'location': {'path': 'main.my', 'start': {'line': 3, 'column': 1}, 'end': {'line': 3, 'column': 7}, 'bytes': {'start': 41, 'end': 47}}, 'notes': [], 'stack': {'frames': [], 'omitted': 0}}}])

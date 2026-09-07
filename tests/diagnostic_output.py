@@ -65,6 +65,21 @@ def single_files(compiler, root):
         assert invalid.returncode == 2 and invalid.stdout == '' and invalid.stderr.startswith('usage:')
 
 
+def export_placement(compiler, root):
+    entry = root / 'main.my'
+    for declaration in ('fn value()->i64{return 42;}', 'struct Value { n:i64 }'):
+        name = 'value' if declaration.startswith('fn') else 'Value'
+        bad = 'module main;\n' + declaration + '\nexport ' + name + ';\nfn main()->i64{return 42;}'
+        entry.write_text(bad)
+        _, messages = invoke(compiler, 'check-project', entry, status=1)
+        error = problem(messages, 'E_EXPORT_PLACEMENT')
+        assert 'after imports' in error['message'] and 'before type or function' in error['message']
+        span = error['location']['bytes']
+        assert bad.encode()[span['start']:span['end']] == b'export'
+        entry.write_text('module main;export ' + name + ';' + declaration + 'fn main()->i64{return 42;}')
+        assert invoke(compiler, 'run-project', entry) == ('42\n', [])
+
+
 def modules(compiler, root):
     entry, helper = root / 'main.my', root / 'helper.my'
     entry.write_text('module main;import helper;fn main()->i64{let n=9;borrow n as r{borrow helper::work::<bool>(r) as value{return read_ref(value);}}}')
@@ -125,6 +140,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='mylang-diagnostic-output-') as directory:
         root = Path(directory)
         single_files(compiler, root)
+        export_placement(compiler, root)
         modules(compiler, root)
     print('JSON diagnostics: source errors, warnings, module notes, VM traces, auxiliary failures, text compatibility and cached session replay passed')
 

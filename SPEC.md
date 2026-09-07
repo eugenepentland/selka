@@ -39,6 +39,8 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [OWN-12] Releases arena backing and owners across every injected host allocation failure in the execution scenario.
 ## Projects and native output
 
+- [EXPORT-PLACEMENT-1] An export after a type or function declaration rejects with located E_EXPORT_PLACEMENT and instructs moving it after imports and before declarations. Header export semantics and privacy checks are unchanged.
+
 - [PROJ-1] Loads shared module dependencies once in dependency order and releases state on allocation failure.
 - [PROJ-2] Reports module cycles with both the importing location and the related source location.
 - [PROJ-3] Rejects duplicate exports, missing exported symbols, and private types exposed through public interfaces.

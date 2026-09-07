@@ -16,9 +16,11 @@ def command_plan(language, application, arm, *, practice=False):
     return commands[2:] if practice else (commands if arm == 'main' else commands[1:])
 
 
-def freeze(language, application, arm, *, zig=None, guardian=None, byte_io=None, compiler=None, navigate=None):
+def freeze(language, application, arm, *, zig=None, guardian=None, byte_io=None, compiler=None, navigate=None, workflow=None):
     if language not in ('my', 'python', 'zig') or application not in ('planner', 'eda') or arm not in ('main', 'language-focused'):
         raise ValueError('invalid trial condition')
+    if workflow is not None and (language != 'my' or arm != 'main' or not Path(workflow).is_dir()):
+        raise ValueError('workflow directory requires the main my arm')
     limits = Limits(wall_seconds=60, cpu_seconds=60, memory_bytes=4 * 1024**3)
     tools = {}
     if language == 'python':
@@ -32,6 +34,8 @@ def freeze(language, application, arm, *, zig=None, guardian=None, byte_io=None,
             if compiler is None or navigate is None:
                 raise ValueError('main my arm requires installed compiler and navigation client')
             tools.update(compiler=str(Path(compiler).resolve(strict=True)), navigate=str(Path(navigate).resolve(strict=True)))
+        if workflow is not None:
+            tools['workflow'] = str(Path(workflow).resolve(strict=True))
         task = freeze_adapter(language, tools, command_plan(language, application, arm), limits)
         practice = task
     else:
@@ -46,7 +50,7 @@ def freeze(language, application, arm, *, zig=None, guardian=None, byte_io=None,
         else:
             task = freeze_adapter(language, tools, command_plan(language, application, arm), limits)
     environment = environment_receipt.capture(tools=environment_receipt.session_tools(tools, task, practice))
-    body = {'version': 'application-trial-configuration-v2', 'language': language,
+    body = {'version': 'application-trial-configuration-v3' if workflow is not None else 'application-trial-configuration-v2', 'language': language,
             'application': application, 'arm': arm, 'tools': tools,
             'task_adapter': task, 'practice_adapter': practice, 'environment': environment,
             'scored_launch_authorized': False}
@@ -59,7 +63,7 @@ def validate(configuration):
     if not isinstance(configuration, dict) or set(configuration) != fields:
         raise ValueError('invalid trial configuration fields')
     body = {key: value for key, value in configuration.items() if key != 'sha256'}
-    if configuration.get('version') not in ('application-trial-configuration-v1', 'application-trial-configuration-v2') or digest(body) != configuration.get('sha256'):
+    if configuration.get('version') not in ('application-trial-configuration-v1', 'application-trial-configuration-v2', 'application-trial-configuration-v3') or digest(body) != configuration.get('sha256'):
         raise ValueError('trial configuration changed')
     if configuration['scored_launch_authorized'] is not False:
         raise ValueError('configuration does not authorize scored launch')
@@ -67,8 +71,12 @@ def validate(configuration):
     if language not in ('my', 'python', 'zig') or application not in ('planner', 'eda') or arm not in ('main', 'language-focused'):
         raise ValueError('invalid trial condition')
     tool_names = {'python': set(), 'my': {'byte_io'}, 'zig': {'zig'}}[language]
-    if configuration['version'] == 'application-trial-configuration-v2' and language == 'my' and arm == 'main':
+    if configuration['version'] in ('application-trial-configuration-v2', 'application-trial-configuration-v3') and language == 'my' and arm == 'main':
         tool_names |= {'compiler', 'navigate'}
+    if configuration['version'] == 'application-trial-configuration-v3':
+        if language != 'my' or arm != 'main':
+            raise ValueError('workflow configuration requires main my arm')
+        tool_names.add('workflow')
     if not isinstance(configuration['tools'], dict) or set(configuration['tools']) != tool_names:
         raise ValueError('participant tool inventory mismatch')
     for practice, adapter in ((False, configuration['task_adapter']), (True, configuration['practice_adapter'])):

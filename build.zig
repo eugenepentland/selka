@@ -313,6 +313,10 @@ pub fn build(b: *std.Build) void {
     navigation_tests.addFileArg(exe.getEmittedBin());
     navigation_tests.setCwd(b.path("."));
     test_step.dependOn(&navigation_tests.step);
+    const project_workflow = b.addSystemCommand(&.{ "python3", "tests/project_workflow.py", "--compiler" });
+    project_workflow.addFileArg(exe.getEmittedBin());
+    project_workflow.setCwd(b.path("."));
+    test_step.dependOn(&project_workflow.step);
     const schemas = b.addSystemCommand(&.{ "python3", "tests/schemas.py", "--compiler" });
     schemas.addFileArg(exe.getEmittedBin());
     schemas.setCwd(b.path("."));

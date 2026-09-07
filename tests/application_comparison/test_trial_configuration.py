@@ -63,6 +63,24 @@ class TrialConfigurationTests(unittest.TestCase):
             with self.subTest(mutation=mutate), self.assertRaises(ValueError):
                 config.validate(changed)
 
+    def test_workflow_directory_is_bound_only_in_version_three_my_main(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            host = root / 'host'
+            host.write_text('tool')
+            workflow = root / 'workflow'
+            workflow.mkdir()
+            (workflow / 'project.py').write_text('pass')
+            item = config.freeze('my', 'planner', 'main', byte_io=host, compiler=host, navigate=host, workflow=workflow)
+            config.validate(item)
+            self.assertEqual('application-trial-configuration-v3', item['version'])
+            self.assertEqual(str(workflow), item['tools']['workflow'])
+            (workflow / 'project.py').write_text('changed')
+            with self.assertRaises(ValueError):
+                config.verify(item)
+        with self.assertRaisesRegex(ValueError, 'workflow directory'):
+            config.freeze('python', 'planner', 'main', workflow='/usr/bin')
+
     def test_missing_toolchain_or_gate_rejects(self):
         with self.assertRaisesRegex(ValueError, 'complete Zig'):
             config.freeze('zig', 'planner', 'main')

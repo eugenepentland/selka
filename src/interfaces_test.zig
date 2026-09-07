@@ -564,3 +564,9 @@ test "generic execution retains module identities and ordinary public schema roo
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), genericExecutionScenario, .{});
 }
+
+// spec: EXPORT-PLACEMENT-1
+test "misplaced exports identify the header repair" {
+    try reject("module main; fn value()->i64{return 42;} export value;", "E_EXPORT_PLACEMENT");
+    try reject("module main; struct Value { n:i64 } export Value;", "E_EXPORT_PLACEMENT");
+}
