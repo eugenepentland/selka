@@ -34,6 +34,8 @@ class Scheduler:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         self.lease, self.aging = lease, aging
         self.client_lease = max(lease * 3, 1)
+        with sqlite3.connect(self.path, timeout=30, isolation_level=None) as setup:
+            setup.execute('PRAGMA journal_mode=WAL')
         with self._transaction() as db:
             db.executescript('''
                 CREATE TABLE IF NOT EXISTS config(id INTEGER PRIMARY KEY, cpus REAL, memory REAL, workers INTEGER);
@@ -51,11 +53,11 @@ class Scheduler:
                 raise ValueError('shared scheduler resource configuration differs')
 
     @contextlib.contextmanager
-    def _transaction(self):
+    def _transaction(self, *, write=True):
         db = sqlite3.connect(self.path, timeout=30, isolation_level=None)
         db.row_factory = sqlite3.Row
         try:
-            db.execute('BEGIN IMMEDIATE')
+            db.execute('BEGIN IMMEDIATE' if write else 'BEGIN')
             yield db
             if db.in_transaction:
                 db.commit()
@@ -96,8 +98,8 @@ class Scheduler:
                 db.execute("UPDATE jobs SET state='cancelled',generation=generation+1 WHERE key=? AND state IN ('queued','running')", (key,))
 
     def claim(self, key, owner):
-        now = time.time()
         with self._transaction() as db:
+            now = time.time()
             db.execute('DELETE FROM subscribers WHERE deadline<?', (now,))
             db.execute("UPDATE jobs SET state='cancelled',generation=generation+1 WHERE state IN ('queued','running') AND NOT EXISTS (SELECT 1 FROM subscribers s WHERE s.key=jobs.key)")
             db.execute("UPDATE jobs SET state='queued',owner=NULL WHERE state='running' AND deadline<?", (now,))
@@ -133,7 +135,7 @@ class Scheduler:
                               (json.dumps(result), time.time(), key, owner, generation, time.time())).rowcount == 1
 
     def status(self, key):
-        with self._transaction() as db:
+        with self._transaction(write=False) as db:
             row = db.execute('SELECT * FROM jobs WHERE key=?', (key,)).fetchone()
             if row is None:
                 return None
@@ -152,9 +154,12 @@ class Scheduler:
         client = client or uuid.uuid4().hex
         owner = uuid.uuid4().hex
         self.submit(key, client, **resources)
+        next_touch = time.monotonic() + self.client_lease / 3
         try:
             while True:
-                self.touch(key, client)
+                if time.monotonic() >= next_touch:
+                    self.touch(key, client)
+                    next_touch = time.monotonic() + self.client_lease / 3
                 if cancel is not None and cancel.is_set():
                     raise Cancelled(key)
                 state = self.status(key)
@@ -166,7 +171,7 @@ class Scheduler:
                     return result
                 if state['state'] == 'cancelled':
                     raise Cancelled(key)
-                token = self.claim(key, owner)
+                token = self.claim(key, owner) if state['state'] == 'queued' or state['deadline'] < time.time() else None
                 if token is None:
                     time.sleep(0.02)
                     continue

@@ -1,6 +1,7 @@
 import concurrent.futures
 import json
 import subprocess
+import sqlite3
 import sys
 import tempfile
 import threading
@@ -17,6 +18,23 @@ class SchedulerTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)
         self.scheduler = Scheduler(Path(self.temporary.name)/'queue.db', cpus=2, memory=512, workers=2, lease=.15, aging=.05)
+
+    def test_claim_lease_starts_after_database_lock_wait(self):
+        self.scheduler.submit('delayed', 'client')
+        locked = threading.Event()
+        def holder():
+            with sqlite3.connect(self.scheduler.path, isolation_level=None) as db:
+                db.execute('BEGIN IMMEDIATE')
+                locked.set()
+                time.sleep(.25)
+                db.commit()
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            holding = pool.submit(holder)
+            self.assertTrue(locked.wait(2))
+            token = self.scheduler.claim('delayed', 'owner')
+            holding.result()
+        self.assertIsNotNone(token)
+        self.assertTrue(self.scheduler.publish('delayed', 'owner', token, {'passed': True}))
 
     def test_ten_clients_coalesce(self):
         barrier = threading.Barrier(10)
