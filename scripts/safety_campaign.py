@@ -9,6 +9,8 @@ import subprocess
 import tempfile
 import time
 
+import safety_interactions
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -24,7 +26,7 @@ def templates(rng):
     arena = (ROOT / 'examples/arenas.my').read_text().replace('append_buffer<Change>(buffer, 8)',
                                                             f'append_buffer<Change>(buffer, {a})')
     return [(concrete, a + b, 'concrete-arithmetic'), (generic, a + b, 'generic-copy'),
-            (arena, 42 + a, 'arena-pool-buffer-result')]
+            (arena, 42 + a, 'arena-pool-buffer-result'), *safety_interactions.templates(rng)]
 
 
 def execute(compiler, source, path, action):
@@ -96,6 +98,7 @@ def campaign(compiler, seed, rounds, output):
     report = {'version': 'safety-campaign-v1', 'seed': seed, 'rounds': rounds,
               'compiler_sha256': identity, 'generator_sha256': digest(Path(__file__).read_bytes()),
               'template_sha256': digest((ROOT / 'examples/arenas.my').read_bytes()),
+              'interaction_generator_sha256': digest(Path(safety_interactions.__file__).read_bytes()),
               'coverage': {'kind': 'case-families-not-code-coverage', 'families': sorted({r['family'] for r in rows})},
               'passed': all(r['passed'] for r in rows), 'cases': rows}
     output.parent.mkdir(parents=True, exist_ok=True)

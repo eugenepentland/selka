@@ -19,7 +19,22 @@ these retained runs, not a source-language failure.
 
 This is deterministic family coverage, not instrumented code coverage or a
 soundness proof. It complements the existing exhaustive allocator-failure tests.
-JSON/host failure combinations, new split borrows, stored views, and actual
+The later `campaign-interactions-{debug,releasefast}-20260907.json` reports each
+pass 480 cases (120 generated executions and 360 mutations), adding typed JSON
+success/budget paths inside arenas, generic whole-owner references, checked split
+siblings and immutable snapshots. Their source/helper hashes pin their generators.
+
+`python3 scripts/safety_host_interactions.py --runner zig-out/bin/mylang-io --output report.json`
+adds real byte-host interactions. The retained Debug/ReleaseFast host reports each
+pass 60 cases: JSON backing inside an arena, normal copied output, provider failure,
+and callback-budget exhaustion. Failures must have the expected trap code, suppress
+unpublished output and leave zero requested live bytes after cleanup. These reports
+pin the byte runner separately from the compiler CLI.
+
+Initial local generator trials used an untyped zero against u64 slice lengths,
+an owner without an explicit borrow, an incomplete host module and an incorrect
+runner flag. Corrected fixtures passed before the retained reports; these were
+campaign setup failures rather than compiler defects. Stored views and actual
 coverage-guided compiler/runtime fuzzing remain extensions to this campaign.
 Unexpected compiler infrastructure failures are retained rather than counted as
 successful rejection. Minimized candidates are diagnostic artifacts; they need

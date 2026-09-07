@@ -42,3 +42,8 @@ current model, not guarantees supplied by a future backend or thread system.
 Scalar constants may call bounded nongeneric source functions with scalar locals and control flow; see [source-evaluation.md](source-evaluation.md).
 
 [Runtime memory reports](experiments/runtime-memory-budgets.md) distinguish logical slots, guest backing and bookkeeping. Typed holes, bounded VM traces, in-memory host replay and named executable laws are experimental agent-facing tools; comparative productivity evidence remains pending.
+
+Run `python3 tests/feature_surface.py --compiler zig-out/bin/mylang --output receipt.json`
+to execute the documented binary64/constant/split examples and verify explicit
+unsupported syntax and unresolved-hole rejection. The receipt pins the executable,
+feature report and case source hashes; it complements the broader acceptance suite.
