@@ -1,0 +1,43 @@
+module main;
+import std_io;
+import std_fs;
+fn main(heap: allocator, fs: filesystem_cap) -> i64 {
+    match std_fs::open(heap, fs, "data", new std_fs::Mode.write_existing) {
+        std_fs::Open.err(discard) => {
+            return - 1;
+        },
+        std_fs::Open.ok(file) => {
+            match std_io::write_all(std_io::writer(file), "hello") {
+                std_io::Writing.err(discard) => {
+                    return - 2;
+                },
+                std_io::Writing.ok(written) => {
+                    if read_field(written, progress) != 5u64 {
+                        discard written;
+                        return - 3;
+                    }
+                    match std_io::flush(take_field(written, writer)) {
+                        std_io::Writing.ok(value) => {
+                            let count = read_field(value, progress);
+                            discard value;
+                            return cast<i64>(count);
+                        },
+                        std_io::Writing.err(failure) => {
+                            let count = read_field(failure, progress);
+                            match std_io::flush(take_field(failure, writer)) {
+                                std_io::Writing.err(discard) => {
+                                    return - 4;
+                                },
+                                std_io::Writing.ok(value) => {
+                                    let rest = read_field(value, progress);
+                                    discard value;
+                                    return cast<i64>(count + rest);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

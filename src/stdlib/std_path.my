@@ -1,0 +1,138 @@
+// Strict relative byte paths; no platform normalization or filesystem access.
+module std_path;
+import std_bytes;
+import std_result;
+export Span;
+export valid;
+export component;
+export basename;
+export dirname;
+export extension;
+export join;
+struct Span {
+    start: u64,
+    end: u64
+}
+fn valid(path: &[]u8) -> bool noalloc {
+    let size = len_slice(path);
+    if size == 0u64 || size > 4094u64 {
+        return false;
+    }
+    let mut start = 0u64;
+    let mut i = 0u64;
+    while i <= size {
+        if i == size || read_slice(path, i) == 47u8 {
+            let length = i - start;
+            if length == 0u64 {
+                return false;
+            }
+            if length == 1u64 && read_slice(path, start) == 46u8 {
+                return false;
+            }
+            if length == 2u64 && read_slice(path, start) == 46u8 && read_slice(path, start + 1u64) == 46u8 {
+                return false;
+            }
+            start = i + 1u64;
+        } else {
+            let byte = read_slice(path, i);
+            if byte == 0u8 || byte == 92u8 {
+                return false;
+            }
+        }
+        i += 1u64;
+    }
+    return true;
+}
+fn component(path: &[]u8, index: u64) -> std_result::Option<Span> noalloc {
+    if !valid(path) {
+        return new std_result::Option<Span>.none;
+    }
+    let mut start = 0u64;
+    let mut count = 0u64;
+    let mut i = 0u64;
+    while i <= len_slice(path) {
+        if i == len_slice(path) || read_slice(path, i) == 47u8 {
+            if count == index {
+                return new std_result::Option<Span>.some(new Span {
+                    start: start,
+                    end: i
+                });
+            }
+            start = i + 1u64;
+            count += 1u64;
+        }
+        i += 1u64;
+    }
+    return new std_result::Option<Span>.none;
+}
+fn basename(path: &[]u8) -> std_result::Option<Span> noalloc {
+    if !valid(path) {
+        return new std_result::Option<Span>.none;
+    }
+    let mut start = 0u64;
+    let mut i = 0u64;
+    while i < len_slice(path) {
+        if read_slice(path, i) == 47u8 {
+            start = i + 1u64;
+        }
+        i += 1u64;
+    }
+    return new std_result::Option<Span>.some(new Span {
+        start: start,
+        end: len_slice(path)
+    });
+}
+fn dirname(path: &[]u8) -> std_result::Option<Span> noalloc {
+    match basename(path) {
+        std_result::Option<Span>.none => {
+            return new std_result::Option<Span>.none;
+        },
+        std_result::Option<Span>.some(part) => {
+            if part.start == 0u64 {
+                return new std_result::Option<Span>.none;
+            }
+            return new std_result::Option<Span>.some(new Span {
+                start: 0u64,
+                end: part.start - 1u64
+            });
+        }
+    }
+}
+fn extension(path: &[]u8) -> std_result::Option<Span> noalloc {
+    match basename(path) {
+        std_result::Option<Span>.none => {
+            return new std_result::Option<Span>.none;
+        },
+        std_result::Option<Span>.some(part) => {
+            let mut dot = part.end;
+            let mut i = part.start + 1u64;
+            while i < part.end {
+                if read_slice(path, i) == 46u8 {
+                    dot = i;
+                }
+                i += 1u64;
+            }
+            if dot == part.end || dot + 1u64 == part.end {
+                return new std_result::Option<Span>.none;
+            }
+            return new std_result::Option<Span>.some(new Span {
+                start: dot + 1u64,
+                end: part.end
+            });
+        }
+    }
+}
+fn join(heap: allocator, parent: &[]u8, child: &[]u8, limit: u64) -> std_bytes::Built {
+    if !valid(parent) || !valid(child) {
+        return new std_bytes::Built.err(new std_result::Error {
+            category: new std_result::Category.malformed,
+            code: 1
+        });
+    }
+    let size = len_slice(parent) + 1u64 + len_slice(child);
+    if size > limit || size > 4094u64 {
+        return new std_bytes::Built.err(std_result::allocation_error(2));
+    }
+    let bytes = try std_bytes::create(heap, cast<i64>(size));
+    return std_bytes::append(try std_bytes::append(try std_bytes::append(bytes, parent), "/"), child);
+}

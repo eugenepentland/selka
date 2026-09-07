@@ -1,0 +1,135 @@
+// Typed scoped-provider requests; authority comes only from the supplied capability.
+module std_fs;
+import std_io;
+import std_path;
+import std_bytes;
+export ReadFileFailure;
+export ReadFile;
+export WriteFileFailure;
+export WriteFile;
+export read_file;
+export write_file;
+export Mode;
+export Open;
+export open;
+enum Mode {
+    read,
+    write_existing,
+    create_exclusive,
+    truncate_existing
+}
+result RawOpen {
+    ok: std_io::File,
+    err: i64
+}
+result Open {
+    ok: std_io::File,
+    err: std_io::Error
+}
+fn open(heap: allocator, fs: filesystem_cap, path: &[]u8, mode: Mode) -> Open {
+    if !std_path::valid(path) {
+        return new Open.err(new std_io::Error {
+            kind: new std_io::Kind.invalid_path,
+            code: 1
+        });
+    }
+    match std_bytes::create(heap, cast<i64>(len_slice(path) + 2u64)) {
+        std_bytes::Built.err(e) => {
+            return new Open.err(new std_io::Error {
+                kind: new std_io::Kind.allocation,
+                code: e.code
+            });
+        },
+        std_bytes::Built.ok(bytes) => {
+            match mode {
+                Mode.read => {
+                    return requested(restrict_resource<read, complete>(fs), bytes, "r:", path);
+                },
+                Mode.write_existing => {
+                    return requested(restrict_resource<write, complete>(fs), bytes, "w:", path);
+                },
+                Mode.create_exclusive => {
+                    return requested(restrict_resource<write, complete>(fs), bytes, "c:", path);
+                },
+                Mode.truncate_existing => {
+                    return requested(restrict_resource<write, complete>(fs), bytes, "t:", path);
+                }
+            }
+        }
+    }
+}
+fn requested(fs: filesystem_cap, bytes: std_bytes::Bytes, prefix: &[]u8, path: &[]u8) -> Open {
+    match std_bytes::append(bytes, prefix) {
+        std_bytes::Built.err(e) => {
+            return new Open.err(new std_io::Error {
+                kind: new std_io::Kind.allocation,
+                code: e.code
+            });
+        },
+        std_bytes::Built.ok(first) => {
+            match std_bytes::append(first, path) {
+                std_bytes::Built.err(e) => {
+                    return new Open.err(new std_io::Error {
+                        kind: new std_io::Kind.allocation,
+                        code: e.code
+                    });
+                },
+                std_bytes::Built.ok(request) => {
+                    match acquire_resource<RawOpen>(fs, request) {
+                        RawOpen.ok(file) => {
+                            return new Open.ok(file);
+                        },
+                        RawOpen.err(code) => {
+                            return new Open.err(std_io::provider_error(code));
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+struct ReadFileFailure { bytes: std_bytes::Bytes, cause: std_io::Error, progress: u64 }
+result ReadFile { ok: std_bytes::Bytes, err: ReadFileFailure }
+struct WriteFileFailure { cause: std_io::Error, progress: u64 }
+result WriteFile { ok: u64, err: WriteFileFailure }
+fn read_file(heap: allocator, fs: filesystem_cap, path: &[]u8, output: std_bytes::Bytes, limit: u64) -> ReadFile {
+    match open(heap, fs, path, new Mode.read) {
+        Open.err(cause) => { return new ReadFile.err(new ReadFileFailure { bytes: output, cause: cause, progress: 0u64 }); },
+        Open.ok(file) => {
+            match std_io::read_to_end(std_io::reader(file), output, limit) {
+                std_io::Collected.err(failure) => {
+                    return new ReadFile.err(new ReadFileFailure { cause: read_field(failure, cause),
+                        progress: read_field(failure, progress), bytes: take_field(failure, bytes) });
+                },
+                std_io::Collected.ok(value) => { return new ReadFile.ok(take_field(value, bytes)); }
+            }
+        }
+    }
+}
+fn write_file(heap: allocator, fs: filesystem_cap, path: &[]u8, mode: Mode, source: &[]u8) -> WriteFile {
+    match open(heap, fs, path, mode) {
+        Open.err(cause) => { return new WriteFile.err(new WriteFileFailure { cause: cause, progress: 0u64 }); },
+        Open.ok(file) => {
+            match std_io::write_all(std_io::writer(file), source) {
+                std_io::Writing.err(failure) => {
+                    let cause = read_field(failure, cause);
+                    let accepted = read_field(failure, progress);
+                    let state = take_field(failure, writer);
+                    let pending = read_field(state, length);
+                    return new WriteFile.err(new WriteFileFailure { cause: cause, progress: accepted - pending });
+                },
+                std_io::Writing.ok(value) => {
+                    match std_io::finish(take_field(value, writer)) {
+                        std_io::Finished.ok(discard) => { return new WriteFile.ok(len_slice(source)); },
+                        std_io::Finished.err(failure) => {
+                            let cause = read_field(failure, cause);
+                            let state = take_field(failure, writer);
+                            let pending = read_field(state, length);
+                            return new WriteFile.err(new WriteFileFailure { cause: cause, progress: len_slice(source) - pending });
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

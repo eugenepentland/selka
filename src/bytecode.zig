@@ -323,7 +323,7 @@ fn validateOpResourceIo(program: Program, function: Function, io: @FieldType(@Fi
 
 fn validateOpAcquireResource(program: Program, acquire: @FieldType(@FieldType(Instruction, "op"), "acquire_resource")) Error!void {
     const shape = typed.resultShape(acquire.output, program.records) orelse return error.InternalError;
-    if (typed.resourceKind(shape.ok_type, program.records) == null or shape.error_type != .i64 or !typed.byteRequest(acquire.request, program.records)) return error.InternalError;
+    if (typed.resourceKind(shape.ok_type, program.records) == null or shape.error_type != .i64 or !typed.acquisitionBytes(acquire.request, program.records)) return error.InternalError;
 }
 
 fn validateOpExternalRead(program: Program, read: @FieldType(@FieldType(Instruction, "op"), "external_read")) Error!void {

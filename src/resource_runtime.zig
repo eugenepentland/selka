@@ -95,11 +95,11 @@ pub const Runtime = struct {
     }
     /// Convert a typed request, acquire a provider resource, and allocate the declared result.
     pub fn acquire(self: *Runtime, output: typed.Type, records: []const typed.Record, capability: typed.Value, request: typed.Value, request_type: typed.Type) AcquireError!typed.Value {
-        if (!capability.isCapability(.resource_capability) or request != .aggregate or request.typeOf() != request_type) return error.InternalError;
+        if (!capability.isCapability(.resource_capability) or request.typeOf() != request_type) return error.InternalError;
         const shape = typed.resultShape(output, records).?;
         const kind = typed.resourceKind(shape.ok_type, records).?;
         const store = try self.storeFor(kind);
-        const bytes = try byte_values.toOwnedBytes(self.allocator, request, request_type, records);
+        const bytes = try byte_values.acquisitionBytes(self.allocator, request, request_type, records);
         defer self.allocator.free(bytes);
         const owner = store.acquire(capability.capability.resource_capability, bytes) catch |err| {
             const code = recoverable(err) orelse return err;

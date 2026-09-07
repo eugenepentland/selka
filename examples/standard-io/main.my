@@ -1,0 +1,24 @@
+module main;
+import io;
+import std_fs;
+import std_bytes;
+fn main(heap: allocator, fs: filesystem_cap) -> i64 {
+    match std_bytes::create(heap, 4096) {
+        std_bytes::Built.err(discard) => { return 1; },
+        std_bytes::Built.ok(output) => {
+            match std_fs::read_file(heap, fs, "notes.txt", output, 4096u64) {
+                std_fs::ReadFile.err(discard) => { return 2; },
+                std_fs::ReadFile.ok(bytes) => {
+                    borrow bytes[0..len_buffer(bytes)] as text {
+                        let mut i = 0u64;
+                        while i < len_slice(text) {
+                            discard io::put(read_slice(text, i));
+                            i += 1u64;
+                        }
+                    }
+                    return 0;
+                }
+            }
+        }
+    }
+}

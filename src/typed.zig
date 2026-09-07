@@ -325,6 +325,10 @@ pub fn byteRequest(ty: Type, records: []const Record) bool {
     const array = records[ty.recordIndex()].shape.array orelse return false;
     return array.element == .u8 and array.key == null;
 }
+/// Acquisition consumes an owned u8 buffer or accepts an ordinary fixed byte array.
+pub fn acquisitionBytes(ty: Type, records: []const Record) bool {
+    return sliceElement(ty, records) == .u8;
+}
 /// Result schema and fields needed to preserve a resource on failed completion.
 pub const CompletionShape = struct { result: ResultShape, resource_type: Type, resource_field: usize, code_field: usize };
 /// Recognize the resource-preserving completion result layout.

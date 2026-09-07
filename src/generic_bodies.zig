@@ -924,7 +924,10 @@ const Checker = struct {
         if (!symbolic.same(shape.error_type, .{ .concrete = .i64 }, self.catalog)) return self.sink.fail(diagnostic.resource_result, acquire.ty, "acquisition error must be i64");
         const authority: typed.Type = if (kind == .filesystem) .filesystem_cap else .network_cap;
         try self.same(try self.expression(acquire.capability), .{ .concrete = authority }, self.program.nodes.items[@backingInt(acquire.capability)].span);
-        try self.byteInput(acquire.request, "E_RESOURCE_REQUEST");
+        const request_type = try self.expression(acquire.request);
+        const owned_bytes = if (request_type == .concrete) typed.acquisitionBytes(request_type.concrete, self.catalog.records) else false;
+        if (!provider_shapes.bytes(request_type, self.catalog.records) and !owned_bytes)
+            return self.sink.fail("E_RESOURCE_REQUEST", self.program.nodes.items[@backingInt(acquire.request)].span, "request requires a fixed byte array or owned byte buffer");
         self.seedEffect(kind.effect());
         return result;
     }

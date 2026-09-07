@@ -1,0 +1,48 @@
+module main;
+import std_io;
+import std_fs;
+import std_bytes;
+fn main(heap: allocator, fs: filesystem_cap) -> i64 {
+    match std_bytes::create(heap, 2) {
+        std_bytes::Built.err(discard) => {
+            return - 1;
+        },
+        std_bytes::Built.ok(output) => {
+            match std_fs::open(heap, fs, "data", new std_fs::Mode.read) {
+                std_fs::Open.err(discard) => {
+                    discard output;
+                    return - 2;
+                },
+                std_fs::Open.ok(file) => {
+                    match std_io::read_to_end(std_io::reader(file), output, 2u64) {
+                        std_io::Collected.ok(discard) => {
+                            return - 3;
+                        },
+                        std_io::Collected.err(failure) => {
+                            let cause = read_field(failure, cause);
+                            let progress = read_field(failure, progress);
+                            let bytes = take_field(failure, bytes);
+                            if cause.kind != new std_io::Kind.limit || progress != 2u64 || len_buffer(bytes) != 2u64 {
+                                return - 4;
+                            }
+                            if read_buffer(bytes, 0) != 97u8 || read_buffer(bytes, 1) != 98u8 {
+                                return - 5;
+                            }
+                            let mut last = new [1]u8[0u8];
+                            borrow mut last[0..1] as view {
+                                match std_io::read_exact(take_field(failure, reader), view) {
+                                    std_io::Reading.err(discard) => {
+                                        return - 6;
+                                    },
+                                    std_io::Reading.ok(discard) => {
+                                        return cast<i64>(read_slice(view, 0));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

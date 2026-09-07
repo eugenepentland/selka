@@ -373,3 +373,10 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [STANDARD-MODULES-9] Bounded hash tables handle collisions, tombstone reuse, replacement in full tables, and byte keys by content; full insertion preserves existing values and physical slot iteration is deterministic.
 - [STDLIB-TEXT-DATA-1] Reserved text and data modules provide bounded byte builders, range-based splitting, ASCII whitespace trimming, base formatting, finite decimal conversion, endian codecs, canonical padded base64, hex, JSON construction and explicit argument token parsing. Builder failure consumes owned intermediate output and returns a typed error.
 - [STDLIB-COMPOSITION-1] Text range splitting, borrowed byte-key hash tables and owned JSON builders compose in one checked module while retaining capacity errors and scoped borrows.
+- [STANDARD-IO-1] `std_path` exposes strict relative byte-path validation, component/name/extension spans and bounded joining. Invalid paths never normalize into authority-bearing requests.
+- [STANDARD-IO-2] `std_io` buffered readers and writers retain owned file state on success and recoverable failures, report partial progress, distinguish EOF from stalled providers, and preserve buffered bytes for retry. Bounded collection retains partial output and the first byte beyond its limit.
+- [STANDARD-IO-3] `std_fs.open` translates typed modes to scoped provider requests and rejects invalid paths before acquisition. Supplied filesystem authority remains mandatory.
+
+- [STANDARD-IO-4] Resource acquisition accepts fixed byte arrays or consumes an owned u8 buffer on either outcome. The provider receives a copied, call-bounded byte request; invalid value schemas reject before access.
+
+- [STANDARD-IO-5] Invalid acquisition request schemas reject before reading or invoking provider memory.
