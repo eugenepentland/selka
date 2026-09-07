@@ -3,9 +3,10 @@ const std = @import("std");
 const external = @import("external_capabilities.zig");
 const resources = @import("external_resources.zig");
 const CallError = external.CallError;
+const directory_data = @import("scoped_directory.zig");
 /// A configured numeric address. No DNS resolution or redirect following occurs.
 pub const Endpoint = struct { name: []const u8, address: std.Io.net.IpAddress };
-const Handle = union(enum) { file: std.Io.File, stream: std.Io.net.Stream };
+const Handle = union(enum) { file: std.Io.File, stream: std.Io.net.Stream, snapshot: *directory_data.Snapshot };
 /// Callbacks borrow this stable context and its directory/endpoint grants until stores close.
 pub const Context = struct {
     allocator: std.mem.Allocator,
@@ -14,6 +15,7 @@ pub const Context = struct {
     endpoints: []const Endpoint = &.{},
     handles: std.ArrayList(?Handle) = .empty,
     max_handles: usize = 256,
+    snapshot_limits: directory_data.Limits = .{},
     /// Release all remaining handles; root directory and endpoint storage remain caller-owned.
     pub fn deinit(self: *Context) void {
         for (self.handles.items) |handle| if (handle) |h| self.close(h);
@@ -38,6 +40,7 @@ pub const Context = struct {
         switch (handle) {
             .file => |file| file.close(self.io),
             .stream => |stream| stream.close(self.io),
+            .snapshot => |snapshot| snapshot.deinit(),
         }
     }
     fn get(self: *Context, id: u64) CallError!Handle {
@@ -60,6 +63,11 @@ pub const Context = struct {
             parent = child;
             owned = true;
             name = next;
+        }
+        if (spec.mode == 'm' or spec.mode == 'l') {
+            const snapshot = try directory_data.create(self.allocator, self.io, parent, name, spec.mode, self.snapshot_limits);
+            self.handles.items[index] = .{ .snapshot = snapshot };
+            return @intCast(index);
         }
         const file = try self.open(parent, name, spec.mode);
         self.handles.items[index] = .{ .file = file };
@@ -88,10 +96,12 @@ pub const Context = struct {
     fn read(raw: *anyopaque, id: u64, output: []u8) CallError!resources.Read {
         const self: *Context = @ptrCast(@alignCast(raw));
         const handle = try self.get(id);
-        // A zero-size request cannot establish stream EOF.
+        // A zero-size callback does not probe EOF, including immutable snapshots.
         if (output.len == 0) return .{ .length = 0, .eof = false };
+        if (handle == .snapshot) return handle.snapshot.read(output[0..@min(output.len, 64 * 1024)]);
         var buffers = [_][]u8{output[0..@min(output.len, 64 * 1024)]};
         const length = switch (handle) {
+            .snapshot => return error.Failed,
             .file => |file| file.readStreaming(self.io, &buffers) catch |err| if (err == error.EndOfStream) 0 else return mapError(err),
             .stream => |stream| stream.read(self.io, &buffers) catch |err| if (err == error.EndOfStream) 0 else return mapError(err),
         };
@@ -101,6 +111,7 @@ pub const Context = struct {
         const self: *Context = @ptrCast(@alignCast(raw));
         const bytes = input[0..@min(input.len, 64 * 1024)];
         return switch (try self.get(id)) {
+            .snapshot => error.Denied,
             .file => |file| file.writeStreaming(self.io, &.{}, &.{bytes}, 1) catch |err| return mapError(err),
             .stream => |stream| blk: {
                 var writer = stream.writer(self.io, &.{});
@@ -122,12 +133,15 @@ pub const Context = struct {
 };
 /// Reject traversal and write-mode requests before opening, creating or truncating anything.
 pub fn fileRequest(request: []const u8, permissions: resources.Permissions) CallError!struct { mode: u8, path: []const u8 } {
-    if (request.len < 3 or request.len > 4096 or request[1] != ':') return error.Denied;
+    if (request.len < 2 or request.len > 4096 or request[1] != ':') return error.Denied;
     const mode = request[0];
-    if (mode != 'r' and mode != 'w' and mode != 'c' and mode != 't') return error.Denied;
-    const required = resources.permissionBit(if (mode == 'r') .read else .write);
+    const reading = mode == 'r' or mode == 'm' or mode == 'l';
+    const writing = mode == 'w' or mode == 'c' or mode == 't';
+    if (!reading and !writing) return error.Denied;
+    const required = resources.permissionBit(if (reading) .read else .write);
     if (permissions & required == 0) return error.Denied;
     const path = request[2..];
+    if (path.len == 0 and (mode == 'm' or mode == 'l')) return .{ .mode = mode, .path = path };
     if (std.mem.indexOfAny(u8, path, "\\\x00") != null) return error.Denied;
     var parts = std.mem.splitScalar(u8, path, '/');
     while (parts.next()) |part| {

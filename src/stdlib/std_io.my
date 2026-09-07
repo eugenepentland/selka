@@ -36,7 +36,8 @@ enum Kind {
     no_progress,
     limit,
     allocation,
-    invalid_path
+    invalid_path,
+    malformed
 }
 struct Error {
     kind: Kind,
@@ -432,22 +433,40 @@ fn collect(input: Reader, output: std_bytes::Bytes, limit: u64, line: bool) -> C
 fn zeros() -> [64]u8 {
     return new [64]u8[0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8];
 }
-struct RawCloseFailure { resource: File, code: i64 }
-result RawClose { ok: bool, err: RawCloseFailure }
-result Finished { ok: u64, err: WriteFailure }
+struct RawCloseFailure {
+    resource: File,
+    code: i64
+}
+result RawClose {
+    ok: bool,
+    err: RawCloseFailure
+}
+result Finished {
+    ok: u64,
+    err: WriteFailure
+}
 fn finish(input: Writer) -> Finished {
     match flush(input) {
-        Writing.err(failure) => { return new Finished.err(failure); },
+        Writing.err(failure) => {
+            return new Finished.err(failure);
+        },
         Writing.ok(value) => {
             let progress = read_field(value, progress);
             let state = take_field(value, writer);
             let bytes = read_field(state, bytes);
             match complete_resource<RawClose>(take_field(state, file)) {
-                RawClose.ok(discard) => { return new Finished.ok(progress); },
+                RawClose.ok(discard) => {
+                    return new Finished.ok(progress);
+                },
                 RawClose.err(failure) => {
                     return new Finished.err(new WriteFailure {
-                        cause: provider_error(read_field(failure, code)), progress: progress,
-                        writer: new Writer { file: take_field(failure, resource), bytes: bytes, length: 0u64 }
+                        cause: provider_error(read_field(failure, code)),
+                        progress: progress,
+                        writer: new Writer {
+                            file: take_field(failure, resource),
+                            bytes: bytes,
+                            length: 0u64
+                        }
                     });
                 }
             }

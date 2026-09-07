@@ -77,7 +77,8 @@ test "standard IO dynamic requests and opened files unwind on every OutOfMemory 
     var program: language.embedded_project.Program = undefined;
     try program.init(t.allocator, .{ .context = &fixture, .read = io_fixture.Source.load });
     defer program.deinit();
-    try t.checkAllAllocationFailures(t.allocator, injectedIo, .{program.compilation.code.?});
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), injectedIo, .{program.compilation.code.?});
 }
 test "standard IO line reading accepts delimiter at bound and retains next line data" {
     var provider: io_fixture.Provider = .{ .input = "a\nb" };
@@ -115,4 +116,53 @@ test "standard IO convenient file reads accept exact bounds and retain partial f
     try ioScenario(prefix ++ "2u64" ++ suffix, &partial, 2);
     var empty: io_fixture.Provider = .{ .input = "" };
     try ioScenario(prefix ++ "0u64" ++ suffix, &empty, 0);
+}
+// spec: STANDARD-DIRECTORY-1
+test "standard IO metadata and directory entries preserve kinds size and opaque nonopenable names" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "data", .data = "abc" });
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "odd\\name", .data = "x" });
+    try temporary.dir.createDir(t.io, "nested", .default_dir);
+    try temporary.dir.symLink(t.io, "data", "link", .{});
+    var source_fixture: io_fixture.Source = .{ .text = @embedFile("stdlib/fixtures/io/metadata.my") };
+    var program: language.embedded_project.Program = undefined;
+    try program.init(t.allocator, .{ .context = &source_fixture, .read = io_fixture.Source.load });
+    defer program.deinit();
+    var context: language.scoped_providers.Context = .{ .allocator = t.allocator, .io = t.io, .directory = temporary.dir };
+    defer context.deinit();
+    const result = try language.vm.runWithOptions(t.allocator, program.compilation.code.?, .{ .resources = .{ .filesystem = context.filesystem() } });
+    try t.expectEqual(@as(i64, 15), result.value);
+    for (context.handles.items) |handle| try t.expect(handle == null);
+}
+test "standard IO directory decoders reject invalid framing traversal and zero bytes" {
+    try run("module main;import std_fs;import std_result;fn main()->i64{" ++
+        "let invalid=new [7]u8[1u8,1u8,3u8,0u8,46u8,46u8,47u8];" ++
+        "borrow invalid[0..7] as view{match std_fs::directory_count(view){std_result::Option<u64>.some(discard)=>{return -1;},std_result::Option<u64>.none=>{}}}" ++
+        "let truncated=new [4]u8[1u8,1u8,3u8,0u8];" ++
+        "borrow truncated[0..4] as view{match std_fs::directory_entry(view,0u64){std_result::Option<std_fs::DirectoryEntry>.some(discard)=>{return -2;},std_result::Option<std_fs::DirectoryEntry>.none=>{}}}return 0;}", 0);
+}
+test "standard IO independent prebuffer retry EOF edges and completion failure regressions" {
+    var prebuffer: io_fixture.Provider = .{ .failure = .{ .write = 1 } };
+    try ioScenario(@embedFile("stdlib/fixtures/io/prebuffer.my"), &prebuffer, 42);
+    try t.expectEqualStrings("012345678901234567890123456789012345678901234567890123456789ABCDEFGH", prebuffer.progress.output[0..prebuffer.progress.length]);
+    var finish: io_fixture.Provider = .{ .failure = .{ .complete = 0 } };
+    try ioScenario(@embedFile("stdlib/fixtures/io/finish_retry.my"), &finish, 42);
+    try t.expectEqual(@as(usize, 2), finish.calls.complete);
+    try t.expectEqualStrings("hi", finish.progress.output[0..finish.progress.length]);
+    var edges: io_fixture.Provider = .{};
+    try ioScenario(@embedFile("stdlib/fixtures/io/read_edges.my"), &edges, 42);
+    try t.expectEqual(@as(usize, 2), edges.calls.read);
+}
+test "standard IO metadata rejects malformed wire and preserves full u64 size" {
+    const text = "module main;import std_fs;import std_io;fn main(heap:allocator,fs:filesystem_cap)->i64{" ++
+        "match std_fs::metadata(heap,fs,\"data\"){std_fs::MetadataResult.ok(value)=>{" ++
+        "if value.size!=18446744073709551615u64{return -1;}return 42;},std_fs::MetadataResult.err(cause)=>{" ++
+        "if cause.kind==new std_io::Kind.malformed{return 1;}if cause.kind==new std_io::Kind.unexpected_eof{return 2;}return -2;}}}";
+    var maximum: io_fixture.Provider = .{ .input = &.{ 1, 1, 255, 255, 255, 255, 255, 255, 255, 255 } };
+    try ioScenario(text, &maximum, 42);
+    var malformed: io_fixture.Provider = .{ .input = &.{ 2, 1, 255, 255, 255, 255, 255, 255, 255, 255 } };
+    try ioScenario(text, &malformed, 1);
+    var truncated: io_fixture.Provider = .{ .input = &.{ 1, 1, 255 } };
+    try ioScenario(text, &truncated, 2);
 }

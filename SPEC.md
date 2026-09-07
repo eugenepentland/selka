@@ -386,3 +386,7 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [OWNED-BUFFER-2] Owned element read, resize-fill, and slices are rejected in ordinary and generic code. Buffer elements cannot hide fallible results or filesystem/network owners inside arrays/records/unions.
 - [OWNED-BUFFER-3] Owned insertions, helper mutation and take results retain allocator-origin restrictions; child arena owners cannot enter parent storage or escape through extraction.
 - [OWNED-BUFFER-4] Bytecode buffer graphs recompute finite storage contracts rather than trusting supplied copy/storable flags; forged external-resource storage, cyclic ownership and owned-element slice instructions are invalid.
+- [SCOPED-DIRECTORY-1] Read-authorized `m:path` metadata and `l:path` directory listing acquisitions publish bounded immutable byte snapshots under the existing directory grant. Empty paths denote that root only for these modes; intermediate/final directory traversal never follows symlinks, while final metadata reports a symlink itself.
+- [SCOPED-DIRECTORY-2] Failed directory snapshot construction releases partial bytes and open directories before returning; allocation failures never publish a live snapshot handle.
+
+- [STANDARD-DIRECTORY-1] Standard metadata and listing APIs decode versioned bounded copied streams into typed kinds, u64 size, entry counts and name spans, validating framing. Opaque backslash names remain enumerable even though strict path APIs will not open them; byte offsets never borrow provider memory.

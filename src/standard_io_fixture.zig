@@ -7,8 +7,8 @@ const CallError = @import("external_capabilities.zig").CallError;
 pub const Provider = struct {
     input: []const u8 = "abc",
     progress: struct { position: usize = 0, output: [256]u8 = undefined, length: usize = 0 } = .{},
-    calls: struct { read: usize = 0, write: usize = 0, acquire: usize = 0, release: usize = 0 } = .{},
-    failure: struct { read: ?usize = null, write: ?usize = null, stalled: bool = false } = .{},
+    calls: struct { read: usize = 0, write: usize = 0, acquire: usize = 0, complete: usize = 0, release: usize = 0 } = .{},
+    failure: struct { read: ?usize = null, write: ?usize = null, complete: ?usize = null, stalled: bool = false } = .{},
     live: bool = false,
     /// Return callbacks borrowing stable fixture storage.
     pub fn provider(self: *Provider) resources.Provider {
@@ -16,7 +16,9 @@ pub const Provider = struct {
     }
     fn acquire(raw: *anyopaque, request: []const u8, _: resources.Permissions) CallError!u64 {
         const self: *Provider = @ptrCast(@alignCast(raw));
-        if (!std.mem.eql(u8, request, "r:data") and !std.mem.eql(u8, request, "w:data")) return error.Denied;
+        const file = std.mem.eql(u8, request, "r:data") or std.mem.eql(u8, request, "w:data");
+        const query = std.mem.eql(u8, request, "m:data") or std.mem.eql(u8, request, "l:");
+        if (!file and !query) return error.Denied;
         if (self.live) return error.Denied;
         self.calls.acquire += 1;
         self.live = true;
@@ -49,6 +51,10 @@ pub const Provider = struct {
         return length;
     }
     fn complete(raw: *anyopaque, id: u64) CallError!void {
+        const self: *Provider = @ptrCast(@alignCast(raw));
+        const call = self.calls.complete;
+        self.calls.complete += 1;
+        if (self.failure.complete == call) return error.Failed;
         release(raw, id);
     }
     fn release(raw: *anyopaque, _: u64) void {

@@ -100,3 +100,46 @@ EOF, byte progress and cleanup are contractual; provider callback timing is not.
 
 [The bounded file-reader example](../examples/standard-io/README.md) runs against
 an explicitly granted directory with the packaged byte-I/O runner.
+
+## Metadata and directory snapshots
+
+`std_fs::metadata(heap, fs, path)` returns `Metadata {kind,size}` through
+`MetadataResult`. Kinds are file, directory, symlink and other; size preserves the
+full u64 value reported by the host, whose meaning depends on kind. Only file
+byte size has a portable interpretation. An empty path requests the granted root.
+Final symlinks are described without following them; intermediate traversal and
+directory opens still reject symlinks. Metadata is a snapshot, not a promise that
+a later open reaches the same filesystem object.
+
+`list_directory(heap, fs, path, output, limit)` requires an empty owned byte buffer
+and returns `Listed.ok(Listing {bytes,count})` or a `ReadFileFailure` retaining
+partial output. The limit and output capacity independently bound guest bytes.
+`directory_count(view)` validates the versioned listing; `directory_entry(view,i)`
+returns `Option<DirectoryEntry>` with kind and name byte offsets. Each entry lookup
+validates framing and names; repeated indexed lookups are bounded but not a
+constant-time index. Directory order is unspecified and listings are not recursive.
+
+Names are opaque bytes. Empty names, slash, NUL, dot/dot-dot and names longer than
+4094 bytes are invalid listing entries. A backslash-containing POSIX filename is
+preserved and enumerable even though strict `std_path`/`std_fs.open` paths reject
+it. Listing does not grant a way around that path policy. Non-UTF-8 names likewise
+remain bytes, and rendering/encoding decisions belong to the caller.
+
+The packaged scoped provider recognizes two additional read-authorized acquisition
+requests, without changing the provider ABI or permission bits:
+
+- `m:path`: ten bytes — version 1, kind (0 other, 1 file, 2 directory, 3 symlink),
+  then eight little-endian size bytes. The guest decoder verifies the complete
+  length and EOF, version and kind; malformed/truncated responses are typed errors.
+- `l:path`: version byte 1, followed by records containing kind byte, little-endian
+  u16 name length and that many name bytes. The guest validates every record before
+  publishing a Listing.
+
+Empty paths are permitted only for m:/l: and denote the granted directory itself.
+`Context.snapshot_limits` defaults to 256 entries and 64 KiB encoded bytes. Exceeding
+either bound denies the whole host acquisition; no partial host snapshot is
+published. Context construction remains allocation-fallible, with all temporary
+directories/bytes released on failure. Once published, bytes are immutable even
+if the underlying directory changes. Each callback copies at most 64 KiB; empty
+reads return no progress without probing EOF. Metadata/list resource writes are
+denied even if a raw caller acquired with a broader capability.

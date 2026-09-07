@@ -1,0 +1,53 @@
+module main;
+import io;
+import std_fs;
+import std_bytes;
+import std_result;
+fn main(heap: allocator, fs: filesystem_cap) -> i64 {
+    match std_fs::metadata(heap, fs, "") {
+        std_fs::MetadataResult.err(discard) => {
+            return 1;
+        },
+        std_fs::MetadataResult.ok(value) => {
+            if value.kind != new std_fs::FileKind.directory {
+                return 2;
+            }
+        }
+    }
+    match std_bytes::create(heap, 65536) {
+        std_bytes::Built.err(discard) => {
+            return 3;
+        },
+        std_bytes::Built.ok(output) => {
+            match std_fs::list_directory(heap, fs, "", output, 65536u64) {
+                std_fs::Listed.err(discard) => {
+                    return 4;
+                },
+                std_fs::Listed.ok(listing) => {
+                    let count = read_field(listing, count);
+                    let bytes = take_field(listing, bytes);
+                    borrow bytes[0..len_buffer(bytes)] as view {
+                        let mut i = 0u64;
+                        while i < count {
+                            match std_fs::directory_entry(view, i) {
+                                std_result::Option<std_fs::DirectoryEntry>.none => {
+                                    return 5;
+                                },
+                                std_result::Option<std_fs::DirectoryEntry>.some(entry) => {
+                                    let mut offset = entry.name.start;
+                                    while offset < entry.name.end {
+                                        discard io::put(read_slice(view, offset));
+                                        offset += 1u64;
+                                    }
+                                    discard io::put(10u8);
+                                }
+                            }
+                            i += 1u64;
+                        }
+                    }
+                    return 0;
+                }
+            }
+        }
+    }
+}

@@ -40,3 +40,10 @@ traffic are not rolled back on a later guest failure.
 
 Applications using mylang-io still import their explicit `io` host declaration
 (length, byte and put), as in the existing byte-I/O runner contract.
+
+The standard filesystem additions also use read-authorized `m:path` metadata and
+`l:path` directory snapshots. Empty paths name the granted root for these two modes
+only. Snapshots default to 256 entries/64 KiB; limits are configurable together in
+`Context.snapshot_limits`, and per-transfer reads remain capped at 64 KiB. Metadata
+stats the final symlink itself; listing refuses to follow a symlink directory.
+See [the typed guest APIs and wire contract](../standard-io.md#metadata-and-directory-snapshots).

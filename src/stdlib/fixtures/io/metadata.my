@@ -1,0 +1,88 @@
+module main;
+import std_fs;
+import std_bytes;
+import std_result;
+import std_path;
+fn main(heap: allocator, fs: filesystem_cap) -> i64 {
+    match std_fs::metadata(heap, fs, "data") {
+        std_fs::MetadataResult.err(discard) => {
+            return - 1;
+        },
+        std_fs::MetadataResult.ok(value) => {
+            if value.kind != new std_fs::FileKind.file || value.size != 3u64 {
+                return - 2;
+            }
+        }
+    }
+    match std_fs::metadata(heap, fs, "") {
+        std_fs::MetadataResult.err(discard) => {
+            return - 3;
+        },
+        std_fs::MetadataResult.ok(value) => {
+            if value.kind != new std_fs::FileKind.directory {
+                return - 4;
+            }
+        }
+    }
+    match std_fs::metadata(heap, fs, "link") {
+        std_fs::MetadataResult.err(discard) => {
+            return - 5;
+        },
+        std_fs::MetadataResult.ok(value) => {
+            if value.kind != new std_fs::FileKind.symlink {
+                return - 6;
+            }
+        }
+    }
+    match std_bytes::create(heap, 256) {
+        std_bytes::Built.err(discard) => {
+            return - 7;
+        },
+        std_bytes::Built.ok(output) => {
+            match std_fs::list_directory(heap, fs, "", output, 256u64) {
+                std_fs::Listed.err(discard) => {
+                    return - 8;
+                },
+                std_fs::Listed.ok(listing) => {
+                    let count = read_field(listing, count);
+                    if count != 4u64 {
+                        return - 9;
+                    }
+                    let bytes = take_field(listing, bytes);
+                    borrow bytes[0..len_buffer(bytes)] as view {
+                        let mut i = 0u64;
+                        let mut found = 0;
+                        while i < count {
+                            match std_fs::directory_entry(view, i) {
+                                std_result::Option<std_fs::DirectoryEntry>.none => {
+                                    return - 10;
+                                },
+                                std_result::Option<std_fs::DirectoryEntry>.some(entry) => {
+                                    borrow view[entry.name.start..entry.name.end] as name {
+                                        if std_bytes::compare(name, "data") == 0 && entry.kind == new std_fs::FileKind.file {
+                                            found += 1;
+                                        }
+                                        if std_bytes::compare(name, "nested") == 0 && entry.kind == new std_fs::FileKind.directory {
+                                            found += 2;
+                                        }
+                                        if std_bytes::compare(name, "link") == 0 && entry.kind == new std_fs::FileKind.symlink {
+                                            found += 4;
+                                        }
+                                        if std_bytes::compare(name, "odd\\name") == 0 && entry.kind == new std_fs::FileKind.file {
+                                            if std_path::valid(name) {
+                                                return - 11;
+                                            }
+                                            found += 8;
+                                        }
+                                    }
+                                }
+                            }
+                            i += 1u64;
+                        }
+                        return found;
+                    }
+                }
+            }
+        }
+    }
+}
