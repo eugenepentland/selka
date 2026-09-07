@@ -508,6 +508,20 @@ static int buffer_append(Local *owner) {
     buffer->fields[buffer->count++] = value;
     return 0;
 }
+static int buffer_take(Local *owner, Slot *value) {
+    V index = pop(); Aggregate *buffer = buffer_owner(owner);
+    if (index < 0 || (U)index >= buffer->count) { *value = (Slot){3, NULL}; return 3; }
+    *value = buffer->fields[(size_t)index];
+    buffer->count--;
+    if ((size_t)index != buffer->count) buffer->fields[(size_t)index] = buffer->fields[buffer->count];
+    return 0;
+}
+static int buffer_truncate(Local *owner) {
+    V length = pop(); Aggregate *buffer = buffer_owner(owner);
+    if (length < 0 || (U)length > buffer->count) return 3;
+    while (buffer->count > (size_t)length) release_value(buffer->fields[--buffer->count]);
+    return 0;
+}
 static int buffer_resize(Local *owner) {
     Slot fill = pop_value(); V length = pop(); Aggregate *buffer = buffer_owner(owner);
     if (length < 0 || (U)length > SIZE_MAX) { release_value(fill); return 3; }

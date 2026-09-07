@@ -11,6 +11,40 @@ result Answer {
     err: i64
 }
 fn work(heap: allocator) -> Answer {
+    let mut empty = try m::create::< i64 >(heap, 0u64);
+    borrow mut empty as view {
+        if m::put::< i64 >(view, 0u64, 1) != new linear::PutStatus.full {
+            return new Answer.err(104);
+        }
+        match m::lookup::< i64 >(view, 0u64) {
+            linear::Value<i64>.none => {},
+            linear::Value<i64>.some(discard) => {
+                return new Answer.err(105);
+            }
+        }
+    }
+    let good = try b::from_bytes("");
+    let bad = update(good) {
+        length: 257u64
+    };
+    if b::valid(bad) || b::key_equal(bad, bad) || b::key_hash(bad) != 0u64 {
+        return new Answer.err(106);
+    }
+    let mut guarded = try b::create::< i64 >(heap, 1u64);
+    borrow mut guarded as view {
+        if b::put::< i64 >(view, bad, 1) != new b::PutStatus.invalid {
+            return new Answer.err(107);
+        }
+        if b::count::< i64 >(view) != 0u64 {
+            return new Answer.err(108);
+        }
+        match b::lookup::< i64 >(view, bad) {
+            linear::Value<i64>.none => {},
+            linear::Value<i64>.some(discard) => {
+                return new Answer.err(109);
+            }
+        }
+    }
     if h::bytes("") != 14695981039346656037u64 || h::bytes("a") != 12638187200555641996u64 {
         return new Answer.err(90);
     }

@@ -65,7 +65,11 @@
     "deterministic-test-provider-fixtures",
     "typed-noncapturing-function-values",
     "bounded-guest-callbacks",
-    "changed-source-function-body-cache"
+    "changed-source-function-body-cache",
+    "storable-owned-buffer-elements",
+    "borrowed-standard-collections",
+    "bounded-standard-hash-collections",
+    "owned-standard-vectors-and-maps"
   ],
   "unsupported": [
     "builtin-f64-syntax",
@@ -78,7 +82,7 @@
   "limits": {
     "borrow_conflicts": "whole-allocation-except-explicit-checked-split",
     "generic_calls": "explicit-type-arguments",
-    "container_elements": "copyable-no-owned-or-must-handle",
+    "container_elements": "buffers: storable copy/owned values without must-handle or external resource owners; pools: copyable elements",
     "noalloc": "guest-backing-operations-only",
     "type_aliases": "non-parameterized",
     "constants": "bounded-scalar-expressions-and-nongeneric-source-functions",

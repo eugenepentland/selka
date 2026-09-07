@@ -1,0 +1,121 @@
+module main;
+import std_owned as o;
+import std_owned_map as m;
+buffer Bytes: u8;
+result BytesResult {
+    ok: Bytes,
+    err: i64
+}
+result Answer {
+    ok: i64,
+    err: i64
+}
+fn bytes(heap: allocator, value: u8) -> BytesResult {
+    let mut b = try acquire_buffer<BytesResult>(heap, 1u64);
+    discard try append_buffer<o::Status>(b, value);
+    return new BytesResult.ok(b);
+}
+fn work(heap: allocator) -> Answer {
+    let mut integers = try m::create::< i64,
+    i64 >(heap, 1u64);
+    borrow mut integers as view {
+        discard try m::put::< i64,
+        i64 >(view, 1, 42);
+        if (try m::take::< i64, i64 >(view, 1)) != 42 {
+            return new Answer.err(103);
+        }
+    }
+    let mut values = try o::vector::< Bytes >(heap, 1u64);
+    borrow mut values as v {
+        discard try o::append::< Bytes >(v, try bytes(heap, 1u8));
+        match o::append::< Bytes >(v, try bytes(heap, 2u8)) {
+            o::Status.ok(discard) => {
+                return new Answer.err(91);
+            },
+            o::Status.err(e) => {
+                if e != 2 {
+                    return new Answer.err(92);
+                }
+            }
+        }
+        discard try o::replace_at::< Bytes >(v, 0u64, try bytes(heap, 3u8));
+        match o::replace_at::< Bytes >(v, 1u64, try bytes(heap, 4u8)) {
+            o::Status.ok(discard) => {
+                return new Answer.err(93);
+            },
+            o::Status.err(e) => {
+                if e != 3 {
+                    return new Answer.err(94);
+                }
+            }
+        }
+        let moved = try o::take::< Bytes >(v, 0u64);
+        if read_buffer(moved, 0) != 3u8 {
+            return new Answer.err(95);
+        }
+        discard try o::append::< Bytes >(v, moved);
+        discard try o::clear::< Bytes >(v);
+    }
+    let mut map = try m::create::< i64,
+    Bytes >(heap, 3u64);
+    borrow mut map as v {
+        discard try m::put::< i64,
+        Bytes >(v, 1, try bytes(heap, 11u8));
+        discard try m::put::< i64,
+        Bytes >(v, 2, try bytes(heap, 12u8));
+        discard try m::put::< i64,
+        Bytes >(v, 3, try bytes(heap, 13u8));
+        discard try m::put::< i64,
+        Bytes >(v, 2, try bytes(heap, 22u8));
+        match m::put::< i64,
+        Bytes >(v, 4, try bytes(heap, 14u8)) {
+            m::Status.ok(discard) => {
+                return new Answer.err(96);
+            },
+            m::Status.err(e) => {
+                if e != 2 {
+                    return new Answer.err(97);
+                }
+            }
+        }
+        let two = try m::take::< i64,
+        Bytes >(v, 2);
+        if read_buffer(two, 0) != 22u8 {
+            return new Answer.err(98);
+        }
+        let one = try m::take::< i64,
+        Bytes >(v, 1);
+        if read_buffer(one, 0) != 11u8 {
+            return new Answer.err(99);
+        }
+        match m::take::< i64,
+        Bytes >(v, 9) {
+            m::Removed<Bytes>.ok(discard) => {
+                return new Answer.err(100);
+            },
+            m::Removed<Bytes>.err(e) => {
+                if e != 4 {
+                    return new Answer.err(101);
+                }
+            }
+        }
+        let three = try m::take::< i64,
+        Bytes >(v, 3);
+        if read_buffer(three, 0) != 13u8 {
+            return new Answer.err(102);
+        }
+        discard try m::clear::< i64,
+        Bytes >(v);
+    }
+    return new Answer.ok(42);
+}
+fn main(heap: allocator) -> i64 {
+    match work(heap) {
+        Answer.ok(n) => {
+            return n;
+        },
+        Answer.err(e) => {
+            return e;
+        }
+    }
+}

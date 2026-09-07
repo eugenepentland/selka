@@ -6,22 +6,23 @@ const typed = @import("typed.zig");
 const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
 /// Builtin requirements; integer implies equality and equality implies copy.
-pub const Requirement = enum(u2) { copy, equality, integer, codec };
+pub const Requirement = enum(u3) { copy, equality, integer, codec, storable };
 /// Closed set of operations promised by an explicitly declared requirement list.
 pub const Set = struct {
-    bits: u4 = 0,
+    bits: u5 = 0,
     /// Include a requirement and its implied prerequisites.
     pub fn include(self: *Set, requirement: Requirement) void {
         self.bits |= switch (requirement) {
-            .copy => 1,
-            .equality => 3,
-            .integer => 7,
+            .copy => 17,
+            .equality => 19,
+            .integer => 23,
             .codec => 8,
+            .storable => 16,
         };
     }
     /// Test whether this contract promises a particular operation.
     pub fn contains(self: Set, requirement: Requirement) bool {
-        return self.bits & (@as(u4, 1) << @backingInt(requirement)) != 0;
+        return self.bits & (@as(u5, 1) << @backingInt(requirement)) != 0;
     }
     /// Check implication when forwarding a type parameter to another generic.
     pub fn implies(self: Set, required: Set) bool {
@@ -29,6 +30,7 @@ pub const Set = struct {
     }
     /// Test a concrete checked type without erasing nominal or result obligations.
     pub fn accepts(self: Set, ty: typed.Type, records: []const typed.Record) bool {
+        if (self.contains(.storable) and !typed.storable(ty, records)) return false;
         if (self.contains(.codec) and !@import("source_json.zig").supportsCodec(ty, records)) return false;
         if (self.contains(.integer) and !ty.isInteger()) return false;
         if (self.contains(.equality) and !typed.supportsEquality(ty, records)) return false;
@@ -70,10 +72,10 @@ fn resolveRequirements(src: source.Source, parameter: ast.TypeParameter, sink: *
     if (parameter.requirements.len == 0) return sink.fail(eRequirement, parameter.name, "type parameter requires an explicit requirement");
     if (parameter.requirements.len > 16) return sink.fail("E_GENERIC_LIMIT", parameter.requirements[16], "at most 16 requirements are permitted");
     var result: Set = .{};
-    var explicit: u4 = 0;
+    var explicit: u5 = 0;
     for (parameter.requirements) |span| {
-        const requirement = std.meta.stringToEnum(Requirement, src.text(span)) orelse return sink.fail(eRequirement, span, "unknown requirement; expected copy, equality, integer, or codec");
-        const bit = @as(u4, 1) << @backingInt(requirement);
+        const requirement = std.meta.stringToEnum(Requirement, src.text(span)) orelse return sink.fail(eRequirement, span, "unknown requirement; expected copy, equality, integer, codec, or storable");
+        const bit = @as(u5, 1) << @backingInt(requirement);
         if (explicit & bit != 0) return sink.fail(eRequirement, span, "duplicate type requirement");
         explicit |= bit;
         result.include(requirement);

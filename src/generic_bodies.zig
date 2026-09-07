@@ -989,6 +989,7 @@ const Checker = struct {
         try self.regionRead(owner.*);
         const shape = (try self.shapes().container(owner.ty, operation.owner, false)) orelse return self.sink.fail("E_BUFFER_TYPE", operation.owner, "operation requires a buffer value binding");
         const element = shape.element;
+        if (operation.kind == .read or operation.kind == .resize) try self.supports(element, .copy, operation.owner);
         for (operation.arguments, 0..) |input, index| {
             const value = try self.expression(input);
             const at = self.program.nodes.items[@backingInt(input)].span;
@@ -1002,7 +1003,7 @@ const Checker = struct {
         }
         try self.runtimeOwner(operation.owner, operation.kind.mutates());
         if (operation.kind.allocates()) self.seedEffect(.allocation);
-        const success: Symbolic = if (operation.result != null) .{ .concrete = .bool } else if (operation.kind == .read) element else .{ .concrete = .u64 };
+        const success: Symbolic = if (operation.kind == .take or operation.kind == .read) element else if (operation.result != null) .{ .concrete = .bool } else .{ .concrete = .u64 };
         return self.symbolicOperationResult(operation.result, success, "E_BUFFER_RESULT");
     }
     fn poolValue(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "pool_operation")) Error!Symbolic {
@@ -1327,7 +1328,7 @@ const Checker = struct {
             .discard => |value| {
                 const ty_value = try self.expression(value);
                 if ((try self.requiresHandling(ty_value))) return self.sink.fail(eResultDiscard, statement_value.span, "discard cannot erase a result obligation");
-                if (ty_value == .parameter) try self.supports(ty_value, .copy, statement_value.span);
+                if (ty_value == .parameter) try self.supports(ty_value, .storable, statement_value.span);
             },
             .branch => |branch| return self.branchValue(branch, statement_value.span),
             .for_range => |range| {

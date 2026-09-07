@@ -11,27 +11,31 @@ const Checker = struct {
         const records = self.records;
         const sink = self.sink;
         var requires_handling = false;
+        var can_store = schema.shape.resource == null;
         var move_only = schema.shape.buffer != null or schema.shape.resource != null or schema.shape.pool != null;
         if (schema.shape.variants) |variants| {
             requires_handling = variants.fallible;
             for (variants.cases) |case| if (case.payload) |payload| {
                 requires_handling = requires_handling or typed.requiresHandling(payload, records);
+                can_store = can_store and typed.storable(payload, records);
                 move_only = move_only or typed.moveOnly(payload, records);
             };
         } else if (schema.shape.array) |array| {
             requires_handling = array.length != 0 and typed.requiresHandling(array.element, records);
+            can_store = can_store and (array.length == 0 or typed.storable(array.element, records));
             move_only = array.length != 0 and typed.moveOnly(array.element, records);
         } else {
             for (schema.fields) |field| {
                 requires_handling = requires_handling or typed.requiresHandling(field.ty, records);
+                can_store = can_store and typed.storable(field.ty, records);
                 move_only = move_only or typed.moveOnly(field.ty, records);
             }
         }
         if (schema.shape.buffer) |element| {
-            if (typed.moveOnly(element, records) or typed.requiresHandling(element, records)) return sink.fail(
+            if (!typed.storable(element, records)) return sink.fail(
                 "E_BUFFER_ELEMENT",
                 schema.declaration,
-                "buffer elements must be ordinary copyable values without result obligations",
+                "buffer elements must be storable values without result obligations or external resources",
             );
         }
         if (schema.shape.pool) |pool| {
@@ -41,6 +45,7 @@ const Checker = struct {
                 "pool elements must be ordinary copyable values without result obligations",
             );
         }
+        records[record_index].contract.storable = can_store and !requires_handling;
         records[record_index].contract.move_only = move_only;
         records[record_index].contract.requires_handling = requires_handling;
     }

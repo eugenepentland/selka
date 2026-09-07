@@ -380,3 +380,9 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [STANDARD-IO-4] Resource acquisition accepts fixed byte arrays or consumes an owned u8 buffer on either outcome. The provider receives a copied, call-bounded byte request; invalid value schemas reject before access.
 
 - [STANDARD-IO-5] Invalid acquisition request schemas reject before reading or invoking provider memory.
+
+- [OWNED-BUFFER-1] Storable buffer elements may own nested buffers but contain no must-handle results or external resources. Append/write consume input even on failure; take moves the selected value out using swap-removal; truncate only shrinks and releases each removed value. Owned elements cannot be copied through read, resize fill, or slices.
+- [STANDARD-OWNED-COLLECTIONS-1] Owned vectors and linear maps move storable values through insertion, replacement, removal and destruction. Bounded insertion/replacement failure consumes the offered value, preserves existing values, and reports capacity/bounds errors; missing map keys return error 4.
+- [OWNED-BUFFER-2] Owned element read, resize-fill, and slices are rejected in ordinary and generic code. Buffer elements cannot hide fallible results or filesystem/network owners inside arrays/records/unions.
+- [OWNED-BUFFER-3] Owned insertions, helper mutation and take results retain allocator-origin restrictions; child arena owners cannot enter parent storage or escape through extraction.
+- [OWNED-BUFFER-4] Bytecode buffer graphs recompute finite storage contracts rather than trusting supplied copy/storable flags; forged external-resource storage, cyclic ownership and owned-element slice instructions are invalid.

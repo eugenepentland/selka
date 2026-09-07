@@ -102,7 +102,7 @@ fn collectionFailureRun(allocator: std.mem.Allocator, code: language.bytecode.Pr
     try t.expectEqual(@as(i64, 42), (try outcome).value);
 }
 test "collection owners unwind cleanly on every runtime allocation failure" {
-    for ([_][]const u8{ @embedFile("stdlib/fixtures/collection_borrows.my"), @embedFile("stdlib/fixtures/hash_collections.my") }) |text| {
+    for ([_][]const u8{ @embedFile("stdlib/fixtures/collection_borrows.my"), @embedFile("stdlib/fixtures/hash_collections.my"), @embedFile("stdlib/fixtures/owned_collections.my") }) |text| {
         var fixture: Fixture = .{ .text = text };
         var program: language.embedded_project.Program = undefined;
         try program.init(t.allocator, .{ .context = &fixture, .read = Fixture.load });
@@ -143,4 +143,9 @@ test "text data fixed formatting truncates exact binary fractions across limb bo
 // spec: STDLIB-COMPOSITION-1
 test "standard text hash and JSON builders compose into a bounded word histogram" {
     try runLibrary(@embedFile("stdlib/fixtures/word_counts.my"), 42);
+}
+
+// spec: STANDARD-OWNED-COLLECTIONS-1
+test "owned collection library preserves values across replacement failure and removal" {
+    try runLibrary(@embedFile("stdlib/fixtures/owned_collections.my"), 42);
 }

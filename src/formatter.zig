@@ -61,6 +61,8 @@ fn genericHead(tag: Tag) bool {
         .kw_append_buffer,
         .kw_resize_buffer,
         .kw_reserve_buffer,
+        .kw_take_buffer,
+        .kw_truncate_buffer,
         => true,
         else => false,
     };

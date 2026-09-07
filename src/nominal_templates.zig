@@ -209,7 +209,11 @@ pub const Index = struct {
             .parameter => |id| parameters[id].requirements,
             .named => |id| self.declarations.items[id].guarantees,
             .application => |application| self.declarations.items[application.declaration].guarantees,
-            .array => |array| if ((array.length_parameter == null and array.length == 0) or self.guarantees(array.element, parameters).contains(.copy)) copyGuarantee() else .{},
+            .array => |array| array_result: {
+                const empty = array.length_parameter == null and array.length == 0;
+                if (empty or self.guarantees(array.element, parameters).contains(.copy)) break :array_result copyGuarantee();
+                break :array_result if (self.guarantees(array.element, parameters).contains(.storable)) .{ .bits = 16 } else .{};
+            },
         };
     }
     fn inferGuarantees(self: *Index) Error!void {
@@ -225,7 +229,7 @@ pub const Index = struct {
         for (self.declarations.items, 0..) |*declaration, id| {
             declaration.guarantees = switch (declaration.kind) {
                 .record, .variants => copyGuarantee(),
-                .enumeration, .domain, .handle => .{ .bits = 3 },
+                .enumeration, .domain, .handle => .{ .bits = 19 },
                 .buffer, .resource, .pool, .result => .{},
             };
             if (!declaration.guarantees.contains(.copy)) try pending.append(allocator, id);
@@ -238,6 +242,25 @@ pub const Index = struct {
         var cursor: usize = 0;
         while (cursor < pending.items.len) : (cursor += 1) {
             for (reverse[pending.items[cursor]].items) |id| try self.removeCopy(id, &pending);
+        }
+    }
+    fn inferStorable(self: *Index) void {
+        for (self.declarations.items) |*declaration| {
+            if (declaration.kind != .result and declaration.kind != .resource) declaration.guarantees.include(.storable);
+        }
+        var changed = true;
+        while (changed) {
+            changed = false;
+            for (self.declarations.items) |*declaration| {
+                if (!declaration.guarantees.contains(.storable)) continue;
+                for (declaration.fields) |field| if (field.ty) |value| {
+                    if (!self.guarantees(value, declaration.parameters).contains(.storable)) {
+                        declaration.guarantees.bits &= ~@as(u5, 16);
+                        changed = true;
+                        break;
+                    }
+                };
+            }
         }
     }
     fn removeCopy(self: *Index, id: usize, pending: *std.ArrayList(usize)) Error!void {
@@ -281,7 +304,7 @@ pub const Index = struct {
     }
 };
 fn copyGuarantee() requirements.Set {
-    return .{ .bits = 1 };
+    return .{ .bits = 17 };
 }
 fn builtinGuarantees(ty: typed.Type) requirements.Set {
     var result: requirements.Set = .{};
@@ -330,10 +353,15 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     for (program.types.buffers) |declaration| try index.backing(declaration.name, declaration.backing);
     for (program.types.pools) |declaration| try index.backing(declaration.name, declaration.element);
     try index.inferGuarantees();
+    index.inferStorable();
     for (index.declarations.items) |declaration| {
         if (declaration.parameters.len == 0 or (declaration.kind != .buffer and declaration.kind != .pool)) continue;
         const element = declaration.fields[0];
-        if (!index.guarantees(element.ty.?, declaration.parameters).contains(.copy)) return sink.fail(eRequirement, element.name, "container elements must guarantee copy; owned and must-handle elements are excluded");
+        if (!index.guarantees(element.ty.?, declaration.parameters).contains(if (declaration.kind == .buffer) .storable else .copy)) return sink.fail(
+            eRequirement,
+            element.name,
+            "buffer elements must guarantee storable; pool elements must guarantee copy",
+        );
     }
     for (index.declarations.items) |declaration| for (declaration.fields) |field| if (field.ty) |value| try index.checkArguments(value, declaration.parameters);
     return index;

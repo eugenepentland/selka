@@ -567,6 +567,10 @@ fn writeOperation(context: InstructionOutput) !bool {
             switch (operation.kind) {
                 .length, .capacity => try w.print("push((V)buffer_{s}(container));\n", .{@tagName(operation.kind)}),
                 .read => try w.writeAll("push_value(buffer_read(container));\n"),
+                .take => {
+                    try w.writeAll("Slot value = (Slot){0}; int status = buffer_take(container, &value);\n");
+                    try statusResult(w, layout, operation.output);
+                },
                 else => {
                     try w.print("int status = buffer_{s}(container); Slot value = (Slot){{status ? status : 1, NULL}};\n", .{@tagName(operation.kind)});
                     try statusResult(w, layout, operation.output);

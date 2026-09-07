@@ -682,6 +682,26 @@ pub const Memory = struct {
                 owned.length += 1;
             }
         }
+        /// Move one initialized value out, filling its slot with the last value.
+        pub fn takeOwner(self: *Store, allocation: Allocation, index: usize) Error!Value {
+            const owned = try self.cell(allocation);
+            try unborrowed(owned.*);
+            if (index >= owned.length) return error.Bounds;
+            const value = owned.values[index];
+            owned.length -= 1;
+            if (index != owned.length) owned.values[index] = owned.values[owned.length];
+            return value;
+        }
+        /// Shrink only; every removed value is released exactly once.
+        pub fn truncateOwner(self: *Store, allocation: Allocation, length: usize) Error!void {
+            const owned = try self.cell(allocation);
+            try unborrowed(owned.*);
+            if (length > owned.length) return error.Bounds;
+            while (owned.length > length) {
+                owned.length -= 1;
+                owned.values[owned.length].release(self.allocator);
+            }
+        }
         /// Release an unborrowed owner and invalidate its registry identity.
         pub fn destroy(self: *Store, allocation: Allocation) Error!void {
             try unborrowed((try self.cell(allocation)).*);

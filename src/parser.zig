@@ -711,7 +711,7 @@ pub const Parser = struct {
         const token = self.current();
         var left: ast.NodeId = switch (token.tag) {
             .kw_len_pool, .kw_capacity_pool, .kw_read_pool, .kw_replace_pool, .kw_insert_pool, .kw_remove_pool, .kw_clear_pool => try self.parsePool(token),
-            .kw_len_buffer, .kw_capacity_buffer, .kw_read_buffer, .kw_write_buffer, .kw_append_buffer, .kw_resize_buffer, .kw_reserve_buffer => try self.parseBuffer(token),
+            .kw_len_buffer, .kw_capacity_buffer, .kw_read_buffer, .kw_write_buffer, .kw_append_buffer, .kw_resize_buffer, .kw_reserve_buffer, .kw_take_buffer, .kw_truncate_buffer => try self.parseBuffer(token),
             .kw_restrict_resource => try self.parseRestrict(token),
             .kw_read_resource_slice, .kw_write_resource_slice => try self.parseSliceIo(token),
             .kw_read_resource, .kw_write_resource => try self.parseResourceIo(token),
@@ -917,6 +917,8 @@ pub const Parser = struct {
             .kw_append_buffer => .append,
             .kw_resize_buffer => .resize,
             .kw_reserve_buffer => .reserve,
+            .kw_take_buffer => .take,
+            .kw_truncate_buffer => .truncate,
             else => unreachable,
         };
         const result: ?Span = if (kind.mutates()) result: {

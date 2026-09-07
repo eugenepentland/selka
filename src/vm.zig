@@ -1194,6 +1194,13 @@ const Step = struct {
                 if (number < 0 or number >= info.length) return trap("R_BUFFER_BOUNDS", "buffer index is outside initialized bounds", instruction.span, frames.items, program);
                 break :read storage.readOwner(owner, @intCast(number)) catch |err| return memoryFailure(err, instruction, frames.items, program);
             },
+            .take => taking: {
+                const shape = typed.resultShape(operation.output, program.records).?;
+                if (number < 0 or number >= info.length) break :taking try typed.Value.createVariant(allocator, operation.output, shape.error_tag, .{ .i64 = 3 });
+                const value = storage.takeOwner(owner, @intCast(number)) catch |err| return memoryFailure(err, instruction, frames.items, program);
+                defer value.release(allocator);
+                break :taking try typed.Value.createVariant(allocator, operation.output, shape.ok_tag, value);
+            },
             else => mutation: {
                 if (operation.kind != .append and (number < 0 or number > std.math.maxInt(usize))) {
                     status = if (operation.kind == .reserve) 1 else 3;
@@ -1204,6 +1211,7 @@ const Step = struct {
                         .append => storage.appendWithinCapacity(owner, arguments[0]),
                         .resize => storage.resizeWithinCapacity(owner, index, arguments[1]),
                         .reserve => reserveBuffer(storage, owner, index),
+                        .truncate => storage.truncateOwner(owner, index),
                         else => unreachable,
                     };
                     result catch |err| switch (err) {

@@ -70,7 +70,7 @@ pub fn supports(value: Value, requirement: requirements.Requirement, parameters:
     return switch (value) {
         .length, .length_parameter => false,
         .parameter => |index| parameters[index].requirements.contains(requirement),
-        .array => |shape| requirement == .copy and ((shape.length_parameter == null and shape.length == 0) or supports(shape.element, .copy, parameters, catalog)),
+        .array => |shape| (requirement == .copy or requirement == .storable) and ((shape.length_parameter == null and shape.length == 0) or supports(shape.element, requirement, parameters, catalog)),
         .nominal => |value_type| catalog.templates.store.?.index.declarations.items[value_type.declaration].guarantees.contains(requirement),
         .concrete => |ty| result: {
             var required: requirements.Set = .{};

@@ -64,7 +64,6 @@ test "owned bindings cannot be reused or conditionally consumed" {
 test "owned schemas preserve nominal identity and reject bypass construction" {
     try reject("buffer B: bool; fn main() -> i64 { return 0; }", "E_DUPLICATE_TYPE");
     try reject("buffer Recursive: Recursive; fn main() -> i64 { return 0; }", "E_RECURSIVE_RECORD");
-    try reject("buffer Nested: B; fn main() -> i64 { return 0; }", "E_BUFFER_ELEMENT");
     try reject("buffer Errors: R; fn main() -> i64 { return 0; }", "E_BUFFER_ELEMENT");
     try reject("fn main(alloc: allocator) -> i64 { discard new B {}; return 0; }", "E_TYPE");
     try reject("fn main(alloc: allocator) -> i64 { acknowledge acquire_buffer<B>(alloc, 1); return 0; }", "E_BUFFER_RESULT");

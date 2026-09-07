@@ -189,8 +189,9 @@ pub const Context = struct {
         return switch (value) {
             .length, .length_parameter => .{},
             .parameter => |id| .{
+                .move_only = self.parameters[id].requirements.contains(.storable) and !self.parameters[id].requirements.contains(.copy),
                 .region = !self.parameters[id].requirements.contains(.equality) and !self.parameters[id].requirements.contains(.codec),
-                .requires_handling = self.parameters[id].requirements.contains(.codec) and !self.parameters[id].requirements.contains(.copy),
+                .requires_handling = self.parameters[id].requirements.contains(.codec) and !self.parameters[id].requirements.contains(.storable),
             },
             .concrete => |ty| .{
                 .move_only = typed.moveOnly(ty, self.catalog.records),

@@ -122,3 +122,6 @@ test {
     _ = @import("match_expression_test.zig");
     _ = @import("type_aliases_test.zig");
 }
+test {
+    _ = @import("owned_buffers_test.zig");
+}

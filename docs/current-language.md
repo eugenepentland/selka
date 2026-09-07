@@ -12,7 +12,7 @@ intend to use; historical counts are not current verification receipts.
 | Values | Fixed-width integers, booleans, byte literals, records/domains/arrays, unions/results, standard Unit, scalar constants and transparent aliases | [constants](module-constants.md), [aliases](type-aliases.md); [bounded scalar source evaluation](source-evaluation.md) |
 | Control flow | While, structured break/continue, integer range iteration and value-producing matches | [range iteration](range-iteration.md), [match expressions](match-expressions.md); conservative outer ownership on loop exits |
 | Generics | Functions and nominal records/unions/results/enums/buffers/pools; structural field/operation contracts and const length parameters | [structural contracts](../examples/structural-constraints.my); explicit call type arguments |
-| Ownership | Move-only buffers, pools, resource owners, deterministic cleanup and partial record moves | [buffers](../examples/buffers.my); elements cannot own backing or carry must-handle obligations |
+| Ownership | Move-only buffers, pools, resource owners, deterministic cleanup and partial record moves | [buffers](../examples/buffers.my); [storable owned buffer elements](stdlib-collections.md); no result/resource elements, no copying views of owned elements |
 | References | Lexical read/write borrows, slices and single-input-origin reference returns | [buffer views](../examples/buffer-views.my); whole-owner references and [checked disjoint splits](../examples/split-borrows.my); no stored reference fields |
 | Regions | Explicit allocator capabilities, scoped arenas, reset with escape checks | [arenas](../examples/arenas.my); selected-field owner-return provenance; no general lifetime inference |
 | Authority | Explicit host capabilities and transitive effect ceilings; resource attenuation | [effects](../examples/effects.my); [byte runner scoped directory/endpoint grants](experiments/scoped-providers.md) |
@@ -50,3 +50,5 @@ feature report and case source hashes; it complements the broader acceptance sui
 Generic functions and nominal declarations support explicit `const N:u64` length parameters; see [const-length-generics.md](const-length-generics.md).
 
 [Typed noncapturing callbacks](experiments/callbacks.md) support reusable sorting and visitors with explicit signatures and effect ceilings, including owned value arguments/results. Captures and borrowed callback signatures remain excluded.
+
+Borrowed collections, bounded integer/byte hash tables, and generic owned vectors/maps are documented in [standard collections](stdlib-collections.md).

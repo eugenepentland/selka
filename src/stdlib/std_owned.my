@@ -1,0 +1,42 @@
+module std_owned;
+export Vector;
+export Created;
+export Taken;
+export Status;
+export vector;
+export append;
+export replace_at;
+export take;
+export clear;
+export truncate;
+buffer Vector < T: storable >: T;
+result Created<T: storable> {
+    ok: Vector<T>,
+    err: i64
+}
+result Taken<T: storable> {
+    ok: T,
+    err: i64
+}
+result Status {
+    ok: bool,
+    err: i64
+}
+fn vector < T: storable >(heap: allocator, capacity: u64) -> Created<T> {
+    return acquire_buffer<Created<T>>(heap, capacity);
+}
+fn append < T: storable >(values: &mut Vector<T>, value: T) -> Status noalloc {
+    return append_buffer<Status>(values, value);
+}
+fn replace_at < T: storable >(values: &mut Vector<T>, index: u64, value: T) -> Status noalloc {
+    return write_buffer<Status>(values, index, value);
+}
+fn take < T: storable >(values: &mut Vector<T>, index: u64) -> Taken<T> noalloc {
+    return take_buffer<Taken<T>>(values, index);
+}
+fn clear < T: storable >(values: &mut Vector<T>) -> Status noalloc {
+    return truncate_buffer<Status>(values, 0u64);
+}
+fn truncate < T: storable >(values: &mut Vector<T>, length: u64) -> Status noalloc {
+    return truncate_buffer<Status>(values, length);
+}

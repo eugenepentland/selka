@@ -699,6 +699,11 @@ const Checker = struct {
         local.usage.reads += 1;
         if (operation.kind.mutates()) local.usage.writes += 1;
         const element = self.catalog.records[local.ty.recordIndex()].shape.buffer.?;
+        if ((operation.kind == .read or operation.kind == .resize) and typed.moveOnly(element, self.catalog.records)) return self.sink.fail(
+            "E_BUFFER_COPY",
+            operation.owner,
+            "owned buffer elements require take_buffer or truncate_buffer; reads and resize fill would copy ownership",
+        );
         const arguments = try self.allocator.alloc(typed.NodeId, operation.arguments.len);
         for (operation.arguments, arguments, 0..) |input, *argument, argument_index| {
             argument.* = self.resolved[@backingInt(input)].?;
@@ -715,8 +720,16 @@ const Checker = struct {
         }
         if (operation.result) |result_type| {
             out.ty = try self.ty(result_type);
-            const shape = typed.resultShape(out.ty, self.catalog.records) orelse return self.sink.fail(eBufferResult, result_type, "buffer mutation requires a result with bool success and i64 error payloads");
-            if (shape.ok_type != .bool or shape.error_type != .i64) return self.sink.fail(eBufferResult, result_type, "buffer mutation requires a result with bool success and i64 error payloads");
+            const shape = typed.resultShape(out.ty, self.catalog.records) orelse return self.sink.fail(
+                eBufferResult,
+                result_type,
+                "buffer mutation result requires matching success and i64 error payloads",
+            );
+            if (shape.ok_type != (if (operation.kind == .take) element else typed.Type.bool) or shape.error_type != .i64) return self.sink.fail(
+                eBufferResult,
+                result_type,
+                "buffer mutation result requires matching success and i64 error payloads",
+            );
         } else out.ty = if (operation.kind == .read) element else .u64;
         out.data = .{ .buffer_operation = .{ .reference = access.reference, .kind = operation.kind, .owner = owner, .arguments = arguments } };
     }

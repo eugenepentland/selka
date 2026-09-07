@@ -169,7 +169,7 @@ pub const RecordShape = struct {
 /// Exact value parameter/result types and declared callback effect ceiling.
 pub const Callable = struct { parameters: []const Type, return_type: Type, effects: effect_set.Mask };
 /// Ownership and public schema policy for each concrete type.
-pub const RecordContract = struct { callback: ?Callable = null, public_arguments: bool = true, codec: ?Codec = null, codec_declared: bool = false, move_only: bool = false, requires_handling: bool = false };
+pub const RecordContract = struct { callback: ?Callable = null, public_arguments: bool = true, codec: ?Codec = null, codec_declared: bool = false, move_only: bool = false, storable: bool = true, requires_handling: bool = false };
 /// Payload types and case tags of a checked ok/err result schema.
 pub const ResultShape = struct { ok_type: Type, error_type: Type, ok_tag: usize, error_tag: usize };
 /// Recognize a valid fallible result and return its payload types and tags.
@@ -191,8 +191,11 @@ pub fn resultShape(ty: Type, records: []const Record) ?ResultShape {
 pub fn sliceElement(ty: Type, records: []const Record) ?Type {
     if (!ty.isAggregate() or ty.recordIndex() >= records.len) return null;
     const shape = records[ty.recordIndex()].shape;
-    if (shape.buffer) |element| return element;
-    if (shape.array) |array| if (array.key == null) return array.element;
+    if (shape.buffer) |element| return if (moveOnly(element, records) or requiresHandling(element, records)) null else element;
+    if (shape.array) |array| {
+        if (array.key != null) return null;
+        if (!moveOnly(array.element, records) and !requiresHandling(array.element, records)) return array.element;
+    }
     return null;
 }
 /// Resolve a buffer/pool acquisition result with the required i64 error payload.
@@ -214,6 +217,10 @@ pub fn supportsEquality(ty: Type, records: []const Record) bool {
 /// Determine whether a type carries ownership that forbids implicit copying.
 pub fn moveOnly(ty: Type, records: []const Record) bool {
     return ty.isAggregate() and records[ty.recordIndex()].contract.move_only;
+}
+/// Values whose destruction requires neither result handling nor external provider effects.
+pub fn storable(ty: Type, records: []const Record) bool {
+    return !ty.isAggregate() or records[ty.recordIndex()].contract.storable;
 }
 /// Determine whether a value contains an unacknowledged fallible result obligation.
 pub fn requiresHandling(ty: Type, records: []const Record) bool {

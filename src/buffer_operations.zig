@@ -8,11 +8,13 @@ pub const Kind = enum {
     append,
     resize,
     reserve,
+    take,
+    truncate,
     /// Return the required source argument count for this buffer builtin.
     pub fn arity(self: Kind) usize {
         return switch (self) {
             .length, .capacity => 0,
-            .read, .append => 1,
+            .read, .append, .take, .truncate => 1,
             .write, .resize, .reserve => 2,
         };
     }

@@ -20,6 +20,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
     if (@backingInt(program.main) >= program.functions.len) return error.InternalError;
     try @import("effects.zig").validate(allocator, program);
     try validateRecords(program);
+    try @import("storage_contracts.zig").validate(allocator, program.records);
     try @import("codec_bytecode.zig").validate(allocator, program);
     try validateEntry(program);
     for (program.functions, 0..) |function, index| {
@@ -292,9 +293,10 @@ fn validateOpBufferOperation(program: Program, function: Function, operation: @F
     if (!local.ty.isAggregate()) return error.InternalError;
     try validateOperationOwner(function, operation.owner, operation.reference, operation.kind.mutates());
     const element = program.records[local.ty.recordIndex()].shape.buffer orelse return error.InternalError;
+    if ((operation.kind == .read or operation.kind == .resize) and typed.moveOnly(element, program.records)) return error.InternalError;
     if (operation.kind.mutates()) {
         const shape = typed.resultShape(operation.output, program.records) orelse return error.InternalError;
-        if (shape.ok_type != .bool or shape.error_type != .i64) return error.InternalError;
+        if (shape.ok_type != (if (operation.kind == .take) element else typed.Type.bool) or shape.error_type != .i64) return error.InternalError;
     } else if (operation.output != (if (operation.kind == .read) element else typed.Type.u64)) return error.InternalError;
 }
 
@@ -653,6 +655,7 @@ fn validateReference(program: Program, function: Function, reference: typed.Refe
         source_type = function.scope.references[@backingInt(parent)].ty;
         source_slice = function.scope.references[@backingInt(parent)].mode.slice;
     }
+    if (reference.mode.slice and typed.moveOnly(reference.ty, program.records)) return error.InternalError;
     if (reference.mode.slice and !source_slice) {
         if (!source_type.isAggregate() or !validType(source_type, program)) return error.InternalError;
         const schema = program.records[source_type.recordIndex()];
@@ -726,7 +729,7 @@ fn validateResourceRecord(record: typed.Record) Error!void {
 fn validateBufferRecord(program: Program, record: typed.Record) Error!void {
     if (record.shape.buffer) |element| {
         if (!validType(element, program)) return error.InternalError;
-        if (typed.moveOnly(element, program.records)) return error.InternalError;
+        if (!typed.storable(element, program.records)) return error.InternalError;
         if (typed.requiresHandling(element, program.records)) return error.InternalError;
         if (!record.contract.move_only) return error.InternalError;
         if (record.contract.requires_handling) return error.InternalError;

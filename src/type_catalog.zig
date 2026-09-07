@@ -64,7 +64,11 @@ pub const Catalog = struct {
             .declaration = span,
             .fields = &.{},
             .shape = .{ .array = shape },
-            .contract = .{ .move_only = length != 0 and typed.moveOnly(element, self.records), .requires_handling = length != 0 and typed.requiresHandling(element, self.records) },
+            .contract = .{
+                .storable = length == 0 or typed.storable(element, self.records),
+                .move_only = length != 0 and typed.moveOnly(element, self.records),
+                .requires_handling = length != 0 and typed.requiresHandling(element, self.records),
+            },
         };
         var storage: std.ArrayList(typed.Record) = .{ .items = self.records, .capacity = self.record_capacity };
         defer {
