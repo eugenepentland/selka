@@ -12,10 +12,7 @@ export Via;
 export Feature;
 export Region;
 export Board;
-export ComponentSlot;
-export NetSlot;
-export RegionSlot;
-export FeatureSlot;
+export Slot;
 export InputProblem;
 export GeometryFailure;
 export Failure;
@@ -26,9 +23,12 @@ export ContactResult;
 export ViolationKind;
 export RegionIndex;
 export Violation;
-export First;
 export Report;
 export Validation;
+union Slot<T: copy> {
+    none,
+    some: T
+}
 struct Rect {
     x: units::Micrometres,
     y: units::Micrometres,
@@ -73,34 +73,18 @@ union Feature {
     track: Track,
     via: Via
 }
-union ComponentSlot {
-    none,
-    some: ids::ComponentId
-}
-union NetSlot {
-    none,
-    some: ids::NetId
-}
 struct Region {
     rect: Rect,
     face: RegionFace,
     blocks: Blocks,
-    allow_nets: [4]NetSlot
-}
-union RegionSlot {
-    none,
-    some: Region
-}
-union FeatureSlot {
-    none,
-    some: Feature
+    allow_nets: [4]Slot<ids::NetId>
 }
 struct Board {
     outline: Rect,
-    components: [4]ComponentSlot,
-    nets: [4]NetSlot,
-    regions: [4]RegionSlot,
-    features: [8]FeatureSlot
+    components: [4]Slot<ids::ComponentId>,
+    nets: [4]Slot<ids::NetId>,
+    regions: [4]Slot<Region>,
+    features: [8]Slot<Feature>
 }
 enum InputProblem {
     invalid_bounds,
@@ -149,13 +133,9 @@ struct Violation {
     kind: ViolationKind,
     region: RegionIndex
 }
-union First {
-    none,
-    some: Violation
-}
 struct Report {
     violations: u64,
-    first: First
+    first: Slot<Violation>
 }
 result Validation {
     ok: Report,

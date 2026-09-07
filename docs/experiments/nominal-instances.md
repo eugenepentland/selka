@@ -72,7 +72,8 @@ and all 88 Guardian checks pass with baselines disabled. The board trial retains
 147 oracle comparisons, and the ordinary VM corpus retains 96 independent checks.
 Actual agent repair attempts remain pending.
 
-Symbolic nominal operations are now implemented. Next: the board trial's shared
-`Slot<T>` declarations, public generic tooling and provider-specific symbolic shapes.
+Symbolic nominal operations, provider-specific symbolic shapes and the board
+trial's shared `Slot<T>` declarations are now implemented. Public generic tooling
+remains pending.
 The measured repair study, source serialization and incremental tooling remain
 open. Guest-native compilation is excluded from the active goal.

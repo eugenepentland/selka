@@ -78,6 +78,7 @@ cross-module diagnostic locations. They include allocation-failure sweeps and a
 requirement and unknown-type errors from unused templates.
 
 Concrete catalog specialization and symbolic record/variant operations are now
-implemented. Next: the board trial's shared `Slot<T>` types and public generic tooling.
+implemented. The board trial now uses shared `Slot<T>` types. Public generic
+tooling remains pending.
 This checkpoint does not complete the nominal-type roadmap item or the measured
 agent-repair study. Native guest compilation remains outside the active goal.

@@ -47,8 +47,13 @@ geometry, and a geometry failure discards the partial successful report.
 
 Implementation exposed two abstraction costs. Scalar domains now support ordinary
 `==` and `!=`, removing the two nominal-ID `same` helpers while preserving ID
-isolation. Fixed optional slots still require separate component/net membership
-helpers without parameterized composite types; that abstraction remains open.
+isolation. One `Slot<T:copy>` now replaces five optional unions for component IDs, net IDs,
+regions, features and first violations. One `has<T:equality>` helper replaces the
+separate component/net membership loops. Concrete slot instances still retain
+exact payload identities; the trusted snapshot boundary rejects putting a net ID
+in a component slot. This removes 34 guest-source lines while preserving the
+fixed contract and independent oracle results. Separate component/net validation
+functions retain their distinct factories and error cases.
 The snapshot wrapper keeps host conversion and VM allocation outside ordinary
 application code; trusted wrappers still require independent review and tests.
 
@@ -59,3 +64,10 @@ The [repair-study harness](repair/README.md) prepares five task pairs, retains
 failed checks and patches, and grades shared fresh cases after both submissions
 are sealed. Its known-answer fixture restorations validate the harness; actual
 agent repair attempts remain pending. Native guest compilation remains deferred.
+
+The optional-slot consolidation passes the same 147 comparisons, 18 malformed
+transports and three seeded diagnostic checks. All five Zig boundary tests pass
+in Debug and ReleaseFast, and all ten repair-harness fixture tests pass. Guest/Zig
+formatting, gated installation and all 88 Guardian checks pass with violation
+baselines disabled. Public generic schema exports remain separate compiler work;
+the trial's handwritten host boundary uses the checked concrete runtime schemas.

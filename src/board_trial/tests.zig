@@ -77,3 +77,21 @@ test "trial transport rejects partial allocations without leaking caller arena s
     const parsed = try std.json.parseFromSlice(std.json.Value, arena.allocator(), bytes, .{ .parse_numbers = false });
     try t.expectError(error.InvalidSnapshot, input.request(arena.allocator(), parsed.value));
 }
+
+// spec: BOARD-ABSTRACTION-1
+test "trial generic slot snapshots preserve distinct ID payloads at the trusted boundary" {
+    var app: application.App = undefined;
+    try app.init(t.allocator, .{ .context = null, .read = application.embedded });
+    defer app.deinit();
+    const meta = app.geometry.meta;
+    var snapshot = try values.Snapshot.init(t.allocator, meta, board);
+    defer snapshot.deinit();
+    const nets = try meta.field(snapshot.value, "nets");
+    const net_slot = nets.aggregate.fields[0];
+    try t.expectEqualStrings("some", try meta.tag(net_slot));
+    const component_slot_type = try meta.find("model::Slot<ids::ComponentId>");
+    try t.expect(net_slot.typeOf() != component_slot_type);
+    try t.expectEqual(try meta.find("ids::NetId"), net_slot.aggregate.fields[0].typeOf());
+    try t.expectError(error.SnapshotSchemaMismatch, meta.variant(t.allocator, component_slot_type, "some", net_slot.aggregate.fields[0]));
+    try t.expectEqualStrings("none", try meta.tag(nets.aggregate.fields[1]));
+}

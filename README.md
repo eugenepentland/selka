@@ -334,7 +334,9 @@ then specialize the discovered concrete types for the VM.
 [Generic provider contracts](docs/experiments/nominal-providers.md) now support
 resource/environment result wrappers and fully substituted byte-array inputs.
 Generic functions can also call codecs for concrete domains while preserving
-factory/accessor privacy. Public generic schema tooling and codec constraints
+factory/accessor privacy. The [board trial](experiments/board_trial/README.md)
+now uses one optional `Slot<T>` union and one membership helper for distinct IDs.
+Public generic schema tooling and codec constraints
 on arbitrary type parameters remain pending.
 
 [Lexical arenas](docs/experiments/source-arenas.md) use `arena heap as scratch { ... }`

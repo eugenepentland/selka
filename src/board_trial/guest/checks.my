@@ -1,5 +1,6 @@
 module checks;
 import model as m;
+import ids;
 import inventory;
 import bounds;
 export preflight;
@@ -13,9 +14,9 @@ fn region(board: m::Board, item: m::Region) -> m::Preflight {
     let mut i = 0u64;
     while i < len(item.allow_nets) {
         match item.allow_nets[i] {
-            m::NetSlot.none => {},
-            m::NetSlot.some(net) => {
-                if !inventory::hasNet(board.nets, net, len(board.nets)) {
+            m::Slot<ids::NetId>.none => {},
+            m::Slot<ids::NetId>.some(net) => {
+                if !inventory::has::< ids::NetId >(board.nets, net, len(board.nets)) {
                     return new m::Preflight.err(new m::Failure.input(new m::InputProblem.unknown_allow_net));
                 }
             }
@@ -30,17 +31,17 @@ fn feature(board: m::Board, item: m::Feature) -> m::Preflight {
     }
     match item {
         m::Feature.component(value) => {
-            if !inventory::hasComponent(board.components, value.id, len(board.components)) {
+            if !inventory::has::< ids::ComponentId >(board.components, value.id, len(board.components)) {
                 return new m::Preflight.err(new m::Failure.input(new m::InputProblem.missing_component));
             }
         },
         m::Feature.track(value) => {
-            if !inventory::hasNet(board.nets, value.net, len(board.nets)) {
+            if !inventory::has::< ids::NetId >(board.nets, value.net, len(board.nets)) {
                 return new m::Preflight.err(new m::Failure.input(new m::InputProblem.missing_net));
             }
         },
         m::Feature.via(value) => {
-            if !inventory::hasNet(board.nets, value.net, len(board.nets)) {
+            if !inventory::has::< ids::NetId >(board.nets, value.net, len(board.nets)) {
                 return new m::Preflight.err(new m::Failure.input(new m::InputProblem.missing_net));
             }
         }
@@ -56,8 +57,8 @@ fn preflight(board: m::Board) -> m::Preflight {
     let mut i = 0u64;
     while i < len(board.regions) {
         match board.regions[i] {
-            m::RegionSlot.none => {},
-            m::RegionSlot.some(value) => {
+            m::Slot<m::Region>.none => {},
+            m::Slot<m::Region>.some(value) => {
                 discard try region(board, value);
             }
         }
@@ -66,8 +67,8 @@ fn preflight(board: m::Board) -> m::Preflight {
     i = 0u64;
     while i < len(board.features) {
         match board.features[i] {
-            m::FeatureSlot.none => {},
-            m::FeatureSlot.some(value) => {
+            m::Slot<m::Feature>.none => {},
+            m::Slot<m::Feature>.some(value) => {
                 discard try feature(board, value);
             }
         }

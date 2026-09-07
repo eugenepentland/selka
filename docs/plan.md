@@ -82,8 +82,9 @@ explicit types, schemas, and interfaces where that improves the program.
    fields, variants, ownership and lifetimes before late VM specialization.
    [Provider-specific symbolic shapes](experiments/nominal-providers.md) now cover
    resource/environment operations and concrete domain codecs in generic callers.
-   Public generic tooling, codec constraints on type parameters, and board `Slot<T>`
-   consolidation remain open.
+   The board trial now uses one `Slot<T>` declaration and one equality-constrained
+   membership helper for component/net IDs. Public generic tooling and codec
+   constraints on type parameters remain open.
    These remain open; completing all
    abstraction experiments is not a prerequisite for starting the trial.
 
@@ -2743,3 +2744,35 @@ nominal generics, then public generic tooling and remaining abstraction/codec,
 serialization and incremental-checking work. The measured repair study and other
 pending roadmap requirements remain active. Guest-native compilation remains
 outside this goal.
+
+
+## Board optional-slot and membership consolidation — 2026-09-07
+
+The [board trial](../experiments/board_trial/README.md) now uses one `Slot<T:copy>`
+union for optional component IDs, net IDs, regions, features and first violations.
+One `has<T:equality>` function replaces the separate component/net membership
+loops. Instantiated slot types preserve nominal ID separation; the trusted snapshot
+boundary explicitly rejects a net-ID payload in a component slot. The five guest
+modules changed by this refactor contain 34 fewer lines. Distinct validation
+factories and domain-specific errors remain explicit.
+
+No changes were made to the fixed trial contract, oracle cases, independent Zig
+baseline, geometry kernel or transport schema. The refactored runner still matches
+all 87 fixed and 60 transformed cases, including exact reports/callback counts;
+18 malformed transports reject and three seeded static errors are caught. All five
+board boundary tests pass in Debug and ReleaseFast, including allocation-failure
+cleanup and the new cross-slot payload rejection. The ten matched repair fixture
+self-tests pass after updating their exact seed strings for formatted generic
+calls. These remain harness tests, not measured agent repair outcomes.
+
+Guest project formatting, Zig formatting, gated installation and all 88 Guardian
+checks pass with baselines disabled. Existing report-only size/line findings and
+uncertain ROI observations remain. The preceding provider checkpoint's full
+853-test Zig/21-driver interpreter run remains the compiler-wide regression
+baseline; this guest refactor received the focused board and repair acceptance
+above, with one additional board test. No guest-native acceptance was run.
+
+Next: public generic schema/tooling, remaining structural and codec constraints,
+source serialization, finer incremental checking and the measured repair study.
+Those requirements and the broader roadmap goal remain active. Native guest
+compilation stays deferred.

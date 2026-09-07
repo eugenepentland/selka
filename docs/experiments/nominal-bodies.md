@@ -84,6 +84,7 @@ Buffer/pool acquisition and their fixed operation result contracts can use
 symbolic nominal result wrappers. [Provider-specific symbolic shapes](nominal-providers.md) now cover external
 resources, resource I/O and environment reads. Generic callers may use codecs for
 concrete domains; codec constraints on type parameters remain pending. Public generic schema exports, structural
-constraints, board `Slot<T>` consolidation, source serialization, finer incremental
-checks and measured agent repairs remain open. Native guest compilation remains
+constraints, source serialization, finer incremental
+checks and measured agent repairs remain open. The board trial now uses shared
+`Slot<T>` declarations and one equality-constrained membership helper. Native guest compilation remains
 outside the active goal.

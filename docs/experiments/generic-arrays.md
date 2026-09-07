@@ -59,12 +59,14 @@ consume that final catalog. There are at most 4096 added array shapes and the
 existing 4096 function-specialization limit remains. Type traversal retains
 checking depth/work limits; expanding generic recursion fails explicitly.
 
-This is the fixed-array part of parameterized composites. Parameterized records,
-unions/results, named buffers, length parameters and structural requirements on
-an otherwise opaque `T` remain open. A parameter-dependent enum-keyed table
+This is the fixed-array part of parameterized composites. Parameterized records
+and unions/results now follow [nominal body checking](nominal-bodies.md). Generic
+named buffers, length parameters and structural requirements on an otherwise
+opaque `T` remain open. A parameter-dependent enum-keyed table
 rejects with `E_GENERIC_ARRAY_KEY`; existing concrete enum tables remain usable.
-The board trial still needs parameterized optional-slot unions before its two
-membership routines can be consolidated without changing its contract.
+The [board trial](../../experiments/board_trial/README.md) now uses a shared
+optional-slot union and one equality-constrained membership routine, preserving
+its fixed contract.
 
 No guest-native backend implementation or acceptance work accompanies this
 change. Specializations lower to existing typed-array IR and VM instructions.

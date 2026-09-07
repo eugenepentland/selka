@@ -97,5 +97,5 @@ types. Concrete execution has additional coverage in the specialization contract
 
 [Symbolic body operations](nominal-bodies.md) now use these semantic identities
 with late concrete catalog specialization. Shared `Slot<T>` types in the board
-trial and public generic tooling remain pending. Native guest compilation remains outside the
-active goal.
+trial are now implemented; public generic tooling remains pending. Native guest
+compilation remains outside the active goal.

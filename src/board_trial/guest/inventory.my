@@ -1,16 +1,15 @@
 module inventory;
 import model as m;
 import ids;
-export hasComponent;
-export hasNet;
+export has;
 export checkComponents;
 export checkNets;
-fn hasComponent(slots: [4]m::ComponentSlot, needle: ids::ComponentId, end: u64) -> bool {
+fn has < T: equality >(slots: [4]m::Slot<T>, needle: T, end: u64) -> bool {
     let mut i = 0u64;
     while i < end {
         match slots[i] {
-            m::ComponentSlot.none => {},
-            m::ComponentSlot.some(value) => {
+            m::Slot<T>.none => {},
+            m::Slot<T>.some(value) => {
                 if value == needle {
                     return true;
                 }
@@ -20,31 +19,16 @@ fn hasComponent(slots: [4]m::ComponentSlot, needle: ids::ComponentId, end: u64) 
     }
     return false;
 }
-fn hasNet(slots: [4]m::NetSlot, needle: ids::NetId, end: u64) -> bool {
-    let mut i = 0u64;
-    while i < end {
-        match slots[i] {
-            m::NetSlot.none => {},
-            m::NetSlot.some(value) => {
-                if value == needle {
-                    return true;
-                }
-            }
-        }
-        i = i + 1u64;
-    }
-    return false;
-}
-fn checkComponents(slots: [4]m::ComponentSlot) -> m::Preflight {
+fn checkComponents(slots: [4]m::Slot<ids::ComponentId>) -> m::Preflight {
     let mut i = 0u64;
     while i < len(slots) {
         match slots[i] {
-            m::ComponentSlot.none => {},
-            m::ComponentSlot.some(value) => {
+            m::Slot<ids::ComponentId>.none => {},
+            m::Slot<ids::ComponentId>.some(value) => {
                 if ids::ComponentId.number(value) == 0u64 {
                     return new m::Preflight.err(new m::Failure.input(new m::InputProblem.invalid_id));
                 }
-                if hasComponent(slots, value, i) {
+                if has::< ids::ComponentId >(slots, value, i) {
                     return new m::Preflight.err(new m::Failure.input(new m::InputProblem.duplicate_component));
                 }
             }
@@ -53,16 +37,16 @@ fn checkComponents(slots: [4]m::ComponentSlot) -> m::Preflight {
     }
     return new m::Preflight.ok(true);
 }
-fn checkNets(slots: [4]m::NetSlot) -> m::Preflight {
+fn checkNets(slots: [4]m::Slot<ids::NetId>) -> m::Preflight {
     let mut i = 0u64;
     while i < len(slots) {
         match slots[i] {
-            m::NetSlot.none => {},
-            m::NetSlot.some(value) => {
+            m::Slot<ids::NetId>.none => {},
+            m::Slot<ids::NetId>.some(value) => {
                 if ids::NetId.number(value) == 0u64 {
                     return new m::Preflight.err(new m::Failure.input(new m::InputProblem.invalid_id));
                 }
-                if hasNet(slots, value, i) {
+                if has::< ids::NetId >(slots, value, i) {
                     return new m::Preflight.err(new m::Failure.input(new m::InputProblem.duplicate_net));
                 }
             }

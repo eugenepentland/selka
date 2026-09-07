@@ -39,13 +39,13 @@ def seed(root, language, task):
         old = 'return Micrometres.make(unwrap(value) * 1000);' if language == 'guest' else 'return @fromBackingInt(@backingInt(value) * 1000);'
         text = replace_once(text, old, 'return value;')
     elif task == 'identity':
-        old = 'inventory::hasComponent(board.components, value.id, len(board.components))' if language == 'guest' else 'has(m.ComponentId, board.components, value.id)'
-        new = 'inventory::hasNet(board.nets, value.id, len(board.nets))' if language == 'guest' else 'has(m.NetId, board.nets, value.id)'
+        old = 'inventory::has::< ids::ComponentId >(board.components, value.id, len(board.components))' if language == 'guest' else 'has(m.ComponentId, board.components, value.id)'
+        new = 'inventory::has::< ids::NetId >(board.nets, value.id, len(board.nets))' if language == 'guest' else 'has(m.NetId, board.nets, value.id)'
         text = replace_once(text, old, new)
     elif task == 'state':
         old = ('''        },
         m::Feature.via(value) => {
-            if !inventory::hasNet(board.nets, value.net, len(board.nets)) {
+            if !inventory::has::< ids::NetId >(board.nets, value.net, len(board.nets)) {
                 return new m::Preflight.err(new m::Failure.input(new m::InputProblem.missing_net));
             }
         }
@@ -55,7 +55,7 @@ def seed(root, language, task):
 ''')
         text = replace_once(text, old, '        }\n' if language == 'guest' else '')
     elif task == 'admission':
-        old = (' && !inventory::hasNet(region.allow_nets, value.net, len(region.allow_nets))'
+        old = (' && !inventory::has::< ids::NetId >(region.allow_nets, value.net, len(region.allow_nets))'
                if language == 'guest' else ' and !has(m.NetId, region.allow_nets, value.net)')
         if text.count(old) != 2:
             raise ValueError('expected track and via exemption checks')

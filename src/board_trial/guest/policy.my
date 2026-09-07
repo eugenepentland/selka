@@ -1,5 +1,6 @@
 module policy;
 import model as m;
+import ids;
 import inventory;
 export applies;
 fn side(region: m::RegionFace, face: m::Face) -> bool {
@@ -34,10 +35,10 @@ fn applies(item: m::Feature, region: m::Region) -> bool {
             return region.blocks.component && side(region.face, value.face);
         },
         m::Feature.track(value) => {
-            return region.blocks.track && layer(region.face, value.layer) && !inventory::hasNet(region.allow_nets, value.net, len(region.allow_nets));
+            return region.blocks.track && layer(region.face, value.layer) && !inventory::has::< ids::NetId >(region.allow_nets, value.net, len(region.allow_nets));
         },
         m::Feature.via(value) => {
-            return region.blocks.via && !inventory::hasNet(region.allow_nets, value.net, len(region.allow_nets));
+            return region.blocks.via && !inventory::has::< ids::NetId >(region.allow_nets, value.net, len(region.allow_nets));
         }
     }
 }

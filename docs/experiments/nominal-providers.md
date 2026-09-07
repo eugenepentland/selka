@@ -69,9 +69,10 @@ the ordinary and generic checkers. Concrete codecs execute success/error paths a
 imported methods under allocation failure; unused invalid callers reject privacy,
 arity, type and result errors.
 
-No guest-native backend work is included. Public generic tooling, board `Slot<T>`
-consolidation, codec/structural constraints, source serialization, finer incremental
-checking and measured agent repair outcomes remain open.
+No guest-native backend work is included. Board `Slot<T>` consolidation is now
+implemented. Public generic tooling, codec/structural constraints, source
+serialization, finer incremental checking and measured agent repair outcomes
+remain open.
 
 Validation on 2026-09-07: `zig build test-interpreter --summary all` passes all
 35 steps, 853 Zig tests (776 core, 73 CLI, 4 board), and 21 Python drivers.
