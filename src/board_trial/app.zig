@@ -19,6 +19,16 @@ pub const App = struct {
         self.trap = null;
         try self.program.init(allocator, provider);
         errdefer self.program.deinit();
+        try self.bind(allocator);
+    }
+    /// Load the current disk project and validate its typed geometry interface.
+    pub fn initDisk(self: *App, allocator: std.mem.Allocator, io: std.Io, root: []const u8) InitError!void {
+        self.trap = null;
+        try self.program.initDisk(allocator, io, root);
+        errdefer self.program.deinit();
+        try self.bind(allocator);
+    }
+    fn bind(self: *App, allocator: std.mem.Allocator) InitError!void {
         self.registry = try language.vm_host.Registry.init(allocator, self.program.compilation.code.?);
         errdefer self.registry.deinit();
         self.geometry = .{ .meta = .{ .records = self.program.compilation.code.?.records } };
@@ -48,18 +58,3 @@ pub const App = struct {
         }
     }
 };
-/// Read the checked-in guest modules without a dependency on the working directory.
-pub fn embedded(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
-    return language.embedded_project.read(allocator, &.{
-        .{ .path = "main.my", .bytes = @embedFile("guest/main.my") },
-        .{ .path = "units.my", .bytes = @embedFile("guest/units.my") },
-        .{ .path = "ids.my", .bytes = @embedFile("guest/ids.my") },
-        .{ .path = "model.my", .bytes = @embedFile("guest/model.my") },
-        .{ .path = "bounds.my", .bytes = @embedFile("guest/bounds.my") },
-        .{ .path = "inventory.my", .bytes = @embedFile("guest/inventory.my") },
-        .{ .path = "checks.my", .bytes = @embedFile("guest/checks.my") },
-        .{ .path = "policy.my", .bytes = @embedFile("guest/policy.my") },
-        .{ .path = "geometry.my", .bytes = @embedFile("guest/geometry.my") },
-        .{ .path = "validation.my", .bytes = @embedFile("guest/validation.my") },
-    }, path, limit);
-}

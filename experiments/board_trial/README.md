@@ -36,8 +36,12 @@ The executable accepts a file containing a JSON array of
 `{"name": ..., "input": ..., "unavailable": false}` requests. Each output row has
 `name`, `guest` and `baseline`; observations contain `outcome` and `calls`.
 Input/output definitions are in the contract. A runner error is a failed trial,
-not a successful guest report. The runner embeds guest source at build time;
-rebuild it after source changes.
+not a successful guest report. Invoke it as
+`zig-out/bin/board-trial --project src/board_trial/guest REQUESTS.json`.
+The runner reads `main.my` and its imports from disk on every invocation, so
+application edits do not require Zig or Guardian. Its typed geometry interface
+must still match the installed host. Immutable guest sources remain embedded only
+in Zig boundary tests. See the [development plan](../../docs/experiments/incremental-development.md).
 
 ## Findings and limits
 

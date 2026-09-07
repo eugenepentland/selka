@@ -11,11 +11,17 @@ pub const App = struct {
     program: language.embedded_project.Program,
     issue: ?bridge.Issue = null,
     trap: ?language.diagnostic.Diagnostic = null,
-    /// Load the supplied guest project, normally the checked-in embedded modules.
+    /// Load the supplied guest project, using an explicit source provider.
     pub fn init(self: *App, allocator: std.mem.Allocator, provider: language.project.Provider) InitError!void {
         self.issue = null;
         self.trap = null;
         try self.program.init(allocator, provider);
+    }
+    /// Read the current main.my project from disk without rebuilding the host.
+    pub fn initDisk(self: *App, allocator: std.mem.Allocator, io: std.Io, root: []const u8) InitError!void {
+        self.issue = null;
+        self.trap = null;
+        try self.program.initDisk(allocator, io, root);
     }
     /// Release all source, syntax, type and bytecode storage.
     pub fn deinit(self: *App) void {
@@ -50,16 +56,3 @@ pub const App = struct {
         return context.output.toOwnedSlice(allocator);
     }
 };
-/// Read the guest source without depending on cwd or granting guest filesystem access.
-pub fn embedded(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
-    return language.embedded_project.read(allocator, &.{
-        .{ .path = "main.my", .bytes = @embedFile("guest/main.my") },
-        .{ .path = "io.my", .bytes = @embedFile("guest/io.my") },
-        .{ .path = "text.my", .bytes = @embedFile("guest/text.my") },
-        .{ .path = "sexpr.my", .bytes = @embedFile("guest/sexpr.my") },
-        .{ .path = "circuit.my", .bytes = @embedFile("guest/circuit.my") },
-        .{ .path = "svg.my", .bytes = @embedFile("guest/svg.my") },
-        .{ .path = "validate.my", .bytes = @embedFile("guest/validate.my") },
-        .{ .path = "ports.my", .bytes = @embedFile("guest/ports.my") },
-    }, path, limit);
-}

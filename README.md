@@ -41,11 +41,25 @@ Netlisp DSL and renders a schematic inside the bytecode VM. It includes a genera
 SVG, reproducible inputs and independent netlist acceptance. This is a bounded
 single-subcircuit application; full Netlisp evaluation remains outside its scope.
 
+## Application development without rebuilding Zig
+
+Use an installed `mylang` binary to check/run `.my` projects from disk. The two
+pilot hosts also load disk source explicitly: `schematic-svg --project DIRECTORY`
+and `board-trial --project DIRECTORY`, followed by their input paths. The directory
+contains `main.my` and its imports. Each invocation reads the current source and
+compiles it to VM bytecode in memory. No Zig or Guardian invocation is needed for
+application edits; rebuild the host when changing the implementation or wrappers.
+
+See the [implementation and phased development plan](docs/experiments/incremental-development.md)
+for commands and acceptance. Disk loading is implemented; dependency-aware testing,
+shared verification caching, an agent scheduler, combined-merge certificates and
+HMR are planned. The existing check watcher does not yet reload running code.
+
 ## Build and use
 
 ```sh
 zig build
-zig build run -- run examples/arithmetic.my
+zig-out/bin/mylang run examples/arithmetic.my
 zig-out/bin/mylang check examples/arithmetic.my
 zig-out/bin/mylang dump-bytecode examples/arithmetic.my
 zig build test --summary all

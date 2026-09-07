@@ -12,6 +12,7 @@ import tempfile
 import xml.etree.ElementTree as ET
 
 FIXTURES = Path(__file__).resolve().parents[1] / "experiments/schematic/fixtures"
+PROJECT = FIXTURES.parents[2] / "src/schematic/guest"
 NS = {"s": "http://www.w3.org/2000/svg"}
 
 
@@ -96,7 +97,7 @@ def execute(runner, docs):
             path = Path(directory) / f"source{i}.sexp"
             path.write_bytes(data if isinstance(data, bytes) else data.encode())
             paths.append(str(path))
-        return subprocess.run([str(runner), *paths], capture_output=True, timeout=180)
+        return subprocess.run([str(runner), "--project", str(PROJECT), *paths], capture_output=True, timeout=180)
 
 
 def acceptance(runner, output):

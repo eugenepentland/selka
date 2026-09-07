@@ -64,6 +64,8 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [WIRE-6] Rejects stale schemas, private targets, effects, reference boundaries, and malformed call arguments before execution.
 ## Command line
 
+- [DISK-PROJECT-1] Interpreter application hosts load `main.my` and imported modules from an explicit disk directory, with bounded reads and no embedded-source fallback. Failed loads and compilation release owned storage and preserve located source errors; a later invocation reads repaired source. Existing typed host registrations remain mandatory. The standalone acceptance driver also changes guest source and project roots using the same executable without Zig or Guardian on PATH.
+
 - [CLI-1] Distinguishes source errors, runtime traps, and invalid command usage through actual process results.
 - [CLI-2] Reports missing arguments and missing source files as usage or host failures.
 - [CLI-3] Executes the plan acceptance programs and recursive functions through the command-line executable.

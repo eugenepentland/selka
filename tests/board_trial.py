@@ -13,7 +13,7 @@ CASES = ROOT / 'experiments/board_trial/cases.json'
 
 def invoke(runner, path, raw):
     path.write_text(raw)
-    return subprocess.run([str(runner), str(path)], capture_output=True, text=True, timeout=90)
+    return subprocess.run([str(runner), "--project", str(ROOT / "src/board_trial/guest"), str(path)], capture_output=True, text=True, timeout=90)
 
 
 def compare(runner, path, cases):

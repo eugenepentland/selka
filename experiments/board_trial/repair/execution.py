@@ -9,7 +9,7 @@ from storage import command, digest, write_json
 def verdict(directory, cases, language, program):
     requests = [{key: case[key] for key in ('name', 'input', 'unavailable')} for case in cases]
     write_json(directory / 'requests.json', requests)
-    record = command(directory, 'run', [program, directory / 'requests.json'])
+    record = command(directory, 'run', [program, '--project', directory / 'source/guest', directory / 'requests.json'])
     if record['status'] != 'passed':
         return {'phase': 'execution', 'passed': False}
     try:

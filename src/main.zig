@@ -522,14 +522,8 @@ const ModuleFiles = struct {
             if (input.source.len > limit) return error.TooLarge;
             return allocator.dupe(u8, input.source);
         };
-        const path = try std.fs.path.join(allocator, &.{ self.root, relative });
-        defer allocator.free(path);
-        return std.Io.Dir.cwd().readFileAlloc(self.io, path, allocator, .limited(limit + 1)) catch |err| switch (err) {
-            error.OutOfMemory => error.OutOfMemory,
-            error.FileNotFound => error.NotFound,
-            error.StreamTooLong => error.TooLarge,
-            else => error.ReadFailed,
-        };
+        var files: language.project_files.Files = .{ .io = self.io, .root = self.root };
+        return language.project_files.Files.read(&files, allocator, relative, limit);
     }
 };
 fn listModules(init: Context, parsed: Parsed) !u8 {

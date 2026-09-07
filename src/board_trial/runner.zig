@@ -10,12 +10,15 @@ const Row = struct { name: []const u8, guest: m.Observation, baseline: m.Observa
 pub fn main(init: std.process.Init) !void {
     const allocator = init.arena.allocator();
     const args = try init.minimal.args.toSlice(allocator);
-    if (args.len != 2) return error.Usage;
-    const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, args[1], allocator, .limited(4 * 1024 * 1024));
+    if (args.len != 4 or !std.mem.eql(u8, args[1], "--project")) {
+        std.debug.print("usage: board-trial --project DIRECTORY REQUESTS.json\n", .{});
+        return error.Usage;
+    }
+    const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, args[3], allocator, .limited(4 * 1024 * 1024));
     const parsed = try std.json.parseFromSlice(std.json.Value, allocator, bytes, .{ .allocate = .alloc_always, .parse_numbers = false });
     if (parsed.value != .array) return error.InvalidSnapshot;
     var app: application.App = undefined;
-    try app.init(allocator, .{ .context = null, .read = application.embedded });
+    try app.initDisk(allocator, init.io, args[2]);
     defer app.deinit();
     const rows = try allocator.alloc(Row, parsed.value.array.items.len);
     for (parsed.value.array.items, rows) |raw, *row| {

@@ -26,7 +26,7 @@ fn callbackScenario(allocator: std.mem.Allocator, meta: values.Meta, rect: value
 // spec: BOARD-TRIAL-1
 test "trial snapshot and callback allocation failures release all ordinary value graphs" {
     var app: application.App = undefined;
-    try app.init(t.allocator, .{ .context = null, .read = application.embedded });
+    try app.init(t.allocator, .{ .context = null, .read = @import("fixtures.zig").embedded });
     defer app.deinit();
     const meta = app.geometry.meta;
     try snapshotScenario(t.allocator, meta);
@@ -42,7 +42,7 @@ test "trial snapshot and callback allocation failures release all ordinary value
 }
 test "trial VM reports typed failure then starts a fresh successful geometry session" {
     var app: application.App = undefined;
-    try app.init(t.allocator, .{ .context = null, .read = application.embedded });
+    try app.init(t.allocator, .{ .context = null, .read = @import("fixtures.zig").embedded });
     defer app.deinit();
     try t.expectError(error.GuestTrap, app.run(t.allocator, board, false, .{ .execution = .{ .max_steps = 1 } }));
     try t.expectEqualStrings("R_STEP_LIMIT", app.trap.?.code);
@@ -81,7 +81,7 @@ test "trial transport rejects partial allocations without leaking caller arena s
 // spec: BOARD-ABSTRACTION-1
 test "trial generic slot snapshots preserve distinct ID payloads at the trusted boundary" {
     var app: application.App = undefined;
-    try app.init(t.allocator, .{ .context = null, .read = application.embedded });
+    try app.init(t.allocator, .{ .context = null, .read = @import("fixtures.zig").embedded });
     defer app.deinit();
     const meta = app.geometry.meta;
     var snapshot = try values.Snapshot.init(t.allocator, meta, board);
@@ -94,4 +94,14 @@ test "trial generic slot snapshots preserve distinct ID payloads at the trusted 
     try t.expectEqual(try meta.find("ids::NetId"), net_slot.aggregate.fields[0].typeOf());
     try t.expectError(error.SnapshotSchemaMismatch, meta.variant(t.allocator, component_slot_type, "some", net_slot.aggregate.fields[0]));
     try t.expectEqualStrings("none", try meta.tag(nets.aggregate.fields[1]));
+}
+
+test "board initDisk releases compilation and registry when the host schema is absent" {
+    var temp = t.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(t.io, .{ .sub_path = "main.my", .data = "module main; fn main()->i64 { return 0; }" });
+    const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    var app: application.App = undefined;
+    try t.expectError(error.SnapshotSchemaMismatch, app.initDisk(t.allocator, t.io, root));
 }

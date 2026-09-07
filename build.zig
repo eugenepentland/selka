@@ -90,7 +90,8 @@ pub fn build(b: *std.Build) void {
     guardian.addAllChecks(b, guardian_exe, test_step, .{});
     test_step.dependOn(&b.addRunArtifact(unit).step);
     test_step.dependOn(&run_integration.step);
-    test_step.dependOn(&b.addRunArtifact(board_unit).step);
+    const run_board_unit = b.addRunArtifact(board_unit);
+    test_step.dependOn(&run_board_unit.step);
     const schematic_runtime = b.addSystemCommand(&.{ "python3", "tests/schematic_svg.py", "--runner" });
     schematic_runtime.addFileArg(schematic_runner.getEmittedBin());
     schematic_runtime.setCwd(b.path("."));
@@ -107,6 +108,17 @@ pub fn build(b: *std.Build) void {
     board_runtime.addFileArg(exe.getEmittedBin());
     board_runtime.setCwd(b.path("."));
     test_step.dependOn(&board_runtime.step);
+    const disk_runtime = b.addSystemCommand(&.{ "python3", "tests/disk_projects.py", "--schematic-runner" });
+    disk_runtime.addFileArg(schematic_runner.getEmittedBin());
+    disk_runtime.addArg("--board-runner");
+    disk_runtime.addFileArg(board_runner.getEmittedBin());
+    disk_runtime.setCwd(b.path("."));
+    test_step.dependOn(&disk_runtime.step);
+    const disk_step = b.step("test-disk-projects", "Verify guest edits using unchanged host binaries and no build tools on PATH");
+    disk_step.dependOn(&disk_runtime.step);
+    disk_step.dependOn(&run_schematic_unit.step);
+    disk_step.dependOn(&run_board_unit.step);
+    guardian.addAllChecks(b, guardian_exe, disk_step, .{});
     const driver_tests = b.addSystemCommand(&.{ "python3", "-m", "unittest", "discover", "-s", "tests/verification", "-p", "test_driver.py" });
     driver_tests.setCwd(b.path("."));
     test_step.dependOn(&driver_tests.step);

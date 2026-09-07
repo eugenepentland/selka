@@ -19,17 +19,22 @@ Use the pinned Zig 0.17.0 development toolchain and sibling Guardian checkout:
 
 ```sh
 zig build -Doptimize=ReleaseFast
-zig-out/bin/schematic-svg \
+zig-out/bin/schematic-svg --project src/schematic/guest \
   experiments/schematic/fixtures/straps-synth-lmx2595.sexp \
   experiments/schematic/fixtures/lmx2595rhar.sexp \
   experiments/schematic/fixtures/spi.sexp > /tmp/straps-synth-lmx2595.svg
 zig build test-schematic -Doptimize=ReleaseFast --summary all
 ```
 
+After the initial host build, edit any file in `src/schematic/guest/` and rerun
+the executable directly. It reloads imports from disk without Zig or Guardian.
+The project directory is required; missing/invalid source cannot fall back to an
+embedded copy. [Incremental verification and HMR plan](../../docs/experiments/incremental-development.md).
+
 For the live local design, substitute these three explicit input paths:
 
 ```sh
-zig-out/bin/schematic-svg \
+zig-out/bin/schematic-svg --project src/schematic/guest \
   ../eda/projects/designs/lib/modules/straps-synth-lmx2595.sexp \
   ../eda/projects/designs/lib/pinouts/lmx2595rhar.sexp \
   ../eda/stdlib/interfaces/spi.sexp > /tmp/current-straps-synth-lmx2595.svg

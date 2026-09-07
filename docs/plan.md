@@ -5,6 +5,14 @@ ability to add a backend later, but do not implement or extend native execution
 as part of completing this roadmap. The current goal is to develop the language
 on its bytecode VM; a future decision can reopen native work.
 
+Current development-tooling priority (2026-09-07): [disk projects and incremental
+verification](experiments/incremental-development.md). Disk-loaded schematic and board hosts are implemented;
+ordinary `.my` edits use the installed executable without rebuilding Zig or running
+Guardian. Next: dependency inventory/affected testing, shared verification receipts,
+an agent job scheduler and combined-merge verification. Safe request-boundary HMR
+can follow disk loading independently; finer semantic caching follows profiling.
+Those later stages remain planned, with acceptance criteria in the linked plan.
+
 Status: revision 3, interpreter-first direction adopted on 2026-09-06. Scalar MVP M0–M5 and substantial post-MVP experiments are implemented. The current priorities below supersede older sequencing and dated “next” statements; completed experiments remain historical evidence.
 
 Working executable name: `mylang`. Working source extension: `.my`.
@@ -2833,3 +2841,26 @@ coverage or measured agent-repair effectiveness. Public generic tooling,
 remaining structural/codec constraints, source serialization, finer incremental
 checking and actual repair-study attempts remain active roadmap items. Native
 execution remains deferred to a future decision.
+
+## Disk-loaded applications and development infrastructure — 2026-09-07
+
+The schematic and board hosts now require `--project DIRECTORY` and read `main.my`
+and its imports on each invocation. A shared bounded disk provider also serves
+the ordinary CLI. Guest edits change VM behavior without rebuilding the installed
+Zig executable or invoking Guardian. Missing source, syntax/type errors and host
+contract mismatches fail explicitly; Zig boundary tests retain isolated fixtures.
+The repair-study coordinator was updated for the disk-project runner interface.
+
+`tests/disk_projects.py` verifies import additions/removals, repaired source,
+independent project roots, real SVG/policy changes, unchanged binary hashes and
+modification times, and operation without build tools on PATH. The full Debug
+interpreter gate passes 40/40 steps and 864/864 Zig tests, plus its Python drivers.
+Focused ReleaseFast disk/schematic verification passes 14/14 steps and 10/10 Zig
+tests, including all 23 schematic input rejections. Formatting and gated ReleaseFast
+installation pass; all 88 Guardian checks pass with baselines disabled. Existing
+report-only findings remain. Exact-limit reads have a regression test.
+
+The linked disk-project development plan specifies dependency-aware testing,
+shared verification receipts, a multi-agent scheduler, combined-merge certificates,
+safe request-boundary HMR and later semantic query reuse. Those stages are planned,
+not implemented by this checkpoint. Native execution remains deferred.

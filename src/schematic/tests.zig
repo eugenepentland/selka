@@ -90,6 +90,34 @@ test "schematic application clears output and trap state between bounded runs" {
     defer t.allocator.free(result);
     try t.expect(app.trap == null and app.issue == null);
     try t.expectEqualStrings("A", result);
-    try t.expectError(error.TooLarge, application.embedded(null, t.allocator, "main.my", 0));
-    try t.expectError(error.NotFound, application.embedded(null, t.allocator, "unknown.my", 1024));
+    try t.expectError(error.TooLarge, provider(null, t.allocator, "main.my", 0));
+    try t.expectError(error.NotFound, provider(null, t.allocator, "unknown.my", 1024));
+}
+
+// spec: DISK-PROJECT-1
+test "disk initSource and initDisk release failed compilations and reload bounded sources" {
+    var temp = t.tmpDir(.{});
+    defer temp.cleanup();
+    const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
+    defer t.allocator.free(root);
+    var disk: language.project_files.Files = .{ .io = t.io, .root = root };
+    try t.expectError(error.NotFound, language.project_files.Files.read(&disk, t.allocator, "main.my", 100));
+    try temp.dir.writeFile(t.io, .{ .sub_path = "main.my", .data = main_source });
+    try t.expectError(error.TooLarge, language.project_files.Files.read(&disk, t.allocator, "main.my", main_source.len - 1));
+    const exact = try language.project_files.Files.read(&disk, t.allocator, "main.my", main_source.len);
+    defer t.allocator.free(exact);
+    try t.expectEqualStrings(main_source, exact);
+    var app: application.App = undefined;
+    try t.expectError(error.SourceError, app.initDisk(t.allocator, t.io, root));
+    try temp.dir.writeFile(t.io, .{ .sub_path = "io.my", .data = "module io; broken" });
+    try t.expectError(error.SourceError, app.initDisk(t.allocator, t.io, root));
+    try temp.dir.writeFile(t.io, .{ .sub_path = "io.my", .data = declarations });
+    try temp.dir.writeFile(t.io, .{ .sub_path = "main.my", .data = "module main; fn main()->i64 { return true; }" });
+    try t.expectError(error.SourceError, app.initDisk(t.allocator, t.io, root));
+    try temp.dir.writeFile(t.io, .{ .sub_path = "main.my", .data = main_source });
+    try app.initDisk(t.allocator, t.io, root);
+    defer app.deinit();
+    const output = try app.run(t.allocator, &.{ "", "", "" }, .{});
+    defer t.allocator.free(output);
+    try t.expectEqualStrings("A", output);
 }
