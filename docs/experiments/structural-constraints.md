@@ -83,3 +83,14 @@ effect ceilings, mutable references and alias rejection, imported dispatch,
 formatter idempotence and cleanup under allocation failure. Source JSON's separate
 `codec` requirement is implemented by the serialization work; it does not imply
 `copy`, structural field visibility or access to a domain's backing representation.
+
+## Composite signatures
+
+Contracts accept fixed arrays and nominal applications, including parameterized
+fields such as `T:copy+field(items:[2]U)+field(box:Box<U>)`. Signature substitution
+uses the same array and nominal identities as ordinary function specialization;
+array lengths and nested nominal arguments must match exactly. Contracts may
+borrow slices and whole owners, for example `op(fill(b:&mut Buffer<i64>)->Status
+ effects())`. A borrowed result obligation remains invalid, and field contracts
+still require copyable records and fields. Returned-reference operation contracts
+and structural requirements on nominal declarations remain separate work.

@@ -7,7 +7,7 @@ fn run(bytes: []const u8, expected: i64) !void {
     var c = try language.Compilation.init(t.allocator, "structural.my", bytes);
     defer c.deinit();
     const result = c.execute(t.allocator) catch |err| {
-        for (c.diagnostics.items) |diag| print("{s}: {s}\n", .{ diag.code, diag.message });
+        for (c.diagnostics.items) |diag| print("{s}: {s} ({s})\n", .{ diag.code, diag.message, c.src.text(diag.span) });
         return err;
     };
     try t.expectEqual(expected, result.value);
@@ -102,4 +102,49 @@ test "structural imported operation dispatch survives AST source relocation" {
     try program.init(t.allocator, .{ .context = null, .read = moduleRead });
     defer program.deinit();
     try t.expectEqual(@as(i64, 13), (try language.vm.run(t.allocator, program.compilation.code.?)).value);
+}
+
+// spec: STRUCTURAL-COMPOSITE-1
+test "structural composite fields substitute arrays and nominal applications" {
+    try run("struct Box<U:copy>{value:U}struct A{items:[2]i64,box:Box<i64>}" ++
+        "fn get<T:copy+field(items:[2]U)+field(box:Box<U>),U:copy>(v:T)->U{return v.box.value;}" ++
+        "fn main()->i64{return get::<A,i64>(new A{items:new [2]i64 [1,2],box:new Box<i64>{value:7}});}", 7);
+    try reject("fn f<T:copy+field(items:[2]U),U:copy>(v:T)->U{return v.items[true];}", "E_GENERIC_OPERATION");
+}
+
+test "structural composite operations preserve slices and owned reference permissions" {
+    try run("buffer B:i64;result A{ok:B,err:i64}result S{ok:bool,err:i64}" ++
+        "domain D:i64{fn append(b:&mut B,n:i64)->S effects(){return append_buffer<S>(b,n);}}" ++
+        "fn apply<T:copy+op(append(b:&mut B,n:i64)->S effects())>(b:&mut B)->S{return T.append(b,7);}" ++
+        "fn main(heap:allocator)->i64{match acquire_buffer<A>(heap,1){A.ok(acquired)=>{let mut b=acquired;" ++
+        "borrow mut b as r{acknowledge apply::<D>(r);}return read_buffer(b,0);},A.err(e)=>{return e;}}}", 7);
+    try run("domain D:i64{fn pair(v:&mut [][2]i64)->[2]i64 effects(){let old=read_slice(v,0);write_slice(v,0,new [2]i64 [8,9]);return old;}}" ++
+        "fn call<T:copy+op(pair(v:&mut [][2]i64)->[2]i64 effects())>(v:&mut [][2]i64)->i64{return T.pair(v)[1];}" ++
+        "fn main()->i64{let mut a=new [1][2]i64 [new [2]i64 [3,4]];borrow mut a[0..1] as s{return call::<D>(s);}}", 4);
+}
+
+const composite = "struct Box<U:copy>{value:U}struct A{items:[2]i64,box:Box<i64>}struct B{items:[2]bool,box:Box<bool>}" ++
+    "fn get<T:copy+field(items:[2]U)+field(box:Box<U>),U:copy>(v:T)->U{return v.box.value;}" ++
+    "fn forward<V:copy+field(items:[2]W)+field(box:Box<W>),W:copy>(v:V)->W{return get::<V,W>(v);}" ++
+    "fn main()->i64{let flag=forward::<B,bool>(new B{items:new [2]bool [true,false],box:new Box<bool>{value:true}});" ++
+    "if flag{return forward::<A,i64>(new A{items:new [2]i64 [1,2],box:new Box<i64>{value:7}});}return 0;}";
+fn compositeLifecycle(allocator: std.mem.Allocator) !void {
+    var c = try language.Compilation.init(allocator, "composite.my", composite);
+    defer c.deinit();
+    const formatted = try c.format(allocator);
+    defer allocator.free(formatted);
+    var copy = try language.Compilation.init(allocator, "formatted.my", formatted);
+    defer copy.deinit();
+    try t.expectEqual(@as(i64, 7), (try copy.execute(allocator)).value);
+    const generated = try copy.emitC(allocator);
+    defer allocator.free(generated);
+}
+
+test "structural composite contracts forward distinct substitutions and survive allocation failures" {
+    try compositeLifecycle(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), compositeLifecycle, .{});
+    try reject("struct A{items:[3]i64}fn f<T:copy+field(items:[2]U),U:copy>(v:T)->i64{return 0;}" ++
+        "fn main()->i64{return f::<A,i64>(new A{items:new [3]i64 [1,2,3]});}", "E_GENERIC_ARGUMENT");
+    try reject("result R{ok:i64,err:i64}fn f<T:copy+op(use(v:&[2]R)->i64 effects())>()->i64{return 0;}", "E_RESULT_BORROW");
 }

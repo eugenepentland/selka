@@ -1,4 +1,5 @@
 //! Resolve nominal fields and contracts without assigning runtime IDs to type parameters.
+const body_limit = "E_GENERIC_BODY_LIMIT";
 const std = @import("std");
 const symbolic = @import("symbolic_types.zig");
 const templates = @import("nominal_templates.zig");
@@ -20,7 +21,7 @@ pub const Context = struct {
     work: *usize,
 
     fn charge(self: Context, span: source.Span) Error!void {
-        if (self.work.* == 100000) return self.sink.fail("E_GENERIC_BODY_LIMIT", span, "generic nominal shapes exceed checking work budget");
+        if (self.work.* == 100000) return self.sink.fail(body_limit, span, "generic nominal shapes exceed checking work budget");
         self.work.* += 1;
     }
     /// Retain nominal identity and copied ordered arguments in the function's shape arena.
@@ -31,7 +32,7 @@ pub const Context = struct {
     }
     fn expression(self: Context, expression_value: templates.Expression, arguments: []const Value, depth: usize, span: source.Span) Error!Value {
         try self.charge(span);
-        if (depth == 256) return self.sink.fail("E_GENERIC_BODY_LIMIT", span, "generic nominal expression exceeds 256 levels");
+        if (depth == 256) return self.sink.fail(body_limit, span, "generic nominal expression exceeds 256 levels");
         const store = self.catalog.templates.store.?;
         return switch (expression_value) {
             .builtin => |ty| .{ .concrete = ty },
@@ -56,6 +57,24 @@ pub const Context = struct {
                 break :result .{ .array = shape };
             },
         };
+    }
+    fn sourceType(self: Context, span: source.Span, depth: usize) Error!Value {
+        try self.charge(span);
+        if (depth == 256) return self.sink.fail(body_limit, span, "structural field type exceeds 256 levels");
+        for (self.parameters, 0..) |parameter, i| {
+            if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(span))) return .{ .parameter = i };
+        }
+        if (self.catalog.templates.applications.get(span.start)) |template| {
+            var arguments: [16]Value = undefined;
+            for (template.syntax.arguments, 0..) |argument, i| arguments[i] = try self.sourceType(argument, depth + 1);
+            return self.nominal(template.declaration, arguments[0..template.arguments.len]);
+        }
+        if (self.catalog.arrays.templates.get(span.start)) |template| {
+            const array = try self.arena.allocator().create(symbolic.Array);
+            array.* = .{ .length = template.length, .element = try self.sourceType(template.syntax.element, depth + 1) };
+            return .{ .array = array };
+        }
+        return .{ .concrete = try self.catalog.resolve(self.src, span, self.sink) };
     }
     /// Inspect declaration kind without demanding a record shape from an unconstrained parameter.
     pub fn kind(self: Context, value: Value) ?templates.Kind {
@@ -113,12 +132,7 @@ pub const Context = struct {
             const declared = self.parameters[value.parameter].field_requirements;
             const fields = try self.arena.allocator().alloc(symbolic.Field, declared.len);
             for (declared, fields) |field, *out| {
-                var field_type: ?Value = null;
-                for (self.parameters, 0..) |parameter, i| if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(field.ty))) {
-                    field_type = .{ .parameter = i };
-                    break;
-                };
-                out.* = .{ .name = self.src.text(field.name), .span = field.name, .ty = field_type orelse .{ .concrete = try self.catalog.resolve(self.src, field.ty, self.sink) } };
+                out.* = .{ .name = self.src.text(field.name), .span = field.name, .ty = try self.sourceType(field.ty, 0) };
             }
             return .{ .kind = .record, .fields = fields };
         }

@@ -632,7 +632,7 @@ const Checker = struct {
             const node = self.program.nodes.items[@backingInt(input)];
             if (parameter.reference) |mutable| {
                 if (node.data != .name) return self.sink.fail(eReferenceArgument, node.span, "operation reference argument must name an active borrow");
-                const ref = try self.reference(node.data.name, mutable, false);
+                const ref = try self.reference(node.data.name, mutable, parameter.slice);
                 try self.same(ref.ty, expected, node.span);
                 try self.regionRead(ref.*);
                 try self.claimLoan(&loans, node.data.name);
@@ -665,7 +665,7 @@ const Checker = struct {
                     }
                 },
                 .concrete => |target| {
-                    const function = try (@import("structural_constraints.zig").Context{ .src = self.src, .catalog = self.catalog, .program = self.program, .sink = self.sink }).method(target, operation.name);
+                    const function = try (@import("structural_constraints.zig").Context{ .src = self.src, .catalog = &self.catalog, .program = self.program, .sink = self.sink }).method(target, operation.name);
                     actual = .{ .name = function.name, .parameters = function.signature.parameters, .return_type = function.signature.return_type, .effect_bound = function.policy.effect_bound.? };
                     concrete = true;
                 },
@@ -692,7 +692,7 @@ const Checker = struct {
                 _ = try self.ty(operation.return_type);
                 for (operation.parameters) |input| {
                     const value = try self.ty(input.ty);
-                    if (input.reference != null and try self.transfers(value)) return self.sink.fail(diagnostic.result_borrow, input.ty, "structural operation cannot borrow owned or result-bearing values");
+                    if (input.reference != null and try self.requiresHandling(value)) return self.sink.fail(diagnostic.result_borrow, input.ty, "structural operation cannot borrow result-bearing values");
                 }
             }
         }

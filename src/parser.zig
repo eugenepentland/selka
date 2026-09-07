@@ -391,8 +391,9 @@ pub const Parser = struct {
         const name = (try self.expect(.ident)).span;
         _ = try self.expect(.colon);
         const reference: ?bool = if (self.take(.ampersand)) self.take(.kw_mut) else null;
-        if (self.current().tag == .lbracket) return self.sink.fail(eRequirement, self.current().span, "structural signatures currently require named types, not arrays or slices");
-        return .{ .name = name, .ty = try self.typeName(), .reference = reference };
+        const slice = reference != null and self.current().tag == .lbracket and self.tokens[self.cursor.pos + 1].tag == .rbracket;
+        if (slice) self.cursor.pos += 2;
+        return .{ .name = name, .ty = try self.typeName(), .reference = reference, .slice = slice };
     }
     fn operationConstraint(self: *Parser) diagnostic.Error!ast.Operation {
         _ = try self.expect(.lparen);
@@ -406,7 +407,7 @@ pub const Parser = struct {
         };
         _ = try self.expect(.rparen);
         _ = try self.expect(.arrow);
-        if (self.current().tag == .ampersand or self.current().tag == .lbracket) return self.sink.fail(eRequirement, self.current().span, "structural operation results currently require named value types");
+        if (self.current().tag == .ampersand) return self.sink.fail(eRequirement, self.current().span, "structural operation results currently require named value types");
         const result = try self.typeName();
         const bound = try self.effectBound() orelse return self.sink.fail(eRequirement, name, "structural operations require an explicit effects bound");
         _ = try self.expect(.rparen);

@@ -184,22 +184,9 @@ const Checker = struct {
         return self.functionTypeDepth(id, span, 0);
     }
     fn functionTypeDepth(self: *Checker, id: typed.FunctionId, span: source.Span, depth: usize) Error!typed.Type {
-        if (depth == 256) return self.sink.fail("E_GENERIC_LIMIT", span, "generic array type exceeds 256 nesting levels");
         const key = self.instance_keys.items[@backingInt(id)];
         const function = self.syntax.functions[@backingInt(key.declaration)];
-        for (function.signature.type_parameters, key.arguments) |parameter, argument| {
-            if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(span))) return argument;
-        }
-        if (self.catalog.templates.applications.get(span.start)) |template| {
-            var arguments: [16]typed.Type = undefined;
-            for (template.syntax.arguments, 0..) |argument, i| arguments[i] = try self.functionTypeDepth(id, argument, depth + 1);
-            return @import("nominal_catalog.zig").instantiate(&self.catalog, template.declaration, arguments[0..template.arguments.len], span);
-        }
-        if (self.catalog.arrays.templates.get(span.start)) |template| {
-            const element = try self.functionTypeDepth(id, template.syntax.element, depth + 1);
-            return self.catalog.instantiateArray(self.allocator, element, template.length, span, self.sink);
-        }
-        return self.catalog.resolve(self.src, span, self.sink);
+        return @import("generic_substitution.zig").resolve(self.allocator, &self.catalog, self.src, self.sink, .{ .span = span, .parameters = function.signature.type_parameters, .arguments = key.arguments, .depth = depth });
     }
     fn specialize(self: *Checker, declaration: instances.DeclarationId, call: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span) Error!typed.FunctionId {
         const function = self.syntax.functions[@backingInt(declaration)];
@@ -218,10 +205,10 @@ const Checker = struct {
         }
         for (required, arguments) |parameter, argument| try (@import("structural_constraints.zig").Context{
             .src = self.src,
-            .catalog = self.catalog,
+            .catalog = &self.catalog,
             .program = self.syntax,
             .sink = self.sink,
-        }).accepts(argument, parameter, function.signature.type_parameters, arguments);
+        }).accepts(self.allocator, argument, parameter, function.signature.type_parameters, arguments);
         const instance = self.generic_registry.intern(self.allocator, .{ .declaration = declaration, .arguments = arguments }) catch |err| switch (err) {
             error.OutOfMemory => return error.OutOfMemory,
             else => return self.sink.fail("E_GENERIC_LIMIT", span, "generic specialization exceeds instance or type argument budget"),
