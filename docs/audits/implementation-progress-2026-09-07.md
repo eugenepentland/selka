@@ -20,17 +20,17 @@ The original audit remains a historical baseline, not a current feature inventor
 | F11 safety campaigns | Retained seeded Debug/ReleaseFast generated/mutated campaigns | Ongoing assurance; broaden host/JSON interactions |
 | F12 split borrows | Checked nested/empty disjoint partitions, suspended parents, VM/native cleanup | No arbitrary overlap theorem proving |
 | F13 lifetimes | Direct and selected-field immutable return provenance | Stored views/multiple-origin lifetimes remain conditional |
-| F14 generic contracts | Composite fields/operations and owner-reference parameters | Const lengths being implemented |
-| F15 callbacks | Design and implementation active | Noncapturing typed guest callbacks; closures deferred |
+| F14 generic contracts | Composite fields/operations and owner-reference parameters | Explicit const N:u64 lengths implemented; no inferred/expression arguments |
+| F15 callbacks | Typed noncapturing guest callbacks, owned value contracts and collection algorithms | Borrowed signatures/captures deferred |
 | F16 numerics | All-width bitwise/shifts/wrapping/saturation; nominal binary64 math | Named F64 operations; no primitive decimal float syntax |
 | F17 packages | Offline local locked roots, source hashes and nominal namespaces | No registry/version solver |
 | F18 memory budgets | Nested byte limits; logical capacity, backing and bookkeeping reports | Child budget API is host-facing; no source quota syntax |
 | F19 agent tools | Typed holes, bounded VM traces, in-memory host replay, named sampled laws | Matched outcome measurement pending; no proof claims |
-| F20 semantic reuse | Agent implementing function-body reuse with conservative dependencies | Fresh equivalence and edit latency evidence pending |
-| F21 native coverage | Host ABI and ordinary/typed/domain JSON through existing C backend | Combined latest native acceptance pending |
+| F20 semantic reuse | Function-body reuse, fresh global checks, equivalence tests and p50/p95 benchmark | Modest synthetic improvement; generics/constants/callback schemas fall back |
+| F21 native coverage | Host ABI and ordinary/typed/domain JSON through existing C backend | 22-step native acceptance passed before latest callback/length integrations; final combined run pending |
 | F22 concurrency | Bounded isolated process workers, copied typed messages, cancellation/join | Host-facing API; no guest shared-memory threads |
 | F23 source evaluation | Bounded scalar source functions in constants; fixed-width semantics | No aggregate generation or unrestricted macros |
-| F24 maintenance trials | Previous three exploratory blocks/nine sessions preserved | New matched owner/generic maintenance trials pending |
+| F24 maintenance trials | Previous three exploratory blocks/nine sessions preserved | Reviewed trial pack preparation underway; actual fresh sessions pending |
 
 Integration evidence so far: the earlier combined core run passed 896 tests;
 subsequent changes have focused Debug/optimized/native and allocation-failure checks.

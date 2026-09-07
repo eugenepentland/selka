@@ -62,11 +62,13 @@
     "named-executable-laws",
     "isolated-process-workers",
     "bounded-scalar-source-evaluation",
-    "deterministic-test-provider-fixtures"
+    "deterministic-test-provider-fixtures",
+    "typed-noncapturing-function-values",
+    "bounded-guest-callbacks",
+    "changed-source-function-body-cache"
   ],
   "unsupported": [
     "builtin-f64-syntax",
-    "function-values",
     "stored-reference-fields",
     "guest-shared-memory-threads",
     "unrestricted-comptime",
@@ -83,6 +85,8 @@
     "iteration": "ascending-half-open-integer-ranges",
     "native_runtime": "JSON support linked through pinned Zig object; host effects require explicit ABI registration",
     "workers": "host-facing copied typed messages; no guest spawn syntax",
-    "floating_point": "std_math::F64 nominal domain with named operations and bit codecs"
+    "floating_point": "std_math::F64 nominal domain with named operations and bit codecs",
+    "callbacks": "concrete value signatures, exact effect ceilings, no captures or borrowed signatures",
+    "semantic_reuse": "conservative function-body queries; generics constants aliases and inferred callback schemas check fresh"
   }
 }

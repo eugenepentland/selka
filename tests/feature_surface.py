@@ -23,7 +23,7 @@ def main():
     features = json.loads(feature_run.stdout)
     assert features['compiler_sha256'] == identity
     examples = []
-    for document, expected in [('floating-point.md', '42\n'), ('source-evaluation.md', '45\n')]:
+    for document, expected in [('floating-point.md', '42\n'), ('source-evaluation.md', '45\n'), ('const-length-generics.md', '42\n')]:
         text = (ROOT / 'docs' / document).read_text()
         source = re.search(r'```(?:mylang|my)\n(.*?)\n```', text, re.S).group(1)
         examples.append((document, source, expected, None))
