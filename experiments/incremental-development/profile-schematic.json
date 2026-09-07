@@ -1,0 +1,318 @@
+{
+  "cold_check": {
+    "samples": [
+      8.228221966419369,
+      8.487362996675074,
+      7.170474040322006,
+      8.392512972932309,
+      7.752584991976619
+    ],
+    "median_ms": 8.228221966419369,
+    "p95_ms": 8.487362996675074
+  },
+  "warm_verdict": {
+    "samples": [
+      1.1723529896698892,
+      1.066413999069482,
+      1.1641099699772894,
+      1.014054985716939,
+      1.022389973513782
+    ],
+    "median_ms": 1.066413999069482,
+    "p95_ms": 1.1723529896698892
+  },
+  "edited_check": {
+    "samples": [
+      4.489505023229867,
+      3.907223988790065,
+      3.7744850269518793,
+      4.267789016012102,
+      3.7987749674357474
+    ],
+    "median_ms": 3.907223988790065,
+    "p95_ms": 4.489505023229867
+  },
+  "observations": [
+    {
+      "version": "check-session-v1",
+      "action": "check",
+      "status": 0,
+      "failure": null,
+      "reuse": {
+        "hits": 0,
+        "misses": 8
+      },
+      "cache": {
+        "hits": 0,
+        "misses": 8,
+        "stored": 8,
+        "evicted": 0,
+        "bypassed": 0,
+        "retained_bytes": 795178
+      },
+      "semantic": {
+        "hits": 0,
+        "misses": 1,
+        "stored": 1,
+        "bypassed": 0,
+        "retained_bytes": 119068
+      }
+    },
+    {
+      "version": "check-session-v1",
+      "action": "check",
+      "status": 0,
+      "failure": null,
+      "reuse": {
+        "hits": 0,
+        "misses": 0
+      },
+      "cache": {
+        "hits": 0,
+        "misses": 8,
+        "stored": 8,
+        "evicted": 0,
+        "bypassed": 0,
+        "retained_bytes": 795178
+      },
+      "semantic": {
+        "hits": 1,
+        "misses": 1,
+        "stored": 1,
+        "bypassed": 0,
+        "retained_bytes": 119068
+      }
+    },
+    {
+      "version": "check-session-v1",
+      "action": "check",
+      "status": 0,
+      "failure": null,
+      "reuse": {
+        "hits": 0,
+        "misses": 0
+      },
+      "cache": {
+        "hits": 0,
+        "misses": 8,
+        "stored": 8,
+        "evicted": 0,
+        "bypassed": 0,
+        "retained_bytes": 795178
+      },
+      "semantic": {
+        "hits": 2,
+        "misses": 1,
+        "stored": 1,
+        "bypassed": 0,
+        "retained_bytes": 119068
+      }
+    },
+    {
+      "version": "check-session-v1",
+      "action": "check",
+      "status": 0,
+      "failure": null,
+      "reuse": {
+        "hits": 0,
+        "misses": 0
+      },
+      "cache": {
+        "hits": 0,
+        "misses": 8,
+        "stored": 8,
+        "evicted": 0,
+        "bypassed": 0,
+        "retained_bytes": 795178
+      },
+      "semantic": {
+        "hits": 3,
+        "misses": 1,
+        "stored": 1,
+        "bypassed": 0,
+        "retained_bytes": 119068
+      }
+    },
+    {
+      "version": "check-session-v1",
+      "action": "check",
+      "status": 0,
+      "failure": null,
+      "reuse": {
+        "hits": 0,
+        "misses": 0
+      },
+      "cache": {
+        "hits": 0,
+        "misses": 8,
+        "stored": 8,
+        "evicted": 0,
+        "bypassed": 0,
+        "retained_bytes": 795178
+      },
+      "semantic": {
+        "hits": 4,
+        "misses": 1,
+        "stored": 1,
+        "bypassed": 0,
+        "retained_bytes": 119068
+      }
+    },
+    {
+      "version": "check-session-v1",
+      "action": "check",
+      "status": 0,
+      "failure": null,
+      "reuse": {
+        "hits": 0,
+        "misses": 0
+      },
+      "cache": {
+        "hits": 0,
+        "misses": 8,
+        "stored": 8,
+        "evicted": 0,
+        "bypassed": 0,
+        "retained_bytes": 795178
+      },
+      "semantic": {
+        "hits": 5,
+        "misses": 1,
+        "stored": 1,
+        "bypassed": 0,
+        "retained_bytes": 119068
+      }
+    },
+    {
+      "version": "check-session-v1",
+      "action": "check",
+      "status": 0,
+      "failure": null,
+      "reuse": {
+        "hits": 7,
+        "misses": 1
+      },
+      "cache": {
+        "hits": 7,
+        "misses": 9,
+        "stored": 9,
+        "evicted": 0,
+        "bypassed": 0,
+        "retained_bytes": 1026750
+      },
+      "semantic": {
+        "hits": 5,
+        "misses": 2,
+        "stored": 2,
+        "bypassed": 0,
+        "retained_bytes": 119068
+      }
+    },
+    {
+      "version": "check-session-v1",
+      "action": "check",
+      "status": 0,
+      "failure": null,
+      "reuse": {
+        "hits": 8,
+        "misses": 0
+      },
+      "cache": {
+        "hits": 15,
+        "misses": 9,
+        "stored": 9,
+        "evicted": 0,
+        "bypassed": 0,
+        "retained_bytes": 1026750
+      },
+      "semantic": {
+        "hits": 5,
+        "misses": 3,
+        "stored": 3,
+        "bypassed": 0,
+        "retained_bytes": 119068
+      }
+    },
+    {
+      "version": "check-session-v1",
+      "action": "check",
+      "status": 0,
+      "failure": null,
+      "reuse": {
+        "hits": 8,
+        "misses": 0
+      },
+      "cache": {
+        "hits": 23,
+        "misses": 9,
+        "stored": 9,
+        "evicted": 0,
+        "bypassed": 0,
+        "retained_bytes": 1026750
+      },
+      "semantic": {
+        "hits": 5,
+        "misses": 4,
+        "stored": 4,
+        "bypassed": 0,
+        "retained_bytes": 119068
+      }
+    },
+    {
+      "version": "check-session-v1",
+      "action": "check",
+      "status": 0,
+      "failure": null,
+      "reuse": {
+        "hits": 8,
+        "misses": 0
+      },
+      "cache": {
+        "hits": 31,
+        "misses": 9,
+        "stored": 9,
+        "evicted": 0,
+        "bypassed": 0,
+        "retained_bytes": 1026750
+      },
+      "semantic": {
+        "hits": 5,
+        "misses": 5,
+        "stored": 5,
+        "bypassed": 0,
+        "retained_bytes": 119068
+      }
+    },
+    {
+      "version": "check-session-v1",
+      "action": "check",
+      "status": 0,
+      "failure": null,
+      "reuse": {
+        "hits": 8,
+        "misses": 0
+      },
+      "cache": {
+        "hits": 39,
+        "misses": 9,
+        "stored": 9,
+        "evicted": 0,
+        "bypassed": 0,
+        "retained_bytes": 1026750
+      },
+      "semantic": {
+        "hits": 5,
+        "misses": 6,
+        "stored": 6,
+        "bypassed": 0,
+        "retained_bytes": 119068
+      }
+    }
+  ],
+  "version": "development-profile-v1",
+  "compiler_sha256": "6460eb2386c7052464799c6a250f5f6f9d664afec76635977c4aa45a72fab93d",
+  "entry": "src/schematic/guest/main.my",
+  "edit_module": "svg.my",
+  "repeats": 5,
+  "scope": "local sequential checking only; includes process startup for cold checks; no VM execution or merge timing"
+}

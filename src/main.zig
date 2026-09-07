@@ -27,7 +27,9 @@ const usage = "usage: mylang " ++
     "signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  " ++
     "fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: " ++
     "--check (otherwise writes formatted source to " ++
-    "stdout)\n  all commands: --diagnostics=text|json (stderr JSON Lines; stdout unchanged)\n  check-session: persistent check/clear/quit lines on stdin; JSON status on stdout; --inputs supported\n";
+    "stdout)\n  project-dependencies: checked module graph and hashes; --inputs supported\n" ++
+    "  all commands: --diagnostics=text|json (stderr JSON Lines; stdout unchanged)\n" ++
+    "  check-session: persistent check/clear/quit lines on stdin; JSON status on stdout; --inputs supported\n";
 
 /// Dispatch compiler commands, reporting usage/source/IO failures through process exit status.
 pub fn main(init: std.process.Init) void {
@@ -70,6 +72,7 @@ fn run(init: Context, parsed: Parsed) !u8 {
     const allocator = init.gpa;
     if (parsed.command == .@"check-session") return checkSession(init, parsed);
     switch (parsed.command) {
+        .@"project-dependencies",
         .@"check-session",
         .@"invoke-project",
         .@"check-value-project",
@@ -127,6 +130,7 @@ fn run(init: Context, parsed: Parsed) !u8 {
     const check_ns = if (parsed.reporting.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
     if (parsed.command != .@"emit-c") try report(init, &compilation);
     switch (parsed.command) {
+        .@"project-dependencies",
         .@"check-session",
         .@"invoke-project",
         .@"check-value-project",
@@ -220,6 +224,7 @@ fn report(init: Context, compilation: *const language.Compilation) !void {
 }
 
 const Command = enum {
+    @"project-dependencies",
     @"check-session",
     @"invoke-project",
     @"check-value-project",
@@ -358,7 +363,7 @@ const ArgumentParser = struct {
     fn evaluationOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
         if (std.mem.startsWith(u8, arg, inputs_prefix)) {
             switch (self.command) {
-                .@"eval-project", .@"schema-project", .@"invoke-project", .@"check-value-project", .@"check-session" => {},
+                .@"eval-project", .@"schema-project", .@"invoke-project", .@"check-value-project", .@"check-session", .@"project-dependencies" => {},
                 else => return error.Usage,
             }
             if (self.input_count == self.inputs.len or arg.len == inputs_prefix.len) return error.Usage;
@@ -511,7 +516,7 @@ fn positive(digits: []const u8) error{Usage}!u64 {
     return value;
 }
 
-const GeneratedInput = struct { module: []const u8, path: []const u8, source: []const u8, manifest_path: []const u8 };
+const GeneratedInput = struct { module: []const u8, path: []const u8, source: []const u8, manifest_path: []const u8, manifest_sha256: []const u8 };
 const ModuleFiles = struct {
     io: std.Io,
     root: []const u8,
@@ -545,15 +550,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     if (parsed.command == .@"fmt-project") return formatProject(init, &project);
     if (try replayCheck(init, parsed.command, &project, verdict)) return 0;
     const output = if (parsed.command != .@"list-modules") result: {
-        var index = language.interfaces.buildWithCache(&project, cache) catch |err| switch (err) {
-            error.SourceError => {
-                const message = try diagnostic_output.renderProject(init.gpa, &project, init.diagnostics);
-                defer init.gpa.free(message);
-                try std.Io.File.stderr().writeStreamingAll(init.io, message);
-                return 1;
-            },
-            else => return err,
-        };
+        var index = (try buildIndex(init, &project, cache)) orelse return 1;
         if (parsed.command == .@"list-interfaces") break :result try index.render(init.gpa);
         var compilation = try language.project_compile.Compilation.init(&index);
         compilation.check() catch |err| switch (err) {
@@ -576,6 +573,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
             break :result generated;
         }
         if (parsed.command != .@"eval-project") try reportProject(init, &compilation);
+        if (parsed.command == .@"project-dependencies") break :result try dependencyReport(init, &compilation, files.inputs);
         if (parsed.command == .@"check-project") return rememberCheck(verdict, &project, &compilation);
         if (parsed.command == .@"check-value-project" or parsed.command == .@"invoke-project") break :result (try checkValue(init, &compilation, parsed.value_path.?, parsed.codec, parsed.command == .@"invoke-project")) orelse return 1;
         if (parsed.command == .@"schema-project") break :result if (parsed.schema_report)
@@ -631,6 +629,18 @@ fn loadModules(init: Context, project: *language.project.Project, files: *Module
     };
     if (!try checkImportedInputs(init, files.inputs, project)) return 2;
     return null;
+}
+
+fn buildIndex(init: Context, project: *language.project.Project, cache: ?*language.syntax_cache.Cache) !?language.interfaces.Index {
+    return language.interfaces.buildWithCache(project, cache) catch |err| switch (err) {
+        error.SourceError => {
+            const message = try diagnostic_output.renderProject(init.gpa, project, init.diagnostics);
+            defer init.gpa.free(message);
+            try std.Io.File.stderr().writeStreamingAll(init.io, message);
+            return null;
+        },
+        else => return err,
+    };
 }
 
 fn rememberCheck(verdict: ?*language.check_cache.Cache, project: *const language.project.Project, compilation: *const language.project_compile.Compilation) !u8 {
@@ -829,10 +839,18 @@ fn prepareInputs(init: Context, parsed: Parsed, basename: []const u8) !?[]Genera
             .path = try language.project.modulePath(input_allocator, module),
             .source = try manifest.generate(input_allocator),
             .manifest_path = manifest_path,
+            .manifest_sha256 = try language.dependency_report.hashBytes(input_allocator, bytes),
         });
     }
     const inputs = try generated_inputs.toOwnedSlice(input_allocator);
     return inputs;
+}
+
+fn dependencyReport(init: Context, compilation: *language.project_compile.Compilation, inputs: []const GeneratedInput) ![]u8 {
+    const manifests = try init.gpa.alloc(language.dependency_report.Manifest, inputs.len);
+    defer init.gpa.free(manifests);
+    for (manifests, inputs) |*manifest, input| manifest.* = .{ .module = input.module, .path = input.manifest_path, .sha256 = input.manifest_sha256 };
+    return language.dependency_report.render(init.gpa, compilation, try compilerIdentity(init.io), manifests);
 }
 
 fn evaluationRequest(init: Context, parsed: Parsed, project: *language.project.Project, compilation: *language.project_compile.Compilation) !?[]u8 {

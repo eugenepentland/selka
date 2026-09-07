@@ -1,0 +1,5 @@
+module amount;
+export total;
+fn total() -> i64 {
+    return 42;
+}

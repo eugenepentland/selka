@@ -1,0 +1,5 @@
+module main;
+import amount;
+fn main() -> i64 {
+    return amount::total();
+}

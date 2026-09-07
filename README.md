@@ -51,9 +51,11 @@ compiles it to VM bytecode in memory. No Zig or Guardian invocation is needed fo
 application edits; rebuild the host when changing the implementation or wrappers.
 
 See the [implementation and phased development plan](docs/experiments/incremental-development.md)
-for commands and acceptance. Disk loading is implemented; dependency-aware testing,
-shared verification caching, an agent scheduler, combined-merge certificates and
-HMR are planned. The existing check watcher does not yet reload running code.
+for commands and acceptance. [Incremental verification](docs/experiments/verification-runtime.md)
+now provides opt-in affected-suite selection, shared receipts, local agent scheduling
+and combined-merge certificates. The [development host](docs/experiments/development-host.md)
+reloads the schematic in one VM process. Existing production gates remain full gates;
+finer semantic-query caching is conditional on measurements.
 
 ## Build and use
 

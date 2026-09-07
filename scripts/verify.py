@@ -88,19 +88,41 @@ def select(steps, patterns):
     return requested, selected
 
 
-def command(argv, root, step):
+def command(argv, root, step, env=None):
     start = time.monotonic()
     outcome = {"argv": argv, "cwd": str(root), "executed": False, "timed_out": False}
     limit = step.get("max_output_bytes", 1048576)
     with tempfile.TemporaryFile() as stdout, tempfile.TemporaryFile() as stderr:
         try:
-            process = subprocess.Popen(argv, cwd=root, stdin=subprocess.DEVNULL, stdout=stdout, stderr=stderr, start_new_session=True)
+            process = subprocess.Popen(argv, cwd=root, stdin=subprocess.DEVNULL, stdout=stdout, stderr=stderr, start_new_session=True, env=env)
         except OSError as error:
             outcome.update(error=str(error), elapsed_seconds=time.monotonic() - start, passed=False)
             return outcome
         outcome["executed"] = True
         try:
-            process.wait(timeout=step.get("timeout", 60))
+            deadline = start + step.get("timeout", 60)
+            while True:
+                try:
+                    from verification.scheduler import current_cancelled
+                    cancelled = current_cancelled()
+                except ImportError:
+                    cancelled = False
+                if cancelled:
+                    outcome["cancelled"] = True
+                    try:
+                        os.killpg(process.pid, signal.SIGKILL)
+                    except ProcessLookupError:
+                        pass
+                    process.wait()
+                    break
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise subprocess.TimeoutExpired(argv, step.get("timeout", 60))
+                try:
+                    process.wait(timeout=min(0.1, remaining))
+                    break
+                except subprocess.TimeoutExpired:
+                    continue
         except subprocess.TimeoutExpired:
             outcome["timed_out"] = True
             try:
@@ -115,6 +137,12 @@ def command(argv, root, step):
                 pass
             process.wait()
             raise
+        finally:
+            # A command owns its process group, including surviving descendants.
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
         outcome["exit"] = process.returncode
         outcome["elapsed_seconds"] = time.monotonic() - start
         truncated = False
@@ -126,7 +154,7 @@ def command(argv, root, step):
             outcome[name + "_sha256"] = hashlib.sha256(content[:limit]).hexdigest()
             outcome[name] = content[:limit].decode("utf-8", errors="replace")
         outcome["output_truncated"] = truncated
-    outcome["passed"] = not outcome["timed_out"] and not truncated and outcome["exit"] == step.get("expect_exit", 0)
+    outcome["passed"] = not outcome["timed_out"] and not outcome.get("cancelled", False) and not truncated and outcome["exit"] == step.get("expect_exit", 0)
     if "expect_stdout" in step:
         outcome["passed"] &= outcome["stdout_base64"] == base64.b64encode(step["expect_stdout"].encode()).decode("ascii")
     if "expect_stderr_contains" in step:
@@ -177,9 +205,22 @@ def main():
     parser.add_argument("manifest", type=Path)
     parser.add_argument("--only", action="append", default=[], help="step ID glob; dependencies are included explicitly in the report")
     parser.add_argument("--report", type=Path, help="also save the JSON report")
+    parser.add_argument("--cache-dir", type=Path, default=Path.home() / ".cache" / "mylang-verification")
+    parser.add_argument("--cache-max-bytes", type=int, default=512 * 1024 * 1024)
+    parser.add_argument("--previous", type=Path, help="previous v2 report for affected inventory comparison")
+    parser.add_argument("--mode", choices=("full", "affected", "shadow"), default="full")
+    from verification.scheduler import add_arguments, executor_from_args
+    add_arguments(parser)
     args = parser.parse_args()
     try:
-        report = run(args.manifest.resolve(), args.only)
+        from verification.core import run_manifest, collect_cache
+        if args.cache_max_bytes < 0:
+            raise ValueError("cache-max-bytes must be nonnegative")
+        previous = json.loads(args.previous.read_text()) if args.previous else None
+        executor = executor_from_args(args)
+        report = run_manifest(args.manifest.resolve(), cache_dir=args.cache_dir, previous=previous, mode=args.mode, patterns=args.only, executor=executor)
+        if report["version"] == 2:
+            report["cache_gc"] = collect_cache(args.cache_dir, args.cache_max_bytes)
         text = json.dumps(report, indent=2) + "\n"
         if args.report:
             args.report.write_text(text)

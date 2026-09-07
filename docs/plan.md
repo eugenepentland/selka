@@ -8,10 +8,13 @@ on its bytecode VM; a future decision can reopen native work.
 Current development-tooling priority (2026-09-07): [disk projects and incremental
 verification](experiments/incremental-development.md). Disk-loaded schematic and board hosts are implemented;
 ordinary `.my` edits use the installed executable without rebuilding Zig or running
-Guardian. Next: dependency inventory/affected testing, shared verification receipts,
-an agent job scheduler and combined-merge verification. Safe request-boundary HMR
-can follow disk loading independently; finer semantic caching follows profiling.
-Those later stages remain planned, with acceptance criteria in the linked plan.
+Guardian. Opt-in dependency inventories/affected-suite testing, shared successful
+receipts, a local agent scheduler and combined-merge certificates are implemented.
+The schematic has a persistent VM development host with request-boundary reloads.
+These are bounded tools with explicit input contracts; production gates remain full
+gates while shadow evidence is gathered. Profiling is implemented; finer semantic
+query reuse remains conditional because measured schematic checks are already small.
+The linked plan and runtime guides specify limitations and acceptance evidence.
 
 Status: revision 3, interpreter-first direction adopted on 2026-09-06. Scalar MVP M0–M5 and substantial post-MVP experiments are implemented. The current priorities below supersede older sequencing and dated “next” statements; completed experiments remain historical evidence.
 
@@ -2864,3 +2867,39 @@ The linked disk-project development plan specifies dependency-aware testing,
 shared verification receipts, a multi-agent scheduler, combined-merge certificates,
 safe request-boundary HMR and later semantic query reuse. Those stages are planned,
 not implemented by this checkpoint. Native execution remains deferred.
+
+## Incremental verification and persistent VM development — 2026-09-07
+
+Three subagents implemented verification/cache infrastructure, scheduler/merge
+certificates and persistent schematic reloads; integration added checked compiler
+dependency receipts, a real `.my` verification example, profiling and cross-component
+review. V2 verification supports declared suite input closures, affected/full/shadow
+modes, bounded snapshots, shared successful receipts and a fixed bounded lock
+namespace. SQLite coordination coalesces identical work, admits resource estimates,
+ages priority, reclaims abandoned clients and fences late results. Merge certificates
+verify the combined candidate and recheck branch, tool, environment and policy
+freshness without changing any branch. The schematic development host keeps one
+process alive, prepares and commits source generations between requests, and keeps
+failed/superseded output from replacing the preview.
+
+Review and regression tests covered cache-hit source races, generated in-memory
+input receipts, tool/PATH identity, workspace input mutation, crashed sole-client
+queue blockage, certificate freshness, bounded lock storage, FIFO rejection and
+watcher shutdown. The current Python verification suite passes 43 tests with no
+skips. The full Debug interpreter gate passed 42/42 steps: 861 Zig tests executed
+and the six schematic tests reused their green cache result. Focused ReleaseFast
+verification/reload gates passed 13/13 steps, with six schematic tests executed;
+subsequent Python-only refinements passed the final 43-test suite. All Python
+interpreter acceptance drivers passed. The live development host regenerated the
+saved Straps SVG byte-for-byte. Formatting, ReleaseFast installation and all 88
+Guardian checks pass with baselines disabled; report-only findings remain.
+
+Runtime guides provide commands and limits. Selection is at declared suite/module
+closure granularity; dependency completeness remains an explicit contract, not an
+OS sandbox or automatic discovery of tool runtime libraries. Suites are self-contained,
+and produced artifacts are not shared. Existing production gates remain full gates
+while shadow evidence is gathered; the certificate tool does not merge/push. HMR
+uses synchronous requests with fresh guest state, not state migration. A five-sample
+ReleaseFast schematic profile recorded median checks of 8.23 ms cold, 1.07 ms exact
+warm verdict and 3.91 ms after a body edit. Finer semantic query caching remains
+conditional on larger measured bottlenecks. Native execution remains deferred.

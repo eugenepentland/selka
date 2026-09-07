@@ -1,0 +1,30 @@
+//! Checked module/import inventory for verification tools; no VM execution required.
+const std = @import("std");
+const receipt = @import("source_receipt.zig");
+const project_compile = @import("project_compile.zig");
+/// Exact manifest bytes consumed during input generation, rather than a later disk read.
+pub const Manifest = struct { module: []const u8, path: []const u8, sha256: []const u8 };
+/// Checking errors and receipt allocation failures remain distinct.
+pub const RenderError = project_compile.CheckError || receipt.InputsError;
+/// Allocate lowercase SHA-256 for the supplied raw bytes.
+pub fn hashBytes(allocator: std.mem.Allocator, bytes: []const u8) std.mem.Allocator.Error![]const u8 {
+    var digest: [32]u8 = undefined;
+    std.crypto.hash.sha2.Sha256.hash(bytes, &digest, .{});
+    return std.fmt.allocPrint(allocator, "{s}", .{std.fmt.bytesToHex(digest, .lower)});
+}
+/// Return an owned complete receipt only after checking all reachable modules.
+pub fn render(allocator: std.mem.Allocator, compilation: *project_compile.Compilation, identity: receipt.Identity, manifests: []const Manifest) RenderError![]u8 {
+    try compilation.check();
+    var arena = std.heap.ArenaAllocator.init(allocator);
+    defer arena.deinit();
+    const scratch = arena.allocator();
+    const graph = compilation.index.project;
+    return std.json.Stringify.valueAlloc(allocator, .{
+        .version = "project-dependencies-v1",
+        .complete = true,
+        .entry = graph.modules.items[0].name,
+        .implementation = try receipt.implementation(scratch, identity),
+        .inputs = try receipt.inputs(scratch, graph),
+        .manifests = manifests,
+    }, .{});
+}

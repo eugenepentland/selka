@@ -1242,3 +1242,19 @@ test "CLI specializes nominal generic bodies and reports uncalled shape errors" 
     try invoke("run", definitions ++ "fn pack<T:copy>(x:T)->Box<T>{return new Box<T>{value:x};}fn main()->i64{return pack::<i64>(31).value;}", 0, "31\n", "");
     try invokeOptions("check", definitions ++ "fn bad<T:copy>(x:T)->Box<T>{return new Box<T>{value:1};}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_TYPE\"");
 }
+
+// spec: DEPENDENCIES-1
+test "CLI project-dependencies buildIndex emits checked graph identity and rejects invalid bodies" {
+    const outcome = try runFixture("project-dependencies", "module input; fn main()->i64 { return 7; }", &.{});
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    const parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, outcome.stdout, .{});
+    defer parsed.deinit();
+    try testing.expectEqualStrings("project-dependencies-v1", parsed.value.object.get("version").?.string);
+    try testing.expect(parsed.value.object.get("complete").?.bool);
+    try testing.expectEqualStrings("input.my", parsed.value.object.get("inputs").?.array.items[0].object.get("path").?.string);
+    try testing.expectEqual(@as(usize, 64), parsed.value.object.get("implementation").?.object.get("compiler_sha256").?.string.len);
+    try invoke("project-dependencies", "module input; fn main()->i64 { return true; }", 1, "", "E_TYPE");
+    try invoke("project-dependencies", "module input; export absent; fn main()->i64 { return 0; }", 1, "", "error[");
+}

@@ -121,3 +121,7 @@ test "disk initSource and initDisk release failed compilations and reload bounde
     defer t.allocator.free(output);
     try t.expectEqualStrings("A", output);
 }
+
+test {
+    _ = @import("dev_session.zig");
+}

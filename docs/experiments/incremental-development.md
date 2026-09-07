@@ -1,7 +1,12 @@
 # Disk projects and incremental verification
 
-Status: 2026-09-07. Phase 0 is implemented. Phases 1–6 below are proposed work,
-with explicit acceptance criteria; they are not current commands or guarantees.
+Status: 2026-09-07. Disk loading and the bounded first implementations of phases
+1–5 are available. [Verification commands and limits](verification-runtime.md) and
+[the persistent development host](development-host.md) describe current behavior.
+Production merge-gate adoption remains in shadow/full-gate rollout; no EDA gate was
+weakened. Phase 6 has measurement support; finer semantic queries remain conditional.
+The phase descriptions below retain the intended architecture and acceptance criteria;
+this implementation status takes precedence over their original future tense.
 The bytecode VM remains the execution target. Native guest execution is deferred.
 
 ## Objective and boundary
@@ -81,7 +86,7 @@ python3 tests/board_trial.py --runner zig-out/bin/board-trial --compiler zig-out
 zig build test-disk-projects --summary all
 ```
 
-## Current reuse and its limits
+## Starting point before phases 1–5
 
 - `check-session` and `scripts/watch.py` provide a persistent check process, bounded
   syntax reuse and an exact successful whole-project verdict cache. Watch checks;
@@ -94,7 +99,7 @@ zig build test-disk-projects --summary all
   aid: tests in transitive importing files can be reported as omitted. That is
   insufficient evidence for skipping those tests in a merge gate.
 
-## Phase 1 — dependency inventory and affected verification
+## Phase 1 — dependency inventory and affected verification (initial implementation)
 
 Extend the existing verification manifest/driver with a versioned input schema
 and dependency receipt. The compiler exports its freshly loaded module graph,
@@ -128,7 +133,7 @@ fixture-only edits, config changes and untracked files select the expected suite
 A deliberately broken importing test must be selected. Unknown dependencies must
 fall back safely. Record selection time and unnecessary reruns as well as misses.
 
-## Phase 2 — shared content-addressed verification cache
+## Phase 2 — shared content-addressed verification cache (receipt reuse implemented)
 
 Place successful verification receipts in a configurable shared local store,
 initially shared by trusted worktrees on one machine. This belongs in reusable
@@ -166,7 +171,7 @@ any relevant fixture, tool, option or policy misses. Test truncated receipts,
 modified artifacts, process crashes, external inputs and same names with different
 contents. Demonstrate that no result can certify another worktree's source.
 
-## Phase 3 — scheduler for concurrent agents
+## Phase 3 — scheduler for concurrent agents (local coordinator implemented)
 
 Build a local coordinator around immutable job keys and snapshots. Clients submit
 the required job set; identical queued/running requests subscribe to one execution.
@@ -192,7 +197,7 @@ respect limits. Exercise worker crash, expired lease, stale publication, one-cli
 cancellation, full cancellation, queue starvation and resource exhaustion. Measure
 queue wait separately from execution, not just end-to-end gate duration.
 
-## Phase 4 — combined-merge verification
+## Phase 4 — combined-merge verification (opt-in certificates implemented)
 
 Verify the actual combined candidate against the latest target base, not merely
 the agents' individually green branches. Construct an immutable candidate tree,
@@ -217,7 +222,7 @@ a combined candidate; moving main invalidates the certificate; source mutation
 after verification cannot publish. Compare shadow certificates with full gates
 before allowing cached/selected verification to certify a merge.
 
-## Phase 5 — persistent development host and safe HMR
+## Phase 5 — persistent development host and safe HMR (synchronous schematic host implemented)
 
 First add an explicit development runner that retains the host process, watches
 all guest sources and request inputs, debounces changes and reruns the last request.
@@ -288,3 +293,30 @@ Phase 0 validation on 2026-09-07: full Debug interpreter gate 40/40 steps,
 ReleaseFast installation pass. Guardian passes all 88 checks with baselines disabled;
 existing report-only size/line findings remain. No speedup estimate is inferred
 from these correctness runs.
+
+## Measurement checkpoint and remaining scope
+
+`scripts/profile_development.py` measures cold CLI checks, exact warm check-session
+verdicts and changed-body checks on a private copy of an application. The recorded
+[schematic sample](../../experiments/incremental-development/profile-schematic.json)
+used the ReleaseFast host and five samples per case: median/p95 8.23/8.49 ms cold,
+1.07/1.17 ms warm, and 3.91/4.49 ms after a renderer literal edit. Cold includes
+process startup. This is a local checking measurement, not end-to-end SVG latency,
+a controlled benchmark or evidence of language superiority.
+
+These checks do not currently justify a new per-function semantic cache. Keep the
+bounded existing caches while measuring larger applications; no persistent typed
+IR pointers or bytecode format was introduced. Function-query reuse, produced
+artifact transfer/cache, automatic per-test discovery, automatic receipt regeneration,
+state migration, concurrent guest requests and production gate replacement remain
+outside this bounded release. Verification runs self-contained suites over declared
+input closures; tool runtime dependencies remain an explicit completeness obligation.
+Native execution remains deferred.
+
+Reproduce the measured check loop:
+
+```sh
+python3 scripts/profile_development.py --compiler zig-out/bin/mylang \
+  --entry src/schematic/guest/main.my --edit-module svg.my \
+  --before '#f5f7fa' --after '#123abc' --repeats 5 --output /tmp/check-profile.json
+```
