@@ -63,6 +63,78 @@ const Checker = struct {
     references: std.ArrayList(typed.Reference) = .empty,
     active_refs: std.StringHashMapUnmanaged(typed.ReferenceId) = .empty,
 
+    fn checkFunction(self: *Checker, i: usize) Error!typed.Function {
+        const allocator = self.allocator;
+        const src = self.src;
+        const sink = self.sink;
+        self.current_function = @fromBackingInt(i);
+        const function = self.syntaxFunction(@fromBackingInt(i));
+        for (self.resolved_nodes.items) |node| self.resolved[node] = null;
+        self.resolved_nodes.clearRetainingCapacity();
+        self.locals = .empty;
+        self.references = .empty;
+        self.active_refs.clearRetainingCapacity();
+        self.active.clearRetainingCapacity();
+        self.owner = if (function.policy.owner) |owner| try self.ty(owner) else null;
+        self.return_type = try self.ty(function.signature.return_type);
+        self.return_reference = try self.returnContract(@fromBackingInt(i));
+        try self.bindParameters(function);
+        if (function.policy.host != null) {
+            try checkHostType(allocator, self.catalog.records, self.return_type, function.signature.return_type, sink);
+            for (self.locals.items) |local| try checkHostType(allocator, self.catalog.records, local.ty, local.declaration, sink);
+        }
+        self.conversion_fields = null;
+        if (function.policy.conversion) {
+            if (function.signature.return_reference != null or function.signature.parameters.len != 1 or function.signature.parameters[0].reference != null) return sink.fail(
+                "E_CONVERSION_SIGNATURE",
+                function.name,
+                "a complete conversion requires one source record parameter",
+            );
+            const source_record = try self.catalog.record(self.locals.items[0].ty, function.signature.parameters[0].ty, sink);
+            _ = try self.catalog.record(self.return_type, function.signature.return_type, sink);
+            try conversionBody(src, self.syntax, function, sink);
+            self.conversion_fields = try allocator.alloc(bool, source_record.fields.len);
+            @memset(self.conversion_fields.?, false);
+        }
+        const body = try self.statement(function.body);
+        if (self.conversion_fields) |seen| {
+            const source_record = self.catalog.records[self.locals.items[0].ty.recordIndex()];
+            for (seen, source_record.fields) |accounted, field| {
+                if (!accounted) {
+                    const message = try std.fmt.allocPrint(allocator, "source field `{s}` is not accounted for; use it in the destination or explicitly discard that named field", .{field.name});
+                    return sink.failRelated("E_INCOMPLETE_CONVERSION", function.name, message, .{ .span = field.declaration, .message = "unaccounted source field declared here" });
+                }
+            }
+        }
+        if (function.policy.host == null and !body.terminates) return sink.fail(
+            "E_MISSING_RETURN",
+            function.name,
+            "function may fall through without returning its declared type; loops are conservatively treated as falling through, even while true",
+        );
+        return .{
+            .policy = .{
+                .host = function.policy.host,
+                .effect_bound = function.policy.effect_bound,
+                .owner = self.owner,
+                .restricted = function.policy.restricted,
+                .conversion = function.policy.conversion,
+            },
+            .signature = .{
+                .return_reference = self.return_reference,
+                .return_type = self.return_type,
+                .parameter_count = function.signature.parameters.len,
+            },
+            .scope = .{
+                .references = try self.references.toOwnedSlice(allocator),
+                .body = body.id,
+                .locals = try self.locals.toOwnedSlice(allocator),
+            },
+            .id = @fromBackingInt(i),
+            .name = try self.instanceName(@fromBackingInt(i)),
+            .type_arguments = self.instance_keys.items[i].arguments,
+            .declaration = function.name,
+        };
+    }
     fn topLevel(self: *Checker, span: source.Span) error{InternalError}!bool {
         if (self.catalog.module_names) |names| return names.topLevel(span);
         const name = self.src.text(span);
@@ -1464,20 +1536,42 @@ const Checker = struct {
 };
 fn warningLess(_: void, a: diagnostic.Diagnostic, b: diagnostic.Diagnostic) bool {
     if (a.span.start != b.span.start) return a.span.start < b.span.start;
+    if (a.span.end != b.span.end) return a.span.end < b.span.end;
     return std.mem.lessThan(u8, a.code, b.code);
+}
+// The same invalid signature can be reached from several callers. Keep its
+// source diagnostic once, ordered independently of specialization discovery.
+fn normalizeDiagnostics(sink: *diagnostic.Sink) void {
+    std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
+    var count: usize = 0;
+    for (sink.items.items) |item| {
+        if (count != 0) {
+            const previous = sink.items.items[count - 1];
+            if (previous.span.start == item.span.start and previous.span.end == item.span.end and
+                std.mem.eql(u8, previous.code, item.code)) continue;
+        }
+        sink.items.items[count] = item;
+        count += 1;
+    }
+    sink.items.shrinkRetainingCapacity(count);
 }
 /// Type-check a single source unit, returning arena-owned resolved instructions.
 pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!typed.Program {
     return checkWithNames(allocator, src, program, sink, null);
 }
 fn checkGenericContracts(src: source.Source, program: ast.Program, sink: *diagnostic.Sink, catalog: records.Catalog) Error!void {
-    for (program.functions) |function| _ = try @import("generic_requirements.zig").resolve(sink.allocator, src, function.signature.type_parameters, sink);
     try @import("generic_bodies.zig").checkWithCatalog(sink.allocator, src, program, sink, catalog);
 }
 /// Type-check linked module names and validate ownership, effects, and domain codecs.
 pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!typed.Program {
+    defer normalizeDiagnostics(sink);
     const catalog = try records.collectWithNames(allocator, src, program, sink, module_names);
-    try checkGenericContracts(src, program, sink, catalog);
+    var failed = false;
+    checkGenericContracts(src, program, sink, catalog) catch |err| switch (err) {
+        error.SourceError => failed = true,
+        else => return err,
+    };
+    const contracts_failed = failed;
     const resolved = try allocator.alloc(?typed.NodeId, program.nodes.items.len);
     @memset(resolved, null);
     const ordinary_ids = try allocator.alloc(?typed.FunctionId, program.functions.len);
@@ -1504,7 +1598,10 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
     }
     const main_name = if (module_names) |names| try std.fmt.allocPrint(allocator, "{s}::main", .{names.index.project.modules.items[0].name}) else "main";
     checker.ordinary_count = checker.instance_keys.items.len;
-    const main_declaration = checker.functions.get(main_name) orelse return sink.fail("E_MAIN", .{ .start = 0, .end = 0 }, "the program requires fn main() -> i64");
+    const main_declaration = checker.functions.get(main_name) orelse {
+        if (failed) return error.SourceError;
+        return sink.fail("E_MAIN", .{ .start = 0, .end = 0 }, "the program requires fn main() -> i64");
+    };
     const entry = program.functions[@backingInt(main_declaration)];
     const main = ordinary_ids[@backingInt(main_declaration)] orelse return sink.fail("E_MAIN", entry.name, "main cannot have type parameters");
     if (entry.policy.host != null) return sink.fail("E_MAIN", entry.name, "main must have a guest body");
@@ -1519,75 +1616,19 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
     if (try checker.ty(entry.signature.return_type) != .i64) return sink.fail("E_TYPE", entry.signature.return_type, "main must return i64");
     var checked_functions: std.ArrayList(typed.Function) = .empty;
     var i: usize = 0;
-    while (i < checker.instance_keys.items.len) : (i += 1) {
-        checker.current_function = @fromBackingInt(i);
-        const function = checker.syntaxFunction(@fromBackingInt(i));
-        for (checker.resolved_nodes.items) |node| checker.resolved[node] = null;
-        checker.resolved_nodes.clearRetainingCapacity();
-        checker.locals = .empty;
-        checker.references = .empty;
-        checker.active_refs.clearRetainingCapacity();
-        checker.active.clearRetainingCapacity();
-        checker.owner = if (function.policy.owner) |owner| try checker.ty(owner) else null;
-        checker.return_type = try checker.ty(function.signature.return_type);
-        checker.return_reference = try checker.returnContract(@fromBackingInt(i));
-        try checker.bindParameters(function);
-        if (function.policy.host != null) {
-            try checkHostType(allocator, checker.catalog.records, checker.return_type, function.signature.return_type, sink);
-            for (checker.locals.items) |local| try checkHostType(allocator, checker.catalog.records, local.ty, local.declaration, sink);
-        }
-        checker.conversion_fields = null;
-        if (function.policy.conversion) {
-            if (function.signature.return_reference != null or function.signature.parameters.len != 1 or function.signature.parameters[0].reference != null) return sink.fail(
-                "E_CONVERSION_SIGNATURE",
-                function.name,
-                "a complete conversion requires one source record parameter",
-            );
-            const source_record = try checker.catalog.record(checker.locals.items[0].ty, function.signature.parameters[0].ty, sink);
-            _ = try checker.catalog.record(checker.return_type, function.signature.return_type, sink);
-            try conversionBody(src, program, function, sink);
-            checker.conversion_fields = try allocator.alloc(bool, source_record.fields.len);
-            @memset(checker.conversion_fields.?, false);
-        }
-        const body = try checker.statement(function.body);
-        if (checker.conversion_fields) |seen| {
-            const source_record = checker.catalog.records[checker.locals.items[0].ty.recordIndex()];
-            for (seen, source_record.fields) |accounted, field| {
-                if (!accounted) {
-                    const message = try std.fmt.allocPrint(allocator, "source field `{s}` is not accounted for; use it in the destination or explicitly discard that named field", .{field.name});
-                    return sink.failRelated("E_INCOMPLETE_CONVERSION", function.name, message, .{ .span = field.declaration, .message = "unaccounted source field declared here" });
-                }
-            }
-        }
-        if (function.policy.host == null and !body.terminates) return sink.fail(
-            "E_MISSING_RETURN",
-            function.name,
-            "function may fall through without returning its declared type; loops are conservatively treated as falling through, even while true",
-        );
-        try checked_functions.append(allocator, .{
-            .policy = .{
-                .host = function.policy.host,
-                .effect_bound = function.policy.effect_bound,
-                .owner = checker.owner,
-                .restricted = function.policy.restricted,
-                .conversion = function.policy.conversion,
+    while (i < checker.instance_keys.items.len and (!contracts_failed or i < checker.ordinary_count)) : (i += 1) {
+        const function = checker.checkFunction(i) catch |err| switch (err) {
+            error.SourceError => {
+                failed = true;
+                continue;
             },
-            .signature = .{
-                .return_reference = checker.return_reference,
-                .return_type = checker.return_type,
-                .parameter_count = function.signature.parameters.len,
-            },
-            .scope = .{
-                .references = try checker.references.toOwnedSlice(allocator),
-                .body = body.id,
-                .locals = try checker.locals.toOwnedSlice(allocator),
-            },
-            .id = @fromBackingInt(i),
-            .name = try checker.instanceName(@fromBackingInt(i)),
-            .type_arguments = checker.instance_keys.items[i].arguments,
-            .declaration = function.name,
-        });
+            else => return err,
+        };
+        try checked_functions.append(allocator, function);
     }
+    // Failed functions leave no executable placeholders. Cross-function passes
+    // require a complete graph and must never see the partial function list.
+    if (failed) return error.SourceError;
     const functions = try checked_functions.toOwnedSlice(allocator);
     var executable_names: std.StringHashMapUnmanaged(typed.FunctionId) = .empty;
     for (functions) |function| try executable_names.put(allocator, function.name, function.id);

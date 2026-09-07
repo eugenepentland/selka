@@ -142,6 +142,7 @@ pub const Compilation = struct {
     /// Lazily type-check parsed syntax and retain the checked program.
     pub fn check(self: *Compilation) diagnostic.Error!void {
         if (self.program != null) return;
+        for (self.diagnostics.items) |item| if (item.severity == .err) return error.SourceError;
         try self.parse();
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;

@@ -109,6 +109,7 @@ pub const Compilation = struct {
     /// Type-check merged module bodies and enforce exported signature boundaries.
     pub fn check(self: *Compilation) CheckError!void {
         if (self.program != null) return;
+        for (self.diagnostics.items.items) |item| if (item.severity == .err) return error.SourceError;
         var names: Names = .{ .index = self.index, .src = self.src };
         self.program = try @import("sema.zig").checkWithNames(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names);
     }

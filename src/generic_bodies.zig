@@ -76,6 +76,30 @@ const Checker = struct {
     work: usize = 0,
     expression_depth: usize = 0,
     temporary_results: usize = 0,
+    fn checkFunction(self: *Checker, function: ast.Function) Error!void {
+        const sink = self.sink;
+        if (function.policy.conversion) return sink.fail(eUnsupported, function.name, "generic conversions still need abstract checking");
+        for (self.parameters) |parameter| if (try self.topLevel(parameter.name)) return sink.fail(eShadowing, parameter.name, "type parameter shadows a top-level declaration or import");
+        try self.validateStructural();
+        self.result = try self.ty(function.signature.return_type);
+        try self.seedCleanup(self.result);
+        for (function.signature.parameters) |parameter| {
+            const parameter_type = try self.ty(parameter.ty);
+            if (parameter.reference != null and (try self.transfers(parameter_type))) return sink.fail(diagnostic.result_borrow, parameter.ty, "result-bearing parameters must transfer by value");
+            try self.bind(parameter.name, parameter_type, false);
+            self.locals.items[self.locals.items.len - 1].reference = parameter.reference;
+            self.locals.items[self.locals.items.len - 1].slice = parameter.slice;
+            if (parameter.reference != null) self.locals.items[self.locals.items.len - 1].root = self.locals.items.len - 1;
+        }
+        self.return_reference = try self.provenance(function);
+        if (self.return_reference) |contract| {
+            const input = self.locals.items[contract.parameter];
+            const returned = if (contract.slice and !input.slice) try self.sliceType(input.ty, function.signature.return_type) else input.ty;
+            try self.same(returned, self.result, function.signature.return_type);
+        }
+        if (!try self.statement(function.body)) return sink.fail("E_MISSING_RETURN", function.name, "template may fall through without returning its declared type");
+        try self.regions.check(sink);
+    }
     fn shapes(self: *Checker) @import("symbolic_shapes.zig").Context {
         return .{
             .arena = &self.field_arena,
@@ -1171,11 +1195,18 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
         scheduled[index] = true;
         pending.appendAssumeCapacity(index);
     }
+    var failed = false;
     var cursor: usize = 0;
     while (cursor < pending.items.len) : (cursor += 1) {
         const function = program.functions[pending.items[cursor]];
         if (function.policy.host != null) continue;
-        const parameters = try requirements.resolve(allocator, src, function.signature.type_parameters, sink);
+        const parameters = requirements.resolve(allocator, src, function.signature.type_parameters, sink) catch |err| switch (err) {
+            error.SourceError => {
+                failed = true;
+                continue;
+            },
+            else => return err,
+        };
         defer allocator.free(parameters);
         var checker: Checker = .{
             .allocator = allocator,
@@ -1202,27 +1233,11 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
         defer checker.regions.deinit();
         defer checker.locals.deinit(allocator);
         defer checker.active.deinit(allocator);
-        if (function.policy.conversion) return sink.fail(eUnsupported, function.name, "generic conversions still need abstract checking");
-        for (parameters) |parameter| if (try checker.topLevel(parameter.name)) return sink.fail(eShadowing, parameter.name, "type parameter shadows a top-level declaration or import");
-        try checker.validateStructural();
-        checker.result = try checker.ty(function.signature.return_type);
-        try checker.seedCleanup(checker.result);
-        for (function.signature.parameters) |parameter| {
-            const parameter_type = try checker.ty(parameter.ty);
-            if (parameter.reference != null and (try checker.transfers(parameter_type))) return sink.fail(diagnostic.result_borrow, parameter.ty, "result-bearing parameters must transfer by value");
-            try checker.bind(parameter.name, parameter_type, false);
-            checker.locals.items[checker.locals.items.len - 1].reference = parameter.reference;
-            checker.locals.items[checker.locals.items.len - 1].slice = parameter.slice;
-            if (parameter.reference != null) checker.locals.items[checker.locals.items.len - 1].root = checker.locals.items.len - 1;
-        }
-        checker.return_reference = try checker.provenance(function);
-        if (checker.return_reference) |contract| {
-            const input = checker.locals.items[contract.parameter];
-            const returned = if (contract.slice and !input.slice) try checker.sliceType(input.ty, function.signature.return_type) else input.ty;
-            try checker.same(returned, checker.result, function.signature.return_type);
-        }
-        if (!try checker.statement(function.body)) return sink.fail("E_MISSING_RETURN", function.name, "template may fall through without returning its declared type");
-        try checker.regions.check(sink);
+        checker.checkFunction(function) catch |err| switch (err) {
+            error.SourceError => failed = true,
+            else => return err,
+        };
     }
+    if (failed) return error.SourceError;
     try effects.checkAbstract(allocator, program.functions, effect_masks, effect_calls.items, sink);
 }

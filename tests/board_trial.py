@@ -111,13 +111,15 @@ def check_diagnostics(compiler, directory):
         assert result.returncode == 1 and not result.stdout, result
         records = [json.loads(line) for line in result.stderr.splitlines()]
         diagnostics = [row['diagnostic'] for row in records if row['kind'] == 'diagnostic']
-        assert len(diagnostics) == 1, diagnostics
-        diagnostic = diagnostics[0]
-        assert diagnostic['code'] == code and message in diagnostic['message'], diagnostic
-        assert diagnostic['location']['bytes']['end'] > diagnostic['location']['bytes']['start'], diagnostic
+        assert len(diagnostics) == (3 if name == 'state' else 1), diagnostics
+        for diagnostic in diagnostics:
+            assert diagnostic['code'] == code and message in diagnostic['message'], diagnostic
+            assert diagnostic['location']['bytes']['end'] > diagnostic['location']['bytes']['start'], diagnostic
+            if name == 'state':
+                assert diagnostic['notes'][0]['location']['path'] == 'model.my', diagnostic
         if name == 'state':
-            assert diagnostic['location']['path'] == 'bounds.my', diagnostic
-            assert diagnostic['notes'][0]['location']['path'] == 'model.my', diagnostic
+            assert [row['location']['path'] for row in diagnostics] == ['bounds.my', 'checks.my', 'policy.my'], diagnostics
+
 
 
 def main():
