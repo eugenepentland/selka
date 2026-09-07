@@ -161,3 +161,8 @@ test "application library parity sorting priority queues ASCII classes and pair 
 test "integer extrema cover all widths empty defaults and full signed ranges" {
     try runLibrary(@embedFile("stdlib/fixtures/integer_extrema.my"), 42);
 }
+
+// spec: STANDARD-JSON-SCHEMA-1
+test "ordinary JSON schema helpers iterate nested values and preserve absent null type bounds errors" {
+    try runLibrary(@embedFile("stdlib/fixtures/json_schema.my"), 42);
+}

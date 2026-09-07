@@ -1,0 +1,297 @@
+module main;
+import std_json;
+import std_json_view as j;
+import std_result as r;
+fn input(heap: allocator) -> std_json::Input {
+    let source = "{\"optional\":null,\"n\":-7,\"yes\":true,\"no\":false,\"fraction\":1.0,\"items\":[{\"deep\":[1,2]},[],42],\"empty\":{},\"keys\":{\"\":0,\"a|b\":1,\"\\u00e9\":2}}";
+    let mut bytes = try acquire_buffer<std_json::Input>(heap, len(source));
+    borrow source[0..len(source)] as text {
+        let mut i = 0u64;
+        while i < len_slice(text) {
+            discard try append_buffer<std_json::Status>(bytes, read_slice(text, i));
+            i += 1u64;
+        }
+    }
+    return new std_json::Input.ok(bytes);
+}
+fn inspect(doc: &[]i64) -> r::Result<i64, r::Error> {
+    let root = try j::root(doc);
+    let number = try j::required(doc, root, "n");
+    let absent = new j::Node {
+        id: 0
+    };
+    let optional = try j::required(doc, root, "optional");
+    if try j::kind(doc, optional) != new j::Kind.null {
+        return new r::Result<i64, r::Error>.ok(- 1);
+    }
+    if try j::integer_or(doc, root, "missing", 42) != 42 || try j::integer_or(doc, root, "n", 42) != - 7 {
+        return new r::Result<i64, r::Error>.ok(- 2);
+    }
+    if !(try j::boolean_or(doc, root, "missing", true)) || !(try j::boolean_or(doc, root, "yes", false)) || try j::boolean_or(doc, root, "no", true) {
+        return new r::Result<i64, r::Error>.ok(- 3);
+    }
+    if try j::integer_between(doc, number, - 7, - 7) != - 7 {
+        return new r::Result<i64, r::Error>.ok(- 4);
+    }
+    match j::required(doc, root, "missing") {
+        r::Result<j::Node, r::Error>.ok(discard) => {
+            return new r::Result<i64, r::Error>.ok(- 10);
+        },
+        r::Result<j::Node, r::Error>.err(e) => {
+            if e.category != new r::Category.absent {
+                return new r::Result<i64, r::Error>.ok(- 11);
+            }
+        }
+    }
+    match j::kind(doc, absent) {
+        r::Result<j::Kind, r::Error>.ok(discard) => {
+            return new r::Result<i64, r::Error>.ok(- 12);
+        },
+        r::Result<j::Kind, r::Error>.err(e) => {
+            if e.category != new r::Category.bounds {
+                return new r::Result<i64, r::Error>.ok(- 13);
+            }
+        }
+    }
+    match j::integer_or(doc, root, "optional", 42) {
+        r::Result<i64, r::Error>.ok(discard) => {
+            return new r::Result<i64, r::Error>.ok(- 14);
+        },
+        r::Result<i64, r::Error>.err(e) => {
+            if e.category != new r::Category.wrong_type {
+                return new r::Result<i64, r::Error>.ok(- 15);
+            }
+        }
+    }
+    match j::integer_or(doc, root, "yes", 42) {
+        r::Result<i64, r::Error>.ok(discard) => {
+            return new r::Result<i64, r::Error>.ok(- 16);
+        },
+        r::Result<i64, r::Error>.err(e) => {
+            if e.category != new r::Category.wrong_type {
+                return new r::Result<i64, r::Error>.ok(- 17);
+            }
+        }
+    }
+    match j::integer_or(doc, root, "fraction", 42) {
+        r::Result<i64, r::Error>.ok(discard) => {
+            return new r::Result<i64, r::Error>.ok(- 18);
+        },
+        r::Result<i64, r::Error>.err(e) => {
+            if e.category != new r::Category.wrong_type {
+                return new r::Result<i64, r::Error>.ok(- 19);
+            }
+        }
+    }
+    match j::boolean_or(doc, root, "optional", true) {
+        r::Result<bool, r::Error>.ok(discard) => {
+            return new r::Result<i64, r::Error>.ok(- 20);
+        },
+        r::Result<bool, r::Error>.err(e) => {
+            if e.category != new r::Category.wrong_type {
+                return new r::Result<i64, r::Error>.ok(- 21);
+            }
+        }
+    }
+    match j::required(doc, number, "n") {
+        r::Result<j::Node, r::Error>.ok(discard) => {
+            return new r::Result<i64, r::Error>.ok(- 22);
+        },
+        r::Result<j::Node, r::Error>.err(e) => {
+            if e.category != new r::Category.wrong_type {
+                return new r::Result<i64, r::Error>.ok(- 23);
+            }
+        }
+    }
+    match j::integer_between(doc, number, - 6, 10) {
+        r::Result<i64, r::Error>.ok(discard) => {
+            return new r::Result<i64, r::Error>.ok(- 24);
+        },
+        r::Result<i64, r::Error>.err(e) => {
+            if e.category != new r::Category.bounds {
+                return new r::Result<i64, r::Error>.ok(- 25);
+            }
+        }
+    }
+    match j::integer_between(doc, number, 10, - 10) {
+        r::Result<i64, r::Error>.ok(discard) => {
+            return new r::Result<i64, r::Error>.ok(- 26);
+        },
+        r::Result<i64, r::Error>.err(e) => {
+            if e.category != new r::Category.bounds {
+                return new r::Result<i64, r::Error>.ok(- 27);
+            }
+        }
+    }
+    match j::count_between(doc, root, 0, 7) {
+        r::Result<i64, r::Error>.ok(discard) => {
+            return new r::Result<i64, r::Error>.ok(- 28);
+        },
+        r::Result<i64, r::Error>.err(e) => {
+            if e.category != new r::Category.bounds {
+                return new r::Result<i64, r::Error>.ok(- 29);
+            }
+        }
+    }
+    match j::count_between(doc, root, - 1, 10) {
+        r::Result<i64, r::Error>.ok(discard) => {
+            return new r::Result<i64, r::Error>.ok(- 30);
+        },
+        r::Result<i64, r::Error>.err(e) => {
+            if e.category != new r::Category.bounds {
+                return new r::Result<i64, r::Error>.ok(- 31);
+            }
+        }
+    }
+    match j::children(doc, number) {
+        r::Result<j::Cursor, r::Error>.ok(discard) => {
+            return new r::Result<i64, r::Error>.ok(- 32);
+        },
+        r::Result<j::Cursor, r::Error>.err(e) => {
+            if e.category != new r::Category.wrong_type {
+                return new r::Result<i64, r::Error>.ok(- 33);
+            }
+        }
+    }
+    let array = try j::required(doc, root, "items");
+    if try j::count_between(doc, array, 3, 3) != 3 {
+        return new r::Result<i64, r::Error>.ok(- 40);
+    }
+    let mut cursor = try j::children(doc, array);
+    let nested = try j::current(doc, cursor);
+    if try j::count(doc, try j::required(doc, nested, "deep")) != 2 {
+        return new r::Result<i64, r::Error>.ok(- 41);
+    }
+    match j::member_key(doc, cursor) {
+        r::Result<j::Node, r::Error>.ok(discard) => {
+            return new r::Result<i64, r::Error>.ok(- 42);
+        },
+        r::Result<j::Node, r::Error>.err(e) => {
+            if e.category != new r::Category.wrong_type {
+                return new r::Result<i64, r::Error>.ok(- 43);
+            }
+        }
+    }
+    cursor = try j::advance(doc, cursor);
+    let empty_array = try j::children(doc, try j::current(doc, cursor));
+    if !empty_array.done || !(try j::advance(doc, empty_array)).done {
+        return new r::Result<i64, r::Error>.ok(- 44);
+    }
+    cursor = try j::advance(doc, cursor);
+    if try j::integer(doc, try j::current(doc, cursor)) != 42 {
+        return new r::Result<i64, r::Error>.ok(- 45);
+    }
+    cursor = try j::advance(doc, cursor);
+    if !cursor.done {
+        return new r::Result<i64, r::Error>.ok(- 46);
+    }
+    match j::current(doc, cursor) {
+        r::Result<j::Node, r::Error>.ok(discard) => {
+            return new r::Result<i64, r::Error>.ok(- 47);
+        },
+        r::Result<j::Node, r::Error>.err(e) => {
+            if e.category != new r::Category.absent {
+                return new r::Result<i64, r::Error>.ok(- 48);
+            }
+        }
+    }
+    let mut object = try j::children(doc, root);
+    let mut members = 0;
+    while !object.done {
+        discard try j::text_length(doc, try j::member_key(doc, object));
+        discard try j::kind(doc, try j::current(doc, object));
+        object = try j::advance(doc, object);
+        members += 1;
+    }
+    if members != 8 {
+        return new r::Result<i64, r::Error>.ok(- 49);
+    }
+    let empty = try j::required(doc, root, "empty");
+    if !(try j::children(doc, empty)).done {
+        return new r::Result<i64, r::Error>.ok(- 50);
+    }
+    let keys = try j::required(doc, root, "keys");
+    let names = new [3]j::Name[new j::Name {
+        start: 0u64,
+        end: 0u64
+    }, new j::Name {
+        start: 0u64,
+        end: 3u64
+    }, new j::Name {
+        start: 3u64,
+        end: 5u64
+    }];
+    borrow names[0..3] as allowed {
+        if !(try j::only_fields(doc, keys, "a|bé", allowed)) {
+            return new r::Result<i64, r::Error>.ok(- 51);
+        }
+    }
+    borrow names[0..2] as allowed {
+        if try j::only_fields(doc, keys, "a|bé", allowed) {
+            return new r::Result<i64, r::Error>.ok(- 52);
+        }
+    }
+    borrow names[0..0] as allowed {
+        if !(try j::only_fields(doc, empty, "", allowed)) || try j::only_fields(doc, keys, "", allowed) {
+            return new r::Result<i64, r::Error>.ok(- 53);
+        }
+    }
+    let bad = new [2]j::Name[new j::Name {
+        start: 0u64,
+        end: 0u64
+    }, new j::Name {
+        start: 2u64,
+        end: 1u64
+    }];
+    borrow bad[0..2] as allowed {
+        match j::only_fields(doc, empty, "a", allowed) {
+            r::Result<bool, r::Error>.ok(discard) => {
+                return new r::Result<i64, r::Error>.ok(- 54);
+            },
+            r::Result<bool, r::Error>.err(e) => {
+                if e.category != new r::Category.bounds {
+                    return new r::Result<i64, r::Error>.ok(- 55);
+                }
+            }
+        }
+    }
+    borrow names[0..3] as allowed {
+        match j::only_fields(doc, keys, "a", allowed) {
+            r::Result<bool, r::Error>.ok(discard) => {
+                return new r::Result<i64, r::Error>.ok(- 56);
+            },
+            r::Result<bool, r::Error>.err(e) => {
+                if e.category != new r::Category.bounds {
+                    return new r::Result<i64, r::Error>.ok(- 57);
+                }
+            }
+        }
+    }
+    return new r::Result<i64, r::Error>.ok(42);
+}
+fn main(heap: allocator) -> i64 {
+    match input(heap) {
+        std_json::Input.err(discard) => {
+            return - 90;
+        },
+        std_json::Input.ok(bytes) => {
+            match j::parse(heap, bytes, 4096) {
+                j::Parsed.err(discard) => {
+                    return - 91;
+                },
+                j::Parsed.ok(doc) => {
+                    borrow doc[0..len_buffer(doc)] as view {
+                        match inspect(view) {
+                            r::Result<i64, r::Error>.err(discard) => {
+                                return - 92;
+                            },
+                            r::Result<i64, r::Error>.ok(answer) => {
+                                return answer;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

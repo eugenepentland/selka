@@ -18,6 +18,18 @@ export text_length;
 export text_byte;
 export Parsed;
 export parse;
+export Cursor;
+export Name;
+export children;
+export current;
+export member_key;
+export advance;
+export required;
+export integer_or;
+export boolean_or;
+export integer_between;
+export count_between;
+export only_fields;
 struct Node {
     id: i64
 }
@@ -183,4 +195,144 @@ fn parse(heap: allocator, bytes: std_json::Bytes, limit: i64) -> Parsed {
             return new Parsed.ok(doc);
         }
     }
+}
+// Cursors belong to one unmodified document; callers inspect done, not positions.
+struct Cursor {
+    owner: Node,
+    position: i64,
+    done: bool
+}
+// Half-open ranges into caller-owned allowlist bytes; empty names are valid.
+struct Name {
+    start: u64,
+    end: u64
+}
+fn children(doc: &[]i64, node: Node) -> std_result::Result<Cursor, std_result::Error> {
+    let size = try count(doc, node);
+    return new std_result::Result<Cursor, std_result::Error>.ok(new Cursor {
+        owner: node,
+        position: node.id + 1,
+        done: size == 0
+    });
+}
+fn current(doc: &[]i64, cursor: Cursor) -> std_result::Result<Node, std_result::Error> {
+    discard try count(doc, cursor.owner);
+    if cursor.done {
+        return new std_result::Result<Node, std_result::Error>.err(failure(new std_result::Category.absent));
+    }
+    let end = std_json::get(doc, cursor.owner.id, 3);
+    if cursor.position <= cursor.owner.id || cursor.position >= end {
+        return new std_result::Result<Node, std_result::Error>.err(failure(new std_result::Category.bounds));
+    }
+    let mut id = cursor.position;
+    if try kind(doc, cursor.owner) == new Kind.object {
+        id += 1;
+    }
+    if id >= end {
+        return new std_result::Result<Node, std_result::Error>.err(failure(new std_result::Category.bounds));
+    }
+    return new std_result::Result<Node, std_result::Error>.ok(new Node {
+        id: id
+    });
+}
+fn member_key(doc: &[]i64, cursor: Cursor) -> std_result::Result<Node, std_result::Error> {
+    if try kind(doc, cursor.owner) != new Kind.object {
+        return new std_result::Result<Node, std_result::Error>.err(failure(new std_result::Category.wrong_type));
+    }
+    discard try current(doc, cursor);
+    return new std_result::Result<Node, std_result::Error>.ok(new Node {
+        id: cursor.position
+    });
+}
+// Advancing a completed cursor is idempotent; each step skips a whole subtree.
+fn advance(doc: &[]i64, cursor: Cursor) -> std_result::Result<Cursor, std_result::Error> {
+    discard try count(doc, cursor.owner);
+    if cursor.done {
+        return new std_result::Result<Cursor, std_result::Error>.ok(cursor);
+    }
+    let child = try current(doc, cursor);
+    let position = std_json::get(doc, child.id, 3);
+    return new std_result::Result<Cursor, std_result::Error>.ok(new Cursor {
+        owner: cursor.owner,
+        position: position,
+        done: position >= std_json::get(doc, cursor.owner.id, 3)
+    });
+}
+fn required(doc: &[]i64, node: Node, name: &[]u8) -> std_result::Result<Node, std_result::Error> {
+    match try field(doc, node, name) {
+        std_result::Option<Node>.some(found) => {
+            return new std_result::Result<Node, std_result::Error>.ok(found);
+        },
+        std_result::Option<Node>.none => {
+            return new std_result::Result<Node, std_result::Error>.err(failure(new std_result::Category.absent));
+        }
+    }
+}
+// Defaults apply only to absence, never to null or invalid present values.
+fn integer_or(doc: &[]i64, node: Node, name: &[]u8, fallback: i64) -> std_result::Result<i64, std_result::Error> {
+    match try field(doc, node, name) {
+        std_result::Option<Node>.some(found) => {
+            return integer(doc, found);
+        },
+        std_result::Option<Node>.none => {
+            return new std_result::Result<i64, std_result::Error>.ok(fallback);
+        }
+    }
+}
+fn boolean_or(doc: &[]i64, node: Node, name: &[]u8, fallback: bool) -> std_result::Result<bool, std_result::Error> {
+    match try field(doc, node, name) {
+        std_result::Option<Node>.some(found) => {
+            return boolean(doc, found);
+        },
+        std_result::Option<Node>.none => {
+            return new std_result::Result<bool, std_result::Error>.ok(fallback);
+        }
+    }
+}
+fn integer_between(doc: &[]i64, node: Node, lower: i64, upper: i64) -> std_result::Result<i64, std_result::Error> {
+    let number = try integer(doc, node);
+    if lower > upper || number < lower || number > upper {
+        return new std_result::Result<i64, std_result::Error>.err(failure(new std_result::Category.bounds));
+    }
+    return new std_result::Result<i64, std_result::Error>.ok(number);
+}
+fn count_between(doc: &[]i64, node: Node, lower: i64, upper: i64) -> std_result::Result<i64, std_result::Error> {
+    let size = try count(doc, node);
+    if lower < 0 || lower > upper || size < lower || size > upper {
+        return new std_result::Result<i64, std_result::Error>.err(failure(new std_result::Category.bounds));
+    }
+    return new std_result::Result<i64, std_result::Error>.ok(size);
+}
+// Unknown fields only: requiredness and value schemas remain explicit.
+// Validate every descriptor before testing members; duplicates are harmless.
+fn only_fields(doc: &[]i64, node: Node, text: &[]u8, allowed: &[]Name) -> std_result::Result<bool, std_result::Error> {
+    if try kind(doc, node) != new Kind.object {
+        return new std_result::Result<bool, std_result::Error>.err(failure(new std_result::Category.wrong_type));
+    }
+    let mut i = 0u64;
+    while i < len_slice(allowed) {
+        let name = read_slice(allowed, i);
+        if name.start > name.end || name.end > len_slice(text) {
+            return new std_result::Result<bool, std_result::Error>.err(failure(new std_result::Category.bounds));
+        }
+        i += 1u64;
+    }
+    let mut cursor = try children(doc, node);
+    while !cursor.done {
+        let key_node = try member_key(doc, cursor);
+        let mut found = false;
+        i = 0u64;
+        while i < len_slice(allowed) && !found {
+            let name = read_slice(allowed, i);
+            borrow text[name.start..name.end] as candidate {
+                found = try textis(doc, key_node, candidate);
+            }
+            i += 1u64;
+        }
+        if !found {
+            return new std_result::Result<bool, std_result::Error>.ok(false);
+        }
+        cursor = try advance(doc, cursor);
+    }
+    return new std_result::Result<bool, std_result::Error>.ok(true);
 }

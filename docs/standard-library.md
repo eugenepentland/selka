@@ -64,3 +64,74 @@ are not monotonic timers, and the deterministic generator is not cryptographic.
 
 See [application library parity](stdlib-application-parity.md) for ordering,
 counting, character classes, pair iteration and graph contracts.
+
+
+## Ordinary JSON schema and iteration
+
+`std_json_view` is the checked layer over ordinary `std_json::Document`, distinct
+from the `typed-json-v1` compiler invocation format. Existing `Node`, `Kind`,
+`root`, `kind`, `integer`, `boolean`, `count`, `at`, `key` and text accessors remain
+compatible. `field` returns `Option<Node>`; present null is a node with `Kind.null`,
+not absence. Handles and cursors belong to the same unmodified parser-produced
+document; they do not encode ownership or validate a fabricated tape. Do not
+construct or mutate cursor positions. Fraction nodes expose their kind, but the
+ordinary tape currently does not retain a recoverable fractional numeric value.
+
+The following additions return `std_result::Result<value, std_result::Error>` and
+compose with `try` inside an application schema function using that error type:
+
+| Function | Successful value and contract |
+| --- | --- |
+| `required(doc, object, name)` | `Node`; missing is `absent`, present null is retained |
+| `integer_or(doc, object, name, fallback)` | `i64`; fallback only for missing fields |
+| `boolean_or(doc, object, name, fallback)` | `bool`; fallback only for missing fields |
+| `integer_between(doc, node, lower, upper)` | `i64` within inclusive bounds |
+| `count_between(doc, container, lower, upper)` | `i64` count within inclusive nonnegative bounds |
+| `children(doc, container)` | `Cursor` over immediate array values or object members |
+| `current(doc, cursor)` | Current value `Node`; exhausted cursor is `absent` |
+| `member_key(doc, cursor)` | Current object key `Node`; array cursor is `wrong_type` |
+| `advance(doc, cursor)` | Next `Cursor`; exhausted cursors remain exhausted |
+| `only_fields(doc, object, text, allowed)` | `bool`; every decoded member name appears in the allowlist |
+
+Defaults never conceal null or a wrong type. Typed access happens before numeric
+range validation; reversed bounds, negative count bounds and out-of-range values
+produce `bounds`. Invalid node indices produce `bounds`; wrong node kinds produce
+`wrong_type`. Array/object cursors run in source order and skip entire nested
+subtrees in constant work per advance, avoiding repeated indexed scans. Inspect
+`cursor.done` before `current` or `member_key`.
+
+`only_fields` accepts a byte slice and a slice of `Name {start:u64,end:u64}`
+half-open ranges into those bytes. It checks every descriptor before inspecting
+members, including on an empty object: reversed or out-of-buffer ranges produce
+`bounds`. Names are compared as exact decoded UTF-8 bytes, with no delimiter
+encoding: empty names, Unicode, pipes and embedded NUL are representable.
+Duplicate descriptors are harmless. An empty allowlist accepts only an empty
+object. This helper does not require all allowed fields to be present; combine
+it with `required` for requiredness and kind/value predicates for field schemas.
+
+For example, an application helper returning `Result<i64,Error>` can write:
+
+```mylang
+let names = new [2]std_json_view::Name[
+    new std_json_view::Name {start:0u64,end:2u64},
+    new std_json_view::Name {start:2u64,end:5u64}
+];
+borrow names[0..2] as allowed {
+    let known = try std_json_view::only_fields(doc, object, "idlag", allowed);
+    // The application maps false to its own invalid-schema result.
+}
+let lag = try std_json_view::integer_between(doc,
+    try std_json_view::required(doc, object, "lag"), 0, 1000000);
+let mut cursor = try std_json_view::children(doc, array);
+while !cursor.done {
+    let child = try std_json_view::current(doc, cursor);
+    // Validate this child within the application's complete schema phase.
+    cursor = try std_json_view::advance(doc, cursor);
+}
+```
+
+These helpers do not choose application error precedence. Complete the whole
+schema phase before checking duplicate identifiers, references or graph rules.
+Parsing strictness, input limits, transport errors and raw tape APIs are unchanged.
+The integrated `json_schema.my` fixture checks nested traversal, exhaustion,
+missing/null/default distinctions, strict kinds, bounds and arbitrary-name lists.

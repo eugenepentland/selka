@@ -399,3 +399,7 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [STANDARD-PARITY-2] std_ascii matches explicit ASCII identifier classes and length bounds over integer slices; std_iter visits each distinct index pair once in lexicographic order without allocation.
 - [STANDARD-PARITY-3] std_graph prepares caller-owned indegrees from bounded directed edges, reserves ready vertices, completes each once, and distinguishes finished and cyclically stalled graphs; state and edges must retain their prepared correspondence.
 - [STANDARD-INTEGER-EXTREMA-1] std_math integer min/max compare exact values at every supported integer width without arithmetic overflow; min_or/max_or use an explicit fallback only for an empty slice and ignore it for nonempty slices. Existing F64 operations remain available.
+
+## Ordinary JSON schema helpers
+
+- [STANDARD-JSON-SCHEMA-1] Checked document-local JSON cursors iterate immediate array elements or object members in source order, skipping nested subtrees; empty cursors terminate and advancing an exhausted cursor is idempotent. Required fields distinguish absence from null. Integer and boolean defaults apply only to absent fields; present wrong kinds remain errors. Inclusive integer/count bounds and descriptor-based allowed object field checks preserve named type and bounds failures without changing parser strictness or application validation precedence.
