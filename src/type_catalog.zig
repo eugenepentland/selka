@@ -38,6 +38,19 @@ pub const Catalog = struct {
         if (self.templates.names.contains(key)) return sink.fail("E_GENERIC_ARITY", span, "nominal template requires explicit type arguments");
         return self.names.get(key) orelse sink.fail("E_UNKNOWN_TYPE", span, "type is not declared");
     }
+    /// Retain canonical alias targets for checked public schemas; resolution may fail with SourceError or OutOfMemory.
+    pub fn aliases(self: Catalog, allocator: std.mem.Allocator, src: Source, syntax: @import("ast.zig").Program, sink: *diagnostic.Sink) Error![]const typed.TypeAlias {
+        const result = try allocator.alloc(typed.TypeAlias, syntax.types.expressions.aliases.len);
+        errdefer allocator.free(result);
+        for (syntax.types.expressions.aliases, result) |alias, *out| {
+            out.* = .{
+                .name = if (self.module_names) |names| try names.declaration(alias.name) else src.text(alias.name),
+                .target = try self.resolve(src, alias.name, sink),
+                .declaration = alias.name,
+            };
+        }
+        return result;
+    }
     /// Intern a specialized numeric array while retaining declaration-based element identity.
     pub fn instantiateArray(self: *Catalog, allocator: std.mem.Allocator, element: typed.Type, length: usize, span: Span, sink: *diagnostic.Sink) Error!typed.Type {
         const shape: typed.Array = .{ .element = element, .length = length };

@@ -309,7 +309,10 @@ pub const FunctionScope = struct {
     references: []const Reference = &.{},
 };
 /// Borrowed checked expression, statement, function, and nominal schema tables.
-pub const Program = struct { nodes: []const Node, statements: []const Statement, functions: []const Function, main: FunctionId, records: []const Record = &.{} };
+/// Checked transparent name and its canonical target, retained for public interfaces.
+pub const TypeAlias = struct { name: []const u8, target: Type, declaration: Span };
+/// Checked semantic graph with arena-owned type and alias identities.
+pub const Program = struct { aliases: []const TypeAlias = &.{}, nodes: []const Node, statements: []const Statement, functions: []const Function, main: FunctionId, records: []const Record = &.{} };
 
 /// Identify the external provider family associated with a type.
 pub fn resourceKind(ty: Type, records: []const Record) ?external_resources.Kind {

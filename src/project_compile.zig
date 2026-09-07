@@ -154,15 +154,22 @@ pub const Compilation = struct {
     pub fn publicValueType(self: *Compilation, name: []const u8) PublicValueTypeError!typed.Type {
         try self.check();
         if (typed.Type.fromName(name)) |ty| return ty;
+        for (self.program.?.aliases) |alias| {
+            if (!@import("std").mem.eql(u8, name, alias.name)) continue;
+            if (try self.exportedType(alias.declaration)) return alias.target;
+        }
         for (self.program.?.records) |record| {
             if (!@import("std").mem.eql(u8, name, record.name) or record.shape.array != null) continue;
-            const original = self.src.originalSpan(record.declaration) catch return error.InternalError;
-            if (original.input >= self.index.units.len or original.input >= self.index.project.modules.items.len) return error.InternalError;
-            const unit = self.index.units[original.input];
-            const symbol = unit.symbols.items[unit.names.get(self.src.text(record.declaration)) orelse return error.InternalError];
-            if (symbol.exported and symbol.kind == .type and record.contract.public_arguments) return record.id;
+            if (try self.exportedType(record.declaration) and record.contract.public_arguments) return record.id;
         }
         return error.UnknownPublicValueType;
+    }
+    fn exportedType(self: *Compilation, declaration: source.Span) error{InternalError}!bool {
+        const original = self.src.originalSpan(declaration) catch return error.InternalError;
+        if (original.input >= self.index.units.len or original.input >= self.index.project.modules.items.len) return error.InternalError;
+        const unit = self.index.units[original.input];
+        const symbol = unit.symbols.items[unit.names.get(self.src.text(declaration)) orelse return error.InternalError];
+        return symbol.exported and symbol.kind == .type;
     }
     /// Only explicitly exported functions/public methods may be invoked by name.
     pub fn invokePublic(self: *Compilation, allocator: @import("std").mem.Allocator, name: []const u8, arguments: []const typed.Value, options: @import("vm.zig").InvokeOptions) InvokePublicError!@import("vm.zig").ValueResult {

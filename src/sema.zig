@@ -1946,7 +1946,14 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     const functions = try checked_functions.toOwnedSlice(allocator);
     var executable_names: std.StringHashMapUnmanaged(typed.FunctionId) = .empty;
     for (functions) |function| try executable_names.put(allocator, function.name, function.id);
-    const checked: typed.Program = .{ .nodes = try checker.nodes.toOwnedSlice(allocator), .statements = try checker.statements.toOwnedSlice(allocator), .functions = functions, .main = main, .records = checker.catalog.records };
+    const checked: typed.Program = .{
+        .aliases = try checker.catalog.aliases(allocator, src, program, sink),
+        .nodes = try checker.nodes.toOwnedSlice(allocator),
+        .statements = try checker.statements.toOwnedSlice(allocator),
+        .functions = functions,
+        .main = main,
+        .records = checker.catalog.records,
+    };
     try @import("region_check.zig").check(allocator, checked, sink);
     try @import("effects.zig").check(allocator, checked, sink);
     try @import("domain_codecs.zig").check(allocator, src, program.types.domains, checker.catalog, .{ .items = functions, .names = executable_names }, sink);

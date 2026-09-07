@@ -73,3 +73,34 @@ test "exported aliases cannot expose private nominal types" {
     var program: language.embedded_project.Program = undefined;
     try t.expectError(error.SourceError, program.init(t.allocator, .{ .context = null, .read = privateTarget }));
 }
+
+fn schemaAliases(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
+    if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
+    return allocator.dupe(u8, "module main;export Count;export Pair;export Chosen;export Array;export Other;" ++
+        "type Count=i64;struct Pair<T:copy>{value:T}type Chosen=Pair<Count>;type Other=Chosen;" ++
+        "type Array=[2]Count;type Hidden=bool;fn main()->i64{let x=new Other{value:42};return x.value;}");
+}
+fn schemaScenario(allocator: std.mem.Allocator) !void {
+    var program: language.embedded_project.Program = undefined;
+    try program.init(allocator, .{ .context = null, .read = schemaAliases });
+    defer program.deinit();
+    try t.expectEqual(@import("typed.zig").Type.i64, try program.compilation.publicValueType("main::Count"));
+    try t.expectEqual(try program.compilation.publicValueType("main::Chosen"), try program.compilation.publicValueType("main::Other"));
+    try t.expectError(error.UnknownPublicValueType, program.compilation.publicValueType("main::Hidden"));
+    const rendered = try language.schema.render(allocator, &program.compilation);
+    defer allocator.free(rendered);
+    const parsed = try std.json.parseFromSlice(std.json.Value, allocator, rendered, .{});
+    defer parsed.deinit();
+    const exports = parsed.value.object.get("exports").?.array.items;
+    try t.expectEqual(@as(usize, 4), exports.len);
+    try t.expectEqualStrings("[2]i64", exports[0].string);
+    try t.expectEqualStrings("i64", exports[1].string);
+    try t.expectEqualStrings(exports[2].string, exports[3].string);
+    const emitted = try program.compilation.emitC(allocator);
+    defer allocator.free(emitted);
+    try t.expect(emitted.len > 0);
+}
+// spec: TYPE-ALIAS-SCHEMA-1
+test "public scalar array and generic aliases retain canonical schemas and native emission" {
+    try schemaScenario(t.allocator);
+}

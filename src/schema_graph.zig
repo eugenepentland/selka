@@ -130,6 +130,7 @@ pub fn render(allocator: std.mem.Allocator, index: *interfaces.Index, program: t
     // are not declarations and acquire visibility only through public contracts.
     var nominal: std.StringHashMapUnmanaged(typed.Type) = .empty;
     for (program.records) |record| try nominal.put(scratch, record.name, record.id);
+    for (program.aliases) |alias| try nominal.put(scratch, alias.name, alias.target);
     for (index.units, 0..) |unit, module| {
         for (unit.symbols.items) |symbol| {
             if (!symbol.exported or symbol.kind != .type) continue;
