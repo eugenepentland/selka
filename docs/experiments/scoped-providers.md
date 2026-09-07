@@ -29,3 +29,14 @@ Provider errors map to the existing runtime categories (`Denied`, `Failed`,
 `Unavailable`, allocation failure). Acquire failures retain no live handle.
 The provider registry has a default 256-handle bound in addition to VM quotas.
 EOF translation handles both zero-length reads and host EndOfStream errors.
+
+`mylang-io --project APP --allow-dir=DATA` grants read-only directory access.
+Add `--allow-write` to permit write, exclusive create and truncation. Repeated
+`--allow-endpoint=127.0.0.1:9000` arguments grant up to 16 numeric TCP endpoints
+(IPv6 uses `[::1]:9000`). No grant means the corresponding entry capability is
+unavailable. Resource effects occur during execution; only raw stdout is buffered
+for publication after a successful guest exit. Filesystem writes and network
+traffic are not rolled back on a later guest failure.
+
+Applications using mylang-io still import their explicit `io` host declaration
+(length, byte and put), as in the existing byte-I/O runner contract.

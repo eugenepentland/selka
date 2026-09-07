@@ -3,6 +3,7 @@ const std = @import("std");
 /// Project path and bounded input, unpublished output, and execution budgets.
 pub const Options = struct {
     project: []const u8,
+    grants: @import("grants.zig").Config = .{},
     input: usize = 2 * 1024 * 1024,
     output: usize = 128 * 1024 * 1024,
     steps: u64 = 2_000_000_000,
@@ -15,6 +16,7 @@ pub fn parse(args: []const []const u8) error{InvalidArguments}!Options {
     var options: Options = .{ .project = args[2] };
     var seen: u8 = 0;
     for (args[3..]) |argument| {
+        if (try options.grants.parse(argument)) continue;
         const split = std.mem.indexOfScalar(u8, argument, '=') orelse return error.InvalidArguments;
         const key = argument[0..split];
         const digits = argument[split + 1 ..];
@@ -47,5 +49,6 @@ pub fn parse(args: []const []const u8) error{InvalidArguments}!Options {
         }
         if (!matched) return error.InvalidArguments;
     }
+    if (options.grants.writable and options.grants.directory == null) return error.InvalidArguments;
     return options;
 }

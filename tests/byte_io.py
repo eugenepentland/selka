@@ -56,7 +56,58 @@ def main():
         io.write_text(io.read_text().replace('[256]u8', '[255]u8'))
         malformed = run('fn main()->i64{return 0;}')
         assert malformed.returncode != 0 and not malformed.stdout and b'HostSignatureMismatch' in malformed.stderr, malformed
+    scoped_checks(runner)
     print('byte I/O: scalar/bulk binary bytes, short writes, ABI validation, configurable budgets and unpublished failures pass')
+
+
+def scoped_checks(runner):
+    import socket
+    with tempfile.TemporaryDirectory(prefix='scoped-provider-cli-') as temporary:
+        root = Path(temporary)
+        data = root / 'data'
+        data.mkdir()
+        (data / 'existing').write_bytes(b'original')
+        outside = root / 'outside'
+        outside.write_bytes(b'outside')
+        (data / 'link').symlink_to(outside)
+        (root / 'io.my').write_text('module io;export length;export byte;export put;host fn length()->i64 effects(host);host fn byte(index:i64)->u8 effects(host);host fn put(value:u8)->i64 effects(host);')
+        declarations = ('module main;import io;resource File:filesystem;result Open{ok:File,err:i64}'
+                        'result Written{ok:u64,err:i64}')
+        def run(request, flags, expected=0):
+            source = declarations + ('fn main(fs:filesystem_cap)->i64{match acquire_resource<Open>(fs,"' + request + '") {'
+                     'Open.err(e)=>{if e==2{return 0;}return 9;},Open.ok(input)=>{let mut file=input;'
+                     'acknowledge write_resource<Written>(file,"changed");return ' + str(expected) + ';}}}')
+            (root / 'main.my').write_text(source)
+            return subprocess.run([str(runner), '--project', str(root), *flags], input=b'', capture_output=True, timeout=15)
+        grant = '--allow-dir=' + str(data)
+        unavailable = run('r:existing', [])
+        assert unavailable.returncode != 0 and b'CapabilityUnavailable' in unavailable.stderr, unavailable
+        for request in ['t:existing', 'c:created', 'w:../outside']:
+            result = run(request, [grant], 10)
+            assert result.returncode == 0, result.stderr
+        assert (data / 'existing').read_bytes() == b'original'
+        assert not (data / 'created').exists()
+        denied = run('t:link', [grant, '--allow-write'], 10)
+        assert denied.returncode == 0 and outside.read_bytes() == b'outside', denied.stderr
+        created = run('c:created', [grant, '--allow-write'])
+        assert created.returncode == 0 and (data / 'created').read_bytes() == b'changed', created.stderr
+        with socket.socket() as server:
+            server.bind(('127.0.0.1', 0))
+            server.listen()
+            server.settimeout(5)
+            endpoint = '127.0.0.1:' + str(server.getsockname()[1])
+            (root / 'main.my').write_text('module main;import io;resource Socket:network;result Open{ok:Socket,err:i64}'
+                'result Written{ok:u64,err:i64}fn main(net:network_cap)->i64{match acquire_resource<Open>(net,"' + endpoint + '") {'
+                'Open.err(discard)=>{return 1;},Open.ok(input)=>{let mut socket=input;acknowledge write_resource<Written>(socket,"ping");return 0;}}}')
+            result = subprocess.run([str(runner), '--project', str(root), '--allow-endpoint=' + endpoint],
+                                    input=b'', capture_output=True, timeout=15)
+            assert result.returncode == 0, result.stderr
+            peer, _ = server.accept()
+            with peer:
+                peer.settimeout(5)
+                assert peer.recv(4) == b'ping'
+                assert peer.recv(1) == b''
+    print('scoped providers: CLI grants, read-only create/truncate denial, traversal, symlinks, files and TCP cleanup pass')
 
 
 if __name__ == '__main__':

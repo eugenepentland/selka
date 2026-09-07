@@ -29,7 +29,12 @@ fn run(init: std.process.Init) !void {
     var registry = try language.vm_host.Registry.init(runtime_allocator, program.compilation.code.?);
     defer registry.deinit();
     try context.install(&registry);
-    const result = try language.vm.runWithHost(runtime_allocator, program.compilation.code.?, .{ .max_steps = options.steps }, &registry, .{ .max_calls = options.calls, .max_work = options.work });
+    var grants: @import("grants.zig").State = undefined;
+    try grants.init(runtime_allocator, init.io, options.grants);
+    defer grants.deinit();
+    var vm_options = grants.options();
+    vm_options.max_steps = options.steps;
+    const result = try language.vm.runWithHost(runtime_allocator, program.compilation.code.?, vm_options, &registry, .{ .max_calls = options.calls, .max_work = options.work });
     switch (result) {
         .trap => |trap| {
             const message = try trap.render(allocator, program.compilation.src);
@@ -57,4 +62,16 @@ test "runner rejects InvalidArguments InputLimit and GuestExit at the publicatio
     try validateExit(0);
     try t.expectError(error.GuestExit, validateExit(1));
     try t.expectError(error.GuestExit, validateExit(-1));
+}
+// spec: SCOPED-PROVIDERS-4
+test "runner grants require explicit directories and numeric endpoints" {
+    const t = std.testing;
+    const parse = @import("limits.zig").parse;
+    try t.expectError(error.InvalidArguments, parse(&.{ "mylang-io", "--project", ".", "--allow-write" }));
+    try t.expectError(error.InvalidArguments, parse(&.{ "mylang-io", "--project", ".", "--allow-dir=a", "--allow-dir=b" }));
+    try t.expectError(error.InvalidArguments, parse(&.{ "mylang-io", "--project", ".", "--allow-endpoint=example.org:80" }));
+    const options = try parse(&.{ "mylang-io", "--project", ".", "--allow-dir=data", "--allow-write", "--allow-endpoint=127.0.0.1:8000" });
+    try t.expectEqualStrings("data", options.grants.directory.?);
+    try t.expect(options.grants.writable);
+    try t.expectEqual(@as(usize, 1), options.grants.count);
 }
