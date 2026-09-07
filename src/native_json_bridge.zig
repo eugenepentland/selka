@@ -2,7 +2,11 @@
 const std = @import("std");
 const document = @import("json_document.zig");
 comptime {
-    if (!@import("builtin").is_test) @export(&parseDocumentC, .{ .name = "mylang_native_json_document_v1" });
+    if (!@import("builtin").is_test) {
+        @export(&parseDocumentC, .{ .name = "mylang_native_json_document_v1" });
+        @export(&@import("native_typed_json.zig").encode, .{ .name = "mylang_native_json_encode_v1" });
+        @export(&@import("native_typed_json.zig").decode, .{ .name = "mylang_native_json_decode_v1" });
+    }
 }
 const Result = struct { words: []i64 = &.{}, status: c_int = 0 };
 fn parse(allocator: std.mem.Allocator, bytes: []const u8) Result {
@@ -34,28 +38,4 @@ test "native JSON bridge preserves malformed and allocation errors and owned out
     try t.expectEqual(@as(c_int, -1), parse(failing.allocator(), "[]").status);
 }
 
-const NativeAllocator = extern struct {
-    allocate: *const fn (usize) callconv(.c) ?*anyopaque,
-    reallocate: *const fn (?*anyopaque, usize) callconv(.c) ?*anyopaque,
-    release: *const fn (?*anyopaque) callconv(.c) void,
-    fn allocator(self: *const NativeAllocator) std.mem.Allocator {
-        return .{ .ptr = @constCast(self), .vtable = &.{ .alloc = allocateBytes, .resize = resizeBytes, .remap = remapBytes, .free = freeBytes } };
-    }
-    fn allocateBytes(context: *anyopaque, length: usize, alignment: std.mem.Alignment, _: usize) ?[*]u8 {
-        const self: *const NativeAllocator = @ptrCast(@alignCast(context));
-        if (std.mem.Alignment.compare(alignment, .gt, .of(std.c.max_align_t))) return null;
-        return @ptrCast(self.allocate(length) orelse return null);
-    }
-    fn resizeBytes(_: *anyopaque, _: []u8, _: std.mem.Alignment, _: usize, _: usize) bool {
-        return false;
-    }
-    fn remapBytes(context: *anyopaque, bytes: []u8, alignment: std.mem.Alignment, length: usize, _: usize) ?[*]u8 {
-        const self: *const NativeAllocator = @ptrCast(@alignCast(context));
-        if (std.mem.Alignment.compare(alignment, .gt, .of(std.c.max_align_t))) return null;
-        return @ptrCast(self.reallocate(bytes.ptr, length) orelse return null);
-    }
-    fn freeBytes(context: *anyopaque, bytes: []u8, _: std.mem.Alignment, _: usize) void {
-        const self: *const NativeAllocator = @ptrCast(@alignCast(context));
-        self.release(bytes.ptr);
-    }
-};
+const NativeAllocator = @import("native_json_abi.zig").NativeAllocator;

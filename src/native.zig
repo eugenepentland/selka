@@ -135,7 +135,7 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     var output: std.Io.Writer.Allocating = .init(allocator);
     errdefer output.deinit();
     const w = &output.writer;
-    if (hasJsonDocument(program)) try writeJsonSupport(w);
+    if (hasJsonSupport(program)) try writeJsonSupport(w);
     try w.print("#define MYLANG_GUEST_VALUE_BYTES {d}\n", .{@sizeOf(typed.Value)});
     try w.writeAll(@embedFile("native_host.h"));
     try w.writeAll(@embedFile("native_providers.h"));
@@ -143,7 +143,10 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     try w.writeAll(@embedFile("native_runtime.c"));
     try w.writeAll(@embedFile("native_resources.c"));
     try @import("native_host.zig").emit(w, layout, program);
-    if (hasJsonDocument(program)) try w.writeAll(@embedFile("native_json.c"));
+    if (hasJsonSupport(program)) {
+        try @import("native_json_schema.zig").emit(w, program.records);
+        try w.writeAll(@embedFile("native_json.c"));
+    }
     try writeInterface(w, interface.schema);
     try native_wire.emit(w, layout, codec_types, program.functions);
     try w.writeAll("\nstatic const char *const names[] = {\n");
@@ -299,7 +302,11 @@ fn checkFunction(layout: native_layout.Layout, function: bc.Function, sink: *dia
     for (function.scope.instructions) |instruction| switch (instruction.op) {
         .cmp_domain => {},
         .json_codec => |operation| if (!operation.document) {
-            return sink.fail(unsupported_feature, instruction.span, "typed source JSON codecs currently require the interpreter; native ordinary JSON parsing is supported");
+            const value = if (operation.decode) typed.resultShape(operation.output, layout.records).?.ok_type else operation.input;
+            @import("data_type.zig").check(layout.allocator, layout.records, value, false) catch |err| {
+                if (err == error.OutOfMemory) return error.OutOfMemory;
+                return sink.fail(unsupported_feature, instruction.span, "native source JSON domain codecs require compiled codec invocation support");
+            };
         },
         .make_variant => |variant| {
             if (!layout.supports(variant.ty)) return sink.fail(unsupported_feature, instruction.span, "native variant representation requires supported payloads");
@@ -517,7 +524,14 @@ fn writeOperation(context: InstructionOutput) !bool {
         },
         .json_codec => |operation| {
             const result = typed.resultShape(operation.output, program.records).?;
-            try w.print("push_value(json_document({d}, {d}));\n", .{ result.ok_tag, result.error_tag });
+            if (operation.document) {
+                try w.print("push_value(json_document({d}, {d}));\n", .{ result.ok_tag, result.error_tag });
+            } else {
+                const value_type = if (operation.decode) result.ok_type else operation.input;
+                try w.print("NativeJsonResult converted=json_typed({d}, {d}); int status=converted.status; " ++
+                    "Slot value=converted.value; if(status) value=(Slot){{status,NULL}};\n", .{ @backingInt(value_type), @intFromBool(operation.decode) });
+                try statusResult(w, layout, operation.output);
+            }
         },
         .acquire_buffer => |ty| {
             const shape = typed.resultShape(ty, program.records).?;
@@ -643,16 +657,16 @@ fn operationOwner(writer: *std.Io.Writer, owner: typed.LocalId, reference: ?type
     } else try writer.print("local_access({d}, {d})", .{ @backingInt(owner), @intFromBool(mutable) });
 }
 
-fn hasJsonDocument(program: bc.Program) bool {
+fn hasJsonSupport(program: bc.Program) bool {
     for (program.functions) |function| for (function.scope.instructions) |instruction| {
-        if (instruction.op == .json_codec and instruction.op.json_codec.document) return true;
+        if (instruction.op == .json_codec) return true;
     };
     return false;
 }
 
 fn writeJsonSupport(w: *std.Io.Writer) error{WriteFailed}!void {
     var hash = std.crypto.hash.sha2.Sha256.init(.{});
-    inline for (.{ "native_json_bridge.zig", "json_document.zig", "typed_json.zig", "codec_memory.zig" }) |path| {
+    inline for (.{ "native_json_bridge.zig", "native_json_abi.zig", "native_typed_json.zig", "json_document.zig", "typed_json.zig", "codec_memory.zig", "typed.zig", "runtime_values.zig" }) |path| {
         hash.update(path);
         hash.update("\x00");
         hash.update(@embedFile(path));

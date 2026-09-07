@@ -53,7 +53,41 @@ def main():
                     native_limited = invoke([executable, f'--max-steps={budget}'])
                     assert native_limited.returncode == vm_limited.returncode, (index, mode, budget, vm_limited, native_limited)
                     assert native_limited.stdout == vm_limited.stdout, (index, mode, budget)
+        typed_checks(args, root, directory)
     print('native JSON: 24 value/error comparisons and 72 shared step-budget comparisons pass')
+
+
+def typed_checks(args, root, directory):
+    fixtures = [((root / 'src/native_fixtures/typed_json.my').read_text(), 42)]
+    for payload, expected in [
+        (b'{"version":"typed-json-v1","type":"i64","value":"42"}', 42),
+        (b'{"version":"typed-json-v1","type":"u64","value":"42"}', -1),
+        (b'{"version":"typed-json-v1","type":"i64","value":42}', -1),
+        (b'{"version":"typed-json-v1","type":"i64","value":"9223372036854775808"}', -1),
+        (b'{"version":"typed-json-v1","type":"i64","value":"1","extra":true}', -1),
+    ]:
+        program = source(payload).replace('result Parsed{ok:Doc,err:i64}', 'result Parsed{ok:i64,err:i64}')
+        program = program.replace('json_parse::<Parsed>', 'json_decode::<Parsed>')
+        program = program.replace('Parsed.ok(doc)=>{borrow doc[0..len_buffer(doc)] as view{return read_slice(view,6);}}',
+                                  'Parsed.ok(value)=>{return value;}')
+        fixtures.append((program, expected))
+    for index, (program, expected) in enumerate(fixtures):
+        entry = directory / 'typed.my'
+        entry.write_text(program)
+        vm = invoke([args.compiler.resolve(), 'run', entry])
+        assert vm.returncode == 0 and vm.stdout == f'{expected}\n'.encode(), vm
+        for mode in ['Debug', 'ReleaseFast']:
+            executable = directory / 'typed-native'
+            built = invoke(['python3', root / 'scripts/native.py', entry, '--compiler', args.compiler.resolve(),
+                '--zig', args.zig, '--mode', mode, '-o', executable])
+            assert built.returncode == 0, (index, built.stderr)
+            native = invoke([executable])
+            assert native.returncode == 0 and native.stdout == vm.stdout, (index, native)
+            for budget in [100, 500, 1000, 5000]:
+                vm_limited = invoke([args.compiler.resolve(), 'run', entry, f'--max-steps={budget}'])
+                native_limited = invoke([executable, f'--max-steps={budget}'])
+                assert (native_limited.returncode, native_limited.stdout) == (vm_limited.returncode, vm_limited.stdout), (index, mode, budget, native_limited, vm_limited)
+    print('native typed JSON: 12 value/error and 48 step-budget comparisons across scalar and composite codecs pass')
 
 
 if __name__ == '__main__':

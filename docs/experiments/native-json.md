@@ -1,4 +1,4 @@
-# Native ordinary JSON parsing
+# Native source JSON
 
 Native `json_parse` links the same `json_document.zig` parser used by the VM.
 `scripts/native.py` automatically builds its small Zig support object and links
@@ -22,5 +22,17 @@ input returns 1, and actual allocator exhaustion remains a host failure. Byte an
 tape-word instruction charges match the VM. The parity suite checks 24 value/error
 comparisons and 72 shared step-budget comparisons in Debug and ReleaseFast.
 
-Typed source `json_encode`/`json_decode` are still rejected explicitly in this
-stage; their checked value/domain codec bridge remains separate work.
+Typed source `json_encode`/`json_decode` share the normative typed-json-v1
+encoder and decoder through copied value trees and compiler-emitted schemas.
+Integers (including u64), booleans, records, fixed and enum-keyed arrays, enums,
+unions and fallible variants preserve canonical names and values. Operations
+retain the VM's 32 MiB temporary budget, 65,536 visited values, depth 64, byte
+limits and instruction charges. Compiler-owned metadata and copied input/output
+storage use the parent allocator; temporary codec storage uses the bounded
+allocator. Every allocation-failure position is checked for cleanup.
+
+The typed parity suite adds 12 value/error and 48 step-budget comparisons across
+Debug and ReleaseFast, including nested variants and zero-length arrays. Domain
+codec execution is still rejected before emission: implementing it requires
+compiled codec calls and recoverable traps with preserved caller state. Thus
+native coverage of the current language remains incomplete.
