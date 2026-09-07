@@ -139,8 +139,8 @@ const Builder = struct {
     fn runtimeType(self: Builder, id: layouts.Id) Error!typed.Type {
         return self.identities.items.items[@backingInt(id)].ty orelse error.InternalError;
     }
-    fn named(self: Builder, declaration: usize) Error!typed.Type {
-        const id = self.graph.index.get(.{ .base = .{ .named = declaration }, .arguments = &.{} }) orelse return error.InternalError;
+    fn named(self: Builder, declaration: usize, arguments: []const layouts.Id) Error!typed.Type {
+        const id = self.graph.index.get(.{ .base = .{ .named = declaration }, .arguments = arguments }) orelse return error.InternalError;
         return self.runtimeType(id);
     }
     fn fields(self: Builder, node: layouts.Node, schema: *typed.Record, declaration: templates.Declaration) Error!void {
@@ -221,8 +221,8 @@ const Builder = struct {
                 .record => try self.fields(node, schema, declaration),
                 .variants, .result, .enumeration => try self.variants(node, schema, declaration),
                 .buffer => schema.shape.buffer = try self.runtimeType(node.edges[0].target),
-                .pool => schema.shape.pool = .{ .element = try self.runtimeType(node.edges[0].target), .handle = try self.named(id + 1) },
-                .handle => schema.shape.handle_pool = try self.named(id - 1),
+                .pool => schema.shape.pool = .{ .element = try self.runtimeType(node.edges[0].target), .handle = try self.named(id + 1, node.key.arguments) },
+                .handle => schema.shape.handle_pool = try self.named(id - 1, node.key.arguments),
                 .domain, .resource => try self.special(declaration, schema),
             }
         }

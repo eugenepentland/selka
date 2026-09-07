@@ -194,3 +194,51 @@ test "nominal catalog preserves domain factories pool handles and ordinary resou
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), catalogCategories, .{});
 }
+
+// spec: GENERIC-CONTAINER-1
+test "generic buffers share one checked implementation across nominal elements" {
+    try run(t.allocator, "buffer Vec<T:copy>:T;result Status{ok:bool,err:i64}result Open<T:copy>{ok:Vec<T>,err:i64}result Answer<T:copy>{ok:T,err:i64}" ++
+        "struct A{value:i64}struct B{other:bool}" ++
+        "fn first<T:copy>(heap:allocator,value:T)->Answer<T>{let mut v=try acquire_buffer<Open<T>>(heap,2);discard try append_buffer<Status>(v,value);return new Answer<T>.ok(read_buffer(v,0));}" ++
+        "fn main(heap:allocator)->i64{match first::<A>(heap,new A{value:7}){Answer<A>.ok(a)=>{match first::<B>(heap,new B{other:true}){Answer<B>.ok(b" ++
+        ")=>{if b.other{return a.value;}else{return 0;}},Answer<B>.err(e)=>{return e;}}},Answer<A>.err(e)=>{return e;}}}", 7);
+}
+
+test "generic pools specialize nominal handles and preserve remove errors" {
+    try run(t.allocator, "pool Store<T:copy>(Id):T;result Open<T:copy>{ok:Store<T>,err:i64}result Insert<T:copy>{ok:Id<T>,err:i64}result Read<T:copy>{ok:T,err:i64}result Status{ok:bool,err:i64}result Answer{ok:i64,err:i64}" ++
+        "fn work<T:copy>(heap:allocator,value:T)->Answer{let mut p=try acquire_pool<Open<T>>(heap,2);let id=try insert_pool<Insert<T>>(p,value);disca" ++
+        "rd try read_pool<Read<T>>(p,id);discard try remove_pool<Status>(p,id);match read_pool<Read<T>>(p,id){Read<T>.ok(discard)=>{return new Answer" ++
+        ".ok(0);},Read<T>.err(discard)=>{return new Answer.ok(1);}}}" ++
+        "fn main(heap:allocator)->i64{match work::<i64>(heap,7){Answer.ok(n)=>{return n;},Answer.err(e)=>{return e;}}}", 1);
+}
+
+test "generic container declarations check unused element contracts" {
+    try reject("buffer Vec<T:codec>:T;fn main()->i64{return 0;}", "E_GENERIC_REQUIREMENT");
+    try reject("pool Store<T:codec>(Id):T;fn main()->i64{return 0;}", "E_GENERIC_REQUIREMENT");
+    try reject("buffer Vec<T:copy>:T;buffer B:u8;fn f(value:Vec<B>)->i64{discard value;return 0;}fn main()->i64{return 0;}", "E_GENERIC_REQUIREMENT");
+    try reject("buffer Vec<T:copy>:T;result Status{ok:bool,err:i64}result Open<T:copy>{ok:Vec<T>,err:i64}fn bad<T:copy>(heap:allocator)->Open<T>{let mut v=try acquire_buffer<Open<T>>(hea" ++
+        "p,1);discard try append_buffer<Status>(v,true);return new Open<T>.ok(v);}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
+}
+
+const collection_client =
+    "module main;import std_collections as c;" ++
+    "fn main(heap:allocator)->i64{match c::filled::<i64>(heap,4u64,9){" ++
+    "c::Created<i64>.err(e)=>{return e;},c::Created<i64>.ok(input)=>{let mut values=input;" ++
+    "borrow mut values[0..4] as view{write_slice(view,0,5);write_slice(view,1,1);write_slice(view,2,3);" ++
+    "discard c::sort::<i64>(view);if read_slice(view,0)!=1{return -1;}" ++
+    "discard c::reverse::<i64>(view);if read_slice(view,0)!=9{return -2;}" ++
+    "discard c::sort::<i64>(view);if !c::contains::<i64>(view,3){return -3;}" ++
+    "return cast<i64>(c::lower_bound::<i64>(view,4))+c::find::<i64>(view,9);}}}}";
+fn readCollections(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
+    if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
+    if (collection_client.len > limit) return error.TooLarge;
+    return allocator.dupe(u8, collection_client);
+}
+// spec: STANDARD-COLLECTIONS-1
+test "standard generic collections allocate sort search and mutate one borrowed vector" {
+    var program: language.embedded_project.Program = undefined;
+    try program.init(t.allocator, .{ .context = null, .read = readCollections });
+    defer program.deinit();
+    const outcome = try language.vm.run(t.allocator, program.compilation.code.?);
+    try t.expectEqual(@as(i64, 5), outcome.value);
+}

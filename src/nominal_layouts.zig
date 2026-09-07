@@ -141,6 +141,11 @@ pub const Graph = struct {
             defer edges.deinit(self.allocator);
             switch (node.key.base) {
                 .named => |declaration| {
+                    const kind = self.templates.declarations.items[declaration].kind;
+                    if (kind == .pool or kind == .handle) {
+                        const companion = if (kind == .pool) declaration + 1 else declaration - 1;
+                        try self.need(try self.intern(.{ .base = .{ .named = companion }, .arguments = node.key.arguments }, self.templates.declarations.items[companion].name));
+                    }
                     for (self.templates.declarations.items[declaration].fields) |field| if (field.ty) |value| {
                         const child = try self.resolve(value, node.key.arguments, field.name);
                         try self.need(child);

@@ -1,4 +1,5 @@
 //! Declaration-scoped nominal template expressions, before concrete layout specialization.
+const eRequirement = "E_GENERIC_REQUIREMENT";
 const std = @import("std");
 const ast = @import("ast.zig");
 const typed = @import("typed.zig");
@@ -49,7 +50,7 @@ pub const Index = struct {
     fn add(self: *Index, name: Span, parameters: []const ast.TypeParameter, kind: Kind) Error!void {
         const ctx = self.context;
         for (parameters) |contract| if (contract.field_requirements.len != 0 or contract.operation_requirements.len != 0)
-            return ctx.sink.fail("E_GENERIC_REQUIREMENT", contract.name, "structural requirements currently belong to function templates, not nominal type declarations");
+            return ctx.sink.fail(eRequirement, contract.name, "structural requirements currently belong to function templates, not nominal type declarations");
         const key = if (ctx.names) |names| try names.declaration(name) else ctx.src.text(name);
         if (self.names.get(key)) |previous| return ctx.sink.failRelated("E_DUPLICATE_TYPE", name, "type is already declared", .{ .span = self.declarations.items[previous].name, .message = "previous type declaration" });
         const entry: Declaration = .{ .name = name, .parameters = try requirements.resolve(ctx.allocator, ctx.src, parameters, ctx.sink), .kind = kind };
@@ -150,7 +151,7 @@ pub const Index = struct {
     fn backing(self: *Index, name: Span, span: Span) Error!void {
         const id = try self.lookup(name);
         const field = try self.context.allocator.alloc(Field, 1);
-        field[0] = .{ .name = span, .ty = try self.expression(span, &.{}) };
+        field[0] = .{ .name = span, .ty = try self.expression(span, self.declarations.items[id].parameters) };
         self.declarations.items[id].fields = field;
     }
     /// Operation guarantees are independent of layout IDs; aggregate equality is never inferred.
@@ -216,7 +217,7 @@ pub const Index = struct {
                 for (application.arguments, required, application.syntax.arguments) |argument, item, at| {
                     try self.checkArguments(argument, parameters);
                     if (!self.guarantees(argument, parameters).implies(item.requirements)) return self.context.sink.failRelated(
-                        "E_GENERIC_REQUIREMENT",
+                        eRequirement,
                         at,
                         "type argument does not guarantee the nominal template's required operations",
                         .{ .span = item.name, .message = "type parameter requirements are declared here" },
@@ -261,11 +262,11 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     for (program.types.records) |declaration| try index.add(declaration.name, declaration.type_parameters, .record);
     for (program.types.variants) |declaration| try index.add(declaration.name, declaration.type_parameters, if (declaration.fallible) .result else if (declaration.is_union) .variants else .enumeration);
     inline for (.{ "domains", "buffers", "resources" }, .{ Kind.domain, .buffer, .resource }) |category, kind| {
-        for (@field(program.types, category)) |declaration| try index.add(declaration.name, &.{}, kind);
+        for (@field(program.types, category)) |declaration| try index.add(declaration.name, declaration.type_parameters, kind);
     }
     for (program.types.pools) |pool| {
-        try index.add(pool.name, &.{}, .pool);
-        try index.add(pool.handle, &.{}, .handle);
+        try index.add(pool.name, pool.type_parameters, .pool);
+        try index.add(pool.handle, pool.type_parameters, .handle);
     }
     try index.checkParameters(program);
     for (program.types.expressions.arrays) |syntax| try index.syntax.arrays.put(allocator, syntax.span.start, syntax);
@@ -275,6 +276,11 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     for (program.types.buffers) |declaration| try index.backing(declaration.name, declaration.backing);
     for (program.types.pools) |declaration| try index.backing(declaration.name, declaration.element);
     try index.inferGuarantees();
+    for (index.declarations.items) |declaration| {
+        if (declaration.parameters.len == 0 or (declaration.kind != .buffer and declaration.kind != .pool)) continue;
+        const element = declaration.fields[0];
+        if (!index.guarantees(element.ty.?, declaration.parameters).contains(.copy)) return sink.fail(eRequirement, element.name, "container elements must guarantee copy; owned and must-handle elements are excluded");
+    }
     for (index.declarations.items) |declaration| for (declaration.fields) |field| if (field.ty) |value| try index.checkArguments(value, declaration.parameters);
     return index;
 }

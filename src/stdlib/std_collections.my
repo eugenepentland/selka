@@ -1,0 +1,81 @@
+module std_collections;
+export Vector;
+export Created;
+export Status;
+export vector;
+export filled;
+export find;
+export contains;
+export reverse;
+export sort;
+export lower_bound;
+
+buffer Vector<T:copy>:T;
+result Created<T:copy>{ok:Vector<T>,err:i64}
+result Status{ok:bool,err:i64}
+
+fn vector<T:copy>(heap:allocator, capacity:u64)->Created<T> {
+    return acquire_buffer<Created<T>>(heap, capacity);
+}
+
+fn filled<T:copy>(heap:allocator, count:u64, value:T)->Created<T> {
+    let mut values = try vector::<T>(heap, count);
+    discard try resize_buffer<Status>(values, count, value);
+    return new Created<T>.ok(values);
+}
+
+fn find<T:equality>(values:&[]T, needle:T)->i64 noalloc {
+    let mut index = 0u64;
+    while index < len_slice(values) {
+        if read_slice(values, index) == needle { return cast<i64>(index); }
+        index += 1u64;
+    }
+    return -1;
+}
+
+fn contains<T:equality>(values:&[]T, needle:T)->bool noalloc {
+    return find::<T>(values, needle) >= 0;
+}
+
+fn reverse<T:copy>(values:&mut[]T)->i64 noalloc {
+    let mut left = 0u64;
+    let mut right = len_slice(values);
+    while left < right {
+        right -= 1u64;
+        let old = read_slice(values, left);
+        write_slice(values, left, read_slice(values, right));
+        write_slice(values, right, old);
+        left += 1u64;
+    }
+    return 0;
+}
+
+fn sort<T:integer>(values:&mut[]T)->i64 noalloc {
+    let mut index = 1u64;
+    while index < len_slice(values) {
+        let value = read_slice(values, index);
+        let mut position = index;
+        while position > 0u64 {
+            let previous = read_slice(values, position - 1u64);
+            if previous <= value { position = 0u64; }
+            else {
+                write_slice(values, position, previous);
+                write_slice(values, position - 1u64, value);
+                position -= 1u64;
+            }
+        }
+        index += 1u64;
+    }
+    return 0;
+}
+
+fn lower_bound<T:integer>(values:&[]T, needle:T)->u64 noalloc {
+    let mut left = 0u64;
+    let mut right = len_slice(values);
+    while left < right {
+        let middle = left + (right - left) / 2u64;
+        if read_slice(values, middle) < needle { left = middle + 1u64; }
+        else { right = middle; }
+    }
+    return left;
+}

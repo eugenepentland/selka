@@ -161,22 +161,24 @@ pub const Parser = struct {
             if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "pool")) {
                 self.cursor.pos += 1;
                 const name = try self.expect(.ident);
+                const type_parameters = try self.typeParameters();
                 _ = try self.expect(.lparen);
                 const handle = try self.expect(.ident);
                 _ = try self.expect(.rparen);
                 _ = try self.expect(.colon);
                 const element = try self.typeName();
                 _ = try self.expect(.semicolon);
-                try pools.append(self.arena.allocator(), .{ .name = name.span, .handle = handle.span, .element = element });
+                try pools.append(self.arena.allocator(), .{ .type_parameters = type_parameters, .name = name.span, .handle = handle.span, .element = element });
                 continue;
             }
             if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "buffer")) {
                 self.cursor.pos += 1;
                 const name = try self.expect(.ident);
+                const type_parameters = try self.typeParameters();
                 _ = try self.expect(.colon);
                 const element = try self.typeName();
                 _ = try self.expect(.semicolon);
-                try buffers.append(self.arena.allocator(), .{ .name = name.span, .backing = element });
+                try buffers.append(self.arena.allocator(), .{ .type_parameters = type_parameters, .name = name.span, .backing = element });
                 continue;
             }
             if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "resource")) {

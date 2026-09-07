@@ -265,3 +265,15 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [STANDARD-MODULES-5] Typed JSON fields return optional nodes; absent members, present null, wrong types and invalid node indices remain distinct. Object and array access uses member indices without exposing tape offsets.
 - [STANDARD-MODULES-6] Standard context errors preserve category, original numeric code and owned byte payload across explicit try propagation. Provider-specific denied codes use an explicit adapter parameter rather than a universal assumed numeric code.
 - [STANDARD-MODULES-7] Standard generic Result values retain the language's must-handle obligation; an ignored fallible result is a source error.
+- [GENERIC-CONTAINER-1] `buffer Vec<T:copy>:T` and `pool Store<T:copy>(Id):T`
+  declare element-generic owners. Pool handles use the same explicit arguments
+  (`Id<T>`) and remain distinct across specializations. Element expressions must
+  guarantee copy even in uncalled templates; owned and must-handle elements stay
+  excluded. Generic operation checking preserves explicit allocator growth,
+  move-only ownership, arena provenance, and typed pool failure boundaries.
+
+- [STANDARD-COLLECTIONS-1] The reserved std_collections module supplies generic
+  vectors under explicit allocator/capacity authority and allocation-free slice
+  find, contains, reversal, integer insertion sort and lower-bound search. Sorting
+  is stable, ascending and quadratic; lower_bound requires ascending input and
+  returns an insertion index. Vector elements retain the copy requirement.

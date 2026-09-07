@@ -124,9 +124,10 @@ pub const Index = struct {
     }
     fn declaredTypeParameters(self: *Index, id: Identity) []const ast.TypeParameter {
         const declaration = self.units[id.module].symbols.items[id.symbol].span;
-        inline for (.{ "records", "variants" }) |category| {
+        inline for (.{ "records", "variants", "buffers", "pools" }) |category| {
             for (@field(self.units[id.module].syntax.types, category)) |item| {
                 if (item.name.start == declaration.start) return item.type_parameters;
+                if (@hasField(@TypeOf(item), "handle")) if (item.handle.start == declaration.start) return item.type_parameters;
             }
         }
         return &.{};
@@ -182,10 +183,12 @@ pub const Index = struct {
             if (unit.symbols.items[unit.names.get(project.modules.items[module].src.text(domain.name)).?].exported) try self.signatureType(module, domain.backing);
         }
         for (unit.syntax.types.buffers) |buffer| {
-            if (unit.symbols.items[unit.names.get(project.modules.items[module].src.text(buffer.name)).?].exported) try self.signatureType(module, buffer.backing);
+            try self.checkNominalParameters(module, buffer.type_parameters);
+            if (unit.symbols.items[unit.names.get(project.modules.items[module].src.text(buffer.name)).?].exported) try self.genericSignatureType(module, buffer.backing, buffer.type_parameters);
         }
         for (unit.syntax.types.pools) |pool| {
-            if (unit.symbols.items[unit.names.get(project.modules.items[module].src.text(pool.name)).?].exported) try self.signatureType(module, pool.element);
+            try self.checkNominalParameters(module, pool.type_parameters);
+            if (unit.symbols.items[unit.names.get(project.modules.items[module].src.text(pool.name)).?].exported) try self.genericSignatureType(module, pool.element, pool.type_parameters);
         }
         for (unit.syntax.functions) |function| {
             try self.checkGenericRequirements(module, function.signature.type_parameters);

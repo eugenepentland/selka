@@ -39,6 +39,12 @@ pub const Sources = struct {
                 if (span) |at| try self.scopes.append(allocator, .{ .span = at, .parameters = parameters, .nominal = true });
             }
         };
+        inline for (.{ "buffers", "pools" }) |category| for (@field(program.types, category)) |declaration| {
+            if (declaration.type_parameters.len == 0) continue;
+            const parameters = try requirements.resolve(allocator, src, declaration.type_parameters, sink);
+            const span = if (@hasField(@TypeOf(declaration), "backing")) declaration.backing else declaration.element;
+            try self.scopes.append(allocator, .{ .span = span, .parameters = parameters, .nominal = true });
+        };
         std.mem.sort(Scope, self.scopes.items, {}, less);
     }
 };

@@ -14,7 +14,7 @@ const Location = struct { path: []const u8, start: usize, end: usize, line: usiz
 pub const Template = struct {
     name: []const u8,
     module: []const u8,
-    kind: enum { function, record, tagged_union, result, enumeration },
+    kind: enum { function, record, tagged_union, result, enumeration, buffer, pool, handle },
     contract: Contract,
     shape: Shape = .{},
     imports: []const @import("source_receipt.zig").Import,
@@ -33,7 +33,7 @@ const Signature = struct {
     return_reference: ?Provenance = null,
     declared_effects: ?[]const []const u8 = null,
 };
-const Shape = struct { fields: ?[]const Value = null, cases: ?[]const Case = null };
+const Shape = struct { fields: ?[]const Value = null, cases: ?[]const Case = null, element: ?[]const u8 = null, handle: ?[]const u8 = null };
 
 const Context = struct {
     allocator: std.mem.Allocator,
@@ -144,6 +144,28 @@ pub fn collect(arena: std.mem.Allocator, index: *const interfaces.Index) std.mem
             item.shape.fields = try context.values(record.fields);
             try out.append(arena, item);
         }
+        for (unit.syntax.types.buffers) |buffer| {
+            if (buffer.type_parameters.len == 0 or !context.visible(buffer.name)) continue;
+            var item = try context.base(buffer.name, buffer.type_parameters);
+            item.kind = .buffer;
+            item.shape.element = context.src().text(buffer.backing);
+            try out.append(arena, item);
+        }
+        for (unit.syntax.types.pools) |pool| {
+            if (pool.type_parameters.len == 0) continue;
+            if (context.visible(pool.name)) {
+                var item = try context.base(pool.name, pool.type_parameters);
+                item.kind = .pool;
+                item.shape.element = context.src().text(pool.element);
+                item.shape.handle = context.src().text(pool.handle);
+                try out.append(arena, item);
+            }
+            if (context.visible(pool.handle)) {
+                var item = try context.base(pool.handle, pool.type_parameters);
+                item.kind = .handle;
+                try out.append(arena, item);
+            }
+        }
         for (unit.syntax.types.variants) |variant| {
             if (variant.type_parameters.len == 0 or !context.visible(variant.name)) continue;
             var item = try context.base(variant.name, variant.type_parameters);
@@ -162,8 +184,9 @@ pub fn collect(arena: std.mem.Allocator, index: *const interfaces.Index) std.mem
 }
 /// Whether an exported source symbol denotes a constructor rather than a concrete type.
 pub fn isConstructor(unit: interfaces.Unit, span: source.Span) bool {
-    inline for (.{ "records", "variants" }) |category| for (@field(unit.syntax.types, category)) |declaration| {
+    inline for (.{ "records", "variants", "buffers", "pools" }) |category| for (@field(unit.syntax.types, category)) |declaration| {
         if (declaration.name.start == span.start and declaration.type_parameters.len != 0) return true;
+        if (@hasField(@TypeOf(declaration), "handle")) if (declaration.handle.start == span.start and declaration.type_parameters.len != 0) return true;
     };
     return false;
 }

@@ -124,7 +124,7 @@ const Checker = struct {
     }
     fn referenceLimit(self: *Checker, binding: Local) Regions.Limit {
         const owner = self.locals.items[binding.root.?];
-        if (owner.ty == .concrete and owner.ty.concrete.isAggregate() and self.catalog.records[owner.ty.concrete.recordIndex()].shape.buffer != null) return .{ .node = owner.origin };
+        if (self.shapes().kind(owner.ty) == .buffer) return .{ .node = owner.origin };
         return .{ .depth = owner.arena_depth };
     }
     fn regionWrite(self: *Checker, binding: Local, value: usize, span: source.Span) Error!void {
@@ -309,6 +309,7 @@ const Checker = struct {
     }
     fn sliceType(self: *Checker, value: Symbolic, span: source.Span) Error!Symbolic {
         if (value == .array) return value.array.element;
+        if (try self.shapes().container(value, span, false)) |shape| return shape.element;
         const owner_type = try self.concreteValue(value, span);
         const element = typed.sliceElement(owner_type, self.catalog.records) orelse return self.sink.fail("E_SLICE_TYPE", span, "slicing requires a fixed numeric array, buffer, or existing slice");
         return .{ .concrete = element };
@@ -327,7 +328,7 @@ const Checker = struct {
             if (borrow.mutable and !binding.mutable) return self.sink.fail(diagnostic.immutable, borrow.owner, "exclusive borrowing requires a mutable owner");
             try self.ownerAccess(binding, borrow.mutable, borrow.owner);
         }
-        const buffer_owner = binding.ty == .concrete and binding.ty.concrete.isAggregate() and self.catalog.records[binding.ty.concrete.recordIndex()].shape.buffer != null;
+        const buffer_owner = self.shapes().kind(binding.ty) == .buffer;
         if (buffer_owner and !binding.available) return self.sink.failTransfer(diagnostic.owned_consumed, borrow.owner, binding.name, binding.transfer_span);
         if ((try self.transfers(binding.ty)) and !(buffer_owner and borrow.range != null)) return self.sink.fail(diagnostic.result_borrow, borrow.owner, "owned and result-bearing values must transfer by value");
         const element = if (borrow.range != null and !binding.slice) try self.sliceType(binding.ty, borrow.owner) else binding.ty;
@@ -845,19 +846,22 @@ const Checker = struct {
         try self.ownerAccess(binding.*, mutates, span);
     }
     fn operationResult(self: *Checker, span: ?source.Span, success: typed.Type, code: []const u8) Error!Symbolic {
-        const result_span = span orelse return .{ .concrete = success };
+        return self.symbolicOperationResult(span, .{ .concrete = success }, code);
+    }
+    fn symbolicOperationResult(self: *Checker, span: ?source.Span, success: Symbolic, code: []const u8) Error!Symbolic {
+        const result_span = span orelse return success;
         const result = try self.ty(result_span);
         const shape = try self.resultShape(result, result_span, code);
-        const success_matches = symbolic.same(shape.ok_type, .{ .concrete = success }, self.catalog);
+        const success_matches = symbolic.same(shape.ok_type, success, self.catalog);
         if (!success_matches or !symbolic.same(shape.error_type, .{ .concrete = .i64 }, self.catalog)) return self.sink.fail(code, result_span, "operation result payloads do not match its contract");
         return result;
     }
     fn bufferValue(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "buffer_operation")) Error!Symbolic {
         const owner = try self.local(operation.owner);
-        const ty_value = try self.concreteValue(owner.ty, operation.owner);
-        if (owner.reference != null or !ty_value.isAggregate()) return self.sink.fail("E_BUFFER_TYPE", operation.owner, "operation requires a buffer value binding");
+        if (owner.reference != null) return self.sink.fail("E_BUFFER_TYPE", operation.owner, "operation requires a buffer value binding");
         try self.regionRead(owner.*);
-        const element = self.catalog.records[ty_value.recordIndex()].shape.buffer orelse return self.sink.fail("E_BUFFER_TYPE", operation.owner, "operation requires a buffer value binding");
+        const shape = (try self.shapes().container(owner.ty, operation.owner, false)) orelse return self.sink.fail("E_BUFFER_TYPE", operation.owner, "operation requires a buffer value binding");
+        const element = shape.element;
         for (operation.arguments, 0..) |input, index| {
             const value = try self.expression(input);
             const at = self.program.nodes.items[@backingInt(input)].span;
@@ -865,36 +869,40 @@ const Checker = struct {
             if (operation.kind == .reserve and index == 0) {
                 try self.same(value, .{ .concrete = .allocator }, at);
             } else if (operation.kind == .append or writes_element) {
-                try self.same(value, .{ .concrete = element }, at);
+                try self.same(value, element, at);
                 try self.regions.require(self.last_origin, .{ .node = owner.origin }, at);
             } else try self.supports(value, .integer, at);
         }
         try self.runtimeOwner(operation.owner, operation.kind.mutates());
         if (operation.kind.allocates()) self.seedEffect(.allocation);
-        const success: typed.Type = if (operation.result != null) .bool else if (operation.kind == .read) element else .u64;
-        return self.operationResult(operation.result, success, "E_BUFFER_RESULT");
+        const success: Symbolic = if (operation.result != null) .{ .concrete = .bool } else if (operation.kind == .read) element else .{ .concrete = .u64 };
+        return self.symbolicOperationResult(operation.result, success, "E_BUFFER_RESULT");
     }
     fn poolValue(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "pool_operation")) Error!Symbolic {
         const owner = try self.local(operation.owner);
-        const ty_value = try self.concreteValue(owner.ty, operation.owner);
-        if (owner.reference != null or !ty_value.isAggregate()) return self.sink.fail("E_POOL_TYPE", operation.owner, "operation requires a pool value binding");
+        if (owner.reference != null) return self.sink.fail("E_POOL_TYPE", operation.owner, "operation requires a pool value binding");
         try self.regionRead(owner.*);
-        const pool = self.catalog.records[ty_value.recordIndex()].shape.pool orelse return self.sink.fail("E_POOL_TYPE", operation.owner, "operation requires a pool value binding");
+        const pool = (try self.shapes().container(owner.ty, operation.owner, true)) orelse return self.sink.fail("E_POOL_TYPE", operation.owner, "operation requires a pool value binding");
         for (operation.arguments, 0..) |input, index| {
             const expected = if (operation.kind == .insert or index == 1) pool.element else pool.handle;
             const at = self.program.nodes.items[@backingInt(input)].span;
-            try self.same(try self.expression(input), .{ .concrete = expected }, at);
+            try self.same(try self.expression(input), expected, at);
             if (operation.kind == .insert or index == 1) try self.regions.require(self.last_origin, .{ .node = owner.origin }, at);
         }
         try self.runtimeOwner(operation.owner, operation.kind.mutates());
-        return self.operationResult(operation.result, operation.kind.output(pool), "E_POOL_RESULT");
+        const success: Symbolic = switch (operation.kind) {
+            .length, .capacity => .{ .concrete = .u64 },
+            .insert => pool.handle,
+            .read => pool.element,
+            .replace, .remove, .clear => .{ .concrete = .bool },
+        };
+        return self.symbolicOperationResult(operation.result, success, "E_POOL_RESULT");
     }
     fn acquireValue(self: *Checker, acquire: @FieldType(@FieldType(ast.Node, "data"), "acquire_buffer"), pool: bool, span: source.Span) Error!Symbolic {
         const result = try self.ty(acquire.ty);
         const code = if (pool) "E_POOL_RESULT" else "E_BUFFER_RESULT";
         const shape = try self.resultShape(result, acquire.ty, code);
-        const owner = if (shape.ok_type == .concrete) shape.ok_type.concrete else return self.sink.fail(code, acquire.ty, "acquisition success requires a declared owner type");
-        const kind_matches = if (!owner.isAggregate()) false else if (pool) self.catalog.records[owner.recordIndex()].shape.pool != null else self.catalog.records[owner.recordIndex()].shape.buffer != null;
+        const kind_matches = try self.shapes().container(shape.ok_type, acquire.ty, pool) != null;
         if (!kind_matches or !symbolic.same(shape.error_type, .{ .concrete = .i64 }, self.catalog)) return self.sink.fail(code, acquire.ty, "acquisition requires matching owner success and i64 error payloads");
         try self.same(try self.expression(acquire.allocator), .{ .concrete = .allocator }, self.program.nodes.items[@backingInt(acquire.allocator)].span);
         try self.supports(try self.expression(acquire.value), .integer, span);

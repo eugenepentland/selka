@@ -91,11 +91,11 @@ pub const Range = struct { start: NodeId, end: NodeId };
 /// Source name/type and optional reference or slice passing mode.
 pub const Parameter = struct { name: Span, ty: Span, reference: ?bool = null, slice: bool = false };
 /// Source names of a pool, its nominal handle, and its element type.
-pub const Pool = struct { name: Span, handle: Span, element: Span };
+pub const Pool = struct { type_parameters: []const TypeParameter = &.{}, name: Span, handle: Span, element: Span };
 /// Source-spelled wire type and domain decoder/encoder names.
 pub const Codec = struct { wire: Span, decode: Span, encode: Span };
 /// Nominal domain declaration with backing type and optional explicit codec.
-pub const Domain = struct { name: Span, backing: Span, codec: ?Codec = null };
+pub const Domain = struct { type_parameters: []const TypeParameter = &.{}, name: Span, backing: Span, codec: ?Codec = null };
 /// Declared caller parameter provenance of a returned reference or slice.
 pub const ReturnReference = struct { source: Span, mutable: bool, slice: bool };
 /// Parsed signature, visibility, effect bound, provenance annotation, and body.

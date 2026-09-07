@@ -7,5 +7,6 @@ pub fn source(path: []const u8) ?[]const u8 {
     if (std.mem.eql(u8, path, "std_result.my")) return @embedFile("stdlib/std_result.my");
     if (std.mem.eql(u8, path, "std_bytes.my")) return @embedFile("stdlib/std_bytes.my");
     if (std.mem.eql(u8, path, "std_json_view.my")) return @embedFile("stdlib/std_json_view.my");
+    if (std.mem.eql(u8, path, "std_collections.my")) return @embedFile("stdlib/std_collections.my");
     return null;
 }

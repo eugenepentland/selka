@@ -62,8 +62,21 @@ pub const Context = struct {
         if (value == .nominal) return self.catalog.templates.store.?.index.declarations.items[value.nominal.declaration].kind;
         if (value != .concrete or !value.concrete.isAggregate()) return null;
         const shape = self.catalog.records[value.concrete.recordIndex()];
+        if (shape.shape.buffer != null) return .buffer;
+        if (shape.shape.pool != null) return .pool;
+        if (shape.shape.handle_pool != null) return .handle;
         if (shape.shape.variants) |variants| return if (variants.fallible) .result else if (variants.is_union) .variants else .enumeration;
         return if (shape.isRecord()) .record else null;
+    }
+    /// Resolve an owner's element and nominal handle without inventing a concrete type.
+    pub fn container(self: Context, value: Value, span: source.Span, pool: bool) Error!?struct { element: Value, handle: Value } {
+        if (self.kind(value) != (if (pool) templates.Kind.pool else .buffer)) return null;
+        if (value == .nominal) {
+            const shape = try self.schema(value, span);
+            return .{ .element = shape.fields[0].ty.?, .handle = if (pool) try self.nominal(value.nominal.declaration + 1, value.nominal.arguments) else .{ .concrete = .bool } };
+        }
+        const shape = self.catalog.records[value.concrete.recordIndex()].shape;
+        return .{ .element = .{ .concrete = if (pool) shape.pool.?.element else shape.buffer.? }, .handle = .{ .concrete = if (pool) shape.pool.?.handle else .bool } };
     }
     /// Recognize named result payloads while keeping symbolic arguments intact.
     pub fn matchResult(self: Context, value: Value, span: source.Span) Error!?symbolic.ResultShape {
@@ -152,7 +165,11 @@ pub const Context = struct {
                 .region = @import("region_check.zig").carries(ty, self.contracts.regions),
                 .cleanup = if (ty.isAggregate()) self.contracts.cleanup[ty.recordIndex()] else 0,
             },
-            .nominal => |nominal_value| nominal_value.properties,
+            .nominal => |nominal_value| switch (self.kind(value).?) {
+                .buffer, .pool => .{ .move_only = true, .region = true },
+                .handle => .{},
+                else => nominal_value.properties,
+            },
             .array => null,
         };
     }
