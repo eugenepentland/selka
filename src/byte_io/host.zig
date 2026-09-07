@@ -12,13 +12,14 @@ pub const Context = struct {
     pub fn deinit(self: *Context) void {
         self.output.deinit(self.allocator);
     }
-    /// Install only scalar byte I/O, with no text validation or domain callbacks.
+    /// Install scalar compatibility calls and optional validated copied-block I/O.
     pub fn install(self: *Context, registry: *language.vm_host.Registry) language.vm_host.Error!void {
         const scalar = host.Parameter{ .ty = .i64 };
         const octet = host.Parameter{ .ty = .u8 };
         try registry.register("io::length", .{ .signature = .{ .parameters = &.{}, .result = scalar, .effects = 1 << 6 }, .context = self, .invoke = length }, 1 << 6);
         try registry.register("io::byte", .{ .signature = .{ .parameters = &.{scalar}, .result = octet, .effects = 1 << 6 }, .context = self, .invoke = byte }, 1 << 6);
         try registry.register("io::put", .{ .signature = .{ .parameters = &.{octet}, .result = scalar, .effects = 1 << 6 }, .context = self, .invoke = put }, 1 << 6);
+        try @import("bulk.zig").Operations(Context).install(self, registry);
     }
     fn context(call: *host.Call) *Context {
         return @ptrCast(@alignCast(call.context.?));

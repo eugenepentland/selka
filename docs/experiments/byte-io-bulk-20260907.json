@@ -1,0 +1,32 @@
+{
+  "callback_limit": {
+    "block256": 515,
+    "scalar": 131079
+  },
+  "input_bytes": 65539,
+  "input_sha256": "32beb7b57583420f652233c9c0b774fbe19e611c9374f26c5b4722e5c940cf05",
+  "measurement": "end-to-end subprocess; includes source checking, VM execution, and copied stdin/stdout",
+  "median_seconds": {
+    "block256": 0.11961608595447615,
+    "scalar": 6.30884601699654
+  },
+  "platform": "Linux-7.0.0-30-generic-x86_64-with-glibc2.43",
+  "runner_sha256": "7d243568da9ebeb8b5bb94e0c16146ebf62f0958c7cf5a9939ee7c5a2c861beb",
+  "samples_seconds": {
+    "block256": [
+      0.11640042305225506,
+      0.11961608595447615,
+      0.12522897199960425,
+      0.11516867997124791,
+      0.12476192595204338
+    ],
+    "scalar": [
+      6.30884601699654,
+      6.414195302990265,
+      6.052968104952015,
+      6.200842137972359,
+      7.113643963006325
+    ]
+  },
+  "version": "byte-io-benchmark-v1"
+}

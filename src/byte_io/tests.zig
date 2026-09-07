@@ -81,3 +81,90 @@ test "standard text emits UTF8 and all signed integer endpoints through the ordi
     try t.expectEqual(@as(i64, 0), result.value);
     try t.expectEqualStrings("é:-9223372036854775808,9223372036854775807,0", context.output.items);
 }
+
+fn bulkProvider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
+    const source = if (std.mem.eql(u8, path, "io.my"))
+        "module io;export length;export byte;export put;export Block;export read_block;export write_block;" ++
+            "struct Block{bytes:[256]u8,count:i64}" ++
+            "host fn length()->i64 effects(host);host fn byte(index:i64)->u8 effects(host);" ++
+            "host fn put(value:u8)->i64 effects(host);host fn read_block(offset:i64)->Block effects(host);" ++
+            "host fn write_block(block:Block)->i64 effects(host);"
+    else if (std.mem.eql(u8, path, "main.my"))
+        "module main;import io;fn main()->i64{let size=io::length();let mut offset=0;" ++
+            "while offset<size{let block=io::read_block(offset);let count=block.count;" ++
+            "if io::write_block(block)!=count{return 1;}offset+=count;}return 0;}"
+    else
+        return error.NotFound;
+    if (source.len > limit) return error.TooLarge;
+    return allocator.dupe(u8, source);
+}
+fn bulkScenario(allocator: std.mem.Allocator, code: language.bytecode.Program) !void {
+    var input: [777]u8 = undefined;
+    for (&input, 0..) |*byte, i| byte.* = @truncate(i);
+    var context: bridge.Context = .{ .allocator = allocator, .input = &input, .output_limit = input.len };
+    defer context.deinit();
+    var registry = try language.vm_host.Registry.init(allocator, code);
+    defer registry.deinit();
+    try context.install(&registry);
+    // Four reads, four writes, one length call; byte-at-a-time requires 1555.
+    const result = try language.vm.runWithHost(allocator, code, .{}, &registry, .{ .max_calls = 9, .max_work = 1572 });
+    try t.expectEqual(@as(i64, 0), result.value);
+    try t.expectEqualSlices(u8, &input, context.output.items);
+    context.output.clearRetainingCapacity();
+    context.output_limit = 260;
+    const short = try language.vm.runWithHost(allocator, code, .{}, &registry, .{});
+    try t.expectEqual(@as(i64, 1), short.value);
+    try t.expectEqualSlices(u8, input[0..260], context.output.items);
+}
+// spec: BYTE-IO-BULK-1
+test "copied byte blocks use bounded callbacks and preserve short writes under allocation failure" {
+    var program: language.embedded_project.Program = undefined;
+    try program.init(t.allocator, .{ .context = null, .read = bulkProvider });
+    defer program.deinit();
+    try bulkScenario(t.allocator, program.compilation.code.?);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), bulkScenario, .{program.compilation.code.?});
+}
+test "bulk EOF zero padding invalid offsets counts and budget failure do not append output" {
+    var program: language.embedded_project.Program = undefined;
+    try program.init(t.allocator, .{ .context = null, .read = bulkProvider });
+    defer program.deinit();
+    var context: bridge.Context = .{ .allocator = t.allocator, .input = "\xff\x00", .output_limit = 1 };
+    defer context.deinit();
+    var registry = try language.vm_host.Registry.init(t.allocator, program.compilation.code.?);
+    defer registry.deinit();
+    try context.install(&registry);
+    const session = try registry.begin(t.allocator, program.compilation.code.?, .{ .max_work = 17 });
+    defer session.close() catch unreachable;
+    const read = try registry.registry.resolve("io::read_block");
+    const write = try registry.registry.resolve("io::write_block");
+    const block = try session.call(read, &.{.{ .i64 = 0 }});
+    defer block.release(t.allocator);
+    try t.expectEqual(@as(i64, 2), block.aggregate.fields[1].i64);
+    try t.expectEqual(@as(i128, 0), block.aggregate.fields[0].aggregate.fields[255].integer.value);
+    try t.expectEqual(@as(i64, 1), (try session.call(write, &.{block})).i64);
+    try t.expectEqual(@as(i64, 0), (try session.call(write, &.{block})).i64);
+    const eof = try session.call(read, &.{.{ .i64 = 2 }});
+    defer eof.release(t.allocator);
+    try t.expectEqual(@as(i64, 0), eof.aggregate.fields[1].i64);
+    try hostFailure(error.HostFailure, session.call(read, &.{.{ .i64 = -1 }}));
+    try hostFailure(error.HostFailure, session.call(read, &.{.{ .i64 = 3 }}));
+    const invalid = try language.vm.Value.create(t.allocator, block.aggregate.ty, &.{ block.aggregate.fields[0], .{ .i64 = 257 } });
+    defer invalid.release(t.allocator);
+    try hostFailure(error.HostFailure, session.call(write, &.{invalid}));
+    try hostFailure(error.HostWorkLimit, session.call(read, &.{.{ .i64 = 0 }}));
+    try t.expectEqualSlices(u8, "\xff", context.output.items);
+}
+// spec: BYTE-IO-LIMITS-1
+test "runner limits accept explicit zero storage but reject duplicate overflow and zero execution budgets" {
+    const limits = @import("limits.zig");
+    const options = try limits.parse(&.{ "io", "--project", ".", "--max-input=0", "--max-output=3", "--max-steps=4", "--max-calls=5", "--max-work=6" });
+    try t.expectEqual(@as(usize, 0), options.input);
+    try t.expectEqual(@as(usize, 3), options.output);
+    try t.expectEqual(@as(u64, 4), options.steps);
+    try t.expectEqual(@as(u64, 5), options.calls);
+    try t.expectEqual(@as(u64, 6), options.work);
+    for ([_][]const u8{ "--unknown=1", "--max-steps=0", "--max-input=-1", "--max-output=+1", "--max-work=18446744073709551616", "--max-calls=" }) |invalid|
+        try t.expectError(error.InvalidArguments, limits.parse(&.{ "io", "--project", ".", invalid }));
+    try t.expectError(error.InvalidArguments, limits.parse(&.{ "io", "--project", ".", "--max-work=1", "--max-work=2" }));
+}
