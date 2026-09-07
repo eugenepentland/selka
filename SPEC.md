@@ -248,3 +248,10 @@ invokes them with schema-pinned typed JSON, and compares structured expectations
 It distinguishes skips, empty selections, traps, assertion failures and setup
 failures. It grants no host capabilities. Source/compiler changes invalidate
 results. See `docs/experiments/guest-tests.md` and `tests/guest_tests.py`.
+
+## Installed feature identity
+
+- [FEATURE-REPORT-1] `mylang --features` reports `language-features-v1`, the running executable's
+SHA-256, pinned Zig version and embedded feature/restriction manifest. The current
+reference is `docs/current-language.md`; historical checkpoint prose does not
+supersede it. The manifest records implementation coverage, not a test certificate.

@@ -56,6 +56,10 @@ const Context = struct {
 };
 fn dispatch(process: std.process.Init) !u8 {
     const args = try process.minimal.args.toSlice(process.arena.allocator());
+    if (args.len == 2 and std.mem.eql(u8, args[1], "--features")) {
+        try featureReport(process);
+        return 0;
+    }
     const parsed = parseArgs(args[1..]) catch {
         try std.Io.File.stderr().writeStreamingAll(process.io, usage);
         return 2;
@@ -979,6 +983,22 @@ fn sessionReply(init: Context, action: []const u8, status: u8, failure: ?[]const
         .reuse = .{ .hits = cache.syntax.statistics.hits - before.hits, .misses = cache.syntax.statistics.misses - before.misses },
         .cache = cache.syntax.statistics,
         .semantic = cache.semantic.statistics,
+    }, .{});
+    defer init.gpa.free(text);
+    try std.Io.File.stdout().writeStreamingAll(init.io, text);
+    try std.Io.File.stdout().writeStreamingAll(init.io, "\n");
+}
+
+/// Report the installed compiler identity and its versioned supported surface.
+fn featureReport(init: std.process.Init) !void {
+    const identity = try compilerIdentity(init.io);
+    const manifest = try std.json.parseFromSlice(std.json.Value, init.gpa, @embedFile("features.json"), .{});
+    defer manifest.deinit();
+    const text = try std.json.Stringify.valueAlloc(init.gpa, .{
+        .version = "language-features-v1",
+        .compiler_sha256 = std.fmt.bytesToHex(identity.compiler_sha256, .lower),
+        .zig_version = identity.zig_version,
+        .features = manifest.value,
     }, .{});
     defer init.gpa.free(text);
     try std.Io.File.stdout().writeStreamingAll(init.io, text);

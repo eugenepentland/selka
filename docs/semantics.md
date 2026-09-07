@@ -1,7 +1,9 @@
-# Implemented semantics
+# Historical semantics checkpoints
 
-Status: M0–M5 complete, 2026-09-05. This file describes implemented behavior, while
-[plan.md](plan.md) describes the complete target and future experiments.
+This file preserves successive implementation checkpoints, beginning with M0–M5
+on 2026-09-05. Early restrictions below were superseded by later extensions.
+Use [the current language reference](current-language.md) and `mylang --features`
+for the supported surface; [plan.md](plan.md) records historical design targets.
 
 - A source file contains named functions and exactly one `main` returning i64.
   It accepts no parameters or one explicit `allocator` capability parameter.

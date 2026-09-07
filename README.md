@@ -10,11 +10,17 @@ language name and `.my` extension are provisional.
 Typed VM host-library calls now execute through explicit registrations. The
 [board-validation trial](experiments/board_trial/README.md) runs on the VM and
 matches a standalone Zig baseline against 87 fixed oracle cases and 60 transformed
-cases. Measured agent repair attempts remain pending.
+cases. Three exploratory agent maintenance blocks have since completed; see
+[the audit](docs/audits/feature-completeness-2026-09-07.md). These do not establish
+a comparative productivity advantage.
 Expensive geometry can remain in Zig/C/Rust behind explicit typed wrappers.
 Completed C/native experiments remain available; further native compilation,
 LLVM, and direct x86_64 Linux work are deferred until the design and measurements
 justify them. Native feature descriptions below record the existing experiments.
+
+Current supported features and restrictions are indexed in the
+[current language reference](docs/current-language.md). Run `mylang --features`
+for a machine-readable manifest tied to the installed executable.
 
 ## Toolchain
 

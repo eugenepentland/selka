@@ -1265,3 +1265,18 @@ test "CLI emitProjectC rejects interpreter-only JSON without publishing partial 
     try invoke("run-project", source, 0, "42\n", "");
     try invoke("emit-project-c", source, 1, "", "E_NATIVE_FEATURE");
 }
+
+// spec: FEATURE-REPORT-1
+test "CLI features identify installed compiler without source input" {
+    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "--features" } });
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
+    try testing.expectEqualStrings("", result.stderr);
+    const parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, result.stdout, .{});
+    defer parsed.deinit();
+    const report = parsed.value.object;
+    try testing.expectEqualStrings("language-features-v1", report.get("version").?.string);
+    try testing.expectEqual(@as(usize, 64), report.get("compiler_sha256").?.string.len);
+    try testing.expectEqualStrings("vm", report.get("features").?.object.get("primary_backend").?.string);
+}
