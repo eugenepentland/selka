@@ -32,6 +32,10 @@ now passes for all three languages; its exploratory timings remain separate from
 older cohorts and do not establish a general advantage.
 The [portable planner follow-up](portable-planner-trials-20260907.md) adds nine fresh
 repair/contract/feature sessions with passing private packs and cycle limit checks.
+The [two-stage planner chain](planner-chain-20260907.md) adds six accepted lag/slack
+sessions, with fresh agents inheriting accepted code after integer extrema library
+preparation. This is still a small workload; observed timings and syntax/gate
+repairs are recorded without a general productivity claim.
 Prepare medium-size maintenance next, reviewing and filling library gaps before
 application timing; scored work still needs verifiable telemetry and confinement.
 

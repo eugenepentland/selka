@@ -658,7 +658,11 @@ block has no established productivity/defect-rate advantage and is not pooled
 with older calibration. The [portable planner follow-up](portable-planner-trials-20260907.md)
 now adds nine fresh repair/shared-contract/feature sessions: all private packs and
 prelaunch cycle limit checks passed. Preparation and application clocks remain
-separate; there are 21 exploratory sessions overall and zero scored sessions.
+separate. The [two-stage planner maintenance chain](planner-chain-20260907.md)
+adds six accepted lag/slack sessions after integer extrema library preparation.
+There are now 27 exploratory sessions overall, 18 after library preparation, and
+zero scored sessions. These small tasks do not establish a general speed or defect
+advantage; the chain also recorded an export-placement syntax repair in `.my`.
 Next prepare a medium-size maintenance workload with the same library-first rule;
 verifiable model/turn/usage telemetry and enforced participant confinement remain
 prerequisites for scored claims.
