@@ -1,0 +1,9 @@
+module io;
+export length;
+export byte;
+export put;
+export issue;
+host fn length(file: i64) -> i64 effects(host);
+host fn byte(file: i64, position: i64) -> u8 effects(host);
+host fn put(value: u8) -> i64 effects(host);
+host fn issue(code: i64, file: i64, position: i64) -> i64 effects(host);

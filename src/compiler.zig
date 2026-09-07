@@ -61,6 +61,7 @@ pub const input_manifest = @import("input_manifest.zig");
 pub const evaluation_report = @import("evaluation_report.zig");
 pub const evaluation = @import("evaluation.zig");
 pub const import_policy = @import("import_policy.zig");
+pub const embedded_project = @import("embedded_project.zig");
 pub const project_compile = @import("project_compile.zig");
 const project_syntax = @import("project_syntax.zig");
 pub const interfaces = @import("interfaces.zig");

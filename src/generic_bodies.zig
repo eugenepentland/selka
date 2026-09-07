@@ -557,6 +557,7 @@ const Checker = struct {
             },
             .call => |invocation| try self.call(invocation, node.span, false),
             .propagate => |operand| try self.propagateValue(operand, node.span),
+            .bytes => try self.concreteType(node.span),
             .boolean => .{ .concrete = .bool },
             .integer => |span| .{ .concrete = (try @import("integer_literal.zig").parse(self.src, span, false, self.sink)).ty },
             .unary => |unary| result: {

@@ -17,6 +17,14 @@ pub const Catalog = @import("type_catalog.zig").Catalog;
 
 /// All storage is owned by the compilation arena.
 pub fn collectWithNames(allocator: std.mem.Allocator, src: Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!Catalog {
+    var catalog = try collectDeclarations(allocator, src, program, sink, module_names);
+    for (program.nodes.items) |node| if (node.data == .bytes) {
+        const ty = try catalog.instantiateArray(allocator, .u8, node.data.bytes.len, node.span, sink);
+        try catalog.arrays.resolved.put(allocator, node.span.start, ty);
+    };
+    return catalog;
+}
+fn collectDeclarations(allocator: std.mem.Allocator, src: Source, program: ast.Program, sink: *diagnostic.Sink, module_names: ?*Names) Error!Catalog {
     if (@import("nominal_type_syntax.zig").present(program)) return @import("nominal_catalog.zig").collect(allocator, src, program, sink, module_names);
     const declarations = program.types.records;
     const domains = program.types.domains;

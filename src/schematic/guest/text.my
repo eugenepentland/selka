@@ -1,0 +1,182 @@
+module text;
+import io;
+export Span;
+export equal;
+export matches;
+export number;
+export write;
+export escaped;
+export decimal;
+export empty;
+export identifier;
+export folded;
+struct Span {
+    file: i64,
+    start: i64,
+    end: i64
+}
+fn empty() -> Span {
+    return new Span {
+        file: 0,
+        start: 0,
+        end: 0
+    };
+}
+fn equal(a: Span, b: Span) -> bool {
+    if a.end - a.start != b.end - b.start {
+        return false;
+    }
+    let mut i = 0;
+    while i < a.end - a.start {
+        if io::byte(a.file, a.start + i) != io::byte(b.file, b.start + i) {
+            return false;
+        }
+        i += 1;
+    }
+    return true;
+}
+fn matches(a: Span, b: &[]u8) -> bool {
+    if a.end - a.start != cast<i64>(len_slice(b)) {
+        return false;
+    }
+    let mut i = 0;
+    while i < a.end - a.start {
+        if io::byte(a.file, a.start + i) != read_slice(b, i) {
+            return false;
+        }
+        i += 1;
+    }
+    return true;
+}
+fn number(a: Span) -> i64 {
+    let mut value = 0;
+    let mut i = a.start;
+    if i == a.end {
+        return - 1;
+    }
+    while i < a.end {
+        let c = cast<i64>(io::byte(a.file, i));
+        if c < 48 || c > 57 {
+            return - 1;
+        }
+        if value > 1000000 {
+            return - 1;
+        }
+        value = value * 10 + c - 48;
+        i += 1;
+    }
+    return value;
+}
+fn write(bytes: &[]u8) -> i64 {
+    let mut i = 0u64;
+    while i < len_slice(bytes) {
+        discard io::put(read_slice(bytes, i));
+        i += 1u64;
+    }
+    return 0;
+}
+fn escaped(a: Span) -> i64 {
+    let mut i = a.start;
+    while i < a.end {
+        let mut c = io::byte(a.file, i);
+        i += 1;
+        if c == 92u8 && i < a.end {
+            c = io::byte(a.file, i);
+            i += 1;
+            if c == 110u8 {
+                c = 10u8;
+            } else if c == 114u8 {
+                c = 13u8;
+            } else if c == 116u8 {
+                c = 9u8;
+            }
+        }
+        if c == 9u8 {
+            let entity = "&#9;";
+            borrow entity[0..len(entity)] as v {
+                discard write(v);
+            }
+        } else if c == 10u8 {
+            let entity = "&#10;";
+            borrow entity[0..len(entity)] as v {
+                discard write(v);
+            }
+        } else if c == 13u8 {
+            let entity = "&#13;";
+            borrow entity[0..len(entity)] as v {
+                discard write(v);
+            }
+        } else if c == 38u8 {
+            let s = "&amp;";
+            borrow s[0..len(s)] as v {
+                discard write(v);
+            }
+        } else if c == 60u8 {
+            let s = "&lt;";
+            borrow s[0..len(s)] as v {
+                discard write(v);
+            }
+        } else if c == 62u8 {
+            let s = "&gt;";
+            borrow s[0..len(s)] as v {
+                discard write(v);
+            }
+        } else if c == 34u8 {
+            let s = "&quot;";
+            borrow s[0..len(s)] as v {
+                discard write(v);
+            }
+        } else {
+            discard io::put(c);
+        }
+    }
+    return 0;
+}
+fn decimal(value: i64) -> i64 {
+    if value < 0 {
+        discard io::put(45u8);
+        if value <= - 10 {
+            discard decimal(-(value / 10));
+        }
+        discard io::put(cast<u8>(-(value % 10) + 48));
+        return 0;
+    }
+    if value >= 10 {
+        discard decimal(value / 10);
+    }
+    discard io::put(cast<u8>(value % 10 + 48));
+    return 0;
+}
+fn identifier(a: Span) -> bool {
+    if a.start == a.end || a.end - a.start > 64 {
+        return false;
+    }
+    let mut i = a.start;
+    while i < a.end {
+        let ch = io::byte(a.file, i);
+        if ch < 33u8 || ch == 92u8 {
+            return false;
+        }
+        i += 1;
+    }
+    return true;
+}
+fn lower(ch: u8) -> u8 {
+    if ch >= 65u8 && ch <= 90u8 {
+        return ch + 32u8;
+    }
+    return ch;
+}
+fn folded(a: Span, b: Span) -> bool {
+    if a.end - a.start != b.end - b.start {
+        return false;
+    }
+    let mut i = 0;
+    while i < a.end - a.start {
+        if lower(io::byte(a.file, a.start + i)) != lower(io::byte(b.file, b.start + i)) {
+            return false;
+        }
+        i += 1;
+    }
+    return true;
+}

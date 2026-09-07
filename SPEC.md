@@ -9,6 +9,8 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 
 ## Core semantics
 
+- [BYTE-LITERAL-1] Quoted byte literals produce ordinary fixed `[N]u8` arrays without terminators. UTF-8 source contributes its encoded bytes; escapes are `\n`, `\r`, `\t`, `\0`, `\\`, `\"` and exactly two hexadecimal digits after `\x`. Empty literals have length zero; each literal is limited to 65,536 decoded bytes (`E_BYTE_LITERAL_LIMIT`). Checking, generic bodies, module relocation, cached syntax and formatting preserve ordinary array identity and behavior. Invalid escapes and unterminated literals are located source errors.
+
 - [CORE-1] Evaluates multiplication before addition, honors parentheses, and associates subtraction from the left.
 - [CORE-2] Reports checked arithmetic overflow at the responsible operator without evaluating arithmetic during checking.
 - [CORE-3] Returns located source diagnostics for empty input, malformed syntax, and out-of-range integer literals.
@@ -182,3 +184,7 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [GENERIC-CODEC-1] Generic bodies may invoke codec_encode/codec_decode for explicitly concrete domains, resolving the declared method and checking exact value types, arity, result obligations and transitive effects. Reachable factories/accessors are checked with their declaring domain's representation privacy, including module relocation. wrap/unwrap require that exact declaring domain; private methods remain inaccessible outside it. A codec operation on a type parameter rejects until a codec constraint is declared by a future language extension.
 
 - [BOARD-ABSTRACTION-1] The VM board trial uses a shared Slot<T:copy> for optional IDs, regions, features and first violations, and one equality-constrained membership helper for component/net IDs. Typed snapshots preserve each instantiated slot's exact payload identity; a NetId payload cannot enter a component slot. Consolidation preserves the fixed board contract, oracle results, callback counts and repair fixture failure/restoration behavior.
+
+## Interpreted schematic pilot
+
+- [SCHEMATIC-1] The guest S-expression parser, circuit model, interface expansion and SVG renderer execute in the bytecode VM. A typed scalar host boundary exposes only bounded UTF-8 source bytes and unpublished output. Invalid inputs, unsupported forms, incomplete or duplicate pads and invalid ports reject without publishing partial SVG. The pilot supports one parameterless module with one 41-pad IC and supported two-terminal primitives; its documented limits and metadata exclusions are not a general Netlisp evaluator or electrical sign-off.

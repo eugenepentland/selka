@@ -103,3 +103,13 @@ test "incremental source provider preserves TooLarge and missing-file failures" 
     try t.expectError(error.TooLarge, Files.read(&files, t.allocator, "main.my", 0));
     try t.expectError(error.NotFound, Files.read(&files, t.allocator, "absent.my", 1024));
 }
+
+test "cached quoted byte arrays survive source relocation and cache eviction" {
+    var cache = Cache.init(t.allocator, .{});
+    defer cache.deinit();
+    var files: Files = .{ .data = "module data;export value;fn value()->i64{let s=\"a\\x00b\";return cast<i64>(s[2]);}" };
+    try t.expectEqual(@as(i64, 98), try execute(t.allocator, &files, &cache, false));
+    try t.expectEqual(@as(i64, 98), try execute(t.allocator, &files, &cache, true));
+    try t.expectEqual(@as(usize, 2), cache.statistics.hits);
+    try t.expectEqual(@as(usize, 0), cache.statistics.retained_bytes);
+}

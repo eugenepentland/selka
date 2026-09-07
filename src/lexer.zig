@@ -7,6 +7,7 @@ pub const Tag = enum {
     eof,
     ident,
     integer,
+    bytes,
     kw_fn,
     kw_reset_arena,
     kw_arena,
@@ -231,6 +232,10 @@ pub fn lex(allocator: std.mem.Allocator, bytes: []const u8, sink: *diagnostic.Si
             continue;
         }
         const tag: Tag = blk: {
+            if (ch == '"') {
+                i = try @import("byte_literal.zig").end(bytes, start, sink);
+                break :blk .bytes;
+            }
             if (std.ascii.isAlphabetic(ch) or ch == '_') {
                 i += 1;
                 while (i < bytes.len and (std.ascii.isAlphanumeric(bytes[i]) or bytes[i] == '_')) i += 1;

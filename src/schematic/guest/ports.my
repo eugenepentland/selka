@@ -1,0 +1,242 @@
+module ports;
+import io;
+import text;
+import sexpr as s;
+import circuit as c;
+export Port;
+export Ports;
+export Collected;
+export collect;
+export validate;
+struct Port {
+    prefix: text::Span,
+    name: text::Span,
+    direction: text::Span
+}
+buffer Ports: Port;
+result Collected {
+    ok: Ports,
+    err: i64
+}
+result Mutation {
+    ok: bool,
+    err: i64
+}
+fn portForm(nodes: &[]s::Node, i: i64) -> bool {
+    {
+        let word = "port";
+        borrow word[0..len(word)] as w {
+            return s::form(nodes, i, w);
+        }
+    }
+}
+fn port_groupForm(nodes: &[]s::Node, i: i64) -> bool {
+    {
+        let word = "port-group";
+        borrow word[0..len(word)] as w {
+            return s::form(nodes, i, w);
+        }
+    }
+}
+fn interfaceForm(nodes: &[]s::Node, i: i64) -> bool {
+    {
+        let word = "interface";
+        borrow word[0..len(word)] as w {
+            return s::form(nodes, i, w);
+        }
+    }
+}
+fn signalForm(nodes: &[]s::Node, i: i64) -> bool {
+    {
+        let word = "signal";
+        borrow word[0..len(word)] as w {
+            return s::form(nodes, i, w);
+        }
+    }
+}
+fn renameForm(nodes: &[]s::Node, i: i64) -> bool {
+    {
+        let word = "rename";
+        borrow word[0..len(word)] as w {
+            return s::form(nodes, i, w);
+        }
+    }
+}
+fn fail(span: text::Span) -> Collected {
+    discard io::issue(21, span.file, span.start);
+    return new Collected.err(21);
+}
+fn direction(span: text::Span) -> bool {
+    {
+        let word = "in";
+        borrow word[0..len(word)] as w {
+            if text::matches(span, w) {
+                return true;
+            }
+        }
+    }
+    {
+        let word = "out";
+        borrow word[0..len(word)] as w {
+            if text::matches(span, w) {
+                return true;
+            }
+        }
+    }
+    {
+        let word = "bidi";
+        borrow word[0..len(word)] as w {
+            if text::matches(span, w) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+fn collect(heap: allocator, nodes: &[]s::Node, lanes: &[]s::Node) -> Collected {
+    let mut out = try acquire_buffer<Collected>(heap, 32);
+    if !interfaceForm(lanes, 1) || s::at(lanes, 1).next != cast<i64>(len_slice(lanes)) {
+        return fail(s::at(lanes, 1).span);
+    }
+    let b = c::body(nodes);
+    let mut i = b + 3;
+    while i < s::at(nodes, b).next {
+        if portForm(nodes, i) {
+            let name = s::at(nodes, i + 2);
+            let dir = s::at(nodes, i + 3);
+            if i + 3 >= s::at(nodes, i).next || name.kind != new s::Kind.string || !text::identifier(name.span) || !direction(dir.span) {
+                return fail(name.span);
+            }
+            if len_buffer(out) == 32u64 {
+                return fail(name.span);
+            }
+            discard try append_buffer<Mutation>(out, new Port {
+                prefix: text::empty(),
+                name: name.span,
+                direction: dir.span
+            });
+        } else if port_groupForm(nodes, i) {
+            let prefix = s::at(nodes, i + 2).span;
+            if !text::identifier(prefix) || !text::equal(s::at(nodes, i + 3).span, s::at(lanes, 3).span) {
+                return fail(prefix);
+            }
+            let mut rename = i + 4;
+            while rename < s::at(nodes, i).next {
+                if !renameForm(nodes, rename) || s::at(nodes, rename).next != rename + 4 || s::at(nodes, rename + 3).kind != new s::Kind.string {
+                    return fail(s::at(nodes, rename).span);
+                }
+                let mut found = false;
+                let mut lane = 5;
+                while lane < s::at(lanes, 1).next {
+                    if text::equal(s::at(nodes, rename + 2).span, s::at(lanes, lane + 2).span) {
+                        found = true;
+                    }
+                    lane = s::at(lanes, lane).next;
+                }
+                if !found {
+                    return fail(s::at(nodes, rename + 2).span);
+                }
+                rename = s::at(nodes, rename).next;
+            }
+            let mut lane = 5;
+            while lane < s::at(lanes, 1).next {
+                if !signalForm(lanes, lane) || s::at(lanes, lane).next < lane + 4 || !direction(s::at(lanes, lane + 3).span) {
+                    return fail(s::at(lanes, lane).span);
+                }
+                let mut name = s::at(lanes, lane + 2).span;
+                let original = name;
+                let mut pre = prefix;
+                let mut renamed = false;
+                rename = i + 4;
+                while rename < s::at(nodes, i).next {
+                    if text::equal(s::at(nodes, rename + 2).span, original) {
+                        if renamed {
+                            return fail(s::at(nodes, rename).span);
+                        }
+                        renamed = true;
+                        name = s::at(nodes, rename + 3).span;
+                        pre = text::empty();
+                    }
+                    rename = s::at(nodes, rename).next;
+                }
+                if !text::identifier(name) || len_buffer(out) == 32u64 {
+                    return fail(name);
+                }
+                discard try append_buffer<Mutation>(out, new Port {
+                    prefix: pre,
+                    name: name,
+                    direction: s::at(lanes, lane + 3).span
+                });
+                lane = s::at(lanes, lane).next;
+            }
+        }
+        i = s::at(nodes, i).next;
+    }
+    return new Collected.ok(out);
+}
+fn size(item: Port) -> i64 {
+    let mut n = item.name.end - item.name.start;
+    if item.prefix.start != item.prefix.end {
+        n += item.prefix.end - item.prefix.start + 1;
+    }
+    return n;
+}
+fn byteAt(item: Port, index: i64) -> u8 {
+    let n = item.prefix.end - item.prefix.start;
+    if n == 0 {
+        return io::byte(item.name.file, item.name.start + index);
+    }
+    if index < n {
+        return io::byte(item.prefix.file, item.prefix.start + index);
+    }
+    if index == n {
+        return 95u8;
+    }
+    return io::byte(item.name.file, item.name.start + index - n - 1);
+}
+fn equal(a: Port, b: Port) -> bool {
+    if size(a) != size(b) {
+        return false;
+    }
+    let mut i = 0;
+    while i < size(a) {
+        if byteAt(a, i) != byteAt(b, i) {
+            return false;
+        }
+        i += 1;
+    }
+    return true;
+}
+fn validate(connections: &[]Port, pins: &[]c::Pin) -> i64 {
+    let mut i = 0;
+    while i < cast<i64>(len_slice(connections)) {
+        let item = read_slice(connections, i);
+        let mut j = 0;
+        while j < i {
+            if equal(item, read_slice(connections, j)) {
+                discard io::issue(22, item.name.file, item.name.start);
+                return 22;
+            }
+            j += 1;
+        }
+        let mut found = false;
+        j = 0;
+        while j < cast<i64>(len_slice(pins)) {
+            let pin = read_slice(pins, j);
+            if !pin.nc && equal(item, new Port {
+                prefix: text::empty(),
+                name: pin.net,
+                direction: text::empty()
+            }) {
+                found = true;
+            }
+            j += 1;
+        }
+        if !found {
+            discard io::issue(23, item.name.file, item.name.start);
+            return 23;
+        }
+        i += 1;
+    }
+    return 0;
+}

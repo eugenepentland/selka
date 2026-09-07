@@ -2776,3 +2776,60 @@ Next: public generic schema/tooling, remaining structural and codec constraints,
 source serialization, finer incremental checking and the measured repair study.
 Those requirements and the broader roadmap goal remain active. Native guest
 compilation stays deferred.
+
+
+## Real Netlisp schematic pilot — 2026-09-07
+
+The requested Straps LMX2595 subcircuit now has a reproducible
+[SVG and application](../experiments/schematic/README.md). Its S-expression
+parser, circuit model, validation, interface expansion, layout and SVG emission
+are written in the language and execute on the bytecode VM. Four explicitly
+registered Zig callbacks supply bounded source bytes and unpublished output;
+they do not delegate parsing or drawing to the EDA renderer. No guest-native
+execution work was added.
+
+Quoted byte literals now lower to ordinary fixed `[N]u8` arrays. They support
+UTF-8 bytes, escaped text and explicit hexadecimal bytes, preserve generic and
+borrow semantics, and survive module relocation, cached syntax and formatting.
+A literal is limited to 65,536 decoded bytes. The two embedded applications now
+share the Zig project-compilation lifecycle and bounded source-manifest reader,
+following Guardian's duplicate-code findings.
+
+The generated schematic contains all 30 components, 95 connected pads, four
+explicit no-connects and nine interface signals, including expanded SPI lanes.
+An independent Python fixture reader checks component values and connections;
+all 34 raw nets also match a separately captured Netlisp `netlist-dump`. Supply
+branch labels follow Netlisp's structural host-pad/trunk rule while retaining
+raw names in SVG metadata. Mutation checks change values, XML metacharacters,
+quoted/line-break text, interface lanes and pin labels; those changes reach the
+rendered result. Twenty-three malformed, duplicate, unsupported or disconnected
+inputs reject with located diagnostics and no partial SVG. The SVG was rendered
+and visually inspected.
+
+This is a bounded real-source pilot, not a complete Netlisp implementation. It
+supports a parameterless module, one 41-pad IC, the two-terminal primitive
+families needed here, direct ports and peripheral interface renames. Known
+non-rendering electrical/PCB metadata is retained as input but does not perform
+electrical validation. Arbitrary expressions, nested module evaluation,
+controller-role inversion and additional library families remain unsupported.
+The CLI takes explicit module, pinout and interface files. The web URL required
+sign-in, so the checked-in fixture manifest records hashes and paths of the
+matching local source captured on this date.
+
+Validation: the full Debug interpreter suite passes 39/39 build steps and
+862/862 Zig tests (781 core, 73 CLI, five board, three schematic), plus all
+22 Python acceptance drivers. Subsequent schematic-boundary and XML refinements
+pass the focused ReleaseFast schematic gate (8/8 steps, three Zig tests and the
+expanded 23-case rejection suite), the three Debug boundary tests and a byte-for-
+byte regeneration of the saved SVG. Guest formatting, Zig formatting, gated
+installation and all 88 Guardian checks pass with baselines disabled. Existing
+report-only size/line findings remain; no frozen baseline was added. Guardian
+ROI labels distinguish useful shared-code extraction from a test-name heuristic
+that missed an already-exercised helper.
+
+This establishes that the language can implement a useful bounded parsing and
+rendering tool against real project source. It does not establish general EDA
+coverage or measured agent-repair effectiveness. Public generic tooling,
+remaining structural/codec constraints, source serialization, finer incremental
+checking and actual repair-study attempts remain active roadmap items. Native
+execution remains deferred to a future decision.

@@ -42,6 +42,13 @@ pub fn build(b: *std.Build) void {
     });
     const board_runner = b.addExecutable(.{ .name = "board-trial", .root_module = board_module });
     b.installArtifact(board_runner);
+    const schematic_runner = b.addExecutable(.{ .name = "schematic-svg", .root_module = b.createModule(.{
+        .root_source_file = b.path("src/schematic/runner.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{.{ .name = "mylang", .module = core }},
+    }) });
+    b.installArtifact(schematic_runner);
     guardian.addAllChecks(b, guardian_exe, b.getInstallStep(), .{});
     const board_unit = b.addTest(.{ .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
         .root_source_file = b.path("src/board_trial/tests.zig"),
@@ -50,6 +57,13 @@ pub fn build(b: *std.Build) void {
         .imports = &.{.{ .name = "mylang", .module = core }},
     }) });
     guardian.enableTestDiagnostics(board_unit.root_module);
+    const schematic_unit = b.addTest(.{ .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
+        .root_source_file = b.path("src/schematic/tests.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{.{ .name = "mylang", .module = core }},
+    }) });
+    guardian.enableTestDiagnostics(schematic_unit.root_module);
     const options = b.addOptions();
     options.addOptionPath("compiler_path", exe.getEmittedBin());
     const integration = b.addTest(.{ .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
@@ -63,6 +77,7 @@ pub fn build(b: *std.Build) void {
     const compile_tests = b.step("test-compile", "Compile every Zig test without running the suite");
     compile_tests.dependOn(&unit.step);
     compile_tests.dependOn(&board_unit.step);
+    compile_tests.dependOn(&schematic_unit.step);
     compile_tests.dependOn(&integration.step);
     const run_integration = b.addRunArtifact(integration);
     const test_step = b.step("test", "Run interpreter, checker, CLI, and tooling regression tests");
@@ -76,6 +91,16 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&b.addRunArtifact(unit).step);
     test_step.dependOn(&run_integration.step);
     test_step.dependOn(&b.addRunArtifact(board_unit).step);
+    const schematic_runtime = b.addSystemCommand(&.{ "python3", "tests/schematic_svg.py", "--runner" });
+    schematic_runtime.addFileArg(schematic_runner.getEmittedBin());
+    schematic_runtime.setCwd(b.path("."));
+    test_step.dependOn(&schematic_runtime.step);
+    const schematic_step = b.step("test-schematic", "Verify guest SVG generation against Netlisp connectivity and source mutations");
+    schematic_step.dependOn(&schematic_runtime.step);
+    const run_schematic_unit = b.addRunArtifact(schematic_unit);
+    schematic_step.dependOn(&run_schematic_unit.step);
+    test_step.dependOn(&run_schematic_unit.step);
+    guardian.addAllChecks(b, guardian_exe, schematic_step, .{});
     const board_runtime = b.addSystemCommand(&.{ "python3", "tests/board_trial.py", "--runner" });
     board_runtime.addFileArg(board_runner.getEmittedBin());
     board_runtime.addArg("--compiler");

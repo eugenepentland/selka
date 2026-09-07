@@ -721,6 +721,14 @@ const Checker = struct {
         out.ty = try self.functionType(function, signature.signature.return_type);
         out.data = .{ .call = .{ .function = function, .arguments = try arguments.toOwnedSlice(self.allocator), .references = try loans.toOwnedSlice(self.allocator) } };
     }
+    fn byteValues(self: *Checker, bytes: []const u8, span: source.Span) Error![]const typed.NodeId {
+        const values = try self.allocator.alloc(typed.NodeId, bytes.len);
+        for (bytes, values) |byte, *value| {
+            value.* = @fromBackingInt(self.nodes.items.len);
+            try self.nodes.append(self.allocator, .{ .span = span, .ty = .u8, .data = .{ .integer = byte } });
+        }
+        return values;
+    }
     fn checkedExpression(self: *Checker, node: ast.Node, minimum_literal: ?Literal, temporaries: []const typed.Type) Error!typed.Node {
         var out: typed.Node = .{ .span = node.span, .ty = .i64, .data = undefined };
         if (minimum_literal) |parsed| {
@@ -844,6 +852,10 @@ const Checker = struct {
                 out.data = .{ .update = .{ .base = base, .fields = replacements } };
             },
             .field => |field| try self.checkField(node, field, &out),
+            .bytes => |bytes| {
+                out.ty = try self.ty(node.span);
+                out.data = .{ .array = try self.byteValues(bytes, node.span) };
+            },
             .integer => |token| {
                 const parsed = try self.literal(token, false);
                 out.ty = parsed.ty;
@@ -970,7 +982,7 @@ const Checker = struct {
                 if (try self.queueExpression(&work, task.id, reference_result and task.id == root)) continue;
             }
             const out = try self.checkedExpression(node, minimum_literal, temporaries.items);
-            const consumed: usize = switch (out.data) {
+            const consumed: usize = if (node.data == .bytes) 0 else switch (out.data) {
                 .integer, .boolean, .local, .read_ref, .read_field, .take_field, .len_slice => 0,
                 .reset_arena, .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .external_read, .complete_resource, .restrict_resource => 1,
                 .acquire_buffer, .acquire_pool, .acquire_resource, .environment_get => 2,

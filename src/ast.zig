@@ -20,6 +20,7 @@ pub const Node = struct {
     span: Span,
     data: union(enum) {
         integer: Span,
+        bytes: []const u8,
         boolean: bool,
         name: Span,
         read_ref: Span,

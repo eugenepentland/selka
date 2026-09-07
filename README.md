@@ -34,6 +34,13 @@ checkout for compiler quality checks. The CLI
 uses this snapshot's `std.process.Init` and `std.Io` APIs. Do not substitute
 Zig 0.15 APIs or update the compiler version as part of a language feature.
 
+## Real schematic pilot
+
+The [Straps LMX2595 SVG pilot](experiments/schematic/README.md) parses the local
+Netlisp DSL and renders a schematic inside the bytecode VM. It includes a generated
+SVG, reproducible inputs and independent netlist acceptance. This is a bounded
+single-subcircuit application; full Netlisp evaluation remains outside its scope.
+
 ## Build and use
 
 ```sh

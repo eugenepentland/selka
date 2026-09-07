@@ -644,7 +644,7 @@ pub const Parser = struct {
                 break :update try self.append(.{ .span = .join(token.span, self.tokens[self.cursor.pos - 1].span), .data = .{ .update = .{ .base = base, .fields = fields } } });
             },
             .kw_codec_encode, .kw_codec_decode => try self.parseCodecOperation(token),
-            .integer, .ident, .kw_true, .kw_false => try self.parseLeaf(token),
+            .integer, .bytes, .ident, .kw_true, .kw_false => try self.parseLeaf(token),
             .kw_try => propagated: {
                 self.cursor.pos += 1;
                 const value = try self.expression(7);
@@ -994,6 +994,7 @@ pub const Parser = struct {
         }
         return self.append(.{ .span = name, .data = switch (token.tag) {
             .integer => .{ .integer = token.span },
+            .bytes => .{ .bytes = try @import("byte_literal.zig").decode(self.arena.allocator(), self.src, token.span, self.sink) },
             .ident => .{ .name = name },
             else => .{ .boolean = token.tag == .kw_true },
         } });

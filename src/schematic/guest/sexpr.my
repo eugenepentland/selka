@@ -1,0 +1,161 @@
+module sexpr;
+import io;
+import text;
+export Kind;
+export Node;
+export Nodes;
+export Parsed;
+export parse;
+export form;
+export at;
+enum Kind {
+    list,
+    atom,
+    string
+}
+struct Node {
+    kind: Kind,
+    span: text::Span,
+    next: i64
+}
+buffer Nodes: Node;
+result Parsed {
+    ok: Nodes,
+    err: i64
+}
+result Mutation {
+    ok: bool,
+    err: i64
+}
+fn at(nodes: &[]Node, index: i64) -> Node {
+    if index < 0 || index >= cast<i64>(len_slice(nodes)) {
+        return new Node {
+            kind: new Kind.atom,
+            span: text::empty(),
+            next: cast<i64>(len_slice(nodes))
+        };
+    }
+    return read_slice(nodes, index);
+}
+fn form(nodes: &[]Node, index: i64, name: &[]u8) -> bool {
+    let item = at(nodes, index);
+    if item.kind != new Kind.list || item.next == index + 1 {
+        return false;
+    }
+    return text::matches(at(nodes, index + 1).span, name);
+}
+fn parse(heap: allocator, file: i64) -> Parsed {
+    let mut nodes = try acquire_buffer<Parsed>(heap, 16384);
+    let mut stack = new [128]i64[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+    let mut depth = 0;
+    let mut p = 0;
+    let size = io::length(file);
+    discard try append_buffer<Mutation>(nodes, new Node {
+        kind: new Kind.list,
+        span: new text::Span {
+            file: file,
+            start: 0,
+            end: size
+        },
+        next: 0
+    });
+    while p < size {
+        let c = io::byte(file, p);
+        if c == 32u8 || c == 9u8 || c == 10u8 || c == 13u8 {
+            p += 1;
+        } else if c == 59u8 {
+            while p < size && io::byte(file, p) != 10u8 {
+                p += 1;
+            }
+        } else if c == 41u8 {
+            if depth == 0 {
+                discard io::issue(1, file, p);
+                return new Parsed.err(1);
+            }
+            depth -= 1;
+            let open = stack[depth];
+            discard try write_buffer<Mutation>(nodes, open, update(read_buffer(nodes, open)) {
+                next: cast<i64>(len_buffer(nodes))
+            });
+            p += 1;
+        } else {
+            let index = cast<i64>(len_buffer(nodes));
+            let start = p;
+            if index == 16384 {
+                discard io::issue(5, file, p);
+                return new Parsed.err(5);
+            }
+            let mut kind = new Kind.atom;
+            if c == 40u8 {
+                if depth == 128 {
+                    discard io::issue(2, file, p);
+                    return new Parsed.err(2);
+                }
+                stack = replace(stack, depth, index);
+                depth += 1;
+                kind = new Kind.list;
+                p += 1;
+            } else if c == 34u8 {
+                kind = new Kind.string;
+                p += 1;
+                let mut closed = false;
+                while p < size && !closed {
+                    let ch = io::byte(file, p);
+                    p += 1;
+                    if ch == 92u8 {
+                        if p == size {
+                            discard io::issue(3, file, start);
+                            return new Parsed.err(3);
+                        }
+                        let escape = io::byte(file, p);
+                        if escape != 92u8 && escape != 34u8 && escape != 110u8 && escape != 114u8 && escape != 116u8 {
+                            discard io::issue(6, file, p);
+                            return new Parsed.err(6);
+                        }
+                        p += 1;
+                    } else if ch == 34u8 {
+                        closed = true;
+                    }
+                }
+                if !closed {
+                    discard io::issue(3, file, start);
+                    return new Parsed.err(3);
+                }
+            } else {
+                let mut scanning = true;
+                while p < size && scanning {
+                    let ch = io::byte(file, p);
+                    if ch == 40u8 || ch == 41u8 || ch == 32u8 || ch == 9u8 || ch == 10u8 || ch == 13u8 || ch == 59u8 {
+                        scanning = false;
+                    } else {
+                        p += 1;
+                    }
+                }
+            }
+            let mut span = new text::Span {
+                file: file,
+                start: start,
+                end: p
+            };
+            if kind == new Kind.string {
+                span = update(span) {
+                    start: start + 1,
+                    end: p - 1
+                };
+            }
+            discard try append_buffer<Mutation>(nodes, new Node {
+                kind: kind,
+                span: span,
+                next: index + 1
+            });
+        }
+    }
+    if depth != 0 {
+        discard io::issue(4, file, size);
+        return new Parsed.err(4);
+    }
+    discard try write_buffer<Mutation>(nodes, 0, update(read_buffer(nodes, 0)) {
+        next: cast<i64>(len_buffer(nodes))
+    });
+    return new Parsed.ok(nodes);
+}
