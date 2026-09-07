@@ -156,6 +156,13 @@ pub fn build(b: *std.Build) void {
     dev_step.dependOn(&dev_runtime.step);
     dev_step.dependOn(&run_schematic_unit.step);
     guardian.addAllChecks(b, guardian_exe, dev_step, .{});
+    const intent_tests = b.addSystemCommand(&.{ "python3", "tests/intent_trace.py", "--compiler" });
+    intent_tests.addFileArg(exe.getEmittedBin());
+    intent_tests.setCwd(b.path("."));
+    test_step.dependOn(&intent_tests.step);
+    const intent_step = b.step("test-intent", "Verify requirement links, revisions and source-pinned evidence");
+    intent_step.dependOn(&intent_tests.step);
+    guardian.addAllChecks(b, guardian_exe, intent_step, .{});
     const driver_tests = b.addSystemCommand(&.{ "python3", "tests/verification/run_tests.py", "--compiler" });
     driver_tests.addFileArg(exe.getEmittedBin());
     driver_tests.setCwd(b.path("."));
@@ -210,6 +217,10 @@ pub fn build(b: *std.Build) void {
     embedding_tests.addArgs(&.{ "--zig", b.graph.zig_exe });
     embedding_tests.setCwd(b.path("."));
     native_step.dependOn(&embedding_tests.step);
+    const standard_time_random = b.addSystemCommand(&.{ "python3", "tests/native_std_time_random.py", "--compiler" });
+    standard_time_random.addFileArg(exe.getEmittedBin());
+    standard_time_random.setCwd(b.path("."));
+    native_step.dependOn(&standard_time_random.step);
     const native_tests = b.addSystemCommand(&.{ "python3", "tests/native_cases.py", "--compiler" });
     native_tests.addFileArg(exe.getEmittedBin());
     native_tests.addArgs(&.{ "--zig", b.graph.zig_exe });

@@ -363,3 +363,6 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [CALLBACK-1] Noncapturing function values have exact concrete value parameter/result signatures and declared effect ceilings. Creation stores an immediate function identity; invocation validates the target and preserves ordinary ownership/result obligations. Borrowed and parameter-dependent callback signatures remain unsupported.
 
 - [SEMANTIC-CALLBACK-1] Function-name values may infer callback schemas while checking bodies, so semantic body reuse stays disabled for these programs until snapshots can safely remap their inferred types. Fresh and changed-source callback execution retain identical signatures and outcomes.
+
+- [STANDARD-TIME-RANDOM-1] Standard durations and Unix nanosecond instants use checked full-width arithmetic; SplitMix64 seeded state has stable word sequences and bounded rejection sampling with retained state on exhaustion.
+- [STANDARD-TIME-RANDOM-2] Standard clock and entropy calls require explicit capabilities, retain typed provider failures, and report initialized byte prefixes on partial entropy failure; host allocation failure aborts normally.
