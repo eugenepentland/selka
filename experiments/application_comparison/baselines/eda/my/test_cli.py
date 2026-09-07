@@ -1,14 +1,29 @@
 #!/usr/bin/env python3
 """Independent CLI cases. Python supplies fixtures/assertions only."""
 import json
-import pathlib
+import os
+from pathlib import Path
 import subprocess
 import sys
 import time
 
-HERE = pathlib.Path(__file__).resolve().parent
-ROOT = HERE.parents[4]
-EXE = ROOT / 'zig-out/bin/mylang-io'
+def byte_io_host(project):
+    """Resolve an explicit host, the isolated tool, or the nearest built checkout."""
+    override = os.environ.get('MYLANG_IO')
+    if override is not None:
+        candidate = Path(override).expanduser().resolve()
+        if not override.strip() or not candidate.is_file() or not os.access(candidate, os.X_OK):
+            raise RuntimeError(f'MYLANG_IO must name an executable file: {override!r}')
+        return candidate
+    for candidate in (Path('/tools/byte_io'), *(parent / 'zig-out/bin/mylang-io'
+                                               for parent in (project, *project.parents))):
+        if candidate.is_file() and os.access(candidate, os.X_OK):
+            return candidate.resolve()
+    raise RuntimeError('Cannot find mylang-io; set MYLANG_IO to an executable file, '
+                       'provide /tools/byte_io, or build the enclosing checkout.')
+
+HERE = Path(__file__).resolve().parent
+EXE = byte_io_host(HERE)
 
 
 def invoke(value, timeout=60):

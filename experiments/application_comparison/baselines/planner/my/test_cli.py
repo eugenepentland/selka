@@ -1,10 +1,26 @@
 """Independent, unscored contract tests. Python is only the test process driver."""
 import json
+import os
 import subprocess
 import unittest
 from pathlib import Path
+def byte_io_host(project):
+    """Resolve an explicit host, the isolated tool, or the nearest built checkout."""
+    override = os.environ.get('MYLANG_IO')
+    if override is not None:
+        candidate = Path(override).expanduser().resolve()
+        if not override.strip() or not candidate.is_file() or not os.access(candidate, os.X_OK):
+            raise RuntimeError(f'MYLANG_IO must name an executable file: {override!r}')
+        return candidate
+    for candidate in (Path('/tools/byte_io'), *(parent / 'zig-out/bin/mylang-io'
+                                               for parent in (project, *project.parents))):
+        if candidate.is_file() and os.access(candidate, os.X_OK):
+            return candidate.resolve()
+    raise RuntimeError('Cannot find mylang-io; set MYLANG_IO to an executable file, '
+                       'provide /tools/byte_io, or build the enclosing checkout.')
+
 ROOT=Path(__file__).resolve().parent
-HOST=ROOT.parents[4]/'zig-out/bin/mylang-io'
+HOST=byte_io_host(ROOT)
 def call(value, raw=False):
     data=value if raw else json.dumps(value).encode()
     p=subprocess.run([str(HOST),'--project',str(ROOT)], input=data,capture_output=True,timeout=60)
