@@ -1,0 +1,31 @@
+# Scoped synchronous resource providers
+
+`language.scoped_providers.Context` packages filesystem and TCP callbacks for
+`vm.Options.resources`. It borrows a configured open directory and a list of
+`Endpoint { name, address }` grants. Keep the stable context and grants alive
+until the VM's stores close; then call `Context.deinit` and close the directory.
+The adapter releases all remaining handles even if the guest traps.
+
+Filesystem acquisition requests are byte strings `r:relative/path` (read),
+`w:relative/path` (write existing), `c:relative/path` (exclusive create), or
+`t:relative/path` (truncate existing). Paths have at most 4094 bytes, contain no
+empty, dot, dot-dot, NUL or backslash components, and cannot be absolute.
+Directory traversal opens each component with symlink following disabled;
+final opens also reject symlinks. Exclusive creation never follows an existing
+link. Truncation occurs only after an authorized regular file has been opened.
+Read-only capabilities reject all three writing modes before opening anything.
+The host's filesystem tree is trusted: directory handles retain authority when
+renamed, and directory scoping does not distinguish hard links to shared inodes.
+
+TCP acquisition matches the exact configured endpoint name before connecting
+to its pre-parsed numeric IP address. There is no DNS, HTTP redirect, TLS, process
+launching, or implicit endpoint discovery. Read and write operations preserve
+partial progress, cap each transfer at 64 KiB, and report EOF distinctly. Empty
+reads report zero bytes without claiming EOF. Completion closes the handle;
+release closes without application-level commit semantics. These are blocking
+synchronous providers; VM instruction budgets are not wall-clock I/O deadlines.
+
+Provider errors map to the existing runtime categories (`Denied`, `Failed`,
+`Unavailable`, allocation failure). Acquire failures retain no live handle.
+The provider registry has a default 256-handle bound in addition to VM quotas.
+EOF translation handles both zero-length reads and host EndOfStream errors.

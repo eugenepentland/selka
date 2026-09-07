@@ -286,3 +286,6 @@ supersede it. The manifest records implementation coverage, not a test certifica
   removal is FIFO, full insertion preserves content, and removal frees capacity.
   Operations never grow implicitly and preserve cleanup on every branch.
 - [UNIT-CONVENTION-1] Reserved std_unit exports the empty ordinary record Unit and noalloc unit()->Unit constructor. Unit is a copyable normal value accepted by generic functions and result payloads; successful operations with no useful payload need no dummy integer. Fallible Result<Unit,E> keeps its must-handle obligation.
+- [SCOPED-PROVIDERS-1] Packaged resource adapters accept only relative normal path components under an open directory and exact configured numeric TCP endpoints. Read-only acquisition rejects write/create/truncate modes before effects; network adapters do not resolve DNS or follow redirects.
+- [SCOPED-PROVIDERS-2] Directory adapters reject symlink path components, create exclusively, truncate only opened regular files, report actual partial I/O and close all provider handles when their stores end. The host keeps directory and endpoint grants alive until provider stores close.
+- [SCOPED-PROVIDERS-3] The packaged synchronous TCP adapter connects only after an exact endpoint grant match, transfers bounded byte chunks with reported progress, and closes the connection on completion or cleanup.

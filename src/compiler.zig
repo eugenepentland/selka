@@ -180,3 +180,6 @@ pub const Compilation = struct {
         return disassemble.dump(allocator, self.code.?, self.src);
     }
 };
+
+/// Trusted directory and endpoint scoped resource adapters for application hosts.
+pub const scoped_providers = @import("scoped_providers.zig");
