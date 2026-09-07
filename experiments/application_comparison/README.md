@@ -8,7 +8,10 @@ application timing. The [capability matrix](stdlib-parity.json) and
 common six-baseline conformance, maximum-size regressions and independent review.
 `parity_readiness.py` binds a reviewed decision to actual inputs; it does not prove
 semantic equivalence or authorize scored launch. Earlier calibration remains under
-its original library conditions. A new rotation feature block is being prepared.
+its original library conditions. The [new rotation block](../../docs/experiments/stdlib-parity-rotation-20260907.md)
+completed private grading for all three languages; application times were about
+117s for both `.my`/Python and 214s for Zig+Guardian. This single fixed-order block
+establishes feasibility, not a general productivity or defect-rate advantage.
 
 Current checkpoint (2026-09-07): suite-local verified Zig build reuse is implemented,
 51 targeted checks and the real 21-input practice probe passed, and three direct

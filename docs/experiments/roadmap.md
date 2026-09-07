@@ -22,11 +22,14 @@ Before new application timing, inventory needed Python/Zig standard-library
 capabilities, implement/test missing `.my` equivalents, and review/freeze library
 readiness and migrated baselines. Track this preparation separately from timed
 application work; report both application outcomes and total adoption cost.
-The expanded library is implemented, but workload parity still requires review.
+Current EDA/planner library readiness is reviewed; repeat it for later workloads.
 The proposed sequence starts with six reviewed small baselines and 36 pilot
 sessions before expanding to meaningful larger codebases, maintenance chains
-and measured concurrent-agent work. These are planned studies, not collected
-comparative agent results.
+and measured concurrent-agent work. The larger staged studies remain planned;
+exploratory sessions are recorded separately.
+The [first library-prepared rotation block](stdlib-parity-rotation-20260907.md)
+now passes for all three languages; its exploratory timings remain separate from
+older cohorts and do not establish a general advantage.
 
 The user authorized duplicate discovery and post-MVP experiments on 2026-09-05.
 The scalar MVP remains the tested baseline. This is implementation tracking,

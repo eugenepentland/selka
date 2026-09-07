@@ -646,3 +646,14 @@ separate from the earlier priority block, which used repeated cold builds.
 Third exploratory block completed: [pin-role shared-contract results](direct-agent-pin-roles-20260907.md).
 All three participants passed private grading; nine direct-agent sessions now
 have results, with no scored pilot or productivity advantage claimed.
+
+## Library-prepared rotation checkpoint (2026-09-07)
+
+The capability audit, five additional reusable modules and both baseline migrations
+are complete for current v1 workloads. The [fresh rotation trial](stdlib-parity-rotation-20260907.md)
+passed private grading for all three languages. `.my` and Python each took about
+117 seconds of application work; Zig with Guardian took 214 seconds. Library
+preparation was excluded and recorded separately. This fixed-order exploratory
+block has no established productivity/defect-rate advantage and is not pooled
+with older calibration. Next fix portable test launching and telemetry, then
+repeat matched task families before deciding larger-tier work.

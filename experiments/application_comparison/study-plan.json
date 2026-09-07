@@ -21,7 +21,7 @@
   "calibration_lifecycle": {
     "grading_reporting": "three abandoned calibration attempts through local HTTP, fresh scheduled grading and cohort summary; failures/unlaunched repetitions retained; fixture grading rejects calibration",
     "live_requests": 0,
-    "remaining": "Current EDA/planner library readiness reviewed; next fresh rotation matched calibration being prepared. Historical nine sessions retain original conditions; scored pilot count remains zero.",
+    "remaining": "Four exploratory blocks/twelve sessions completed; the latest three follow stdlib preparation and are not pooled with historical nine. Fix portable test launching before next cohort, capture exact model/turn/usage telemetry, then fresh matched repairs/features and repetitions. Scored pilot not launched.",
     "reservation_namespace": "calibration-reservations",
     "setup_cli": "calibration_setup freezes selected small pilot blocks, all language/arm tools, curricula, private task packs and coordinator v2 policy; explicit model/budgets required; zero model calls and no reservations",
     "status": "fresh-calibration-transport-implemented-local-http-validation",
@@ -37,7 +37,7 @@
   },
   "comparative_claims": [],
   "continuation_sequence": [
-    "audit expanded stdlib against EDA/planner comparator dependencies; fill remaining gaps before timing",
+    "Make baseline test-driver paths portable, retain source/gate contracts, and freeze updated readiness before another cohort.",
     "migrate/review baselines, refresh pinned trial tools/guides/receipts and rerun conformance",
     "calibrate fresh matched blocks under one library/build policy, then freeze unseen tasks for the provisional 36-session pilot",
     "report application speed, turns, defects and reviewed quality alongside separate preparation/adoption cost",
@@ -375,6 +375,7 @@
     "current_implementation": "34embeddedmodules; both baselines migrated; experiments/validation/stdlib-parity-20260907/receipt.json records common conformance, stress and independent review",
     "historical_results": "Keep old calibration clocks and library conditions unchanged; do not pool as parity-prepared observations.",
     "late_gap_policy": "Retain all matched attempts as parity-incomplete observations; no pause/subtraction/resume. Implement and review the gap outside application timing, then run a new cohort/block with fresh participants and unseen equivalent tasks in all languages.",
+    "latest_trial": "Fresh rotation block completed: all languages accepted; no missing library capability reported. Full adoption cost remains unknown; preparation excluded from task clocks.",
     "ledgers": [
       "library/compiler preparation",
       "baseline construction/migration",
@@ -408,6 +409,53 @@
     "status": "current-v1-workloads-reviewed; direct-calibration-readiness-preflight-implemented; scored-cohort-binding-pending"
   },
   "status": "infrastructure-in-progress",
+  "stdlib_parity_rotation_calibration": {
+    "comparative_claim": false,
+    "dispatch": "Sequential Python/my/Zig due fresh-thread limit; deviation retained; no paused task clock.",
+    "evidence": "evidence/stdlib-parity-rotation-20260907.json",
+    "private_boards": 138,
+    "private_groups": 7,
+    "private_malformed_requests": 4,
+    "quality": "Independent sealed-source review found no rotation defect; all three clarity/consistency/testing scores2/2; no relative quality advantage established.",
+    "report": "docs/experiments/stdlib-parity-rotation-20260907.md",
+    "results": {
+      "my": {
+        "failed_public_submissions": 0,
+        "hidden": {
+          "accepted": true,
+          "failed_cases": []
+        },
+        "preparation_seconds": 25.460639266,
+        "public_submissions": 2,
+        "task_seconds": 116.665028302
+      },
+      "python": {
+        "failed_public_submissions": 0,
+        "hidden": {
+          "accepted": true,
+          "failed_cases": []
+        },
+        "preparation_seconds": 22.092432787,
+        "public_submissions": 1,
+        "task_seconds": 117.260675561
+      },
+      "zig": {
+        "failed_public_submissions": 1,
+        "hidden": {
+          "accepted": true,
+          "failed_cases": []
+        },
+        "preparation_seconds": 56.547988363,
+        "public_submissions": 2,
+        "task_seconds": 214.045744376
+      }
+    },
+    "scored": false,
+    "sessions": 3,
+    "status": "completed-and-privately-graded",
+    "task": "eda-rotation",
+    "turns_tokens_cost": null
+  },
   "suite_build_reuse": {
     "evidence": "experiments/application_comparison/evidence/build-reuse-20260907.json",
     "invalidation": "source, full adapter/tool/policy identities and limits; live identities verified for each case",
