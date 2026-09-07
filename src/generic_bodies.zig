@@ -1,4 +1,5 @@
 //! Symbolic template checking preserves types, ownership and effects without representative substitution.
+const eResultDiscard = diagnostic.result_discard;
 const std = @import("std");
 const source_json = @import("source_json.zig");
 const eReferenceArgument = diagnostic.reference_argument;
@@ -677,6 +678,7 @@ const Checker = struct {
         defer self.depth -= 1;
         return switch (node.data) {
             .name => |name| try self.namedValue(name),
+            .match_expression => |match| try self.matchExpression(match, node.span),
             .wrap => |wrap| result: {
                 const operand = try self.expression(wrap.value);
                 const target = try self.ty(wrap.ty);
@@ -975,7 +977,7 @@ const Checker = struct {
             if (seen[tag]) return self.sink.fail("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm");
             seen[tag] = true;
             const payload = variants.fields[tag].ty;
-            if (arm.discard_payload and payload != null and (try self.requiresHandling(payload.?))) return self.sink.fail("E_RESULT_DISCARD", arm.name, "nested result payload requires explicit handling");
+            if (arm.discard_payload and payload != null and (try self.requiresHandling(payload.?))) return self.sink.fail(eResultDiscard, arm.name, "nested result payload requires explicit handling");
             if ((payload != null) != (arm.binding != null or arm.discard_payload)) return self.sink.fail("E_PATTERN_PAYLOAD", arm.name, "payload cases require a binding or discard; empty cases take neither");
             const before = self.locals.items.len;
             defer self.endScope(before);
@@ -993,6 +995,45 @@ const Checker = struct {
         for (seen) |present| if (!present) return self.sink.fail("E_INCOMPLETE_MATCH", span, "match must cover every declared case");
         if (continuation) |state| self.restorePending(state);
         return terminated;
+    }
+    fn matchExpression(self: *Checker, match: @FieldType(@FieldType(ast.Node, "data"), "match_expression"), span: source.Span) Error!Symbolic {
+        const outer_temporaries = self.temporary_results;
+        const value = try self.expression(match.value);
+        const origin = self.last_origin;
+        const variants = try self.shapes().requireVariants(value, span);
+        const seen = try self.allocator.alloc(bool, variants.fields.len);
+        defer self.allocator.free(seen);
+        @memset(seen, false);
+        const incoming = try self.pendingState(self.locals.items.len);
+        defer self.allocator.free(incoming);
+        var continuation: ?[]Pending = null;
+        defer if (continuation) |state| self.allocator.free(state);
+        var result: ?Symbolic = null;
+        for (match.arms) |arm| {
+            self.restorePending(incoming);
+            self.temporary_results = outer_temporaries;
+            try self.same(try self.ty(arm.ty), value, arm.ty);
+            const tag = try self.shapes().memberIndex(variants, arm.name);
+            if (seen[tag]) return self.sink.fail("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm");
+            seen[tag] = true;
+            const payload = variants.fields[tag].ty;
+            if (arm.discard_payload and payload != null and (try self.requiresHandling(payload.?))) return self.sink.fail(eResultDiscard, arm.name, "nested result payload requires explicit handling");
+            if ((payload != null) != (arm.binding != null or arm.discard_payload)) return self.sink.fail("E_PATTERN_PAYLOAD", arm.name, "payload cases require a binding or discard; empty cases take neither");
+            const before = self.locals.items.len;
+            defer self.endScope(before);
+            if (arm.binding) |binding| {
+                try self.bind(binding, payload.?, false);
+                if ((try self.carriesRegion(payload.?))) try self.regions.flow(origin, self.locals.items[before].origin);
+            }
+            const arm_type = try self.expression(arm.value);
+            if (result) |expected| try self.same(arm_type, expected, span) else result = arm_type;
+            try self.requireHandled(before, span);
+            if (continuation) |state| try self.samePending(state, span, eResultPath) else continuation = try self.pendingState(incoming.len);
+        }
+        for (seen) |present| if (!present) return self.sink.fail("E_INCOMPLETE_MATCH", span, "match must cover every declared case");
+        if (continuation) |state| self.restorePending(state);
+        self.temporary_results = outer_temporaries;
+        return result orelse self.sink.fail("E_EMPTY_MATCH", span, "a value-producing match requires at least one case");
     }
     fn arrayIndex(self: *Checker, base: Symbolic, input: ast.NodeId, span: source.Span) Error!symbolic.Array {
         const shape = try self.arrayShape(base, span);
@@ -1141,7 +1182,7 @@ const Checker = struct {
             },
             .discard => |value| {
                 const ty_value = try self.expression(value);
-                if ((try self.requiresHandling(ty_value))) return self.sink.fail("E_RESULT_DISCARD", statement_value.span, "discard cannot erase a result obligation");
+                if ((try self.requiresHandling(ty_value))) return self.sink.fail(eResultDiscard, statement_value.span, "discard cannot erase a result obligation");
                 if (ty_value == .parameter) try self.supports(ty_value, .copy, statement_value.span);
             },
             .branch => |branch| return self.branchValue(branch, statement_value.span),

@@ -232,6 +232,10 @@ const CanonicalWriter = struct {
                 writer.print("propagate to {s}\n", .{typed.typeName(propagate.output, program.records)}) catch return error.OutOfMemory;
                 try work.append(allocator, .{ .expression = propagate.value });
             },
+            .block_value => |block| {
+                try work.append(allocator, .{ .expression = block.value });
+                try work.append(allocator, .{ .statement = block.body });
+            },
             .variant => |variant| {
                 writer.print("variant {s}\n", .{program.records[node.ty.recordIndex()].shape.variants.?.cases[variant.tag].name}) catch return error.OutOfMemory;
                 if (variant.value) |value| try work.append(allocator, .{ .expression = value });

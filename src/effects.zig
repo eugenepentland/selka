@@ -109,6 +109,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
                 .cast,
                 .wrap,
                 .variant,
+                .block_value,
                 .unwrap,
                 .array,
                 .index,

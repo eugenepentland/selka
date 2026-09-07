@@ -706,6 +706,7 @@ pub const Parser = struct {
             },
             .kw_reset_arena, .kw_cast, .kw_wrap, .kw_acquire_buffer, .kw_acquire_pool => try self.parseCast(token),
             .kw_new => try self.parseRecord(token),
+            .kw_match => try self.parseMatchExpression(token),
             .kw_len, .kw_replace, .kw_unwrap => try self.parseBuiltin(token),
             .kw_update => update: {
                 self.cursor.pos += 1;
@@ -1044,6 +1045,30 @@ pub const Parser = struct {
             .type_arguments = types,
             .arguments = try arguments.toOwnedSlice(self.arena.allocator()),
         } } });
+    }
+    fn parseMatchExpression(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
+        self.cursor.pos += 1;
+        const value = try self.expression(0);
+        _ = try self.expect(.lbrace);
+        var arms: std.ArrayList(ast.MatchValueArm) = .empty;
+        if (self.current().tag != .rbrace) while (true) {
+            const ty = try self.nominalTypeName();
+            _ = try self.expect(.dot);
+            const name = (try self.expect(.ident)).span;
+            var binding: ?Span = null;
+            var discard_payload = false;
+            if (self.take(.lparen)) {
+                if (self.take(.kw_discard)) discard_payload = true else binding = (try self.expect(.ident)).span;
+                _ = try self.expect(.rparen);
+            }
+            _ = try self.expect(.fat_arrow);
+            const arm = try self.expression(0);
+            try arms.append(self.arena.allocator(), .{ .ty = ty, .name = name, .binding = binding, .discard_payload = discard_payload, .value = arm });
+            if (!self.take(.comma)) break;
+            if (self.current().tag == .rbrace) break;
+        };
+        const close = (try self.expect(.rbrace)).span;
+        return self.append(.{ .span = .join(token.span, close), .data = .{ .match_expression = .{ .value = value, .arms = try arms.toOwnedSlice(self.arena.allocator()) } } });
     }
     fn parseLeaf(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.pos += 1;

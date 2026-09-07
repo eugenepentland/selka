@@ -15,6 +15,8 @@ const eResultLoop = diagnostic.result_loop;
 const bindingDeclaredHere = "binding declared here";
 const ePoolResult = "E_POOL_RESULT";
 const eImmutable = diagnostic.immutable;
+const eResultDiscard = diagnostic.result_discard;
+const variantDeclaredHere = "variant declared here";
 const std = @import("std");
 const eReferenceArgument = diagnostic.reference_argument;
 const source_json = @import("source_json.zig");
@@ -962,7 +964,7 @@ const Checker = struct {
                     "construction must supply exactly the payload declared for this variant",
                     .{
                         .span = schema.declaration,
-                        .message = "variant declared here",
+                        .message = variantDeclaredHere,
                     },
                 );
                 if (value) |input| try self.require(self.nodes.items[@backingInt(input)].ty, schema.payload.?, self.syntax.nodes.items[@backingInt(variant.value.?)].span);
@@ -1012,6 +1014,7 @@ const Checker = struct {
                 out.ty = try self.ty(node.span);
                 out.data = .{ .array = try self.byteValues(bytes, node.span) };
             },
+            .match_expression => |match| return self.matchExpression(node, match, temporaries),
             .integer => |token| {
                 const parsed = try self.literal(token, false);
                 out.ty = parsed.ty;
@@ -1114,10 +1117,14 @@ const Checker = struct {
         return out;
     }
     fn expressionMode(self: *Checker, root: ast.NodeId, reference_result: bool) Error!typed.NodeId {
+        return self.expressionWithTemporaries(root, reference_result, &.{});
+    }
+    fn expressionWithTemporaries(self: *Checker, root: ast.NodeId, reference_result: bool, inherited: []const typed.Type) Error!typed.NodeId {
         var work: std.ArrayList(Work) = .empty;
         defer work.deinit(self.allocator);
         var temporaries: std.ArrayList(typed.Type) = .empty;
         defer temporaries.deinit(self.allocator);
+        try temporaries.appendSlice(self.allocator, inherited);
         try work.append(self.allocator, .{ .id = root });
         while (work.pop()) |task| {
             if (task.verify) |state| {
@@ -1140,7 +1147,7 @@ const Checker = struct {
             const out = try self.checkedExpression(node, minimum_literal, temporaries.items);
             const consumed: usize = if (node.data == .bytes) 0 else switch (out.data) {
                 .json_codec => 3,
-                .integer, .boolean, .local, .read_ref, .read_field, .take_field, .len_slice => 0,
+                .integer, .boolean, .local, .read_ref, .read_field, .take_field, .len_slice, .block_value => 0,
                 .reset_arena, .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .external_read, .complete_resource, .restrict_resource => 1,
                 .acquire_buffer, .acquire_pool, .acquire_resource, .environment_get => 2,
                 .index, .binary => 2,
@@ -1225,14 +1232,14 @@ const Checker = struct {
             if (seen[tag]) |previous| return self.sink.failRelated("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm", .{ .span = previous, .message = "previous arm" });
             seen[tag] = arm.name;
             const payload = variants.cases[tag].payload;
-            if (arm.discard_payload and payload != null and self.requiresHandling(payload.?)) return self.sink.fail("E_RESULT_DISCARD", arm.name, "nested result payload requires a binding and explicit handling or acknowledgement");
+            if (arm.discard_payload and payload != null and self.requiresHandling(payload.?)) return self.sink.fail(eResultDiscard, arm.name, "nested result payload requires a binding and explicit handling or acknowledgement");
             if ((payload != null) != (arm.binding != null or arm.discard_payload)) return self.sink.failRelated(
                 "E_PATTERN_PAYLOAD",
                 arm.name,
                 "payload variants require a binding or (discard); empty variants take neither",
                 .{
                     .span = variants.cases[tag].declaration,
-                    .message = "variant declared here",
+                    .message = variantDeclaredHere,
                 },
             );
             const first_local = self.locals.items.len;
@@ -1276,6 +1283,86 @@ const Checker = struct {
         };
         if (continuation) |state| self.restorePending(state);
         return .{ .match = .{ .value = value, .arms = arms } };
+    }
+    fn matchExpression(self: *Checker, node: ast.Node, match: @FieldType(@FieldType(ast.Node, "data"), "match_expression"), temporaries: []const typed.Type) Error!typed.Node {
+        const value = try self.expressionWithTemporaries(match.value, false, temporaries);
+        const value_type = self.nodes.items[@backingInt(value)].ty;
+        const variants = try self.catalog.variants(value_type, node.span, self.sink);
+        const seen = try self.allocator.alloc(?source.Span, variants.cases.len);
+        @memset(seen, null);
+        const arms = try self.allocator.alloc(typed.MatchArm, match.arms.len);
+        const before = try self.pendingState(self.locals.items.len);
+        var continuation: ?[]Pending = null;
+        const result_slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
+        try self.locals.append(self.allocator, .{ .name = "<match-result>", .declaration = node.span, .ty = .i64, .mutable = false, .usage = .{ .reads = 1, .temporary = true } });
+        var result_type: ?typed.Type = null;
+        for (match.arms, arms) |arm, *out_arm| {
+            self.restorePending(before);
+            try self.require(try self.ty(arm.ty), value_type, arm.ty);
+            const tag = try self.catalog.variant(value_type, self.src, arm.name, self.sink);
+            if (seen[tag]) |previous| return self.sink.failRelated("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm", .{ .span = previous, .message = "previous arm" });
+            seen[tag] = arm.name;
+            const payload = variants.cases[tag].payload;
+            if (arm.discard_payload and payload != null and self.requiresHandling(payload.?)) return self.sink.fail(eResultDiscard, arm.name, "nested result payload requires a binding and explicit handling or acknowledgement");
+            if ((payload != null) != (arm.binding != null or arm.discard_payload)) return self.sink.failRelated(
+                "E_PATTERN_PAYLOAD",
+                arm.name,
+                "payload variants require a binding or (discard); empty variants take neither",
+                .{
+                    .span = variants.cases[tag].declaration,
+                    .message = variantDeclaredHere,
+                },
+            );
+            const first_local = self.locals.items.len;
+            defer for (self.locals.items[first_local..]) |local| {
+                _ = self.active.remove(local.name);
+            };
+            var slot: ?typed.LocalId = null;
+            if (arm.binding) |binding| {
+                const name = self.src.text(binding);
+                if (try self.topLevel(binding) or self.active.contains(name) or self.active_refs.contains(name)) return self.sink.fail(eShadowing, binding, "payload binding shadows an active binding or top-level name");
+                slot = @fromBackingInt(self.locals.items.len);
+                try self.locals.append(self.allocator, .{
+                    .ownership = .{
+                        .arena_depth = self.arena_depth,
+                        .transfer_available = self.transfers(payload.?),
+                    },
+                    .name = name,
+                    .declaration = binding,
+                    .ty = payload.?,
+                    .mutable = false,
+                });
+                try self.active.put(self.allocator, name, slot.?);
+            }
+            const arm_value = try self.expressionWithTemporaries(arm.value, false, temporaries);
+            const arm_type = self.nodes.items[@backingInt(arm_value)].ty;
+            if (result_type) |expected| try self.require(arm_type, expected, self.syntax.nodes.items[@backingInt(arm.value)].span) else result_type = arm_type;
+            try self.requireHandled(first_local, node.span);
+            const body_id: typed.StatementId = @fromBackingInt(self.statements.items.len);
+            try self.statements.append(self.allocator, .{ .span = node.span, .terminates = false, .data = .{ .initialize = .{ .slot = result_slot, .value = arm_value } } });
+            var body: CheckedStatement = .{ .id = body_id, .terminates = false };
+            if (slot) |payload_slot| if (typed.moveOnly(payload.?, self.catalog.records)) {
+                const children = try self.allocator.dupe(typed.StatementId, &.{body.id});
+                const cleanup_slots = try self.allocator.dupe(typed.LocalId, &.{payload_slot});
+                body.id = @fromBackingInt(self.statements.items.len);
+                try self.statements.append(self.allocator, .{ .span = node.span, .terminates = false, .owned_cleanup = cleanup_slots, .data = .{ .block = children } });
+            };
+            if (continuation) |state| try self.samePending(state, node.span, eResultPath) else continuation = try self.pendingState(before.len);
+            out_arm.* = .{ .tag = tag, .slot = slot, .body = body.id };
+        }
+        for (seen, variants.cases) |covered, variant| if (covered == null) {
+            const message = try std.fmt.allocPrint(self.allocator, "match does not handle variant `{s}`; every variant requires an explicit arm", .{variant.name});
+            return self.sink.failRelated("E_INCOMPLETE_MATCH", node.span, message, .{ .span = variant.declaration, .message = "unhandled variant declared here" });
+        };
+        if (continuation) |state| self.restorePending(state);
+        const output_type = result_type orelse return self.sink.fail("E_EMPTY_MATCH", node.span, "a value-producing match requires at least one case");
+        self.locals.items[@backingInt(result_slot)].ty = output_type;
+        self.locals.items[@backingInt(result_slot)].ownership.arena_depth = self.arena_depth;
+        const body: typed.StatementId = @fromBackingInt(self.statements.items.len);
+        try self.statements.append(self.allocator, .{ .span = node.span, .terminates = false, .data = .{ .match = .{ .value = value, .arms = arms } } });
+        const result: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = node.span, .ty = output_type, .data = .{ .local = result_slot } });
+        return .{ .span = node.span, .ty = output_type, .data = .{ .block_value = .{ .body = body, .value = result } } };
     }
     fn statementBorrowCall(self: *Checker, _: ast.Statement, borrow: @FieldType(@FieldType(ast.Statement, "data"), "borrow_call"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         const call_node = self.syntax.nodes.items[@backingInt(borrow.call)];
@@ -1375,7 +1462,7 @@ const Checker = struct {
     }
     fn statementDiscard(self: *Checker, stmt: ast.Statement, expr: @FieldType(@FieldType(ast.Statement, "data"), "discard"), _: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         const value = try self.expression(expr);
-        if (self.requiresHandling(self.nodes.items[@backingInt(value)].ty)) return self.sink.fail("E_RESULT_DISCARD", stmt.span, "discard cannot erase a fallible result; match, return, transfer, or explicitly acknowledge it");
+        if (self.requiresHandling(self.nodes.items[@backingInt(value)].ty)) return self.sink.fail(eResultDiscard, stmt.span, "discard cannot erase a fallible result; match, return, transfer, or explicitly acknowledge it");
         return .{ .discard = value };
     }
     fn statementBranch(self: *Checker, stmt: ast.Statement, branch: @FieldType(@FieldType(ast.Statement, "data"), "branch"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {

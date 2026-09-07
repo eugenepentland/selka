@@ -1,4 +1,6 @@
 //! Stable diagnostics are data; only the CLI chooses an output destination.
+/// Shared code for attempts to discard a must-handle result value.
+pub const result_discard = "E_RESULT_DISCARD";
 /// Shared code for forbidden source binding/type-variable shadowing.
 pub const shadowing = "E_SHADOWING";
 /// Shared code for misuse of a reference-returning function or reference result.

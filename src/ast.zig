@@ -22,6 +22,7 @@ pub const Node = struct {
         integer: Span,
         bytes: []const u8,
         boolean: bool,
+        match_expression: struct { value: NodeId, arms: []const MatchValueArm },
         name: Span,
         read_ref: Span,
         read_field: FieldAccess,
@@ -78,6 +79,8 @@ pub const Statement = struct {
         assignment: struct { name: Span, value: NodeId, op: AssignmentOp, op_span: Span },
     },
 };
+/// Expression match case with an optional payload binding and its yielded value.
+pub const MatchValueArm = struct { ty: Span, name: Span, binding: ?Span, discard_payload: bool, value: NodeId };
 /// Source case spelling, optional payload binding, and arm body.
 pub const MatchArm = struct { ty: Span, name: Span, binding: ?Span, discard_payload: bool, body: StatementId };
 /// Source-spelled case name and optional payload type.

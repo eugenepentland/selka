@@ -71,6 +71,7 @@ const Analysis = struct {
             .json_codec => |codec| self.node(codec.arguments[0]),
             .reset_arena, .cast, .wrap, .unwrap, .length, .complete_resource => |value| self.node(value),
             .propagate => |propagate| self.node(propagate.value),
+            .block_value => |block| self.node(block.value),
             .variant => |variant| if (variant.value) |value| self.node(value) else .{},
             .array => |inputs| self.arguments(inputs),
             .record => |inputs| self.fields(inputs),

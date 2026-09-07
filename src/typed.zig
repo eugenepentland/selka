@@ -33,6 +33,7 @@ pub const Node = struct {
     data: union(enum) {
         integer: i128,
         boolean: bool,
+        block_value: struct { body: StatementId, value: NodeId },
         local: LocalId,
         read_ref: ReferenceId,
         read_field: FieldAccess,

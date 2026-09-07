@@ -186,6 +186,10 @@ const Emitter = struct {
     fn emitExpression(self: *Emitter, id: typed.NodeId) !void {
         const node = self.program.nodes[@backingInt(id)];
         switch (node.data) {
+            .block_value => |block| {
+                try self.push(.{ .expression = block.value });
+                try self.push(.{ .statement = block.body });
+            },
             .propagate => |propagate| {
                 const failure = try self.label();
                 const success = try self.label();

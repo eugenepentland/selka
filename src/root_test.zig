@@ -104,4 +104,5 @@ test {
     _ = @import("loop_exit_test.zig");
     _ = @import("constants_test.zig");
     _ = @import("for_range_test.zig");
+    _ = @import("match_expression_test.zig");
 }

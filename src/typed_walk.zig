@@ -61,6 +61,10 @@ pub const Walker = struct {
                 .reset_arena, .cast, .wrap, .unwrap, .length => |value| try self.expr(value),
                 .propagate => |p| try self.expr(p.value),
                 .read_slice => |r| try self.expr(r.index),
+                .block_value => |block| {
+                    try self.expr(block.value);
+                    try self.stmt(block.body);
+                },
                 .variant => |v| if (v.value) |value| try self.expr(value),
                 .array => |values| try self.arguments(values),
                 .record => |values| try self.fields(values),
