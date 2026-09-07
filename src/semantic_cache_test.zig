@@ -13,6 +13,8 @@ fn compare(allocator: std.mem.Allocator, cache: *Cache, bytes: []const u8, expec
     if (expected) |number| {
         try cached.checkWithCache(cache);
         try fresh.check();
+        for (fresh.program.?.functions, cached.program.?.functions) |a, b|
+            try t.expectEqual(a.policy.effects, b.policy.effects);
         try t.expectEqual(number, (try cached.execute(allocator)).value);
         try t.expectEqual(number, (try fresh.execute(allocator)).value);
     } else {
@@ -119,4 +121,49 @@ test "semantic cache keeps inferred callback schemas fresh across changed bodies
     try compare(t.allocator, &cache, "fn helper(n:i64)->i64 effects(){return n+1;}" ++ caller, 41);
     try compare(t.allocator, &cache, "fn helper(n:i64)->i64 effects(){return n+2;}" ++ caller, 42);
     try t.expectEqual(@as(usize, 0), cache.statistics.reused);
+}
+
+test "semantic cache bypasses constant length function and nominal specializations" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const function = "fn size<const N:u64>()->u64{return N;}";
+    try compare(t.allocator, &cache, function ++ "fn main()->i64{return cast<i64>(size::<2>());}", 2);
+    try compare(t.allocator, &cache, function ++ "fn main()->i64{return cast<i64>(size::<3>());}", 3);
+    const nominal = "struct Chunk<const N:u64>{items:[N]i64}";
+    try compare(t.allocator, &cache, nominal ++ "fn main()->i64{let x=new Chunk<1>{items:new [1]i64[42]};return x.items[0];}", 42);
+    try compare(t.allocator, &cache, nominal ++ "fn main()->i64{let x=new Chunk<2>{items:new [2]i64[43,0]};return x.items[0];}", 43);
+    try t.expectEqual(@as(usize, 0), cache.statistics.reused);
+    try t.expectEqual(@as(usize, 0), cache.statistics.stored);
+    try t.expectEqual(@as(usize, 4), cache.statistics.bypassed);
+}
+
+test "semantic cache recomputes inferred effects when a callee gains and loses allocation" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const declarations = "buffer B:i64;result R{ok:B,err:i64}";
+    const pure = "fn change(heap:allocator)->i64{return 42;}";
+    const allocating = "fn change(heap:allocator)->i64{acknowledge acquire_buffer<R>(heap,1);return 42;}";
+    const caller = "fn main(heap:allocator)->i64{return change(heap);}";
+    try compare(t.allocator, &cache, declarations ++ pure ++ caller, 42);
+    try compare(t.allocator, &cache, declarations ++ allocating ++ caller, 42);
+    try compare(t.allocator, &cache, declarations ++ pure ++ caller, 42);
+    try t.expectEqual(@as(usize, 2), cache.statistics.reused);
+    try t.expectEqual(@as(usize, 3), cache.statistics.stored);
+}
+
+test "semantic cache rejects changed allocator return projections with an unchanged caller" {
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    const declaration = "struct Pair{outer:allocator,scratch:allocator}";
+    const safe = "fn choose(pair:Pair)->allocator{return pair.outer;}";
+    const escaping = "fn choose(pair:Pair)->allocator{return pair.scratch;}";
+    const caller = "fn work(heap:allocator)->allocator{let mut selected=heap;arena heap as scratch{" ++
+        "let pair=new Pair{outer:heap,scratch:scratch};selected=choose(pair);}return selected;}" ++
+        "fn main(heap:allocator)->i64{discard work(heap);return 9;}";
+    try compare(t.allocator, &cache, declaration ++ safe ++ caller, 9);
+    try compare(t.allocator, &cache, declaration ++ escaping ++ caller, null);
+    try t.expectEqual(@as(usize, 2), cache.statistics.reused);
+    try t.expectEqual(@as(usize, 1), cache.statistics.stored);
+    try compare(t.allocator, &cache, declaration ++ safe ++ caller, 9);
+    try t.expectEqual(@as(usize, 5), cache.statistics.reused);
 }
