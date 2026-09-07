@@ -35,3 +35,19 @@ VM limit and a 60-second host deadline. Nothing accepts unchecked source.
 
 `tests/guest_tests.py` covers discovery, scalar and structured comparisons,
 explicit inputs, filtering, skips, traps, locations, and invalid source.
+
+A test case may set `providers` to an object mapping existing dependency `.my`
+paths to deterministic replacement source strings. The runner copies a bounded
+source snapshot, replaces those modules, checks it, and pins the resulting schema
+before invoking the test in a fresh VM. For example, replace a dependency's
+`host fn sample(x:i64)->i64 effects(host);` with
+`fn sample(x:i64)->i64{return x+35;}` while preserving its module/export declarations.
+This tests application behavior through ordinary guest dependency injection; it
+is not a test of the real host callback ABI or provider implementation.
+
+Provider fixtures cannot replace the test entry, introduce unknown source paths,
+change its parameter/result contracts or alter exported data layouts. The report
+includes `provider_snapshot_sha256`; original source files remain unchanged.
+Different fixtures can model deterministic success, failure and boundary values
+without a custom Zig test host. The fixture and test must themselves check; an
+invalid fixture is an infrastructure failure, never an application test failure.

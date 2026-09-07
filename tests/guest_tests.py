@@ -49,6 +49,20 @@ fn test_value(n:i64)->Pair{return new Pair{n:n,good:true};}
         assert invoke('*missing', 3)['status'] == 'empty'
         cases.write_text(json.dumps({'main::test_ok': {'skip': 'fixture unavailable'}}))
         assert invoke('*test_ok', 3)['tests'][0]['status'] == 'skipped'
+        entry.write_text('module main;import provider;export test_sample;fn main()->i64{return 0;}fn test_sample()->bool{return provider::sample(7)==42;}')
+        provider = entry.parent / 'provider.my'
+        original = 'module provider;export sample;host fn sample(x:i64)->i64 effects(host);'
+        provider.write_text(original)
+        cases.write_text(json.dumps({'main::test_sample': {'providers': {'provider.my': 'module provider;export sample;fn sample(x:i64)->i64{return x+35;}'}}}))
+        mocked = invoke()
+        assert mocked['tests'][0]['status'] == 'passed'
+        assert len(mocked['tests'][0]['provider_snapshot_sha256']) == 64
+        assert provider.read_text() == original
+        cases.write_text(json.dumps({'main::test_sample': {'providers': {'main.my': 'module main;'}}}))
+        assert invoke(expected_code=2)['status'] == 'infrastructure-failure'
+        cases.write_text(json.dumps({'main::test_sample': {'providers': {'provider.my': 'module provider;export sample;fn sample(x:i64)->bool{return true;}'}}}))
+        assert invoke(expected_code=2)['status'] == 'infrastructure-failure'
+        cases.write_text('{}')
         entry.write_text('module main;fn main()->i64{return missing;}')
         assert invoke(expected_code=2)['status'] == 'infrastructure-failure'
     print('guest test workflow checks passed')

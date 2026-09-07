@@ -19,7 +19,7 @@ intend to use; historical counts are not current verification receipts.
 | Modules | Disk imports, explicit exports, nominal identity and embedded standard modules | [domain codecs](../examples/domain-codecs/main.my); [local locked package roots](experiments/local-packages.md); no network version resolver |
 | Data interchange | Typed JSON codecs, checked ordinary-JSON accessors, byte/text helpers and bounded builders | [source JSON](../examples/source-json.my); byte slices are not a Unicode string type |
 | Development | Independent function diagnostics, navigation, formatting, syntax/exact-verdict caches, affected verification | [navigation](experiments/navigation-client.md); edited programs recheck semantics |
-| Tests | Exported test_ function discovery, typed expected values, filters and explicit skips | [guest test workflow](experiments/guest-tests.md); deterministic arguments, no custom provider injection |
+| Tests | Exported test_ function discovery, typed expected values, filters and explicit skips | [guest test workflow](experiments/guest-tests.md); deterministic arguments and isolated source-provider fixtures |
 | Byte application I/O | Scalar compatibility and bounded copied 256-byte blocks, configurable input/output/execution budgets | [bulk I/O](byte-io-bulk.md); output publishes only on successful guest exit |
 | Execution | Typed bytecode VM; C emission/native embedding with host ABI and ordinary/typed/domain JSON | [native experiments](experiments/roadmap.md); [native host](experiments/native-host.md) and [JSON support](experiments/native-json.md) require their documented runtime integration |
 

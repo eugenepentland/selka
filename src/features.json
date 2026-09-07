@@ -60,7 +60,8 @@
     "in-memory-host-replay",
     "named-executable-laws",
     "isolated-process-workers",
-    "bounded-scalar-source-evaluation"
+    "bounded-scalar-source-evaluation",
+    "deterministic-test-provider-fixtures"
   ],
   "unsupported": [
     "builtin-f64-syntax",

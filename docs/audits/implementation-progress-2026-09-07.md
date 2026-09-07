@@ -16,7 +16,7 @@ The original audit remains a historical baseline, not a current feature inventor
 | F07 value/control syntax | Unit, constants, break/continue, range-for, value matches, aliases | Aliases nonparameterized; iteration ascending half-open |
 | F08 bulk I/O | Copied blocks, partial-write semantics, configurable budgets and benchmark | Borrowed host ABI separate |
 | F09 scoped providers | Directory/endpoint providers and CLI grants | Synchronous numeric TCP; no TLS/DNS/async |
-| F10 guest tests | Discovery, structured expected values, filters/skips, locations | Custom deterministic provider injection remains |
+| F10 guest tests | Discovery, structured expected values, filters/skips, locations and deterministic source-provider fixtures | Real host ABI/provider tests remain separate |
 | F11 safety campaigns | Retained seeded Debug/ReleaseFast generated/mutated campaigns | Ongoing assurance; broaden host/JSON interactions |
 | F12 split borrows | Checked nested/empty disjoint partitions, suspended parents, VM/native cleanup | No arbitrary overlap theorem proving |
 | F13 lifetimes | Direct and selected-field immutable return provenance | Stored views/multiple-origin lifetimes remain conditional |

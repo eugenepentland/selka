@@ -10,6 +10,7 @@ import sys
 import tempfile
 
 import navigate
+import test_providers
 
 
 def command(compiler, entry, action, *flags):
@@ -50,10 +51,22 @@ def run(compiler, entry, pattern='*', cases=None):
             if 'expected' not in settings and function['result'] != 'bool':
                 raise ValueError(name + ': non-boolean test requires expected typed JSON value')
             expected = settings.get('expected', True)
+            invocation_entry, invocation_schema = entry, schema_hash
+            if 'providers' in settings:
+                invocation_entry, identity = test_providers.snapshot(entry, before, settings['providers'], Path(temporary) / str(len(rows)))
+                provider_schema = command(compiler, invocation_entry, 'schema-project')
+                if provider_schema.returncode:
+                    raise ValueError(name + ': injected provider project does not check: ' + provider_schema.stderr)
+                replacement_schema = json.loads(provider_schema.stdout)
+                selected = next((f for f in replacement_schema['functions'] if f['name'] == name), None)
+                if selected is None or selected['result'] != function['result'] or selected['parameters'] != function['parameters'] or replacement_schema['types'] != schema['types']:
+                    raise ValueError(name + ': providers changed the test call signature')
+                invocation_schema = navigate.digest(replacement_schema)
+                row['provider_snapshot_sha256'] = identity
             request_path.write_text(json.dumps({'version': 'typed-call-v1',
-                'schema_sha256': schema_hash, 'function': name,
+                'schema_sha256': invocation_schema, 'function': name,
                 'arguments': settings.get('arguments', {})}))
-            result = command(compiler, entry, 'invoke-project', '--request=' + str(request_path),
+            result = command(compiler, invocation_entry, 'invoke-project', '--request=' + str(request_path),
                              '--diagnostics=json', '--max-codec-steps=1000000')
             if result.returncode:
                 status = 'trap' if 'InvocationTrap' in result.stderr else 'infrastructure-failure'
