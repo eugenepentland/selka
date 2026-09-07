@@ -243,6 +243,7 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
             .get_index,
             .replace_index,
             .array_length,
+            .split_borrow,
             .begin_borrow,
             .begin_slice,
             .read_slice,

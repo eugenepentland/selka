@@ -118,6 +118,7 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
         .read_slice => |id| try writer.print("READ_SLICE {d}", .{@backingInt(id)}),
         .write_slice => |id| try writer.print("WRITE_SLICE {d}", .{@backingInt(id)}),
         .len_slice => |id| try writer.print("LEN_SLICE {d}", .{@backingInt(id)}),
+        .split_borrow => |pair| try writer.print("SPLIT_BORROW {d} {d}", .{ @backingInt(pair.left), @backingInt(pair.right) }),
         .begin_borrow => |id| try writer.print("BEGIN_BORROW {d}", .{@backingInt(id)}),
         .end_borrow => |id| try writer.print("END_BORROW {d}", .{@backingInt(id)}),
         .read_ref => |id| try writer.print("READ_REF {d}", .{@backingInt(id)}),

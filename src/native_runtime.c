@@ -657,6 +657,18 @@ static void begin_reference(size_t id, size_t owner, size_t parent_id, int mutab
         *destination = (Reference){.owner=local, .start=start, .length=length, .active=1, .mutable=mutable, .slice=slice};
     }
 }
+static void split_reference(size_t parent_id, size_t left_id, size_t right_id) {
+    Frame *frame = &frames[nf-1];
+    Reference *parent = usable_reference(&frame->references[parent_id]);
+    Reference *left = &frame->references[left_id], *right = &frame->references[right_id];
+    V middle = pop();
+    if (!parent->slice || !parent->mutable) trap("R_REFERENCE_READ_ONLY");
+    if (middle < 0 || (U)middle > parent->length) trap("R_SLICE_BOUNDS");
+    if (left->active || right->active) trap("R_REFERENCE_LIFETIME");
+    *left = (Reference){.owner=parent->owner, .parent=parent, .start=parent->start, .length=(size_t)middle, .active=1, .mutable=1, .slice=1};
+    *right = (Reference){.owner=parent->owner, .parent=parent, .start=parent->start+(size_t)middle, .length=parent->length-(size_t)middle, .active=1, .mutable=1, .slice=1};
+    parent->children = 2;
+}
 static void end_reference(size_t id) {
     Reference *reference = active_reference(&frames[nf-1].references[id]);
     if (reference->children) trap("R_REFERENCE_LIFETIME");

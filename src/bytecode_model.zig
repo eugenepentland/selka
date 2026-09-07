@@ -38,6 +38,7 @@ pub const Instruction = struct {
         begin_region: typed.LocalId,
         end_region: typed.LocalId,
         begin_borrow: typed.ReferenceId,
+        split_borrow: struct { left: typed.ReferenceId, right: typed.ReferenceId },
         begin_slice: typed.ReferenceId,
         read_slice: typed.ReferenceId,
         write_slice: typed.ReferenceId,

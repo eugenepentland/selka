@@ -106,12 +106,20 @@ const Emitter = struct {
                 try self.push(.{ .expression = value });
             },
             .borrow => |borrow| {
-                if (!self.program.statements[@backingInt(borrow.body)].terminates) try self.instruction(stmt.span, .{ .end_borrow = borrow.reference });
+                if (!self.program.statements[@backingInt(borrow.body)].terminates) {
+                    try self.instruction(stmt.span, .{ .end_borrow = borrow.reference });
+                    if (borrow.split) |split| try self.instruction(stmt.span, .{ .end_borrow = split.right });
+                }
                 try self.push(.{ .statement = borrow.body });
-                try self.instruction(stmt.span, if (borrow.range != null) .{ .begin_slice = borrow.reference } else .{ .begin_borrow = borrow.reference });
-                if (borrow.range) |range| {
-                    try self.push(.{ .expression = range.end });
-                    try self.push(.{ .expression = range.start });
+                if (borrow.split) |split| {
+                    try self.instruction(stmt.span, .{ .split_borrow = .{ .left = borrow.reference, .right = split.right } });
+                    try self.push(.{ .expression = split.middle });
+                } else {
+                    try self.instruction(stmt.span, if (borrow.range != null) .{ .begin_slice = borrow.reference } else .{ .begin_borrow = borrow.reference });
+                    if (borrow.range) |range| {
+                        try self.push(.{ .expression = range.end });
+                        try self.push(.{ .expression = range.start });
+                    }
                 }
             },
             .write_slice => |write| {

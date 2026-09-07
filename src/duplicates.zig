@@ -372,6 +372,10 @@ const CanonicalWriter = struct {
                 writer.print(reference_format, .{@backingInt(borrow.reference)}) catch return error.OutOfMemory;
                 try work.append(allocator, .{ .statement = borrow.body });
                 writer.print("range {}\n", .{borrow.range != null}) catch return error.OutOfMemory;
+                if (borrow.split) |split| {
+                    writer.print(reference_format, .{@backingInt(split.right)}) catch return error.OutOfMemory;
+                    try work.append(allocator, .{ .expression = split.middle });
+                }
                 if (borrow.range) |range| {
                     try work.append(allocator, .{ .expression = range.end });
                     try work.append(allocator, .{ .expression = range.start });

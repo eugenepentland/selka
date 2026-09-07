@@ -92,7 +92,7 @@ pub const Statement = struct {
         loop_exit: bool,
         for_range: struct { name: Span, start: NodeId, end: NodeId, body: StatementId },
         borrow_call: struct { call: NodeId, name: Span, mutable: bool, body: StatementId },
-        borrow: struct { owner: Span, name: Span, mutable: bool, body: StatementId, range: ?Range = null },
+        borrow: struct { split: ?struct { right: Span, middle: NodeId } = null, owner: Span, name: Span, mutable: bool, body: StatementId, range: ?Range = null },
         write_slice: struct { name: Span, index: NodeId, value: NodeId },
         write_ref: struct { name: Span, value: NodeId },
         discard: NodeId,

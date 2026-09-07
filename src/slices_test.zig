@@ -211,3 +211,45 @@ fn corruptSliceLengths(instructions: []language.bytecode.Instruction, read: bool
     };
     try testing.expect(changed > 0);
 }
+
+// spec: SPLIT-SOURCE-1
+test "split slices permit sibling calls nested narrowing and snapshots" {
+    try result("fn pair(a:&mut []i64,b:&mut []i64)->i64{write_slice(a,0,7);write_slice(b,0,9);return read_slice(a,0)+read_slice(b,0);}fn main()->i64{let mut a=new [4]i64 [1,2,3" ++
+        ",4];let old=a;borrow mut a[1..4] as s{split s at 1 as left,right{discard pair(left,right);split right at 0 as empty,tail{discard len_slice(empty);borrow tail[1." ++
+        ".2] as last{discard read_slice(last,0);}}}write_slice(s,2,5);}return a[0]+a[1]+a[2]+a[3]+old[1];}", 24);
+    try result("fn pair<T:copy>(a:&mut []T,b:&mut []T,x:T)->T{write_slice(a,0,x);return read_slice(b,0);}fn divide<T:copy>(s:&mut []T,x:T)->T{split s at 1 as a,b{return pair::<" ++
+        "T>(a,b,x);}}fn main()->i64{let mut a=new [2]i64 [1,2];borrow mut a[0..2] as s{return divide::<i64>(s,9);}}", 2);
+}
+
+test "split slices reject suspended parents shared sources and invalid points" {
+    try reject("fn main()->i64{let mut a=new [2]i64 [1,2];borrow mut a[0..2] as s{split s at 1 as l,r{return read_slice(s,0);}}}", "E_BORROW_SUSPENDED");
+    try reject("fn main()->i64{let a=new [2]i64 [1,2];borrow a[0..2] as s{split s at 1 as l,r{return read_slice(l,0);}}}", "E_REFERENCE_READ_ONLY");
+    for ([_][]const u8{ "-1", "3", "18446744073709551615u64" }) |point| {
+        const source = try std.fmt.allocPrint(testing.allocator, "fn main()->i64{{let mut a=new [2]i64 [1,2];borrow mut a[0..2] as s{{split s at {s} as l,r{{return 0;}}}}}}", .{point});
+        defer testing.allocator.free(source);
+        try bounds(source);
+    }
+}
+
+fn splitAllocationScenario(allocator: std.mem.Allocator) !void {
+    const source = "fn main()->i64{let mut a=new [2]i64 [1,2];borrow mut a[0..2] as s{" ++
+        "split s at 1 as l,r{write_slice(l,0,7);return read_slice(l,0)+read_slice(r,0);}}}";
+    var compilation = try language.Compilation.init(allocator, fixture_path, source);
+    defer compilation.deinit();
+    try testing.expectEqual(@as(i64, 9), (try compilation.execute(allocator)).value);
+    const c = try compilation.emitC(allocator);
+    defer allocator.free(c);
+}
+
+test "split slices compilation and execution release every failed allocation" {
+    var stable = testing.FailingAllocator.init(testing.allocator, .{ .resize_fail_index = 0 });
+    try testing.checkAllAllocationFailures(stable.allocator(), splitAllocationScenario, .{});
+}
+
+test "split slices return one partition and restore owners after loop exits" {
+    try result("fn half(s:&mut []i64)->&mut []i64 from s{split s at 1 as left,right{return right;}}" ++
+        "fn main()->i64{let mut a=new [3]i64 [1,2,3];borrow mut a[0..3] as s{borrow mut half(s) as tail{" ++
+        "write_slice(tail,0,8);}while true{split s at 1 as left,right{write_slice(left,0,7);break;}}}return a[0]+a[1];}", 15);
+    try reject("fn f<T:copy>(s:&mut []T)->T{split s at 0 as left,right{return read_slice(s,0);}}", "E_BORROW_SUSPENDED");
+    try reject("fn f<T:copy>(s:&[]T)->T{split s at 0 as left,right{return read_slice(right,0);}}", "E_REFERENCE_READ_ONLY");
+}

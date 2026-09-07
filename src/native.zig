@@ -329,7 +329,7 @@ fn checkFunction(layout: native_layout.Layout, function: bc.Function, sink: *dia
         .get_index, .replace_index, .array_length => |ty| {
             if (!layout.supports(ty)) return sink.fail(unsupported_feature, instruction.span, "native arrays require supported elements");
         },
-        .get_field, .read_field, .take_field, .begin_borrow, .begin_slice, .end_borrow, .read_ref, .write_ref, .read_slice, .write_slice, .len_slice, .call_refs, .call_borrow, .capture_ref, .ret_ref => {},
+        .get_field, .read_field, .take_field, .split_borrow, .begin_borrow, .begin_slice, .end_borrow, .read_ref, .write_ref, .read_slice, .write_slice, .len_slice, .call_refs, .call_borrow, .capture_ref, .ret_ref => {},
         .cmp_enum,
         .wrap_domain,
         .unwrap_domain,
@@ -446,6 +446,10 @@ fn writeOperation(context: InstructionOutput) !bool {
             try w.writeAll("; release_value(variant); Slot propagated = ");
             try variantValue(w, layout, propagate.output, result.error_tag, result.error_type);
             try w.print("; clear_values(frames[nf-1].base); push_value(propagated); goto L{d}; }} else host_failure(\"InternalError\");\n", .{offset + propagate.error_target});
+        },
+        .split_borrow => |pair| {
+            const parent = function.scope.references[@backingInt(pair.left)].parent.?;
+            try w.print("split_reference({d}, {d}, {d});\n", .{ @backingInt(parent), @backingInt(pair.left), @backingInt(pair.right) });
         },
         .begin_borrow, .begin_slice => |id| {
             const reference = function.scope.references[@backingInt(id)];

@@ -848,7 +848,8 @@ const Checker = struct {
                 try self.require(ref.ty, try self.functionType(function, parameter.ty), argument.span);
                 for (loans.items) |previous_id| {
                     const previous = self.references.items[@backingInt(previous_id)];
-                    if (previous.owner == ref.owner and (previous.mutable or ref.mutable)) return self.sink.failRelated(
+                    const exclusive = previous.mutable or ref.mutable;
+                    if (previous.owner == ref.owner and exclusive and !typed.disjointReferences(self.references.items, previous_id, id)) return self.sink.failRelated(
                         "E_BORROW_CONFLICT",
                         argument.span,
                         "call arguments cannot reborrow overlapping exclusive access",
@@ -1403,7 +1404,31 @@ const Checker = struct {
         flow.terminates = body.terminates;
         return .{ .borrow_call = .{ .call = call, .reference = id, .body = body.id } };
     }
+    fn statementSplitBorrow(self: *Checker, borrow: @FieldType(@FieldType(ast.Statement, "data"), "borrow"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
+        const split = borrow.split.?;
+        const middle = try self.expression(split.middle);
+        try self.requireInteger(self.nodes.items[@backingInt(middle)].ty, borrow.owner);
+        const parent = try self.reference(borrow.owner);
+        try self.requireReferenceKind(parent, true, borrow.owner);
+        const source_ref = self.references.items[@backingInt(parent)];
+        if (!source_ref.mutable) return self.sink.fail(eReferenceReadOnly, borrow.owner, "split requires an exclusive slice");
+        const left: typed.ReferenceId = @fromBackingInt(self.references.items.len);
+        const right: typed.ReferenceId = @fromBackingInt(self.references.items.len + 1);
+        for ([_]source.Span{ borrow.name, split.right }, [_]typed.ReferenceId{ right, left }) |span, sibling| {
+            const name = self.src.text(span);
+            if (self.active.contains(name) or self.active_refs.contains(name) or try self.topLevel(span)) return self.sink.fail(eShadowing, span, "split name shadows an active binding or top-level name");
+            const id: typed.ReferenceId = @fromBackingInt(self.references.items.len);
+            try self.references.append(self.allocator, .{ .mode = .{ .slice = true, .split_sibling = sibling }, .name = name, .declaration = span, .owner = source_ref.owner, .parent = parent, .ty = source_ref.ty, .mutable = true });
+            try self.active_refs.put(self.allocator, name, id);
+        }
+        defer _ = self.active_refs.remove(self.src.text(borrow.name));
+        defer _ = self.active_refs.remove(self.src.text(split.right));
+        const body = try self.statement(borrow.body);
+        flow.terminates = body.terminates;
+        return .{ .borrow = .{ .reference = left, .body = body.id, .split = .{ .right = right, .middle = middle } } };
+    }
     fn statementBorrow(self: *Checker, _: ast.Statement, borrow: @FieldType(@FieldType(ast.Statement, "data"), "borrow"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
+        if (borrow.split != null) return self.statementSplitBorrow(borrow, flow);
         const name = self.src.text(borrow.name);
         if (self.active.contains(name) or self.active_refs.contains(name) or try self.topLevel(borrow.name)) return self.sink.fail(eShadowing, borrow.name, "reference shadows an active binding or top-level name");
         var range: ?typed.Range = null;

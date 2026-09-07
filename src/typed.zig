@@ -17,7 +17,7 @@ pub const ReferenceId = enum(usize) { _ };
 /// Checked borrow provenance, owner slot, element type, and mutability metadata.
 pub const Reference = struct { mode: ReferenceMode = .{}, name: []const u8, declaration: Span, owner: LocalId, parent: ?ReferenceId, ty: Type, mutable: bool };
 /// Distinguish slice views and incoming parameter loans from local whole-value loans.
-pub const ReferenceMode = struct { temporary: bool = false, slice: bool = false, parameter: bool = false };
+pub const ReferenceMode = struct { split_sibling: ?ReferenceId = null, temporary: bool = false, slice: bool = false, parameter: bool = false };
 /// Index of a function-local value slot.
 pub const LocalId = enum(usize) { _ };
 pub const Type = values.Type;
@@ -223,7 +223,7 @@ pub const Statement = struct {
         ret: NodeId,
         ret_ref: ReferenceId,
         borrow_call: struct { call: NodeId, reference: ReferenceId, body: StatementId },
-        borrow: struct { reference: ReferenceId, body: StatementId, range: ?Range = null },
+        borrow: struct { split: ?struct { right: ReferenceId, middle: NodeId } = null, reference: ReferenceId, body: StatementId, range: ?Range = null },
         write_slice: struct { reference: ReferenceId, index: NodeId, value: NodeId },
         write_ref: struct { reference: ReferenceId, value: NodeId },
         discard: NodeId,
@@ -368,4 +368,16 @@ fn providerFields(schema: Record, records: []const Record, operation: provider_c
         if (!found) return null;
     }
     return slots;
+}
+
+/// Distinct descendants of explicit split siblings cannot overlap.
+pub fn disjointReferences(references: []const Reference, left: ReferenceId, right: ReferenceId) bool {
+    var a: ?ReferenceId = left;
+    while (a) |first| : (a = references[@backingInt(first)].parent) {
+        var b: ?ReferenceId = right;
+        while (b) |second| : (b = references[@backingInt(second)].parent) {
+            if (references[@backingInt(first)].mode.split_sibling == second) return true;
+        }
+    }
+    return false;
 }

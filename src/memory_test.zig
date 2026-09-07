@@ -215,3 +215,79 @@ fn fillLeaseCapacity(store: *memory.Store, other: memory.Allocation, fillers: *s
         try fillers.append(testing.allocator, try store.borrow(other, 0, 1, .shared));
     }
 }
+
+// spec: SPLIT-LEASE-1
+test "explicit split leases permit disjoint siblings and suspend their parent" {
+    var store = try memory.Store.init(testing.allocator);
+    defer store.deinit();
+    const owner = try store.create(.i64, &.{ .{ .i64 = 1 }, .{ .i64 = 2 }, .{ .i64 = 3 } });
+    const parent = try store.borrow(owner, 0, 3, .exclusive);
+    try testing.expectError(error.Bounds, store.split(parent, 0, 3, 4));
+    try number(&store, parent, 0, 1);
+    const pair = try store.split(parent, 0, 3, 1);
+    try testing.expectError(error.BorrowSuspended, store.read(parent, 0));
+    try testing.expectError(error.BorrowConflict, store.destroy(owner));
+    try store.write(pair.left, 0, .{ .i64 = 7 });
+    try number(&store, pair.right, 0, 2);
+    try store.write(pair.right, 1, .{ .i64 = 9 });
+    try testing.expectError(error.Bounds, store.write(pair.left, 1, .{ .i64 = 0 }));
+    const nested = try store.split(pair.right, 0, 2, 0);
+    try testing.expectError(error.Bounds, store.read(nested.left, 0));
+    try number(&store, nested.right, 1, 9);
+    try store.end(nested.right);
+    try store.end(nested.left);
+    try store.end(pair.right);
+    try testing.expectError(error.BorrowSuspended, store.describe(parent));
+    try store.end(pair.left);
+    try number(&store, parent, 0, 7);
+    try store.end(parent);
+}
+
+test "projected split leases reject whole-value access and preserve array snapshots" {
+    var store = try memory.Store.init(testing.allocator);
+    defer store.deinit();
+    const ty: Type = @fromBackingInt(Type.record_base);
+    const snapshot = try Value.create(testing.allocator, ty, &.{ .{ .i64 = 1 }, .{ .i64 = 2 } });
+    defer snapshot.release(testing.allocator);
+    const owner = try store.create(ty, &.{snapshot});
+    const parent = try store.borrow(owner, 0, 1, .exclusive);
+    const pair = try store.splitFields(parent, 0, 2, 1);
+    try testing.expectError(error.TypeMismatch, store.read(pair.left, 0));
+    try testing.expectError(error.TypeMismatch, store.write(pair.right, 0, snapshot));
+    try testing.expectError(error.Bounds, store.writeField(pair.left, 1, .{ .i64 = 0 }));
+    try store.writeField(pair.left, 0, .{ .i64 = 7 });
+    try store.writeField(pair.right, 1, .{ .i64 = 9 });
+    try testing.expectEqual(@as(i64, 7), (try store.readField(pair.left, 0)).i64);
+    try testing.expectEqual(@as(i64, 9), (try store.readField(pair.right, 1)).i64);
+    try testing.expectEqual(@as(i64, 1), snapshot.aggregate.fields[0].i64);
+    const child = try store.reborrow(pair.left, 0, 1, .shared);
+    try testing.expectError(error.ReadOnly, store.writeField(child, 0, .{ .i64 = 0 }));
+    try store.end(child);
+    try store.end(pair.right);
+    try store.end(pair.left);
+    try store.end(parent);
+}
+
+fn partitionScenario(allocator: std.mem.Allocator) !void {
+    var store = try memory.Store.init(allocator);
+    defer store.deinit();
+    const owner = try store.create(.i64, &.{ .{ .i64 = 1 }, .{ .i64 = 2 } });
+    const parent = try store.borrow(owner, 0, 2, .exclusive);
+    const pair = store.split(parent, 0, 2, 1) catch |err| {
+        try number(&store, parent, 0, 1);
+        return err;
+    };
+    const nested = store.split(pair.left, 0, 1, 0) catch |err| {
+        try number(&store, pair.left, 0, 1);
+        return err;
+    };
+    try store.end(nested.left);
+    try store.end(nested.right);
+    try store.end(pair.left);
+    try store.end(pair.right);
+    try store.end(parent);
+}
+test "partition atomic lease allocation failures preserve live parent access" {
+    var stable = testing.FailingAllocator.init(testing.allocator, .{ .resize_fail_index = 0 });
+    try testing.checkAllAllocationFailures(stable.allocator(), partitionScenario, .{});
+}

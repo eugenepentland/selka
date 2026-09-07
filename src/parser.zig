@@ -1,4 +1,5 @@
 //! Recursive descent for statements; precedence climbing for expressions.
+const syntax_code = "E_SYNTAX";
 const eRequirement = diagnostic.generic_requirement;
 const eGenericLimit = diagnostic.generic_limit;
 const external_resources = @import("external_resources.zig");
@@ -35,7 +36,7 @@ pub const Parser = struct {
     }
     fn expect(self: *Parser, comptime tag: lex.Tag) diagnostic.Error!lex.Token {
         const token = self.current();
-        if (!self.take(tag)) return self.sink.fail("E_SYNTAX", token.span, "unexpected token; expected " ++ @tagName(tag));
+        if (!self.take(tag)) return self.sink.fail(syntax_code, token.span, "unexpected token; expected " ++ @tagName(tag));
         return token;
     }
     fn enter(self: *Parser) diagnostic.Error!void {
@@ -474,11 +475,26 @@ pub const Parser = struct {
         const open = try self.expect(.lbrace);
         var statements: std.ArrayList(ast.StatementId) = .empty;
         while (self.current().tag != .rbrace) {
-            if (self.current().tag == .eof) return self.sink.fail("E_SYNTAX", self.current().span, "expected closing brace");
+            if (self.current().tag == .eof) return self.sink.fail(syntax_code, self.current().span, "expected closing brace");
             try statements.append(self.arena.allocator(), try self.statement());
         }
         const close = try self.expect(.rbrace);
         return self.addStatement(.{ .span = .join(open.span, close.span), .data = .{ .block = try statements.toOwnedSlice(self.arena.allocator()) } });
+    }
+    fn splitBorrow(self: *Parser, first: Span) diagnostic.Error!ast.StatementId {
+        const owner = (try self.expect(.ident)).span;
+        const at = (try self.expect(.ident)).span;
+        if (!std.mem.eql(u8, self.src.text(at), "at")) return self.sink.fail(syntax_code, at, "split requires `at` before its midpoint");
+        const middle = try self.expression(0);
+        _ = try self.expect(.kw_as);
+        const left = (try self.expect(.ident)).span;
+        _ = try self.expect(.comma);
+        const right = (try self.expect(.ident)).span;
+        const body = try self.block();
+        return self.addStatement(.{
+            .span = .join(first, self.syntax.statements.items[@backingInt(body)].span),
+            .data = .{ .borrow = .{ .owner = owner, .name = left, .mutable = true, .body = body, .split = .{ .right = right, .middle = middle } } },
+        });
     }
     fn statement(self: *Parser) diagnostic.Error!ast.StatementId {
         try self.enter();
@@ -492,6 +508,7 @@ pub const Parser = struct {
             const body = try self.block();
             return self.addStatement(.{ .span = .join(first.span, self.syntax.statements.items[@backingInt(body)].span), .data = .{ .arena_scope = .{ .parent = parent, .name = name.span, .body = body } } });
         }
+        if (self.take(.kw_split)) return self.splitBorrow(first.span);
         if (self.take(.kw_borrow)) {
             const mutable = self.take(.kw_mut);
             const owner_position = self.cursor.pos;

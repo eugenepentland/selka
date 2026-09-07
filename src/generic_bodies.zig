@@ -31,6 +31,7 @@ const FunctionMap = std.StringHashMapUnmanaged(usize);
 const Return = struct { parameter: usize, mutable: bool, slice: bool };
 const Pending = struct { available: bool, fields: field_moves.State, transfer_span: ?source.Span };
 const Local = struct {
+    split_sibling: ?usize = null,
     name: source.Span,
     ty: Symbolic,
     mutable: bool,
@@ -320,7 +321,54 @@ const Checker = struct {
         const element = typed.sliceElement(owner_type, self.catalog.records) orelse return self.sink.fail("E_SLICE_TYPE", span, "slicing requires a fixed numeric array, buffer, or existing slice");
         return .{ .concrete = element };
     }
+    fn splitScope(self: *Checker, borrow: @FieldType(@FieldType(ast.Statement, "data"), "borrow")) Error!bool {
+        const split = borrow.split.?;
+        try self.supports(try self.expression(split.middle), .integer, borrow.owner);
+        const source_ref = (try self.reference(borrow.owner, true, true)).*;
+        const parent = self.active.get(self.src.text(borrow.owner)).?;
+        const root = source_ref.root.?;
+        const before = self.locals.items.len;
+        defer self.endScope(before);
+        for ([_]source.Span{ borrow.name, split.right }, [_]usize{ before + 1, before }) |name, sibling| {
+            try self.bindMode(name, source_ref.ty, false, false);
+            const child = &self.locals.items[self.locals.items.len - 1];
+            child.reference = true;
+            child.slice = true;
+            child.root = root;
+            child.parent = parent;
+            child.split_sibling = sibling;
+        }
+        self.locals.items[root].exclusive += 2;
+        self.locals.items[parent].children += 2;
+        defer {
+            self.locals.items[root].exclusive -= 2;
+            self.locals.items[parent].children -= 2;
+        }
+        return self.statement(borrow.body);
+    }
+    fn disjointLoans(self: *Checker, left: usize, right: usize) bool {
+        var a: ?usize = left;
+        while (a) |first| : (a = self.locals.items[first].parent) {
+            var b: ?usize = right;
+            while (b) |second| : (b = self.locals.items[second].parent) {
+                if (self.locals.items[first].split_sibling == second) return true;
+            }
+        }
+        return false;
+    }
+    fn claimLoan(self: *Checker, loans: *std.ArrayList(usize), name: source.Span) Error!void {
+        const index = self.active.get(self.src.text(name)).?;
+        const ref = self.locals.items[index];
+        for (loans.items) |previous| {
+            const old = self.locals.items[previous];
+            const exclusive = old.reference.? or ref.reference.?;
+            if (old.root == ref.root and exclusive and !self.disjointLoans(previous, index))
+                return self.sink.fail(eBorrowConflict, name, "call cannot alias an exclusive reference argument");
+        }
+        try loans.append(self.allocator, index);
+    }
     fn borrowScope(self: *Checker, borrow: @FieldType(@FieldType(ast.Statement, "data"), "borrow")) Error!bool {
+        if (borrow.split != null) return self.splitScope(borrow);
         if (borrow.range) |range| {
             try self.supports(try self.expression(range.start), .integer, borrow.owner);
             try self.supports(try self.expression(range.end), .integer, borrow.owner);
@@ -514,7 +562,7 @@ const Checker = struct {
             );
         }
         for (required, arguments) |parameter, argument| try self.structural(argument, parameter, signature.type_parameters, arguments);
-        var loans: std.AutoHashMapUnmanaged(usize, bool) = .empty;
+        var loans: std.ArrayList(usize) = .empty;
         defer loans.deinit(self.allocator);
         for (invocation.arguments, signature.parameters) |input, parameter| {
             const expected = try self.substituted(parameter.ty, signature.type_parameters, arguments);
@@ -533,9 +581,7 @@ const Checker = struct {
                 try self.regionRead(ref.*);
                 try self.enter(node.span);
                 self.depth -= 1;
-                const loan = try loans.getOrPut(self.allocator, ref.root.?);
-                if (loan.found_existing and (loan.value_ptr.* or ref.reference.?)) return self.sink.fail(eBorrowConflict, node.span, "call cannot alias an exclusive reference argument");
-                loan.value_ptr.* = ref.reference.?;
+                try self.claimLoan(&loans, node.data.name);
             } else try self.same(try self.expression(input), expected, node.span);
         }
         for (invocation.arguments, signature.parameters) |input, parameter| {
@@ -579,7 +625,7 @@ const Checker = struct {
         const operation = contract orelse return self.sink.fail("E_GENERIC_REQUIREMENT", invocation.name, "type parameter does not declare this operation");
         if (invocation.type_arguments.len != 0 or invocation.arguments.len != operation.parameters.len)
             return self.sink.fail("E_ARITY", invocation.name, "structural operation requires its declared value/reference arguments and no type arguments");
-        var loans: std.AutoHashMapUnmanaged(usize, bool) = .empty;
+        var loans: std.ArrayList(usize) = .empty;
         defer loans.deinit(self.allocator);
         for (invocation.arguments, operation.parameters) |input, parameter| {
             const expected = try self.ty(parameter.ty);
@@ -589,9 +635,7 @@ const Checker = struct {
                 const ref = try self.reference(node.data.name, mutable, false);
                 try self.same(ref.ty, expected, node.span);
                 try self.regionRead(ref.*);
-                const loan = try loans.getOrPut(self.allocator, ref.root.?);
-                if (loan.found_existing and (loan.value_ptr.* or ref.reference.?)) return self.sink.fail(eBorrowConflict, node.span, "operation cannot alias an exclusive argument");
-                loan.value_ptr.* = ref.reference.?;
+                try self.claimLoan(&loans, node.data.name);
             } else try self.same(try self.expression(input), expected, node.span);
         }
         for (invocation.arguments, operation.parameters) |input, parameter| if (parameter.reference == true) {

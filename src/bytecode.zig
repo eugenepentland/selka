@@ -162,6 +162,7 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
         .binary_integer => |binary| {
             if (!binary.ty.isInteger() or binary.op == .logical_and or binary.op == .logical_or) return error.InternalError;
         },
+        .split_borrow => |pair| try validateSplit(function, pair.left, pair.right),
         .begin_borrow, .begin_slice, .end_borrow, .read_ref, .write_ref, .read_slice, .write_slice, .len_slice => |id| try validateOpBeginBorrow(program, function, instruction, id),
         .load_local, .store_local, .move_local, .drop_local => |slot| if (@backingInt(slot) >= function.scope.locals.len or function.scope.locals[@backingInt(slot)].parameter.reference_parameter != null) {
             return error.InternalError;
@@ -333,10 +334,26 @@ fn validateOpAcquireBuffer(program: Program, ty: @FieldType(@FieldType(Instructi
     if (shape.error_type != .i64) return error.InternalError;
 }
 
+fn validateSplit(function: Function, left: typed.ReferenceId, right: typed.ReferenceId) Error!void {
+    if (left == right) return error.InternalError;
+    if (@backingInt(left) >= function.scope.references.len or @backingInt(right) >= function.scope.references.len) return error.InternalError;
+    const a = function.scope.references[@backingInt(left)];
+    const b = function.scope.references[@backingInt(right)];
+    if (a.mode.split_sibling != right or b.mode.split_sibling != left) return error.InternalError;
+    if (a.parent == null or a.parent != b.parent) return error.InternalError;
+    if (!a.mode.slice or !b.mode.slice) return error.InternalError;
+    if (!a.mutable or !b.mutable) return error.InternalError;
+    const parent = function.scope.references[@backingInt(a.parent.?)];
+    if (!parent.mode.slice or !parent.mutable) return error.InternalError;
+}
+
 fn validateOpBeginBorrow(program: Program, function: Function, instruction: Instruction, id: @FieldType(@FieldType(Instruction, "op"), "begin_borrow")) Error!void {
     if (@backingInt(id) >= function.scope.references.len) return error.InternalError;
     const reference = function.scope.references[@backingInt(id)];
     if (instruction.op == .read_ref and (typed.moveOnly(reference.ty, program.records) or typed.requiresHandling(reference.ty, program.records))) return error.InternalError;
+    if (instruction.op == .begin_borrow or instruction.op == .begin_slice) {
+        if (reference.mode.split_sibling != null) return error.InternalError;
+    }
     if ((instruction.op == .begin_borrow or instruction.op == .begin_slice) and reference.mode.parameter) return error.InternalError;
     if ((instruction.op == .write_ref or instruction.op == .write_slice) and !reference.mutable) return error.InternalError;
     switch (instruction.op) {
@@ -491,7 +508,7 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
                 if (height <= update.indices.len) return error.InternalError;
                 height -= update.indices.len;
             },
-            .begin_region, .store_local, .pop, .acknowledge, .jump_if_false, .write_ref => {
+            .split_borrow, .begin_region, .store_local, .pop, .acknowledge, .jump_if_false, .write_ref => {
                 if (height == 0) return error.InternalError;
                 height -= 1;
             },
@@ -616,6 +633,7 @@ fn validateReference(program: Program, function: Function, reference: typed.Refe
         }
     } else if (reference.mode.slice != source_slice or reference.ty != source_type) return error.InternalError;
     try validateReferenceOrigin(function, reference, index);
+    if (reference.mode.split_sibling) |sibling| try validateSplit(function, @fromBackingInt(@intCast(index)), sibling);
 }
 
 fn resourceIoHeight(io: @FieldType(@FieldType(Instruction, "op"), "resource_io"), height: usize) Error!usize {

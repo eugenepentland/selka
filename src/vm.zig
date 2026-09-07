@@ -323,6 +323,7 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
             .push_i64 => step.executePushI64(),
             .push_bool => step.executePushBool(),
             .begin_borrow, .begin_slice => step.executeBeginBorrow(),
+            .split_borrow => step.executeSplitBorrow(),
             .end_borrow => step.executeEndBorrow(),
             .len_slice => step.executeLenSlice(),
             .read_slice => step.executeReadSlice(),
@@ -952,6 +953,31 @@ const Step = struct {
         return null;
     }
 
+    fn executeSplitBorrow(self: *Step) !?ValueResult {
+        const execution = self.execution;
+        const frame = self.frame;
+        const instruction = self.instruction;
+        const pair = instruction.op.split_borrow;
+        const references = execution.state.references;
+        const function = execution.program.functions[@backingInt(frame.function)];
+        const parent_id = function.scope.references[@backingInt(pair.left)].parent.?;
+        const parent = references.items[frame.reference_base + @backingInt(parent_id)] orelse return trap(reference_lifetime_code, inactive_slice_message, instruction.span, execution.state.frames.items, execution.program);
+        const view = parent.slice orelse return error.InternalError;
+        const middle = try numeric(execution.state.stack, frame.operand_base, null, execution.allocator);
+        if (middle < 0 or middle > view.length) return trap(slice_bounds_code, "split point is outside its source bounds", instruction.span, execution.state.frames.items, execution.program);
+        const left = frame.reference_base + @backingInt(pair.left);
+        const right = frame.reference_base + @backingInt(pair.right);
+        if (references.items[left] != null or references.items[right] != null) return trap(reference_lifetime_code, "split reference is already active", instruction.span, execution.state.frames.items, execution.program);
+        const at: usize = @intCast(middle);
+        const divided = (if (parent.direct)
+            execution.storage.split(parent.lease, view.start, view.length, at)
+        else
+            execution.storage.splitFields(parent.lease, view.start, view.length, at)) catch |err| return memoryFailure(err, instruction, execution.state.frames.items, execution.program);
+        references.items[left] = .{ .direct = parent.direct, .lease = divided.left, .slice = .{ .start = if (parent.direct) 0 else view.start, .length = at } };
+        references.items[right] = .{ .direct = parent.direct, .lease = divided.right, .slice = .{ .start = if (parent.direct) 0 else view.start + at, .length = view.length - at } };
+        return null;
+    }
+
     fn executeEndBorrow(self: *Step) !?ValueResult {
         const program = self.execution.program;
         const storage = self.execution.storage;
@@ -1003,9 +1029,8 @@ const Step = struct {
             try pushOwned(stack, allocator, value);
             return null;
         }
-        const array = storage.read(reference.lease, 0) catch |err| return memoryFailure(err, instruction, frames.items, program);
-        defer array.release(allocator);
-        try pushOwned(stack, allocator, try array.getField(view.start + @as(usize, @intCast(index))));
+        const value = storage.readField(reference.lease, view.start + @as(usize, @intCast(index))) catch |err| return memoryFailure(err, instruction, frames.items, program);
+        try pushOwned(stack, allocator, value);
         return null;
     }
 
@@ -1031,11 +1056,7 @@ const Step = struct {
             storage.write(reference.lease, view.start + @as(usize, @intCast(index)), value) catch |err| return memoryFailure(err, instruction, frames.items, program);
             return null;
         }
-        const array = storage.read(reference.lease, 0) catch |err| return memoryFailure(err, instruction, frames.items, program);
-        defer array.release(allocator);
-        const updated = try array.updated(allocator, &.{view.start + @as(usize, @intCast(index))}, &.{value});
-        defer updated.release(allocator);
-        storage.write(reference.lease, 0, updated) catch |err| return memoryFailure(err, instruction, frames.items, program);
+        storage.writeField(reference.lease, view.start + @as(usize, @intCast(index)), value) catch |err| return memoryFailure(err, instruction, frames.items, program);
         return null;
     }
 

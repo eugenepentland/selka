@@ -116,6 +116,7 @@ pub const Walker = struct {
                 },
                 .borrow => |b| {
                     try self.stmt(b.body);
+                    if (b.split) |split| try self.expr(split.middle);
                     if (b.range) |r| {
                         try self.expr(r.end);
                         try self.expr(r.start);

@@ -333,3 +333,11 @@ supersede it. The manifest records implementation coverage, not a test certifica
 ## Bounded VM explanations
 
 - [VM-TRACE-1] Optional `memory.trace` observations record instruction/source identity and the top operand before execution into a caller-owned bounded buffer. Scalar values can explain branch conditions; aggregates record only type identity. Full buffers count omitted events without changing guest work/steps or retaining guest owners. Traces are debugging samples, not complete causal proofs or portable replay logs.
+
+- [SPLIT-LEASE-1] An explicit checked exclusive split creates disjoint siblings
+  atomically and suspends its parent until both descendants end. Physical buffer
+  extents and projected array-member extents retain independent bounds; projected
+  leases cannot authorize whole-array access. Empty/nested partitions preserve
+  bounds, snapshot semantics, ownership exclusion and allocation-failure cleanup.
+
+- [SPLIT-SOURCE-1] `split view at midpoint as left, right { ... }` creates checked disjoint exclusive slices. Siblings may be supplied to the same call, including generic calls. Parent access is suspended for their lexical scope.

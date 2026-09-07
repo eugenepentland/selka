@@ -374,7 +374,11 @@ pub const Memory = struct {
     /// Execution-bound generation-checked identity of a dynamic borrow lease.
     pub const Borrow = struct { memory: u64, token: Token };
     /// Validated borrow extent, access mode, element type, and underlying allocation.
-    pub const View = struct { allocation: Allocation, start: usize, length: usize, kind: Kind, element_type: Type };
+    pub const Extent = struct { start: usize, length: usize };
+    /// Two disjoint children created atomically from one exclusive lease.
+    pub const Split = struct { left: Borrow, right: Borrow };
+    /// Validated allocation extent and optional authorized array member projection.
+    pub const View = struct { projection: ?Extent = null, allocation: Allocation, start: usize, length: usize, kind: Kind, element_type: Type };
 
     const identities = @import("wiring/identity.zig");
 
@@ -429,7 +433,7 @@ pub const Memory = struct {
         };
     }
     const Cell = struct { backing: BackingLease, element_type: Type, values: []Value, length: usize, shared: usize = 0, exclusive: bool = false };
-    const Lease = struct { allocation: Token, start: usize, length: usize, kind: Kind, parent: ?Token = null, children: usize = 0 };
+    const Lease = struct { projection: ?Extent = null, allocation: Token, start: usize, length: usize, kind: Kind, parent: ?Token = null, children: usize = 0 };
 
     /// Owns memory/lease registries. Do not copy an initialized Store. Values passed
     /// to it use the same runtime allocator; successful reads return retained values.
@@ -715,10 +719,55 @@ pub const Memory = struct {
             if (previous.kind == .shared and kind == .exclusive) return error.ReadOnly;
             try checkRange(previous.length, start, length);
             if (previous.children == std.math.maxInt(usize)) return error.IdentityExhausted;
-            const token = try self.leases.insert(self.allocator, .{ .allocation = previous.allocation, .start = previous.start + start, .length = length, .kind = kind, .parent = parent.token });
+            const token = try self.leases.insert(self.allocator, .{ .allocation = previous.allocation, .start = previous.start + start, .length = length, .kind = kind, .parent = parent.token, .projection = previous.projection });
             // Insertion may relocate leases, so resolve the parent again by identity.
             self.leases.get(parent.token).?.children += 1;
             return .{ .memory = self.identity, .token = token };
+        }
+        /// Atomically partition one exclusive extent; failed insertion preserves parent access.
+        pub fn split(self: *Store, parent: Borrow, start: usize, length: usize, middle: usize) Error!Split {
+            const previous = (try self.lease(parent)).*;
+            try usable(previous);
+            if (previous.kind != .exclusive) return error.ReadOnly;
+            if (previous.projection != null) return error.TypeMismatch;
+            try checkRange(previous.length, start, length);
+            if (middle > length) return error.Bounds;
+            var left = previous;
+            left.start += start;
+            left.length = middle;
+            var right = left;
+            right.start += middle;
+            right.length = length - middle;
+            return self.partition(parent, left, right);
+        }
+        /// Partition logical members of a single boxed array without authorizing whole-value access.
+        pub fn splitFields(self: *Store, parent: Borrow, start: usize, length: usize, middle: usize) Error!Split {
+            const previous = (try self.lease(parent)).*;
+            try usable(previous);
+            if (previous.kind != .exclusive) return error.ReadOnly;
+            const array = try self.fieldArray(previous);
+            try checkRange(array.aggregate.fields.len, start, length);
+            if (previous.projection) |extent| {
+                if (start < extent.start) return error.Bounds;
+                try checkRange(extent.length, start - extent.start, length);
+            }
+            if (middle > length) return error.Bounds;
+            var left = previous;
+            left.projection = .{ .start = start, .length = middle };
+            var right = previous;
+            right.projection = .{ .start = start + middle, .length = length - middle };
+            return self.partition(parent, left, right);
+        }
+        fn partition(self: *Store, parent: Borrow, left: Lease, right: Lease) Error!Split {
+            var first = left;
+            first.parent = parent.token;
+            var second = right;
+            second.parent = parent.token;
+            const left_token = try self.leases.insert(self.allocator, first);
+            errdefer _ = self.leases.remove(left_token);
+            const right_token = try self.leases.insert(self.allocator, second);
+            self.leases.get(parent.token).?.children += 2;
+            return .{ .left = .{ .memory = self.identity, .token = left_token }, .right = .{ .memory = self.identity, .token = right_token } };
         }
         /// End a live borrow and restore its parent's access when applicable.
         pub fn end(self: *Store, reference: Borrow) Error!void {
@@ -736,12 +785,20 @@ pub const Memory = struct {
         pub fn describe(self: *Store, reference: Borrow) Error!View {
             const active = (try self.lease(reference)).*;
             try usable(active);
-            return .{ .allocation = .{ .memory = self.identity, .token = active.allocation }, .start = active.start, .length = active.length, .kind = active.kind, .element_type = self.cells.get(active.allocation).?.element_type };
+            return .{
+                .projection = active.projection,
+                .allocation = .{ .memory = self.identity, .token = active.allocation },
+                .start = active.start,
+                .length = active.length,
+                .kind = active.kind,
+                .element_type = self.cells.get(active.allocation).?.element_type,
+            };
         }
         /// Read and retain a value through an active in-bounds borrow.
         pub fn read(self: *Store, reference: Borrow, index: usize) Error!Value {
             const active = (try self.lease(reference)).*;
             try usable(active);
+            if (active.projection != null) return error.TypeMismatch;
             if (index >= active.length) return error.Bounds;
             return self.cells.get(active.allocation).?.values[active.start + index].retain();
         }
@@ -749,9 +806,44 @@ pub const Memory = struct {
         pub fn write(self: *Store, reference: Borrow, index: usize, replacement: Value) Error!void {
             const active = (try self.lease(reference)).*;
             try usable(active);
+            if (active.projection != null) return error.TypeMismatch;
             if (active.kind != .exclusive) return error.ReadOnly;
             if (index >= active.length) return error.Bounds;
             try self.replace(self.cells.get(active.allocation).?, active.start + index, replacement);
+        }
+        fn fieldArray(self: *Store, active: Lease) Error!Value {
+            if (active.length != 1) return error.TypeMismatch;
+            const value = self.cells.get(active.allocation).?.values[active.start];
+            if (value != .aggregate or value.aggregate.active_tag != null or value.aggregate.moved_fields != null) return error.TypeMismatch;
+            return value;
+        }
+        fn fieldValue(self: *Store, reference: Borrow, index: usize, mutable: bool) Error!Value {
+            const active = (try self.lease(reference)).*;
+            try usable(active);
+            if (mutable and active.kind != .exclusive) return error.ReadOnly;
+            const value = try self.fieldArray(active);
+            if (index >= value.aggregate.fields.len) return error.Bounds;
+            if (active.projection) |extent| {
+                if (index < extent.start or index - extent.start >= extent.length) return error.Bounds;
+            }
+            return value;
+        }
+        /// Read one copied member under both the logical partition and lease bounds.
+        pub fn readField(self: *Store, reference: Borrow, index: usize) Error!Value {
+            const value = try self.fieldValue(reference, index, false);
+            return value.aggregate.fields[index].retain();
+        }
+        /// Replace one authorized member while preserving earlier aggregate snapshots.
+        pub fn writeField(self: *Store, reference: Borrow, index: usize, replacement: Value) Error!void {
+            const value = try self.fieldValue(reference, index, true);
+            if (value.aggregate.fields[index].typeOf() != replacement.typeOf()) return error.TypeMismatch;
+            const updated = value.updated(self.allocator, &.{index}, &.{replacement}) catch |err| switch (err) {
+                error.OutOfMemory => return error.OutOfMemory,
+                else => return error.TypeMismatch,
+            };
+            defer updated.release(self.allocator);
+            const active = (try self.lease(reference)).*;
+            try self.replace(self.cells.get(active.allocation).?, active.start, updated);
         }
         /// Validate access to an owner cell without copying or changing its generation.
         pub fn checkOwnerAccess(self: *Store, allocation: Allocation, mutable: bool) Error!void {
