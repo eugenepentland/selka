@@ -64,3 +64,14 @@ test "standard time random providers retain failures and partial initialized out
     try t.expectError(error.OutOfMemory, run(t.allocator, provider_source, oom.options(), 0));
     try t.expectError(error.CapabilityUnavailable, run(t.allocator, provider_source, .{}, 0));
 }
+// spec: STANDARD-TIME-RANDOM-3
+test "standard time random calls preserve effect ceilings and bounded provider work" {
+    try t.expectError(error.SourceError, run(t.allocator, "module main;import std_time;fn main(c:clock_cap)->i64 effects(){acknowledge std_time::now(c);return 0;}", .{}, 0));
+    var provider: Provider = .{};
+    try run(t.allocator, "module main;import std_random as r;fn main(cap:random_cap)->i64{" ++
+        "match r::entropy_bounded(cap,9223372036854775809u64,3u64){" ++
+        "r::Sample.ok(discard)=>{return 1;},r::Sample.err(e)=>{if e!=new r::Error.exhausted{return 2;}}}" ++
+        "let mut empty=new [0]u8 [];borrow mut empty[0..0] as view{match r::fill(cap,view){" ++
+        "r::Filled.ok(n)=>{return cast<i64>(n);},r::Filled.err(discard)=>{return 3;}}}}", provider.options(), 0);
+    try t.expectEqual(@as(usize, 3), provider.calls);
+}

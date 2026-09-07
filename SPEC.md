@@ -366,3 +366,4 @@ supersede it. The manifest records implementation coverage, not a test certifica
 
 - [STANDARD-TIME-RANDOM-1] Standard durations and Unix nanosecond instants use checked full-width arithmetic; SplitMix64 seeded state has stable word sequences and bounded rejection sampling with retained state on exhaustion.
 - [STANDARD-TIME-RANDOM-2] Standard clock and entropy calls require explicit capabilities, retain typed provider failures, and report initialized byte prefixes on partial entropy failure; host allocation failure aborts normally.
+- [STANDARD-TIME-RANDOM-3] Standard provider wrappers preserve source effect ceilings; rejection sampling honors the caller's maximum draw count and empty entropy fills perform no reads.
