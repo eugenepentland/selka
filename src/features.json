@@ -90,7 +90,8 @@
     "std_path",
     "std_fs",
     "std_owned",
-    "std_owned_map"
+    "std_owned_map",
+    "scoped-filesystem-metadata-and-listings"
   ],
   "unsupported": [
     "builtin-f64-syntax",
@@ -115,6 +116,7 @@
     "semantic_reuse": "conservative function-body queries; generics constants aliases and inferred callback schemas check fresh",
     "text_data": "byte offsets and ASCII trim; bounded decimal parser; fixed formatting 0..9 places",
     "hash_collections": "fixed slot capacity; u64 or inline byte keys up to256bytes; copyable values",
-    "time_random": "Unix wall clock and explicit entropy capabilities; deterministic noncryptographic SplitMix64"
+    "time_random": "Unix wall clock and explicit entropy capabilities; deterministic noncryptographic SplitMix64",
+    "directory_listing": "bounded immutable copied entries; unspecified order; no recursive walk"
   }
 }

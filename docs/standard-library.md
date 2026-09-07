@@ -14,7 +14,7 @@ in use; this document describes the source tree.
 | Hashing | `std_hash`, `std_hash_map`, `std_hash_set`, `std_hash_bytes`, `std_hash_byte_set` | Deterministic hashes, bounded u64-key and inline byte-key tables, deletion/tombstones, replacement and explicit slot iteration |
 | Data interchange | `std_json`, `std_json_view`, `std_json_builder`, `std_encoding` | Typed/document JSON, checked node access, nested JSON construction, endian integers, hex and canonical padded base64 |
 | Arguments | `std_args` | Explicit token classification, long option names/values, `--` terminator and checked integer values |
-| I/O and paths | `std_io`, `std_path`, `std_fs` | Buffered reads/writes, exact reads, bounded complete-file/line reads, retryable progress, typed open modes, file convenience functions and checked relative path components/joining |
+| I/O and paths | `std_io`, `std_path`, `std_fs` | Buffered reads/writes, exact reads, bounded complete-file/line reads, retryable progress, typed open modes, file convenience functions, metadata, bounded directory listings and checked relative path components/joining |
 | Time/random | `std_time`, `std_random` | Checked durations and wall-clock instants, explicit clock/entropy capabilities, seeded SplitMix64, bounded unbiased range sampling and byte fills |
 | Results | `std_result`, `std_unit` | Copyable Option/Result, categorized errors, owned error context and Unit |
 
@@ -39,6 +39,8 @@ out by a VM instruction budget.
   16 unique space-delimited words, each at most 256 bytes, with bounded output.
 - [Buffered file example](../examples/standard-io/README.md) runs against an
   explicitly granted directory.
+- [Directory example](../examples/standard-directory/README.md) inspects metadata and
+  enumerates a granted directory without implicit authority.
 - [Time/random example](../examples/standard-time-random/main.my) checks full-width
   boundaries and reproducible streams without ambient authority.
 - [Text/data contracts](stdlib-text-data.md), [collection contracts](stdlib-collections.md),

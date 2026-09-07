@@ -4,6 +4,8 @@ Authorized baseline: `1db5520` (all pre-existing updates committed). Implementat
 are developed in independent worktrees and integrated through normal Guardian gates.
 This table separates delivered scope from conditional extensions and remaining work.
 The original audit remains a historical baseline, not a current feature inventory.
+This table records the audit-stage checkpoint. Subsequent [standard library work](../standard-library.md)
+adds owned collections, text/data utilities, buffered I/O, directory inspection and time/random APIs.
 
 | Item | Delivered scope | Remaining work / limits |
 | --- | --- | --- |
