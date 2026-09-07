@@ -253,3 +253,10 @@ test "split slices return one partition and restore owners after loop exits" {
     try reject("fn f<T:copy>(s:&mut []T)->T{split s at 0 as left,right{return read_slice(s,0);}}", "E_BORROW_SUSPENDED");
     try reject("fn f<T:copy>(s:&[]T)->T{split s at 0 as left,right{return read_slice(right,0);}}", "E_REFERENCE_READ_ONLY");
 }
+
+// spec: SPLIT-CONTEXTUAL-1
+test "split remains an identifier outside partition statements" {
+    try result("fn split(x:i64)->i64{return x+1;}fn main()->i64{return split(41);}", 42);
+    try result("fn main()->i64{let mut split=40;split=split+2;return split;}", 42);
+    try result("fn main()->i64{let mut a=new [2]i64 [1,2];borrow mut a[0..2] as split{split split at 1 as left,right{write_slice(left,0,40);return read_slice(left,0)+read_slice(right,0);}}}", 42);
+}

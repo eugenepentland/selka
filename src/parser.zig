@@ -509,7 +509,10 @@ pub const Parser = struct {
             const body = try self.block();
             return self.addStatement(.{ .span = .join(first.span, self.syntax.statements.items[@backingInt(body)].span), .data = .{ .arena_scope = .{ .parent = parent, .name = name.span, .body = body } } });
         }
-        if (self.take(.kw_split)) return self.splitBorrow(first.span);
+        if (first.tag == .ident and std.mem.eql(u8, self.src.text(first.span), "split") and self.cursor.pos + 1 < self.tokens.len and self.tokens[self.cursor.pos + 1].tag == .ident) {
+            self.cursor.pos += 1;
+            return self.splitBorrow(first.span);
+        }
         if (self.take(.kw_borrow)) {
             const mutable = self.take(.kw_mut);
             const owner_position = self.cursor.pos;

@@ -347,3 +347,5 @@ supersede it. The manifest records implementation coverage, not a test certifica
 
 - [REGION-PROJECTION-1] Proven immutable aliases and record field selections retain only the selected input authority. Generic specializations use the same field identities. Unknown, mutable, ambiguous, host, borrowed-parameter and early-propagation return flows retain conservative all-input provenance.
 - [SOURCE-EVAL-1] Scalar module constants may invoke nongeneric source functions with scalar arguments, locals, branches, loops and recursion. Static validation rejects external effects and unsupported memory/aggregate operations even in untaken paths. Evaluation is limited to 256 nesting levels and 65536 expression, statement and lookup work units, with located errors and no executable publication on failure. Every compilation reevaluates from its complete source/input snapshot with fixed-width target-independent scalar semantics.
+
+- [SPLIT-CONTEXTUAL-1] `split` introduces a partition only at statement start followed by its view identifier; it remains available as a function, local, field or reference identifier elsewhere.
