@@ -1,429 +1,44 @@
+// Application schema predicates and report adapters over the standard JSON tape.
 module json;
 import io;
-export Unit;
-export at;
-export ws;
-export unit;
+import std_json;
+import std_text;
 export equal;
-export skip;
-export valid;
 export integer;
 export text;
 export number;
 export quoted;
 export identifier;
-export key;
 export less;
 export next;
-struct Unit {
-    pos: i64,
-    cp: i64
+fn equal(t: &[]i64, a: i64, b: i64) -> bool {
+    return std_json::equal(t, a, b);
 }
-fn at(p: i64) -> i64 {
-    if p >= io::length() {
+fn less(t: &[]i64, a: i64, b: i64) -> bool {
+    return std_json::compare(t, a, b) < 0;
+}
+fn next(t: &[]i64, p: i64) -> i64 {
+    return std_json::get(t, p, 3);
+}
+fn integer(t: &[]i64, p: i64) -> i64 {
+    if std_json::get(t, p, 0) != 4 {
         return - 1;
     }
-    return cast<i64>(io::byte(p));
+    return std_json::get(t, p, 5);
 }
-fn ws(p: i64) -> i64 {
-    let mut n = p;
-    while at(n) == 32 || at(n) == 9 || at(n) == 10 || at(n) == 13 {
-        n += 1;
-    }
-    return n;
-}
-fn hex(c: i64) -> i64 {
-    if c >= 48 && c <= 57 {
-        return c - 48;
-    }
-    if c >= 65 && c <= 70 {
-        return c - 55;
-    }
-    if c >= 97 && c <= 102 {
-        return c - 87;
-    }
-    return - 1;
-}
-fn quad(p: i64) -> i64 {
-    let mut v = 0;
-    let mut i = 0;
-    while i < 4 {
-        let h = hex(at(p + i));
-        if h < 0 {
-            return - 1;
-        }
-        v = v * 16 + h;
-        i += 1;
-    }
-    return v;
-}
-// Decode one string unit. Raw UTF-8 is strict; JSON escapes may encode surrogates.
-fn unit(p: i64) -> Unit {
-    let c = at(p);
-    if c == 92 {
-        let e = at(p + 1);
-        if e == 117 {
-            let h = quad(p + 2);
-            if h < 0 {
-                return new Unit {
-                    pos: p + 6,
-                    cp: - 1
-                };
-            }
-            if h >= 55296 && h <= 56319 && at(p + 6) == 92 && at(p + 7) == 117 {
-                let l = quad(p + 8);
-                if l >= 56320 && l <= 57343 {
-                    return new Unit {
-                        pos: p + 12,
-                        cp: 65536 +(h - 55296) * 1024 + l - 56320
-                    };
-                }
-            }
-            if h >= 55296 && h <= 57343 {
-                return new Unit {
-                    pos: p + 6,
-                    cp: - 1
-                };
-            }
-            return new Unit {
-                pos: p + 6,
-                cp: h
-            };
-        }
-        let mut v = - 1;
-        if e == 34 || e == 92 || e == 47 {
-            v = e;
-        }
-        if e == 98 {
-            v = 8;
-        }
-        if e == 102 {
-            v = 12;
-        }
-        if e == 110 {
-            v = 10;
-        }
-        if e == 114 {
-            v = 13;
-        }
-        if e == 116 {
-            v = 9;
-        }
-        return new Unit {
-            pos: p + 2,
-            cp: v
-        };
-    }
-    if c < 32 {
-        return new Unit {
-            pos: p + 1,
-            cp: - 1
-        };
-    }
-    if c < 128 {
-        return new Unit {
-            pos: p + 1,
-            cp: c
-        };
-    }
-    let mut n = 0;
-    let mut v = 0;
-    let mut low = 0;
-    if c >= 194 && c <= 223 {
-        n = 2;
-        v = c - 192;
-        low = 128;
-    }
-    if c >= 224 && c <= 239 {
-        n = 3;
-        v = c - 224;
-        low = 2048;
-    }
-    if c >= 240 && c <= 244 {
-        n = 4;
-        v = c - 240;
-        low = 65536;
-    }
-    if n == 0 {
-        return new Unit {
-            pos: p + 1,
-            cp: - 1
-        };
-    }
-    let mut i = 1;
-    while i < n {
-        let b = at(p + i);
-        if b < 128 || b > 191 {
-            return new Unit {
-                pos: p + i,
-                cp: - 1
-            };
-        }
-        v = v * 64 + b - 128;
-        i += 1;
-    }
-    if v < low || v > 1114111 ||(v >= 55296 && v <= 57343) {
-        v = - 1;
-    }
-    return new Unit {
-        pos: p + n,
-        cp: v
-    };
-}
-fn string_end(p: i64) -> i64 {
-    let mut i = p + 1;
-    while at(i) != 34 {
-        let u = unit(i);
-        if u.cp < 0 {
-            return - 1;
-        }
-        i = u.pos;
-    }
-    return i + 1;
-}
-fn equal(a: i64, b: i64) -> bool {
-    let mut x = a + 1;
-    let mut y = b + 1;
-    while at(x) != 34 && at(y) != 34 {
-        let u = unit(x);
-        let v = unit(y);
-        if u.cp != v.cp {
-            return false;
-        }
-        x = u.pos;
-        y = v.pos;
-    }
-    return at(x) == 34 && at(y) == 34;
-}
-fn digit(c: i64) -> bool {
-    return c >= 48 && c <= 57;
-}
-// Validate JSON number grammar and contract bounds without host numeric parsing.
-fn numeric(p: i64) -> i64 {
-    let mut i = p;
-    if at(i) == 45 {
-        i += 1;
-    }
-    let start = i;
-    if at(i) == 48 {
-        i += 1;
-    } else {
-        if at(i) < 49 || at(i) > 57 {
-            return - 1;
-        }
-        while digit(at(i)) {
-            i += 1;
-        }
-    }
-    let stop = i;
-    let mut integral = true;
-    let mut frac = 0;
-    if at(i) == 46 {
-        integral = false;
-        i += 1;
-        let f = i;
-        while digit(at(i)) {
-            i += 1;
-        }
-        frac = i - f;
-        if frac == 0 {
-            return - 1;
-        }
-    }
-    let digits_end = i;
-    let mut exponent = 0;
-    let mut sign = 1;
-    if at(i) == 101 || at(i) == 69 {
-        integral = false;
-        i += 1;
-        if at(i) == 45 {
-            sign = - 1;
-            i += 1;
-        } else {
-            if at(i) == 43 {
-                i += 1;
-            }
-        }
-        let e = i;
-        while digit(at(i)) {
-            if exponent < 10000000 {
-                exponent = exponent * 10 + at(i) - 48;
-            }
-            i += 1;
-        }
-        if i == e {
-            return - 1;
-        }
-    }
-    if integral {
-        let mut value = 0u64;
-        let mut k = start;
-        let mut limit = 9223372036854775807u64;
-        if at(p) == 45 {
-            limit += 1u64;
-        }
-        while k < stop {
-            let d = cast<u64>(at(k) - 48);
-            if value > limit / 10u64 ||(value == limit / 10u64 && d > limit % 10u64) {
-                return - 1;
-            }
-            value = value * 10u64 + d;
-            k += 1;
-        }
-    } else {
-        let mut k = start;
-        let mut significant = 0;
-        let mut prefix = 0u64;
-        let mut seen = false;
-        while k < digits_end {
-            let d = at(k);
-            if d != 46 {
-                if d != 48 {
-                    seen = true;
-                }
-                if seen {
-                    if significant < 17 {
-                        prefix = prefix * 10u64 + cast<u64>(d - 48);
-                    }
-                    significant += 1;
-                }
-            }
-            k += 1;
-        }
-        if seen {
-            let power = significant - frac + exponent * sign - 1;
-            if power > 308 {
-                return - 1;
-            }
-            if power == 308 {
-                let mut n = significant;
-                while n < 17 {
-                    prefix = prefix * 10u64;
-                    n += 1;
-                }
-                if overflow(start, digits_end) {
-                    return - 1;
-                }
-            }
-        }
-    }
-    return i;
-}
-// Full validation pass: never short-circuit on application schema failures.
-fn skip(p: i64, depth: i64) -> i64 {
-    let c = at(p);
-    if c == 34 {
-        return string_end(p);
-    }
-    if c == 45 || digit(c) {
-        return numeric(p);
-    }
-    if c == 116 && at(p + 1) == 114 && at(p + 2) == 117 && at(p + 3) == 101 {
-        return p + 4;
-    }
-    if c == 110 && at(p + 1) == 117 && at(p + 2) == 108 && at(p + 3) == 108 {
-        return p + 4;
-    }
-    if c == 102 && at(p + 1) == 97 && at(p + 2) == 108 && at(p + 3) == 115 && at(p + 4) == 101 {
-        return p + 5;
-    }
-    if c != 91 && c != 123 {
-        return - 1;
-    }
-    if depth >= 64 {
-        return - 1;
-    }
-    let mut i = ws(p + 1);
-    let mut end = 93;
-    if c == 123 {
-        end = 125;
-    }
-    if at(i) == end {
-        return i + 1;
-    }
-    while true {
-        if c == 123 {
-            if at(i) != 34 {
-                return - 1;
-            }
-            let keypos = i;
-            let e = string_end(i);
-            if e < 0 {
-                return - 1;
-            }
-            let mut prior = ws(p + 1);
-            while prior < keypos {
-                if equal(prior, keypos) {
-                    return - 1;
-                }
-                prior = ws(string_end(prior));
-                prior = ws(prior + 1);
-                prior = skip(prior, depth + 1);
-                if prior < 0 {
-                    return - 1;
-                }
-                prior = ws(prior);
-                prior = ws(prior + 1);
-            }
-            i = ws(e);
-            if at(i) != 58 {
-                return - 1;
-            }
-            i = ws(i + 1);
-        }
-        i = skip(i, depth + 1);
-        if i < 0 {
-            return - 1;
-        }
-        i = ws(i);
-        if at(i) == end {
-            return i + 1;
-        }
-        if at(i) != 44 {
-            return - 1;
-        }
-        i = ws(i + 1);
-    }
-    return - 1;
-}
-fn valid() -> bool {
-    if io::length() > 1048576 {
+fn identifier(t: &[]i64, p: i64) -> bool {
+    if std_json::get(t, p, 0) != 3 {
         return false;
     }
-    let e = skip(ws(0), 0);
-    return e >= 0 && ws(e) == io::length();
-}
-fn integer(p: i64) -> i64 {
-    let mut i = p;
-    let mut v = 0;
-    if at(i) == 45 {
-        if at(i + 1) != 48 {
-            return - 1;
-        }
-        i += 1;
-    }
-    while digit(at(i)) {
-        if v > 1000000 {
-            return - 1;
-        }
-        v = v * 10 + at(i) - 48;
-        i += 1;
-    }
-    if i == p || at(i) == 46 || at(i) == 101 || at(i) == 69 {
-        return - 1;
-    }
-    return v;
-}
-fn identifier(p: i64) -> bool {
-    if at(p) != 34 {
+    let start = std_json::get(t, p, 1);
+    let end = std_json::get(t, p, 2);
+    if end - start < 1 || end - start > 32 {
         return false;
     }
-    let mut i = p + 1;
-    let mut n = 0;
-    while at(i) != 34 {
-        let u = unit(i);
-        let c = u.cp;
-        if n == 0 {
+    let mut i = start;
+    while i < end {
+        let c = read_slice(t, i);
+        if i == start {
             if c < 97 || c > 122 {
                 return false;
             }
@@ -432,102 +47,25 @@ fn identifier(p: i64) -> bool {
                 return false;
             }
         }
-        n += 1;
-        if n > 32 {
-            return false;
-        }
-        i = u.pos;
-    }
-    return n > 0;
-}
-fn text(s: &[]u8) -> i64 {
-    let mut i = 0u64;
-    while i < len_slice(s) {
-        discard io::put(read_slice(s, i));
-        i += 1u64;
-    }
-    return 0;
-}
-fn number(n: i64) -> i64 {
-    if n >= 10 {
-        discard number(n / 10);
-    }
-    discard io::put(cast<u8>(48 + n % 10));
-    return 0;
-}
-fn quoted(p: i64) -> i64 {
-    discard io::put(34u8);
-    let mut i = p + 1;
-    while at(i) != 34 {
-        let u = unit(i);
-        discard io::put(cast<u8>(u.cp));
-        i = u.pos;
-    }
-    discard io::put(34u8);
-    return 0;
-}
-fn key(p: i64, s: &[]u8) -> bool {
-    if at(p) != 34 {
-        return false;
-    }
-    let mut i = p + 1;
-    let mut n = 0u64;
-    while at(i) != 34 {
-        let u = unit(i);
-        if n >= len_slice(s) {
-            return false;
-        }
-        if u.cp != cast<i64>(read_slice(s, n)) {
-            return false;
-        }
-        n += 1u64;
-        i = u.pos;
-    }
-    return n == len_slice(s);
-}
-fn less(a: i64, b: i64) -> bool {
-    let mut i = a + 1;
-    let mut j = b + 1;
-    while at(i) != 34 && at(j) != 34 {
-        let u = unit(i);
-        let v = unit(j);
-        if u.cp != v.cp {
-            return u.cp < v.cp;
-        }
-        i = u.pos;
-        j = v.pos;
-    }
-    return at(i) == 34 && at(j) != 34;
-}
-fn next(p: i64) -> i64 {
-    let e = ws(skip(p, 0));
-    if at(e) == 44 {
-        return ws(e + 1);
-    }
-    return e;
-}
-// Exact binary64 overflow midpoint: max finite + half its final ULP.
-fn overflow(p: i64, end: i64) -> bool {
-    let boundary = "179769313486231580793728971405303415079934132710037826936173778980444968292764750946649017977587207096330286416692887910946555547851940402630657488671505820681908902000708383676273854845817711531764475730270069855571366959622842914819860834936475292719074168444365510704342711559699508093042880177904174497792";
-    let mut i = p;
-    while i < end &&(at(i) == 48 || at(i) == 46) {
         i += 1;
     }
-    let mut k = 0u64;
-    while k < len(boundary) {
-        while at(i) == 46 && i < end {
-            i += 1;
-        }
-        let mut d = 48;
-        if i < end {
-            d = at(i);
-            i += 1;
-        }
-        let b = cast<i64>(boundary[k]);
-        if d != b {
-            return d > b;
-        }
-        k += 1u64;
-    }
     return true;
+}
+fn text(s: &[]u8) -> i64 {
+    return std_text::emit(s);
+}
+fn number(n: i64) -> i64 {
+    return std_text::number(n);
+}
+// Schema-approved identifiers contain only printable ASCII without JSON escapes.
+fn quoted(t: &[]i64, p: i64) -> i64 {
+    discard io::put(34u8);
+    let mut i = std_json::get(t, p, 1);
+    let end = std_json::get(t, p, 2);
+    while i < end {
+        discard io::put(cast<u8>(read_slice(t, i)));
+        i += 1;
+    }
+    discard io::put(34u8);
+    return 0;
 }

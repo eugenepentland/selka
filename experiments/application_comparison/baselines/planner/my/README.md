@@ -1,8 +1,10 @@
 # Workflow planner: `.my` construction baseline
 
-This is an independent, **unscored construction baseline** for
-`contracts/workflow-planner-v1.md`. It has not read the coordinator oracle,
-other language baselines, or hidden cases.
+This is the **unscored, library-prepared baseline** for
+`contracts/workflow-planner-v1.md`. Its original construction was independent;
+the 2026-09-07 parity migration reviewed comparator source and public contracts.
+No timed trial or hidden-task acceptance is implied. Historical construction and
+calibration evidence remains under its original source/compiler identities.
 
 Run from the mylang repository:
 
@@ -16,50 +18,52 @@ rebuild is needed. Application dependencies are only the `.my` runtime and the
 three raw byte operations in `io.my`: input length, input byte, output byte.
 Python is used exclusively for independent subprocess tests; it is not imported, launched, or otherwise needed by the application.
 
-## Structure
+## Structure after library preparation
 
-- `main.my` validates the entire request before publishing any results.
-- `json.my` owns JSON syntax, depth, decoded-key uniqueness, UTF-8 and escapes,
-  signed 64-bit integer bounds, finite decimal-number validation, source-offset
-  comparisons, and output primitives. JSON values remain as offsets into the
-  immutable byte stream; identifiers are compared by decoded codepoints.
-- `schema.my` validates exact envelope/manifest/job fields and bounded arrays.
-- `planner.my` sorts identifiers with heapsort, resolves names with binary search,
-  completes each error phase, detects blocked jobs, and separately computes
-  lexicographic topological order, synchronous layers, and critical-path times.
-- `output.my` holds fixed report punctuation and error messages.
-- `test_cli.py` contains independent expected results and boundary tests.
-- `stress_cli.py` preserves upper-bound graph resource reproducers.
+- `main.my` reads bounded bytes with `std_text::read`, parses once using
+  `std_json::parse`, and validates the envelope before publishing results.
+- `json.my` contains application identifier predicates, thin standard-library
+  query/output adapters and quoting for schema-approved ASCII identifiers.
+  It no longer implements a JSON parser, UTF-8 decoder or decimal formatter.
+- `schema.my` validates exact envelope/manifest/job fields and bounded arrays
+  through standard JSON tape queries. Node zero represents a missing field.
+- `planner.my` resolves names, completes ordered validation phases and computes
+  the contractual lexicographic order, synchronous layers and critical-path times.
+  Its seven bounded scratch buffers use `std_collections::filled`.
+- `output.my` holds the fixed application report punctuation and error messages.
+- `test_cli.py` retains independent construction expectations and adds migration
+  boundaries; `stress_cli.py` preserves upper-bound resource reproducers.
 
-The guest intentionally retains no rich host-side representations. Graph storage
-is bounded by the contract: six 128-element owned working buffers and a 16,384-element
-owned scratch buffer (the maximum number of dependency references). Allocator authority enters through main; checked acquisition and resize failures
-return a nonzero status so the host discards buffered output. Schema validation
-finishes before graph buffers are allocated. Temporary dependency sorting uses a separate 128-element scratch
-buffer; source-order permutations therefore cannot change report order.
+The immutable JSON tape keeps decoded strings and typed numbers. General
+transport validation is supplied by the standard parser: strict scalar UTF-8,
+paired surrogate decoding, decoded duplicate-key rejection, signed 64-bit integer
+bounds, depth 64, and finite binary64 decimals including extreme underflow.
+The bounded `std_format` decimal parser is not used here. This migration does not
+move any planner policy into a native host bridge.
 
-Decimal floats are parsed without a floating-point type. A normalized decimal
-exponent detects gross overflow; the maximum exponent is compared exactly against
-the round-to-nearest binary64 overflow midpoint. Underflow and signed zero remain
-finite. Escaped UTF-16 surrogate pairs decode to a codepoint; unpaired escaped
-surrogates reject the entire request, following the clarified scalar-value contract.
-Raw UTF-8 surrogate encodings, overlong forms, and out-of-range scalars reject.
+Seven owned graph buffers have capacities 128 for IDs, durations, dependencies,
+completion state, finish times and temporary sorting, plus 16,384 for unknown
+references. The input is capped at 1 MiB; JSON tape storage is separately bounded
+by the standard parser. Allocation failure remains a nonzero application status
+for scratch allocation so the host discards buffered output. Input/parser errors
+produce the contract's whole-request error before any result publication.
 
 ## Validation and limits
 
 The independent suite covers the public example, empty graphs, all validation
 phases, downstream cycle blockage, numeric/UTF-8/escape errors, decoded duplicate
 keys, nesting 64/65, 64/65 manifests, 128/129 jobs, and a reversed 128-job chain.
-All ten test groups pass using the installed raw byte host. This is construction
+The original ten groups passed after the parser migration using the installed
+raw byte host; current migration evidence is recorded in
+[the parity audit](../../../../../docs/experiments/planner-stdlib-parity.md). This is construction
 validation, not scored evaluation or a claim about unseen cases.
 
-The parser rescans prior object members when checking duplicate keys, which can
-be quadratic for large schema-invalid objects. Graph name operations repeatedly
-read input bytes through the bridge. These are performance risks for adversarial
-near-1-MiB requests; no schema or transport limits have been reduced to hide them.
-Coordinator quotas still need feasibility review before a scored cohort is frozen.
+The historical parser's quadratic duplicate-key rescanning no longer applies.
+The current baseline still needs the full coordinator resource/isolation review
+and a frozen library-readiness matrix before timing. Passing public checks alone
+is not evidence of speed, low defect rates or scored readiness.
 
-## Construction resource evidence
+## Historical construction resource evidence (pre-migration)
 
 The preserved `stress_cli.py` maximum-distinct-unknown case contains 128 jobs with
 128 distinct missing references each (16,384 report IDs). During the initial

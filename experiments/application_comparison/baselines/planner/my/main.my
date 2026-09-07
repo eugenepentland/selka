@@ -3,27 +3,45 @@ import json;
 import schema;
 import planner;
 import output;
+import std_json;
+import std_text;
 fn main(heap: allocator) -> i64 {
-    if !json::valid() {
-        return output::invalid_request();
+    match std_text::read(heap, 1048576) {
+        std_json::Input.err(discard) => {
+            return output::invalid_request();
+        },
+        std_json::Input.ok(bytes) => {
+            match std_json::parse(heap, bytes, 1048576) {
+                std_json::Parsed.err(discard) => {
+                    return output::invalid_request();
+                },
+                std_json::Parsed.ok(document) => {
+                    borrow document[0..len_buffer(document)] as t {
+                        return request(heap, t);
+                    }
+                }
+            }
+        }
     }
-    let a = schema::envelope(json::ws(0));
+}
+fn request(heap: allocator, t: &[]i64) -> i64 {
+    let a = schema::envelope(t, 1);
     if a < 0 {
         return output::invalid_request();
     }
     discard output::results();
-    let mut p = json::ws(a + 1);
+    let mut p = a + 1;
     let mut n = 0;
-    while json::at(p) != 93 {
+    while p < json::next(t, a) {
         if n > 0 {
             discard output::comma();
         }
-        let status = planner::run(heap, p);
+        let status = planner::run(heap, t, p);
         if status != 0 {
             return status;
         }
         n += 1;
-        p = json::next(p);
+        p = json::next(t, p);
     }
     discard output::close();
     return 0;

@@ -1,117 +1,54 @@
 module schema;
 import json;
+import std_json;
 export field;
 export count;
 export manifest;
 export envelope;
-fn field(p: i64, name: &[]u8) -> i64 {
-    if json::at(p) != 123 {
-        return - 1;
-    }
-    let mut i = json::ws(p + 1);
-    while json::at(i) != 125 {
-        let k = i;
-        i = json::ws(json::skip(i, 0));
-        i = json::ws(i + 1);
-        if json::key(k, name) {
-            return i;
-        }
-        i = json::next(i);
-    }
-    return - 1;
+fn field(t: &[]i64, p: i64, name: &[]u8) -> i64 {
+    return std_json::field(t, p, name);
 }
-fn count(p: i64) -> i64 {
-    let c = json::at(p);
-    if c != 123 && c != 91 {
-        return - 1;
-    }
-    let mut end = 93;
-    if c == 123 {
-        end = 125;
-    }
-    let mut i = json::ws(p + 1);
-    let mut n = 0;
-    while json::at(i) != end {
-        if c == 123 {
-            i = json::ws(json::skip(i, 0));
-            i = json::ws(i + 1);
-        }
-        n += 1;
-        i = json::next(i);
-    }
-    return n;
+fn count(t: &[]i64, p: i64) -> i64 {
+    return std_json::get(t, p, 4);
 }
-fn envelope(p: i64) -> i64 {
-    if count(p) != 1 || json::at(p) != 123 {
+fn envelope(t: &[]i64, p: i64) -> i64 {
+    if std_json::get(t, p, 0) != 1 || count(t, p) != 1 {
         return - 1;
     }
-    let s = "cases";
-    let mut a = - 1;
-    borrow s[0..len(s)] as b {
-        a = field(p, b);
-    }
-    if a < 0 {
-        return - 1;
-    }
-    if json::at(a) != 91 || count(a) > 64 {
+    let a = field(t, p, "cases");
+    if std_json::get(t, a, 0) != 2 || count(t, a) > 64 {
         return - 1;
     }
     return a;
 }
-fn manifest(p: i64) -> i64 {
-    if json::at(p) != 123 || count(p) != 2 {
+fn manifest(t: &[]i64, p: i64) -> i64 {
+    if std_json::get(t, p, 0) != 1 || count(t, p) != 2 {
         return - 1;
     }
-    let ver = "version";
-    let jobs = "jobs";
-    let mut v = - 1;
-    let mut a = - 1;
-    borrow ver[0..len(ver)] as b {
-        v = field(p, b);
-    }
-    borrow jobs[0..len(jobs)] as b {
-        a = field(p, b);
-    }
-    if v < 0 || a < 0 {
+    let v = field(t, p, "version");
+    let a = field(t, p, "jobs");
+    if json::integer(t, v) != 1 || std_json::get(t, a, 0) != 2 || count(t, a) > 128 {
         return - 1;
     }
-    if json::integer(v) != 1 || json::at(a) != 91 || count(a) > 128 {
-        return - 1;
-    }
-    let mut i = json::ws(a + 1);
-    while json::at(i) != 93 {
-        if json::at(i) != 123 || count(i) != 3 {
+    let mut i = a + 1;
+    while i < json::next(t, a) {
+        if std_json::get(t, i, 0) != 1 || count(t, i) != 3 {
             return - 1;
         }
-        let id = "id";
-        let dur = "duration";
-        let needs = "needs";
-        let mut x = - 1;
-        let mut d = - 1;
-        let mut n = - 1;
-        borrow id[0..len(id)] as b {
-            x = field(i, b);
-        }
-        borrow dur[0..len(dur)] as b {
-            d = field(i, b);
-        }
-        borrow needs[0..len(needs)] as b {
-            n = field(i, b);
-        }
-        if x < 0 || d < 0 || n < 0 {
+        let x = field(t, i, "id");
+        let d = field(t, i, "duration");
+        let n = field(t, i, "needs");
+        if !json::identifier(t, x) || json::integer(t, d) < 0 || json::integer(t, d) > 1000000 || std_json::get(t, n, 0) != 2 || count(t, n) > 128 {
             return - 1;
         }
-        if !json::identifier(x) || json::integer(d) < 0 || json::integer(d) > 1000000 || json::at(n) != 91 || count(n) > 128 {
-            return - 1;
-        }
-        let mut j = json::ws(n + 1);
-        while json::at(j) != 93 {
-            if !json::identifier(j) {
+        let mut j = n + 1;
+        while j < json::next(t, n) {
+            if !json::identifier(t, j) {
                 return - 1;
             }
-            j = json::next(j);
+            j = json::next(t, j);
         }
-        i = json::next(i);
+        i = json::next(t, i);
     }
     return a;
 }

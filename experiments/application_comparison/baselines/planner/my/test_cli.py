@@ -38,6 +38,28 @@ class Contract(unittest.TestCase):
         self.assertEqual(call(b'{"cases":[{"version":1,"jobs":[{"id":"a","duration":-0,"needs":[]}]}]}',True)['results'][0]['makespan'],0)
     def test_escaped(self):
         self.assertEqual(call(b'{"cases":[{"version":1,"jobs":[{"id":"\\u0061","duration":0,"needs":[]}]}]}',True),call(dict(cases=[manifest([job('a',0)])])))
+    def test_standard_transport_boundaries(self):
+        # General transport must validate values before manifest schema rejection.
+        valid = [b'"\\ud83d\\ude00"', '"é"'.encode(), b'1e-9999', b'0e9999',
+                 b'-9223372036854775808', b'1.7976931348623158e308']
+        for value in valid:
+            with self.subTest(value=value):
+                self.assertEqual(call(b'{"cases":[' + value + b']}', True),
+                                 {'results': [{'error': 'invalid-manifest'}]})
+        for value in [b'{"x":0,"\\u0078":1}', b'"\\ud800"', b'"\\udc00"',
+                      b'9223372036854775808', b'1.7976931348623159e308']:
+            with self.subTest(value=value):
+                self.assertEqual(call(b'{"cases":[false,' + value + b']}', True),
+                                 {'error': 'invalid-request'})
+        prefix = b'{"cases":[]}'
+        self.assertEqual(call(prefix + b' ' * (1048576-len(prefix)), True),
+                         {'results': []})
+    def test_source_order_permutations(self):
+        import itertools
+        jobs = [job('z',5), job('b',2), job('a',3,['b']), job('c',0,['a','z'])]
+        expected = run(jobs)
+        for order in itertools.permutations(jobs):
+            self.assertEqual(run(list(order)), expected)
     def test_limits(self):
         self.assertEqual(len(call(dict(cases=[manifest([])]*64))['results']),64)
         self.assertEqual(call(dict(cases=[manifest([])]*65)),dict(error='invalid-request'))
