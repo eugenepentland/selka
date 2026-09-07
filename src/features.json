@@ -19,6 +19,8 @@
     "buffers",
     "pools",
     "lexical-borrows",
+    "whole-slice-borrows",
+    "grouped-lexical-borrows",
     "input-origin-reference-returns",
     "arenas",
     "capability-effects",
