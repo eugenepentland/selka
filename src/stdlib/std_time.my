@@ -11,47 +11,94 @@ export now;
 export add;
 export elapsed;
 export expired;
-struct Duration { nanoseconds:u64 }
-struct Instant { unix_nanoseconds:i64 }
-enum Error { overflow, reversed, unavailable, denied, failed }
-result Measured { ok:Instant, err:Error }
-result Span { ok:Duration, err:Error }
-result Sample { ok:i64, err:i64 }
-fn scaled(value:u64, factor:u64)->Span noalloc {
-    if value > 18446744073709551615u64 / factor { return new Span.err(new Error.overflow); }
-    return new Span.ok(new Duration{nanoseconds:value * factor});
+struct Duration {
+    nanoseconds: u64
 }
-fn seconds(value:u64)->Span noalloc { return scaled(value, 1000000000u64); }
-fn milliseconds(value:u64)->Span noalloc { return scaled(value, 1000000u64); }
-fn now(clock:clock_cap)->Measured effects(clock) {
+struct Instant {
+    unix_nanoseconds: i64
+}
+enum Error {
+    overflow,
+    reversed,
+    unavailable,
+    denied,
+    failed
+}
+result Measured {
+    ok: Instant,
+    err: Error
+}
+result Span {
+    ok: Duration,
+    err: Error
+}
+result Sample {
+    ok: i64,
+    err: i64
+}
+fn scaled(value: u64, factor: u64) -> Span noalloc {
+    if value > 18446744073709551615u64 / factor {
+        return new Span.err(new Error.overflow);
+    }
+    return new Span.ok(new Duration {
+        nanoseconds: value * factor
+    });
+}
+fn seconds(value: u64) -> Span noalloc {
+    return scaled(value, 1000000000u64);
+}
+fn milliseconds(value: u64) -> Span noalloc {
+    return scaled(value, 1000000u64);
+}
+fn now(clock: clock_cap) -> Measured effects(clock) {
     match clock_now<Sample>(clock) {
-        Sample.ok(value)=>{return new Measured.ok(new Instant{unix_nanoseconds:value});},
-        Sample.err(code)=>{
-            if code == 1 { return new Measured.err(new Error.unavailable); }
-            if code == 2 { return new Measured.err(new Error.denied); }
+        Sample.ok(value) => {
+            return new Measured.ok(new Instant {
+                unix_nanoseconds: value
+            });
+        },
+        Sample.err(code) => {
+            if code == 1 {
+                return new Measured.err(new Error.unavailable);
+            }
+            if code == 2 {
+                return new Measured.err(new Error.denied);
+            }
             return new Measured.err(new Error.failed);
         }
     }
 }
-fn index(value:i64)->u64 noalloc {
-    if value < 0 { return cast<u64>(value - (-9223372036854775808)); }
+fn index(value: i64) -> u64 noalloc {
+    if value < 0 {
+        return cast<u64>(value -(- 9223372036854775808));
+    }
     return 9223372036854775808u64 + cast<u64>(value);
 }
-fn instant(value:u64)->Instant noalloc {
+fn instant(value: u64) -> Instant noalloc {
     if value < 9223372036854775808u64 {
-        return new Instant{unix_nanoseconds:(-9223372036854775808) + cast<i64>(value)};
+        return new Instant {
+            unix_nanoseconds:(- 9223372036854775808) + cast<i64>(value)
+        };
     }
-    return new Instant{unix_nanoseconds:cast<i64>(value - 9223372036854775808u64)};
+    return new Instant {
+        unix_nanoseconds: cast<i64>(value - 9223372036854775808u64)
+    };
 }
-fn add(start:Instant, duration:Duration)->Measured noalloc {
+fn add(start: Instant, duration: Duration) -> Measured noalloc {
     let base = index(start.unix_nanoseconds);
-    if duration.nanoseconds > 18446744073709551615u64 - base { return new Measured.err(new Error.overflow); }
+    if duration.nanoseconds > 18446744073709551615u64 - base {
+        return new Measured.err(new Error.overflow);
+    }
     return new Measured.ok(instant(base + duration.nanoseconds));
 }
-fn elapsed(start:Instant, end:Instant)->Span noalloc {
-    if end.unix_nanoseconds < start.unix_nanoseconds { return new Span.err(new Error.reversed); }
-    return new Span.ok(new Duration{nanoseconds:index(end.unix_nanoseconds) - index(start.unix_nanoseconds)});
+fn elapsed(start: Instant, end: Instant) -> Span noalloc {
+    if end.unix_nanoseconds < start.unix_nanoseconds {
+        return new Span.err(new Error.reversed);
+    }
+    return new Span.ok(new Duration {
+        nanoseconds: index(end.unix_nanoseconds) - index(start.unix_nanoseconds)
+    });
 }
-fn expired(deadline:Instant, current:Instant)->bool noalloc {
+fn expired(deadline: Instant, current: Instant) -> bool noalloc {
     return current.unix_nanoseconds >= deadline.unix_nanoseconds;
 }

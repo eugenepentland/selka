@@ -1,57 +1,125 @@
 module main;
 import std_time as t;
 import std_random as r;
-fn main()->i64 {
+fn main() -> i64 {
     let first = r::next(r::seed(0u64));
-    if first.value != 16294208416658607535u64 { return 1; }
+    if first.value != 16294208416658607535u64 {
+        return 1;
+    }
     let second = r::next(first.generator);
-    if second.value != 7960286522194355700u64 { return 2; }
+    if second.value != 7960286522194355700u64 {
+        return 2;
+    }
     match r::bounded(r::seed(0u64), 10u64, 8u64) {
-        r::Bounded.ok(draw)=>{if draw.value != 5u64 {return 3;}},
-        r::Bounded.err(discard)=>{return 4;}
-    }
-    match r::bounded(r::seed(0u64), 0u64, 8u64) {
-        r::Bounded.ok(discard)=>{return 5;},
-        r::Bounded.err(e)=>{if e.error != new r::Error.invalid_bound {return 6;}}
-    }
-    match r::bounded(r::seed(0u64), 10u64, 0u64) {
-        r::Bounded.ok(discard)=>{return 7;},
-        r::Bounded.err(e)=>{if e.error != new r::Error.exhausted || e.generator.state != 0u64 {return 8;}}
-    }
-    match r::bounded(r::seed(3u64), 9223372036854775809u64, 1u64) {
-        r::Bounded.ok(discard)=>{return 22;},
-        r::Bounded.err(e)=>{
-            if e.error != new r::Error.exhausted || e.generator.state != r::next(r::seed(3u64)).generator.state {return 23;}
-        }
-    }
-    let earliest = new t::Instant{unix_nanoseconds:-9223372036854775808};
-    let latest = new t::Instant{unix_nanoseconds:9223372036854775807};
-    match t::elapsed(earliest, latest) {
-        t::Span.ok(d)=>{
-            if d.nanoseconds != 18446744073709551615u64 {return 9;}
-            match t::add(earliest, d) {
-                t::Measured.ok(end)=>{if end.unix_nanoseconds != latest.unix_nanoseconds {return 10;}},
-                t::Measured.err(discard)=>{return 11;}
+        r::Bounded.ok(draw) => {
+            if draw.value != 5u64 {
+                return 3;
             }
         },
-        t::Span.err(discard)=>{return 12;}
+        r::Bounded.err(discard) => {
+            return 4;
+        }
     }
-    match t::add(latest, new t::Duration{nanoseconds:1u64}) {
-        t::Measured.ok(discard)=>{return 13;},
-        t::Measured.err(e)=>{if e != new t::Error.overflow {return 14;}}
+    match r::bounded(r::seed(0u64), 0u64, 8u64) {
+        r::Bounded.ok(discard) => {
+            return 5;
+        },
+        r::Bounded.err(e) => {
+            if e.error != new r::Error.invalid_bound {
+                return 6;
+            }
+        }
+    }
+    match r::bounded(r::seed(0u64), 10u64, 0u64) {
+        r::Bounded.ok(discard) => {
+            return 7;
+        },
+        r::Bounded.err(e) => {
+            if e.error != new r::Error.exhausted || e.generator.state != 0u64 {
+                return 8;
+            }
+        }
+    }
+    match r::bounded(r::seed(3u64), 9223372036854775809u64, 1u64) {
+        r::Bounded.ok(discard) => {
+            return 22;
+        },
+        r::Bounded.err(e) => {
+            if e.error != new r::Error.exhausted || e.generator.state != r::next(r::seed(3u64)).generator.state {
+                return 23;
+            }
+        }
+    }
+    let earliest = new t::Instant {
+        unix_nanoseconds: - 9223372036854775808
+    };
+    let latest = new t::Instant {
+        unix_nanoseconds: 9223372036854775807
+    };
+    match t::elapsed(earliest, latest) {
+        t::Span.ok(d) => {
+            if d.nanoseconds != 18446744073709551615u64 {
+                return 9;
+            }
+            match t::add(earliest, d) {
+                t::Measured.ok(end) => {
+                    if end.unix_nanoseconds != latest.unix_nanoseconds {
+                        return 10;
+                    }
+                },
+                t::Measured.err(discard) => {
+                    return 11;
+                }
+            }
+        },
+        t::Span.err(discard) => {
+            return 12;
+        }
+    }
+    match t::add(latest, new t::Duration {
+        nanoseconds: 1u64
+    }) {
+        t::Measured.ok(discard) => {
+            return 13;
+        },
+        t::Measured.err(e) => {
+            if e != new t::Error.overflow {
+                return 14;
+            }
+        }
     }
     match t::elapsed(latest, earliest) {
-        t::Span.ok(discard)=>{return 15;},
-        t::Span.err(e)=>{if e != new t::Error.reversed {return 16;}}
+        t::Span.ok(discard) => {
+            return 15;
+        },
+        t::Span.err(e) => {
+            if e != new t::Error.reversed {
+                return 16;
+            }
+        }
     }
     match t::seconds(18446744073709551615u64) {
-        t::Span.ok(discard)=>{return 17;},
-        t::Span.err(e)=>{if e != new t::Error.overflow {return 18;}}
+        t::Span.ok(discard) => {
+            return 17;
+        },
+        t::Span.err(e) => {
+            if e != new t::Error.overflow {
+                return 18;
+            }
+        }
     }
     match t::milliseconds(42u64) {
-        t::Span.ok(d)=>{if d.nanoseconds != 42000000u64 {return 19;}},
-        t::Span.err(discard)=>{return 20;}
+        t::Span.ok(d) => {
+            if d.nanoseconds != 42000000u64 {
+                return 19;
+            }
+        },
+        t::Span.err(discard) => {
+            return 20;
+        }
     }
-    if !t::expired(earliest, latest) || t::expired(latest, earliest) {return 21;}
+    if !t::expired(earliest, latest) || t::expired(latest, earliest) {
+        return 21;
+    }
     return 0;
 }

@@ -1,34 +1,64 @@
 module main;
 import std_time as t;
 import std_random as r;
-fn main(clock:clock_cap, random:random_cap)->i64 {
+fn main(clock: clock_cap, random: random_cap) -> i64 {
     match t::now(clock) {
-        t::Measured.ok(value)=>{if value.unix_nanoseconds != -7 {return 1;}},
-        t::Measured.err(e)=>{
-            if e == new t::Error.denied {return 42;}
-            if e == new t::Error.unavailable {return 43;}
+        t::Measured.ok(value) => {
+            if value.unix_nanoseconds != - 7 {
+                return 1;
+            }
+        },
+        t::Measured.err(e) => {
+            if e == new t::Error.denied {
+                return 42;
+            }
+            if e == new t::Error.unavailable {
+                return 43;
+            }
             return 44;
         }
     }
-    let mut bytes = new [10]u8 [0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8,0u8];
+    let mut bytes = new [10]u8[0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8, 0u8];
     borrow mut bytes[0..10] as view {
         match r::fill(random, view) {
-            r::Filled.ok(written)=>{if written != 10u64 {return 2;}},
-            r::Filled.err(e)=>{
-                if e.written != 8u64 || e.error != new r::Error.failed {return 3;}
-                if read_slice(view, 0u64) != 8u8 || read_slice(view, 7u64) != 1u8 || read_slice(view, 8u64) != 0u8 {return 4;}
+            r::Filled.ok(written) => {
+                if written != 10u64 {
+                    return 2;
+                }
+            },
+            r::Filled.err(e) => {
+                if e.written != 8u64 || e.error != new r::Error.failed {
+                    return 3;
+                }
+                if read_slice(view, 0u64) != 8u8 || read_slice(view, 7u64) != 1u8 || read_slice(view, 8u64) != 0u8 {
+                    return 4;
+                }
                 return 45;
             }
         }
-        if read_slice(view, 0u64) != 8u8 || read_slice(view, 7u64) != 1u8 || read_slice(view, 8u64) != 8u8 {return 5;}
+        if read_slice(view, 0u64) != 8u8 || read_slice(view, 7u64) != 1u8 || read_slice(view, 8u64) != 8u8 {
+            return 5;
+        }
     }
     match r::entropy_bounded(random, 10u64, 4u64) {
-        r::Sample.ok(n)=>{if n != 6u64 {return 6;}},
-        r::Sample.err(discard)=>{return 7;}
+        r::Sample.ok(n) => {
+            if n != 6u64 {
+                return 6;
+            }
+        },
+        r::Sample.err(discard) => {
+            return 7;
+        }
     }
     match r::seed_from_entropy(random) {
-        r::Seeded.ok(g)=>{if g.state != 72623859790382856u64 {return 8;}},
-        r::Seeded.err(discard)=>{return 9;}
+        r::Seeded.ok(g) => {
+            if g.state != 72623859790382856u64 {
+                return 8;
+            }
+        },
+        r::Seeded.err(discard) => {
+            return 9;
+        }
     }
     return 0;
 }
