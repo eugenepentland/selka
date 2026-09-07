@@ -27,7 +27,8 @@ def main():
         text = (ROOT / 'docs' / document).read_text()
         source = re.search(r'```(?:mylang|my)\n(.*?)\n```', text, re.S).group(1)
         examples.append((document, source, expected, None))
-    examples.append(('split-borrows.my', (ROOT / 'examples/split-borrows.my').read_text(), '39\n', None))
+    for path, expected in [('split-borrows.my', '39\n'), ('callbacks.my', '17\n'), ('callback-collections/main.my', '82\n')]:
+        examples.append((path, (ROOT / 'examples' / path).read_text(), expected, None))
     examples.extend([
         ('builtin-f64-excluded', 'fn main()->f64{return 0;}', '', 'E_UNKNOWN_TYPE'),
         ('stored-references-excluded', 'struct View{value:&i64}fn main()->i64{return 0;}', '', 'E_TYPE'),
