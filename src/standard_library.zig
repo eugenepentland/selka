@@ -15,5 +15,11 @@ pub fn source(path: []const u8) ?[]const u8 {
     if (std.mem.eql(u8, path, "std_unit.my")) return @embedFile("stdlib/std_unit.my");
     if (std.mem.eql(u8, path, "std_time.my")) return @embedFile("stdlib/std_time.my");
     if (std.mem.eql(u8, path, "std_random.my")) return @embedFile("stdlib/std_random.my");
+    if (std.mem.eql(u8, path, "std_hash.my")) return @embedFile("stdlib/std_hash.my");
+    if (std.mem.eql(u8, path, "std_hash_map.my")) return @embedFile("stdlib/std_hash_map.my");
+    if (std.mem.eql(u8, path, "std_hash_bytes.my")) return @embedFile("stdlib/std_hash_bytes.my");
+    if (std.mem.eql(u8, path, "std_borrowed_set.my")) return @embedFile("stdlib/std_borrowed_set.my");
+    if (std.mem.eql(u8, path, "std_hash_set.my")) return @embedFile("stdlib/std_hash_set.my");
+    if (std.mem.eql(u8, path, "std_hash_byte_set.my")) return @embedFile("stdlib/std_hash_byte_set.my");
     return null;
 }

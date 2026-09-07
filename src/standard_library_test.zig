@@ -83,3 +83,31 @@ test "standard generic results cannot be silently ignored" {
         0,
     ));
 }
+
+// spec: STANDARD-MODULES-8
+test "borrowed collection mutations are bounded stable and preserve owners" {
+    try runLibrary(@embedFile("stdlib/fixtures/collection_borrows.my"), 42);
+}
+
+// spec: STANDARD-MODULES-9
+test "hash collections probe full tables tombstones replacements and byte keys" {
+    try runLibrary(@embedFile("stdlib/fixtures/hash_collections.my"), 42);
+}
+
+fn collectionFailureRun(allocator: std.mem.Allocator, code: language.bytecode.Program) !void {
+    var statistics: language.memory.Statistics = .{};
+    const outcome = language.vm.runWithOptions(allocator, code, .{ .memory = .{ .statistics = &statistics } });
+    try t.expectEqual(@as(usize, 0), statistics.live_allocations);
+    try t.expectEqual(statistics.created, statistics.released);
+    try t.expectEqual(@as(i64, 42), (try outcome).value);
+}
+test "collection owners unwind cleanly on every runtime allocation failure" {
+    for ([_][]const u8{ @embedFile("stdlib/fixtures/collection_borrows.my"), @embedFile("stdlib/fixtures/hash_collections.my") }) |text| {
+        var fixture: Fixture = .{ .text = text };
+        var program: language.embedded_project.Program = undefined;
+        try program.init(t.allocator, .{ .context = &fixture, .read = Fixture.load });
+        defer program.deinit();
+        var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+        try t.checkAllAllocationFailures(no_resize.allocator(), collectionFailureRun, .{program.compilation.code.?});
+    }
+}

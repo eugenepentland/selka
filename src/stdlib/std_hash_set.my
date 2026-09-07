@@ -1,0 +1,46 @@
+module std_hash_set;
+import std_hash_map as m;
+import std_map as linear;
+import std_collections as c;
+export Set;
+export Created;
+export create;
+export contains;
+export insert;
+export remove;
+export clear;
+export count;
+type Set = m::Map<bool>;
+type Created = m::Created<bool>;
+fn create(heap: allocator, capacity: u64) -> Created {
+    return m::create::< bool >(heap, capacity);
+}
+fn contains(set: &Set, value: u64) -> bool noalloc {
+    match m::lookup::< bool >(set, value) {
+        linear::Value<bool>.none => {
+            return false;
+        },
+        linear::Value<bool>.some(discard) => {
+            return true;
+        }
+    }
+}
+fn insert(set: &mut Set, value: u64) -> linear::PutStatus noalloc {
+    return m::put::< bool >(set, value, true);
+}
+fn remove(set: &mut Set, value: u64) -> bool noalloc {
+    match m::remove::< bool >(set, value) {
+        linear::Value<bool>.none => {
+            return false;
+        },
+        linear::Value<bool>.some(discard) => {
+            return true;
+        }
+    }
+}
+fn clear(set: &mut Set) -> c::Status noalloc {
+    return m::clear::< bool >(set);
+}
+fn count(set: &Set) -> u64 noalloc {
+    return m::count::< bool >(set);
+}

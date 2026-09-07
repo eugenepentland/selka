@@ -1,0 +1,166 @@
+module std_hash_map;
+import std_hash as h;
+import std_collections as c;
+import std_map as m;
+export Entry;
+export Slot;
+export Map;
+export Created;
+export create;
+export lookup;
+export put;
+export remove;
+export clear;
+export count;
+struct Entry<V: copy> {
+    key: u64,
+    value: V
+}
+union Slot<V: copy> {
+    empty,
+    deleted,
+    occupied: Entry<V>
+}
+buffer Map < V: copy >: Slot<V>;
+result Created<V: copy> {
+    ok: Map<V>,
+    err: i64
+}
+fn create < V: copy >(heap: allocator, capacity: u64) -> Created<V> {
+    let mut map = try acquire_buffer<Created<V>>(heap, capacity);
+    discard try resize_buffer<c::Status>(map, capacity, new Slot<V>.empty);
+    return new Created<V>.ok(map);
+}
+fn lookup < V: copy >(map: &Map<V>, key: u64) -> m::Value<V> noalloc {
+    let capacity = len_buffer(map);
+    if capacity == 0u64 {
+        return new m::Value<V>.none;
+    }
+    let start = h::integer(key) % capacity;
+    let mut step = 0u64;
+    while step < capacity {
+        let i =(start + step) % capacity;
+        match read_buffer(map, i) {
+            Slot<V>.empty => {
+                return new m::Value<V>.none;
+            },
+            Slot<V>.deleted => {},
+            Slot<V>.occupied(e) => {
+                if e.key == key {
+                    return new m::Value<V>.some(e.value);
+                }
+            }
+        }
+        step += 1u64;
+    }
+    return new m::Value<V>.none;
+}
+fn put < V: copy >(map: &mut Map<V>, key: u64, value: V) -> m::PutStatus noalloc {
+    let capacity = len_buffer(map);
+    if capacity == 0u64 {
+        return new m::PutStatus.full;
+    }
+    let start = h::integer(key) % capacity;
+    let mut step = 0u64;
+    let mut vacant = capacity;
+    while step < capacity {
+        let i =(start + step) % capacity;
+        match read_buffer(map, i) {
+            Slot<V>.empty => {
+                if vacant == capacity {
+                    vacant = i;
+                }
+                break;
+            },
+            Slot<V>.deleted => {
+                if vacant == capacity {
+                    vacant = i;
+                }
+            },
+            Slot<V>.occupied(e) => {
+                if e.key == key {
+                    match write_buffer<c::Status>(map, i, new Slot<V>.occupied(new Entry<V> {
+                        key: key,
+                        value: value
+                    })) {
+                        c::Status.ok(discard) => {
+                            return new m::PutStatus.replaced;
+                        },
+                        c::Status.err(discard) => {
+                            return new m::PutStatus.full;
+                        }
+                    }
+                }
+            }
+        }
+        step += 1u64;
+    }
+    if vacant == capacity {
+        return new m::PutStatus.full;
+    }
+    match write_buffer<c::Status>(map, vacant, new Slot<V>.occupied(new Entry<V> {
+        key: key,
+        value: value
+    })) {
+        c::Status.ok(discard) => {
+            return new m::PutStatus.inserted;
+        },
+        c::Status.err(discard) => {
+            return new m::PutStatus.full;
+        }
+    }
+}
+fn remove < V: copy >(map: &mut Map<V>, key: u64) -> m::Value<V> noalloc {
+    let capacity = len_buffer(map);
+    if capacity == 0u64 {
+        return new m::Value<V>.none;
+    }
+    let start = h::integer(key) % capacity;
+    let mut step = 0u64;
+    while step < capacity {
+        let i =(start + step) % capacity;
+        match read_buffer(map, i) {
+            Slot<V>.empty => {
+                return new m::Value<V>.none;
+            },
+            Slot<V>.deleted => {},
+            Slot<V>.occupied(e) => {
+                if e.key == key {
+                    match write_buffer<c::Status>(map, i, new Slot<V>.deleted) {
+                        c::Status.ok(discard) => {
+                            return new m::Value<V>.some(e.value);
+                        },
+                        c::Status.err(discard) => {
+                            return new m::Value<V>.none;
+                        }
+                    }
+                }
+            }
+        }
+        step += 1u64;
+    }
+    return new m::Value<V>.none;
+}
+fn clear < V: copy >(map: &mut Map<V>) -> c::Status noalloc {
+    let mut i = 0u64;
+    while i < len_buffer(map) {
+        discard try write_buffer<c::Status>(map, i, new Slot<V>.empty);
+        i += 1u64;
+    }
+    return new c::Status.ok(true);
+}
+fn count < V: copy >(map: &Map<V>) -> u64 noalloc {
+    let mut total = 0u64;
+    let mut i = 0u64;
+    while i < len_buffer(map) {
+        match read_buffer(map, i) {
+            Slot<V>.empty => {},
+            Slot<V>.deleted => {},
+            Slot<V>.occupied(discard) => {
+                total += 1u64;
+            }
+        }
+        i += 1u64;
+    }
+    return total;
+}

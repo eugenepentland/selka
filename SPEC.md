@@ -369,3 +369,5 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [STANDARD-TIME-RANDOM-3] Standard provider wrappers preserve source effect ceilings; rejection sampling honors the caller's maximum draw count and empty entropy fills perform no reads.
 
 - [TYPE-ALIAS-SCHEMA-1] Exported transparent aliases retain their checked canonical target in public schemas and native interfaces, including scalar, array, chained and concrete generic targets.
+- [STANDARD-MODULES-8] Borrowed map operations preserve the map owner; bounded vector append-many is unchanged on insufficient capacity, deduplication and filtering retain input order, and clear accepts empty vectors.
+- [STANDARD-MODULES-9] Bounded hash tables handle collisions, tombstone reuse, replacement in full tables, and byte keys by content; full insertion preserves existing values and physical slot iteration is deterministic.
