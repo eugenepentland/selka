@@ -57,3 +57,9 @@ pub const Dispatch = *const fn (
     []const typed.Value,
     InvokeOptions,
 ) InvokeError!ValueResult;
+
+/// Context-bearing synchronous dispatch for compiled providers with no global binding.
+pub const Contextual = struct {
+    context: *anyopaque,
+    dispatch: *const fn (*anyopaque, std.mem.Allocator, @import("bytecode_model.zig").Program, typed.FunctionId, []const typed.Value, InvokeOptions) InvokeError!ValueResult,
+};

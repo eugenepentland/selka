@@ -1,0 +1,33 @@
+buffer Bytes:u8;
+struct Wire{n:i64}
+result DomainRead{ok:Positive,err:i64}
+result Encoded{ok:Bytes,err:i64}
+result Decoded{ok:Positive,err:i64}
+domain Positive:i64{
+    codec Wire{decode:from_wire,encode:to_wire}
+    fn make(n:i64)->Positive{return wrap<Positive>(n);}
+    fn from_wire(w:Wire)->DomainRead{
+        if w.n==-2{return new DomainRead.ok(wrap<Positive>(1/(w.n+2)));}
+        if w.n<=0{return new DomainRead.err(99);}
+        return new DomainRead.ok(wrap<Positive>(w.n));
+    }
+    fn to_wire(p:Positive)->Wire{
+        let n=unwrap(p);
+        if n==-1{return new Wire{n:1/(n+1)};}
+        return new Wire{n:n};
+    }
+    fn value(p:Positive)->i64{return unwrap(p);}
+}
+fn work(heap:allocator,n:i64)->Decoded{
+    let bytes=try json_encode::<Encoded>(heap,Positive.make(n),4096);
+    return json_decode::<Decoded>(heap,bytes,4096);
+}
+fn checked(heap:allocator,n:i64)->i64{
+    match work(heap,n){Decoded.ok(p)=>{return Positive.value(p);},Decoded.err(e)=>{return e;}}
+}
+fn main(heap:allocator)->i64{
+    if checked(heap,0)!=3{return -1;}
+    if checked(heap,-1)!=3{return -2;}
+    if checked(heap,-2)!=3{return -3;}
+    return checked(heap,42);
+}

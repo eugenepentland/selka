@@ -40,8 +40,22 @@ pub const Shape = extern struct {
     flags: c_uint,
 };
 /// Compiled type identity and bounded byte budget for one conversion.
-pub const Request = extern struct { shapes: [*]const Shape, count: usize, ty: usize, limit: usize };
+pub const Request = extern struct { shapes: [*]const Shape, count: usize, ty: usize, limit: usize, execution: ?*const Execution = null };
 /// Either source bytes or copied argument nodes for one conversion.
 pub const Input = extern struct { bytes: ?[*]const u8, length: usize, nodes: ?[*]const Node, count: usize };
 /// Transferred output allocation and charged traversal work.
 pub const Output = extern struct { data: ?*anyopaque = null, count: usize = 0, work: u64 = 0 };
+
+/// Compiler-selected codec identities and their checked result types.
+pub const Codec = extern struct { domain: usize, wire: usize, decode: usize, encode: usize, result: usize };
+/// One isolated compiled call with copied arguments and remaining operation quotas.
+pub const Call = extern struct { function: usize, input_type: usize, output_type: usize, nodes: [*]const Node, count: usize, steps: u64, frames: u64 };
+/// Compiler-owned codec catalog and synchronous compiled invocation callback.
+pub const Execution = extern struct {
+    codecs: [*]const Codec,
+    count: usize,
+    invoke: *const fn (*const Call, *Output) callconv(.c) c_int,
+    release: *const fn (?*anyopaque) callconv(.c) void,
+    steps: u64,
+    frames: u64,
+};

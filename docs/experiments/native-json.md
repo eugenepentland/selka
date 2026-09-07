@@ -33,9 +33,23 @@ allocator. Every allocation-failure position is checked for cleanup.
 
 The typed parity suite adds 12 value/error and 48 step-budget comparisons across
 Debug and ReleaseFast, including nested variants and zero-length arrays. Domain
-codec execution is still rejected before emission: implementing it requires
-compiled codec calls and recoverable traps with preserved caller state. Thus
-native coverage of the current language remains incomplete.
+codecs now invoke the compiler-selected machine-code methods with copied arguments
+and results. Each call owns separate operand, frame and aggregate registries, so
+rejections and arithmetic traps release only that invocation and preserve the
+surrounding JSON operation. The bridge passes no providers or allocation authority.
+As with authority-free VM invocation, programs containing host declarations yield
+a domain failure instead of accessing the enclosing host registry.
+
+Codec calls share the operation's 256-call budget, remaining instruction budget
+and remaining frame budget after counting caller frames. Domain rejections and
+ordinary codec traps return error 3; frame and instruction exhaustion remain
+runtime traps. The trap recovery jump stays within C and never crosses Zig stack
+frames. `tests/native_domain_json.py` checks rejection/trap recovery followed by a
+successful call, call-budget exhaustion, recursive codecs, 114 step/frame parity
+cases, and 238 allocation injection positions with subsequent successful reuse.
+The allocation sweep runs with ASan/UBSan at O0 and O2. A failed resize may safely
+fall back to a fresh allocation; every run must either complete correctly or
+report OutOfMemory, and release all tracked allocations.
 
 `tests/native_json_benchmark.py --compiler zig-out/bin/mylang --zig PATH` measures
 200 nested composite roundtrips, checks the same checksum, and reports three-sample

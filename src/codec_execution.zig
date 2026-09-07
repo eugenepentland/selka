@@ -71,7 +71,7 @@ pub const Failure = struct {
     }
 };
 /// Checked program paired with its authority-free invocation implementation.
-pub const Backend = struct { program: @import("bytecode.zig").Program, dispatch: invocation.Dispatch };
+pub const Backend = struct { program: @import("bytecode.zig").Program, dispatch: ?invocation.Dispatch = null, contextual: ?invocation.Contextual = null };
 /// Shares guest instruction and invocation quotas across a complete codec operation.
 pub const Execution = struct {
     backend: Backend,
@@ -87,7 +87,13 @@ pub const Execution = struct {
         self.used.calls += 1;
         var executed: u64 = 0;
         defer self.used.steps += executed;
-        const result = try self.backend.dispatch(allocator, self.backend.program, id, inputs, .{ .max_steps = self.max_steps - self.used.steps, .max_frames = self.max_frames, .arguments = self.arguments, .steps_executed = &executed });
+        const options: invocation.InvokeOptions = .{ .max_steps = self.max_steps - self.used.steps, .max_frames = self.max_frames, .arguments = self.arguments, .steps_executed = &executed };
+        const result = if (self.backend.contextual) |contextual|
+            try contextual.dispatch(contextual.context, allocator, self.backend.program, id, inputs, options)
+        else if (self.backend.dispatch) |dispatch|
+            try dispatch(allocator, self.backend.program, id, inputs, options)
+        else
+            return error.InternalError;
         return switch (result) {
             .value => |value| value,
             .trap => |trap| {

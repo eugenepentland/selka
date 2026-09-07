@@ -144,7 +144,7 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     try w.writeAll(@embedFile("native_resources.c"));
     try @import("native_host.zig").emit(w, layout, program);
     if (hasJsonSupport(program)) {
-        try @import("native_json_schema.zig").emit(w, program.records);
+        try @import("native_json_schema.zig").emit(w, program);
         try w.writeAll(@embedFile("native_json.c"));
     }
     try writeInterface(w, interface.schema);
@@ -163,9 +163,9 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
         try string(w, src.locate(ins.span.start).path);
         try w.writeAll(",\n");
     };
-    try w.writeAll("};\n#ifdef MYLANG_EMBED\nstatic int execute_entry(const char *entry_name, const MylangScalar *arguments, size_t argument_count, size_t codec_entry) {\n" ++
-        "#else\nint main(int argc, char **argv) {\n#endif\nsource_paths = paths; function_names = names; source_lines = lines; source_columns = columns;\n" ++
-        "#ifndef MYLANG_EMBED\noptions(argc, argv); providers = mylang_native_providers();\n#endif\nvalidate_resource_providers(); size_t return_target = 0;\n");
+    try w.writeAll("};\nstatic int execute_entry(const char *entry_name, const MylangScalar *arguments, size_t argument_count, size_t codec_entry) {\n" ++
+        "source_paths = paths; function_names = names; source_lines = lines; source_columns = columns;\n" ++
+        "validate_resource_providers(); size_t return_target = 0;\n");
     try writeCodecDispatch(allocator, w, program, offsets);
     try w.writeAll("host_begin();\n");
     try writeExports(w, program, offsets, interface.roots, wire_types, codec_types);
@@ -207,6 +207,8 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
         try w.print("case {d}: goto L{d};\n", .{ offset + pc + 1, offset + pc + 1 });
     };
     try w.writeAll("default: host_failure(\"InternalError\"); } return 2;\n}\n");
+    if (hasJsonSupport(program)) try w.writeAll(@embedFile("native_json_call.c"));
+    try w.writeAll("#ifndef MYLANG_EMBED\nint main(int argc,char **argv) { options(argc,argv);providers=mylang_native_providers();return execute_entry(NULL,NULL,0,SIZE_MAX); }\n#endif\n");
     try w.writeAll(@embedFile("native_embed.c"));
     return output.toOwnedSlice();
 }
@@ -222,14 +224,14 @@ fn writeCodecDispatch(allocator: std.mem.Allocator, w: *std.Io.Writer, program: 
         selected[decode] = true;
         selected[encode] = true;
     };
-    try w.writeAll("#ifdef MYLANG_EMBED\nconst size_t return_depth = nf;\nif (codec_entry != SIZE_MAX) { switch (codec_entry) {\n");
+    try w.writeAll("const size_t return_depth = nf;\nif (codec_entry != SIZE_MAX) { switch (codec_entry) {\n");
     for (program.functions, offsets, selected) |function, offset, enabled| {
         if (!enabled) continue;
         try w.print("case {d}:\n", .{@backingInt(function.id)});
         try enter(w, function, 0);
         try w.print(jump_format, .{offset});
     }
-    try w.writeAll("default: host_failure(\"InternalError\"); } }\n#endif\n");
+    try w.writeAll("default: host_failure(\"InternalError\"); } }\n");
 }
 
 fn writeInterface(w: *std.Io.Writer, schema: ?[]const u8) !void {
@@ -300,14 +302,7 @@ fn checkFunction(layout: native_layout.Layout, function: bc.Function, sink: *dia
     for (function.scope.locals) |local| if (!layout.supports(local.ty)) return sink.fail(unsupported_feature, local.declaration, "native execution requires supported value locals and parameters");
     for (function.scope.references) |reference| if (!layout.supports(reference.ty)) return sink.fail(unsupported_feature, reference.declaration, "native references require supported value types");
     for (function.scope.instructions) |instruction| switch (instruction.op) {
-        .cmp_domain => {},
-        .json_codec => |operation| if (!operation.document) {
-            const value = if (operation.decode) typed.resultShape(operation.output, layout.records).?.ok_type else operation.input;
-            @import("data_type.zig").check(layout.allocator, layout.records, value, false) catch |err| {
-                if (err == error.OutOfMemory) return error.OutOfMemory;
-                return sink.fail(unsupported_feature, instruction.span, "native source JSON domain codecs require compiled codec invocation support");
-            };
-        },
+        .cmp_domain, .json_codec => {},
         .make_variant => |variant| {
             if (!layout.supports(variant.ty)) return sink.fail(unsupported_feature, instruction.span, "native variant representation requires supported payloads");
         },
@@ -663,7 +658,7 @@ fn writeOperation(context: InstructionOutput) !bool {
         },
         .ret => {
             try w.writeAll("Slot result = pop_value(); size_t target = leave(result);\n" ++
-                "#ifdef MYLANG_EMBED\nif (nf == return_depth) { if (codec_entry != SIZE_MAX) return 0;\n" ++
+                "if (nf == return_depth && codec_entry != SIZE_MAX) return 0;\n#ifdef MYLANG_EMBED\nif (nf == return_depth) {\n" ++
                 "wire_finish(result); native_value = (int64_t)result.number; native_bits = (uint64_t)(U)result.number; cleanup(); return 0; }\n" ++
                 "#else\nif (!nf) { printf(\"%\" PRId64 \"\\n\", (int64_t)result.number); cleanup(); return 0; }\n#endif\n" ++
                 "return_target = target; goto dispatch_return;\n");
@@ -688,7 +683,20 @@ fn hasJsonSupport(program: bc.Program) bool {
 
 fn writeJsonSupport(w: *std.Io.Writer) error{WriteFailed}!void {
     var hash = std.crypto.hash.sha2.Sha256.init(.{});
-    inline for (.{ "native_json_bridge.zig", "native_json_abi.zig", "native_typed_json.zig", "json_document.zig", "typed_json.zig", "codec_memory.zig", "typed.zig", "runtime_values.zig" }) |path| {
+    inline for (.{
+        "native_json_bridge.zig",
+        "native_json_abi.zig",
+        "native_typed_json.zig",
+        "native_json_calls.zig",
+        "native_json_values.zig",
+        "codec_execution.zig",
+        "invocation_contract.zig",
+        "json_document.zig",
+        "typed_json.zig",
+        "codec_memory.zig",
+        "typed.zig",
+        "runtime_values.zig",
+    }) |path| {
         hash.update(path);
         hash.update("\x00");
         hash.update(@embedFile(path));

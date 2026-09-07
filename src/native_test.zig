@@ -364,11 +364,12 @@ test "native host composite parity fixture has an independent VM result" {
     defer t.allocator.free(generated);
 }
 // spec: NATIVE-JSON-3
-test "native checkFunction keeps domain JSON codecs explicitly unsupported" {
+test "native checkFunction accepts compiled domain JSON codecs" {
     var compilation = try language.Compilation.init(t.allocator, "domain-json.my", "buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}result R{ok:D,err:i64}" ++
         "domain D:i64{codec i64{decode:dec,encode:enc}fn dec(n:i64)->R{return new R.ok(wrap<D>(n));}fn enc(v:D)->i64{return unwrap(v);}}" ++
         "fn main(heap:allocator)->i64{match D.dec(1){R.err(e)=>{return e;},R.ok(v)=>{acknowledge json_encode::<Encoded>(heap,v,100);return 0;}}}");
     defer compilation.deinit();
-    try t.expectError(error.SourceError, compilation.emitC(t.allocator));
-    try t.expectEqualStrings("E_NATIVE_FEATURE", compilation.diagnostics.items[compilation.diagnostics.items.len - 1].code);
+    const output = try compilation.emitC(t.allocator);
+    defer t.allocator.free(output);
+    try t.expect(output.len > 0);
 }

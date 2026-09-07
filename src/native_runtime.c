@@ -9,14 +9,18 @@
 #if !defined(MYLANG_NATIVE_PROVIDER) && !defined(MYLANG_EMBED)
 MylangNativeProviders mylang_native_providers(void) { return (MylangNativeProviders){0}; }
 #endif
-#ifdef MYLANG_EMBED
 #include <setjmp.h>
+#ifdef MYLANG_EMBED
 #include <stdatomic.h>
 static jmp_buf entry_escape;
 static MylangRunResult *active_result;
 static int64_t native_value;
 static uint64_t native_bits;
 static const char *native_type;
+#endif
+#ifdef MYLANG_NATIVE_JSON
+typedef struct { jmp_buf escape;const char *code;int host; } NativeCodecEscape;
+static NativeCodecEscape *codec_escape;
 #endif
 static MylangNativeProviders providers;
 typedef __int128 V;
@@ -99,11 +103,7 @@ static void cleanup_native_json(void);
 /* References not held by an aggregate, operand, or local belong to in-flight
    C temporaries. Registry order records their most recent acquisition, rather
    than only object allocation order. No cleanup bookkeeping allocates. */
-static void cleanup(void) {
-#ifdef MYLANG_NATIVE_JSON
-    cleanup_native_json();
-#endif
-    release_pending_resource();
+static void cleanup_values(void) {
     for (Aggregate *object = objects; object; object = object->next)
         object->unwind_refs = object->refs;
     for (Aggregate *object = objects; object; object = object->next)
@@ -133,12 +133,22 @@ static void cleanup(void) {
             release_value(frame->locals[--i].value);
         free(frame->references); free(frame->locals);
     }
-    cleanup_resources();
-    for (size_t i = 0; i < 256; ++i) clear_region_chunks(&regions[i]);
     free(frames); free(values);
     frames = NULL; values = NULL; cf = 0; cv = 0;
 }
+static void cleanup(void) {
+#ifdef MYLANG_NATIVE_JSON
+    cleanup_native_json();
+#endif
+    release_pending_resource();
+    cleanup_values();
+    cleanup_resources();
+    for (size_t i = 0; i < 256; ++i) clear_region_chunks(&regions[i]);
+}
 static void host_failure(const char *message) {
+#ifdef MYLANG_NATIVE_JSON
+    if (codec_escape) {codec_escape->code=message;codec_escape->host=1;longjmp(codec_escape->escape,1);}
+#endif
 #ifdef MYLANG_EMBED
     active_result->status = 2; active_result->code = message;
     cleanup(); longjmp(entry_escape, 1);
@@ -148,6 +158,9 @@ static void host_failure(const char *message) {
 #endif
 }
 static void trap(const char *code) {
+#ifdef MYLANG_NATIVE_JSON
+    if (codec_escape) {codec_escape->code=code;longjmp(codec_escape->escape,1);}
+#endif
 #ifdef MYLANG_EMBED
     active_result->status = 1; active_result->code = code;
     active_result->path = source_paths[site];

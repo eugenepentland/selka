@@ -51,7 +51,7 @@ def compile_native(zig, mode, temporary, provider, candidate, library=False):
     if b'#define MYLANG_NATIVE_JSON 1' in (temporary / 'program.c').read_bytes():
         source_root = Path(__file__).resolve().parents[1] / 'src'
         digest = hashlib.sha256()
-        for name in ['native_json_bridge.zig', 'native_json_abi.zig', 'native_typed_json.zig', 'json_document.zig', 'typed_json.zig', 'codec_memory.zig', 'typed.zig', 'runtime_values.zig']:
+        for name in ['native_json_bridge.zig', 'native_json_abi.zig', 'native_typed_json.zig', 'native_json_calls.zig', 'native_json_values.zig', 'codec_execution.zig', 'invocation_contract.zig', 'json_document.zig', 'typed_json.zig', 'codec_memory.zig', 'typed.zig', 'runtime_values.zig']:
             digest.update(name.encode() + b'\0')
             digest.update((source_root / name).read_bytes())
         marker = '#define MYLANG_NATIVE_JSON_SUPPORT_SHA256 "' + digest.hexdigest() + '"'
