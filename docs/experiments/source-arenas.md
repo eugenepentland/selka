@@ -101,3 +101,16 @@ fixture and reject escapes across check/run/discovery/quality/native commands.
 Formatting round trips cover 32 valid fixtures. Exact discovery is `exact-v28` and
 retains arena boundary structure while normalizing bound allocator names. Native
 emission continues to reject these operations with `E_NATIVE_FEATURE`.
+
+### Proven direct return origins
+
+The concrete checker now narrows a helper's result dependency when every return
+is exactly the same immutable value parameter. For example,
+`fn select(outer:allocator,scratch:allocator)->allocator {discard scratch;return outer;}`
+can be called inside a scratch arena without making its result depend on scratch.
+Returning scratch still rejects an escape. This proof also applies to concrete
+generic specializations; symbolic generic validation retains its own restrictions.
+Other expressions, multiple possible parameter origins, reference parameters,
+host calls and early `try` propagation keep the conservative result summary.
+Mutable argument effects remain conservative even when the result is precise.
+Stored views and field-sensitive aggregate summaries remain separate work.

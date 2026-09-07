@@ -256,3 +256,7 @@ SHA-256, pinned Zig version and embedded feature/restriction manifest. The curre
 reference is `docs/current-language.md`; historical checkpoint prose does not
 supersede it. The manifest records implementation coverage, not a test certificate.
 - [DIAGNOSTIC-RECOVERY-1] Semantic checking recovers at ordinary and symbolic function boundaries after a source error, reports independent function faults in source order, and deduplicates repeated errors at the same source range and code. It stops within the failed function and skips whole-program verification when any body is incomplete; syntax, type-catalog, and namespace construction remain prerequisites. A failed check never publishes typed code or permits execution. Repeating a failed compilation check preserves diagnostics rather than appending duplicates.
+
+## Proven parameter return regions
+
+- [REGION-PROVENANCE-1] A helper whose every explicit return directly names the same immutable value parameter carries only that parameter's region dependency in its result. Reference parameters, early result propagation, host functions and unrecognized return expressions retain conservative all-argument result dependencies. Mutable reference argument effects always retain conservative dependency checks; actual scratch returns remain rejected escapes.

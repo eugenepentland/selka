@@ -272,3 +272,41 @@ test "arena-local capability containers work while plain pool snapshots survive 
         "Work.ok(v) => { return v; }, Work.err(e) => { return e; } } }";
     try expectResult(source, 42, .{});
 }
+
+const provenance_source =
+    \\fn choose(outer:allocator,scratch:allocator)->allocator {discard scratch;return outer;}
+    \\fn work(heap:allocator)->allocator {
+    \\    let mut selected=heap;
+    \\    arena heap as scratch {selected=choose(heap,scratch);}
+    \\    return selected;
+    \\}
+    \\fn main(heap:allocator)->i64 {discard work(heap);return 7;}
+;
+fn provenanceScenario(allocator: std.mem.Allocator) !void {
+    var c = try language.Compilation.init(allocator, "provenance.my", provenance_source);
+    defer c.deinit();
+    const result = try c.execute(allocator);
+    try t.expectEqual(@as(i64, 7), result.value);
+}
+// spec: REGION-PROVENANCE-1
+test "directReturns excludes unrelated scratch authority and unwinds every allocation failure" {
+    try provenanceScenario(t.allocator);
+    try t.checkAllAllocationFailures(t.allocator, provenanceScenario, .{});
+}
+test "direct returned scratch authority remains a rejected region escape" {
+    const source = try std.mem.replaceOwned(u8, t.allocator, provenance_source, "choose(heap,scratch)", "choose(scratch,heap)");
+    defer t.allocator.free(source);
+    var c = try language.Compilation.init(t.allocator, "escape.my", source);
+    defer c.deinit();
+    try t.expectError(error.SourceError, c.check());
+    try t.expectEqualStrings("E_ARENA_ESCAPE", c.diagnostics.items[0].code);
+}
+
+test "multiple possible returned parameters conservatively retain scratch dependency" {
+    const source = try std.mem.replaceOwned(u8, t.allocator, provenance_source, "discard scratch;return outer;", "if true {return outer;} else {return scratch;}");
+    defer t.allocator.free(source);
+    var c = try language.Compilation.init(t.allocator, "branches.my", source);
+    defer c.deinit();
+    try t.expectError(error.SourceError, c.check());
+    try t.expectEqualStrings("E_ARENA_ESCAPE", c.diagnostics.items[0].code);
+}

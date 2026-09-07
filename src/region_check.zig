@@ -1,6 +1,6 @@
 //! Conservative lifetime dependency analysis over checked function bodies. Local
-//! dependencies are monotone across assignments/control flow; calls retain all
-//! region-bearing argument dependencies rather than guessing callee behavior.
+//! dependencies are monotone across assignments/control flow. Proven direct
+//! parameter returns narrow result provenance; unknown calls retain all inputs.
 const std = @import("std");
 const typed = @import("typed.zig");
 const walk = @import("typed_walk.zig");
@@ -19,6 +19,7 @@ const Analysis = struct {
     types: []const bool,
     nodes: []Dependency,
     locals: []Dependency,
+    returns: []const ?usize,
     fn node(self: Analysis, id: typed.NodeId) Dependency {
         return self.nodes[@backingInt(id)];
     }
@@ -45,6 +46,10 @@ const Analysis = struct {
             if (carries(ref.ty, self.types)) dependency = origin.combine(dependency, self.reference(id));
         }
         return dependency;
+    }
+    fn resultDependency(self: Analysis, invocation: @FieldType(@FieldType(typed.Node, "data"), "call")) Dependency {
+        if (self.returns[@backingInt(invocation.function)]) |parameter| return self.node(invocation.arguments[parameter]);
+        return self.call(invocation);
     }
     fn mutableArgument(self: Analysis, invocation: @FieldType(@FieldType(typed.Node, "data"), "call"), reference_index: usize) bool {
         const callee = self.program.functions[@backingInt(invocation.function)];
@@ -73,7 +78,7 @@ const Analysis = struct {
             .field => |field| self.node(field.base),
             .index => |index| self.node(index.base),
             .replace => |replace| origin.combine(self.node(replace.base), self.node(replace.value)),
-            .call => |invocation| self.call(invocation),
+            .call => |invocation| self.resultDependency(invocation),
             .buffer_operation => |operation| self.local(operation.owner),
             .pool_operation => |operation| self.local(operation.owner),
             .unary => |unary| self.node(unary.operand),
@@ -131,6 +136,8 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
     if (!any_regions) return;
     const types = try typeDependencies(allocator, program.records);
     defer allocator.free(types);
+    const returns = try directReturns(allocator, program);
+    defer allocator.free(returns);
     var changed = false;
     const nodes = try allocator.alloc(Dependency, program.nodes.len);
     defer allocator.free(nodes);
@@ -147,7 +154,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
         const locals = try allocator.alloc(Dependency, function.scope.locals.len);
         defer allocator.free(locals);
         @memset(locals, .{});
-        const analysis: Analysis = .{ .program = program, .function = function, .types = types, .nodes = nodes, .locals = locals };
+        const analysis: Analysis = .{ .program = program, .function = function, .types = types, .nodes = nodes, .locals = locals, .returns = returns };
         changed = true;
         while (changed) {
             changed = false;
@@ -244,4 +251,38 @@ fn propagateDependencies(analysis: Analysis, item: walk.Item) bool {
         },
     }
     return changed;
+}
+
+// Only prove direct immutable parameter returns. Unrecognized bodies retain the
+// existing conservative summary, including early propagation and host calls.
+fn directReturns(allocator: std.mem.Allocator, program: typed.Program) std.mem.Allocator.Error![]?usize {
+    const summaries = try allocator.alloc(?usize, program.functions.len);
+    errdefer allocator.free(summaries);
+    for (program.functions, summaries) |function, *summary| summary.* = try directReturn(allocator, program, function);
+    return summaries;
+}
+fn directReturn(allocator: std.mem.Allocator, program: typed.Program, function: typed.Function) std.mem.Allocator.Error!?usize {
+    if (function.policy.host != null or function.signature.return_reference != null) return null;
+    for (function.scope.locals[0..function.signature.parameter_count]) |parameter| {
+        if (parameter.parameter.reference_parameter != null) return null;
+    }
+    var walker = try walk.Walker.init(allocator, program, function.scope.body);
+    defer walker.deinit();
+    var selected: ?usize = null;
+    while (try walker.next()) |item| switch (item) {
+        .expression => |id| if (program.nodes[@backingInt(id)].data == .propagate) return null,
+        .statement => |id| {
+            const statement = program.statements[@backingInt(id)];
+            if (statement.data != .ret) continue;
+            const node = program.nodes[@backingInt(statement.data.ret)];
+            if (node.data != .local) return null;
+            const index = @backingInt(node.data.local);
+            if (index >= function.signature.parameter_count) return null;
+            const local = function.scope.locals[index];
+            if (local.mutable or local.usage.writes != 0 or local.usage.mutable_borrow) return null;
+            if (selected) |previous| if (previous != index) return null;
+            selected = index;
+        },
+    };
+    return selected;
 }
