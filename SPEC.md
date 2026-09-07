@@ -301,3 +301,10 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [MATCH-VALUE-1] match expressions select one expression from an exhaustive set of variant arms, evaluate the scrutinee once, and require every arm to yield the same type. Payload bindings and owned/result values preserve existing move and must-handle rules. Match expressions retain outer temporary obligations during try propagation, keep branch ownership states compatible, and propagate arena dependencies through the selected result. Ordinary and generic bodies share these checks.
 
 - [TYPE-ALIAS-1] type NAME = TYPE declares a transparent non-parameterized alias for an existing scalar, aggregate, fixed array or concrete nominal application. Alias chains support forward references and reject cycles or declaration conflicts. They preserve target nominal identity, ownership and result obligations; they never unwrap domains. Exported aliases obey interface visibility checks and private aliases cannot be named across modules. Constants accept aliases of supported scalar types.
+
+- [OWNER-REFERENCE-1] Whole-value shared/exclusive references may borrow owners
+  without result-handling obligations. read_field copies an ordinary field through
+  a shared reference; buffer/pool operations use shared inspection or exclusive
+  mutation. read_ref and take_field cannot copy or move a borrowed owner. Whole
+  partial owners reject borrowing. Element slices are borrowed from owners in
+  separate lexical scopes, so growth cannot invalidate an outstanding view.

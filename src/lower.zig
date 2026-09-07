@@ -266,7 +266,7 @@ const Emitter = struct {
             .len_slice => |reference| try self.instruction(node.span, .{ .len_slice = reference }),
             .read_ref => |reference| try self.instruction(node.span, .{ .read_ref = reference }),
             .pool_operation => |operation| {
-                try self.instruction(node.span, .{ .pool_operation = .{ .kind = operation.kind, .owner = operation.owner, .output = node.ty } });
+                try self.instruction(node.span, .{ .pool_operation = .{ .reference = operation.reference, .kind = operation.kind, .owner = operation.owner, .output = node.ty } });
                 var i = operation.arguments.len;
                 while (i > 0) {
                     i -= 1;
@@ -274,7 +274,7 @@ const Emitter = struct {
                 }
             },
             .buffer_operation => |operation| {
-                try self.instruction(node.span, .{ .buffer_operation = .{ .kind = operation.kind, .owner = operation.owner, .output = node.ty } });
+                try self.instruction(node.span, .{ .buffer_operation = .{ .reference = operation.reference, .kind = operation.kind, .owner = operation.owner, .output = node.ty } });
                 var i = operation.arguments.len;
                 while (i > 0) {
                     i -= 1;
@@ -282,7 +282,7 @@ const Emitter = struct {
                 }
             },
             .take_field => |read| try self.instruction(node.span, .{ .take_field = .{ .owner = read.owner, .field = read.field, .output = node.ty } }),
-            .read_field => |read| try self.instruction(node.span, .{ .read_field = .{ .owner = read.owner, .field = read.field, .output = node.ty } }),
+            .read_field => |read| try self.instruction(node.span, .{ .read_field = .{ .reference = read.reference, .owner = read.owner, .field = read.field, .output = node.ty } }),
             .reset_arena => |value| {
                 try self.instruction(node.span, .{ .reset_arena = node.ty });
                 try self.push(.{ .expression = value });

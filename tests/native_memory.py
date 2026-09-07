@@ -56,7 +56,7 @@ def main():
             "trap": "struct R{values:[2]i64} fn main()->i64{let r=new R{values:new [2]i64[0,7]};return r.values[2];}",
         }
         programs["propagation-order"] = "struct Mark{v:i64}struct Pair{first:Mark,second:i64}result R{ok:i64,err:Mark}result S{ok:Pair,err:Mark}fn work()->S{return new S.ok(new Pair{first:new Mark{v:1},second:try new R.err(new Mark{v:2})});}fn main()->i64{match work(){S.ok(p)=>{return p.second;},S.err(e)=>{return e.v;}}}"
-        for name in ("buffers", "buffer-views", "allocator-capabilities", "arena-reset", "pools", "arenas"):
+        for name in ("buffers", "buffer-views", "allocator-capabilities", "arena-reset", "pools", "arenas", "owner-references"):
             programs[name] = (root / "examples" / f"{name}.my").read_text()
         programs["buffer-aggregate"] = "struct R{values:[2]i64} buffer B:R; result A{err:i64,ok:B} result S{err:i64,ok:bool} fn main(heap:allocator)->i64{match acquire_buffer<A>(heap,2){A.ok(acquired)=>{let mut b=acquired;acknowledge append_buffer<S>(b,new R{values:new [2]i64[7,8]});let saved=read_buffer(b,0);acknowledge reserve_buffer<S>(b,heap,4);acknowledge resize_buffer<S>(b,4,saved);acknowledge write_buffer<S>(b,0,new R{values:new [2]i64[9,10]});borrow mut b[0..4] as view{write_slice(view,1,new R{values:new [2]i64[11,12]});}let changed=read_buffer(b,1);acknowledge resize_buffer<S>(b,0,saved);return saved.values[0]+changed.values[0];},A.err(e)=>{return e;}}}"
         programs["arena-loop"] = "buffer B:i64;result A{ok:B,err:i64}result S{ok:bool,err:i64}fn main(heap:allocator)->i64{let mut n=0;arena heap as scratch{while n<20000{match acquire_buffer<A>(scratch,2){A.ok(acquired)=>{let mut b=acquired;acknowledge resize_buffer<S>(b,2,7);acknowledge reserve_buffer<S>(b,scratch,4);},A.err(e)=>{return e;}}acknowledge reset_arena<S>(scratch);n+=1;}}return n;}"
@@ -81,7 +81,7 @@ def main():
                 baseline = invoke([executable])
                 attempts, peak = memory(baseline)
                 expected = b"20\n" if name == "failure" else b"12\n" if name == "reference" else b"40\n" if name == "reference-recursive" else b"20006\n"
-                buffer_results = {"buffers": b"21\n", "buffer-views": b"19\n", "allocator-capabilities": b"3\n", "buffer-aggregate": b"18\n", "arena-reset": b"3\n", "arena-loop": b"20000\n", "arena-snapshot": b"7\n", "arena-propagation": b"1\n", "pools": b"52\n", "arenas": b"50\n", "pool-loop": b"20000\n"}
+                buffer_results = {"owner-references": b"9\n", "buffers": b"21\n", "buffer-views": b"19\n", "allocator-capabilities": b"3\n", "buffer-aggregate": b"18\n", "arena-reset": b"3\n", "arena-loop": b"20000\n", "arena-snapshot": b"7\n", "arena-propagation": b"1\n", "pools": b"52\n", "arenas": b"50\n", "pool-loop": b"20000\n"}
                 if name == "propagation-order":
                     expected = b"2\n"
                     assert re.findall(rb"propagation-release: (\d+)", baseline.stderr) == [b"1", b"2"], baseline.stderr

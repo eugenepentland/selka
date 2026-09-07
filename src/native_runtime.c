@@ -454,8 +454,8 @@ static Slot environment_lookup(size_t capacity, size_t ok, size_t error, size_t 
     return boxed_variant(ok, (Slot){0, entry}, 1);
 }
 static size_t guest_capacity_limit(void) { return SIZE_MAX / MYLANG_GUEST_VALUE_BYTES; }
-static Aggregate *buffer_owner(size_t owner, int write) {
-    Aggregate *buffer = local_access(owner, write)->value.object;
+static Aggregate *buffer_owner(Local *owner) {
+    Aggregate *buffer = owner->value.object;
     if (!buffer || !buffer->buffer) host_failure("InternalError");
     return buffer;
 }
@@ -469,28 +469,28 @@ static Slot acquire_buffer(size_t ok, size_t error) {
     guest_capacity += (size_t)capacity;
     return boxed_variant(ok, (Slot){0, buffer}, 1);
 }
-static size_t buffer_length(size_t owner) { return buffer_owner(owner, 0)->count; }
-static size_t buffer_capacity(size_t owner) { return buffer_owner(owner, 0)->capacity; }
-static Slot buffer_read(size_t owner) {
-    V index = pop(); Aggregate *buffer = buffer_owner(owner, 0);
+static size_t buffer_length(Local *owner) { return buffer_owner(owner)->count; }
+static size_t buffer_capacity(Local *owner) { return buffer_owner(owner)->capacity; }
+static Slot buffer_read(Local *owner) {
+    V index = pop(); Aggregate *buffer = buffer_owner(owner);
     if (index < 0 || (U)index >= buffer->count) trap("R_BUFFER_BOUNDS");
     return copy_value(buffer->fields[(size_t)index]);
 }
-static int buffer_write(size_t owner) {
+static int buffer_write(Local *owner) {
     Slot value = pop_value(); V index = pop();
-    Aggregate *buffer = buffer_owner(owner, 1);
+    Aggregate *buffer = buffer_owner(owner);
     if (index < 0 || (U)index >= buffer->count) { release_value(value); return 3; }
     release_value(buffer->fields[(size_t)index]); buffer->fields[(size_t)index] = value;
     return 0;
 }
-static int buffer_append(size_t owner) {
-    Slot value = pop_value(); Aggregate *buffer = buffer_owner(owner, 1);
+static int buffer_append(Local *owner) {
+    Slot value = pop_value(); Aggregate *buffer = buffer_owner(owner);
     if (buffer->count == buffer->capacity) { release_value(value); return 2; }
     buffer->fields[buffer->count++] = value;
     return 0;
 }
-static int buffer_resize(size_t owner) {
-    Slot fill = pop_value(); V length = pop(); Aggregate *buffer = buffer_owner(owner, 1);
+static int buffer_resize(Local *owner) {
+    Slot fill = pop_value(); V length = pop(); Aggregate *buffer = buffer_owner(owner);
     if (length < 0 || (U)length > SIZE_MAX) { release_value(fill); return 3; }
     if ((U)length > buffer->capacity) { release_value(fill); return 2; }
     while (buffer->count > (size_t)length) release_value(buffer->fields[--buffer->count]);
@@ -498,9 +498,9 @@ static int buffer_resize(size_t owner) {
     release_value(fill);
     return 0;
 }
-static int buffer_reserve(size_t owner) {
+static int buffer_reserve(Local *owner) {
     V capacity = pop(), authority = pop();
-    Aggregate *old = buffer_owner(owner, 1);
+    Aggregate *old = buffer_owner(owner);
     if (allocator_region(authority) != old->region) trap("R_CAPABILITY");
     if (old->refs != 1) host_failure("InternalError");
     if (capacity < 0 || (U)capacity > guest_capacity_limit()) return 1;
@@ -513,12 +513,12 @@ static int buffer_reserve(size_t owner) {
     /* Transfer initialized children once. No borrowed view can be active here. */
     old->count = 0; old->buffer = 0;
     release_value((Slot){0, old});
-    local_access(owner, 1)->value = (Slot){0, grown};
+    owner->value = (Slot){0, grown};
     guest_capacity += increase;
     return 0;
 }
-static Aggregate *pool_owner(size_t owner) {
-    Aggregate *object = local_access(owner, 0)->value.object;
+static Aggregate *pool_owner(Local *owner) {
+    Aggregate *object = owner->value.object;
     if (!object || !object->pool) host_failure("InternalError");
     return object;
 }
@@ -545,9 +545,9 @@ static int pool_index(Aggregate *owner, Slot handle, size_t *index) {
     PoolEntry entry = owner->pool->entries[*index];
     return !entry.live || (V)entry.generation != id->fields[2].number ? 1 : 0;
 }
-static size_t pool_length(size_t owner) { return pool_owner(owner)->pool->live; }
-static size_t pool_capacity(size_t owner) { return pool_owner(owner)->capacity; }
-static int pool_insert(size_t owner, Slot *result) {
+static size_t pool_length(Local *owner) { return pool_owner(owner)->pool->live; }
+static size_t pool_capacity(Local *owner) { return pool_owner(owner)->capacity; }
+static int pool_insert(Local *owner, Slot *result) {
     Slot value = pop_value(); Aggregate *object = pool_owner(owner); Pool *pool = object->pool;
     if (pool->free_head == SIZE_MAX && pool->issued == object->capacity) { release_value(value); return 3; }
     size_t index;
@@ -562,13 +562,13 @@ static int pool_insert(size_t owner, Slot *result) {
     handle->fields[2].number = (V)entry->generation;
     *result = (Slot){0, handle}; return 0;
 }
-static int pool_read(size_t owner, Slot *result) {
+static int pool_read(Local *owner, Slot *result) {
     Slot handle = pop_value(); Aggregate *object = pool_owner(owner); size_t index = 0;
     int status = pool_index(object, handle, &index); release_value(handle);
     if (!status) *result = copy_value(object->fields[index]);
     return status;
 }
-static int pool_replace(size_t owner, Slot *result) {
+static int pool_replace(Local *owner, Slot *result) {
     Slot value = pop_value(), handle = pop_value(); Aggregate *object = pool_owner(owner); size_t index = 0;
     int status = pool_index(object, handle, &index); release_value(handle);
     if (status) { release_value(value); return status; }
@@ -583,13 +583,13 @@ static void pool_remove_index(Aggregate *object, size_t index) {
         ++entry->generation; entry->next = pool->free_head; pool->free_head = index;
     }
 }
-static int pool_remove(size_t owner, Slot *result) {
+static int pool_remove(Local *owner, Slot *result) {
     Slot handle = pop_value(); Aggregate *object = pool_owner(owner); size_t index = 0;
     int status = pool_index(object, handle, &index); release_value(handle);
     if (!status) { pool_remove_index(object, index); *result = (Slot){1, NULL}; }
     return status;
 }
-static V pool_clear(size_t owner) {
+static V pool_clear(Local *owner) {
     Aggregate *object = pool_owner(owner);
     for (size_t i = object->pool->issued; i; --i)
         if (object->pool->entries[i-1].live) pool_remove_index(object, i-1);
@@ -658,6 +658,12 @@ static void end_reference(size_t id) {
     else if (reference->mutable) reference->owner->exclusive = 0;
     else --reference->owner->shared;
     *reference = (Reference){0};
+}
+static Local *reference_owner(size_t id, int write) {
+    Reference *reference = usable_reference(&frames[nf-1].references[id]);
+    if (reference->slice) host_failure("InternalError");
+    if (write && !reference->mutable) trap("R_REFERENCE_READ_ONLY");
+    return reference->owner;
 }
 static void read_reference(size_t id) {
     Reference *reference = usable_reference(&frames[nf-1].references[id]);

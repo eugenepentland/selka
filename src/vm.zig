@@ -905,7 +905,8 @@ const Step = struct {
                 const owner_type = function.scope.locals[@backingInt(metadata.owner)].ty;
                 const schema = program.records[owner_type.recordIndex()];
                 if (schema.shape.buffer != null) {
-                    const local = locals.items[frame.local_base + @backingInt(metadata.owner)] orelse return error.InternalError;
+                    const local = try self.operationOwner(metadata.owner, null, false);
+                    defer local.release(allocator);
                     if (!local.isOwned(.resource)) return error.InternalError;
                     const info = storage.bufferInfo(local.owned.resource.owner) catch |err| return memoryFailure(err, instruction, frames.items, program);
                     slice = .{ .start = 0, .length = info.length };
@@ -926,7 +927,9 @@ const Step = struct {
         } else root: {
             const local_index = frame.local_base + @backingInt(metadata.owner);
             if (direct) {
-                const resource = locals.items[local_index].?.owned.resource;
+                const value = try self.operationOwner(metadata.owner, null, false);
+                defer value.release(allocator);
+                const resource = value.owned.resource;
                 const info = storage.bufferInfo(resource.owner) catch |err| return memoryFailure(err, instruction, frames.items, program);
                 break :root storage.borrow(resource.owner, 0, info.length, kind) catch |err| return memoryFailure(err, instruction, frames.items, program);
             }
@@ -1066,21 +1069,35 @@ const Step = struct {
         return null;
     }
 
+    fn operationOwner(self: *Step, owner: typed.LocalId, reference_id: ?typed.ReferenceId, mutable: bool) !typed.Value {
+        const storage = self.execution.storage;
+        const state = self.execution.state;
+        if (reference_id) |id| {
+            const reference = state.references.items[self.frame.reference_base + @backingInt(id)] orelse return error.InternalError;
+            const view = try storage.describe(reference.lease);
+            if (mutable and view.kind != .exclusive) return error.InternalError;
+            return storage.read(reference.lease, 0);
+        }
+        const index = self.frame.local_base + @backingInt(owner);
+        if (state.owners.get(index)) |allocation| {
+            try storage.checkOwnerAccess(allocation, mutable);
+            return storage.readOwner(allocation, 0);
+        }
+        return (state.locals.items[index] orelse return error.InternalError).retain();
+    }
+
     fn executePoolOperation(self: *Step) !?ValueResult {
         const allocator = self.execution.allocator;
         const program = self.execution.program;
         const pools = self.execution.pools;
         const stack = self.execution.state.stack;
-        const locals = self.execution.state.locals;
-        const owners = self.execution.state.owners;
         const frame = self.frame;
         const operation = self.instruction.op.pool_operation;
         const count = operation.kind.arity();
         if (stack.items.len - frame.operand_base < count) return error.InternalError;
         const start = stack.items.len - count;
-        const local_index = frame.local_base + @backingInt(operation.owner);
-        if (owners.contains(local_index)) return error.InternalError;
-        const local = locals.items[local_index] orelse return error.InternalError;
+        const local = try self.operationOwner(operation.owner, operation.reference, operation.kind.mutates());
+        defer local.release(allocator);
         if (!local.isOwned(.pool) or local.owned.pool.runtime != pools) return error.InternalError;
         const schema = program.records[local.owned.pool.ty.recordIndex()].shape.pool orelse return error.InternalError;
         var status: i64 = 0;
@@ -1110,7 +1127,6 @@ const Step = struct {
         const program = self.execution.program;
         const storage = self.execution.storage;
         const stack = self.execution.state.stack;
-        const locals = self.execution.state.locals;
         const frames = self.execution.state.frames;
         const frame = self.frame;
         const instruction = self.instruction;
@@ -1119,7 +1135,8 @@ const Step = struct {
         if (stack.items.len - frame.operand_base < count) return error.InternalError;
         const start = stack.items.len - count;
         const arguments = stack.items[start..];
-        const local = locals.items[frame.local_base + @backingInt(operation.owner)] orelse return error.InternalError;
+        const local = try self.operationOwner(operation.owner, operation.reference, operation.kind.mutates());
+        defer local.release(allocator);
         if (!local.isOwned(.resource) or local.owned.resource.store != storage) return error.InternalError;
         const owner = local.owned.resource.owner;
         const info = storage.bufferInfo(owner) catch |err| return memoryFailure(err, instruction, frames.items, program);
@@ -1419,15 +1436,25 @@ const Step = struct {
         return null;
     }
 
+    fn restoreLocalOwner(self: *Step, index: usize) !void {
+        const state = self.execution.state;
+        if (state.owners.get(index)) |allocation| {
+            const value = try self.execution.storage.readOwner(allocation, 0);
+            errdefer value.release(self.execution.allocator);
+            try self.execution.storage.destroy(allocation);
+            _ = state.owners.remove(index);
+            state.locals.items[index] = value;
+        }
+    }
+
     fn executeMoveLocal(self: *Step) !?ValueResult {
         const allocator = self.execution.allocator;
         const stack = self.execution.state.stack;
         const locals = self.execution.state.locals;
-        const owners = self.execution.state.owners;
         const frame = self.frame;
         const slot = self.instruction.op.move_local;
         const index = frame.local_base + @backingInt(slot);
-        if (owners.contains(index)) return error.InternalError;
+        try self.restoreLocalOwner(index);
         const value = locals.items[index] orelse return error.InternalError;
         locals.items[index] = null;
         try pushOwned(stack, allocator, value);
@@ -1454,11 +1481,10 @@ const Step = struct {
         const allocator = self.execution.allocator;
         const stack = self.execution.state.stack;
         const locals = self.execution.state.locals;
-        const owners = self.execution.state.owners;
         const frame = self.frame;
         const take = self.instruction.op.take_field;
         const index = frame.local_base + @backingInt(take.owner);
-        if (owners.contains(index)) return error.InternalError;
+        try self.restoreLocalOwner(index);
         const owner = locals.items[index] orelse return error.InternalError;
         const value = try owner.takeField(allocator, take.field);
         try pushOwned(stack, allocator, value);
@@ -1467,18 +1493,10 @@ const Step = struct {
 
     fn executeReadField(self: *Step) !?ValueResult {
         const allocator = self.execution.allocator;
-        const program = self.execution.program;
-        const storage = self.execution.storage;
         const stack = self.execution.state.stack;
-        const locals = self.execution.state.locals;
-        const owners = self.execution.state.owners;
-        const frames = self.execution.state.frames;
-        const frame = self.frame;
-        const instruction = self.instruction;
         const function = self.execution.program.functions[@backingInt(self.frame.function)];
         const read = self.instruction.op.read_field;
-        const index = frame.local_base + @backingInt(read.owner);
-        const owner = if (owners.get(index)) |allocation| storage.readOwner(allocation, 0) catch |err| return memoryFailure(err, instruction, frames.items, program) else (locals.items[index] orelse return error.InternalError).retain();
+        const owner = try self.operationOwner(read.owner, read.reference, false);
         defer owner.release(allocator);
         if (owner.typeOf() != function.scope.locals[@backingInt(read.owner)].ty) return error.InternalError;
         const value = try owner.getField(read.field);

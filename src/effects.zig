@@ -72,7 +72,7 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
     defer allocator.free(cleanup_masks);
     for (program.functions, 0..) |function, index| {
         if (function.policy.host) |span| try seedHost(&graph, index, function.policy.effect_bound, span);
-        try seedOwnership(&graph, index, function.signature.return_type, function.scope.locals, function.declaration, cleanup_masks);
+        try seedOwnership(&graph, index, if (function.signature.return_reference == null) function.signature.return_type else null, function.scope.locals, function.declaration, cleanup_masks);
         var walker = try @import("typed_walk.zig").Walker.init(allocator, program, function.scope.body);
         defer walker.deinit();
         while (try walker.next()) |item| if (item == .statement) {
@@ -187,7 +187,7 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
     defer allocator.free(cleanup_masks);
     for (program.functions, 0..) |function, index| {
         if (function.policy.host) |span| try seedHost(&graph, index, function.policy.effect_bound, span);
-        try seedOwnership(&graph, index, function.signature.return_type, function.scope.locals, .{ .start = 0, .end = 0 }, cleanup_masks);
+        try seedOwnership(&graph, index, if (function.signature.return_reference == null) function.signature.return_type else null, function.scope.locals, .{ .start = 0, .end = 0 }, cleanup_masks);
         for (function.scope.instructions) |instruction| switch (instruction.op) {
             .acquire_resource => |acquire| {
                 const shape = typed.resultShape(acquire.output, program.records) orelse return error.InternalError;
@@ -326,9 +326,11 @@ pub fn cleanupMasks(allocator: std.mem.Allocator, records: []const typed.Record)
     }
     return masks;
 }
-fn seedOwnership(graph: *Graph, index: usize, result: typed.Type, locals: []const typed.Local, span: Span, masks: []const sets.Mask) !void {
-    var mask = try typeMask(result, masks);
-    for (locals) |local| mask |= try typeMask(local.ty, masks);
+fn seedOwnership(graph: *Graph, index: usize, result: ?typed.Type, locals: []const typed.Local, span: Span, masks: []const sets.Mask) !void {
+    var mask: sets.Mask = if (result) |ty| try typeMask(ty, masks) else 0;
+    for (locals) |local| if (local.parameter.reference_parameter != false) {
+        mask |= try typeMask(local.ty, masks);
+    };
     for (std.meta.tags(sets.Effect)) |effect| if (mask & sets.bit(effect) != 0) {
         graph.direct(index, effect, span);
     };

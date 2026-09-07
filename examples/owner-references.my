@@ -1,0 +1,57 @@
+buffer Vec < T: copy >: T;
+result Open<T: copy> {
+    ok: Vec<T>,
+    err: i64
+}
+result Status {
+    ok: bool,
+    err: i64
+}
+struct Holder<T: copy> {
+    buffer: Vec<T>,
+    tag: i64
+}
+result Answer {
+    ok: i64,
+    err: i64
+}
+fn inspect < T: copy >(holder: &Holder<T>) -> i64 noalloc {
+    return read_field(holder, tag);
+}
+fn append < T: copy >(values: &mut Vec<T>, value: T) -> Status noalloc {
+    return append_buffer<Status>(values, value);
+}
+fn size < T: copy >(values: &Vec<T>) -> u64 noalloc {
+    return len_buffer(values);
+}
+fn work(heap: allocator) -> Answer {
+    let mut values = try acquire_buffer<Open<i64>>(heap, 2);
+    borrow mut values as view {
+        discard try append::< i64 >(view, 7);
+        if size::< i64 >(view) != 1u64 {
+            return new Answer.ok(- 1);
+        }
+    }
+    borrow values[0..1] as view {
+        if read_slice(view, 0) != 7 {
+            return new Answer.ok(- 2);
+        }
+    }
+    let holder = new Holder<i64> {
+        buffer: values,
+        tag: 9
+    };
+    borrow holder as view {
+        return new Answer.ok(inspect::< i64 >(view));
+    }
+}
+fn main(heap: allocator) -> i64 {
+    match work(heap) {
+        Answer.ok(n) => {
+            return n;
+        },
+        Answer.err(e) => {
+            return e;
+        }
+    }
+}

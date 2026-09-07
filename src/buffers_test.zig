@@ -57,8 +57,8 @@ test "owned bindings cannot be reused or conditionally consumed" {
     try reject("fn f(b: B, flag: bool) -> i64 { if flag { discard b; } return 0; } fn main() -> i64 { return 0; }", "E_OWNED_PATH");
     try reject("fn f(b: B) -> i64 { while false { discard b; } return 0; } fn main() -> i64 { return 0; }", "E_OWNED_LOOP");
     try reject("fn consume(b: B) -> bool { return true; } fn f(b: B) -> i64 { discard false && consume(b); return 0; } fn main() -> i64 { return 0; }", "E_OWNED_PATH");
-    try reject("fn f(b: B) -> i64 { borrow b as r { discard read_ref(r); } return 0; } fn main() -> i64 { return 0; }", "E_RESULT_BORROW");
-    try reject("fn f(b: &B) -> i64 { return 0; } fn main() -> i64 { return 0; }", "E_RESULT_BORROW");
+    try reject("fn f(b: B) -> i64 { borrow b as r { discard read_ref(r); } return 0; } fn main() -> i64 { return 0; }", "E_REFERENCE_VALUE");
+    try reject("fn f(b: &B) -> B { return read_ref(b); } fn main() -> i64 { return 0; }", "E_REFERENCE_VALUE");
 }
 
 test "owned schemas preserve nominal identity and reject bypass construction" {

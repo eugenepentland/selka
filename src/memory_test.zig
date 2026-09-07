@@ -18,6 +18,8 @@ test "shared and exclusive memory borrows enforce owner and alias access" {
     const owner = try store.create(.i64, &.{ .{ .i64 = 3 }, .{ .i64 = 7 } });
     const a = try store.borrow(owner, 0, 2, .shared);
     const b = try store.borrow(owner, 1, 1, .shared);
+    try store.checkOwnerAccess(owner, false);
+    try testing.expectError(error.BorrowConflict, store.checkOwnerAccess(owner, true));
     try number(&store, a, 0, 3);
     try number(&store, b, 0, 7);
     try testing.expectEqual(@as(i64, 7), (try store.readOwner(owner, 1)).i64);

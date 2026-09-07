@@ -461,7 +461,11 @@ fn writeOperation(context: InstructionOutput) !bool {
         .get_index => try w.writeAll("get_index();\n"),
         .replace_index => try w.writeAll("replace_index();\n"),
         .array_length => try w.writeAll("array_length();\n"),
-        .read_field => |read| try w.print("push_value(field_value(local_access({d}, 0)->value, {d}));\n", .{ @backingInt(read.owner), read.field }),
+        .read_field => |read| {
+            try w.writeAll("push_value(field_value(");
+            try operationOwner(w, read.owner, read.reference, false);
+            try w.print("->value, {d}));\n", .{read.field});
+        },
         .take_field => |take| try w.print("take_field({d}, {d});\n", .{ @backingInt(take.owner), take.field }),
         .environment_get => |operation| {
             const shape = typed.environmentShape(operation.output, program.records).?;
@@ -491,10 +495,13 @@ fn writeOperation(context: InstructionOutput) !bool {
             try w.print("push_value(acquire_pool({d}, {d}));\n", .{ shape.ok_tag, shape.error_tag });
         },
         .pool_operation => |operation| {
+            try w.writeAll("Local *container = ");
+            try operationOwner(w, operation.owner, operation.reference, operation.kind.mutates());
+            try w.writeAll(";\n");
             if (operation.kind.fallible()) {
-                try w.print("Slot value = (Slot){{0}}; int status = pool_{s}({d}, &value); if (status) value = (Slot){{status, NULL}};\n", .{ @tagName(operation.kind), @backingInt(operation.owner) });
+                try w.print("Slot value = (Slot){{0}}; int status = pool_{s}(container, &value); if (status) value = (Slot){{status, NULL}};\n", .{@tagName(operation.kind)});
                 try statusResult(w, layout, operation.output);
-            } else try w.print("push((V)pool_{s}({d}));\n", .{ @tagName(operation.kind), @backingInt(operation.owner) });
+            } else try w.print("push((V)pool_{s}(container));\n", .{@tagName(operation.kind)});
         },
         .begin_region => |slot| try w.print("begin_region({d});\n", .{@backingInt(slot)}),
         .end_region => |slot| try w.print("end_region({d});\n", .{@backingInt(slot)}),
@@ -508,11 +515,14 @@ fn writeOperation(context: InstructionOutput) !bool {
             try w.print("push_value(acquire_buffer({d}, {d}));\n", .{ shape.ok_tag, shape.error_tag });
         },
         .buffer_operation => |operation| {
+            try w.writeAll("Local *container = ");
+            try operationOwner(w, operation.owner, operation.reference, operation.kind.mutates());
+            try w.writeAll(";\n");
             switch (operation.kind) {
-                .length, .capacity => try w.print("push((V)buffer_{s}({d}));\n", .{ @tagName(operation.kind), @backingInt(operation.owner) }),
-                .read => try w.print("push_value(buffer_read({d}));\n", .{@backingInt(operation.owner)}),
+                .length, .capacity => try w.print("push((V)buffer_{s}(container));\n", .{@tagName(operation.kind)}),
+                .read => try w.writeAll("push_value(buffer_read(container));\n"),
                 else => {
-                    try w.print("int status = buffer_{s}({d}); Slot value = (Slot){{status ? status : 1, NULL}};\n", .{ @tagName(operation.kind), @backingInt(operation.owner) });
+                    try w.print("int status = buffer_{s}(container); Slot value = (Slot){{status ? status : 1, NULL}};\n", .{@tagName(operation.kind)});
                     try statusResult(w, layout, operation.output);
                 },
             }
@@ -612,4 +622,10 @@ fn writeOperation(context: InstructionOutput) !bool {
         },
     }
     return falls_through;
+}
+
+fn operationOwner(writer: *std.Io.Writer, owner: typed.LocalId, reference: ?typed.ReferenceId, mutable: bool) std.Io.Writer.Error!void {
+    if (reference) |id| {
+        try writer.print("reference_owner({d}, {d})", .{ @backingInt(id), @intFromBool(mutable) });
+    } else try writer.print("local_access({d}, {d})", .{ @backingInt(owner), @intFromBool(mutable) });
 }

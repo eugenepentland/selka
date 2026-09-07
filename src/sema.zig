@@ -607,12 +607,24 @@ const Checker = struct {
         }
         return false;
     }
+    fn operationOwner(self: *Checker, span: source.Span, mutable: bool) Error!struct { owner: typed.LocalId, reference: ?typed.ReferenceId } {
+        if (self.active_refs.contains(self.src.text(span))) {
+            const id = try self.reference(span);
+            try self.requireReferenceKind(id, false, span);
+            const ref = self.references.items[@backingInt(id)];
+            if (mutable and !ref.mutable) return self.sink.fail(eReferenceReadOnly, span, "mutation requires an exclusive owner reference");
+            return .{ .owner = ref.owner, .reference = id };
+        }
+        const owner = try self.resolve(span);
+        try self.ownerAccess(owner, mutable, span);
+        return .{ .owner = owner, .reference = null };
+    }
     fn checkReadField(self: *Checker, node: ast.Node, read: @FieldType(@FieldType(ast.Node, "data"), "read_field"), out: *typed.Node) Error!void {
         const taking = node.data == .take_field;
-        if (self.active_refs.contains(self.src.text(read.owner))) return self.sink.fail("E_TYPE", read.owner, "read_field requires a value binding; use read_ref for a reference");
-        const owner = try self.resolve(read.owner);
+        const access = try self.operationOwner(read.owner, taking);
+        if (taking and access.reference != null) return self.sink.fail("E_FIELD_TAKE", read.owner, "cannot move a field out of a borrowed owner");
+        const owner = access.owner;
         const local = &self.locals.items[@backingInt(owner)];
-        if (local.parameter.reference_parameter != null) return self.sink.fail("E_TYPE", read.owner, "read_field requires a value binding, not a reference parameter");
         const field = try self.catalog.field(local.ty, self.src, read.field, self.sink);
         out.ty = self.catalog.records[local.ty.recordIndex()].fields[field].ty;
         if (!taking and self.transfers(out.ty)) return self.sink.fail("E_FIELD_COPY", read.field, "read_field cannot copy owned values or result obligations");
@@ -621,7 +633,6 @@ const Checker = struct {
         if (local.ownership.partial_fields.len != 0) {
             if (local.ownership.partial_fields[field]) |at| return self.sink.failMovedField(read.field, local.declaration, at);
         }
-        try self.ownerAccess(owner, taking, read.owner);
         if (taking) local.ownership.partial_fields = try field_moves.take(
             self.allocator,
             local.ownership.partial_fields,
@@ -633,16 +644,16 @@ const Checker = struct {
         if (self.conversion_fields) |seen| {
             if (@backingInt(owner) == 0) seen[field] = true;
         }
-        out.data = if (taking) .{ .take_field = .{ .owner = owner, .field = field } } else .{ .read_field = .{ .owner = owner, .field = field } };
+        out.data = if (taking) .{ .take_field = .{ .owner = owner, .field = field } } else .{ .read_field = .{ .reference = access.reference, .owner = owner, .field = field } };
     }
     fn checkPoolOperation(self: *Checker, _: ast.Node, operation: @FieldType(@FieldType(ast.Node, "data"), "pool_operation"), out: *typed.Node) Error!void {
-        const owner = try self.resolve(operation.owner);
+        const access = try self.operationOwner(operation.owner, operation.kind.mutates());
+        const owner = access.owner;
         const local = &self.locals.items[@backingInt(owner)];
-        if (local.parameter.reference_parameter != null or !local.ty.isAggregate()) return self.sink.fail("E_POOL_TYPE", operation.owner, "operation requires an owned pool binding");
+        if (!local.ty.isAggregate()) return self.sink.fail("E_POOL_TYPE", operation.owner, "operation requires an owned pool binding");
         const pool = self.catalog.records[local.ty.recordIndex()].shape.pool orelse return self.sink.fail("E_POOL_TYPE", operation.owner, "operation requires an owned pool binding");
         if (!local.ownership.transfer_available) return self.sink.failTransfer(eOwnedConsumed, operation.owner, local.declaration, local.ownership.transfer_span);
-        if (operation.kind.mutates() and !local.mutable) return self.sink.fail(eImmutable, operation.owner, "pool mutation requires a let mut binding");
-        try self.ownerAccess(owner, operation.kind.mutates(), operation.owner);
+        if (operation.kind.mutates() and access.reference == null and !local.mutable) return self.sink.fail(eImmutable, operation.owner, "pool mutation requires a let mut binding");
         local.usage.reads += 1;
         if (operation.kind.mutates()) local.usage.writes += 1;
         const arguments = try self.allocator.alloc(typed.NodeId, operation.arguments.len);
@@ -657,15 +668,15 @@ const Checker = struct {
             if (shape.ok_type != out.ty or shape.error_type != .i64) return self.sink.fail(ePoolResult, result_type, "pool operation requires a result with the operation's success type and i64 error");
             out.ty = result;
         }
-        out.data = .{ .pool_operation = .{ .kind = operation.kind, .owner = owner, .arguments = arguments } };
+        out.data = .{ .pool_operation = .{ .reference = access.reference, .kind = operation.kind, .owner = owner, .arguments = arguments } };
     }
     fn checkBufferOperation(self: *Checker, _: ast.Node, operation: @FieldType(@FieldType(ast.Node, "data"), "buffer_operation"), out: *typed.Node) Error!void {
-        const owner = try self.resolve(operation.owner);
+        const access = try self.operationOwner(operation.owner, operation.kind.mutates());
+        const owner = access.owner;
         const local = &self.locals.items[@backingInt(owner)];
         if (!local.ty.isAggregate() or self.catalog.records[local.ty.recordIndex()].shape.buffer == null) return self.sink.fail("E_BUFFER_TYPE", operation.owner, "operation requires an owned buffer binding");
         if (!local.ownership.transfer_available) return self.sink.failTransfer(eOwnedConsumed, operation.owner, local.declaration, local.ownership.transfer_span);
-        if (operation.kind.mutates() and !local.mutable) return self.sink.fail(eImmutable, operation.owner, "buffer mutation requires a let mut binding");
-        try self.ownerAccess(owner, operation.kind.mutates(), operation.owner);
+        if (operation.kind.mutates() and access.reference == null and !local.mutable) return self.sink.fail(eImmutable, operation.owner, "buffer mutation requires a let mut binding");
         local.usage.reads += 1;
         if (operation.kind.mutates()) local.usage.writes += 1;
         const element = self.catalog.records[local.ty.recordIndex()].shape.buffer.?;
@@ -688,7 +699,7 @@ const Checker = struct {
             const shape = typed.resultShape(out.ty, self.catalog.records) orelse return self.sink.fail(eBufferResult, result_type, "buffer mutation requires a result with bool success and i64 error payloads");
             if (shape.ok_type != .bool or shape.error_type != .i64) return self.sink.fail(eBufferResult, result_type, "buffer mutation requires a result with bool success and i64 error payloads");
         } else out.ty = if (operation.kind == .read) element else .u64;
-        out.data = .{ .buffer_operation = .{ .kind = operation.kind, .owner = owner, .arguments = arguments } };
+        out.data = .{ .buffer_operation = .{ .reference = access.reference, .kind = operation.kind, .owner = owner, .arguments = arguments } };
     }
     fn checkAcquireResource(self: *Checker, _: ast.Node, acquire: @FieldType(@FieldType(ast.Node, "data"), "acquire_resource"), out: *typed.Node) Error!void {
         out.ty = try self.ty(acquire.ty);
@@ -887,6 +898,13 @@ const Checker = struct {
         }
         return values;
     }
+    fn checkReadReference(self: *Checker, name: source.Span, out: *typed.Node) Error!void {
+        const id = try self.reference(name);
+        try self.requireReferenceKind(id, false, name);
+        out.ty = self.references.items[@backingInt(id)].ty;
+        if (self.transfers(out.ty)) return self.sink.fail("E_REFERENCE_VALUE", name, "read_ref cannot copy an owned value; use owner inspection or mutation operations");
+        out.data = .{ .read_ref = id };
+    }
     fn checkedExpression(self: *Checker, node: ast.Node, minimum_literal: ?Literal, temporaries: []const typed.Type) Error!typed.Node {
         var out: typed.Node = .{ .span = node.span, .ty = .i64, .data = undefined };
         if (minimum_literal) |parsed| {
@@ -1068,12 +1086,7 @@ const Checker = struct {
                 out.ty = .u64;
                 out.data = .{ .len_slice = id };
             },
-            .read_ref => |name| {
-                const id = try self.reference(name);
-                try self.requireReferenceKind(id, false, name);
-                out.ty = self.references.items[@backingInt(id)].ty;
-                out.data = .{ .read_ref = id };
-            },
+            .read_ref => |name| try self.checkReadReference(name, &out),
             .name => |name| try self.checkName(node, name, &out),
             .call => |call| try self.checkCall(node, call, &out),
             .unary => |u| {
@@ -1412,19 +1425,24 @@ const Checker = struct {
             if (borrow.mutable) self.locals.items[@backingInt(owner)].usage.mutable_borrow = true;
         }
         const owner_type = self.locals.items[@backingInt(owner)].ty;
-        const buffer_owner = owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].shape.buffer != null;
-        if (buffer_owner and !self.locals.items[@backingInt(owner)].ownership.transfer_available) return self.sink.failTransfer(
+        if (self.transfers(owner_type) and !self.locals.items[@backingInt(owner)].ownership.transfer_available) return self.sink.failTransfer(
             eOwnedConsumed,
             borrow.owner,
             self.locals.items[@backingInt(owner)].declaration,
             self.locals.items[@backingInt(owner)].ownership.transfer_span,
         );
-        const buffer_view = buffer_owner and (range != null or parent != null);
-        if (self.transfers(owner_type) and !buffer_view) return self.sink.fail(eResultBorrow, borrow.owner, "owned and result-bearing values must currently transfer by value; borrowing these values is not supported");
+        if (self.requiresHandling(owner_type)) return self.sink.fail(eResultBorrow, borrow.owner, "result-bearing values must transfer their handling obligation by value");
+        for (self.locals.items[@backingInt(owner)].ownership.partial_fields) |moved| if (moved != null) return self.sink.fail(eResultBorrow, borrow.owner, "a partially moved owner cannot be borrowed whole");
         const source_type = if (parent) |id| self.references.items[@backingInt(id)].ty else self.locals.items[@backingInt(owner)].ty;
         const parent_slice = if (parent) |id| self.references.items[@backingInt(id)].mode.slice else false;
+        const owner_subslice = range != null and parent != null and !parent_slice;
+        if (owner_subslice and source_type.isAggregate()) {
+            if (self.catalog.records[source_type.recordIndex()].shape.buffer != null)
+                return self.sink.fail("E_SLICE_TYPE", borrow.owner, "borrow buffer elements directly from the owner in a separate lexical scope");
+        }
         const element = if (range != null and !parent_slice) try self.sliceElement(source_type, borrow.owner) else source_type;
-        if (self.transfers(element)) return self.sink.fail(eResultBorrow, borrow.owner, "result-bearing elements cannot be exposed through references");
+        if (self.requiresHandling(element) or ((range != null or parent_slice) and self.transfers(element)))
+            return self.sink.fail(eResultBorrow, borrow.owner, "result obligations and owned slice elements cannot be exposed through references");
         const id: typed.ReferenceId = @fromBackingInt(self.references.items.len);
         try self.references.append(self.allocator, .{ .mode = .{ .slice = range != null or parent_slice }, .name = name, .declaration = borrow.name, .owner = owner, .parent = parent, .ty = element, .mutable = borrow.mutable });
         try self.active_refs.put(self.allocator, name, id);
@@ -1663,7 +1681,7 @@ const Checker = struct {
             if (try self.topLevel(parameter.name)) return sink.fail(eShadowing, parameter.name, "parameter shadows a top-level function");
             const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
             const parameter_type = try self.ty(parameter.ty);
-            if (parameter.reference != null and self.transfers(parameter_type)) return sink.fail(eResultBorrow, parameter.ty, "owned and result-bearing parameters must currently transfer by value");
+            if (parameter.reference != null and self.requiresHandling(parameter_type)) return sink.fail(eResultBorrow, parameter.ty, "result-bearing parameters must transfer their handling obligation by value");
             try self.locals.append(
                 allocator,
                 .{

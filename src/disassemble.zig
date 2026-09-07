@@ -1,4 +1,5 @@
 //! Deterministic instruction dumps show evaluation order and source locations.
+const reference_format = " ref={d}";
 const std = @import("std");
 const bc = @import("bytecode.zig");
 const typed = @import("typed.zig");
@@ -121,18 +122,27 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
         .end_borrow => |id| try writer.print("END_BORROW {d}", .{@backingInt(id)}),
         .read_ref => |id| try writer.print("READ_REF {d}", .{@backingInt(id)}),
         .write_ref => |id| try writer.print("WRITE_REF {d}", .{@backingInt(id)}),
-        .buffer_operation => |operation| try writer.print("BUFFER_{s} local={d} -> {s}", .{
-            @tagName(operation.kind),
-            @backingInt(operation.owner),
-            typed.typeName(operation.output, program.records),
-        }),
-        .pool_operation => |operation| try writer.print("POOL_{s} local={d} -> {s}", .{
-            @tagName(operation.kind),
-            @backingInt(operation.owner),
-            typed.typeName(operation.output, program.records),
-        }),
+        .buffer_operation => |operation| {
+            try writer.print("BUFFER_{s} local={d} -> {s}", .{
+                @tagName(operation.kind),
+                @backingInt(operation.owner),
+                typed.typeName(operation.output, program.records),
+            });
+            if (operation.reference) |id| try writer.print(reference_format, .{@backingInt(id)});
+        },
+        .pool_operation => |operation| {
+            try writer.print("POOL_{s} local={d} -> {s}", .{
+                @tagName(operation.kind),
+                @backingInt(operation.owner),
+                typed.typeName(operation.output, program.records),
+            });
+            if (operation.reference) |id| try writer.print(reference_format, .{@backingInt(id)});
+        },
         .take_field => |read| try writer.print("TAKE_FIELD local={d} field={d} -> {s}", .{ @backingInt(read.owner), read.field, typed.typeName(read.output, program.records) }),
-        .read_field => |read| try writer.print("READ_FIELD local={d} field={d} -> {s}", .{ @backingInt(read.owner), read.field, typed.typeName(read.output, program.records) }),
+        .read_field => |read| {
+            try writer.print("READ_FIELD local={d} field={d} -> {s}", .{ @backingInt(read.owner), read.field, typed.typeName(read.output, program.records) });
+            if (read.reference) |id| try writer.print(reference_format, .{@backingInt(id)});
+        },
         .resource_io => |io| try writer.print("RESOURCE_{s} local={d} -> {s}", .{
             if (io.reference != null) (if (io.kind == .read) "read_slice" else "write_slice") else @tagName(io.kind),
             @backingInt(io.owner),

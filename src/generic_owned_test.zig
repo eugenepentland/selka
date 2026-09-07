@@ -15,8 +15,8 @@ test "generic owned templates reject repeated moves and inconsistent continuing 
     try reject(schema ++ "fn f<T:copy>(flag:bool,b:B)->i64{if flag{discard b;}return 0;}fn main()->i64{return 0;}", "E_OWNED_PATH");
     try reject(schema ++ "fn f<T:copy>(b:B)->i64{while false{discard b;}return 0;}fn main()->i64{return 0;}", "E_OWNED_LOOP");
     try reject(schema ++ "fn consume(b:B)->bool{discard b;return true;}fn f<T:copy>(b:B)->i64{discard false&&consume(b);return 0;}fn main()->i64{return 0;}", "E_OWNED_PATH");
-    try reject(schema ++ "fn f<T:copy>(b:&B)->&B from b{return b;}fn main()->i64{return 0;}", "E_RESULT_BORROW");
-    try reject(schema ++ "fn f<T:copy>(b:B)->i64{borrow b as r{}return 0;}fn main()->i64{return 0;}", "E_RESULT_BORROW");
+    try reject(schema ++ "fn f<T:copy>(b:&B)->B{return read_ref(b);}fn main()->i64{return 0;}", "E_REFERENCE_VALUE");
+    try reject(schema ++ "fn f<T:copy>(b:B)->i64{borrow b as r{discard b;}return 0;}fn main()->i64{return 0;}", "E_BORROW_CONFLICT");
     try reject(schema ++ "fn f<T:copy>(b:Box)->B{return read_field(b,b);}fn main()->i64{return 0;}", "E_FIELD_COPY");
     try reject(schema ++ "fn identity<T:copy>(x:T)->T{return x;}fn f(b:B)->B{return identity::<B>(b);}fn main()->i64{return 0;}", "E_GENERIC_ARGUMENT");
 }

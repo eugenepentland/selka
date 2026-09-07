@@ -1,7 +1,7 @@
 //! Checked instruction model independent of validation and effect inference.
 const external_resources = @import("external_resources.zig");
 const std = @import("std");
-const FieldAccess = struct { owner: typed.LocalId, field: usize, output: typed.Type };
+const FieldAccess = struct { reference: ?typed.ReferenceId = null, owner: typed.LocalId, field: usize, output: typed.Type };
 const Span = @import("source.zig").Span;
 const typed = @import("typed.zig");
 /// Signed scalar ordering and equality predicates.
@@ -47,8 +47,8 @@ pub const Instruction = struct {
         read_field: FieldAccess,
         take_field: FieldAccess,
         write_ref: typed.ReferenceId,
-        buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: typed.LocalId, output: typed.Type },
-        pool_operation: struct { kind: @import("pool_operations.zig").Kind, owner: typed.LocalId, output: typed.Type },
+        buffer_operation: struct { reference: ?typed.ReferenceId = null, kind: @import("buffer_operations.zig").Kind, owner: typed.LocalId, output: typed.Type },
+        pool_operation: struct { reference: ?typed.ReferenceId = null, kind: @import("pool_operations.zig").Kind, owner: typed.LocalId, output: typed.Type },
         complete_resource: typed.Type,
         acquire_resource: struct { output: typed.Type, request: typed.Type },
         resource_io: struct { reference: ?typed.ReferenceId = null, kind: external_resources.IoKind, owner: typed.LocalId, output: typed.Type, input: ?typed.Type },

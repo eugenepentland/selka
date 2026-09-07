@@ -483,7 +483,10 @@ pub const Memory = struct {
         /// leases. Normal owner destruction uses destroy and refuses active borrows.
         pub fn deinit(self: *Store) void {
             if (self.identity == 0) return;
-            for (self.cells.entries.items) |entry| if (entry.value) |owned| self.releaseOwned(owned);
+            for (self.cells.entries.items, 0..) |entry, index| if (entry.value != null) {
+                const owned = self.cells.remove(.{ .index = index, .generation = entry.generation });
+                self.releaseOwned(owned);
+            };
             self.cells.entries.deinit(self.allocator);
             self.leases.entries.deinit(self.allocator);
             self.cells = .{};
@@ -749,6 +752,11 @@ pub const Memory = struct {
             if (active.kind != .exclusive) return error.ReadOnly;
             if (index >= active.length) return error.Bounds;
             try self.replace(self.cells.get(active.allocation).?, active.start + index, replacement);
+        }
+        /// Validate access to an owner cell without copying or changing its generation.
+        pub fn checkOwnerAccess(self: *Store, allocation: Allocation, mutable: bool) Error!void {
+            const owned = try self.cell(allocation);
+            if (owned.exclusive or (mutable and owned.shared != 0)) return error.BorrowConflict;
         }
         /// Read and retain an owner element after checking dynamic borrow conflicts.
         pub fn readOwner(self: *Store, allocation: Allocation, index: usize) Error!Value {

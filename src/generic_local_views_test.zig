@@ -48,7 +48,7 @@ test "generic local buffer views check ownership after bounds and forbid transfe
     try reject("fn consume(b:B)->i64{discard b;return 0;}fn f<T:copy>(b:B)->i64{borrow b[consume(b)..0] as s{return 0;}}", "E_OWNED_CONSUMED");
     try reject("fn f<T:copy>(b:B)->i64{borrow b[0..0] as s{discard b;}return 0;}", "E_BORROW_CONFLICT");
     try reject("fn f<T:copy>(input:B,heap:allocator)->i64{let mut b=input;borrow b[0..0] as s{acknowledge reserve_buffer<S>(b,heap,2);}return 0;}", "E_BORROW_CONFLICT");
-    try reject("fn f<T:copy>(b:B)->i64{borrow b as s{return 0;}}", "E_RESULT_BORROW");
+    try reject("fn f<T:copy>(b:B)->i64{borrow b as s{discard read_ref(s);return 0;}}", "E_REFERENCE_VALUE");
     try reject("fn f<T:copy>(input:B)->i64{let mut b=input;borrow mut b[0..0] as s{return cast<i64>(len_buffer(b));}}", "E_BORROW_CONFLICT");
 }
 test "generic local slices cannot escape as borrowed input results or change nominal element type" {

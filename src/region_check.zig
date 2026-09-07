@@ -91,13 +91,13 @@ const Analysis = struct {
         const ref = self.function.scope.references[@backingInt(id)];
         if (!carries(ref.ty, self.types)) return false;
         const owner_type = self.function.scope.locals[@backingInt(ref.owner)].ty;
-        if (owner_type.isAggregate() and self.program.records[owner_type.recordIndex()].shape.buffer != null) return false;
+        if (ref.mode.slice and owner_type.isAggregate() and self.program.records[owner_type.recordIndex()].shape.buffer != null) return false;
         return grow(&self.locals[@backingInt(ref.owner)], self.node(value));
     }
     fn refLimit(self: Analysis, id: typed.ReferenceId) usize {
         const ref = self.function.scope.references[@backingInt(id)];
         const owner = self.function.scope.locals[@backingInt(ref.owner)];
-        if (owner.ty.isAggregate() and self.program.records[owner.ty.recordIndex()].shape.buffer != null) return self.local(ref.owner).depth;
+        if (ref.mode.slice and owner.ty.isAggregate() and self.program.records[owner.ty.recordIndex()].shape.buffer != null) return self.local(ref.owner).depth;
         return owner.ownership.arena_depth;
     }
     fn validateExpression(self: Analysis, expression_node: typed.Node, sink: *diagnostic.Sink) diagnostic.Error!void {
@@ -230,7 +230,7 @@ fn propagateDependencies(analysis: Analysis, item: walk.Item) bool {
                 for (invocation.references, 0..) |ref_id, reference_index| {
                     const ref = function.scope.references[@backingInt(ref_id)];
                     const owner_type = function.scope.locals[@backingInt(ref.owner)].ty;
-                    const buffer = owner_type.isAggregate() and program.records[owner_type.recordIndex()].shape.buffer != null;
+                    const buffer = ref.mode.slice and owner_type.isAggregate() and program.records[owner_type.recordIndex()].shape.buffer != null;
                     if (analysis.mutableArgument(invocation, reference_index) and carries(ref.ty, types) and !buffer) changed = grow(&locals[@backingInt(ref.owner)], dependency) or changed;
                 }
             }

@@ -1,5 +1,6 @@
 //! Concrete nominal instances execute through ordinary typed IR and the checked bytecode VM.
 const std = @import("std");
+const memory = @import("memory.zig");
 const t = std.testing;
 const language = @import("compiler.zig");
 const typed = @import("typed.zig");
@@ -56,7 +57,7 @@ const owned = "buffer B:u8;result Open{ok:B,err:i64}struct Owner<T:copy>{buffer:
 fn ownedScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "owned-instance.my", owned);
     defer compilation.deinit();
-    var stats: @import("memory.zig").Statistics = .{};
+    var stats: memory.Statistics = .{};
     const result = try compilation.executeWithOptions(allocator, .{ .memory = .{ .statistics = &stats } });
     try t.expectEqual(@as(i64, 9), result.value);
     try t.expectEqual(@as(u64, 1), stats.created);
@@ -254,7 +255,7 @@ test "bounded maps sets and queues preserve owners through full duplicate and de
     var program: language.embedded_project.Program = undefined;
     try program.init(t.allocator, .{ .context = null, .read = readBounded });
     defer program.deinit();
-    var stats: @import("memory.zig").Statistics = .{};
+    var stats: memory.Statistics = .{};
     const outcome = try language.vm.runWithOptions(t.allocator, program.compilation.code.?, .{ .memory = .{ .statistics = &stats } });
     try t.expectEqual(@as(i64, 21), outcome.value);
     try t.expectEqual(stats.created, stats.released);
@@ -262,7 +263,7 @@ test "bounded maps sets and queues preserve owners through full duplicate and de
 }
 
 fn boundedRuntime(allocator: std.mem.Allocator, code: language.bytecode.Program) !void {
-    var stats: @import("memory.zig").Statistics = .{};
+    var stats: memory.Statistics = .{};
     const outcome = language.vm.runWithOptions(allocator, code, .{ .memory = .{ .statistics = &stats } });
     try t.expectEqual(stats.created, stats.released);
     try t.expectEqual(@as(usize, 0), stats.live_allocations);
@@ -275,4 +276,90 @@ test "bounded collection runtime frees ownership on every allocation failure" {
     defer program.deinit();
     var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(no_resize.allocator(), boundedRuntime, .{program.compilation.code.?});
+}
+
+const owner_borrows =
+    "buffer Vec<T:copy>:T;result Open<T:copy>{ok:Vec<T>,err:i64}result Status{ok:bool,err:i64}" ++
+    "struct Holder<T:copy>{buffer:Vec<T>,tag:i64}result Answer{ok:i64,err:i64}" ++
+    "fn inspect<T:copy>(holder:&Holder<T>)->i64 noalloc{return read_field(holder,tag);}" ++
+    "fn append<T:copy>(values:&mut Vec<T>,value:T)->Status noalloc{return append_buffer<Status>(values,value);}" ++
+    "fn size<T:copy>(values:&Vec<T>)->u64 noalloc{return len_buffer(values);}" ++
+    "fn work(heap:allocator)->Answer{let mut values=try acquire_buffer<Open<i64>>(heap,2);" ++
+    "borrow mut values as view{discard try append::<i64>(view,7);if size::<i64>(view)!=1u64{return new Answer.ok(-1);}}" ++
+    "borrow values[0..1] as view{if read_slice(view,0)!=7{return new Answer.ok(-2);}}" ++
+    "let holder=new Holder<i64>{buffer:values,tag:9};borrow holder as view{return new Answer.ok(inspect::<i64>(view));}}" ++
+    "fn main(heap:allocator)->i64{match work(heap){Answer.ok(n)=>{return n;},Answer.err(e)=>{return e;}}}";
+// spec: OWNER-REFERENCE-1
+test "whole owner references inspect records and mutate generic buffers without transfer" {
+    try run(t.allocator, owner_borrows, 9);
+}
+
+test "owner references preserve exclusion obligations and forbid extracting ownership" {
+    const defs = "buffer B:i64;result Open{ok:B,err:i64}result Status{ok:bool,err:i64}struct Holder{buffer:B,tag:i64}";
+    try reject(defs ++ "fn f(b:&B)->Status{return append_buffer<Status>(b,1);}fn main()->i64{return 0;}", "E_REFERENCE_READ_ONLY");
+    try reject(defs ++ "fn f(b:&B)->B{return read_ref(b);}fn main()->i64{return 0;}", "E_REFERENCE_VALUE");
+    try reject(defs ++ "fn f(h:&Holder)->B{return take_field(h,buffer);}fn main()->i64{return 0;}", "E_REFERENCE_READ_ONLY");
+    try reject(defs ++ "fn f(b:B)->i64{borrow b as view{discard b;}return 0;}fn main()->i64{return 0;}", "E_BORROW_CONFLICT");
+    try reject(defs ++ "fn f(h:Holder)->i64{discard take_field(h,buffer);borrow h as view{return read_field(view,tag);}}fn main()->i64{return 0;}", "E_RESULT_BORROW");
+    try reject(defs ++ "fn f(b:&mut B)->i64{borrow b[0..0] as view{return 0;}}fn main()->i64{return 0;}", "E_SLICE_TYPE");
+    try reject(defs ++ "fn f<T:copy>(b:&B)->Status{return append_buffer<Status>(b,1);}fn main()->i64{return 0;}", "E_REFERENCE_READ_ONLY");
+    try reject(defs ++ "fn f<T:copy>(b:&B)->B{return read_ref(b);}fn main()->i64{return 0;}", "E_REFERENCE_VALUE");
+}
+
+test "shared owner inspectors do not acquire the owner's resource cleanup effects" {
+    var compilation = try language.Compilation.init(t.allocator, "inspect.my", "resource F:filesystem;struct Holder{file:F,tag:i64}" ++
+        "fn inspect(h:&Holder)->i64 effects(){return read_field(h,tag);}" ++
+        "fn generic<T:copy>(h:&Holder)->i64 effects(){return read_field(h,tag);}" ++
+        "fn main()->i64{return 0;}");
+    defer compilation.deinit();
+    try compilation.check();
+}
+
+fn ownerReferenceRuntime(allocator: std.mem.Allocator, code: language.bytecode.Program) !void {
+    var stats: memory.Statistics = .{};
+    const outcome = language.vm.runWithOptions(allocator, code, .{ .memory = .{ .statistics = &stats } });
+    try t.expectEqual(stats.created, stats.released);
+    try t.expectEqual(@as(usize, 0), stats.live_allocations);
+    try t.expectEqual(@as(i64, 9), (try outcome).value);
+}
+test "owner reference restoreLocalOwner unwinds nested owned cells under allocation failures" {
+    var compilation = try language.Compilation.init(t.allocator, "owner-reference.my", owner_borrows);
+    defer compilation.deinit();
+    try compilation.emit();
+    var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(no_resize.allocator(), ownerReferenceRuntime, .{compilation.code.?});
+    const generated = try compilation.emitC(t.allocator);
+    defer t.allocator.free(generated);
+    try t.expect(std.mem.indexOf(u8, generated, "reference_owner(") != null);
+}
+
+test "whole owner reborrows return references and grow buffers before fresh element views" {
+    try run(t.allocator, "buffer B:i64;result Open{ok:B,err:i64}result Status{ok:bool,err:i64}result Answer{ok:i64,err:i64}" ++
+        "fn identity<T:copy>(value:&mut B)->&mut B from value{return value;}" ++
+        "fn work(heap:allocator)->Answer{let mut b=try acquire_buffer<Open>(heap,0);" ++
+        "borrow mut b as view{borrow mut identity::<bool>(view) as child{" ++
+        "discard try reserve_buffer<Status>(child,heap,2);discard try append_buffer<Status>(child,11);}}" ++
+        "borrow b[0..1] as view{return new Answer.ok(read_slice(view,0));}}" ++
+        "fn main(heap:allocator)->i64{match work(heap){Answer.ok(n)=>{return n;},Answer.err(e)=>{return e;}}}", 11);
+}
+
+test "whole pool references mutate inspect and remove through generic helpers" {
+    try run(t.allocator, "pool Store<T:copy>(Id):T;result Open<T:copy>{ok:Store<T>,err:i64}result Insert<T:copy>{ok:Id<T>,err:i64}" ++
+        "result Read<T:copy>{ok:T,err:i64}result Status{ok:bool,err:i64}result Answer{ok:i64,err:i64}" ++
+        "fn insert<T:copy>(pool:&mut Store<T>,value:T)->Insert<T> noalloc{return insert_pool<Insert<T>>(pool,value);}" ++
+        "fn get<T:copy>(pool:&Store<T>,id:Id<T>)->Read<T> noalloc{return read_pool<Read<T>>(pool,id);}" ++
+        "fn work(heap:allocator)->Answer{let mut pool=try acquire_pool<Open<i64>>(heap,1);borrow mut pool as view{" ++
+        "let id=try insert::<i64>(view,17);let value=try get::<i64>(view,id);discard try remove_pool<Status>(view,id);return new Answer.ok(value);}}" ++
+        "fn main(heap:allocator)->i64{match work(heap){Answer.ok(n)=>{return n;},Answer.err(e)=>{return e;}}}", 17);
+}
+
+test "whole buffer replacement preserves lexical arena escape checks in ordinary and generic helpers" {
+    const defs = "buffer B:i64;result Open{ok:B,err:i64}result Status{ok:bool,err:i64}";
+    try reject(defs ++ "fn replace_owner(b:&mut B,heap:allocator)->Status{arena heap as scratch{write_ref(b,try acquire_buffer<Open>(scratch,1));}return new Status.ok(true);}fn main()->i64{return 0;}", "E_ARENA_ESCAPE");
+    try reject(defs ++ "fn replace_owner<T:copy>(b:&mut B,heap:allocator)->Status{arena heap as scratch{write_ref(b,try acquire_buffer<Open>(scratch,1));}return new Status.ok(true);}fn main()->i64{return 0;}", "E_ARENA_ESCAPE");
+    try run(t.allocator, defs ++
+        "fn replace_owner(b:&mut B,value:B)->i64 noalloc{write_ref(b,value);return cast<i64>(capacity_buffer(b));}" ++
+        "fn work(heap:allocator)->Status{let mut b=try acquire_buffer<Open>(heap,1);let value=try acquire_buffer<Open>(heap,3);" ++
+        "borrow mut b as view{if replace_owner(view,value)!=3{return new Status.ok(false);}}return new Status.ok(capacity_buffer(b)==3u64);}" ++
+        "fn main(heap:allocator)->i64{match work(heap){Status.ok(good)=>{if good{return 1;}return 0;},Status.err(e)=>{return e;}}}", 1);
 }

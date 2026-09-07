@@ -84,11 +84,11 @@ const Checker = struct {
         for (self.parameters) |parameter| if (try self.topLevel(parameter.name)) return sink.fail(eShadowing, parameter.name, "type parameter shadows a top-level declaration or import");
         try self.validateStructural();
         self.result = try self.ty(function.signature.return_type);
-        try self.seedCleanup(self.result);
+        if (function.signature.return_reference == null) try self.seedCleanup(self.result);
         for (function.signature.parameters) |parameter| {
             const parameter_type = try self.ty(parameter.ty);
-            if (parameter.reference != null and (try self.transfers(parameter_type))) return sink.fail(diagnostic.result_borrow, parameter.ty, "result-bearing parameters must transfer by value");
-            try self.bind(parameter.name, parameter_type, false);
+            if (parameter.reference != null and (try self.properties(parameter_type)).requires_handling) return sink.fail(diagnostic.result_borrow, parameter.ty, "result-bearing parameters must transfer by value");
+            try self.bindMode(parameter.name, parameter_type, false, parameter.reference == false);
             self.locals.items[self.locals.items.len - 1].reference = parameter.reference;
             self.locals.items[self.locals.items.len - 1].slice = parameter.slice;
             if (parameter.reference != null) self.locals.items[self.locals.items.len - 1].root = self.locals.items.len - 1;
@@ -126,7 +126,7 @@ const Checker = struct {
     }
     fn referenceLimit(self: *Checker, binding: Local) Regions.Limit {
         const owner = self.locals.items[binding.root.?];
-        if (self.shapes().kind(owner.ty) == .buffer) return .{ .node = owner.origin };
+        if (binding.slice and self.shapes().kind(owner.ty) == .buffer) return .{ .node = owner.origin };
         return .{ .depth = owner.arena_depth };
     }
     fn regionWrite(self: *Checker, binding: Local, value: usize, span: source.Span) Error!void {
@@ -335,11 +335,15 @@ const Checker = struct {
             try self.ownerAccess(binding, borrow.mutable, borrow.owner);
         }
         const buffer_owner = self.shapes().kind(binding.ty) == .buffer;
-        if (buffer_owner and !binding.available) return self.sink.failTransfer(diagnostic.owned_consumed, borrow.owner, binding.name, binding.transfer_span);
-        if ((try self.transfers(binding.ty)) and !(buffer_owner and borrow.range != null)) return self.sink.fail(diagnostic.result_borrow, borrow.owner, "owned and result-bearing values must transfer by value");
+        if ((try self.transfers(binding.ty)) and !binding.available) return self.sink.failTransfer(diagnostic.owned_consumed, borrow.owner, binding.name, binding.transfer_span);
+        if ((try self.properties(binding.ty)).requires_handling) return self.sink.fail(diagnostic.result_borrow, borrow.owner, "result-bearing values must transfer their handling obligation by value");
+        if (field_moves.first(binding.fields) != null) return self.sink.fail(diagnostic.result_borrow, borrow.owner, "a partially moved owner cannot be borrowed whole");
+        if (buffer_owner and borrow.range != null) {
+            if (binding.reference != null and !binding.slice) return self.sink.fail("E_SLICE_TYPE", borrow.owner, "borrow buffer elements directly from the owner in a separate lexical scope");
+        }
         const element = if (borrow.range != null and !binding.slice) try self.sliceType(binding.ty, borrow.owner) else binding.ty;
-        if ((try self.transfers(element))) return self.sink.fail(diagnostic.result_borrow, borrow.owner, "result-bearing elements cannot be exposed through references");
-        try self.supports(element, .copy, borrow.owner);
+        if ((try self.properties(element)).requires_handling) return self.sink.fail(diagnostic.result_borrow, borrow.owner, "result obligations cannot be exposed through references");
+        if (borrow.range != null or binding.slice) try self.supports(element, .copy, borrow.owner);
         return self.loanScope(.{ .name = borrow.name, .ty = element, .mutable = false, .reference = borrow.mutable, .slice = borrow.range != null or binding.slice, .root = binding.root orelse owner_index }, parent, borrow.body);
     }
 
@@ -347,7 +351,7 @@ const Checker = struct {
         const root = child.root.?;
         const mutable = child.reference.?;
         const before = self.locals.items.len;
-        try self.bind(child.name, child.ty, false);
+        try self.bindMode(child.name, child.ty, false, !child.reference.?);
         defer self.endScope(before);
         self.locals.items[before] = child;
         self.locals.items[before].parent = parent;
@@ -423,13 +427,16 @@ const Checker = struct {
         return false;
     }
     fn bind(self: *Checker, name: source.Span, ty_value: Symbolic, mutable: bool) Error!void {
+        return self.bindMode(name, ty_value, mutable, false);
+    }
+    fn bindMode(self: *Checker, name: source.Span, ty_value: Symbolic, mutable: bool, readonly_reference: bool) Error!void {
         const text = self.src.text(name);
         if (try self.topLevel(name)) return self.sink.fail(eShadowing, name, "binding shadows a top-level declaration or import");
         if (self.active.contains(text)) return self.sink.fail(eShadowing, name, "binding shadows an active template binding");
         for (self.parameters) |parameter| if (std.mem.eql(u8, text, self.src.text(parameter.name))) return self.sink.fail(eShadowing, name, "binding shadows a template type parameter");
         try self.active.put(self.allocator, text, self.locals.items.len);
         try self.locals.append(self.allocator, .{ .name = name, .ty = ty_value, .mutable = mutable, .origin = try self.regions.add(.{}), .arena_depth = self.arena_depth });
-        try self.seedCleanup(ty_value);
+        if (!readonly_reference) try self.seedCleanup(ty_value);
     }
     fn callTarget(self: *Checker, invocation: Call, call_span: source.Span) Error!ast.Function {
         const key = if (self.module_names) |names|
@@ -719,6 +726,7 @@ const Checker = struct {
             },
             .read_ref => |name| result: {
                 const ref = try self.reference(name, false, false);
+                if (try self.transfers(ref.ty)) return self.sink.fail("E_REFERENCE_VALUE", name, "read_ref cannot copy an owned value");
                 try self.supports(ref.ty, .copy, name);
                 try self.regionRead(ref.*);
                 break :result ref.ty;
@@ -848,6 +856,10 @@ const Checker = struct {
     }
     fn runtimeOwner(self: *Checker, span: source.Span, mutates: bool) Error!void {
         const binding = try self.local(span);
+        if (binding.reference != null) {
+            _ = try self.reference(span, mutates, false);
+            return;
+        }
         if (!binding.available) return self.sink.failTransfer(diagnostic.owned_consumed, span, binding.name, binding.transfer_span);
         if (mutates and !binding.mutable) return self.sink.fail(diagnostic.immutable, span, "mutation requires a let mut binding");
         try self.ownerAccess(binding.*, mutates, span);
@@ -865,7 +877,6 @@ const Checker = struct {
     }
     fn bufferValue(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "buffer_operation")) Error!Symbolic {
         const owner = try self.local(operation.owner);
-        if (owner.reference != null) return self.sink.fail("E_BUFFER_TYPE", operation.owner, "operation requires a buffer value binding");
         try self.regionRead(owner.*);
         const shape = (try self.shapes().container(owner.ty, operation.owner, false)) orelse return self.sink.fail("E_BUFFER_TYPE", operation.owner, "operation requires a buffer value binding");
         const element = shape.element;
@@ -877,7 +888,7 @@ const Checker = struct {
                 try self.same(value, .{ .concrete = .allocator }, at);
             } else if (operation.kind == .append or writes_element) {
                 try self.same(value, element, at);
-                try self.regions.require(self.last_origin, .{ .node = owner.origin }, at);
+                try self.regions.require(self.last_origin, .{ .node = self.locals.items[owner.root orelse self.active.get(self.src.text(operation.owner)).?].origin }, at);
             } else try self.supports(value, .integer, at);
         }
         try self.runtimeOwner(operation.owner, operation.kind.mutates());
@@ -887,14 +898,13 @@ const Checker = struct {
     }
     fn poolValue(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "pool_operation")) Error!Symbolic {
         const owner = try self.local(operation.owner);
-        if (owner.reference != null) return self.sink.fail("E_POOL_TYPE", operation.owner, "operation requires a pool value binding");
         try self.regionRead(owner.*);
         const pool = (try self.shapes().container(owner.ty, operation.owner, true)) orelse return self.sink.fail("E_POOL_TYPE", operation.owner, "operation requires a pool value binding");
         for (operation.arguments, 0..) |input, index| {
             const expected = if (operation.kind == .insert or index == 1) pool.element else pool.handle;
             const at = self.program.nodes.items[@backingInt(input)].span;
             try self.same(try self.expression(input), expected, at);
-            if (operation.kind == .insert or index == 1) try self.regions.require(self.last_origin, .{ .node = owner.origin }, at);
+            if (operation.kind == .insert or index == 1) try self.regions.require(self.last_origin, .{ .node = self.locals.items[owner.root orelse self.active.get(self.src.text(operation.owner)).?].origin }, at);
         }
         try self.runtimeOwner(operation.owner, operation.kind.mutates());
         const success: Symbolic = switch (operation.kind) {
@@ -918,7 +928,10 @@ const Checker = struct {
     }
     fn fieldValue(self: *Checker, access: @FieldType(@FieldType(ast.Node, "data"), "read_field"), taking: bool) Error!Symbolic {
         const binding = try self.local(access.owner);
-        if (binding.reference != null) return self.sink.fail("E_TYPE", access.owner, "field access requires a value binding, not a reference");
+        if (binding.reference != null) {
+            if (taking) return self.sink.fail("E_FIELD_TAKE", access.owner, "cannot move a field out of a borrowed owner");
+            _ = try self.reference(access.owner, false, false);
+        }
         try self.regionRead(binding.*);
         const shape = try self.shapes().requireRecord(binding.ty, access.owner, false);
         const index = try self.shapes().memberIndex(shape, access.field);
@@ -930,7 +943,7 @@ const Checker = struct {
         if (binding.fields.len != 0) {
             if (binding.fields[index]) |at| return self.sink.failMovedField(access.field, binding.name, at);
         }
-        try self.ownerAccess(binding.*, taking, access.owner);
+        if (binding.reference == null) try self.ownerAccess(binding.*, taking, access.owner);
         if (taking) binding.fields = try field_moves.take(self.field_arena.allocator(), binding.fields, fields.len, index, access.field);
         return result;
     }

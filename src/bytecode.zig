@@ -162,7 +162,7 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
         .binary_integer => |binary| {
             if (!binary.ty.isInteger() or binary.op == .logical_and or binary.op == .logical_or) return error.InternalError;
         },
-        .begin_borrow, .begin_slice, .end_borrow, .read_ref, .write_ref, .read_slice, .write_slice, .len_slice => |id| try validateOpBeginBorrow(function, instruction, id),
+        .begin_borrow, .begin_slice, .end_borrow, .read_ref, .write_ref, .read_slice, .write_slice, .len_slice => |id| try validateOpBeginBorrow(program, function, instruction, id),
         .load_local, .store_local, .move_local, .drop_local => |slot| if (@backingInt(slot) >= function.scope.locals.len or function.scope.locals[@backingInt(slot)].parameter.reference_parameter != null) {
             return error.InternalError;
         },
@@ -228,10 +228,23 @@ fn validateOpSwitchVariant(program: Program, function: Function, dispatch: @Fiel
     }
 }
 
+fn validateOperationOwner(function: Function, owner: typed.LocalId, reference_id: ?typed.ReferenceId, mutable: bool) Error!void {
+    if (@backingInt(owner) >= function.scope.locals.len) return error.InternalError;
+    const local = function.scope.locals[@backingInt(owner)];
+    if (reference_id) |id| {
+        if (@backingInt(id) >= function.scope.references.len) return error.InternalError;
+        const reference = function.scope.references[@backingInt(id)];
+        if (reference.owner != owner or reference.ty != local.ty or reference.mode.slice) return error.InternalError;
+        if (mutable and !reference.mutable) return error.InternalError;
+    } else {
+        if (local.parameter.reference_parameter != null or (mutable and !local.mutable)) return error.InternalError;
+    }
+}
+
 fn validateOpReadField(program: Program, function: Function, instruction: Instruction, read: @FieldType(@FieldType(Instruction, "op"), "read_field")) Error!void {
     if (@backingInt(read.owner) >= function.scope.locals.len or !validType(read.output, program)) return error.InternalError;
     const local = function.scope.locals[@backingInt(read.owner)];
-    if (local.parameter.reference_parameter != null) return error.InternalError;
+    try validateOperationOwner(function, read.owner, read.reference, false);
     if (!validType(local.ty, program)) return error.InternalError;
     if (!local.ty.isAggregate()) return error.InternalError;
     const schema = program.records[local.ty.recordIndex()];
@@ -240,6 +253,7 @@ fn validateOpReadField(program: Program, function: Function, instruction: Instru
     if (schema.fields[read.field].ty != read.output) return error.InternalError;
     if ((instruction.op == .read_field and (typed.moveOnly(read.output, program.records) or typed.requiresHandling(read.output, program.records)))) return error.InternalError;
     if (instruction.op == .take_field) {
+        if (read.reference != null) return error.InternalError;
         if (!typed.moveOnly(local.ty, program.records) and !typed.requiresHandling(local.ty, program.records)) return error.InternalError;
     }
 }
@@ -247,10 +261,9 @@ fn validateOpReadField(program: Program, function: Function, instruction: Instru
 fn validateOpPoolOperation(program: Program, function: Function, operation: @FieldType(@FieldType(Instruction, "op"), "pool_operation")) Error!void {
     if (@backingInt(operation.owner) >= function.scope.locals.len or !validType(operation.output, program)) return error.InternalError;
     const local = function.scope.locals[@backingInt(operation.owner)];
-    if (local.parameter.reference_parameter != null) return error.InternalError;
     if (!validType(local.ty, program)) return error.InternalError;
     if (!local.ty.isAggregate()) return error.InternalError;
-    if ((operation.kind.mutates() and !local.mutable)) return error.InternalError;
+    try validateOperationOwner(function, operation.owner, operation.reference, operation.kind.mutates());
     const pool = program.records[local.ty.recordIndex()].shape.pool orelse return error.InternalError;
     const expected = operation.kind.output(pool);
     if (operation.kind.fallible()) {
@@ -262,9 +275,8 @@ fn validateOpPoolOperation(program: Program, function: Function, operation: @Fie
 fn validateOpBufferOperation(program: Program, function: Function, operation: @FieldType(@FieldType(Instruction, "op"), "buffer_operation")) Error!void {
     if (@backingInt(operation.owner) >= function.scope.locals.len or !validType(operation.output, program)) return error.InternalError;
     const local = function.scope.locals[@backingInt(operation.owner)];
-    if (local.parameter.reference_parameter != null) return error.InternalError;
     if (!local.ty.isAggregate()) return error.InternalError;
-    if ((operation.kind.mutates() and !local.mutable)) return error.InternalError;
+    try validateOperationOwner(function, operation.owner, operation.reference, operation.kind.mutates());
     const element = program.records[local.ty.recordIndex()].shape.buffer orelse return error.InternalError;
     if (operation.kind.mutates()) {
         const shape = typed.resultShape(operation.output, program.records) orelse return error.InternalError;
@@ -321,9 +333,10 @@ fn validateOpAcquireBuffer(program: Program, ty: @FieldType(@FieldType(Instructi
     if (shape.error_type != .i64) return error.InternalError;
 }
 
-fn validateOpBeginBorrow(function: Function, instruction: Instruction, id: @FieldType(@FieldType(Instruction, "op"), "begin_borrow")) Error!void {
+fn validateOpBeginBorrow(program: Program, function: Function, instruction: Instruction, id: @FieldType(@FieldType(Instruction, "op"), "begin_borrow")) Error!void {
     if (@backingInt(id) >= function.scope.references.len) return error.InternalError;
     const reference = function.scope.references[@backingInt(id)];
+    if (instruction.op == .read_ref and (typed.moveOnly(reference.ty, program.records) or typed.requiresHandling(reference.ty, program.records))) return error.InternalError;
     if ((instruction.op == .begin_borrow or instruction.op == .begin_slice) and reference.mode.parameter) return error.InternalError;
     if ((instruction.op == .write_ref or instruction.op == .write_slice) and !reference.mutable) return error.InternalError;
     switch (instruction.op) {
@@ -594,6 +607,7 @@ fn validateReference(program: Program, function: Function, reference: typed.Refe
     if (reference.mode.slice and !source_slice) {
         if (!source_type.isAggregate() or !validType(source_type, program)) return error.InternalError;
         const schema = program.records[source_type.recordIndex()];
+        if (reference.parent != null and schema.shape.buffer != null) return error.InternalError;
         if (schema.shape.buffer) |element| {
             if (element != reference.ty) return error.InternalError;
         } else {
