@@ -9,13 +9,15 @@ const eGenericLimit = diagnostic.generic_limit;
 const Span = source.Span;
 /// Identity in the symbolic layout graph, independent of executable typed.Type IDs.
 pub const Id = enum(usize) { _ };
-const Base = union(enum) {
+/// Semantic identity category; parameters remain scoped to their declaring template.
+pub const Base = union(enum) {
     builtin: typed.Type,
     parameter: struct { declaration: usize, index: usize },
     named: usize,
     array: struct { length: usize, key: ?Id },
 };
-const Key = struct { base: Base, arguments: []const Id };
+/// Ordered semantic identity accepted by layout materialization.
+pub const Key = struct { base: Base, arguments: []const Id };
 const KeyContext = struct {
     /// Hash declaration, parameter and ordered argument identities without pointer identity.
     pub fn hash(_: KeyContext, key: Key) u64 {
@@ -110,6 +112,15 @@ pub const Graph = struct {
         if (templates.depends(value)) return self.sink.fail("E_GENERIC_BODY_UNSUPPORTED", span, "nominal specialization requires resolved concrete type arguments");
         const first = self.pending.items.len;
         const id = try self.resolve(value, &.{}, span);
+        try self.need(id);
+        try self.expand();
+        try self.acyclic(first);
+        return id;
+    }
+    /// Demand an already-resolved key when function specialization supplies concrete arguments.
+    pub fn materializeKey(self: *Graph, key: Key, span: Span) Error!Id {
+        const first = self.pending.items.len;
+        const id = try self.intern(key, span);
         try self.need(id);
         try self.expand();
         try self.acyclic(first);

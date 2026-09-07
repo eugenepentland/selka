@@ -1236,3 +1236,9 @@ test "CLI executes concrete nominal instances and reports argument identity erro
     try invokeOptions("check", definitions ++
         "fn takes(box:Box<i64>)->i64{return box.value;}fn main()->i64{return takes(new Box<bool>{value:true});}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_TYPE\"");
 }
+
+test "CLI specializes nominal generic bodies and reports uncalled shape errors" {
+    const definitions = "struct Box<T:copy>{value:T}";
+    try invoke("run", definitions ++ "fn pack<T:copy>(x:T)->Box<T>{return new Box<T>{value:x};}fn main()->i64{return pack::<i64>(31).value;}", 0, "31\n", "");
+    try invokeOptions("check", definitions ++ "fn bad<T:copy>(x:T)->Box<T>{return new Box<T>{value:1};}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_TYPE\"");
+}

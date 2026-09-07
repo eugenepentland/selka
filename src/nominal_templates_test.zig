@@ -61,7 +61,7 @@ fn separateSinkScenario(allocator: std.mem.Allocator) !void {
     defer sink.items.deinit(allocator);
     const catalog = try @import("records.zig").collectWithNames(compilation.arena.allocator(), compilation.src, compilation.syntax.?, &sink, null);
     try t.expectEqual(@as(usize, 0), catalog.records.len);
-    try t.expect(catalog.template_names.contains("Box"));
+    try t.expect(catalog.templates.names.contains("Box"));
     try t.expectEqual(@as(usize, 0), sink.items.items.len);
 }
 // spec: NOMINAL-TEMPLATE-CHECK-1

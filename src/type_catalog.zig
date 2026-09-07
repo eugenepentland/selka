@@ -22,8 +22,12 @@ pub const Catalog = struct {
     names: std.StringHashMapUnmanaged(typed.Type),
     arrays: ArrayCatalog = .{},
     record_capacity: usize = 0,
-    field_names: []std.StringHashMapUnmanaged(usize),
-    template_names: std.StringHashMapUnmanaged(Span) = .empty,
+    field_names: std.ArrayList(std.StringHashMapUnmanaged(usize)) = .empty,
+    templates: struct {
+        names: std.StringHashMapUnmanaged(Span) = .empty,
+        applications: std.AutoHashMapUnmanaged(usize, *const @import("nominal_templates.zig").Application) = .empty,
+        store: ?*@import("nominal_state.zig").Store = null,
+    } = .{},
 
     /// Resolve a source type name or interned array span, diagnosing unknown types.
     pub fn resolve(self: Catalog, src: Source, span: Span, sink: *diagnostic.Sink) Error!typed.Type {
@@ -31,7 +35,7 @@ pub const Catalog = struct {
         const name = src.text(span);
         if (typed.Type.fromName(name)) |builtin| return builtin;
         const key = if (self.module_names) |names| try names.reference(span, .type, null, null, sink) else name;
-        if (self.template_names.contains(key)) return sink.fail("E_GENERIC_ARITY", span, "nominal template requires explicit type arguments");
+        if (self.templates.names.contains(key)) return sink.fail("E_GENERIC_ARITY", span, "nominal template requires explicit type arguments");
         return self.names.get(key) orelse sink.fail("E_UNKNOWN_TYPE", span, "type is not declared");
     }
     /// Intern a specialized numeric array while retaining declaration-based element identity.
@@ -90,11 +94,11 @@ pub const Catalog = struct {
     /// Resolve a variant name to its stable case index.
     pub fn variant(self: Catalog, ty: typed.Type, src: Source, name: Span, sink: *diagnostic.Sink) Error!usize {
         _ = try self.variants(ty, name, sink);
-        return self.field_names[ty.recordIndex()].get(src.text(name)) orelse sink.fail("E_UNKNOWN_VARIANT", name, "variant is not declared on this type");
+        return self.field_names.items[ty.recordIndex()].get(src.text(name)) orelse sink.fail("E_UNKNOWN_VARIANT", name, "variant is not declared on this type");
     }
     /// Resolve a record field name to its stable field index.
     pub fn field(self: Catalog, ty: typed.Type, src: Source, name: Span, sink: *diagnostic.Sink) Error!usize {
         _ = try self.record(ty, name, sink);
-        return self.field_names[ty.recordIndex()].get(src.text(name)) orelse sink.fail("E_UNKNOWN_FIELD", name, "field does not exist on this record type");
+        return self.field_names.items[ty.recordIndex()].get(src.text(name)) orelse sink.fail("E_UNKNOWN_FIELD", name, "field does not exist on this record type");
     }
 };

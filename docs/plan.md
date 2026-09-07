@@ -78,8 +78,10 @@ explicit types, schemas, and interfaces where that improves the program.
    [finite layout checking](experiments/nominal-layouts.md) now validates stored
    dependencies while preserving phantom arguments. [Concrete instances](experiments/nominal-instances.md)
    now execute on the VM with complete schemas and existing ownership/host rules.
-   Symbolic nominal operations in generic functions, public generic tooling, and
-   board `Slot<T>` consolidation remain open.
+   [Symbolic nominal bodies](experiments/nominal-bodies.md) now check construction,
+   fields, variants, ownership and lifetimes before late VM specialization.
+   Public generic tooling, provider-specific symbolic shapes, and board `Slot<T>`
+   consolidation remain open.
    These remain open; completing all
    abstraction experiments is not a prerequisite for starting the trial.
 
@@ -2643,3 +2645,56 @@ functions, then board `Slot<T>` consolidation and public generic tooling. The
 measured repair study, source serialization, finer incremental checking and other
 remaining roadmap requirements stay active. Guest-native compilation remains
 outside this goal.
+
+
+## Symbolic nominal function bodies — 2026-09-07
+
+Generic functions now check parameterized record, union, result and enum shapes
+before calls. Scoped symbolic arguments preserve declaration identity through
+callee substitution, construction, projection, updates, exhaustive matches and
+named-result propagation. Mixed symbolic/concrete types compare semantic
+identities; matching fields or requirements do not merge nominal declarations.
+`examples/nominal-bodies.my` returns `7` on the VM. See [the body contract](experiments/nominal-bodies.md).
+
+Stored-member contracts preserve partial ownership, result obligations, cleanup
+effects, borrowed mutation, returned-input lifetimes and arena escape checks.
+An explicit stack traverses stored children and caches nominal shapes; absent
+phantom values and zero-length arrays acquire no storage contract from an unused
+argument. Ordinary unconstrained type parameters still need structural constraints
+for member operations. Buffer/pool acquisition and fixed operation-result contracts
+also accept symbolic nominal result wrappers.
+
+Late function specialization now appends complete runtime schemas to an existing
+catalog while preserving earlier type IDs. Arrays created by an earlier generic
+function reuse their identity, and field indexes grow with amortized capacity.
+The shared nominal metadata is independent of the catalog builder. Graph and
+identity storage remain in the compilation arena until checking finishes; the
+symbolic shape context explicitly borrows its owning function's arena. Growing
+specialization stops at compiler resource limits before producing bytecode.
+
+Validation: the full Debug interpreter suite passes 35/35 steps and 841/841 Zig
+tests (764 core, 73 CLI and four board-runner tests), plus all 21 Python drivers.
+All 83 nominal-focused tests pass in ReleaseFast. New allocation-failure sweeps
+cover symbolic shapes, late arrays/catalogs, result propagation, imported generic
+helpers and owned cleanup. The example returns `7` with both memory backings;
+formatting and the gated install pass. Guardian passes all 88 checks without
+baselines; existing report-only findings remain.
+
+The initial broad regression found four changed diagnostic codes, which were
+restored rather than weakening their tests. Guardian's import-cycle finding led
+to a separate shared-state module; nesting and public-key findings improved the
+traversal and exposed API. The destructor heuristic incorrectly treated a
+borrowed allocation context as an owner; that observation is labeled false-positive,
+and the API now makes the borrowed arena explicit. Other classified findings are
+useful-review. These findings do not establish a shipped runtime defect.
+
+The board trial retains 147 matching comparisons, 18 malformed transports and
+three seeded static errors; the ordinary VM corpus retains 96 independent oracle
+comparisons. Repair harness fixtures pass, while actual agent attempts remain
+pending. No guest-native execution integration was run.
+
+Next: provider-specific symbolic shapes (resource/environment/codec contracts),
+public generic tooling and board `Slot<T>` consolidation. Structural constraints,
+source serialization, finer incremental checking, the measured repair study and
+other remaining roadmap requirements stay active. Native guest compilation
+remains outside this goal.

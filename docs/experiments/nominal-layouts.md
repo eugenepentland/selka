@@ -95,6 +95,7 @@ limits, 1,200-type finite chains, allocation failures and imported diagnostic
 locations. The CLI distinguishes recursive-layout errors from accepted finite
 types. Concrete execution has additional coverage in the specialization contract.
 
-Symbolic body operations remain the next milestone, followed by shared `Slot<T>`
-types in the unchanged board trial. Native guest compilation remains outside the
+[Symbolic body operations](nominal-bodies.md) now use these semantic identities
+with late concrete catalog specialization. Shared `Slot<T>` types in the board
+trial and public generic tooling remain pending. Native guest compilation remains outside the
 active goal.

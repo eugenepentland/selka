@@ -10,6 +10,7 @@ const Scope = struct { span: source.Span, parameters: []const requirements.Param
 /// Compilation-arena mapping from complete source expression spans to concrete semantic identities.
 pub const Sources = struct {
     resolved: std.AutoHashMapUnmanaged(usize, layouts.Id) = .empty,
+    nominal_templates: std.AutoHashMapUnmanaged(usize, *const templates.Application) = .empty,
     scopes: std.ArrayList(Scope) = .empty,
     array_templates: std.AutoHashMapUnmanaged(usize, @import("generic_arrays.zig").Template) = .empty,
     fn scope(self: Sources, span: source.Span) ?Scope {
@@ -55,7 +56,10 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
         try index.checkArguments(expression, parameters);
         if (templates.depends(expression)) {
             if (scope.?.nominal) continue;
-            if (expression == .application) return sink.fail("E_GENERIC_BODY_UNSUPPORTED", syntax.span, "parameterized nominal types in generic function bodies require symbolic field and payload checking");
+            if (expression == .application) {
+                try result.nominal_templates.put(allocator, syntax.span.start, expression.application);
+                continue;
+            }
             if (expression != .array or expression.array.length == null) return error.InternalError;
             try result.array_templates.put(allocator, syntax.span.start, .{ .syntax = expression.array.syntax, .length = expression.array.length.? });
             continue;

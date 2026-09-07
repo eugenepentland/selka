@@ -1,6 +1,7 @@
 //! Unit test entry point, separate from the production compiler module.
 test {
     _ = @import("nominal_instances_test.zig");
+    _ = @import("nominal_bodies_test.zig");
     _ = @import("nominal_layouts_test.zig");
     _ = @import("nominal_templates_test.zig");
     _ = @import("nominal_type_syntax_test.zig");

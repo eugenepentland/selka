@@ -4,7 +4,7 @@ This document describes the syntax and module-interface foundation for
 parameterized records and variants. Subsequent [declaration checking](nominal-template-checks.md),
 [finite layout checking](nominal-layouts.md), and [concrete specialization](nominal-instances.md)
 now let concrete instances execute on the VM. Generic function bodies containing
-parameter-dependent nominal applications remain pending. Generic fixed arrays
+parameter-dependent nominal applications now follow the [symbolic body contract](nominal-bodies.md). Generic fixed arrays
 remain executable as documented in [their contract](generic-arrays.md).
 
 The parser can now retain declarations such as:
@@ -58,7 +58,7 @@ now executes concrete applications and programs with valid unused templates.
 `src/nominal_type_syntax_test.zig` exercises nested syntax, constructors/patterns,
 source spans, owned copying, allocation failures, formatting/comments/operator
 ambiguity, limits, cached module relocation, interface privacy/arity/kind/scope
-errors and explicit unsupported symbolic-body diagnostics. `test/integration.zig`
+errors and executable symbolic-body validation. `test/integration.zig`
 checks the actual formatter, unused declarations and structured CLI diagnostics. This is a foundation checkpoint,
 not completion of the parameterized-record/union roadmap item. No guest-native
 backend work is included.

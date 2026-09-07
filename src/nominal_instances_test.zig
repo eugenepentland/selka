@@ -86,8 +86,8 @@ test "nominal instances preserve borrowing snapshots arrays and enum key identit
     try reject(definitions ++ "fn main()->i64{let mut box=new Box<i64>{value:3};borrow box as r{box=new Box<i64>{value:4};}return 0;}", "E_BORROW_CONFLICT");
     try reject(definitions ++ "enum Key<T:copy>{left,right}fn main()->i64{let table=new [Key<bool>]i64{left:1,right:2};return table[new Key<i64>.left];}", "E_TYPE");
 }
-test "nominal instances reject symbolic nominal bodies explicitly while concrete generic bodies remain checked" {
-    try reject(definitions ++ "fn identity<T:copy>(x:Box<T>)->Box<T>{return x;}fn main()->i64{return 0;}", "E_GENERIC_BODY_UNSUPPORTED");
+test "nominal instances retain concrete checks within generic bodies" {
+    try run(t.allocator, definitions ++ "fn identity<T:copy>(x:Box<T>)->Box<T>{return x;}fn main()->i64{return identity::<i64>(new Box<i64>{value:5}).value;}", 5);
     try reject(definitions ++ "fn bad<T:copy>()->i64{let box=new Box<i64>{value:true};return 0;}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
     try run(t.allocator, definitions ++ "fn concrete<T:copy>()->i64{let box=new Box<i64>{value:4};return box.value;}fn main()->i64{return concrete::<bool>();}", 4);
 }

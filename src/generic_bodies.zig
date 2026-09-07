@@ -71,15 +71,25 @@ const Checker = struct {
     work: usize = 0,
     expression_depth: usize = 0,
     temporary_results: usize = 0,
-    fn carriesRegion(self: *Checker, value: Symbolic) bool {
-        return switch (value) {
-            .concrete => |ty_value| region_check.carries(ty_value, self.region_types),
-            .parameter => |index| !self.parameters[index].requirements.contains(.equality),
-            .array => |shape| shape.length != 0 and self.carriesRegion(shape.element),
+    fn shapes(self: *Checker) @import("symbolic_shapes.zig").Context {
+        return .{
+            .arena = &self.field_arena,
+            .catalog = self.catalog,
+            .src = self.src,
+            .sink = self.sink,
+            .parameters = self.parameters,
+            .contracts = .{ .regions = self.region_types, .cleanup = self.cleanup_masks },
+            .work = &self.work,
         };
     }
+    fn properties(self: *Checker, value: Symbolic) Error!symbolic.Properties {
+        return self.shapes().properties(value, self.program.functions[self.function_index].name);
+    }
+    fn carriesRegion(self: *Checker, value: Symbolic) Error!bool {
+        return (try self.properties(value)).region;
+    }
     fn regionRead(self: *Checker, binding: Local) Error!void {
-        if (!self.carriesRegion(binding.ty)) return;
+        if (!(try self.carriesRegion(binding.ty))) return;
         const origin = if (binding.root) |root| self.locals.items[root].origin else binding.origin;
         try self.regions.flow(origin, self.region_inputs.?);
     }
@@ -89,7 +99,7 @@ const Checker = struct {
         return .{ .depth = owner.arena_depth };
     }
     fn regionWrite(self: *Checker, binding: Local, value: usize, span: source.Span) Error!void {
-        if (!self.carriesRegion(binding.ty)) return;
+        if (!(try self.carriesRegion(binding.ty))) return;
         const limit = self.referenceLimit(binding);
         try self.regions.require(value, limit, span);
         if (limit == .depth) try self.regions.flow(value, self.locals.items[binding.root.?].origin);
@@ -100,6 +110,13 @@ const Checker = struct {
         self.work += 1;
     }
     fn ty(self: *Checker, span: source.Span) Error!Symbolic {
+        if (self.catalog.templates.applications.get(span.start)) |template| {
+            try self.enter(span);
+            defer self.depth -= 1;
+            var arguments: [16]Symbolic = undefined;
+            for (template.syntax.arguments, 0..) |argument, i| arguments[i] = try self.ty(argument);
+            return self.shapes().nominal(template.declaration, arguments[0..template.arguments.len]);
+        }
         if (self.catalog.arrays.templates.get(span.start)) |template| {
             try self.enter(span);
             defer self.depth -= 1;
@@ -120,42 +137,35 @@ const Checker = struct {
     fn concreteType(self: *Checker, span: source.Span) Error!Symbolic {
         return .{ .concrete = try self.catalog.resolve(self.src, span, self.sink) };
     }
-    fn moveOnly(self: *Checker, value: Symbolic) bool {
-        return switch (value) {
-            .concrete => |ty_value| typed.moveOnly(ty_value, self.catalog.records),
-            .parameter => false,
-            .array => |shape| shape.length != 0 and self.moveOnly(shape.element),
-        };
+    fn moveOnly(self: *Checker, value: Symbolic) Error!bool {
+        return (try self.properties(value)).move_only;
     }
-    fn transfers(self: *Checker, value: Symbolic) bool {
-        return self.moveOnly(value) or self.requiresHandling(value);
+    fn transfers(self: *Checker, value: Symbolic) Error!bool {
+        const flags = try self.properties(value);
+        return flags.move_only or flags.requires_handling;
     }
-    fn seedCleanup(self: *Checker, value: Symbolic) void {
-        if (value == .concrete and value.concrete.isAggregate()) self.effect_masks[self.function_index] |= self.cleanup_masks[value.concrete.recordIndex()];
+    fn seedCleanup(self: *Checker, value: Symbolic) Error!void {
+        self.effect_masks[self.function_index] |= (try self.properties(value)).cleanup;
     }
-    fn requiresHandling(self: *Checker, value: Symbolic) bool {
-        return switch (value) {
-            .concrete => |ty_value| typed.requiresHandling(ty_value, self.catalog.records),
-            .parameter => false,
-            .array => |shape| shape.length != 0 and self.requiresHandling(shape.element),
-        };
+    fn requiresHandling(self: *Checker, value: Symbolic) Error!bool {
+        return (try self.properties(value)).requires_handling;
     }
     fn seedEffect(self: *Checker, effect: effect_set.Effect) void {
         self.effect_masks[self.function_index] |= effect_set.bit(effect);
     }
-    fn pendingObligation(self: *Checker, binding: Local) bool {
+    fn pendingObligation(self: *Checker, binding: Local) Error!bool {
         if (binding.reference != null or !binding.available) return false;
-        if (!self.requiresHandling(binding.ty)) return false;
+        if (!(try self.requiresHandling(binding.ty))) return false;
         if (binding.fields.len == 0) return true;
-        const record = self.catalog.records[binding.ty.concrete.recordIndex()];
+        const record = try self.shapes().requireRecord(binding.ty, binding.name, false);
         for (record.fields, binding.fields) |field, moved| {
-            if (moved == null and self.requiresHandling(.{ .concrete = field.ty })) return true;
+            if (moved == null and (try self.requiresHandling(field.ty.?))) return true;
         }
         return false;
     }
     fn requireHandled(self: *Checker, first: usize, span: source.Span) Error!void {
         for (self.locals.items[first..]) |binding| {
-            if (self.pendingObligation(binding))
+            if ((try self.pendingObligation(binding)))
                 return self.sink.failRelated("E_RESULT_UNHANDLED", span, "result-bearing binding leaves scope without handling or transfer", .{ .span = binding.name, .message = "unhandled result-bearing binding" });
         }
     }
@@ -174,7 +184,7 @@ const Checker = struct {
     fn samePending(self: *Checker, state: []const Pending, span: source.Span, code: []const u8) Error!void {
         for (self.locals.items[0..state.len], state) |binding, pending| {
             const fields_match = field_moves.same(binding.fields, pending.fields);
-            const owned = self.moveOnly(binding.ty) and !self.requiresHandling(binding.ty);
+            const owned = (try self.moveOnly(binding.ty)) and !(try self.requiresHandling(binding.ty));
             const mismatch_code = if (owned) (if (std.mem.eql(u8, code, diagnostic.result_loop)) "E_OWNED_LOOP" else "E_OWNED_PATH") else code;
             if (binding.available != pending.available or !fields_match) return self.sink.failRelated(
                 mismatch_code,
@@ -187,14 +197,14 @@ const Checker = struct {
     fn concreteValue(self: *Checker, value: Symbolic, span: source.Span) Error!typed.Type {
         return switch (value) {
             .concrete => |ty_value| ty_value,
-            .parameter, .array => self.sink.fail(eUnsupported, span, "structural operations require a concrete type; parameter shapes need declared constraints"),
+            .parameter, .array, .nominal => self.sink.fail(eUnsupported, span, "structural operations require a concrete type; parameter shapes need declared constraints"),
         };
     }
     fn same(self: *Checker, actual: Symbolic, expected: Symbolic, span: source.Span) Error!void {
-        if (!symbolic.same(actual, expected, self.catalog.records)) return self.sink.fail("E_GENERIC_TYPE", span, "types differ; distinct type parameters remain distinct even with identical requirements");
+        if (!symbolic.same(actual, expected, self.catalog)) return self.sink.fail("E_GENERIC_TYPE", span, "types differ; distinct type parameters remain distinct even with identical requirements");
     }
     fn supports(self: *Checker, ty_value: Symbolic, requirement: requirements.Requirement, span: source.Span) Error!void {
-        const supported = symbolic.supports(ty_value, requirement, self.parameters, self.catalog.records);
+        const supported = symbolic.supports(ty_value, requirement, self.parameters, self.catalog);
         if (!supported) {
             const message = try std.fmt.allocPrint(self.sink.allocator, "operation requires declared {s} support", .{@tagName(requirement)});
             return self.sink.fail("E_GENERIC_OPERATION", span, message);
@@ -225,10 +235,10 @@ const Checker = struct {
     fn namedValue(self: *Checker, span: source.Span) Error!Symbolic {
         const binding = try self.local(span);
         if (binding.reference != null) return self.sink.fail("E_REFERENCE_VALUE", span, "references require read_ref or an explicit reference parameter");
-        try self.ownerAccess(binding.*, self.transfers(binding.ty), span);
+        try self.ownerAccess(binding.*, (try self.transfers(binding.ty)), span);
         if (field_moves.first(binding.fields)) |at| return self.sink.failPartialMove(span, binding.name, at);
-        if (self.transfers(binding.ty)) {
-            if (!binding.available) return self.sink.failTransfer(if (self.moveOnly(binding.ty)) diagnostic.owned_consumed else "E_RESULT_CONSUMED", span, binding.name, binding.transfer_span);
+        if ((try self.transfers(binding.ty))) {
+            if (!binding.available) return self.sink.failTransfer(if ((try self.moveOnly(binding.ty))) diagnostic.owned_consumed else "E_RESULT_CONSUMED", span, binding.name, binding.transfer_span);
             binding.available = false;
             binding.transfer_span = span;
         }
@@ -275,9 +285,9 @@ const Checker = struct {
         }
         const buffer_owner = binding.ty == .concrete and binding.ty.concrete.isAggregate() and self.catalog.records[binding.ty.concrete.recordIndex()].shape.buffer != null;
         if (buffer_owner and !binding.available) return self.sink.failTransfer(diagnostic.owned_consumed, borrow.owner, binding.name, binding.transfer_span);
-        if (self.transfers(binding.ty) and !(buffer_owner and borrow.range != null)) return self.sink.fail(diagnostic.result_borrow, borrow.owner, "owned and result-bearing values must transfer by value");
+        if ((try self.transfers(binding.ty)) and !(buffer_owner and borrow.range != null)) return self.sink.fail(diagnostic.result_borrow, borrow.owner, "owned and result-bearing values must transfer by value");
         const element = if (borrow.range != null and !binding.slice) try self.sliceType(binding.ty, borrow.owner) else binding.ty;
-        if (self.transfers(element)) return self.sink.fail(diagnostic.result_borrow, borrow.owner, "result-bearing elements cannot be exposed through references");
+        if ((try self.transfers(element))) return self.sink.fail(diagnostic.result_borrow, borrow.owner, "result-bearing elements cannot be exposed through references");
         try self.supports(element, .copy, borrow.owner);
         return self.loanScope(.{ .name = borrow.name, .ty = element, .mutable = false, .reference = borrow.mutable, .slice = borrow.range != null or binding.slice, .root = binding.root orelse owner_index }, parent, borrow.body);
     }
@@ -368,7 +378,7 @@ const Checker = struct {
         for (self.parameters) |parameter| if (std.mem.eql(u8, text, self.src.text(parameter.name))) return self.sink.fail(eShadowing, name, "binding shadows a template type parameter");
         try self.active.put(self.allocator, text, self.locals.items.len);
         try self.locals.append(self.allocator, .{ .name = name, .ty = ty_value, .mutable = mutable, .origin = try self.regions.add(.{}), .arena_depth = self.arena_depth });
-        self.seedCleanup(ty_value);
+        try self.seedCleanup(ty_value);
     }
     fn callTarget(self: *Checker, invocation: Call) Error!ast.Function {
         if (@import("source_codec.zig").operation(self.src.text(invocation.name)) and invocation.owner == null)
@@ -391,6 +401,13 @@ const Checker = struct {
         return function;
     }
     fn substituted(self: *Checker, span: source.Span, parameters: []const ast.TypeParameter, arguments: []const Symbolic) Error!Symbolic {
+        if (self.catalog.templates.applications.get(span.start)) |template| {
+            try self.enter(span);
+            defer self.depth -= 1;
+            var values: [16]Symbolic = undefined;
+            for (template.syntax.arguments, 0..) |argument, i| values[i] = try self.substituted(argument, parameters, arguments);
+            return self.shapes().nominal(template.declaration, values[0..template.arguments.len]);
+        }
         if (self.catalog.arrays.templates.get(span.start)) |template| {
             try self.enter(span);
             defer self.depth -= 1;
@@ -416,7 +433,7 @@ const Checker = struct {
             const satisfies = switch (argument.*) {
                 .parameter => |index| self.parameters[index].requirements.implies(parameter.requirements),
                 .concrete => |builtin| parameter.requirements.accepts(builtin, self.catalog.records),
-                .array => symbolic.supports(argument.*, .copy, self.parameters, self.catalog.records) and !parameter.requirements.contains(.equality),
+                .array, .nominal => supportsSet(argument.*, parameter.requirements, self.parameters, self.catalog),
             };
             if (!satisfies) return self.sink.failRelated(
                 "E_GENERIC_ARGUMENT",
@@ -461,11 +478,11 @@ const Checker = struct {
         defer self.region_inputs = previous_inputs;
         const result = try self.expressionValue(id);
         const output = try self.regions.add(.{});
-        if (self.carriesRegion(result)) try self.regions.flow(inputs, output);
+        if ((try self.carriesRegion(result))) try self.regions.flow(inputs, output);
         if (previous_inputs) |parent| try self.regions.flow(output, parent);
         self.last_origin = output;
         self.temporary_results = before;
-        if (self.expression_depth > 1 and self.requiresHandling(result)) self.temporary_results += 1;
+        if (self.expression_depth > 1 and (try self.requiresHandling(result))) self.temporary_results += 1;
         return result;
     }
     fn expressionValue(self: *Checker, id: ast.NodeId) Error!Symbolic {
@@ -530,33 +547,34 @@ const Checker = struct {
             .array => |array| try self.arrayValue(array, node.span),
             .update => |update| result: {
                 const base = try self.expression(update.base);
-                try self.recordFields(try self.concreteValue(base, node.span), update.fields, false, node.span);
+                try self.recordFields(base, update.fields, false, node.span);
                 break :result base;
             },
             .replace => |replacement| result: {
                 const base = try self.expression(replacement.base);
                 const shape = try self.arrayIndex(base, replacement.index, node.span);
-                if (self.requiresHandling(shape.element)) return self.sink.fail(eResultOperation, node.span, "replacement would drop a result-bearing element");
+                if ((try self.requiresHandling(shape.element))) return self.sink.fail(eResultOperation, node.span, "replacement would drop a result-bearing element");
                 try self.same(try self.expression(replacement.value), shape.element, node.span);
                 break :result base;
             },
             .field => |field| result: {
-                const base = try self.concreteValue(try self.expression(field.base), node.span);
-                const index = try self.catalog.field(base, self.src, field.name, self.sink);
-                for (self.catalog.records[base.recordIndex()].fields, 0..) |other, i| {
-                    if (i != index and self.requiresHandling(.{ .concrete = other.ty })) return self.sink.fail(eResultOperation, node.span, "projection would drop another result-bearing field");
+                const base = try self.expression(field.base);
+                const shape = try self.shapes().requireRecord(base, node.span, false);
+                const index = try self.shapes().memberIndex(shape, field.name);
+                for (shape.fields, 0..) |other, i| {
+                    if (i != index and (try self.requiresHandling(other.ty.?))) return self.sink.fail(eResultOperation, node.span, "projection would drop another result-bearing field");
                 }
-                break :result .{ .concrete = self.catalog.records[base.recordIndex()].fields[index].ty };
+                break :result shape.fields[index].ty.?;
             },
             .length => |input| result: {
                 const base = try self.expression(input);
                 _ = try self.arrayShape(base, node.span);
-                if (self.requiresHandling(base)) return self.sink.fail(eResultOperation, node.span, "length would drop result-bearing elements");
+                if ((try self.requiresHandling(base))) return self.sink.fail(eResultOperation, node.span, "length would drop result-bearing elements");
                 break :result .{ .concrete = .u64 };
             },
             .index => |access| result: {
                 const shape = try self.arrayIndex(try self.expression(access.base), access.index, node.span);
-                if (shape.length != 1 and self.requiresHandling(shape.element)) return self.sink.fail(eResultOperation, node.span, "indexing would drop other result-bearing elements");
+                if (shape.length != 1 and (try self.requiresHandling(shape.element))) return self.sink.fail(eResultOperation, node.span, "indexing would drop other result-bearing elements");
                 break :result shape.element;
             },
             .cast => |cast| result: {
@@ -642,9 +660,9 @@ const Checker = struct {
     fn operationResult(self: *Checker, span: ?source.Span, success: typed.Type, code: []const u8) Error!Symbolic {
         const result_span = span orelse return .{ .concrete = success };
         const result = try self.ty(result_span);
-        const result_type = try self.concreteValue(result, result_span);
-        const shape = typed.resultShape(result_type, self.catalog.records) orelse return self.sink.fail(code, result_span, "operation requires a matching success payload and i64 error result");
-        if (shape.ok_type != success or shape.error_type != .i64) return self.sink.fail(code, result_span, "operation result payloads do not match its contract");
+        const shape = try self.resultShape(result, result_span, code);
+        const success_matches = symbolic.same(shape.ok_type, .{ .concrete = success }, self.catalog);
+        if (!success_matches or !symbolic.same(shape.error_type, .{ .concrete = .i64 }, self.catalog)) return self.sink.fail(code, result_span, "operation result payloads do not match its contract");
         return result;
     }
     fn bufferValue(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "buffer_operation")) Error!Symbolic {
@@ -686,12 +704,11 @@ const Checker = struct {
     }
     fn acquireValue(self: *Checker, acquire: @FieldType(@FieldType(ast.Node, "data"), "acquire_buffer"), pool: bool, span: source.Span) Error!Symbolic {
         const result = try self.ty(acquire.ty);
-        const result_type = try self.concreteValue(result, acquire.ty);
-        _ = typed.acquisitionShape(result_type, self.catalog.records, pool) orelse return self.sink.fail(
-            if (pool) "E_POOL_RESULT" else "E_BUFFER_RESULT",
-            acquire.ty,
-            "acquisition requires the matching owned success type and i64 error result",
-        );
+        const code = if (pool) "E_POOL_RESULT" else "E_BUFFER_RESULT";
+        const shape = try self.resultShape(result, acquire.ty, code);
+        const owner = if (shape.ok_type == .concrete) shape.ok_type.concrete else return self.sink.fail(code, acquire.ty, "acquisition success requires a declared owner type");
+        const kind_matches = if (!owner.isAggregate()) false else if (pool) self.catalog.records[owner.recordIndex()].shape.pool != null else self.catalog.records[owner.recordIndex()].shape.buffer != null;
+        if (!kind_matches or !symbolic.same(shape.error_type, .{ .concrete = .i64 }, self.catalog)) return self.sink.fail(code, acquire.ty, "acquisition requires matching owner success and i64 error payloads");
         try self.same(try self.expression(acquire.allocator), .{ .concrete = .allocator }, self.program.nodes.items[@backingInt(acquire.allocator)].span);
         try self.supports(try self.expression(acquire.value), .integer, span);
         self.seedEffect(.allocation);
@@ -701,13 +718,13 @@ const Checker = struct {
         const binding = try self.local(access.owner);
         if (binding.reference != null) return self.sink.fail("E_TYPE", access.owner, "field access requires a value binding, not a reference");
         try self.regionRead(binding.*);
-        const owner_type = try self.concreteValue(binding.ty, access.owner);
-        const index = try self.catalog.field(owner_type, self.src, access.field, self.sink);
-        const fields = self.catalog.records[owner_type.recordIndex()].fields;
-        const result: Symbolic = .{ .concrete = fields[index].ty };
-        if (!taking and self.transfers(result)) return self.sink.fail("E_FIELD_COPY", access.field, "read_field cannot copy owned values or result obligations");
-        if (self.transfers(binding.ty) and !binding.available) return self.sink.failTransfer(diagnostic.owned_consumed, access.owner, binding.name, binding.transfer_span);
-        if (taking and !self.transfers(binding.ty)) return self.sink.fail("E_FIELD_TAKE", access.owner, "take_field requires an owned or result-bearing record; use read_field for copyable records");
+        const shape = try self.shapes().requireRecord(binding.ty, access.owner, false);
+        const index = try self.shapes().memberIndex(shape, access.field);
+        const fields = shape.fields;
+        const result = fields[index].ty.?;
+        if (!taking and (try self.transfers(result))) return self.sink.fail("E_FIELD_COPY", access.field, "read_field cannot copy owned values or result obligations");
+        if ((try self.transfers(binding.ty)) and !binding.available) return self.sink.failTransfer(diagnostic.owned_consumed, access.owner, binding.name, binding.transfer_span);
+        if (taking and !(try self.transfers(binding.ty))) return self.sink.fail("E_FIELD_TAKE", access.owner, "take_field requires an owned or result-bearing record; use read_field for copyable records");
         if (binding.fields.len != 0) {
             if (binding.fields[index]) |at| return self.sink.failMovedField(access.field, binding.name, at);
         }
@@ -715,37 +732,44 @@ const Checker = struct {
         if (taking) binding.fields = try field_moves.take(self.field_arena.allocator(), binding.fields, fields.len, index, access.field);
         return result;
     }
+    fn resultShape(self: *Checker, value: Symbolic, span: source.Span, code: []const u8) Error!struct { ok_type: Symbolic, error_type: Symbolic } {
+        const declared = switch (value) {
+            .nominal => |nominal| self.catalog.templates.store.?.index.declarations.items[nominal.declaration].kind == .result,
+            .concrete => |value_type| typed.resultShape(value_type, self.catalog.records) != null,
+            else => false,
+        };
+        if (!declared) return self.sink.fail(code, span, "operation requires a declared result type");
+        const shape = try self.shapes().schema(value, span);
+        if (shape.kind != .result) return self.sink.fail(code, span, "operation requires a declared result type");
+        const ok: usize = if (std.mem.eql(u8, shape.fields[0].name, "ok")) 0 else 1;
+        return .{ .ok_type = shape.fields[ok].ty.?, .error_type = shape.fields[1 - ok].ty.? };
+    }
     fn propagateValue(self: *Checker, operand: ast.NodeId, span: source.Span) Error!Symbolic {
         const temporaries = self.temporary_results;
-        const value = try self.concreteValue(try self.expression(operand), span);
-        const input = typed.resultShape(value, self.catalog.records) orelse return self.sink.fail("E_TRY_TYPE", span, "try requires a declared result");
-        if (self.carriesRegion(.{ .concrete = input.error_type })) try self.regions.require(self.last_origin, .{ .depth = 0 }, span);
-        const return_type = switch (self.result) {
-            .concrete => |ty_value| ty_value,
-            .parameter, .array => return self.sink.fail(eTryReturn, span, "try requires a concrete declared result return type"),
-        };
-        const output = typed.resultShape(return_type, self.catalog.records) orelse return self.sink.fail(eTryReturn, span, "try requires a result return type");
+        const value = try self.expression(operand);
+        const input = try self.resultShape(value, span, "E_TRY_TYPE");
+        if ((try self.carriesRegion(input.error_type))) try self.regions.require(self.last_origin, .{ .depth = 0 }, span);
+        const output = try self.resultShape(self.result, span, eTryReturn);
         if (self.return_reference != null) return self.sink.fail(eTryReturn, span, "try cannot propagate through a reference return");
-        try self.same(.{ .concrete = input.error_type }, .{ .concrete = output.error_type }, span);
+        try self.same(input.error_type, output.error_type, span);
         try self.requireHandled(0, span);
         if (temporaries != 0) return self.sink.fail("E_RESULT_PROPAGATION", span, "propagation could drop an already evaluated result temporary");
-        return .{ .concrete = input.ok_type };
+        return input.ok_type;
     }
     fn variantValue(self: *Checker, variant: @FieldType(@FieldType(ast.Node, "data"), "variant"), span: source.Span) Error!Symbolic {
         const result = try self.ty(variant.ty);
-        const ty_value = try self.concreteValue(result, span);
-        const tag = try self.catalog.variant(ty_value, self.src, variant.name, self.sink);
-        const payload = (try self.catalog.variants(ty_value, span, self.sink)).cases[tag].payload;
+        const shape = try self.shapes().requireVariants(result, span);
+        const tag = try self.shapes().memberIndex(shape, variant.name);
+        const payload = shape.fields[tag].ty;
         if ((payload != null) != (variant.value != null)) return self.sink.fail("E_VARIANT_PAYLOAD", span, "construction must supply exactly the declared payload");
-        if (variant.value) |value| try self.same(try self.expression(value), .{ .concrete = payload.? }, span);
+        if (variant.value) |value| try self.same(try self.expression(value), payload.?, span);
         return result;
     }
     fn matchValue(self: *Checker, match: @FieldType(@FieldType(ast.Statement, "data"), "match"), span: source.Span) Error!bool {
         const value = try self.expression(match.value);
         const origin = self.last_origin;
-        const ty_value = try self.concreteValue(value, span);
-        const variants = try self.catalog.variants(ty_value, span, self.sink);
-        const seen = try self.allocator.alloc(bool, variants.cases.len);
+        const variants = try self.shapes().requireVariants(value, span);
+        const seen = try self.allocator.alloc(bool, variants.fields.len);
         defer self.allocator.free(seen);
         @memset(seen, false);
         const incoming = try self.pendingState(self.locals.items.len);
@@ -756,17 +780,17 @@ const Checker = struct {
         for (match.arms) |arm| {
             self.restorePending(incoming);
             try self.same(try self.ty(arm.ty), value, arm.ty);
-            const tag = try self.catalog.variant(ty_value, self.src, arm.name, self.sink);
+            const tag = try self.shapes().memberIndex(variants, arm.name);
             if (seen[tag]) return self.sink.fail("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm");
             seen[tag] = true;
-            const payload = variants.cases[tag].payload;
-            if (arm.discard_payload and payload != null and self.requiresHandling(.{ .concrete = payload.? })) return self.sink.fail("E_RESULT_DISCARD", arm.name, "nested result payload requires explicit handling");
+            const payload = variants.fields[tag].ty;
+            if (arm.discard_payload and payload != null and (try self.requiresHandling(payload.?))) return self.sink.fail("E_RESULT_DISCARD", arm.name, "nested result payload requires explicit handling");
             if ((payload != null) != (arm.binding != null or arm.discard_payload)) return self.sink.fail("E_PATTERN_PAYLOAD", arm.name, "payload cases require a binding or discard; empty cases take neither");
             const before = self.locals.items.len;
             defer self.endScope(before);
             if (arm.binding) |binding| {
-                try self.bind(binding, .{ .concrete = payload.? }, false);
-                if (self.carriesRegion(.{ .concrete = payload.? })) try self.regions.flow(origin, self.locals.items[before].origin);
+                try self.bind(binding, payload.?, false);
+                if ((try self.carriesRegion(payload.?))) try self.regions.flow(origin, self.locals.items[before].origin);
             }
             const returns = try self.statement(arm.body);
             if (!returns) {
@@ -795,22 +819,21 @@ const Checker = struct {
     }
     fn recordValue(self: *Checker, record: @FieldType(@FieldType(ast.Node, "data"), "record"), span: source.Span) Error!Symbolic {
         const result = try self.ty(record.name);
-        const ty_value = try self.concreteValue(result, span);
-        try self.recordFields(ty_value, record.fields, true, span);
+        try self.recordFields(result, record.fields, true, span);
         return result;
     }
-    fn recordFields(self: *Checker, ty_value: typed.Type, fields: []const ast.FieldInit, complete: bool, span: source.Span) Error!void {
-        const shape = if (complete) try self.catalog.constructor(ty_value, span, self.sink) else try self.catalog.record(ty_value, span, self.sink);
-        const table_key = shape.tableKey();
+    fn recordFields(self: *Checker, ty_value: Symbolic, fields: []const ast.FieldInit, complete: bool, span: source.Span) Error!void {
+        const shape = try self.shapes().requireRecord(ty_value, span, complete);
+        const table_key = shape.key;
         const seen = try self.allocator.alloc(bool, shape.fields.len);
         defer self.allocator.free(seen);
         @memset(seen, false);
         for (fields) |field| {
-            const index = if (table_key) |key| try self.catalog.variant(key, self.src, field.name, self.sink) else try self.catalog.field(ty_value, self.src, field.name, self.sink);
+            const index = try self.shapes().memberIndex(shape, field.name);
             if (seen[index]) return self.sink.fail(if (table_key != null) "E_DUPLICATE_KEY" else "E_DUPLICATE_FIELD", field.name, "named entry is initialized more than once");
             seen[index] = true;
-            if (!complete and self.requiresHandling(.{ .concrete = shape.fields[index].ty })) return self.sink.fail(eResultOperation, field.name, "update would drop a result-bearing field");
-            try self.same(try self.expression(field.value), .{ .concrete = shape.fields[index].ty }, field.name);
+            if (!complete and (try self.requiresHandling(shape.fields[index].ty.?))) return self.sink.fail(eResultOperation, field.name, "update would drop a result-bearing field");
+            try self.same(try self.expression(field.value), shape.fields[index].ty.?, field.name);
         }
         if (complete) for (seen) |present| {
             if (!present) return self.sink.fail(if (table_key != null) "E_INCOMPLETE_TABLE" else "E_MISSING_FIELD", span, "named construction must initialize every entry");
@@ -901,8 +924,8 @@ const Checker = struct {
                 try self.regions.flow(self.last_origin, target.origin);
                 try self.regions.require(self.last_origin, .{ .depth = target.arena_depth }, assignment.name);
                 if (assignment.op != .set) try self.supports(target.ty, .integer, assignment.op_span);
-                if (self.transfers(target.ty)) {
-                    if (self.pendingObligation(target.*)) return self.sink.fail("E_RESULT_OVERWRITE", assignment.name, "assignment would overwrite an unhandled result");
+                if ((try self.transfers(target.ty))) {
+                    if ((try self.pendingObligation(target.*))) return self.sink.fail("E_RESULT_OVERWRITE", assignment.name, "assignment would overwrite an unhandled result");
                     target.available = true;
                     target.transfer_span = null;
                     target.fields = &.{};
@@ -920,11 +943,11 @@ const Checker = struct {
                 try self.regionWrite(ref.*, self.last_origin, statement_value.span);
             },
             .acknowledge => |value| {
-                if (!self.requiresHandling(try self.expression(value))) return self.sink.fail("E_ACKNOWLEDGE_TYPE", statement_value.span, "acknowledge requires a result-bearing value");
+                if (!(try self.requiresHandling(try self.expression(value)))) return self.sink.fail("E_ACKNOWLEDGE_TYPE", statement_value.span, "acknowledge requires a result-bearing value");
             },
             .discard => |value| {
                 const ty_value = try self.expression(value);
-                if (self.requiresHandling(ty_value)) return self.sink.fail("E_RESULT_DISCARD", statement_value.span, "discard cannot erase a result obligation");
+                if ((try self.requiresHandling(ty_value))) return self.sink.fail("E_RESULT_DISCARD", statement_value.span, "discard cannot erase a result obligation");
                 if (ty_value == .parameter) try self.supports(ty_value, .copy, statement_value.span);
             },
             .branch => |branch| return self.branchValue(branch, statement_value.span),
@@ -940,6 +963,12 @@ const Checker = struct {
         return false;
     }
 };
+fn supportsSet(value: Symbolic, required: requirements.Set, parameters: []const requirements.Parameter, catalog: Catalog) bool {
+    inline for (std.meta.tags(requirements.Requirement)) |requirement| {
+        if (required.contains(requirement) and !symbolic.supports(value, requirement, parameters, catalog)) return false;
+    }
+    return true;
+}
 /// Validate supported template bodies symbolically; unsupported forms remain explicit errors.
 pub fn check(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, sink: *diagnostic.Sink) Error!void {
     return checkWithNames(allocator, src, program, sink, null);
@@ -1019,10 +1048,10 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
         if (function.policy.conversion) return sink.fail(eUnsupported, function.name, "generic conversions still need abstract checking");
         for (parameters) |parameter| if (try checker.topLevel(parameter.name)) return sink.fail(eShadowing, parameter.name, "type parameter shadows a top-level declaration or import");
         checker.result = try checker.ty(function.signature.return_type);
-        checker.seedCleanup(checker.result);
+        try checker.seedCleanup(checker.result);
         for (function.signature.parameters) |parameter| {
             const parameter_type = try checker.ty(parameter.ty);
-            if (parameter.reference != null and checker.transfers(parameter_type)) return sink.fail(diagnostic.result_borrow, parameter.ty, "result-bearing parameters must transfer by value");
+            if (parameter.reference != null and (try checker.transfers(parameter_type))) return sink.fail(diagnostic.result_borrow, parameter.ty, "result-bearing parameters must transfer by value");
             try checker.bind(parameter.name, parameter_type, false);
             checker.locals.items[checker.locals.items.len - 1].reference = parameter.reference;
             checker.locals.items[checker.locals.items.len - 1].slice = parameter.slice;

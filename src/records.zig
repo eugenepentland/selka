@@ -28,8 +28,14 @@ pub fn collectWithNames(allocator: std.mem.Allocator, src: Source, program: ast.
     const pool_base = declarations.len + domains.len + variant_types.len + buffers.len + resources.len;
     const named_count = pool_base + pools.len * 2;
     const storage = try allocator.alloc(typed.Record, named_count + arrays.len);
-    var catalog: Catalog = .{ .module_names = module_names, .records = storage[0..named_count], .record_capacity = storage.len, .names = .empty, .field_names = try allocator.alloc(std.StringHashMapUnmanaged(usize), named_count) };
-    @memset(catalog.field_names, .empty);
+    var catalog: Catalog = .{
+        .module_names = module_names,
+        .records = storage[0..named_count],
+        .record_capacity = storage.len,
+        .names = .empty,
+        .field_names = .{ .items = try allocator.alloc(std.StringHashMapUnmanaged(usize), named_count), .capacity = named_count },
+    };
+    @memset(catalog.field_names.items, .empty);
     var collector: Collector = .{ .allocator = allocator, .src = src, .program = program, .sink = sink, .catalog = &catalog, .storage = storage };
     try collector.declareNames();
     try collector.internArrays();
@@ -100,7 +106,7 @@ const Collector = struct {
             const cases = try allocator.alloc(typed.Variant, declaration.cases.len);
             for (declaration.cases, cases, 0..) |input, *output, tag| {
                 const variant_name = src.text(input.name);
-                if (catalog.field_names[index].get(variant_name)) |previous| return sink.failRelated(
+                if (catalog.field_names.items[index].get(variant_name)) |previous| return sink.failRelated(
                     "E_DUPLICATE_VARIANT",
                     input.name,
                     "variant is already declared",
@@ -109,7 +115,7 @@ const Collector = struct {
                         .message = "previous variant declaration",
                     },
                 );
-                try catalog.field_names[index].put(allocator, variant_name, tag);
+                try catalog.field_names.items[index].put(allocator, variant_name, tag);
                 output.* = .{ .name = variant_name, .declaration = input.name, .payload = null };
             }
             storage[index] = .{
@@ -256,8 +262,13 @@ const Collector = struct {
             const fields = try allocator.alloc(typed.Field, declaration.fields.len);
             for (declaration.fields, fields, 0..) |field, *resolved, j| {
                 const name = src.text(field.name);
-                if (catalog.field_names[i].get(name)) |previous| return sink.failRelated("E_DUPLICATE_FIELD", field.name, "field is already declared", .{ .span = fields[previous].declaration, .message = "previous field declaration" });
-                try catalog.field_names[i].put(allocator, name, j);
+                if (catalog.field_names.items[i].get(name)) |previous| return sink.failRelated(
+                    "E_DUPLICATE_FIELD",
+                    field.name,
+                    "field is already declared",
+                    .{ .span = fields[previous].declaration, .message = "previous field declaration" },
+                );
+                try catalog.field_names.items[i].put(allocator, name, j);
                 resolved.* = .{ .name = name, .declaration = field.name, .ty = try catalog.resolve(src, field.ty, sink) };
             }
             out.* = .{ .id = @fromBackingInt(i + typed.Type.record_base), .name = out.name, .declaration = declaration.name, .fields = fields };
@@ -272,7 +283,7 @@ const Collector = struct {
             const cases = @constCast(storage[index].shape.variants.?.cases);
             for (declaration.cases, cases) |input, *output| output.payload = if (input.payload) |payload| try catalog.resolve(src, payload, sink) else null;
             if (declaration.fallible) {
-                const named_cases = catalog.field_names[index].contains("ok") and catalog.field_names[index].contains("err");
+                const named_cases = catalog.field_names.items[index].contains("ok") and catalog.field_names.items[index].contains("err");
                 if (cases.len != 2 or !named_cases) return sink.fail("E_RESULT_SCHEMA", declaration.name, "a result declares exactly `ok: Value` and `err: Error` payload cases");
                 for (cases) |case| if (case.payload == null) return sink.fail("E_RESULT_SCHEMA", case.declaration, "result cases require explicit payload types");
             }

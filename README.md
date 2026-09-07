@@ -326,8 +326,12 @@ stored recursion from finite nesting and phantom arguments.
 [Concrete nominal instances](docs/experiments/nominal-instances.md) now execute
 records, unions, results and enum templates on the VM, preserving argument
 identity, ownership, borrowing and typed host contracts.
-`examples/nominal-instances.my` returns `16`. Symbolic uses such as `Box<T>`
-inside generic functions and public type-constructor schema export remain pending.
+`examples/nominal-instances.my` returns `16`.
+[Symbolic nominal bodies](docs/experiments/nominal-bodies.md) now check `Box<T>`
+fields, variant payloads, result propagation, ownership and borrows before calls,
+then specialize the discovered concrete types for the VM.
+`examples/nominal-bodies.my` returns `7`. Public generic schema tooling and
+provider-specific symbolic result shapes remain pending.
 
 [Lexical arenas](docs/experiments/source-arenas.md) use `arena heap as scratch { ... }`
 with conservative escape checks and cleanup across returns/errors.

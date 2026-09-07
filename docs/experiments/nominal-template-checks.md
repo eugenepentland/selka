@@ -66,7 +66,7 @@ now supplies that separate check. It does not allocate executable instance IDs, 
 function-body uses of parameterized fields/payloads, or establish borrowing and
 arena behavior for those operations. It cannot be used as a full program
 acceptance verdict. Concrete operations use the shared runtime catalog and
-ordinary checker; parameter-dependent nominal body operations remain pending.
+ordinary checker; parameter-dependent operations now follow the [symbolic body contract](nominal-bodies.md).
 
 ## Evidence and next work
 
@@ -77,7 +77,7 @@ cross-module diagnostic locations. They include allocation-failure sweeps and a
 1,200-record reverse-ordered dependency chain. An actual CLI test checks structured
 requirement and unknown-type errors from unused templates.
 
-Concrete catalog specialization is now implemented. Next: symbolic record/variant
-operations and the board trial's shared `Slot<T>` types.
+Concrete catalog specialization and symbolic record/variant operations are now
+implemented. Next: the board trial's shared `Slot<T>` types and public generic tooling.
 This checkpoint does not complete the nominal-type roadmap item or the measured
 agent-repair study. Native guest compilation remains outside the active goal.

@@ -64,7 +64,7 @@ const Checker = struct {
     fn topLevel(self: *Checker, span: source.Span) error{InternalError}!bool {
         if (self.catalog.module_names) |names| return names.topLevel(span);
         const name = self.src.text(span);
-        return self.functions.contains(name) or self.catalog.names.contains(name) or self.catalog.template_names.contains(name);
+        return self.functions.contains(name) or self.catalog.names.contains(name) or self.catalog.templates.names.contains(name);
     }
     fn ty(self: *Checker, span: source.Span) Error!typed.Type {
         if (self.current_function) |id| return self.functionType(id, span);
@@ -100,6 +100,11 @@ const Checker = struct {
         const function = self.syntax.functions[@backingInt(key.declaration)];
         for (function.signature.type_parameters, key.arguments) |parameter, argument| {
             if (std.mem.eql(u8, self.src.text(parameter.name), self.src.text(span))) return argument;
+        }
+        if (self.catalog.templates.applications.get(span.start)) |template| {
+            var arguments: [16]typed.Type = undefined;
+            for (template.syntax.arguments, 0..) |argument, i| arguments[i] = try self.functionTypeDepth(id, argument, depth + 1);
+            return @import("nominal_catalog.zig").instantiate(&self.catalog, template.declaration, arguments[0..template.arguments.len], span);
         }
         if (self.catalog.arrays.templates.get(span.start)) |template| {
             const element = try self.functionTypeDepth(id, template.syntax.element, depth + 1);
@@ -1405,7 +1410,7 @@ pub fn checkWithNames(allocator: std.mem.Allocator, src: source.Source, program:
     var checker: Checker = .{ .allocator = allocator, .src = src, .syntax = program, .sink = sink, .resolved = resolved, .catalog = catalog, .ordinary_ids = ordinary_ids };
     for (program.functions, 0..) |function, i| {
         const name = if (module_names) |names| try names.functionDeclaration(function.policy.owner, function.name) else try functionName(allocator, src, function.policy.owner, function.name);
-        if (checker.catalog.names.contains(name) or checker.catalog.template_names.contains(name)) return sink.fail("E_DUPLICATE_NAME", function.name, "function name conflicts with a declared type");
+        if (checker.catalog.names.contains(name) or checker.catalog.templates.names.contains(name)) return sink.fail("E_DUPLICATE_NAME", function.name, "function name conflicts with a declared type");
         if (checker.functions.get(name)) |previous| return sink.failRelated(
             "E_DUPLICATE_FUNCTION",
             function.name,

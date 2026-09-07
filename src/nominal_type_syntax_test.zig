@@ -146,8 +146,8 @@ fn moduleScenario(allocator: std.mem.Allocator) !void {
         try t.expectEqualStrings("[2]T", merged.src.text(application.arguments[0]));
         try t.expectEqual(@as(usize, iteration * 2), cache.statistics.hits);
         var compilation = try language.project_compile.Compilation.init(&index);
-        try t.expectError(error.SourceError, compilation.check());
-        try t.expectEqualStrings("E_GENERIC_BODY_UNSUPPORTED", compilation.diagnostics.items.items[0].code);
+        try compilation.emit();
+        try t.expectEqual(@as(i64, 0), (try language.vm.run(allocator, compilation.code.?)).value);
     }
 }
 test "public nominal templates survive cached syntax and project relocation with requirements intact" {
