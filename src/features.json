@@ -69,7 +69,28 @@
     "storable-owned-buffer-elements",
     "borrowed-standard-collections",
     "bounded-standard-hash-collections",
-    "owned-standard-vectors-and-maps"
+    "owned-standard-vectors-and-maps",
+    "std_math",
+    "std_collections",
+    "std_unit",
+    "std_time",
+    "std_random",
+    "std_hash",
+    "std_hash_map",
+    "std_hash_bytes",
+    "std_borrowed_set",
+    "std_hash_set",
+    "std_hash_byte_set",
+    "std_strings",
+    "std_encoding",
+    "std_format",
+    "std_args",
+    "std_json_builder",
+    "std_io",
+    "std_path",
+    "std_fs",
+    "std_owned",
+    "std_owned_map"
   ],
   "unsupported": [
     "builtin-f64-syntax",
@@ -91,6 +112,9 @@
     "workers": "host-facing copied typed messages; no guest spawn syntax",
     "floating_point": "std_math::F64 nominal domain with named operations and bit codecs",
     "callbacks": "concrete value signatures, exact effect ceilings, no captures or borrowed signatures",
-    "semantic_reuse": "conservative function-body queries; generics constants aliases and inferred callback schemas check fresh"
+    "semantic_reuse": "conservative function-body queries; generics constants aliases and inferred callback schemas check fresh",
+    "text_data": "byte offsets and ASCII trim; bounded decimal parser; fixed formatting 0..9 places",
+    "hash_collections": "fixed slot capacity; u64 or inline byte keys up to256bytes; copyable values",
+    "time_random": "Unix wall clock and explicit entropy capabilities; deterministic noncryptographic SplitMix64"
   }
 }
