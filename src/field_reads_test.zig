@@ -46,7 +46,10 @@ test "field reads respect shared and exclusive access on ordinary records" {
     defer c.deinit();
     try t.expectEqual(@as(i64, 7), (try c.execute(t.allocator)).value);
     try reject("struct Meta { code: i64 } fn main() -> i64 { let mut meta = new Meta { code: 7 }; borrow mut meta as view { discard read_ref(view); return read_field(meta, code); } }", "E_BORROW_CONFLICT");
-    try reject("struct Meta { code: i64 } fn f(meta: &Meta) -> i64 { return read_field(meta, code); } fn main() -> i64 { return 0; }", "E_TYPE");
+    var reference = try language.Compilation.init(t.allocator, "reference-field.my", "struct Meta{code:i64}fn f(meta:&Meta)->i64{return read_field(meta,code);}" ++
+        "fn main()->i64{let meta=new Meta{code:7};borrow meta as view{return f(view);}}");
+    defer reference.deinit();
+    try t.expectEqual(@as(i64, 7), (try reference.execute(t.allocator)).value);
 }
 test "field read snapshots and ownership survive every allocation failure" {
     var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });

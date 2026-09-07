@@ -90,11 +90,13 @@ test "domain equality bytecode rejects invalid comparison schemas and mismatched
     try t.expectError(error.InternalError, language.vm.run(t.allocator, code));
 }
 
-test "domain equality is explicitly deferred by the historical C emitter" {
+test "domain equality emits native comparisons without a feature rejection" {
     var compilation = try language.Compilation.init(t.allocator, "native.my", comparison);
     defer compilation.deinit();
-    try t.expectError(error.SourceError, compilation.emitC(t.allocator));
-    try t.expectEqualStrings("E_NATIVE_FEATURE", compilation.diagnostics.items[0].code);
+    const generated = try compilation.emitC(t.allocator);
+    defer t.allocator.free(generated);
+    try t.expect(generated.len > 0);
+    try t.expectEqual(@as(usize, 0), compilation.diagnostics.items.len);
 }
 
 const Modules = struct {

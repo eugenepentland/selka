@@ -42,8 +42,9 @@ test "host calls cannot enter effect-free invocation or compile-time evaluation"
     var sink: language.diagnostic.Sink = .{ .allocator = c.arena.allocator() };
     try t.expectError(error.SourceError, language.evaluation.evaluate(t.allocator, c.code.?, &sink, .{}));
     try t.expectEqualStrings("E_EVAL_EFFECT", sink.items.items[0].code);
-    try t.expectError(error.SourceError, c.emitC(t.allocator));
-    try t.expectEqualStrings("E_NATIVE_FEATURE", c.diagnostics.items[0].code);
+    const generated = try c.emitC(t.allocator);
+    defer t.allocator.free(generated);
+    try t.expect(std.mem.indexOf(u8, generated, "MylangHostCall") != null);
 }
 test "host declarations preserve contextual names formatting and separate external implementations" {
     const bytes = declaration ++ "host fn other(x:i64)->i64 effects(host);fn host(x:i64)->i64{return x;}fn main()->i64{return host(3);}";

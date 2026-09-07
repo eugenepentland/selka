@@ -24,7 +24,10 @@ test "generic field access rejects copied results repeated moves and incomplete 
 }
 test "generic partial moves enforce concrete record shapes and value binding access" {
     try reject("struct Data{n:i64}fn f<T:copy>(p:Data)->i64{return take_field(p,n);}", "E_FIELD_TAKE");
-    try reject("struct Data{n:i64}fn f<T:copy>(p:&Data)->i64{return read_field(p,n);}", "E_TYPE");
+    var c = try language.Compilation.init(t.allocator, "reference-field.my", "struct Data{n:i64}fn f<T:copy>(p:&Data)->i64{return read_field(p,n);}" ++
+        "fn main()->i64{let data=new Data{n:7};borrow data as view{return f::<i64>(view);}}");
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 7), (try c.execute(t.allocator)).value);
     try reject("fn f<T:copy>(p:T)->i64{return read_field(p,n);}", "E_GENERIC_BODY_UNSUPPORTED");
     try reject("fn f<T:copy>(p:[1]R)->R{return take_field(p,left);}", "E_TYPE");
     try reject("fn f<T:copy>(p:Pair)->R{return take_field(p,missing);}", "E_UNKNOWN_FIELD");
