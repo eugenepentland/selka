@@ -19,6 +19,7 @@ const region_check = @import("region_check.zig");
 const Regions = @import("generic_regions.zig");
 const Catalog = @import("records.zig").Catalog;
 const symbolic = @import("symbolic_types.zig");
+const provider_shapes = @import("symbolic_providers.zig");
 const Symbolic = symbolic.Value;
 const Call = @FieldType(@FieldType(ast.Node, "data"), "call");
 const FunctionMap = std.StringHashMapUnmanaged(usize);
@@ -335,7 +336,7 @@ const Checker = struct {
         defer self.region_inputs = previous_inputs;
         const result = try self.call(node.data.call, node.span, true);
         self.region_inputs = previous_inputs;
-        const function = try self.callTarget(node.data.call);
+        const function = try self.callTarget(try self.resolveCall(node.data.call), node.data.call.name);
         const contract = (try self.provenance(function)) orelse return self.sink.fail(diagnostic.reference_result, node.span, "borrow result requires a reference-returning function");
         if (borrow.mutable and !contract.mutable) return self.sink.fail(diagnostic.reference_read_only, borrow.name, "shared result cannot be borrowed exclusively");
         const argument = self.program.nodes.items[@backingInt(node.data.call.arguments[contract.parameter])].data.name;
@@ -380,16 +381,14 @@ const Checker = struct {
         try self.locals.append(self.allocator, .{ .name = name, .ty = ty_value, .mutable = mutable, .origin = try self.regions.add(.{}), .arena_depth = self.arena_depth });
         try self.seedCleanup(ty_value);
     }
-    fn callTarget(self: *Checker, invocation: Call) Error!ast.Function {
-        if (@import("source_codec.zig").operation(self.src.text(invocation.name)) and invocation.owner == null)
-            return self.sink.fail(eUnsupported, invocation.name, "generic codec operations require nominal codec constraints, which are not implemented");
+    fn callTarget(self: *Checker, invocation: Call, call_span: source.Span) Error!ast.Function {
         const key = if (self.module_names) |names|
             try names.reference(invocation.owner orelse invocation.name, .function, if (invocation.owner != null) invocation.name else null, if (self.owner) |owner| self.src.text(owner) else null, self.sink)
         else
             try @import("function_identity.zig").localName(self.sink.allocator, self.src, invocation.owner, invocation.name);
         const index = self.functions.get(key) orelse return self.sink.fail("E_UNKNOWN_FUNCTION", invocation.name, "no function has this qualified name");
         const function = self.program.functions[index];
-        try self.effect_calls.append(self.allocator, .{ .caller = self.function_index, .callee = index, .span = invocation.name });
+        try self.effect_calls.append(self.allocator, .{ .caller = self.function_index, .callee = index, .span = call_span });
         if (self.module_names == null and function.policy.restricted) {
             const allowed = if (self.owner) |owner| std.mem.eql(u8, self.src.text(owner), self.src.text(function.policy.owner.?)) else false;
             if (!allowed) return self.sink.failRelated("E_PRIVATE_FUNCTION", invocation.name, "private generic method requires the same declaring domain", .{ .span = function.name, .message = "private function declared here" });
@@ -417,8 +416,17 @@ const Checker = struct {
         for (parameters, arguments) |parameter, argument| if (std.mem.eql(u8, text, self.src.text(parameter.name))) return argument;
         return self.concreteType(span);
     }
-    fn call(self: *Checker, invocation: Call, span: source.Span, allow_reference: bool) Error!Symbolic {
-        const function = try self.callTarget(invocation);
+    fn resolveCall(self: *Checker, invocation: Call) Error!Call {
+        const codec = @import("source_codec.zig");
+        if (!codec.operation(self.src.text(invocation.name)) or invocation.owner != null) return invocation;
+        if (invocation.type_arguments.len != 1 or invocation.arguments.len != 1) return self.sink.fail("E_CODEC_ARITY", invocation.name, "codec operation requires one explicit domain type and one value argument");
+        const target = try self.ty(invocation.type_arguments[0]);
+        if (target != .concrete) return self.sink.fail(eUnsupported, invocation.type_arguments[0], "codec operations on type parameters require declared codec constraints");
+        return codec.resolve(self.src, self.program, self.catalog, invocation, self.sink);
+    }
+    fn call(self: *Checker, input_call: Call, span: source.Span, allow_reference: bool) Error!Symbolic {
+        const invocation = try self.resolveCall(input_call);
+        const function = try self.callTarget(invocation, input_call.name);
         const signature = function.signature;
         if (function.policy.conversion) return self.sink.fail(eUnsupported, span, "generic conversions still need abstract checking");
         if (signature.return_reference != null and !allow_reference) return self.sink.fail(diagnostic.reference_result, span, "reference-returning calls require a borrow scope");
@@ -485,12 +493,31 @@ const Checker = struct {
         if (self.expression_depth > 1 and (try self.requiresHandling(result))) self.temporary_results += 1;
         return result;
     }
+    fn domainBacking(self: *Checker, value: Symbolic, span: source.Span) Error!Symbolic {
+        const domain_type = try self.concreteValue(value, span);
+        const backing = try self.catalog.domain(domain_type, span, self.sink);
+        const owner = if (self.owner) |name| try self.concreteType(name) else null;
+        if (owner == null or !symbolic.same(owner.?, value, self.catalog)) return self.sink.failRelated(
+            "E_PRIVATE_DOMAIN",
+            span,
+            "only functions declared inside this domain can access its representation; use its factories and accessors",
+            .{ .span = self.catalog.records[domain_type.recordIndex()].declaration, .message = "domain representation is private here" },
+        );
+        return .{ .concrete = backing };
+    }
     fn expressionValue(self: *Checker, id: ast.NodeId) Error!Symbolic {
         const node = self.program.nodes.items[@backingInt(id)];
         try self.enter(node.span);
         defer self.depth -= 1;
         return switch (node.data) {
             .name => |name| try self.namedValue(name),
+            .wrap => |wrap| result: {
+                const operand = try self.expression(wrap.value);
+                const target = try self.ty(wrap.ty);
+                try self.same(operand, try self.domainBacking(target, node.span), node.span);
+                break :result target;
+            },
+            .unwrap => |input| try self.domainBacking(try self.expression(input), node.span),
             .reset_arena => |reset| result: {
                 const output = try self.operationResult(reset.ty, .bool, "E_ARENA_RESULT");
                 try self.same(try self.expression(reset.value), .{ .concrete = .allocator }, node.span);
@@ -584,7 +611,6 @@ const Checker = struct {
                 try self.supports(target, .integer, cast.ty);
                 break :result target;
             },
-            else => self.sink.fail(eUnsupported, node.span, "this operation still needs abstract generic body checking"),
         };
     }
     fn externalValue(self: *Checker, read: @FieldType(@FieldType(ast.Node, "data"), "external_read")) Error!Symbolic {
@@ -597,13 +623,12 @@ const Checker = struct {
     }
     fn byteInput(self: *Checker, input: ast.NodeId, code: []const u8) Error!void {
         const span = self.program.nodes.items[@backingInt(input)].span;
-        const value_type = try self.concreteValue(try self.expression(input), span);
-        if (!typed.byteRequest(value_type, self.catalog.records)) return self.sink.fail(code, span, "input requires a fixed u8 array");
+        const value_type = try self.expression(input);
+        if (!provider_shapes.bytes(value_type, self.catalog.records)) return self.sink.fail(code, span, "input requires a fixed u8 array");
     }
     fn environmentValue(self: *Checker, get: @FieldType(@FieldType(ast.Node, "data"), "environment_get")) Error!Symbolic {
         const result = try self.ty(get.ty);
-        const result_type = try self.concreteValue(result, get.ty);
-        if (typed.environmentShape(result_type, self.catalog.records) == null) return self.sink.fail("E_ENVIRONMENT_RESULT", get.ty, "environment result requires bytes, length and present success fields with i64 error");
+        if (try provider_shapes.payload(self.shapes(), result, .environment, get.ty) == null) return self.sink.fail("E_ENVIRONMENT_RESULT", get.ty, "environment result requires bytes, length and present success fields with i64 error");
         try self.same(try self.expression(get.capability), .{ .concrete = .environment_cap }, self.program.nodes.items[@backingInt(get.capability)].span);
         try self.byteInput(get.name, "E_ENVIRONMENT_NAME");
         self.seedEffect(.environment);
@@ -611,10 +636,9 @@ const Checker = struct {
     }
     fn acquireResource(self: *Checker, acquire: @FieldType(@FieldType(ast.Node, "data"), "acquire_resource")) Error!Symbolic {
         const result = try self.ty(acquire.ty);
-        const result_type = try self.concreteValue(result, acquire.ty);
-        const shape = typed.resultShape(result_type, self.catalog.records) orelse return self.sink.fail(diagnostic.resource_result, acquire.ty, "acquisition requires a resource success and i64 error result");
-        const kind = typed.resourceKind(shape.ok_type, self.catalog.records) orelse return self.sink.fail(diagnostic.resource_result, acquire.ty, "acquisition success must be a resource");
-        if (shape.error_type != .i64) return self.sink.fail(diagnostic.resource_result, acquire.ty, "acquisition error must be i64");
+        const shape = try self.resultShape(result, acquire.ty, diagnostic.resource_result);
+        const kind = provider_shapes.resource(shape.ok_type, self.catalog.records) orelse return self.sink.fail(diagnostic.resource_result, acquire.ty, "acquisition success must be a resource");
+        if (!symbolic.same(shape.error_type, .{ .concrete = .i64 }, self.catalog)) return self.sink.fail(diagnostic.resource_result, acquire.ty, "acquisition error must be i64");
         const authority: typed.Type = if (kind == .filesystem) .filesystem_cap else .network_cap;
         try self.same(try self.expression(acquire.capability), .{ .concrete = authority }, self.program.nodes.items[@backingInt(acquire.capability)].span);
         try self.byteInput(acquire.request, "E_RESOURCE_REQUEST");
@@ -623,10 +647,13 @@ const Checker = struct {
     }
     fn completeResource(self: *Checker, complete: @FieldType(@FieldType(ast.Node, "data"), "complete_resource")) Error!Symbolic {
         const result = try self.ty(complete.ty);
-        const result_type = try self.concreteValue(result, complete.ty);
-        const shape = typed.completionShape(result_type, self.catalog.records) orelse return self.sink.fail("E_COMPLETION_RESULT", complete.ty, "completion requires bool success and an error record containing the resource and i64 code");
-        try self.same(try self.expression(complete.value), .{ .concrete = shape.resource_type }, self.program.nodes.items[@backingInt(complete.value)].span);
-        self.seedEffect(typed.resourceKind(shape.resource_type, self.catalog.records).?.effect());
+        const fields = (try provider_shapes.payload(self.shapes(), result, .completion, complete.ty)) orelse return self.sink.fail(
+            "E_COMPLETION_RESULT",
+            complete.ty,
+            "completion requires bool success and an error record containing the resource and i64 code",
+        );
+        try self.same(try self.expression(complete.value), fields[0].?, self.program.nodes.items[@backingInt(complete.value)].span);
+        self.seedEffect(provider_shapes.resource(fields[0].?, self.catalog.records).?.effect());
         return result;
     }
     fn resourceIo(self: *Checker, io: @FieldType(@FieldType(ast.Node, "data"), "resource_io")) Error!Symbolic {
@@ -641,11 +668,10 @@ const Checker = struct {
             try self.same(ref.ty, .{ .concrete = .u8 }, name);
         }
         const result = try self.ty(io.ty);
-        const result_type = try self.concreteValue(result, io.ty);
         if (io.kind == .write) {
             _ = try self.operationResult(io.ty, .u64, "E_RESOURCE_IO_RESULT");
         } else {
-            const valid = if (io.reference != null) typed.resourceSliceReadShape(result_type, self.catalog.records) != null else typed.resourceReadShape(result_type, self.catalog.records) != null;
+            const valid = try provider_shapes.payload(self.shapes(), result, if (io.reference != null) .slice_read else .read, io.ty) != null;
             if (!valid) return self.sink.fail("E_RESOURCE_IO_RESULT", io.ty, "read result must contain the required bytes/length/eof fields and i64 error");
         }
         self.seedEffect(kind.effect());
@@ -732,17 +758,8 @@ const Checker = struct {
         if (taking) binding.fields = try field_moves.take(self.field_arena.allocator(), binding.fields, fields.len, index, access.field);
         return result;
     }
-    fn resultShape(self: *Checker, value: Symbolic, span: source.Span, code: []const u8) Error!struct { ok_type: Symbolic, error_type: Symbolic } {
-        const declared = switch (value) {
-            .nominal => |nominal| self.catalog.templates.store.?.index.declarations.items[nominal.declaration].kind == .result,
-            .concrete => |value_type| typed.resultShape(value_type, self.catalog.records) != null,
-            else => false,
-        };
-        if (!declared) return self.sink.fail(code, span, "operation requires a declared result type");
-        const shape = try self.shapes().schema(value, span);
-        if (shape.kind != .result) return self.sink.fail(code, span, "operation requires a declared result type");
-        const ok: usize = if (std.mem.eql(u8, shape.fields[0].name, "ok")) 0 else 1;
-        return .{ .ok_type = shape.fields[ok].ty.?, .error_type = shape.fields[1 - ok].ty.? };
+    fn resultShape(self: *Checker, value: Symbolic, span: source.Span, code: []const u8) Error!symbolic.ResultShape {
+        return (try self.shapes().matchResult(value, span)) orelse self.sink.fail(code, span, "operation requires a declared result type");
     }
     fn propagateValue(self: *Checker, operand: ast.NodeId, span: source.Span) Error!Symbolic {
         const temporaries = self.temporary_results;

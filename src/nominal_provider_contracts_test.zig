@@ -1,0 +1,72 @@
+//! Invalid provider layouts must reject in ordinary and unused generic functions alike.
+const std = @import("std");
+const t = std.testing;
+const language = @import("compiler.zig");
+const fixture = @import("nominal_provider_fixture.zig");
+fn reject(text: []const u8, code: []const u8) !void {
+    var compilation = try language.Compilation.init(t.allocator, "bad-nominal-provider.my", text);
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.check());
+    try t.expectEqualStrings(code, compilation.diagnostics.items[0].code);
+}
+fn rejectBody(body: []const u8, code: []const u8) !void {
+    const text = try std.mem.concat(t.allocator, u8, &.{ fixture.declarations, body, "fn main()->i64{return 0;}" });
+    defer t.allocator.free(text);
+    try reject(text, code);
+}
+test "nominal provider byte inputs require known u8 and authority effects remain checked before calls" {
+    try rejectBody("fn f<T:integer>(fs:filesystem_cap,x:[1]T)->Open<T>{return acquire_resource<Open<T>>(fs,x);}", "E_RESOURCE_REQUEST");
+    try rejectBody("fn f<T:integer>(input:File,x:[1]T)->Written<T>{let mut file=input;return write_resource<Written<T>>(file,x);}", "E_RESOURCE_BYTES");
+    try rejectBody("fn f<T:copy>(fs:network_cap)->Open<T>{return acquire_resource<Open<T>>(fs,singleton::<u8>(42u8));}", "E_GENERIC_TYPE");
+    try rejectBody("fn f<T:copy>(fs:filesystem_cap)->Open<T> noio{return acquire_resource<Open<T>>(fs,singleton::<u8>(42u8));}", "E_EFFECT_BOUND");
+    try rejectBody("fn f<T:copy>(file:File)->Finish<T>{acknowledge complete_resource<Finish<T>>(file);return complete_resource<Finish<T>>(file);}", "E_OWNED_CONSUMED");
+    try rejectBody("fn f<T:copy>(file:File)->Read<T>{return read_resource<Read<T>>(file);}", "E_IMMUTABLE");
+    try rejectBody("fn f<T:copy>(input:File)->Read<T>{let mut file=input;discard file;return read_resource<Read<T>>(file);}", "E_OWNED_CONSUMED");
+    try rejectBody("fn f<T:copy>(input:File,view:&[]u8)->Slice<T>{let mut file=input;return read_resource_slice<Slice<T>>(file,view);}", "E_REFERENCE_READ_ONLY");
+    try rejectBody("fn f<T:copy>(input:File,view:&mut[]i64)->Slice<T>{let mut file=input;return read_resource_slice<Slice<T>>(file,view);}", "E_GENERIC_TYPE");
+}
+const env_call = "result Lookup<T:copy>{ok:Entry<T>,err:i64}fn f<T:copy>(env:environment_cap)->Lookup<T>{return environment_get<Lookup<T>>(env,new [0]u8[]);}fn main()->i64{return 0;}";
+fn bothForms(text: []const u8, code: []const u8) !void {
+    try reject(text, code);
+    const declarations = try std.mem.replaceOwned(u8, t.allocator, text, "<T:copy>", "");
+    defer t.allocator.free(declarations);
+    const concrete = try std.mem.replaceOwned(u8, t.allocator, declarations, "<T>", "");
+    defer t.allocator.free(concrete);
+    try reject(concrete, code);
+}
+test "nominal provider environment contracts reject wrong missing extra and renamed fields in both checkers" {
+    const schemas = [_][]const u8{
+        "struct Entry<T:copy>{present:bool,length:u64,bytes:[4]i64}",
+        "struct Entry<T:copy>{present:bool,length:i64,bytes:[4]u8}",
+        "struct Entry<T:copy>{present:i64,length:u64,bytes:[4]u8}",
+        "struct Entry<T:copy>{present:bool,length:u64}",
+        "struct Entry<T:copy>{present:bool,length:u64,bytes:[4]u8,extra:bool}",
+        "struct Entry<T:copy>{exists:bool,length:u64,bytes:[4]u8}",
+        "union Entry<T:copy>{present:bool,length:u64,bytes:[4]u8}",
+    };
+    for (schemas) |schema| {
+        const text = try std.mem.concat(t.allocator, u8, &.{ schema, env_call });
+        defer t.allocator.free(text);
+        try bothForms(text, "E_ENVIRONMENT_RESULT");
+    }
+    try reject("struct Entry<T:integer>{present:bool,length:u64,bytes:[4]T}result Lookup<T:integer>{ok:Entry<T>,err:i64}" ++
+        "fn f<T:integer>(env:environment_cap)->Lookup<T>{return environment_get<Lookup<T>>(env,new [0]u8[]);}fn main()->i64{return 0;}", "E_ENVIRONMENT_RESULT");
+    try reject("struct Entry<T:copy>{present:bool,length:u64,bytes:[4]u8}result Lookup<T:copy>{ok:Entry<T>,err:i64}" ++
+        "fn f<T:integer>(env:environment_cap,name:[1]T)->Lookup<T>{return environment_get<Lookup<T>>(env,name);}fn main()->i64{return 0;}", "E_ENVIRONMENT_NAME");
+}
+test "nominal provider completion and read contracts reject wrong named shapes in both checkers" {
+    const Case = struct { declaration: []const u8, body: []const u8, code: []const u8 };
+    const cases = [_]Case{
+        .{ .declaration = "struct Failure<T:copy>{code:u64,resource:File}result R<T:copy>{ok:bool,err:Failure<T>}", .body = "return complete_resource<R<T>>(input);", .code = "E_COMPLETION_RESULT" },
+        .{ .declaration = "struct Failure<T:copy>{code:i64,resource:i64}result R<T:copy>{ok:bool,err:Failure<T>}", .body = "return complete_resource<R<T>>(input);", .code = "E_COMPLETION_RESULT" },
+        .{ .declaration = "struct Chunk<T:copy>{bytes:[4]u8,length:u64,present:bool}result R<T:copy>{ok:Chunk<T>,err:i64}", .body = "let mut file=input;return read_resource<R<T>>(file);", .code = "E_RESOURCE_IO_RESULT" },
+        .{ .declaration = "struct Chunk<T:copy>{bytes:[4]u8,length:u64,eof:bool}result R<T:copy>{ok:Chunk<T>,err:bool}", .body = "let mut file=input;return read_resource<R<T>>(file);", .code = "E_RESOURCE_IO_RESULT" },
+        .{ .declaration = "result R<T:copy>{ok:i64,err:i64}", .body = "let mut file=input;return write_resource<R<T>>(file,new [0]u8[]);", .code = "E_RESOURCE_IO_RESULT" },
+    };
+    for (cases) |case| {
+        const text = try std.mem.concat(t.allocator, u8, &.{ "resource File:filesystem;", case.declaration, "fn f<T:copy>(input:File)->R<T>{", case.body, "}fn main()->i64{return 0;}" });
+        defer t.allocator.free(text);
+        try bothForms(text, case.code);
+    }
+    try rejectBody("resource Other:filesystem;fn f<T:copy>(input:Other)->Finish<T>{return complete_resource<Finish<T>>(input);}", "E_GENERIC_TYPE");
+}

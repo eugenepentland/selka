@@ -81,9 +81,9 @@ Python drivers. The 83 nominal-focused tests pass in ReleaseFast. Formatting,
 the gated install and all 88 Guardian checks pass with baselines disabled.
 
 Buffer/pool acquisition and their fixed operation result contracts can use
-symbolic nominal result wrappers. Provider-specific symbolic shapes for external
-resources, resource I/O, environment reads and codec operations are still pending;
-existing concrete forms remain checked. Public generic schema exports, structural
+symbolic nominal result wrappers. [Provider-specific symbolic shapes](nominal-providers.md) now cover external
+resources, resource I/O and environment reads. Generic callers may use codecs for
+concrete domains; codec constraints on type parameters remain pending. Public generic schema exports, structural
 constraints, board `Slot<T>` consolidation, source serialization, finer incremental
 checks and measured agent repairs remain open. Native guest compilation remains
 outside the active goal.

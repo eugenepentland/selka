@@ -80,7 +80,9 @@ explicit types, schemas, and interfaces where that improves the program.
    now execute on the VM with complete schemas and existing ownership/host rules.
    [Symbolic nominal bodies](experiments/nominal-bodies.md) now check construction,
    fields, variants, ownership and lifetimes before late VM specialization.
-   Public generic tooling, provider-specific symbolic shapes, and board `Slot<T>`
+   [Provider-specific symbolic shapes](experiments/nominal-providers.md) now cover
+   resource/environment operations and concrete domain codecs in generic callers.
+   Public generic tooling, codec constraints on type parameters, and board `Slot<T>`
    consolidation remain open.
    These remain open; completing all
    abstraction experiments is not a prerequisite for starting the trial.
@@ -2698,3 +2700,46 @@ public generic tooling and board `Slot<T>` consolidation. Structural constraints
 source serialization, finer incremental checking, the measured repair study and
 other remaining roadmap requirements stay active. Native guest compilation
 remains outside this goal.
+
+
+## Symbolic provider payloads and concrete generic codecs — 2026-09-07
+
+[Generic provider contracts](experiments/nominal-providers.md) now accept nominal
+result and payload templates around resource acquisition, completion, reads/writes,
+slice I/O and environment lookup. Concrete and symbolic checking use the same
+named field contracts, independent of source declaration order. Exact byte arrays
+remain required, including when their u8 element is known through generic helper
+substitution. General integer parameters cannot stand in for bytes.
+
+Authority, resource identity, mutable access, borrow exclusivity, handling and
+transitive effects remain checked before calls. VM tests preserve partial I/O,
+zero padding, absent/empty/binary environment values, failed-completion ownership
+and retries. Allocation-failure sweeps and traps at every instruction require each
+acquired owner to be completed or released exactly once. Malformed named layouts
+reject through both ordinary and generic checking.
+
+Generic callers may also invoke declared codecs for concrete domains. The checker
+follows selected factories/accessors and imported helper methods, retaining exact
+signatures, results and domain representation privacy for wrap/unwrap. Codec
+methods remain effect-free, including transitive calls. Codec constraints on
+arbitrary type parameters are not implemented by this checkpoint.
+
+Validation: `zig build test-interpreter --summary all` passes 35/35 steps,
+853/853 Zig tests (776 core, 73 CLI, 4 board) and 21 Python drivers. Focused
+provider/generic/resource/codec checks pass 299 tests; nominal and generic-codec
+ReleaseFast checks pass 95. Formatting, gated installation and all 88 Guardian
+checks pass with baselines disabled. Guardian caught a duplicate specification
+anchor and hard-limit fixture/diagnostic lines; these were corrected without
+baselines, and evidence-backed ROI subjects were labeled useful-review. Existing
+report-only size/line findings and uncertain ROI subjects remain.
+
+The board trial retains 147 matching comparisons, 18 malformed transports and
+three seeded checker errors; the ordinary VM corpus retains 96 independent-oracle
+comparisons. Repair fixture self-tests pass; actual agent repairs remain pending.
+No guest-native execution integration was run.
+
+Next: consolidate the board trial's optional slots and membership helpers using
+nominal generics, then public generic tooling and remaining abstraction/codec,
+serialization and incremental-checking work. The measured repair study and other
+pending roadmap requirements remain active. Guest-native compilation remains
+outside this goal.

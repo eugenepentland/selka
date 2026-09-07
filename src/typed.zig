@@ -1,5 +1,6 @@
 //! Checked nodes use declaration identities, concrete types, and local slots.
 const std = @import("std");
+const provider_contracts = @import("provider_contracts.zig");
 const external_resources = @import("external_resources.zig");
 const values = @import("value.zig");
 const Acquisition = struct { allocator: NodeId, capacity: NodeId };
@@ -283,42 +284,26 @@ pub fn completionShape(ty: Type, records: []const Record) ?CompletionShape {
     const result = resultShape(ty, records) orelse return null;
     if (result.ok_type != .bool or !result.error_type.isAggregate() or result.error_type.recordIndex() >= records.len) return null;
     const schema = records[result.error_type.recordIndex()];
-    if (!schema.isRecord() or schema.fields.len != 2) return null;
-    var resource_field: ?usize = null;
-    var code_field: ?usize = null;
-    for (schema.fields, 0..) |field, index| {
-        if (std.mem.eql(u8, field.name, "resource") and resourceKind(field.ty, records) != null) resource_field = index;
-        if (std.mem.eql(u8, field.name, "code") and field.ty == .i64) code_field = index;
-    }
-    const resource = resource_field orelse return null;
-    return .{ .result = result, .resource_type = schema.fields[resource].ty, .resource_field = resource, .code_field = code_field orelse return null };
+    const slots = providerFields(schema, records, .completion) orelse return null;
+    return .{ .result = result, .resource_type = schema.fields[slots[0]].ty, .resource_field = slots[0], .code_field = slots[1] };
 }
 
 /// Result payload layout containing bytes, a length, and a status flag.
 pub const ByteResultShape = struct { result: ResultShape, bytes_type: Type, bytes_field: usize, length_field: usize, flag_field: usize };
 /// Recognize the required environment lookup result layout.
 pub fn environmentShape(ty: Type, records: []const Record) ?ByteResultShape {
-    return byteResultShape(ty, records, "present");
+    return byteResultShape(ty, records, .environment);
 }
 /// Recognize the required fixed-buffer resource read result layout.
 pub fn resourceReadShape(ty: Type, records: []const Record) ?ByteResultShape {
-    return byteResultShape(ty, records, "eof");
+    return byteResultShape(ty, records, .read);
 }
-fn byteResultShape(ty: Type, records: []const Record, flag_name: []const u8) ?ByteResultShape {
+fn byteResultShape(ty: Type, records: []const Record, operation: provider_contracts.Operation) ?ByteResultShape {
     const result = resultShape(ty, records) orelse return null;
     if (result.error_type != .i64 or !result.ok_type.isAggregate() or result.ok_type.recordIndex() >= records.len) return null;
     const schema = records[result.ok_type.recordIndex()];
-    if (!schema.isRecord() or schema.fields.len != 3) return null;
-    var bytes: ?usize = null;
-    var length: ?usize = null;
-    var present: ?usize = null;
-    for (schema.fields, 0..) |field, index| {
-        if (std.mem.eql(u8, field.name, "bytes") and byteRequest(field.ty, records)) bytes = index;
-        if (std.mem.eql(u8, field.name, "length") and field.ty == .u64) length = index;
-        if (std.mem.eql(u8, field.name, flag_name) and field.ty == .bool) present = index;
-    }
-    const byte_field = bytes orelse return null;
-    return .{ .result = result, .bytes_type = schema.fields[byte_field].ty, .bytes_field = byte_field, .length_field = length orelse return null, .flag_field = present orelse return null };
+    const slots = providerFields(schema, records, operation) orelse return null;
+    return .{ .result = result, .bytes_type = schema.fields[slots[0]].ty, .bytes_field = slots[0], .length_field = slots[1], .flag_field = slots[2] };
 }
 
 /// Result fields describing the count and EOF state of a read into a slice.
@@ -327,13 +312,30 @@ pub const SliceReadShape = struct { result: ResultShape, length_field: usize, eo
 pub fn resourceSliceReadShape(ty: Type, records: []const Record) ?SliceReadShape {
     const result = resultShape(ty, records) orelse return null;
     if (result.error_type != .i64 or !result.ok_type.isAggregate() or result.ok_type.recordIndex() >= records.len) return null;
-    const schema = records[result.ok_type.recordIndex()];
-    if (!schema.isRecord() or schema.fields.len != 2) return null;
-    var length: ?usize = null;
-    var eof: ?usize = null;
-    for (schema.fields, 0..) |field, index| {
-        if (std.mem.eql(u8, field.name, "length") and field.ty == .u64) length = index;
-        if (std.mem.eql(u8, field.name, "eof") and field.ty == .bool) eof = index;
+    const slots = providerFields(records[result.ok_type.recordIndex()], records, .slice_read) orelse return null;
+    return .{ .result = result, .length_field = slots[0], .eof_field = slots[1] };
+}
+
+fn providerFields(schema: Record, records: []const Record, operation: provider_contracts.Operation) ?[3]usize {
+    const required = provider_contracts.fields(operation);
+    if (!schema.isRecord() or schema.fields.len != required.len) return null;
+    var slots: [3]usize = @splat(0);
+    for (required, 0..) |rule, slot| {
+        var found = false;
+        for (schema.fields, 0..) |field, index| {
+            if (!std.mem.eql(u8, field.name, rule.name)) continue;
+            const matches = switch (rule.requirement) {
+                .i64 => field.ty == .i64,
+                .u64 => field.ty == .u64,
+                .boolean => field.ty == .bool,
+                .bytes => byteRequest(field.ty, records),
+                .resource => resourceKind(field.ty, records) != null,
+            };
+            if (!matches) return null;
+            slots[slot] = index;
+            found = true;
+        }
+        if (!found) return null;
     }
-    return .{ .result = result, .length_field = length orelse return null, .eof_field = eof orelse return null };
+    return slots;
 }

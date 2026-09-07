@@ -330,8 +330,12 @@ identity, ownership, borrowing and typed host contracts.
 [Symbolic nominal bodies](docs/experiments/nominal-bodies.md) now check `Box<T>`
 fields, variant payloads, result propagation, ownership and borrows before calls,
 then specialize the discovered concrete types for the VM.
-`examples/nominal-bodies.my` returns `7`. Public generic schema tooling and
-provider-specific symbolic result shapes remain pending.
+`examples/nominal-bodies.my` returns `7`.
+[Generic provider contracts](docs/experiments/nominal-providers.md) now support
+resource/environment result wrappers and fully substituted byte-array inputs.
+Generic functions can also call codecs for concrete domains while preserving
+factory/accessor privacy. Public generic schema tooling and codec constraints
+on arbitrary type parameters remain pending.
 
 [Lexical arenas](docs/experiments/source-arenas.md) use `arena heap as scratch { ... }`
 with conservative escape checks and cleanup across returns/errors.

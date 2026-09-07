@@ -57,6 +57,27 @@ pub const Context = struct {
             },
         };
     }
+    /// Inspect declaration kind without demanding a record shape from an unconstrained parameter.
+    pub fn kind(self: Context, value: Value) ?templates.Kind {
+        if (value == .nominal) return self.catalog.templates.store.?.index.declarations.items[value.nominal.declaration].kind;
+        if (value != .concrete or !value.concrete.isAggregate()) return null;
+        const shape = self.catalog.records[value.concrete.recordIndex()];
+        if (shape.shape.variants) |variants| return if (variants.fallible) .result else if (variants.is_union) .variants else .enumeration;
+        return if (shape.isRecord()) .record else null;
+    }
+    /// Recognize named result payloads while keeping symbolic arguments intact.
+    pub fn matchResult(self: Context, value: Value, span: source.Span) Error!?symbolic.ResultShape {
+        if (self.kind(value) != .result) return null;
+        const shape = try self.schema(value, span);
+        if (shape.fields.len != 2) return null;
+        var ok: ?Value = null;
+        var failure: ?Value = null;
+        for (shape.fields) |field| {
+            if (std.mem.eql(u8, field.name, "ok")) ok = field.ty;
+            if (std.mem.eql(u8, field.name, "err")) failure = field.ty;
+        }
+        return .{ .ok_type = ok orelse return null, .error_type = failure orelse return null };
+    }
     /// Resolve a record/variant schema, caching substituted nominal members without expanding phantom arguments.
     pub fn schema(self: Context, value: Value, span: source.Span) Error!Schema {
         try self.charge(span);
