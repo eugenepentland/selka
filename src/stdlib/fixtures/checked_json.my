@@ -1,0 +1,84 @@
+module main;
+import std_json;
+import std_json_view;
+import std_result;
+import std_bytes;
+fn input(heap: allocator) -> std_json::Input {
+    let source = "{\"optional\":null,\"count\":42,\"items\":[true,\"x\"]}";
+    let mut bytes = try acquire_buffer<std_json::Input>(heap, len(source));
+    borrow source[0..len(source)] as text {
+        let mut i = 0u64;
+        while i < len_slice(text) {
+            discard try append_buffer<std_json::Status>(bytes, read_slice(text, i));
+            i += 1u64;
+        }
+    }
+    return new std_json::Input.ok(bytes);
+}
+fn inspect(doc: &[]i64, heap: allocator) -> std_result::Result<i64, std_result::Error> {
+    let root = try std_json_view::root(doc);
+    if try std_json_view::count(doc, root) != 3 {
+        return new std_result::Result<i64, std_result::Error>.ok(- 1);
+    }
+    match try std_json_view::field(doc, root, "missing") {
+        std_result::Option<std_json_view::Node>.none => {},
+        std_result::Option<std_json_view::Node>.some(discard) => {
+            return new std_result::Result<i64, std_result::Error>.ok(- 2);
+        }
+    }
+    match try std_json_view::field(doc, root, "optional") {
+        std_result::Option<std_json_view::Node>.none => {
+            return new std_result::Result<i64, std_result::Error>.ok(- 3);
+        },
+        std_result::Option<std_json_view::Node>.some(node) => {
+            if try std_json_view::kind(doc, node) != new std_json_view::Kind.null {
+                return new std_result::Result<i64, std_result::Error>.ok(- 4);
+            }
+            match std_json_view::integer(doc, node) {
+                std_result::Result<i64, std_result::Error>.ok(discard) => {
+                    return new std_result::Result<i64, std_result::Error>.ok(- 5);
+                },
+                std_result::Result<i64, std_result::Error>.err(e) => {
+                    if e.category != new std_result::Category.wrong_type {
+                        return new std_result::Result<i64, std_result::Error>.ok(- 6);
+                    }
+                }
+            }
+        }
+    }
+    let name = try std_json_view::key(doc, root, 1);
+    if !(try std_json_view::textis(doc, name, "count")) {
+        return new std_result::Result<i64, std_result::Error>.ok(- 7);
+    }
+    let value = try std_json_view::integer(doc, try std_json_view::at(doc, root, 1));
+    let bytes = try std_bytes::decimal(heap, value, 2);
+    borrow bytes[0..len_buffer(bytes)] as text {
+        return new std_result::Result<i64, std_result::Error>.ok(std_bytes::compare(text, "42"));
+    }
+}
+fn main(heap: allocator) -> i64 {
+    match input(heap) {
+        std_json::Input.err(discard) => {
+            return - 8;
+        },
+        std_json::Input.ok(bytes) => {
+            match std_json_view::parse(heap, bytes, 4096) {
+                std_json_view::Parsed.err(discard) => {
+                    return - 9;
+                },
+                std_json_view::Parsed.ok(doc) => {
+                    borrow doc[0..len_buffer(doc)] as view {
+                        match inspect(view, heap) {
+                            std_result::Result<i64, std_result::Error>.err(discard) => {
+                                return - 10;
+                            },
+                            std_result::Result<i64, std_result::Error>.ok(value) => {
+                                return value;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

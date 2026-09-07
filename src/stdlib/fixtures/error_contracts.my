@@ -1,0 +1,70 @@
+module main;
+import std_bytes;
+import std_result;
+result Open {
+    ok: std_result::Context,
+    err: i64
+}
+fn wrapped(input: std_result::Context) -> std_result::ContextResult<i64> {
+    let cause = std_result::io_error(17, 17);
+    return new std_result::ContextResult<i64>.err(std_result::with_context(cause, input));
+}
+fn propagate(input: std_result::Context) -> std_result::ContextResult<i64> {
+    return new std_result::ContextResult<i64>.ok(try wrapped(input));
+}
+fn main(heap: allocator) -> i64 {
+    let invalid = new [2]u8[192u8, 128u8];
+    borrow invalid[0..2] as view {
+        if std_bytes::utf8(view) {
+            return - 1;
+        }
+        match std_bytes::escaped(heap, view, 30) {
+            std_bytes::Built.ok(discard) => {
+                return - 2;
+            },
+            std_bytes::Built.err(e) => {
+                if e.category != new std_result::Category.invalid_utf8 {
+                    return - 3;
+                }
+            }
+        }
+    }
+    match std_bytes::escaped(heap, "a", 2) {
+        std_bytes::Built.ok(discard) => {
+            return - 4;
+        },
+        std_bytes::Built.err(e) => {
+            if e.category != new std_result::Category.capacity {
+                return - 5;
+            }
+        }
+    }
+    match std_bytes::decimal(heap, -9223372036854775808, 20) {
+        std_bytes::Built.err(discard) => {return -9;},
+        std_bytes::Built.ok(bytes) => {
+            borrow bytes[0..len_buffer(bytes)] as text {
+                if std_bytes::compare(text, "-9223372036854775808") != 0 {return -10;}
+            }
+        }
+    }
+    match acquire_buffer<Open>(heap, 3) {
+        Open.err(discard) => {
+            return - 6;
+        },
+        Open.ok(context) => {
+            match propagate(context) {
+                std_result::ContextResult<i64>.ok(discard) => {
+                    return - 7;
+                },
+                std_result::ContextResult<i64>.err(e) => {
+                    let cause = read_field(e, cause);
+                    if cause.category != new std_result::Category.denied || cause.code != 17 {
+                        return - 8;
+                    }
+                    let retained = take_field(e, context);
+                    return cast<i64>(capacity_buffer(retained));
+                }
+            }
+        }
+    }
+}

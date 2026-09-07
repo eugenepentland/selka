@@ -1,0 +1,93 @@
+// Shared fallible values. Numeric builtin errors are converted explicitly.
+module std_result;
+export Option;
+export Result;
+export Category;
+export Error;
+export Context;
+export ContextError;
+export ContextResult;
+export allocation_error;
+export parse_error;
+export io_error;
+export with_context;
+union Option<T: copy> {
+    none,
+    some: T
+}
+result Result<T: copy, E: copy> {
+    ok: T,
+    err: E
+}
+enum Category {
+    capacity,
+    denied,
+    malformed,
+    invalid_utf8,
+    invalid_budget,
+    absent,
+    wrong_type,
+    bounds,
+    overflow,
+    io,
+    unknown
+}
+struct Error {
+    category: Category,
+    code: i64
+}
+buffer Context: u8;
+struct ContextError {
+    cause: Error,
+    context: Context
+}
+result ContextResult<T: copy> {
+    ok: T,
+    err: ContextError
+}
+fn allocation_error(code: i64) -> Error {
+    return new Error {
+        category: new Category.capacity,
+        code: code
+    };
+}
+fn parse_error(code: i64) -> Error {
+    if code == 1 {
+        return new Error {
+            category: new Category.malformed,
+            code: code
+        };
+    }
+    if code == 2 {
+        return allocation_error(code);
+    }
+    if code == 4 {
+        return new Error {
+            category: new Category.invalid_budget,
+            code: code
+        };
+    }
+    return new Error {
+        category: new Category.unknown,
+        code: code
+    };
+}
+// Caller supplies the provider's denied code; provider error spaces are not universal.
+fn io_error(code: i64, denied_code: i64) -> Error {
+    if code == denied_code {
+        return new Error {
+            category: new Category.denied,
+            code: code
+        };
+    }
+    return new Error {
+        category: new Category.io,
+        code: code
+    };
+}
+fn with_context(cause: Error, context: Context) -> ContextError {
+    return new ContextError {
+        cause: cause,
+        context: context
+    };
+}

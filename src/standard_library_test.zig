@@ -35,3 +35,51 @@ test "standard modules remain inside the total project byte budget" {
     try t.expectError(error.SourceError, project.load(.{ .context = null, .read = read }, "main", .{ .max_total_bytes = source.len + 1 }));
     try t.expectEqualStrings("E_PROJECT_BYTES", project.problem.?.code);
 }
+
+const Fixture = struct {
+    text: []const u8,
+    fn load(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
+        const self: *Fixture = @ptrCast(@alignCast(context.?));
+        if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
+        if (self.text.len > limit) return error.TooLarge;
+        return allocator.dupe(u8, self.text);
+    }
+};
+fn runLibrary(text: []const u8, expected: i64) !void {
+    var fixture: Fixture = .{ .text = text };
+    var program: language.embedded_project.Program = undefined;
+    try program.init(t.allocator, .{ .context = &fixture, .read = Fixture.load });
+    defer program.deinit();
+    const outcome = try language.vm.run(t.allocator, program.compilation.code.?);
+    try t.expectEqual(expected, outcome.value);
+}
+// spec: STANDARD-MODULES-3
+test "standard byte helpers validate text parse integer bounds and retain named failures" {
+    try runLibrary("module main;import std_bytes;import std_result;fn main()->i64{" ++
+        "if !std_bytes::utf8(\"hello\") || std_bytes::compare(\"a\",\"b\")>=0{return -1;}" ++
+        "match std_bytes::integer(\"9223372036854775808\"){std_result::Result<i64,std_result::Error>.ok(discard)=>{return -2;}," ++
+        "std_result::Result<i64,std_result::Error>.err(e)=>{if e.category!=new std_result::Category.overflow{return -3;}}}" ++
+        "match std_bytes::integer(\"-9223372036854775808\"){std_result::Result<i64,std_result::Error>.ok(n)=>{if n!= -9223372036854775808{return -4;}},std_result::Result<i64,std_result::Error>.err(discard)=>{return -5;}}" ++
+        "match std_bytes::find(\"abcd\",\"bc\"){std_result::Option<u64>.none=>{return -6;},std_result::Option<u64>.some(n)=>{return cast<i64>(n);}}}", 1);
+}
+// spec: STANDARD-MODULES-4
+test "standard JSON view imports compile and escaped output is bounded" {
+    try runLibrary("module main;import std_json_view;import std_bytes;fn main(heap:allocator)->i64{" ++
+        "match std_bytes::escaped(heap,\"a\\\"\\n\",64){std_bytes::Built.err(discard)=>{return -1;},std_bytes::Built.ok(bytes)=>{" ++
+        "borrow bytes[0..len_buffer(bytes)] as text{return std_bytes::compare(text,\"\\\"a\\\\\\\"\\\\u000a\\\"\");}}}}", 0);
+}
+// spec: STANDARD-MODULES-5
+test "checked JSON distinguishes absent null wrong type and emits optional data without tape offsets" {
+    try runLibrary(@embedFile("stdlib/fixtures/checked_json.my"), 0);
+}
+// spec: STANDARD-MODULES-6
+test "standard error context survives propagation and UTF8 and capacity failures stay distinct" {
+    try runLibrary(@embedFile("stdlib/fixtures/error_contracts.my"), 3);
+}
+// spec: STANDARD-MODULES-7
+test "standard generic results cannot be silently ignored" {
+    try t.expectError(error.SourceError, runLibrary(
+        "module main;import std_bytes;fn main()->i64{let forgotten=std_bytes::integer(\"1\");return 0;}",
+        0,
+    ));
+}

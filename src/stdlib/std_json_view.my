@@ -1,0 +1,186 @@
+// Checked queries for unmodified parser-produced documents. Nodes are document-local.
+module std_json_view;
+import std_bytes;
+import std_json;
+import std_result;
+export Node;
+export Kind;
+export root;
+export kind;
+export field;
+export integer;
+export boolean;
+export count;
+export at;
+export key;
+export textis;
+export text_length;
+export text_byte;
+export Parsed;
+export parse;
+struct Node {
+    id: i64
+}
+enum Kind {
+    object,
+    array,
+    string,
+    integer,
+    fraction,
+    boolean,
+    null
+}
+fn failure(category: std_result::Category) -> std_result::Error {
+    return new std_result::Error {
+        category: category,
+        code: 0
+    };
+}
+fn valid(doc: &[]i64, node: Node) -> bool {
+    if len_slice(doc) < 12u64 || node.id < 1 {
+        return false;
+    }
+    let end = read_slice(doc, 9);
+    if end < 2 || cast<u64>(end) > len_slice(doc) / 6u64 {
+        return false;
+    }
+    return node.id < end;
+}
+fn root(doc: &[]i64) -> std_result::Result<Node, std_result::Error> {
+    let node = new Node {
+        id: 1
+    };
+    if !valid(doc, node) {
+        return new std_result::Result<Node, std_result::Error>.err(failure(new std_result::Category.bounds));
+    }
+    return new std_result::Result<Node, std_result::Error>.ok(node);
+}
+fn kind(doc: &[]i64, node: Node) -> std_result::Result<Kind, std_result::Error> {
+    if !valid(doc, node) {
+        return new std_result::Result<Kind, std_result::Error>.err(failure(new std_result::Category.bounds));
+    }
+    let tag = std_json::get(doc, node.id, 0);
+    if tag == 1 {
+        return new std_result::Result<Kind, std_result::Error>.ok(new Kind.object);
+    }
+    if tag == 2 {
+        return new std_result::Result<Kind, std_result::Error>.ok(new Kind.array);
+    }
+    if tag == 3 {
+        return new std_result::Result<Kind, std_result::Error>.ok(new Kind.string);
+    }
+    if tag == 4 {
+        return new std_result::Result<Kind, std_result::Error>.ok(new Kind.integer);
+    }
+    if tag == 5 {
+        return new std_result::Result<Kind, std_result::Error>.ok(new Kind.fraction);
+    }
+    if tag == 6 || tag == 7 {
+        return new std_result::Result<Kind, std_result::Error>.ok(new Kind.boolean);
+    }
+    if tag == 8 {
+        return new std_result::Result<Kind, std_result::Error>.ok(new Kind.null);
+    }
+    return new std_result::Result<Kind, std_result::Error>.err(failure(new std_result::Category.malformed));
+}
+fn field(doc: &[]i64, node: Node, name: &[]u8) -> std_result::Result<std_result::Option<Node>, std_result::Error> {
+    if try kind(doc, node) != new Kind.object {
+        return new std_result::Result<std_result::Option<Node>, std_result::Error>.err(failure(new std_result::Category.wrong_type));
+    }
+    let id = std_json::field(doc, node.id, name);
+    if id == 0 {
+        return new std_result::Result<std_result::Option<Node>, std_result::Error>.ok(new std_result::Option<Node>.none);
+    }
+    return new std_result::Result<std_result::Option<Node>, std_result::Error>.ok(new std_result::Option<Node>.some(new Node {
+        id: id
+    }));
+}
+fn integer(doc: &[]i64, node: Node) -> std_result::Result<i64, std_result::Error> {
+    if try kind(doc, node) != new Kind.integer {
+        return new std_result::Result<i64, std_result::Error>.err(failure(new std_result::Category.wrong_type));
+    }
+    return new std_result::Result<i64, std_result::Error>.ok(std_json::get(doc, node.id, 5));
+}
+fn boolean(doc: &[]i64, node: Node) -> std_result::Result<bool, std_result::Error> {
+    if try kind(doc, node) != new Kind.boolean {
+        return new std_result::Result<bool, std_result::Error>.err(failure(new std_result::Category.wrong_type));
+    }
+    return new std_result::Result<bool, std_result::Error>.ok(std_json::get(doc, node.id, 0) == 6);
+}
+fn count(doc: &[]i64, node: Node) -> std_result::Result<i64, std_result::Error> {
+    let tag = try kind(doc, node);
+    if tag != new Kind.object && tag != new Kind.array {
+        return new std_result::Result<i64, std_result::Error>.err(failure(new std_result::Category.wrong_type));
+    }
+    return new std_result::Result<i64, std_result::Error>.ok(std_json::get(doc, node.id, 4));
+}
+// Arrays return the indexed value; objects return the indexed member value.
+fn at(doc: &[]i64, node: Node, index: i64) -> std_result::Result<Node, std_result::Error> {
+    let size = try count(doc, node);
+    if index < 0 || index >= size {
+        return new std_result::Result<Node, std_result::Error>.err(failure(new std_result::Category.bounds));
+    }
+    let object = try kind(doc, node) == new Kind.object;
+    let mut child = node.id + 1;
+    let mut i = 0;
+    while i < index {
+        if object {
+            child += 1;
+        }
+        child = std_json::get(doc, child, 3);
+        i += 1;
+    }
+    if object {
+        child += 1;
+    }
+    return new std_result::Result<Node, std_result::Error>.ok(new Node {
+        id: child
+    });
+}
+fn key(doc: &[]i64, node: Node, index: i64) -> std_result::Result<Node, std_result::Error> {
+    if try kind(doc, node) != new Kind.object {
+        return new std_result::Result<Node, std_result::Error>.err(failure(new std_result::Category.wrong_type));
+    }
+    let value = try at(doc, node, index);
+    return new std_result::Result<Node, std_result::Error>.ok(new Node {
+        id: value.id - 1
+    });
+}
+fn textis(doc: &[]i64, node: Node, text: &[]u8) -> std_result::Result<bool, std_result::Error> {
+    if try kind(doc, node) != new Kind.string {
+        return new std_result::Result<bool, std_result::Error>.err(failure(new std_result::Category.wrong_type));
+    }
+    return new std_result::Result<bool, std_result::Error>.ok(std_json::textis(doc, node.id, text));
+}
+fn text_length(doc: &[]i64, node: Node) -> std_result::Result<i64, std_result::Error> {
+    if try kind(doc, node) != new Kind.string {
+        return new std_result::Result<i64, std_result::Error>.err(failure(new std_result::Category.wrong_type));
+    }
+    return new std_result::Result<i64, std_result::Error>.ok(std_json::get(doc, node.id, 2) - std_json::get(doc, node.id, 1));
+}
+fn text_byte(doc: &[]i64, node: Node, index: i64) -> std_result::Result<u8, std_result::Error> {
+    let length = try text_length(doc, node);
+    if index < 0 || index >= length {
+        return new std_result::Result<u8, std_result::Error>.err(failure(new std_result::Category.bounds));
+    }
+    return new std_result::Result<u8, std_result::Error>.ok(cast<u8>(read_slice(doc, std_json::get(doc, node.id, 1) + index)));
+}
+result Parsed {
+    ok: std_json::Document,
+    err: std_result::Error
+}
+fn parse(heap: allocator, bytes: std_json::Bytes, limit: i64) -> Parsed {
+    borrow bytes[0..len_buffer(bytes)] as view {
+        if !std_bytes::utf8(view) {
+            return new Parsed.err(failure(new std_result::Category.invalid_utf8));
+        }
+    }
+    match std_json::parse(heap, bytes, limit) {
+        std_json::Parsed.err(code) => {
+            return new Parsed.err(std_result::parse_error(code));
+        },
+        std_json::Parsed.ok(doc) => {
+            return new Parsed.ok(doc);
+        }
+    }
+}
