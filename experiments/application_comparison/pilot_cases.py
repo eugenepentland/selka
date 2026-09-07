@@ -1,6 +1,7 @@
 """Pilot grading-case authoring. Seeds and hidden outputs stay with the coordinator."""
 import base64
 import copy
+import json
 import random
 from . import eda_oracle, planner_oracle, eda_pilot_oracle, planner_pilot_oracle
 
@@ -75,9 +76,118 @@ def feature_examples(task):
     return cases
 
 
+
+def lag_examples():
+    """Small contract examples; no priority or SCC task semantics are inherited."""
+    def job(name, duration, needs=()):
+        return dict(id=name, duration=duration, needs=list(needs))
+    return [dict(version=1, jobs=[]),
+            dict(version=1, jobs=[job('a', 2), job('b', 1, [dict(id='a', lag=3)])]),
+            dict(version=1, jobs=[job('a', 2), job('b', 5),
+                 job('c', 0, ['a', dict(id='b', lag=1)]), job('z', 1)])]
+
+
+def build_lag_cases(task, *, seed, public):
+    """Cumulative lag/slack packs, kept separate from historical task dispatch."""
+    cases = []
+    def add(name, request):
+        # Authoring guard: all structured payloads stay within shared transport.
+        if len(request['cases']) > 64 or len(json.dumps(request).encode()) > 1048576:
+            raise ValueError('generated lag payload exceeds transport envelope')
+        cases.append({'name': name, 'case': {'request': request,
+            'expected': planner_pilot_oracle.response(request, task)}})
+    def raw(name, data):
+        cases.append({'name': name, 'case': {'request_base64': base64.b64encode(data).decode(),
+            'expected': planner_pilot_oracle.response_bytes(data, task)}})
+    add('documented-behavior', {'cases': lag_examples()})
+    add('original-behavior', {'cases': [planner()]})
+    if public:
+        return cases
+    rng = random.Random(seed)
+    add('original-regressions', planner_oracle.generated_cases(seed + ':original', 64))
+    generated = planner_oracle.generated_cases(seed + ':lags', 64)
+    for manifest in generated['cases']:
+        for job in manifest['jobs']:
+            job['needs'] = [dict(id=name, lag=rng.choice((0, 1000000, rng.randrange(1000001))))
+                            if rng.choice((True, False)) else name for name in job['needs']]
+            rng.shuffle(job['needs'])
+    add('seeded-lag-graphs', generated)
+    variants = []
+    for value in lag_examples()[1:]:
+        for _ in range(8):
+            variant = copy.deepcopy(value)
+            rng.shuffle(variant['jobs'])
+            for job in variant['jobs']:
+                rng.shuffle(job['needs'])
+            variants.append(variant)
+    add('source-order-permutations', {'cases': variants})
+    malformed = []
+    for edge in (None, True, 1, [], {}, dict(id='a'), dict(lag=0),
+                 dict(id='a', lag=True), dict(id='a', lag=0.0), dict(id='a', lag=None),
+                 dict(id='a', lag=-1), dict(id='a', lag=1000001), dict(id='A', lag=0),
+                 dict(id='a', lag=0, extra=1), dict(id='', lag=0)):
+        value = lag_examples()[1]
+        value['jobs'][1]['needs'] = [edge]
+        malformed.append(value)
+    too_many_jobs = dict(version=1, jobs=[dict(id=f'v{i:03}', duration=0, needs=[]) for i in range(129)])
+    too_many_needs = lag_examples()[1]
+    too_many_needs['jobs'][1]['needs'] = [dict(id='a', lag=0) for _ in range(129)]
+    malformed.extend([too_many_jobs, too_many_needs])
+    add('edge-schema', {'cases': malformed})
+    precedence = []
+    for needs in (['a', dict(id='a', lag=0)], [dict(id='a', lag=1), dict(id='a', lag=2)],
+                  ['missing', dict(id='missing', lag=1000000)]):
+        value = lag_examples()[1]
+        value['jobs'][1]['needs'] = needs
+        precedence.append(value)
+    # Each pair deliberately combines competing validation phases.
+    for extra in (dict(id='b', duration=1, needs=['missing']),
+                  dict(id='b', duration=1, needs=[dict(id='a', lag=-1)])):
+        value = lag_examples()[1]
+        value['jobs'].append(extra)
+        precedence.append(value)
+    precedence.extend([
+        dict(version=1, jobs=[dict(id='a', duration=0, needs=[dict(id='a', lag=0)])]),
+        dict(version=1, jobs=[dict(id='a', duration=1, needs=[dict(id='b', lag=1000000)]),
+                             dict(id='b', duration=0, needs=['a']),
+                             dict(id='z', duration=2, needs=['b'])]),
+        dict(version=1, jobs=[dict(id='a', duration=0, needs=['a', dict(id='missing', lag=1)])])])
+    add('resolved-id-precedence-and-cycles', {'cases': precedence})
+    shapes = []
+    for lag in (0, 1000000):
+        for duration in (0, 1000000):
+            shapes.append(dict(version=1, jobs=[dict(id='a', duration=duration, needs=[]),
+                dict(id='b', duration=0, needs=[dict(id='a', lag=lag)]),
+                dict(id='c', duration=duration, needs=['a']),
+                dict(id='d', duration=0, needs=['b', dict(id='c', lag=lag)]),
+                dict(id='unused', duration=0, needs=[])]))
+    add('lag-duration-joins-disconnected', {'cases': shapes})
+    names = [f'n{i:03}' for i in range(128)]
+    chain = dict(version=1, jobs=[dict(id=name, duration=1000000,
+        needs=[] if i == 0 else [dict(id=names[i-1], lag=1000000)])
+        for i, name in enumerate(names)])
+    dense = dict(version=1, jobs=[dict(id=name, duration=i % 3,
+        needs=[dict(id=prior, lag=1000000 if j % 2 else 0) for j, prior in enumerate(names[:i])])
+        for i, name in enumerate(names)])
+    cycle = dict(version=1, jobs=[dict(id=name, duration=0,
+        needs=[dict(id=other, lag=1000000) for other in names]) for name in names])
+    add('maximum-chain-and-dense-graphs', {'cases': [chain, dense, cycle]})
+    add('maximum-manifest-batch', {'cases': [copy.deepcopy(chain) for _ in range(64)]})
+    for name, data in [
+        ('duplicate-object-id', b'{"cases":[{"version":1,"jobs":[{"id":"b","duration":1,"needs":[{"id":"a","\\u0069d":"a","lag":0}]}]}]}'),
+        ('duplicate-object-lag', b'{"cases":[{"version":1,"jobs":[{"id":"b","duration":1,"needs":[{"id":"a","lag":0,"lag":1}]}]}]}'),
+        ('nonfinite', b'{"cases":[1e999]}'), ('invalid-utf8', b'\xff'),
+        ('unpaired-surrogate', b'{"cases":["\\ud800"]}'), ('integer-overflow', b'{"cases":[9223372036854775808]}'),
+        ('nesting-overflow', b'{"cases":[' + b'[' * 63 + b'0' + b']' * 63 + b']}'),
+        ('trailing-data', b'{"cases":[]}x'), ('empty-input', b'')]:
+        raw(name, data)
+    return cases
+
 def build(task, *, seed, public=False):
     if task not in TASKS or not isinstance(seed, str) or not seed:
         raise ValueError('known task and explicit nonempty seed required')
+    if task in ('planner-dependency-lags', 'planner-slack'):
+        return build_lag_cases(task, seed=seed, public=public)
     oracle = planner_pilot_oracle if task.startswith('planner-') else eda_pilot_oracle
     original = planner_oracle if task.startswith('planner-') else eda_oracle
     cases = []

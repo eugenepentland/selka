@@ -1,4 +1,4 @@
-"""Coordinator-only pilot extensions; these tasks are separate, not cumulative."""
+"""Coordinator-only task oracles; slack explicitly extends dependency-lag semantics."""
 from . import planner_oracle as base
 from .oracle_transport import respond
 
@@ -60,8 +60,77 @@ def cycle_groups_result(value):
     return dict(result, cycles=sorted(groups))
 
 
+def normalize_lags(value):
+    """Translate only the new edge representation; base owns phase precedence."""
+    if not isinstance(value, dict) or not isinstance(value.get('jobs'), list):
+        return None
+    normalized = []
+    for job in value['jobs']:
+        if not isinstance(job, dict) or not isinstance(job.get('needs'), list):
+            return None
+        needs = []
+        for edge in job['needs']:
+            if isinstance(edge, str):
+                name = edge
+            elif (isinstance(edge, dict) and set(edge) == {'id', 'lag'} and
+                  type(edge['lag']) is int and 0 <= edge['lag'] <= 1000000):
+                name = edge['id']
+            else:
+                return None
+            if not base.identifier(name):
+                return None
+            needs.append(name)
+        normalized.append(dict(job, needs=needs))
+    return dict(value, jobs=normalized)
+
+
+def dependency_lags_result(value):
+    normalized = normalize_lags(value)
+    if normalized is None:
+        return {'error': 'invalid-manifest'}
+    result = base.manifest_result(normalized)
+    if 'error' in result:
+        return result
+    jobs = {job['id']: job for job in value['jobs']}
+    finish, timing = {}, {}
+    for name in result['order']:
+        job = jobs[name]
+        starts = [finish[edge if isinstance(edge, str) else edge['id']] +
+                  (0 if isinstance(edge, str) else edge['lag']) for edge in job['needs']]
+        start = max(starts, default=0)
+        finish[name] = start + job['duration']
+        timing[name] = dict(id=name, start=start, finish=finish[name])
+    return dict(result, timings=[timing[name] for name in sorted(jobs)],
+                makespan=max(finish.values(), default=0))
+
+
+def slack_result(value):
+    result = dependency_lags_result(value)
+    if 'error' in result:
+        return result
+    jobs = {job['id']: job for job in value['jobs']}
+    successors = {name: [] for name in jobs}
+    for name, job in jobs.items():
+        for edge in job['needs']:
+            source, lag = (edge, 0) if isinstance(edge, str) else (edge['id'], edge['lag'])
+            successors[source].append((name, lag))
+    # Maximum remaining path length, including this job's own execution, gives
+    # the tightest common-deadline bound. This also constrains disconnected sinks.
+    tail = {}
+    for name in reversed(result['order']):
+        tail[name] = jobs[name]['duration'] + max(
+            (lag + tail[target] for target, lag in successors[name]), default=0)
+    timings = []
+    for timing in result['timings']:
+        latest = result['makespan'] - tail[timing['id']]
+        timings.append(dict(timing, latest_start=latest, slack=latest - timing['start']))
+    return dict(result, timings=timings,
+                critical=[timing['id'] for timing in timings if timing['slack'] == 0])
+
+
 HANDLERS = {'planner-priority': priority_result, 'planner-cycle-groups': cycle_groups_result,
-            'planner-input-boundary': base.manifest_result}
+            'planner-input-boundary': base.manifest_result,
+            'planner-dependency-lags': dependency_lags_result, 'planner-slack': slack_result}
 
 
 def response(request, task):
