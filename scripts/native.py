@@ -48,6 +48,24 @@ def compile_native(zig, mode, temporary, provider, candidate, library=False):
     if not run([*flags, '-c', 'program.c', '-o', str(generated)], cwd=temporary):
         return False
     objects = [str(generated)]
+    if b'#define MYLANG_NATIVE_JSON 1' in (temporary / 'program.c').read_bytes():
+        source_root = Path(__file__).resolve().parents[1] / 'src'
+        digest = hashlib.sha256()
+        for name in ['native_json_bridge.zig', 'json_document.zig', 'typed_json.zig', 'codec_memory.zig']:
+            digest.update(name.encode() + b'\0')
+            digest.update((source_root / name).read_bytes())
+        marker = '#define MYLANG_NATIVE_JSON_SUPPORT_SHA256 "' + digest.hexdigest() + '"'
+        if marker not in (temporary / 'program.c').read_text():
+            print('native: JSON support sources differ from the compiler snapshot; rebuild the compiler', file=sys.stderr)
+            return False
+        support = temporary / 'json-support.o' 
+        support_source = Path(__file__).resolve().parents[1] / 'src/native_json_bridge.zig'
+        remaining = 180 - (time.monotonic() - started)
+        result = subprocess.run([zig, 'build-obj', str(support_source), '-lc', '-fPIC',
+            '-O', mode, '-femit-bin=' + str(support)], timeout=max(remaining, 1))
+        if result.returncode:
+            return False
+        objects.append(str(support))
     if provider is not None:
         adapter = temporary / 'provider.o'
         # Assembly .incbin inputs are not necessarily tracked by Zig's C cache.

@@ -93,10 +93,16 @@ static void release_value(Slot value);
 static void release_resource(Aggregate *object);
 static void release_pending_resource(void);
 static void cleanup_resources(void);
+#ifdef MYLANG_NATIVE_JSON
+static void cleanup_native_json(void);
+#endif
 /* References not held by an aggregate, operand, or local belong to in-flight
    C temporaries. Registry order records their most recent acquisition, rather
    than only object allocation order. No cleanup bookkeeping allocates. */
 static void cleanup(void) {
+#ifdef MYLANG_NATIVE_JSON
+    cleanup_native_json();
+#endif
     release_pending_resource();
     for (Aggregate *object = objects; object; object = object->next)
         object->unwind_refs = object->refs;

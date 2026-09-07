@@ -41,5 +41,5 @@ call/work/node limits, malformed results and a generic composite/domain fixture
 whose VM result is independently checked. The small five-process timing printed
 by the test includes startup; it is not a claim about steady-state throughput.
 
-This stage also implements native scalar domain equality. Source JSON operations
-remain a separately tracked native coverage gap until their runtime is supplied.
+This stage also implements native scalar domain equality. Typed source JSON operations remain a separately tracked native coverage gap.
+[Ordinary JSON parsing](native-json.md) now uses the shared parser support object.

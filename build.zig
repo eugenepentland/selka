@@ -232,6 +232,11 @@ pub fn build(b: *std.Build) void {
     native_host.addArgs(&.{ "--zig", b.graph.zig_exe });
     native_host.setCwd(b.path("."));
     native_step.dependOn(&native_host.step);
+    const native_json = b.addSystemCommand(&.{ "python3", "tests/native_json.py", "--compiler" });
+    native_json.addFileArg(exe.getEmittedBin());
+    native_json.addArgs(&.{ "--zig", b.graph.zig_exe });
+    native_json.setCwd(b.path("."));
+    native_step.dependOn(&native_json.step);
     const native_environment = b.addSystemCommand(&.{ "python3", "tests/native_environment.py", "--compiler" });
     native_environment.addFileArg(exe.getEmittedBin());
     native_environment.addArgs(&.{ "--zig", b.graph.zig_exe });
