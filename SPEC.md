@@ -279,3 +279,9 @@ supersede it. The manifest records implementation coverage, not a test certifica
   returns an insertion index. Vector elements retain the copy requirement.
 - [BYTE-IO-BULK-1] The byte application host optionally registers io::read_block(i64)->Block and io::write_block(Block)->i64 for a copied plain Block with bytes:[256]u8 followed by count:i64. Reads return up to 256 useful bytes with zero padding, count zero at EOF, and reject offsets outside [0,input length]. Writes reject counts outside [0,256], append up to remaining unpublished output capacity, and return the accepted count. Each call charges one work unit plus transferred bytes before mutation; allocation/work failure never appends a partial block. Existing scalar declarations remain compatible. Output is published only after successful guest exit.
 - [BYTE-IO-LIMITS-1] mylang-io accepts unique decimal --max-input, --max-output, --max-steps, --max-calls and --max-work values using = syntax after --project DIRECTORY. Input/output limits may be zero; execution budgets must be positive. Unknown flags, duplicate limits, non-decimal values and overflow reject before invocation. The configured input limit, output publication capacity and VM/host budgets are enforced without changing default limits.
+
+- [BOUNDED-COLLECTIONS-1] std_map, std_set and std_queue provide capacity-bounded,
+  element-generic collections. Operations return their owner on both accepted and
+  rejected mutations. Existing map keys replace, set insertion deduplicates, queue
+  removal is FIFO, full insertion preserves content, and removal frees capacity.
+  Operations never grow implicitly and preserve cleanup on every branch.

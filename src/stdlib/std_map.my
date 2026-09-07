@@ -1,0 +1,79 @@
+module std_map;
+import std_collections as c;
+export Entry;
+export Map;
+export Created;
+export Value;
+export PutStatus;
+export Put;
+export Found;
+export Removed;
+export create;
+export put;
+export get;
+export remove;
+
+struct Entry<K:equality,V:copy>{key:K,value:V}
+buffer Map<K:equality,V:copy>:Entry<K,V>;
+result Created<K:equality,V:copy>{ok:Map<K,V>,err:i64}
+union Value<V:copy>{none,some:V}
+enum PutStatus{inserted,replaced,full}
+struct Put<K:equality,V:copy>{map:Map<K,V>,status:PutStatus}
+struct Found<K:equality,V:copy>{map:Map<K,V>,value:Value<V>}
+struct Removed<K:equality,V:copy>{map:Map<K,V>,value:Value<V>}
+
+fn create<K:equality,V:copy>(heap:allocator, capacity:u64)->Created<K,V> {
+    return acquire_buffer<Created<K,V>>(heap, capacity);
+}
+
+fn put<K:equality,V:copy>(input:Map<K,V>, key:K, value:V)->Put<K,V> noalloc {
+    let mut map = input;
+    let mut index = 0u64;
+    while index < len_buffer(map) {
+        let entry = read_buffer(map, index);
+        if entry.key == key {
+            match write_buffer<c::Status>(map, index, new Entry<K,V>{key:key,value:value}) {
+                c::Status.ok(discard)=>{return new Put<K,V>{map:map,status:new PutStatus.replaced};},
+                c::Status.err(discard)=>{return new Put<K,V>{map:map,status:new PutStatus.full};}
+            }
+        }
+        index += 1u64;
+    }
+    match append_buffer<c::Status>(map, new Entry<K,V>{key:key,value:value}) {
+        c::Status.ok(discard)=>{return new Put<K,V>{map:map,status:new PutStatus.inserted};},
+        c::Status.err(discard)=>{return new Put<K,V>{map:map,status:new PutStatus.full};}
+    }
+}
+
+fn get<K:equality,V:copy>(input:Map<K,V>, key:K)->Found<K,V> noalloc {
+    let map = input;
+    let mut index = 0u64;
+    while index < len_buffer(map) {
+        let entry = read_buffer(map, index);
+        if entry.key == key {return new Found<K,V>{map:map,value:new Value<V>.some(entry.value)};}
+        index += 1u64;
+    }
+    return new Found<K,V>{map:map,value:new Value<V>.none};
+}
+
+fn remove<K:equality,V:copy>(input:Map<K,V>, key:K)->Removed<K,V> noalloc {
+    let mut map = input;
+    let count = len_buffer(map);
+    let mut index = 0u64;
+    while index < count {
+        let entry = read_buffer(map, index);
+        if entry.key == key {
+            let last = read_buffer(map, count - 1u64);
+            match write_buffer<c::Status>(map, index, last) {
+                c::Status.ok(discard)=>{},
+                c::Status.err(discard)=>{return new Removed<K,V>{map:map,value:new Value<V>.none};}
+            }
+            match resize_buffer<c::Status>(map, count - 1u64, last) {
+                c::Status.ok(discard)=>{return new Removed<K,V>{map:map,value:new Value<V>.some(entry.value)};},
+                c::Status.err(discard)=>{return new Removed<K,V>{map:map,value:new Value<V>.none};}
+            }
+        }
+        index += 1u64;
+    }
+    return new Removed<K,V>{map:map,value:new Value<V>.none};
+}

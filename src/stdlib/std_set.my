@@ -1,0 +1,46 @@
+module std_set;
+import std_map as m;
+export Set;
+export Created;
+export Changed;
+export Found;
+export create;
+export insert;
+export contains;
+export remove;
+
+struct Set<T:equality>{map:m::Map<T,bool>}
+result Created<T:equality>{ok:Set<T>,err:i64}
+struct Changed<T:equality>{set:Set<T>,changed:bool,full:bool}
+struct Found<T:equality>{set:Set<T>,present:bool}
+
+fn create<T:equality>(heap:allocator, capacity:u64)->Created<T> {
+    return new Created<T>.ok(new Set<T>{map:try m::create::<T,bool>(heap, capacity)});
+}
+
+fn insert<T:equality>(input:Set<T>, value:T)->Changed<T> noalloc {
+    let result = m::put::<T,bool>(take_field(input,map), value, true);
+    let status = read_field(result,status);
+    let set = new Set<T>{map:take_field(result,map)};
+    return new Changed<T>{set:set,changed:status == new m::PutStatus.inserted,full:status == new m::PutStatus.full};
+}
+
+fn contains<T:equality>(input:Set<T>, value:T)->Found<T> noalloc {
+    let result = m::get::<T,bool>(take_field(input,map), value);
+    let found = read_field(result,value);
+    let set = new Set<T>{map:take_field(result,map)};
+    match found {
+        m::Value<bool>.none=>{return new Found<T>{set:set,present:false};},
+        m::Value<bool>.some(discard)=>{return new Found<T>{set:set,present:true};}
+    }
+}
+
+fn remove<T:equality>(input:Set<T>, value:T)->Changed<T> noalloc {
+    let result = m::remove::<T,bool>(take_field(input,map), value);
+    let found = read_field(result,value);
+    let set = new Set<T>{map:take_field(result,map)};
+    match found {
+        m::Value<bool>.none=>{return new Changed<T>{set:set,changed:false,full:false};},
+        m::Value<bool>.some(discard)=>{return new Changed<T>{set:set,changed:true,full:false};}
+    }
+}

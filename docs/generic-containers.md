@@ -35,5 +35,28 @@ The same module provides allocation-free slice algorithms:
 
 Borrow a buffer's initialized range to use these algorithms. Empty slices are
 valid. Sorting intentionally suits small application worklists; it is not a claim
-of optimal large-input sorting. Maps, sets, queues, owned elements, arbitrary
-ordering callbacks, and implicit growth are separate library or language additions.
+of optimal large-input sorting. Owned elements, arbitrary ordering callbacks, and implicit growth remain separate
+language additions.
+
+## Bounded maps, sets and queues
+
+`std_map` supplies `Map<K:equality,V:copy>` with create/put/get/remove.
+`std_set` supplies `Set<T:equality>` with create/insert/contains/remove.
+`std_queue` supplies `Queue<T:copy>` with create/push/pop.
+
+Creation takes an explicit allocator and `u64` capacity and returns a typed result.
+Operations transfer the owner and return it in a record on every path; extract the
+copyable status/payload with `read_field`, then recover the owner with `take_field`.
+Full insertions preserve existing content. Map replacement and set deduplication
+succeed even when capacity is full. Removal reclaims capacity. A map removal uses
+swap-with-last and does not preserve iteration order; a queue removes in FIFO order.
+Lookup/removal and map/set insertion are linear; queue push is constant time and
+pop shifts the remaining elements in linear time. All operations are `noalloc`.
+
+Map put reports `PutStatus.inserted`, `.replaced`, or `.full`; get/remove return
+`Value<V>.none` or `.some(value)`. Set mutations return `changed` and `full` flags;
+contains returns `present`. Queue push returns `accepted`; pop returns `Item<T>`.
+Records always contain the live owner, so rejecting an insertion cannot lose it.
+An example exercising unrelated nominal keys, replacement, full insertion,
+deduplication, deletion, and FIFO removal lives in
+[`src/stdlib/tests/bounded.my`](../src/stdlib/tests/bounded.my).
