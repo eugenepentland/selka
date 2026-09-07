@@ -1,0 +1,108 @@
+module main;
+import std_strings as text;
+import std_bytes as bytes;
+import std_hash_bytes as hash;
+import std_map as map;
+import std_result as result;
+import std_json_builder as json;
+export histogram;
+fn histogram(heap: allocator, input: &[]u8) -> bytes::Built {
+    match hash::create::< i64 >(heap, 16u64) {
+        hash::Created<i64>.err(code) => {
+            return new bytes::Built.err(result::allocation_error(code));
+        },
+        hash::Created<i64>.ok(table) => {
+            let mut counts = table;
+            let mut start = 0u64;
+            while true {
+                let part = try text::split_next(input, 32u8, start);
+                if part.part.end > part.part.start {
+                    borrow input[part.part.start..part.part.end] as word {
+                        match hash::from_bytes(word) {
+                            hash::KeyResult.err(code) => {
+                                return new bytes::Built.err(new result::Error {
+                                    category: new result::Category.capacity,
+                                    code: code
+                                });
+                            },
+                            hash::KeyResult.ok(key) => {
+                                borrow mut counts as view {
+                                    let mut number = 1;
+                                    match hash::lookup::< i64 >(view, key) {
+                                        map::Value<i64>.none => {},
+                                        map::Value<i64>.some(previous) => {
+                                            number = previous + 1;
+                                        }
+                                    }
+                                    match hash::put::< i64 >(view, key, number) {
+                                        hash::PutStatus.inserted => {},
+                                        hash::PutStatus.replaced => {},
+                                        hash::PutStatus.full => {
+                                            return new bytes::Built.err(new result::Error {
+                                                category: new result::Category.capacity,
+                                                code: 2
+                                            });
+                                        },
+                                        hash::PutStatus.invalid => {
+                                            return new bytes::Built.err(new result::Error {
+                                                category: new result::Category.malformed,
+                                                code: 3
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if part.done {
+                    break;
+                }
+                start = part.next;
+            }
+            let mut output = try json::object(heap, 4096);
+            borrow counts as view {
+                for index in 0u64..len_buffer(view) {
+                    match read_buffer(view, index) {
+                        hash::Slot<i64>.empty => {},
+                        hash::Slot<i64>.deleted => {},
+                        hash::Slot<i64>.occupied(entry) => {
+                            let key = entry.key.bytes;
+                            borrow key[0..entry.key.length] as name {
+                                output = try json::integer_field(heap, output, name, entry.value);
+                            }
+                        }
+                    }
+                }
+            }
+            return json::finish(output);
+        }
+    }
+}
+fn main(heap: allocator) -> i64 {
+    match histogram(heap, "red blue red") {
+        bytes::Built.err(discard) => {
+            return 1;
+        },
+        bytes::Built.ok(output) => {
+            borrow output[0..len_buffer(output)] as view {
+                if len_slice(view) != 18u64 {
+                    return 2;
+                }
+                match bytes::find(view, "\"red\":2") {
+                    result::Option<u64>.none => {
+                        return 3;
+                    },
+                    result::Option<u64>.some(discard) => {}
+                }
+                match bytes::find(view, "\"blue\":1") {
+                    result::Option<u64>.none => {
+                        return 4;
+                    },
+                    result::Option<u64>.some(discard) => {}
+                }
+            }
+        }
+    }
+    return 42;
+}

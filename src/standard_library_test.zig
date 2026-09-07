@@ -140,3 +140,7 @@ test "text data builder partial allocation failures release nested owned values"
 test "text data fixed formatting truncates exact binary fractions across limb boundaries" {
     try runLibrary(@embedFile("stdlib/fixtures/text_data_float_edges.my"), 42);
 }
+// spec: STDLIB-COMPOSITION-1
+test "standard text hash and JSON builders compose into a bounded word histogram" {
+    try runLibrary(@embedFile("stdlib/fixtures/word_counts.my"), 42);
+}
