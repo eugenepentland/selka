@@ -245,8 +245,15 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
         const name = if (names) |module| try module.declaration(declaration.name) else src.text(declaration.name);
         if (declaration.parameters.len != 0) try catalog.templates.names.put(allocator, name, declaration.name);
     }
+    const alias_ids = try allocator.alloc(layouts.Id, program.types.expressions.aliases.len);
+    defer allocator.free(alias_ids);
+    for (program.types.expressions.aliases, alias_ids) |alias, *id| id.* = try graph.materialize(try index.expression(alias.name, &.{}), alias.name);
     var builder: Builder = .{ .context = store.context, .index = index, .graph = graph, .catalog = &catalog, .identities = &store.identities };
     try builder.identify();
+    for (program.types.expressions.aliases, alias_ids) |alias, id| {
+        const name = if (names) |module| try module.declaration(alias.name) else src.text(alias.name);
+        try catalog.names.put(allocator, name, try builder.runtimeType(id));
+    }
     var resolved = sources.resolved.iterator();
     while (resolved.next()) |entry| try catalog.arrays.resolved.put(allocator, entry.key_ptr.*, try builder.runtimeType(entry.value_ptr.*));
     try builder.fill(0);

@@ -15,6 +15,11 @@ pub const Context = struct {
     program: ast.Program,
     names: ?*Names,
     sink: *diagnostic.Sink,
+    catalog: ?@import("type_catalog.zig").Catalog = null,
+    fn resolveType(self: Context, span: source.Span) Error!typed.Type {
+        if (self.catalog) |catalog| return catalog.resolve(self.src, span, self.sink);
+        return typed.Type.fromName(self.src.text(span)) orelse self.sink.fail(eType, span, "constant type requires a known scalar type");
+    }
     /// Resolve a visible constant or leave an ordinary local/function name unchanged.
     pub fn lookup(self: Context, name: source.Span) Error!?usize {
         var any_constants = false;
@@ -88,8 +93,7 @@ const Evaluator = struct {
         if (self.visiting[index]) return self.context.sink.fail("E_CONSTANT_CYCLE", function.name, "constant initializers must have acyclic dependencies");
         self.visiting[index] = true;
         defer self.visiting[index] = false;
-        const result_type = typed.Type.fromName(self.context.src.text(function.signature.return_type)) orelse
-            return self.context.sink.fail(eType, function.signature.return_type, "constant types currently require builtin integers or bool");
+        const result_type = try self.context.resolveType(function.signature.return_type);
         if (!result_type.isInteger() and result_type != .bool) return self.context.sink.fail(eType, function.signature.return_type, "constant types currently require builtin integers or bool");
         const body = self.context.program.statements.items[@backingInt(function.body)].data.block[0];
         const initializer = self.context.program.statements.items[@backingInt(body)].data.ret;
@@ -120,7 +124,7 @@ const Evaluator = struct {
                 return self.declaration(index, depth + 1);
             },
             .cast => |cast| {
-                const ty = typed.Type.fromName(self.context.src.text(cast.ty)) orelse return self.context.sink.fail(eType, cast.ty, "constant cast requires a builtin integer type");
+                const ty = try self.context.resolveType(cast.ty);
                 const value = try self.expression(cast.value, depth + 1);
                 if (!value.typeOf().isInteger()) return self.context.sink.fail("E_TYPE", node.span, "constant cast requires an integer");
                 return integers.cast(ty, integer(value)) catch |err| return self.failure(node.span, err);

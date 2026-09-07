@@ -179,6 +179,9 @@ pub const Index = struct {
             if (!unit.symbols.items[unit.names.get(project.modules.items[module].src.text(variant.name)).?].exported) continue;
             for (variant.cases) |case| if (case.payload) |payload| try self.genericSignatureType(module, payload, variant.type_parameters);
         }
+        for (unit.syntax.types.expressions.aliases) |alias| {
+            if (unit.symbols.items[unit.names.get(project.modules.items[module].src.text(alias.name)).?].exported) try self.signatureType(module, alias.target);
+        }
         for (unit.syntax.types.domains) |domain| {
             if (unit.symbols.items[unit.names.get(project.modules.items[module].src.text(domain.name)).?].exported) try self.signatureType(module, domain.backing);
         }
@@ -238,6 +241,7 @@ pub fn buildWithCache(project: *graph.Project, cache: ?*@import("syntax_cache.zi
         inline for (.{ "records", "domains", "variants", "buffers", "resources", "pools" }) |field| {
             for (@field(syntax.types, field)) |declaration| try index.add(module_id, declaration.name, .type, null, false);
         }
+        for (syntax.types.expressions.aliases) |alias| try index.add(module_id, alias.name, .type, null, false);
         for (syntax.types.pools) |pool| try index.add(module_id, pool.handle, .type, null, false);
         for (syntax.functions) |function| try index.add(module_id, function.name, .function, function.policy.owner, function.policy.restricted);
         for (module.exports) |exported| {

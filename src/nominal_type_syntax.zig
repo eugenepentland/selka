@@ -5,5 +5,5 @@ pub fn present(program: ast.Program) bool {
     inline for (.{ "records", "variants", "buffers", "pools" }) |category| {
         for (@field(program.types, category)) |declaration| if (declaration.type_parameters.len != 0) return true;
     }
-    return program.types.expressions.applications.len != 0;
+    return program.types.expressions.applications.len != 0 or program.types.expressions.aliases.len != 0;
 }

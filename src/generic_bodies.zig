@@ -280,7 +280,7 @@ const Checker = struct {
     }
     fn namedValue(self: *Checker, span: source.Span) Error!Symbolic {
         if (!self.active.contains(self.src.text(span))) {
-            const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.program, .names = self.module_names, .sink = self.sink };
+            const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.program, .names = self.module_names, .sink = self.sink, .catalog = self.catalog };
             if (try constants.lookup(span)) |index| return .{ .concrete = (try constants.evaluate(index)).typeOf() };
         }
         const binding = try self.local(span);

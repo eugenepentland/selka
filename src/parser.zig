@@ -21,6 +21,7 @@ pub const Parser = struct {
         statements: std.ArrayList(ast.Statement) = .empty,
         array_types: std.ArrayList(ast.ArrayType) = .empty,
         applications: std.ArrayList(ast.TypeApplication) = .empty,
+        aliases: std.ArrayList(ast.TypeAlias) = .empty,
     } = .{},
     fn current(self: *Parser) lex.Token {
         const token = self.tokens[self.cursor.pos];
@@ -158,6 +159,14 @@ pub const Parser = struct {
         var resources: std.ArrayList(ast.Domain) = .empty;
         var variants: std.ArrayList(ast.Variants) = .empty;
         while (self.current().tag != .eof) {
+            if (self.take(.kw_type)) {
+                const name = (try self.expect(.ident)).span;
+                _ = try self.expect(.equal);
+                const target = try self.typeName();
+                _ = try self.expect(.semicolon);
+                try self.syntax.aliases.append(self.arena.allocator(), .{ .name = name, .target = target });
+                continue;
+            }
             if (self.take(.kw_const)) {
                 const name = (try self.expect(.ident)).span;
                 _ = try self.expect(.colon);
@@ -263,7 +272,11 @@ pub const Parser = struct {
                 .buffers = try buffers.toOwnedSlice(self.arena.allocator()),
                 .variants = try variants.toOwnedSlice(self.arena.allocator()),
                 .domains = try domains.toOwnedSlice(self.arena.allocator()),
-                .expressions = .{ .arrays = try self.syntax.array_types.toOwnedSlice(self.arena.allocator()), .applications = try self.syntax.applications.toOwnedSlice(self.arena.allocator()) },
+                .expressions = .{
+                    .arrays = try self.syntax.array_types.toOwnedSlice(self.arena.allocator()),
+                    .applications = try self.syntax.applications.toOwnedSlice(self.arena.allocator()),
+                    .aliases = try self.syntax.aliases.toOwnedSlice(self.arena.allocator()),
+                },
                 .records = try records.toOwnedSlice(self.arena.allocator()),
             },
 

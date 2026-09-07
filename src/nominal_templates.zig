@@ -33,7 +33,9 @@ pub const Declaration = struct {
     fields: []const Field = &.{},
     guarantees: requirements.Set = .{},
 };
+const Alias = struct { declaration: ast.TypeAlias, visiting: bool = false };
 const Syntax = struct {
+    aliases: std.StringHashMapUnmanaged(Alias) = .empty,
     arrays: std.AutoHashMapUnmanaged(usize, ast.ArrayType) = .empty,
     applications: std.AutoHashMapUnmanaged(usize, ast.TypeApplication) = .empty,
 };
@@ -107,6 +109,15 @@ pub const Index = struct {
         }
         if (self.parameter(span, parameters)) |id| return .{ .parameter = id };
         if (typed.Type.fromName(ctx.src.text(span))) |ty| return .{ .builtin = ty };
+        if (self.syntax.aliases.count() != 0) {
+            const alias_name = if (ctx.names) |names| try names.reference(span, .type, null, null, ctx.sink) else ctx.src.text(span);
+            if (self.syntax.aliases.getPtr(alias_name)) |alias| {
+                if (alias.visiting) return ctx.sink.fail("E_ALIAS_CYCLE", span, "type aliases must have acyclic dependencies");
+                alias.visiting = true;
+                defer alias.visiting = false;
+                return self.expression(alias.declaration.target, &.{});
+            }
+        }
         const id = try self.lookup(span);
         if (self.declarations.items[id].parameters.len != 0) return ctx.sink.fail("E_GENERIC_ARITY", span, "nominal template requires explicit type arguments");
         return .{ .named = id };
@@ -114,7 +125,7 @@ pub const Index = struct {
     fn checkParameters(self: *Index, program: ast.Program) Error!void {
         const ctx = self.context;
         for (self.declarations.items) |declaration| for (declaration.parameters) |item| {
-            var shadowed = if (ctx.names) |names| try names.topLevel(item.name) else self.names.contains(ctx.src.text(item.name));
+            var shadowed = if (ctx.names) |names| try names.topLevel(item.name) else self.names.contains(ctx.src.text(item.name)) or self.syntax.aliases.contains(ctx.src.text(item.name));
             if (ctx.names == null) for (program.functions) |function| {
                 if (function.policy.owner == null and std.mem.eql(u8, ctx.src.text(function.name), ctx.src.text(item.name))) shadowed = true;
             };
@@ -267,6 +278,11 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     for (program.types.pools) |pool| {
         try index.add(pool.name, pool.type_parameters, .pool);
         try index.add(pool.handle, pool.type_parameters, .handle);
+    }
+    for (program.types.expressions.aliases) |alias| {
+        const key = if (module_names) |names| try names.declaration(alias.name) else src.text(alias.name);
+        if (index.names.contains(key) or index.syntax.aliases.contains(key)) return sink.fail("E_DUPLICATE_TYPE", alias.name, "alias name conflicts with an existing type declaration");
+        try index.syntax.aliases.put(allocator, key, .{ .declaration = alias });
     }
     try index.checkParameters(program);
     for (program.types.expressions.arrays) |syntax| try index.syntax.arrays.put(allocator, syntax.span.start, syntax);

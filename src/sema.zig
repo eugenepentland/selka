@@ -73,7 +73,7 @@ const Checker = struct {
         const sink = self.sink;
         self.current_function = @fromBackingInt(i);
         const function = self.syntaxFunction(@fromBackingInt(i));
-        const constant_context: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = self.sink };
+        const constant_context: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = self.sink, .catalog = self.catalog };
         const constant = if (function.policy.constant) try constant_context.evaluate(@backingInt(self.instance_keys.items[i].declaration)) else null;
         for (self.resolved_nodes.items) |node| self.resolved[node] = null;
         self.resolved_nodes.clearRetainingCapacity();
@@ -775,7 +775,7 @@ const Checker = struct {
     fn checkName(self: *Checker, _: ast.Node, name: @FieldType(@FieldType(ast.Node, "data"), "name"), out: *typed.Node) Error!void {
         if (self.active_refs.contains(self.src.text(name))) return self.sink.fail("E_REFERENCE_VALUE", name, "references cannot be copied, stored, returned, or passed to value parameters; use read_ref to copy the referenced value");
         if (!self.active.contains(self.src.text(name))) {
-            const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = self.sink };
+            const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = self.sink, .catalog = self.catalog };
             if (try constants.lookup(name)) |index| {
                 const value = try constants.evaluate(index);
                 out.ty = value.typeOf();

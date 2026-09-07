@@ -156,4 +156,7 @@ pub const TypeDeclarations = struct {
 /// Parsed nominal application; the base name and each type argument retain exact source spans.
 pub const TypeApplication = struct { span: Span, name: Span, arguments: []const Span };
 /// Structural and nominal type expressions referenced by declarations and function bodies.
-pub const TypeExpressions = struct { arrays: []const ArrayType = &.{}, applications: []const TypeApplication = &.{} };
+/// Transparent non-parameterized alias; the target retains its source type spelling.
+pub const TypeAlias = struct { name: Span, target: Span };
+/// Structural type syntax, concrete nominal applications and transparent aliases.
+pub const TypeExpressions = struct { arrays: []const ArrayType = &.{}, applications: []const TypeApplication = &.{}, aliases: []const TypeAlias = &.{} };
