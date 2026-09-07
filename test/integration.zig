@@ -1259,11 +1259,16 @@ test "CLI project-dependencies buildIndex emits checked graph identity and rejec
     try invoke("project-dependencies", "module input; export absent; fn main()->i64 { return 0; }", 1, "", "error[");
 }
 
-test "CLI emitProjectC rejects interpreter-only JSON without publishing partial C" {
+test "CLI emitProjectC publishes C for source typed JSON" {
     const source = "module input; buffer Bytes:u8; result Wire{ok:Bytes,err:i64} " ++
         "fn main(heap:allocator)->i64{match json_encode::<Wire>(heap,42,256){Wire.ok(bytes)=>{discard bytes;return 42;},Wire.err(code)=>{return code;}}}";
     try invoke("run-project", source, 0, "42\n", "");
-    try invoke("emit-project-c", source, 1, "", "E_NATIVE_FEATURE");
+    const outcome = try runFixture("emit-project-c", source, &.{});
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    try testing.expectEqualStrings("", outcome.stderr);
+    try testing.expect(std.mem.indexOf(u8, outcome.stdout, "mylang") != null);
 }
 
 // spec: FEATURE-REPORT-1

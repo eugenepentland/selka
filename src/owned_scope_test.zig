@@ -27,7 +27,7 @@ test "buffer transfers consume identities and growth respects active views" {
     try t.expectEqual(@as(i64, 7), (try store.readOwner(moved, 0)).i64);
     try t.expectError(error.ExpiredBorrow, store.read(view, 0));
     try store.destroy(moved);
-    try t.expectEqual(memory.Statistics{ .created = 1, .released = 1, .transfers = 1 }, store.statistics);
+    try t.expectEqual(memory.Statistics{ .created = 1, .released = 1, .transfers = 1, .peak_capacity = 4, .peak_allocations = 1 }, store.statistics);
 }
 
 test "buffer capacity never exposes uninitialized elements and quotas recover" {
@@ -96,7 +96,7 @@ test "scope moves and adoption preserve one cleanup owner" {
     b.deinit();
     try t.expectEqual(@as(i64, 42), (try store.readOwner(taken, 0)).i64);
     try store.destroy(taken);
-    try t.expectEqual(memory.Statistics{ .created = 1, .released = 1, .transfers = 4 }, store.statistics);
+    try t.expectEqual(memory.Statistics{ .created = 1, .released = 1, .transfers = 4, .peak_capacity = 1, .peak_allocations = 1 }, store.statistics);
 }
 
 test "terminal scope cleanup invalidates nested loans without disturbing other owners" {
