@@ -8,6 +8,12 @@ pub const Memory = struct {
     live: usize = 0,
     peak: usize = 0,
     limit_failure: bool = false,
+    /// Create a narrower accounting layer; keep both objects alive until all
+    /// child allocations are freed through the child allocator. Every byte is
+    /// charged to both limits, so nested children cannot amplify parent authority.
+    pub fn child(self: *Memory, limit: usize) Memory {
+        return .{ .parent = self.allocator(), .limit = @min(limit, self.limit) };
+    }
     /// Borrow an allocator interface tied to this accounting object's lifetime.
     pub fn allocator(self: *Memory) std.mem.Allocator {
         return .{ .ptr = self, .vtable = &.{ .alloc = alloc, .resize = resize, .remap = remap, .free = free } };

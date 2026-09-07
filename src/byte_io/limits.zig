@@ -6,9 +6,8 @@ pub const Options = struct {
     grants: @import("grants.zig").Config = .{},
     input: usize = 2 * 1024 * 1024,
     output: usize = 128 * 1024 * 1024,
-    steps: u64 = 2_000_000_000,
-    calls: u64 = 300_000_000,
-    work: u64 = 300_000_000,
+    execution: struct { steps: u64 = 2_000_000_000, calls: u64 = 300_000_000, work: u64 = 300_000_000 } = .{},
+    memory: @import("memory_budget.zig").Config = .{},
 };
 /// Parse unique decimal limits; reject unknown flags, zero VM budgets and overflow.
 pub fn parse(args: []const []const u8) error{InvalidArguments}!Options {
@@ -17,6 +16,7 @@ pub fn parse(args: []const []const u8) error{InvalidArguments}!Options {
     var seen: u8 = 0;
     for (args[3..]) |argument| {
         if (try options.grants.parse(argument)) continue;
+        if (try options.memory.parse(argument)) continue;
         const split = std.mem.indexOfScalar(u8, argument, '=') orelse return error.InvalidArguments;
         const key = argument[0..split];
         const digits = argument[split + 1 ..];
@@ -40,9 +40,9 @@ pub fn parse(args: []const []const u8) error{InvalidArguments}!Options {
                     if (value > std.math.maxInt(usize)) return error.InvalidArguments;
                     options.output = @intCast(value);
                 },
-                2 => options.steps = value,
-                3 => options.calls = value,
-                4 => options.work = value,
+                2 => options.execution.steps = value,
+                3 => options.execution.calls = value,
+                4 => options.execution.work = value,
                 else => unreachable,
             }
             matched = true;

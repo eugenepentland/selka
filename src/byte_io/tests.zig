@@ -161,10 +161,23 @@ test "runner limits accept explicit zero storage but reject duplicate overflow a
     const options = try limits.parse(&.{ "io", "--project", ".", "--max-input=0", "--max-output=3", "--max-steps=4", "--max-calls=5", "--max-work=6" });
     try t.expectEqual(@as(usize, 0), options.input);
     try t.expectEqual(@as(usize, 3), options.output);
-    try t.expectEqual(@as(u64, 4), options.steps);
-    try t.expectEqual(@as(u64, 5), options.calls);
-    try t.expectEqual(@as(u64, 6), options.work);
+    try t.expectEqual(@as(u64, 4), options.execution.steps);
+    try t.expectEqual(@as(u64, 5), options.execution.calls);
+    try t.expectEqual(@as(u64, 6), options.execution.work);
     for ([_][]const u8{ "--unknown=1", "--max-steps=0", "--max-input=-1", "--max-output=+1", "--max-work=18446744073709551616", "--max-calls=" }) |invalid|
         try t.expectError(error.InvalidArguments, limits.parse(&.{ "io", "--project", ".", invalid }));
     try t.expectError(error.InvalidArguments, limits.parse(&.{ "io", "--project", ".", "--max-work=1", "--max-work=2" }));
+}
+
+// spec: RUNTIME-BYTES-2
+test "runner memory quotas parse zero limits and reject duplicate InvalidArguments" {
+    const parse = @import("limits.zig").parse;
+    const parsed = try parse(&.{ "mylang-io", "--project", ".", "--max-runtime-bytes=100", "--max-vm-bytes=80", "--max-host-bytes=0", "--memory-report" });
+    try t.expectEqual(@as(usize, 100), parsed.memory.total);
+    try t.expectEqual(@as(usize, 80), parsed.memory.vm);
+    try t.expectEqual(@as(usize, 0), parsed.memory.host);
+    try t.expect(parsed.memory.output);
+    try t.expectError(error.InvalidArguments, parse(&.{ "mylang-io", "--project", ".", "--max-vm-bytes=1", "--max-vm-bytes=2" }));
+    try t.expectError(error.InvalidArguments, parse(&.{ "mylang-io", "--project", ".", "--memory-report", "--memory-report" }));
+    try t.expectError(error.InvalidArguments, parse(&.{ "mylang-io", "--project", ".", "--max-host-bytes=-1" }));
 }

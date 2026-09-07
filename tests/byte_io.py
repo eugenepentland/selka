@@ -1,5 +1,6 @@
 """Actual raw guest I/O and reload checks for the installed application bridge."""
 import argparse
+import json
 from pathlib import Path
 import subprocess
 import tempfile
@@ -19,6 +20,17 @@ def main():
         copied = run('fn main()->i64{let mut i=0;while i<io::length(){discard io::put(io::byte(i));i+=1;}return 0;}', b'\x00\xff\xc0\x80{broken}')
         assert copied.returncode == 0, copied.stderr
         assert copied.stdout == b'\x00\xff\xc0\x80{broken}'
+        measured = run('fn main()->i64{discard io::put(65u8);return 0;}', flags=('--memory-report',))
+        assert measured.returncode == 0 and measured.stdout == b'A', measured.stderr
+        accounting = json.loads(measured.stderr)
+        assert accounting['version'] == 'runtime-memory-v1'
+        assert accounting['total']['live'] == 0
+        assert accounting['vm']['peak'] > 0 and accounting['host']['peak'] > 0
+        for flag in ('--max-runtime-bytes=0', '--max-vm-bytes=0', '--max-host-bytes=0'):
+            exhausted = run('fn main()->i64{discard io::put(65u8);return 0;}', flags=(flag, '--memory-report'))
+            assert exhausted.returncode != 0 and not exhausted.stdout, exhausted
+            report = next(json.loads(line) for line in exhausted.stderr.splitlines() if line.startswith(b'{'))
+            assert report['total']['live'] == 0, report
         # The same binary reads a changed guest source on its next invocation.
         changed = run('fn main()->i64{discard io::put(65u8);return 0;}')
         assert changed.returncode == 0 and changed.stdout == b'A', changed.stderr

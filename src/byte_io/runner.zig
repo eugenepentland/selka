@@ -23,18 +23,22 @@ fn run(init: std.process.Init) !void {
     try validateInputLength(input.len, options.input);
     // VM and host-call temporaries must be reclaimable within a long invocation.
     // Source/input storage may use the process arena because it has one lifetime.
-    const runtime_allocator = init.gpa;
-    var context: bridge.Context = .{ .allocator = runtime_allocator, .input = input, .output_limit = options.output };
+    var total: language.allocation_budget.Memory = .{ .parent = init.gpa, .limit = options.memory.total };
+    var vm_budget = total.child(options.memory.vm);
+    var host_budget = total.child(options.memory.host);
+    defer @import("memory_budget.zig").report(init.io, options.memory, total, vm_budget, host_budget);
+    const runtime_allocator = vm_budget.allocator();
+    var context: bridge.Context = .{ .allocator = host_budget.allocator(), .input = input, .output_limit = options.output };
     defer context.deinit();
     var registry = try language.vm_host.Registry.init(runtime_allocator, program.compilation.code.?);
     defer registry.deinit();
     try context.install(&registry);
     var grants: @import("grants.zig").State = undefined;
-    try grants.init(runtime_allocator, init.io, options.grants);
+    try grants.init(host_budget.allocator(), init.io, options.grants);
     defer grants.deinit();
     var vm_options = grants.options();
-    vm_options.max_steps = options.steps;
-    const result = try language.vm.runWithHost(runtime_allocator, program.compilation.code.?, vm_options, &registry, .{ .max_calls = options.calls, .max_work = options.work });
+    vm_options.max_steps = options.execution.steps;
+    const result = try language.vm.runWithHost(runtime_allocator, program.compilation.code.?, vm_options, &registry, .{ .max_calls = options.execution.calls, .max_work = options.execution.work });
     switch (result) {
         .trap => |trap| {
             const message = try trap.render(allocator, program.compilation.src);

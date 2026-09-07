@@ -315,3 +315,8 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [NATIVE-JSON-3] Native source JSON that requires domain codec execution rejects explicitly before emitting output until compiled domain invocation and recoverable codec traps are supported.
 
 - [NATIVE-JSON-4] Typed native JSON releases temporary metadata, copied values and codec output at every parent allocator failure position.
+
+## Runtime requested-byte accounting
+
+- [RUNTIME-BYTES-1] Embedded allocation budgets support child quotas clamped to the parent limit. Child allocations and resize/remap operations charge both live-byte limits; failed acquisitions do not charge storage; release restores live accounting and retains peak statistics. Accounting objects must outlive every allocation made through them.
+- [RUNTIME-BYTES-2] The byte application runner accepts unique nonnegative `--max-runtime-bytes`, `--max-vm-bytes`, `--max-host-bytes` limits and `--memory-report`. VM and host requested live bytes share the total cap. Source compilation/input storage, underlying allocator overhead, operating-system and provider-internal allocations outside the supplied allocator are excluded. Exhaustion terminates execution with cleanup; it is not a guest-recoverable numeric error. Reports distinguish VM allocations (including retained arena chunks) and host allocations.
