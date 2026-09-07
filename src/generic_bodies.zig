@@ -1145,6 +1145,21 @@ const Checker = struct {
                 if (ty_value == .parameter) try self.supports(ty_value, .copy, statement_value.span);
             },
             .branch => |branch| return self.branchValue(branch, statement_value.span),
+            .for_range => |range| {
+                const element = try self.expression(range.start);
+                try self.supports(element, .integer, range.name);
+                try self.same(try self.expression(range.end), element, range.name);
+                const first = self.locals.items.len;
+                try self.bind(range.name, element, false);
+                defer self.endScope(first);
+                const before = try self.pendingState(self.locals.items.len);
+                defer self.allocator.free(before);
+                const previous = self.loop_pending;
+                self.loop_pending = before;
+                defer self.loop_pending = previous;
+                if (!try self.statement(range.body)) try self.samePending(before, statement_value.span, diagnostic.result_loop);
+                self.restorePending(before);
+            },
             .loop_exit => {
                 const before = self.loop_pending orelse return self.sink.fail("E_LOOP_EXIT", statement_value.span, "break and continue require an enclosing loop");
                 try self.requireHandled(before.len, statement_value.span);

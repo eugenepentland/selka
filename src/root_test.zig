@@ -103,4 +103,5 @@ test {
     _ = @import("unit_convention_test.zig");
     _ = @import("loop_exit_test.zig");
     _ = @import("constants_test.zig");
+    _ = @import("for_range_test.zig");
 }

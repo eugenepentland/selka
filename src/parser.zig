@@ -549,6 +549,15 @@ pub const Parser = struct {
                 .else_body = else_body,
             } } });
         }
+        if (self.take(.kw_for)) {
+            const name = (try self.expect(.ident)).span;
+            _ = try self.expect(.kw_in);
+            const start = try self.expression(0);
+            _ = try self.expect(.dot_dot);
+            const end = try self.expression(0);
+            const body = try self.block();
+            return self.addStatement(.{ .span = .join(first.span, self.syntax.statements.items[@backingInt(body)].span), .data = .{ .for_range = .{ .name = name, .start = start, .end = end, .body = body } } });
+        }
         if (self.take(.kw_while)) {
             const condition = try self.expression(0);
             const body = try self.block();

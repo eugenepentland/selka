@@ -1407,6 +1407,49 @@ const Checker = struct {
         self.restorePending(before);
         return .{ .loop = .{ .id = loop_id, .condition = condition, .body = body.id } };
     }
+    fn statementForRange(self: *Checker, stmt: ast.Statement, range: @FieldType(@FieldType(ast.Statement, "data"), "for_range")) Error!@FieldType(typed.Statement, "data") {
+        const name = self.src.text(range.name);
+        if (try self.topLevel(range.name) or self.active.contains(name) or self.active_refs.contains(name)) return self.sink.fail(eShadowing, range.name, "iteration binding shadows an active declaration");
+        const start = try self.expression(range.start);
+        const end = try self.expression(range.end);
+        const element = self.nodes.items[@backingInt(start)].ty;
+        try self.requireInteger(element, range.name);
+        try self.require(self.nodes.items[@backingInt(end)].ty, element, self.syntax.nodes.items[@backingInt(range.end)].span);
+        const index: typed.LocalId = @fromBackingInt(self.locals.items.len);
+        try self.locals.append(self.allocator, .{ .name = name, .declaration = range.name, .ty = element, .mutable = false, .usage = .{ .reads = 1 } });
+        const limit: typed.LocalId = @fromBackingInt(self.locals.items.len);
+        try self.locals.append(self.allocator, .{ .name = "<range-limit>", .declaration = range.name, .ty = element, .mutable = false, .usage = .{ .reads = 1, .temporary = true } });
+        try self.active.put(self.allocator, name, index);
+        defer _ = self.active.remove(name);
+        const index_node: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = range.name, .ty = element, .data = .{ .local = index } });
+        const limit_node: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = range.name, .ty = element, .data = .{ .local = limit } });
+        const condition: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = stmt.span, .ty = .bool, .data = .{ .binary = .{ .op = .lt, .left = index_node, .right = limit_node, .op_span = stmt.span } } });
+        const one: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = range.name, .ty = element, .data = .{ .integer = 1 } });
+        const next: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = range.name, .ty = element, .data = .{ .binary = .{ .op = .add, .left = index_node, .right = one, .op_span = range.name } } });
+        const before = try self.pendingState(self.locals.items.len);
+        const loop_id = self.loops.next;
+        self.loops.next += 1;
+        try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .references = self.references.items.len, .arena_depth = self.arena_depth });
+        defer _ = self.loops.active.pop();
+        const body = try self.statement(range.body);
+        if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
+        self.restorePending(before);
+        const step: typed.StatementId = @fromBackingInt(self.statements.items.len);
+        try self.statements.append(self.allocator, .{ .span = range.name, .terminates = false, .data = .{ .assign = .{ .slot = index, .value = next } } });
+        const children = try self.allocator.alloc(typed.StatementId, 3);
+        children[0] = @fromBackingInt(self.statements.items.len);
+        try self.statements.append(self.allocator, .{ .span = range.name, .terminates = false, .data = .{ .initialize = .{ .slot = index, .value = start } } });
+        children[1] = @fromBackingInt(self.statements.items.len);
+        try self.statements.append(self.allocator, .{ .span = range.name, .terminates = false, .data = .{ .initialize = .{ .slot = limit, .value = end } } });
+        children[2] = @fromBackingInt(self.statements.items.len);
+        try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = false, .data = .{ .loop = .{ .id = loop_id, .condition = condition, .body = body.id, .step = step } } });
+        return .{ .block = children };
+    }
     fn statementLoopExit(self: *Checker, stmt: ast.Statement, continuing: bool, flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         if (self.loops.active.items.len == 0) return self.sink.fail("E_LOOP_EXIT", stmt.span, "break and continue require an enclosing loop");
         const loop = self.loops.active.items[self.loops.active.items.len - 1];
@@ -1574,6 +1617,7 @@ const Checker = struct {
             .loop => |loop| try self.statementLoop(stmt, loop, &flow),
             .ret => |expr| try self.statementRet(stmt, expr, &flow),
             .loop_exit => |continuing| try self.statementLoopExit(stmt, continuing, &flow),
+            .for_range => |range| try self.statementForRange(stmt, range),
             .binding => |b| try self.statementBinding(stmt, b, &flow),
             .assignment => |a| try self.statementAssignment(stmt, a, &flow),
         };

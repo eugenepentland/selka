@@ -128,6 +128,7 @@ pub const Walker = struct {
                     try self.expr(b.condition);
                 },
                 .loop => |l| {
+                    if (l.step) |step| try self.stmt(step);
                     try self.stmt(l.body);
                     try self.expr(l.condition);
                 },

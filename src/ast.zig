@@ -64,6 +64,7 @@ pub const Statement = struct {
         block: []const StatementId,
         ret: NodeId,
         loop_exit: bool,
+        for_range: struct { name: Span, start: NodeId, end: NodeId, body: StatementId },
         borrow_call: struct { call: NodeId, name: Span, mutable: bool, body: StatementId },
         borrow: struct { owner: Span, name: Span, mutable: bool, body: StatementId, range: ?Range = null },
         write_slice: struct { name: Span, index: NodeId, value: NodeId },

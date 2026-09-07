@@ -167,9 +167,14 @@ const Emitter = struct {
             .loop => |loop| {
                 const start = try self.label();
                 const end = try self.label();
-                try self.loops.put(self.allocator, loop.id, .{ .start = start, .end = end });
+                const next = if (loop.step != null) try self.label() else start;
+                try self.loops.put(self.allocator, loop.id, .{ .start = next, .end = end });
                 try self.push(.{ .mark = end });
-                if (!self.program.statements[@backingInt(loop.body)].terminates)
+                if (loop.step) |step| {
+                    try self.push(.{ .jump = .{ .target = start, .span = stmt.span } });
+                    try self.push(.{ .statement = step });
+                    try self.push(.{ .mark = next });
+                } else if (!self.program.statements[@backingInt(loop.body)].terminates)
                     try self.push(.{ .jump = .{ .target = start, .span = stmt.span } });
                 try self.push(.{ .statement = loop.body });
                 try self.push(.{ .jump = .{ .target = end, .conditional = true, .span = self.program.nodes[@backingInt(loop.condition)].span } });
