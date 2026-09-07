@@ -5,6 +5,7 @@ reviewer authenticity. It never starts a participant or authorizes scored launch
 """
 from pathlib import Path
 from .storage import digest, path_identity, read_json
+from .environment_receipt import tree_identity
 
 
 def validate_matrix(matrix):
@@ -66,6 +67,15 @@ def required_inputs(matrix):
             {f'contract:{app}' for app in matrix['applications']})
 
 
+def input_identity(name, path):
+    # Runtime trees legitimately contain symlinks. Reuse the environment scanner,
+    # which records link targets and all in-tree content; full trial environment
+    # receipts also cover mounted runtime dependencies outside these subtrees.
+    if name in ('python_stdlib', 'zig'):
+        return tree_identity(path)
+    return path_identity(path)
+
+
 def capture(matrix_path, *, inputs, output):
     """Bind reviewed coverage to supplied tools, source trees and evidence files."""
     matrix_path, output = Path(matrix_path).resolve(strict=True), Path(output)
@@ -77,7 +87,7 @@ def capture(matrix_path, *, inputs, output):
         raise ValueError('named trial inputs required; matrix is reserved')
     if not (evidence | required_inputs(matrix)).issubset(inputs):
         raise ValueError('matrix evidence and complete trial inventory must be supplied as named inputs')
-    identities = {name: path_identity(path) for name, path in sorted(inputs.items())}
+    identities = {name: input_identity(name, path) for name, path in sorted(inputs.items())}
     identities['matrix'] = path_identity(matrix_path)
     body = {'version': 'stdlib-parity-readiness-v1', 'inputs': identities,
             'review_scope': 'declared capability coverage and pinned inputs; not independent proof or launch authorization',
@@ -105,7 +115,7 @@ def verify(receipt):
     for name, identity in identities.items():
         if not isinstance(identity, dict) or not isinstance(identity.get('path'), str):
             raise ValueError('invalid readiness input: ' + str(name))
-        if path_identity(identity['path']) != identity:
+        if input_identity(name, identity['path']) != identity:
             raise ValueError('readiness input changed: ' + name)
     matrix = read_json(identities['matrix']['path'])
     evidence = validate_matrix(matrix)

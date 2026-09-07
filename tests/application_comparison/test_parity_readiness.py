@@ -72,6 +72,21 @@ class ParityReadinessTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'input changed'):
                 parity.verify(receipt)
 
+    def test_runtime_symlinks_are_recorded_and_changed_targets_reject(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            runtime = root / 'runtime'
+            runtime.mkdir()
+            (runtime / 'real.py').write_text('one')
+            (runtime / 'alias.py').symlink_to('real.py')
+            m = root / 'matrix.json'
+            m.write_text(json.dumps(matrix()))
+            receipt = parity.capture(m, inputs=inputs(m, python_stdlib=runtime, acceptance=m), output=root / 'receipt.json')
+            self.assertEqual(parity.verify(receipt)['status'], 'verified')
+            (runtime / 'real.py').write_text('two')
+            with self.assertRaisesRegex(ValueError, 'input changed'):
+                parity.verify(receipt)
+
     def test_rehashed_receipt_cannot_drop_declared_evidence(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
