@@ -1,0 +1,31 @@
+# Bounded source evaluation in constants
+
+Module constants can call ordinary scalar source functions:
+
+```my
+const CHECKSUM: u64 = checksum(10u64);
+fn checksum(count: u64) -> u64 {
+    let mut value = 0u64;
+    for index in 0u64..count {
+        value = wrapping_add(value, index);
+    }
+    return value;
+}
+fn main() -> i64 { return cast<i64>(CHECKSUM); }
+```
+
+This extends the existing constant evaluator. It does not run an unrestricted macro system or call the separate `eval-project` tool. No new source keyword is required.
+
+Supported callees are nongeneric free functions with integer/bool parameters and results. Integer aliases are accepted. Arguments evaluate once, left to right. Bodies may contain scalar bindings and assignments, discard, return, if/else, while, integer range for, break and continue. Calls may recurse within the nesting/work limits. Imported functions retain normal name and visibility checks, and each call has its own lexical locals.
+
+Validation walks the entire reachable function syntax, including untaken branches and short-circuit operands. Host functions, capabilities, borrowed memory, arenas, buffers, resource operations, aggregate construction, domain values and unsupported expressions reject. The normal language checker still validates the full program, including unreachable type errors; an invalid program never publishes executable bytecode. Constant dependency cycles reject even when short-circuited.
+
+Evaluation shares a fixed 256-level nesting limit and 65,536 work-unit limit across validation, expression/statement execution and name lookup for one constant. Infinite loops and recursion produce located `E_CONSTANT_LIMIT` errors. Invalid arithmetic produces `E_CONSTANT_ARITHMETIC`; forbidden effects/signatures produce `E_CONSTANT_EFFECT` or `E_CONSTANT_TYPE`; unsupported syntax produces `E_CONSTANT_EXPRESSION`. Normal compiler allocation failures propagate and clean up all temporary state. These compile-time budgets are distinct from guest runtime budgets and are not configurable in this stage.
+
+Arithmetic uses the existing fixed-width evaluator, including checked, wrapping, saturating and raw binary64 operations. No target pointer width, host layout or machine addresses enter a computed value. Binary64 operations have the environment requirements specified in [floating-point.md](floating-point.md).
+
+Each compilation evaluates against its complete source and input-module snapshot. Results are cached only within an individual evaluation; no cross-compilation generated-result cache is introduced. Changed imported input source is therefore evaluated anew, while existing compiler/checker cache identity rules continue to include the whole snapshot and compiler identity. Future target-dependent builtins would require an explicit target dependency before they could be admitted.
+
+The final constant getter contains a folded scalar literal. Guest execution does not rerun the source computation: a regression computes a 1,000-iteration loop during checking, then reads the constant with a ten-step guest budget. Getter calls retain ordinary call/step accounting.
+
+This stage deliberately excludes generated aggregate tables, schema ASTs, generic/domain function evaluation and arbitrary compile-time I/O. Those require further explicit value/authority/budget design. Focused tests cover runtime equivalence, allocation failure, changed input modules, lexical isolation, forbidden effects and located limits; a native example verifies the folded result survives native emission.

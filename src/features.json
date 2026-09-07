@@ -36,6 +36,7 @@
     "configurable-byte-io-budgets",
     "standard-unit",
     "scalar-module-constants",
+    "bounded-source-constant-functions",
     "structured-loop-exits",
     "integer-range-iteration",
     "value-producing-matches",
@@ -59,7 +60,7 @@
     "container_elements": "copyable-no-owned-or-must-handle",
     "noalloc": "guest-backing-operations-only",
     "type_aliases": "non-parameterized",
-    "constants": "scalar-expressions-with-acyclic-dependencies",
+    "constants": "bounded-scalar-source-functions-with-acyclic-constant-dependencies",
     "iteration": "ascending-half-open-integer-ranges"
   }
 }

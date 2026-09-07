@@ -31,8 +31,8 @@ test "constant declarations reject cycles effects mismatched types and arithmeti
         .{ .prefix = "const A:u8=cast<u8>(256);", .code = "E_CONSTANT_ARITHMETIC" },
         .{ .prefix = "const A:i64=true;", .code = "E_TYPE" },
         .{ .prefix = "const A:bool=false&&1;", .code = "E_TYPE" },
-        .{ .prefix = "const A:i64=helper();fn helper()->i64{return 1;}", .code = "E_CONSTANT_EXPRESSION" },
-        .{ .prefix = "const A:bool=false&&helper();fn helper()->bool{return true;}", .code = "E_CONSTANT_EXPRESSION" },
+        .{ .prefix = "const A:i64=helper();fn helper()->i64{let values=new [1]i64[1];return values[0];}", .code = "E_CONSTANT_EXPRESSION" },
+        .{ .prefix = "const A:bool=false&&helper();fn helper()->bool{let values=new [1]bool[true];return values[0];}", .code = "E_CONSTANT_EXPRESSION" },
         .{ .prefix = "struct S{}const A:S=new S{};", .code = "E_CONSTANT_EXPRESSION" },
     };
     for (cases) |case| {

@@ -4,6 +4,7 @@ test {
     _ = @import("host_replay_test.zig");
     _ = @import("typed_holes_test.zig");
     _ = @import("allocation_budget_test.zig");
+    _ = @import("source_evaluation_test.zig");
     _ = @import("float_operations_test.zig");
     _ = @import("integer_operations_test.zig");
     _ = @import("native_typed_json.zig");

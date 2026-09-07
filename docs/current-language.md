@@ -39,3 +39,5 @@ trusted implementations of documented contracts. These limits are part of the
 current model, not guarantees supplied by a future backend or thread system.
 
 `std_math::F64` provides named IEEE binary64 arithmetic, basic math, checked integer conversion and exact bit codecs; see [floating-point.md](floating-point.md).
+
+Scalar constants may call bounded nongeneric source functions with scalar locals and control flow; see [source-evaluation.md](source-evaluation.md).
