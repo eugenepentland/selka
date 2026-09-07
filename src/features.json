@@ -25,7 +25,18 @@
     "std_json",
     "source-navigation",
     "syntax-cache",
-    "exact-verdict-cache"
+    "exact-verdict-cache",
+    "generic-buffers",
+    "generic-pools",
+    "independent-function-diagnostics",
+    "copied-block-byte-io",
+    "configurable-byte-io-budgets",
+    "standard-unit",
+    "scalar-module-constants",
+    "structured-loop-exits",
+    "integer-range-iteration",
+    "value-producing-matches",
+    "transparent-type-aliases"
   ],
   "unsupported": [
     "floats",
@@ -33,7 +44,6 @@
     "stored-reference-fields",
     "guest-threads",
     "general-comptime",
-    "generic-buffers",
     "disjoint-split-borrows"
   ],
   "native_exclusions": [
@@ -44,6 +54,9 @@
     "borrow_conflicts": "whole-allocation",
     "generic_calls": "explicit-type-arguments",
     "container_elements": "copyable-no-owned-or-must-handle",
-    "noalloc": "guest-backing-operations-only"
+    "noalloc": "guest-backing-operations-only",
+    "type_aliases": "non-parameterized",
+    "constants": "scalar-expressions-with-acyclic-dependencies",
+    "iteration": "ascending-half-open-integer-ranges"
   }
 }

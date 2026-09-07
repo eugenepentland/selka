@@ -9,16 +9,18 @@ intend to use; historical counts are not current verification receipts.
 
 | Area | Supported surface | Executable example / restriction |
 | --- | --- | --- |
-| Values | Fixed-width signed/unsigned integers, Boolean values, byte literals, records, domains, arrays, tables, unions/results | [arrays](../examples/arrays.my); arithmetic overflow traps |
-| Generics | Functions and nominal records/unions/results/enums; structural field/operation contracts | [structural contracts](../examples/structural-constraints.my); explicit call type arguments |
+| Values | Fixed-width integers, booleans, byte literals, records/domains/arrays, unions/results, standard Unit, scalar constants and transparent aliases | [constants](module-constants.md), [aliases](type-aliases.md); no general compile-time execution |
+| Control flow | While, structured break/continue, integer range iteration and value-producing matches | [range iteration](range-iteration.md), [match expressions](match-expressions.md); conservative outer ownership on loop exits |
+| Generics | Functions and nominal records/unions/results/enums/buffers/pools; structural field/operation contracts | [structural contracts](../examples/structural-constraints.my); explicit call type arguments |
 | Ownership | Move-only buffers, pools, resource owners, deterministic cleanup and partial record moves | [buffers](../examples/buffers.my); elements cannot own backing or carry must-handle obligations |
 | References | Lexical read/write borrows, slices and single-input-origin reference returns | [buffer views](../examples/buffer-views.my); whole-allocation conflict checks; no stored reference fields |
 | Regions | Explicit allocator capabilities, scoped arenas, reset with escape checks | [arenas](../examples/arenas.my); no general lifetime inference |
 | Authority | Explicit host capabilities and transitive effect ceilings; resource attenuation | [effects](../examples/effects.my); ordinary CLI grants no filesystem/network provider |
 | Modules | Disk imports, explicit exports, nominal identity and embedded standard modules | [domain codecs](../examples/domain-codecs/main.my); no package version resolver |
 | Data interchange | Typed JSON codecs, plain JSON document parsing, std_json and byte-oriented std_text | [source JSON](../examples/source-json.my); byte slices are not a Unicode string type |
-| Development | JSON diagnostics, navigation, formatting, syntax/exact-verdict caches, affected verification | [navigation](experiments/navigation-client.md); edited programs recheck semantics |
+| Development | Independent function diagnostics, navigation, formatting, syntax/exact-verdict caches, affected verification | [navigation](experiments/navigation-client.md); edited programs recheck semantics |
 | Tests | Exported test_ function discovery, typed expected values, filters and explicit skips | [guest test workflow](experiments/guest-tests.md); deterministic arguments, no custom provider injection |
+| Byte application I/O | Scalar compatibility and bounded copied 256-byte blocks, configurable input/output/execution budgets | [bulk I/O](byte-io-bulk.md); output publishes only on successful guest exit |
 | Execution | Typed bytecode VM; partial C emission/native embedding | [native experiments](experiments/roadmap.md); host declarations and plain JSON reject native emission |
 
 The detailed [SPEC](../SPEC.md) and focused experiment references describe
