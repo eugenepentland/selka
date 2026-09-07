@@ -334,3 +334,32 @@ test "native declared codec dispatcher emission cleans every allocation failure"
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), codecDispatchScenario, .{});
 }
+// spec: NATIVE-HOST-1
+test "native host declarations emit checked copied data descriptors and direct calls" {
+    var compilation = try language.Compilation.init(t.allocator, "host.my", "struct Point{x:i64,y:u8}host fn echo(point:Point)->Point effects(host);" ++
+        "fn main()->i64{return echo(new Point{x:3,y:4u8}).x;}");
+    defer compilation.deinit();
+    const generated = try compilation.emitC(t.allocator);
+    defer t.allocator.free(generated);
+    try t.expect(std.mem.indexOf(u8, generated, "host_invoke(0)") != null);
+    try t.expect(std.mem.indexOf(u8, generated, "HostCapabilityDenied") != null);
+}
+const HostEcho = struct {
+    fn invoke(call: *language.host_functions.Call) language.host_functions.CallbackError!language.vm.Value {
+        return call.arguments[0].retain();
+    }
+};
+// spec: NATIVE-HOST-2
+test "native host composite parity fixture has an independent VM result" {
+    var compilation = try language.Compilation.init(t.allocator, "composite.my", @embedFile("native_fixtures/composite.my"));
+    defer compilation.deinit();
+    try compilation.emit();
+    var registry = try language.vm_host.Registry.init(t.allocator, compilation.code.?);
+    defer registry.deinit();
+    const contract = try registry.contract("echo");
+    try registry.register("echo", .{ .signature = contract, .invoke = HostEcho.invoke }, contract.effects);
+    const result = try language.vm.runWithHost(t.allocator, compilation.code.?, .{}, &registry, .{});
+    try t.expectEqual(@as(i64, 42), result.value);
+    const generated = try compilation.emitC(t.allocator);
+    defer t.allocator.free(generated);
+}

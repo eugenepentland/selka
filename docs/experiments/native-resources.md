@@ -13,7 +13,7 @@ The source contracts remain [resource ownership](source-resources.md),
 
 Include the current `src/native_providers.h`, implement its generic
 `mylang_native_providers` name, and link the adapter with the native builder's
-`--provider` option. The header maps that name to `mylang_native_providers_v4`;
+`--provider` option. The header maps that name to `mylang_native_providers_v5`;
 older factory symbols cannot silently link against the changed structure.
 Contexts outlive the run, and synchronous callbacks must not reenter the generated
 program. No ambient filesystem/network adapter is selected.
@@ -109,3 +109,6 @@ on release causes regression assertions to fail.
 Broader native compilation performance and native embedding/bindings remain
 open. Generics, source serialization, finer incremental compilation, and the
 other requirements in the [roadmap](roadmap.md) remain open as well.
+
+The current provider ABI is version 5, adding [copied host declarations](native-host.md).
+Existing resource adapters remain source-compatible when rebuilt against the header.

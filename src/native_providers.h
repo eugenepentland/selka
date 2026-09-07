@@ -2,8 +2,11 @@
 #define MYLANG_NATIVE_PROVIDERS_H
 #include <stdint.h>
 #include <stddef.h>
-#define MYLANG_NATIVE_PROVIDER_ABI 4
-#define mylang_native_providers mylang_native_providers_v4
+#ifndef MYLANG_NATIVE_HOST_H
+#include "native_host.h"
+#endif
+#define MYLANG_NATIVE_PROVIDER_ABI 5
+#define mylang_native_providers mylang_native_providers_v5
 /* Trusted synchronous adapters. Contexts outlive the generated program's run.
    Callbacks must not reenter this generated program. No callback is invoked
    while checking whether an entry grant is available. */
@@ -47,6 +50,7 @@ typedef struct {
     void *environment_context;
     MylangEnvironmentResult (*environment_get)(void *context, const uint8_t *name, size_t name_length, uint8_t *output, size_t capacity);
     MylangResourceProvider filesystem, network;
+    MylangHostRegistry host;
 } MylangNativeProviders;
 /* Adapter setup must not perform a guest read. The default supplies no grants. */
 MylangNativeProviders mylang_native_providers(void);

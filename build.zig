@@ -225,6 +225,13 @@ pub fn build(b: *std.Build) void {
     native_providers.addArgs(&.{ "--zig", b.graph.zig_exe });
     native_providers.setCwd(b.path("."));
     native_step.dependOn(&native_providers.step);
+    const native_host = b.addSystemCommand(&.{ "python3", "tests/native_host.py", "--compiler" });
+    native_host.addFileArg(exe.getEmittedBin());
+    native_host.addArg("--runner");
+    native_host.addFileArg(byte_io_runner.getEmittedBin());
+    native_host.addArgs(&.{ "--zig", b.graph.zig_exe });
+    native_host.setCwd(b.path("."));
+    native_step.dependOn(&native_host.step);
     const native_environment = b.addSystemCommand(&.{ "python3", "tests/native_environment.py", "--compiler" });
     native_environment.addFileArg(exe.getEmittedBin());
     native_environment.addArgs(&.{ "--zig", b.graph.zig_exe });

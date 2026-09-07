@@ -20,7 +20,7 @@ ignored. The host callback is trusted to stay within its borrowed output buffer.
 Returned ordinary values own independent copies, so later lookups cannot alter
 prior snapshots. Temporary bytes and partial values join native failure cleanup.
 
-The current factory symbol is mylang_native_providers_v4. Adapters should include the
+The current factory symbol is mylang_native_providers_v5. Adapters should include the
 current native_providers.h and implement its generic mylang_native_providers name.
 The builder compiles the adapter source with that header; a stale v1 factory cannot
 silently link against v4 emission. Clock/random adapters remain supported when
@@ -42,3 +42,6 @@ byte I/O now passes acceptance; the wider roadmap remains open.
 
 [Native resource byte I/O](native-resources.md) now extends provider ABI v4; full
 array/slice I/O regression acceptance passes.
+
+The current provider ABI is version 5, adding [copied host declarations](native-host.md).
+Existing resource adapters remain source-compatible when rebuilt against the header.

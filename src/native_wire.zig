@@ -64,7 +64,8 @@ pub fn emit(w: *std.Io.Writer, layout: native_layout.Layout, flags: []const bool
     }
     try w.writeAll("};\n#endif\n");
 }
-fn emitRecord(w: *std.Io.Writer, layout: native_layout.Layout, record: typed.Record) !void {
+/// Emit the common ordinary record/array/variant shape used by both copied host ABIs.
+pub fn emitRecord(w: *std.Io.Writer, layout: native_layout.Layout, record: typed.Record) error{WriteFailed}!void {
     const kind: u8 = if (record.shape.variants != null) 4 else if (record.shape.array != null) 3 else 2;
     const count = if (record.shape.variants) |v| v.cases.len else if (record.shape.array) |a| a.length else record.fields.len;
     const tag_bits = if (kind == 4) native_layout.tagBits(count) else 0;

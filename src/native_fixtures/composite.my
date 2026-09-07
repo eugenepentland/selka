@@ -1,0 +1,18 @@
+domain D:i64 {
+    fn make(value:i64)->D{return wrap<D>(value);}
+    fn value(value:D)->i64{return unwrap(value);}
+}
+struct Pair {tag:D,bytes:[2]u8}
+result Outcome {ok:Pair,err:i64}
+host fn echo(value:Outcome)->Outcome effects(host);
+fn forward<T:copy>(value:T)->T{return value;}
+fn main()->i64 {
+    let pair=new Pair{tag:D.make(40),bytes:new [2]u8 [1u8,2u8]};
+    match echo(new Outcome.ok(forward::<Pair>(pair))) {
+        Outcome.err(discard)=>{return -1;},
+        Outcome.ok(value)=>{
+            if value.tag!=D.make(40){return -2;}
+            return D.value(value.tag)+cast<i64>(value.bytes[1]);
+        }
+    }
+}

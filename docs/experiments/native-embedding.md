@@ -69,3 +69,6 @@ ownership, including a division trap with an acquired resource still live. Separ
 libraries in Debug and ReleaseFast; rebuilding identical inputs preserves output
 identity. All of these focused checks passed. Full regression results are recorded
 in the roadmap's milestone entry when validation completes.
+
+The current provider ABI is version 5, adding [copied host declarations](native-host.md).
+Existing resource adapters remain source-compatible when rebuilt against the header.

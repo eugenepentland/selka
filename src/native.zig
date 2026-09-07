@@ -118,7 +118,6 @@ pub fn generateWithInterface(allocator: std.mem.Allocator, program: bc.Program, 
 }
 fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source, sink: *diagnostic.Sink, interface: Interface) ![]u8 {
     try bc.validate(allocator, program);
-    for (program.functions) |function| if (function.policy.host) |span| return sink.fail(unsupported_feature, span, "host declarations currently execute only in the bytecode VM");
     var layout = try native_layout.Layout.init(allocator, program.records);
     defer layout.deinit();
     const wire_types = try native_wire.supported(allocator, program.records, false);
@@ -137,10 +136,12 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
     errdefer output.deinit();
     const w = &output.writer;
     try w.print("#define MYLANG_GUEST_VALUE_BYTES {d}\n", .{@sizeOf(typed.Value)});
+    try w.writeAll(@embedFile("native_host.h"));
     try w.writeAll(@embedFile("native_providers.h"));
     try w.writeAll(@embedFile("native_embed.h"));
     try w.writeAll(@embedFile("native_runtime.c"));
     try w.writeAll(@embedFile("native_resources.c"));
+    try @import("native_host.zig").emit(w, layout, program);
     try writeInterface(w, interface.schema);
     try native_wire.emit(w, layout, codec_types, program.functions);
     try w.writeAll("\nstatic const char *const names[] = {\n");
@@ -161,6 +162,7 @@ fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source,
         "#else\nint main(int argc, char **argv) {\n#endif\nsource_paths = paths; function_names = names; source_lines = lines; source_columns = columns;\n" ++
         "#ifndef MYLANG_EMBED\noptions(argc, argv); providers = mylang_native_providers();\n#endif\nvalidate_resource_providers(); size_t return_target = 0;\n");
     try writeCodecDispatch(allocator, w, program, offsets);
+    try w.writeAll("host_begin();\n");
     try writeExports(w, program, offsets, interface.roots, wire_types, codec_types);
     const main_index = @backingInt(program.main);
     for (program.functions[main_index].scope.locals[0..program.functions[main_index].signature.parameter_count]) |parameter| {
@@ -293,8 +295,8 @@ fn checkFunction(layout: native_layout.Layout, function: bc.Function, sink: *dia
     for (function.scope.locals) |local| if (!layout.supports(local.ty)) return sink.fail(unsupported_feature, local.declaration, "native execution requires supported value locals and parameters");
     for (function.scope.references) |reference| if (!layout.supports(reference.ty)) return sink.fail(unsupported_feature, reference.declaration, "native references require supported value types");
     for (function.scope.instructions) |instruction| switch (instruction.op) {
+        .cmp_domain => {},
         .json_codec => return sink.fail(unsupported_feature, instruction.span, "source JSON byte codecs currently require the interpreter"),
-        .cmp_domain => return sink.fail(unsupported_feature, instruction.span, "domain equality is supported by the bytecode VM; native emission is deferred"),
         .make_variant => |variant| {
             if (!layout.supports(variant.ty)) return sink.fail(unsupported_feature, instruction.span, "native variant representation requires supported payloads");
         },
@@ -402,7 +404,7 @@ fn writeOperation(context: InstructionOutput) !bool {
             try variantValue(w, layout, variant.ty, variant.tag, payload_type);
             try w.writeAll(");\n");
         },
-        .cmp_domain => return error.InternalError,
+        .cmp_domain => |comparison| try w.print(binary_format, .{if (comparison.predicate == .eq) "==" else "!="}),
         .cmp_enum => |comparison| try w.print(binary_format, .{if (comparison.predicate == .eq) "==" else "!="}),
         .switch_variant => |dispatch| {
             const variants = program.records[dispatch.ty.recordIndex()].shape.variants.?;
@@ -593,6 +595,10 @@ fn writeOperation(context: InstructionOutput) !bool {
             };
             const callee = @backingInt(callee_id);
             const target = program.functions[callee];
+            if (target.policy.host != null) {
+                try w.print("host_invoke({d});\n", .{@import("native_host.zig").declarationIndex(program.functions, callee)});
+                return true;
+            }
             try enter(w, target, location + 1);
             try w.writeAll("binding_call = 1;\n");
             if (ins.op == .call_borrow) {

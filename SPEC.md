@@ -308,3 +308,5 @@ supersede it. The manifest records implementation coverage, not a test certifica
   mutation. read_ref and take_field cannot copy or move a borrowed owner. Whole
   partial owners reject borrowing. Element slices are borrowed from owners in
   separate lexical scopes, so growth cannot invalidate an outstanding view.
+- [NATIVE-HOST-1] Native C host declarations use a checked copied preorder-value ABI with exact qualified function/type names, effect bounds and explicit grants. All host registrations preflight before guest instructions; calls and sticky callback work charges share execution budgets, input/output copies share node/depth limits, and malformed results fail with cleanup. Provider ABI version 5 adds the host registry without exposing guest pointers.
+- [NATIVE-HOST-2] Native copied host values preserve nominal domains, records, arrays and fallible variants across generic calls; scalar domain equality compares the same checked backing values as the VM. Invalid host result structures trap before a guest result is published.
