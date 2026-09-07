@@ -22,7 +22,8 @@ def main():
         temp = Path(temp)
         for fixture in ('collection_borrows', 'hash_collections', 'word_counts', 'owned_collections', 'owned_buffer_mutations'):
             source = temp / 'main.my'
-            source.write_bytes((root / 'src/stdlib/fixtures' / (fixture + '.my')).read_bytes())
+            text = (root / 'src/stdlib/fixtures' / (fixture + '.my')).read_bytes()
+            source.write_bytes(text if text.startswith(b'module ') else b'module main;\n' + text)
             interpreted = run([compiler, 'run-project', source])
             assert (interpreted.returncode, interpreted.stdout) == (0, b'42\n'), interpreted.stderr
             emitted = run([compiler, 'emit-project-c', source])
