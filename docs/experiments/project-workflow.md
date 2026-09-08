@@ -33,7 +33,7 @@ Navigation caches validate source and compiler identities; v2 test caches must b
 outside the source directory. Store reports outside that directory as well to avoid
 unnecessary verification snapshot churn. Exact agent turns/tokens are not measured.
 
-The export-placement diagnostic now identifies the keyword with
-`E_EXPORT_PLACEMENT` and tells agents to move the declaration after imports and
-before types/functions. CLI regression tests execute the corresponding repaired
-programs. Other existing JSON diagnostics retain their contracts.
+Exports may now appear before, between, or after top-level declarations. CLI
+regressions execute each placement and preserve located duplicate-export
+diagnostics. Older experiment reports describing `E_EXPORT_PLACEMENT` record the
+previous grammar; other existing JSON diagnostics retain their contracts.

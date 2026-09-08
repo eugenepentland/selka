@@ -69,15 +69,19 @@ def export_placement(compiler, root):
     entry = root / 'main.my'
     for declaration in ('fn value()->i64{return 42;}', 'struct Value { n:i64 }'):
         name = 'value' if declaration.startswith('fn') else 'Value'
-        bad = 'module main;\n' + declaration + '\nexport ' + name + ';\nfn main()->i64{return 42;}'
-        entry.write_text(bad)
-        _, messages = invoke(compiler, 'check-project', entry, status=1)
-        error = problem(messages, 'E_EXPORT_PLACEMENT')
-        assert 'after imports' in error['message'] and 'before type or function' in error['message']
-        span = error['location']['bytes']
-        assert bad.encode()[span['start']:span['end']] == b'export'
+        late = 'module main;\n' + declaration + '\nexport ' + name + ';\nfn main()->i64{return 42;}'
+        entry.write_text(late)
+        assert invoke(compiler, 'check-project', entry) == ('', [])
+        assert invoke(compiler, 'run-project', entry) == ('42\n', [])
         entry.write_text('module main;export ' + name + ';' + declaration + 'fn main()->i64{return 42;}')
         assert invoke(compiler, 'run-project', entry) == ('42\n', [])
+        duplicate = late + '\nexport ' + name + ';'
+        entry.write_text(duplicate)
+        _, messages = invoke(compiler, 'check-project', entry, status=1)
+        error = problem(messages, 'E_DUPLICATE_EXPORT')
+        span = error['location']['bytes']
+        assert duplicate.encode()[span['start']:span['end']] == name.encode()
+        assert span['start'] == duplicate.rindex(name)
 
 
 def modules(compiler, root):
