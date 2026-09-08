@@ -1,0 +1,7 @@
+guardian: run-all: cached — 0 blocking (inputs unchanged since last green run)
+[codex/language-mvp 0bfd615] language: expose phase timings and complete text and path primitives
+ 15 files changed, 666 insertions(+), 13 deletions(-)
+ create mode 100644 docs/tooling/timings.md
+ create mode 100644 src/stdlib/fixtures/corpus_text_paths.my
+ create mode 100644 src/timings.zig
+ create mode 100644 tests/timings.py

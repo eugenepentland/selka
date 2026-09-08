@@ -1,0 +1,257 @@
+{
+  "version": "development-velocity-corpus-v1",
+  "transport": "bounded-json-batch-v1",
+  "tasks": [
+    {
+      "id": "data-rollup",
+      "family": "data-text",
+      "kind": "feature",
+      "tier": "small",
+      "brief": "briefs/data-rollup.md",
+      "modules": 2,
+      "required_my_modules": [
+        "std_json",
+        "std_json_view",
+        "std_text",
+        "std_hash_bytes",
+        "std_collections"
+      ],
+      "readiness": "blocked-preparation",
+      "prerequisites": [
+        "equivalent my/Python runtime scaffold and starter acceptance",
+        "task-scoped standard-library parity proof",
+        "independent generated-case review and private seed freeze"
+      ]
+    },
+    {
+      "id": "ascii-table",
+      "family": "data-text",
+      "kind": "feature",
+      "tier": "small",
+      "brief": "briefs/ascii-table.md",
+      "modules": 2,
+      "required_my_modules": [
+        "std_json",
+        "std_json_view",
+        "std_text",
+        "std_bytes",
+        "std_format"
+      ],
+      "readiness": "blocked-preparation",
+      "prerequisites": [
+        "equivalent my/Python runtime scaffold and starter acceptance",
+        "task-scoped standard-library parity proof",
+        "independent generated-case review and private seed freeze"
+      ]
+    },
+    {
+      "id": "config-layers",
+      "family": "configuration",
+      "kind": "feature",
+      "tier": "small",
+      "brief": "briefs/config-layers.md",
+      "modules": 2,
+      "required_my_modules": [
+        "std_json",
+        "std_json_view",
+        "std_text",
+        "std_json_view",
+        "std_hash_bytes"
+      ],
+      "readiness": "blocked-preparation",
+      "prerequisites": [
+        "equivalent my/Python runtime scaffold and starter acceptance",
+        "task-scoped standard-library parity proof",
+        "independent generated-case review and private seed freeze"
+      ]
+    },
+    {
+      "id": "quota-boundary",
+      "family": "configuration",
+      "kind": "bugfix",
+      "tier": "small",
+      "brief": "briefs/quota-boundary.md",
+      "modules": 2,
+      "required_my_modules": [
+        "std_json",
+        "std_json_view",
+        "std_text",
+        "std_math"
+      ],
+      "readiness": "blocked-preparation",
+      "prerequisites": [
+        "equivalent my/Python runtime scaffold and starter acceptance",
+        "task-scoped standard-library parity proof",
+        "independent generated-case review and private seed freeze"
+      ]
+    },
+    {
+      "id": "lru-cache",
+      "family": "stateful-collections",
+      "kind": "feature",
+      "tier": "medium",
+      "brief": "briefs/lru-cache.md",
+      "modules": 2,
+      "required_my_modules": [
+        "std_json",
+        "std_json_view",
+        "std_text",
+        "std_hash_bytes",
+        "std_collections"
+      ],
+      "readiness": "blocked-preparation",
+      "prerequisites": [
+        "equivalent my/Python runtime scaffold and starter acceptance",
+        "task-scoped standard-library parity proof",
+        "independent generated-case review and private seed freeze"
+      ]
+    },
+    {
+      "id": "ttl-boundary",
+      "family": "stateful-collections",
+      "kind": "bugfix",
+      "tier": "medium",
+      "brief": "briefs/ttl-boundary.md",
+      "modules": 2,
+      "required_my_modules": [
+        "std_json",
+        "std_json_view",
+        "std_text",
+        "std_hash_bytes",
+        "std_collections"
+      ],
+      "readiness": "blocked-preparation",
+      "prerequisites": [
+        "equivalent my/Python runtime scaffold and starter acceptance",
+        "task-scoped standard-library parity proof",
+        "independent generated-case review and private seed freeze"
+      ]
+    },
+    {
+      "id": "record-frames",
+      "family": "binary-codecs",
+      "kind": "feature",
+      "tier": "small",
+      "brief": "briefs/record-frames.md",
+      "modules": 2,
+      "required_my_modules": [
+        "std_json",
+        "std_json_view",
+        "std_text",
+        "std_encoding",
+        "std_bytes"
+      ],
+      "readiness": "blocked-preparation",
+      "prerequisites": [
+        "equivalent my/Python runtime scaffold and starter acceptance",
+        "task-scoped standard-library parity proof",
+        "independent generated-case review and private seed freeze"
+      ]
+    },
+    {
+      "id": "little-endian-read",
+      "family": "binary-codecs",
+      "kind": "bugfix",
+      "tier": "small",
+      "brief": "briefs/little-endian-read.md",
+      "modules": 2,
+      "required_my_modules": [
+        "std_json",
+        "std_json_view",
+        "std_text",
+        "std_encoding"
+      ],
+      "readiness": "blocked-preparation",
+      "prerequisites": [
+        "equivalent my/Python runtime scaffold and starter acceptance",
+        "task-scoped standard-library parity proof",
+        "independent generated-case review and private seed freeze"
+      ]
+    },
+    {
+      "id": "snapshot-diff",
+      "family": "filesystem-path",
+      "kind": "feature",
+      "tier": "medium",
+      "brief": "briefs/snapshot-diff.md",
+      "modules": 2,
+      "required_my_modules": [
+        "std_json",
+        "std_json_view",
+        "std_text",
+        "std_path",
+        "std_hash_bytes",
+        "std_collections"
+      ],
+      "readiness": "blocked-preparation",
+      "prerequisites": [
+        "equivalent my/Python runtime scaffold and starter acceptance",
+        "task-scoped standard-library parity proof",
+        "independent generated-case review and private seed freeze"
+      ]
+    },
+    {
+      "id": "mount-routing",
+      "family": "filesystem-path",
+      "kind": "feature",
+      "tier": "medium",
+      "brief": "briefs/mount-routing.md",
+      "modules": 2,
+      "required_my_modules": [
+        "std_json",
+        "std_json_view",
+        "std_text",
+        "std_path",
+        "std_bytes"
+      ],
+      "readiness": "blocked-preparation",
+      "prerequisites": [
+        "equivalent my/Python runtime scaffold and starter acceptance",
+        "task-scoped standard-library parity proof",
+        "independent generated-case review and private seed freeze"
+      ]
+    },
+    {
+      "id": "inventory-reservations",
+      "family": "multi-module-maintenance",
+      "kind": "feature",
+      "tier": "medium",
+      "brief": "briefs/inventory-reservations.md",
+      "modules": 3,
+      "required_my_modules": [
+        "std_json",
+        "std_json_view",
+        "std_text",
+        "std_hash_bytes",
+        "std_collections"
+      ],
+      "readiness": "blocked-preparation",
+      "prerequisites": [
+        "equivalent my/Python runtime scaffold and starter acceptance",
+        "task-scoped standard-library parity proof",
+        "independent generated-case review and private seed freeze"
+      ]
+    },
+    {
+      "id": "atomic-transfers",
+      "family": "multi-module-maintenance",
+      "kind": "bugfix",
+      "tier": "medium",
+      "brief": "briefs/atomic-transfers.md",
+      "modules": 3,
+      "required_my_modules": [
+        "std_json",
+        "std_json_view",
+        "std_text",
+        "std_hash_bytes",
+        "std_collections"
+      ],
+      "readiness": "blocked-preparation",
+      "prerequisites": [
+        "equivalent my/Python runtime scaffold and starter acceptance",
+        "task-scoped standard-library parity proof",
+        "independent generated-case review and private seed freeze"
+      ]
+    }
+  ]
+}

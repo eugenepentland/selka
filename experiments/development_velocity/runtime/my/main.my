@@ -1,0 +1,79 @@
+module main;
+import app;
+import std_text;
+import std_json;
+import std_json_view as j;
+import std_bytes as b;
+import std_result as r;
+
+fn main(heap: allocator) -> i64 {
+    match std_text::read(heap, 1048576) {
+        std_json::Input.err(discard) => { return invalid(); },
+        std_json::Input.ok(input) => {
+            match std_json::parse(heap, input, 1048576) {
+                std_json::Parsed.err(discard) => { return invalid(); },
+                std_json::Parsed.ok(document) => {
+                    borrow document[..] as doc {
+                        match envelope(heap, doc) {
+                            b::Built.err(discard) => { return invalid(); },
+                            b::Built.ok(output) => {
+                                borrow output[..] as bytes { discard std_text::emit(bytes); }
+                                discard std_text::emit("\n");
+                                return 0;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+fn invalid() -> i64 {
+    discard std_text::emit("{\"error\":\"invalid-envelope\"}\n");
+    return 0;
+}
+fn failure() -> r::Error {
+    return new r::Error { category: new r::Category.malformed, code: 1 };
+}
+fn depth(doc: &[]i64, node: j::Node, level: i64) -> r::Result<bool, r::Error> {
+    let kind = try j::kind(doc, node);
+    if kind != new j::Kind.array && kind != new j::Kind.object {
+        return new r::Result<bool, r::Error>.ok(true);
+    }
+    if level > 32 { return new r::Result<bool, r::Error>.err(failure()); }
+    let mut cursor = try j::children(doc, node);
+    while !cursor.done {
+        discard try depth(doc, try j::current(doc, cursor), level + 1);
+        cursor = try j::advance(doc, cursor);
+    }
+    return new r::Result<bool, r::Error>.ok(true);
+}
+fn envelope(heap: allocator, doc: &[]i64) -> b::Built {
+    let root = try j::root(doc);
+    discard try depth(doc, root, 1);
+    if try j::kind(doc, root) != new j::Kind.object || try j::count(doc, root) != 1 {
+        return new b::Built.err(failure());
+    }
+    let requests = try j::required(doc, root, "requests");
+    if try j::kind(doc, requests) != new j::Kind.array {
+        return new b::Built.err(failure());
+    }
+    discard try j::count_between(doc, requests, 0, 64);
+    let mut output = try b::append(try b::create(heap, 8388608), "{\"results\":[");
+    let mut cursor = try j::children(doc, requests);
+    let mut first = true;
+    while !cursor.done {
+        if !first { output = try b::append(output, ","); }
+        first = false;
+        match app::run(heap, doc, try j::current(doc, cursor)) {
+            b::Built.err(discard) => {
+                output = try b::append(output, "{\"error\":\"invalid-request\"}");
+            },
+            b::Built.ok(result) => {
+                borrow result[..] as bytes { output = try b::append(output, bytes); }
+            }
+        }
+        cursor = try j::advance(doc, cursor);
+    }
+    return b::append(output, "]}");
+}

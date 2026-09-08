@@ -1,0 +1,6 @@
+test_freeze_practice_and_dispatch_preserve_clock_boundary (test_runner_lifecycle.RunnerLifecycle.test_freeze_practice_and_dispatch_preserve_clock_boundary) ... ok
+
+----------------------------------------------------------------------
+Ran 1 test in 3.097s
+
+OK
