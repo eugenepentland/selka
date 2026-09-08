@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "policy": "pin-role-intent-v1",
+  "steps": [
+    {
+      "id": "pin-role-acceptance",
+      "kind": "test",
+      "complete": true,
+      "inputs": [
+        "*.my",
+        "test_*.py",
+        "intent*.md",
+        "intent.json"
+      ],
+      "tools": [
+        "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang-io"
+      ],
+      "commands": [
+        [
+          "/usr/bin/python3",
+          "-B",
+          "-c",
+          "from pathlib import Path; import test_cli, test_roles; test_cli.EXE=Path('/home/epentland/ai/canopy/mylang/zig-out/bin/mylang-io'); test_roles.tests()"
+        ]
+      ],
+      "timeout": 120
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "version": "design-intent-v1",
+  "requirements": [
+    {
+      "id": "LIMIT-001",
+      "revision": 1,
+      "status": "proposed",
+      "statement": "Return the configured limit of seven.",
+      "rationale": "Demonstrate traceability from a request to checked source and a behavioral test.",
+      "origin": {
+        "path": "request.md",
+        "sha256": "959fb9663b07694de4cc52fdc154b16def3a4365e38f3b298910a7143471d9e9",
+        "excerpt": "The example must return the configured limit of seven.",
+        "kind": "example"
+      },
+      "implements": [
+        "main::main"
+      ],
+      "tests": [
+        "returns-seven"
+      ],
+      "assumptions": [],
+      "non_goals": [
+        "No claim of authenticated user approval or formal proof."
+      ]
+    }
+  ],
+  "decisions": [
+    {
+      "id": "DEC-LIMIT",
+      "revision": 1,
+      "status": "proposed",
+      "statement": "Keep the configured limit in a separate function.",
+      "rationale": "An edit to the helper should identify the dependent requirement.",
+      "requirements": [
+        "LIMIT-001"
+      ],
+      "symbols": [
+        "main::configured_limit"
+      ],
+      "alternatives": [
+        "Inline the constant in main."
+      ],
+      "revisit_when": "The configuration needs runtime input."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "policy": "intent-example-v1",
+  "steps": [
+    {
+      "id": "returns-seven",
+      "kind": "test",
+      "complete": true,
+      "inputs": [
+        "*.my"
+      ],
+      "commands": [
+        [
+          "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
+          "run-project",
+          "main.my"
+        ]
+      ],
+      "expect_stdout": "7\n"
+    }
+  ]
+}

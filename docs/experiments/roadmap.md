@@ -1271,3 +1271,21 @@ See [API and ownership rules](plain-json-ergonomics.md) and
 [application accounting](../../experiments/ergonomics/pin-roles/README.md).
 Native compilation remains deferred. The next measurement should use fresh
 matched maintenance tasks with this library documented for participants.
+
+## Completed: design-intent traceability tooling (2026-09-07)
+
+Versioned requirement and decision records now link retained request snapshots
+to compiler-resolved symbols and verification steps. Reports distinguish
+declared links, current passing linked tests, incomplete-input observations and
+stale evidence. Revision comparisons retain retired IDs and require revision
+increments; filtered impact queries locate affected requirements through checked
+symbol relationships.
+
+Verification reuses the existing capture/cache/scheduler pipeline and records
+the actual tested project snapshot. This first version uses conservative whole
+project invalidation. It adds no VM operations, annotation syntax, authenticated
+approvals or formal proof of natural-language requirements.
+
+See [design intent](design-intent.md) and the examples/intent project. The
+pin-role application also has proposed trace records and a linked acceptance
+manifest. Run the new test-intent build target for regression coverage.

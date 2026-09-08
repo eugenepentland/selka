@@ -1,0 +1,7 @@
+{
+  "version": 1,
+  "cases": [
+    {"id": "json-object", "input": "input.json", "expected": "expected.json"},
+    {"id": "malformed-passthrough", "input": "malformed.txt", "expected": "malformed.txt", "compare": "bytes"}
+  ]
+}
