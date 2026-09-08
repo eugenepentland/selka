@@ -16,8 +16,10 @@ def grade(pack, root, configuration, directory):
         if (participant['phase'] != 'sealed' or participant['language'] != 'my' or
                 participant['record_kind'] != 'calibration' or participant['block'] != frozen_pack['task']):
             raise ValueError('single-language grading requires a sealed matching exploratory .my session')
-        if configuration['language'] != 'my':
-            raise ValueError('configuration language mismatch')
+        if (configuration['language'] != 'my' or configuration['arm'] != participant['arm'] or
+                configuration['application'] != participant['block'].split('-')[0] or
+                participant.get('trial_configuration_sha256') != configuration['sha256']):
+            raise ValueError('configuration does not match frozen session condition')
         plan = {'version': 'single-language-grading-v1', 'pack_sha256': frozen_pack['sha256'],
                 'session_sha256': digest(participant), 'configuration_sha256': configuration['sha256'],
                 'scored': False}

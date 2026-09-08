@@ -62,6 +62,12 @@ class WorkflowTests(unittest.TestCase):
         self.write_manifest(code="from pathlib import Path;Path('main.my').write_text('module main;fn main()->i64{return 3;}');print(42)")
         self.assertEqual('stale', self.run_project()['status'])
 
+    def test_v1_test_and_fixture_changes_invalidate_acceptance(self):
+        for filename in ('test_cli.py', 'fixture.json'):
+            (self.root / filename).write_text('before')
+            self.write_manifest(code="from pathlib import Path;Path(" + repr(filename) + ").write_text('after');print(42)")
+            self.assertEqual('stale', self.run_project()['status'])
+
     def test_no_tests_is_not_success_and_reports_cannot_be_overwritten(self):
         self.write_manifest(kind='check')
         self.assertEqual('failed', self.run_project()['status'])
@@ -71,6 +77,17 @@ class WorkflowTests(unittest.TestCase):
             '--entry', str(self.entry), '--manifest', str(self.manifest), '--report', str(destination)], capture_output=True, text=True)
         self.assertEqual(2, result.returncode)
         self.assertEqual('retained', destination.read_text())
+
+    def test_malformed_manifest_retains_infrastructure_failure_report(self):
+        self.manifest.write_text('{broken')
+        destination = self.base / 'failed-attempt.json'
+        result = subprocess.run([sys.executable, str(Path(project.__file__)), '--compiler', str(COMPILER),
+            '--entry', str(self.entry), '--manifest', str(self.manifest), '--report', str(destination)], capture_output=True, text=True)
+        self.assertEqual(2, result.returncode)
+        report = json.loads(destination.read_text())
+        self.assertEqual('infrastructure-failure', report['status'])
+        self.assertTrue(report['check_passed'])
+        self.assertTrue(report['identity_unchanged'])
 
     def test_v2_complete_receipts_reuse_and_invalidate(self):
         self.write_manifest(version=2)

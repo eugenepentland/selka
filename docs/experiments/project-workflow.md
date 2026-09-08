@@ -19,9 +19,10 @@ which tests prove a change. At least one test/parity/mutation step must be selec
 A checked source-pinned navigation index supplies the type-check verdict and up to
 20 context symbols/relationships with 8 KiB snippets. Broken source emits compiler
 JSON diagnostics and skips tests. Successful compilation runs declared checks;
-source, compiler or manifest changes during execution invalidate acceptance.
-The report identifies precisely those inputs, while v2 verification adds its own
-complete-input snapshot. This is a local developer workflow, not hostile-process
+project-file, compiler or manifest changes during execution invalidate acceptance.
+The report includes a conservative regular-file project inventory, including Python
+tests and JSON fixtures; v2 verification adds its declared input/tool snapshot.
+Tests must put generated artifacts outside the source directory. This is a local developer workflow, not hostile-process
 confinement or a proof that declared tests cover all behavior.
 
 The command prints compact JSON and saves full verification streams and identities.

@@ -1,0 +1,133 @@
+{
+  "version": "project-workflow-v1",
+  "captured_utc": "2026-09-07T23:55:42.476627+00:00",
+  "identity": {
+    "compiler_sha256": "a22e7d8278e4a9bc4fb777597c1971ba335b2ec4c4f72cd25a83991eeeb9d7b7",
+    "sources": {
+      "io.my": "318bf703f8fa8e1fe706d7211b226c19ea60f9e885ef06da4279a8970df395e9",
+      "main.my": "39722d7eaf54e7194aa7fc8d8674459edb5bc92aaf0bed411317e4afa968273f"
+    },
+    "manifest_sha256": "b6166361e81cb1257f2ffa3f44323ccf9bcfb2ba0599c41c665942fd8b07cd2e"
+  },
+  "status": "passed",
+  "navigation": {
+    "version": "navigation-query-v1",
+    "checked": true,
+    "snapshot_sha256": "bea8a8741971f04832fda0e68c6d6ca9ef0e854220ecfe8c1ae08f3b98bdf786",
+    "relation": "context",
+    "scope": "static source relationships; impact is not test coverage or proof of complete change impact",
+    "symbols": [],
+    "references": [],
+    "omitted_symbols": 0,
+    "omitted_references": 0,
+    "traversal_truncated": false,
+    "semantic_relations_available": true
+  },
+  "verification": {
+    "version": 1,
+    "manifest": "/home/epentland/ai/canopy/mylang-worktrees/velocity-json/experiments/application_comparison/baselines/eda/my/verify.json",
+    "manifest_sha256": "b6166361e81cb1257f2ffa3f44323ccf9bcfb2ba0599c41c665942fd8b07cd2e",
+    "captured_utc": "2026-09-07T23:55:42.568957+00:00",
+    "requested": [
+      "cli",
+      "schema"
+    ],
+    "selected": [
+      "cli",
+      "schema"
+    ],
+    "runtime_coverage": "not measured",
+    "steps": [
+      {
+        "id": "cli",
+        "kind": "test",
+        "selected": true,
+        "executed": true,
+        "definition": {
+          "id": "cli",
+          "kind": "test",
+          "commands": [
+            [
+              "/usr/bin/python3",
+              "-B",
+              "test_cli.py"
+            ]
+          ],
+          "timeout": 60
+        },
+        "commands": [
+          {
+            "argv": [
+              "/usr/bin/python3",
+              "-B",
+              "test_cli.py"
+            ],
+            "cwd": "/home/epentland/ai/canopy/mylang-worktrees/velocity-json/experiments/application_comparison/baselines/eda/my",
+            "executed": true,
+            "timed_out": false,
+            "exit": 0,
+            "elapsed_seconds": 1.0686618619947694,
+            "stdout_base64": "aW5kZXBlbmRlbnQgQ0xJIGNhc2VzIHBhc3NlZAo=",
+            "stdout_sha256": "cb251c5ba08f11ec4b2a3285ac76fab7ed0cc3c90c8ec6babe332eff5545eccc",
+            "stdout": "independent CLI cases passed\n",
+            "stderr_base64": "",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": "",
+            "output_truncated": false,
+            "passed": true
+          }
+        ],
+        "status": "passed"
+      },
+      {
+        "id": "schema",
+        "kind": "test",
+        "selected": true,
+        "executed": true,
+        "definition": {
+          "id": "schema",
+          "kind": "test",
+          "commands": [
+            [
+              "/usr/bin/python3",
+              "-B",
+              "test_schema.py"
+            ]
+          ],
+          "timeout": 60
+        },
+        "commands": [
+          {
+            "argv": [
+              "/usr/bin/python3",
+              "-B",
+              "test_schema.py"
+            ],
+            "cwd": "/home/epentland/ai/canopy/mylang-worktrees/velocity-json/experiments/application_comparison/baselines/eda/my",
+            "executed": true,
+            "timed_out": false,
+            "exit": 0,
+            "elapsed_seconds": 0.20090250798966736,
+            "stdout_base64": "c2NoZW1hIGJvdW5kYXJ5IGFuZCBzdWJ0cmVlIHRyYXZlcnNhbCBjYXNlcyBwYXNzZWQK",
+            "stdout_sha256": "1a041bb63966ff8140105edb5d497533eb02bb7bebfafd87e6fb661db1c490ad",
+            "stdout": "schema boundary and subtree traversal cases passed\n",
+            "stderr_base64": "",
+            "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "stderr": "",
+            "output_truncated": false,
+            "passed": true
+          }
+        ],
+        "status": "passed"
+      }
+    ],
+    "selected_passed": true,
+    "full_manifest_passed": true
+  },
+  "coverage": "declared tests only; static impact does not select or prove test coverage",
+  "navigation_cache_hit": false,
+  "check_passed": true,
+  "declared_test_steps": 2,
+  "identity_unchanged": true,
+  "elapsed_seconds": 1.3985656300210394
+}

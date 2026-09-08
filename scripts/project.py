@@ -6,16 +6,18 @@ import hashlib
 import json
 from pathlib import Path
 import sys
+import subprocess
 import time
 
 import navigate
 import verify
-from verification.core import run_manifest
+from verification.core import run_manifest, tree
 
 
 def identity(compiler, entry, manifest):
     return {'compiler_sha256': hashlib.sha256(navigate.bounded_read(compiler, 256 * 1024 * 1024)).hexdigest(),
             'sources': navigate.sources(entry.parent),
+            'project_files': tree(entry.parent),
             'manifest_sha256': hashlib.sha256(navigate.bounded_read(manifest, 4 * 1024 * 1024)).hexdigest()}
 
 
@@ -40,23 +42,28 @@ def run(compiler, entry, manifest, *, query='', symbol=None, cache_dir=None, pat
         report['navigation'] = navigate.query(index, text=query, symbol=symbol, relation='context')
         report['navigation_cache_hit'] = cached
         report['check_passed'] = index['checked']
-    except (OSError, ValueError, TypeError, KeyError) as error:
+    except (OSError, ValueError, TypeError, KeyError, subprocess.SubprocessError) as error:
         report['navigation_error'] = str(error)
         report['check_passed'] = False
     if not report['check_passed']:
         report['diagnostics'] = diagnostics(compiler, entry)
     else:
-        verification = run_manifest(manifest, cache_dir=cache_dir / 'verification' if cache_dir else None,
-                                    patterns=patterns, mode='full')
-        report['verification'] = verification
-        selected = set(verification['selected'])
-        rows = [row for row in verification['steps'] if row['id'] in selected]
-        declared_tests = [row for row in rows if row.get('kind', row.get('definition', {}).get('kind')) in ('test', 'parity', 'mutation')]
-        report['declared_test_steps'] = len(declared_tests)
-        report['status'] = 'passed' if verification['selected_passed'] and declared_tests else 'failed'
-        if not declared_tests:
-            report['error'] = 'no selected test, parity, or mutation step; compilation alone is not test acceptance'
-    report['identity_unchanged'] = identity(compiler, entry, manifest) == before
+        try:
+            verification = run_manifest(manifest, cache_dir=cache_dir / 'verification', patterns=patterns, mode='full')
+            report['verification'] = verification
+            selected = set(verification['selected'])
+            rows = [row for row in verification['steps'] if row['id'] in selected]
+            tests = [row for row in rows if row.get('kind', row.get('definition', {}).get('kind')) in ('test', 'parity', 'mutation')]
+            report['declared_test_steps'] = len(tests)
+            report['status'] = 'passed' if verification['selected_passed'] and tests else 'failed'
+            if not tests:
+                report['error'] = 'no selected test, parity, or mutation step; compilation alone is not test acceptance'
+        except (OSError, ValueError, TypeError, KeyError, subprocess.SubprocessError) as error:
+            report.update(status='infrastructure-failure', error=str(error))
+    try:
+        report['identity_unchanged'] = identity(compiler, entry, manifest) == before
+    except (OSError, ValueError) as error:
+        report.update(identity_unchanged=False, identity_error=str(error))
     if not report['identity_unchanged']:
         report['status'] = 'stale'
     report['elapsed_seconds'] = time.monotonic() - started
@@ -88,21 +95,27 @@ def main():
     parser.add_argument('--cache-dir', type=Path)
     parser.add_argument('--report', type=Path, required=True, help='new full evidence file; existing files are never replaced')
     args = parser.parse_args()
+    if args.report.exists():
+        print(json.dumps({'version': 'project-workflow-v1', 'status': 'infrastructure-failure',
+                          'error': 'report already exists; choose a new attempt path'}))
+        return 2
     try:
-        if args.report.exists():
-            raise ValueError('report already exists; choose a new attempt path')
         report = run(args.compiler, args.entry, args.manifest, query=args.query, symbol=args.symbol,
                      cache_dir=args.cache_dir, patterns=args.only)
-        # Exclusive create retains attempts and prevents accidental concurrent overwrite.
+    except (OSError, ValueError, TypeError, KeyError, subprocess.SubprocessError) as error:
+        report = {'version': 'project-workflow-v1', 'status': 'infrastructure-failure',
+                  'captured_utc': datetime.now(timezone.utc).isoformat(), 'error': str(error)}
+    try:
         args.report.parent.mkdir(parents=True, exist_ok=True)
         with args.report.open('x') as stream:
             json.dump(report, stream, indent=2)
             stream.write('\n')
-        print(json.dumps(compact(report)))
-        return 0 if report['status'] == 'passed' else 1
-    except (OSError, ValueError, TypeError, KeyError) as error:
-        print(json.dumps({'version': 'project-workflow-v1', 'status': 'infrastructure-failure', 'error': str(error)}))
+    except OSError as error:
+        print(json.dumps({'version': 'project-workflow-v1', 'status': 'infrastructure-failure',
+                          'error': 'could not preserve attempt: ' + str(error), 'attempt': compact(report)}))
         return 2
+    print(json.dumps(compact(report)))
+    return 0 if report['status'] == 'passed' else 2 if report['status'] == 'infrastructure-failure' else 1
 
 
 if __name__ == '__main__':

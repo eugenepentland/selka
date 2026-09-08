@@ -15,7 +15,10 @@ from .storage import canonical, digest, locked, path_identity, read_json, write_
 
 
 class Gateway:
-    def __init__(self, root, tools, limits=None, *, adapter=None, public_case=None):
+    def __init__(self, root, tools, limits=None, *, adapter=None, public_case=None, retain_command_cache=False):
+        if type(retain_command_cache) is not bool:
+            raise ValueError("retain_command_cache must be boolean")
+        self.retain_command_cache = retain_command_cache
         self.root = Path(root).resolve()
         if (adapter is None) != (public_case is None):
             raise ValueError('public checking requires both adapter and case')
@@ -45,7 +48,8 @@ class Gateway:
                 write_json(config_path, config)
 
     def configuration(self):
-        return {'tools': self.tools, 'limits': self.limits.__dict__,
+        return {**({'retain_command_cache': True} if self.retain_command_cache else {}),
+                'tools': self.tools, 'limits': self.limits.__dict__,
                 'adapter_sha256': self.adapter['sha256'] if self.adapter is not None else None,
                 'public_case_sha256': digest(self.public_case) if self.public_case is not None else None}
 
@@ -120,7 +124,15 @@ class Gateway:
                        'tools': self.tools, 'limits': limits.__dict__}
             write_json(directory / 'request.json', request)
             work = self.root / ('practice' if phase == 'preparing' else 'work')
-            result = run(work, argv, tools={key: item['path'] for key, item in self.tools.items()}, limits=limits)
+            cache = directory / 'cache' if self.retain_command_cache else None
+            if cache is not None:
+                cache.mkdir()
+            result = run(work, argv, tools={key: item['path'] for key, item in self.tools.items()}, limits=limits, cache=cache)
+            if cache is not None:
+                try:
+                    result['retained_cache'] = path_identity(cache)
+                except (OSError, ValueError) as error:
+                    result['cache_retention_error'] = str(error)
             stdout, stderr = result.pop('stdout'), result.pop('stderr')
             (directory / 'stdout').write_bytes(stdout)
             (directory / 'stderr').write_bytes(stderr)

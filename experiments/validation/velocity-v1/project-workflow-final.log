@@ -1,0 +1,12 @@
+..verify: behavior
+.verify: behavior
+.verify: behavior
+verify: behavior
+verify: behavior
+.verify: behavior
+verify: behavior
+..
+----------------------------------------------------------------------
+Ran 7 tests in 3.046s
+
+OK

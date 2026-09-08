@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "scope": "untimed EDA JSON-view preparation",
+  "baseline_commit": "89eeac2",
+  "random_seed": 70819,
+  "differential_cases": 128,
+  "differential_result": "equal",
+  "original_cli": "passed",
+  "schema_cli": "passed",
+  "clearance_condition": "if gx * gx + gy * gy < clearance * clearance ||(min(xe, dxe) > max(x, dx) && min(ye, dye) > max(y, dy)) {",
+  "clearance_condition_unchanged": true,
+  "before": {
+    "bytes": 23267,
+    "lines": 729,
+    "sha256": "9ecb0a144833b5e5973d7425fcf199eabafbf6ac39ec19fecbdf2b7670009053"
+  },
+  "after": {
+    "bytes": 24229,
+    "lines": 681,
+    "sha256": "39722d7eaf54e7194aa7fc8d8674459edb5bc92aaf0bed411317e4afa968273f"
+  },
+  "limits": [
+    "Preparation tests only; no development timing or speed claims.",
+    "Domain/report code retains validated raw tape descriptors."
+  ]
+}

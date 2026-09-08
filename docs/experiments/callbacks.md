@@ -29,7 +29,7 @@ and transformation. Generic `sort_by`, `lower_bound_by`, and `filter_by` accept
 readonly context slices and generic element types. Callable values may also pass through type-only generic
 records or generic helpers with concrete callback signatures.
 
-This stage supports at most 16 value parameters and 4096 inferred signatures.
+This stage supports at most 16 total parameters and 4096 inferred signatures.
 Captures, mutable callback parameters, borrowed results, generic function values,
 and arbitrary expression-call syntax remain unsupported. Bind a callback field or returned callback to a local before
 calling it. Stored reference lifetimes remain a separate feature.

@@ -9,6 +9,12 @@ def language_tool(argv, tools):
     """Recognize direct invocations of declared mounts, not strings inside scripts."""
     if not argv:
         return None
+    if 'workflow' in tools and argv[0] == '/usr/bin/python3':
+        index = 1
+        while index < len(argv) and argv[index] in ('-S', '-B', '-I', '-u'):
+            index += 1
+        if index < len(argv) and argv[index] == '/tools/workflow/project.py':
+            return 'project-workflow'
     if 'navigate' in tools:
         if argv[0] == '/tools/navigate':
             return 'navigation-client'

@@ -18,6 +18,12 @@ class ToolMetricsTests(unittest.TestCase):
             self.assertIsNone(tool_metrics.language_tool(argv, tools))
         self.assertIsNone(tool_metrics.language_tool(['/tools/compiler', 'index-project', '/work/main.my'], {}))
 
+    def test_direct_workflow_commands_require_declared_directory(self):
+        command = ['/usr/bin/python3', '-B', '/tools/workflow/project.py', '--query', 'parse']
+        self.assertEqual('project-workflow', tool_metrics.language_tool(command, {'workflow': {}}))
+        self.assertIsNone(tool_metrics.language_tool(command, {}))
+        self.assertIsNone(tool_metrics.language_tool(['/bin/sh', '-c', ' '.join(command)], {'workflow': {}}))
+
     def test_interval_union_does_not_sum_overlaps(self):
         self.assertEqual(tool_metrics.interval_seconds([(0, 2000000000), (1000000000, 3000000000), (4000000000, 5000000000)]), 4)
         with self.assertRaises(ValueError):

@@ -44,6 +44,26 @@ class ParticipantGatewayTests(unittest.TestCase):
                 gateway.dispatch('command', {'argv': ['true']})
             self.assertEqual(len(list((root / 'gateway').glob('*/result.json'))), 2)
 
+    def test_opt_in_retains_each_command_cache_without_cross_command_reuse(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            parent = Path(temporary)
+            baseline = parent / 'baseline'
+            baseline.mkdir()
+            (baseline / 'main.py').write_text('pass')
+            root = parent / 'session'
+            session.prepare(root, baseline, language='python', block='fixture', cohort='fixture', participant='fixture', model='fixture')
+            gateway = Gateway(root, {}, retain_command_cache=True)
+            session.start_preparation(root)
+            for value in ('first', 'second'):
+                code = "from pathlib import Path;p=Path('/cache/report.json');assert not p.exists();p.write_text(" + repr(value) + ")"
+                self.assertEqual(0, gateway.dispatch('command', {'argv': ['/usr/bin/python3', '-c', code]})['returncode'])
+            reports = sorted((root / 'gateway').glob('*/cache/report.json'))
+            self.assertEqual(['first', 'second'], [p.read_text() for p in reports])
+            results = sorted((root / 'gateway').glob('*/result.json'))
+            self.assertTrue(all('retained_cache' in read_json(p) for p in results))
+            with self.assertRaisesRegex(ValueError, 'configuration changed'):
+                Gateway(root, {})
+
 
 if __name__ == '__main__':
     unittest.main()
