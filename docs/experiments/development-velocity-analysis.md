@@ -16,7 +16,8 @@ JSON (`ensure_ascii=False`, no NaN/Infinity). Hash strings use lowercase hex.
 
 ## Pre-registration and input
 
-Version 1 accepts exactly these top-level fields:
+Version 1 accepts exactly these top-level fields; version 2 adds `arm` to every
+attempt and `arms` to the configuration, as described under Registered arms:
 
 ```text
 {
@@ -30,7 +31,7 @@ Version 1 accepts exactly these top-level fields:
     configuration: object,
     configuration_hash: SHA256(configuration),
     analysis: {
-      version: "development-velocity-analysis-v1",
+      version: "development-velocity-analysis-v1" | "development-velocity-analysis-v2",
       seed: integer,
       bootstrap_samples: integer in [1000, 1000000],
       speed_margin: 1.0,
@@ -51,6 +52,7 @@ Version 1 accepts exactly these top-level fields:
     task_id: string,
     pair_id: string,
     language: "my" | "python",
+    arm: string,                        // registered arm label; v2 only
     attempt_id: string,
     participant_id: string,
     registration_hash: SHA256,
@@ -80,6 +82,30 @@ model identity, tokens, queue time and cost belong as `null` in the configuratio
 or telemetry, never invented zeros. Telemetry objects are opaque raw observations;
 the analyzer does not classify their contents or derive model reasoning time.
 
+## Registered arms
+
+`configuration.arms` is optional and records the compared pair:
+
+```text
+arms: {comparator: {label, language: "my" | "python", interface: "files" | "store"},
+       candidate:  {label, language, interface}}
+```
+
+Labels are distinct and name the attempt directories. When `arms` is present the
+registration is `development-velocity-analysis-v2`: each attempt carries `arm`,
+its `language` must equal that arm's language, expected identities are
+task/pair/arm label, per-task, family and aggregate values use `candidate_*` and
+`comparator_*` keys, the speed ratio is candidate cost over comparator cost, both
+gates read candidate against comparator, and the report echoes the arm
+definitions under `arms`.
+
+When `arms` is absent the registration stays `development-velocity-analysis-v1`
+and every output is byte-for-byte what it was: identities are task/pair/language,
+values keep `my_*` and `python_*` keys, the ratio is `.my` over Python, and no
+`arm` field is accepted on an attempt. Old evidence therefore keeps validating
+against its hashes; old records are never rewritten. A cohort of two `.my` arms
+is expressible only in the v2 form.
+
 Families match the corpus catalog: `data-text`, `configuration`,
 `stateful-collections`, `binary-codecs`, `filesystem-path`, and
 `multi-module-maintenance`. The development plan starts with twelve tasks
@@ -88,8 +114,9 @@ The analyzer accepts smaller development subsets for diagnostic work; their
 reports cannot authorize stopping. The frozen task roster records the intended
 feature/bugfix balance; the coordinator enforces the study's planned balance.
 
-Each registered task/pair must have exactly one attempt in each language. Missing
-attempts, duplicates, unexpected attempts and reused participant identities reject.
+Each registered task/pair must have exactly one attempt in each language, or in
+each registered arm under v2. Missing attempts, duplicates, unexpected attempts
+and reused participant identities reject.
 Each context is fresh; register a sequential maintenance sequence as **one task
 cluster**, rather than treating stages sharing a participant as independent tasks.
 Tasks and variant hashes must be unique within a cohort. Confirmation variants
@@ -143,11 +170,12 @@ the budget cost and do not qualify. Every attempted/qualified count and terminal
 status remains visible. Successful-only timing is reported per task as secondary;
 it is `null` when no attempt qualifies and never determines a decision.
 
-For each language, average all registered attempts within a task, then average
-tasks equally within each family, then average families equally. The speed statistic
-is the ratio of these two weighted mean costs, `.my / Python`, **not** the mean of
-task ratios. Completion rates follow the same hierarchy. Extra repetitions do not
-increase a task's weight, and extra tasks do not increase a family's weight.
+For each language or registered arm, average all registered attempts within a
+task, then average tasks equally within each family, then average families equally.
+The speed statistic is the ratio of these two weighted mean costs, `.my / Python`,
+or candidate over comparator under v2, **not** the mean of task ratios. Completion
+rates follow the same hierarchy. Extra repetitions do not increase a task's weight,
+and extra tasks do not increase a family's weight.
 
 Speed uncertainty resamples whole task clusters with replacement independently
 within each family, preserving paired language data and every repetition within

@@ -8,6 +8,7 @@ import time
 from .storage import digest, inventory, locked, read_json, snapshot, source_files, verify_snapshot, write_json
 
 LANGUAGES = frozenset(('my', 'python', 'zig'))
+ARMS = ('main', 'language-focused', 'declaration-store')
 
 
 def clock():
@@ -40,7 +41,7 @@ def save(root, manifest, event, **details):
 def prepare(root, baseline, *, language, block, cohort, participant, model,
             arm='main', kind='fixture', preparation_seconds=1200, task_seconds=1800,
             max_submissions=20, protected=(), pair_id=None, environment_sha256=None, trial_configuration_sha256=None, coordinator_sha256=None, max_reported_tokens_per_phase=None):
-    if language not in LANGUAGES or arm not in ('main', 'language-focused') or kind not in ('fixture', 'calibration', 'agent'):
+    if language not in LANGUAGES or arm not in ARMS or kind not in ('fixture', 'calibration', 'agent'):
         raise ValueError('invalid session condition')
     if any(type(value) is not int or value <= 0 for value in (preparation_seconds, task_seconds, max_submissions)):
         raise ValueError('session budgets must be positive integers')

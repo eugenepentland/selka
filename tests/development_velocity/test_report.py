@@ -237,6 +237,47 @@ class ReportTests(unittest.TestCase):
         with patch.object(report.runner,'registered',return_value=self.reg):
             with self.assertRaisesRegex(ValueError,'twelve distinct'):report.project(self.root)
 
+    def test_registered_arms_project_labels_and_null_store_metrics(self):
+        arms={'candidate':{'label':'my-store','language':'my','interface':'store'},
+              'comparator':{'label':'my-files','language':'my','interface':'files'}}
+        config={'adapters':{'my-files':self.adapter,'my-store':self.adapter},'arms':arms}
+        self.reg=dict(self.reg,configuration=config,configuration_hash=digest(config),
+                      analysis=dict(self.reg['analysis'],version=analysis.ARM_VERSION))
+        write_json(self.path/'registration-binding.json',{'registration_sha256':digest(self.reg),
+            'variant_hash':self.task['variant_hash'],'participant':'attempt-my'})
+        write_json(self.path/'context-binding.json',{'version':'observed-agent-context-v1','context_id':'/root/fresh',
+            'registration_sha256':digest(self.reg),'fork_turns':'none','prompt_sha256':'a'*64})
+        self.sync()
+        # Frozen baselines are keyed by arm label; each arm carries its own WORKFLOW.md.
+        armed=self.root/'fixture/my-files-baseline';armed.mkdir()
+        for name in self.source['files']:
+            (armed/name).write_bytes((self.root/'fixture/my-baseline'/name).read_bytes())
+        self.assertEqual(report.identities(self.reg),
+                         [(self.task,'pair-01','my-store'),(self.task,'pair-01','my-files')])
+        with patch.object(report.runner,'attempt_path',return_value=(self.path,self.reg,self.task)), \
+             patch.object(report.session,'load',return_value=self.manifest), \
+             patch.object(report.telemetry,'summarize',return_value=self.profile):
+            attempt,detail=report.project_attempt(self.root,self.reg,self.task,'pair-01','my-files',report.Evidence())
+        self.assertEqual((attempt['arm'],attempt['language'],detail['interface']),('my-files','my','files'))
+        other=dict(attempt,arm='my-store',attempt_id='attempt-store',participant_id='/root/store')
+        result=analysis.analyze({'schema_version':1,'registration':self.reg,'registration_hash':digest(self.reg),
+                                 'attempts':[attempt,other]})
+        self.assertEqual(result['analysis_version'],analysis.ARM_VERSION)
+        self.assertEqual(result['tasks'][0]['comparator_qualified_count'],1)
+        self.assertEqual(report.store_totals([self.profile]),
+                         {key:None for key in report.telemetry.STORE_METRICS})
+        self.assertEqual(report.store_totals([dict(self.profile,store_metrics={
+            'bytes_returned':10,'verb_counts':{'context':2},'context_omitted_total':1,
+            'if_match_conflicts':0,'batch_rejections':3})]),
+            {'bytes_returned':10,'verb_counts':{'context':2},'context_omitted_total':1,
+             'if_match_conflicts':0,'batch_rejections':3})
+
+    def test_legacy_registration_projects_without_an_arm_field(self):
+        attempt,_=self.project()
+        self.assertNotIn('arm',attempt)
+        self.assertEqual(report.identities(self.reg),[(self.task,'pair-01','my'),(self.task,'pair-01','python')])
+        self.assertEqual(self.analyze(attempt)['analysis_version'],analysis.VERSION)
+
     def test_publication_refuses_existing_directory(self):
         out=self.root/'published';out.mkdir();(out/'marker').write_text('original')
         with patch.object(report,'project',return_value=({},{})), \

@@ -1,19 +1,30 @@
 """Capture an onboarding starter and its public contract without coordinator solutions."""
 from pathlib import Path
 from . import practice_cases, public_verification
-from .storage import digest, inventory, read_json, snapshot, verify_snapshot, write_json
+from .storage import digest, inventory, read_json, snapshot, source_files, verify_snapshot, write_json
 
 ROOT = Path(__file__).resolve().parent
+INTERFACES = ('files', 'store')
 
 
-def create(directory, *, language):
+def create(directory, *, language, interface='files'):
+    """The same three repairs, cases and contract; `interface` only rewrites the guide."""
     if language not in ('my', 'python', 'zig'):
         raise ValueError('unknown practice language')
+    if interface not in INTERFACES:
+        raise ValueError('unknown practice interface')
+    if interface == 'store' and language != 'my':
+        raise ValueError('the declaration store interface exists only for .my')
     directory = Path(directory)
     directory.mkdir(exist_ok=False)
     starter = snapshot(ROOT / 'practice' / language / 'starter', directory / 'starter')
     if 'GUIDE.md' not in starter['files']:
         raise ValueError('practice starter requires its guide')
+    if interface == 'store':
+        # Identical starter sources; the guide names verbs instead of commands and paths.
+        (directory / 'starter/GUIDE.md').write_bytes((ROOT / 'practice' / language / 'GUIDE-store.md').read_bytes())
+        files = inventory(source_files(directory / 'starter'))
+        starter = {'files': files, 'sha256': digest(files)}
     checks = practice_cases.cases()
     public_verification.validate(checks)
     write_json(directory / 'cases.json', checks)

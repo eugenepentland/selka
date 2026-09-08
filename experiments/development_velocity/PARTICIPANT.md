@@ -11,6 +11,8 @@ bridge given by the coordinator. Its command tool accepts argv and an optional
 purpose: inspect, edit, compile, test, debug, benchmark or other. These labels are
 self-reports, not measurements of reasoning. Commands run in `/work`; `/cache`
 is scratch scoped to that command. Standard libraries/tools are read-only mounts.
+The bridge also has `await-handoff`, taking `{}`, used only between practice and
+the timed task.
 Do not inspect the bridge source, outside workspace paths, hidden packs, prior
 solutions, timing reports, other participants or coordinator files. Do not use
 network access, other agents, alternate runtimes to implement `.my` behavior,
@@ -39,8 +41,11 @@ skip the required public checks. Compiler success alone is insufficient.
 Use `finish` with reason `completed` after checking the final source. Failed
 checks, attempts and timings are all retained; a fast failure is not a speed win.
 Completion does not reveal hidden results. If unable to finish, seal with reason
-`abandoned`. During practice, finish returns `ready`; stop and await the task
-handoff. Practice and preparation stay outside application delivery time.
+`abandoned`. During practice, `finish` returns `ready`; then call `await-handoff`
+with `{}`, in the same context, until it answers `phase: "working"`, and follow
+its message. Practice and preparation stay outside application delivery time; the
+application clock starts at the coordinator's `begin`, and only the poll's return
+latency, at most 0.5 s, falls inside it.
 
 Raw stdout/stderr and source changes are retained outside the application tree.
 Long feedback may be abbreviated. Use targeted source reads and local commands

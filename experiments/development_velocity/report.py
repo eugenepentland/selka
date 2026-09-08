@@ -43,9 +43,18 @@ def timestamp(clock):
     return datetime.fromtimestamp(seconds, timezone.utc).strftime('%Y-%m-%dT%H:%M:%S') + f'.{nanos:09}Z'
 
 
+def arm_labels(registration):
+    """Registered arm labels, candidate first; a legacy cohort is the my/python pair."""
+    definitions = registration['configuration'].get('arms')
+    if definitions is None:
+        return None, ('my', 'python')
+    return definitions, tuple(definitions[role]['label'] for role in runner.ROLES)
+
+
 def identities(registration):
-    return [(task, pair, language) for task in registration['tasks']
-            for pair in task['pair_ids'] for language in ('my', 'python')]
+    labels = arm_labels(registration)[1]
+    return [(task, pair, arm) for task in registration['tasks']
+            for pair in task['pair_ids'] for arm in labels]
 
 
 def review_record(path, source_sha256, evidence):
@@ -127,8 +136,11 @@ def verify_pack(directory, record, source, adapter, cases, evidence):
     return record['passed']
 
 
-def project_attempt(root, reg, task, pair, language, evidence):
-    path, checked_reg, checked_task = runner.attempt_path(root, task['task_id'], pair, language)
+def project_attempt(root, reg, task, pair, arm, evidence):
+    definitions, _ = arm_labels(reg)
+    definition = runner.arm_row(reg, arm)
+    language = definition['language']
+    path, checked_reg, checked_task = runner.attempt_path(root, task['task_id'], pair, arm)
     require(checked_reg == reg and checked_task == task, 'registration changed')
     manifest = session.load(path); evidence.note(path/'session.json')
     require(manifest['phase'] == 'sealed', 'unfinished attempt: ' + str(path))
@@ -144,13 +156,14 @@ def project_attempt(root, reg, task, pair, language, evidence):
             and context['context_id'].startswith('/root/')
             and re.fullmatch('[0-9a-f]{64}', context.get('prompt_sha256','')) is not None,
             'invalid participant context binding')
-    adapter=reg['configuration']['adapters'][language]
+    adapter=reg['configuration']['adapters'][arm]
     public_cases=evidence.read(Path(root)/task['task_id']/'pack/public/cases.json')
     baseline = manifest['baseline']['files']
     protected = {name:value for name,value in baseline.items() if '.trial-public' in Path(name).parts
                  or Path(name).name in ('main.my','main.py','io.my')}
     require(manifest['protected'] == protected, 'protected runtime inventory mismatch')
-    frozen_baseline = Path(root)/task['task_id']/(language+'-baseline')
+    # Baselines are keyed by arm label; a legacy cohort's labels are its language names.
+    frozen_baseline = Path(root)/task['task_id']/(arm+'-baseline')
     evidence.snapshot(frozen_baseline, manifest['baseline'])
     for index, row in enumerate(manifest['submissions']):
         require(row['index'] == index, 'submission index mismatch')
@@ -189,7 +202,8 @@ def project_attempt(root, reg, task, pair, language, evidence):
             summary['verification_pass'] == verification and summary['eligible'] == eligible and
             summary['passed'] == (raw['passed'] and verification and eligible), 'grading summary verdict mismatch')
     profile = evidence.read(path/'profile.json')
-    require(profile == telemetry.summarize(path), 'stale or inconsistent operation profile')
+    require(profile == telemetry.summarize(path, arm=arm, interface=definition['interface']),
+            'stale or inconsistent operation profile')
     # Profile recomputation rejects incomplete operations and uncommitted commands.
     for directory in ('telemetry','gateway'):
         for record in (path/directory).glob('*/request.json'):
@@ -203,6 +217,7 @@ def project_attempt(root, reg, task, pair, language, evidence):
     source = row['source']['sha256'] if row else None
     decision, review = review_record(path/'source-review.json', source, evidence)
     attempt = {'task_id':task['task_id'],'pair_id':pair,'language':language,
+               **({} if definitions is None else {'arm':arm}),
                'attempt_id':manifest['participant'],'participant_id':context['context_id'],
                'registration_hash':digest(reg),'configuration_hash':reg['configuration_hash'],
                'variant_hash':task['variant_hash'],'started_at':timestamp(manifest['task_started']),
@@ -214,6 +229,7 @@ def project_attempt(root, reg, task, pair, language, evidence):
                'telemetry':{'model_requests':profile.get('model_requests'), 'model_tokens':profile.get('model_tokens'),
                             'queue_wait_seconds':profile.get('queue_wait_seconds')}}
     detail = {'attempt_id':manifest['participant'],'source_sha256':source,'review':review,
+              'arm':arm,'interface':definition['interface'],
               'raw_clocks':{'started':manifest['task_started'],'sealed':manifest['sealed']},
               'profile':profile,'preparation':manifest.get('preparation'),
               'submission_count':len(manifest['submissions']),
@@ -223,58 +239,87 @@ def project_attempt(root, reg, task, pair, language, evidence):
 
 def inventory(root):
     reg = runner.registered(root)
+    definitions, _ = arm_labels(reg)
     rows=[]
-    for task,pair,language in identities(reg):
-        path=Path(root)/task['task_id']/pair/language
-        rows.append({'task':task['task_id'],'pair':pair,'language':language,
+    for task,pair,arm in identities(reg):
+        definition=runner.arm_row(reg,arm)
+        path=Path(root)/task['task_id']/pair/arm
+        rows.append({'task':task['task_id'],'pair':pair,'arm':arm,'language':definition['language'],
+            'interface':definition['interface'],
             'phase':read_json(path/'session.json')['phase'] if (path/'session.json').exists() else 'not-prepared',
             'grade_present':(path/'grading-summary.json').exists(),
             'review_present':(path/'source-review.json').exists()})
-    return {'version':'development-inventory-v1','aggregate_available':False,'parity_claim':False,'attempts':rows}
+    # v2 lists the registered arms; rows carry the arm label, language and interface.
+    return {'version':'development-inventory-v2','aggregate_available':False,'parity_claim':False,
+            'arms':definitions,'attempts':rows}
 
 
 def compiler_totals(attempts, details):
     groups={}
     for attempt, detail in zip(attempts, details):
         for record in detail['profile']['compiler_phase_records']:
-            key=(attempt['language'],record.get('tool'),record['name'],record['inclusive'])
+            key=(attempt.get('arm',attempt['language']),attempt['language'],
+                 record.get('tool'),record['name'],record['inclusive'])
             require(type(record['duration_ns']) is int and record['duration_ns'] >= 0 and
                     type(record['inclusive']) is bool, 'invalid phase timing')
             require((record.get('tool') is None or isinstance(record['tool'],str)) and
                     isinstance(record['name'],str), 'invalid phase identity')
             count,duration=groups.get(key,(0,0))
             groups[key]=(count+1,duration+record['duration_ns'])
-    return [{'language':lang,'tool':tool,'name':name,'inclusive':inclusive,
+    return [{'arm':arm,'language':lang,'tool':tool,'name':name,'inclusive':inclusive,
              'calls':count,'sum_duration_seconds':duration/1e9}
-            for (lang,tool,name,inclusive),(count,duration) in sorted(groups.items(),
-                key=lambda item:(item[0][0],item[0][1] or '',item[0][2],item[0][3]))]
+            for (arm,lang,tool,name,inclusive),(count,duration) in sorted(groups.items(),
+                key=lambda item:(item[0][0],item[0][2] or '',item[0][3],item[0][4]))]
+
+
+def store_totals(profiles):
+    """Only a store session gateway reports these; a files arm projects null."""
+    metrics=[profile.get('store_metrics') for profile in profiles]
+    if not metrics or any(metric is None for metric in metrics):
+        return {key:None for key in telemetry.STORE_METRICS}
+    totals={}
+    for key in telemetry.STORE_METRICS:
+        values=[metric[key] for metric in metrics]
+        if all(isinstance(value,dict) for value in values):
+            counter=Counter()
+            for value in values: counter.update(value)
+            totals[key]=dict(counter)
+        else:
+            require(all(type(value) is int for value in values),'invalid store metric')
+            totals[key]=sum(values)
+    return totals
 
 
 def project(root):
     root=Path(root).resolve(strict=True); reg=runner.registered(root)
     require({t['task_id'] for t in reg['tasks']}==set(IDS) and len(reg['tasks'])==12, 'full corpus requires twelve distinct tasks')
     expected=identities(reg);require(len(expected)>=24,'full cohort requires at least24 attempts')
+    labels=arm_labels(reg)[1]
     e=Evidence();e.note(root/'registration.json'); readiness=e.read(root/'readiness.json')
     require(digest(readiness)==reg['configuration']['readiness_sha256'],'preparation record changed')
     attempts=[];details=[]
-    for task,pair,language in expected:
-        attempt,detail=project_attempt(root,reg,task,pair,language,e);attempts.append(attempt);details.append(detail)
+    for task,pair,arm in expected:
+        attempt,detail=project_attempt(root,reg,task,pair,arm,e);attempts.append(attempt);details.append(detail)
     document={'schema_version':1,'registration':reg,'registration_hash':digest(reg),'attempts':attempts}
     result=analysis.analyze(document) # Rejects reused context IDs and incomplete paired identities.
-    diagnostics=Counter(); operations=Counter(); output={}; observed={};unobserved={}
-    for language in ('my','python'):
-        profiles=[d['profile'] for a,d in zip(attempts,details) if a['language']==language]
-        output[language]=sum(p['gateway_metrics']['phases']['working']['captured_output_bytes'] for p in profiles)
-        observed[language]=sum(p['observed_operation_seconds'] for p in profiles) if all(p['observed_operation_seconds'] is not None for p in profiles) else None
-        unobserved[language]=sum(p['unobserved_seconds'] for p in profiles) if all(p['unobserved_seconds'] is not None for p in profiles) else None
+    diagnostics=Counter(); operations=Counter(); output={}; observed={};unobserved={};store={}
+    languages={arm:runner.arm_row(reg,arm)['language'] for arm in labels}
+    for arm in labels:
+        profiles=[d['profile'] for a,d in zip(attempts,details) if a.get('arm',a['language'])==arm]
+        output[arm]=sum(p['gateway_metrics']['phases']['working']['captured_output_bytes'] for p in profiles)
+        observed[arm]=sum(p['observed_operation_seconds'] for p in profiles) if all(p['observed_operation_seconds'] is not None for p in profiles) else None
+        unobserved[arm]=sum(p['unobserved_seconds'] for p in profiles) if all(p['unobserved_seconds'] is not None for p in profiles) else None
+        store[arm]=store_totals(profiles)
         for profile in profiles:
-            for event in profile['diagnostic_history']: diagnostics.update((language,code) for code in event['codes'])
-            for label,seconds in (profile['operation_seconds_by_declared_purpose'] or {}).items():operations[(language,label)]+=seconds
+            for event in profile['diagnostic_history']: diagnostics.update((arm,code) for code in event['codes'])
+            for purpose,seconds in (profile['operation_seconds_by_declared_purpose'] or {}).items():operations[(arm,purpose)]+=seconds
     result['observations']={'compiler_phases':compiler_totals(attempts,details),
         'compiler_phase_scope':'Timed application commands and public checks only; practice and private grading excluded. Nested/inclusive phase sums may overlap and are not added to operation or application wall time; not pure compiler CPU.',
-        'diagnostics':[{'language':lang,'code':code,'operation_occurrences':count} for (lang,code),count in diagnostics.most_common()],
-        'operation_seconds_by_declared_purpose':[{'language':lang,'purpose':purpose,'seconds':seconds} for (lang,purpose),seconds in sorted(operations.items())],
-        'captured_output_bytes':output,'observed_operation_seconds':observed,'unobserved_wall_seconds':unobserved}
+        'diagnostics':[{'arm':arm,'language':languages[arm],'code':code,'operation_occurrences':count} for (arm,code),count in diagnostics.most_common()],
+        'operation_seconds_by_declared_purpose':[{'arm':arm,'language':languages[arm],'purpose':purpose,'seconds':seconds} for (arm,purpose),seconds in sorted(operations.items())],
+        'captured_output_bytes':output,'observed_operation_seconds':observed,'unobserved_wall_seconds':unobserved,
+        'store_session_metrics':store,
+        'store_metric_scope':'Only a declaration-store session interface reports these; files arms are null.'}
     result['attempt_evidence']=details;result['raw_evidence']=e.files
     result['preparation_record']=str(root/'readiness.json')
     result['preparation_journal']={}
@@ -290,21 +335,25 @@ def project(root):
 
 
 def markdown(report):
+    arms=report.get('arms')
+    # Legacy cohorts keep their published my/Python wording; arm cohorts use labels.
+    first,second=('my','python') if arms is None else ('candidate','comparator')
+    names=('.my','Python') if arms is None else tuple(arms[role]['label'] for role in ('candidate','comparator'))
     lines=['# Development velocity cohort','',
            'Failure-inclusive capped costs; pending reviews and unsuccessful attempts receive their full registered budget. Development results cannot establish a stopping/parity claim.','',
-           '| Task | .my cost seconds | Python cost seconds | .my / Python qualified |',
+           f'| Task | {names[0]} cost seconds | {names[1]} cost seconds | {names[0]} / {names[1]} qualified |',
            '|---|---:|---:|---|']
-    for row in report['tasks']:lines.append(f"| {row['task_id']} | {row['my_cost']:.3f} | {row['python_cost']:.3f} | {row['my_qualified_count']} / {row['python_qualified_count']} |")
-    lines+=['','| Family | .my cost | Python cost | .my completion | Python completion |','|---|---:|---:|---:|---:|']
-    for family,row in report['families'].items():lines.append(f"| {family} | {row['my_cost']:.3f} | {row['python_cost']:.3f} | {row['my_completion']:.3f} | {row['python_completion']:.3f} |")
-    lines+=['',f"Family-weighted .my/Python cost ratio: {report['aggregate']['cost_ratio']:.3f}.",'',
-            'Observed output and time totals: '+json.dumps({k:v for k,v in report['observations'].items() if k not in ('diagnostics','operation_seconds_by_declared_purpose','compiler_phases','compiler_phase_scope')},sort_keys=True), '',
+    for row in report['tasks']:lines.append(f"| {row['task_id']} | {row[first+'_cost']:.3f} | {row[second+'_cost']:.3f} | {row[first+'_qualified_count']} / {row[second+'_qualified_count']} |")
+    lines+=['',f'| Family | {names[0]} cost | {names[1]} cost | {names[0]} completion | {names[1]} completion |','|---|---:|---:|---:|---:|']
+    for family,row in report['families'].items():lines.append(f"| {family} | {row[first+'_cost']:.3f} | {row[second+'_cost']:.3f} | {row[first+'_completion']:.3f} | {row[second+'_completion']:.3f} |")
+    lines+=['',f"Family-weighted {names[0]}/{names[1]} cost ratio: {report['aggregate']['cost_ratio']:.3f}.",'',
+            'Observed output and time totals: '+json.dumps({k:v for k,v in report['observations'].items() if k not in ('diagnostics','operation_seconds_by_declared_purpose','compiler_phases','compiler_phase_scope','store_metric_scope')},sort_keys=True), '',
             'Repeated diagnostic codes (operation occurrences, not bugs):']
     lines+=['- '+str(row) for row in report['observations']['diagnostics'][:20]] or ['No diagnostic codes observed.']
     lines+=['','Declared operation time:']+['- '+str(row) for row in report['observations']['operation_seconds_by_declared_purpose']]
-    lines+=['','| Language | Tool | Phase | Inclusive | Calls | Sum seconds |', '|---|---|---|---|---:|---:|']
+    lines+=['','| Arm | Tool | Phase | Inclusive | Calls | Sum seconds |', '|---|---|---|---|---:|---:|']
     for row in report['observations']['compiler_phases']:
-        lines.append(f"| {row['language']} | {row['tool'] or 'unknown'} | {row['name']} | {row['inclusive']} | {row['calls']} | {row['sum_duration_seconds']:.6f} |")
+        lines.append(f"| {row['arm']} | {row['tool'] or 'unknown'} | {row['name']} | {row['inclusive']} | {row['calls']} | {row['sum_duration_seconds']:.6f} |")
     lines+=['',report['observations']['compiler_phase_scope']]
     lines+=['','Unobserved wall time includes reasoning, drafting, scheduling and orchestration; its components are unknown. Output bytes and gateway commands are not tokens or model turns.', '',
             'Preparation record: '+report['preparation_record'], '',

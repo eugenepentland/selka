@@ -11,10 +11,11 @@ Inspect progress without aggregate or parity claims:
 python3 -B -m experiments.development_velocity.report /external/study/cohort --inventory
 ```
 
-Inventory lists every registered task/pair/language, including not-prepared and
-unfinished attempts. It is an explicitly incomplete inventory, not an accepted
-analysis projection. A full report requires all twelve task IDs and every
-registered pair in both languages (at least 24 attempts):
+Inventory (`development-inventory-v2`) lists the registered arms and every
+registered task/pair/arm, with each arm's language and interface, including
+not-prepared and unfinished attempts. It is an explicitly incomplete inventory, not
+an accepted analysis projection. A full report requires all twelve task IDs and
+every registered pair in both arms (at least 24 attempts):
 
 ```
 python3 -B -m experiments.development_velocity.report /external/study/cohort \
@@ -75,18 +76,32 @@ It does not infer global preparation elapsed time. Any explicit
 `preparation-start-correction` event supersedes the original manually converted
 start when interpreting that journal, while the original record remains intact.
 
-Tables include task and family costs/completion by .my and Python. Observations
-include repeated diagnostic codes counted per operation, declared operation
-purposes, captured output bytes, observed operation time and unobserved wall time.
-Compiler/VM/Python phase records are grouped by language, tool, phase name and
+Identities iterate the registered arm labels from `configuration.arms`; a
+registration without that field keeps the literal `my`/`python` pair, and its
+projected attempts carry no `arm` field so `analysis.py` v1 still accepts them.
+Attempts live at `task/pair/<arm label>`, and tools, adapters, practice packs and
+frozen baselines are keyed by label: `task/<arm label>-baseline` carries that arm's
+`WORKFLOW.md`, and a legacy cohort's labels are its language names, so
+`my-baseline` and `python-baseline` are unchanged. Tables include task and family costs/completion by arm, named
+`.my`/Python for a legacy cohort and by candidate/comparator label otherwise.
+
+Observations include repeated diagnostic codes counted per operation, declared
+operation purposes, captured output bytes, observed operation time and unobserved
+wall time, each keyed by arm label.
+Compiler/VM/Python phase records are grouped by arm, language, tool, phase name and
 inclusive flag, with call count and summed duration seconds. These totals are
 reported separately: parent/child and compound-command phases can overlap and
 do not measure pure compiler CPU. Practice and private grading are excluded.
 Phase totals are never added to operation/application wall time.
-Missing telemetry remains null. Unobserved wall time combines drafting, reasoning,
-scheduling and orchestration; none is inferred separately. Diagnostics are not
-bug counts, command/output counts are not turns/tokens, and compiler phases nest
-inside operation time rather than adding independent time.
+Store session metrics (`bytes_returned`, per-verb counts, `context_omitted_total`,
+`if_match_conflicts`, `batch_rejections`) are projected per arm from each profile's
+`store_metrics`; a files arm reports them as null. Profiles are
+`development-profile-v2`, carrying the arm label, interface and that slot, so a v1
+profile cannot be recomputed. Missing telemetry remains null. Unobserved wall time
+combines drafting, reasoning, scheduling and orchestration; none is inferred
+separately. Diagnostics are not bug counts, command/output counts are not
+turns/tokens, and compiler phases nest inside operation time rather than adding
+independent time.
 
 Development-phase reports cannot trigger a parity stopping claim. Confirmation
 criteria, family weighting, capped costs and uncertainty remain owned by

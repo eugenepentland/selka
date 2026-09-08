@@ -4,8 +4,11 @@ from datetime import datetime, timedelta, timezone
 import unittest
 
 from experiments.development_velocity.analysis import (
-    ALPHA_PER_GATE, FAMILIES, VERSION, analyze, canonical_hash, registration_hash,
+    ALPHA_PER_GATE, ARM_VERSION, FAMILIES, VERSION, analyze, canonical_hash, registration_hash,
 )
+
+ARMS = {"candidate": {"label": "my-store", "language": "my", "interface": "store"},
+        "comparator": {"label": "my-files", "language": "my", "interface": "files"}}
 
 
 def stamp(seconds):
@@ -49,6 +52,81 @@ def cohort(phase="development", my_seconds=10, python_seconds=20):
                                                 ended_monotonic_ns=1000000000 + seconds * 1000000000),
                                      behavior_pass=True, verification_pass=True, review="approve"))
     return seal(dict(schema_version=1, registration=reg, registration_hash="", attempts=attempts))
+
+
+def two_my_arms(document):
+    """Remap a my/python cohort onto two registered .my arms."""
+    reg = document["registration"]
+    reg["configuration"]["arms"] = deepcopy(ARMS)
+    reg["analysis"]["version"] = ARM_VERSION
+    for attempt in document["attempts"]:
+        attempt["arm"] = "my-store" if attempt["language"] == "my" else "my-files"
+        attempt["language"] = "my"
+    return seal(document)
+
+
+class ArmTests(unittest.TestCase):
+    def test_registered_arms_report_candidate_and_comparator_series(self):
+        report = analyze(two_my_arms(cohort()))
+        self.assertEqual(report["analysis_version"], ARM_VERSION)
+        self.assertEqual(report["arms"], ARMS)
+        self.assertEqual(report["aggregate"]["cost_ratio"], 0.5)
+        self.assertEqual(report["tasks"][0]["candidate_cost"], 10)
+        self.assertEqual(report["tasks"][0]["comparator_cost"], 20)
+        self.assertEqual(set(report["counts"]), {"my-store", "my-files"})
+        self.assertEqual(report["attempts"][0]["arm"], "my-files")
+        self.assertNotIn("my_cost", report["tasks"][0])
+
+    def test_candidate_arm_owns_the_completion_gate(self):
+        data = two_my_arms(cohort())
+        data["attempts"][1]["status"] = "failed"  # A comparator failure, not the candidate.
+        self.assertTrue(analyze(data)["decision"]["empirical_quality_gate_met"])
+        data = two_my_arms(cohort())
+        data["attempts"][0]["status"] = "failed"
+        report = analyze(data)
+        self.assertFalse(report["decision"]["empirical_quality_gate_met"])
+        self.assertEqual(report["tasks"][0]["candidate_cost"], 100)
+
+    def test_version_string_follows_the_registration(self):
+        data = two_my_arms(cohort())
+        data["registration"]["analysis"]["version"] = VERSION
+        with self.assertRaisesRegex(ValueError, "analysis version"):
+            analyze(seal(data))
+        data = cohort()
+        data["registration"]["analysis"]["version"] = ARM_VERSION
+        with self.assertRaisesRegex(ValueError, "analysis version"):
+            analyze(seal(data))
+
+    def test_arm_field_is_required_only_with_registered_arms(self):
+        data = two_my_arms(cohort())
+        del data["attempts"][0]["arm"]
+        with self.assertRaisesRegex(ValueError, "missing fields"):
+            analyze(seal(data))
+        data = cohort()
+        data["attempts"][0]["arm"] = "my"
+        with self.assertRaisesRegex(ValueError, "unknown fields"):
+            analyze(seal(data))
+
+    def test_unregistered_label_and_arm_language_drift_reject(self):
+        data = two_my_arms(cohort())
+        data["attempts"][0]["arm"] = "my-other"
+        with self.assertRaisesRegex(ValueError, "unregistered task/pair/arm"):
+            analyze(seal(data))
+        data = two_my_arms(cohort())
+        data["attempts"][0]["language"] = "python"
+        with self.assertRaisesRegex(ValueError, "differs from its arm"):
+            analyze(seal(data))
+        data = two_my_arms(cohort())
+        data["registration"]["configuration"]["arms"]["candidate"]["label"] = "my-files"
+        with self.assertRaisesRegex(ValueError, "labels must be distinct"):
+            analyze(seal(data))
+
+    def test_legacy_registration_keeps_the_literal_language_series(self):
+        report = analyze(cohort())
+        self.assertEqual(report["analysis_version"], VERSION)
+        self.assertNotIn("arms", report)
+        self.assertEqual(set(report["counts"]), {"my", "python"})
+        self.assertEqual(report["tasks"][0]["my_cost"], 10)
 
 
 class AnalysisTests(unittest.TestCase):

@@ -10,6 +10,8 @@ import random
 import re
 
 VERSION = "development-velocity-analysis-v1"
+# Arm-aware registrations report candidate/comparator series and need their own version.
+ARM_VERSION = "development-velocity-analysis-v2"
 FAMILIES = ("data-text", "configuration", "stateful-collections", "binary-codecs",
             "filesystem-path", "multi-module-maintenance")
 ALPHA_PER_GATE = 0.00625
@@ -25,6 +27,11 @@ def canonical_hash(value):
 
 def registration_hash(registration):
     return canonical_hash(registration)
+
+
+def version_for(configuration):
+    """Registrations declaring configuration.arms are v2; legacy my/python stay v1."""
+    return ARM_VERSION if configuration.get("arms") is not None else VERSION
 
 
 def _require(condition, message):
@@ -61,6 +68,24 @@ def _number(value, positive=False):
     _require(value > 0 if positive else value >= 0, "number outside allowed range")
 
 
+def _arms(configuration):
+    """Registered comparator/candidate arms, or None for a legacy my/python cohort."""
+    arms = configuration.get("arms")
+    if arms is None:
+        return None
+    _fields(arms, ("comparator", "candidate"))
+    labels = set()
+    for role in ("candidate", "comparator"):
+        arm = arms[role]
+        _fields(arm, ("label", "language", "interface"))
+        _id(arm["label"])
+        _require(arm["language"] in ("my", "python"), "invalid arm language")
+        _require(arm["interface"] in ("files", "store"), "invalid arm interface")
+        labels.add(arm["label"])
+    _require(len(labels) == 2, "arm labels must be distinct")
+    return arms
+
+
 def _validate(document):
     _fields(document, ("schema_version", "registration", "registration_hash", "attempts"))
     _require(type(document["schema_version"]) is int and document["schema_version"] == 1, "unsupported schema version")
@@ -74,13 +99,15 @@ def _validate(document):
     _require(isinstance(reg["configuration"], dict), "configuration must be object")
     _hash(reg["configuration_hash"])
     _require(canonical_hash(reg["configuration"]) == reg["configuration_hash"], "configuration hash mismatch")
+    arms = _arms(reg["configuration"])
+    series = ("my", "python") if arms is None else tuple(arms[role]["label"] for role in ("candidate", "comparator"))
     _require(reg["phase"] in ("development", "confirmation"), "invalid phase")
     _require(type(reg["look"]) is int, "look must be integer")
     _require(reg["look"] == 0 if reg["phase"] == "development" else 1 <= reg["look"] <= LOOKS, "look outside preregistered schedule")
     frozen = _time(reg["frozen_at"])
     settings = reg["analysis"]
     _fields(settings, ("version", "seed", "bootstrap_samples", "speed_margin", "quality_margin"))
-    _require(settings["version"] == VERSION, "analysis version mismatch")
+    _require(settings["version"] == version_for(reg["configuration"]), "analysis version mismatch")
     _require(type(settings["seed"]) is int, "seed must be integer")
     _require(type(settings["bootstrap_samples"]) is int and 1000 <= settings["bootstrap_samples"] <= 1000000, "bootstrap samples must be 1000..1000000")
     for name, target in (("speed_margin", 1.0), ("quality_margin", 0.0)):
@@ -116,7 +143,7 @@ def _validate(document):
             _require(task["variant_hash"] not in prior, "confirmation variant was previously exposed")
         family_counts[task["family"]] += 1
         tasks[task["task_id"]] = task
-        expected.update((task["task_id"], pair, language) for pair in pairs for language in ("my", "python"))
+        expected.update((task["task_id"], pair, name) for pair in pairs for name in series)
     if reg["phase"] == "confirmation":
         _require(all(family_counts[f] >= 2 for f in FAMILIES), "confirmation requires two task clusters in each of six families")
     _require(isinstance(document["attempts"], list), "attempts must be array")
@@ -124,12 +151,17 @@ def _validate(document):
     for attempt in document["attempts"]:
         _fields(attempt, ("task_id", "pair_id", "language", "attempt_id", "participant_id",
                           "registration_hash", "configuration_hash", "variant_hash", "started_at",
-                          "ended_at", "status", "behavior_pass", "verification_pass", "review"), ("telemetry", "clock"))
+                          "ended_at", "status", "behavior_pass", "verification_pass", "review")
+                + (() if arms is None else ("arm",)), ("telemetry", "clock"))
         for name in ("task_id", "pair_id", "attempt_id", "participant_id"):
             _id(attempt[name])
         _require(attempt["language"] in ("my", "python"), "invalid language")
-        identity = (attempt["task_id"], attempt["pair_id"], attempt["language"])
-        _require(identity in expected, "unregistered task/pair/language")
+        identity = (attempt["task_id"], attempt["pair_id"],
+                    attempt["language"] if arms is None else attempt["arm"])
+        _require(identity in expected, "unregistered task/pair/arm")
+        if arms is not None:
+            definition = next(a for a in arms.values() if a["label"] == attempt["arm"])
+            _require(attempt["language"] == definition["language"], "attempt language differs from its arm")
         _require(identity not in seen, "duplicate attempt identity")
         seen.add(identity)
         _require(attempt["attempt_id"] not in attempt_ids, "duplicate attempt_id")
@@ -158,7 +190,7 @@ def _validate(document):
         _require(attempt["review"] in ("approve", "approve_with_nits", "reject", "pending"), "invalid review")
         _require(attempt.get("telemetry") is None or isinstance(attempt["telemetry"], dict), "telemetry must be object or null")
     _require(seen == expected, "missing registered attempts: " + str(sorted(expected - seen)))
-    return reg, tasks
+    return reg, tasks, arms
 
 
 def _mean(values):
@@ -172,19 +204,23 @@ def _elapsed(attempt):
     return _time(attempt["ended_at"]) - _time(attempt["started_at"])
 
 
-def _aggregate(families):
+def _aggregate(families, prefixes=("my", "python")):
     # Equal tasks within each family; equal families irrespective of pair counts.
     return {key: _mean([_mean([row[key] for row in rows]) for rows in families.values()])
-            for key in ("my_cost", "python_cost", "my_completion", "python_completion")}
+            for key in tuple(prefix + "_" + name for name in ("cost", "completion") for prefix in prefixes)}
 
 
-def _ratio(values):
-    return values["my_cost"] / values["python_cost"]
+def _ratio(values, prefixes=("my", "python")):
+    return values[prefixes[0] + "_cost"] / values[prefixes[1] + "_cost"]
 
 
 def analyze(document):
     """Validate a complete immutable cohort and return a JSON-serializable report."""
-    reg, tasks = _validate(document)
+    reg, tasks, arms = _validate(document)
+    # Legacy cohorts keep the literal my/python series; arm cohorts report roles.
+    prefixes = ("my", "python") if arms is None else ("candidate", "comparator")
+    labels = ("my", "python") if arms is None else tuple(arms[role]["label"] for role in prefixes)
+    series = (lambda row: row["language"]) if arms is None else (lambda row: row["arm"])
     attempts, grouped = [], defaultdict(lambda: defaultdict(list))
     for raw in document["attempts"]:
         task = tasks[raw["task_id"]]
@@ -197,49 +233,50 @@ def analyze(document):
                    utc_elapsed_seconds=_time(raw["ended_at"]) - _time(raw["started_at"]),
                    qualified=qualified, capped_cost_seconds=elapsed if qualified else task["budget_seconds"])
         attempts.append(row)
-        grouped[raw["task_id"]][raw["language"]].append(row)
+        grouped[raw["task_id"]][series(raw)].append(row)
     families = defaultdict(list)
     task_results = []
     for task_id in sorted(tasks):
         task, rows = tasks[task_id], grouped[task_id]
         result = {"task_id": task_id, "family": task["family"], "kind": task["kind"],
                   "pairs": len(task["pair_ids"]), "variant_hash": task["variant_hash"]}
-        for language in ("my", "python"):
-            result[language + "_cost"] = _mean([r["capped_cost_seconds"] for r in rows[language]])
-            result[language + "_completion"] = _mean([int(r["qualified"]) for r in rows[language]])
-            result[language + "_qualified_count"] = sum(r["qualified"] for r in rows[language])
-            result[language + "_successful_only_seconds"] = _mean([r["elapsed_seconds"] for r in rows[language] if r["qualified"]])
+        for prefix, label in zip(prefixes, labels):
+            result[prefix + "_cost"] = _mean([r["capped_cost_seconds"] for r in rows[label]])
+            result[prefix + "_completion"] = _mean([int(r["qualified"]) for r in rows[label]])
+            result[prefix + "_qualified_count"] = sum(r["qualified"] for r in rows[label])
+            result[prefix + "_successful_only_seconds"] = _mean([r["elapsed_seconds"] for r in rows[label] if r["qualified"]])
         task_results.append(result)
         families[task["family"]].append(result)
     families = dict(sorted(families.items()))
-    aggregate = _aggregate(families)
+    aggregate = _aggregate(families, prefixes)
     rng = random.Random(reg["analysis"]["seed"])
     ratios = []
     for _ in range(reg["analysis"]["bootstrap_samples"]):
         sampled = {family: [rng.choice(rows) for _ in rows] for family, rows in families.items()}
-        ratios.append(_ratio(_aggregate(sampled)))
+        ratios.append(_ratio(_aggregate(sampled, prefixes), prefixes))
     ratios.sort()
     upper = ratios[min(len(ratios) - 1, math.ceil((1 - ALPHA_PER_GATE) * len(ratios)) - 1)]
-    difference = aggregate["my_completion"] - aggregate["python_completion"]
+    difference = aggregate[prefixes[0] + "_completion"] - aggregate[prefixes[1] + "_completion"]
     squared_weights = sum(1 / (len(families) ** 2 * len(rows)) for rows in families.values())
     # Each independent task-cluster completion difference is in [-1, 1].
     quality_lower = max(-1.0, difference - math.sqrt(2 * math.log(1 / ALPHA_PER_GATE) * squared_weights))
-    all_my = all(row["qualified"] for row in attempts if row["language"] == "my")
-    empirical_quality = all_my and difference >= 0
+    all_candidate = all(row["qualified"] for row in attempts if series(row) == labels[0])
+    empirical_quality = all_candidate and difference >= 0
     speed_met = upper <= 1.0
     confirmation = reg["phase"] == "confirmation"
-    family_results = {family: dict(_aggregate({family: rows}), task_count=len(rows)) for family, rows in families.items()}
-    counts = {language: {"attempted": sum(row["language"] == language for row in attempts),
-                         "qualified": sum(row["language"] == language and row["qualified"] for row in attempts),
-                         "statuses": dict(Counter(row["status"] for row in attempts if row["language"] == language))}
-              for language in ("my", "python")}
+    family_results = {family: dict(_aggregate({family: rows}, prefixes), task_count=len(rows)) for family, rows in families.items()}
+    counts = {label: {"attempted": sum(series(row) == label for row in attempts),
+                      "qualified": sum(series(row) == label and row["qualified"] for row in attempts),
+                      "statuses": dict(Counter(row["status"] for row in attempts if series(row) == label))}
+              for label in labels}
     return {
-        "schema_version": 1, "analysis_version": VERSION,
+        **({} if arms is None else {"arms": arms}),
+        "schema_version": 1, "analysis_version": version_for(reg["configuration"]),
         "registration_hash": document["registration_hash"], "configuration_hash": reg["configuration_hash"],
         "input_hash": canonical_hash(document), "study_id": reg["study_id"], "candidate_id": reg["candidate_id"],
-        "phase": reg["phase"], "look": reg["look"], "attempts": sorted(attempts, key=lambda r: (r["task_id"], r["pair_id"], r["language"])),
+        "phase": reg["phase"], "look": reg["look"], "attempts": sorted(attempts, key=lambda r: (r["task_id"], r["pair_id"], series(r))),
         "tasks": task_results, "families": family_results, "counts": counts,
-        "aggregate": dict(aggregate, cost_ratio=_ratio(aggregate), completion_difference=difference),
+        "aggregate": dict(aggregate, cost_ratio=_ratio(aggregate, prefixes), completion_difference=difference),
         "uncertainty": {"alpha_per_gate": ALPHA_PER_GATE, "planned_looks": LOOKS,
                         "bootstrap_seed": reg["analysis"]["seed"], "bootstrap_samples": len(ratios),
                         "cost_ratio_upper": upper, "quality_difference_lower": quality_lower,
