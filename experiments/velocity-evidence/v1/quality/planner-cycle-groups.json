@@ -1,0 +1,17 @@
+{
+  "verdict": "approve",
+  "summary": "The new iterative Tarjan traversal produces full cyclic SCCs, retains downstream jobs only in blocked, and emits deterministic sorted groups. Only cycle errors gain the new field. No concrete correctness or scope defect found.",
+  "findings": [],
+  "assessment": {
+    "scc_correctness": "submitted/cycles.my:27-85 implements discovery indices, lowlinks, an active stack, and explicit DFS parent/cursor state. Tree returns propagate child lowlinks; edges to active vertices lower with discovery indices; edges into completed SCCs are ignored. SCC roots pop all active members through the root. Traversing dependent-to-prerequisite edges reverses the existing graph, preserving SCC membership. planner.my:58-73 supplies edges grouped by dependent, matching the adjacency-range assumption.",
+    "membership_and_sorting": "cycles.my:94-133 includes every SCC larger than one and singleton SCCs only when a self-edge exists. Merely blocked descendants and removable upstream vertices are excluded from groups. Scanning sorted IDs emits each group at its first/smallest member, which sorts disjoint group arrays lexicographically; members are emitted in sorted ID order. Each vertex receives one SCC assignment.",
+    "bounds_and_ownership": "At 128 jobs, seven state words per vertex require 896 words of the existing 16,384-word unknown buffer; the active stack uses at most the existing 128-word scratch buffer. Blocked IDs are serialized before their buffer is reused for SCC state. Traversal is iterative, avoiding recursive depth growth. Mutable buffers are separate borrowed owners. SCC discovery is O(V+E); emission performs O(V^2) member scans and up to O(VE) singleton self-edge checks within the fixed bounds.",
+    "preservation": "planner.my:185-201 preserves the existing sorted blocked construction and appends cycles before closing the error object. Schema, prior errors, removal-based cycle detection, successful order, layers, timings and makespan are unchanged. Existing cycle fixture expectations and the dense-cycle stress expectation are updated only for the new field.",
+    "tests": "Added CLI tests cover two SCCs connected one way, a return edge merging SCCs, a self-loop, upstream removable jobs, blocked tails, reversed job/dependency order, and random graphs checked against an independent all-pairs-reachability oracle. Maximum 128-job rings and 128 distinct self-loops test traversal/stack depth and output grouping. Existing dense 128-job stress case checks one full SCC. These run under existing verification steps.",
+    "maintainability_and_scope": "The new cycles module isolates the algorithm and documents scratch layout, reversed-edge adjacency and ordering invariants. Existing buffers are reused only after earlier phase data is no longer needed. No fixture-specific behavior or unrelated change found."
+  },
+  "limitations": [
+    "Static source review only; no executable tests, build or resource-limit measurements performed. No Guardian gate exercised.",
+    "Reviewed supplied public brief and contract plus baseline/submitted source and tests; avoided README timing text, parent trial state, private cases/grading, transcripts and new-run timing information."
+  ]
+}

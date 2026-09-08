@@ -60,4 +60,11 @@ The summary retains unknown measurements as null. Never overwrite a prior iterat
 or claim test execution duration is developer delivery time. Add subsequent
 iterations to an append-only index and compare matched tasks before aggregating.
 
-Status: implementation in progress. Results will be filled only after execution.
+Status: completed 2026-09-08. See [the results and next experiment controls](velocity-iteration-v1-results.md).
+All six improvements, eight application retests, both three-stage maintenance
+sequences, and a second six-stage maintenance repeat are complete. The repeat
+corrected a discovered clock-placement mismatch; the original attempts remain
+recorded separately. All private grading and full declared application tests passed.
+Application delivery was 11.6% slower overall; matched small maintenance was 6.3%
+faster. Neither result establishes causality. Preparation remains outside application
+clocks, with 47.4 minutes elapsed before the tool/readiness freeze.

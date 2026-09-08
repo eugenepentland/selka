@@ -1,0 +1,4 @@
+verify: cli-contract
+verify: cli-dependency-lags
+verify: cli-slack
+verify: resource-bounds

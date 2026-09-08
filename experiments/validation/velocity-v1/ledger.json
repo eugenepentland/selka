@@ -2,7 +2,7 @@
   "version": "velocity-iteration-v1",
   "started_utc": "2026-09-07T23:41:57Z",
   "base_revision": "ed99a52",
-  "status": "validating-before-retests",
+  "status": "complete",
   "scored": false,
   "exact_model_id": null,
   "model_turns": null,
@@ -21,9 +21,54 @@
         "eda",
         "planner"
       ]
+    },
+    {
+      "log": "application-harness.log",
+      "tests_passed": 185
     }
   ],
-  "trials": [],
+  "trials": [
+    {
+      "task": "eda-clearance-boundary",
+      "summary": "/home/epentland/ai/canopy/application-trials/velocity-v1/eda-clearance-boundary/summary.json"
+    },
+    {
+      "task": "planner-input-boundary",
+      "summary": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-input-boundary/summary.json"
+    },
+    {
+      "task": "eda-pin-roles",
+      "summary": "/home/epentland/ai/canopy/application-trials/velocity-v1/eda-pin-roles/summary.json"
+    },
+    {
+      "task": "planner-priority",
+      "summary": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-priority/summary.json"
+    },
+    {
+      "task": "eda-rotation",
+      "summary": "/home/epentland/ai/canopy/application-trials/velocity-v1/eda-rotation/summary.json"
+    },
+    {
+      "task": "planner-cycle-groups",
+      "summary": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-cycle-groups/summary.json"
+    },
+    {
+      "task": "planner-dependency-lags",
+      "summary": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-dependency-lags/summary.json"
+    },
+    {
+      "task": "planner-slack",
+      "summary": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-slack/summary.json"
+    },
+    {
+      "cohort": "maintenance",
+      "summary": "/home/epentland/ai/canopy/application-trials/velocity-v1/maintenance/observations.json"
+    },
+    {
+      "cohort": "maintenance-matched",
+      "summary": "/home/epentland/ai/canopy/application-trials/velocity-v1/maintenance-matched/observations.json"
+    }
+  ],
   "implementation_revision": "b6776e7",
   "implementation_commits": [
     "3edb3b4",
@@ -36,5 +81,21 @@
     "8048512",
     "b6776e7"
   ],
-  "raw_iteration": "/home/epentland/ai/canopy/application-trials/velocity-v1"
+  "raw_iteration": "/home/epentland/ai/canopy/application-trials/velocity-v1",
+  "main_application_attempts": 8,
+  "maintenance_stages": 12,
+  "main_fresh_case_groups": 90,
+  "main_historical_case_groups": 90,
+  "cycle_limit_groups": 5,
+  "maintenance_fresh_observations": 1920,
+  "maintenance_historical_observations": 1920,
+  "all_accepted": true,
+  "declared_application_manifests_passed": 8,
+  "source_reviews": 20,
+  "post_review_test_fixes": 2,
+  "journal_prefix": {
+    "events": 57,
+    "last_sha256": "52017f421b14c21c90cda55c7362908996a10b1e6cc725938c8f4c0d50afd757"
+  },
+  "result_report": "docs/experiments/velocity-iteration-v1-results.md"
 }

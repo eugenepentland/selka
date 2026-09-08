@@ -1,0 +1,90 @@
+{
+  "verdict": "approve",
+  "summary": "All six submitted stages meet their public behavior, ownership and structural requirements by source inspection. No concrete source defects found.",
+  "stages": [
+    {
+      "stage": "a-stage1",
+      "verdict": "approve",
+      "findings": [],
+      "behavior": "ledger.my:19 fixes the summary loop to visit all four owned-buffer entries. Inclusive n >= floor, zero accumulators, existing signatures and total*100+count report satisfy stage 1.",
+      "ownership_and_modules": "The owned generic Vec<T:copy>, Open<T>, Status and Answer definitions persist. Acquisition uses try and generic noalloc append still calls append_buffer through the mutable owner borrow. discard try append propagates append errors through Answer. The borrow ends before read_buffer traversal; the owner remains local with no escape or added cleanup hazard. report still matches both Answer variants and maps errors unchanged. All three module boundaries persist.",
+      "continuity": "Initial repair starts from the supplied baseline.",
+      "scope_and_maintainability": "Only the requested stage-specific application changes appear. No fixture-specific branches, constant-answer substitution, obsolete Reply aliases or unrelated refactor. Four is the explicit application size, not a shortcut.",
+      "test_assessment": "Inspected each stage public checker and cases: report and individual Reply fields are exercised separately with exact expected returns. Cases cover all accepted, equality with floor, negative inputs and none accepted; stage 2/3 also cover positive and negative ceilings. These are provided fixtures, not evidence of executed results.",
+      "limitations": [
+        "Static review only; no compiler execution, runtime cleanup observation or allocation/append failure injection. Source snapshots cannot establish command-gateway compliance or invocation/edit/timing budgets."
+      ]
+    },
+    {
+      "stage": "a-stage2",
+      "verdict": "approve",
+      "findings": [],
+      "behavior": "ledger.my:7 and report.my:5 add and forward ceiling after floor. ledger.my:21-24 filters each original value against floor, adds min(n,ceiling), and counts every accepted entry including capped entries. Negative bounds and equality are correct; ceiling=100 preserves stage-1 results for the stated input range.",
+      "ownership_and_modules": "The owned generic Vec<T:copy>, Open<T>, Status and Answer definitions persist. Acquisition uses try and generic noalloc append still calls append_buffer through the mutable owner borrow. discard try append propagates append errors through Answer. The borrow ends before read_buffer traversal; the owner remains local with no escape or added cleanup hazard. report still matches both Answer variants and maps errors unchanged. All three module boundaries persist.",
+      "continuity": "Verified all three baseline modules are byte-identical to this cohort's previous-stage submitted modules.",
+      "scope_and_maintainability": "Only the requested stage-specific application changes appear. No fixture-specific branches, constant-answer substitution, obsolete Reply aliases or unrelated refactor. Four is the explicit application size, not a shortcut.",
+      "test_assessment": "Inspected each stage public checker and cases: report and individual Reply fields are exercised separately with exact expected returns. Cases cover all accepted, equality with floor, negative inputs and none accepted; stage 2/3 also cover positive and negative ceilings. These are provided fixtures, not evidence of executed results.",
+      "limitations": [
+        "Static review only; no compiler execution, runtime cleanup observation or allocation/append failure injection. Source snapshots cannot establish command-gateway compliance or invocation/edit/timing budgets."
+      ]
+    },
+    {
+      "stage": "a-stage3",
+      "verdict": "approve",
+      "findings": [],
+      "behavior": "model.my:10 replaces total/count with net/accepted/rejected and no aliases. ledger.my:28 returns the capped total, accepted count and 4-accepted. report.my:7 migrates the consumer and encodes net*100+accepted*10+rejected. Accepted is bounded by four, so rejected subtraction is safe. Stage-2 arguments remain unchanged.",
+      "ownership_and_modules": "The owned generic Vec<T:copy>, Open<T>, Status and Answer definitions persist. Acquisition uses try and generic noalloc append still calls append_buffer through the mutable owner borrow. discard try append propagates append errors through Answer. The borrow ends before read_buffer traversal; the owner remains local with no escape or added cleanup hazard. report still matches both Answer variants and maps errors unchanged. All three module boundaries persist.",
+      "continuity": "Verified all three baseline modules are byte-identical to this cohort's previous-stage submitted modules.",
+      "scope_and_maintainability": "Only the requested stage-specific application changes appear. No fixture-specific branches, constant-answer substitution, obsolete Reply aliases or unrelated refactor. Four is the explicit application size, not a shortcut.",
+      "test_assessment": "Inspected each stage public checker and cases: report and individual Reply fields are exercised separately with exact expected returns. Cases cover all accepted, equality with floor, negative inputs and none accepted; stage 2/3 also cover positive and negative ceilings. These are provided fixtures, not evidence of executed results.",
+      "limitations": [
+        "Static review only; no compiler execution, runtime cleanup observation or allocation/append failure injection. Source snapshots cannot establish command-gateway compliance or invocation/edit/timing budgets."
+      ]
+    },
+    {
+      "stage": "b-stage1",
+      "verdict": "approve",
+      "findings": [],
+      "behavior": "ledger.my:19 fixes the summary loop to visit all four owned-buffer entries. Inclusive n >= floor, zero accumulators, existing signatures and total*100+count report satisfy stage 1.",
+      "ownership_and_modules": "The owned generic Vec<T:copy>, Open<T>, Status and Answer definitions persist. Acquisition uses try and generic noalloc append still calls append_buffer through the mutable owner borrow. discard try append propagates append errors through Answer. The borrow ends before read_buffer traversal; the owner remains local with no escape or added cleanup hazard. report still matches both Answer variants and maps errors unchanged. All three module boundaries persist.",
+      "continuity": "Initial repair starts from the supplied baseline.",
+      "scope_and_maintainability": "Only the requested stage-specific application changes appear. No fixture-specific branches, constant-answer substitution, obsolete Reply aliases or unrelated refactor. Four is the explicit application size, not a shortcut.",
+      "test_assessment": "Inspected each stage public checker and cases: report and individual Reply fields are exercised separately with exact expected returns. Cases cover all accepted, equality with floor, negative inputs and none accepted; stage 2/3 also cover positive and negative ceilings. These are provided fixtures, not evidence of executed results.",
+      "limitations": [
+        "Static review only; no compiler execution, runtime cleanup observation or allocation/append failure injection. Source snapshots cannot establish command-gateway compliance or invocation/edit/timing budgets."
+      ]
+    },
+    {
+      "stage": "b-stage2",
+      "verdict": "approve",
+      "findings": [],
+      "behavior": "ledger.my:7 and report.my:5 add and forward ceiling after floor. ledger.my:21-24 filters each original value against floor, adds min(n,ceiling), and counts every accepted entry including capped entries. Negative bounds and equality are correct; ceiling=100 preserves stage-1 results for the stated input range.",
+      "ownership_and_modules": "The owned generic Vec<T:copy>, Open<T>, Status and Answer definitions persist. Acquisition uses try and generic noalloc append still calls append_buffer through the mutable owner borrow. discard try append propagates append errors through Answer. The borrow ends before read_buffer traversal; the owner remains local with no escape or added cleanup hazard. report still matches both Answer variants and maps errors unchanged. All three module boundaries persist.",
+      "continuity": "Verified all three baseline modules are byte-identical to this cohort's previous-stage submitted modules.",
+      "scope_and_maintainability": "Only the requested stage-specific application changes appear. No fixture-specific branches, constant-answer substitution, obsolete Reply aliases or unrelated refactor. Four is the explicit application size, not a shortcut.",
+      "test_assessment": "Inspected each stage public checker and cases: report and individual Reply fields are exercised separately with exact expected returns. Cases cover all accepted, equality with floor, negative inputs and none accepted; stage 2/3 also cover positive and negative ceilings. These are provided fixtures, not evidence of executed results.",
+      "limitations": [
+        "Static review only; no compiler execution, runtime cleanup observation or allocation/append failure injection. Source snapshots cannot establish command-gateway compliance or invocation/edit/timing budgets."
+      ]
+    },
+    {
+      "stage": "b-stage3",
+      "verdict": "approve",
+      "findings": [],
+      "behavior": "model.my:10 replaces total/count with net/accepted/rejected and no aliases. ledger.my:28 returns the capped total, accepted count and 4-accepted. report.my:7 migrates the consumer and encodes net*100+accepted*10+rejected. Accepted is bounded by four, so rejected subtraction is safe. Stage-2 arguments remain unchanged.",
+      "ownership_and_modules": "The owned generic Vec<T:copy>, Open<T>, Status and Answer definitions persist. Acquisition uses try and generic noalloc append still calls append_buffer through the mutable owner borrow. discard try append propagates append errors through Answer. The borrow ends before read_buffer traversal; the owner remains local with no escape or added cleanup hazard. report still matches both Answer variants and maps errors unchanged. All three module boundaries persist.",
+      "continuity": "Verified all three baseline modules are byte-identical to this cohort's previous-stage submitted modules.",
+      "scope_and_maintainability": "Only the requested stage-specific application changes appear. No fixture-specific branches, constant-answer substitution, obsolete Reply aliases or unrelated refactor. Four is the explicit application size, not a shortcut.",
+      "test_assessment": "Inspected each stage public checker and cases: report and individual Reply fields are exercised separately with exact expected returns. Cases cover all accepted, equality with floor, negative inputs and none accepted; stage 2/3 also cover positive and negative ceilings. These are provided fixtures, not evidence of executed results.",
+      "limitations": [
+        "Static review only; no compiler execution, runtime cleanup observation or allocation/append failure injection. Source snapshots cannot establish command-gateway compliance or invocation/edit/timing budgets."
+      ]
+    }
+  ],
+  "continuity": "Within each cohort, stage-2 baseline equals stage-1 submission and stage-3 baseline equals stage-2 submission across all three application modules.",
+  "limitations": [
+    "Only this bundle public tasks/checkers/cases and baseline/submitted modules were inspected for this review. No parent state, private grades, transcripts, timing records or historical solutions accessed.",
+    "Public cases do not inject allocation/append failure or exhaustively test numeric bounds; propagation is assessed from preserved try paths. Runtime owner cleanup was not independently executed.",
+    "No Guardian gate exercised. No comparative outcome or timing inference made."
+  ]
+}

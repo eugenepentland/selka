@@ -1,0 +1,26 @@
+{
+  "verdict": "approve_with_nits",
+  "summary": "The single application predicate change exactly implements submitted/.trial-public/brief.md and CONTRACT.md: strict clearance comparison with positive-area overlap rejection at zero clearance. No application correctness or scope defect found by source inspection.",
+  "findings": [
+    {
+      "file": "submitted/test_clearance.py",
+      "line": 39,
+      "severity": "low",
+      "title": "Boundary tests do not assert result count",
+      "detail": "zip silently truncates if the application returns fewer results than requested, including an empty results array. The new batch boundary tests could report success without checking every fixture.",
+      "recommendation": "Assert len(results) equals the batch size before iterating, or use zip with strict=True."
+    }
+  ],
+  "assessment": {
+    "behavior": "Squared gap distance now uses <, so horizontal, vertical, and diagonal equality pass. Edge and corner contact at zero clearance pass; positive-area intersection and containment still fail via the unchanged overlap term.",
+    "arithmetic": "Existing schema limits coordinates to +/-1,000,000 and dimensions/clearance to at most 1,000,000 with at most 1000 unit scaling. The two squared gaps total less than 8e18 and remain in signed i64; this edit introduces no arithmetic changes.",
+    "regressions": "Serialization, ordering, schema validation, connectivity and normalized rectangle construction are unchanged. Existing CLI tests already assert equality and touching behavior.",
+    "tests": "New public JSON-interface fixtures cover equality and nearby thresholds, both units, input order reversal, edge/corner contact, overlap, containment, and a maximum-clearance scaled 3-4-5 case. Full returned result objects are checked. The new suite is registered in verify.json.",
+    "ownership_and_maintainability": "No ownership or generic structure changes. Small predicate fix and a concise explanatory comment preserve existing architecture.",
+    "scope": "Only the clearance predicate, dedicated tests, and verification registration change. No fixed-case application workaround found."
+  },
+  "limitations": [
+    "Static source review only; no build or tests executed and no Guardian gate exercised.",
+    "No parent trial state, private cases, grading, transcripts or external experiment reports inspected. Accidental exposure to historical timing text embedded in the supplied README was disregarded; no new-run timing information was inspected."
+  ]
+}

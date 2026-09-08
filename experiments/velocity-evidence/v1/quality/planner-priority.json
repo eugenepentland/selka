@@ -1,0 +1,16 @@
+{
+  "verdict": "approve",
+  "summary": "The submission adds checked optional priority and chooses the highest-priority ready job with ASCII ID ties. The public brief is implemented without changing layers, timing reports, cycle handling or output schema. No concrete correctness or scope defect found.",
+  "findings": [],
+  "assessment": {
+    "schema": "submitted/schema.my:72-96 requires an object, restricts keys to id/duration/needs/priority, keeps all original fields required, and uses integer_or with a missing-only zero default followed by inclusive -1000..1000 bounds. Present null, floats and booleans fail the typed accessor. Strict parsing and duplicate-key handling are unchanged.",
+    "selection": "submitted/planner.my:54-65 and 119-124 cache validated priorities in Job. Lines 209-220 scan every currently-ready job after each removal, replacing a candidate only for a strictly higher priority. Existing ascending ID indexing therefore supplies the requested tie break. Negative priorities work because the first ready candidate is accepted independently of its value. Dependencies still gate eligibility.",
+    "preservation": "Complete schema and semantic validation still precede planning. The separate cycle-removal pass and sorted blocked report are unchanged. The selected job finish time remains max prerequisite finish plus duration, valid for any topological order. Layers still snapshot the ready set per round in ID order; timings remain ID sorted and makespan remains maximum finish. Zero defaults reproduce the previous ready-selection policy.",
+    "tests": "test_priority.py exercises all job-order permutations and both dependency orders for a newly-ready high-priority job, negative/default/zero/tied priorities and both bounds, unchanged layers and explicit full timings, cycles with downstream blocked jobs across permutations, validation precedence, wrong types and ranges, original missing fields, unrelated extras, duplicate and escaped duplicate keys, and signed-64 overflow. The suite is registered in verify.json and original suites remain intact.",
+    "ownership_and_maintainability": "A scalar Job field and small accessor fit existing storage and borrowing. Full ready scans are O(n^2) with n capped at 128, preserving the existing worst-case order. The schema key ranges match their combined literal. No fixed-case special casing or unrelated application changes found."
+  },
+  "limitations": [
+    "Static source review only; no build, executable tests or resource-envelope measurements performed. No Guardian gate exercised.",
+    "Reviewed supplied public brief, contract and relevant library API contract plus baseline/submitted source and tests; avoided README timing text, parent trial state, private cases/grading, transcripts and new-run timing information."
+  ]
+}

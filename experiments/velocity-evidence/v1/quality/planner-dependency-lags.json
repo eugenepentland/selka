@@ -1,0 +1,16 @@
+{
+  "verdict": "approve",
+  "summary": "Mixed string/object dependencies are schema-checked and consistently normalized to decoded prerequisite IDs. Timing includes each edge lag while graph reports and error precedence retain v1 behavior. No concrete correctness or scope defect found.",
+  "findings": [],
+  "assessment": {
+    "schema": "submitted/schema.my:27-40 accepts valid identifier strings or exact two-field objects with required id and lag, validates identifier grammar and integer lag in 0..1,000,000, and rejects wrong types/missing/extra fields. The existing checked cursor advances across whole object subtrees; needs/job/request limits and strict parser are unchanged.",
+    "identity_and_precedence": "dependency_id is used in graph construction (planner.my:64), duplicate-dependency sorting (123), unknown-reference collection (154), and timing lookup (216). Therefore decoded identity is independent of representation and lag. Full schema, duplicate job IDs, duplicate dependencies, unknown dependencies and cycle handling retain their existing sequence and response shapes.",
+    "timing_and_graph": "planner.my:213-222 takes the maximum prerequisite finish plus that entry lag, then adds job duration. Strings supply zero lag. Graph edges contain only resolved IDs, so order/layers/cycle blockage are unchanged, including zero-lag zero-duration self-loops. Across 128 acyclic jobs, maximum finish is 128*1,000,000 + 127*1,000,000 = 255,000,000, safely within i64.",
+    "tests": "test_lags.py checks complete branch/join reports across job and dependency permutations, zero-lag equivalence, malformed object/type/boundary cases and schema precedence, mixed/different-lag duplicates, deduplicated unknown IDs, cycles and unknown-before-cycle ordering, escaped identifiers/keys and duplicate JSON keys. A 128-job maximum-duration/lag chain checks every timing, and 128/129 dependency cases check count limits. stress_cli.py adds object-form variants at maximum dense/reference counts. Existing tests change only an obsolete now-valid schema fixture and verification registers the new suite.",
+    "ownership_and_maintainability": "Small schema adapters centralize the two supported representations and document their validated-input precondition. All dependency consumers use them while subtree traversal remains intact. No new owned state or scratch buffer sizing changes are required. Application changes remain task-scoped with no fixture-specific logic."
+  },
+  "limitations": [
+    "Static source review only; no build, executable tests or resource-limit measurements performed. No Guardian gate exercised.",
+    "Reviewed supplied public brief and contract plus baseline/submitted source and tests; avoided README timing text, parent trial state, private cases/grading, transcripts and new-run timing information."
+  ]
+}

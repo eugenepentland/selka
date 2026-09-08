@@ -986,3 +986,13 @@ participants; their gateway receives only the projected public task/practice fil
 The integration test uses placeholder executables without running them, verifies
 full cohort binding and no reservations, and covers invalid settings, overwrite
 rejection and retained setup failure.
+
+
+## Velocity iteration v1 — 2026-09-08
+
+[Six language/tooling improvements and the complete retest report](../../docs/experiments/velocity-iteration-v1-results.md)
+retain eight application runs, two maintenance dispatch cohorts, source reviews,
+full test manifests, historical replays and all failed attempts. The versioned
+[evidence index](evidence/velocity-iterations.jsonl) is append-only. Application
+time increased 11.6% despite fewer recorded commands/failures; keep verification
+workload and clock placement identical in subsequent comparisons.

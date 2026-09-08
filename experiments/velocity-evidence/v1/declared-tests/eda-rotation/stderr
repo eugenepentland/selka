@@ -1,0 +1,3 @@
+verify: cli
+verify: schema
+verify: rotation

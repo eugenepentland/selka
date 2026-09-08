@@ -1,0 +1,90 @@
+{
+  "verdict": "approve",
+  "summary": "All six staged submissions meet their respective public behavior and structural requirements by source inspection. No concrete source defects found.",
+  "stages": [
+    {
+      "stage": "a-stage1",
+      "verdict": "approve",
+      "findings": [],
+      "behavior": "ledger.my:19 changes the summary loop bound from three to four, matching the four appended inputs. Inclusive floor filtering, zero initial accumulators, original signatures and total*100+count report remain correct.",
+      "ownership_and_modules": "Owned model::Vec<T>, Open<T>, Status and Answer remain intact. The allocator acquisition uses try; append<T:copy> remains generic/noalloc and calls append_buffer through a mutable borrow. Each append uses discard try, preserving propagation rather than swallowing errors. The mutable borrow ends before owned-buffer reads and scope exit; no ownership escape, duplicate owner or added resource is introduced. model/ledger/report boundaries remain intact.",
+      "continuity": "Initial repair starts from the supplied baseline.",
+      "scope_and_maintainability": "Minimal stage-specific changes; fixed bound four is the application contract, not a case-specific shortcut. No fixture values or constant-result replacements appear.",
+      "test_assessment": "Public checker compiles/runs report and each Reply field separately and checks exact returned values. Supplied cases cover all accepted, floor equality, negative accepted values and none accepted; capped stages add positive and negative ceilings. Cases/checker are provided public materials, not evidence of execution.",
+      "limitations": [
+        "Static review only; no compiler/check execution or allocation-failure injection. Command-gateway compliance, edit/check counts and timing cannot be assessed from source snapshots."
+      ]
+    },
+    {
+      "stage": "a-stage2",
+      "verdict": "approve",
+      "findings": [],
+      "behavior": "ledger.my:7 and report.my:5 add ceiling after floor and forward it across the module boundary. ledger.my:21-24 filters original n >= floor, caps only the summed value, and increments count even when capped. Negative ceilings and equality are handled. ceiling=100 preserves prior behavior under the documented input bounds.",
+      "ownership_and_modules": "Owned model::Vec<T>, Open<T>, Status and Answer remain intact. The allocator acquisition uses try; append<T:copy> remains generic/noalloc and calls append_buffer through a mutable borrow. Each append uses discard try, preserving propagation rather than swallowing errors. The mutable borrow ends before owned-buffer reads and scope exit; no ownership escape, duplicate owner or added resource is introduced. model/ledger/report boundaries remain intact.",
+      "continuity": "All three baseline modules are byte-identical to this cohort's preceding submitted modules.",
+      "scope_and_maintainability": "Minimal stage-specific changes; fixed bound four is the application contract, not a case-specific shortcut. No fixture values or constant-result replacements appear.",
+      "test_assessment": "Public checker compiles/runs report and each Reply field separately and checks exact returned values. Supplied cases cover all accepted, floor equality, negative accepted values and none accepted; capped stages add positive and negative ceilings. Cases/checker are provided public materials, not evidence of execution.",
+      "limitations": [
+        "Static review only; no compiler/check execution or allocation-failure injection. Command-gateway compliance, edit/check counts and timing cannot be assessed from source snapshots."
+      ]
+    },
+    {
+      "stage": "a-stage3",
+      "verdict": "approve",
+      "findings": [],
+      "behavior": "model.my:10 replaces Reply with net/accepted/rejected and no aliases. ledger.my accumulates capped net and accepted exactly as stage 2 and returns rejected=4-accepted; accepted stays in 0..4, so unsigned subtraction is safe. report.my:7 consumes only new fields and uses net*100+accepted*10+rejected. Stage-2 arguments and error mapping remain unchanged.",
+      "ownership_and_modules": "Owned model::Vec<T>, Open<T>, Status and Answer remain intact. The allocator acquisition uses try; append<T:copy> remains generic/noalloc and calls append_buffer through a mutable borrow. Each append uses discard try, preserving propagation rather than swallowing errors. The mutable borrow ends before owned-buffer reads and scope exit; no ownership escape, duplicate owner or added resource is introduced. model/ledger/report boundaries remain intact.",
+      "continuity": "All three baseline modules are byte-identical to this cohort's preceding submitted modules.",
+      "scope_and_maintainability": "Minimal stage-specific changes; fixed bound four is the application contract, not a case-specific shortcut. No fixture values or constant-result replacements appear.",
+      "test_assessment": "Public checker compiles/runs report and each Reply field separately and checks exact returned values. Supplied cases cover all accepted, floor equality, negative accepted values and none accepted; capped stages add positive and negative ceilings. Cases/checker are provided public materials, not evidence of execution.",
+      "limitations": [
+        "Static review only; no compiler/check execution or allocation-failure injection. Command-gateway compliance, edit/check counts and timing cannot be assessed from source snapshots."
+      ]
+    },
+    {
+      "stage": "b-stage1",
+      "verdict": "approve",
+      "findings": [],
+      "behavior": "ledger.my:19 changes the summary loop bound from three to four, matching the four appended inputs. Inclusive floor filtering, zero initial accumulators, original signatures and total*100+count report remain correct.",
+      "ownership_and_modules": "Owned model::Vec<T>, Open<T>, Status and Answer remain intact. The allocator acquisition uses try; append<T:copy> remains generic/noalloc and calls append_buffer through a mutable borrow. Each append uses discard try, preserving propagation rather than swallowing errors. The mutable borrow ends before owned-buffer reads and scope exit; no ownership escape, duplicate owner or added resource is introduced. model/ledger/report boundaries remain intact.",
+      "continuity": "Initial repair starts from the supplied baseline.",
+      "scope_and_maintainability": "Minimal stage-specific changes; fixed bound four is the application contract, not a case-specific shortcut. No fixture values or constant-result replacements appear.",
+      "test_assessment": "Public checker compiles/runs report and each Reply field separately and checks exact returned values. Supplied cases cover all accepted, floor equality, negative accepted values and none accepted; capped stages add positive and negative ceilings. Cases/checker are provided public materials, not evidence of execution.",
+      "limitations": [
+        "Static review only; no compiler/check execution or allocation-failure injection. Command-gateway compliance, edit/check counts and timing cannot be assessed from source snapshots."
+      ]
+    },
+    {
+      "stage": "b-stage2",
+      "verdict": "approve",
+      "findings": [],
+      "behavior": "ledger.my:7 and report.my:5 add ceiling after floor and forward it across the module boundary. ledger.my:21-24 filters original n >= floor, caps only the summed value, and increments count even when capped. Negative ceilings and equality are handled. ceiling=100 preserves prior behavior under the documented input bounds.",
+      "ownership_and_modules": "Owned model::Vec<T>, Open<T>, Status and Answer remain intact. The allocator acquisition uses try; append<T:copy> remains generic/noalloc and calls append_buffer through a mutable borrow. Each append uses discard try, preserving propagation rather than swallowing errors. The mutable borrow ends before owned-buffer reads and scope exit; no ownership escape, duplicate owner or added resource is introduced. model/ledger/report boundaries remain intact.",
+      "continuity": "All three baseline modules are byte-identical to this cohort's preceding submitted modules.",
+      "scope_and_maintainability": "Minimal stage-specific changes; fixed bound four is the application contract, not a case-specific shortcut. No fixture values or constant-result replacements appear.",
+      "test_assessment": "Public checker compiles/runs report and each Reply field separately and checks exact returned values. Supplied cases cover all accepted, floor equality, negative accepted values and none accepted; capped stages add positive and negative ceilings. Cases/checker are provided public materials, not evidence of execution.",
+      "limitations": [
+        "Static review only; no compiler/check execution or allocation-failure injection. Command-gateway compliance, edit/check counts and timing cannot be assessed from source snapshots."
+      ]
+    },
+    {
+      "stage": "b-stage3",
+      "verdict": "approve",
+      "findings": [],
+      "behavior": "model.my:10 replaces Reply with net/accepted/rejected and no aliases. ledger.my accumulates capped net and accepted exactly as stage 2 and returns rejected=4-accepted; accepted stays in 0..4, so unsigned subtraction is safe. report.my:7 consumes only new fields and uses net*100+accepted*10+rejected. Stage-2 arguments and error mapping remain unchanged.",
+      "ownership_and_modules": "Owned model::Vec<T>, Open<T>, Status and Answer remain intact. The allocator acquisition uses try; append<T:copy> remains generic/noalloc and calls append_buffer through a mutable borrow. Each append uses discard try, preserving propagation rather than swallowing errors. The mutable borrow ends before owned-buffer reads and scope exit; no ownership escape, duplicate owner or added resource is introduced. model/ledger/report boundaries remain intact.",
+      "continuity": "All three baseline modules are byte-identical to this cohort's preceding submitted modules.",
+      "scope_and_maintainability": "Minimal stage-specific changes; fixed bound four is the application contract, not a case-specific shortcut. No fixture values or constant-result replacements appear.",
+      "test_assessment": "Public checker compiles/runs report and each Reply field separately and checks exact returned values. Supplied cases cover all accepted, floor equality, negative accepted values and none accepted; capped stages add positive and negative ceilings. Cases/checker are provided public materials, not evidence of execution.",
+      "limitations": [
+        "Static review only; no compiler/check execution or allocation-failure injection. Command-gateway compliance, edit/check counts and timing cannot be assessed from source snapshots."
+      ]
+    }
+  ],
+  "continuity": "Verified within each cohort: stage-2 baseline equals stage-1 submission and stage-3 baseline equals stage-2 submission across all three modules.",
+  "limitations": [
+    "No parent state, private grades, transcripts, timing records or historical solutions inspected. No inference about run outcomes or comparative timing.",
+    "Public fixtures do not force allocation/append failure or exhaustively cover all numeric bounds; error propagation is assessed from preserved try paths. Runtime cleanup semantics were not independently executed.",
+    "No Guardian gate exercised."
+  ]
+}

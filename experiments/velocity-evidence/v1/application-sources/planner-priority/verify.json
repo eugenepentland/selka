@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "steps": [
+    {
+      "id": "cli-contract",
+      "kind": "test",
+      "commands": [
+        [
+          "/usr/bin/python3",
+          "-B",
+          "test_cli.py"
+        ]
+      ],
+      "timeout": 120
+    },
+    {
+      "id": "cli-priority",
+      "kind": "test",
+      "commands": [
+        [
+          "/usr/bin/python3",
+          "-B",
+          "test_priority.py"
+        ]
+      ],
+      "timeout": 60
+    },
+    {
+      "id": "resource-bounds",
+      "kind": "test",
+      "commands": [
+        [
+          "/usr/bin/python3",
+          "-B",
+          "stress_cli.py"
+        ]
+      ],
+      "timeout": 400
+    }
+  ]
+}

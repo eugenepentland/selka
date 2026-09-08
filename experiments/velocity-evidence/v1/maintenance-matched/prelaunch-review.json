@@ -1,0 +1,28 @@
+{
+  "version": "velocity-maintenance-handoff-prelaunch-v2",
+  "status": "prepared-no-clocks",
+  "mock_tests_passed": 9,
+  "original_documentation_files_identical": true,
+  "original_frozen_compiler_identical": true,
+  "stages_prepared": [
+    "A:1",
+    "B:1"
+  ],
+  "clocks_started": 0,
+  "clock_policy": "explicit coordinator begin before each stage dispatch; bridge cannot start clock",
+  "transition_policy": "finish prepares next stage and returns await-coordinator; participant returns final response",
+  "measurement": "start-to-last-command retained; begin-to-first-command reported separately, no subtraction",
+  "evidence": {
+    "freeze.json": "7f9bde327b76585a912c93d974ad9c048df99e5ea054df8103778e5b26723320",
+    "config.json": "b780767c105b83ed277767bece924423e1b2450974432013df56c7adf3b38c04",
+    "tooling-test.log": "31fee74ca91764ff428912a09870cbe01b998b86899b47ff32b2bbbf7fdc0d92",
+    "coordinator.py": "63fbfb7425d3910158dc385004d87a8404f63642e8e2640da122173c93fc2748",
+    "participant_bridge.py": "72375ea09904dd4fcf56ab1370469e9f2d06d4feaa5a418dcd3aa4bdb8ac5474",
+    "participant-prompt.txt": "b68a1608581debbacbfff724c525f3ea59778390f39e9e825244b4f52fbc4396",
+    "README.md": "de73fef589182e85859c89d983a753d2313187a3e3a8c4ffefb2354c5c735318"
+  },
+  "limits": [
+    "Mocked gateway testing only; no timed execution or outcome claim",
+    "Fresh agents and transcript boundary review remain coordinator responsibilities"
+  ]
+}

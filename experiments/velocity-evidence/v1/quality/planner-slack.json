@@ -1,0 +1,25 @@
+{
+  "verdict": "approve_with_nits",
+  "summary": "The reverse-topological backward pass applies the common makespan deadline and lag-aware successor constraints correctly. Slack and sorted critical IDs match the public brief, with inherited lag behavior preserved. No application correctness defect found; one minor test completeness issue.",
+  "findings": [
+    {
+      "file": "submitted/test_slack.py",
+      "line": 45,
+      "severity": "low",
+      "title": "Independent schedule checks can silently skip missing results",
+      "detail": "zip(graphs, results) truncates without checking that all requested graphs returned results. The later loop over result timings likewise does not verify one timing per job. The independent enumeration test could therefore pass on truncated results or missing timing entries. Other explicit fixtures provide some coverage, but this weakens the broadest independent check.",
+      "recommendation": "Assert result count equals graph count before zipping and assert timing IDs equal all expected sorted job IDs before checking each timing."
+    }
+  ],
+  "assessment": {
+    "backward_equations": "submitted/planner.my:86-116 initializes each latest start to makespan minus its duration, then visits the saved topological order in reverse. Each prerequisite is tightened to successor.latest_start minus edge lag minus prerequisite duration, taking the minimum over successors. Successor latest values are final when propagated. This enforces both individual deadlines and all lag constraints, including disconnected components and zero-duration jobs.",
+    "slack_and_output": "Lines 311-316 compute latest_start minus unchanged earliest start; lines 319-332 emit exactly zero-slack IDs by the existing ASCII-sorted ID array. New output fragments close timings, serialize critical, then preserve makespan. Empty graphs yield empty timings/critical and zero makespan; error paths return before any success-only field.",
+    "preservation_and_bounds": "Schema, mixed dependency adapters, duplicate identity handling, validation precedence and error shapes are unchanged. The earliest pass, ready ordering and layers remain intact. Maximum makespan remains 255,000,000 for 128 jobs with maximum durations/lags, safely within i64. The existing 128-word scratch buffer saves at most one index per job after duplicate validation and is consumed before later phases could reuse it.",
+    "tests": "Explicit fixtures cover lag-constrained joins, disconnected slack, multiple critical paths, zero-duration chains and job/dependency permutations. An independent enumerator checks feasible schedules for 24 small DAGs. A dense 128-job maximum-duration/lag DAG and updated inherited maximum chain check bounds. Existing baseline/lag expected results are extended with required fields; error fixtures are retained and verify.json adds the slack suite.",
+    "maintainability_and_scope": "A focused latest helper and one scalar Job field fit existing ownership and storage. The reverse pass is O(V + E log V) using existing identifier lookup. No extra input knobs, fixture-specific logic or unrelated behavior changes appear."
+  },
+  "limitations": [
+    "Static source review only; no build, executable tests or resource-limit measurements performed. No Guardian gate exercised.",
+    "Reviewed supplied public brief and contract including inherited lags plus baseline/submitted source and tests; avoided README timing text, parent trial state, private cases/grading, transcripts and new-run timing information."
+  ]
+}

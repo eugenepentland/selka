@@ -1,0 +1,71 @@
+// Application schema predicates and report adapters over the standard JSON tape.
+module json;
+import io;
+import std_json;
+import std_text;
+import std_ascii;
+export equal;
+export integer;
+export text;
+export number;
+export quoted;
+export identifier;
+export less;
+export next;
+fn equal(t: &[]i64, a: i64, b: i64) -> bool {
+    return std_json::equal(t, a, b);
+}
+fn less(t: &[]i64, a: i64, b: i64) -> bool {
+    return std_json::compare(t, a, b) < 0;
+}
+fn next(t: &[]i64, p: i64) -> i64 {
+    return std_json::get(t, p, 3);
+}
+fn integer(t: &[]i64, p: i64) -> i64 {
+    if std_json::get(t, p, 0) != 4 {
+        return - 1;
+    }
+    return std_json::get(t, p, 5);
+}
+fn identifier(t: &[]i64, p: i64) -> bool {
+    if std_json::get(t, p, 0) != 3 {
+        return false;
+    }
+    let start = std_json::get(t, p, 1);
+    let end = std_json::get(t, p, 2);
+    let head = new std_ascii::Class {
+        lower: true,
+        upper: false,
+        digit: false,
+        underscore: false,
+        hyphen: false
+    };
+    let tail = new std_ascii::Class {
+        lower: true,
+        upper: false,
+        digit: true,
+        underscore: true,
+        hyphen: true
+    };
+    borrow t[cast<u64>(start)..cast<u64>(end)] as name {
+        return std_ascii::matches::< i64 >(name, head, tail, 1u64, 32u64);
+    }
+}
+fn text(s: &[]u8) -> i64 {
+    return std_text::emit(s);
+}
+fn number(n: i64) -> i64 {
+    return std_text::number(n);
+}
+// Schema-approved identifiers contain only printable ASCII without JSON escapes.
+fn quoted(t: &[]i64, p: i64) -> i64 {
+    discard io::put(34u8);
+    let mut i = std_json::get(t, p, 1);
+    let end = std_json::get(t, p, 2);
+    while i < end {
+        discard io::put(cast<u8>(read_slice(t, i)));
+        i += 1;
+    }
+    discard io::put(34u8);
+    return 0;
+}

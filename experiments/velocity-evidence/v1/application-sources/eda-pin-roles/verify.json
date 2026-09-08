@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "steps": [
+    {
+      "id": "cli",
+      "kind": "test",
+      "commands": [
+        [
+          "/usr/bin/python3",
+          "-B",
+          "test_cli.py"
+        ]
+      ],
+      "timeout": 60
+    },
+    {
+      "id": "schema",
+      "kind": "test",
+      "commands": [
+        [
+          "/usr/bin/python3",
+          "-B",
+          "test_schema.py"
+        ]
+      ],
+      "timeout": 60
+    },
+    {
+      "id": "pin-roles",
+      "kind": "test",
+      "commands": [
+        [
+          "/usr/bin/python3",
+          "-B",
+          "test_pin_roles.py"
+        ]
+      ],
+      "timeout": 60
+    }
+  ]
+}

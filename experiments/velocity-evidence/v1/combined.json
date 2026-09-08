@@ -1,0 +1,1280 @@
+{
+  "acceptance_rule": "Current speed reduction is reported only if fresh AND historical packs accept current development and original historical development was accepted.",
+  "comparisons": [
+    {
+      "comparison": {
+        "accepted_both": true,
+        "causal_claim": false,
+        "current": {
+          "accepted": true,
+          "application_seconds": 104.425744061,
+          "fresh_pack_accepted": true,
+          "historical_pack_accepted": true,
+          "language": "my",
+          "task": "eda-clearance-boundary"
+        },
+        "delta_seconds": 14.794032961,
+        "interpretation": "historical task comparison; changed agents, baselines, tools and cases may affect time",
+        "previous": {
+          "accepted": true,
+          "application_seconds": 89.6317111,
+          "language": "my",
+          "task": "eda-clearance-boundary"
+        },
+        "reduction_percent": -16.505355949854227,
+        "task": "eda-clearance-boundary"
+      },
+      "failed_public_submissions": 0,
+      "historical_metrics": {
+        "adjacent_unchanged_task_checks": 0,
+        "cache_hits": null,
+        "limitations": [
+          "Direct search counts exclude searches embedded in shells or scripts.",
+          "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+          "Output bytes are captured command output, not source bytes read or model context.",
+          "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+        ],
+        "phases": {
+          "preparing": {
+            "captured_output_bytes": 7174,
+            "command_count": 3,
+            "command_interval_seconds": 0.284041837,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          },
+          "working": {
+            "captured_output_bytes": 25230,
+            "command_count": 9,
+            "command_interval_seconds": 1.757854006,
+            "direct_search_commands": 0,
+            "failed_commands": 1,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {
+              "compiler-check": 1
+            }
+          }
+        },
+        "queue_wait_seconds": null,
+        "relevant_location_seconds": null,
+        "session_sha256": "4a3d0cfee0f866302535398dea4c06330c73d86dd2cb6aff2b2a3771fe5c9cec",
+        "submission_to_check_seconds": [
+          0.297140505
+        ],
+        "task_checks": 1,
+        "uncommitted_command_records": [],
+        "version": "observed-tool-metrics-v1"
+      },
+      "historical_preparation_seconds": 22.059451522,
+      "historical_source_sha256": "7993a3cffe61046b770760319cfccfbd92f39cdbe056b725835f1a7dc31db1ba",
+      "metrics": {
+        "adjacent_unchanged_task_checks": 0,
+        "cache_hits": null,
+        "limitations": [
+          "Direct search counts exclude searches embedded in shells or scripts.",
+          "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+          "Output bytes are captured command output, not source bytes read or model context.",
+          "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+        ],
+        "phases": {
+          "preparing": {
+            "captured_output_bytes": 6936,
+            "command_count": 2,
+            "command_interval_seconds": 0.204144478,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          },
+          "working": {
+            "captured_output_bytes": 88288,
+            "command_count": 5,
+            "command_interval_seconds": 2.706348135,
+            "direct_search_commands": 0,
+            "failed_commands": 1,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {
+              "project-workflow": 1
+            }
+          }
+        },
+        "queue_wait_seconds": null,
+        "relevant_location_seconds": null,
+        "session_sha256": "de7db375505f8c153ca1c5ac9cf7efa1904736fa114700b37be259335cf4844c",
+        "submission_to_check_seconds": [
+          0.294870151
+        ],
+        "task_checks": 1,
+        "uncommitted_command_records": [],
+        "version": "observed-tool-metrics-v1"
+      },
+      "preparation_seconds": 15.160247914,
+      "public_submissions": 1,
+      "references": {
+        "configuration": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/eda-clearance-boundary/my-configuration.json",
+          "sha256": "394dabdf4819e675cf32d2369c4947cc6abead0ed3e19ff0fe3c169174f649df"
+        },
+        "fresh_result": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/eda-clearance-boundary/grading/result.json",
+          "sha256": "cd04c0f86a7f9a28915b60efedc8e8ecca3d6c850dbfc49952855b7a1d8bdcfd"
+        },
+        "historical_evidence": {
+          "configuration": {
+            "path": "/home/epentland/ai/canopy/application-trials/direct-20260907-clearance/my-configuration.json",
+            "sha256": "0b96509e8f6dd1f4a7f09d4eaf23b15e2aee700dab884f82fa989b14c5d18646"
+          },
+          "pack": {
+            "path": "/home/epentland/ai/canopy/application-trials/direct-20260907-clearance/pack/pack.json",
+            "sha256": "dbac8e7937843fb56b1f2bf2632bac53cfbebeec21e5065c513b722d5c555247"
+          },
+          "protocol": {
+            "path": "/home/epentland/ai/canopy/application-trials/direct-20260907-clearance/protocol.json",
+            "sha256": "a1d56c006e8e78e438db1195a58b06d624f85cdd7a340b82e49eaa398a61feac"
+          },
+          "session": {
+            "path": "/home/epentland/ai/canopy/application-trials/direct-20260907-clearance/my/session.json",
+            "sha256": "d73d34b993fdcf53a501ffb996735358abdf7f6c33a2c1e2ba07452353a5ead9"
+          },
+          "summary": {
+            "path": "/home/epentland/ai/canopy/application-trials/direct-20260907-clearance/summary.json",
+            "sha256": "e078aa52f9be72eff6982fb0112b18e57a6ef2944357e600aadaee3777405984"
+          }
+        },
+        "historical_replay": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/reporting/replays/eda-clearance-boundary/receipt.json",
+          "sha256": "296325ecfc7a48e703506c26fe9da70519a0e448d2baf1d0193cfb996696e4b5"
+        },
+        "protocol": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/eda-clearance-boundary/protocol.json",
+          "sha256": "acdefdeccc6894fdbb89454eb83d78c5a350a33c58107736e99f1fbaec30ff3f"
+        },
+        "summary": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/eda-clearance-boundary/summary.json",
+          "sha256": "f54f4f00d515838afb18777e49e9a1b81432228c03730d5f60122990891b0039"
+        }
+      },
+      "seal_reason": "completed",
+      "source_sha256": "be80010a35b30510addf83aaa3bf3b2f83b8adeff11932f6224ce420e2bd887a"
+    },
+    {
+      "comparison": {
+        "accepted_both": true,
+        "causal_claim": false,
+        "current": {
+          "accepted": true,
+          "application_seconds": 90.867394212,
+          "fresh_pack_accepted": true,
+          "historical_pack_accepted": true,
+          "language": "my",
+          "task": "planner-input-boundary"
+        },
+        "delta_seconds": -4.158633222000006,
+        "interpretation": "historical task comparison; changed agents, baselines, tools and cases may affect time",
+        "previous": {
+          "accepted": true,
+          "application_seconds": 95.026027434,
+          "language": "my",
+          "task": "planner-input-boundary"
+        },
+        "reduction_percent": 4.376309664095313,
+        "task": "planner-input-boundary"
+      },
+      "failed_public_submissions": 0,
+      "historical_metrics": {
+        "adjacent_unchanged_task_checks": 0,
+        "cache_hits": null,
+        "limitations": [
+          "Direct search counts exclude searches embedded in shells or scripts.",
+          "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+          "Output bytes are captured command output, not source bytes read or model context.",
+          "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+        ],
+        "phases": {
+          "preparing": {
+            "captured_output_bytes": 7219,
+            "command_count": 3,
+            "command_interval_seconds": 0.278004292,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          },
+          "working": {
+            "captured_output_bytes": 59444,
+            "command_count": 8,
+            "command_interval_seconds": 8.43441339,
+            "direct_search_commands": 0,
+            "failed_commands": 3,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          }
+        },
+        "queue_wait_seconds": null,
+        "relevant_location_seconds": null,
+        "session_sha256": "54ddccf1faf681db88bed0e7d8fc7266fd3afb14d084f77816e4f2b0d303c4fb",
+        "submission_to_check_seconds": [
+          1.273663674
+        ],
+        "task_checks": 1,
+        "uncommitted_command_records": [],
+        "version": "observed-tool-metrics-v1"
+      },
+      "historical_preparation_seconds": 27.874025856,
+      "historical_source_sha256": "8f9457f28a90ca9bbafe0e168aa83ba8068de895294ad0bc80bc4b725ae1984c",
+      "metrics": {
+        "adjacent_unchanged_task_checks": 0,
+        "cache_hits": null,
+        "limitations": [
+          "Direct search counts exclude searches embedded in shells or scripts.",
+          "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+          "Output bytes are captured command output, not source bytes read or model context.",
+          "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+        ],
+        "phases": {
+          "preparing": {
+            "captured_output_bytes": 6951,
+            "command_count": 2,
+            "command_interval_seconds": 0.204702132,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          },
+          "working": {
+            "captured_output_bytes": 1450467,
+            "command_count": 6,
+            "command_interval_seconds": 8.515703332,
+            "direct_search_commands": 0,
+            "failed_commands": 1,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          }
+        },
+        "queue_wait_seconds": null,
+        "relevant_location_seconds": null,
+        "session_sha256": "f0c88926f8b6330d064f9d43052c533f941c982404592d6be941ba4c6c5abc3d",
+        "submission_to_check_seconds": [
+          1.338603636
+        ],
+        "task_checks": 1,
+        "uncommitted_command_records": [],
+        "version": "observed-tool-metrics-v1"
+      },
+      "preparation_seconds": 15.024677803,
+      "public_submissions": 1,
+      "references": {
+        "configuration": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-input-boundary/my-configuration.json",
+          "sha256": "fce77984647671cd7de9a7853e5cc75de6a433c666693b87d68aaa1f39f7a225"
+        },
+        "fresh_result": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-input-boundary/grading/result.json",
+          "sha256": "ca063bbf8ee2730af88b655a36fd7242639c5e733a3cefb20783d6958f4a7e09"
+        },
+        "historical_evidence": {
+          "configuration": {
+            "path": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-input-boundary/my-configuration.json",
+            "sha256": "221283dfd02b5301cb1171f5457383e727fdda78801421c3a187c68db8518dd2"
+          },
+          "pack": {
+            "path": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-input-boundary/pack/pack.json",
+            "sha256": "c1cf57a5e68a8b32a85179145d530c0aa9b4a1fb9c2be0116638d9a6e603f049"
+          },
+          "protocol": {
+            "path": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-input-boundary/protocol.json",
+            "sha256": "d607d29c24886233ab2d59d9f2a170ad3daa4f6e1fb8aeaff204257db2b35668"
+          },
+          "session": {
+            "path": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-input-boundary/my/session.json",
+            "sha256": "6591a6e4b758c9d349873fed743c0b8d703f104ab2bc0b8532e5b7d7c3574d59"
+          },
+          "summary": {
+            "path": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-input-boundary/summary.json",
+            "sha256": "674f8f839930af32b85ff0174f5cc010a8053c8015bbf603b90ad2ed551d32ad"
+          }
+        },
+        "historical_replay": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/reporting/replays/planner-input-boundary/receipt.json",
+          "sha256": "b27e496f1da17b28ba1ab25f7cd2f2b6e7aec0cd7c257826aa17b65dd67a33d8"
+        },
+        "protocol": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-input-boundary/protocol.json",
+          "sha256": "a35112a894b4c6727d0330c273f1ab3130738adc1e08cda8f95500b732fb2873"
+        },
+        "summary": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-input-boundary/summary.json",
+          "sha256": "a8ad1ae6c281586b6dd43cabdf0043f9aeca474ce7d3426e529470410096520a"
+        }
+      },
+      "seal_reason": "completed",
+      "source_sha256": "5d13b268b785ac747f0cae23206d0cffea606b90b043792466bb02ca0d9d674f"
+    },
+    {
+      "comparison": {
+        "accepted_both": true,
+        "causal_claim": false,
+        "current": {
+          "accepted": true,
+          "application_seconds": 183.832457164,
+          "fresh_pack_accepted": true,
+          "historical_pack_accepted": true,
+          "language": "my",
+          "task": "eda-pin-roles"
+        },
+        "delta_seconds": -14.878573816,
+        "interpretation": "historical task comparison; changed agents, baselines, tools and cases may affect time",
+        "previous": {
+          "accepted": true,
+          "application_seconds": 198.71103098,
+          "language": "my",
+          "task": "eda-pin-roles"
+        },
+        "reduction_percent": 7.487542962573379,
+        "task": "eda-pin-roles"
+      },
+      "failed_public_submissions": 0,
+      "historical_metrics": {
+        "adjacent_unchanged_task_checks": 0,
+        "cache_hits": null,
+        "limitations": [
+          "Direct search counts exclude searches embedded in shells or scripts.",
+          "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+          "Output bytes are captured command output, not source bytes read or model context.",
+          "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+        ],
+        "phases": {
+          "preparing": {
+            "captured_output_bytes": 7174,
+            "command_count": 3,
+            "command_interval_seconds": 0.280866352,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          },
+          "working": {
+            "captured_output_bytes": 64684,
+            "command_count": 10,
+            "command_interval_seconds": 3.118239258,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {
+              "compiler-check": 1
+            }
+          }
+        },
+        "queue_wait_seconds": null,
+        "relevant_location_seconds": null,
+        "session_sha256": "11e4315f18a02e0731c57158f498ad74fa732dacf738c6a1bab1770c2a2081dc",
+        "submission_to_check_seconds": [
+          0.322742686,
+          0.308348923
+        ],
+        "task_checks": 2,
+        "uncommitted_command_records": [],
+        "version": "observed-tool-metrics-v1"
+      },
+      "historical_preparation_seconds": 26.926931846,
+      "historical_source_sha256": "d2cde9fc8fa28740133680e53ea3aab6a7a5209ad6a8a5bc8a0caa29786fbad4",
+      "metrics": {
+        "adjacent_unchanged_task_checks": 0,
+        "cache_hits": null,
+        "limitations": [
+          "Direct search counts exclude searches embedded in shells or scripts.",
+          "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+          "Output bytes are captured command output, not source bytes read or model context.",
+          "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+        ],
+        "phases": {
+          "preparing": {
+            "captured_output_bytes": 6951,
+            "command_count": 2,
+            "command_interval_seconds": 0.202493257,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          },
+          "working": {
+            "captured_output_bytes": 94999,
+            "command_count": 8,
+            "command_interval_seconds": 4.078795628,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {
+              "compiler-check": 1,
+              "project-workflow": 1
+            }
+          }
+        },
+        "queue_wait_seconds": null,
+        "relevant_location_seconds": null,
+        "session_sha256": "f9b909e181b49271fc71efb3a256ba7610b5a0b98c2d116fcd428aa2d57eaf2a",
+        "submission_to_check_seconds": [
+          0.306375101
+        ],
+        "task_checks": 1,
+        "uncommitted_command_records": [],
+        "version": "observed-tool-metrics-v1"
+      },
+      "preparation_seconds": 15.925784836,
+      "public_submissions": 1,
+      "references": {
+        "configuration": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/eda-pin-roles/my-configuration.json",
+          "sha256": "394dabdf4819e675cf32d2369c4947cc6abead0ed3e19ff0fe3c169174f649df"
+        },
+        "fresh_result": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/eda-pin-roles/grading/result.json",
+          "sha256": "14e1a7d84f89a2389f4fd4b7fe3c8d2752893d08c6a471fc14d50f29212660f3"
+        },
+        "historical_evidence": {
+          "configuration": {
+            "path": "/home/epentland/ai/canopy/application-trials/direct-20260907-pin-roles/my-configuration.json",
+            "sha256": "2436ccb02f832d6836e722f8cfd83e6a5f58d79c3abb51ad412736cae3127b1c"
+          },
+          "pack": {
+            "path": "/home/epentland/ai/canopy/application-trials/direct-20260907-pin-roles/pack/pack.json",
+            "sha256": "aa33e8ed0e9f214febc63575491ba1b3be180d5637125c95c2156855260e9410"
+          },
+          "protocol": {
+            "path": "/home/epentland/ai/canopy/application-trials/direct-20260907-pin-roles/protocol.json",
+            "sha256": "5b40f09c8bfb87b0f750975bafec20b25ec6e31512e7555eef5c3d9c1907ff8d"
+          },
+          "session": {
+            "path": "/home/epentland/ai/canopy/application-trials/direct-20260907-pin-roles/my/session.json",
+            "sha256": "4c8a5249b0d37fc03759a39d9f493a92ba410a26aa7be390f384f38d34add05a"
+          },
+          "summary": {
+            "path": "/home/epentland/ai/canopy/application-trials/direct-20260907-pin-roles/summary.json",
+            "sha256": "cabadfcaa84518e4b121354a3ee6ead2aae86465517db2600fca1508c723a541"
+          }
+        },
+        "historical_replay": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/reporting/replays/eda-pin-roles/receipt.json",
+          "sha256": "7e1ca3d9c004cc9c2bfb0582c76e15b1f0a8e9c6dcdf4823cfc1c25f1011715e"
+        },
+        "protocol": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/eda-pin-roles/protocol.json",
+          "sha256": "43c68c5162feffd3e904c4678a1484d209a913de436d39772a44414be92d8205"
+        },
+        "summary": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/eda-pin-roles/summary.json",
+          "sha256": "7c3bcf1b2cdcbba6e89d1a9322779a2ee1fabdfd71ebf49a78ba5dbf6d87ce15"
+        }
+      },
+      "seal_reason": "completed",
+      "source_sha256": "0e8ac021c67511d4e23f5c461162009ea8d13e33c91e7f6ca23734c896796706"
+    },
+    {
+      "comparison": {
+        "accepted_both": true,
+        "causal_claim": false,
+        "current": {
+          "accepted": true,
+          "application_seconds": 147.379186476,
+          "fresh_pack_accepted": true,
+          "historical_pack_accepted": true,
+          "language": "my",
+          "task": "planner-priority"
+        },
+        "delta_seconds": 14.741135240999995,
+        "interpretation": "historical task comparison; changed agents, baselines, tools and cases may affect time",
+        "previous": {
+          "accepted": true,
+          "application_seconds": 132.638051235,
+          "language": "my",
+          "task": "planner-priority"
+        },
+        "reduction_percent": -11.113805656630582,
+        "task": "planner-priority"
+      },
+      "failed_public_submissions": 0,
+      "historical_metrics": {
+        "adjacent_unchanged_task_checks": 0,
+        "cache_hits": null,
+        "limitations": [
+          "Direct search counts exclude searches embedded in shells or scripts.",
+          "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+          "Output bytes are captured command output, not source bytes read or model context.",
+          "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+        ],
+        "phases": {
+          "preparing": {
+            "captured_output_bytes": 6904,
+            "command_count": 3,
+            "command_interval_seconds": 0.440366381,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          },
+          "working": {
+            "captured_output_bytes": 52987,
+            "command_count": 10,
+            "command_interval_seconds": 3.066352426,
+            "direct_search_commands": 1,
+            "failed_commands": 2,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          }
+        },
+        "queue_wait_seconds": null,
+        "relevant_location_seconds": null,
+        "session_sha256": "ad15a16f43c81c45c3c5c7f733b874eafecd2df68a09d34f186a131d49e03b68",
+        "submission_to_check_seconds": [
+          0.274125974,
+          0.259931365
+        ],
+        "task_checks": 2,
+        "uncommitted_command_records": [],
+        "version": "observed-tool-metrics-v1"
+      },
+      "historical_preparation_seconds": 31.867875812,
+      "historical_source_sha256": "97c04c828f48b632009d0876c2489a4ba018b76ba3ff124cf92e6c92054983cc",
+      "metrics": {
+        "adjacent_unchanged_task_checks": 0,
+        "cache_hits": null,
+        "limitations": [
+          "Direct search counts exclude searches embedded in shells or scripts.",
+          "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+          "Output bytes are captured command output, not source bytes read or model context.",
+          "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+        ],
+        "phases": {
+          "preparing": {
+            "captured_output_bytes": 6954,
+            "command_count": 2,
+            "command_interval_seconds": 0.217409014,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          },
+          "working": {
+            "captured_output_bytes": 88453,
+            "command_count": 9,
+            "command_interval_seconds": 10.9940227,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {
+              "compiler-check": 1,
+              "project-workflow": 1
+            }
+          }
+        },
+        "queue_wait_seconds": null,
+        "relevant_location_seconds": null,
+        "session_sha256": "f463c2bf8c506f2d1881d9aa301b3e4232a434946fa3c2fac09d191677672469",
+        "submission_to_check_seconds": [
+          0.293390462
+        ],
+        "task_checks": 1,
+        "uncommitted_command_records": [],
+        "version": "observed-tool-metrics-v1"
+      },
+      "preparation_seconds": 17.74568157,
+      "public_submissions": 1,
+      "references": {
+        "configuration": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-priority/my-configuration.json",
+          "sha256": "fce77984647671cd7de9a7853e5cc75de6a433c666693b87d68aaa1f39f7a225"
+        },
+        "fresh_result": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-priority/grading/result.json",
+          "sha256": "134ec49c43bdd80d5b3d7d851f2f79604959c7b2d9ffd6515b529c62b7d814bd"
+        },
+        "historical_evidence": {
+          "configuration": {
+            "path": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-priority/my-configuration.json",
+            "sha256": "7a6f762838510a76f5dfaab13c4b7dc48cd47733de5a4de71f0155e3ec82c1ab"
+          },
+          "pack": {
+            "path": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-priority/pack/pack.json",
+            "sha256": "cb922a85980060496dcea892d5c8018bb6c3ed7aee737d3c7e6d73053600e048"
+          },
+          "protocol": {
+            "path": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-priority/protocol.json",
+            "sha256": "d6c3323b12aff7ebcbae10c6d32556a4e774f78da2c6774b16f18f916015acdb"
+          },
+          "session": {
+            "path": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-priority/my/session.json",
+            "sha256": "3f2149792595f503156d74a5d0788458f5f1a38ff1aaeef6542e41921e92751b"
+          },
+          "summary": {
+            "path": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-priority/summary.json",
+            "sha256": "8e35743da4c176b836cd0f7b4e6782d304250c3fb8ca01c935dca5fad1623bf7"
+          }
+        },
+        "historical_replay": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/reporting/replays/planner-priority/receipt.json",
+          "sha256": "200d8f7f1645eb60374299d40283c2ad95329ab995a832de8391f26a16096104"
+        },
+        "protocol": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-priority/protocol.json",
+          "sha256": "01cd1a1f5b8e83694f98926c23b47bf3cd8bc85502e34d5577553c5d1975f804"
+        },
+        "summary": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-priority/summary.json",
+          "sha256": "0305ca017129414ae3b899d5e67b4a5fe038f12d7e3a0dcdaef3d56c5d592733"
+        }
+      },
+      "seal_reason": "completed",
+      "source_sha256": "5c95bf4e9768a27934b6bbb6c3e496eb8c5251d41fa1ec62b0b376ecfedc479f"
+    },
+    {
+      "comparison": {
+        "accepted_both": true,
+        "causal_claim": false,
+        "current": {
+          "accepted": true,
+          "application_seconds": 155.139173577,
+          "fresh_pack_accepted": true,
+          "historical_pack_accepted": true,
+          "language": "my",
+          "task": "eda-rotation"
+        },
+        "delta_seconds": 38.47414527500001,
+        "interpretation": "historical task comparison; changed agents, baselines, tools and cases may affect time",
+        "previous": {
+          "accepted": true,
+          "application_seconds": 116.665028302,
+          "language": "my",
+          "task": "eda-rotation"
+        },
+        "reduction_percent": -32.97830192558264,
+        "task": "eda-rotation"
+      },
+      "failed_public_submissions": 0,
+      "historical_metrics": {
+        "adjacent_unchanged_task_checks": 0,
+        "cache_hits": null,
+        "limitations": [
+          "Direct search counts exclude searches embedded in shells or scripts.",
+          "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+          "Output bytes are captured command output, not source bytes read or model context.",
+          "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+        ],
+        "phases": {
+          "preparing": {
+            "captured_output_bytes": 7491,
+            "command_count": 3,
+            "command_interval_seconds": 0.281705254,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          },
+          "working": {
+            "captured_output_bytes": 67953,
+            "command_count": 5,
+            "command_interval_seconds": 1.879266218,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          }
+        },
+        "queue_wait_seconds": null,
+        "relevant_location_seconds": null,
+        "session_sha256": "e3c078fd0153cb29ab03c15d027fa2da1e961ef5e56cfc6dc3a08f54ca55b692",
+        "submission_to_check_seconds": [
+          0.268957773,
+          0.271341395
+        ],
+        "task_checks": 2,
+        "uncommitted_command_records": [],
+        "version": "observed-tool-metrics-v1"
+      },
+      "historical_preparation_seconds": 25.460639266,
+      "historical_source_sha256": "71e2c4442f3d4ae4c702c5d0e82df25c7a0ef91565dd658439ad347af528ff5e",
+      "metrics": {
+        "adjacent_unchanged_task_checks": 0,
+        "cache_hits": null,
+        "limitations": [
+          "Direct search counts exclude searches embedded in shells or scripts.",
+          "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+          "Output bytes are captured command output, not source bytes read or model context.",
+          "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+        ],
+        "phases": {
+          "preparing": {
+            "captured_output_bytes": 6951,
+            "command_count": 2,
+            "command_interval_seconds": 0.219070977,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          },
+          "working": {
+            "captured_output_bytes": 106003,
+            "command_count": 9,
+            "command_interval_seconds": 4.096169112,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {
+              "compiler-check": 1,
+              "project-workflow": 1
+            }
+          }
+        },
+        "queue_wait_seconds": null,
+        "relevant_location_seconds": null,
+        "session_sha256": "fb9d932edf38668f5aabf927f82c6d11665e1c048ff6ee9f060f8917985043a0",
+        "submission_to_check_seconds": [
+          0.287613494
+        ],
+        "task_checks": 1,
+        "uncommitted_command_records": [],
+        "version": "observed-tool-metrics-v1"
+      },
+      "preparation_seconds": 15.598880822,
+      "public_submissions": 1,
+      "references": {
+        "configuration": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/eda-rotation/my-configuration.json",
+          "sha256": "394dabdf4819e675cf32d2369c4947cc6abead0ed3e19ff0fe3c169174f649df"
+        },
+        "fresh_result": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/eda-rotation/grading/result.json",
+          "sha256": "e6986fad26b7360ff531c9e0e79e737f66707878a5ab7f60caddf5af50cd9e7f"
+        },
+        "historical_evidence": {
+          "configuration": {
+            "path": "/home/epentland/ai/canopy/application-trials/stdlib-parity-20260907-rotation/my-configuration.json",
+            "sha256": "daa21d8bc186cea717abcae6caf9333363457947bc1d624113bf245b36a278aa"
+          },
+          "pack": {
+            "path": "/home/epentland/ai/canopy/application-trials/stdlib-parity-20260907-rotation/pack/pack.json",
+            "sha256": "ba5e9d6395659d9d552af695f47ffb6c162ea38f76178c2c940d112e3a1d0efa"
+          },
+          "protocol": {
+            "path": "/home/epentland/ai/canopy/application-trials/stdlib-parity-20260907-rotation/protocol.json",
+            "sha256": "63f1c8c45614b87c7e45a1cbf60bd101bd457def802219822fc026ab9480e290"
+          },
+          "session": {
+            "path": "/home/epentland/ai/canopy/application-trials/stdlib-parity-20260907-rotation/my/session.json",
+            "sha256": "18058a9cd7390cd036d744f9f3a3eed75c136768687403304302f78f66fedae1"
+          },
+          "summary": {
+            "path": "/home/epentland/ai/canopy/application-trials/stdlib-parity-20260907-rotation/summary.json",
+            "sha256": "a7b166afedfb49b0101bf461f1a4eaae30c4ae2c05744454fc75a891c6273cfb"
+          }
+        },
+        "historical_replay": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/reporting/replays/eda-rotation/receipt.json",
+          "sha256": "d7f9cb3e29988c22e9f28ad3156acf416064f505bb07d9a7ae0005426b160f5a"
+        },
+        "protocol": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/eda-rotation/protocol.json",
+          "sha256": "86ab00505c7fe132730ea5abc79c2aaab3fbce0497d20acafaaa66951be4bca4"
+        },
+        "summary": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/eda-rotation/summary.json",
+          "sha256": "abbc8b6762740b711f350072738f32e87571106fb5d81c43eb1a91775d290d2c"
+        }
+      },
+      "seal_reason": "completed",
+      "source_sha256": "9e40f8a44fb2885d4589286ae0ed80b66a691022988d270c52ba91be835de8a0"
+    },
+    {
+      "comparison": {
+        "accepted_both": true,
+        "causal_claim": false,
+        "current": {
+          "accepted": true,
+          "application_seconds": 205.704105077,
+          "fresh_pack_accepted": true,
+          "historical_pack_accepted": true,
+          "language": "my",
+          "task": "planner-cycle-groups"
+        },
+        "delta_seconds": 58.24587211400001,
+        "interpretation": "historical task comparison; changed agents, baselines, tools and cases may affect time",
+        "previous": {
+          "accepted": true,
+          "application_seconds": 147.458232963,
+          "language": "my",
+          "task": "planner-cycle-groups"
+        },
+        "reduction_percent": -39.49991190292845,
+        "task": "planner-cycle-groups"
+      },
+      "failed_public_submissions": 0,
+      "historical_metrics": {
+        "adjacent_unchanged_task_checks": 0,
+        "cache_hits": null,
+        "limitations": [
+          "Direct search counts exclude searches embedded in shells or scripts.",
+          "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+          "Output bytes are captured command output, not source bytes read or model context.",
+          "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+        ],
+        "phases": {
+          "preparing": {
+            "captured_output_bytes": 6904,
+            "command_count": 3,
+            "command_interval_seconds": 0.273040561,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          },
+          "working": {
+            "captured_output_bytes": 52160,
+            "command_count": 9,
+            "command_interval_seconds": 9.186818897,
+            "direct_search_commands": 0,
+            "failed_commands": 1,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          }
+        },
+        "queue_wait_seconds": null,
+        "relevant_location_seconds": null,
+        "session_sha256": "c634ea4089630c23d9e4d9f8d6e9dfd16f10d9046b617a4b00bf8dec26aeabf3",
+        "submission_to_check_seconds": [
+          0.274628313
+        ],
+        "task_checks": 1,
+        "uncommitted_command_records": [],
+        "version": "observed-tool-metrics-v1"
+      },
+      "historical_preparation_seconds": 27.172266464,
+      "historical_source_sha256": "d87235346f115372eb8e1af4b1359c3e3285aa9478b45d199203411aba1eb8bc",
+      "metrics": {
+        "adjacent_unchanged_task_checks": 0,
+        "cache_hits": null,
+        "limitations": [
+          "Direct search counts exclude searches embedded in shells or scripts.",
+          "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+          "Output bytes are captured command output, not source bytes read or model context.",
+          "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+        ],
+        "phases": {
+          "preparing": {
+            "captured_output_bytes": 6907,
+            "command_count": 2,
+            "command_interval_seconds": 0.202398871,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          },
+          "working": {
+            "captured_output_bytes": 85130,
+            "command_count": 9,
+            "command_interval_seconds": 19.126173766,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {
+              "compiler-check": 1,
+              "project-workflow": 1
+            }
+          }
+        },
+        "queue_wait_seconds": null,
+        "relevant_location_seconds": null,
+        "session_sha256": "0de9e9168756415c22455e77feb16148edd1055bfdf9914e730ec8c12082b2a6",
+        "submission_to_check_seconds": [
+          0.332982133
+        ],
+        "task_checks": 1,
+        "uncommitted_command_records": [],
+        "version": "observed-tool-metrics-v1"
+      },
+      "preparation_seconds": 16.160086864,
+      "public_submissions": 1,
+      "references": {
+        "configuration": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-cycle-groups/my-configuration.json",
+          "sha256": "fce77984647671cd7de9a7853e5cc75de6a433c666693b87d68aaa1f39f7a225"
+        },
+        "fresh_result": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-cycle-groups/grading/result.json",
+          "sha256": "37e74337199afb1d2f04d4ab39d6974f658c2c4e740a317ecdcf317aa7f75d40"
+        },
+        "historical_evidence": {
+          "configuration": {
+            "path": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-cycle-groups/my-configuration.json",
+            "sha256": "02858ed783445d663e900c3c90ec806f477ad7511e944abb4506d048bb5ed9e3"
+          },
+          "pack": {
+            "path": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-cycle-groups/pack/pack.json",
+            "sha256": "0b5c031f3a6c79d852bc7028d31bf809c001d4fea3541c445f6e6f145a3f0e63"
+          },
+          "protocol": {
+            "path": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-cycle-groups/protocol.json",
+            "sha256": "e346d319624800aa3480d5f3fbdbb519a177338557f73b72825e836aee3e8360"
+          },
+          "session": {
+            "path": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-cycle-groups/my/session.json",
+            "sha256": "5a7cec829ea16392c75985bcee13981d65d8e7a9d6f388bb16442237362c5f28"
+          },
+          "summary": {
+            "path": "/home/epentland/ai/canopy/application-trials/portable-planner-20260907/planner-cycle-groups/summary.json",
+            "sha256": "ab9863f98b79cac5a494cdf13b2e3e2155ae407f574115cc7efc44c602c12943"
+          }
+        },
+        "historical_replay": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/reporting/replays/planner-cycle-groups/receipt.json",
+          "sha256": "0ff9a1694be38d191a1b23b8215959030f773ae646485562c7212bbff212501a"
+        },
+        "protocol": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-cycle-groups/protocol.json",
+          "sha256": "90ac1746c308fb920af2a7aade134d88e5a7b2711af6e7c5304efc35ab7401b6"
+        },
+        "summary": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-cycle-groups/summary.json",
+          "sha256": "9849237b39e40fffb653262d8d0e011774e626beb614166754685bb73c324175"
+        }
+      },
+      "seal_reason": "completed",
+      "source_sha256": "7f75410337a531085a48aa10cbb64515018e4f177c2fa48f3f3bc6d56f8d802c"
+    },
+    {
+      "comparison": {
+        "accepted_both": true,
+        "causal_claim": false,
+        "current": {
+          "accepted": true,
+          "application_seconds": 191.21666532,
+          "fresh_pack_accepted": true,
+          "historical_pack_accepted": true,
+          "language": "my",
+          "task": "planner-dependency-lags"
+        },
+        "delta_seconds": 8.913695697999998,
+        "interpretation": "historical task comparison; changed agents, baselines, tools and cases may affect time",
+        "previous": {
+          "accepted": true,
+          "application_seconds": 182.302969622,
+          "language": "my",
+          "task": "planner-dependency-lags"
+        },
+        "reduction_percent": -4.889495610785866,
+        "task": "planner-dependency-lags"
+      },
+      "failed_public_submissions": 0,
+      "historical_metrics": {
+        "adjacent_unchanged_task_checks": 0,
+        "cache_hits": null,
+        "limitations": [
+          "Direct search counts exclude searches embedded in shells or scripts.",
+          "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+          "Output bytes are captured command output, not source bytes read or model context.",
+          "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+        ],
+        "phases": {
+          "preparing": {
+            "captured_output_bytes": 7219,
+            "command_count": 3,
+            "command_interval_seconds": 0.281655701,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          },
+          "working": {
+            "captured_output_bytes": 64756,
+            "command_count": 11,
+            "command_interval_seconds": 14.544930036,
+            "direct_search_commands": 0,
+            "failed_commands": 1,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          }
+        },
+        "queue_wait_seconds": null,
+        "relevant_location_seconds": null,
+        "session_sha256": "c45b7cf3454709aa8f0262eb654bc139144da37c684e431120b9b0e4dc37c95f",
+        "submission_to_check_seconds": [
+          0.257148365,
+          0.267744245
+        ],
+        "task_checks": 2,
+        "uncommitted_command_records": [],
+        "version": "observed-tool-metrics-v1"
+      },
+      "historical_preparation_seconds": 30.90650301,
+      "historical_source_sha256": "4df277dd8aa24eb3fa0252cb874b4d91383749f2c9d94bc08705b2e24b447664",
+      "metrics": {
+        "adjacent_unchanged_task_checks": 0,
+        "cache_hits": null,
+        "limitations": [
+          "Direct search counts exclude searches embedded in shells or scripts.",
+          "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+          "Output bytes are captured command output, not source bytes read or model context.",
+          "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+        ],
+        "phases": {
+          "preparing": {
+            "captured_output_bytes": 6945,
+            "command_count": 2,
+            "command_interval_seconds": 0.223033216,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          },
+          "working": {
+            "captured_output_bytes": 115137,
+            "command_count": 11,
+            "command_interval_seconds": 24.024869248,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {
+              "compiler-check": 1,
+              "project-workflow": 2
+            }
+          }
+        },
+        "queue_wait_seconds": null,
+        "relevant_location_seconds": null,
+        "session_sha256": "1cfa0618ff06a023710b412960d2a4f5ddb9ade218a21cb510185013382bcc15",
+        "submission_to_check_seconds": [
+          0.275839149
+        ],
+        "task_checks": 1,
+        "uncommitted_command_records": [],
+        "version": "observed-tool-metrics-v1"
+      },
+      "preparation_seconds": 16.019686657,
+      "public_submissions": 1,
+      "references": {
+        "configuration": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-dependency-lags/my-configuration.json",
+          "sha256": "fce77984647671cd7de9a7853e5cc75de6a433c666693b87d68aaa1f39f7a225"
+        },
+        "fresh_result": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-dependency-lags/grading/result.json",
+          "sha256": "0c5b8821e6210c6d05f467d4da4d5ab59d78e4ec5ae4e8ce33e7244a2bd24b36"
+        },
+        "historical_evidence": {
+          "configuration": {
+            "path": "/home/epentland/ai/canopy/application-trials/planner-chain-20260907/planner-dependency-lags/my-configuration.json",
+            "sha256": "c1738fb5b8c103f250ee4b99ffd159096c1c4a370d83cfcbba8417bb4b52a974"
+          },
+          "pack": {
+            "path": "/home/epentland/ai/canopy/application-trials/planner-chain-20260907/planner-dependency-lags/pack/pack.json",
+            "sha256": "bdf24eccb5dfa63d258b545e435087a958a24f5564ca86fdce3ab77318b1f861"
+          },
+          "protocol": {
+            "path": "/home/epentland/ai/canopy/application-trials/planner-chain-20260907/planner-dependency-lags/protocol.json",
+            "sha256": "aa63bfd4395e0c69031eddeb86bad83a383e093c7813de9f39d0040442da2e76"
+          },
+          "session": {
+            "path": "/home/epentland/ai/canopy/application-trials/planner-chain-20260907/planner-dependency-lags/my/session.json",
+            "sha256": "42c4abd75a9ac36ccd6b3ac90773002343eda80060d758ca87ba95dcc1521da2"
+          },
+          "summary": {
+            "path": "/home/epentland/ai/canopy/application-trials/planner-chain-20260907/planner-dependency-lags/summary.json",
+            "sha256": "7135d48a807efe1b6700f2effeca17a88af1bacb13d042ed7eda8d81e35bbee8"
+          }
+        },
+        "historical_replay": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/reporting/replays/planner-dependency-lags/receipt.json",
+          "sha256": "a98dd400f1626c84af128ebbbf0fddf70c5b4b145d80f05aba66504ceb38c392"
+        },
+        "protocol": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-dependency-lags/protocol.json",
+          "sha256": "b804a16b8e3966e18c1a758dcc51018a170308c147d54946b6ab9bb3a25a4c4c"
+        },
+        "summary": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-dependency-lags/summary.json",
+          "sha256": "8c1affcd31f7c8fd03620dea714a6e3c0814fbe28eca2990309d890bd5fddb82"
+        }
+      },
+      "seal_reason": "completed",
+      "source_sha256": "657d38a9bafaa77ef9af6ae18ffd81c09c0bcedd9c4e41836e61ecb2e8f9013b"
+    },
+    {
+      "comparison": {
+        "accepted_both": true,
+        "causal_claim": false,
+        "current": {
+          "accepted": true,
+          "application_seconds": 206.147280463,
+          "fresh_pack_accepted": true,
+          "historical_pack_accepted": true,
+          "language": "my",
+          "task": "planner-slack"
+        },
+        "delta_seconds": 17.821070763999984,
+        "interpretation": "historical task comparison; changed agents, baselines, tools and cases may affect time",
+        "previous": {
+          "accepted": true,
+          "application_seconds": 188.326209699,
+          "language": "my",
+          "task": "planner-slack"
+        },
+        "reduction_percent": -9.462873379378923,
+        "task": "planner-slack"
+      },
+      "failed_public_submissions": 0,
+      "historical_metrics": {
+        "adjacent_unchanged_task_checks": 0,
+        "cache_hits": null,
+        "limitations": [
+          "Direct search counts exclude searches embedded in shells or scripts.",
+          "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+          "Output bytes are captured command output, not source bytes read or model context.",
+          "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+        ],
+        "phases": {
+          "preparing": {
+            "captured_output_bytes": 6949,
+            "command_count": 3,
+            "command_interval_seconds": 0.413437119,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          },
+          "working": {
+            "captured_output_bytes": 63152,
+            "command_count": 9,
+            "command_interval_seconds": 21.749646126,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          }
+        },
+        "queue_wait_seconds": null,
+        "relevant_location_seconds": null,
+        "session_sha256": "147d098c1a261725105eb36fafa82c2b9dff488f4398039b2efbb273ad4f89da",
+        "submission_to_check_seconds": [
+          0.251341205,
+          0.269992716,
+          0.268290466
+        ],
+        "task_checks": 3,
+        "uncommitted_command_records": [],
+        "version": "observed-tool-metrics-v1"
+      },
+      "historical_preparation_seconds": 26.362007039,
+      "historical_source_sha256": "24bce5751845ab2a74653862753694031e02efc96f5b8fbc0653f76b1a0f7c21",
+      "metrics": {
+        "adjacent_unchanged_task_checks": 0,
+        "cache_hits": null,
+        "limitations": [
+          "Direct search counts exclude searches embedded in shells or scripts.",
+          "Language-tool counts recognize direct declared mounts only; they do not establish successful navigation, relevance, diagnostics repaired, or cache reuse.",
+          "Output bytes are captured command output, not source bytes read or model context.",
+          "Unchanged checks do not prove cache reuse; check latency is not isolated execution time."
+        ],
+        "phases": {
+          "preparing": {
+            "captured_output_bytes": 6907,
+            "command_count": 2,
+            "command_interval_seconds": 0.211200359,
+            "direct_search_commands": 0,
+            "failed_commands": 0,
+            "failed_language_tool_commands": {},
+            "language_tool_commands": {}
+          },
+          "working": {
+            "captured_output_bytes": 100580,
+            "command_count": 10,
+            "command_interval_seconds": 35.662559519,
+            "direct_search_commands": 0,
+            "failed_commands": 1,
+            "failed_language_tool_commands": {
+              "project-workflow": 1
+            },
+            "language_tool_commands": {
+              "compiler-check": 1,
+              "project-workflow": 1
+            }
+          }
+        },
+        "queue_wait_seconds": null,
+        "relevant_location_seconds": null,
+        "session_sha256": "fde433f80af59e1a81f0b56a0a23f32e7396ce64d0b755be85adbe74eee0edef",
+        "submission_to_check_seconds": [
+          0.279238515
+        ],
+        "task_checks": 1,
+        "uncommitted_command_records": [],
+        "version": "observed-tool-metrics-v1"
+      },
+      "preparation_seconds": 16.104857693,
+      "public_submissions": 1,
+      "references": {
+        "configuration": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-slack/my-configuration.json",
+          "sha256": "fce77984647671cd7de9a7853e5cc75de6a433c666693b87d68aaa1f39f7a225"
+        },
+        "fresh_result": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-slack/grading/result.json",
+          "sha256": "4643451510c3e32a9b755638ba7e5bec9e74010d16600491fb38cbaf3129f4c0"
+        },
+        "historical_evidence": {
+          "configuration": {
+            "path": "/home/epentland/ai/canopy/application-trials/planner-chain-20260907/planner-slack/my-configuration.json",
+            "sha256": "ba8157718ff35765506cc0c8f269035aa83bcdcaae786a87d158bb8be6bfb8f5"
+          },
+          "pack": {
+            "path": "/home/epentland/ai/canopy/application-trials/planner-chain-20260907/planner-slack/pack/pack.json",
+            "sha256": "96851b519baa120a057d2aa3518026e9fac0c39eb9115e4ff0415f214fd82d35"
+          },
+          "protocol": {
+            "path": "/home/epentland/ai/canopy/application-trials/planner-chain-20260907/planner-slack/protocol.json",
+            "sha256": "a8407bb822c2cbf2d341c18a98ed8d5d410c06e7004d8ee08e053bbe2356b738"
+          },
+          "session": {
+            "path": "/home/epentland/ai/canopy/application-trials/planner-chain-20260907/planner-slack/my/session.json",
+            "sha256": "c79f20627d887dbc492ee046be6b9eb0600b8b15e269ed29996c028ae383d7da"
+          },
+          "summary": {
+            "path": "/home/epentland/ai/canopy/application-trials/planner-chain-20260907/planner-slack/summary.json",
+            "sha256": "f71c964a38c1cfd03200a4ee85bc5321a6aa271dbc69414987ba835d17a38792"
+          }
+        },
+        "historical_replay": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/reporting/replays/planner-slack/receipt.json",
+          "sha256": "988e3fed9890e1d6fbbbc4d9a2b2bb08038716ca13441f543d70a3b92b8767c8"
+        },
+        "protocol": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-slack/protocol.json",
+          "sha256": "131a1c778675bf47286b1eb0af443c09a443b220ce9d9b2b376e2cdd5fafb58b"
+        },
+        "summary": {
+          "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/planner-slack/summary.json",
+          "sha256": "c272392f87b2fe8d9031a9912f8cda24725960295b6124fef54aa6ebab609071"
+        }
+      },
+      "seal_reason": "completed",
+      "source_sha256": "9e2f3e849df2fc33b59cd9ebcf79f7d9384150e5229e4ed68f61f5a177150700"
+    }
+  ],
+  "complete_task_count": 8,
+  "helper": {
+    "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/reporting/replay.py",
+    "sha256": "755a2bc94811f9789185117d7b680bc43b63e158dbffe997bf130c90fd6f7bd0"
+  },
+  "historical_catalog": {
+    "path": "/home/epentland/ai/canopy/application-trials/velocity-v1/reporting/historical.json",
+    "sha256": "970a3f18e5dbe418be50445405a7e03fb3abd65fac0eadf1f352790c00c91fcb"
+  },
+  "limitations": [
+    "Exploratory combined intervention; changed baselines, agents, tools, guides and cases prevent causal attribution.",
+    "Eight distinct tasks, not independent replications; slack inherits current accepted lag code.",
+    "Historical development times are original observations; post-seal replay uses current tools and adds no development time.",
+    "Gateway commands are not model turns; exact model identity, turns, tokens and cost remain unknown.",
+    "Direct project-workflow counts do not establish cache reuse or relevant navigation.",
+    "Source-quality reviews and owner/generic sequence must be reported separately; this report makes no code-quality claim."
+  ],
+  "scored": false,
+  "version": "velocity-v1-matched-report-v1"
+}

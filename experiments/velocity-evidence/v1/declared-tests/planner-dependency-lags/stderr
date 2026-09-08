@@ -1,0 +1,3 @@
+verify: cli-contract
+verify: cli-dependency-lags
+verify: resource-bounds
