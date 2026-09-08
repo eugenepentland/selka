@@ -10,8 +10,8 @@ zig build run -- fmt-project examples/modules/main.my --check
 ```
 
 `fmt-module` formats exactly the named file to stdout. `--check` compares canonical
-bytes and reports a difference without writing. It parses module/import/export
-header order and the full body, but does not load imports, match the file path to
+bytes and reports a difference without writing. It parses module/import
+header order, exports anywhere among top-level declarations, and the full body, but does not load imports, match the file path to
 its declaration, validate export targets, reject duplicate import aliases, or check
 types, ownership, effects, and name resolution. This permits unfinished source to be
 formatted. Malformed headers or bodies still reject. Original `fmt` behavior for
@@ -26,7 +26,7 @@ reported in dependency-first order after every body has parsed successfully. A
 malformed body reports its syntax error instead of a partial formatting-difference
 list. Files outside the reachable graph are not checked.
 
-Module headers preserve directive order. Dotted module names and `alias::Type` or
+Module headers and top-level exports preserve directive order and placement. Dotted module names and `alias::Type` or
 `alias::function` qualifications have canonical tight separators; ordinary type
 annotations retain the space after their colon. Line comments remain in the same
 token gap even when placed around/between qualifier colons. Existing indentation,

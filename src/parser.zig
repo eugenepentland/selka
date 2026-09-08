@@ -151,11 +151,6 @@ pub const Parser = struct {
             if (self.take(.kw_as)) _ = try self.expect(.ident);
             _ = try self.expect(.semicolon);
         }
-        while (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "export")) {
-            self.cursor.pos += 1;
-            _ = try self.expect(.ident);
-            _ = try self.expect(.semicolon);
-        }
         return self.parse();
     }
     fn parseCodec(self: *Parser) diagnostic.Error!ast.Codec {
@@ -193,8 +188,12 @@ pub const Parser = struct {
         var resources: std.ArrayList(ast.Domain) = .empty;
         var variants: std.ArrayList(ast.Variants) = .empty;
         while (self.current().tag != .eof) {
-            if (self.module_syntax and self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "export"))
-                return self.sink.fail("E_EXPORT_PLACEMENT", self.current().span, "move this export declaration to the module header, after imports and before type or function declarations");
+            if (self.module_syntax and self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "export")) {
+                self.cursor.pos += 1;
+                _ = try self.expect(.ident);
+                _ = try self.expect(.semicolon);
+                continue;
+            }
             if (self.take(.kw_type)) {
                 const name = (try self.expect(.ident)).span;
                 _ = try self.expect(.equal);

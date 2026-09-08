@@ -8,7 +8,9 @@ the existing single-file grammar; they do not ignore imports.
 zig build run -- list-modules examples/modules/main.my
 ```
 
-Each file begins with a matching logical module name, optional imports, and optional `export Name;` directives:
+Each file begins with a matching logical module name and optional imports.
+Explicit `export Name;` directives may appear anywhere among the following
+top-level declarations:
 
 ```text
 module main;
@@ -43,9 +45,10 @@ exit 1 with no partial stdout graph; usage and host failures exit 2.
 The report identifies itself as `module graph v1; header discovery only;
 bodies/exports/types not checked`, followed by normalized paths, whole-file SHA-256
 digests, and direct imports. These are content fingerprints, not a persistent
-cache or proof of semantic equivalence. The entire source is lexed, but parsing
-stops after leading imports and exports. Body syntax, late directives, export targets, references, and type validity are
-not checked by this command. The separate [interface command](module-interfaces.md)
+cache or proof of semantic equivalence. The entire source is lexed; the loader parses the leading imports and scans
+top-level declaration boundaries for exports, checking duplicate export names.
+Nested bodies are skipped. Body syntax, misplaced imports, export targets,
+references, and type validity are not checked by this command. The separate [interface command](module-interfaces.md)
 parses bodies and checks export targets and signature visibility.
 
 Acceptance includes actual multi-file CLI execution, shared dependency loading,

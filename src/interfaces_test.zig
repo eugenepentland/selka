@@ -566,7 +566,58 @@ test "generic execution retains module identities and ordinary public schema roo
 }
 
 // spec: EXPORT-PLACEMENT-1
-test "misplaced exports identify the header repair" {
-    try reject("module main; fn value()->i64{return 42;} export value;", "E_EXPORT_PLACEMENT");
-    try reject("module main; struct Value { n:i64 } export Value;", "E_EXPORT_PLACEMENT");
+test "exports after declarations retain interface validation and scope boundaries" {
+    try acceptChecked("module main;import units;fn main()->i64{return units::value()-42;}", "module units;fn value()->i64{return 42;}export value;");
+    try reject("module main; struct Value { n:i64 } export Missing;", "E_UNKNOWN_EXPORT");
+    try reject("module main; export Value; struct Value { n:i64 } export Value;", "E_DUPLICATE_EXPORT");
+    try reject("module main; struct Secret {} fn value(x:Secret)->i64{return 0;} export value;", "E_PRIVATE_INTERFACE");
+    try reject("module main; fn value()->i64{export value; return 0;}", "E_EXPLICIT_DISCARD_REQUIRED");
+    try reject("module main; struct Value { export Value; }", "E_SYNTAX");
+    try reject("module main; fn value()->i64{return 0;} import units;", "E_SYNTAX");
+}
+
+fn scatteredExports(allocator: std.mem.Allocator) !void {
+    const body = "module main;export Value;struct Value{n:i64}export value;" ++
+        "fn value()->i64{let export=42;return export;}" ++
+        "type Number=i64;export Number;const answer:Number=42;export answer;" ++
+        "fn main()->i64{return value()-answer;}export main;";
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = body }} };
+    var project = graph.Project.init(allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    const names = [_][]const u8{ "Value", "value", "Number", "answer", "main" };
+    const module = project.modules.items[0];
+    try t.expectEqual(names.len, module.exports.len);
+    var last: usize = 0;
+    for (module.exports, names) |exported, name| {
+        try t.expectEqualStrings(name, exported.name);
+        try t.expectEqualStrings(name, module.src.text(exported.span));
+        try t.expect(exported.span.start > last);
+        last = exported.span.start;
+    }
+    var index = try interfaces.build(&project);
+    var compilation = try project_compile_module.Compilation.init(&index);
+    try compilation.emit();
+    try t.expectEqual(@as(i64, 0), (try @import("vm.zig").runWithOptions(allocator, compilation.code.?, .{})).value);
+    const generated = try compilation.emitC(allocator);
+    defer allocator.free(generated);
+    try t.expect(generated.len > 0);
+}
+
+test "scattered exports preserve source order and spans through compilation and allocation failures" {
+    try scatteredExports(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), scatteredExports, .{});
+}
+
+test "late duplicate export diagnostics locate both original directives" {
+    const body = "module main;export value;fn value()->i64{return 0;}export value;";
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = body }} };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try t.expectError(error.SourceError, project.load(files.provider(), "main", .{}));
+    const failure = project.problem.?;
+    try t.expectEqualStrings("E_DUPLICATE_EXPORT", failure.code);
+    try t.expectEqual(std.mem.lastIndexOf(u8, body, "value").?, failure.site.span.start);
+    try t.expectEqual(std.mem.indexOf(u8, body, "value").?, failure.related.?.span.start);
 }

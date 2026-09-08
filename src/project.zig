@@ -186,9 +186,14 @@ pub const Project = struct {
             try imports.append(allocator, .{ .name = imported.text, .alias = alias, .span = imported.span });
         }
         self.modules.items[id].imports = try imports.toOwnedSlice(allocator);
+        self.modules.items[id].header.body_start = tokens[scanner.pos].span.start;
         var exports: std.ArrayList(Export) = .empty;
         var exported_names: std.StringHashMapUnmanaged(source.Span) = .empty;
-        while (scanner.isWord("export")) {
+        while (scanner.tokens[scanner.pos].tag != .eof) {
+            if (!scanner.isWord("export")) {
+                scanner.skipDeclaration();
+                continue;
+            }
             scanner.pos += 1;
             const token = try scanner.expect(.ident);
             const name = src.text(token.span);
@@ -198,7 +203,6 @@ pub const Project = struct {
             try exports.append(allocator, .{ .name = name, .span = token.span });
         }
         self.modules.items[id].exports = try exports.toOwnedSlice(allocator);
-        self.modules.items[id].header.body_start = tokens[scanner.pos].span.start;
     }
     /// Allocate the completed dependency graph report; reject incomplete loading state.
     pub fn render(self: *Project, allocator: std.mem.Allocator) RenderError![]u8 {
@@ -232,6 +236,24 @@ const Scanner = struct {
     id: usize,
     tokens: []const lex.Token,
     pos: usize = 0,
+    // Discovery skips bodies without parsing them. Only declaration boundaries
+    // can introduce exports; identifiers named export inside declarations cannot.
+    fn skipDeclaration(self: *Scanner) void {
+        var depth: usize = 0;
+        while (self.tokens[self.pos].tag != .eof) {
+            const tag = self.tokens[self.pos].tag;
+            self.pos += 1;
+            switch (tag) {
+                .lbrace, .lparen, .lbracket => depth += 1,
+                .rbrace, .rparen, .rbracket => {
+                    depth -|= 1;
+                    if (tag == .rbrace and depth == 0) return;
+                },
+                .semicolon => if (depth == 0) return,
+                else => {},
+            }
+        }
+    }
     fn take(self: *Scanner, tag: lex.Tag) bool {
         if (self.tokens[self.pos].tag != tag) return false;
         self.pos += 1;

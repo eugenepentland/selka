@@ -85,7 +85,8 @@ test "formatter parser comments output and idempotence release every failed allo
 }
 
 fn moduleRoundTrip(allocator: std.mem.Allocator) !void {
-    const text = "// header\r\nmodule app . main ;import missing . units as u;export Example;struct Example{value:u :: Value}\nfn unfinished(x:u // qualifier comment\n: // between colons\n:Value)->[2]u::Value{return missing(x);}";
+    const text = "// header\r\nmodule app . main ;import missing . units as u;export Example;struct Example{value:u :: Value}\n" ++
+        "fn unfinished(x:u // qualifier comment\n: // between colons\n:Value)->[2]u::Value{return missing(x);} // next export\nexport unfinished; // final export\n";
     var before = try language.Compilation.init(allocator, "draft.my", text);
     defer before.deinit();
     const formatted = try before.formatModule(allocator);
@@ -98,6 +99,7 @@ fn moduleRoundTrip(allocator: std.mem.Allocator) !void {
     try t.expect(std.mem.indexOf(u8, formatted, "module app.main;\nimport missing.units as u;\nexport Example;") != null);
     try t.expect(std.mem.indexOf(u8, formatted, "value: u::Value") != null);
     try t.expect(std.mem.indexOf(u8, formatted, "-> [2]u::Value") != null);
+    try t.expect(std.mem.indexOf(u8, formatted, "} // next export\nexport unfinished; // final export") != null);
     var sink_a: diagnostic.Sink = .{ .allocator = before.arena.allocator() };
     var sink_b: diagnostic.Sink = .{ .allocator = after.arena.allocator() };
     const a = try lexer.lex(sink_a.allocator, text, &sink_a);

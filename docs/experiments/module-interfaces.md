@@ -8,14 +8,18 @@ and the visibility of types mentioned by exported signatures:
 zig build run -- list-interfaces examples/modules/main.my
 ```
 
-Header order is `module`, then imports, then explicit exports, then declarations:
+Header order is `module`, then imports. Explicit exports may precede, follow, or be interspersed with top-level declarations:
 
 ```text
 module main;
 import shared.units;
-export Measurement;
 struct Measurement { distance: units::Distance }
+export Measurement;
 ```
+
+`export Measurement;` can be placed next to its declaration or in a separate list.
+Exports are module-level directives; they are not permitted inside functions or types.
+Formatting preserves their placement and source order.
 
 Declarations are private to their module unless named in its export list. Exports
 name local top-level declarations; they cannot re-export an import alias. Unknown
