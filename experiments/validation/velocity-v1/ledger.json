@@ -2,13 +2,39 @@
   "version": "velocity-iteration-v1",
   "started_utc": "2026-09-07T23:41:57Z",
   "base_revision": "ed99a52",
-  "status": "implementing",
+  "status": "validating-before-retests",
   "scored": false,
   "exact_model_id": null,
   "model_turns": null,
   "tokens": null,
   "cost": null,
   "preparation_events": [],
-  "validation": [],
-  "trials": []
+  "validation": [
+    {
+      "log": "final-test-install.log",
+      "steps_passed": 57,
+      "tests_passed": 1089
+    },
+    {
+      "log": "workflow-isolation.json",
+      "apps_passed": [
+        "eda",
+        "planner"
+      ]
+    }
+  ],
+  "trials": [],
+  "implementation_revision": "b6776e7",
+  "implementation_commits": [
+    "3edb3b4",
+    "a402ed1",
+    "3ed0d15",
+    "ce7c821",
+    "bf7b197",
+    "1745a98",
+    "b0471ae",
+    "8048512",
+    "b6776e7"
+  ],
+  "raw_iteration": "/home/epentland/ai/canopy/application-trials/velocity-v1"
 }

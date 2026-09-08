@@ -1,0 +1,110 @@
+{
+  "eda": {
+    "version": "comparison-execution-v1",
+    "isolated": true,
+    "outcome": "exited",
+    "returncode": 0,
+    "elapsed_seconds": 1.9128431510180235,
+    "argv": [
+      "/usr/bin/python3",
+      "-B",
+      "/tools/workflow/project.py",
+      "--compiler",
+      "/tools/compiler",
+      "--entry",
+      "/work/main.my",
+      "--manifest",
+      "/work/verify.json",
+      "--query",
+      "validate",
+      "--only",
+      "cli*",
+      "--cache-dir",
+      "/cache/project",
+      "--report",
+      "/cache/attempt-001.json"
+    ],
+    "system_mounts": {
+      "/usr/bin": "/usr/bin",
+      "/usr/sbin": "/usr/sbin",
+      "/usr/lib": "/usr/lib",
+      "/usr/lib64": "/usr/lib64",
+      "/usr/share/locale": "/usr/share/locale",
+      "/usr/share/zoneinfo": "/usr/share/zoneinfo",
+      "/usr/share/terminfo": "/usr/share/terminfo",
+      "/usr/share/git-core": "/usr/share/git-core",
+      "/usr/include": "/usr/include",
+      "/bin": "/usr/bin",
+      "/lib": "/usr/lib",
+      "/lib64": "/usr/lib64",
+      "/etc/ld.so.cache": "/etc/ld.so.cache",
+      "/etc/localtime": "/usr/share/zoneinfo/Etc/UTC"
+    },
+    "bootstrap_sha256": "8da96a6b7422b8071051301b75c30019e7eabe83e4c3010d5b25107fc3def194",
+    "launcher_sha256": "978612fd3c034985975da85b8350c6e30fd360b829680d1187d75839fa6f2a62",
+    "limits": {
+      "wall_seconds": 60,
+      "output_bytes": 2097152,
+      "memory_bytes": 4294967296,
+      "file_bytes": 268435456,
+      "cpu_seconds": 60
+    },
+    "resource_scope": "per-process rlimits plus command wall/output bounds"
+  },
+  "planner": {
+    "version": "comparison-execution-v1",
+    "isolated": true,
+    "outcome": "exited",
+    "returncode": 0,
+    "elapsed_seconds": 3.1068972849752754,
+    "argv": [
+      "/usr/bin/python3",
+      "-B",
+      "/tools/workflow/project.py",
+      "--compiler",
+      "/tools/compiler",
+      "--entry",
+      "/work/main.my",
+      "--manifest",
+      "/work/verify.json",
+      "--query",
+      "validate",
+      "--only",
+      "cli*",
+      "--cache-dir",
+      "/cache/project",
+      "--report",
+      "/cache/attempt-001.json"
+    ],
+    "system_mounts": {
+      "/usr/bin": "/usr/bin",
+      "/usr/sbin": "/usr/sbin",
+      "/usr/lib": "/usr/lib",
+      "/usr/lib64": "/usr/lib64",
+      "/usr/share/locale": "/usr/share/locale",
+      "/usr/share/zoneinfo": "/usr/share/zoneinfo",
+      "/usr/share/terminfo": "/usr/share/terminfo",
+      "/usr/share/git-core": "/usr/share/git-core",
+      "/usr/include": "/usr/include",
+      "/bin": "/usr/bin",
+      "/lib": "/usr/lib",
+      "/lib64": "/usr/lib64",
+      "/etc/ld.so.cache": "/etc/ld.so.cache",
+      "/etc/localtime": "/usr/share/zoneinfo/Etc/UTC"
+    },
+    "bootstrap_sha256": "8da96a6b7422b8071051301b75c30019e7eabe83e4c3010d5b25107fc3def194",
+    "launcher_sha256": "978612fd3c034985975da85b8350c6e30fd360b829680d1187d75839fa6f2a62",
+    "limits": {
+      "wall_seconds": 60,
+      "output_bytes": 2097152,
+      "memory_bytes": 4294967296,
+      "file_bytes": 268435456,
+      "cpu_seconds": 60
+    },
+    "resource_scope": "per-process rlimits plus command wall/output bounds"
+  },
+  "preparation_error": {
+    "detail": "Initial preflight omitted byte_io mount; corrected preflight with full tools passes both apps. Participant configuration already included byte_io.",
+    "raw": "/home/epentland/ai/canopy/application-trials/velocity-v1/workflow-preflight"
+  }
+}
