@@ -12,6 +12,7 @@ pub const Kind = enum(u8) {
     copy,
     copy_pair,
     binary,
+    binary_chain,
     binary_store,
     compare,
     compare_jump,
@@ -39,7 +40,15 @@ pub const Entry = struct {
     destination: usize = 0,
     successor: usize = 0,
     ty: typed.Type = .i64,
-    operation: struct { arithmetic: Arithmetic = .identity, predicate: bc.Predicate = .eq, offset: u8 = 0, scalar_function: bool = false, tail_jump: bool = false, second_destination: usize = 0 } = .{},
+    operation: struct {
+        arithmetic: Arithmetic = .identity,
+        next_arithmetic: Arithmetic = .identity,
+        predicate: bc.Predicate = .eq,
+        offset: u8 = 0,
+        scalar_function: bool = false,
+        tail_jump: bool = false,
+        second_destination: usize = 0,
+    } = .{},
     kind: Kind = .none,
     cost: u8 = 0,
 };
@@ -116,6 +125,7 @@ fn match(program: bc.Program, function: bc.Function, pc: usize) Entry {
     const right = operand(function, pc + 1, .i64) orelse return single(function, pc);
     if (arithmetic(code[pc + 2])) |op| {
         var entry: Entry = .{ .kind = .binary, .cost = 3, .inputs = .{ .left = left, .right = right }, .operation = .{ .arithmetic = op, .offset = 2 } };
+        if (arithmeticChain(function, pc, entry)) |chained| return chained;
         if (pc + 3 < code.len and code[pc + 3].op == .store_local) {
             const slot = code[pc + 3].op.store_local;
             if (function.scope.locals[@backingInt(slot)].ty == .i64) {
@@ -165,6 +175,18 @@ fn match(program: bc.Program, function: bc.Function, pc: usize) Entry {
         return entry;
     }
     return single(function, pc);
+}
+fn arithmeticChain(function: bc.Function, pc: usize, first: Entry) ?Entry {
+    const code = function.scope.instructions;
+    if (pc + 4 >= code.len) return null;
+    const next = arithmetic(code[pc + 4]) orelse return null;
+    const third = operand(function, pc + 3, .i64) orelse return null;
+    var entry = first;
+    entry.kind = .binary_chain;
+    entry.cost = 5;
+    entry.inputs.third = third;
+    entry.operation.next_arithmetic = next;
+    return entry;
 }
 fn copySequence(function: bc.Function, pc: usize, left: Operand, ty: typed.Type, slot: typed.LocalId) Entry {
     var entry: Entry = .{ .kind = .copy, .cost = 2, .inputs = .{ .left = left }, .ty = ty, .destination = @backingInt(slot) };

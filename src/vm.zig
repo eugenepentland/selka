@@ -550,6 +550,7 @@ const Step = struct {
             .index => self.executeFusedIndex(fused),
             .scalar_load, .copy, .copy_pair, .return_value => self.executeFusedValue(fused),
             .binary_store => self.executeFusedStore(fused),
+            .binary_chain => self.executeFusedChain(fused),
             .compare, .compare_jump, .compare_return => self.executeFusedCompare(fused),
             .binary, .binary_compare, .binary_compare_jump, .arguments_call, .binary_call => self.executeFusedOperands(fused),
         };
@@ -587,6 +588,16 @@ const Step = struct {
             return if (try self.executeRet()) .finished else .continued;
         }
         unreachable;
+    }
+    fn executeFusedChain(self: *Step, fused: *const fusion.Entry) !FusedResult {
+        const left = self.fastScalar(fused.inputs.left, .i64) orelse return .fallback;
+        const right = self.fastScalar(fused.inputs.right, .i64) orelse return .fallback;
+        const third = self.fastScalar(fused.inputs.third, .i64) orelse return .fallback;
+        const first = fusion.evaluate(fused.operation.arithmetic, left, right) catch |err| return self.fusedArithmeticFailure(err, 2);
+        const result = fusion.evaluate(fused.operation.next_arithmetic, first, third) catch |err| return self.fusedArithmeticFailure(err, 4);
+        self.advanceFused(fused.cost);
+        try appendValue(self.execution.state.stack, self.execution.allocator, .{ .i64 = result });
+        return .continued;
     }
     fn executeFusedStore(self: *Step, fused: *const fusion.Entry) !FusedResult {
         const left = self.fastScalar(fused.inputs.left, .i64) orelse return .fallback;

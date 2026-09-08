@@ -51,6 +51,18 @@ test "fused arithmetic branches calls and reads preserve every budget cutoff" {
     };
     for (sources) |source| try compareBudgets(source);
 }
+// spec: VM-FUSION-7
+test "chained arithmetic preserves intermediate traps and every budget cutoff" {
+    const sources = [_][]const u8{
+        "fn f(x:i64,y:i64,z:i64)->i64{return x*y%z;}fn main()->i64{return f(123,456,97);}",
+        "fn f(x:i64,y:i64,z:i64)->i64{return x*y%z;}fn main()->i64{return f(9223372036854775807,2,0);}",
+        "fn f(x:i64,y:i64,z:i64)->i64{return x*y%z;}fn main()->i64{return f(123,456,0);}",
+        "fn f(x:i64,y:i64,z:i64)->i64{return x+y+z;}fn main()->i64{return f(9223372036854775806,1,1);}",
+        "fn f(x:i64,y:i64,z:i64)->i64{return (x-y)/z;}fn main()->i64{return f(-9223372036854775808,0,-1);}",
+        "fn main()->i64{let mut i=0;let mut total=0;while i<3{let mut j=0;while j<4{total+=(i*j)%7;j+=1;}i+=1;}return total;}",
+    };
+    for (sources) |source| try compareBudgets(source);
+}
 // spec: VM-FUSION-2
 test "fused execution preserves borrowed scalar owners" {
     try compareBudgets("fn bump(x:&mut i64)->i64{write_ref(x,read_ref(x)+1);return read_ref(x);}" ++
