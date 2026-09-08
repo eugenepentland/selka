@@ -1,0 +1,150 @@
+module main;
+import std_strings as s;
+import std_path as p;
+import std_bytes as b;
+import std_json as json;
+import std_json_view as j;
+import std_result as r;
+fn same(bytes: b::Bytes, expected: &[]u8) -> bool {
+    borrow bytes[..] as view {
+        return b::compare(view, expected) == 0;
+    }
+}
+fn bounded(value: b::Built) -> bool {
+    match value {
+        b::Built.ok(discard) => {
+            return false;
+        },
+        b::Built.err(error) => {
+            return error.category == new r::Category.bounds;
+        }
+    }
+}
+fn input(heap: allocator) -> json::Input {
+    let source = "[\"\\u00e9\\ud83d\\ude00\\u0000\",\"\",null]";
+    let mut bytes = try acquire_buffer<json::Input>(heap, len(source));
+    borrow source[..] as view {
+        let mut i = 0u64;
+        while i < len_slice(view) {
+            discard try append_buffer<json::Status>(bytes, read_slice(view, i));
+            i += 1u64;
+        }
+    }
+    return new json::Input.ok(bytes);
+}
+fn parsed(heap: allocator) -> j::Parsed {
+    match input(heap) {
+        json::Input.err(code) => {
+            return new j::Parsed.err(r::allocation_error(code));
+        },
+        json::Input.ok(bytes) => {
+            return j::parse(heap, bytes, 4096);
+        }
+    }
+}
+fn checks(heap: allocator) -> r::Result<i64, r::Error> {
+    if !same(try s::pad_right(heap, "a", 3u64, 32u8, 3u64), "a  ") || !same(try s::pad_right(heap, "abc", 1u64, 32u8, 3u64), "abc") || !same(try s::pad_right(heap, "", 0u64, 32u8, 0u64), "") {
+        return new r::Result<i64, r::Error>.ok(- 1);
+    }
+    if !bounded(s::pad_right(heap, "a", 3u64, 32u8, 2u64)) {
+        return new r::Result<i64, r::Error>.ok(- 2);
+    }
+    let parts = new [3]s::Range[new s::Range {
+        start: 0u64,
+        end: 1u64
+    }, new s::Range {
+        start: 1u64,
+        end: 1u64
+    }, new s::Range {
+        start: 1u64,
+        end: 3u64
+    }];
+    borrow parts[..] as spans {
+        if !same(try s::join(heap, "abc", spans, "/", 5u64), "a//bc") || !bounded(s::join(heap, "abc", spans, "/", 4u64)) {
+            return new r::Result<i64, r::Error>.ok(- 3);
+        }
+    }
+    borrow parts[0u64..0u64] as empty {
+        if !same(try s::join(heap, "abc", empty, "long separator", 0u64), "") {
+            return new r::Result<i64, r::Error>.ok(- 14);
+        }
+    }
+    let bad = new [1]s::Range[new s::Range {
+        start: 2u64,
+        end: 1u64
+    }];
+    borrow bad[..] as spans {
+        if !bounded(s::join(heap, "abc", spans, "", 9u64)) {
+            return new r::Result<i64, r::Error>.ok(- 4);
+        }
+    }
+    if !p::absolute_valid("/") || !p::absolute_valid("/a/b") || p::absolute_valid("/a/") || p::absolute_valid("/a/../b") || p::absolute_valid("//a") || p::valid("/a") {
+        return new r::Result<i64, r::Error>.ok(- 5);
+    }
+    if !p::absolute_prefix("/a/b", "/a") || !p::absolute_prefix("/a", "/") || p::absolute_prefix("/ab", "/a") {
+        return new r::Result<i64, r::Error>.ok(- 6);
+    }
+    if !same(try p::absolute_join(heap, "/", "a/b", 4u64), "/a/b") || !same(try p::absolute_join(heap, "/a", "", 2u64), "/a") || !bounded(p::absolute_join(heap, "/a", "b", 3u64)) {
+        return new r::Result<i64, r::Error>.ok(- 7);
+    }
+    match parsed(heap) {
+        j::Parsed.err(error) => {
+            return new r::Result<i64, r::Error>.err(error);
+        },
+        j::Parsed.ok(document) => {
+            borrow document[..] as doc {
+                let root = try j::root(doc);
+                let node = try j::at(doc, root, 0);
+                let bytes = try j::text(heap, doc, node, 7u64);
+                borrow bytes[..] as view {
+                    if len_slice(view) != 7u64 || !b::utf8(view) || read_slice(view, 0u64) != 195u8 || read_slice(view, 2u64) != 240u8 || read_slice(view, 6u64) != 0u8 {
+                        return new r::Result<i64, r::Error>.ok(- 8);
+                    }
+                }
+                let expected = new [7]u8[195u8, 169u8, 240u8, 159u8, 152u8, 128u8, 0u8];
+                borrow bytes[..] as decoded,
+                expected[..] as exact {
+                    if b::compare(decoded, exact) != 0 {
+                        return new r::Result<i64, r::Error>.ok(- 15);
+                    }
+                }
+                if !bounded(j::text(heap, doc, node, 6u64)) || !same(try j::text(heap, doc, try j::at(doc, root, 1), 0u64), "") {
+                    return new r::Result<i64, r::Error>.ok(- 9);
+                }
+                match j::text(heap, doc, try j::at(doc, root, 2), 9u64) {
+                    b::Built.ok(discard) => {
+                        return new r::Result<i64, r::Error>.ok(- 10);
+                    },
+                    b::Built.err(error) => {
+                        if error.category != new r::Category.wrong_type {
+                            return new r::Result<i64, r::Error>.ok(- 11);
+                        }
+                    }
+                }
+                match j::text(heap, doc, new j::Node {
+                    id: 0
+                }, 9u64) {
+                    b::Built.ok(discard) => {
+                        return new r::Result<i64, r::Error>.ok(- 12);
+                    },
+                    b::Built.err(error) => {
+                        if error.category != new r::Category.absent {
+                            return new r::Result<i64, r::Error>.ok(- 13);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    return new r::Result<i64, r::Error>.ok(42);
+}
+fn main(heap: allocator) -> i64 {
+    match checks(heap) {
+        r::Result<i64, r::Error>.ok(value) => {
+            return value;
+        },
+        r::Result<i64, r::Error>.err(discard) => {
+            return - 99;
+        }
+    }
+}

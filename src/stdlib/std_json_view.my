@@ -3,7 +3,9 @@ module std_json_view;
 import std_bytes;
 import std_json;
 import std_result;
+import std_strings;
 export Node;
+export text;
 export Kind;
 export root;
 export kind;
@@ -158,11 +160,11 @@ fn key(doc: &[]i64, node: Node, index: i64) -> std_result::Result<Node, std_resu
         id: value.id - 1
     });
 }
-fn textis(doc: &[]i64, node: Node, text: &[]u8) -> std_result::Result<bool, std_result::Error> {
+fn textis(doc: &[]i64, node: Node, content: &[]u8) -> std_result::Result<bool, std_result::Error> {
     if try kind(doc, node) != new Kind.string {
         return new std_result::Result<bool, std_result::Error>.err(failure(new std_result::Category.wrong_type));
     }
-    return new std_result::Result<bool, std_result::Error>.ok(std_json::textis(doc, node.id, text));
+    return new std_result::Result<bool, std_result::Error>.ok(std_json::textis(doc, node.id, content));
 }
 fn text_length(doc: &[]i64, node: Node) -> std_result::Result<i64, std_result::Error> {
     if try kind(doc, node) != new Kind.string {
@@ -305,14 +307,14 @@ fn count_between(doc: &[]i64, node: Node, lower: i64, upper: i64) -> std_result:
 }
 // Unknown fields only: requiredness and value schemas remain explicit.
 // Validate every descriptor before testing members; duplicates are harmless.
-fn only_fields(doc: &[]i64, node: Node, text: &[]u8, allowed: &[]Name) -> std_result::Result<bool, std_result::Error> {
+fn only_fields(doc: &[]i64, node: Node, content: &[]u8, allowed: &[]Name) -> std_result::Result<bool, std_result::Error> {
     if try kind(doc, node) != new Kind.object {
         return new std_result::Result<bool, std_result::Error>.err(failure(new std_result::Category.wrong_type));
     }
     let mut i = 0u64;
     while i < len_slice(allowed) {
         let name = read_slice(allowed, i);
-        if name.start > name.end || name.end > len_slice(text) {
+        if name.start > name.end || name.end > len_slice(content) {
             return new std_result::Result<bool, std_result::Error>.err(failure(new std_result::Category.bounds));
         }
         i += 1u64;
@@ -324,7 +326,7 @@ fn only_fields(doc: &[]i64, node: Node, text: &[]u8, allowed: &[]Name) -> std_re
         i = 0u64;
         while i < len_slice(allowed) && !found {
             let name = read_slice(allowed, i);
-            borrow text[name.start..name.end] as candidate {
+            borrow content[name.start..name.end] as candidate {
                 found = try textis(doc, key_node, candidate);
             }
             i += 1u64;
@@ -335,4 +337,21 @@ fn only_fields(doc: &[]i64, node: Node, text: &[]u8, allowed: &[]Name) -> std_re
         cursor = try advance(doc, cursor);
     }
     return new std_result::Result<bool, std_result::Error>.ok(true);
+}
+// Materialize decoded UTF-8 bytes without normalization, including embedded NUL.
+fn text(heap: allocator, doc: &[]i64, node: Node, limit: u64) -> std_bytes::Built {
+    if node.id == 0 {
+        return new std_bytes::Built.err(failure(new std_result::Category.absent));
+    }
+    let size = try text_length(doc, node);
+    if cast<u64>(size) > limit {
+        return new std_bytes::Built.err(failure(new std_result::Category.bounds));
+    }
+    let mut bytes = try std_bytes::create(heap, size);
+    let mut i = 0;
+    while i < size {
+        bytes = try std_strings::push(bytes, try text_byte(doc, node, i));
+        i += 1;
+    }
+    return new std_bytes::Built.ok(bytes);
 }

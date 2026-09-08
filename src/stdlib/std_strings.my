@@ -3,6 +3,8 @@ module std_strings;
 import std_bytes;
 import std_result;
 export Range;
+export pad_right;
+export join;
 export Split;
 export starts_with;
 export ends_with;
@@ -188,4 +190,71 @@ fn signed(heap: allocator, value: i64, base: u64, limit: i64) -> std_bytes::Buil
         return digits(bytes, cast<u64>(-(value + 1)) + 1u64, base);
     }
     return digits(bytes, cast<u64>(value), base);
+}
+// Width is bytes, never Unicode display columns; a shorter width never truncates.
+fn pad_right(heap: allocator, text: &[]u8, width: u64, fill: u8, limit: u64) -> std_bytes::Built {
+    let mut size = len_slice(text);
+    if width > size {
+        size = width;
+    }
+    if size > limit || size > 9223372036854775807u64 {
+        return new std_bytes::Built.err(new std_result::Error {
+            category: new std_result::Category.bounds,
+            code: 1
+        });
+    }
+    let mut bytes = try std_bytes::append(try std_bytes::create(heap, cast<i64>(size)), text);
+    let mut i = len_slice(text);
+    while i < size {
+        bytes = try push(bytes, fill);
+        i += 1u64;
+    }
+    return new std_bytes::Built.ok(bytes);
+}
+// Validate every half-open span and total output bound before allocating.
+fn join(heap: allocator, text: &[]u8, parts: &[]Range, separator: &[]u8, limit: u64) -> std_bytes::Built {
+    let mut size = 0u64;
+    let mut i = 0u64;
+    while i < len_slice(parts) {
+        let part = read_slice(parts, i);
+        if part.start > part.end || part.end > len_slice(text) {
+            return new std_bytes::Built.err(new std_result::Error {
+                category: new std_result::Category.bounds,
+                code: 1
+            });
+        }
+        if i > 0u64 {
+            if len_slice(separator) > limit - size {
+                return new std_bytes::Built.err(new std_result::Error {
+                    category: new std_result::Category.bounds,
+                    code: 1
+                });
+            }
+            size += len_slice(separator);
+        }
+        if part.end - part.start > limit - size {
+            return new std_bytes::Built.err(new std_result::Error {
+                category: new std_result::Category.bounds,
+                code: 1
+            });
+        }
+        size += part.end - part.start;
+        i += 1u64;
+    }
+    if size > 9223372036854775807u64 {
+        return new std_bytes::Built.err(new std_result::Error {
+            category: new std_result::Category.bounds,
+            code: 1
+        });
+    }
+    let mut bytes = try std_bytes::create(heap, cast<i64>(size));
+    i = 0u64;
+    while i < len_slice(parts) {
+        if i > 0u64 {
+            bytes = try std_bytes::append(bytes, separator);
+        }
+        bytes = try append_range(bytes, text, read_slice(parts, i));
+        i += 1u64;
+    }
+    return new std_bytes::Built.ok(bytes);
 }

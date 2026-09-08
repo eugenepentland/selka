@@ -403,6 +403,8 @@ supersede it. The manifest records implementation coverage, not a test certifica
 ## Ordinary JSON schema helpers
 
 - [STANDARD-JSON-SCHEMA-1] Checked document-local JSON cursors iterate immediate array elements or object members in source order, skipping nested subtrees; empty cursors terminate and advancing an exhausted cursor is idempotent. Required fields distinguish absence from null. Integer and boolean defaults apply only to absent fields; present wrong kinds remain errors. Inclusive integer/count bounds and descriptor-based allowed object field checks preserve named type and bounds failures without changing parser strictness or application validation precedence.
+- [STANDARD-CORPUS-TEXT-1] Bounded byte right-padding and span joining validate output limits and descriptor bounds before allocation; decoded JSON string materialization preserves full UTF-8 and embedded NUL with explicit absent, wrong-kind and bounds errors. Separately named absolute lexical path validation, component-prefix matching and bounded relative-suffix joining preserve all existing relative path contracts.
+- [STANDARD-CORPUS-TEXT-2] Text materialization, padding, joining and absolute path builders release owned partial outputs when runtime allocation fails.
 
 - [BORROW-SYNTAX-1] `borrow owner[..] as view` borrows all initialized elements of a buffer, fixed array or existing slice with existing slice safety rules. Comma-separated borrow clauses use independent per-clause mutability and lower left-to-right to lexical nested scopes; all aliases remain checked, later clauses observe earlier loans, and return/try/break/continue release loans in reverse order. Whole-value borrowing without brackets retains its existing meaning. Generic bodies enforce the same rules. Grouped scopes count toward the existing parser nesting bound.
 
@@ -425,3 +427,5 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [VM-TIMING-1] `run --timings` reports VM execution nanoseconds on stderr, including VM validation, setup and cleanup but excluding source compilation and result output. Timing preserves guest results, dispatch selection, quotas and runtime diagnostics; duplicate options and unsupported commands reject it.
 
 - [VM-FUSION-7] Fused arithmetic chains preserve evaluation order, intermediate overflow/division traps, original source spans and every logical instruction-budget cutoff.
+
+- [PHASE-TIMING-1] One-shot compiler commands and the raw byte I/O host accept opt-in `--timings=json`, emitting versioned phase-timings-v1 JSON Lines on stderr. Records use nonnegative duration_ns, explicit inclusive scope, available work counts and the command exit_code; total includes cleanup and excludes timing serialization. Attempted failing phases remain observable, stdout and default behavior are preserved, and legacy `--timings` remains compatible.

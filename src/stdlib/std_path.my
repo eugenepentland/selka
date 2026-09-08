@@ -3,6 +3,9 @@ module std_path;
 import std_bytes;
 import std_result;
 export Span;
+export absolute_valid;
+export absolute_prefix;
+export absolute_join;
 export valid;
 export component;
 export basename;
@@ -135,4 +138,54 @@ fn join(heap: allocator, parent: &[]u8, child: &[]u8, limit: u64) -> std_bytes::
     }
     let bytes = try std_bytes::create(heap, cast<i64>(size));
     return std_bytes::append(try std_bytes::append(try std_bytes::append(bytes, parent), "/"), child);
+}
+// Absolute lexical names: root or slash plus a valid strict relative path.
+fn absolute_valid(path: &[]u8) -> bool noalloc {
+    if len_slice(path) == 0u64 || read_slice(path, 0u64) != 47u8 {
+        return false;
+    }
+    if len_slice(path) == 1u64 {
+        return true;
+    }
+    borrow path[1u64..len_slice(path)] as relative {
+        return valid(relative);
+    }
+}
+fn absolute_prefix(path: &[]u8, prefix: &[]u8) -> bool noalloc {
+    if !absolute_valid(path) || !absolute_valid(prefix) || len_slice(prefix) > len_slice(path) {
+        return false;
+    }
+    let mut i = 0u64;
+    while i < len_slice(prefix) {
+        if read_slice(path, i) != read_slice(prefix, i) {
+            return false;
+        }
+        i += 1u64;
+    }
+    return len_slice(prefix) == 1u64 || len_slice(prefix) == len_slice(path) || read_slice(path, len_slice(prefix)) == 47u8;
+}
+// Suffix is empty or strict relative; an absolute suffix never replaces base.
+fn absolute_join(heap: allocator, base: &[]u8, suffix: &[]u8, limit: u64) -> std_bytes::Built {
+    if !absolute_valid(base) ||(len_slice(suffix) > 0u64 && !valid(suffix)) {
+        return new std_bytes::Built.err(new std_result::Error {
+            category: new std_result::Category.malformed,
+            code: 1
+        });
+    }
+    let slash = len_slice(base) > 1u64 && len_slice(suffix) > 0u64;
+    let mut size = len_slice(base) + len_slice(suffix);
+    if slash {
+        size += 1u64;
+    }
+    if size > limit || size > 4095u64 {
+        return new std_bytes::Built.err(new std_result::Error {
+            category: new std_result::Category.bounds,
+            code: 1
+        });
+    }
+    let mut bytes = try std_bytes::append(try std_bytes::create(heap, cast<i64>(size)), base);
+    if slash {
+        bytes = try std_bytes::append(bytes, "/");
+    }
+    return std_bytes::append(bytes, suffix);
 }

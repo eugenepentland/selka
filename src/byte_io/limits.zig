@@ -3,6 +3,7 @@ const std = @import("std");
 /// Project path and bounded input, unpublished output, and execution budgets.
 pub const Options = struct {
     project: []const u8,
+    timings_json: bool = false,
     grants: @import("grants.zig").Config = .{},
     input: usize = 2 * 1024 * 1024,
     output: usize = 128 * 1024 * 1024,
@@ -15,6 +16,11 @@ pub fn parse(args: []const []const u8) error{InvalidArguments}!Options {
     var options: Options = .{ .project = args[2] };
     var seen: u8 = 0;
     for (args[3..]) |argument| {
+        if (std.mem.eql(u8, argument, "--timings=json")) {
+            if (options.timings_json) return error.InvalidArguments;
+            options.timings_json = true;
+            continue;
+        }
         if (try options.grants.parse(argument)) continue;
         if (try options.memory.parse(argument)) continue;
         const split = std.mem.indexOfScalar(u8, argument, '=') orelse return error.InvalidArguments;

@@ -194,3 +194,6 @@ pub const Compilation = struct {
 
 /// Trusted directory and endpoint scoped resource adapters for application hosts.
 pub const scoped_providers = @import("scoped_providers.zig");
+
+/// Opt-in structured phase timing for command-line hosts.
+pub const timings = @import("timings.zig");

@@ -166,3 +166,17 @@ test "integer extrema cover all widths empty defaults and full signed ranges" {
 test "ordinary JSON schema helpers iterate nested values and preserve absent null type bounds errors" {
     try runLibrary(@embedFile("stdlib/fixtures/json_schema.my"), 42);
 }
+
+// spec: STANDARD-CORPUS-TEXT-1
+test "corpus text padding span joining absolute paths and Unicode materialization" {
+    try runLibrary(@embedFile("stdlib/fixtures/corpus_text_paths.my"), 42);
+}
+// spec: STANDARD-CORPUS-TEXT-2
+test "corpus text helpers release partial owned allocations" {
+    var fixture: Fixture = .{ .text = @embedFile("stdlib/fixtures/corpus_text_paths.my") };
+    var program: language.embedded_project.Program = undefined;
+    try program.init(t.allocator, .{ .context = &fixture, .read = Fixture.load });
+    defer program.deinit();
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), textRuntimeAllocation, .{program.compilation.code.?});
+}

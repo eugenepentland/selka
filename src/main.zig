@@ -1,10 +1,11 @@
 //! Host I/O and process policy stay outside the compiler and VM.
+const lowering_phase = "bytecode_lowering";
 const inputs_prefix = "--inputs=";
 const policy_prefix = "--policy=";
 const std = @import("std");
 const language = @import("mylang");
 const diagnostic_output = language.diagnostic_output;
-const Reporting = struct { timings: bool = false, diagnostics: ?diagnostic_output.Format = null };
+const Reporting = struct { timings: bool = false, timings_json: bool = false, diagnostics: ?diagnostic_output.Format = null };
 const usage = "usage: mylang " ++
     "<invoke-project|check-value-project|schema-project|input-module|check|run|dump-bytecode|di" ++
     "scover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fm" ++
@@ -29,6 +30,7 @@ const usage = "usage: mylang " ++
     "fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: " ++
     "--check (otherwise writes formatted source to " ++
     "stdout)\n  index-project: JSON symbols, references and pinned source snapshot\n  project-dependencies: checked module graph and hashes; --inputs supported\n" ++
+    "  one-shot commands: --timings=json (phase-timings-v1 JSON Lines on stderr)\n" ++
     "  all commands: --diagnostics=text|json (stderr JSON Lines; stdout unchanged)\n" ++
     "  check-session: persistent check/clear/quit lines on stdin; JSON status on stdout; --inputs supported\n";
 
@@ -48,6 +50,7 @@ const Context = struct {
     arena: *std.heap.ArenaAllocator,
     io: std.Io,
     diagnostics: diagnostic_output.Format,
+    timings: *language.timings.Profile,
     fn text(self: Context, bytes: []const u8) !void {
         if (self.diagnostics == .text) return std.Io.File.stderr().writeStreamingAll(self.io, bytes);
         const rendered = try diagnostic_output.message(self.gpa, bytes, self.diagnostics);
@@ -65,13 +68,16 @@ fn dispatch(process: std.process.Init) !u8 {
         try std.Io.File.stderr().writeStreamingAll(process.io, usage);
         return 2;
     };
-    const init: Context = .{ .gpa = process.gpa, .arena = process.arena, .io = process.io, .diagnostics = parsed.reporting.diagnostics orelse .text };
-    return run(init, parsed) catch |err| {
+    var timings = language.timings.Profile.init(process.io, parsed.reporting.timings_json, .compiler);
+    const init: Context = .{ .timings = &timings, .gpa = process.gpa, .arena = process.arena, .io = process.io, .diagnostics = parsed.reporting.diagnostics orelse .text };
+    const status = run(init, parsed) catch |err| status: {
         const message = try std.fmt.allocPrint(init.gpa, "mylang: host failure: {s}\n", .{@errorName(err)});
         defer init.gpa.free(message);
         try init.text(message);
-        return 2;
+        break :status @as(u8, 2);
     };
+    try timings.report(status);
+    return status;
 }
 fn run(init: Context, parsed: Parsed) !u8 {
     const allocator = init.gpa;
@@ -96,8 +102,12 @@ fn run(init: Context, parsed: Parsed) !u8 {
         => return listModules(init, parsed),
         else => {},
     }
+    init.timings.begin("source_load", false);
     const bytes = try std.Io.Dir.cwd().readFileAlloc(init.io, parsed.path, allocator, .limited(16 * 1024 * 1024));
     defer allocator.free(bytes);
+    init.timings.counts.source_bytes = bytes.len;
+    init.timings.counts.modules = 1;
+    init.timings.end();
     if (parsed.command == .@"input-module") {
         var manifest = (try parseInputManifest(init, parsed.path, bytes)) orelse return 2;
         defer manifest.deinit();
@@ -106,9 +116,11 @@ fn run(init: Context, parsed: Parsed) !u8 {
         try std.Io.File.stdout().writeStreamingAll(init.io, generated);
         return 0;
     }
+    init.timings.begin("frontend", false);
     var compilation = try language.Compilation.init(allocator, parsed.path, bytes);
     defer compilation.deinit();
     if (parsed.command == .fmt or parsed.command == .@"fmt-module") {
+        init.timings.begin("format_inclusive", true);
         const formatted = (if (parsed.command == .@"fmt-module") compilation.formatModule(allocator) else compilation.format(allocator)) catch |err| switch (err) {
             error.SourceError => {
                 try report(init, &compilation);
@@ -116,6 +128,7 @@ fn run(init: Context, parsed: Parsed) !u8 {
             },
             else => return err,
         };
+        init.timings.end();
         defer allocator.free(formatted);
         if (parsed.format_check) {
             if (std.mem.eql(u8, formatted, bytes)) return 0;
@@ -133,6 +146,9 @@ fn run(init: Context, parsed: Parsed) !u8 {
         },
         else => return err,
     };
+    init.timings.counts.ast_nodes = compilation.syntax.?.nodes.items.len + compilation.syntax.?.statements.items.len;
+    init.timings.counts.typed_nodes = compilation.program.?.nodes.len + compilation.program.?.statements.len;
+    init.timings.end();
     const check_ns = if (parsed.reporting.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
     if (parsed.command != .@"emit-c") try report(init, &compilation);
     switch (parsed.command) {
@@ -157,13 +173,14 @@ fn run(init: Context, parsed: Parsed) !u8 {
         .@"report-project-quality",
         => unreachable,
         .@"emit-c" => {
-            const generated = compilation.emitC(allocator) catch |err| switch (err) {
+            const generated = emitMeasuredC(init, &compilation) catch |err| switch (err) {
                 error.SourceError => {
                     try report(init, &compilation);
                     return 1;
                 },
                 else => return err,
             };
+            init.timings.end();
             defer allocator.free(generated);
             try report(init, &compilation);
             try std.Io.File.stdout().writeStreamingAll(init.io, generated);
@@ -178,7 +195,9 @@ fn run(init: Context, parsed: Parsed) !u8 {
         },
         .@"discover-duplicates" => {
             const start = std.Io.Timestamp.now(init.io, .awake);
+            init.timings.begin("discovery", false);
             var analysis = try language.duplicates.discover(allocator, compilation.program.?, parsed.discovery);
+            init.timings.end();
             defer analysis.deinit();
             const analysis_ns = start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds;
             const text = try language.duplicates.render(allocator, analysis, compilation.program.?, compilation.src);
@@ -201,7 +220,9 @@ fn run(init: Context, parsed: Parsed) !u8 {
             }
         },
         .@"dump-bytecode" => {
+            init.timings.begin("bytecode_dump_inclusive", true);
             const text = try compilation.dump(allocator);
+            init.timings.end();
             defer allocator.free(text);
             try std.Io.File.stdout().writeStreamingAll(init.io, text);
         },
@@ -223,10 +244,14 @@ fn run(init: Context, parsed: Parsed) !u8 {
 }
 
 fn executeRun(init: Context, compilation: *language.Compilation, parsed: Parsed) !language.vm.Result {
-    if (!parsed.reporting.timings) return compilation.executeWithOptions(init.gpa, parsed.options);
+    if (!parsed.reporting.timings and !parsed.reporting.timings_json) return compilation.executeWithOptions(init.gpa, parsed.options);
+    init.timings.begin(lowering_phase, false);
     try compilation.emit();
+    init.timings.begin("vm_execution", false);
     const start = std.Io.Timestamp.now(init.io, .awake);
     const result = try language.vm.runWithOptions(init.gpa, compilation.code.?, parsed.options);
+    init.timings.end();
+    if (!parsed.reporting.timings) return result;
     const elapsed = start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds;
     var buffer: [96]u8 = undefined;
     const text = try std.fmt.bufPrint(&buffer, "timings: bytecode_ns={d}\n", .{elapsed});
@@ -496,9 +521,12 @@ const ArgumentParser = struct {
             if ((self.command != .@"discover-duplicates" and self.command != .@"discover-project-duplicates") or self.saw_work) return error.Usage;
             self.saw_work = true;
             self.discovery.near_options.max_work = std.math.cast(usize, try positive(arg["--max-work=".len..])) orelse return error.Usage;
+        } else if (std.mem.eql(u8, arg, "--timings=json")) {
+            if (self.command == .@"check-session" or self.reporting.timings or self.reporting.timings_json) return error.Usage;
+            self.reporting.timings_json = true;
         } else if (std.mem.eql(u8, arg, "--timings")) {
             const supported = self.command == .run or self.command == .@"discover-duplicates" or self.command == .@"discover-project-duplicates";
-            if (!supported or self.reporting.timings) return error.Usage;
+            if (!supported or self.reporting.timings or self.reporting.timings_json) return error.Usage;
             self.reporting.timings = true;
         } else return false;
         return true;
@@ -569,14 +597,19 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         try init.text("list-modules: entry must be an identifier.my file; imports resolve beneath its directory\n");
         return 2;
     }
+    init.timings.begin("source_load_parse", false);
     var files: ModuleFiles = .{ .io = init.io, .root = std.fs.path.dirname(path) orelse "." };
     files.inputs = (try prepareInputs(init, parsed, basename)) orelse return 2;
     var project = language.project.Project.init(init.gpa);
     defer project.deinit();
     if (try loadModules(init, &project, &files, basename)) |status| return status;
+    init.timings.counts.modules = project.modules.items.len;
+    init.timings.counts.source_bytes = project.counts.bytes;
+    init.timings.end();
     if (parsed.command == .@"fmt-project") return formatProject(init, &project);
     if (try replayCheck(init, parsed.command, &project, verdict)) return 0;
     const output = if (parsed.command != .@"list-modules") result: {
+        init.timings.begin("frontend", false);
         var index = (try buildIndex(init, &project, cache)) orelse return partialNavigation(init, &project, parsed.command);
         if (parsed.command == .@"list-interfaces") break :result try index.render(init.gpa);
         var compilation = try language.project_compile.Compilation.init(&index);
@@ -588,6 +621,9 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
             },
             else => return err,
         };
+        init.timings.counts.ast_nodes = compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len;
+        init.timings.counts.typed_nodes = compilation.program.?.nodes.len + compilation.program.?.statements.len;
+        init.timings.end();
         if (parsed.command == .@"emit-project-c") break :result (try emitProjectC(init, &compilation)) orelse return 1;
         if (parsed.command != .@"eval-project") try reportProject(init, &compilation);
         if (parsed.command == .@"project-dependencies") break :result try dependencyReport(init, &compilation, files.inputs);
@@ -606,8 +642,11 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         }
         if (parsed.command == .@"discover-project-duplicates") return discoverProject(init, parsed, &project, &compilation, frontend_start);
         if (parsed.command == .@"check-policy") return checkProjectPolicy(init, parsed, &project);
+        init.timings.begin(lowering_phase, false);
         try compilation.emit();
+        init.timings.end();
         if (parsed.evaluation_request) break :result (try evaluationRequest(init, parsed, &project, &compilation)) orelse return 1;
+        init.timings.begin(executionPhase(parsed.command), false);
         const outcome = if (parsed.command == .@"eval-project") language.evaluation.evaluate(init.gpa, compilation.code.?, &compilation.diagnostics, parsed.evaluation) catch |err| switch (err) {
             error.SourceError => {
                 try reportProject(init, &compilation);
@@ -615,6 +654,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
             },
             else => return err,
         } else try language.vm.runWithOptions(init.gpa, compilation.code.?, parsed.options);
+        init.timings.end();
         if (parsed.command == .@"eval-project") try reportProject(init, &compilation);
         switch (outcome) {
             .value => |value| {
@@ -635,13 +675,14 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
 }
 
 fn emitProjectC(init: Context, compilation: *language.project_compile.Compilation) !?[]u8 {
-    const generated = compilation.emitC(init.gpa) catch |err| switch (err) {
+    const generated = emitMeasuredC(init, compilation) catch |err| switch (err) {
         error.SourceError => {
             try reportProject(init, compilation);
             return null;
         },
         else => return err,
     };
+    init.timings.end();
     errdefer init.gpa.free(generated);
     try reportProject(init, compilation);
     return generated;
@@ -660,6 +701,9 @@ fn renderNavigation(init: Context, compilation: *language.project_compile.Compil
         error.SourceError => {},
         else => return err,
     };
+    init.timings.counts.ast_nodes = compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len;
+    if (compilation.program) |program| init.timings.counts.typed_nodes = program.nodes.len + program.statements.len;
+    init.timings.end();
     try reportProject(init, compilation);
     return language.navigation.render(init.gpa, compilation, try compilerIdentity(init.io), .{});
 }
@@ -805,7 +849,9 @@ fn formatProject(init: Context, project: *language.project.Project) !u8 {
 
 fn discoverProject(init: Context, parsed: Parsed, project: *language.project.Project, compilation: *language.project_compile.Compilation, frontend_start: std.Io.Timestamp) !u8 {
     const start = std.Io.Timestamp.now(init.io, .awake);
+    init.timings.begin("discovery", false);
     var analysis = try language.duplicates.discover(init.gpa, compilation.program.?, parsed.discovery);
+    init.timings.end();
     defer analysis.deinit();
     const discovery_ns = start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds;
     const text = try language.duplicates.render(init.gpa, analysis, compilation.program.?, compilation.src);
@@ -1027,4 +1073,17 @@ fn featureReport(init: std.process.Init) !void {
     defer init.gpa.free(text);
     try std.Io.File.stdout().writeStreamingAll(init.io, text);
     try std.Io.File.stdout().writeStreamingAll(init.io, "\n");
+}
+
+fn executionPhase(command: Command) []const u8 {
+    return if (command == .@"eval-project") "evaluation" else "vm_execution";
+}
+
+fn emitMeasuredC(init: Context, compilation: anytype) ![]u8 {
+    init.timings.begin(lowering_phase, false);
+    try compilation.emit();
+    init.timings.begin("native_emission", false);
+    const generated = try compilation.emitC(init.gpa);
+    init.timings.end();
+    return generated;
 }

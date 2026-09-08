@@ -113,3 +113,24 @@ compiler to include runtime allocation-failure cleanup checks.
 /absolute/path/to/zig` executes all three fixtures on the VM and native builds at
 O0/O2 with undefined-behavior sanitization. This native test also belongs to
 `zig build test-native`.
+
+Byte-oriented preparation helpers:
+
+- `std_strings::pad_right(heap, text, width, fill, limit) -> std_bytes::Built`
+  pads to a minimum byte width without truncation. Width and limit are `u64`,
+  fill is `u8`; this does not measure Unicode display columns.
+- `std_strings::join(heap, text, parts: &[]Range, separator, limit) -> Built`
+  joins half-open ranges into shared bytes, preserving empty parts. Zero parts
+  produces empty bytes. Invalid ranges and output limits yield `bounds` before
+  allocation; allocation failures remain typed and release partial output.
+- `std_path::absolute_valid(path)` accepts `/` or `/` followed by an existing
+  valid relative path. `absolute_prefix(path,prefix)` requires a complete
+  component boundary. `absolute_join(heap,base,suffix,limit)` accepts an absolute
+  base and empty/relative suffix, inserts one slash, and never treats an absolute
+  suffix as replacement. Malformed paths yield `malformed`; output beyond the
+  caller limit or 4095 bytes yields `bounds`. Original relative APIs are unchanged.
+- `std_json_view::text(heap,doc,node,limit) -> std_bytes::Built` allocates exactly
+  the decoded UTF-8 byte length, preserving Unicode and embedded NUL. Limit is
+  `u64`. Missing sentinel node zero yields `absent`, nonstrings `wrong_type`,
+  other invalid nodes and too-small limits `bounds`; allocator failures remain
+  typed. Documents retain the existing unmodified-parser-output precondition.

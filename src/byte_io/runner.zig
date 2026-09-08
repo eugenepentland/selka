@@ -14,13 +14,29 @@ fn run(init: std.process.Init) !void {
     const allocator = init.arena.allocator();
     const args = try init.minimal.args.toSlice(allocator);
     const options = try @import("limits.zig").parse(args);
+    var timings = language.timings.Profile.init(init.io, options.timings_json, .byte_io);
+    var status: u8 = 1;
+    defer timings.report(status) catch |err| print("mylang-io: timing report: {s}\n", .{@errorName(err)});
+    try execute(init, options, &timings);
+    status = 0;
+}
+fn execute(init: std.process.Init, options: @import("limits.zig").Options, timings: *language.timings.Profile) !void {
+    const allocator = init.arena.allocator();
+    timings.begin("compilation_inclusive", true);
     var program: language.embedded_project.Program = undefined;
     try program.initDisk(allocator, init.io, options.project);
     defer program.deinit();
+    timings.counts.modules = program.loaded.modules.items.len;
+    timings.counts.source_bytes = program.loaded.counts.bytes;
+    timings.counts.ast_nodes = program.compilation.syntax.nodes.items.len + program.compilation.syntax.statements.items.len;
+    timings.counts.typed_nodes = program.compilation.program.?.nodes.len + program.compilation.program.?.statements.len;
+    timings.begin("stdin_read", false);
     var buffer: [8192]u8 = undefined;
     var reader = std.Io.File.stdin().readerStreaming(init.io, &buffer);
     const input = try reader.interface.allocRemaining(allocator, .limited(options.input + 1));
+    timings.counts.input_bytes = input.len;
     try validateInputLength(input.len, options.input);
+    timings.end();
     // VM and host-call temporaries must be reclaimable within a long invocation.
     // Source/input storage may use the process arena because it has one lifetime.
     var total: language.allocation_budget.Memory = .{ .parent = init.gpa, .limit = options.memory.total };
@@ -45,7 +61,9 @@ fn run(init: std.process.Init) !void {
     vm_options.memory.backing_allocator = observations.backing.allocator();
     vm_options.memory.statistics = &observations.buffers;
     vm_options.pools.statistics = &observations.pools;
+    timings.begin("vm_execution", false);
     const result = try language.vm.runWithHost(runtime_allocator, program.compilation.code.?, vm_options, &registry, .{ .max_calls = options.execution.calls, .max_work = options.execution.work });
+    timings.end();
     switch (result) {
         .trap => |trap| {
             const message = try trap.render(allocator, program.compilation.src);
@@ -54,7 +72,10 @@ fn run(init: std.process.Init) !void {
         },
         .value => |value| try validateExit(value),
     }
+    timings.begin("stdout_write", false);
     try std.Io.File.stdout().writeStreamingAll(init.io, context.output.items);
+    timings.counts.output_bytes = context.output.items.len;
+    timings.end();
 }
 
 fn validateInputLength(length: usize, limit: usize) error{InputLimit}!void {

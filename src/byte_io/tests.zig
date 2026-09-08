@@ -181,3 +181,12 @@ test "runner memory quotas parse zero limits and reject duplicate InvalidArgumen
     try t.expectError(error.InvalidArguments, parse(&.{ "mylang-io", "--project", ".", "--memory-report", "--memory-report" }));
     try t.expectError(error.InvalidArguments, parse(&.{ "mylang-io", "--project", ".", "--max-host-bytes=-1" }));
 }
+
+// spec: PHASE-TIMING-1
+test "structured timing opt-in accepts JSON and rejects duplicates and unknown formats" {
+    const parse = @import("limits.zig").parse;
+    try t.expect(!(try parse(&.{ "io", "--project", "." })).timings_json);
+    try t.expect((try parse(&.{ "io", "--project", ".", "--timings=json" })).timings_json);
+    try t.expectError(error.InvalidArguments, parse(&.{ "io", "--project", ".", "--timings=json", "--timings=json" }));
+    try t.expectError(error.InvalidArguments, parse(&.{ "io", "--project", ".", "--timings=text" }));
+}
