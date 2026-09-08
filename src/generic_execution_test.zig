@@ -26,7 +26,7 @@ test "generic execution specializes widths forwarding recursion and shared insta
 test "generic execution rejects concrete requirement and arity violations" {
     const cases = [_]struct { source: []const u8, code: []const u8 }{
         .{ .source = "fn f<T:integer>(x:T)->T{return x;}fn main()->i64{discard f::<bool>(true);return 0;}", .code = "E_GENERIC_ARGUMENT" },
-        .{ .source = "fn f<T:copy>(x:T)->T{return x;}fn main()->i64{return f(1);}", .code = "E_GENERIC_ARITY" },
+        .{ .source = "fn f<T:copy,U:copy>(x:T)->T{return x;}fn main()->i64{return f(1);}", .code = "E_GENERIC_INFERENCE" },
         .{ .source = "fn f<T:copy>(x:T)->T{return x;}fn main()->i64{return f::<i64>(true);}", .code = "E_TYPE" },
         .{ .source = "fn main<T:copy>()->i64{return 0;}", .code = "E_MAIN" },
         .{ .source = "fn bad<T:copy>(x:T)->T{return x+x;}fn main()->i64{return bad::<i64>(2);}", .code = "E_GENERIC_OPERATION" },

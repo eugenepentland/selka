@@ -635,31 +635,24 @@ const Checker = struct {
         const signature = function.signature;
         if (function.policy.conversion) return self.sink.fail(eUnsupported, span, "generic conversions still need abstract checking");
         if (signature.return_reference != null and !allow_reference) return self.sink.fail(diagnostic.reference_result, span, "reference-returning calls require a borrow scope");
-        if (invocation.type_arguments.len != signature.type_parameters.len) return self.sink.fail("E_GENERIC_ARITY", span, "explicit type argument count does not match generic parameters");
+        if (invocation.type_arguments.len != 0 and invocation.type_arguments.len != signature.type_parameters.len) return self.sink.fail("E_GENERIC_ARITY", span, "explicit type argument count does not match generic parameters");
         if (invocation.arguments.len != signature.parameters.len) return self.sink.fail("E_ARITY", span, "argument count does not match function parameters");
         const required = try requirements.resolve(self.allocator, self.src, signature.type_parameters, self.sink);
         defer self.allocator.free(required);
         const arguments = try self.allocator.alloc(Symbolic, required.len);
         defer self.allocator.free(arguments);
-        for (invocation.type_arguments, required, arguments) |argument_span, parameter, *argument| {
-            argument.* = if (parameter.constant_length) try self.lengthType(argument_span) else try self.ty(argument_span);
-            const satisfies = switch (argument.*) {
-                .length, .length_parameter => parameter.constant_length,
-                .parameter => |index| self.parameters[index].requirements.implies(parameter.requirements),
-                .concrete => |builtin| parameter.requirements.accepts(builtin, self.catalog.records),
-                .callback, .array, .nominal => supportsSet(argument.*, parameter.requirements, self.parameters, self.catalog),
-            };
-            if (!satisfies) return self.sink.failRelated(
-                eArgument,
-                argument_span,
-                "type argument does not satisfy the callee's declared requirements",
-                .{ .span = parameter.name, .message = "required type parameter declared here" },
-            );
+        const inferred = invocation.type_arguments.len == 0 and required.len != 0;
+        const actuals = if (inferred) try self.inferCall(invocation, signature, arguments) else null;
+        defer if (actuals) |values| self.allocator.free(values);
+        for (required, arguments, 0..) |parameter, *argument, index| {
+            const argument_span = if (inferred) span else invocation.type_arguments[index];
+            if (!inferred) argument.* = if (parameter.constant_length) try self.lengthType(argument_span) else try self.ty(argument_span);
+            try self.inferredRequirement(argument.*, parameter, argument_span);
         }
         for (required, arguments) |parameter, argument| try self.structural(argument, parameter, signature.type_parameters, arguments);
         var loans: std.ArrayList(usize) = .empty;
         defer loans.deinit(self.allocator);
-        for (invocation.arguments, signature.parameters) |input, parameter| {
+        for (invocation.arguments, signature.parameters, 0..) |input, parameter, input_index| {
             const expected = try self.substituted(parameter.ty, signature.type_parameters, arguments);
             const node = self.program.nodes.items[@backingInt(input)];
             if (parameter.reference) |mutable| {
@@ -667,7 +660,7 @@ const Checker = struct {
                     const valid_slice = !mutable and parameter.slice and expected == .concrete;
                     if (!valid_slice or expected.concrete != .u8 or signature.return_reference != null)
                         return self.sink.fail(eReferenceArgument, node.span, "byte literals require readonly u8 slice parameters and a value return");
-                    _ = try self.expression(input);
+                    if (!inferred) _ = try self.expression(input);
                     continue;
                 }
                 if (node.data != .name) return self.sink.fail(eReferenceArgument, node.span, "reference parameter requires an active reference name");
@@ -677,7 +670,7 @@ const Checker = struct {
                 try self.enter(node.span);
                 self.depth -= 1;
                 try self.claimLoan(&loans, node.data.name);
-            } else try self.same(try self.expression(input), expected, node.span);
+            } else try self.same(if (actuals) |values| values[input_index] else try self.expression(input), expected, node.span);
         }
         for (invocation.arguments, signature.parameters) |input, parameter| {
             if (parameter.reference == true) {
@@ -686,6 +679,38 @@ const Checker = struct {
             }
         }
         return self.substituted(signature.return_type, signature.type_parameters, arguments);
+    }
+    fn inferredRequirement(self: *Checker, argument: Symbolic, parameter: requirements.Parameter, argument_span: source.Span) Error!void {
+        const satisfies = switch (argument) {
+            .length, .length_parameter => parameter.constant_length,
+            .parameter => |index| self.parameters[index].requirements.implies(parameter.requirements),
+            .concrete => |builtin| parameter.requirements.accepts(builtin, self.catalog.records),
+            .callback, .array, .nominal => supportsSet(argument, parameter.requirements, self.parameters, self.catalog),
+        };
+        if (!satisfies) return self.sink.failRelated(
+            eArgument,
+            argument_span,
+            "type argument does not satisfy the callee's declared requirements",
+            .{ .span = parameter.name, .message = "required type parameter declared here" },
+        );
+    }
+    fn inferCall(self: *Checker, invocation: Call, signature: @FieldType(ast.Function, "signature"), arguments: []Symbolic) Error![]Symbolic {
+        var inference: @import("generic_inference.zig").Context = .{ .src = self.src, .catalog = self.catalog, .parameters = signature.type_parameters, .sink = self.sink, .site = invocation.name };
+        const actuals = try self.allocator.alloc(Symbolic, invocation.arguments.len);
+        errdefer self.allocator.free(actuals);
+        for (invocation.arguments, signature.parameters, actuals) |input, parameter, *actual| {
+            const node = self.program.nodes.items[@backingInt(input)];
+            if (parameter.reference != null and node.data != .bytes) {
+                if (node.data != .name) return self.sink.fail(eReferenceArgument, node.span, "reference parameter requires an active reference name");
+                actual.* = (try self.local(node.data.name)).ty;
+            } else {
+                actual.* = try self.expression(input);
+                if (parameter.reference != null) actual.* = .{ .concrete = .u8 };
+            }
+            try inference.match(parameter.ty, actual.*);
+        }
+        try inference.finish(arguments);
+        return actuals;
     }
     fn jsonCall(self: *Checker, invocation: Call, decode: bool) Error!Symbolic {
         if (invocation.type_arguments.len != 1 or invocation.arguments.len != 3) return self.sink.fail("E_JSON_ARITY", invocation.name, "JSON operation requires one result type and allocator, value, byte-limit arguments");

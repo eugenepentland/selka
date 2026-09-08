@@ -32,7 +32,6 @@ test "generic calls reject invalid contracts identities arity and private access
         .{ .body = "fn f<T:copy>(x:T)->T{return numeric::<T>(x);}", .code = "E_GENERIC_ARGUMENT" },
         .{ .body = "fn f<T:copy>(x:T)->bool{discard x;return numeric::<bool>(true);}", .code = "E_GENERIC_ARGUMENT" },
         .{ .body = "fn f<T:copy,U:copy>(x:T,y:U)->U{discard y;return identity::<U>(x);}", .code = "E_GENERIC_TYPE" },
-        .{ .body = "fn f<T:copy>(x:T)->T{return identity(x);}", .code = "E_GENERIC_ARITY" },
         .{ .body = "fn f<T:copy>(x:T)->T{return identity::<T,T>(x);}", .code = "E_GENERIC_ARITY" },
         .{ .body = "fn f<T:copy>(x:T)->T{return identity::<T>(x,x);}", .code = "E_ARITY" },
         .{ .body = "fn f<T:copy>(x:T)->T{return missing::<T>(x);}", .code = "E_UNKNOWN_FUNCTION" },
@@ -75,7 +74,7 @@ test "generic calls reject hidden effects and invalid concrete helper bodies" {
         .{ .body = "fn helper(x:i64)->i64{return true;}", .code = "E_GENERIC_TYPE" },
         .{ .body = "fn helper(x:i64)->i64{if x==0{return 0;}}", .code = "E_MISSING_RETURN" },
         .{ .body = "fn helper(x:bool)->i64{discard x;return 0;}", .code = "E_GENERIC_TYPE" },
-        .{ .body = "fn helper<T:copy>(x:T)->T{return x;}", .code = "E_GENERIC_ARITY" },
+        .{ .body = "fn helper<T:copy,U:copy>(x:T)->T{return x;}", .code = "E_GENERIC_INFERENCE" },
     };
     for (cases) |case| {
         const text = try std.mem.concat(t.allocator, u8, &.{ case.body, "fn f<T:copy>(x:T)->i64{discard x;return helper(1);}" });

@@ -212,19 +212,23 @@ const Checker = struct {
     }
     fn specialize(self: *Checker, declaration: instances.DeclarationId, call: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span) Error!typed.FunctionId {
         const function = self.syntax.functions[@backingInt(declaration)];
-        if (call.type_arguments.len != function.signature.type_parameters.len) return self.sink.fail("E_GENERIC_ARITY", span, "explicit type argument count does not match generic parameters");
+        if (call.type_arguments.len != 0 and call.type_arguments.len != function.signature.type_parameters.len) return self.sink.fail("E_GENERIC_ARITY", span, "explicit type argument count does not match generic parameters");
         if (self.ordinary_ids[@backingInt(declaration)]) |id| return id;
         const required = try @import("generic_requirements.zig").resolve(self.allocator, self.src, function.signature.type_parameters, self.sink);
         const arguments = try self.allocator.alloc(typed.Type, required.len);
         const lengths = try self.allocator.alloc(?usize, required.len);
         @memset(lengths, null);
-        for (call.type_arguments, required, arguments, 0..) |at, parameter, *argument, argument_index| {
+        if (call.type_arguments.len == 0) {
+            try self.inferArguments(function.signature, call, span, arguments, lengths);
+        }
+        for (required, arguments, 0..) |parameter, *argument, argument_index| {
+            const at = if (call.type_arguments.len == 0) span else call.type_arguments[argument_index];
             if (parameter.constant_length) {
-                lengths[argument_index] = try self.lengthArgument(at);
+                if (call.type_arguments.len != 0) lengths[argument_index] = try self.lengthArgument(at);
                 argument.* = .u64;
                 continue;
             }
-            argument.* = try self.ty(at);
+            if (call.type_arguments.len != 0) argument.* = try self.ty(at);
             if (!parameter.requirements.accepts(argument.*, self.catalog.records)) return self.sink.failRelated(
                 "E_GENERIC_ARGUMENT",
                 at,
@@ -246,6 +250,31 @@ const Checker = struct {
         const index = self.ordinary_count + @backingInt(instance);
         if (index == self.instance_keys.items.len) try self.instance_keys.append(self.allocator, (self.generic_registry.get(instance) catch return error.InternalError));
         return @fromBackingInt(index);
+    }
+    fn inferArguments(self: *Checker, signature: @FieldType(ast.Function, "signature"), call: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span, arguments: []typed.Type, lengths: []?usize) Error!void {
+        const inference = @import("generic_inference.zig");
+        var context: inference.Context = .{ .src = self.src, .catalog = self.catalog, .parameters = signature.type_parameters, .sink = self.sink, .site = span };
+        for (signature.parameters, call.arguments) |parameter, input| {
+            const node = self.syntax.nodes.items[@backingInt(input)];
+            const actual = if (parameter.reference != null and node.data != .bytes) reference_type: {
+                if (node.data != .name) return self.sink.fail(eReferenceArgument, node.span, "reference parameter requires an active reference name");
+                const id = self.active_refs.get(self.src.text(node.data.name)) orelse return self.sink.fail("E_REFERENCE_SCOPE", node.span, "reference is not active in this scope");
+                break :reference_type self.references.items[@backingInt(id)].ty;
+            } else if (parameter.reference != null) typed.Type.u8 else self.nodes.items[@backingInt(self.resolved[@backingInt(input)].?)].ty;
+            try context.match(parameter.ty, .{ .concrete = actual });
+        }
+        var inferred: [16]@import("symbolic_types.zig").Value = undefined;
+        try context.finish(inferred[0..arguments.len]);
+        for (inferred[0..arguments.len], arguments, lengths) |value, *argument, *length| {
+            switch (value) {
+                .concrete => |ty_value| argument.* = ty_value,
+                .length => |count| {
+                    argument.* = .u64;
+                    length.* = count;
+                },
+                else => return error.InternalError,
+            }
+        }
     }
     fn requiresHandling(self: *Checker, value_type: typed.Type) bool {
         return typed.requiresHandling(value_type, self.catalog.records);
@@ -320,7 +349,12 @@ const Checker = struct {
         }
         return self.sink.fail(eReturnLifetime, contract.source, "result lifetime names no parameter");
     }
+    const ResolvedCall = struct { declaration: instances.DeclarationId, call: @FieldType(@FieldType(ast.Node, "data"), "call") };
     fn callTarget(self: *Checker, input: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span) Error!typed.FunctionId {
+        const target = try self.callDeclaration(input, span);
+        return self.specialize(target.declaration, target.call, span);
+    }
+    fn callDeclaration(self: *Checker, input: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span) Error!ResolvedCall {
         if (std.mem.eql(u8, self.src.text(input.name), "todo") and input.owner == null) {
             _ = try self.ty(input.type_arguments[0]);
             return self.sink.typedHole(input.name, input.type_arguments[0]);
@@ -355,7 +389,7 @@ const Checker = struct {
             },
         );
         if (signature.signature.parameters.len != call.arguments.len) return self.sink.fail("E_ARITY", span, "argument count does not match function parameters");
-        return self.specialize(function, call, span);
+        return .{ .declaration = function, .call = call };
     }
     fn reference(self: *Checker, span: source.Span) Error!typed.ReferenceId {
         const id = self.active_refs.get(self.src.text(span)) orelse return self.sink.fail("E_REFERENCE_SCOPE", span, "reference is not active in this scope");
@@ -605,8 +639,9 @@ const Checker = struct {
                     }
                     return true;
                 }
-                const target = try self.callTarget(call, node.span);
-                const signature = self.syntaxFunction(target);
+                const target = try self.callDeclaration(call, node.span);
+                if (target.call.type_arguments.len != 0) _ = try self.specialize(target.declaration, target.call, node.span);
+                const signature = self.syntax.functions[@backingInt(target.declaration)];
                 if (signature.signature.return_reference != null and !(allow_reference)) return self.sink.fail(eReferenceResult, node.span, "reference-returning calls require a borrow scope");
                 var i = call.arguments.len;
                 while (i > 0) {

@@ -41,6 +41,7 @@ test {
     _ = @import("generic_regions_test.zig");
     _ = @import("generic_slices_test.zig");
     _ = @import("generic_references_test.zig");
+    _ = @import("generic_inference_test.zig");
     _ = @import("generic_execution_test.zig");
     _ = @import("generic_instances_test.zig");
     _ = @import("generic_calls_test.zig");
