@@ -1303,3 +1303,84 @@ test "CLI features identify installed compiler without source input" {
     try testing.expectEqual(@as(usize, 64), report.get("compiler_sha256").?.string.len);
     try testing.expectEqualStrings("vm", report.get("features").?.object.get("primary_backend").?.string);
 }
+
+const listing_module = "module input;\nimport std_math;\nimport shared.units as units;\n" ++
+    "export Count;\n// leading comment\n// second line\ntype Count = i64;\n\n" ++
+    "const LIMIT: Count = 3; // trailing note\nstruct Job { id: Count }\n" ++
+    "host fn measure(x: i64) -> i64 effects(host);\nexport main;\n" ++
+    "fn main() -> i64 { return LIMIT; }\n";
+const Listing = struct {
+    version: []const u8,
+    module: ?[]const u8,
+    header: ?Extent,
+    imports: []const struct { name: []const u8, alias: ?[]const u8, bytes: Extent },
+    exports: []const struct { name: []const u8, bytes: Extent },
+    declarations: []const struct { kind: []const u8, name: []const u8, exported: bool, bytes: Extent, comment_start: usize },
+    const Extent = struct { start: usize, end: usize };
+};
+
+fn expectTrivia(text: []const u8) !void {
+    var at: usize = 0;
+    while (at < text.len) {
+        if (std.ascii.isWhitespace(text[at])) {
+            at += 1;
+            continue;
+        }
+        if (!std.mem.startsWith(u8, text[at..], "//")) return error.UnaccountedSourceByte;
+        at = std.mem.indexOfScalarPos(u8, text, at, '\n') orelse text.len;
+    }
+}
+
+// spec: DECLARATION-LIST-2
+test "CLI declaration listing accounts for every byte with disjoint ordered ranges" {
+    const outcome = try runFixture("list-declarations", listing_module, &.{});
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    try testing.expectEqualStrings("", outcome.stderr);
+    const parsed = try std.json.parseFromSlice(Listing, testing.allocator, outcome.stdout, .{});
+    defer parsed.deinit();
+    const listing = parsed.value;
+    try testing.expectEqualStrings("declarations-v1", listing.version);
+    try testing.expectEqualStrings("input", listing.module.?);
+    try testing.expectEqualStrings("units", listing.imports[1].alias.?);
+    try testing.expectEqual(@as(usize, 5), listing.declarations.len);
+    var ranges: std.ArrayList(Listing.Extent) = .empty;
+    defer ranges.deinit(testing.allocator);
+    try ranges.append(testing.allocator, listing.header.?);
+    for (listing.imports) |imported| try ranges.append(testing.allocator, imported.bytes);
+    for (listing.exports) |exported| try ranges.append(testing.allocator, exported.bytes);
+    var previous: usize = 0;
+    for (listing.declarations) |declaration| {
+        try testing.expect(declaration.bytes.start >= previous);
+        try testing.expect(declaration.comment_start <= declaration.bytes.start);
+        previous = declaration.bytes.start;
+        try ranges.append(testing.allocator, .{ .start = declaration.comment_start, .end = declaration.bytes.end });
+    }
+    std.mem.sort(Listing.Extent, ranges.items, {}, struct {
+        fn before(_: void, a: Listing.Extent, b: Listing.Extent) bool {
+            return a.start < b.start;
+        }
+    }.before);
+    var accounted: usize = 0;
+    for (ranges.items) |range| {
+        try testing.expect(range.start >= accounted and range.end > range.start);
+        try expectTrivia(listing_module[accounted..range.start]);
+        accounted = range.end;
+    }
+    try expectTrivia(listing_module[accounted..]);
+    try testing.expect(listing.declarations[0].comment_start < listing.declarations[0].bytes.start);
+    try testing.expect(listing.declarations[3].exported == false and listing.declarations[4].exported);
+}
+
+test "CLI declaration listing separates parse failures from checking and usage failures" {
+    try invoke("list-declarations", "fn main() -> i64 { return 1 + ; }", 1, "", "error[E_EXPRESSION]");
+    try invokeOptions("list-declarations", "module m; export absent; fn main() -> i64 { return 0; }", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_UNKNOWN_EXPORT\"");
+    try invokeOptions("list-declarations", "fn main() -> i64 { return 0; }", &.{"--check"}, 2, "", "usage:");
+    const unchecked = "module m; fn main() -> i64 { let flag: bool = 1; return flag; }";
+    const outcome = try runFixture("list-declarations", unchecked, &.{});
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    try testing.expect(std.mem.indexOf(u8, outcome.stdout, "\"kind\":\"fn\",\"name\":\"main\"") != null);
+}

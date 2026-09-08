@@ -84,6 +84,8 @@ pub const host_replay = @import("host_replay.zig");
 pub const host_functions = @import("host_functions.zig");
 /// Program-bound registration adapter for explicitly declared VM host functions.
 pub const vm_host = @import("vm_host.zig");
+/// Parse-only top-level declaration listing for store and tooling consumers.
+pub const declarations = @import("declarations.zig");
 const lexer = @import("lexer.zig");
 const parser = @import("parser.zig");
 const ast = @import("ast.zig");
@@ -144,6 +146,14 @@ pub const Compilation = struct {
         var p: parser.Parser = .{ .src = self.src, .arena = &self.arena, .tokens = tokens, .sink = &sink };
         const syntax = try p.parseModule();
         return @import("formatter.zig").format(allocator, self.src.bytes, tokens, syntax.types);
+    }
+
+    /// Parse one module or single-file program and allocate its declaration listing.
+    pub fn listDeclarations(self: *Compilation, allocator: std.mem.Allocator) declarations.Error![]u8 {
+        var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
+        defer self.diagnostics = sink.items;
+        const tokens = try lexer.lex(sink.allocator, self.src.bytes, &sink);
+        return declarations.render(allocator, &self.arena, self.src, tokens, &sink);
     }
 
     /// Lazily type-check parsed syntax and retain the checked program.

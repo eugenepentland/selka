@@ -63,6 +63,20 @@ and combined-merge certificates. The [development host](docs/experiments/develop
 reloads the schematic in one VM process. Existing production gates remain full gates;
 finer semantic-query caching is conditional on measurements.
 
+The development tools keep the ordinary read/edit/check workflow:
+
+- [Project verification](docs/experiments/project-workflow.md) prints a compact
+  receipt by default and retains complete context and command output in its report.
+- [Contract fixtures](docs/experiments/contract-tests.md) exercise an application's
+  actual stdin/stdout interface, with strict JSON or exact-byte expectations and
+  bounded child execution. A maintained runner replaces per-task driver scripts.
+- [Compiler-pinned references](docs/experiments/agent-reference.md) provide a
+  concise searchable language/API reference derived from the selected executable.
+
+Run `zig build test-agent-tools --summary all` for their implementation regressions.
+These tests also belong to the default suite; they do not launch agent evaluations
+or establish a development-speed improvement.
+
 ## Build and use
 
 ```sh
@@ -425,6 +439,10 @@ are accounted for explicitly; see [module quality reports](docs/experiments/modu
 `fmt-module <file.my>` formats a module draft without resolving imports.
 `fmt-project <entry.my> --check` checks formatting across its reachable graph.
 Neither command writes source files; see [module formatting](docs/experiments/module-formatting.md).
+
+`list-declarations <file.my>` prints a parse-only `declarations-v1` JSON listing of
+top-level declarations with their kinds, exports and original byte ranges. It resolves
+no imports and checks nothing; see [declaration listing](docs/experiments/list-declarations.md).
 
 Scalar module projects support `emit-project-c` and `scripts/native.py --project`.
 Try the [module-native example](docs/experiments/module-native.md); resource

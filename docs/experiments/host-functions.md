@@ -31,6 +31,17 @@ path. Closing a session does not invalidate returned values: callers release
 those using the execution allocator. A declared result's error variant remains
 an ordinary guest result; `HostFailure` is a separate wrapper failure.
 
+Per-call cost stays proportional to the declared signature, not to the module
+catalog. `Registry.init` already validates every declared parameter and result
+type, and the scalar type graph terminates at the value itself, so a call whose
+signature is entirely integers and booleans crosses the boundary without any
+allocator round trip: the graph walk in `data_type` returns before it builds
+traversal state, and copied arguments up to a small arity stay in the caller's
+frame. Nominal graphs keep the full bounded traversal and spill as before. This
+matters because raw byte hosts such as `mylang-io` call `io::byte`/`io::put`
+once per transported byte, and a safety-checked build charges several
+microseconds for each allocation such a call would otherwise make.
+
 Registration metadata cannot change during an execution. Sessions reject nested
 entry, callback-time close/rebinding, and use after close or after another
 session begins. A generation counter rejects exhaustion instead of wrapping.

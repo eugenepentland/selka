@@ -9,7 +9,8 @@ const Reporting = struct { timings: bool = false, timings_json: bool = false, di
 const usage = "usage: mylang " ++
     "<invoke-project|check-value-project|schema-project|input-module|check|run|dump-bytecode|di" ++
     "scover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fm" ++
-    "t-module|fmt-project|emit-c|emit-project-c|eval-project|list-modules|list-interfaces|check" ++
+    "t-module|fmt-project|emit-c|emit-project-c|eval-project|list-modules|list-interfaces|list-" ++
+    "declarations|check" ++
     "-project|run-project|check-policy> <file.my>\n  schema-project: --schema-report (include " ++
     "checked source and compiler identities)\n  check-value-project: --value=path.json " ++
     "(required; validates and writes canonical typed-json-v1); --max-codec-steps=N " ++
@@ -29,7 +30,8 @@ const usage = "usage: mylang " ++
     "signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  " ++
     "fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: " ++
     "--check (otherwise writes formatted source to " ++
-    "stdout)\n  index-project: JSON symbols, references and pinned source snapshot\n  project-dependencies: checked module graph and hashes; --inputs supported\n" ++
+    "stdout)\n  list-declarations: parse-only declarations-v1 JSON with byte ranges\n" ++
+    "  index-project: JSON symbols, references and pinned source snapshot\n  project-dependencies: checked module graph and hashes; --inputs supported\n" ++
     "  one-shot commands: --timings=json (phase-timings-v1 JSON Lines on stderr)\n" ++
     "  all commands: --diagnostics=text|json (stderr JSON Lines; stdout unchanged)\n" ++
     "  check-session: persistent check/clear/quit lines on stdin; JSON status on stdout; --inputs supported\n";
@@ -138,6 +140,20 @@ fn run(init: Context, parsed: Parsed) !u8 {
         try std.Io.File.stdout().writeStreamingAll(init.io, formatted);
         return 0;
     }
+    if (parsed.command == .@"list-declarations") {
+        init.timings.begin("declaration_listing", true);
+        const listing = compilation.listDeclarations(allocator) catch |err| switch (err) {
+            error.SourceError => {
+                try report(init, &compilation);
+                return 1;
+            },
+            else => return err,
+        };
+        init.timings.end();
+        defer allocator.free(listing);
+        try std.Io.File.stdout().writeStreamingAll(init.io, listing);
+        return 0;
+    }
     const check_start = if (parsed.reporting.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
     compilation.check() catch |err| switch (err) {
         error.SourceError => {
@@ -163,6 +179,7 @@ fn run(init: Context, parsed: Parsed) !u8 {
         .fmt,
         .@"fmt-module",
         .@"fmt-project",
+        .@"list-declarations",
         .@"emit-project-c",
         .@"list-modules",
         .@"list-interfaces",
@@ -287,6 +304,7 @@ const Command = enum {
     @"list-interfaces",
     @"list-modules",
     @"emit-c",
+    @"list-declarations",
     fmt,
     check,
     run,

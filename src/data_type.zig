@@ -17,6 +17,10 @@ pub fn checkCodecs(allocator: std.mem.Allocator, records: []const typed.Record, 
     return checkMode(allocator, records, root, .wire);
 }
 fn checkMode(allocator: std.mem.Allocator, records: []const typed.Record, root: typed.Type, mode: enum { reject, backing, wire }) !void {
+    // A builtin integer or bool terminates the graph by itself. Traversal state
+    // exists only for nominal graphs, so scalar boundaries -- every argument and
+    // result of a raw byte host call -- must not pay for allocating it.
+    if (root.isInteger() or root == .bool) return;
     var pending: std.ArrayList(typed.Type) = .empty;
     defer pending.deinit(allocator);
     const seen = try allocator.alloc(bool, typed.Type.record_base + records.len);

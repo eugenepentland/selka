@@ -33,6 +33,8 @@ pub const Error = CallbackError || data_type.CheckError || error{
 pub const Binding = struct { signature: Signature, context: ?*anyopaque = null, invoke: *const fn (*Call) CallbackError!typed.Value };
 /// Per-execution call/work limits and a shared input/output value-copy limit per call.
 pub const Limits = struct { max_calls: u64 = 10000, max_work: u64 = 1000000, values: copy.Limits = .{} };
+/// Copied arguments up to this arity stay in the caller's frame; longer ones spill to the allocator.
+const inline_arguments = 8;
 const Registered = struct { binding: Binding, grants: effects.Mask };
 const Entry = struct { declaration: Declaration, registered: ?Registered = null };
 const State = struct {
@@ -128,11 +130,16 @@ pub const Session = struct {
         if (state.calls == state.limits.max_calls) return error.HostCallLimit;
         if (state.work_remaining == 0) return error.HostWorkLimit;
         const allocator = state.allocator.?;
-        const inputs = try allocator.alloc(typed.Value, arguments.len);
+        // Small arities cover every declaration this boundary sees in practice;
+        // keeping their copied arguments on the stack leaves a scalar host call
+        // with no allocator round trip of its own.
+        var reserved: [inline_arguments]typed.Value = undefined;
+        const spilled = arguments.len > inline_arguments;
+        const inputs = if (spilled) try allocator.alloc(typed.Value, arguments.len) else reserved[0..arguments.len];
         var initialized: usize = 0;
         defer {
             for (inputs[0..initialized]) |value| value.release(allocator);
-            allocator.free(inputs);
+            if (spilled) allocator.free(inputs);
         }
         var copier: copy.Copier = .{ .records = self.registry.records, .limits = state.limits.values };
         for (arguments, signature.parameters, inputs) |argument, parameter, *input| {

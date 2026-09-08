@@ -157,6 +157,28 @@ pub const Tag = enum {
 };
 /// Token category paired with its byte span in the original source.
 pub const Token = struct { tag: Tag, span: Span };
+
+/// Index just past one top-level declaration's terminating `;` or `}`, without parsing it.
+/// `braced` selects the expected terminator; null accepts whichever appears first.
+/// Unterminated input returns the end-of-file index, so callers can reject it.
+pub fn declarationEnd(tokens: []const Token, start: usize, braced: ?bool) usize {
+    var depth: usize = 0;
+    var at = start;
+    while (tokens[at].tag != .eof) {
+        const tag = tokens[at].tag;
+        at += 1;
+        switch (tag) {
+            .lbrace, .lparen, .lbracket => depth += 1,
+            .rbrace, .rparen, .rbracket => {
+                depth -|= 1;
+                if (tag == .rbrace and depth == 0 and (braced orelse true)) return at;
+            },
+            .semicolon => if (depth == 0 and !(braced orelse false)) return at,
+            else => {},
+        }
+    }
+    return at;
+}
 fn keyword(word: []const u8) Tag {
     const words = .{
         "f64_add",

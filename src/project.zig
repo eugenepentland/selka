@@ -239,20 +239,7 @@ const Scanner = struct {
     // Discovery skips bodies without parsing them. Only declaration boundaries
     // can introduce exports; identifiers named export inside declarations cannot.
     fn skipDeclaration(self: *Scanner) void {
-        var depth: usize = 0;
-        while (self.tokens[self.pos].tag != .eof) {
-            const tag = self.tokens[self.pos].tag;
-            self.pos += 1;
-            switch (tag) {
-                .lbrace, .lparen, .lbracket => depth += 1,
-                .rbrace, .rparen, .rbracket => {
-                    depth -|= 1;
-                    if (tag == .rbrace and depth == 0) return;
-                },
-                .semicolon => if (depth == 0) return,
-                else => {},
-            }
-        }
+        self.pos = lex.declarationEnd(self.tokens, self.pos, null);
     }
     fn take(self: *Scanner, tag: lex.Tag) bool {
         if (self.tokens[self.pos].tag != tag) return false;

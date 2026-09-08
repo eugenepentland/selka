@@ -275,3 +275,19 @@ test "host copy budgets span inputs and outputs and reject oversized input befor
         try t.expectEqual(@as(usize, if (index < 2) 0 else index - 1), counter.calls);
     }
 }
+test "scalar host calls cross the boundary without allocating" {
+    var r = try registry(t.allocator);
+    defer r.deinit();
+    var counter: Counter = .{};
+    try r.register("geometry::measure", .{ .signature = scalar, .context = &counter, .invoke = Counter.invoke }, 0);
+    var counting: std.testing.FailingAllocator = .init(t.allocator, .{});
+    const session = try r.begin(counting.allocator(), .{});
+    defer session.close() catch |err| std.debug.panic("host session cleanup failed: {s}", .{@errorName(err)});
+    const id = try r.resolve("geometry::measure");
+    for (0..64) |_| try t.expectEqual(@as(i64, 3), (try session.call(id, &.{.{ .i64 = 3 }})).i64);
+    try t.expectEqual(@as(usize, 64), counter.calls);
+    // A raw byte transport calls a scalar host function once per transported
+    // byte. Argument and result copies must stay in the caller's frame, and the
+    // declared types are already validated, so no call may reach the allocator.
+    try t.expectEqual(@as(usize, 0), counting.allocations);
+}
