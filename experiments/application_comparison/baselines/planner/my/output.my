@@ -20,116 +20,59 @@ export comma;
 export open;
 export shut;
 fn invalid_request() -> i64 {
-    let s = "{\"error\":\"invalid-request\"}";
-    borrow s[0..len(s)] as b {
-        return json::text(b);
-    }
+    return json::text("{\"error\":\"invalid-request\"}");
 }
 fn invalid_manifest() -> i64 {
-    let s = "{\"error\":\"invalid-manifest\"}";
-    borrow s[0..len(s)] as b {
-        return json::text(b);
-    }
+    return json::text("{\"error\":\"invalid-manifest\"}");
 }
 fn results() -> i64 {
-    let s = "{\"results\":[";
-    borrow s[0..len(s)] as b {
-        return json::text(b);
-    }
+    return json::text("{\"results\":[");
 }
 fn close() -> i64 {
-    let s = "]}";
-    borrow s[0..len(s)] as b {
-        return json::text(b);
-    }
+    return json::text("]}");
 }
 fn dup_id() -> i64 {
-    let s = "{\"error\":\"duplicate-id\",\"ids\":[";
-    borrow s[0..len(s)] as b {
-        return json::text(b);
-    }
+    return json::text("{\"error\":\"duplicate-id\",\"ids\":[");
 }
 fn dup_dep() -> i64 {
-    let s = "{\"error\":\"duplicate-dependency\",\"jobs\":[";
-    borrow s[0..len(s)] as b {
-        return json::text(b);
-    }
+    return json::text("{\"error\":\"duplicate-dependency\",\"jobs\":[");
 }
 fn unknown() -> i64 {
-    let s = "{\"error\":\"unknown-dependency\",\"ids\":[";
-    borrow s[0..len(s)] as b {
-        return json::text(b);
-    }
+    return json::text("{\"error\":\"unknown-dependency\",\"ids\":[");
 }
 fn cycle() -> i64 {
-    let s = "{\"error\":\"cycle\",\"blocked\":[";
-    borrow s[0..len(s)] as b {
-        return json::text(b);
-    }
+    return json::text("{\"error\":\"cycle\",\"blocked\":[");
 }
 fn order() -> i64 {
-    let s = "{\"order\":[";
-    borrow s[0..len(s)] as b {
-        return json::text(b);
-    }
+    return json::text("{\"order\":[");
 }
 fn layers() -> i64 {
-    let s = "],\"layers\":[";
-    borrow s[0..len(s)] as b {
-        return json::text(b);
-    }
+    return json::text("],\"layers\":[");
 }
 fn timings() -> i64 {
-    let s = "],\"timings\":[";
-    borrow s[0..len(s)] as b {
-        return json::text(b);
-    }
+    return json::text("],\"timings\":[");
 }
 fn id() -> i64 {
-    let s = "{\"id\":";
-    borrow s[0..len(s)] as b {
-        return json::text(b);
-    }
+    return json::text("{\"id\":");
 }
 fn start() -> i64 {
-    let s = ",\"start\":";
-    borrow s[0..len(s)] as b {
-        return json::text(b);
-    }
+    return json::text(",\"start\":");
 }
 fn finish() -> i64 {
-    let s = ",\"finish\":";
-    borrow s[0..len(s)] as b {
-        return json::text(b);
-    }
+    return json::text(",\"finish\":");
 }
 fn makespan() -> i64 {
-    let s = "],\"makespan\":";
-    borrow s[0..len(s)] as b {
-        return json::text(b);
-    }
+    return json::text("],\"makespan\":");
 }
 fn brace() -> i64 {
-    let s = "}";
-    borrow s[0..len(s)] as b {
-        return json::text(b);
-    }
+    return json::text("}");
 }
 fn comma() -> i64 {
-    let s = ",";
-    borrow s[0..len(s)] as b {
-        return json::text(b);
-    }
+    return json::text(",");
 }
 fn open() -> i64 {
-    let s = "[";
-    borrow s[0..len(s)] as b {
-        return json::text(b);
-    }
+    return json::text("[");
 }
 fn shut() -> i64 {
-    let s = "]";
-    borrow s[0..len(s)] as b {
-        return json::text(b);
-    }
+    return json::text("]");
 }

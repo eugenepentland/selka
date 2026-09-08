@@ -16,7 +16,7 @@ fn main(heap: allocator) -> i64 {
                     return output::invalid_request();
                 },
                 std_json::Parsed.ok(document) => {
-                    borrow document[0..len_buffer(document)] as t {
+                    borrow document[..] as t {
                         return request(heap, t);
                     }
                 }

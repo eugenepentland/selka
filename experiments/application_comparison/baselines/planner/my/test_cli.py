@@ -82,4 +82,19 @@ class Contract(unittest.TestCase):
         jobs=[job('j'+str(i).zfill(3),1000000,[] if i==0 else ['j'+str(i-1).zfill(3)]) for i in range(128)]
         result=run(jobs[::-1]);self.assertEqual(result['makespan'],128000000);self.assertEqual(len(result['layers']),128)
         self.assertEqual(run(jobs+[job('extra')]),dict(error='invalid-manifest'))
+    def test_schema_cursors_preserve_exact_fields_and_error_priority(self):
+        cases = [
+            {"version": 1, "extra": []},
+            {"version": None, "jobs": []},
+            {"version": 1, "jobs": {"id": "a"}},
+            manifest([{"id": "a", "duration": 1, "extra": []}]),
+            manifest([job("a", needs=[None])]),
+            manifest([job("a", needs=[{"id": "a", "lag": 0}])]),
+            manifest([job("z", needs=["missing", "missing"]), job("z"),
+                      {"id": "a", "duration": 0.0, "needs": []}]),
+        ]
+        self.assertEqual(call({"cases": cases}),
+                         {"results": [{"error": "invalid-manifest"}] * len(cases)})
+        self.assertEqual(call({"extra": []}), {"error": "invalid-request"})
+
 if __name__=='__main__':unittest.main()
