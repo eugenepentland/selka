@@ -17,6 +17,7 @@ pub const Instruction = struct {
         try_result: struct { input: typed.Type, output: typed.Type, error_target: usize },
         push_i64: i64,
         push_bool: bool,
+        push_unit,
         push_integer: struct { ty: typed.Type, value: i128 },
         cast_integer: typed.Type,
         wrap_domain: typed.Type,

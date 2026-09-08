@@ -571,7 +571,7 @@ test "exports after declarations retain interface validation and scope boundarie
     try reject("module main; struct Value { n:i64 } export Missing;", "E_UNKNOWN_EXPORT");
     try reject("module main; export Value; struct Value { n:i64 } export Value;", "E_DUPLICATE_EXPORT");
     try reject("module main; struct Secret {} fn value(x:Secret)->i64{return 0;} export value;", "E_PRIVATE_INTERFACE");
-    try reject("module main; fn value()->i64{export value; return 0;}", "E_EXPLICIT_DISCARD_REQUIRED");
+    try reject("module main; fn value()->i64{export value; return 0;}", "E_SYNTAX");
     try reject("module main; struct Value { export Value; }", "E_SYNTAX");
     try reject("module main; fn value()->i64{return 0;} import units;", "E_SYNTAX");
 }

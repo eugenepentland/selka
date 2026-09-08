@@ -18,7 +18,7 @@ const Definition = struct {
     callback: ?struct { parameters: []const []const u8, result: []const u8, effects: u8, borrowed: u16, slices: u16 } = null,
     codec: ?Codec = null,
     name: []const u8,
-    kind: enum { callback, integer, boolean, capability, record, array, table, domain, enumeration, tagged_union, result, buffer, resource, pool, handle },
+    kind: enum { unit, callback, integer, boolean, capability, record, array, table, domain, enumeration, tagged_union, result, buffer, resource, pool, handle },
     move_only: bool = false,
     requires_handling: bool = false,
     @"opaque": bool = false,
@@ -62,6 +62,7 @@ const Graph = struct {
             .minimum = try std.fmt.allocPrint(self.allocator, "{d}", .{ty.min()}),
             .maximum = try std.fmt.allocPrint(self.allocator, "{d}", .{ty.max()}),
         };
+        if (ty == .unit) return .{ .name = name, .kind = .unit };
         if (!ty.isAggregate()) return .{ .name = name, .kind = if (ty == .bool) .boolean else .capability, .@"opaque" = ty != .bool };
         const record = self.records[ty.recordIndex()];
         var out: Definition = .{ .name = name, .kind = .record, .move_only = record.contract.move_only, .requires_handling = record.contract.requires_handling };

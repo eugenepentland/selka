@@ -66,6 +66,7 @@ pub const Node = struct {
     data: union(enum) {
         integer: i128,
         boolean: bool,
+        unit,
         block_value: struct { body: StatementId, value: NodeId },
         function_value: FunctionId,
         invoke: struct { callee: NodeId, arguments: []const NodeId, references: []const ReferenceId = &.{} },

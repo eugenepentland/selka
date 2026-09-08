@@ -432,3 +432,11 @@ supersede it. The manifest records implementation coverage, not a test certifica
 
 - [ERGONOMIC-INTEGRATION-1] Late exports, inferred generic calls and unit procedures compose across module boundaries, preserving borrowed mutation, VM/native results and logical instruction budgets.
 - [GENERIC-INFERENCE-1] Generic function calls may omit their entire type-argument list when checked call arguments uniquely determine every type and const length parameter. Matching follows direct variables, fixed arrays, nominal applications, and callback signatures; repeated occurrences must agree. Abstract callers retain distinct symbolic identities and declared requirements. Argument expressions are checked and evaluated once in their original order; ordinary type, effect, ownership, reference, and structural checks remain in force. Return context, constraints alone, defaults, and partial explicit lists do not infer missing arguments; ambiguity and conflicting inference report E_GENERIC_INFERENCE. Unmaterialized phantom type arguments require explicit specialization.
+## Unit procedures
+
+- [UNIT-1] The builtin `unit` is a distinct no-value type. Unit functions accept `return;` and implicit fallthrough; `main` still returns `i64`.
+- [UNIT-2] Ordinary standalone expressions must have type `unit`; all other values retain explicit discard/result-handling rules, including generic bodies. VM and native C calls preserve unit identity and ownership cleanup.
+- [UNIT-3] Unit is described explicitly in public schemas and is rejected by data/wire and host ABI boundaries.
+- [UNIT-4] Unit fallthrough and early return release owned parameters through the ordinary cleanup paths.
+- [UNIT-5] Fallible values with unit success payloads retain all result obligations; a successful `try` yielding unit may appear as a standalone statement.
+- [UNIT-6] Public unit-returning functions remain callable within language modules. Their schema uses `kind: unit`; copied VM/host/native ABI invocation rejects unit-containing signatures explicitly instead of interpreting unit as a scalar or capability.

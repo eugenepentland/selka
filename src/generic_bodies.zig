@@ -100,7 +100,10 @@ const Checker = struct {
             const returned = if (contract.slice and !input.slice) try self.sliceType(input.ty, function.signature.return_type) else input.ty;
             try self.same(returned, self.result, function.signature.return_type);
         }
-        if (!try self.statement(function.body)) return sink.fail("E_MISSING_RETURN", function.name, "template may fall through without returning its declared type");
+        const implicit_unit = self.return_reference == null and symbolic.same(self.result, .{ .concrete = .unit }, self.catalog);
+        const terminates = try self.statement(function.body);
+        if (!terminates and !implicit_unit) return sink.fail("E_MISSING_RETURN", function.name, "template may fall through without returning its declared type");
+        if (!terminates) try self.requireHandled(0, function.name);
         try self.regions.check(sink);
     }
     fn shapes(self: *Checker) @import("symbolic_shapes.zig").Context {
@@ -902,6 +905,7 @@ const Checker = struct {
             .call => |invocation| try self.call(invocation, node.span, false),
             .propagate => |operand| try self.propagateValue(operand, node.span),
             .bytes => try self.concreteType(node.span),
+            .unit => .{ .concrete = .unit },
             .boolean => .{ .concrete = .bool },
             .integer => |span| .{ .concrete = (try @import("integer_literal.zig").parse(self.src, span, false, self.sink)).ty },
             .unary => |unary| result: {
@@ -1389,6 +1393,11 @@ const Checker = struct {
             },
             .discard => |value| {
                 const ty_value = try self.expression(value);
+                if (statement_value.implicit_discard and !symbolic.same(ty_value, .{ .concrete = .unit }, self.catalog)) return self.sink.fail(
+                    "E_EXPLICIT_DISCARD_REQUIRED",
+                    statement_value.span,
+                    "a standalone non-unit value requires explicit discard or result handling",
+                );
                 if ((try self.requiresHandling(ty_value))) return self.sink.fail(eResultDiscard, statement_value.span, "discard cannot erase a result obligation");
                 if (ty_value == .parameter) try self.supports(ty_value, .storable, statement_value.span);
             },

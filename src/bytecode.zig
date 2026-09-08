@@ -496,7 +496,7 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
         const instruction = function.scope.instructions[pc];
         var height = heights[pc].?;
         switch (instruction.op) {
-            .function_value, .push_i64, .push_bool, .push_integer, .load_local, .move_local, .read_ref, .read_field, .take_field, .len_slice => height += 1,
+            .function_value, .push_unit, .push_i64, .push_bool, .push_integer, .load_local, .move_local, .read_ref, .read_field, .take_field, .len_slice => height += 1,
             .drop_local, .end_region => {},
             .resource_io => |io| {
                 height = try resourceIoHeight(io, height);
@@ -629,6 +629,7 @@ fn validateIndices(allocator: std.mem.Allocator, indices: []const usize, count: 
 }
 
 fn validType(ty: typed.Type, program: Program) bool {
+    if (ty == .unit) return true;
     return ty.isInteger() or ty == .bool or ty.capabilityIndex() != null or (ty.isAggregate() and ty.recordIndex() < program.records.len);
 }
 

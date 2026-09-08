@@ -124,6 +124,8 @@ const Checker = struct {
                 }
             }
         }
+        const implicit_unit = self.return_type == .unit and self.return_reference == null;
+        if (function.policy.host == null and !body.terminates and implicit_unit) body = try self.unitFallthrough(body, function.name);
         if (function.policy.host == null and !body.terminates) return sink.fail(
             "E_MISSING_RETURN",
             function.name,
@@ -1211,6 +1213,10 @@ const Checker = struct {
                 try self.requireInteger(self.nodes.items[@backingInt(value)].ty, node.span);
                 out.data = .{ .cast = value };
             },
+            .unit => {
+                out.ty = .unit;
+                out.data = .unit;
+            },
             .boolean => |value| {
                 out.ty = .bool;
                 out.data = .{ .boolean = value };
@@ -1311,7 +1317,7 @@ const Checker = struct {
             const out = try self.checkedExpression(node, minimum_literal, temporaries.items);
             const consumed: usize = if (node.data == .bytes) 0 else switch (out.data) {
                 .json_codec => 3,
-                .function_value, .integer, .boolean, .local, .read_ref, .read_field, .take_field, .len_slice, .block_value => 0,
+                .function_value, .unit, .integer, .boolean, .local, .read_ref, .read_field, .take_field, .len_slice, .block_value => 0,
                 .reset_arena, .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .external_read, .complete_resource, .restrict_resource => 1,
                 .acquire_buffer, .acquire_pool, .acquire_resource, .environment_get => 2,
                 .index, .binary => 2,
@@ -1671,6 +1677,7 @@ const Checker = struct {
     }
     fn statementDiscard(self: *Checker, stmt: ast.Statement, expr: @FieldType(@FieldType(ast.Statement, "data"), "discard"), _: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         const value = try self.expression(expr);
+        if (stmt.implicit_discard and self.nodes.items[@backingInt(value)].ty != .unit) return self.sink.fail("E_EXPLICIT_DISCARD_REQUIRED", stmt.span, "a standalone non-unit value requires explicit discard or result handling");
         if (self.requiresHandling(self.nodes.items[@backingInt(value)].ty)) return self.sink.fail(eResultDiscard, stmt.span, "discard cannot erase a fallible result; match, return, transfer, or explicitly acknowledge it");
         return .{ .discard = value };
     }
@@ -1766,6 +1773,17 @@ const Checker = struct {
         flow.owned_cleanup = try owned.toOwnedSlice(self.allocator);
         flow.cleanup = try refs.toOwnedSlice(self.allocator);
         return .{ .loop_exit = .{ .target = loop.id, .continuing = continuing, .regions = try regions.toOwnedSlice(self.allocator) } };
+    }
+    fn unitFallthrough(self: *Checker, body: CheckedStatement, span: source.Span) Error!CheckedStatement {
+        try self.requireHandled(0, span);
+        const value: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = span, .ty = .unit, .data = .unit });
+        const ret: typed.StatementId = @fromBackingInt(self.statements.items.len);
+        try self.statements.append(self.allocator, .{ .span = span, .terminates = true, .cleanup = try self.activeCleanup(), .data = .{ .ret = value } });
+        const children = try self.allocator.dupe(typed.StatementId, &.{ body.id, ret });
+        const block: typed.StatementId = @fromBackingInt(self.statements.items.len);
+        try self.statements.append(self.allocator, .{ .span = span, .terminates = true, .data = .{ .block = children } });
+        return .{ .id = block, .terminates = true };
     }
     fn statementRet(self: *Checker, stmt: ast.Statement, expr: @FieldType(@FieldType(ast.Statement, "data"), "ret"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         var value: ?typed.NodeId = null;

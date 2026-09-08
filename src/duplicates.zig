@@ -303,6 +303,7 @@ const CanonicalWriter = struct {
                 try work.append(allocator, .{ .expression = field.base });
             },
             .integer => |value| writer.print("{d}\n", .{value}) catch return error.OutOfMemory,
+            .unit => writer.writeAll("unit\n") catch return error.OutOfMemory,
             .boolean => |value| writer.print("{}\n", .{value}) catch return error.OutOfMemory,
             .read_slice => |read| {
                 writer.print(reference_format, .{@backingInt(read.reference)}) catch return error.OutOfMemory;

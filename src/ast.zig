@@ -55,6 +55,7 @@ pub const Node = struct {
         integer: Span,
         bytes: []const u8,
         boolean: bool,
+        unit,
         match_expression: struct { value: NodeId, arms: []const MatchValueArm },
         name: Span,
         read_ref: Span,
@@ -93,6 +94,7 @@ pub const Node = struct {
 /// Parsed statement and control-flow structure before ownership and type checking.
 pub const Statement = struct {
     span: Span,
+    implicit_discard: bool = false,
     data: union(enum) {
         arena_scope: struct { parent: NodeId, name: Span, body: StatementId },
         block: []const StatementId,

@@ -150,7 +150,10 @@ an iterative VM with typed locals, jumps, and explicit call frames, deterministi
 
 The accepted subset has one `fn main() -> i64` and typed helper functions, with
 local bindings, assignment,
-nested blocks, branches, loops, explicit discard, and explicit returns. It supports integer and boolean values,
+nested blocks, branches, loops, explicit discard, and typed returns.
+[Unit procedures](docs/experiments/unit-procedures.md) use `-> unit`, ordinary call
+statements, and bare returns or fallthrough; other values retain explicit handling.
+It supports integer and boolean values,
 optional local type annotations, unary `-` and `!`, binary `+`, `-`, `*`, `/`, `%`, short-circuit `&&` and `||`,
 comparisons, parentheses, whitespace, and `//` comments. Active shadowing,
 use outside scope, mutation of immutable bindings, and type mismatches are

@@ -584,7 +584,7 @@ test "CLI formatter supports stdout check mode and syntax-only formatting" {
     try invokeOptions("fmt", compact, &.{"--check"}, 1, "", "formatting differs");
     try invokeOptions("fmt", formatted, &.{"--check"}, 0, "", "");
     try invoke("fmt", "fn main()->i64{return false;}", 0, "fn main() -> i64 {\n    return false;\n}\n", "");
-    try invoke("fmt", "fn main()->i64{return ;}", 1, "", "error[E_EXPRESSION]");
+    try invoke("fmt", "fn main()->i64{return +;}", 1, "", "error[E_EXPRESSION]");
     try invokeOptions("fmt", compact, &.{ "--check", "--check" }, 2, "", "usage:");
     try invokeOptions("check", compact, &.{"--check"}, 2, "", "usage:");
 }

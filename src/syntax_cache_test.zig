@@ -90,7 +90,7 @@ test "cached syntax never suppresses fresh interface or semantic errors" {
 test "failed parseModule and moduleSyntax results are never remembered" {
     var cache = Cache.init(t.allocator, .{});
     defer cache.deinit();
-    var files: Files = .{ .data = "module data;export value;fn value()->i64{return ;}" };
+    var files: Files = .{ .data = "module data;export value;fn value()->i64{return +;}" };
     try t.expectError(error.SourceError, execute(t.allocator, &files, &cache, false));
     try t.expectError(error.SourceError, execute(t.allocator, &files, &cache, false));
     try t.expectEqual(@as(usize, 0), cache.statistics.stored);

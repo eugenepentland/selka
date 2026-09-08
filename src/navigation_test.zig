@@ -72,7 +72,7 @@ test "navigation exposes declarations but never checked references after a seman
 }
 
 test "navigation syntax failure retains lexical declarations without resolving comments or calls" {
-    var files: Files = .{ .main = "module main; import data; // fn invented()\nfn broken()->i64{return ;}" };
+    var files: Files = .{ .main = "module main; import data; // fn invented()\nfn broken()->i64{return +;}" };
     var project = graph.Project.init(t.allocator);
     defer project.deinit();
     try project.load(.{ .context = &files, .read = Files.read }, "main", .{});

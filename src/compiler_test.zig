@@ -557,7 +557,7 @@ test "located source diagnostics include EOF discard and previous declarations" 
     defer discard.deinit();
     try testing.expectError(error.SourceError, discard.check());
     try testing.expectEqualStrings("E_EXPLICIT_DISCARD_REQUIRED", discard.diagnostics.items[0].code);
-    try testing.expectEqualStrings("1", discard.src.text(discard.diagnostics.items[0].span));
+    try testing.expectEqualStrings("1 + 2;", discard.src.text(discard.diagnostics.items[0].span));
 }
 
 test "emission validation rejects invalid references jumps and inconsistent joins" {

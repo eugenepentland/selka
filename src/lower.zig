@@ -267,6 +267,7 @@ const Emitter = struct {
                 try self.push(.{ .expression = value });
             },
             .boolean => |value| try self.instruction(node.span, .{ .push_bool = value }),
+            .unit => try self.instruction(node.span, .push_unit),
             .read_slice => |read| {
                 try self.instruction(node.span, .{ .read_slice = read.reference });
                 try self.push(.{ .expression = read.index });

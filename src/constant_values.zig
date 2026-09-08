@@ -280,7 +280,7 @@ const Evaluator = struct {
         const node = self.context.program.nodes.items[@backingInt(id)];
         try self.take(node.span, depth);
         switch (node.data) {
-            .integer, .boolean => {},
+            .unit, .integer, .boolean => {},
             .call => |invocation| try self.validateCall(invocation, node.span, depth + 1),
             .name => |name| {
                 if (try self.local(name) != null) return;

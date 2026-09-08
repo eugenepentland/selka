@@ -357,6 +357,7 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
             .binary_integer => step.executeBinaryInteger(),
             .push_i64 => step.executePushI64(),
             .push_bool => step.executePushBool(),
+            .push_unit => step.executePushUnit(),
             .begin_borrow, .begin_slice => step.executeBeginBorrow(),
             .split_borrow => step.executeSplitBorrow(),
             .end_borrow => step.executeEndBorrow(),
@@ -1246,6 +1247,11 @@ const Step = struct {
         const stack = self.execution.state.stack;
         const value = self.instruction.op.push_i64;
         try appendValue(stack, allocator, .{ .i64 = value });
+        return false;
+    }
+
+    fn executePushUnit(self: *Step) !bool {
+        try appendValue(self.execution.state.stack, self.execution.allocator, .unit);
         return false;
     }
 

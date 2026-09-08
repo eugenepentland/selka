@@ -98,7 +98,7 @@ const Analysis = struct {
             .pool_operation => |operation| self.local(operation.owner),
             .unary => |unary| self.node(unary.operand),
             .binary => |binary| origin.combine(self.node(binary.left), self.node(binary.right)),
-            .integer, .boolean, .len_slice, .acquire_resource, .resource_io, .restrict_resource, .environment_get, .external_read => .{},
+            .unit, .integer, .boolean, .len_slice, .acquire_resource, .resource_io, .restrict_resource, .environment_get, .external_read => .{},
         };
     }
     fn writeReference(self: Analysis, id: typed.ReferenceId, value: typed.NodeId) bool {

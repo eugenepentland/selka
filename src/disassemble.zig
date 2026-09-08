@@ -114,6 +114,7 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
         .cast_integer => |ty| try writer.print("CAST_INT {f}", .{ty}),
         .neg_integer => |ty| try writer.print("NEG_INT_CHECKED {f}", .{ty}),
         .binary_integer => |binary| try writer.print("INT_BINARY {f} {s}", .{ binary.ty, @tagName(binary.op) }),
+        .push_unit => try writer.writeAll("PUSH_UNIT"),
         .push_bool => |value| try writer.print("PUSH_BOOL {}", .{value}),
         .begin_slice => |id| try writer.print("BEGIN_SLICE {d}", .{@backingInt(id)}),
         .read_slice => |id| try writer.print("READ_SLICE {d}", .{@backingInt(id)}),

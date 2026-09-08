@@ -20,8 +20,9 @@ pub const Type = enum(usize) {
     filesystem_cap,
     network_cap,
     environment_cap,
+    unit,
     _,
-    pub const record_base: usize = 15;
+    pub const record_base: usize = 16;
     /// Return the compact builtin capability index, or null for non-capabilities.
     pub fn capabilityIndex(self: Type) ?u3 {
         return switch (self) {
@@ -115,6 +116,7 @@ pub const Type = enum(usize) {
 
 /// Runtime scalar, aggregate, capability, or owned resource representation.
 pub const Value = union(enum) {
+    unit,
     i64: i64,
     bool: bool,
     integer: struct { ty: Type, value: i128 },
@@ -129,6 +131,7 @@ pub const Value = union(enum) {
             .owned => |owned| owned.typeOf(),
             .capability => |capability| capability.typeOf(),
             .handle => |handle| handle.ty,
+            .unit => .unit,
             .i64 => .i64,
             .bool => .bool,
             .integer => |n| n.ty,

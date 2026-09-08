@@ -68,7 +68,7 @@ test "formatting accepts incomplete semantic work but rejects invalid syntax" {
     defer t.allocator.free(formatted);
     try t.expect(c.program == null and c.code == null);
     try t.expectError(error.SourceError, c.check());
-    var invalid = try language.Compilation.init(t.allocator, "invalid.my", "fn main() -> i64 { return ; }");
+    var invalid = try language.Compilation.init(t.allocator, "invalid.my", "fn main() -> i64 { return +; }");
     defer invalid.deinit();
     try t.expectError(error.SourceError, invalid.format(t.allocator));
 }

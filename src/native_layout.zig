@@ -93,7 +93,7 @@ pub const Layout = struct {
     }
     /// Check whether the native backend can represent the supplied type.
     pub fn supports(self: Layout, ty: typed.Type) bool {
-        if (ty.isInteger() or ty == .bool or ty == .allocator) return true;
+        if (ty.isInteger() or ty == .unit or ty == .bool or ty == .allocator) return true;
         if (ty == .filesystem_cap or ty == .network_cap) return true;
         if (ty == .clock_cap or ty == .random_cap or ty == .environment_cap) return true;
         return ty.isAggregate() and self.supported[ty.recordIndex()];

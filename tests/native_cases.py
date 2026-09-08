@@ -220,8 +220,10 @@ def main():
     compiler = args.compiler.resolve()
     root = Path(__file__).resolve().parents[1]
     fixtures = [(name, (root / "test" / "fixtures" / f"{name}.my").read_text()) for name in ("arithmetic", "sum", "gcd")]
+    fixtures.append(("unit-result", "result Done{ok:unit,err:i64}fn noop()->unit{}fn done()->Done{return new Done.ok(noop());}fn chained()->Done{try done();return done();}fn main()->i64{match chained(){Done.ok(discard)=>{return 42;},Done.err(code)=>{return code;}}}"))
+    fixtures.append(("unit-owned", "buffer Numbers:i64;result A{ok:Numbers,err:i64}fn consume(values:Numbers,early:bool)->unit{discard len_buffer(values);if early{return;}}fn main(heap:allocator)->i64{let mut i=0;while i<2{match acquire_buffer<A>(heap,2){A.ok(values)=>{consume(values,i==0);},A.err(code)=>{return code;}}i+=1;}return 42;}"))
     fixtures.append(("generic-pool", "pool P(Id):i64;result A{ok:P,err:i64}result H{ok:Id,err:i64}fn forward<T:copy>(pool:P)->P{return pool;}fn identity<T:copy>(value:T)->T{return value;}fn main(heap:allocator)->i64{match acquire_pool<A>(heap,1){A.ok(pool)=>{let mut moved=forward::<bool>(pool);match insert_pool<H>(moved,7){H.ok(id)=>{if id==identity::<Id>(id){return 7;}return 0;},H.err(e)=>{return e;}}},A.err(e)=>{return e;}}}"))
-    fixtures += [(name, (root / "examples" / f"{name}.my").read_text()) for name in ("arrays", "records", "conversions", "tables", "references", "reference-parameters", "slices", "returned-references", "propagation", "buffers", "buffer-views", "allocator-capabilities", "arena-reset", "pools", "arenas", "generics", "generic-references", "generic-slices", "generic-borrows", "generic-returned-references", "generic-records", "generic-updates", "generic-variants", "generic-results", "generic-fields", "generic-owned", "generic-runtime")]
+    fixtures += [(name, (root / "examples" / f"{name}.my").read_text()) for name in ("unit", "arrays", "records", "conversions", "tables", "references", "reference-parameters", "slices", "returned-references", "propagation", "buffers", "buffer-views", "allocator-capabilities", "arena-reset", "pools", "arenas", "generics", "generic-references", "generic-slices", "generic-borrows", "generic-returned-references", "generic-records", "generic-updates", "generic-variants", "generic-results", "generic-fields", "generic-owned", "generic-runtime")]
     for index in ("-1i8", "18446744073709551615u64"):
         index_type = "i8" if index.startswith("-") else "u64"
         fixtures.append(("generic-slice-bounds-" + index_type, "fn at<T:copy,I:integer>(s:&[]T,i:I)->T{return read_slice(s,i);}fn main()->i64{let values=new [1]i64 [7];borrow values[0..1] as s{return at::<i64," + index_type + ">(s," + index + ");}}"))
@@ -335,7 +337,7 @@ def main():
                     native = invoke([executable, *options])
                     assert signature(vm) == signature(native), (name, mode, options, vm.stderr, native.stderr)
                     pairs += 1
-                if name == "calls" or name.startswith(("variant-", "result-")) or name in ("arrays", "records", "conversions", "tables", "aggregate-result", "aggregate-partial", "aggregate-propagation", "aggregate-empty", "references", "reference-parameters", "slices", "returned-references", "propagation", "reference-mixed", "reference-empty", "reference-shared", "reference-return-whole"):
+                if name == "calls" or name.startswith(("variant-", "result-")) or name in ("unit", "unit-result", "unit-owned", "arrays", "records", "conversions", "tables", "aggregate-result", "aggregate-partial", "aggregate-propagation", "aggregate-empty", "references", "reference-parameters", "slices", "returned-references", "propagation", "reference-mixed", "reference-empty", "reference-shared", "reference-return-whole"):
                     for budget in range(1, 200):
                         options = [f"--max-steps={budget}"]
                         vm = invoke([compiler, "run", source, *options])

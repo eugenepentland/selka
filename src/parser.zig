@@ -669,6 +669,7 @@ pub const Parser = struct {
             const body = try self.block();
             return self.addStatement(.{ .span = .join(first.span, self.syntax.statements.items[@backingInt(body)].span), .data = .{ .loop = .{ .condition = condition, .body = body } } });
         }
+        var implicit_discard = false;
         const data: @FieldType(ast.Statement, "data") = switch (first.tag) {
             .kw_write_slice => write: {
                 self.cursor.pos += 1;
@@ -704,7 +705,7 @@ pub const Parser = struct {
             },
             .kw_return => ret: {
                 self.cursor.pos += 1;
-                break :ret .{ .ret = try self.expression(0) };
+                break :ret .{ .ret = if (self.current().tag == .semicolon) try self.append(.{ .span = first.span, .data = .unit }) else try self.expression(0) };
             },
             .kw_let => binding: {
                 self.cursor.pos += 1;
@@ -720,15 +721,21 @@ pub const Parser = struct {
                     .equal => .set,
                     .plus_equal => .add,
                     .minus_equal => .sub,
-                    else => return self.sink.fail("E_EXPLICIT_DISCARD_REQUIRED", first.span, "a standalone value requires explicit discard"),
+                    else => {
+                        implicit_discard = true;
+                        break :assignment .{ .discard = try self.expression(0) };
+                    },
                 };
                 self.cursor.pos += 2;
                 break :assignment .{ .assignment = .{ .name = first.span, .value = try self.expression(0), .op = op, .op_span = operator.span } };
             },
-            else => return self.sink.fail("E_EXPLICIT_DISCARD_REQUIRED", first.span, "expected a statement; a standalone value requires explicit discard"),
+            else => expression: {
+                implicit_discard = true;
+                break :expression .{ .discard = try self.expression(0) };
+            },
         };
         const end = try self.expect(.semicolon);
-        return self.addStatement(.{ .span = .join(first.span, end.span), .data = data });
+        return self.addStatement(.{ .span = .join(first.span, end.span), .implicit_discard = implicit_discard, .data = data });
     }
     fn append(self: *Parser, node: ast.Node) diagnostic.Error!ast.NodeId {
         const id: ast.NodeId = @fromBackingInt(self.syntax.nodes.items.len);

@@ -54,3 +54,5 @@ Generic functions and nominal declarations support explicit `const N:u64` length
 Borrowed collections, bounded integer/byte hash tables, and generic owned vectors/maps are documented in [standard collections](stdlib-collections.md).
 
 The [standard library guide](standard-library.md) lists embedded text/data, borrowed and owned collections, buffered I/O, paths, time and random APIs with their bounded contracts.
+
+Unit procedures use `-> unit`, bare `return;`, and natural fallthrough; ordinary calls may stand alone only when returning unit. See [unit procedures](experiments/unit-procedures.md).
