@@ -237,6 +237,11 @@ pub const Value = union(enum) {
     /// Release without allocation or recursive host calls. Zero-reference nodes
     /// temporarily form an intrusive work list; shared live nodes never change.
     pub fn release(self: Value, allocator: std.mem.Allocator) void {
+        if (self != .aggregate and self != .owned) return;
+        releaseManaged(self, allocator);
+    }
+
+    noinline fn releaseManaged(self: Value, allocator: std.mem.Allocator) void {
         var pending: ?*Aggregate = null;
         enqueueRelease(self, &pending, allocator);
         while (pending) |record| {

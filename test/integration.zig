@@ -45,6 +45,24 @@ test "CLI run and check success" {
     try invoke("check", @embedFile("fixtures/arithmetic.my"), 0, "", "");
 }
 
+// spec: VM-TIMING-1
+test "CLI execution timings preserve results and runtime diagnostics" {
+    const source = "fn main() -> i64 { return 42; }";
+    for ([_][]const u8{ "--dispatch=optimized", "--dispatch=generic" }) |dispatch| {
+        const outcome = try runFixture("run", source, &.{ "--timings", dispatch });
+        defer testing.allocator.free(outcome.stdout);
+        defer testing.allocator.free(outcome.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+        try testing.expectEqualStrings("42\n", outcome.stdout);
+        const prefix = "timings: bytecode_ns=";
+        try testing.expect(std.mem.startsWith(u8, outcome.stderr, prefix));
+        _ = try std.fmt.parseInt(u64, std.mem.trim(u8, outcome.stderr[prefix.len..], "\n"), 10);
+    }
+    try invokeOptions("run", "fn main() -> i64 { return 1 / 0; }", &.{"--timings"}, 1, "", "error[R_DIVISION_BY_ZERO]");
+    try invokeOptions("run", source, &.{ "--timings", "--timings" }, 2, "", "usage:");
+    try invokeOptions("check", source, &.{"--timings"}, 2, "", "usage:");
+}
+
 test "CLI dumps actual instructions" {
     try invoke("dump-bytecode", @embedFile("fixtures/arithmetic.my"), 0, @embedFile("fixtures/arithmetic.dump"), "");
 }

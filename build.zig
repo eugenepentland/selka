@@ -124,6 +124,13 @@ pub fn build(b: *std.Build) void {
     const schematic_step = b.step("test-schematic", "Verify guest SVG generation against Netlisp connectivity and source mutations");
     schematic_step.dependOn(&schematic_runtime.step);
     const run_schematic_unit = b.addRunArtifact(schematic_unit);
+    const audit_runtime = b.step("test-runtime-audit", "Run every Zig test root for isolated runtime probes");
+    guardian.addAllChecks(b, guardian_exe, audit_runtime, .{});
+    audit_runtime.dependOn(&b.addRunArtifact(unit).step);
+    audit_runtime.dependOn(&run_integration.step);
+    audit_runtime.dependOn(&run_board_unit.step);
+    audit_runtime.dependOn(&run_byte_io_unit.step);
+    audit_runtime.dependOn(&run_schematic_unit.step);
     schematic_step.dependOn(&run_schematic_unit.step);
     test_step.dependOn(&run_schematic_unit.step);
     guardian.addAllChecks(b, guardian_exe, schematic_step, .{});

@@ -150,3 +150,16 @@ test "every signed and unsigned byte addition and multiplication has checked bou
         }
     }
 }
+
+// spec: VM-AUDIT-1
+test "scalar loop retains exact step budget and located trap under VM audit probes" {
+    const source = "fn main()->i64{let mut i=0;let mut total=0;" ++
+        "while i<100{total+=i;i+=1;}return total;}";
+    var compilation = try language.Compilation.init(testing.allocator, "audit.my", source);
+    defer compilation.deinit();
+    const limited = try compilation.executeWithOptions(testing.allocator, .{ .max_steps = 1309 });
+    try testing.expectEqualStrings("R_STEP_LIMIT", limited.trap.code);
+    try testing.expectEqualStrings("return total;", source[limited.trap.span.start..limited.trap.span.end]);
+    const result = try compilation.executeWithOptions(testing.allocator, .{ .max_steps = 1310 });
+    try testing.expectEqual(@as(i64, 4950), result.value);
+}

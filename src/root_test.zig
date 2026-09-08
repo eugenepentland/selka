@@ -1,5 +1,6 @@
 //! Unit test entry point, separate from the production compiler module.
 test {
+    _ = @import("vm_fusion_test.zig");
     _ = @import("stdlib_time_random_test.zig");
     _ = @import("const_lengths_test.zig");
     _ = @import("source_evaluation_test.zig");

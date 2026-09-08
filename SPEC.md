@@ -408,3 +408,18 @@ supersede it. The manifest records implementation coverage, not a test certifica
 
 - [CALLBACK-CONTEXT-1] Readonly callback contexts support whole values and slices, enforce synchronous lexical borrowing, preserve allocation-region provenance, and participate in generic checking and noalloc effect ceilings.
 - [CALLBACK-ALGORITHMS-1] Generic context-aware sort_by uses bounded in-place heapsort; lower_bound_by searches under the same ordering and filter_by preserves retained order and capacity. JSON document contexts can compare node IDs directly.
+
+## Bytecode execution
+
+- [VM-AUDIT-1] Scalar-loop execution preserves results, exact instruction budgets and located traps across runtime representation optimizations.
+
+- [VM-FUSION-1] Execution-local fused scalar and array-read sequences preserve original logical instruction counts, located traps, trace events and borrowed-local behavior; generic dispatch remains selectable for differential verification.
+- [VM-FUSION-2] Fused dispatch falls back for locals whose active storage has moved into the borrowing store.
+- [VM-FUSION-3] Requested bounded traces preserve original operation names, PCs, logical step counts and source spans under both dispatch settings.
+- [VM-FUSION-4] Fusion metadata uses a fixed-size execution-local cache; every injected execution allocation failure releases all owned storage.
+
+- [VM-FUSION-5] Scalar-only calls and returns preserve frame limits and results across frame-array growth; fusion cache collisions preserve original instruction identity.
+
+- [VM-FUSION-6] Scalar fast paths reuse checked local bindings; invocation argument copies canonicalize integer representations and reject mismatched types before execution.
+
+- [VM-TIMING-1] `run --timings` reports VM execution nanoseconds on stderr, including VM validation, setup and cleanup but excluding source compilation and result output. Timing preserves guest results, dispatch selection, quotas and runtime diagnostics; duplicate options and unsupported commands reject it.

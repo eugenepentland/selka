@@ -15,7 +15,8 @@ const usage = "usage: mylang " ++
     "--max-codec-frames=N --max-codec-calls=N --max-codec-bytes=N --max-codec-values=N\n  " ++
     "invoke-project: --request=path.json (typed-call-v1, schema-pinned public function call; " ++
     "same codec budgets)\n  input-module: reads a typed JSON manifest and writes generated " ++
-    "module source\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena\n  " ++
+    "module source\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena --dispatch=optimized|generic\n  " ++
+    "run: --timings (VM execution nanoseconds on stderr; excludes source compilation)\n  " ++
     "eval-project: --max-steps=N --max-frames=N --max-eval-bytes=N " ++
     "--evaluation-report|--evaluation-request --inputs=manifest.json (repeat for up to 16 " ++
     "modules; effect-free, parameter-free entry)\n  " ++
@@ -204,7 +205,7 @@ fn run(init: Context, parsed: Parsed) !u8 {
             defer allocator.free(text);
             try std.Io.File.stdout().writeStreamingAll(init.io, text);
         },
-        .run => switch (try compilation.executeWithOptions(allocator, parsed.options)) {
+        .run => switch (try executeRun(init, &compilation, parsed)) {
             .value => |value| {
                 var buffer: [32]u8 = undefined;
                 const text = try std.fmt.bufPrint(&buffer, "{d}\n", .{value});
@@ -219,6 +220,18 @@ fn run(init: Context, parsed: Parsed) !u8 {
         },
     }
     return 0;
+}
+
+fn executeRun(init: Context, compilation: *language.Compilation, parsed: Parsed) !language.vm.Result {
+    if (!parsed.reporting.timings) return compilation.executeWithOptions(init.gpa, parsed.options);
+    try compilation.emit();
+    const start = std.Io.Timestamp.now(init.io, .awake);
+    const result = try language.vm.runWithOptions(init.gpa, compilation.code.?, parsed.options);
+    const elapsed = start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds;
+    var buffer: [96]u8 = undefined;
+    const text = try std.fmt.bufPrint(&buffer, "timings: bytecode_ns={d}\n", .{elapsed});
+    try init.text(text);
+    return result;
 }
 
 fn report(init: Context, compilation: *const language.Compilation) !void {
@@ -324,6 +337,7 @@ const ArgumentParser = struct {
     saw_steps: bool = false,
     saw_frames: bool = false,
     saw_memory: bool = false,
+    saw_dispatch: bool = false,
     discovery: language.duplicates.Options = .{},
     reporting: Reporting = .{},
     saw_min: bool = false,
@@ -453,6 +467,11 @@ const ArgumentParser = struct {
             };
             self.options.max_frames = std.fmt.parseUnsigned(u64, digits, 10) catch return error.Usage;
             if (self.options.max_frames == 0) return error.Usage;
+        } else if (std.mem.startsWith(u8, arg, "--dispatch=")) {
+            if ((self.command != .run and self.command != .@"run-project") or self.saw_dispatch) return error.Usage;
+            self.saw_dispatch = true;
+            const mode = arg["--dispatch=".len..];
+            self.options.memory.optimize_dispatch = if (std.mem.eql(u8, mode, "optimized")) true else if (std.mem.eql(u8, mode, "generic")) false else return error.Usage;
         } else if (std.mem.startsWith(u8, arg, "--memory=")) {
             if ((self.command != .run and self.command != .@"run-project") or self.saw_memory) return error.Usage;
             self.saw_memory = true;
@@ -478,7 +497,8 @@ const ArgumentParser = struct {
             self.saw_work = true;
             self.discovery.near_options.max_work = std.math.cast(usize, try positive(arg["--max-work=".len..])) orelse return error.Usage;
         } else if (std.mem.eql(u8, arg, "--timings")) {
-            if ((self.command != .@"discover-duplicates" and self.command != .@"discover-project-duplicates") or self.reporting.timings) return error.Usage;
+            const supported = self.command == .run or self.command == .@"discover-duplicates" or self.command == .@"discover-project-duplicates";
+            if (!supported or self.reporting.timings) return error.Usage;
             self.reporting.timings = true;
         } else return false;
         return true;
