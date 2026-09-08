@@ -15,7 +15,7 @@ const Field = struct { name: []const u8, type: []const u8 };
 const Case = struct { name: []const u8, payload: ?[]const u8 };
 const Codec = struct { wire: []const u8, decode: []const u8, encode: []const u8, error_type: []const u8 };
 const Definition = struct {
-    callback: ?struct { parameters: []const []const u8, result: []const u8, effects: u8 } = null,
+    callback: ?struct { parameters: []const []const u8, result: []const u8, effects: u8, borrowed: u16, slices: u16 } = null,
     codec: ?Codec = null,
     name: []const u8,
     kind: enum { callback, integer, boolean, capability, record, array, table, domain, enumeration, tagged_union, result, buffer, resource, pool, handle },
@@ -70,7 +70,7 @@ const Graph = struct {
             for (contract.parameters, parameters) |parameter, *out_type| out_type.* = try self.reference(parameter);
             out.kind = .callback;
             out.@"opaque" = true;
-            out.callback = .{ .parameters = parameters, .result = try self.reference(contract.return_type), .effects = contract.effects };
+            out.callback = .{ .parameters = parameters, .result = try self.reference(contract.return_type), .effects = contract.effects, .borrowed = contract.borrowed, .slices = contract.slices };
             return out;
         }
         // Domains may only be constructed through their checked factories. Runtime

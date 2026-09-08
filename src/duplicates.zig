@@ -322,6 +322,7 @@ const CanonicalWriter = struct {
             },
             .function_value => |target| writer.print("function {s}\n", .{program.functions[@backingInt(target)].name}) catch return error.OutOfMemory,
             .invoke => |call| {
+                writer.print("references {any}\n", .{call.references}) catch return error.OutOfMemory;
                 try work.append(allocator, .{ .expression = call.callee });
                 for (call.arguments) |argument| try work.append(allocator, .{ .expression = argument });
             },

@@ -40,7 +40,7 @@ const Analysis = struct {
         for (inputs) |input| dependency = origin.combine(dependency, self.node(input.value));
         return dependency;
     }
-    fn call(self: Analysis, invocation: @FieldType(@FieldType(typed.Node, "data"), "call")) Dependency {
+    fn call(self: Analysis, invocation: anytype) Dependency {
         var dependency = self.arguments(invocation.arguments);
         for (invocation.references) |id| {
             const ref = self.function.scope.references[@backingInt(id)];
@@ -76,7 +76,7 @@ const Analysis = struct {
         if (!carries(expression_node.ty, self.types)) return .{};
         return switch (expression_node.data) {
             .function_value => .{},
-            .invoke => |invocation| self.arguments(invocation.arguments),
+            .invoke => |invocation| self.call(invocation),
             .local => |id| self.local(id),
             .read_ref => |id| self.reference(id),
             .read_slice => |read| self.reference(read.reference),

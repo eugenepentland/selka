@@ -19,6 +19,18 @@ pub fn resolve(allocator: std.mem.Allocator, catalog: *@import("type_catalog.zig
             return argument;
         }
     }
+    if (catalog.templates.store) |store| if (store.index.syntax.callbacks.get(span.start)) |callback| {
+        var inputs: [16]typed.Type = undefined;
+        for (callback.parameters, 0..) |input, i| inputs[i] = try resolve(allocator, catalog, src, sink, .{ .span = input, .parameters = parameters, .arguments = arguments, .lengths = binding.lengths, .depth = depth + 1 });
+        const result = try resolve(allocator, catalog, src, sink, .{ .span = callback.return_type, .parameters = parameters, .arguments = arguments, .lengths = binding.lengths, .depth = depth + 1 });
+        return @import("callables.zig").intern(allocator, catalog, .{
+            .parameters = inputs[0..callback.parameters.len],
+            .return_type = result,
+            .effects = callback.effect_bound.allowed,
+            .borrowed = callback.borrowed,
+            .slices = callback.slices,
+        }, span, sink);
+    };
     if (catalog.templates.applications.get(span.start)) |template| {
         var values: [16]typed.Type = undefined;
         var lengths: [16]?usize = @splat(null);

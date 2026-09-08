@@ -194,6 +194,6 @@ pub const TypeApplication = struct { span: Span, name: Span, arguments: []const 
 pub const TypeAlias = struct { name: Span, target: Span };
 /// Structural type syntax, concrete nominal applications and transparent aliases.
 /// Noncapturing callable value signature with an explicit effect ceiling.
-pub const CallbackType = struct { span: Span, parameters: []const Span, return_type: Span, effect_bound: effect_set.Bound };
+pub const CallbackType = struct { span: Span, parameters: []const Span, return_type: Span, effect_bound: effect_set.Bound, borrowed: u16 = 0, slices: u16 = 0 };
 /// Source catalog of structural types and nominal type applications.
 pub const TypeExpressions = struct { callbacks: []const CallbackType = &.{}, arrays: []const ArrayType = &.{}, applications: []const TypeApplication = &.{}, aliases: []const TypeAlias = &.{} };

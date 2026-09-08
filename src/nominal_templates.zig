@@ -95,7 +95,6 @@ pub const Index = struct {
             const arguments = try ctx.allocator.alloc(Expression, syntax.parameters.len + 1);
             for (syntax.parameters, arguments[0..syntax.parameters.len]) |input, *out| out.* = try self.expression(input, parameters);
             arguments[syntax.parameters.len] = try self.expression(syntax.return_type, parameters);
-            for (arguments) |argument| if (depends(argument)) return ctx.sink.fail("E_CALLBACK_TYPE", span, "callback signatures currently require concrete parameter and result types");
             const callback = try ctx.allocator.create(Callback);
             callback.* = .{ .syntax = syntax, .arguments = arguments };
             return .{ .callback = callback };
@@ -283,6 +282,7 @@ pub const Index = struct {
     /// Validate nested arguments against the caller's declared guarantees, including unused fields.
     pub fn checkArguments(self: *Index, value: Expression, parameters: []const requirements.Parameter) Error!void {
         switch (value) {
+            .callback => |callback| for (callback.arguments) |argument| try self.checkArguments(argument, parameters),
             .application => |application| {
                 const required = self.declarations.items[application.declaration].parameters;
                 for (application.arguments, required, application.syntax.arguments) |argument, item, at| {
@@ -318,6 +318,10 @@ fn builtinGuarantees(ty: typed.Type) requirements.Set {
 /// Test whether an expression retains a parameter from its declaring scope.
 pub fn depends(value: Expression) bool {
     return switch (value) {
+        .callback => |callback| dependent: {
+            for (callback.arguments) |argument| if (depends(argument)) break :dependent true;
+            break :dependent false;
+        },
         .parameter => true,
         .array => |array| array.length_parameter != null or depends(array.element),
         .application => |application| dependent: {

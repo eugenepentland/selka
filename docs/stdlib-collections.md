@@ -31,3 +31,21 @@ Owned elements cannot be copied with `read_buffer`, resize-fill, or slices. Extr
 `std_owned_map::Map<K:equality,V:storable>` is a bounded linear map for owned values. `put` consumes the offered value and returns inserted/replaced status, `take` moves a matching value out, and `clear` destroys entries. Missing keys return error 4. Full insertion consumes the new value and preserves existing key/value pairs. The map inspects keys by moving entries during its reverse scan, so entry order is unspecified and may change even when a key is absent. Lookup without moving an owned value needs an element-reference API, which this release does not provide. Hash maps currently retain copyable values; use this owned map when values own buffers.
 
 Run `src/stdlib/fixtures/owned_collections.my` for owned byte-buffer vectors/maps. `src/stdlib/fixtures/owned_buffer_mutations.my` also covers reserve, swap removal, truncation and failed replacement. The compiler rejects recursive by-value buffer ownership; there is no general recursive container type in this release.
+
+
+Generic context algorithms accept an explicit readonly slice and a pure callback:
+
+- sort_by<T:copy,C:copy>(values:&mut []T,context:&[]C,before:fn(&[]C,T,T)->bool effects()) -> u64
+- lower_bound_by<T:copy,C:copy>(values:&[]T,context:&[]C,needle:T,before:fn(&[]C,T,T)->bool effects()) -> u64
+- filter_by<T:copy,C:copy>(values:&mut Vector<T>,context:&[]C,keep:fn(&[]C,T)->bool effects()) -> Status
+
+All three are noalloc. Sort is in-place heapsort (O(n log n) worst case, not stable);
+lower_bound_by performs logarithmic comparisons on a slice sorted by the same
+strict ordering; filter compacts stably in linear time and retains capacity.
+Empty inputs succeed. Context and mutable destination must obey ordinary borrow
+alias rules. See src/stdlib/fixtures/callback_context.my for sorting JSON node IDs
+using the parsed document directly, then searching and filtering those IDs.
+
+The callback_context_bounds fixture checks 16,384 reverse-ordered, permuted,
+and duplicate-key values. Native checks run both O0 and O2 with UBSan. These
+are implementation/conformance checks, not evidence of developer productivity.

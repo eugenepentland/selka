@@ -384,13 +384,14 @@ const InstructionOutput = struct {
     position: struct { offset: usize, location: usize },
     instruction: bc.Instruction,
 };
-fn writeIndirect(context: InstructionOutput, ty: typed.Type) !void {
+fn writeIndirect(context: InstructionOutput, invocation: @FieldType(@FieldType(bc.Instruction, "op"), "invoke")) !void {
+    const ty = invocation.ty;
     const w = context.writer;
     const program = context.program;
     const offsets = context.offsets;
     const location = context.position.location;
     const contract = callables.signature(ty, program.records).?;
-    try w.print("switch (callback_target({d})) {{\n", .{contract.parameters.len});
+    try w.print("switch (callback_target({d})) {{\n", .{contract.valueCount()});
     for (program.functions, 0..) |target, target_id| {
         if (!callables.accepts(contract, target)) continue;
         try w.print("case {d}: ", .{target_id});
@@ -398,7 +399,13 @@ fn writeIndirect(context: InstructionOutput, ty: typed.Type) !void {
             try w.print("host_invoke({d}); goto L{d};\n", .{ native_host.declarationIndex(program.functions, target_id), location + 1 });
         } else {
             try enter(w, target, location + 1);
-            try w.print("goto L{d};\n", .{offsets[target_id]});
+            try w.writeAll("binding_call = 1;\n");
+            var loan: usize = 0;
+            for (target.scope.references, 0..) |reference, index| if (reference.mode.parameter) {
+                try w.print("bind_reference({d}, {d}, 0);\n", .{ index, @backingInt(invocation.references[loan]) });
+                loan += 1;
+            };
+            try w.print("binding_call = 0; goto L{d};\n", .{offsets[target_id]});
         }
     }
     try w.writeAll("default: host_failure(\"InternalError\");\n}\n");
@@ -655,8 +662,8 @@ fn writeOperation(context: InstructionOutput) !bool {
         },
         .jump_if_false => |target| try w.print("if (!pop()) goto L{d};\n", .{offset + target}),
         .function_value => |value| try w.print("push({d});\n", .{@backingInt(value.function)}),
-        .invoke => |ty| {
-            try writeIndirect(context, ty);
+        .invoke => |invocation| {
+            try writeIndirect(context, invocation);
             falls_through = false;
         },
         .call, .call_refs, .call_borrow => {

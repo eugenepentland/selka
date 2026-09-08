@@ -223,6 +223,7 @@ pub fn build(b: *std.Build) void {
     native_step.dependOn(&standard_time_random.step);
     const standard_collections = b.addSystemCommand(&.{ "python3", "tests/native_stdlib_collections.py", "--compiler" });
     standard_collections.addFileArg(exe.getEmittedBin());
+    standard_collections.addArgs(&.{ "--zig", b.graph.zig_exe });
     standard_collections.setCwd(b.path("."));
     native_step.dependOn(&standard_collections.step);
     const standard_io = b.addSystemCommand(&.{ "python3", "tests/standard_io_native.py", "--compiler" });

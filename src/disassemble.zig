@@ -194,7 +194,7 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
             call.references,
         }),
         .function_value => |value| try writer.print("FUNCTION_VALUE {d} type {d}", .{ @backingInt(value.function), @backingInt(value.ty) }),
-        .invoke => |ty| try writer.print("INVOKE type {d}", .{@backingInt(ty)}),
+        .invoke => |call| try writer.print("INVOKE type {d} references {any}", .{ @backingInt(call.ty), call.references }),
         .call => |id| try writer.print("CALL {d} ({s})", .{ @backingInt(id), program.functions[@backingInt(id)].name }),
         .ret => try writer.writeAll("RET"),
     }

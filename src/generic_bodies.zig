@@ -18,7 +18,7 @@ const eResultOperation = diagnostic.result_operation;
 const eResultPath = diagnostic.result_path;
 const eTryReturn = "E_TRY_RETURN";
 const eArgument = diagnostic.generic_argument;
-const eBorrowConflict = "E_BORROW_CONFLICT";
+const eBorrowConflict = diagnostic.borrow_conflict;
 const eUnsupported = "E_GENERIC_BODY_UNSUPPORTED";
 const region_check = @import("region_check.zig");
 const Regions = @import("generic_regions.zig");
@@ -142,6 +142,13 @@ const Checker = struct {
         self.work += 1;
     }
     fn ty(self: *Checker, span: source.Span) Error!Symbolic {
+        for (self.program.types.expressions.callbacks) |callback| if (callback.span.start == span.start) {
+            try self.enter(span);
+            defer self.depth -= 1;
+            const parameters = try self.field_arena.allocator().alloc(Symbolic, callback.parameters.len);
+            for (callback.parameters, parameters) |input, *out| out.* = try self.ty(input);
+            return self.callbackType(callback, parameters, try self.ty(callback.return_type));
+        };
         if (self.catalog.templates.applications.get(span.start)) |template| {
             try self.enter(span);
             defer self.depth -= 1;
@@ -162,6 +169,11 @@ const Checker = struct {
             return .{ .parameter = index };
         };
         return self.concreteType(span);
+    }
+    fn callbackType(self: *Checker, syntax: ast.CallbackType, parameters: []const Symbolic, result: Symbolic) Error!Symbolic {
+        const signature = try self.field_arena.allocator().create(symbolic.Callback);
+        signature.* = .{ .parameters = parameters, .result = result, .effects = syntax.effect_bound.allowed, .borrowed = syntax.borrowed, .slices = syntax.slices };
+        return .{ .callback = signature };
     }
     fn lengthType(self: *Checker, span: source.Span) Error!Symbolic {
         for (self.parameters, 0..) |parameter, index| {
@@ -203,7 +215,7 @@ const Checker = struct {
         try self.enter(span);
         defer self.depth -= 1;
         return switch (value) {
-            .length, .length_parameter, .parameter => false,
+            .callback, .length, .length_parameter, .parameter => false,
             .concrete => |ty_value| typed.requiresHandling(ty_value, self.catalog.records),
             .array => |array| (array.length_parameter != null or array.length != 0) and try self.definiteHandling(array.element, span),
             .nominal => result: {
@@ -264,7 +276,7 @@ const Checker = struct {
     fn concreteValue(self: *Checker, value: Symbolic, span: source.Span) Error!typed.Type {
         return switch (value) {
             .concrete => |ty_value| ty_value,
-            .length, .length_parameter, .parameter, .array, .nominal => self.sink.fail(eUnsupported, span, "structural operations require a concrete type; parameter shapes need declared constraints"),
+            .callback, .length, .length_parameter, .parameter, .array, .nominal => self.sink.fail(eUnsupported, span, "structural operations require a concrete type; parameter shapes need declared constraints"),
         };
     }
     fn same(self: *Checker, actual: Symbolic, expected: Symbolic, span: source.Span) Error!void {
@@ -538,6 +550,13 @@ const Checker = struct {
         return self.lengthType(span);
     }
     fn substituted(self: *Checker, span: source.Span, parameters: []const ast.TypeParameter, arguments: []const Symbolic) Error!Symbolic {
+        for (self.program.types.expressions.callbacks) |callback| if (callback.span.start == span.start) {
+            try self.enter(span);
+            defer self.depth -= 1;
+            const inputs = try self.field_arena.allocator().alloc(Symbolic, callback.parameters.len);
+            for (callback.parameters, inputs) |input, *out| out.* = try self.substituted(input, parameters, arguments);
+            return self.callbackType(callback, inputs, try self.substituted(callback.return_type, parameters, arguments));
+        };
         if (self.catalog.templates.applications.get(span.start)) |template| {
             try self.enter(span);
             defer self.depth -= 1;
@@ -579,12 +598,29 @@ const Checker = struct {
     }
     fn indirectCall(self: *Checker, invocation: Call) Error!Symbolic {
         const value = try self.namedValue(invocation.name);
-        const ty_value = try self.concreteValue(value, invocation.name);
-        const contract = @import("callables.zig").signature(ty_value, self.catalog.records) orelse return self.sink.fail("E_CALLBACK_TYPE", invocation.name, "called local is not a function value");
-        if (invocation.type_arguments.len != 0 or invocation.arguments.len != contract.parameters.len) return self.sink.fail("E_ARITY", invocation.name, "callback arguments must match its declared value parameters");
-        for (invocation.arguments, contract.parameters) |input, parameter| try self.same(try self.expression(input), .{ .concrete = parameter }, invocation.name);
+        var concrete_parameters: [16]Symbolic = undefined;
+        const contract: symbolic.Callback = if (value == .callback) value.callback.* else concrete: {
+            const ty_value = try self.concreteValue(value, invocation.name);
+            const signature = @import("callables.zig").signature(ty_value, self.catalog.records) orelse return self.sink.fail("E_CALLBACK_TYPE", invocation.name, "called local is not a function value");
+            for (signature.parameters, 0..) |parameter, i| concrete_parameters[i] = .{ .concrete = parameter };
+            break :concrete .{ .parameters = concrete_parameters[0..signature.parameters.len], .result = .{ .concrete = signature.return_type }, .effects = signature.effects, .borrowed = signature.borrowed, .slices = signature.slices };
+        };
+        if (invocation.type_arguments.len != 0 or invocation.arguments.len != contract.parameters.len) return self.sink.fail("E_ARITY", invocation.name, "callback arguments must match its signature");
+        var loans: std.ArrayList(usize) = .empty;
+        defer loans.deinit(self.allocator);
+        for (invocation.arguments, contract.parameters, 0..) |input, parameter, i| {
+            const bit = @as(u16, 1) << @as(u4, @intCast(i));
+            if (contract.borrowed & bit != 0) {
+                const node = self.program.nodes.items[@backingInt(input)];
+                if (node.data != .name) return self.sink.fail(eReferenceArgument, node.span, "callback context requires an active reference name");
+                const ref = try self.reference(node.data.name, false, contract.slices & bit != 0);
+                try self.same(ref.ty, parameter, node.span);
+                try self.claimLoan(&loans, node.data.name);
+                try self.regionRead(ref.*);
+            } else try self.same(try self.expression(input), parameter, invocation.name);
+        }
         self.effect_masks[self.function_index] |= contract.effects;
-        return .{ .concrete = contract.return_type };
+        return contract.result;
     }
     fn call(self: *Checker, input_call: Call, span: source.Span, allow_reference: bool) Error!Symbolic {
         if (std.mem.eql(u8, self.src.text(input_call.name), "todo") and input_call.owner == null) {
@@ -611,7 +647,7 @@ const Checker = struct {
                 .length, .length_parameter => parameter.constant_length,
                 .parameter => |index| self.parameters[index].requirements.implies(parameter.requirements),
                 .concrete => |builtin| parameter.requirements.accepts(builtin, self.catalog.records),
-                .array, .nominal => supportsSet(argument.*, parameter.requirements, self.parameters, self.catalog),
+                .callback, .array, .nominal => supportsSet(argument.*, parameter.requirements, self.parameters, self.catalog),
             };
             if (!satisfies) return self.sink.failRelated(
                 eArgument,

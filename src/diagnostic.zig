@@ -160,3 +160,6 @@ pub const reference_argument = "E_REFERENCE_ARGUMENT";
 
 /// Constant generic length syntax, kind or specialization-bound failure.
 pub const generic_length = "E_GENERIC_LENGTH";
+
+/// An exclusive loan cannot overlap another active call argument.
+pub const borrow_conflict = "E_BORROW_CONFLICT";

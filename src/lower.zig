@@ -337,7 +337,7 @@ const Emitter = struct {
             .local => |slot| try self.instruction(node.span, if (typed.moveOnly(node.ty, self.program.records) or typed.requiresHandling(node.ty, self.program.records)) .{ .move_local = slot } else .{ .load_local = slot }),
             .function_value => |target| try self.instruction(node.span, .{ .function_value = .{ .ty = node.ty, .function = target } }),
             .invoke => |call| {
-                try self.instruction(node.span, .{ .invoke = self.program.nodes[@backingInt(call.callee)].ty });
+                try self.instruction(node.span, .{ .invoke = .{ .ty = self.program.nodes[@backingInt(call.callee)].ty, .references = call.references } });
                 var i = call.arguments.len;
                 while (i > 0) {
                     i -= 1;

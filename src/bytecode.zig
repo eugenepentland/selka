@@ -124,11 +124,22 @@ fn validateFunctionValue(program: Program, ty: typed.Type, target: typed.Functio
     if (@backingInt(target) >= program.functions.len) return error.InternalError;
     if (!callables.accepts(contract, program.functions[@backingInt(target)])) return error.InternalError;
 }
+fn validateInvocation(program: Program, function: Function, invocation: @FieldType(@FieldType(Instruction, "op"), "invoke")) Error!void {
+    const ty = invocation.ty;
+    const contract = callables.signature(ty, program.records) orelse return error.InternalError;
+    if (invocation.references.len != @popCount(contract.borrowed)) return error.InternalError;
+    var loan: usize = 0;
+    for (contract.parameters, 0..) |parameter, i| if (contract.borrows(i)) {
+        const id = @backingInt(invocation.references[loan]);
+        loan += 1;
+        if (id >= function.scope.references.len) return error.InternalError;
+        const ref = function.scope.references[id];
+        if (ref.ty != parameter or ref.mode.slice != contract.slice(i)) return error.InternalError;
+    };
+}
 fn validateInstruction(allocator: std.mem.Allocator, program: Program, function: Function, instruction: Instruction) Error!void {
     switch (instruction.op) {
-        .invoke => |ty| {
-            _ = callables.signature(ty, program.records) orelse return error.InternalError;
-        },
+        .invoke => |invocation| try validateInvocation(program, function, invocation),
         .function_value => |value| try validateFunctionValue(program, value.ty, value.function),
         .make_variant => |variant| try validateOpMakeVariant(program, variant),
         .reset_arena => |output| try validateOpResetArena(program, output),
@@ -556,10 +567,11 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
             => if (height == 0) {
                 return error.InternalError;
             },
-            .invoke => |ty| {
+            .invoke => |invocation| {
+                const ty = invocation.ty;
                 const contract = callables.signature(ty, program.records) orelse return error.InternalError;
-                if (height <= contract.parameters.len) return error.InternalError;
-                height -= contract.parameters.len;
+                if (height <= contract.valueCount()) return error.InternalError;
+                height -= contract.valueCount();
             },
             .call, .call_refs, .call_borrow => {
                 const id = switch (instruction.op) {
@@ -744,6 +756,8 @@ fn validateCallableRecord(program: Program, record: typed.Record) Error!void {
     const contract = record.contract.callback orelse return;
     if (record.shape.domain != .u64) return error.InternalError;
     if (contract.parameters.len > 16 or !validType(contract.return_type, program)) return error.InternalError;
+    if (contract.slices & ~contract.borrowed != 0) return error.InternalError;
+    if (contract.parameters.len < 16 and contract.borrowed >> @as(u4, @intCast(contract.parameters.len)) != 0) return error.InternalError;
     if (contract.effects & ~@import("effect_set.zig").all != 0) return error.InternalError;
     for (contract.parameters) |parameter| if (!validType(parameter, program)) return error.InternalError;
 }

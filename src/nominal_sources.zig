@@ -66,6 +66,7 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
                 try result.nominal_templates.put(allocator, syntax.span.start, expression.application);
                 continue;
             }
+            if (expression == .callback) continue;
             if (expression != .array) return error.InternalError;
             try result.array_templates.put(allocator, syntax.span.start, .{
                 .syntax = expression.array.syntax,

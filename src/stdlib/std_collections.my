@@ -10,6 +10,9 @@ export reverse;
 export sort;
 export lower_bound;
 export sort_by_i64;
+export sort_by;
+export lower_bound_by;
+export filter_by;
 export transform_i64;
 export clear;
 export append_many;
@@ -167,6 +170,73 @@ fn filter_i64(values: &mut Vector<i64>, keep: fn(i64) -> bool effects()) -> Stat
     while i < count {
         let value = read_buffer(values, i);
         if keep(value) {
+            discard try write_buffer<Status>(values, out, value);
+            out += 1u64;
+        }
+        i += 1u64;
+    }
+    if count == 0u64 {
+        return new Status.ok(true);
+    }
+    return resize_buffer<Status>(values, out, read_buffer(values, 0u64));
+}
+fn sift_by < T: copy, C: copy >(values: &mut []T, context: &[]C, start: u64, count: u64, before: fn(&[]C, T, T) -> bool effects()) -> i64 noalloc {
+    let mut root = start;
+    while root < count / 2u64 {
+        let mut child = root * 2u64 + 1u64;
+        if child + 1u64 < count && before(context, read_slice(values, child), read_slice(values, child + 1u64)) {
+            child += 1u64;
+        }
+        let value = read_slice(values, root);
+        let selected = read_slice(values, child);
+        if !before(context, value, selected) {
+            break;
+        }
+        write_slice(values, root, selected);
+        write_slice(values, child, value);
+        root = child;
+    }
+    return 0;
+}
+fn sort_by < T: copy, C: copy >(values: &mut []T, context: &[]C, before: fn(&[]C, T, T) -> bool effects()) -> u64 noalloc {
+    let count = len_slice(values);
+    let mut start = count / 2u64;
+    while start > 0u64 {
+        start -= 1u64;
+        discard sift_by::< T,
+        C >(values, context, start, count, before);
+    }
+    let mut end = count;
+    while end > 1u64 {
+        end -= 1u64;
+        let last = read_slice(values, end);
+        write_slice(values, end, read_slice(values, 0u64));
+        write_slice(values, 0u64, last);
+        discard sift_by::< T,
+        C >(values, context, 0u64, end, before);
+    }
+    return count;
+}
+fn lower_bound_by < T: copy, C: copy >(values: &[]T, context: &[]C, needle: T, before: fn(&[]C, T, T) -> bool effects()) -> u64 noalloc {
+    let mut left = 0u64;
+    let mut right = len_slice(values);
+    while left < right {
+        let middle = left +(right - left) / 2u64;
+        if before(context, read_slice(values, middle), needle) {
+            left = middle + 1u64;
+        } else {
+            right = middle;
+        }
+    }
+    return left;
+}
+fn filter_by < T: copy, C: copy >(values: &mut Vector<T>, context: &[]C, keep: fn(&[]C, T) -> bool effects()) -> Status noalloc {
+    let count = len_buffer(values);
+    let mut out = 0u64;
+    let mut i = 0u64;
+    while i < count {
+        let value = read_buffer(values, i);
+        if keep(context, value) {
             discard try write_buffer<Status>(values, out, value);
             out += 1u64;
         }

@@ -38,7 +38,11 @@ pub const Store = struct {
                 var arguments: [17]layouts.Id = undefined;
                 for (contract.parameters, 0..) |parameter, i| arguments[i] = try self.typeArgument(records, parameter, span, depth + 1);
                 arguments[contract.parameters.len] = try self.typeArgument(records, contract.return_type, span, depth + 1);
-                break :array try self.graph.materializeKey(.{ .base = .{ .callback = contract.effects }, .arguments = arguments[0 .. contract.parameters.len + 1] }, span);
+                break :array try self.graph.materializeKey(.{ .base = .{ .callback = .{
+                    .effects = contract.effects,
+                    .borrowed = contract.borrowed,
+                    .slices = contract.slices,
+                } }, .arguments = arguments[0 .. contract.parameters.len + 1] }, span);
             }
             const shape = records[ty.recordIndex()].shape.array orelse return error.InternalError;
             const element = try self.typeArgument(records, shape.element, span, depth + 1);

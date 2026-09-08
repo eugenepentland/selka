@@ -68,7 +68,7 @@ pub const Node = struct {
         boolean: bool,
         block_value: struct { body: StatementId, value: NodeId },
         function_value: FunctionId,
-        invoke: struct { callee: NodeId, arguments: []const NodeId },
+        invoke: struct { callee: NodeId, arguments: []const NodeId, references: []const ReferenceId = &.{} },
         local: LocalId,
         read_ref: ReferenceId,
         read_field: FieldAccess,
@@ -167,7 +167,25 @@ pub const RecordShape = struct {
 };
 /// Checked obligations, type-argument visibility and an optional explicit domain wire contract.
 /// Exact value parameter/result types and declared callback effect ceiling.
-pub const Callable = struct { parameters: []const Type, return_type: Type, effects: effect_set.Mask };
+pub const Callable = struct {
+    parameters: []const Type,
+    return_type: Type,
+    effects: effect_set.Mask,
+    borrowed: u16 = 0,
+    slices: u16 = 0,
+    /// Borrowed contexts are supplied separately from the value operand stack.
+    pub fn valueCount(self: Callable) usize {
+        return self.parameters.len - @popCount(self.borrowed);
+    }
+    /// Each readonly context loan lasts only for the synchronous invocation.
+    pub fn borrows(self: Callable, index: usize) bool {
+        return self.borrowed & (@as(u16, 1) << @as(u4, @intCast(index))) != 0;
+    }
+    /// Distinguish borrowed element slices from whole-value contexts.
+    pub fn slice(self: Callable, index: usize) bool {
+        return self.slices & (@as(u16, 1) << @as(u4, @intCast(index))) != 0;
+    }
+};
 /// Ownership and public schema policy for each concrete type.
 pub const RecordContract = struct { callback: ?Callable = null, public_arguments: bool = true, codec: ?Codec = null, codec_declared: bool = false, move_only: bool = false, storable: bool = true, requires_handling: bool = false };
 /// Payload types and case tags of a checked ok/err result schema.

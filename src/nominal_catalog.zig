@@ -30,7 +30,7 @@ const Builder = struct {
         defer if (array_prefix) |prefix| allocator.free(prefix);
         switch (node.key.base) {
             .callback => |mask| {
-                array_prefix = try std.fmt.allocPrint(allocator, "fn@{d}:", .{mask});
+                array_prefix = try std.fmt.allocPrint(allocator, "fn@{d}:{d}:{d}:", .{ mask.effects, mask.borrowed, mask.slices });
                 base = array_prefix.?;
             },
             .parameter => return,
@@ -127,7 +127,13 @@ const Builder = struct {
             if (node.key.base == .callback) {
                 var parameters: [16]typed.Type = undefined;
                 for (node.key.arguments[0 .. node.key.arguments.len - 1], 0..) |argument, argument_index| parameters[argument_index] = try self.runtimeType(argument);
-                const contract: typed.Callable = .{ .parameters = parameters[0 .. node.key.arguments.len - 1], .return_type = try self.runtimeType(node.key.arguments[node.key.arguments.len - 1]), .effects = node.key.base.callback };
+                const contract: typed.Callable = .{
+                    .parameters = parameters[0 .. node.key.arguments.len - 1],
+                    .return_type = try self.runtimeType(node.key.arguments[node.key.arguments.len - 1]),
+                    .effects = node.key.base.callback.effects,
+                    .borrowed = node.key.base.callback.borrowed,
+                    .slices = node.key.base.callback.slices,
+                };
                 for (storage.items) |record| if (record.contract.callback) |existing| {
                     if (@import("callables.zig").equal(existing, contract)) {
                         identity.ty = record.id;
@@ -236,7 +242,13 @@ const Builder = struct {
                 const parameters = try self.context.allocator.alloc(typed.Type, node.key.arguments.len - 1);
                 for (node.key.arguments[0..parameters.len], parameters) |id, *out| out.* = try self.runtimeType(id);
                 schema.shape.domain = .u64;
-                schema.contract.callback = .{ .parameters = parameters, .return_type = try self.runtimeType(node.key.arguments[parameters.len]), .effects = node.key.base.callback };
+                schema.contract.callback = .{
+                    .parameters = parameters,
+                    .return_type = try self.runtimeType(node.key.arguments[parameters.len]),
+                    .effects = node.key.base.callback.effects,
+                    .borrowed = node.key.base.callback.borrowed,
+                    .slices = node.key.base.callback.slices,
+                };
                 continue;
             }
             if (node.key.base == .array) {

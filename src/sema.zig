@@ -1,4 +1,6 @@
 //! Scope and type checking use resolved binding identities, including advisory use counts.
+const callables = @import("callables.zig");
+const eBorrowConflict = diagnostic.borrow_conflict;
 const callback_type_code = "E_CALLBACK_TYPE";
 const eResultOperation = diagnostic.result_operation;
 const eOwnedConsumed = diagnostic.owned_consumed;
@@ -394,7 +396,7 @@ const Checker = struct {
             }
         }
         if (cause) |at| return self.sink.failProvenance(
-            "E_BORROW_CONFLICT",
+            eBorrowConflict,
             span,
             "owner access conflicts with an active borrow",
             .{ .span = at, .message = "conflicting borrow starts here" },
@@ -595,8 +597,10 @@ const Checker = struct {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
                 if (call.owner == null and (self.active.contains(self.src.text(call.name)) or source_json.operation(self.src.text(call.name)) != null)) {
                     var index = call.arguments.len;
+                    const contract = if (self.active.get(self.src.text(call.name))) |slot| callables.signature(self.locals.items[@backingInt(slot)].ty, self.catalog.records) else null;
                     while (index > 0) {
                         index -= 1;
+                        if (contract) |signature| if (index < signature.parameters.len and signature.borrows(index)) continue;
                         try work.append(self.allocator, .{ .id = call.arguments[index] });
                     }
                     return true;
@@ -826,30 +830,54 @@ const Checker = struct {
         if (function.signature.return_reference != null) return self.sink.fail(callback_type_code, name, "callback values cannot return borrowed references");
         const bound = function.policy.effect_bound orelse return self.sink.fail("E_CALLBACK_EFFECTS", name, "function values require a declared effect ceiling");
         const parameters = try self.allocator.alloc(typed.Type, function.signature.parameters.len);
-        for (function.signature.parameters, parameters) |input, *parameter| {
-            if (input.reference != null) return self.sink.fail(callback_type_code, name, "callback values currently accept value parameters only");
+        var borrowed: u16 = 0;
+        var slices: u16 = 0;
+        if (parameters.len > 16) return self.sink.fail(callback_type_code, name, "callbacks support at most 16 parameters");
+        for (function.signature.parameters, parameters, 0..) |input, *parameter, i| {
+            if (input.reference == true) return self.sink.fail(callback_type_code, name, "callback context parameters are readonly borrows");
+            const bit = @as(u16, 1) << @as(u4, @intCast(i));
+            if (input.reference != null) borrowed |= bit;
+            if (input.slice) slices |= bit;
             parameter.* = try self.catalog.resolve(self.src, input.ty, self.sink);
         }
         const result = try self.catalog.resolve(self.src, function.signature.return_type, self.sink);
-        out.ty = try @import("callables.zig").intern(self.allocator, &self.catalog, .{ .parameters = parameters, .return_type = result, .effects = bound.allowed }, name, self.sink);
+        out.ty = try callables.intern(self.allocator, &self.catalog, .{ .parameters = parameters, .return_type = result, .effects = bound.allowed, .borrowed = borrowed, .slices = slices }, name, self.sink);
         out.data = .{ .function_value = self.ordinary_ids[@backingInt(declaration)] orelse return error.InternalError };
         return true;
     }
     fn indirectCall(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
         const slot = try self.resolve(call.name);
-        const contract = @import("callables.zig").signature(self.locals.items[@backingInt(slot)].ty, self.catalog.records) orelse return self.sink.fail(callback_type_code, call.name, "called local is not a function value");
+        const contract = callables.signature(self.locals.items[@backingInt(slot)].ty, self.catalog.records) orelse return self.sink.fail(callback_type_code, call.name, "called local is not a function value");
         if (call.type_arguments.len != 0 or call.arguments.len != contract.parameters.len) return self.sink.fail("E_ARITY", call.name, "callback argument count must match its signature");
         try self.ownerAccess(slot, false, call.name);
         self.locals.items[@backingInt(slot)].usage.reads += 1;
         const callee: typed.NodeId = @fromBackingInt(self.nodes.items.len);
         try self.nodes.append(self.allocator, .{ .span = call.name, .ty = self.locals.items[@backingInt(slot)].ty, .data = .{ .local = slot } });
-        const arguments = try self.allocator.alloc(typed.NodeId, call.arguments.len);
-        for (call.arguments, contract.parameters, arguments) |input, expected, *argument| {
-            argument.* = self.resolved[@backingInt(input)].?;
-            try self.require(self.nodes.items[@backingInt(argument.*)].ty, expected, node.span);
+        var arguments: std.ArrayList(typed.NodeId) = .empty;
+        var loans: std.ArrayList(typed.ReferenceId) = .empty;
+        for (call.arguments, contract.parameters, 0..) |input, expected, i| {
+            const argument = self.syntax.nodes.items[@backingInt(input)];
+            if (contract.borrows(i)) {
+                if (argument.data != .name) return self.sink.fail(eReferenceArgument, argument.span, "callback context requires an active reference name");
+                const id = try self.reference(argument.data.name);
+                try self.requireReferenceKind(id, contract.slice(i), argument.span);
+                try self.require(self.references.items[@backingInt(id)].ty, expected, argument.span);
+                const ref = self.references.items[@backingInt(id)];
+                for (loans.items) |previous_id| {
+                    const previous = self.references.items[@backingInt(previous_id)];
+                    const overlap = previous.owner == ref.owner and !typed.disjointReferences(self.references.items, previous_id, id);
+                    if (overlap and (previous.mutable or ref.mutable))
+                        return self.sink.fail(eBorrowConflict, argument.span, "callback contexts cannot alias exclusive access");
+                }
+                try loans.append(self.allocator, id);
+            } else {
+                const value = self.resolved[@backingInt(input)].?;
+                try self.require(self.nodes.items[@backingInt(value)].ty, expected, node.span);
+                try arguments.append(self.allocator, value);
+            }
         }
         out.ty = contract.return_type;
-        out.data = .{ .invoke = .{ .callee = callee, .arguments = arguments } };
+        out.data = .{ .invoke = .{ .callee = callee, .arguments = try arguments.toOwnedSlice(self.allocator), .references = try loans.toOwnedSlice(self.allocator) } };
     }
     fn checkName(self: *Checker, _: ast.Node, name: @FieldType(@FieldType(ast.Node, "data"), "name"), out: *typed.Node) Error!void {
         if (self.current_function) |id| {
@@ -925,7 +953,7 @@ const Checker = struct {
                     const previous = self.references.items[@backingInt(previous_id)];
                     const exclusive = previous.mutable or ref.mutable;
                     if (previous.owner == ref.owner and exclusive and !typed.disjointReferences(self.references.items, previous_id, id)) return self.sink.failRelated(
-                        "E_BORROW_CONFLICT",
+                        eBorrowConflict,
                         argument.span,
                         "call arguments cannot reborrow overlapping exclusive access",
                         .{

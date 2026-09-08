@@ -10,14 +10,15 @@ pub fn signature(ty: typed.Type, records: []const typed.Record) ?typed.Callable 
 }
 /// Exact parameter and result identity; ceilings must agree at value boundaries.
 pub fn equal(a: typed.Callable, b: typed.Callable) bool {
-    return a.return_type == b.return_type and a.effects == b.effects and std.mem.eql(typed.Type, a.parameters, b.parameters);
+    return a.return_type == b.return_type and a.effects == b.effects and a.borrowed == b.borrowed and a.slices == b.slices and std.mem.eql(typed.Type, a.parameters, b.parameters);
 }
 /// Validate a runtime target against the callable's parameter, ownership and effect contract.
 pub fn accepts(contract: typed.Callable, function: anytype) bool {
     if (function.signature.return_reference != null or function.signature.return_type != contract.return_type) return false;
     if (function.signature.parameter_count != contract.parameters.len) return false;
-    for (function.scope.locals[0..function.signature.parameter_count], contract.parameters) |parameter, ty| {
-        if (parameter.parameter.reference_parameter != null or parameter.ty != ty) return false;
+    for (function.scope.locals[0..function.signature.parameter_count], contract.parameters, 0..) |parameter, ty, i| {
+        const reference: ?bool = if (contract.borrows(i)) false else null;
+        if (parameter.parameter.reference_parameter != reference or parameter.parameter.slice_parameter != contract.slice(i) or parameter.ty != ty) return false;
     }
     const ceiling = function.policy.effect_bound orelse return false;
     return ceiling.allowed == contract.effects;
@@ -37,6 +38,7 @@ pub fn intern(allocator: std.mem.Allocator, catalog: *@import("type_catalog.zig"
     name.writer.writeAll("fn(") catch return error.OutOfMemory;
     for (parameters, 0..) |parameter, i| {
         if (i != 0) name.writer.writeByte(',') catch return error.OutOfMemory;
+        if (contract.borrows(i)) name.writer.writeAll(if (contract.slice(i)) "&[]" else "&") catch return error.OutOfMemory;
         name.writer.writeAll(typed.typeName(parameter, catalog.records)) catch return error.OutOfMemory;
     }
     name.writer.print(")->{s} effects({d})", .{ typed.typeName(contract.return_type, catalog.records), contract.effects }) catch return error.OutOfMemory;
@@ -52,7 +54,7 @@ pub fn intern(allocator: std.mem.Allocator, catalog: *@import("type_catalog.zig"
         .declaration = span,
         .fields = &.{},
         .shape = .{ .domain = .u64 },
-        .contract = .{ .callback = .{ .parameters = parameters, .return_type = contract.return_type, .effects = contract.effects } },
+        .contract = .{ .callback = .{ .parameters = parameters, .return_type = contract.return_type, .effects = contract.effects, .borrowed = contract.borrowed, .slices = contract.slices } },
     });
     return id;
 }

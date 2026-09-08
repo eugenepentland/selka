@@ -1637,8 +1637,8 @@ const Step = struct {
     fn indirectTarget(self: *Step, ty: typed.Type) !typed.FunctionId {
         const contract = callables.signature(ty, self.execution.program.records) orelse return error.InternalError;
         const stack = self.execution.state.stack;
-        if (stack.items.len <= contract.parameters.len + self.frame.operand_base) return error.InternalError;
-        const value = stack.orderedRemove(stack.items.len - contract.parameters.len - 1);
+        if (stack.items.len <= contract.valueCount() + self.frame.operand_base) return error.InternalError;
+        const value = stack.orderedRemove(stack.items.len - contract.valueCount() - 1);
         defer value.release(self.execution.allocator);
         if (value.typeOf() != ty) return error.InternalError;
         const target = try value.asInteger();
@@ -1661,14 +1661,14 @@ const Step = struct {
         const instruction = self.instruction;
         const function = self.execution.program.functions[@backingInt(self.frame.function)];
         const id = switch (instruction.op) {
-            .invoke => |ty| try self.indirectTarget(ty),
+            .invoke => |call| try self.indirectTarget(call.ty),
             .call => |id| id,
             .call_refs => |call| call.function,
             .call_borrow => |call| call.function,
             else => unreachable,
         };
         const loan_arguments: []const typed.ReferenceId = switch (instruction.op) {
-            .invoke => &.{},
+            .invoke => |call| call.references,
             .call => &.{},
             .call_refs => |call| call.references,
             .call_borrow => |call| call.references,

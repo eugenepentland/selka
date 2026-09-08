@@ -214,7 +214,8 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
             .buffer_operation => |op| if (op.kind.allocates()) {
                 graph.direct(index, .allocation, instruction.span);
             },
-            .invoke => |ty| {
+            .invoke => |invocation| {
+                const ty = invocation.ty;
                 const contract = @import("callables.zig").signature(ty, program.records) orelse return error.InternalError;
                 inline for (std.meta.tags(sets.Effect)) |effect| if (contract.effects & sets.bit(effect) != 0) graph.direct(index, effect, instruction.span);
             },

@@ -44,7 +44,13 @@ pub const Context = struct {
         const store = self.catalog.templates.store.?;
         return switch (expression_value) {
             .length => |value| .{ .length = value },
-            .callback => |callback| .{ .concrete = try self.catalog.resolve(self.src, callback.syntax.span, self.sink) },
+            .callback => |callback| result: {
+                const values = try self.arena.allocator().alloc(Value, callback.arguments.len);
+                for (callback.arguments, values) |argument, *value| value.* = try self.expression(argument, arguments, depth + 1, span);
+                const signature = try self.arena.allocator().create(symbolic.Callback);
+                signature.* = .{ .parameters = values[0 .. values.len - 1], .result = values[values.len - 1], .effects = callback.syntax.effect_bound.allowed, .borrowed = callback.syntax.borrowed, .slices = callback.syntax.slices };
+                break :result .{ .callback = signature };
+            },
             .builtin => |ty| .{ .concrete = ty },
             .parameter => |id| arguments[id],
             .named => |declaration| .{ .concrete = store.runtime(store.graph.index.get(.{ .base = .{ .named = declaration }, .arguments = &.{} }).?) orelse return error.InternalError },
@@ -187,6 +193,7 @@ pub const Context = struct {
     }
     fn leaf(self: Context, value: Value) ?Properties {
         return switch (value) {
+            .callback => .{},
             .length, .length_parameter => .{},
             .parameter => |id| .{
                 .move_only = self.parameters[id].requirements.contains(.storable) and !self.parameters[id].requirements.contains(.copy),

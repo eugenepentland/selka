@@ -92,8 +92,19 @@ pub const Parser = struct {
     fn callbackType(self: *Parser, first: Span) diagnostic.Error!Span {
         _ = try self.expect(.lparen);
         var parameters: std.ArrayList(Span) = .empty;
+        var borrowed: u16 = 0;
+        var slices: u16 = 0;
         if (self.current().tag != .rparen) while (true) {
             if (parameters.items.len == 16) return self.sink.fail(eGenericLimit, first, "callbacks support at most 16 value parameters");
+            const bit = @as(u16, 1) << @as(u4, @intCast(parameters.items.len));
+            if (self.take(.ampersand)) {
+                if (self.take(.kw_mut)) return self.sink.fail("E_CALLBACK_TYPE", first, "callback context parameters are readonly borrows");
+                borrowed |= bit;
+                if (self.current().tag == .lbracket and self.tokens[self.cursor.pos + 1].tag == .rbracket) {
+                    self.cursor.pos += 2;
+                    slices |= bit;
+                }
+            }
             try parameters.append(self.arena.allocator(), try self.typeName());
             if (!self.take(.comma)) break;
         };
@@ -102,7 +113,7 @@ pub const Parser = struct {
         const result = try self.typeName();
         const bound = try self.effectBound() orelse return self.sink.fail("E_CALLBACK_EFFECTS", first, "callback types require an explicit effects ceiling");
         const span: Span = .join(first, self.tokens[self.cursor.pos - 1].span);
-        try self.syntax.callbacks.append(self.arena.allocator(), .{ .span = span, .parameters = try parameters.toOwnedSlice(self.arena.allocator()), .return_type = result, .effect_bound = bound });
+        try self.syntax.callbacks.append(self.arena.allocator(), .{ .span = span, .parameters = try parameters.toOwnedSlice(self.arena.allocator()), .return_type = result, .effect_bound = bound, .borrowed = borrowed, .slices = slices });
         return span;
     }
     fn nominalTypeName(self: *Parser) diagnostic.Error!Span {
