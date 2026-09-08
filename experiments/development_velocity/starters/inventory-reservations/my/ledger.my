@@ -1,0 +1,31 @@
+module ledger;
+import model;
+import std_hash_bytes as h;
+import std_json_view as j;
+import std_result as r;
+export initial;
+export apply;
+fn initial(heap: allocator, doc: &[]i64, accounts: j::Node) -> model::Open<model::Stock> {
+    let mut state = try model::create::<model::Stock>(heap);
+    borrow mut state as table {
+        let mut cursor = try j::children(doc,accounts);
+        while !cursor.done {
+            let account = try j::current(doc,cursor);
+            let name = try j::required(doc,account,"id");
+            let key = try model::identifier(heap,doc,name);
+            let value = try j::integer(doc,try j::required(doc,account,"quantity"));
+            if h::put::<model::Stock>(table,key,new model::Stock {quantity:value,name:name.id}) == new h::PutStatus.full {
+                return new model::Open<model::Stock>.err(r::allocation_error(2));
+            }
+            cursor = try j::advance(doc,cursor);
+        }
+    }
+    return new model::Open<model::Stock>.ok(state);
+}
+
+// Existing inventory loading/reporting is complete. Reservation state transitions
+// are the requested feature; both supported operation forms are unimplemented.
+fn apply(available: &mut h::Map<model::Stock>, reservations: &mut h::Map<model::Reservation>, doc: &[]i64, operation: j::Node) -> r::Result<i64,r::Error> {
+    discard try j::required(doc,operation,"op");
+    return new r::Result<i64,r::Error>.ok(0);
+}

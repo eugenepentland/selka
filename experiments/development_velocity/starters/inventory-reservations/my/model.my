@@ -1,0 +1,92 @@
+module model;
+import std_json_view as j;
+import std_bytes as b;
+import std_result as r;
+import std_ascii as ascii;
+import std_hash_bytes as h;
+import std_map as m;
+export failure;
+export object;
+export array;
+export identifier;
+export Stock;
+export Reservation;
+export Open;
+export create;
+export validate;
+struct Stock { quantity: i64, name: i64 }
+struct Reservation { item: h::Key, quantity: i64, name: i64 }
+result Open<V: copy> { ok: h::Map<V>, err: r::Error }
+fn failure() -> r::Error {
+    return new r::Error { category: new r::Category.malformed, code: 1 };
+}
+fn object(doc: &[]i64, node: j::Node, count: i64) -> r::Result<bool,r::Error> {
+    if try j::kind(doc,node) != new j::Kind.object || try j::count(doc,node) != count {
+        return new r::Result<bool,r::Error>.err(failure());
+    }
+    return new r::Result<bool,r::Error>.ok(true);
+}
+fn array(doc: &[]i64, node: j::Node, limit: i64) -> r::Result<i64,r::Error> {
+    if try j::kind(doc,node) != new j::Kind.array { return new r::Result<i64,r::Error>.err(failure()); }
+    return j::count_between(doc,node,0,limit);
+}
+
+fn identifier(heap: allocator, doc: &[]i64, node: j::Node) -> r::Result<h::Key,r::Error> {
+    let text = try j::text(heap,doc,node,32u64);
+    let head = new ascii::Class {lower:true,upper:false,digit:false,underscore:false,hyphen:false};
+    let tail = new ascii::Class {lower:true,upper:false,digit:true,underscore:true,hyphen:true};
+    borrow text[..] as bytes {
+        if !ascii::matches::<u8>(bytes,head,tail,1u64,32u64) { return new r::Result<h::Key,r::Error>.err(failure()); }
+        match h::from_bytes(bytes) {
+            h::KeyResult.ok(key) => { return new r::Result<h::Key,r::Error>.ok(key); },
+            h::KeyResult.err(code) => { return new r::Result<h::Key,r::Error>.err(r::allocation_error(code)); }
+        }
+    }
+}
+
+fn create<V: copy>(heap: allocator) -> Open<V> {
+    match h::create::<V>(heap,256u64) {
+        h::Created<V>.ok(value) => { return new Open<V>.ok(value); },
+        h::Created<V>.err(code) => { return new Open<V>.err(r::allocation_error(code)); }
+    }
+}
+
+fn validate(heap: allocator, doc: &[]i64, request: j::Node) -> r::Result<bool,r::Error> {
+    discard try object(doc,request,2);
+    let stock = try j::required(doc,request,"stock");
+    let count = try array(doc,stock,32);
+    let mut known = try create::<bool>(heap);
+    borrow mut known as ids {
+        let mut i = 0;
+        while i < count {
+            let item = try j::at(doc,stock,i);
+            discard try object(doc,item,2);
+            let key = try identifier(heap,doc,try j::required(doc,item,"id"));
+            discard try j::integer_between(doc,try j::required(doc,item,"quantity"),0,1000000);
+            match h::lookup::<bool>(ids,key) {
+                m::Value<bool>.some(discard) => { return new r::Result<bool,r::Error>.err(failure()); },
+                m::Value<bool>.none => {}
+            }
+            if h::put::<bool>(ids,key,true) == new h::PutStatus.full { return new r::Result<bool,r::Error>.err(r::allocation_error(2)); }
+            i += 1;
+        }
+    }
+    let operations = try j::required(doc,request,"operations");
+    let operation_count = try array(doc,operations,128);
+    let mut i = 0;
+    while i < operation_count {
+        let operation = try j::at(doc,operations,i);
+        let kind = try j::required(doc,operation,"op");
+        if try j::textis(doc,kind,"reserve") {
+            discard try object(doc,operation,4);
+            discard try identifier(heap,doc,try j::required(doc,operation,"id"));
+            discard try j::integer_between(doc,try j::required(doc,operation,"quantity"),1,1000000);
+        } else {
+            if !(try j::textis(doc,kind,"release")) { return new r::Result<bool,r::Error>.err(failure()); }
+            discard try object(doc,operation,2);
+        }
+        discard try identifier(heap,doc,try j::required(doc,operation,"token"));
+        i += 1;
+    }
+    return new r::Result<bool,r::Error>.ok(true);
+}

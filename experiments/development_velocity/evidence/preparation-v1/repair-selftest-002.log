@@ -1,0 +1,15 @@
+fixture guest/identity: expected failure, restoration and fresh grading verified
+fixture guest/units: expected failure, restoration and fresh grading verified
+fixture guest/state: expected failure, restoration and fresh grading verified
+fixture guest/admission: expected failure, restoration and fresh grading verified
+fixture guest/boundary: expected failure, restoration and fresh grading verified
+fixture zig/identity: expected failure, restoration and fresh grading verified
+fixture zig/units: expected failure, restoration and fresh grading verified
+fixture zig/state: expected failure, restoration and fresh grading verified
+fixture zig/admission: expected failure, restoration and fresh grading verified
+fixture zig/boundary: expected failure, restoration and fresh grading verified
+..........
+----------------------------------------------------------------------
+Ran 10 tests in 39.764s
+
+OK

@@ -1,0 +1,25 @@
+test_abandoned_no_submission_preserved (test_report.ReportTests.test_abandoned_no_submission_preserved) ... ok
+test_capture_budget_rejection_without_public_execution_is_retained (test_report.ReportTests.test_capture_budget_rejection_without_public_execution_is_retained) ... ok
+test_changed_protected_source_and_profile_rejected (test_report.ReportTests.test_changed_protected_source_and_profile_rejected) ... ok
+test_compiler_phase_aggregation_keeps_inclusive_groups_separate (test_report.ReportTests.test_compiler_phase_aggregation_keeps_inclusive_groups_separate) ... ok
+test_correct_but_late_case_stays_failure (test_report.ReportTests.test_correct_but_late_case_stays_failure) ... ok
+test_duplicate_context_cannot_qualify (test_report.ReportTests.test_duplicate_context_cannot_qualify) ... ok
+test_failed_fast_private_and_public_failures_receive_full_budget (test_report.ReportTests.test_failed_fast_private_and_public_failures_receive_full_budget) ... ok
+test_incomplete_profile_operation_not_hidden (test_report.ReportTests.test_incomplete_profile_operation_not_hidden) ... ok
+test_missing_grade_and_noncomplete_corpus_reject (test_report.ReportTests.test_missing_grade_and_noncomplete_corpus_reject) ... ok
+test_missing_review_pending_and_nonqualified (test_report.ReportTests.test_missing_review_pending_and_nonqualified) ... ok
+test_missing_stderr_receipt_rejected (test_report.ReportTests.test_missing_stderr_receipt_rejected) ... ok
+test_phase_deadline_without_command_remains_failed_record (test_report.ReportTests.test_phase_deadline_without_command_remains_failed_record) ... ok
+test_projection_preserves_monotonic_and_unknown_telemetry (test_report.ReportTests.test_projection_preserves_monotonic_and_unknown_telemetry) ... ok
+test_protocol_failure_is_preserved (test_report.ReportTests.test_protocol_failure_is_preserved) ... ok
+test_publication_refuses_existing_directory (test_report.ReportTests.test_publication_refuses_existing_directory) ... ok
+test_scope_rejection_without_public_execution_is_retained (test_report.ReportTests.test_scope_rejection_without_public_execution_is_retained) ... ok
+test_stale_review_and_stale_grade_fail_closed (test_report.ReportTests.test_stale_review_and_stale_grade_fail_closed) ... ok
+test_stdout_tampering_cannot_retain_claimed_pass (test_report.ReportTests.test_stdout_tampering_cannot_retain_claimed_pass) ... ok
+test_timeout_keeps_raw_duration_but_caps_cost (test_report.ReportTests.test_timeout_keeps_raw_duration_but_caps_cost) ... ok
+test_wrong_adapter_command_or_input_receipt_rejected (test_report.ReportTests.test_wrong_adapter_command_or_input_receipt_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 20 tests in 0.089s
+
+OK
