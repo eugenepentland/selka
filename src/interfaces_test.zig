@@ -621,3 +621,26 @@ test "late duplicate export diagnostics locate both original directives" {
     try t.expectEqual(std.mem.lastIndexOf(u8, body, "value").?, failure.site.span.start);
     try t.expectEqual(std.mem.indexOf(u8, body, "value").?, failure.related.?.span.start);
 }
+
+// spec: ERGONOMIC-INTEGRATION-1
+test "late exports inferred generic calls and unit procedures compose across modules" {
+    var files: Files = .{ .entries = &.{
+        .{ .path = "main.my", .bytes = "module main;import units;fn main()->i64{" ++
+            "let mut n=40;borrow mut n as number{units::bump(number);}" ++
+            "units::consume(n);units::noop();return n;}" },
+        .{ .path = units_path, .bytes = "module units;fn identity<T:copy>(value:T)->T{return value;}" ++
+            "fn bump(number:&mut i64)->unit{write_ref(number,identity(read_ref(number)+1));}export bump;" ++
+            "fn consume<T:copy>(value:T)->unit{discard identity(value);}export consume;" ++
+            "fn noop()->unit{return;}export noop;" },
+    } };
+    var project = graph.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    var index = try interfaces.build(&project);
+    var compilation = try project_compile_module.Compilation.init(&index);
+    try compilation.emit();
+    try t.expectEqual(@as(i64, 41), (try @import("vm.zig").runWithOptions(t.allocator, compilation.code.?, .{})).value);
+    const generated = try compilation.emitC(t.allocator);
+    defer t.allocator.free(generated);
+    try t.expect(generated.len > 0);
+}

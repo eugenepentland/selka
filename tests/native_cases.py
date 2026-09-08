@@ -36,6 +36,10 @@ def project_signature(result):
 
 def project_cases(compiler, zig, root, temp):
     fixtures = [
+        ("ergonomics", {
+            "main.my": "module main;import helpers;fn main()->i64{let mut n=40;borrow mut n as number{helpers::bump(number);}helpers::consume(n);helpers::noop();return n;}",
+            "helpers.my": "module helpers;fn identity<T:copy>(value:T)->T{return value;}fn bump(number:&mut i64)->unit{write_ref(number,identity(read_ref(number)+1));}export bump;fn consume<T:copy>(value:T)->unit{discard identity(value);}export consume;fn noop()->unit{return;}export noop;",
+        }),
         ("calls", {
             "main.my": "module main; import left; import right; fn main() -> i64 { return left::work(3) + right::work(4); }",
             "left.my": "module left; export work; fn work(x: i64) -> i64 { return helper(x) * 2; } fn helper(x: i64) -> i64 { return x + 1; }",
@@ -176,7 +180,7 @@ def project_cases(compiler, zig, root, temp):
                 native = invoke([executable, *options])
                 assert project_signature(vm) == project_signature(native), (name, mode, options, vm.stderr, native.stderr)
                 pairs += 1
-            if name in ("calls", "domains", "enums", "results", "aggregates", "references", "domain-codecs"):
+            if name in ("calls", "domains", "enums", "results", "aggregates", "references", "domain-codecs", "ergonomics"):
                 for budget in range(1, 100):
                     options = [f"--max-steps={budget}"]
                     vm = invoke([compiler, "run-project", entry, *options])

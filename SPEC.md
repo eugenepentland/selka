@@ -429,3 +429,5 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [VM-FUSION-7] Fused arithmetic chains preserve evaluation order, intermediate overflow/division traps, original source spans and every logical instruction-budget cutoff.
 
 - [PHASE-TIMING-1] One-shot compiler commands and the raw byte I/O host accept opt-in `--timings=json`, emitting versioned phase-timings-v1 JSON Lines on stderr. Records use nonnegative duration_ns, explicit inclusive scope, available work counts and the command exit_code; total includes cleanup and excludes timing serialization. Attempted failing phases remain observable, stdout and default behavior are preserved, and legacy `--timings` remains compatible.
+
+- [ERGONOMIC-INTEGRATION-1] Late exports, inferred generic calls and unit procedures compose across module boundaries, preserving borrowed mutation, VM/native results and logical instruction budgets.
