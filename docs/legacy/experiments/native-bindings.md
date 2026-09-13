@@ -1,5 +1,6 @@
 # Schema-pinned native Python bindings
-> Removed on 2026-09-13: this page documents a feature that no longer exists in the language.
+> Removed on 2026-09-13: this page records the compatibility C backend, which no longer
+> exists. QBE is the only native backend; see [../../experiments/incremental-qbe.md](../../experiments/incremental-qbe.md).
 
 Generated Python modules now include `NativeClient` alongside the existing
 compiler-process `Client`. Both work with the same typed `CALLS` wrappers and

@@ -1,5 +1,6 @@
 # Native domain codec wire API
-> Removed on 2026-09-13: this page documents a feature that no longer exists in the language.
+> Removed on 2026-09-13: this page records the compatibility C backend, which no longer
+> exists. QBE is the only native backend; see [../../experiments/incremental-qbe.md](../../experiments/incremental-qbe.md).
 
 `mylang_native_call_codecs_v1` in `src/native_embed.h` accepts exported functions
 whose complete input/output shapes have ordinary values or declared domain codecs.

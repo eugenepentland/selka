@@ -1,5 +1,6 @@
 # Native filesystem/network resources
-> Removed on 2026-09-13: this page documents a feature that no longer exists in the language.
+> Removed on 2026-09-13: this page records the compatibility C backend, which no longer
+> exists. QBE is the only native backend; see [../../experiments/incremental-qbe.md](../../experiments/incremental-qbe.md).
 
 Native acquisition, completion, permission attenuation, and array/slice byte I/O
 are implemented through explicit provider ABI v4. The native instruction switches

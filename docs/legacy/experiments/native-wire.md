@@ -1,5 +1,6 @@
 # Native ordinary-value calls
-> Removed on 2026-09-13: this page documents a feature that no longer exists in the language.
+> Removed on 2026-09-13: this page records the compatibility C backend, which no longer
+> exists. QBE is the only native backend; see [../../experiments/incremental-qbe.md](../../experiments/incremental-qbe.md).
 
 `mylang_native_call_values_v1` adds ordinary aggregate inputs and results to
 module shared libraries. Include `native_providers.h` and `native_embed.h`, and

@@ -1,5 +1,6 @@
 # Native source JSON
-> Removed on 2026-09-13: this page documents a feature that no longer exists in the language.
+> Removed on 2026-09-13: this page records the compatibility C backend, which no longer
+> exists. QBE is the only native backend; see [../../experiments/incremental-qbe.md](../../experiments/incremental-qbe.md).
 
 Native `json_parse` links the same `json_document.zig` parser used by the VM.
 `scripts/native.py` automatically builds its small Zig support object and links

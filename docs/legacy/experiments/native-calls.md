@@ -1,5 +1,6 @@
 # Exported native scalar calls
-> Removed on 2026-09-13: this page documents a feature that no longer exists in the language.
+> Removed on 2026-09-13: this page records the compatibility C backend, which no longer
+> exists. QBE is the only native backend; see [../../experiments/incremental-qbe.md](../../experiments/incremental-qbe.md).
 
 Module shared libraries expose `mylang_native_call_v1` in `native_embed.h`.
 The compiler passes its resolved public function roots into native emission;

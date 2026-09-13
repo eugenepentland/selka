@@ -1,5 +1,6 @@
 # Native execution of scalar module projects
-> Removed on 2026-09-13: this page documents a feature that no longer exists in the language.
+> Removed on 2026-09-13: this page records the compatibility C backend, which no longer
+> exists. QBE is the only native backend; see [../../experiments/incremental-qbe.md](../../experiments/incremental-qbe.md).
 
 `emit-project-c` checks the complete reachable module program and emits C through the
 existing scalar native backend. The native builder accepts an explicit `--project`:
