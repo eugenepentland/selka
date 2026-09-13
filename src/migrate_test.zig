@@ -353,6 +353,7 @@ test "operators propagation matching and generics adopt Python spellings" {
         \\    return new Answer.err(1);
         \\}
         \\fn identity<T: copy>(value: T) -> T { return value; }
+        \\fn twice(step: fn(i64) -> unit effects(), value: i64) -> unit { step(value); step(value); }
         \\fn main() -> i64 {
         \\    let answer = checked(40)?;
         \\    match checked(answer) {
@@ -374,6 +375,11 @@ test "operators propagation matching and generics adopt Python spellings" {
         \\
         \\def identity[T](value: T) -> T:
         \\    return value
+        \\
+        \\
+        \\def twice(step: fn(i64) -> None effects(), value: i64):
+        \\    step(value)
+        \\    step(value)
         \\
         \\
         \\def main() -> i64:

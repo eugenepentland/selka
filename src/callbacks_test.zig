@@ -148,12 +148,3 @@ test "callbacks reject malformed invoke metadata and dynamically mismatched sign
     }
     try t.expect(false);
 }
-
-const ContextFixture = struct {
-    fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
-        const source = @embedFile("stdlib/fixtures/callback_context.my");
-        if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
-        if (source.len > limit) return error.TooLarge;
-        return allocator.dupe(u8, source);
-    }
-};

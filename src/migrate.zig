@@ -595,16 +595,19 @@ const Walk = struct {
         var at = self.tokenAt(span.start);
         var first = true;
         var previous: Tag = .eof;
+        var ceiling = false;
         while (at < self.tokens.len and self.tokens[at].span.start < span.end) : (at += 1) {
             const token = self.tokens[at];
             if (token.tag == .ampersand) try self.reject(token.span, "a borrowed type");
             if (token.tag == .colon and self.tokens[at + 1].tag == .colon) {
                 try self.out.text(".");
                 previous = .dot;
+                ceiling = false;
                 at += 1;
                 continue;
             }
-            if (token.tag == .lparen and self.tokens[at + 1].tag == .rparen) {
+            // An empty `effects()` ceiling keeps its parentheses; a bare `()` is the unit type.
+            if (token.tag == .lparen and self.tokens[at + 1].tag == .rparen and !ceiling) {
                 try self.out.text("None");
                 previous = .ident;
                 at += 1;
@@ -620,6 +623,7 @@ const Walk = struct {
             if (!first and typeSpace(previous, token.tag)) try self.out.space();
             try self.out.text(rendered);
             previous = token.tag;
+            ceiling = token.tag == .ident and std.mem.eql(u8, self.src.text(token.span), "effects");
             first = false;
         }
         self.advance(span.end);
