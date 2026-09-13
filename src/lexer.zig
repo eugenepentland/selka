@@ -131,8 +131,8 @@ pub const Tag = enum {
 /// Token category paired with its byte span in the original source.
 pub const Token = struct { tag: Tag, span: Span };
 
-/// Index just past one top-level declaration's terminating `;` or `}`, without parsing it.
-/// `braced` selects the expected terminator; null accepts whichever appears first.
+/// Index just past one top-level declaration's terminating newline or dedent, without
+/// parsing it. `braced` selects which one; null accepts whichever appears first.
 /// Unterminated input returns the end-of-file index, so callers can reject it.
 pub fn declarationEnd(bytes: []const u8, tokens: []const Token, start: usize, braced: ?bool) usize {
     var depth: usize = 0;

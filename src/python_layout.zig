@@ -1,4 +1,6 @@
-//! Source-preserving indentation lowering for the Python surface grammar.
+//! Source-preserving indentation lowering: a `:` that ends a line opens a suite and
+//! the dedent that leaves it closes one, each with its own token, so a literal brace
+//! is only ever a dictionary literal.
 const std = @import("std");
 const diagnostic = @import("diagnostic.zig");
 const eIndentation = "E_INDENTATION";

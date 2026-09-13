@@ -7,16 +7,53 @@ import subprocess
 
 
 SOURCES = [
-    "result T{ok:i64,err:i64}result R{err:i64,ok:u64}struct Auth{c:clock_cap,r:random_cap}"
-    "fn work(auth:Auth)->T{let n=clock_now[T](auth.c)?;let word=random_u64[R](auth.r)?;"
-    "if word!=18446744073709551615u64{return new T.err(90);}return new T.ok(n);}"
-    "fn main(r:random_cap,c:clock_cap)->i64{match work(new Auth{c:c,r:r}){T.ok(n)=>{return n;},T.err(e)=>{return e;}}}",
-    "result T{ok:i64,err:i64}fn main(c:clock_cap,r:random_cap)->i64{_ = r;if false{_ = clock_now[T](c);}return 7;}",
+    """result T:
+    ok: i64,
+    err: i64
+
+
+result R:
+    err: i64,
+    ok: u64
+
+
+class Auth:
+    c: clock_cap
+    r: random_cap
+
+
+def work(auth: Auth) -> T:
+    n = clock_now[T](auth.c)?
+    word = random_u64[R](auth.r)?
+    if word != 18446744073709551615u64:
+        return Err(90)
+    return Ok(n)
+
+
+def main(r: random_cap, c: clock_cap) -> i64:
+    match work(Auth(c=c, r=r)):
+        case T.ok(n):
+            return n
+        case T.err(e):
+            return e
+""",
+    """result T:
+    ok: i64,
+    err: i64
+
+
+def main(c: clock_cap, r: random_cap) -> i64:
+    _ = r
+    if False:
+        _ = clock_now[T](c)
+    return 7
+""",
 ]
 
-SOURCES.append(SOURCES[0].replace("fn work(", "fn work<G:copy>(").replace("match work(", "match work::<bool>("))
+SOURCES.append(SOURCES[0].replace("def work(", "def work[G](").replace("match work(", "match work[bool]("))
 
-SOURCES.append(SOURCES[1].replace("fn main(", "fn skip<G:copy>(") + "fn main(c:clock_cap,r:random_cap)->i64{return skip::<bool>(c,r);}")
+SOURCES.append(SOURCES[1].replace("def main(", "def skip[G](")
+               + "\n\ndef main(c: clock_cap, r: random_cap) -> i64:\n    return skip[bool](c, r)\n")
 
 
 def cases():
