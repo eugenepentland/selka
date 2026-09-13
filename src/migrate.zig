@@ -761,6 +761,7 @@ const Walk = struct {
         const item = self.stmt(id);
         switch (item.data) {
             .block => |children| try self.scopeBlock(item, children),
+            .assertion => |check| try self.assertStatement(check),
             .ret => |result| try self.returnStatement(item, result),
             .loop_exit => |is_continue| try self.out.text(if (is_continue) "continue" else "break"),
             .for_each => |loop| try self.forEach(loop),
@@ -872,6 +873,14 @@ const Walk = struct {
         entry.value_ptr.* = if (entry.found_existing) entry.value_ptr.* + 1 else 1;
     }
 
+    /// `assert` has no legacy spelling, so only Python reprinting reaches this.
+    fn assertStatement(self: *Walk, check: ast.Assertion) Error!void {
+        try self.out.text("assert ");
+        try self.expression(check.condition, 0);
+        const literal = check.literal orelse return;
+        try self.out.text(", ");
+        try self.out.text(self.src.text(literal));
+    }
     fn returnStatement(self: *Walk, item: ast.Statement, result: ast.NodeId) Error!void {
         try self.out.text("return");
         const returned = self.node(result);

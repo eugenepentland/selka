@@ -421,7 +421,7 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
                 if (height <= update.indices.len) return error.InternalError;
                 height -= update.indices.len;
             },
-            .store_local, .pop, .acknowledge, .jump_if_false => {
+            .store_local, .pop, .acknowledge, .jump_if_false, .assert_true => {
                 if (height == 0) return error.InternalError;
                 height -= 1;
             },

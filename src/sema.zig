@@ -2272,6 +2272,12 @@ const Checker = struct {
         flow.terminates = true;
         return .{ .ret = value };
     }
+    /// `assert` traps instead of returning, so it needs no result type and no effect.
+    fn statementAssert(self: *Checker, claim: ast.Assertion) Error!@FieldType(typed.Statement, "data") {
+        const condition = try self.expressionExpected(claim.condition, .bool);
+        try self.require(self.nodes.items[@backingInt(condition)].ty, .bool, self.syntax.nodes.items[@backingInt(claim.condition)].span);
+        return .{ .assertion = .{ .condition = condition, .message = claim.message } };
+    }
     fn statementBinding(self: *Checker, _: ast.Statement, b: @FieldType(@FieldType(ast.Statement, "data"), "binding"), _: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         const name = self.src.text(b.name);
         if (try self.topLevel(b.name) or self.active.contains(name))
@@ -2378,6 +2384,7 @@ const Checker = struct {
             .loop_exit => |continuing| try self.statementLoopExit(stmt, continuing, &flow),
             .for_each => |each| try self.statementForEach(stmt, each),
             .for_range => |range| try self.statementForRange(stmt, range),
+            .assertion => |claim| try self.statementAssert(claim),
             .binding => |b| try self.statementBinding(stmt, b, &flow),
             .assignment => |a| try self.statementAssignment(stmt, a, &flow),
         };

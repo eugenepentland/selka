@@ -111,7 +111,7 @@ const Analyzer = struct {
                 .push_bool => result = .bool,
                 .push_unit => result = .unit,
                 .load_local, .move_local => |slot| result = self.function.scope.locals[@backingInt(slot)].ty,
-                .store_local, .pop, .acknowledge, .jump_if_false, .ret => pops = 1,
+                .store_local, .pop, .acknowledge, .jump_if_false, .ret, .assert_true => pops = 1,
                 .drop_local, .jump => {},
                 .cast_integer => |ty| {
                     pops = 1;

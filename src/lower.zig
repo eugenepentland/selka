@@ -77,6 +77,10 @@ const Emitter = struct {
                 try self.instruction(stmt.span, .ret);
                 try self.push(.{ .expression = value });
             },
+            .assertion => |check| {
+                try self.instruction(self.program.nodes[@backingInt(check.condition)].span, .{ .assert_true = check.message });
+                try self.push(.{ .expression = check.condition });
+            },
             // `_ = expr` releases a result-bearing value, which settles its obligation.
             .discard => |value| {
                 const value_type = self.program.nodes[@backingInt(value)].ty;

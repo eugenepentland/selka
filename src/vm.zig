@@ -20,6 +20,7 @@ const callables = @import("callables.zig");
 const capability_code = "R_CAPABILITY";
 const slice_bounds_code = "R_SLICE_BOUNDS";
 const overflow_code = "R_OVERFLOW";
+const assert_code = "R_ASSERT";
 const reference_lifetime_code = "R_REFERENCE_LIFETIME";
 const inactive_reference_message = "reference is not active";
 const inactive_slice_message = "slice is not active";
@@ -313,6 +314,7 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
             .pop => step.executePop(),
             .jump => step.executeJump(),
             .jump_if_false => step.executeJumpIfFalse(),
+            .assert_true => step.executeAssertTrue(),
             .div_i64_checked, .rem_i64_checked => step.executeDivI64Checked(),
             .make_record => step.executeMakeRecord(),
             .update_record => step.executeUpdateRecord(),
@@ -806,6 +808,15 @@ const Step = struct {
         return false;
     }
 
+    fn executeAssertTrue(self: *Step) !bool {
+        const allocator = self.execution.allocator;
+        const stack = self.execution.state.stack;
+        const frames = self.execution.state.frames;
+        const frame = self.frame.*;
+        const instruction = self.instruction.*;
+        if (try boolean(try pop(stack, frame.operand_base), allocator)) return false;
+        return self.finish(trap(assert_code, instruction.op.assert_true, instruction.span, frames.items, self.execution.program));
+    }
     fn executeJumpIfFalse(self: *Step) !bool {
         const allocator = self.execution.allocator;
         const stack = self.execution.state.stack;

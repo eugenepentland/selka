@@ -757,6 +757,10 @@ const Emitter = struct {
             .pop, .acknowledge => try self.dropOperand(h - 1, stack[h - 1]),
             .wrap_domain, .unwrap_domain => {},
             .jump => |target| try self.print(" jmp @i{d}\n", .{target}),
+            .assert_true => {
+                const v = try self.load("s", h - 1);
+                try self.require(v, "myl_qbe_fail_assert");
+            },
             .jump_if_false => |target| {
                 const v = try self.load("s", h - 1);
                 try self.print(" jnz %v{d}, @next{d}, @i{d}\n", .{ v, self.serial, target });

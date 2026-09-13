@@ -594,6 +594,18 @@ pub const Parser = struct {
                 self.cursor.pos += 1;
                 break :no_op .{ .block = &.{} };
             },
+            .kw_assert => check: {
+                self.cursor.pos += 1;
+                const condition = try self.expression(0);
+                var message = self.src.text(self.syntax.nodes.items[@backingInt(condition)].span);
+                var literal: ?Span = null;
+                if (self.take(.comma)) {
+                    const quoted = try self.expect(.bytes);
+                    literal = quoted.span;
+                    message = try @import("byte_literal.zig").decode(self.arena.allocator(), self.src, quoted.span, self.sink);
+                }
+                break :check .{ .assertion = .{ .condition = condition, .message = message, .literal = literal } };
+            },
             .kw_break, .kw_continue => exit: {
                 self.cursor.pos += 1;
                 break :exit .{ .loop_exit = first.tag == .kw_continue };

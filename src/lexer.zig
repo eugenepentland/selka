@@ -11,6 +11,7 @@ pub const Tag = enum {
     kw_fn,
     kw_none,
     kw_pass,
+    kw_assert,
     kw_elif,
     kw_case,
     kw_arena,
@@ -263,6 +264,7 @@ fn pythonKeyword(word: []const u8) Tag {
         .{ "or", Tag.or_or },
         .{ "not", Tag.bang },
         .{ "with", Tag.kw_with },
+        .{ "assert", Tag.kw_assert },
     };
     inline for (aliases) |alias| if (std.mem.eql(u8, word, alias[0])) return alias[1];
     return keyword(word);

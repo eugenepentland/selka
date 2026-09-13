@@ -287,6 +287,7 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
             .acknowledge,
             .jump,
             .jump_if_false,
+            .assert_true,
             .ret,
             => {},
         };

@@ -152,6 +152,11 @@ def main() -> int:
     return total(fixed) + table[Status.ok] + table[Status.missing]
 ```
 
+`assert condition` and `assert condition, "message"` trap `R_ASSERT` when the condition is
+false, reporting the message — or the expression's own source text — and the location of the
+expression. Assertions are allowed under every effect bound and are not removed in release
+builds; use them for invariants a caller cannot violate, and `Result` for errors it can.
+
 Checked errors use the following explicit extension to Python syntax:
 
 ```mylang

@@ -98,6 +98,7 @@ pub const Statement = struct {
     data: union(enum) {
         managed_arena: struct { name: ?Span, body: StatementId },
         block: []const StatementId,
+        assertion: Assertion,
         ret: NodeId,
         loop_exit: bool,
         for_each: struct { name: Span, index_name: ?Span, iterable: NodeId, body: StatementId },
@@ -110,6 +111,8 @@ pub const Statement = struct {
         assignment: struct { python: bool = false, name: Span, value: NodeId, op: AssignmentOp, op_span: Span },
     },
 };
+/// Checked condition with the trap message its failure reports.
+pub const Assertion = struct { condition: NodeId, message: []const u8, literal: ?Span = null };
 /// Expression match case with an optional payload binding and its yielded value.
 pub const MatchValueArm = struct { ty: Span, name: Span, binding: ?Span, discard_payload: bool, value: NodeId };
 /// Source case spelling, optional payload binding, and arm body.

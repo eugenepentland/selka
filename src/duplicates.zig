@@ -11,7 +11,7 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const Source = @import("source.zig").Source;
 
-pub const version = "exact-v28";
+pub const version = "exact-v29";
 /// Declared origin of the functions included in a duplicate discovery report.
 pub const Population = enum { production, tests, generated, reference, intentional };
 pub const near = @import("near_duplicates.zig");
@@ -314,6 +314,10 @@ const CanonicalWriter = struct {
         const statement = program.statements[@backingInt(id)];
         writer.print("stmt {s}\n", .{@tagName(statement.data)}) catch return error.OutOfMemory;
         switch (statement.data) {
+            .assertion => |claim| {
+                writer.print("message {s}\n", .{claim.message}) catch return error.OutOfMemory;
+                try self.expression(claim.condition);
+            },
             .managed_arena => |scope| {
                 writer.print("managed arena locals={d}\n", .{@backingInt(scope.watermark)}) catch return error.OutOfMemory;
                 try work.append(allocator, .{ .statement = scope.body });

@@ -18,6 +18,7 @@
     "python-contextual-array-and-table-literals",
     "python-call-type-arguments",
     "truncating-division-helpers",
+    "assert-statements",
     "legacy-migration",
     "python-assignments-and-value-records",
     "canonical-prelude-types",

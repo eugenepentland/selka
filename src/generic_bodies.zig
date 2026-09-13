@@ -1240,6 +1240,10 @@ const Checker = struct {
                 try self.returnValue(value, statement_value.span);
                 return true;
             },
+            .assertion => |claim| {
+                const condition = try self.expression(claim.condition);
+                try self.same(condition, .{ .concrete = .bool }, statement_value.span);
+            },
             .binding => |binding| {
                 const value = if (binding.annotation) |annotation| try self.expressionExpected(binding.value, try self.ty(annotation)) else try self.expression(binding.value);
                 if (binding.annotation) |annotation| try self.same(value, try self.ty(annotation), annotation);
