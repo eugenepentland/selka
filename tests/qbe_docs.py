@@ -56,6 +56,29 @@ def compare(args, label, entry, project, argv, cache):
     assert signature(vm) == signature(native), (label, argv, vm.stdout, vm.stderr, native.stdout, native.stderr)
 
 
+def schematic(args, temp):
+    """Lower every schematic guest module natively.
+
+    The guest's own entry is registered with a VM host, so only its modules are
+    checked here: each one must reach native QBE units, including the byte-string
+    and managed-text code the application leans on.
+    """
+    work = temp / 'schematic'
+    shutil.rmtree(work, ignore_errors=True)
+    work.mkdir()
+    modules = []
+    for path in sorted((ROOT / 'src/schematic/guest').glob('*.my')):
+        if path.name == 'main.my':
+            continue
+        shutil.copy(path, work / path.name)
+        modules.append(path.stem)
+    for module in modules:
+        (work / 'main.my').write_text(f'module main\nimport {module}\n\ndef main() -> int:\n    return 0\n')
+        emitted = invoke([args.compiler, 'emit-project-qbe', work / 'main.my'])
+        assert emitted.returncode == 0, (module, emitted.stderr.decode(errors='replace'))
+    return len(modules)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', type=Path, required=True)
@@ -79,7 +102,8 @@ def main():
             project = entry.read_text().lstrip().startswith('module ')
             compare(args, name, entry, project, ['--print-result'], cache)
             count += 1
-    print(f'QBE documentation parity: {count} runnable examples matched the VM')
+        modules = schematic(args, temp)
+    print(f'QBE documentation parity: {count} runnable examples matched the VM, {modules} schematic guest modules lowered')
 
 
 if __name__ == '__main__':
