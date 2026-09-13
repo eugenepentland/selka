@@ -43,6 +43,7 @@ test "standard fixture helpers report every assertion failure through declared e
     const bounds = "module main\nimport sort\ndef main() -> int:\n    return sort.sort_ints([1])[5]\n";
     try t.expectError(error.TestUnexpectedResult, fixture.run(t.allocator, bounds, 0));
     try t.expectError(error.TestExpectedError, fixture.reject(t.allocator, ordering));
+    try fixture.reject(t.allocator, "module main\nimport sort\ndef main() -> int:\n    return sort.sort_ints([1])\n");
 }
 
 // spec-case: STANDARD-MODULES-1

@@ -532,6 +532,17 @@ def measured(start: time.Instant, deadline: time.Instant) -> int:
             return 0 - len(message)
 ```
 
+## Focused references
+
+- [Time and randomness](standard-time-random.md) specifies the capability
+  contracts, the pinned SplitMix64 vectors and the arithmetic limits.
+- [Binary64 floating point](floating-point.md) specifies what `float` itself
+  does, which is what `math` builds on.
+- [Time and random example](../examples/standard-time-random/main.my) exercises
+  reproducible streams and rejected bounds without ambient authority.
+- [Managed word counts](../examples/python-word-count/main.my) shows the builtin
+  collections these modules are written against.
+
 ## Contracts these modules share
 
 Managed collections grow automatically; see [managed memory](managed-memory.md),

@@ -43,5 +43,10 @@ pub fn stress(allocator: std.mem.Allocator, text: []const u8, wanted: i64) Error
 pub fn reject(allocator: std.mem.Allocator, text: []const u8) Error!void {
     var entry: Entry = .{ .text = text };
     var program: language.embedded_project.Program = undefined;
-    try std.testing.expectError(error.SourceError, program.init(allocator, .{ .context = &entry, .read = Entry.read }));
+    program.init(allocator, .{ .context = &entry, .read = Entry.read }) catch |failure| {
+        if (failure == error.SourceError) return;
+        return failure;
+    };
+    program.deinit();
+    return error.TestExpectedError;
 }
