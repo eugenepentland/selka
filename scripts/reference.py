@@ -8,7 +8,6 @@ import re
 import subprocess
 import sys
 import tempfile
-import textwrap
 
 from bindings import file_digest, store, validate_schema_report
 
@@ -80,7 +79,11 @@ def render(identity, features, report, selection):
                 'Language version: ' + facts['language_version'],
                 'Primary backend: ' + facts['primary_backend'], 'Native backend: ' + facts['native_backend'], '',
                 '## Reported implemented features', '',
-                textwrap.fill(', '.join(facts['implemented']), width=100), '',
+                'Each feature reports its kind, a one-line summary, and the checkout documentation',
+                'section that demonstrates it; `mylang doc-coverage` keeps those pointers resolvable.', '']
+    overview += [f"- {slug} [{entry['kind']}] — {entry['summary']} ({entry['doc']})"
+                 for slug, entry in facts['implemented'].items()]
+    overview += ['',
                 '## Reported exclusions', '', 'Unsupported: ' + (', '.join(facts['unsupported']) or '(none reported)'),
                 'Native exclusions: ' + (', '.join(facts['native_exclusions']) or '(none reported)'), '',
                 '## Reported limits', '']
