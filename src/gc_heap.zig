@@ -6,7 +6,9 @@ const values = @import("runtime_values.zig");
 const Value = values.Value;
 const Type = values.Type;
 
-pub const Error = std.mem.Allocator.Error || error{ Bounds, TypeMismatch, CapacityLimit, ForeignMemory, InvalidDataValue };
+pub const Error = std.mem.Allocator.Error || error{ Bounds, TypeMismatch, CapacityLimit, ForeignMemory, InvalidDataValue, ArenaEscape };
+/// Bulk arena release counters, reported separately from tracing reclamation.
+pub const ArenaStatistics = struct { scopes: u64 = 0, released: u64 = 0, escaped: u64 = 0 };
 /// Allocation and collection counters for one execution.
 pub const Statistics = struct {
     live_objects: usize = 0,
@@ -15,7 +17,10 @@ pub const Statistics = struct {
     reclaimed: u64 = 0,
     collections: u64 = 0,
     peak_objects: usize = 0,
+    arena: ArenaStatistics = .{},
 };
+/// Innermost arena nesting depth and the escape-copy collection guard.
+pub const RegionState = struct { depth: u32 = 0, suspended: bool = false };
 pub const Object = values.ManagedObject;
 
 /// Execution-local heap. Release exported values before deinitializing it.
@@ -25,6 +30,7 @@ pub const Heap = struct {
     statistics: Statistics = .{},
     stress: bool = false,
     next_collection: usize = 64,
+    regions: RegionState = .{},
     max_capacity: usize = std.math.maxInt(usize) / @sizeOf(Value),
 
     /// Initialize an empty execution heap using the VM backing allocator.
@@ -52,7 +58,7 @@ pub const Heap = struct {
     pub fn createList(self: *Heap, ty: Type, element_type: Type) Error!*Object {
         try self.safepoint();
         const object = try self.allocator.create(Object);
-        object.* = .{ .heap = self, .ty = ty, .element_type = element_type, .next = self.first };
+        object.* = .{ .heap = self, .ty = ty, .element_type = element_type, .next = self.first, .trace = .{ .region = self.regions.depth } };
         self.first = object;
         self.statistics.live_objects += 1;
         self.statistics.created +|= 1;
@@ -65,6 +71,7 @@ pub const Heap = struct {
         if (object.heap != @as(*anyopaque, @ptrCast(self))) return error.ForeignMemory;
         if (value.typeOf() != object.element_type) return error.TypeMismatch;
         try self.validateElement(value);
+        try self.barrier(object, value);
         if (object.items.items.len >= self.max_capacity) return error.CapacityLimit;
         object.retain();
         defer object.release();
@@ -83,6 +90,7 @@ pub const Heap = struct {
         if (object.heap != @as(*anyopaque, @ptrCast(self))) return error.ForeignMemory;
         if (value.typeOf() != object.element_type) return error.TypeMismatch;
         try self.validateElement(value);
+        try self.barrier(object, value);
         const retained = value.retain();
         object.items.items[index].release(self.allocator);
         object.items.items[index] = retained;
@@ -149,7 +157,42 @@ pub const Heap = struct {
             else => {},
         };
     }
+    /// Highest arena depth reachable from one stored value, visiting shared records once.
+    pub fn regionDepth(self: *Heap, value: Value) Error!u32 {
+        switch (value) {
+            .managed => |object| return object.trace.region,
+            .aggregate => {},
+            else => return 0,
+        }
+        var deepest: u32 = 0;
+        var pending: std.ArrayList(Value) = .empty;
+        defer pending.deinit(self.allocator);
+        var visited: std.AutoHashMapUnmanaged(*values.Aggregate, void) = .empty;
+        defer visited.deinit(self.allocator);
+        try pending.append(self.allocator, value);
+        while (pending.pop()) |item| switch (item) {
+            .managed => |object| deepest = @max(deepest, object.trace.region),
+            .aggregate => |record| {
+                const entry = try visited.getOrPut(self.allocator, record);
+                if (entry.found_existing) continue;
+                for (record.fields, 0..) |field, index| {
+                    if (record.moved_fields) |moved| if (moved[index]) continue;
+                    try pending.append(self.allocator, field);
+                }
+            },
+            else => {},
+        };
+        return deepest;
+    }
+
+    /// Reject storing a younger arena's object into an older container. Depth ordering
+    /// is sufficient because every live object belongs to an arena still on the stack.
+    pub fn barrier(self: *Heap, object: *Object, value: Value) Error!void {
+        if (self.regions.depth == 0) return;
+        if (try self.regionDepth(value) > object.trace.region) return error.ArenaEscape;
+    }
     fn safepoint(self: *Heap) Error!void {
+        if (self.regions.suspended) return;
         if (self.stress or self.statistics.live_objects >= self.next_collection) try self.collect();
     }
 
@@ -249,16 +292,16 @@ pub const Heap = struct {
         }
         while (pending.pop()) |i| graph.trace(graph.entries.items[i].node, &pending);
         for (graph.entries.items) |entry| switch (entry.node) {
-            .managed => |object| object.marked = entry.marked,
+            .managed => |object| object.trace.marked = entry.marked,
             .aggregate => {},
         };
         cursor = self.first;
         while (cursor) |object| : (cursor = object.next) {
-            if (!object.marked) self.clear(object);
+            if (!object.trace.marked) self.clear(object);
         }
         var link = &self.first;
         while (link.*) |object| {
-            if (object.marked) {
+            if (object.trace.marked) {
                 link = &object.next;
             } else {
                 link.* = object.next;

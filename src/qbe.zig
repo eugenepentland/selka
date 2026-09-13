@@ -839,6 +839,7 @@ const Emitter = struct {
             => try @import("qbe_reference.zig").Lower(Emitter).emit(self, op, stack),
             .acquire_resource, .complete_resource, .resource_io, .restrict_resource => try @import("qbe_resources.zig").Lower(Emitter).emit(self, op, stack),
             .external_read, .environment_get, .json_codec, .reset_arena => try @import("qbe_boundaries.zig").emit(self, op, stack),
+            .begin_arena, .end_arena, .arena_escape => return self.reject(self.pc),
             .begin_region => |slot| {
                 const authority = try self.load("s", h - 1);
                 const region = self.temp();

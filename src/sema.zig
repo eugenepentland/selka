@@ -40,7 +40,10 @@ const records = @import("records.zig");
 const Error = diagnostic.Error;
 const instances = @import("generic_instances.zig");
 const Names = @import("module_names.zig").Names;
-const LoopScope = struct { id: usize, before: []const Pending, references: usize, arena_depth: usize };
+const LoopScope = struct { id: usize, before: []const Pending, references: usize, arena_depth: usize, arenas: usize = 0 };
+const ArenaScope = struct { name: []const u8, declaration: source.Span, watermark: typed.LocalId };
+const eArenaEscape = "E_ARENA_ESCAPE";
+const eArenaBinding = "E_ARENA_BINDING";
 const Pending = struct { available: bool, fields: field_moves.State, transfer_span: ?source.Span };
 const Work = struct { default_value: bool = false, id: ast.NodeId, emit: bool = false, checkpoint: bool = false, verify: ?[]const Pending = null };
 const FieldDestination = struct { owner: typed.LocalId, index: ?typed.NodeId, value: typed.NodeId, refresh: typed.StatementId };
@@ -79,6 +82,7 @@ const Checker = struct {
     loops: struct { active: std.ArrayList(LoopScope) = .empty, next: usize = 0 } = .{},
     return_type: typed.Type = .i64,
     arena_depth: usize = 0,
+    arenas: std.ArrayList(ArenaScope) = .empty,
     catalog: records.Catalog,
     conversion_fields: ?[]bool = null,
     managed_types: []bool = &.{},
@@ -642,6 +646,13 @@ const Checker = struct {
         var node = self.syntax.nodes.items[@backingInt(id)];
         if (node.data == .call) {
             const call = node.data.call;
+            if (call.owner) |owner| if (try self.arenaBinding(owner)) {
+                try call_arguments.positional(call, self.sink);
+                if (!std.mem.eql(u8, self.src.text(call.name), "escape")) return self.sink.fail(eArenaBinding, call.name, "an arena binding supports only `escape(value)`");
+                if (call.type_arguments.len != 0 or call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "escape requires exactly one value argument");
+                node.data = .{ .arena_escape = .{ .arena = owner, .value = call.arguments[0] } };
+                return node;
+            };
             if (try @import("record_calls.zig").lower(self.allocator, self.src, self.catalog, call, self.sink)) |record| {
                 node.data = record.data;
                 return node;
@@ -703,6 +714,7 @@ const Checker = struct {
         try self.hint(assignment.value, expected);
         value = try self.expressionWithTemporaries(assignment.value, false, temporaries);
         try self.require(self.nodes.items[@backingInt(value)].ty, expected, node.span);
+        if (destination.index == null) try self.requireArenaStore(destination.owner, value);
         const assigned = try b.local(expected);
         const evaluate_value = try b.stmt(.{ .initialize = .{ .slot = assigned, .value = value } });
         if (self.python_assignment_order) try statements.insert(self.allocator, 0, evaluate_value) else try statements.append(self.allocator, evaluate_value);
@@ -800,7 +812,10 @@ const Checker = struct {
         const inputs = operation.inputs;
         const base = try self.expressionWithTemporaries(base_input, false, temporaries);
         const owner_type = self.nodes.items[@backingInt(base)].ty;
-        if (owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].collection.kind != .list) return self.checkManagedAccess(node, .{ .base = base, .kind = kind, .inputs = inputs }, temporaries);
+        if (owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].collection.kind != .list) {
+            const receiver = self.arenaReceiver(base_input);
+            return self.checkManagedAccess(node, .{ .base = base, .kind = kind, .inputs = inputs, .receiver = receiver }, temporaries);
+        }
         const supported = switch (kind) {
             .append, .read, .write, .length, .contains => true,
             else => false,
@@ -816,9 +831,10 @@ const Checker = struct {
             const actual = self.nodes.items[@backingInt(argument.*)].ty;
             if (writes_element) try self.require(actual, element, node.span) else try self.requireInteger(actual, node.span);
         }
+        try self.requireArenaOperation(self.arenaReceiver(base_input), kind, arguments);
         return (collections.Builder(Checker){ .checker = self, .span = node.span, .python_assignment_order = self.python_assignment_order }).access(base, kind, arguments, operation.signed_length);
     }
-    fn checkManagedAccess(self: *Checker, node: ast.Node, operation: struct { base: typed.NodeId, kind: BufferKind, inputs: []const ast.NodeId }, temporaries: []const typed.Type) Error!typed.Node {
+    fn checkManagedAccess(self: *Checker, node: ast.Node, operation: struct { base: typed.NodeId, kind: BufferKind, inputs: []const ast.NodeId, receiver: ?typed.LocalId = null }, temporaries: []const typed.Type) Error!typed.Node {
         const owner_type = self.nodes.items[@backingInt(operation.base)].ty;
         const schema = self.catalog.records[owner_type.recordIndex()];
         const dictionary = schema.collection.kind == .dictionary;
@@ -837,6 +853,7 @@ const Checker = struct {
             argument.* = try self.expressionWithTemporaries(input, false, temporaries);
             if (integer) try self.requireInteger(self.nodes.items[@backingInt(argument.*)].ty, node.span) else try self.require(self.nodes.items[@backingInt(argument.*)].ty, expected, node.span);
         }
+        try self.requireArenaOperation(operation.receiver, operation.kind, arguments);
         return (collections.Builder(Checker){ .checker = self, .span = node.span, .python_assignment_order = self.python_assignment_order }).access(operation.base, operation.kind, arguments, false);
     }
     fn hintBufferArguments(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation)) Error!void {
@@ -1027,6 +1044,11 @@ const Checker = struct {
             .reset_arena, .cast, .wrap => |cast| {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
                 try work.append(self.allocator, .{ .id = cast.value });
+                return true;
+            },
+            .arena_escape => |copy| {
+                try work.append(self.allocator, .{ .id = id, .emit = true });
+                try work.append(self.allocator, .{ .id = copy.value });
                 return true;
             },
             .dictionary_literal => return self.queueDictionary(work, id),
@@ -1237,6 +1259,7 @@ const Checker = struct {
                 try self.requireInteger(actual, span);
             }
         }
+        try self.requireArenaOperation(if (managed) initial.owner else null, operation.kind, arguments);
         if (managed and operation.result != null) return self.sink.fail(eListType, operation.owner, "managed list mutations return unit without a result type");
         if (operation.result) |result_type| {
             out.ty = try self.ty(result_type);
@@ -1419,6 +1442,11 @@ const Checker = struct {
             }
         }
         if (self.active_refs.contains(self.src.text(name))) return self.sink.fail("E_REFERENCE_VALUE", name, "references cannot be copied, stored, returned, or passed to value parameters; use read_ref to copy the referenced value");
+        for (self.arenas.items) |scope| if (std.mem.eql(u8, scope.name, self.src.text(name))) return self.sink.fail(
+            eArenaBinding,
+            name,
+            "an arena binding is opaque; it cannot be stored, passed, returned or compared, and its only operation is `escape(value)`",
+        );
         if (!self.active.contains(self.src.text(name))) {
             const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = self.sink, .catalog = self.catalog };
             if (try constants.lookup(name)) |index| {
@@ -1909,6 +1937,13 @@ const Checker = struct {
                 try self.requireDomainAccess(domain_type, node.span);
                 out.data = .{ .unwrap = value };
             },
+            .arena_escape => |copy| {
+                const value = self.resolved[@backingInt(copy.value)].?;
+                out.ty = self.nodes.items[@backingInt(value)].ty;
+                if (self.requiresHandling(out.ty)) return self.sink.fail(eResultOperation, node.span, "escape requires a value without a pending result obligation");
+                if (typed.moveOnly(out.ty, self.catalog.records)) return self.sink.fail(eArenaBinding, node.span, "escape copies managed values; owned storage and capabilities cannot be copied out of an arena");
+                out.data = .{ .arena_escape = value };
+            },
             .reset_arena => |reset| {
                 out.ty = try self.ty(reset.ty);
                 const shape = typed.resultShape(out.ty, self.catalog.records) orelse return self.sink.fail("E_ARENA_RESULT", reset.ty, "arena reset requires bool success and i64 error payloads");
@@ -1963,7 +1998,7 @@ const Checker = struct {
         return switch (out.data) {
             .json_codec => 3,
             .function_value, .unit, .integer, .boolean, .local, .read_ref, .read_field, .take_field, .len_slice, .block_value => 0,
-            .reset_arena, .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .external_read, .complete_resource, .restrict_resource => 1,
+            .arena_escape, .reset_arena, .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .external_read, .complete_resource, .restrict_resource => 1,
             .acquire_buffer, .acquire_pool => |acquire| if (acquire.managed) 1 else 2,
             .acquire_resource, .environment_get => 2,
             .index, .binary => 2,
@@ -2043,6 +2078,11 @@ const Checker = struct {
     }
     fn needsLocalCleanup(self: *Checker, local_type: typed.Type) Error!bool {
         if (typed.moveOnly(local_type, self.catalog.records)) return true;
+        return self.managedBearing(local_type);
+    }
+    /// Whether values of this type may hold a garbage-collected reference, including
+    /// references nested inside records, variants, options, results and arrays.
+    fn managedBearing(self: *Checker, local_type: typed.Type) Error!bool {
         if (!local_type.isAggregate()) return false;
         if (self.managed_types.len != self.catalog.records.len) {
             const flags = try @import("record_layouts.zig").managedTypes(self.allocator, self.catalog.records);
@@ -2050,6 +2090,110 @@ const Checker = struct {
             self.managed_types = flags;
         }
         return self.managed_types[local_type.recordIndex()];
+    }
+    /// Source spelling of the innermost arena binding, or `arena` when anonymous.
+    fn arenaName(self: *Checker) []const u8 {
+        const scope = self.arenas.items[self.arenas.items.len - 1];
+        return if (scope.name.len == 0) "arena" else scope.name;
+    }
+    /// Resolve an arena binding spelling, rejecting an enclosing rather than innermost scope.
+    fn arenaBinding(self: *Checker, name: source.Span) Error!bool {
+        const text = self.src.text(name);
+        var index = self.arenas.items.len;
+        while (index > 0) {
+            index -= 1;
+            if (!std.mem.eql(u8, self.arenas.items[index].name, text)) continue;
+            if (index + 1 != self.arenas.items.len) return self.sink.fail(eArenaEscape, name, "escape must name the innermost active arena scope");
+            return true;
+        }
+        return false;
+    }
+    /// Whether this slot names a binding that outlives the innermost arena scope.
+    fn outlivesArena(self: *Checker, slot: typed.LocalId) bool {
+        if (self.arenas.items.len == 0) return false;
+        return @backingInt(slot) < @backingInt(self.arenas.items[self.arenas.items.len - 1].watermark);
+    }
+    /// Whether a checked expression is the arena copy-out that re-homes its result.
+    fn isArenaEscape(self: *Checker, value: typed.NodeId) bool {
+        return self.nodes.items[@backingInt(value)].data == .arena_escape;
+    }
+    /// Reject a managed value leaving the innermost arena, naming scope and destination.
+    fn failArenaEscape(self: *Checker, span: source.Span, message: []const u8, destination: ?source.Span) Error {
+        const scope = self.arenas.items[self.arenas.items.len - 1];
+        const cause: diagnostic.Related = .{ .span = scope.declaration, .message = "arena scope opened here" };
+        if (destination) |at| return self.sink.failProvenance(eArenaEscape, span, message, cause, at);
+        return self.sink.failRelated(eArenaEscape, span, message, cause);
+    }
+    /// Resolve a plain-name collection receiver to its local slot for arena store checks.
+    fn arenaReceiver(self: *Checker, id: ast.NodeId) ?typed.LocalId {
+        if (self.arenas.items.len == 0) return null;
+        const node = self.syntax.nodes.items[@backingInt(id)];
+        if (node.data != .name) return null;
+        return self.active.get(self.src.text(node.data.name));
+    }
+    /// Reject an arena-allocated element stored through a collection mutation.
+    fn requireArenaOperation(self: *Checker, owner: ?typed.LocalId, kind: BufferKind, arguments: []const typed.NodeId) Error!void {
+        const slot = owner orelse return;
+        if (self.arenas.items.len == 0) return;
+        if (kind == .append and arguments.len == 1) return self.requireArenaStore(slot, arguments[0]);
+        if (kind != .write or arguments.len != 2) return;
+        try self.requireArenaStore(slot, arguments[0]);
+        try self.requireArenaStore(slot, arguments[1]);
+    }
+    /// Reject storing a managed value into a container binding that outlives the arena.
+    fn requireArenaStore(self: *Checker, owner: typed.LocalId, value: typed.NodeId) Error!void {
+        if (!self.outlivesArena(owner)) return;
+        if (!try self.managedBearing(self.nodes.items[@backingInt(value)].ty)) return;
+        if (self.isArenaEscape(value)) return;
+        const local = self.locals.items[@backingInt(owner)];
+        const span = self.nodes.items[@backingInt(value)].span;
+        const message = try std.fmt.allocPrint(
+            self.allocator,
+            "`{s}` stores a managed value into `{s}`, which outlives arena `{s}`; store `{s}.escape(...)` instead",
+            .{ self.src.text(span), local.name, self.arenaName(), self.arenaName() },
+        );
+        return self.failArenaEscape(span, message, local.declaration);
+    }
+    /// Reject assigning a managed value to a binding declared outside the arena.
+    fn requireArenaAssignment(self: *Checker, slot: typed.LocalId, value: typed.NodeId) Error!void {
+        if (!self.outlivesArena(slot)) return;
+        if (!try self.managedBearing(self.locals.items[@backingInt(slot)].ty)) return;
+        if (self.isArenaEscape(value)) return;
+        const local = self.locals.items[@backingInt(slot)];
+        const span = self.nodes.items[@backingInt(value)].span;
+        const message = try std.fmt.allocPrint(
+            self.allocator,
+            "`{s}` is assigned to `{s}`, which outlives arena `{s}`; assign `{s}.escape(...)` instead",
+            .{ self.src.text(span), local.name, self.arenaName(), self.arenaName() },
+        );
+        return self.failArenaEscape(span, message, local.declaration);
+    }
+    /// Reject returning a managed value out of an arena scope. A copy-out of the
+    /// outermost arena in this function targets the caller's region and is allowed.
+    fn requireArenaReturn(self: *Checker, value: typed.NodeId, span: source.Span) Error!void {
+        if (self.arenas.items.len == 0) return;
+        if (!try self.managedBearing(self.nodes.items[@backingInt(value)].ty)) return;
+        if (self.arenas.items.len == 1 and self.isArenaEscape(value)) return;
+        const message = try std.fmt.allocPrint(
+            self.allocator,
+            "`{s}` returns a managed value from inside arena `{s}`; assign `{s}.escape(...)` to a binding declared before the block and return it afterwards",
+            .{ self.src.text(self.nodes.items[@backingInt(value)].span), self.arenaName(), self.arenaName() },
+        );
+        return self.failArenaEscape(span, message, null);
+    }
+    fn statementManagedArena(self: *Checker, stmt: ast.Statement, scope: @FieldType(@FieldType(ast.Statement, "data"), "managed_arena"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
+        var name: []const u8 = "";
+        if (scope.name) |declared| {
+            name = self.src.text(declared);
+            if (try self.topLevel(declared) or self.active.contains(name) or self.active_refs.contains(name)) return self.sink.fail(eShadowing, declared, "arena name shadows an active name");
+            for (self.arenas.items) |active| if (std.mem.eql(u8, active.name, name)) return self.sink.fail(eShadowing, declared, "arena name shadows an enclosing arena scope");
+        }
+        const watermark: typed.LocalId = @fromBackingInt(self.locals.items.len);
+        try self.arenas.append(self.allocator, .{ .name = name, .declaration = scope.name orelse stmt.span, .watermark = watermark });
+        defer _ = self.arenas.pop();
+        const body = try self.statement(scope.body);
+        flow.terminates = body.terminates;
+        return .{ .managed_arena = .{ .watermark = watermark, .body = body.id } };
     }
     fn statementBlock(self: *Checker, stmt: ast.Statement, children: @FieldType(@FieldType(ast.Statement, "data"), "block"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         const first_local = self.locals.items.len;
@@ -2402,7 +2546,7 @@ const Checker = struct {
         try self.samePending(before, stmt.span, eResultLoop);
         const loop_id = self.loops.next;
         self.loops.next += 1;
-        try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .references = self.references.items.len, .arena_depth = self.arena_depth });
+        try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .references = self.references.items.len, .arena_depth = self.arena_depth, .arenas = self.arenas.items.len });
         defer _ = self.loops.active.pop();
         const body = try self.statement(loop.body);
         if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
@@ -2441,7 +2585,7 @@ const Checker = struct {
         const before = try self.pendingState(self.locals.items.len);
         const loop_id = self.loops.next;
         self.loops.next += 1;
-        try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .references = self.references.items.len, .arena_depth = self.arena_depth });
+        try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .references = self.references.items.len, .arena_depth = self.arena_depth, .arenas = self.arenas.items.len });
         defer _ = self.loops.active.pop();
         const body = try self.statement(each.body);
         if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
@@ -2492,7 +2636,7 @@ const Checker = struct {
         const before = try self.pendingState(self.locals.items.len);
         const loop_id = self.loops.next;
         self.loops.next += 1;
-        try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .references = self.references.items.len, .arena_depth = self.arena_depth });
+        try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .references = self.references.items.len, .arena_depth = self.arena_depth, .arenas = self.arenas.items.len });
         defer _ = self.loops.active.pop();
         const body = try self.statement(range.body);
         if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
@@ -2527,7 +2671,18 @@ const Checker = struct {
         flow.terminates = true;
         flow.owned_cleanup = try owned.toOwnedSlice(self.allocator);
         flow.cleanup = try refs.toOwnedSlice(self.allocator);
-        return .{ .loop_exit = .{ .target = loop.id, .continuing = continuing, .regions = try regions.toOwnedSlice(self.allocator) } };
+        var arenas: std.ArrayList(typed.LocalId) = .empty;
+        var open = self.arenas.items.len;
+        while (open > loop.arenas) {
+            open -= 1;
+            try arenas.append(self.allocator, self.arenas.items[open].watermark);
+        }
+        return .{ .loop_exit = .{
+            .target = loop.id,
+            .continuing = continuing,
+            .regions = try regions.toOwnedSlice(self.allocator),
+            .arenas = try arenas.toOwnedSlice(self.allocator),
+        } };
     }
     fn unitFallthrough(self: *Checker, body: CheckedStatement, span: source.Span) Error!CheckedStatement {
         try self.requireHandled(0, span);
@@ -2560,6 +2715,7 @@ const Checker = struct {
         } else {
             value = try self.expressionExpected(expr, self.return_type);
             try self.require(self.nodes.items[@backingInt(value.?)].ty, self.return_type, stmt.span);
+            try self.requireArenaReturn(value.?, stmt.span);
         }
         try self.requireHandled(0, stmt.span);
         flow.terminates = true;
@@ -2570,6 +2726,7 @@ const Checker = struct {
         const name = self.src.text(b.name);
         if (try self.topLevel(b.name) or self.active.contains(name) or self.active_refs.contains(name))
             return self.sink.fail(eShadowing, b.name, "binding shadows an active local or top-level function");
+        for (self.arenas.items) |scope| if (std.mem.eql(u8, scope.name, name)) return self.sink.fail(eShadowing, b.name, "binding shadows an active arena name");
         const value = if (b.annotation) |annotation| try self.expressionExpected(b.value, try self.ty(annotation)) else try self.expression(b.value);
         const value_type = self.nodes.items[@backingInt(value)].ty;
         if (b.annotation) |annotation| try self.require(value_type, try self.ty(annotation), annotation);
@@ -2613,6 +2770,7 @@ const Checker = struct {
             value = combined;
         }
         try self.require(self.nodes.items[@backingInt(value)].ty, self.locals.items[@backingInt(slot)].ty, stmt.span);
+        try self.requireArenaAssignment(slot, value);
         if (self.transfers(self.locals.items[@backingInt(slot)].ty)) {
             if (self.pendingObligation(self.locals.items[@backingInt(slot)])) return self.sink.fail("E_RESULT_OVERWRITE", a.name, "assignment would overwrite an unhandled result-bearing value");
             self.locals.items[@backingInt(slot)].ownership.transfer_available = true;
@@ -2682,6 +2840,7 @@ const Checker = struct {
         var flow: StatementFlow = .{};
         const data: @FieldType(typed.Statement, "data") = switch (stmt.data) {
             .arena_scope => |scope| try self.statementArenaScope(stmt, scope, &flow),
+            .managed_arena => |scope| try self.statementManagedArena(stmt, scope, &flow),
             .block => |children| try self.statementBlock(stmt, children, &flow),
             .match => |match| try self.statementMatch(stmt, match, &flow),
             .borrow_call => |borrow| try self.statementBorrowCall(stmt, borrow, &flow),

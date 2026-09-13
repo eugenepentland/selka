@@ -672,6 +672,19 @@ pub const Parser = struct {
         }
         return body;
     }
+    fn managedArenaStatement(self: *Parser, first: Span) diagnostic.Error!ast.StatementId {
+        const head = self.current();
+        if (head.tag != .kw_arena) return self.sink.fail(syntax_code, head.span, "with currently supports only `with arena()` region scopes");
+        self.cursor.pos += 1;
+        _ = try self.expect(.lparen);
+        _ = try self.expect(.rparen);
+        const name: ?Span = if (self.take(.kw_as)) (try self.expect(.ident)).span else null;
+        const body = try self.block();
+        return self.addStatement(.{
+            .span = .join(first, self.syntax.statements.items[@backingInt(body)].span),
+            .data = .{ .managed_arena = .{ .name = name, .body = body } },
+        });
+    }
     fn conditionExpression(self: *Parser) diagnostic.Error!ast.NodeId {
         const previous = self.cursor.record_literals;
         const boundary = self.cursor.record_boundary;
@@ -686,6 +699,7 @@ pub const Parser = struct {
         defer self.cursor.depth -= 1;
         const first = self.current();
         if (first.tag == .lbrace) return self.block();
+        if (self.take(.kw_with)) return self.managedArenaStatement(first.span);
         if (self.take(.kw_arena)) {
             const parent = try self.expression(0);
             _ = try self.expect(.kw_as);

@@ -155,6 +155,8 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
         .make_variant => |variant| try validateOpMakeVariant(program, variant),
         .reset_arena => |output| try validateOpResetArena(program, output),
         .begin_region, .end_region => |slot| try validateOpBeginRegion(function, slot),
+        .begin_arena, .end_arena => |watermark| try validateOpArena(function, watermark),
+        .arena_escape => |ty| try validateOpArenaEscape(program, ty),
         .cmp_handle => |comparison| {
             if (!validType(comparison.ty, program)) return error.InternalError;
             if (!comparison.ty.isAggregate()) return error.InternalError;
@@ -247,6 +249,14 @@ fn validateOpMakeVariant(program: Program, variant: @FieldType(@FieldType(Instru
 fn validateOpResetArena(program: Program, output: @FieldType(@FieldType(Instruction, "op"), "reset_arena")) Error!void {
     const shape = typed.resultShape(output, program.records) orelse return error.InternalError;
     if (shape.ok_type != .bool or shape.error_type != .i64) return error.InternalError;
+}
+
+fn validateOpArena(function: Function, watermark: @FieldType(@FieldType(Instruction, "op"), "begin_arena")) Error!void {
+    if (@backingInt(watermark) > function.scope.locals.len) return error.InternalError;
+}
+
+fn validateOpArenaEscape(program: Program, ty: @FieldType(@FieldType(Instruction, "op"), "arena_escape")) Error!void {
+    if (!validType(ty, program)) return error.InternalError;
 }
 
 fn validateOpBeginRegion(function: Function, slot: @FieldType(@FieldType(Instruction, "op"), "begin_region")) Error!void {
@@ -575,7 +585,7 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
         var height = heights[pc].?;
         switch (instruction.op) {
             .function_value, .push_unit, .push_i64, .push_bool, .push_integer, .load_local, .move_local, .read_ref, .read_field, .take_field, .len_slice => height += 1,
-            .drop_local, .end_region => {},
+            .drop_local, .end_region, .begin_arena, .end_arena => {},
             .resource_io => |io| {
                 height = try resourceIoHeight(io, height);
             },
@@ -629,6 +639,7 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
                 if (height < 2) return error.InternalError;
                 height -= 1;
             },
+            .arena_escape,
             .reset_arena,
             .restrict_resource,
             .complete_resource,

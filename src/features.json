@@ -13,6 +13,7 @@
     "keyword-arguments-and-immutable-defaults",
     "positional-and-named-record-constructors",
     "collection-membership-and-value-equality",
+    "managed-arenas",
     "python-indented-syntax",
     "python-assignments-and-value-records",
     "canonical-prelude-types",

@@ -83,6 +83,7 @@ pub fn build(b: *std.Build) void {
     guardian.enableTestDiagnostics(schematic_unit.root_module);
     const options = b.addOptions();
     options.addOptionPath("compiler_path", exe.getEmittedBin());
+    options.addOptionPath("arena_example_path", b.path("examples/arena-managed/main.my"));
     const integration = b.addTest(.{ .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
         .root_source_file = b.path("test/integration.zig"),
         .target = target,

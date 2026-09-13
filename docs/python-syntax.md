@@ -115,6 +115,10 @@ Generic functions and classes use square brackets, for example
 Unconstrained parameters default to copyable values. Additional operations on an
 abstract type require the existing explicit generic contracts.
 
+Wrap a phase of work in `with arena() as scratch:` to free everything it allocates
+in one step and copy the result out with `scratch.escape(value)`; see
+[managed arenas](arenas.md).
+
 Projects retain explicit `module`, `import`, and `export` declarations. Dotted
 names call imported functions and name imported types. Host capabilities and
 resource cleanup retain their checked contracts; the

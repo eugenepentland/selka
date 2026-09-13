@@ -1087,6 +1087,7 @@ const Checker = struct {
                 break :result target;
             },
             .unwrap => |input| try self.domainBacking(try self.expression(input), node.span),
+            .arena_escape => return self.sink.fail(eUnsupported, node.span, "managed arena scopes and escape copies are not supported inside generic function bodies"),
             .reset_arena => |reset| result: {
                 const output = try self.operationResult(reset.ty, .bool, "E_ARENA_RESULT");
                 try self.same(try self.expression(reset.value), .{ .concrete = .allocator }, node.span);
@@ -1640,6 +1641,7 @@ const Checker = struct {
                 self.seedEffect(.allocation);
                 return self.statement(scope.body);
             },
+            .managed_arena => return self.sink.fail(eUnsupported, statement_value.span, "managed arena scopes are not supported inside generic function bodies"),
             .match => |match| return self.matchValue(match, statement_value.span),
             .borrow => |borrow| return self.borrowScope(borrow),
             .borrow_call => |borrow| return self.borrowCall(borrow),

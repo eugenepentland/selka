@@ -58,7 +58,7 @@ pub const Walker = struct {
                     try self.expr(acquire.capacity);
                     if (!acquire.managed) try self.expr(acquire.allocator);
                 },
-                .reset_arena, .cast, .wrap, .unwrap, .length => |value| try self.expr(value),
+                .arena_escape, .reset_arena, .cast, .wrap, .unwrap, .length => |value| try self.expr(value),
                 .propagate => |p| try self.expr(p.value),
                 .read_slice => |r| try self.expr(r.index),
                 .block_value => |block| {
@@ -105,6 +105,7 @@ pub const Walker = struct {
                     try self.stmt(scope.body);
                     try self.expr(scope.parent);
                 },
+                .managed_arena => |scope| try self.stmt(scope.body),
                 .block => |children| {
                     var i = children.len;
                     while (i != 0) {

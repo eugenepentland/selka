@@ -1,6 +1,7 @@
 //! Typed local/operand storage and explicitly checked guest arithmetic in every host mode.
 const frame_limit_code = "R_FRAME_LIMIT";
 const index_bounds_code = "R_INDEX_BOUNDS";
+const arena_escape_code = "R_ARENA_ESCAPE";
 const division_zero_message = "division or remainder by zero";
 const division_zero_code = "R_DIVISION_BY_ZERO";
 const callables = @import("callables.zig");
@@ -24,6 +25,7 @@ const integers = @import("integers.zig");
 const typed = @import("typed.zig");
 const memory = @import("memory.zig");
 const gc_heap = @import("gc_heap.zig");
+const gc_regions = @import("gc_regions.zig");
 const external = @import("external_capabilities.zig");
 const Diagnostic = @import("diagnostic.zig").Diagnostic;
 const environment = @import("environment.zig");
@@ -121,8 +123,10 @@ const Reference = struct { direct: bool = false, lease: memory.Borrow, slice: ?S
 const ReturnTarget = struct { destination: usize, parent: memory.Borrow, allocation: memory.Allocation, mutable: bool };
 const CapturedReference = struct { direct: bool = false, slice: ?Slice };
 const ActiveRegion = struct { capability: memory.AllocatorCapability, slot: typed.LocalId };
+const ActiveArena = struct { watermark: usize, frame: usize };
 const Frame = struct {
     region_base: usize = 0,
+    arena_base: usize = 0,
     return_target: ?ReturnTarget = null,
     captured: ?CapturedReference = null,
     reference_base: usize = 0,
@@ -297,6 +301,8 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
     }
     var active_regions: std.ArrayList(ActiveRegion) = .empty;
     defer active_regions.deinit(allocator);
+    var active_arenas: std.ArrayList(ActiveArena) = .empty;
+    defer active_arenas.deinit(allocator);
     var frames: std.ArrayList(Frame) = .empty;
     defer frames.deinit(allocator);
     try locals.resize(allocator, program.functions[@backingInt(entry_request.id)].scope.locals.len);
@@ -329,7 +335,7 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
         .managed_heap = &managed_heap,
         .pools = &pools,
         .providers = .{ .host = entry_request.host, .environment = &environment_execution, .resources = &resource_execution, .external = &external_runtime },
-        .state = .{ .stack = &stack, .locals = &locals, .owners = &owners, .references = &references, .active_regions = &active_regions, .frames = &frames },
+        .state = .{ .arenas = &active_arenas, .stack = &stack, .locals = &locals, .owners = &owners, .references = &references, .active_regions = &active_regions, .frames = &frames },
     };
     while (frames.items.len != 0) {
         if (quickened.enabled and try runOptimized(&execution, &quickened)) return execution.outcome;
@@ -360,6 +366,9 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
             .make_variant => step.executeMakeVariant(),
             .switch_variant => step.executeSwitchVariant(),
             .reset_arena => step.executeResetArena(),
+            .begin_arena => step.executeBeginArena(),
+            .end_arena => step.executeEndArena(),
+            .arena_escape => step.executeArenaEscape(),
             .begin_region => step.executeBeginRegion(),
             .end_region => step.executeEndRegion(),
             .cmp_handle => step.executeCmpHandle(),
@@ -461,6 +470,7 @@ const Providers = struct {
     external: *external.Runtime,
 };
 const State = struct {
+    arenas: *std.ArrayList(ActiveArena),
     stack: *std.ArrayList(typed.Value),
     locals: *std.ArrayList(?typed.Value),
     owners: *std.AutoHashMapUnmanaged(usize, memory.Allocation),
@@ -512,7 +522,25 @@ const Step = struct {
     instruction: *const bc.Instruction,
     fn finish(self: *Step, outcome: ValueResult) bool {
         self.execution.outcome = outcome;
+        if (self.execution.state.arenas.items.len != 0) self.unwindArenas();
         return true;
+    }
+    /// Traps, budget exhaustion and host allocation failure end the execution while
+    /// arena scopes are open. Release every operand and local root first, then bulk
+    /// release each arena so surviving objects keep exact reference counts.
+    fn unwindArenas(self: *Step) void {
+        const allocator = self.execution.allocator;
+        const state = self.execution.state;
+        releaseValues(state.stack.items, allocator);
+        state.stack.clearRetainingCapacity();
+        for (state.locals.items) |*slot| {
+            if (slot.*) |owned| owned.release(allocator);
+            slot.* = null;
+        }
+        while (state.arenas.items.len != 0) {
+            _ = state.arenas.pop();
+            gc_regions.end(self.execution.managed_heap);
+        }
     }
     const FusedResult = enum { fallback, continued, finished };
     inline fn fastLocal(self: *Step, slot: usize) ?*Value {
@@ -757,7 +785,15 @@ const Step = struct {
             destination.* = value;
         }
         state.stack.items.len = argument_base;
-        const frame: Frame = .{ .function = id, .local_base = local_base, .operand_base = argument_base, .call_span = self.instruction.span, .reference_base = state.references.items.len, .region_base = state.active_regions.items.len };
+        const frame: Frame = .{
+            .function = id,
+            .local_base = local_base,
+            .operand_base = argument_base,
+            .call_span = self.instruction.span,
+            .reference_base = state.references.items.len,
+            .region_base = state.active_regions.items.len,
+            .arena_base = state.arenas.items.len,
+        };
         try appendFrame(state.frames, execution.allocator, frame);
         return .continued;
     }
@@ -907,13 +943,13 @@ const Step = struct {
             const result = if (schema.collection.kind == .dictionary)
                 managed_dict.create(heap, record.ty, schema.collection.key.?, schema.shape.buffer.?) catch |err| return self.collectionFailure(err)
             else
-                try heap.create(record.ty, .u32, record.fields);
+                heap.create(record.ty, .u32, record.fields) catch |err| return self.managedFailure(err);
             defer result.release(allocator);
             if (schema.collection.kind == .dictionary) {
                 var index: usize = start;
                 while (index < stack.items.len) : (index += 2) managed_dict.write(heap, result, stack.items[index], stack.items[index + 1]) catch |err| return self.collectionFailure(err);
             } else {
-                for (stack.items[start..]) |point| try heap.append(result, point);
+                for (stack.items[start..]) |point| heap.append(result, point) catch |err| return self.managedFailure(err);
                 result.managed.collection.kind = .string;
             }
             releaseValues(stack.items[start..], allocator);
@@ -1100,6 +1136,58 @@ const Step = struct {
         };
         const shape = typed.resultShape(output, program.records).?;
         try pushOwned(stack, allocator, try typed.Value.createVariant(allocator, output, if (status == 0) shape.ok_tag else shape.error_tag, if (status == 0) .{ .bool = true } else .{ .i64 = status }));
+        return false;
+    }
+
+    fn executeBeginArena(self: *Step) !bool {
+        const arenas = self.execution.state.arenas;
+        try arenas.append(self.execution.allocator, .{ .watermark = @backingInt(self.instruction.op.begin_arena), .frame = self.frame_index });
+        gc_regions.begin(self.execution.managed_heap);
+        return false;
+    }
+
+    fn executeEndArena(self: *Step) !bool {
+        const execution = self.execution;
+        const arenas = execution.state.arenas;
+        if (arenas.items.len <= self.frame.arena_base) return error.InternalError;
+        const active = arenas.items[arenas.items.len - 1];
+        if (active.frame != self.frame_index) return error.InternalError;
+        if (active.watermark != @backingInt(self.instruction.op.end_arena)) return error.InternalError;
+        const heap = execution.managed_heap;
+        const scanned = @min(active.watermark, self.local_values.len);
+        for (self.local_values[0..scanned]) |slot| {
+            const value = slot orelse continue;
+            const escaped = gc_regions.retains(heap, value) catch |err| return self.managedFailure(err);
+            if (escaped) return self.finish(trap(
+                arena_escape_code,
+                "a binding declared before this arena still references storage allocated inside it",
+                self.instruction.span,
+                execution.state.frames.items,
+                execution.program,
+            ));
+        }
+        // Bindings introduced inside the block die with it. Release them before the
+        // bulk free so no execution root can observe a released arena object.
+        var index = self.local_values.len;
+        while (index > scanned) {
+            index -= 1;
+            if (self.local_values[index]) |owned| owned.release(execution.allocator);
+            self.local_values[index] = null;
+        }
+        _ = arenas.pop();
+        gc_regions.end(heap);
+        return false;
+    }
+
+    fn executeArenaEscape(self: *Step) !bool {
+        const allocator = self.execution.allocator;
+        const stack = self.execution.state.stack;
+        const frame = self.frame.*;
+        const value = try pop(stack, frame.operand_base);
+        defer value.release(allocator);
+        if (value.typeOf() != self.instruction.op.arena_escape) return error.InternalError;
+        const copied = gc_regions.escape(self.execution.managed_heap, value) catch |err| return self.managedFailure(err);
+        try pushOwned(stack, allocator, copied);
         return false;
     }
 
@@ -1691,7 +1779,7 @@ const Step = struct {
         const index: usize = @intCast(number);
         const output: Value = switch (operation.kind) {
             .iteration_check => checked: {
-                if (try arguments[0].asInteger() != try heap.len(list)) return self.finish(trap(
+                if (try arguments[0].asInteger() != heap.len(list) catch |err| return self.managedFailure(err)) return self.finish(trap(
                     "R_LIST_ITERATION_MUTATION",
                     "list length changed during iteration",
                     self.instruction.span,
@@ -1701,7 +1789,7 @@ const Step = struct {
                 break :checked .unit;
             },
             .contains => .{ .bool = managed_equal.containsWithRecords(heap, list, arguments[0], self.execution.program.records) catch |err| return self.collectionFailure(err) },
-            .length => Value.number(.u64, try heap.len(list)),
+            .length => Value.number(.u64, heap.len(list) catch |err| return self.managedFailure(err)),
             .capacity => Value.number(.u64, list.managed.items.capacity),
             .read => heap.read(list, index) catch |err| return self.managedFailure(err),
             .append => mutation: {
@@ -1778,6 +1866,7 @@ const Step = struct {
             error.Bounds => "R_TEXT_BOUNDS",
             error.MissingKey => "R_MISSING_KEY",
             error.EmptySeparator => "R_EMPTY_SEPARATOR",
+            error.ArenaEscape => return self.managedFailure(error.ArenaEscape),
             error.InvalidKey, error.InvalidUtf8 => return error.InternalError,
             error.OutOfMemory => return error.OutOfMemory,
             error.CapacityLimit => return error.CapacityLimit,
@@ -1789,8 +1878,21 @@ const Step = struct {
     }
 
     fn managedFailure(self: *Step, err: gc_heap.Error) !bool {
-        if (err == error.Bounds) return self.finish(trap("R_LIST_BOUNDS", "list index is outside initialized bounds", self.instruction.span, self.execution.state.frames.items, self.execution.program));
-        return err;
+        switch (err) {
+            error.Bounds => return self.finish(trap("R_LIST_BOUNDS", "list index is outside initialized bounds", self.instruction.span, self.execution.state.frames.items, self.execution.program)),
+            error.ArenaEscape => return self.finish(trap(
+                arena_escape_code,
+                "storing a value allocated in this arena into an object that outlives it would leave a dangling reference",
+                self.instruction.span,
+                self.execution.state.frames.items,
+                self.execution.program,
+            )),
+            error.OutOfMemory => return error.OutOfMemory,
+            error.CapacityLimit => return error.CapacityLimit,
+            error.ForeignMemory => return error.ForeignMemory,
+            error.InvalidDataValue => return error.InvalidDataValue,
+            error.TypeMismatch => return error.TypeMismatch,
+        }
     }
 
     fn executeAcquireResource(self: *Step) !bool {
@@ -2026,7 +2128,7 @@ const Step = struct {
         const capacity = try numeric(stack, frame.operand_base, null, allocator);
         if (program.records[ty.recordIndex()].managed) {
             if (capacity < 0 or capacity > std.math.maxInt(usize)) return self.finish(trap("R_LIST_CAPACITY", "list capacity is outside supported bounds", instruction.span, frames.items, program));
-            const value = try self.execution.managed_heap.create(ty, program.records[ty.recordIndex()].shape.buffer.?, @intCast(capacity));
+            const value = self.execution.managed_heap.create(ty, program.records[ty.recordIndex()].shape.buffer.?, @intCast(capacity)) catch |err| return self.managedFailure(err);
             try pushOwned(stack, allocator, value);
             return false;
         }
@@ -2299,6 +2401,7 @@ const Step = struct {
         stack.shrinkRetainingCapacity(argument_base);
         try appendFrame(frames, allocator, .{
             .region_base = active_regions.items.len,
+            .arena_base = self.execution.state.arenas.items.len,
             .return_target = return_target,
             .reference_base = reference_base,
             .function = id,
@@ -2346,6 +2449,11 @@ const Step = struct {
             local.* = null;
         }
         locals.shrinkRetainingCapacity(frame.local_base);
+        const arenas = self.execution.state.arenas;
+        while (arenas.items.len > frame.arena_base) {
+            _ = arenas.pop();
+            gc_regions.end(self.execution.managed_heap);
+        }
         while (active_regions.items.len > frame.region_base) {
             const active_region = active_regions.items[active_regions.items.len - 1];
             storage.endRegion(active_region.capability) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
