@@ -59,5 +59,9 @@ test "assert checks a Boolean condition under any effect bound and inside loops"
 
 // spec-case: PY-ASSERT-2
 test "assert remains an ordinary identifier in legacy brace sources" {
-    try execute("fn main() -> i64 { let assert = 42; return assert; }", 42);
+    try execute(
+        \\def main() -> i64:
+        \\    assert = 42
+        \\    return assert
+    , 42);
 }

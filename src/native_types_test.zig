@@ -3,10 +3,34 @@ const std = @import("std");
 const Catalog = @import("native_types.zig").Catalog;
 test "frontend generic names and layouts survive source declaration reorder" {
     const compiler = @import("compiler.zig");
-    var first = try compiler.Compilation.init(std.testing.allocator, "types.my", "struct Box<T:copy>{value:T} struct Noise{x:u8} fn main()->i64{let b=new Box<i64>{value:7};return b.value;}");
+    var first = try compiler.Compilation.init(std.testing.allocator, "types.my",
+        \\class Box[T]:
+        \\    value: T
+        \\
+        \\
+        \\class Noise:
+        \\    x: u8
+        \\
+        \\
+        \\def main() -> i64:
+        \\    b = Box[i64](value=7)
+        \\    return b.value
+    );
     defer first.deinit();
     try first.check();
-    var second = try compiler.Compilation.init(std.testing.allocator, "types.my", "struct Noise{x:u8} struct Box<T:copy>{value:T} fn main()->i64{let b=new Box<i64>{value:7};return b.value;}");
+    var second = try compiler.Compilation.init(std.testing.allocator, "types.my",
+        \\class Noise:
+        \\    x: u8
+        \\
+        \\
+        \\class Box[T]:
+        \\    value: T
+        \\
+        \\
+        \\def main() -> i64:
+        \\    b = Box[i64](value=7)
+        \\    return b.value
+    );
     defer second.deinit();
     try second.check();
     var a = try Catalog.initRecords(std.testing.allocator, first.program.?.records);

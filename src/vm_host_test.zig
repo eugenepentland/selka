@@ -7,7 +7,13 @@ const typed = @import("typed.zig");
 const host = language.host_functions;
 const Registry = language.vm_host.Registry;
 const effects = @import("effect_set.zig");
-const scalar_source = "host fn measure(x:i64)->i64 effects(host);fn main()->i64{return measure(6)+measure(7);}";
+const scalar_source =
+    \\host def measure(x: i64) -> i64 effects(host)
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return measure(6) + measure(7)
+;
 const Counter = struct {
     calls: usize = 0,
     mode: enum { success, failure, wrong_type, work } = .success,
@@ -94,9 +100,25 @@ test "VM host failures and quotas locate the guest call and leave reusable sessi
     try t.expectEqualStrings("R_FRAME_LIMIT", frames.trap.code);
     try t.expectEqual(@as(i64, 26), (try vm.runWithHost(t.allocator, c.code.?, .{}, &registry, .{})).value);
 }
-const geometry_source = "module geometry;export Point;export Checked;export validate;" ++
-    "struct Point{x:i64,y:i64}result Checked{ok:Point,err:i64}" ++
-    "host fn validate(point:Point)->Checked effects(host);";
+const geometry_source =
+    \\module geometry
+    \\export Point
+    \\export Checked
+    \\export validate
+    \\
+    \\
+    \\class Point:
+    \\    x: i64
+    \\    y: i64
+    \\
+    \\
+    \\result Checked:
+    \\    ok: Point,
+    \\    err: i64
+    \\
+    \\
+    \\host def validate(point: Point) -> Checked effects(host)
+;
 const entry_prefix = "module main;import geometry as g;fn relay<T:copy>(p:g::Point,tag:T)->g::Checked effects(host){_ = tag;return g::validate(p);}" ++
     "fn main()->i64{let r=relay::<bool>(new g::Point{x:";
 const entry_suffix = ",y:4},true);match r{g::Checked.ok(p)=>{return p.x+p.y;},g::Checked.err(e)=>{return e;}}}";
@@ -148,7 +170,9 @@ test "VM host imports preserve nominal aggregate results generic calls and alloc
     try t.checkAllAllocationFailures(stable.allocator(), projectScenario, .{});
 }
 test "VM host preflight requires unused declarations before any callback and rejects invalid budgets" {
-    var c = try language.Compilation.init(t.allocator, "host.my", scalar_source ++ "host fn unused()->i64 effects(host);");
+    var c = try language.Compilation.init(t.allocator, "host.my", scalar_source ++
+        \\host def unused() -> i64 effects(host)
+    );
     defer c.deinit();
     try c.emit();
     var registry = try Registry.init(t.allocator, c.code.?);

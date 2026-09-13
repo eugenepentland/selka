@@ -29,21 +29,55 @@ const other = "enum Other { red, green, blue } ";
 
 // spec: CORE-9
 test "enum table construction follows names across enum and initializer reordering" {
-    const body = "fn lookup(table: [Color]i64, key: Color) -> i64 { return table[key]; } fn main() -> " ++
-        "i64 { let t: [ Color ] i64 = new [Color]i64 { blue: 30, red: 10, green: 20 }; return " ++
-        "lookup(t, new Color.red) + t[new Color.green] * 10 + t[new Color.blue] * 100; }";
+    const body =
+        \\def lookup(table: [Color]i64, key: Color) -> i64:
+        \\    return table[key]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    t: [Color]i64 = {Color.blue: 30, Color.red: 10, Color.green: 20}
+        \\    return lookup(t, Color.red) + t[Color.green] * 10 + t[Color.blue] * 100
+    ;
     try result(color ++ body, 3210);
     try result("enum Color { blue, red, green } " ++ body, 3210);
-    try result("enum One { only } fn main() -> i64 { let t = new [One]bool { only: true }; if t[new One.only] { return cast<i64>(len(t)); } return 0; }", 1);
-    try result(color ++ "fn main() -> i64 { let old = new [Color]i64 { red: 1, green: 2, blue: 3 }; let " ++
-        "changed = replace(old, new Color.red, 9); return old[new Color.red] + changed[new " ++
-        "Color.red] + changed[new Color.green] + cast<i64>(len(changed)); }", 15);
+    try result(
+        \\enum One:
+        \\    only
+        \\
+        \\
+        \\def main() -> i64:
+        \\    t: [One]bool = {One.only: True}
+        \\    if t[One.only]:
+        \\        return cast<i64>(len(t))
+        \\    return 0
+    , 1);
+    try result(color ++
+        \\def main() -> i64:
+        \\    old: [Color]i64 = {Color.red: 1, Color.green: 2, Color.blue: 3}
+        \\    changed = replace(old, Color.red, 9)
+        \\    return old[Color.red] + changed[Color.red] + changed[Color.green] + cast<i64>(len(changed))
+    , 15);
 }
 
-const allocation_source = "enum Key { a, b } struct Box { n: i64 } fn make() -> [Key]Box { return new [Key]Box " ++
-    "{ b: new Box { n: 7 }, a: new Box { n: 3 } }; } fn main() -> i64 { let old = make(); " ++
-    "let next = replace(old, new Key.a, new Box { n: 9 }); return old[new Key.a].n + " ++
-    "next[new Key.a].n + next[new Key.b].n; }";
+const allocation_source =
+    \\enum Key:
+    \\    a,
+    \\    b
+    \\
+    \\
+    \\class Box:
+    \\    n: i64
+    \\
+    \\
+    \\def make() -> [Key]Box:
+    \\    return {Key.b: Box(n=7), Key.a: Box(n=3)}
+    \\
+    \\
+    \\def main() -> i64:
+    \\    old = make()
+    \\    next = replace(old, Key.a, Box(n=9))
+    \\    return old[Key.a].n + next[Key.a].n + next[Key.b].n
+;
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, fixture_path, allocation_source);
     defer compilation.deinit();
@@ -60,9 +94,18 @@ test "table schemas named construction replacement and discovery clean up on all
 }
 
 test "table replacement loops and traps retain bounded live runtime storage" {
-    const source = "enum Key { count, keep } fn main() -> i64 { let mut t = new [Key]i64 { count: 0, " ++
-        "keep: 7 }; while t[new Key.count] < 10000 { t = replace(t, new Key.count, t[new " ++
-        "Key.count] + 1); } return t[new Key.count] + t[new Key.keep]; }";
+    const source =
+        \\enum Key:
+        \\    count,
+        \\    keep
+        \\
+        \\
+        \\def main() -> i64:
+        \\    t: [Key]i64 = {Key.count: 0, Key.keep: 7}
+        \\    while t[Key.count] < 10000:
+        \\        t = replace(t, Key.count, t[Key.count] + 1)
+        \\    return t[Key.count] + t[Key.keep]
+    ;
     var compilation = try language.Compilation.init(testing.allocator, "loop.my", source);
     defer compilation.deinit();
     try compilation.emit();
@@ -87,13 +130,34 @@ test "table replacement loops and traps retain bounded live runtime storage" {
 }
 
 test "table duplicate identity retains key type named mapping and initializer order" {
-    var compilation = try language.Compilation.init(testing.allocator, "duplicates.my", color ++ other ++ "fn a(n: i64) -> [Color]i64 { return new [Color]i64 { red: n, green: 2, blue: 3 }; } " ++
-        "fn b(x: i64) -> [Color]i64 { return new [Color]i64 { red: x, green: 2, blue: 3 }; } " ++
-        "fn c(n: i64) -> [Other]i64 { return new [Other]i64 { red: n, green: 2, blue: 3 }; } " ++
-        "fn d(n: i64) -> [Color]i64 { return new [Color]i64 { green: n, red: 2, blue: 3 }; } " ++
-        "fn e(n: i64) -> [Color]i64 { return new [Color]i64 { green: 2, red: n, blue: 3 }; } " ++
-        "fn f(n: i64) -> [3]i64 { return new [3]i64 [n, 2, 3]; } fn main() -> i64 { return 0; " ++
-        "}");
+    var compilation = try language.Compilation.init(testing.allocator, "duplicates.my", color ++ other ++
+        \\def a(n: i64) -> [Color]i64:
+        \\    return {Color.red: n, Color.green: 2, Color.blue: 3}
+        \\
+        \\
+        \\def b(x: i64) -> [Color]i64:
+        \\    return {Color.red: x, Color.green: 2, Color.blue: 3}
+        \\
+        \\
+        \\def c(n: i64) -> [Other]i64:
+        \\    return {Other.red: n, Other.green: 2, Other.blue: 3}
+        \\
+        \\
+        \\def d(n: i64) -> [Color]i64:
+        \\    return {Color.green: n, Color.red: 2, Color.blue: 3}
+        \\
+        \\
+        \\def e(n: i64) -> [Color]i64:
+        \\    return {Color.green: 2, Color.red: n, Color.blue: 3}
+        \\
+        \\
+        \\def f(n: i64) -> [3]i64:
+        \\    return [n, 2, 3]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer compilation.deinit();
     try compilation.check();
     var discovery = try language.duplicates.discover(testing.allocator, compilation.program.?, .{ .min_nodes = 1 });
@@ -106,7 +170,18 @@ test "table duplicate identity retains key type named mapping and initializer or
 }
 
 test "table VM rejects forged numeric and foreign enum keys and releases operands" {
-    var compilation = try language.Compilation.init(testing.allocator, "invalid.my", "enum Key { a } enum Other { a } fn main() -> i64 { return new [Key]i64 { a: 7 }[new Key.a]; }");
+    var compilation = try language.Compilation.init(testing.allocator, "invalid.my",
+        \\enum Key:
+        \\    a
+        \\
+        \\
+        \\enum Other:
+        \\    a
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return {Key.a: 7}[Key.a]
+    );
     defer compilation.deinit();
     try compilation.emit();
     const other_type = try schemaType(compilation.code.?.records, "Other");

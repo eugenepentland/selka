@@ -4,7 +4,14 @@ const t = std.testing;
 const language = @import("compiler.zig");
 // spec: VM-TRACE-1
 test "bounded memory trace records branch values without affecting instruction budgets" {
-    var c = try language.Compilation.init(t.allocator, "trace.my", "fn main()->i64{let n=3;if n<4{return 7;}else{return 9;}}");
+    var c = try language.Compilation.init(t.allocator, "trace.my",
+        \\def main() -> i64:
+        \\    n = 3
+        \\    if n < 4:
+        \\        return 7
+        \\    else:
+        \\        return 9
+    );
     defer c.deinit();
     var events: [64]language.vm_trace.Event = undefined;
     var trace: language.vm_trace.Trace = .{ .events = &events };

@@ -17,11 +17,27 @@ fn analyzeSource(allocator: std.mem.Allocator, input: []const u8) !void {
 }
 
 test "native analysis covers concrete record and generic calls" {
-    try analyzeSource(std.testing.allocator, "struct Box<T:copy>{value:T} fn get<T:copy>(x:Box<T>)->T{return x.value;} fn main()->i64{let b=new Box<i64>{value:7};return get::<i64>(b);}");
+    try analyzeSource(std.testing.allocator,
+        \\class Box[T]:
+        \\    value: T
+        \\
+        \\
+        \\def get[T](x: Box[T]) -> T:
+        \\    return x.value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    b = Box[i64](value=7)
+        \\    return get[i64](b)
+    );
 }
 
 test "native analysis covers arrays and indexed updates" {
-    try analyzeSource(std.testing.allocator, "fn main()->i64{let a=new [3]i64[1,2,3];return a[1];}");
+    try analyzeSource(std.testing.allocator,
+        \\def main() -> i64:
+        \\    a: [3]i64 = [1, 2, 3]
+        \\    return a[1]
+    );
 }
 
 test "native analysis covers text concatenation indexing and ordered dictionaries" {
@@ -36,7 +52,10 @@ test "native analysis covers text concatenation indexing and ordered dictionarie
 }
 
 test "native analysis rejects a function without an instruction entry" {
-    var compilation = try compiler.Compilation.init(std.testing.allocator, "empty.my", "fn main()->i64{return 0;}");
+    var compilation = try compiler.Compilation.init(std.testing.allocator, "empty.my",
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer compilation.deinit();
     try compilation.emit();
     var function = compilation.code.?.functions[0];

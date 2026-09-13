@@ -6,10 +6,35 @@ fn index(c: *language.Compilation, name: []const u8) !usize {
     for (c.program.?.functions, 0..) |function, i| if (std.mem.eql(u8, function.name, name)) return i;
     return error.TestUnexpectedResult;
 }
-const graph = "domain D: i64 { private fn hidden() -> i64 { return 1; } } fn leaf(x: i64) -> i64 { " ++
-    "return x; } fn a(n: i64) -> i64 { if n <= 0 { return 0; } return b(n - 1); } fn b(n: " ++
-    "i64) -> i64 { return a(n); } fn unused() -> i64 { return leaf(1); } fn main() -> i64 " ++
-    "{ if false { _ = a(1); } return leaf(2) + leaf(3); }";
+const graph =
+    \\domain D: i64:
+    \\    private def hidden() -> i64:
+    \\        return 1
+    \\
+    \\
+    \\def leaf(x: i64) -> i64:
+    \\    return x
+    \\
+    \\
+    \\def a(n: i64) -> i64:
+    \\    if n <= 0:
+    \\        return 0
+    \\    return b(n - 1)
+    \\
+    \\
+    \\def b(n: i64) -> i64:
+    \\    return a(n)
+    \\
+    \\
+    \\def unused() -> i64:
+    \\    return leaf(1)
+    \\
+    \\
+    \\def main() -> i64:
+    \\    if False:
+    \\        _ = a(1)
+    \\    return leaf(2) + leaf(3)
+;
 
 // spec: TOOL-6
 test "resolved reachability includes untaken call paths cycles and incoming sites from unreachable functions" {
@@ -31,7 +56,12 @@ test "resolved reachability includes untaken call paths cycles and incoming site
 }
 
 test "zero thresholds disable metric signals without hiding facts or changing source checking" {
-    var c = try language.Compilation.init(t.allocator, "quality.my", "fn main() -> i64 { if true { return 1; } return 0; }");
+    var c = try language.Compilation.init(t.allocator, "quality.my",
+        \\def main() -> i64:
+        \\    if True:
+        \\        return 1
+        \\    return 0
+    );
     defer c.deinit();
     try c.check();
     var result = try quality.analyze(t.allocator, c.program.?, c.src, .{ .max_function_lines = 0, .max_parameters = 0, .max_nesting = 0, .max_decisions = 0, .max_line_bytes = 0 });
@@ -73,7 +103,14 @@ test "static call reachability traverses a long chain without host recursion" {
 }
 
 test "explicit quality roots validate bounds and tolerate duplicate or empty roots" {
-    var c = try language.Compilation.init(t.allocator, "roots.my", "fn main() -> i64 { return 0; } fn api() -> i64 { return 1; }");
+    var c = try language.Compilation.init(t.allocator, "roots.my",
+        \\def main() -> i64:
+        \\    return 0
+        \\
+        \\
+        \\def api() -> i64:
+        \\    return 1
+    );
     defer c.deinit();
     try c.check();
     var empty = try language.quality.analyzeWithExports(t.allocator, c.program.?, c.src, .{}, &.{});
@@ -91,20 +128,30 @@ test "explicit quality roots validate bounds and tolerate duplicate or empty roo
 
 fn writeCallChain(output: *std.Io.Writer.Allocating) !void {
     for (0..2000) |i| try output.writer.print("fn f{d}() -> i64 {{ return f{d}(); }}\n", .{ i, i + 1 });
-    try output.writer.writeAll("fn f2000() -> i64 { return 7; }\nfn main() -> i64 { return f0(); }\n");
+    try output.writer.writeAll(
+        \\def f2000() -> i64:
+        \\    return 7
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f0()
+    );
 }
 
 test "structural metrics count branches loops short circuits nesting and physical source lines" {
     const text =
-        \\fn work(x: i64, flag: bool) -> i64 {
-        \\    let mut n = x;
-        \\    if flag && n > 0 {
-        \\        while n > 0 { n -= 1; }
-        \\    }
-        \\    if flag { return n; }
-        \\    return x;
-        \\}
-        \\fn main() -> i64 { return work(2, true); }
+        \\def work(x: i64, flag: bool) -> i64:
+        \\    n = x
+        \\    if flag and n > 0:
+        \\        while n > 0:
+        \\            n -= 1
+        \\    if flag:
+        \\        return n
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return work(2, True)
     ;
     var c = try language.Compilation.init(t.allocator, "quality.my", text);
     defer c.deinit();

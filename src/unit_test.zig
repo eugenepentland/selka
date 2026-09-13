@@ -3,10 +3,26 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const program =
-    "fn set(x:i64)->unit{_ = x;}" ++
-    "fn skip<T:copy>(x:T)->unit{_ = x;}" ++
-    "fn noop()->unit{return;}" ++
-    "fn main()->i64{let mut x=0;x=42;set(x);skip::<i64>(x);noop();return x;}";
+    \\def set(x: i64):
+    \\    _ = x
+    \\
+    \\
+    \\def skip[T](x: T):
+    \\    _ = x
+    \\
+    \\
+    \\def noop():
+    \\    return
+    \\
+    \\
+    \\def main() -> i64:
+    \\    x = 0
+    \\    x = 42
+    \\    set(x)
+    \\    skip[i64](x)
+    \\    noop()
+    \\    return x
+;
 fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "unit.my", program);
     defer c.deinit();
@@ -29,14 +45,32 @@ test "unit data and host boundaries reject unsupported ABI values explicitly" {
     try t.expect(!typed.Type.unit.isInteger());
     try t.expectEqual(@as(?u3, null), typed.Type.unit.capabilityIndex());
     try t.expectError(error.NotDataType, @import("data_type.zig").check(t.allocator, &.{}, .unit, true));
-    var c = try language.Compilation.init(t.allocator, "host.my", "host fn f()->unit effects(host);fn main()->i64{return 0;}");
+    var c = try language.Compilation.init(t.allocator, "host.my",
+        \\host def f() effects(host)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer c.deinit();
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings("E_HOST_SIGNATURE", c.diagnostics.items[0].code);
 }
 fn publicUnit(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
     if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
-    return allocator.dupe(u8, "module main;export finish;fn finish()->unit{}fn main()->i64{finish();return 42;}");
+    return allocator.dupe(u8,
+        \\module main
+        \\export finish
+        \\
+        \\
+        \\def finish():
+        \\    pass
+        \\
+        \\
+        \\def main() -> i64:
+        \\    finish()
+        \\    return 42
+    );
 }
 // spec: UNIT-6
 test "public unit schemas describe a distinct type while unsupported copied ABIs reject invocation" {
@@ -53,10 +87,32 @@ test "public unit schemas describe a distinct type while unsupported copied ABIs
 }
 // spec: UNIT-5
 test "unit result payloads still require handling and propagation only drops successful unit" {
-    const header = "result Done{ok:unit,err:i64}fn noop()->unit{}fn done()->Done{return new Done.ok(noop());}";
+    const header =
+        \\result Done:
+        \\    ok: None,
+        \\    err: i64
+        \\
+        \\
+        \\def noop():
+        \\    pass
+        \\
+        \\
+        \\def done() -> Done:
+        \\    return Ok(noop())
+    ;
     var valid = try language.Compilation.init(t.allocator, "result.my", header ++
-        "fn chained()->Done{done()?;return done();}" ++
-        "fn main()->i64{match chained(){Done.ok(_)=>{return 42;},Done.err(code)=>{return code;}}}");
+        \\def chained() -> Done:
+        \\    done()?
+        \\    return done()
+        \\
+        \\
+        \\def main() -> i64:
+        \\    match chained():
+        \\        case Done.ok(_):
+        \\            return 42
+        \\        case Done.err(code):
+        \\            return code
+    );
     defer valid.deinit();
     try t.expectEqual(@as(i64, 42), (try valid.execute(t.allocator)).value);
     for ([_][]const u8{ "done();", "let pending=done();" }) |statement| {
@@ -71,16 +127,81 @@ test "unit result payloads still require handling and propagation only drops suc
 // spec: UNIT-2
 test "unit remains distinct and implicit discard cannot lose ordinary or fallible values" {
     const invalid = [_][]const u8{
-        "fn main()->bool{return true;}",
-        "result Done{ok:unit,err:i64}fn leak(x:Done)->unit{}fn main()->i64{return 0;}",
-        "result Done{ok:unit,err:i64}fn leak<T:copy>(x:Done)->unit{}fn main()->i64{return 0;}",
-        "fn main()->i64{return;}",
-        "fn f()->unit{return 0;}fn main()->i64{return 0;}",
-        "fn f()->i64{return 7;}fn main()->i64{f();return 0;}",
-        "fn f<T:copy>(x:T)->unit{x;}fn main()->i64{return 0;}",
-        "fn f()->unit{}fn main()->i64{return f();}",
-        "fn f()->unit{}fn main()->i64{if f(){return 1;}return 0;}",
-        "fn f()->unit{}fn main()->i64{return f()+1;}",
+        \\def main() -> bool:
+        \\    return True
+        ,
+        \\result Done:
+        \\    ok: None,
+        \\    err: i64
+        \\
+        \\
+        \\def leak(x: Done):
+        \\    pass
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        ,
+        \\result Done:
+        \\    ok: None,
+        \\    err: i64
+        \\
+        \\
+        \\def leak[T](x: Done):
+        \\    pass
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        ,
+        \\def main() -> i64:
+        \\    return
+        ,
+        \\def f():
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        ,
+        \\def f() -> i64:
+        \\    return 7
+        \\
+        \\
+        \\def main() -> i64:
+        \\    f()
+        \\    return 0
+        ,
+        \\def f[T](x: T):
+        \\    x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        ,
+        \\def f():
+        \\    pass
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f()
+        ,
+        \\def f():
+        \\    pass
+        \\
+        \\
+        \\def main() -> i64:
+        \\    if f():
+        \\        return 1
+        \\    return 0
+        ,
+        \\def f():
+        \\    pass
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f() + 1
+        ,
     };
     for (invalid) |text| {
         var c = try language.Compilation.init(t.allocator, "invalid.my", text);
@@ -91,11 +212,36 @@ test "unit remains distinct and implicit discard cannot lose ordinary or fallibl
 
 // spec: UNIT-4
 test "unit fallthrough and early return release managed parameters without losing result obligations" {
-    const text = "result A{ok:List<i64>,err:i64}" ++
-        "fn consume(values:List<i64>,early:bool)->unit{_ = len(values);if early{return;}}" ++
-        "fn produce()->A{let values:List<i64>=[];values.push(1);values.push(2);return new A.ok(values);}" ++
-        "fn main()->i64{let mut i=0;while i<2{match produce(){" ++
-        "A.ok(values)=>{consume(values,i==0);},A.err(code)=>{return code;}}i+=1;}return 42;}";
+    const text =
+        \\result A:
+        \\    ok: List[i64],
+        \\    err: i64
+        \\
+        \\
+        \\def consume(values: List[i64], early: bool):
+        \\    _ = len(values)
+        \\    if early:
+        \\        return
+        \\
+        \\
+        \\def produce() -> A:
+        \\    values: List[i64] = []
+        \\    values.push(1)
+        \\    values.push(2)
+        \\    return Ok(values)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    i = 0
+        \\    while i < 2:
+        \\        match produce():
+        \\            case A.ok(values):
+        \\                consume(values, i == 0)
+        \\            case A.err(code):
+        \\                return code
+        \\        i += 1
+        \\    return 42
+    ;
     var c = try language.Compilation.init(t.allocator, "cleanup.my", text);
     defer c.deinit();
     try t.expectEqual(@as(i64, 42), (try c.execute(t.allocator)).value);

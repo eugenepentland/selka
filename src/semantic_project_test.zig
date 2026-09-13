@@ -35,23 +35,71 @@ fn agree(files: *Files, cache: *Cache) !void {
 // spec: SEMANTIC-CACHE-6
 test "semantic project body reuse relocates module spans and invalidates changed imports exports signatures and types" {
     var entries = [_]File{
-        .{ .path = "main.my", .bytes = "module main;import data;fn main()->i64{return data::value();}" },
-        .{ .path = "data.my", .bytes = "module data;export value;fn value()->i64{return 41;}" },
-        .{ .path = "other.my", .bytes = "module other;export value;fn value()->i64{return 43;}" },
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\import data
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return data.value()
+        },
+        .{ .path = "data.my", .bytes =
+        \\module data
+        \\export value
+        \\
+        \\
+        \\def value() -> i64:
+        \\    return 41
+        },
+        .{ .path = "other.my", .bytes =
+        \\module other
+        \\export value
+        \\
+        \\
+        \\def value() -> i64:
+        \\    return 43
+        },
     };
     var files: Files = .{ .entries = &entries };
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     try agree(&files, &cache);
-    entries[1].bytes = "module data;export value;fn value()->i64{\nreturn 42;\n}";
+    entries[1].bytes =
+        \\module data
+        \\export value
+        \\
+        \\
+        \\def value() -> i64:
+        \\    return 42
+    ;
     try agree(&files, &cache);
     try t.expectEqual(@as(usize, 1), cache.statistics.reused);
-    entries[1].bytes = "module data;export value;fn value()->bool{return true;}";
+    entries[1].bytes =
+        \\module data
+        \\export value
+        \\
+        \\
+        \\def value() -> bool:
+        \\    return True
+    ;
     try agree(&files, &cache);
     try t.expectEqual(@as(usize, 1), cache.statistics.reused);
-    entries[1].bytes = "module data;fn value()->i64{return 42;}";
+    entries[1].bytes =
+        \\module data
+        \\
+        \\
+        \\def value() -> i64:
+        \\    return 42
+    ;
     try agree(&files, &cache);
-    entries[0].bytes = "module main;import other;fn main()->i64{return other::value();}";
+    entries[0].bytes =
+        \\module main
+        \\import other
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return other.value()
+    ;
     try agree(&files, &cache);
     try t.expectEqual(@as(usize, 1), cache.statistics.reused);
 }
@@ -59,14 +107,36 @@ test "semantic project body reuse relocates module spans and invalidates changed
 // spec: MODULE-DOT-5
 test "dotted imported function values keep callback type catalogs fresh across cache requests" {
     var entries = [_]File{
-        .{ .path = "main.my", .bytes = "module main\nimport data as d\nfn main()->i64{let helper=d.value\nreturn helper()}" },
-        .{ .path = "data.my", .bytes = "module data\nexport value\nfn value()->i64 effects(){return 41}" },
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\import data as d
+        \\
+        \\
+        \\def main() -> i64:
+        \\    helper = d.value
+        \\    return helper()
+        },
+        .{ .path = "data.my", .bytes =
+        \\module data
+        \\export value
+        \\
+        \\
+        \\def value() -> i64 effects():
+        \\    return 41
+        },
     };
     var files: Files = .{ .entries = &entries };
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     try agree(&files, &cache);
-    entries[1].bytes = "module data\nexport value\nfn value()->i64 effects(){return 42}";
+    entries[1].bytes =
+        \\module data
+        \\export value
+        \\
+        \\
+        \\def value() -> i64 effects():
+        \\    return 42
+    ;
     try agree(&files, &cache);
     try t.expectEqual(@as(usize, 0), cache.statistics.reused);
     try t.expect(cache.statistics.bypassed >= 2);

@@ -1,21 +1,92 @@
+//! Typed public invocation over JSON: schema pinning, argument binding, domain
+//! codecs and the rejections a malformed request produces.
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const codec = language.codec_json;
-const source = "module data;export D;export R;export Output;export combine;export fail;export " ++
-    "constant;export nodata;export clock;export Time;export loop;result R{ok:D," ++
-    "err:i64}domain D:i64{codec i64{decode:dec,encode:enc}private fn raw(x:i64)->D{return " ++
-    "wrap<D>(x);}fn dec(x:i64)->R{if x<=0{return new R.err(-1);}return new R.ok(D.raw(x));" ++
-    "}fn enc(x:D)->i64{return unwrap(x);}}struct Output{value:D,total:i64}fn " ++
-    "combine(left:D,right:i64)->Output{return new Output{value:left," ++
-    "total:D.enc(left)+right};}fn fail(x:i64)->R{return new R.err(x);}fn " ++
-    "constant()->u64{return 18446744073709551615u64;}fn nodata()->unit{}" ++
-    "result Time{ok:i64,err:i64}fn " ++
-    "clock(c:clock_cap)->Time{return clock_now<Time>(c);}fn hidden()->i64{return 1;}fn " ++
-    "loop(x:i64)->i64{return loop(x);}";
+const source =
+    \\module data
+    \\export D
+    \\export R
+    \\export Output
+    \\export combine
+    \\export fail
+    \\export constant
+    \\export nodata
+    \\export clock
+    \\export Time
+    \\export loop
+    \\
+    \\
+    \\result R:
+    \\    ok: D,
+    \\    err: i64
+    \\
+    \\
+    \\domain D: i64:
+    \\    codec i64:
+    \\        decode: dec,
+    \\        encode: enc
+    \\
+    \\    private def raw(x: i64) -> D:
+    \\        return wrap<D>(x)
+    \\
+    \\    def dec(x: i64) -> R:
+    \\        if x <= 0:
+    \\            return Err(-1)
+    \\        return Ok(D.raw(x))
+    \\
+    \\    def enc(x: D) -> i64:
+    \\        return unwrap(x)
+    \\
+    \\
+    \\class Output:
+    \\    value: D
+    \\    total: i64
+    \\
+    \\
+    \\def combine(left: D, right: i64) -> Output:
+    \\    return Output(value=left, total=D.enc(left) + right)
+    \\
+    \\
+    \\def fail(x: i64) -> R:
+    \\    return Err(x)
+    \\
+    \\
+    \\def constant() -> u64:
+    \\    return 18446744073709551615u64
+    \\
+    \\
+    \\def nodata():
+    \\    pass
+    \\
+    \\
+    \\result Time:
+    \\    ok: i64,
+    \\    err: i64
+    \\
+    \\
+    \\def clock(c: clock_cap) -> Time:
+    \\    return clock_now<Time>(c)
+    \\
+    \\
+    \\def hidden() -> i64:
+    \\    return 1
+    \\
+    \\
+    \\def loop(x: i64) -> i64:
+    \\    return loop(x)
+;
 const Provider = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
-        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main;import data;fn main()->i64{return 0;}");
+        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
+            \\module main
+            \\import data
+            \\
+            \\
+            \\def main() -> i64:
+            \\    return 0
+        );
         if (std.mem.eql(u8, path, "data.my")) return allocator.dupe(u8, source);
         return error.NotFound;
     }
@@ -142,7 +213,14 @@ test "JSON function call argument envelope depth preserves the 128 level value b
             try text.writer.print("struct R{d}{{next:", .{index});
             if (index + 1 == levels) try text.writer.writeAll("bool}") else try text.writer.print("R{d}}}", .{index + 1});
         }
-        try text.writer.writeAll("fn consume(x:R0)->bool{return true;}fn main()->i64{return 0;}");
+        try text.writer.writeAll(
+            \\def consume(x: R0) -> bool:
+            \\    return True
+            \\
+            \\
+            \\def main() -> i64:
+            \\    return 0
+        );
         var dynamic: Dynamic = .{ .bytes = text.written() };
         var project = language.project.Project.init(t.allocator);
         defer project.deinit();

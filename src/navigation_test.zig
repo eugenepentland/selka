@@ -10,13 +10,37 @@ const Files = struct {
     main: []const u8,
     fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) graph.ReadError![]u8 {
         const self: *Files = @ptrCast(@alignCast(context.?));
-        const data_source = "module data; export Box; export read; struct Box { value:i64 } fn read(x:Box)->i64{return x.value;}";
+        const data_source =
+            \\module data
+            \\export Box
+            \\export read
+            \\
+            \\
+            \\class Box:
+            \\    value: i64
+            \\
+            \\
+            \\def read(x: Box) -> i64:
+            \\    return x.value
+        ;
         const bytes = if (std.mem.eql(u8, path, "main.my")) self.main else if (std.mem.eql(u8, path, "data.my")) data_source else return error.NotFound;
         if (bytes.len > limit) return error.TooLarge;
         return allocator.dupe(u8, bytes);
     }
 };
-const fixture = "module main; import data; fn read(x:i64)->i64{return x;} fn main()->i64{let b=new data::Box{value:3};return read(data::read(b));}";
+const fixture =
+    \\module main
+    \\import data
+    \\
+    \\
+    \\def read(x: i64) -> i64:
+    \\    return x
+    \\
+    \\
+    \\def main() -> i64:
+    \\    b = data.Box(value=3)
+    \\    return read(data.read(b))
+;
 fn emitted(allocator: std.mem.Allocator, compilation: *pc.Compilation) !void {
     const bytes = try navigation.render(allocator, compilation, identity, .{});
     defer allocator.free(bytes);
@@ -55,7 +79,13 @@ test "navigation resolves qualified calls fields and source identities without e
     try t.expectError(error.NavigationLimit, navigation.render(t.allocator, &compilation, identity, .{ .references = 1 }));
 }
 test "navigation exposes declarations but never checked references after a semantic failure" {
-    var files: Files = .{ .main = "module main; fn main()->i64{return missing();}" };
+    var files: Files = .{ .main =
+        \\module main
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return missing()
+    };
     var project = graph.Project.init(t.allocator);
     defer project.deinit();
     try project.load(.{ .context = &files, .read = Files.read }, "main", .{});
@@ -123,8 +153,23 @@ fn typeTargets(value: std.json.Value) !void {
     }
 }
 test "navigation synthesized array shapes never resolve to function local or field declarations" {
-    const parsed = try document("module main;struct Box{n:i64}fn repeat<T:copy>(v:T)->[1]T{return new [1]T[v];}" ++
-        "fn main()->i64{let value=new Box{n:3};let items=repeat::<Box>(value);return items[0].n;}");
+    const parsed = try document(
+        \\module main
+        \\
+        \\
+        \\class Box:
+        \\    n: i64
+        \\
+        \\
+        \\def repeat[T](v: T) -> [1]T:
+        \\    return [v]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    value = Box(n=3)
+        \\    items = repeat[Box](value)
+        \\    return items[0].n
+    );
     defer parsed.deinit();
     try typeTargets(parsed.value);
 }

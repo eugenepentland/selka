@@ -2,11 +2,28 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
-const text = "fn id<T:copy>(x:T)->T{return x;}" ++
-    "fn sum<T:integer>(x:T)->T{if x==cast<T>(0){return x;}return x+sum::<T>(x-cast<T>(1));}" ++
-    "fn forward<U:integer>(x:U)->U{return id::<U>(sum::<U>(x));}" ++
-    "fn main()->i64{let small=forward::<u8>(4u8);let wide=forward::<i64>(5);" ++
-    "if id::<bool>(true){return cast<i64>(small)+wide+sum::<i64>(2);}return 0;}";
+const text =
+    \\def id[T](x: T) -> T:
+    \\    return x
+    \\
+    \\
+    \\def sum[T: integer](x: T) -> T:
+    \\    if x == cast<T>(0):
+    \\        return x
+    \\    return x + sum[T](x - cast<T>(1))
+    \\
+    \\
+    \\def forward[U: integer](x: U) -> U:
+    \\    return id[U](sum[U](x))
+    \\
+    \\
+    \\def main() -> i64:
+    \\    small = forward[u8](4u8)
+    \\    wide = forward[i64](5)
+    \\    if id[bool](True):
+    \\        return cast<i64>(small) + wide + sum[i64](2)
+    \\    return 0
+;
 fn scenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "specialized.my", text);
     defer compilation.deinit();
@@ -21,8 +38,24 @@ test "generic execution specializes widths forwarding recursion and shared insta
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
 test "generic execution preserves nominal values through copy contracts" {
-    var compilation = try language.Compilation.init(t.allocator, "nominal.my", "struct A{x:i64}struct B{x:i64}fn id<T:copy>(x:T)->T{return x;}" ++
-        "fn main()->i64{let a=id::<A>(new A{x:3});let b=id::<B>(new B{x:4});return a.x+b.x;}");
+    var compilation = try language.Compilation.init(t.allocator, "nominal.my",
+        \\class A:
+        \\    x: i64
+        \\
+        \\
+        \\class B:
+        \\    x: i64
+        \\
+        \\
+        \\def id[T](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    a = id[A](A(x=3))
+        \\    b = id[B](B(x=4))
+        \\    return a.x + b.x
+    );
     defer compilation.deinit();
     try t.expectEqual(@as(i64, 7), (try compilation.execute(t.allocator)).value);
     try t.expectEqual(@as(usize, 3), compilation.program.?.functions.len);
@@ -55,8 +88,24 @@ test "generic execution bounds actual discovery and reuses instances at capacity
 // spec: GENERIC-DIAGNOSTIC-1
 test "generic diagnostics name concrete types independently of discovery order" {
     const cases = [_][]const u8{
-        "fn id<T:copy>(x:T)->T{return x;}fn main()->i64{return id::<i64>(2);}",
-        "fn id<T:copy>(x:T)->T{return x;}fn extra()->bool{return id::<bool>(true);}fn main()->i64{return id::<i64>(2);}",
+        \\def id[T](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return id[i64](2)
+        ,
+        \\def id[T](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def extra() -> bool:
+        \\    return id[bool](True)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return id[i64](2)
+        ,
     };
     for (cases) |source_text| {
         var compilation = try language.Compilation.init(t.allocator, "names.my", source_text);
@@ -75,8 +124,18 @@ test "generic diagnostics name concrete types independently of discovery order" 
     }
 }
 test "generic diagnostics retain instantiated names in runtime traces" {
-    var compilation = try language.Compilation.init(t.allocator, "trace.my", "fn divide<T:integer>(x:T)->T{return x/cast<T>(0);}fn forward<U:integer>(x:U)->U{return divide::<U>(x);}" ++
-        "fn main()->i64{return cast<i64>(forward::<u8>(1u8));}");
+    var compilation = try language.Compilation.init(t.allocator, "trace.my",
+        \\def divide[T: integer](x: T) -> T:
+        \\    return divtrunc(x, cast<T>(0))
+        \\
+        \\
+        \\def forward[U: integer](x: U) -> U:
+        \\    return divide[U](x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return cast<i64>(forward[u8](1u8))
+    );
     defer compilation.deinit();
     const result = try compilation.execute(t.allocator);
     try t.expectEqualStrings("R_DIVISION_BY_ZERO", result.trap.code);
@@ -87,11 +146,43 @@ test "generic diagnostics retain instantiated names in runtime traces" {
 
 test "generic execution rejects concrete requirement and arity violations" {
     const cases = [_]struct { source: []const u8, code: []const u8 }{
-        .{ .source = "fn f<T:integer>(x:T)->T{return x;}fn main()->i64{_ = f::<bool>(true);return 0;}", .code = "E_GENERIC_ARGUMENT" },
-        .{ .source = "fn f<T:copy,U:copy>(x:T)->T{return x;}fn main()->i64{return f(1);}", .code = "E_GENERIC_INFERENCE" },
-        .{ .source = "fn f<T:copy>(x:T)->T{return x;}fn main()->i64{return f::<i64>(true);}", .code = "E_TYPE" },
-        .{ .source = "fn main<T:copy>()->i64{return 0;}", .code = "E_MAIN" },
-        .{ .source = "fn bad<T:copy>(x:T)->T{return x+x;}fn main()->i64{return bad::<i64>(2);}", .code = "E_GENERIC_OPERATION" },
+        .{ .source =
+        \\def f[T: integer](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    _ = f[bool](True)
+        \\    return 0
+        , .code = "E_GENERIC_ARGUMENT" },
+        .{ .source =
+        \\def f[T, U](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f(1)
+        , .code = "E_GENERIC_INFERENCE" },
+        .{ .source =
+        \\def f[T](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f[i64](True)
+        , .code = "E_TYPE" },
+        .{ .source =
+        \\def main[T]() -> i64:
+        \\    return 0
+        , .code = "E_MAIN" },
+        .{ .source =
+        \\def bad[T](x: T) -> T:
+        \\    return x + x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return bad[i64](2)
+        , .code = "E_GENERIC_OPERATION" },
     };
     for (cases) |case| {
         var compilation = try language.Compilation.init(t.allocator, "rejected.my", case.source);

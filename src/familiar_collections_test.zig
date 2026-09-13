@@ -17,10 +17,30 @@ fn evaluate(bytes: []const u8, expected: i64) !void {
 // spec: FAMILIAR-COLLECTIONS-4
 test "list syntax rejects invalid methods element types and indices" {
     const cases = [_]struct { text: []const u8, code: []const u8 }{
-        .{ .text = "fn main()->i64{let values:List<i64>=[];values.push();return 0;}", .code = "E_ARITY" },
-        .{ .text = "fn main()->i64{let values:List<i64>=[];values.push(true);return 0;}", .code = "E_TYPE" },
-        .{ .text = "fn main()->i64{let values:List<i64>=[];values[false]=1;return 0;}", .code = "E_TYPE" },
-        .{ .text = "fn main()->i64{let values:List<i64>=[];values.clear();return 0;}", .code = "E_LIST_METHOD" },
+        .{ .text =
+        \\def main() -> i64:
+        \\    values: List[i64] = []
+        \\    values.push()
+        \\    return 0
+        , .code = "E_ARITY" },
+        .{ .text =
+        \\def main() -> i64:
+        \\    values: List[i64] = []
+        \\    values.push(True)
+        \\    return 0
+        , .code = "E_TYPE" },
+        .{ .text =
+        \\def main() -> i64:
+        \\    values: List[i64] = []
+        \\    values[False] = 1
+        \\    return 0
+        , .code = "E_TYPE" },
+        .{ .text =
+        \\def main() -> i64:
+        \\    values: List[i64] = []
+        \\    values.clear()
+        \\    return 0
+        , .code = "E_LIST_METHOD" },
     };
     for (cases) |case| {
         var compilation = try language.Compilation.init(t.allocator, "invalid-list.my", case.text);
@@ -31,8 +51,20 @@ test "list syntax rejects invalid methods element types and indices" {
 }
 
 fn allocationScenario(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, "list-oom.my", "fn make_values()->Result<List<i64>,i64>{let values:List<i64>=[];values.push(42);return Ok(values);}" ++
-        "fn main()->i64{match make_values(){Result<List<i64>,i64>.ok(xs)=>{return xs[0];},Result<List<i64>,i64>.err(e)=>{return e;}}}");
+    var compilation = try language.Compilation.init(allocator, "list-oom.my",
+        \\def make_values() -> Result[List[i64], i64]:
+        \\    values: List[i64] = []
+        \\    values.push(42)
+        \\    return Ok(values)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    match make_values():
+        \\        case Result.ok(xs):
+        \\            return xs[0]
+        \\        case Result.err(e):
+        \\            return e
+    );
     defer compilation.deinit();
     const result = try compilation.executeWithOptions(allocator, .{ .memory = .{ .gc = .{ .stress = true } } });
     try t.expectEqual(@as(i64, 42), result.value);
@@ -47,39 +79,49 @@ test "contextual managed source compilation and execution clean every failed all
 // spec: FAMILIAR-COLLECTIONS-2
 test "record constructors without new support generic records and trailing fields" {
     try evaluate(
-        \\struct Box<T:copy> { value: T }
-        \\struct Empty {}
-        \\fn main() -> i64 {
-        \\    let box = Box<i64> { value: 42, }
-        \\    _ = Empty {}
-        \\    if box.value == 0 {}
+        \\class Box[T]:
+        \\    value: T
+        \\
+        \\
+        \\class Empty:
+        \\    pass
+        \\
+        \\
+        \\def main() -> i64:
+        \\    box = Box[i64](value=42)
+        \\    _ = Empty()
+        \\    if box.value == 0:
+        \\        pass
         \\    return box.value
-        \\}
     , 42);
 }
 
 // spec: FAMILIAR-COLLECTIONS-1
 test "list methods indexing and indexed assignment share aliases" {
     try evaluate(
-        \\fn main() -> i64 {
-        \\    let values: List<i64> = []
-        \\    let alias = values
+        \\def main() -> i64:
+        \\    values: List[i64] = []
+        \\    alias = values
         \\    alias.push(10)
         \\    values[0] = 41
         \\    return alias[0] + cast<i64>(values.len())
-        \\}
     , 42);
 }
 
 // spec: FAMILIAR-COLLECTIONS-3
 test "generic list methods retain element type checking" {
     try evaluate(
-        \\fn add<T:copy>(values:List<T>, value:T)->unit { values.push(value) }
-        \\fn first<T:copy>(values:List<T>)->T { return values[0] }
-        \\fn main()->i64 {
-        \\    let values: List<i64> = []
+        \\def add[T](values: List[T], value: T):
+        \\    values.push(value)
+        \\
+        \\
+        \\def first[T](values: List[T]) -> T:
+        \\    return values[0]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    values: List[i64] = []
         \\    add(values, 42)
         \\    return first(values)
-        \\}
     , 42);
 }

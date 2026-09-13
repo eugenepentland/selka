@@ -3,7 +3,22 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const discovery = language.duplicates;
-const source = "fn a(x: i64) -> i64 { return x * 2 + 1; } fn copy(y: i64) -> i64 { return y * 2 + 1; } fn b(x: i64) -> i64 { return x * 2 + 3; } fn main() -> i64 { return 0; }";
+const source =
+    \\def a(x: i64) -> i64:
+    \\    return x * 2 + 1
+    \\
+    \\
+    \\def copy(y: i64) -> i64:
+    \\    return y * 2 + 1
+    \\
+    \\
+    \\def b(x: i64) -> i64:
+    \\    return x * 2 + 3
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return 0
+;
 
 // spec: TOOL-2
 test "approximate discovery reports literal drift once per exact-group representative" {
@@ -33,8 +48,36 @@ test "approximate discovery reports literal drift once per exact-group represent
 }
 test "near reports explain changed operators and resolved callees" {
     for ([_][]const u8{
-        "fn a(x: i64) -> i64 { return x * 2 + 1; } fn b(x: i64) -> i64 { return x * 2 - 1; } fn main() -> i64 { return 0; }",
-        "fn left(x: i64) -> i64 { return x; } fn right(x: i64) -> i64 { return x; } fn a(x: i64) -> i64 { return left(x) * 2; } fn b(x: i64) -> i64 { return right(x) * 2; } fn main() -> i64 { return 0; }",
+        \\def a(x: i64) -> i64:
+        \\    return x * 2 + 1
+        \\
+        \\
+        \\def b(x: i64) -> i64:
+        \\    return x * 2 - 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        ,
+        \\def left(x: i64) -> i64:
+        \\    return x
+        \\
+        \\
+        \\def right(x: i64) -> i64:
+        \\    return x
+        \\
+        \\
+        \\def a(x: i64) -> i64:
+        \\    return left(x) * 2
+        \\
+        \\
+        \\def b(x: i64) -> i64:
+        \\    return right(x) * 2
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        ,
     }, [_][]const u8{ "sub", "callee 5:right" }) |text, expected| {
         var c = try language.Compilation.init(t.allocator, "near.my", text);
         defer c.deinit();
@@ -48,10 +91,36 @@ test "near reports explain changed operators and resolved callees" {
     }
 }
 test "near search retains signature effect and nominal boundaries and excludes unrelated bodies" {
-    const text = "domain D: i64 {} fn a(x: i64) -> i64 { return x * 2 + 1; } fn b(x: i64) -> i64 " ++
-        "effects() { return x * 2 + 3; } fn c(x: bool) -> bool { return !x; } fn d(x: D) -> D " ++
-        "{ return x; } fn e(x: i64) -> i64 { if x > 0 { return x; } return 0; } fn main() -> " ++
-        "i64 { return 0; }";
+    const text =
+        \\domain D: i64:
+        \\    pass
+        \\
+        \\
+        \\def a(x: i64) -> i64:
+        \\    return x * 2 + 1
+        \\
+        \\
+        \\def b(x: i64) -> i64 effects():
+        \\    return x * 2 + 3
+        \\
+        \\
+        \\def c(x: bool) -> bool:
+        \\    return not x
+        \\
+        \\
+        \\def d(x: D) -> D:
+        \\    return x
+        \\
+        \\
+        \\def e(x: i64) -> i64:
+        \\    if x > 0:
+        \\        return x
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ;
     var c = try language.Compilation.init(t.allocator, "near.my", text);
     defer c.deinit();
     try c.check();
@@ -91,7 +160,10 @@ test "near comparison matrix output and rendering release every failed allocatio
 }
 
 test "near pair limits bound repeated drift reports while exact groups remain complete" {
-    const text = source ++ " fn more(x: i64) -> i64 { return x * 2 + 5; }";
+    const text = source ++
+        \\def more(x: i64) -> i64:
+        \\    return x * 2 + 5
+    ;
     var c = try language.Compilation.init(t.allocator, "near.my", text);
     defer c.deinit();
     try c.check();

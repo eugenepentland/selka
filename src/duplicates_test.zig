@@ -14,18 +14,98 @@ fn groups(source: []const u8, expected: usize) !void {
 
 // spec: TOOL-1
 test "exact discovery normalizes binding spelling but retains binding identity" {
-    try groups("fn a(x: i64, y: i64) -> i64 { let first = x - y; return first * 2; } fn b(left: i64, right: i64) -> i64 { let second = left - right; return second * 2; } fn main() -> i64 { return a(8, 3); }", 1);
-    try groups("fn a(x: i64, y: i64) -> i64 { return x - y; } fn b(x: i64, y: i64) -> i64 { return y - x; } fn main() -> i64 { return a(8, 3); }", 0);
-    try groups("fn a(x: i64) -> i64 { let mut y = x; y += 1; return y; } fn b(n: i64) -> i64 { let mut result = n; result = result + 1; return result; } fn main() -> i64 { return 0; }", 1);
+    try groups(
+        \\def a(x: i64, y: i64) -> i64:
+        \\    first = x - y
+        \\    return first * 2
+        \\
+        \\
+        \\def b(left: i64, right: i64) -> i64:
+        \\    second = left - right
+        \\    return second * 2
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return a(8, 3)
+    , 1);
+    try groups(
+        \\def a(x: i64, y: i64) -> i64:
+        \\    return x - y
+        \\
+        \\
+        \\def b(x: i64, y: i64) -> i64:
+        \\    return y - x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return a(8, 3)
+    , 0);
+    try groups(
+        \\def a(x: i64) -> i64:
+        \\    y = x
+        \\    y += 1
+        \\    return y
+        \\
+        \\
+        \\def b(n: i64) -> i64:
+        \\    result = n
+        \\    result = result + 1
+        \\    return result
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , 1);
 }
 
 test "direct recursion is normalized while mutually recursive callees retain identity" {
-    try groups("fn a(n: i64) -> i64 { if n == 0 { return 1; } return n * a(n - 1); } fn b(x: i64) -> i64 { if x == 0 { return 1; } return x * b(x - 1); } fn main() -> i64 { return a(5); }", 1);
-    try groups("fn a(n: i64) -> i64 { return b(n); } fn b(n: i64) -> i64 { return a(n); } fn main() -> i64 { return 0; }", 0);
+    try groups(
+        \\def a(n: i64) -> i64:
+        \\    if n == 0:
+        \\        return 1
+        \\    return n * a(n - 1)
+        \\
+        \\
+        \\def b(x: i64) -> i64:
+        \\    if x == 0:
+        \\        return 1
+        \\    return x * b(x - 1)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return a(5)
+    , 1);
+    try groups(
+        \\def a(n: i64) -> i64:
+        \\    return b(n)
+        \\
+        \\
+        \\def b(n: i64) -> i64:
+        \\    return a(n)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , 0);
 }
 
 test "discovery groups many matches once and emits deterministic locations" {
-    var compilation = try language.Compilation.init(testing.allocator, "groups.my", "fn a(n: i64) -> i64 { return n + 1; }\nfn b(x: i64) -> i64 { return x + 1; }\nfn c(y: i64) -> i64 { return y + 1; }\nfn main() -> i64 { return 0; }");
+    var compilation = try language.Compilation.init(testing.allocator, "groups.my",
+        \\def a(n: i64) -> i64:
+        \\    return n + 1
+        \\
+        \\
+        \\def b(x: i64) -> i64:
+        \\    return x + 1
+        \\
+        \\
+        \\def c(y: i64) -> i64:
+        \\    return y + 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer compilation.deinit();
     try compilation.check();
     var analysis = try language.duplicates.discover(testing.allocator, compilation.program.?, .{ .min_nodes = 1, .population = .intentional });
@@ -47,7 +127,18 @@ test "discovery groups many matches once and emits deterministic locations" {
 }
 
 fn allocationScenario(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, "allocation.my", "fn a(n: i64) -> i64 { return n * 2 + 1; } fn b(x: i64) -> i64 { return x * 2 + 1; } fn main() -> i64 { return a(4); }");
+    var compilation = try language.Compilation.init(allocator, "allocation.my",
+        \\def a(n: i64) -> i64:
+        \\    return n * 2 + 1
+        \\
+        \\
+        \\def b(x: i64) -> i64:
+        \\    return x * 2 + 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return a(4)
+    );
     defer compilation.deinit();
     try compilation.check();
     var analysis = try language.duplicates.discover(allocator, compilation.program.?, .{ .min_nodes = 1 });
@@ -61,6 +152,36 @@ test "discovery and rendering clean up after every allocation failure" {
 }
 
 test "declaration reordering cannot change resolved external call comparisons" {
-    try groups("fn helper(x: i64) -> i64 { return x; } fn a(x: i64) -> i64 { return helper(x) + 1; } fn b(x: i64) -> i64 { return helper(x) + 1; } fn main() -> i64 { return 0; }", 1);
-    try groups("fn b(x: i64) -> i64 { return helper(x) + 1; } fn main() -> i64 { return 0; } fn helper(x: i64) -> i64 { return x; } fn a(x: i64) -> i64 { return helper(x) + 1; }", 1);
+    try groups(
+        \\def helper(x: i64) -> i64:
+        \\    return x
+        \\
+        \\
+        \\def a(x: i64) -> i64:
+        \\    return helper(x) + 1
+        \\
+        \\
+        \\def b(x: i64) -> i64:
+        \\    return helper(x) + 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , 1);
+    try groups(
+        \\def b(x: i64) -> i64:
+        \\    return helper(x) + 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        \\
+        \\
+        \\def helper(x: i64) -> i64:
+        \\    return x
+        \\
+        \\
+        \\def a(x: i64) -> i64:
+        \\    return helper(x) + 1
+    , 1);
 }

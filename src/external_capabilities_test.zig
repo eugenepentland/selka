@@ -1,3 +1,5 @@
+//! Capability-typed external access: clock, entropy and environment reads, their
+//! declared effects, and the rejections that keep authority out of ambient scope.
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
@@ -29,12 +31,29 @@ fn reject(source: []const u8, code: []const u8) !void {
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
-const forwarded = declarations ++ "struct Authority { clock: clock_cap } fn read(auth: Authority) -> Time " ++
-    "effects(clock) { return clock_now<Time>(auth.clock); } fn main(rng: random_cap, " ++
-    "clock: clock_cap) -> i64 noio { match read(new " ++
-    "Authority { clock: clock }) { Time.ok(now) => { match random_u64<Random>(rng) { " ++
-    "Random.ok(word) => { if word == 18446744073709551615u64 { return now; } else { " ++
-    "return 0; } }, Random.err(e) => { return e; } } }, Time.err(e) => { return e; } } }";
+const forwarded = declarations ++
+    \\class Authority:
+    \\    clock: clock_cap
+    \\
+    \\
+    \\def read(auth: Authority) -> Time effects(clock):
+    \\    return clock_now<Time>(auth.clock)
+    \\
+    \\
+    \\def main(rng: random_cap, clock: clock_cap) -> i64 noio:
+    \\    match read(Authority(clock=clock)):
+    \\        case Time.ok(now):
+    \\            match random_u64<Random>(rng):
+    \\                case Random.ok(word):
+    \\                    if word == 18446744073709551615u64:
+    \\                        return now
+    \\                    else:
+    \\                        return 0
+    \\                case Random.err(e):
+    \\                    return e
+    \\        case Time.err(e):
+    \\            return e
+;
 fn scenario(allocator: std.mem.Allocator) !void {
     var fake: Fake = .{};
     var c = try language.Compilation.init(allocator, "external.my", forwarded);
@@ -48,10 +67,19 @@ fn scenario(allocator: std.mem.Allocator) !void {
 test "external entry grants forward through wrappers and preserve full width samples" {
     try scenario(t.allocator);
 }
-const cleanup = declarations ++ "fn read(c: clock_cap) -> Time { let sample = " ++
-    "clock_now<Time>(c)?; return new Time.ok(sample); } fn main(" ++
-    "c: clock_cap) -> i64 { match read(c) { Time.ok(v) => { return v; }, " ++
-    "Time.err(e) => { return e; } } }";
+const cleanup = declarations ++
+    \\def read(c: clock_cap) -> Time:
+    \\    sample = clock_now<Time>(c)?
+    \\    return Time.ok(sample)
+    \\
+    \\
+    \\def main(c: clock_cap) -> i64:
+    \\    match read(c):
+    \\        case Time.ok(v):
+    \\            return v
+    \\        case Time.err(e):
+    \\            return e
+;
 test "provider failures propagate recoverable codes and clean owned resources including host OOM" {
     var c = try language.Compilation.init(t.allocator, "external.my", cleanup);
     defer c.deinit();
@@ -81,9 +109,21 @@ test "external execution and emission release every failed allocation" {
     try t.checkAllAllocationFailures(no_resize.allocator(), scenario, .{});
 }
 const generic_provider_source = declarations ++
-    "fn read<G:copy>(clock:clock_cap,random:random_cap)->Time effects(clock,random){let n=clock_now<Time>(clock)?;" ++
-    "let word=random_u64<Random>(random)?;if word==18446744073709551615u64{return new Time.ok(n);}return new Time.err(9);}" ++
-    "fn main(clock:clock_cap,random:random_cap)->i64{match read::<bool>(clock,random){Time.ok(n)=>{return n;},Time.err(e)=>{return e;}}}";
+    \\def read[G](clock: clock_cap, random: random_cap) -> Time effects(clock,random):
+    \\    n = clock_now<Time>(clock)?
+    \\    word = random_u64<Random>(random)?
+    \\    if word == 18446744073709551615u64:
+    \\        return Time.ok(n)
+    \\    return Time.err(9)
+    \\
+    \\
+    \\def main(clock: clock_cap, random: random_cap) -> i64:
+    \\    match read[bool](clock, random):
+    \\        case Time.ok(n):
+    \\            return n
+    \\        case Time.err(e):
+    \\            return e
+;
 fn genericProviderScenario(allocator: std.mem.Allocator) !void {
     var fake: Fake = .{};
     var c = try language.Compilation.init(allocator, "generic-provider.my", generic_provider_source);
@@ -106,15 +146,40 @@ test "all grants are checked before invoking any provider" {
     try t.expectError(error.CapabilityUnavailable, c.executeWithOptions(t.allocator, .{ .external = providers }));
     try t.expectEqual(@as(usize, 0), fake.calls);
     try t.expectError(error.CapabilityUnavailable, c.execute(t.allocator));
-    var unused = try language.Compilation.init(t.allocator, "unused.my", "fn main(clock: clock_cap) -> i64 effects() { _ = clock; return 1; }");
+    var unused = try language.Compilation.init(t.allocator, "unused.my",
+        \\def main(clock: clock_cap) -> i64 effects():
+        \\    _ = clock
+        \\    return 1
+    );
     defer unused.deinit();
     try t.expectEqual(@as(i64, 1), (try unused.executeWithOptions(t.allocator, .{ .external = fake.providers() })).value);
     try t.expectEqual(@as(usize, 0), fake.calls);
 }
 test "clock and random bounds propagate through calls independently of noio and noalloc" {
-    try reject(declarations ++ "fn read(c: clock_cap) -> Time { return clock_now<Time>(c); } fn main(c: clock_cap) -> i64 effects() { _ = read(c); return 0; }", "E_EFFECT_BOUND");
-    try reject(declarations ++ "fn read(r: random_cap) -> Random { return random_u64<Random>(r); } fn main(r: random_cap) -> i64 effects(clock) { _ = read(r); return 0; }", "E_EFFECT_BOUND");
-    var c = try language.Compilation.init(t.allocator, "external.my", declarations ++ "fn main(c: clock_cap, r: random_cap) -> i64 noalloc { _ = clock_now<Time>(c); _ = random_u64<Random>(r); return 0; }");
+    try reject(declarations ++
+        \\def read(c: clock_cap) -> Time:
+        \\    return clock_now<Time>(c)
+        \\
+        \\
+        \\def main(c: clock_cap) -> i64 effects():
+        \\    _ = read(c)
+        \\    return 0
+    , "E_EFFECT_BOUND");
+    try reject(declarations ++
+        \\def read(r: random_cap) -> Random:
+        \\    return random_u64<Random>(r)
+        \\
+        \\
+        \\def main(r: random_cap) -> i64 effects(clock):
+        \\    _ = read(r)
+        \\    return 0
+    , "E_EFFECT_BOUND");
+    var c = try language.Compilation.init(t.allocator, "external.my", declarations ++
+        \\def main(c: clock_cap, r: random_cap) -> i64 noalloc:
+        \\    _ = clock_now<Time>(c)
+        \\    _ = random_u64<Random>(r)
+        \\    return 0
+    );
     defer c.deinit();
     var fake: Fake = .{};
     _ = try c.executeWithOptions(t.allocator, .{ .external = fake.providers() });
@@ -124,7 +189,14 @@ test "clock and random bounds propagate through calls independently of noio and 
     try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
 }
 test "repeated provider reads have bounded live storage" {
-    var c = try language.Compilation.init(t.allocator, "external.my", declarations ++ "fn main(c: clock_cap) -> i64 { let mut n = 0; while n < 10000 { _ = clock_now<Time>(c); n += 1; } return n; }");
+    var c = try language.Compilation.init(t.allocator, "external.my", declarations ++
+        \\def main(c: clock_cap) -> i64:
+        \\    n = 0
+        \\    while n < 10000:
+        \\        _ = clock_now<Time>(c)
+        \\        n += 1
+        \\    return n
+    );
     defer c.deinit();
     try c.emit();
     var limited: @import("test_support.zig").LimitedLiveAllocator = .{ .parent = t.allocator, .limit = 16 * 1024 };
@@ -135,10 +207,24 @@ test "repeated provider reads have bounded live storage" {
     try t.expectEqual(@as(usize, 0), limited.live);
 }
 test "clock preserves signed limits and short circuit skips provider calls" {
-    var c = try language.Compilation.init(t.allocator, "external.my", declarations ++ "fn positive(c: clock_cap) -> bool { match clock_now<Time>(c) { Time.ok(v) => { " ++
-        "return v > 0; }, Time.err(e) => { _ = e; return false; } } } fn main(c: " ++
-        "clock_cap) -> i64 { _ = false && positive(c); match clock_now<Time>(c) { " ++
-        "Time.ok(v) => { return v; }, Time.err(e) => { return e; } } }");
+    var c = try language.Compilation.init(t.allocator, "external.my", declarations ++
+        \\def positive(c: clock_cap) -> bool:
+        \\    match clock_now<Time>(c):
+        \\        case Time.ok(v):
+        \\            return v > 0
+        \\        case Time.err(e):
+        \\            _ = e
+        \\            return False
+        \\
+        \\
+        \\def main(c: clock_cap) -> i64:
+        \\    _ = False and positive(c)
+        \\    match clock_now<Time>(c):
+        \\        case Time.ok(v):
+        \\            return v
+        \\        case Time.err(e):
+        \\            return e
+    );
     defer c.deinit();
     for ([_]i64{ std.math.minInt(i64), std.math.maxInt(i64) }) |time| {
         var fake: Fake = .{ .time = time };
@@ -147,7 +233,11 @@ test "clock preserves signed limits and short circuit skips provider calls" {
     }
 }
 test "external emission rejects wrong result shape and VM rejects wrong operand without callback" {
-    var c = try language.Compilation.init(t.allocator, "external.my", declarations ++ "fn main(c: clock_cap) -> i64 { _ = clock_now<Time>(c); return 0; }");
+    var c = try language.Compilation.init(t.allocator, "external.my", declarations ++
+        \\def main(c: clock_cap) -> i64:
+        \\    _ = clock_now<Time>(c)
+        \\    return 0
+    );
     defer c.deinit();
     try c.emit();
     var fake: Fake = .{};

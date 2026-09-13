@@ -3,7 +3,20 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const typed = @import("typed.zig");
-const definitions = "struct Box<T:copy>{value:T}union Slot<T:copy>{none,some:T}result Answer<T:copy>{ok:T,err:i64}";
+const definitions =
+    \\class Box[T]:
+    \\    value: T
+    \\
+    \\
+    \\union Slot[T]:
+    \\    none,
+    \\    some: T
+    \\
+    \\
+    \\result Answer[T]:
+    \\    ok: T,
+    \\    err: i64
+;
 fn run(allocator: std.mem.Allocator, text: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(allocator, "instances.my", text);
     defer compilation.deinit();
@@ -16,19 +29,89 @@ fn reject(text: []const u8, code: []const u8) !void {
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqualStrings(code, compilation.diagnostics.items[0].code);
 }
-const basic = definitions ++ "fn main()->i64{let a=new Box<i64>{value:7};let mut b=a;b.value=9;" ++
-    "let slot=new Slot<Box<i64>>.some(b);match slot{Slot<Box<i64>>.none=>{return 0;},Slot<Box<i64>>.some(value)=>{return a.value+value.value;}}}";
+const basic = definitions ++
+    \\def main() -> i64:
+    \\    a = Box[i64](value=7)
+    \\    b = a
+    \\    b.value = 9
+    \\    slot: Slot[Box[i64]] = Slot.some(b)
+    \\    match slot:
+    \\        case Slot.none:
+    \\            return 0
+    \\        case Slot.some(value):
+    \\            return a.value + value.value
+;
 test "nominal instances preserve argument order and nominal declaration identity" {
-    try reject(definitions ++ "fn takes(x:Box<i64>)->i64{return x.value;}fn main()->i64{return takes(new Box<bool>{value:true});}", "E_TYPE");
-    try reject("struct Pair<A:copy,B:copy>{a:A,b:B}fn takes(x:Pair<i64,bool>)->i64{return x.a;}fn main()->i64{return takes(new Pair<bool,i64>{a:true,b:1});}", "E_TYPE");
-    try reject("struct A<T:copy>{value:T}struct B<T:copy>{value:T}fn takes(x:A<i64>)->i64{return x.value;}fn main()->i64{return takes(new B<i64>{value:1});}", "E_TYPE");
-    try reject(definitions ++ "fn main()->i64{let x:Box=1;return x;}", "E_GENERIC_ARITY");
-    try reject(definitions ++ "fn Box()->i64{return 1;}fn main()->i64{return 0;}", "E_DUPLICATE_NAME");
+    try reject(definitions ++
+        \\def takes(x: Box[i64]) -> i64:
+        \\    return x.value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return takes(Box[bool](value=True))
+    , "E_TYPE");
+    try reject(
+        \\class Pair[A, B]:
+        \\    a: A
+        \\    b: B
+        \\
+        \\
+        \\def takes(x: Pair[i64, bool]) -> i64:
+        \\    return x.a
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return takes(Pair[bool, i64](a=True, b=1))
+    , "E_TYPE");
+    try reject(
+        \\class A[T]:
+        \\    value: T
+        \\
+        \\
+        \\class B[T]:
+        \\    value: T
+        \\
+        \\
+        \\def takes(x: A[i64]) -> i64:
+        \\    return x.value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return takes(B[i64](value=1))
+    , "E_TYPE");
+    try reject(definitions ++
+        \\def main() -> i64:
+        \\    x: Box = 1
+        \\    return x
+    , "E_GENERIC_ARITY");
+    try reject(definitions ++
+        \\def Box() -> i64:
+        \\    return 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_DUPLICATE_NAME");
 }
 test "nominal instances compose with existing generic functions and fixed arrays" {
-    try run(t.allocator, definitions ++ "fn id<T:copy>(x:T)->T{return x;}fn pair<T:copy>(x:T)->[2]T{return new [2]T[x,x];}" ++
-        "fn main()->i64{let boxes=pair::<Box<i64>>(id::<Box<i64>>(new Box<i64>{value:6}));return boxes[0].value+boxes[1].value;}", 12);
-    try run(t.allocator, definitions ++ "fn main()->i64{let a=new [2]Box<i64>[new Box<i64>{value:3},new Box<i64>{value:8}];return a[1].value;}", 8);
+    try run(t.allocator, definitions ++
+        \\def id[T](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def pair[T](x: T) -> [2]T:
+        \\    return [x, x]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    boxes = pair[Box[i64]](id[Box[i64]](Box[i64](value=6)))
+        \\    return boxes[0].value + boxes[1].value
+    , 12);
+    try run(t.allocator, definitions ++
+        \\def main() -> i64:
+        \\    a: [2]Box[i64] = [Box[i64](value=3), Box[i64](value=8)]
+        \\    return a[1].value
+    , 8);
 }
 fn allocations(allocator: std.mem.Allocator) !void {
     try run(allocator, basic, 16);
@@ -39,16 +122,74 @@ test "nominal catalog collect and VM execution clean up every allocation failure
     try t.checkAllAllocationFailures(stable.allocator(), allocations, .{});
 }
 test "nominal instances retain concrete checks within generic bodies" {
-    try run(t.allocator, definitions ++ "fn identity<T:copy>(x:Box<T>)->Box<T>{return x;}fn main()->i64{return identity::<i64>(new Box<i64>{value:5}).value;}", 5);
-    try reject(definitions ++ "fn bad<T:copy>()->i64{let box=new Box<i64>{value:true};return 0;}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
-    try run(t.allocator, definitions ++ "fn concrete<T:copy>()->i64{let box=new Box<i64>{value:4};return box.value;}fn main()->i64{return concrete::<bool>();}", 4);
+    try run(t.allocator, definitions ++
+        \\def identity[T](x: Box[T]) -> Box[T]:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return identity[i64](Box[i64](value=5)).value
+    , 5);
+    try reject(definitions ++
+        \\def bad[T]() -> i64:
+        \\    box = Box[i64](value=True)
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_GENERIC_TYPE");
+    try run(t.allocator, definitions ++
+        \\def concrete[T]() -> i64:
+        \\    box = Box[i64](value=4)
+        \\    return box.value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return concrete[bool]()
+    , 4);
 }
 const Modules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
-        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main;import model as m;fn main()->i64{let x=new m::Box<i64>{value:4};return m::twice(x).value;}");
-        if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8, "module model;export Box;export Empty;export twice;struct Box<T:copy>{value:T}struct Empty<T:copy>{}struct Hidden{value:i64}" ++
-            "fn twice(x:Box<i64>)->Box<i64>{let mut y=x;y.value=x.value*2;return y;}" ++
-            "fn hidden_values(x:Box<Hidden>,y:Empty<Hidden>)->i64{_ = x;_ = y;return 0;}");
+        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
+            \\module main
+            \\import model as m
+            \\
+            \\
+            \\def main() -> i64:
+            \\    x = m.Box[i64](value=4)
+            \\    return m.twice(x).value
+        );
+        if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8,
+            \\module model
+            \\export Box
+            \\export Empty
+            \\export twice
+            \\
+            \\
+            \\class Box[T]:
+            \\    value: T
+            \\
+            \\
+            \\class Empty[T]:
+            \\    pass
+            \\
+            \\
+            \\class Hidden:
+            \\    value: i64
+            \\
+            \\
+            \\def twice(x: Box[i64]) -> Box[i64]:
+            \\    y = x
+            \\    y.value = x.value * 2
+            \\    return y
+            \\
+            \\
+            \\def hidden_values(x: Box[Hidden], y: Empty[Hidden]) -> i64:
+            \\    _ = x
+            \\    _ = y
+            \\    return 0
+        );
         return error.NotFound;
     }
 };
@@ -73,9 +214,25 @@ test "nominal instances share declaration identity through imported signatures a
 fn largeNames(allocator: std.mem.Allocator) ![]u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
-    try text.writer.writeAll("struct Pair<A:copy,B:copy>{a:A,b:B}");
+    try text.writer.writeAll(
+        \\class Pair[A, B]:
+        \\    a: A
+        \\    b: B
+    );
     for (0..18) |i| try text.writer.print("struct Chain{d}<T:copy>{{next:Chain{d}<Pair<T,T>>}}", .{ i, i + 1 });
-    try text.writer.writeAll("struct Chain18<T:copy>{}fn takes(x:Chain0<i64>)->i64{_ = x;return 0;}fn main()->i64{return 0;}");
+    try text.writer.writeAll(
+        \\class Chain18[T]:
+        \\    pass
+        \\
+        \\
+        \\def takes(x: Chain0[i64]) -> i64:
+        \\    _ = x
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     return text.toOwnedSlice();
 }
 test "nominal concrete type names stop expansion before excessive diagnostic allocation" {
@@ -88,7 +245,16 @@ fn hostEcho(call: *language.host_functions.Call) language.host_functions.Callbac
 }
 fn hostScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "host-instance.my", definitions ++
-        "host fn echo(x:Box<i64>)->Answer<Box<i64>> effects(host);fn main()->i64{match echo(new Box<i64>{value:7}){Answer<Box<i64>>.ok(box)=>{return box.value;},Answer<Box<i64>>.err(e)=>{return e;}}}");
+        \\host def echo(x: Box[i64]) -> Answer[Box[i64]] effects(host)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    match echo(Box[i64](value=7)):
+        \\        case Answer.ok(box):
+        \\            return box.value
+        \\        case Answer.err(e):
+        \\            return e
+    );
     defer compilation.deinit();
     try compilation.emit();
     var registry = try language.vm_host.Registry.init(allocator, compilation.code.?);
@@ -129,23 +295,55 @@ fn filesystemResources(records: []const typed.Record) usize {
 }
 test "nominal instances carry domain payloads beside resource declarations" {
     const program = definitions ++
-        "domain Id:i64{fn make(n:i64)->Id{return wrap<Id>(n);}fn number(n:Id)->i64{return unwrap(n);}}" ++
-        "resource File:filesystem;" ++
-        "fn main()->i64{let box=new Box<Id>{value:Id.make(13)};return Id.number(box.value);}";
+        \\domain Id: i64:
+        \\    def make(n: i64) -> Id:
+        \\        return wrap<Id>(n)
+        \\
+        \\    def number(n: Id) -> i64:
+        \\        return unwrap(n)
+        \\
+        \\
+        \\resource File: filesystem
+        \\
+        \\
+        \\def main() -> i64:
+        \\    box = Box[Id](value=Id.make(13))
+        \\    return Id.number(box.value)
+    ;
     var compilation = try language.Compilation.init(t.allocator, "nominal-domain.my", program);
     defer compilation.deinit();
     try t.expectEqual(@as(i64, 13), (try compilation.execute(t.allocator)).value);
     try t.expectEqual(@as(usize, 1), filesystemResources(compilation.program.?.records));
 }
 test "nominal instances keep growing phantom arguments outside runtime storage" {
-    try run(t.allocator, "struct Empty<T:copy>{}struct Grow<T:copy>{marker:Empty<Grow<[1]T>>}" ++
-        "fn main()->i64{_ = new Grow<i64>{marker:new Empty<Grow<[1]i64>>{}};return 1;}", 1);
+    try run(t.allocator,
+        \\class Empty[T]:
+        \\    pass
+        \\
+        \\
+        \\class Grow[T]:
+        \\    marker: Empty[Grow[[1]T]]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    _ = Grow[i64](marker=Empty[Grow[[1]i64]]())
+        \\    return 1
+    , 1);
 }
 
 // spec: NOMINAL-INSTANCE-1
 test "nominal instances construct assign nest and exhaustively match on the VM" {
     try run(t.allocator, basic, 16);
     try run(t.allocator, definitions ++
-        "fn plus(input:Answer<i64>)->Answer<i64>{return new Answer<i64>.ok((input?)+1);}" ++
-        "fn main()->i64{match plus(new Answer<i64>.ok(4)){Answer<i64>.ok(n)=>{return n;},Answer<i64>.err(_)=>{return 0;}}}", 5);
+        \\def plus(input: Answer[i64]) -> Answer[i64]:
+        \\    return Answer.ok(input? + 1)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    match plus(Answer.ok(4)):
+        \\        case Answer.ok(n):
+        \\            return n
+        \\        case Answer.err(_):
+        \\            return 0
+    , 5);
 }

@@ -1,3 +1,5 @@
+//! Value records: construction by field name, copy semantics, updated copies and
+//! the diagnostics that reject unknown, missing and mistyped fields.
 const fixture_path = "records.my";
 const std = @import("std");
 const testing = std.testing;
@@ -16,11 +18,31 @@ fn reject(source: []const u8, code: []const u8) !void {
 }
 
 fn allocationScenario(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, fixture_path, "struct Inner { x: i64 } struct Source { inner: Inner, ignored: bool } struct Target " ++
-        "{ value: i64 } conversion fn convert(src: Source) -> Target { _ = src.ignored; " ++
-        "return new Target { value: src.inner.x }; } fn main() -> i64 { let source = new " ++
-        "Source { ignored: true, inner: new Inner { x: 7 } }; let mut next = source; " ++
-        "next.inner = new Inner { x: 9 }; return convert(next).value; }");
+    var compilation = try language.Compilation.init(allocator, fixture_path,
+        \\class Inner:
+        \\    x: i64
+        \\
+        \\
+        \\class Source:
+        \\    inner: Inner
+        \\    ignored: bool
+        \\
+        \\
+        \\class Target:
+        \\    value: i64
+        \\
+        \\
+        \\conversion def convert(src: Source) -> Target:
+        \\    _ = src.ignored
+        \\    return Target(value=src.inner.x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    source = Source(ignored=True, inner=Inner(x=7))
+        \\    next = source
+        \\    next.inner = Inner(x=9)
+        \\    return convert(next).value
+    );
     defer compilation.deinit();
     try testing.expectEqual(@as(i64, 9), (try compilation.execute(allocator)).value);
     const dump = try compilation.dump(allocator);
@@ -37,9 +59,36 @@ test "record schemas conversion checking construction assignment projection and 
 }
 
 test "duplicate discovery retains nominal record and resolved field identities" {
-    var compilation = try language.Compilation.init(testing.allocator, "identity.my", "struct A { x: i64, y: i64 } struct B { x: i64, y: i64 } fn a(v: A) -> i64 { return " ++
-        "v.x; } fn b(v: B) -> i64 { return v.x; } fn c(v: A) -> i64 { return v.y; } fn " ++
-        "d(renamed: A) -> i64 { return renamed.x; } fn main() -> i64 { return 0; }");
+    var compilation = try language.Compilation.init(testing.allocator, "identity.my",
+        \\class A:
+        \\    x: i64
+        \\    y: i64
+        \\
+        \\
+        \\class B:
+        \\    x: i64
+        \\    y: i64
+        \\
+        \\
+        \\def a(v: A) -> i64:
+        \\    return v.x
+        \\
+        \\
+        \\def b(v: B) -> i64:
+        \\    return v.x
+        \\
+        \\
+        \\def c(v: A) -> i64:
+        \\    return v.y
+        \\
+        \\
+        \\def d(renamed: A) -> i64:
+        \\    return renamed.x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer compilation.deinit();
     try compilation.check();
     var analysis = try language.duplicates.discover(testing.allocator, compilation.program.?, .{ .min_nodes = 1 });
@@ -52,17 +101,120 @@ test "duplicate discovery retains nominal record and resolved field identities" 
 }
 
 test "complete conversion accounts named source fields and requires complete destination" {
-    try result("struct Source { x: i64, ignored: bool } struct Target { y: i64 } conversion fn " ++
-        "convert(src: Source) -> Target { _ = src.ignored; return new Target { y: src.x * " ++
-        "2 }; } fn main() -> i64 { return convert(new Source { x: 4, ignored: true }).y; }", 8);
-    try reject("struct Source { x: i64, added: bool } struct Target { y: i64 } conversion fn convert(src: Source) -> Target { return new Target { y: src.x }; } fn main() -> i64 { return 0; }", "E_INCOMPLETE_CONVERSION");
-    try reject("struct Source { x: i64 } struct Target { y: i64, added: bool } conversion fn convert(src: Source) -> Target { return new Target { y: src.x }; } fn main() -> i64 { return 0; }", "E_INCOMPLETE_CONSTRUCTION");
-    try result("struct Source { x: i64, added: bool } fn geometry(src: Source) -> i64 { return src.x; } fn main() -> i64 { return geometry(new Source { x: 5, added: true }); }", 5);
-    try reject("struct Source { x: i64 } struct Target { y: i64 } fn helper(src: Source) -> i64 { " ++
-        "return src.x; } conversion fn convert(src: Source) -> Target { return new Target { " ++
-        "y: helper(src) }; } fn main() -> i64 { return 0; }", "E_INCOMPLETE_CONVERSION");
-    try reject("struct Source { x: i64 } struct Target { y: i64 } conversion fn convert(src: Source) -> Target { let unused = src.x; return new Target { y: 0 }; } fn main() -> i64 { return 0; }", "E_CONVERSION_BODY");
-    try reject("struct Source { x: i64 } conversion fn convert(src: Source) -> Source { return src; } fn main() -> i64 { return 0; }", "E_CONVERSION_BODY");
+    try result(
+        \\class Source:
+        \\    x: i64
+        \\    ignored: bool
+        \\
+        \\
+        \\class Target:
+        \\    y: i64
+        \\
+        \\
+        \\conversion def convert(src: Source) -> Target:
+        \\    _ = src.ignored
+        \\    return Target(y=src.x * 2)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return convert(Source(x=4, ignored=True)).y
+    , 8);
+    try reject(
+        \\class Source:
+        \\    x: i64
+        \\    added: bool
+        \\
+        \\
+        \\class Target:
+        \\    y: i64
+        \\
+        \\
+        \\conversion def convert(src: Source) -> Target:
+        \\    return Target(y=src.x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_INCOMPLETE_CONVERSION");
+    try reject(
+        \\class Source:
+        \\    x: i64
+        \\
+        \\
+        \\class Target:
+        \\    y: i64
+        \\    added: bool
+        \\
+        \\
+        \\conversion def convert(src: Source) -> Target:
+        \\    return Target(y=src.x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_INCOMPLETE_CONSTRUCTION");
+    try result(
+        \\class Source:
+        \\    x: i64
+        \\    added: bool
+        \\
+        \\
+        \\def geometry(src: Source) -> i64:
+        \\    return src.x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return geometry(Source(x=5, added=True))
+    , 5);
+    try reject(
+        \\class Source:
+        \\    x: i64
+        \\
+        \\
+        \\class Target:
+        \\    y: i64
+        \\
+        \\
+        \\def helper(src: Source) -> i64:
+        \\    return src.x
+        \\
+        \\
+        \\conversion def convert(src: Source) -> Target:
+        \\    return Target(y=helper(src))
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_INCOMPLETE_CONVERSION");
+    try reject(
+        \\class Source:
+        \\    x: i64
+        \\
+        \\
+        \\class Target:
+        \\    y: i64
+        \\
+        \\
+        \\conversion def convert(src: Source) -> Target:
+        \\    unused = src.x
+        \\    return Target(y=0)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_CONVERSION_BODY");
+    try reject(
+        \\class Source:
+        \\    x: i64
+        \\
+        \\
+        \\conversion def convert(src: Source) -> Source:
+        \\    return src
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_CONVERSION_BODY");
 }
 
 test "record schemas conversion checking construction update projection and dump clean up on allocation failure" {
@@ -74,10 +226,57 @@ test "record schemas conversion checking construction update projection and dump
 
 // spec: CORE-5
 test "record construction nesting named order field access and immutable copies" {
-    try result("struct Pair { x: i64, y: i64 } fn main() -> i64 { let a: Pair = new Pair { y: 2, x: 3 }; let mut b = a; b.x = 8; return a.x + b.x + b.y; }", 13);
-    try result("struct Outer { inner: Inner, flag: bool } struct Inner { value: i64 } fn id(x: " ++
-        "Outer) -> Outer { return x; } fn main() -> i64 { let x = id(new Outer { flag: true, " ++
-        "inner: new Inner { value: 7 } }); if x.flag { return x.inner.value; } return 0; }", 7);
-    try result("struct Count { n: i64, keep: i64 } fn main() -> i64 { let mut state = new Count { n: 0, keep: 7 }; while state.n < 10000 { state.n = state.n + 1; } return state.n + state.keep; }", 10007);
-    try result("struct Pair { x: i64, y: i64 } fn main() -> i64 { return -new Pair { x: 4, y: 2 }.x + 10; }", 6);
+    try result(
+        \\class Pair:
+        \\    x: i64
+        \\    y: i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    a: Pair = Pair(y=2, x=3)
+        \\    b = a
+        \\    b.x = 8
+        \\    return a.x + b.x + b.y
+    , 13);
+    try result(
+        \\class Outer:
+        \\    inner: Inner
+        \\    flag: bool
+        \\
+        \\
+        \\class Inner:
+        \\    value: i64
+        \\
+        \\
+        \\def id(x: Outer) -> Outer:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    x = id(Outer(flag=True, inner=Inner(value=7)))
+        \\    if x.flag:
+        \\        return x.inner.value
+        \\    return 0
+    , 7);
+    try result(
+        \\class Count:
+        \\    n: i64
+        \\    keep: i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    state = Count(n=0, keep=7)
+        \\    while state.n < 10000:
+        \\        state.n = state.n + 1
+        \\    return state.n + state.keep
+    , 10007);
+    try result(
+        \\class Pair:
+        \\    x: i64
+        \\    y: i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return -Pair(x=4, y=2).x + 10
+    , 6);
 }

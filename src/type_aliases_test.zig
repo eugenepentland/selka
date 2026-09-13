@@ -3,11 +3,40 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 fn scenario(allocator: std.mem.Allocator) !void {
-    const text = "type Count=i64;type Counts=[2]Count;type Chosen=Pair<Count>;type Other=Chosen;" ++
-        "struct Pair<T:copy>{left:T,right:T}const ANSWER:Count=42;" ++
-        "fn identity<T:copy>(value:T)->T{return value;}fn read_value(value:Chosen)->Count{return value.left;}" ++
-        "fn main()->i64{let pair=new Other{left:ANSWER,right:0};let values=new Counts[read_value(pair),1];" ++
-        "return identity::<Count>(values[0])+values[1];}";
+    const text =
+        \\type Count = i64
+        \\
+        \\
+        \\type Counts = [2]Count
+        \\
+        \\
+        \\type Chosen = Pair[Count]
+        \\
+        \\
+        \\type Other = Chosen
+        \\
+        \\
+        \\class Pair[T]:
+        \\    left: T
+        \\    right: T
+        \\
+        \\
+        \\const ANSWER: Count = 42
+        \\
+        \\
+        \\def identity[T](value: T) -> T:
+        \\    return value
+        \\
+        \\
+        \\def read_value(value: Chosen) -> Count:
+        \\    return value.left
+        \\
+        \\
+        \\def main() -> i64:
+        \\    pair = Other(left=ANSWER, right=0)
+        \\    values: Counts = [read_value(pair), 1]
+        \\    return identity[Count](values[0]) + values[1]
+    ;
     var compilation = try language.Compilation.init(allocator, "aliases.my", text);
     defer compilation.deinit();
     try t.expectEqual(@as(i64, 43), (try compilation.execute(allocator)).value);
@@ -25,11 +54,62 @@ test "transparent aliases compose scalar arrays nominal applications constants a
 }
 test "aliases preserve nominal domains and owned result obligations and reject cycles" {
     const cases = [_]struct { text: []const u8, code: []const u8 }{
-        .{ .text = "type A=B;type B=A;fn main()->i64{return 0;}", .code = "E_ALIAS_CYCLE" },
-        .{ .text = "type A=i64;type A=bool;fn main()->i64{return 0;}", .code = "E_DUPLICATE_TYPE" },
-        .{ .text = "struct A{}type A=i64;fn main()->i64{return 0;}", .code = "E_DUPLICATE_TYPE" },
-        .{ .text = "domain D:i64{}type Alias=D;fn main()->i64{let value:Alias=1;return 0;}", .code = "E_TYPE" },
-        .{ .text = "result R{ok:i64,err:i64}type Alias=R;fn main()->i64{let value=new Alias.ok(1);return 0;}", .code = "E_RESULT_UNHANDLED" },
+        .{ .text =
+        \\type A = B
+        \\
+        \\
+        \\type B = A
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        , .code = "E_ALIAS_CYCLE" },
+        .{ .text =
+        \\type A = i64
+        \\
+        \\
+        \\type A = bool
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        , .code = "E_DUPLICATE_TYPE" },
+        .{ .text =
+        \\class A:
+        \\    pass
+        \\
+        \\
+        \\type A = i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        , .code = "E_DUPLICATE_TYPE" },
+        .{ .text =
+        \\domain D: i64:
+        \\    pass
+        \\
+        \\
+        \\type Alias = D
+        \\
+        \\
+        \\def main() -> i64:
+        \\    value: Alias = 1
+        \\    return 0
+        , .code = "E_TYPE" },
+        .{ .text =
+        \\result R:
+        \\    ok: i64,
+        \\    err: i64
+        \\
+        \\
+        \\type Alias = R
+        \\
+        \\
+        \\def main() -> i64:
+        \\    value: Alias = Ok(1)
+        \\    return 0
+        , .code = "E_RESULT_UNHANDLED" },
     };
     for (cases) |case| {
         var compilation = try language.Compilation.init(t.allocator, "invalid.my", case.text);
@@ -41,7 +121,13 @@ test "aliases preserve nominal domains and owned result obligations and reject c
 fn provider(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
     const hidden = context != null;
     const text = if (std.mem.eql(u8, path, "main.my"))
-        "module main;import shapes;fn main()->i64{let value:shapes::Count=42;return value;}"
+        \\module main
+        \\import shapes
+        \\
+        \\
+        \\def main() -> i64:
+        \\    value: shapes.Count = 42
+        \\    return value
     else if (std.mem.eql(u8, path, "shapes.my"))
         if (hidden) "module shapes;type Count=i64;" else "module shapes;export Count;type Count=i64;"
     else
@@ -60,7 +146,21 @@ test "module aliases export canonical types while private aliases remain inacces
 
 fn privateTarget(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
     if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
-    return allocator.dupe(u8, "module main;export Public;struct Secret{value:i64}type Public=Secret;fn main()->i64{return 0;}");
+    return allocator.dupe(u8,
+        \\module main
+        \\export Public
+        \\
+        \\
+        \\class Secret:
+        \\    value: i64
+        \\
+        \\
+        \\type Public = Secret
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
 }
 test "exported aliases cannot expose private nominal types" {
     var program: language.embedded_project.Program = undefined;
@@ -69,9 +169,38 @@ test "exported aliases cannot expose private nominal types" {
 
 fn schemaAliases(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
     if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
-    return allocator.dupe(u8, "module main;export Count;export Pair;export Chosen;export Array;export Other;" ++
-        "type Count=i64;struct Pair<T:copy>{value:T}type Chosen=Pair<Count>;type Other=Chosen;" ++
-        "type Array=[2]Count;type Hidden=bool;fn main()->i64{let x=new Other{value:42};return x.value;}");
+    return allocator.dupe(u8,
+        \\module main
+        \\export Count
+        \\export Pair
+        \\export Chosen
+        \\export Array
+        \\export Other
+        \\
+        \\
+        \\type Count = i64
+        \\
+        \\
+        \\class Pair[T]:
+        \\    value: T
+        \\
+        \\
+        \\type Chosen = Pair[Count]
+        \\
+        \\
+        \\type Other = Chosen
+        \\
+        \\
+        \\type Array = [2]Count
+        \\
+        \\
+        \\type Hidden = bool
+        \\
+        \\
+        \\def main() -> i64:
+        \\    x = Other(value=42)
+        \\    return x.value
+    );
 }
 fn schemaScenario(allocator: std.mem.Allocator) !void {
     var program: language.embedded_project.Program = undefined;

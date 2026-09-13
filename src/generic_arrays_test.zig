@@ -2,10 +2,29 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
-const factories = "domain Component:u64{fn make(n:u64)->Component{return wrap<Component>(n);}}" ++
-    "domain Net:u64{fn make(n:u64)->Net{return wrap<Net>(n);}}";
-const helpers = "fn pair<T:copy>(a:T,b:T)->[2]T{return new [2]T[a,b];}" ++
-    "fn contains<T:equality>(a:[2]T,n:T)->bool{let mut i=0u64;while i<len(a){if a[i]==n{return true;}i=i+1u64;}return false;}";
+const factories =
+    \\domain Component: u64:
+    \\    def make(n: u64) -> Component:
+    \\        return wrap<Component>(n)
+    \\
+    \\
+    \\domain Net: u64:
+    \\    def make(n: u64) -> Net:
+    \\        return wrap<Net>(n)
+;
+const helpers =
+    \\def pair[T](a: T, b: T) -> [2]T:
+    \\    return [a, b]
+    \\
+    \\
+    \\def contains[T: equality](a: [2]T, n: T) -> bool:
+    \\    i = 0u64
+    \\    while i < len(a):
+    \\        if a[i] == n:
+    \\            return True
+    \\        i = i + 1u64
+    \\    return False
+;
 fn value(allocator: std.mem.Allocator, source: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(allocator, "arrays.my", source);
     defer compilation.deinit();
@@ -17,40 +36,105 @@ fn reject(source: []const u8, code: []const u8) !void {
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqualStrings(code, compilation.diagnostics.items[0].code);
 }
-const membership = factories ++ helpers ++ "fn main()->i64{" ++
-    "let components=pair::<Component>(Component.make(1u64),Component.make(2u64));" ++
-    "let nets=pair::<Net>(Net.make(8u64),Net.make(9u64));" ++
-    "if contains::<Component>(components,Component.make(2u64)) && !contains::<Component>(components,Component.make(8u64)) && contains::<Net>(nets,Net.make(9u64)){return 1;}return 0;}";
+const membership = factories ++ helpers ++
+    \\def main() -> i64:
+    \\    components = pair[Component](Component.make(1u64), Component.make(2u64))
+    \\    nets = pair[Net](Net.make(8u64), Net.make(9u64))
+    \\    if contains[Component](components, Component.make(2u64)) and not contains[Component](components, Component.make(8u64)) and contains[Net](nets, Net.make(9u64)):
+    \\        return 1
+    \\    return 0
+;
 test "generic array templates reject invalid uncalled bodies and invalid lengths" {
     const cases = [_]struct { source: []const u8, code: []const u8 }{
-        .{ .source = "fn f<T:copy,U:copy>(a:[2]T)->[2]U{return a;}", .code = "E_GENERIC_TYPE" },
-        .{ .source = "fn f<T:copy>(a:T)->[2]T{return new [2]T[a];}", .code = "E_ARRAY_LENGTH" },
-        .{ .source = "fn f<T:copy>(a:[2]T)->T{return a[0]+a[1];}", .code = "E_GENERIC_OPERATION" },
-        .{ .source = "fn f<T:copy>(a:[2]T)->bool{return a[0]==a[1];}", .code = "E_GENERIC_OPERATION" },
-        .{ .source = "fn f<T:equality>(a:[2]T)->bool{return a==a;}", .code = "E_GENERIC_OPERATION" },
-        .{ .source = "fn f<T:copy>(a:[2]T)->[3]T{return a;}", .code = "E_GENERIC_TYPE" },
-        .{ .source = "fn f<T:copy>(a:[2]T)->T{return a[true];}", .code = "E_GENERIC_OPERATION" },
-        .{ .source = "fn f<T:copy>(a:T)->[2]T{return new [2]T[a,true];}", .code = "E_GENERIC_TYPE" },
-        .{ .source = "fn f<T:copy>(a:[2]Missing)->i64{return 0;}", .code = "E_UNKNOWN_TYPE" },
-        .{ .source = "fn f<T:copy>(a:[1u64]T)->i64{return 0;}", .code = "E_ARRAY_LENGTH" },
-        .{ .source = "fn f<T:copy>(a:[18446744073709551615]T)->i64{return 0;}", .code = "E_ARRAY_LENGTH" },
-        .{ .source = "fn f<T:copy>(a:[T]i64)->i64{return 0;}", .code = "E_GENERIC_ARRAY_KEY" },
-        .{ .source = "enum Key{a,b}fn f<T:copy>(a:[Key]T)->i64{return 0;}", .code = "E_GENERIC_ARRAY_KEY" },
+        .{ .source =
+        \\def f[T, U](a: [2]T) -> [2]U:
+        \\    return a
+        , .code = "E_GENERIC_TYPE" },
+        .{ .source =
+        \\def f[T](a: T) -> [2]T:
+        \\    return [a]
+        , .code = "E_ARRAY_LENGTH" },
+        .{ .source =
+        \\def f[T](a: [2]T) -> T:
+        \\    return a[0] + a[1]
+        , .code = "E_GENERIC_OPERATION" },
+        .{ .source =
+        \\def f[T](a: [2]T) -> bool:
+        \\    return a[0] == a[1]
+        , .code = "E_GENERIC_OPERATION" },
+        .{ .source =
+        \\def f[T: equality](a: [2]T) -> bool:
+        \\    return a == a
+        , .code = "E_GENERIC_OPERATION" },
+        .{ .source =
+        \\def f[T](a: [2]T) -> [3]T:
+        \\    return a
+        , .code = "E_GENERIC_TYPE" },
+        .{ .source =
+        \\def f[T](a: [2]T) -> T:
+        \\    return a[True]
+        , .code = "E_GENERIC_OPERATION" },
+        .{ .source =
+        \\def f[T](a: T) -> [2]T:
+        \\    return [a, True]
+        , .code = "E_GENERIC_TYPE" },
+        .{ .source =
+        \\def f[T](a: [2]Missing) -> i64:
+        \\    return 0
+        , .code = "E_UNKNOWN_TYPE" },
+        .{ .source =
+        \\def f[T](a: [1u64]T) -> i64:
+        \\    return 0
+        , .code = "E_ARRAY_LENGTH" },
+        .{ .source =
+        \\def f[T](a: [18446744073709551615]T) -> i64:
+        \\    return 0
+        , .code = "E_ARRAY_LENGTH" },
+        .{ .source =
+        \\def f[T](a: [T]i64) -> i64:
+        \\    return 0
+        , .code = "E_GENERIC_ARRAY_KEY" },
+        .{ .source =
+        \\enum Key:
+        \\    a,
+        \\    b
+        \\
+        \\
+        \\def f[T](a: [Key]T) -> i64:
+        \\    return 0
+        , .code = "E_GENERIC_ARRAY_KEY" },
     };
     for (cases) |case| {
-        const source = try std.mem.concat(t.allocator, u8, &.{ case.source, "fn main()->i64{return 0;}" });
+        const source = try std.mem.concat(t.allocator, u8, &.{
+            case.source,
+            \\def main() -> i64:
+            \\    return 0
+        });
         defer t.allocator.free(source);
         try reject(source, case.code);
     }
 }
 
-const views = "fn window<T:copy>(a:[2]T)->[2]T{return a;}" ++
-    "fn edit<T:copy>(x:T,y:T)->T{let mut a=new [2]T[x,y];let original=a;" ++
-    "a=replace(a,0,y);a=replace(a,1,x);" ++
-    "let part=window::<T>(a);_ = part[0];return original[0];}";
+const views =
+    \\def window[T](a: [2]T) -> [2]T:
+    \\    return a
+    \\
+    \\
+    \\def edit[T](x: T, y: T) -> T:
+    \\    a: [2]T = [x, y]
+    \\    original = a
+    \\    a = replace(a, 0, y)
+    \\    a = replace(a, 1, x)
+    \\    part = window[T](a)
+    \\    _ = part[0]
+    \\    return original[0]
+;
 fn allocations(allocator: std.mem.Allocator) !void {
     try value(allocator, membership, 1);
-    try value(allocator, views ++ "fn main()->i64{return edit::<i64>(7,9);}", 7);
+    try value(allocator, views ++
+        \\def main() -> i64:
+        \\    return edit[i64](7, 9)
+    , 7);
 }
 test "generic array specialization and execution clean up under allocation failure" {
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
@@ -59,7 +143,13 @@ test "generic array specialization and execution clean up under allocation failu
 
 test "generic array runtime indexing retains traps and source locations" {
     var compilation = try language.Compilation.init(t.allocator, "bounds.my", helpers ++
-        "fn at<T:copy>(a:[2]T,i:u64)->T{return a[i];}fn main()->i64{return at::<i64>(pair::<i64>(1,2),2u64);}");
+        \\def at[T](a: [2]T, i: u64) -> T:
+        \\    return a[i]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return at[i64](pair[i64](1, 2), 2u64)
+    );
     defer compilation.deinit();
     const result = try compilation.execute(t.allocator);
     try t.expectEqualStrings("R_INDEX_BOUNDS", result.trap.code);
@@ -68,10 +158,27 @@ test "generic array runtime indexing retains traps and source locations" {
 
 const Modules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
-        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main;import collection as c;import model as m;fn main()->i64{" ++
-            "if c::contains::<m::Id>(c::pair::<m::Id>(m::Id.make(3),m::Id.make(5)),m::Id.make(5)){return 1;}return 0;}");
+        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
+            \\module main
+            \\import collection as c
+            \\import model as m
+            \\
+            \\
+            \\def main() -> i64:
+            \\    if c.contains[m.Id](c.pair[m.Id](m.Id.make(3), m.Id.make(5)), m.Id.make(5)):
+            \\        return 1
+            \\    return 0
+        );
         if (std.mem.eql(u8, path, "collection.my")) return allocator.dupe(u8, "module collection;export pair;export contains;" ++ helpers);
-        if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8, "module model;export Id;domain Id:i64{fn make(n:i64)->Id{return wrap<Id>(n);}}");
+        if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8,
+            \\module model
+            \\export Id
+            \\
+            \\
+            \\domain Id: i64:
+            \\    def make(n: i64) -> Id:
+            \\        return wrap<Id>(n)
+        );
         return error.NotFound;
     }
 };
@@ -92,7 +199,11 @@ test "exported generic arrays resolve imported nominal arguments across source r
 
 test "generic arrays retain concrete identity reuse and formatter round trips" {
     var compilation = try language.Compilation.init(t.allocator, "format.my", helpers ++
-        "fn main()->i64{let a:[2]i64=pair::<i64>(1,2);let b=pair::<i64>(3,4);return a[0]+b[1];}");
+        \\def main() -> i64:
+        \\    a: [2]i64 = pair[i64](1, 2)
+        \\    b = pair[i64](3, 4)
+        \\    return a[0] + b[1]
+    );
     defer compilation.deinit();
     try compilation.check();
     var count: usize = 0;
@@ -115,21 +226,60 @@ test "generic arrays retain concrete identity reuse and formatter round trips" {
 // spec: GENERIC-ARRAY-1
 test "generic array membership reuses code across nominal IDs without mixing domains" {
     try value(t.allocator, membership, 1);
-    try reject(factories ++ helpers ++ "fn main()->i64{_ = contains::<Component>(pair::<Net>(Net.make(1u64),Net.make(2u64)),Component.make(1u64));return 0;}", "E_TYPE");
+    try reject(factories ++ helpers ++
+        \\def main() -> i64:
+        \\    _ = contains[Component](pair[Net](Net.make(1u64), Net.make(2u64)), Component.make(1u64))
+        \\    return 0
+    , "E_TYPE");
 }
 
 test "generic arrays nest substitute across calls and match concrete helper shapes" {
     try value(t.allocator, helpers ++
-        "fn matrix<T:copy>(x:T)->[2][2]T{return pair::<[2]T>(pair::<T>(x,x),pair::<T>(x,x));}" ++
-        "fn concrete(a:[2]i64)->i64{return a[0]+a[1];}" ++
-        "fn caller<T:copy>(x:T)->i64{_ = matrix::<T>(x);return concrete(pair::<i64>(3,4));}" ++
-        "fn main()->i64{let a=matrix::<i64>(9);return a[1][0]+caller::<bool>(true);}", 16);
-    try value(t.allocator, "fn empty<T:copy>()->[0]T{return new [0]T[];}fn main()->i64{return cast<i64>(len(empty::<bool>()));}", 0);
+        \\def matrix[T](x: T) -> [2][2]T:
+        \\    return pair[[2]T](pair[T](x, x), pair[T](x, x))
+        \\
+        \\
+        \\def concrete(a: [2]i64) -> i64:
+        \\    return a[0] + a[1]
+        \\
+        \\
+        \\def caller[T](x: T) -> i64:
+        \\    _ = matrix[T](x)
+        \\    return concrete(pair[i64](3, 4))
+        \\
+        \\
+        \\def main() -> i64:
+        \\    a = matrix[i64](9)
+        \\    return a[1][0] + caller[bool](True)
+    , 16);
+    try value(t.allocator,
+        \\def empty[T]() -> [0]T:
+        \\    return []
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return cast<i64>(len(empty[bool]()))
+    , 0);
 }
 
 test "expanding generic array recursion stops at the specialization budget" {
-    try reject("fn grow<T:copy>(x:T)->i64{return grow::<[1]T>(new [1]T[x]);}fn main()->i64{return grow::<i64>(1);}", "E_GENERIC_LIMIT");
-    var compilation = try language.Compilation.init(t.allocator, "shape-budget.my", "fn grow<T:copy>(x:T)->i64{_ = new [2]T[x,x];return grow::<[1]T>(new [1]T[x]);}fn main()->i64{return grow::<i64>(1);}");
+    try reject(
+        \\def grow[T](x: T) -> i64:
+        \\    return grow[[1]T]([x])
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return grow[i64](1)
+    , "E_GENERIC_LIMIT");
+    var compilation = try language.Compilation.init(t.allocator, "shape-budget.my",
+        \\def grow[T](x: T) -> i64:
+        \\    _ = [x, x]
+        \\    return grow[[1]T]([x])
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return grow[i64](1)
+    );
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqualStrings("E_GENERIC_LIMIT", compilation.diagnostics.items[0].code);

@@ -1,3 +1,5 @@
+//! Fixed-width integer semantics: suffixed literals, width-preserving arithmetic,
+//! checked casts and the diagnostics that reject implicit conversions.
 const std = @import("std");
 const testing = std.testing;
 const language = @import("compiler.zig");
@@ -45,10 +47,29 @@ test "integer casts check narrowing signedness and retain operand traps" {
 }
 
 test "integer widths remain distinct in functions records compound assignment and conversions" {
-    const source = "struct Small { n: u8 } struct Wide { n: u64 } conversion fn widen(x: Small) -> Wide " ++
-        "{ return new Wide { n: cast<u64>(x.n) }; } fn bump(n: u8) -> u8 { let mut result = n;" ++
-        " result += 1u8; result -= 2u8; return result; } fn main() -> i64 { return " ++
-        "cast<i64>(widen(new Small { n: bump(9u8) }).n); }";
+    const source =
+        \\class Small:
+        \\    n: u8
+        \\
+        \\
+        \\class Wide:
+        \\    n: u64
+        \\
+        \\
+        \\conversion def widen(x: Small) -> Wide:
+        \\    return Wide(n=cast<u64>(x.n))
+        \\
+        \\
+        \\def bump(n: u8) -> u8:
+        \\    result = n
+        \\    result += 1u8
+        \\    result -= 2u8
+        \\    return result
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return cast<i64>(widen(Small(n=bump(9u8))).n)
+    ;
     var compilation = try language.Compilation.init(testing.allocator, "widths.my", source);
     defer compilation.deinit();
     try testing.expectEqual(@as(i64, 8), (try compilation.execute(testing.allocator)).value);
@@ -60,7 +81,19 @@ test "integer widths remain distinct in functions records compound assignment an
 }
 
 fn allocationScenario(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, "widths.my", "struct Small { n: u8 } fn f(n: u8) -> u8 { return n + 1u8; } fn main() -> i64 { let n = new Small { n: f(254u8) }; return cast<i64>(cast<u64>(n.n) * 2u64); }");
+    var compilation = try language.Compilation.init(allocator, "widths.my",
+        \\class Small:
+        \\    n: u8
+        \\
+        \\
+        \\def f(n: u8) -> u8:
+        \\    return n + 1u8
+        \\
+        \\
+        \\def main() -> i64:
+        \\    n = Small(n=f(254u8))
+        \\    return cast<i64>(cast<u64>(n.n) * 2u64)
+    );
     defer compilation.deinit();
     try testing.expectEqual(@as(i64, 510), (try compilation.execute(allocator)).value);
     const dump = try compilation.dump(allocator);
@@ -75,9 +108,26 @@ test "integer widths casts and record values release storage under allocation fa
 }
 
 test "integer widths and casts remain distinct in duplicate discovery" {
-    var compilation = try language.Compilation.init(testing.allocator, "duplicates.my", "fn a(n: u8) -> u8 { return n + 1u8; } fn b(n: i8) -> i8 { return n + 1i8; } fn c(n: " ++
-        "u8) -> u16 { return cast<u16>(n); } fn d(n: u8) -> u32 { return cast<u32>(n); } fn " ++
-        "main() -> i64 { return 0; }");
+    var compilation = try language.Compilation.init(testing.allocator, "duplicates.my",
+        \\def a(n: u8) -> u8:
+        \\    return n + 1u8
+        \\
+        \\
+        \\def b(n: i8) -> i8:
+        \\    return n + 1i8
+        \\
+        \\
+        \\def c(n: u8) -> u16:
+        \\    return cast<u16>(n)
+        \\
+        \\
+        \\def d(n: u8) -> u32:
+        \\    return cast<u32>(n)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer compilation.deinit();
     try compilation.check();
     var analysis = try language.duplicates.discover(testing.allocator, compilation.program.?, .{ .min_nodes = 1 });
@@ -110,8 +160,15 @@ test "every signed and unsigned byte addition and multiplication has checked bou
 
 // spec: VM-AUDIT-1
 test "scalar loop retains exact step budget and located trap under VM audit probes" {
-    const source = "fn main()->i64{let mut i=0;let mut total=0;" ++
-        "while i<100{total+=i;i+=1;}return total;}";
+    const source =
+        \\def main() -> i64:
+        \\    i = 0
+        \\    total = 0
+        \\    while i < 100:
+        \\        total += i
+        \\        i += 1
+        \\    return total
+    ;
     var compilation = try language.Compilation.init(testing.allocator, "audit.my", source);
     defer compilation.deinit();
     const limited = try compilation.executeWithOptions(testing.allocator, .{ .max_steps = 1309 });
@@ -146,16 +203,19 @@ test "all integer widths accept their limits and reject one-past literals" {
 
 test "no implicit width or boolean conversions and unknown suffixes are rejected" {
     const cases = [_]struct { body: []const u8, code: []const u8 }{
-        .{ .body = "let source = 1; let n: i8 = source; return 0;", .code = "E_TYPE" },
-        .{ .body = "_ = 1u8 + 1u16; return 0;", .code = "E_TYPE" },
-        .{ .body = "_ = cast<u8>(true); return 0;", .code = "E_TYPE" },
-        .{ .body = "_ = cast<bool>(1); return 0;", .code = "E_TYPE" },
-        .{ .body = "_ = 1i7; return 0;", .code = "E_INTEGER_SUFFIX" },
-        .{ .body = "_ = 1bool; return 0;", .code = "E_INTEGER_SUFFIX" },
-        .{ .body = "_ = -(128i8 + 0i8); return 0;", .code = "E_INTEGER_RANGE" },
+        .{ .body = "source = 1\n    n: i8 = source\n    return 0", .code = "E_TYPE" },
+        .{ .body = "_ = 1u8 + 1u16\n    return 0", .code = "E_TYPE" },
+        .{ .body = "_ = cast<u8>(True)\n    return 0", .code = "E_TYPE" },
+        .{ .body = "_ = cast<bool>(1)\n    return 0", .code = "E_TYPE" },
+        .{ .body = "_ = 1i7\n    return 0", .code = "E_INTEGER_SUFFIX" },
+        .{ .body = "_ = 1bool\n    return 0", .code = "E_INTEGER_SUFFIX" },
+        .{ .body = "_ = -(128i8 + 0i8)\n    return 0", .code = "E_INTEGER_RANGE" },
     };
     for (cases) |case| {
-        const source = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ {s} }}", .{case.body});
+        const source = try std.fmt.allocPrint(testing.allocator,
+            \\def main() -> i64:
+            \\    {s}
+        , .{case.body});
         defer testing.allocator.free(source);
         var compilation = try language.Compilation.init(testing.allocator, "invalid.my", source);
         defer compilation.deinit();

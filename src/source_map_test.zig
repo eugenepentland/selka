@@ -17,7 +17,9 @@ fn mappedCompilation(allocator: std.mem.Allocator, texts: []const []const u8) !l
 }
 fn scenario(allocator: std.mem.Allocator) !void {
     var compilation = try mappedCompilation(allocator, &.{
-        "fn main() -> i64 {\n    return helper();\n}",
+        \\def main() -> i64:
+        \\    return helper()
+        ,
         "fn helper() -> i64 {\r\n\treturn 1 / 0;\r\n}",
     });
     defer compilation.deinit();
@@ -41,7 +43,13 @@ test "mapped source locations survive parser checking lowering and VM traces wit
 }
 // spec: PROJ-4
 test "mapped related diagnostics identify each original declaration" {
-    var compilation = try mappedCompilation(t.allocator, &.{ "fn main() -> i64 { return 0; }", "\nfn main() -> i64 { return 1; }" });
+    var compilation = try mappedCompilation(t.allocator, &.{
+        \\def main() -> i64:
+        \\    return 0
+        ,
+        \\def main() -> i64:
+        \\    return 1
+    });
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());
     const text = try compilation.diagnostics.items[0].render(t.allocator, compilation.src);
@@ -88,8 +96,12 @@ test "mapped sources distinguish empty inputs EOF boundaries CRLF tabs and check
 }
 test "quality metrics use combined line indices while reports use original paths" {
     var compilation = try mappedCompilation(t.allocator, &.{
-        "fn main() -> i64 { return helper(); } // the entry source has a much longer line than any helper line",
-        "fn helper() -> i64 {\n return 1;\n}",
+        \\def main() -> i64:
+        \\    return helper() # the entry source has a much longer line than any helper line
+        ,
+        \\def helper() -> i64:
+        \\    return 1
+        ,
     });
     defer compilation.deinit();
     try compilation.check();

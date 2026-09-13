@@ -1,14 +1,40 @@
+//! Declared domain codecs: wire types, encode/decode member contracts, execution
+//! during typed conversion, and the diagnostics that reject an invalid declaration.
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const typed = @import("typed.zig");
-const source = "struct Wire{n:i64} result Decoded{ok:Positive,err:i64} domain Positive:i64{codec " ++
-    "Wire{decode:from_wire,encode:to_wire} private fn raw(x:i64)->Positive{return " ++
-    "wrap<Positive>(x);} fn from_wire(x:Wire)->Decoded{if x.n<=0{return new " ++
-    "Decoded.err(-1);}return new Decoded.ok(Positive.raw(x.n));} fn " ++
-    "to_wire(x:Positive)->Wire{return new Wire{n:unwrap(x)};}}";
+const source =
+    \\class Wire:
+    \\    n: i64
+    \\
+    \\
+    \\result Decoded:
+    \\    ok: Positive,
+    \\    err: i64
+    \\
+    \\
+    \\domain Positive: i64:
+    \\    codec Wire:
+    \\        decode: from_wire,
+    \\        encode: to_wire
+    \\
+    \\    private def raw(x: i64) -> Positive:
+    \\        return wrap<Positive>(x)
+    \\
+    \\    def from_wire(x: Wire) -> Decoded:
+    \\        if x.n <= 0:
+    \\            return Err(-1)
+    \\        return Ok(Positive.raw(x.n))
+    \\
+    \\    def to_wire(x: Positive) -> Wire:
+    \\        return Wire(n=unwrap(x))
+;
 fn scenario(allocator: std.mem.Allocator) !void {
-    var c = try language.Compilation.init(allocator, "codec.my", source ++ "fn main()->i64{return 0;}");
+    var c = try language.Compilation.init(allocator, "codec.my", source ++
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer c.deinit();
     try c.emit();
     const code = c.code.?;
@@ -67,8 +93,18 @@ test "domain codec declarations reject duplicate missing unknown and private ent
 }
 const Provider = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
-        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main;import data as d;fn main()->i64{match codec_decode<d::Positive>(new d::Wire{n:7}){" ++
-            "d::Decoded.ok(x)=>{return codec_encode<d::Positive>(x).n;},d::Decoded.err(e)=>{return e;}}}");
+        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
+            \\module main
+            \\import data as d
+            \\
+            \\
+            \\def main() -> i64:
+            \\    match codec_decode<d.Positive>(d.Wire(n=7)):
+            \\        case d.Decoded.ok(x):
+            \\            return codec_encode<d.Positive>(x).n
+            \\        case d.Decoded.err(e):
+            \\            return e
+        );
         if (std.mem.eql(u8, path, "data.my")) return allocator.dupe(u8, "module data;export Wire;export Decoded;export Positive;" ++ source);
         return error.NotFound;
     }
@@ -125,7 +161,14 @@ test "domain codec formatting preserves comments entries and checked contracts" 
     try t.expect(std.mem.indexOf(u8, formatted, "// wire contract") != null);
 }
 
-const source_call = "fn main()->i64{match codec_decode<Positive>(new Wire{n:7}){Decoded.ok(x)=>{return codec_encode<Positive>(x).n;},Decoded.err(e)=>{return e;}}}";
+const source_call =
+    \\def main() -> i64:
+    \\    match codec_decode<Positive>(Wire(n=7)):
+    \\        case Decoded.ok(x):
+    \\            return codec_encode<Positive>(x).n
+    \\        case Decoded.err(e):
+    \\            return e
+;
 fn sourceScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "source-codec.my", source ++ source_call);
     defer c.deinit();
@@ -145,12 +188,35 @@ test "source codec operations resolve declared methods and preserve formatting u
     try t.checkAllAllocationFailures(stable.allocator(), sourceScenario, .{});
 }
 test "source codec operations reject missing contracts invalid arity and backing bypass" {
-    try reject("domain D:i64{}fn main()->i64{return codec_encode<D>(0);}", "E_CODEC_REQUIRED");
-    try reject("fn main()->i64{return codec_decode<i64>(0);}", "E_TYPE");
-    try reject(source ++ "fn main()->i64{return codec_encode<Positive>(7);}", "E_TYPE");
-    try reject(source ++ "fn main()->i64{return codec_decode<Positive>();}", "E_CODEC_ARITY");
+    try reject(
+        \\domain D: i64:
+        \\    pass
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return codec_encode<D>(0)
+    , "E_CODEC_REQUIRED");
+    try reject(
+        \\def main() -> i64:
+        \\    return codec_decode<i64>(0)
+    , "E_TYPE");
+    try reject(source ++
+        \\def main() -> i64:
+        \\    return codec_encode<Positive>(7)
+    , "E_TYPE");
+    try reject(source ++
+        \\def main() -> i64:
+        \\    return codec_decode<Positive>()
+    , "E_CODEC_ARITY");
     try reject(source ++ "fn main()->i64{return codec_decode(7);}", "E_CODEC_ARITY");
-    try reject("fn helper<T:copy>(x:T)->T{return codec_encode<T>(x);}fn main()->i64{return 0;}", "E_GENERIC_BODY_UNSUPPORTED");
+    try reject(
+        \\def helper[T](x: T) -> T:
+        \\    return codec_encode<T>(x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_GENERIC_BODY_UNSUPPORTED");
 }
 
 test "source codec operations follow selected method names rather than naming conventions" {

@@ -11,12 +11,54 @@ const Files = struct {
         return language.embedded_project.read(allocator, self.entries, path, limit);
     }
 };
-const api = "module library.api\nexport Inputs\nexport Box\nexport parse\nexport identity\nexport Distance\nexport extra\n" ++
-    "struct Inputs{value:i64}\nstruct Box<T:copy>{value:T}\nstruct Hidden{value:i64}\n" ++
-    "fn parse(input:Inputs)->i64 effects(){return input.value+1}\nfn identity<T:copy>(value:T)->T{return value}\n" ++
-    "fn extra()->i64{return 1}\nfn hidden()->i64{return 99}\n" ++
-    "domain Distance:i64{private fn raw(x:i64)->Distance{return wrap<Distance>(x)}" ++
-    "fn make(x:i64)->Distance{return Distance.raw(x)}fn number(x:Distance)->i64{return unwrap(x)}}";
+const api =
+    \\module library.api
+    \\export Inputs
+    \\export Box
+    \\export parse
+    \\export identity
+    \\export Distance
+    \\export extra
+    \\
+    \\
+    \\class Inputs:
+    \\    value: i64
+    \\
+    \\
+    \\class Box[T]:
+    \\    value: T
+    \\
+    \\
+    \\class Hidden:
+    \\    value: i64
+    \\
+    \\
+    \\def parse(input: Inputs) -> i64 effects():
+    \\    return input.value + 1
+    \\
+    \\
+    \\def identity[T](value: T) -> T:
+    \\    return value
+    \\
+    \\
+    \\def extra() -> i64:
+    \\    return 1
+    \\
+    \\
+    \\def hidden() -> i64:
+    \\    return 99
+    \\
+    \\
+    \\domain Distance: i64:
+    \\    private def raw(x: i64) -> Distance:
+    \\        return wrap<Distance>(x)
+    \\
+    \\    def make(x: i64) -> Distance:
+    \\        return Distance.raw(x)
+    \\
+    \\    def number(x: Distance) -> i64:
+    \\        return unwrap(x)
+;
 
 fn scenario(allocator: std.mem.Allocator, main: []const u8, expected_error: ?[]const u8) !void {
     var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = main }, .{ .path = "library/api.my", .bytes = api } } };
@@ -71,8 +113,19 @@ test "dotted module parsing and name resolution release every failed allocation"
 
 // spec: MODULE-DOT-3
 test "dotted imports retain private symbol private domain and alias shadow checks" {
-    try scenario(t.allocator, header ++ "fn main()->i64{return api.hidden()}", "E_PRIVATE_SYMBOL");
-    try scenario(t.allocator, header ++ "fn main()->i64{_ = api.Distance.raw(42)\nreturn 42}", "E_PRIVATE_SYMBOL");
+    try scenario(t.allocator, header ++
+        \\def main() -> i64:
+        \\    return api.hidden()
+    , "E_PRIVATE_SYMBOL");
+    try scenario(t.allocator, header ++
+        \\def main() -> i64:
+        \\    _ = api.Distance.raw(42)
+        \\    return 42
+    , "E_PRIVATE_SYMBOL");
     try scenario(t.allocator, header ++ "export Sample\nstruct Sample{input:api.Hidden}\nfn main()->i64{return 42}", "E_PRIVATE_SYMBOL");
-    try scenario(t.allocator, header ++ "fn main()->i64{let api=42\nreturn api}", "E_SHADOWING");
+    try scenario(t.allocator, header ++
+        \\def main() -> i64:
+        \\    api = 42
+        \\    return api
+    , "E_SHADOWING");
 }

@@ -3,7 +3,14 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const Cache = language.check_cache.Cache;
 const Files = struct {
-    bytes: []const u8 = "module main;fn main()->i64{let unused=7;return 0;}",
+    bytes: []const u8 =
+        \\module main
+        \\
+        \\
+        \\def main() -> i64:
+        \\    unused = 7
+        \\    return 0
+    ,
     fn read(context: ?*anyopaque, allocator: std.mem.Allocator, _: []const u8, _: usize) language.project.ReadError![]u8 {
         const self: *Files = @ptrCast(@alignCast(context.?));
         return allocator.dupe(u8, self.bytes);
@@ -37,7 +44,13 @@ fn scenario(allocator: std.mem.Allocator) !void {
     try t.expect(cache.lookup(&project) == null);
     project.modules.items[0].src.path = original;
     try t.expect(cache.lookup(&project) != null);
-    files.bytes = "module main;fn main()->i64{return 1;}";
+    files.bytes =
+        \\module main
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 1
+    ;
     var changed = language.project.Project.init(allocator);
     defer changed.deinit();
     try load(&changed, &files);
@@ -87,7 +100,13 @@ test "check cache replacement OutOfMemory preserves the prior successful verdict
     defer original.deinit();
     try load(&original, &files);
     failing.fail_index = failing.alloc_index;
-    files.bytes = "module main;fn main()->i64{return 9;}";
+    files.bytes =
+        \\module main
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 9
+    ;
     try t.expectError(error.OutOfMemory, remember(t.allocator, &cache, &files));
     try t.expect(cache.lookup(&original) != null);
     try t.expectEqual(@as(usize, 1), cache.statistics.stored);

@@ -3,8 +3,21 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const Cache = language.semantic_cache.Cache;
-const prefix = "fn helper(n:i64)->i64{return n+1;}";
-const suffix = "fn keep(n:i64)->i64{let unused=1;let mut x=n;x=x+1;return x;}fn main()->i64{return keep(helper(40));}";
+const prefix =
+    \\def helper(n: i64) -> i64:
+    \\    return n + 1
+;
+const suffix =
+    \\def keep(n: i64) -> i64:
+    \\    unused = 1
+    \\    x = n
+    \\    x = x + 1
+    \\    return x
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return keep(helper(40))
+;
 fn compare(allocator: std.mem.Allocator, cache: *Cache, bytes: []const u8, expected: ?i64) !void {
     var cached = try language.Compilation.init(allocator, "edited.my", bytes);
     defer cached.deinit();
@@ -41,10 +54,16 @@ fn scenario(allocator: std.mem.Allocator) !void {
     defer cache.deinit();
     try compare(allocator, &cache, prefix ++ suffix, 42);
     try t.expectEqual(@as(usize, 3), cache.statistics.checked);
-    try compare(allocator, &cache, "fn helper(n:i64)->i64{\nreturn n+2;\n}" ++ suffix, 43);
+    try compare(allocator, &cache,
+        \\def helper(n: i64) -> i64:
+        \\    return n + 2
+    ++ suffix, 43);
     try t.expectEqual(@as(usize, 2), cache.statistics.reused);
     try t.expectEqual(@as(usize, 4), cache.statistics.checked);
-    try compare(allocator, &cache, "fn helper(n:i64)->i64{return true;}" ++ suffix, null);
+    try compare(allocator, &cache,
+        \\def helper(n: i64) -> i64:
+        \\    return True
+    ++ suffix, null);
     try t.expectEqual(@as(usize, 2), cache.statistics.stored);
     try compare(allocator, &cache, prefix ++ suffix, 42);
     try t.expectEqual(@as(usize, 6), cache.statistics.reused);
@@ -62,13 +81,44 @@ test "semantic cache falls back for declaration type constant generic and alias 
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     try compare(t.allocator, &cache, prefix ++ suffix, 42);
-    try compare(t.allocator, &cache, "fn helper(n:bool)->i64{return 1;}" ++ suffix, null);
-    try compare(t.allocator, &cache, "struct Item{n:i64}" ++ prefix ++ suffix, 42);
+    try compare(t.allocator, &cache,
+        \\def helper(n: bool) -> i64:
+        \\    return 1
+    ++ suffix, null);
+    try compare(t.allocator, &cache,
+        \\class Item:
+        \\    n: i64
+    ++ prefix ++ suffix, 42);
     try t.expectEqual(@as(usize, 0), cache.statistics.reused);
-    try compare(t.allocator, &cache, "const N:i64=1;fn main()->i64{return N;}", 1);
-    try compare(t.allocator, &cache, "const N:i64=2;fn main()->i64{return N;}", 2);
-    try compare(t.allocator, &cache, "fn id<T:copy>(n:T)->T{return n;}fn main()->i64{return id::<i64>(42);}", 42);
-    try compare(t.allocator, &cache, "type Number=i64;fn main()->i64{return cast<Number>(42);}", 42);
+    try compare(t.allocator, &cache,
+        \\const N: i64 = 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return N
+    , 1);
+    try compare(t.allocator, &cache,
+        \\const N: i64 = 2
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return N
+    , 2);
+    try compare(t.allocator, &cache,
+        \\def id[T](n: T) -> T:
+        \\    return n
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return id[i64](42)
+    , 42);
+    try compare(t.allocator, &cache,
+        \\type Number = i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return cast<Number>(42)
+    , 42);
     try t.expectEqual(@as(usize, 0), cache.statistics.reused);
     try t.expect(cache.statistics.bypassed >= 4);
 }
@@ -92,7 +142,10 @@ test "semantic cache keeps previous committed bodies when remember reports OutOf
     defer cache.deinit();
     try compare(t.allocator, &cache, prefix ++ suffix, 42);
     failures.fail_index = failures.alloc_index;
-    var interrupted = try language.Compilation.init(t.allocator, "edited.my", "fn helper(n:i64)->i64{return n+2;}" ++ suffix);
+    var interrupted = try language.Compilation.init(t.allocator, "edited.my",
+        \\def helper(n: i64) -> i64:
+        \\    return n + 2
+    ++ suffix);
     defer interrupted.deinit();
     try t.expectError(error.OutOfMemory, interrupted.checkWithCache(&cache));
     try t.expectEqual(@as(usize, 1), cache.statistics.stored);
@@ -106,21 +159,51 @@ test "semantic cache keeps previous committed bodies when remember reports OutOf
 test "semantic cache keeps inferred callback schemas fresh across changed bodies" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
-    const caller = "fn main()->i64{let cb=helper;return cb(40);}";
-    try compare(t.allocator, &cache, "fn helper(n:i64)->i64 effects(){return n+1;}" ++ caller, 41);
-    try compare(t.allocator, &cache, "fn helper(n:i64)->i64 effects(){return n+2;}" ++ caller, 42);
+    const caller =
+        \\def main() -> i64:
+        \\    cb = helper
+        \\    return cb(40)
+    ;
+    try compare(t.allocator, &cache,
+        \\def helper(n: i64) -> i64 effects():
+        \\    return n + 1
+    ++ caller, 41);
+    try compare(t.allocator, &cache,
+        \\def helper(n: i64) -> i64 effects():
+        \\    return n + 2
+    ++ caller, 42);
     try t.expectEqual(@as(usize, 0), cache.statistics.reused);
 }
 
 test "semantic cache bypasses constant length function and nominal specializations" {
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
-    const function = "fn size<const N:u64>()->u64{return N;}";
-    try compare(t.allocator, &cache, function ++ "fn main()->i64{return cast<i64>(size::<2>());}", 2);
-    try compare(t.allocator, &cache, function ++ "fn main()->i64{return cast<i64>(size::<3>());}", 3);
-    const nominal = "struct Chunk<const N:u64>{items:[N]i64}";
-    try compare(t.allocator, &cache, nominal ++ "fn main()->i64{let x=new Chunk<1>{items:new [1]i64[42]};return x.items[0];}", 42);
-    try compare(t.allocator, &cache, nominal ++ "fn main()->i64{let x=new Chunk<2>{items:new [2]i64[43,0]};return x.items[0];}", 43);
+    const function =
+        \\def size[const N: u64]() -> u64:
+        \\    return N
+    ;
+    try compare(t.allocator, &cache, function ++
+        \\def main() -> i64:
+        \\    return cast<i64>(size[2]())
+    , 2);
+    try compare(t.allocator, &cache, function ++
+        \\def main() -> i64:
+        \\    return cast<i64>(size[3]())
+    , 3);
+    const nominal =
+        \\class Chunk[const N: u64]:
+        \\    items: [N]i64
+    ;
+    try compare(t.allocator, &cache, nominal ++
+        \\def main() -> i64:
+        \\    x = Chunk[1](items=[42])
+        \\    return x.items[0]
+    , 42);
+    try compare(t.allocator, &cache, nominal ++
+        \\def main() -> i64:
+        \\    x = Chunk[2](items=[43, 0])
+        \\    return x.items[0]
+    , 43);
     try t.expectEqual(@as(usize, 0), cache.statistics.reused);
     try t.expectEqual(@as(usize, 0), cache.statistics.stored);
     try t.expectEqual(@as(usize, 4), cache.statistics.bypassed);
@@ -132,11 +215,23 @@ test "semantic cache rechecks transitive effects when only a callee body changes
     defer cache.deinit();
     // Only the callee body changes; the unchanged caller is reused but rechecked.
     // The host declaration is never executed, so this stays a checking-only test.
-    const shared = "host fn tick()->i64 effects(host);fn main()->i64 effects(clock){return change();}";
-    var first = try language.Compilation.init(t.allocator, "edited.my", shared ++ "fn change()->i64{return 42;}");
+    const shared =
+        \\host def tick() -> i64 effects(host)
+        \\
+        \\
+        \\def main() -> i64 effects(clock):
+        \\    return change()
+    ;
+    var first = try language.Compilation.init(t.allocator, "edited.my", shared ++
+        \\def change() -> i64:
+        \\    return 42
+    );
     defer first.deinit();
     try first.checkWithCache(&cache);
-    var second = try language.Compilation.init(t.allocator, "edited.my", shared ++ "fn change()->i64{return tick();}");
+    var second = try language.Compilation.init(t.allocator, "edited.my", shared ++
+        \\def change() -> i64:
+        \\    return tick()
+    );
     defer second.deinit();
     try t.expectError(error.SourceError, second.checkWithCache(&cache));
     try t.expectEqualStrings("E_EFFECT_BOUND", second.diagnostics.items[0].code);

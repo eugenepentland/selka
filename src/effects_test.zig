@@ -48,8 +48,22 @@ test "effect bounds reject unknown and duplicate names and noio permits allocati
     try reject("fn main() -> i64 effects(magic) { return 0; }", "E_UNKNOWN_EFFECT", "unknown effect");
     try reject("fn main() -> i64 effects(clock, clock) { return 0; }", "E_DUPLICATE_EFFECT", "more than once");
     try result("def main() -> int noio:\n    items: list[int] = []\n    items.append(9)\n    return items[0]\n", 9);
-    try result("fn main() -> i64 effects(filesystem, network, clock, random, environment) { let mut x = 1; x += 2; return x; }", 3);
-    try result("fn noalloc() -> i64 { let effects = 2; let noio = 3; return effects + noio; } fn main() -> i64 { return noalloc(); }", 5);
+    try result(
+        \\def main() -> i64 effects(filesystem, network, clock, random, environment):
+        \\    x = 1
+        \\    x += 2
+        \\    return x
+    , 3);
+    try result(
+        \\def noalloc() -> i64:
+        \\    effects = 2
+        \\    noio = 3
+        \\    return effects + noio
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return noalloc()
+    , 5);
 }
 
 const accepted = "def edit(n: int) -> int noalloc:\n    return n + 11\n\n" ++
@@ -98,9 +112,22 @@ test "effect graph inference witnesses emission and rendering release every fail
 }
 
 test "duplicate discovery retains normalized declared effect contracts" {
-    var c = try language.Compilation.init(t.allocator, fixture_path, "fn a(n: i64) -> i64 effects(clock, random) { return n + 1; } fn b(x: i64) -> i64 " ++
-        "effects(random, clock) { return x + 1; } fn different(n: i64) -> i64 noalloc { " ++
-        "return n + 1; } fn main() -> i64 { return 0; }");
+    var c = try language.Compilation.init(t.allocator, fixture_path,
+        \\def a(n: i64) -> i64 effects(clock, random):
+        \\    return n + 1
+        \\
+        \\
+        \\def b(x: i64) -> i64 effects(random, clock):
+        \\    return x + 1
+        \\
+        \\
+        \\def different(n: i64) -> i64 noalloc:
+        \\    return n + 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer c.deinit();
     try c.check();
     var found = try language.duplicates.discover(t.allocator, c.program.?, .{ .min_nodes = 1 });

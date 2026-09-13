@@ -4,13 +4,40 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const ast = @import("ast.zig");
 const copy = @import("ast_copy.zig");
-const fixture = "struct Pair<T:copy,U:equality>{first:T,second:U}" ++
-    "union Slot<T:copy>{none,some:T}result Outcome<T:copy,E:copy>{ok:T,err:E}" ++
-    "enum Tag<T:copy>{left,right}" ++
-    "fn sample<T:copy>(x:T)->Pair<T,bool>{let p:Pair<T,bool>=new Pair<T,bool>{first:x,second:true};" ++
-    "let slots=new [1]Slot<Pair<T,bool>>[new Slot<Pair<T,bool>>.some(p)];" ++
-    "match slots[0]{Slot<Pair<T,bool>>.none=>{return p;},Slot<Pair<T,bool>>.some(value)=>{return value;}}}" ++
-    "fn main()->i64{return 0;}";
+const fixture =
+    \\class Pair[T, U: equality]:
+    \\    first: T
+    \\    second: U
+    \\
+    \\
+    \\union Slot[T]:
+    \\    none,
+    \\    some: T
+    \\
+    \\
+    \\result Outcome[T, E]:
+    \\    ok: T,
+    \\    err: E
+    \\
+    \\
+    \\enum Tag[T]:
+    \\    left,
+    \\    right
+    \\
+    \\
+    \\def sample[T](x: T) -> Pair[T, bool]:
+    \\    p: Pair[T, bool] = Pair[T, bool](first=x, second=True)
+    \\    slots: [1]Slot[Pair[T, bool]] = [Slot.some(p)]
+    \\    match slots[0]:
+    \\        case Slot.none:
+    \\            return p
+    \\        case Slot.some(value):
+    \\            return value
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return 0
+;
 fn parseScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "nominal.my", fixture);
     defer compilation.deinit();
@@ -99,10 +126,37 @@ test "nominal application list and nesting bounds reject excessive syntax" {
 
 test "unused nominal templates do not become empty executable record schemas" {
     const cases = [_][]const u8{
-        "struct Box<T:copy>{value:T}fn main()->i64{return 0;}",
-        "union Slot<T:copy>{none,some:T}fn main()->i64{return 0;}",
-        "result R<T:copy>{ok:T,err:i64}fn main()->i64{return 0;}",
-        "enum Tag<T:copy>{first,second}fn main()->i64{return 0;}",
+        \\class Box[T]:
+        \\    value: T
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        ,
+        \\union Slot[T]:
+        \\    none,
+        \\    some: T
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        ,
+        \\result R[T]:
+        \\    ok: T,
+        \\    err: i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        ,
+        \\enum Tag[T]:
+        \\    first,
+        \\    second
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        ,
     };
     for (cases) |text| {
         var compilation = try language.Compilation.init(t.allocator, "deferred.my", text);
@@ -110,7 +164,14 @@ test "unused nominal templates do not become empty executable record schemas" {
         try t.expectEqual(@as(i64, 0), (try compilation.execute(t.allocator)).value);
         try t.expectEqual(@as(usize, 0), compilation.program.?.records.len);
     }
-    var invalid = try language.Compilation.init(t.allocator, "requirements.my", "struct Box<T:missing>{value:T}fn main()->i64{return 0;}");
+    var invalid = try language.Compilation.init(t.allocator, "requirements.my",
+        \\class Box[T: missing]:
+        \\    value: T
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer invalid.deinit();
     try t.expectError(error.SourceError, invalid.check());
     try t.expectEqualStrings("E_GENERIC_REQUIREMENT", invalid.diagnostics.items[0].code);
@@ -121,15 +182,48 @@ const Modules = struct {
     fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         const self: *Modules = @ptrCast(@alignCast(context.?));
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, self.main);
-        if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8, "module model;export Slot;export Id;union Slot<T:copy>{none,some:T}struct Hidden<T:copy>{value:T}domain Id:i64{}");
+        if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8,
+            \\module model
+            \\export Slot
+            \\export Id
+            \\
+            \\
+            \\union Slot[T]:
+            \\    none,
+            \\    some: T
+            \\
+            \\
+            \\class Hidden[T]:
+            \\    value: T
+            \\
+            \\
+            \\domain Id: i64:
+            \\    pass
+        );
         return error.NotFound;
     }
     fn provider(self: *Modules) language.project.Provider {
         return .{ .context = self, .read = read };
     }
 };
-const public_module = "module main;import model as m;export Box;export echo;" ++
-    "struct Box<T:copy>{value:m::Slot<[2]T>}fn echo<T:copy>(x:Box<T>)->Box<T>{return x;}fn main()->i64{return 0;}";
+const public_module =
+    \\module main
+    \\import model as m
+    \\export Box
+    \\export echo
+    \\
+    \\
+    \\class Box[T]:
+    \\    value: m.Slot[[2]T]
+    \\
+    \\
+    \\def echo[T](x: Box[T]) -> Box[T]:
+    \\    return x
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return 0
+;
 fn moduleScenario(allocator: std.mem.Allocator) !void {
     var files: Modules = .{ .main = public_module };
     var cache = @import("syntax_cache.zig").Cache.init(allocator, .{});
@@ -164,15 +258,112 @@ fn interfaceReject(text: []const u8, code: []const u8) !void {
     try t.expectEqualStrings(code, project.problem.?.code);
 }
 test "nominal template interfaces enforce privacy arity kind and parameter scope" {
-    try interfaceReject("module main;import model as m;export Outer;struct Outer{slot:m::Hidden<i64>}", "E_PRIVATE_SYMBOL");
-    try interfaceReject("module main;import model as m;export Outer;struct Secret{}struct Outer{slot:m::Slot<Secret>}", "E_PRIVATE_INTERFACE");
-    try interfaceReject("module main;import model as m;export Outer;struct Outer{slot:m::Slot<i64,bool>}", "E_GENERIC_ARITY");
-    try interfaceReject("module main;import model as m;export Outer;struct Outer{slot:m::Slot}", "E_GENERIC_ARITY");
-    try interfaceReject("module main;export Plain;export Outer;struct Plain{}struct Outer{value:Plain<i64>}", "E_GENERIC_ARITY");
-    try interfaceReject("module main;export Outer;struct Outer<T:copy>{value:T<i64>}", "E_TYPE_APPLICATION");
-    try interfaceReject("module main;export Outer;struct Outer<T:copy>{value:Missing<T>}", "E_UNKNOWN_SYMBOL");
-    try interfaceReject("module main;export helper;export Outer;fn helper()->i64{return 0;}struct Outer{value:helper<i64>}", "E_SYMBOL_KIND");
-    try interfaceReject("module main;struct T{}struct Outer<T:copy>{value:T}", "E_SHADOWING");
-    try interfaceReject("module main;import model as m;struct Outer<m:copy>{value:m}", "E_SHADOWING");
-    try interfaceReject("module main;struct Outer<T:bad>{value:T}", "E_GENERIC_REQUIREMENT");
+    try interfaceReject(
+        \\module main
+        \\import model as m
+        \\export Outer
+        \\
+        \\
+        \\class Outer:
+        \\    slot: m.Hidden[i64]
+    , "E_PRIVATE_SYMBOL");
+    try interfaceReject(
+        \\module main
+        \\import model as m
+        \\export Outer
+        \\
+        \\
+        \\class Secret:
+        \\    pass
+        \\
+        \\
+        \\class Outer:
+        \\    slot: m.Slot[Secret]
+    , "E_PRIVATE_INTERFACE");
+    try interfaceReject(
+        \\module main
+        \\import model as m
+        \\export Outer
+        \\
+        \\
+        \\class Outer:
+        \\    slot: m.Slot[i64, bool]
+    , "E_GENERIC_ARITY");
+    try interfaceReject(
+        \\module main
+        \\import model as m
+        \\export Outer
+        \\
+        \\
+        \\class Outer:
+        \\    slot: m.Slot
+    , "E_GENERIC_ARITY");
+    try interfaceReject(
+        \\module main
+        \\export Plain
+        \\export Outer
+        \\
+        \\
+        \\class Plain:
+        \\    pass
+        \\
+        \\
+        \\class Outer:
+        \\    value: Plain[i64]
+    , "E_GENERIC_ARITY");
+    try interfaceReject(
+        \\module main
+        \\export Outer
+        \\
+        \\
+        \\class Outer[T]:
+        \\    value: T[i64]
+    , "E_TYPE_APPLICATION");
+    try interfaceReject(
+        \\module main
+        \\export Outer
+        \\
+        \\
+        \\class Outer[T]:
+        \\    value: Missing[T]
+    , "E_UNKNOWN_SYMBOL");
+    try interfaceReject(
+        \\module main
+        \\export helper
+        \\export Outer
+        \\
+        \\
+        \\def helper() -> i64:
+        \\    return 0
+        \\
+        \\
+        \\class Outer:
+        \\    value: helper[i64]
+    , "E_SYMBOL_KIND");
+    try interfaceReject(
+        \\module main
+        \\
+        \\
+        \\class T:
+        \\    pass
+        \\
+        \\
+        \\class Outer[T]:
+        \\    value: T
+    , "E_SHADOWING");
+    try interfaceReject(
+        \\module main
+        \\import model as m
+        \\
+        \\
+        \\class Outer[m]:
+        \\    value: m
+    , "E_SHADOWING");
+    try interfaceReject(
+        \\module main
+        \\
+        \\
+        \\class Outer[T: bad]:
+        \\    value: T
+    , "E_GENERIC_REQUIREMENT");
 }

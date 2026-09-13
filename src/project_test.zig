@@ -21,7 +21,15 @@ const Files = struct {
     }
 };
 const diamond = [_]File{
-    .{ .path = "main.my", .bytes = "module main; import left; import right as r; fn main() -> i64 { return 1; }" },
+    .{ .path = "main.my", .bytes =
+    \\module main
+    \\import left
+    \\import right as r
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return 1
+    },
     .{ .path = "left.my", .bytes = "module left; import shared . data;" },
     .{ .path = "right.my", .bytes = "module right; import shared.data;" },
     .{ .path = "shared/data.my", .bytes = "// shared\nmodule shared.data;" },
@@ -61,7 +69,10 @@ fn rejection(entries: []const File, options: p.Options, code: []const u8) !void 
 test "module headers reject mismatch duplicate aliases duplicate imports and invalid syntax" {
     for ([_]struct { text: []const u8, code: []const u8 }{
         .{ .text = "module other;", .code = "E_MODULE_NAME" },
-        .{ .text = "fn main() -> i64 { return 0; }", .code = "E_MODULE_HEADER" },
+        .{ .text =
+        \\def main() -> i64:
+        \\    return 0
+        , .code = "E_MODULE_HEADER" },
         .{ .text = "module main; import x.a; import y.a;", .code = "E_IMPORT_ALIAS" },
         .{ .text = "module main; import x as a; import x as b;", .code = "E_DUPLICATE_IMPORT" },
         .{ .text = "module main; import ../secret;", .code = "E_MODULE_HEADER" },
@@ -143,7 +154,13 @@ test "module graph reports are deterministic and source digests track body edits
     defer t.allocator.free(b);
     try t.expectEqualStrings(a, b);
     var changed_files = diamond;
-    changed_files[3].bytes = "module shared.data; fn helper() -> i64 { return 42; }";
+    changed_files[3].bytes =
+        \\module shared.data
+        \\
+        \\
+        \\def helper() -> i64:
+        \\    return 42
+    ;
     files.entries = &changed_files;
     var changed = p.Project.init(t.allocator);
     defer changed.deinit();
@@ -215,11 +232,44 @@ test "evaluation receipt keys include implementation identity and reject incompl
 
 fn schemaScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
-        .{ .path = "main.my", .bytes = "module main; import data; fn main() -> i64 { return 0; }" },
-        .{ .path = "data.my", .bytes = "module data; export Point; export Choice; export Identity; export select; struct " ++
-            "Point { x: u64, y: [2]bool } union Choice { empty, point: Point } domain Identity: " ++
-            "i16 { private fn raw(x: i16) -> Identity { return wrap<Identity>(x); } } fn " ++
-            "select(x: Choice) -> Choice { return x; } struct Hidden { secret: i8 }" },
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\import data
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        },
+        .{ .path = "data.my", .bytes =
+        \\module data
+        \\export Point
+        \\export Choice
+        \\export Identity
+        \\export select
+        \\
+        \\
+        \\class Point:
+        \\    x: u64
+        \\    y: [2]bool
+        \\
+        \\
+        \\union Choice:
+        \\    empty,
+        \\    point: Point
+        \\
+        \\
+        \\domain Identity: i16:
+        \\    private def raw(x: i16) -> Identity:
+        \\        return wrap<Identity>(x)
+        \\
+        \\
+        \\def select(x: Choice) -> Choice:
+        \\    return x
+        \\
+        \\
+        \\class Hidden:
+        \\    secret: i8
+        },
     } };
     var project = p.Project.init(allocator);
     defer project.deinit();
@@ -245,8 +295,22 @@ test "checked public schemas retain structure and privacy with allocation failur
 
 fn schemaReceiptScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
-        .{ .path = "main.my", .bytes = "module main; import data; fn main() -> i64 { return 0; }" },
-        .{ .path = "data.my", .bytes = "module data; export Item; struct Item { n: u64 }" },
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\import data
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        },
+        .{ .path = "data.my", .bytes =
+        \\module data
+        \\export Item
+        \\
+        \\
+        \\class Item:
+        \\    n: u64
+        },
     } };
     var project = p.Project.init(allocator);
     defer project.deinit();
@@ -294,8 +358,32 @@ test "project lifecycle rejects invalid budgets repeated loading and absent diag
 // spec: FAMILIAR-STMT-6
 test "project discovery respects newline imports exports and multiline declaration signatures" {
     var files: Files = .{ .entries = &.{
-        .{ .path = "main.my", .bytes = "module main\nimport helper as h\nexport main\nfn main()\n->i64\n{return h::value()}" },
-        .{ .path = "helper.my", .bytes = "module helper\nexport value\ntype Number=i64\nconst ANSWER:Number=42\nfn value()->Number{return ANSWER}\nexport Number" },
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\import helper as h
+        \\export main
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return h.value()
+        },
+        .{ .path = "helper.my", .bytes =
+        \\module helper
+        \\export value
+        \\
+        \\
+        \\type Number = i64
+        \\
+        \\
+        \\const ANSWER: Number = 42
+        \\
+        \\
+        \\def value() -> Number:
+        \\    return ANSWER
+        \\
+        \\
+        \\export Number
+        },
     } };
     var project = p.Project.init(t.allocator);
     defer project.deinit();

@@ -4,7 +4,29 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const external = @import("external_capabilities.zig");
 const resources = @import("external_resources.zig");
-const declarations = "resource File: filesystem; result Open { ok: File, err: i64 } struct Failure { code: i64, resource: File } result Finish { err: Failure, ok: bool } result Status { ok: bool, err: i64 } ";
+const declarations =
+    \\resource File: filesystem
+    \\
+    \\
+    \\result Open:
+    \\    ok: File,
+    \\    err: i64
+    \\
+    \\
+    \\class Failure:
+    \\    code: i64
+    \\    resource: File
+    \\
+    \\
+    \\result Finish:
+    \\    err: Failure,
+    \\    ok: bool
+    \\
+    \\
+    \\result Status:
+    \\    ok: bool,
+    \\    err: i64
+;
 const Fake = struct {
     acquired: usize = 0,
     acquire_calls: usize = 0,

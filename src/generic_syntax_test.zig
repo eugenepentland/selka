@@ -5,7 +5,14 @@ const language = @import("compiler.zig");
 const ast = @import("ast.zig");
 const copy = @import("ast_copy.zig");
 const source = @import("source.zig");
-const fixture = "fn choose<T: copy + equality,U: integer>(x:T,y:U)->T{return x;}fn main()->i64{return choose::<i64,u8>(1,2u8);}";
+const fixture =
+    \\def choose[T: copy + equality, U: integer](x: T, y: U) -> T:
+    \\    return x
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return choose[i64, u8](1, 2u8)
+;
 fn scenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "generic.my", fixture);
     defer compilation.deinit();
@@ -60,7 +67,14 @@ test "generic syntax rejects incomplete duplicate and uncallable annotations" {
         try t.expectError(error.SourceError, compilation.parse());
         try t.expectEqualStrings(case.code, compilation.diagnostics.items[0].code);
     }
-    var compilation = try language.Compilation.init(t.allocator, "bad-call.my", "fn f(x:i64)->i64{return x;}fn main()->i64{return f::<i64>(1);}");
+    var compilation = try language.Compilation.init(t.allocator, "bad-call.my",
+        \\def f(x: i64) -> i64:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f[i64](1)
+    );
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqualStrings("E_GENERIC_ARITY", compilation.diagnostics.items[0].code);
@@ -90,7 +104,14 @@ test "generic syntax list limits accept sixteen and reject seventeen entries" {
 }
 
 test "generic syntax preserves qualified module type arguments when formatting" {
-    const text = "module main;import api;fn main()->i64{return api::identity::<api::Number>(1);}";
+    const text =
+        \\module main
+        \\import api
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return api.identity[api.Number](1)
+    ;
     var compilation = try language.Compilation.init(t.allocator, "main.my", text);
     defer compilation.deinit();
     const first = try compilation.formatModule(t.allocator);

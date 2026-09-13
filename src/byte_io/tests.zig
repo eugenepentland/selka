@@ -5,9 +5,27 @@ const language = @import("mylang");
 const bridge = @import("host.zig");
 fn provider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
     const bytes = if (std.mem.eql(u8, path, "io.my"))
-        "module io;export length;export byte;export put;host fn length()->i64 effects(host);host fn byte(index:i64)->u8 effects(host);host fn put(value:u8)->i64 effects(host);"
+        \\module io
+        \\export length
+        \\export byte
+        \\export put
+        \\
+        \\
+        \\host def length() -> i64 effects(host)
+        \\
+        \\
+        \\host def byte(index: i64) -> u8 effects(host)
+        \\
+        \\
+        \\host def put(value: u8) -> i64 effects(host)
     else if (std.mem.eql(u8, path, "main.my"))
-        "module main;import io;fn main()->i64{_ = io::put(io::byte(0));return io::length();}"
+        \\module main
+        \\import io
+        \\
+        \\
+        \\def main() -> i64:
+        \\    _ = io.put(io.byte(0))
+        \\    return io.length()
     else
         return error.NotFound;
     if (bytes.len > limit) return error.TooLarge;
@@ -58,15 +76,48 @@ test {
 }
 fn bulkProvider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
     const source = if (std.mem.eql(u8, path, "io.my"))
-        "module io;export length;export byte;export put;export Block;export read_block;export write_block;" ++
-            "struct Block{bytes:[256]u8,count:i64}" ++
-            "host fn length()->i64 effects(host);host fn byte(index:i64)->u8 effects(host);" ++
-            "host fn put(value:u8)->i64 effects(host);host fn read_block(offset:i64)->Block effects(host);" ++
-            "host fn write_block(block:Block)->i64 effects(host);"
+        \\module io
+        \\export length
+        \\export byte
+        \\export put
+        \\export Block
+        \\export read_block
+        \\export write_block
+        \\
+        \\
+        \\class Block:
+        \\    bytes: [256]u8
+        \\    count: i64
+        \\
+        \\
+        \\host def length() -> i64 effects(host)
+        \\
+        \\
+        \\host def byte(index: i64) -> u8 effects(host)
+        \\
+        \\
+        \\host def put(value: u8) -> i64 effects(host)
+        \\
+        \\
+        \\host def read_block(offset: i64) -> Block effects(host)
+        \\
+        \\
+        \\host def write_block(block: Block) -> i64 effects(host)
     else if (std.mem.eql(u8, path, "main.my"))
-        "module main;import io;fn main()->i64{let size=io::length();let mut offset=0;" ++
-            "while offset<size{let block=io::read_block(offset);let count=block.count;" ++
-            "if io::write_block(block)!=count{return 1;}offset+=count;}return 0;}"
+        \\module main
+        \\import io
+        \\
+        \\
+        \\def main() -> i64:
+        \\    size = io.length()
+        \\    offset = 0
+        \\    while offset < size:
+        \\        block = io.read_block(offset)
+        \\        count = block.count
+        \\        if io.write_block(block) != count:
+        \\            return 1
+        \\        offset += count
+        \\    return 0
     else
         return error.NotFound;
     if (source.len > limit) return error.TooLarge;

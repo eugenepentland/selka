@@ -16,9 +16,23 @@ fn named(manifest: Manifest, name: []const u8) ?Unit {
 }
 // spec: QBE-1
 test "scalar units remain stable across body edits and declaration reorder" {
-    var before = try emitted(std.testing.allocator, "fn square(x:i64)->i64{return x*x;}fn main()->i64{return square(10);}");
+    var before = try emitted(std.testing.allocator,
+        \\def square(x: i64) -> i64:
+        \\    return x * x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return square(10)
+    );
     defer before.deinit();
-    var after = try emitted(std.testing.allocator, "fn main()->i64{return square(10);}fn square(x:i64)->i64{return x*x+1;}");
+    var after = try emitted(std.testing.allocator,
+        \\def main() -> i64:
+        \\    return square(10)
+        \\
+        \\
+        \\def square(x: i64) -> i64:
+        \\    return x * x + 1
+    );
     defer after.deinit();
     const caller_before = named(before.value, "main").?;
     const caller_after = named(after.value, "main").?;
@@ -32,7 +46,19 @@ test "scalar units remain stable across body edits and declaration reorder" {
 
 test "QBE lowers stack joins loops casts and calls independently" {
     const a = std.testing.allocator;
-    var c = try language.Compilation.init(a, "qbe.my", "fn twice(x:i64)->i64{return x*2;}fn main()->i64{let mut x:i64=0;while x<4{x=x+1;}if x==4{return twice(x);}return 0;}");
+    var c = try language.Compilation.init(a, "qbe.my",
+        \\def twice(x: i64) -> i64:
+        \\    return x * 2
+        \\
+        \\
+        \\def main() -> i64:
+        \\    x: i64 = 0
+        \\    while x < 4:
+        \\        x = x + 1
+        \\    if x == 4:
+        \\        return twice(x)
+        \\    return 0
+    );
     defer c.deinit();
     const manifest = try c.emitQbe(a);
     defer a.free(manifest);
@@ -42,7 +68,10 @@ test "QBE lowers stack joins loops casts and calls independently" {
 }
 
 fn allocationScenario(a: std.mem.Allocator) !void {
-    var c = try language.Compilation.init(a, "qbe.my", "fn main()->i64{return 7;}");
+    var c = try language.Compilation.init(a, "qbe.my",
+        \\def main() -> i64:
+        \\    return 7
+    );
     defer c.deinit();
     const manifest = try c.emitQbe(a);
     defer a.free(manifest);
@@ -77,7 +106,13 @@ test "QBE bounds ABI stack usage and heap backs large local frames" {
 }
 
 test "QBE emits direct scalar comparisons wrapping and checked addition" {
-    var parsed = try emitted(std.testing.allocator, "fn main()->i64{let x:i64=3; if x<8{return x+2;}return 0;}");
+    var parsed = try emitted(std.testing.allocator,
+        \\def main() -> i64:
+        \\    x: i64 = 3
+        \\    if x < 8:
+        \\        return x + 2
+        \\    return 0
+    );
     defer parsed.deinit();
     const il = named(parsed.value, "main").?.il;
     try std.testing.expect(std.mem.indexOf(u8, il, "csltl") != null);
@@ -86,7 +121,14 @@ test "QBE emits direct scalar comparisons wrapping and checked addition" {
     try std.testing.expect(std.mem.indexOf(u8, il, "myl_qbe_fail_overflow") != null);
 }
 test "QBE specializes scalar generic calls" {
-    var parsed = try emitted(std.testing.allocator, "fn identity<T:copy>(x:T)->T{return x;}fn main()->i64{return identity::<i64>(2);}");
+    var parsed = try emitted(std.testing.allocator,
+        \\def identity[T](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return identity[i64](2)
+    );
     defer parsed.deinit();
     try std.testing.expectEqual(@as(usize, 2), parsed.value.functions.len);
 }

@@ -96,7 +96,20 @@ test "host sessions enforce argument result call and work budgets with recovery 
     try t.expectError(error.HostWorkLimit, next.call(id, &.{.{ .i64 = 7 }}));
 }
 fn schema(allocator: std.mem.Allocator) !language.Compilation {
-    var c = try language.Compilation.init(allocator, "host-schema.my", "struct Point{x:i64,y:i64}result Checked{ok:Point,err:i64}fn main()->i64{return 0;}");
+    var c = try language.Compilation.init(allocator, "host-schema.my",
+        \\class Point:
+        \\    x: i64
+        \\    y: i64
+        \\
+        \\
+        \\result Checked:
+        \\    ok: Point,
+        \\    err: i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     errdefer c.deinit();
     try c.check();
     return c;

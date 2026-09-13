@@ -28,7 +28,14 @@ fn rejectAll(sources: []const []const u8, code: []const u8) !void {
 
 // spec: GC-SOURCE-9
 test "bytecode rejects managed metadata on an ordinary aggregate" {
-    var compilation = try language.Compilation.init(t.allocator, "forged-managed.my", "struct Record{value:i64}fn main()->i64{return 0;}");
+    var compilation = try language.Compilation.init(t.allocator, "forged-managed.my",
+        \\class Record:
+        \\    value: i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer compilation.deinit();
     try compilation.emit();
     var program = compilation.code.?;
@@ -49,10 +56,20 @@ fn allocationFailure(allocator: std.mem.Allocator, program: language.bytecode.Pr
 
 // spec: GC-SOURCE-1
 test "managed aliases mutate immutable bindings across helpers without allocator authority" {
-    const source = "" ++
-        "fn change(values:List<i64>)->unit{values.push(40);values[0u64]=42;}" ++
-        "fn main()->i64{let values:List<i64>=[];let alias=values;change(alias);" ++
-        "if len(values)!=1{return 1;}return values[0u64];}";
+    const source =
+        \\def change(values: List[i64]):
+        \\    values.push(40)
+        \\    values[0u64] = 42
+        \\
+        \\
+        \\def main() -> i64:
+        \\    values: List[i64] = []
+        \\    alias = values
+        \\    change(alias)
+        \\    if len(values) != 1:
+        \\        return 1
+        \\    return values[0u64]
+    ;
     var statistics: language.vm.GcStatistics = .{};
     const result = try execute(source, &statistics);
     try t.expectEqual(@as(i64, 42), result.value);
@@ -63,11 +80,26 @@ test "managed aliases mutate immutable bindings across helpers without allocator
 
 // spec: GC-SOURCE-2
 test "managed recursive record cycle is reclaimed at an allocation before VM teardown" {
-    const source = "struct Node{children:List<Node>,value:i64}" ++
-        "fn cycle()->unit{let nodes:List<Node>=[];" ++
-        "nodes.push(new Node{children:nodes,value:42});" ++
-        "let node=nodes[0u64];let alias=node.children;alias[0u64]=node;}" ++
-        "fn main()->i64{cycle();let spare:List<Node>=[];_ = spare;return 42;}";
+    const source =
+        \\class Node:
+        \\    children: List[Node]
+        \\    value: i64
+        \\
+        \\
+        \\def cycle():
+        \\    nodes: List[Node] = []
+        \\    nodes.push(Node(children=nodes, value=42))
+        \\    node = nodes[0u64]
+        \\    alias = node.children
+        \\    alias[0u64] = node
+        \\
+        \\
+        \\def main() -> i64:
+        \\    cycle()
+        \\    spare: List[Node] = []
+        \\    _ = spare
+        \\    return 42
+    ;
     var statistics: language.vm.GcStatistics = .{};
     try t.expectEqual(@as(i64, 42), (try execute(source, &statistics)).value);
     try t.expectEqual(@as(u64, 2), statistics.created);
@@ -77,10 +109,26 @@ test "managed recursive record cycle is reclaimed at an allocation before VM tea
 
 // spec: GC-SOURCE-3
 test "managed intermediate call arguments and record snapshots survive collection" {
-    const source = "struct Holder{values:List<i64>}" ++
-        "fn make()->List<i64>{let values:List<i64>=[];values.push(42);return values;}" ++
-        "fn consume(first:Holder,second:List<i64>)->i64{second.push(9);let values=first.values;return values[0u64];}" ++
-        "fn main()->i64{return consume(new Holder{values:make()},[]);}";
+    const source =
+        \\class Holder:
+        \\    values: List[i64]
+        \\
+        \\
+        \\def make() -> List[i64]:
+        \\    values: List[i64] = []
+        \\    values.push(42)
+        \\    return values
+        \\
+        \\
+        \\def consume(first: Holder, second: List[i64]) -> i64:
+        \\    second.push(9)
+        \\    values = first.values
+        \\    return values[0u64]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return consume(Holder(values=make()), [])
+    ;
     var statistics: language.vm.GcStatistics = .{};
     try t.expectEqual(@as(i64, 42), (try execute(source, &statistics)).value);
     try t.expectEqual(@as(u64, 2), statistics.created);
@@ -91,10 +139,14 @@ test "managed intermediate call arguments and record snapshots survive collectio
 // spec: GC-SOURCE-4
 test "managed bounds traps release all execution roots and backing" {
     for ([_][]const u8{
-        "return values[0u64];",
-        "values[0u64]=42;return 0;",
+        "return values[0u64]",
+        "values[0u64] = 42\n    return 0",
     }) |operation| {
-        const source = try std.fmt.allocPrint(t.allocator, "fn main()->i64{{let values:List<i64>=[];{s}}}", .{operation});
+        const source = try std.fmt.allocPrint(t.allocator,
+            \\def main() -> i64:
+            \\    values: List[i64] = []
+            \\    {s}
+        , .{operation});
         defer t.allocator.free(source);
         var statistics: language.vm.GcStatistics = .{};
         const result = try execute(source, &statistics);
@@ -116,20 +168,47 @@ test "noalloc rejects transitive managed allocation while permitting fixed-slot 
         defer t.allocator.free(append_source);
         try reject(append_source, "E_EFFECT_BOUND");
     }
-    const source = "" ++
-        "fn fixed(values:List<i64>)->unit noalloc{values[0u64]=42;}" ++
-        "fn inspect(values:List<i64>)->i64 noalloc{fixed(values);return values[0u64];}" ++
-        "fn main()->i64{let values:List<i64>=[];values.push(0);return inspect(values);}";
+    const source =
+        \\def fixed(values: List[i64]) noalloc:
+        \\    values[0u64] = 42
+        \\
+        \\
+        \\def inspect(values: List[i64]) -> i64 noalloc:
+        \\    fixed(values)
+        \\    return values[0u64]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    values: List[i64] = []
+        \\    values.push(0)
+        \\    return inspect(values)
+    ;
     var statistics: language.vm.GcStatistics = .{};
     try t.expectEqual(@as(i64, 42), (try execute(source, &statistics)).value);
 }
 
 // spec: GC-SOURCE-10
 test "managed source execution unwinds roots on every host allocation failure" {
-    const source = "struct Holder{values:List<i64>}" ++
-        "fn make()->List<i64>{let values:List<i64>=[];values.push(42);return values;}" ++
-        "fn consume(first:Holder,second:List<i64>)->i64{second.push(9);let values=first.values;return values[0u64];}" ++
-        "fn main()->i64{return consume(new Holder{values:make()},[]);}";
+    const source =
+        \\class Holder:
+        \\    values: List[i64]
+        \\
+        \\
+        \\def make() -> List[i64]:
+        \\    values: List[i64] = []
+        \\    values.push(42)
+        \\    return values
+        \\
+        \\
+        \\def consume(first: Holder, second: List[i64]) -> i64:
+        \\    second.push(9)
+        \\    values = first.values
+        \\    return values[0u64]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return consume(Holder(values=make()), [])
+    ;
     var compilation = try language.Compilation.init(t.allocator, "managed-oom.my", source);
     defer compilation.deinit();
     try compilation.emit();
@@ -138,7 +217,15 @@ test "managed source execution unwinds roots on every host allocation failure" {
 
 // spec: GC-SOURCE-11
 test "managed cycles lose local and record roots on block break and continue exits" {
-    const prefix = "struct Node{children:List<Node>,value:i64}struct Holder{nodes:List<Node>}";
+    const prefix =
+        \\class Node:
+        \\    children: List[Node]
+        \\    value: i64
+        \\
+        \\
+        \\class Holder:
+        \\    nodes: List[Node]
+    ;
     const cycle = "let nodes:List<Node>=[];nodes.push(new Node{children:nodes,value:42});" ++
         "let holder=new Holder{nodes:nodes};let alias=holder.nodes;if len(alias)!=1{return 1;}";
     const bodies = [_][]const u8{
@@ -159,8 +246,32 @@ test "managed cycles lose local and record roots on block break and continue exi
 // spec: GC-SOURCE-7
 test "managed elements reject owned resources and unchecked results" {
     try rejectAll(&.{
-        "resource File:filesystem;fn main()->i64{let values:List<File>=[];return len(values);}",
-        "resource File:filesystem;struct Wrapper{file:File}fn main()->i64{let values:List<Wrapper>=[];return len(values);}",
-        "result Answer{ok:i64,err:i64}fn main()->i64{let values:List<Answer>=[];return len(values);}",
+        \\resource File: filesystem
+        \\
+        \\
+        \\def main() -> i64:
+        \\    values: List[File] = []
+        \\    return len(values)
+        ,
+        \\resource File: filesystem
+        \\
+        \\
+        \\class Wrapper:
+        \\    file: File
+        \\
+        \\
+        \\def main() -> i64:
+        \\    values: List[Wrapper] = []
+        \\    return len(values)
+        ,
+        \\result Answer:
+        \\    ok: i64,
+        \\    err: i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    values: List[Answer] = []
+        \\    return len(values)
+        ,
     }, "E_GENERIC_REQUIREMENT");
 }

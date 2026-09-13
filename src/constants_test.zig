@@ -3,10 +3,31 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 fn scenario(allocator: std.mem.Allocator) !void {
-    const text = "const ANSWER:i64=BASE*2;const BASE:i64=21;const MIN:i64=-9223372036854775808;" ++
-        "const SAFE:bool=false&&(1/0==1);const WIDTH:u8=cast<u8>(BASE);" ++
-        "fn work<T:copy>()->i64{if SAFE{return MIN;}return ANSWER+cast<i64>(WIDTH);}" ++
-        "fn main()->i64{return work::<bool>();}";
+    const text =
+        \\const ANSWER: i64 = BASE * 2
+        \\
+        \\
+        \\const BASE: i64 = 21
+        \\
+        \\
+        \\const MIN: i64 = -9223372036854775808
+        \\
+        \\
+        \\const SAFE: bool = False and divtrunc(1, 0) == 1
+        \\
+        \\
+        \\const WIDTH: u8 = cast<u8>(BASE)
+        \\
+        \\
+        \\def work[T]() -> i64:
+        \\    if SAFE:
+        \\        return MIN
+        \\    return ANSWER + cast<i64>(WIDTH)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return work[bool]()
+    ;
     var compilation = try language.Compilation.init(allocator, "constants.my", text);
     defer compilation.deinit();
     try t.expectEqual(@as(i64, 63), (try compilation.execute(allocator)).value);
@@ -24,7 +45,12 @@ test "scalar constants support forward dependencies checked widths short circuit
 }
 fn provider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
     const text = if (std.mem.eql(u8, path, "main.my"))
-        "module main;import constants;fn main()->i64{return constants::VALUE;}"
+        \\module main
+        \\import constants
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return constants.VALUE
     else if (std.mem.eql(u8, path, "constants.my"))
         "module constants;export VALUE;const VALUE:i64=FACTOR*6;const FACTOR:i64=7;"
     else

@@ -1,10 +1,35 @@
+//! Typed JSON values: canonical encoding of public types, decoding limits and the
+//! rejections that keep an out-of-range or incomplete document out of the guest.
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const codec = @import("typed_json.zig");
 const typed = @import("typed.zig");
 const Value = typed.Value;
-const source = "enum Flag { yes, no } struct Point { x: u64, flags: [Flag]bool } union Choice { none, point: Point } result Outcome { ok: Choice, err: i8 } fn main() -> i64 { return 0; }";
+const source =
+    \\enum Flag:
+    \\    yes,
+    \\    no
+    \\
+    \\
+    \\class Point:
+    \\    x: u64
+    \\    flags: [Flag]bool
+    \\
+    \\
+    \\union Choice:
+    \\    none,
+    \\    point: Point
+    \\
+    \\
+    \\result Outcome:
+    \\    ok: Choice,
+    \\    err: i8
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return 0
+;
 const document = "{\"value\":{\"value\":{\"value\":{\"flags\":{\"no\":false,\"yes\":true},\"x\":\"18446744073709551615\"},\"case\":\"point\"},\"case\":\"ok\"},\"type\":\"Outcome\",\"version\":\"typed-json-v1\"}";
 const canonical = "{\"version\":\"typed-json-v1\",\"type\":\"Outcome\",\"value\":{\"case\":\"ok\",\"value\":{\"case\":\"point\",\"value\":{\"x\":\"18446744073709551615\",\"flags\":{\"yes\":true,\"no\":false}}}}}";
 fn find(records: []const typed.Record, name: []const u8) typed.Type {
@@ -42,7 +67,15 @@ test "typed JSON materializes nominal values independently and cleans up every a
 }
 // spec: WIRE-3
 test "typed JSON encodes independently constructed values without consuming ownership" {
-    var compilation = try language.Compilation.init(t.allocator, "codec.my", "struct Pair { n: i16, ok: bool } fn main() -> i64 { return 0; }");
+    var compilation = try language.Compilation.init(t.allocator, "codec.my",
+        \\class Pair:
+        \\    n: i16
+        \\    ok: bool
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer compilation.deinit();
     try compilation.check();
     const records = compilation.program.?.records;
@@ -93,7 +126,19 @@ test "typed JSON rejects malformed host values before emitting bytes" {
 }
 
 test "typed JSON rejects later fields after releasing already decoded aggregates" {
-    var compilation = try language.Compilation.init(t.allocator, "codec.my", "struct Inner { n: i64 } struct Outer { a: Inner, b: bool } fn main() -> i64 { return 0; }");
+    var compilation = try language.Compilation.init(t.allocator, "codec.my",
+        \\class Inner:
+        \\    n: i64
+        \\
+        \\
+        \\class Outer:
+        \\    a: Inner
+        \\    b: bool
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer compilation.deinit();
     try compilation.check();
     const records = compilation.program.?.records;
@@ -123,7 +168,14 @@ test "typed JSON failure locations survive document and checked catalog teardown
     try t.expect(!location.has_path);
 }
 test "typed JSON encoding locates malformed nested native values without consuming them" {
-    var compilation = try language.Compilation.init(t.allocator, "codec.my", "struct R { values: [2]u8 } fn main()->i64{return 0;}");
+    var compilation = try language.Compilation.init(t.allocator, "codec.my",
+        \\class R:
+        \\    values: [2]u8
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer compilation.deinit();
     try compilation.check();
     const records = compilation.program.?.records;

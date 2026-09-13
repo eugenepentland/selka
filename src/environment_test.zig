@@ -3,7 +3,17 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const env = @import("environment.zig");
-const declarations = "struct Entry { present: bool, bytes: [4]u8, length: u64 } result Lookup { err: i64, ok: Entry } ";
+const declarations =
+    \\class Entry:
+    \\    present: bool
+    \\    bytes: [4]u8
+    \\    length: u64
+    \\
+    \\
+    \\result Lookup:
+    \\    err: i64,
+    \\    ok: Entry
+;
 const Fake = struct {
     calls: usize = 0,
     value: ?[]const u8 = "\x00\xff",
@@ -31,13 +41,25 @@ fn reject(source: []const u8, code: []const u8) !void {
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
-const forwarded = declarations ++ "struct Authority { env: environment_cap } fn lookup(auth: Authority) -> Lookup " ++
-    "effects(environment) { return environment_get<Lookup>(auth.env, new [1]u8 [75u8]); } " ++
-    "fn main(environment: environment_cap) -> i64 noio { match lookup(new Authority { " ++
-    "env: environment }) { Lookup.ok(entry) => { if entry.present { return 10 + " ++
-    "cast<i64>(entry.length) + cast<i64>(entry.bytes[3]); } else { return " ++
-    "cast<i64>(entry.length) + cast<i64>(entry.bytes[0]); } }, Lookup.err(code) => { " ++
-    "return -code; } } }";
+const forwarded = declarations ++
+    \\class Authority:
+    \\    env: environment_cap
+    \\
+    \\
+    \\def lookup(auth: Authority) -> Lookup effects(environment):
+    \\    return environment_get<Lookup>(auth.env, [75u8])
+    \\
+    \\
+    \\def main(environment: environment_cap) -> i64 noio:
+    \\    match lookup(Authority(env=environment)):
+    \\        case Lookup.ok(entry):
+    \\            if entry.present:
+    \\                return 10 + cast<i64>(entry.length) + cast<i64>(entry.bytes[3])
+    \\            else:
+    \\                return cast<i64>(entry.length) + cast<i64>(entry.bytes[0])
+    \\        case Lookup.err(code):
+    \\            return -code
+;
 fn scenario(allocator: std.mem.Allocator) !void {
     var fake: Fake = .{};
     var c = try language.Compilation.init(allocator, "environment.my", forwarded);
@@ -64,10 +86,14 @@ test "environment grants delegate explicitly and missing empty and present value
     try t.expectEqual(@as(usize, 3), fake.calls);
 }
 test "environment returns raw bytes and canonical zero padding" {
-    var c = try language.Compilation.init(t.allocator, "bytes.my", declarations ++ "fn main(env: environment_cap) -> i64 { match environment_get<Lookup>(env, new [1]u8 " ++
-        "[75u8]) { Lookup.ok(entry) => { return cast<i64>(entry.bytes[0]) + " ++
-        "cast<i64>(entry.bytes[1]) + cast<i64>(entry.bytes[2]) + cast<i64>(entry.bytes[3]); }," ++
-        " Lookup.err(code) => { return -code; } } }");
+    var c = try language.Compilation.init(t.allocator, "bytes.my", declarations ++
+        \\def main(env: environment_cap) -> i64:
+        \\    match environment_get<Lookup>(env, [75u8]):
+        \\        case Lookup.ok(entry):
+        \\            return cast<i64>(entry.bytes[0]) + cast<i64>(entry.bytes[1]) + cast<i64>(entry.bytes[2]) + cast<i64>(entry.bytes[3])
+        \\        case Lookup.err(code):
+        \\            return -code
+    );
     defer c.deinit();
     var fake: Fake = .{};
     try t.expectEqual(@as(i64, 255), (try c.executeWithOptions(t.allocator, .{ .environment = fake.provider() })).value);
@@ -102,10 +128,28 @@ test "environment execution reporting and byte conversions release all failed al
     try t.checkAllAllocationFailures(no_resize.allocator(), scenario, .{});
 }
 test "zero capacity environment values distinguish absent empty and too large" {
-    var c = try language.Compilation.init(t.allocator, "zero.my", "struct Entry { bytes: [0]u8, length: u64, present: bool } result Lookup { ok: Entry, " ++
-        "err: i64 } fn main(env: environment_cap) -> i64 { match environment_get<Lookup>(env, " ++
-        "new [1]u8 [75u8]) { Lookup.ok(entry) => { if entry.present { return 1; } else { " ++
-        "return 0; } }, Lookup.err(code) => { return -code; } } }");
+    var c = try language.Compilation.init(t.allocator, "zero.my",
+        \\class Entry:
+        \\    bytes: [0]u8
+        \\    length: u64
+        \\    present: bool
+        \\
+        \\
+        \\result Lookup:
+        \\    ok: Entry,
+        \\    err: i64
+        \\
+        \\
+        \\def main(env: environment_cap) -> i64:
+        \\    match environment_get<Lookup>(env, [75u8]):
+        \\        case Lookup.ok(entry):
+        \\            if entry.present:
+        \\                return 1
+        \\            else:
+        \\                return 0
+        \\        case Lookup.err(code):
+        \\            return -code
+    );
     defer c.deinit();
     var fake: Fake = .{ .value = null };
     try t.expectEqual(@as(i64, 0), (try c.executeWithOptions(t.allocator, .{ .environment = fake.provider() })).value);
@@ -115,8 +159,17 @@ test "zero capacity environment values distinguish absent empty and too large" {
     try t.expectEqual(@as(i64, -4), (try c.executeWithOptions(t.allocator, .{ .environment = fake.provider() })).value);
 }
 const generic_environment = declarations ++
-    "fn lookup<G:copy>(cap:environment_cap)->Lookup effects(environment){return environment_get<Lookup>(cap,new [1]u8[75u8]);}" ++
-    "fn main(cap:environment_cap)->i64{match lookup::<bool>(cap){Lookup.ok(e)=>{return cast<i64>(e.length)+cast<i64>(e.bytes[0])+cast<i64>(e.bytes[1]);},Lookup.err(e)=>{return e;}}}";
+    \\def lookup[G](cap: environment_cap) -> Lookup effects(environment):
+    \\    return environment_get<Lookup>(cap, [75u8])
+    \\
+    \\
+    \\def main(cap: environment_cap) -> i64:
+    \\    match lookup[bool](cap):
+    \\        case Lookup.ok(e):
+    \\            return cast<i64>(e.length) + cast<i64>(e.bytes[0]) + cast<i64>(e.bytes[1])
+    \\        case Lookup.err(e):
+    \\            return e
+;
 fn genericEnvironmentScenario(allocator: std.mem.Allocator) !void {
     var fake: Fake = .{};
     var c = try language.Compilation.init(allocator, "generic-environment.my", generic_environment);

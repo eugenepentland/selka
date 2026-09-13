@@ -2,12 +2,32 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
-const schema = "struct Sample{values:[2]i64,tag:u8}";
+const schema =
+    \\class Sample:
+    \\    values: [2]i64
+    \\    tag: u8
+;
 const program = schema ++
-    "fn make<T:integer>(x:T)->Sample{return new Sample{values:new [2]i64[cast<i64>(x),cast<i64>(x)+1],tag:7u8};}" ++
-    "fn total<T:copy>(x:T,s:Sample)->i64{_ = x;return s.values[0]+s.values[1]+cast<i64>(len(s.values));}" ++
-    "fn choose<T:copy>(x:T,a:Sample,b:Sample)->Sample{_ = x;if a.tag==b.tag{return a;}return b;}" ++
-    "fn main()->i64{let p=make::<u8>(7u8);return total::<bool>(true,choose::<i64>(0,p,p));}";
+    \\def make[T: integer](x: T) -> Sample:
+    \\    return Sample(values=[cast<i64>(x), cast<i64>(x) + 1], tag=7u8)
+    \\
+    \\
+    \\def total[T](x: T, s: Sample) -> i64:
+    \\    _ = x
+    \\    return s.values[0] + s.values[1] + cast<i64>(len(s.values))
+    \\
+    \\
+    \\def choose[T](x: T, a: Sample, b: Sample) -> Sample:
+    \\    _ = x
+    \\    if a.tag == b.tag:
+    \\        return a
+    \\    return b
+    \\
+    \\
+    \\def main() -> i64:
+    \\    p = make[u8](7u8)
+    \\    return total[bool](True, choose[i64](0, p, p))
+;
 fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "concrete.my", program);
     defer c.deinit();
@@ -25,17 +45,44 @@ fn reject(bytes: []const u8, expected: []const u8) !void {
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings(expected, c.diagnostics.items[0].code);
 }
-const updates = "struct Pair{values:[2]i64,flag:bool}" ++
-    "fn change<T:integer>(p:Pair,index:T,value:i64)->Pair{let mut q=p;q.values=replace(p.values,index,value);return q;}" ++
-    "fn main()->i64{let original=new Pair{values:new [2]i64[7,8],flag:true};let changed=change::<u8>(original,0u8,20);" ++
-    "if changed.flag{return original.values[0]+changed.values[0]+changed.values[1];}return 0;}";
+const updates =
+    \\class Pair:
+    \\    values: [2]i64
+    \\    flag: bool
+    \\
+    \\
+    \\def change[T: integer](p: Pair, index: T, value: i64) -> Pair:
+    \\    q = p
+    \\    q.values = replace(p.values, index, value)
+    \\    return q
+    \\
+    \\
+    \\def main() -> i64:
+    \\    original = Pair(values=[7, 8], flag=True)
+    \\    changed = change[u8](original, 0u8, 20)
+    \\    if changed.flag:
+    \\        return original.values[0] + changed.values[0] + changed.values[1]
+    \\    return 0
+;
 fn updateScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "updates.my", updates);
     defer c.deinit();
     try t.expectEqual(@as(i64, 35), (try c.execute(allocator)).value);
-    var table = try language.Compilation.init(allocator, "table-update.my", "enum Key{first,second}" ++
-        "fn put<T:integer>(p:[Key]i64,key:Key,value:T)->[Key]i64{return replace(p,key,cast<i64>(value));}" ++
-        "fn main()->i64{let old=new [Key]i64{first:1,second:2};let changed=put::<u8>(old,new Key.first,8u8);return old[new Key.first]+changed[new Key.first];}");
+    var table = try language.Compilation.init(allocator, "table-update.my",
+        \\enum Key:
+        \\    first,
+        \\    second
+        \\
+        \\
+        \\def put[T: integer](p: [Key]i64, key: Key, value: T) -> [Key]i64:
+        \\    return replace(p, key, cast<i64>(value))
+        \\
+        \\
+        \\def main() -> i64:
+        \\    old: [Key]i64 = {Key.first: 1, Key.second: 2}
+        \\    changed = put[u8](old, Key.first, 8u8)
+        \\    return old[Key.first] + changed[Key.first]
+    );
     defer table.deinit();
     try t.expectEqual(@as(i64, 9), (try table.execute(allocator)).value);
 }
@@ -45,12 +92,50 @@ test "generic record updates and array replacement preserve snapshots under allo
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), updateScenario, .{});
 }
-const variants = "struct Payload{n:i64}enum Color{red,blue}union Choice{none,value:Payload}" ++
-    "fn make<T:integer>(x:T)->Choice{return new Choice.value(new Payload{n:cast<i64>(x)});}" ++
-    "fn score<T:copy>(context:T,x:Choice)->i64{_ = context;match x{Choice.none=>{return 0;},Choice.value(p)=>{return p.n;}}}" ++
-    "fn color<T:copy>(context:T)->Color{_ = context;return new Color.blue;}" ++
-    "fn mapping<T:integer>(x:T)->[Color]i64{return new [Color]i64{red:cast<i64>(x),blue:0};}" ++
-    "fn main()->i64{match color::<bool>(true){Color.red=>{return 0;},Color.blue=>{return score::<i64>(0,make::<u8>(7u8))+mapping::<u8>(2u8)[new Color.red];}}}";
+const variants =
+    \\class Payload:
+    \\    n: i64
+    \\
+    \\
+    \\enum Color:
+    \\    red,
+    \\    blue
+    \\
+    \\
+    \\union Choice:
+    \\    none,
+    \\    value: Payload
+    \\
+    \\
+    \\def make[T: integer](x: T) -> Choice:
+    \\    return Choice.value(Payload(n=cast<i64>(x)))
+    \\
+    \\
+    \\def score[T](context: T, x: Choice) -> i64:
+    \\    _ = context
+    \\    match x:
+    \\        case Choice.none:
+    \\            return 0
+    \\        case Choice.value(p):
+    \\            return p.n
+    \\
+    \\
+    \\def color[T](context: T) -> Color:
+    \\    _ = context
+    \\    return Color.blue
+    \\
+    \\
+    \\def mapping[T: integer](x: T) -> [Color]i64:
+    \\    return {Color.red: cast<i64>(x), Color.blue: 0}
+    \\
+    \\
+    \\def main() -> i64:
+    \\    match color[bool](True):
+    \\        case Color.red:
+    \\            return 0
+    \\        case Color.blue:
+    \\            return score[i64](0, make[u8](7u8)) + mapping[u8](2u8)[Color.red]
+;
 fn variantScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "variants.my", variants);
     defer c.deinit();
@@ -64,42 +149,309 @@ test "generic concrete variants construct and match with scoped payloads under a
 }
 
 test "generic concrete shapes reject mismatched nominal values and malformed constructors before instantiation" {
-    try reject("struct A{n:i64}struct B{n:i64}fn f<T:copy>(x:A)->B{return x;}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
-    try reject("struct A{n:i64}fn f<T:copy>(x:T)->A{_ = x;return new A{};}fn main()->i64{return 0;}", "E_MISSING_FIELD");
-    try reject("struct A{n:i64}fn f<T:copy>(x:T)->A{_ = x;return new A{n:1,n:2};}fn main()->i64{return 0;}", "E_DUPLICATE_FIELD");
-    try reject("struct A{n:i64}fn f<T:copy>(x:A)->i64{return x.other;}fn main()->i64{return 0;}", "E_UNKNOWN_FIELD");
-    try reject("fn f<T:copy>(x:T)->[2]i64{_ = x;return new [2]i64[1];}fn main()->i64{return 0;}", "E_ARRAY_LENGTH");
-    try reject("fn f<T:copy>(x:[2]i64)->i64{return x[true];}fn main()->i64{return 0;}", "E_GENERIC_OPERATION");
-    try reject("fn f<T:copy>(x:T)->i64{return x.n;}fn main()->i64{return 0;}", "E_GENERIC_BODY_UNSUPPORTED");
+    try reject(
+        \\class A:
+        \\    n: i64
+        \\
+        \\
+        \\class B:
+        \\    n: i64
+        \\
+        \\
+        \\def f[T](x: A) -> B:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_GENERIC_TYPE");
+    try reject(
+        \\class A:
+        \\    n: i64
+        \\
+        \\
+        \\def f[T](x: T) -> A:
+        \\    _ = x
+        \\    return A()
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_MISSING_FIELD");
+    try reject(
+        \\class A:
+        \\    n: i64
+        \\
+        \\
+        \\def f[T](x: T) -> A:
+        \\    _ = x
+        \\    return A(n=1, n=2)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_DUPLICATE_FIELD");
+    try reject(
+        \\class A:
+        \\    n: i64
+        \\
+        \\
+        \\def f[T](x: A) -> i64:
+        \\    return x.other
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_UNKNOWN_FIELD");
+    try reject(
+        \\def f[T](x: T) -> [2]i64:
+        \\    _ = x
+        \\    return [1]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_ARRAY_LENGTH");
+    try reject(
+        \\def f[T](x: [2]i64) -> i64:
+        \\    return x[True]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_GENERIC_OPERATION");
+    try reject(
+        \\def f[T](x: T) -> i64:
+        \\    return x.n
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_GENERIC_BODY_UNSUPPORTED");
 }
 
 test "generic concrete variants reject incomplete duplicate and malformed uncalled matches" {
-    try reject("enum E{a,b}fn f<T:copy>(x:E)->i64{match x{E.a=>{return 1;}}}fn main()->i64{return 0;}", "E_INCOMPLETE_MATCH");
-    try reject("enum E{a}fn f<T:copy>(x:E)->i64{match x{E.a=>{return 1;},E.a=>{return 2;}}}fn main()->i64{return 0;}", "E_DUPLICATE_ARM");
-    try reject("union E{a:i64}fn f<T:copy>(x:E)->i64{match x{E.a=>{return 1;}}}fn main()->i64{return 0;}", "E_PATTERN_PAYLOAD");
-    try reject("enum E{a}fn f<T:copy>(x:E)->i64{match x{E.a(p)=>{return p;}}}fn main()->i64{return 0;}", "E_PATTERN_PAYLOAD");
-    try reject("union E{a:i64}fn f<T:copy>(x:T)->E{_ = x;return new E.a(true);}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
-    try reject("union E{a:i64}fn f<T:copy>(x:T)->E{_ = x;return new E.a;}fn main()->i64{return 0;}", "E_VARIANT_PAYLOAD");
-    try reject("enum E{a}enum F{a}fn f<T:copy>(x:E)->i64{match x{F.a=>{return 1;}}}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
+    try reject(
+        \\enum E:
+        \\    a,
+        \\    b
+        \\
+        \\
+        \\def f[T](x: E) -> i64:
+        \\    match x:
+        \\        case E.a:
+        \\            return 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_INCOMPLETE_MATCH");
+    try reject(
+        \\enum E:
+        \\    a
+        \\
+        \\
+        \\def f[T](x: E) -> i64:
+        \\    match x:
+        \\        case E.a:
+        \\            return 1
+        \\        case E.a:
+        \\            return 2
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_DUPLICATE_ARM");
+    try reject(
+        \\union E:
+        \\    a: i64
+        \\
+        \\
+        \\def f[T](x: E) -> i64:
+        \\    match x:
+        \\        case E.a:
+        \\            return 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_PATTERN_PAYLOAD");
+    try reject(
+        \\enum E:
+        \\    a
+        \\
+        \\
+        \\def f[T](x: E) -> i64:
+        \\    match x:
+        \\        case E.a(p):
+        \\            return p
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_PATTERN_PAYLOAD");
+    try reject(
+        \\union E:
+        \\    a: i64
+        \\
+        \\
+        \\def f[T](x: T) -> E:
+        \\    _ = x
+        \\    return E.a(True)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_GENERIC_TYPE");
+    try reject(
+        \\union E:
+        \\    a: i64
+        \\
+        \\
+        \\def f[T](x: T) -> E:
+        \\    _ = x
+        \\    return E.a
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_VARIANT_PAYLOAD");
+    try reject(
+        \\enum E:
+        \\    a
+        \\
+        \\
+        \\enum F:
+        \\    a
+        \\
+        \\
+        \\def f[T](x: E) -> i64:
+        \\    match x:
+        \\        case F.a:
+        \\            return 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_GENERIC_TYPE");
 }
 
 test "generic match payload scopes and fallthrough preserve independent arm checking" {
-    var c = try language.Compilation.init(t.allocator, "arms.my", "union U{left:i64,right:i64}" ++
-        "fn f<T:copy>(x:T,u:U)->i64{_ = x;let mut out=0;match u{U.left(p)=>{out=p;},U.right(p)=>{out=p+1;}}return out;}" ++
-        "fn main()->i64{return f::<bool>(true,new U.left(7))+f::<bool>(false,new U.right(8));}");
+    var c = try language.Compilation.init(t.allocator, "arms.my",
+        \\union U:
+        \\    left: i64,
+        \\    right: i64
+        \\
+        \\
+        \\def f[T](x: T, u: U) -> i64:
+        \\    _ = x
+        \\    out = 0
+        \\    match u:
+        \\        case U.left(p):
+        \\            out = p
+        \\        case U.right(p):
+        \\            out = p + 1
+        \\    return out
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f[bool](True, U.left(7)) + f[bool](False, U.right(8))
+    );
     defer c.deinit();
     try t.expectEqual(@as(i64, 16), (try c.execute(t.allocator)).value);
-    try reject("union U{a:i64}fn f<T:copy>(u:U)->i64{match u{U.a(p)=>{_ = p;}}return p;}fn main()->i64{return 0;}", "E_UNKNOWN_NAME");
-    try reject("enum U{a,b}fn f<T:copy>(u:U)->i64{match u{U.a=>{},U.b=>{return true;}}return 0;}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
-    try reject("enum U{a,b}fn f<T:copy>(u:U)->i64{match u{U.a=>{},U.b=>{return 1;}}}fn main()->i64{return 0;}", "E_MISSING_RETURN");
+    try reject(
+        \\union U:
+        \\    a: i64
+        \\
+        \\
+        \\def f[T](u: U) -> i64:
+        \\    match u:
+        \\        case U.a(p):
+        \\            _ = p
+        \\    return p
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_UNKNOWN_NAME");
+    try reject(
+        \\enum U:
+        \\    a,
+        \\    b
+        \\
+        \\
+        \\def f[T](u: U) -> i64:
+        \\    match u:
+        \\        case U.a:
+        \\            pass
+        \\        case U.b:
+        \\            return True
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_GENERIC_TYPE");
+    try reject(
+        \\enum U:
+        \\    a,
+        \\    b
+        \\
+        \\
+        \\def f[T](u: U) -> i64:
+        \\    match u:
+        \\        case U.a:
+        \\            pass
+        \\        case U.b:
+        \\            return 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_MISSING_RETURN");
 }
 
 test "generic concrete enum tables require complete unique nominal keys" {
-    var c = try language.Compilation.init(t.allocator, "table.my", "enum K{a,b}" ++
-        "fn table<T:integer>(x:T)->[K]i64{return new [K]i64{a:cast<i64>(x),b:2};}" ++
-        "fn main()->i64{return table::<u8>(7u8)[new K.a];}");
+    var c = try language.Compilation.init(t.allocator, "table.my",
+        \\enum K:
+        \\    a,
+        \\    b
+        \\
+        \\
+        \\def table[T: integer](x: T) -> [K]i64:
+        \\    return {K.a: cast<i64>(x), K.b: 2}
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return table[u8](7u8)[K.a]
+    );
     defer c.deinit();
     try t.expectEqual(@as(i64, 7), (try c.execute(t.allocator)).value);
-    try reject("enum K{a,b}fn f<T:copy>(x:T)->[K]i64{_ = x;return new [K]i64{a:1};}fn main()->i64{return 0;}", "E_INCOMPLETE_TABLE");
-    try reject("enum K{a}fn f<T:copy>(x:T)->[K]i64{_ = x;return new [K]i64{a:1,a:2};}fn main()->i64{return 0;}", "E_DUPLICATE_KEY");
+    try reject(
+        \\enum K:
+        \\    a,
+        \\    b
+        \\
+        \\
+        \\def f[T](x: T) -> [K]i64:
+        \\    _ = x
+        \\    return {K.a: 1}
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_INCOMPLETE_TABLE");
+    try reject(
+        \\enum K:
+        \\    a
+        \\
+        \\
+        \\def f[T](x: T) -> [K]i64:
+        \\    _ = x
+        \\    return {K.a: 1, K.a: 2}
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_DUPLICATE_KEY");
 }

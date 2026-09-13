@@ -26,19 +26,49 @@ fn trapped(source: []const u8, code: []const u8, span: []const u8) !void {
 
 // spec: CORE-6
 test "fixed arrays have structural types preserve copies and support every integer index width" {
-    try result("fn first(a: [2]i64) -> i64 { return a[0]; } fn main() -> i64 { let a: [02] i64 = new [2]i64 [3, 4]; let b = replace(a, 0, 8); return first(a) + b[0] + b[1]; }", 15);
+    try result(
+        \\def first(a: [2]i64) -> i64:
+        \\    return a[0]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    a: [02]i64 = [3, 4]
+        \\    b = replace(a, 0, 8)
+        \\    return first(a) + b[0] + b[1]
+    , 15);
     for ([_][]const u8{ "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64" }) |width| {
         const source = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ let a = new [2]u8 [7u8, 9u8]; return cast<i64>(a[1{s}]); }}", .{width});
         defer testing.allocator.free(source);
         try result(source, 9);
     }
-    try result("fn empty(a: [0]bool) -> [0]bool { return a; } fn main() -> i64 { return cast<i64>(len(empty(new [0]bool []))); }", 0);
-    try result("fn main() -> i64 { return -new [1]i64 [4][0] + 10; }", 6);
+    try result(
+        \\def empty(a: [0]bool) -> [0]bool:
+        \\    return a
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return cast<i64>(len(empty([])))
+    , 0);
+    try result(
+        \\def main() -> i64:
+        \\    return -[4][0] + 10
+    , 6);
 }
 
-const allocation_source = "struct Box { n: i64 } fn id(a: [2]Box) -> [2]Box { return a; } fn main() -> i64 { " ++
-    "let a = id(new [2]Box [new Box { n: 7 }, new Box { n: 9 }]); let b = replace(a, 1u8, " ++
-    "new Box { n: 11 }); return a[1].n + b[1].n + cast<i64>(len(b)); }";
+const allocation_source =
+    \\class Box:
+    \\    n: i64
+    \\
+    \\
+    \\def id(a: [2]Box) -> [2]Box:
+    \\    return a
+    \\
+    \\
+    \\def main() -> i64:
+    \\    a = id([Box(n=7), Box(n=9)])
+    \\    b = replace(a, 1u8, Box(n=11))
+    \\    return a[1].n + b[1].n + cast<i64>(len(b))
+;
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, fixture_path, allocation_source);
     defer compilation.deinit();
@@ -55,11 +85,42 @@ test "array compiler execution dump and discovery clean up at every allocation f
 }
 
 test "array duplicate identity preserves length element type index replacement and order" {
-    const source = "fn a(x: [2]i64) -> i64 { return x[0]; } fn b(y: [02] i64) -> i64 { return y[0]; } fn " ++
-        "c(x: [3]i64) -> i64 { return x[0]; } fn d(x: [2]i64) -> i64 { return x[1]; } fn e(x: " ++
-        "[2]u8) -> i64 { return cast<i64>(x[0]); } fn f(x: [2]i64) -> i64 { return replace(x, " ++
-        "0, 1)[0]; } fn g() -> [2]i64 { return new [2]i64 [1, 2]; } fn h() -> [2]i64 { return " ++
-        "new [2]i64 [2, 1]; } fn main() -> i64 { return 0; }";
+    const source =
+        \\def a(x: [2]i64) -> i64:
+        \\    return x[0]
+        \\
+        \\
+        \\def b(y: [02]i64) -> i64:
+        \\    return y[0]
+        \\
+        \\
+        \\def c(x: [3]i64) -> i64:
+        \\    return x[0]
+        \\
+        \\
+        \\def d(x: [2]i64) -> i64:
+        \\    return x[1]
+        \\
+        \\
+        \\def e(x: [2]u8) -> i64:
+        \\    return cast<i64>(x[0])
+        \\
+        \\
+        \\def f(x: [2]i64) -> i64:
+        \\    return replace(x, 0, 1)[0]
+        \\
+        \\
+        \\def g() -> [2]i64:
+        \\    return [1, 2]
+        \\
+        \\
+        \\def h() -> [2]i64:
+        \\    return [2, 1]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ;
     var compilation = try language.Compilation.init(testing.allocator, "duplicates.my", source);
     defer compilation.deinit();
     try compilation.check();

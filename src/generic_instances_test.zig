@@ -31,7 +31,18 @@ test "generic instances own ordered keys and deduplicate recursive discovery" {
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
 test "generic instances distinguish nominal types with identical representation" {
-    var compilation = try language.Compilation.init(t.allocator, "nominal.my", "domain A:i64{}domain B:i64{}fn main()->i64{return 0;}");
+    var compilation = try language.Compilation.init(t.allocator, "nominal.my",
+        \\domain A: i64:
+        \\    pass
+        \\
+        \\
+        \\domain B: i64:
+        \\    pass
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer compilation.deinit();
     try compilation.check();
     const records = compilation.program.?.records;

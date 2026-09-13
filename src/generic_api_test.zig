@@ -3,12 +3,42 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const File = @import("embedded_project.zig").File;
-const library = "module lib; export Box; export Answer; export echo; " ++
-    "struct Box<T:copy>{value:T} result Answer<T:copy>{ok:T,err:i64}" ++
-    "fn echo<T:equality>(x:[2]T)->[2]T effects(){return x;}" ++
-    "fn hidden<T:copy>(x:T)->T{return x;}";
-const entry = "module main;import lib as api;export run;" ++
-    "fn run(x:i64)->i64{return x;}fn main()->i64{return 0;}";
+const library =
+    \\module lib
+    \\export Box
+    \\export Answer
+    \\export echo
+    \\
+    \\
+    \\class Box[T]:
+    \\    value: T
+    \\
+    \\
+    \\result Answer[T]:
+    \\    ok: T,
+    \\    err: i64
+    \\
+    \\
+    \\def echo[T: equality](x: [2]T) -> [2]T effects():
+    \\    return x
+    \\
+    \\
+    \\def hidden[T](x: T) -> T:
+    \\    return x
+;
+const entry =
+    \\module main
+    \\import lib as api
+    \\export run
+    \\
+    \\
+    \\def run(x: i64) -> i64:
+    \\    return x
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return 0
+;
 const Files = struct {
     library: []const u8 = library,
     fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
@@ -85,14 +115,35 @@ test "public generic identities survive whitespace while source receipts change"
     }
 }
 test "public generic schema refuses invalid uncalled bodies" {
-    try t.expectError(error.SourceError, inspect(t.allocator, "module lib;export bad;fn bad<T:copy>(x:T)->bool{return x==x;}"));
+    try t.expectError(error.SourceError, inspect(t.allocator,
+        \\module lib
+        \\export bad
+        \\
+        \\
+        \\def bad[T](x: T) -> bool:
+        \\    return x == x
+    ));
 }
 
 test "public generic schemas retain structural field operation and codec constraints" {
-    const bytes = try inspect(t.allocator, "module lib;export field;export action;export coded;" ++
-        "fn field<T:copy+field(value:i64)>(x:T)->i64{return x.value;}" ++
-        "fn action<T:copy+op(score(value:T)->i64 effects())>(x:T)->i64{return T.score(x);}" ++
-        "fn coded<T:copy+codec>(x:T)->T{return x;}");
+    const bytes = try inspect(t.allocator,
+        \\module lib
+        \\export field
+        \\export action
+        \\export coded
+        \\
+        \\
+        \\def field[T: copy + field(value: i64)](x: T) -> i64:
+        \\    return x.value
+        \\
+        \\
+        \\def action[T: copy + op(score(value: T) -> i64 effects())](x: T) -> i64:
+        \\    return T.score(x)
+        \\
+        \\
+        \\def coded[T: copy + codec](x: T) -> T:
+        \\    return x
+    );
     defer t.allocator.free(bytes);
     const parsed = try std.json.parseFromSlice(std.json.Value, t.allocator, bytes, .{});
     defer parsed.deinit();
@@ -106,6 +157,18 @@ test "public generic schemas retain structural field operation and codec constra
     try t.expectEqualStrings("codec", coded.get("requirements").?.array.items[1].string);
     const field = templates[2].object.get("contract").?.object.get("type_parameters").?.array.items[0].object;
     try t.expectEqualStrings("value", field.get("field_requirements").?.array.items[0].object.get("name").?.string);
-    try t.expectError(error.SourceError, inspect(t.allocator, "module lib;struct Secret{}export f;" ++
-        "fn f<T:copy+field(value:Secret)>(x:T)->i64{return 0;}"));
+    try t.expectError(error.SourceError, inspect(t.allocator,
+        \\module lib
+        \\
+        \\
+        \\class Secret:
+        \\    pass
+        \\
+        \\
+        \\export f
+        \\
+        \\
+        \\def f[T: copy + field(value: Secret)](x: T) -> i64:
+        \\    return 0
+    ));
 }

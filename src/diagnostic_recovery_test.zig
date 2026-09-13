@@ -4,8 +4,18 @@ const t = std.testing;
 const language = @import("compiler.zig");
 
 fn faults(allocator: std.mem.Allocator) !void {
-    const text = "fn first()->i64{return missing_first;}" ++
-        "fn second()->i64{return missing_second;}fn main()->i64{return first()+second();}";
+    const text =
+        \\def first() -> i64:
+        \\    return missing_first
+        \\
+        \\
+        \\def second() -> i64:
+        \\    return missing_second
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return first() + second()
+    ;
     var compilation = try language.Compilation.init(allocator, "faults.my", text);
     defer compilation.deinit();
     compilation.check() catch |err| switch (err) {
@@ -47,18 +57,44 @@ test "independent body faults survive either repair and forbid execution under a
     try t.checkAllAllocationFailures(stable.allocator(), faults, .{});
 }
 test "generic and ordinary function failures are recovered at separate boundaries" {
-    var compilation = try language.Compilation.init(t.allocator, "generics.my", "fn first<T:copy>(x:T)->T{return missing_first;}" ++
-        "fn second<T:copy>(x:T)->T{return missing_second;}" ++
-        "fn ordinary()->i64{return missing_third;}fn main()->i64{return 0;}");
+    var compilation = try language.Compilation.init(t.allocator, "generics.my",
+        \\def first[T](x: T) -> T:
+        \\    return missing_first
+        \\
+        \\
+        \\def second[T](x: T) -> T:
+        \\    return missing_second
+        \\
+        \\
+        \\def ordinary() -> i64:
+        \\    return missing_third
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqual(@as(usize, 3), compilation.diagnostics.items.len);
     for (compilation.diagnostics.items) |item| try t.expectEqualStrings("E_UNKNOWN_NAME", item.code);
 }
 test "dependent signature failures collapse to one source diagnostic" {
-    var compilation = try language.Compilation.init(t.allocator, "signature.my", "fn broken(x:Unknown)->i64{return 0;}" ++
-        "fn first()->i64{return broken(1);}fn second()->i64{return broken(2);}" ++
-        "fn main()->i64{return first()+second();}");
+    var compilation = try language.Compilation.init(t.allocator, "signature.my",
+        \\def broken(x: Unknown) -> i64:
+        \\    return 0
+        \\
+        \\
+        \\def first() -> i64:
+        \\    return broken(1)
+        \\
+        \\
+        \\def second() -> i64:
+        \\    return broken(2)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return first() + second()
+    );
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqual(@as(usize, 1), compilation.diagnostics.items.len);
@@ -68,8 +104,21 @@ test "dependent signature failures collapse to one source diagnostic" {
 test "project diagnostics retain each module location and reject repeated lowering" {
     const Files = struct {
         fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
-            if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main;import helper;fn main()->i64{return missing_main;}");
-            if (std.mem.eql(u8, path, "helper.my")) return allocator.dupe(u8, "module helper;fn broken()->i64{return missing_helper;}");
+            if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
+                \\module main
+                \\import helper
+                \\
+                \\
+                \\def main() -> i64:
+                \\    return missing_main
+            );
+            if (std.mem.eql(u8, path, "helper.my")) return allocator.dupe(u8,
+                \\module helper
+                \\
+                \\
+                \\def broken() -> i64:
+                \\    return missing_helper
+            );
             return error.NotFound;
         }
     };

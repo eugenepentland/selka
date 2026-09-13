@@ -24,7 +24,14 @@ fn namedType(records: []const typed.Record, name: []const u8) ?typed.Type {
     return null;
 }
 fn resolution(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, "resolve.my", "fn f<T:copy+integer,U:equality>(a:T,b:U)->T{return a;}fn main()->i64{return 0;}");
+    var compilation = try language.Compilation.init(allocator, "resolve.my",
+        \\def f[T: copy + integer, U: equality](a: T, b: U) -> T:
+        \\    return a
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer compilation.deinit();
     try compilation.parse();
     var sink: @import("diagnostic.zig").Sink = .{ .allocator = compilation.arena.allocator() };
@@ -42,9 +49,27 @@ test "generic requirement resolution owns normalized contracts across allocation
 }
 test "generic requirements diagnose unknown names and builtin shadowing before unsupported specialization" {
     const cases = [_]struct { text: []const u8, code: []const u8, token: []const u8 }{
-        .{ .text = "fn f<T:unknown>(x:T)->T{return x;}fn main()->i64{return 0;}", .code = "E_GENERIC_REQUIREMENT", .token = "unknown" },
+        .{ .text =
+        \\def f[T: unknown](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        , .code = "E_GENERIC_REQUIREMENT", .token = "unknown" },
         .{ .text = "fn f<i64:copy>(x:i64)->i64{return x;}fn main()->i64{return 0;}", .code = "E_SYNTAX", .token = "i64" },
-        .{ .text = "fn f<T:copy>(x:T)->T{return x;}fn g<U:bad>(x:U)->U{return x;}fn main()->i64{return 0;}", .code = "E_GENERIC_REQUIREMENT", .token = "bad" },
+        .{ .text =
+        \\def f[T](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def g[U: bad](x: U) -> U:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        , .code = "E_GENERIC_REQUIREMENT", .token = "bad" },
     };
     for (cases) |case| {
         var compilation = try language.Compilation.init(t.allocator, "bad.my", case.text);
@@ -78,9 +103,39 @@ test "generic requirement resolution frees partial results for malformed caller 
 
 // spec: GENERIC-REQUIREMENTS-1
 test "generic requirements preserve nominal identity and ownership obligations" {
-    var compilation = try language.Compilation.init(t.allocator, "requirements.my", "domain Distance:i64{}enum Color{red,blue}struct Point{x:i64}resource File:filesystem;" ++
-        "result Answer{ok:i64,err:i64}struct Pending{answer:Answer}struct Owned{file:File}" ++
-        "fn main()->i64{return 0;}");
+    var compilation = try language.Compilation.init(t.allocator, "requirements.my",
+        \\domain Distance: i64:
+        \\    pass
+        \\
+        \\
+        \\enum Color:
+        \\    red,
+        \\    blue
+        \\
+        \\
+        \\class Point:
+        \\    x: i64
+        \\
+        \\
+        \\resource File: filesystem
+        \\
+        \\
+        \\result Answer:
+        \\    ok: i64,
+        \\    err: i64
+        \\
+        \\
+        \\class Pending:
+        \\    answer: Answer
+        \\
+        \\
+        \\class Owned:
+        \\    file: File
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer compilation.deinit();
     try compilation.check();
     const records = compilation.program.?.records;

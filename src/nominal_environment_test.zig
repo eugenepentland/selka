@@ -3,12 +3,36 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const environment = @import("environment.zig");
-const declarations = "struct Entry<T:copy>{present:bool,length:u64,bytes:[4]u8}result Lookup<T:copy>{err:i64,ok:Entry<T>}";
-const program = declarations ++ "fn singleton<T:copy>(x:T)->[1]T{return new [1]T[x];}" ++
-    "fn lookup<T:copy>(env:environment_cap)->Lookup<T>{return environment_get<Lookup<T>>(env,singleton::<u8>(75u8));}" ++
-    "fn main(env:environment_cap)->i64{match lookup::<bool>(env){Lookup<bool>.ok(entry)=>{" ++
-    "let sum=cast<i64>(entry.length)+cast<i64>(entry.bytes[0])+cast<i64>(entry.bytes[1])+cast<i64>(entry.bytes[2])+cast<i64>(entry.bytes[3]);" ++
-    "if entry.present{return 100+sum;}return sum;},Lookup<bool>.err(e)=>{return -e;}}}";
+const declarations =
+    \\class Entry[T]:
+    \\    present: bool
+    \\    length: u64
+    \\    bytes: [4]u8
+    \\
+    \\
+    \\result Lookup[T]:
+    \\    err: i64,
+    \\    ok: Entry[T]
+;
+const program = declarations ++
+    \\def singleton[T](x: T) -> [1]T:
+    \\    return [x]
+    \\
+    \\
+    \\def lookup[T](env: environment_cap) -> Lookup[T]:
+    \\    return environment_get<Lookup[T]>(env, singleton[u8](75u8))
+    \\
+    \\
+    \\def main(env: environment_cap) -> i64:
+    \\    match lookup[bool](env):
+    \\        case Lookup.ok(entry):
+    \\            sum = cast<i64>(entry.length) + cast<i64>(entry.bytes[0]) + cast<i64>(entry.bytes[1]) + cast<i64>(entry.bytes[2]) + cast<i64>(entry.bytes[3])
+    \\            if entry.present:
+    \\                return 100 + sum
+    \\            return sum
+    \\        case Lookup.err(e):
+    \\            return -e
+;
 const Fake = struct {
     calls: usize = 0,
     value: ?[]const u8 = "\x00\xff",

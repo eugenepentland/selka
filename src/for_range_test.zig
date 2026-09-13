@@ -2,10 +2,25 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
-const generic_text = "fn sum_range<T:integer>(start:T,end:T)->i64{let mut sum=0;for i in start..end{" ++
-    "if i==cast<T>(2){continue;}for j in 0..3{if j==1{break;}sum+=cast<i64>(i);}}return sum;}" ++
-    "fn main()->i64{let mut result=0;for i in 0..4{result+=i;}" ++
-    "return result+sum_range::<u8>(0u8,5u8);}";
+const generic_text =
+    \\def sum_range[T: integer](start: T, end: T) -> i64:
+    \\    sum = 0
+    \\    for i in range(start, end):
+    \\        if i == cast<T>(2):
+    \\            continue
+    \\        for j in range(0, 3):
+    \\            if j == 1:
+    \\                break
+    \\            sum += cast<i64>(i)
+    \\    return sum
+    \\
+    \\
+    \\def main() -> i64:
+    \\    result = 0
+    \\    for i in range(0, 4):
+    \\        result += i
+    \\    return result + sum_range[u8](0u8, 5u8)
+;
 const once_text =
     \\def bound(counter: list[int], value: int) -> int:
     \\    counter.append(1)

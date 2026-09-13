@@ -4,11 +4,41 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const typed = @import("typed.zig");
 const codec = language.codec_json;
-const source = "struct Wire{n:i64} struct Why{code:i64} result Decoded{ok:Positive,err:Why} domain " ++
-    "Positive:i64{codec Wire{decode:dec,encode:enc}fn dec(x:Wire)->Decoded{if " ++
-    "x.n<=0{return new Decoded.err(new Why{code:-1});}return new " ++
-    "Decoded.ok(wrap<Positive>(x.n));}fn enc(x:Positive)->Wire{return new " ++
-    "Wire{n:unwrap(x)};}}struct Pair{items:[2]Positive}fn main()->i64{return 0;}";
+const source =
+    \\class Wire:
+    \\    n: i64
+    \\
+    \\
+    \\class Why:
+    \\    code: i64
+    \\
+    \\
+    \\result Decoded:
+    \\    ok: Positive,
+    \\    err: Why
+    \\
+    \\
+    \\domain Positive: i64:
+    \\    codec Wire:
+    \\        decode: dec,
+    \\        encode: enc
+    \\
+    \\    def dec(x: Wire) -> Decoded:
+    \\        if x.n <= 0:
+    \\            return Err(Why(code=-1))
+    \\        return Ok(wrap<Positive>(x.n))
+    \\
+    \\    def enc(x: Positive) -> Wire:
+    \\        return Wire(n=unwrap(x))
+    \\
+    \\
+    \\class Pair:
+    \\    items: [2]Positive
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return 0
+;
 const good = "{\"version\":\"typed-json-v1\",\"type\":\"Pair\",\"value\":{\"items\":[{\"n\":\"7\"},{\"n\":\"9\"}]}}";
 const bad = "{\"version\":\"typed-json-v1\",\"type\":\"Pair\",\"value\":{\"items\":[{\"n\":\"7\"},{\"n\":\"0\"}]}}";
 fn find(records: []const typed.Record, name: []const u8) typed.Type {
@@ -79,7 +109,14 @@ test "codec JSON shares instruction call traversal and memory budgets across nes
 }
 const Provider = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
-        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main;import data;fn main()->i64{return 0;}");
+        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
+            \\module main
+            \\import data
+            \\
+            \\
+            \\def main() -> i64:
+            \\    return 0
+        );
         if (std.mem.eql(u8, path, "data.my")) return allocator.dupe(u8, "module data;export Wire;export Why;export Decoded;export Positive;export Pair;" ++ source);
         return error.NotFound;
     }
@@ -113,7 +150,23 @@ test "codec JSON project round trips share both direction budgets under every al
     try t.checkAllAllocationFailures(stable.allocator(), projectScenario, .{});
 }
 test "codec JSON excludes unregistered domains in inactive branches and zero arrays" {
-    var c = try language.Compilation.init(t.allocator, "opaque.my", "domain D:i64{}union U{none,some:D}struct Z{a:[0]D}fn main()->i64{return 0;}");
+    var c = try language.Compilation.init(t.allocator, "opaque.my",
+        \\domain D: i64:
+        \\    pass
+        \\
+        \\
+        \\union U:
+        \\    none,
+        \\    some: D
+        \\
+        \\
+        \\class Z:
+        \\    a: [0]D
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer c.deinit();
     try c.emit();
     var failure: codec.Failure = .{};
@@ -126,9 +179,27 @@ test "codec JSON excludes unregistered domains in inactive branches and zero arr
     }
 }
 test "codec JSON keeps wire depth separate from private domain storage and preserves u64 extrema" {
-    var c = try language.Compilation.init(t.allocator, "width.my", "result R{ok:D,err:bool}domain D:u64{codec u64{decode:dec,encode:enc}fn " ++
-        "dec(x:u64)->R{return new R.ok(wrap<D>(x));}fn enc(x:D)->u64{return unwrap(x);}}fn " ++
-        "main()->i64{return 0;}");
+    var c = try language.Compilation.init(t.allocator, "width.my",
+        \\result R:
+        \\    ok: D,
+        \\    err: bool
+        \\
+        \\
+        \\domain D: u64:
+        \\    codec u64:
+        \\        decode: dec,
+        \\        encode: enc
+        \\
+        \\    def dec(x: u64) -> R:
+        \\        return Ok(wrap<D>(x))
+        \\
+        \\    def enc(x: D) -> u64:
+        \\        return unwrap(x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer c.deinit();
     try c.emit();
     const bytes = "{\"version\":\"typed-json-v1\",\"type\":\"D\",\"value\":\"18446744073709551615\"}";
@@ -144,7 +215,27 @@ test "codec JSON keeps wire depth separate from private domain storage and prese
     try t.expectError(error.CodecWorkLimit, codec.encode(t.allocator, c.code.?, ty, value, .{ .max_work_values = 1 }, &failure));
 }
 test "codec JSON traps retain source traces and frame budgets" {
-    var c = try language.Compilation.init(t.allocator, "loop.my", "result R{ok:D,err:i64}domain D:i64{codec i64{decode:dec,encode:enc}fn dec(x:i64)->R{return D.dec(x);}fn enc(x:D)->i64{return unwrap(x);}}fn main()->i64{return 0;}");
+    var c = try language.Compilation.init(t.allocator, "loop.my",
+        \\result R:
+        \\    ok: D,
+        \\    err: i64
+        \\
+        \\
+        \\domain D: i64:
+        \\    codec i64:
+        \\        decode: dec,
+        \\        encode: enc
+        \\
+        \\    def dec(x: i64) -> R:
+        \\        return D.dec(x)
+        \\
+        \\    def enc(x: D) -> i64:
+        \\        return unwrap(x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer c.deinit();
     try c.emit();
     var failure: codec.Failure = .{};

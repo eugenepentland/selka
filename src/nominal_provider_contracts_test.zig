@@ -10,11 +10,27 @@ fn reject(text: []const u8, code: []const u8) !void {
     try t.expectEqualStrings(code, compilation.diagnostics.items[0].code);
 }
 fn rejectBody(body: []const u8, code: []const u8) !void {
-    const text = try std.mem.concat(t.allocator, u8, &.{ fixture.declarations, body, "fn main()->i64{return 0;}" });
+    const text = try std.mem.concat(t.allocator, u8, &.{
+        fixture.declarations, body,
+        \\def main() -> i64:
+        \\    return 0
+    });
     defer t.allocator.free(text);
     try reject(text, code);
 }
-const env_call = "result Lookup<T:copy>{ok:Entry<T>,err:i64}fn f<T:copy>(env:environment_cap)->Lookup<T>{return environment_get<Lookup<T>>(env,new [0]u8[]);}fn main()->i64{return 0;}";
+const env_call =
+    \\result Lookup[T]:
+    \\    ok: Entry[T],
+    \\    err: i64
+    \\
+    \\
+    \\def f[T](env: environment_cap) -> Lookup[T]:
+    \\    return environment_get<Lookup[T]>(env, [])
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return 0
+;
 fn bothForms(text: []const u8, code: []const u8) !void {
     try reject(text, code);
     const declarations = try std.mem.replaceOwned(u8, t.allocator, text, "<T:copy>", "");
@@ -25,12 +41,36 @@ fn bothForms(text: []const u8, code: []const u8) !void {
 }
 test "nominal provider environment contracts reject wrong missing extra and renamed fields in both checkers" {
     const schemas = [_][]const u8{
-        "struct Entry<T:copy>{present:bool,length:u64,bytes:[4]i64}",
-        "struct Entry<T:copy>{present:bool,length:i64,bytes:[4]u8}",
-        "struct Entry<T:copy>{present:i64,length:u64,bytes:[4]u8}",
-        "struct Entry<T:copy>{present:bool,length:u64}",
-        "struct Entry<T:copy>{present:bool,length:u64,bytes:[4]u8,extra:bool}",
-        "struct Entry<T:copy>{exists:bool,length:u64,bytes:[4]u8}",
+        \\class Entry[T]:
+        \\    present: bool
+        \\    length: u64
+        \\    bytes: [4]i64
+        ,
+        \\class Entry[T]:
+        \\    present: bool
+        \\    length: i64
+        \\    bytes: [4]u8
+        ,
+        \\class Entry[T]:
+        \\    present: i64
+        \\    length: u64
+        \\    bytes: [4]u8
+        ,
+        \\class Entry[T]:
+        \\    present: bool
+        \\    length: u64
+        ,
+        \\class Entry[T]:
+        \\    present: bool
+        \\    length: u64
+        \\    bytes: [4]u8
+        \\    extra: bool
+        ,
+        \\class Entry[T]:
+        \\    exists: bool
+        \\    length: u64
+        \\    bytes: [4]u8
+        ,
         "union Entry<T:copy>{present:bool,length:u64,bytes:[4]u8}",
     };
     for (schemas) |schema| {
@@ -38,18 +78,90 @@ test "nominal provider environment contracts reject wrong missing extra and rena
         defer t.allocator.free(text);
         try bothForms(text, "E_ENVIRONMENT_RESULT");
     }
-    try reject("struct Entry<T:integer>{present:bool,length:u64,bytes:[4]T}result Lookup<T:integer>{ok:Entry<T>,err:i64}" ++
-        "fn f<T:integer>(env:environment_cap)->Lookup<T>{return environment_get<Lookup<T>>(env,new [0]u8[]);}fn main()->i64{return 0;}", "E_ENVIRONMENT_RESULT");
-    try reject("struct Entry<T:copy>{present:bool,length:u64,bytes:[4]u8}result Lookup<T:copy>{ok:Entry<T>,err:i64}" ++
-        "fn f<T:integer>(env:environment_cap,name:[1]T)->Lookup<T>{return environment_get<Lookup<T>>(env,name);}fn main()->i64{return 0;}", "E_ENVIRONMENT_NAME");
+    try reject(
+        \\class Entry[T: integer]:
+        \\    present: bool
+        \\    length: u64
+        \\    bytes: [4]T
+        \\
+        \\
+        \\result Lookup[T: integer]:
+        \\    ok: Entry[T],
+        \\    err: i64
+        \\
+        \\
+        \\def f[T: integer](env: environment_cap) -> Lookup[T]:
+        \\    return environment_get<Lookup[T]>(env, [])
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_ENVIRONMENT_RESULT");
+    try reject(
+        \\class Entry[T]:
+        \\    present: bool
+        \\    length: u64
+        \\    bytes: [4]u8
+        \\
+        \\
+        \\result Lookup[T]:
+        \\    ok: Entry[T],
+        \\    err: i64
+        \\
+        \\
+        \\def f[T: integer](env: environment_cap, name: [1]T) -> Lookup[T]:
+        \\    return environment_get<Lookup[T]>(env, name)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_ENVIRONMENT_NAME");
 }
 test "nominal provider completion and read contracts reject wrong named shapes in both checkers" {
     const Case = struct { declaration: []const u8, body: []const u8, code: []const u8 };
     const cases = [_]Case{
-        .{ .declaration = "struct Failure<T:copy>{code:u64,resource:File}result R<T:copy>{ok:bool,err:Failure<T>}", .body = "return complete_resource<R<T>>(input);", .code = "E_COMPLETION_RESULT" },
-        .{ .declaration = "struct Failure<T:copy>{code:i64,resource:i64}result R<T:copy>{ok:bool,err:Failure<T>}", .body = "return complete_resource<R<T>>(input);", .code = "E_COMPLETION_RESULT" },
-        .{ .declaration = "struct Chunk<T:copy>{bytes:[4]u8,length:u64,present:bool}result R<T:copy>{ok:Chunk<T>,err:i64}", .body = "let mut file=input;return read_resource<R<T>>(file);", .code = "E_RESOURCE_IO_RESULT" },
-        .{ .declaration = "struct Chunk<T:copy>{bytes:[4]u8,length:u64,eof:bool}result R<T:copy>{ok:Chunk<T>,err:bool}", .body = "let mut file=input;return read_resource<R<T>>(file);", .code = "E_RESOURCE_IO_RESULT" },
+        .{ .declaration =
+        \\class Failure[T]:
+        \\    code: u64
+        \\    resource: File
+        \\
+        \\
+        \\result R[T]:
+        \\    ok: bool,
+        \\    err: Failure[T]
+        , .body = "return complete_resource<R<T>>(input);", .code = "E_COMPLETION_RESULT" },
+        .{ .declaration =
+        \\class Failure[T]:
+        \\    code: i64
+        \\    resource: i64
+        \\
+        \\
+        \\result R[T]:
+        \\    ok: bool,
+        \\    err: Failure[T]
+        , .body = "return complete_resource<R<T>>(input);", .code = "E_COMPLETION_RESULT" },
+        .{ .declaration =
+        \\class Chunk[T]:
+        \\    bytes: [4]u8
+        \\    length: u64
+        \\    present: bool
+        \\
+        \\
+        \\result R[T]:
+        \\    ok: Chunk[T],
+        \\    err: i64
+        , .body = "let mut file=input;return read_resource<R<T>>(file);", .code = "E_RESOURCE_IO_RESULT" },
+        .{ .declaration =
+        \\class Chunk[T]:
+        \\    bytes: [4]u8
+        \\    length: u64
+        \\    eof: bool
+        \\
+        \\
+        \\result R[T]:
+        \\    ok: Chunk[T],
+        \\    err: bool
+        , .body = "let mut file=input;return read_resource<R<T>>(file);", .code = "E_RESOURCE_IO_RESULT" },
         .{ .declaration = "result R<T:copy>{ok:i64,err:i64}", .body = "let mut file=input;return write_resource<R<T>>(file,new [0]u8[]);", .code = "E_RESOURCE_IO_RESULT" },
     };
     for (cases) |case| {

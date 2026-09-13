@@ -3,12 +3,55 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const templates = @import("nominal_templates.zig");
-const fixture = "struct Pair<T:copy,U:copy>{first:T,second:U}" ++
-    "union Slot<T:copy>{none,some:T}struct Row<T:equality>{pair:Pair<T,bool>,slots:[2]Slot<T>}" ++
-    "resource File:filesystem;struct Owned<T:copy>{file:File,value:T}" ++
-    "result Answer<T:copy>{ok:T,err:i64}struct Pending{answer:Answer<i64>}" ++
-    "enum Tag<T:copy>{left,right}domain Id:i64{}" ++
-    "struct Empty{zero:[0]File}fn main()->i64{return 0;}";
+const fixture =
+    \\class Pair[T, U]:
+    \\    first: T
+    \\    second: U
+    \\
+    \\
+    \\union Slot[T]:
+    \\    none,
+    \\    some: T
+    \\
+    \\
+    \\class Row[T: equality]:
+    \\    pair: Pair[T, bool]
+    \\    slots: [2]Slot[T]
+    \\
+    \\
+    \\resource File: filesystem
+    \\
+    \\
+    \\class Owned[T]:
+    \\    file: File
+    \\    value: T
+    \\
+    \\
+    \\result Answer[T]:
+    \\    ok: T,
+    \\    err: i64
+    \\
+    \\
+    \\class Pending:
+    \\    answer: Answer[i64]
+    \\
+    \\
+    \\enum Tag[T]:
+    \\    left,
+    \\    right
+    \\
+    \\
+    \\domain Id: i64:
+    \\    pass
+    \\
+    \\
+    \\class Empty:
+    \\    zero: [0]File
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return 0
+;
 fn collect(compilation: *language.Compilation, sink: *language.diagnostic.Sink) !templates.Index {
     try compilation.parse();
     return templates.collect(compilation.arena.allocator(), compilation.src, compilation.syntax.?, sink, null);
@@ -43,7 +86,17 @@ fn metadataScenario(allocator: std.mem.Allocator) !void {
     try t.expect((try named(index, "Empty")).guarantees.contains(.copy));
 }
 fn rejectionScenario(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, "invalid.my", "struct Box<T:copy>{value:T}resource File:filesystem;struct Bad{value:Box<File>}");
+    var compilation = try language.Compilation.init(allocator, "invalid.my",
+        \\class Box[T]:
+        \\    value: T
+        \\
+        \\
+        \\resource File: filesystem
+        \\
+        \\
+        \\class Bad:
+        \\    value: Box[File]
+    );
     defer compilation.deinit();
     compilation.check() catch |err| {
         if (err != error.SourceError) return err;
@@ -54,7 +107,10 @@ fn rejectionScenario(allocator: std.mem.Allocator) !void {
     return error.TestUnexpectedResult;
 }
 fn separateSinkScenario(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, "allocators.my", "struct Box<T:copy>{value:T}");
+    var compilation = try language.Compilation.init(allocator, "allocators.my",
+        \\class Box[T]:
+        \\    value: T
+    );
     defer compilation.deinit();
     try compilation.parse();
     var sink: language.diagnostic.Sink = .{ .allocator = allocator };
@@ -84,30 +140,106 @@ fn reject(text: []const u8, code: []const u8, token: []const u8) !void {
     try t.expect(compilation.program == null and compilation.code == null);
 }
 test "unused nominal template fields reject unknown names duplicate members and invalid result schemas" {
-    try reject("struct Box<T:copy>{value:Missing}", "E_UNKNOWN_TYPE", "Missing");
-    try reject("struct Box<T:copy>{value:T,value:i64}", "E_DUPLICATE_FIELD", "value");
+    try reject(
+        \\class Box[T]:
+        \\    value: Missing
+    , "E_UNKNOWN_TYPE", "Missing");
+    try reject(
+        \\class Box[T]:
+        \\    value: T
+        \\    value: i64
+    , "E_DUPLICATE_FIELD", "value");
     try reject("union Slot<T:copy>{some:T,some:i64}", "E_DUPLICATE_VARIANT", "some");
     try reject("union Slot<T:copy>{}", "E_EMPTY_VARIANTS", "Slot");
     try reject("result Answer<T:copy>{yes:T,no:i64}", "E_RESULT_SCHEMA", "Answer");
     try reject("result Answer<T:copy>{ok:T,err}", "E_RESULT_SCHEMA", "err");
-    try reject("struct Box<T:copy>{value:T}domain Box:i64{}", "E_DUPLICATE_TYPE", "Box");
+    try reject(
+        \\class Box[T]:
+        \\    value: T
+        \\
+        \\
+        \\domain Box: i64:
+        \\    pass
+    , "E_DUPLICATE_TYPE", "Box");
 }
 test "nominal template applications check arity and constructor kinds inside unused declarations" {
-    try reject("struct Pair<T:copy,U:copy>{a:T,b:U}struct Bad<V:copy>{x:Pair<V>}", "E_GENERIC_ARITY", "Pair<V>");
-    try reject("struct Box<T:copy>{value:T}struct Bad{value:Box}", "E_GENERIC_ARITY", "Box");
-    try reject("struct Plain{}struct Bad<T:copy>{value:Plain<T>}", "E_GENERIC_ARITY", "Plain<T>");
-    try reject("struct Bad<T:copy>{value:T<i64>}", "E_TYPE_APPLICATION", "T");
-    try reject("struct Bad<T:copy>{value:[2]Missing<T>}", "E_UNKNOWN_TYPE", "Missing");
+    try reject(
+        \\class Pair[T, U]:
+        \\    a: T
+        \\    b: U
+        \\
+        \\
+        \\class Bad[V]:
+        \\    x: Pair[V]
+    , "E_GENERIC_ARITY", "Pair<V>");
+    try reject(
+        \\class Box[T]:
+        \\    value: T
+        \\
+        \\
+        \\class Bad:
+        \\    value: Box
+    , "E_GENERIC_ARITY", "Box");
+    try reject(
+        \\class Plain:
+        \\    pass
+        \\
+        \\
+        \\class Bad[T]:
+        \\    value: Plain[T]
+    , "E_GENERIC_ARITY", "Plain<T>");
+    try reject(
+        \\class Bad[T]:
+        \\    value: T[i64]
+    , "E_TYPE_APPLICATION", "T");
+    try reject(
+        \\class Bad[T]:
+        \\    value: [2]Missing[T]
+    , "E_UNKNOWN_TYPE", "Missing");
 }
 test "nominal template requirements reject insufficient symbolic promises and concrete operations" {
-    const prefix = "struct Key<T:equality>{value:T}struct Number<T:integer>{value:T}";
-    try reject(prefix ++ "struct Bad<T:copy>{value:Key<T>}", "E_GENERIC_REQUIREMENT", "T");
-    try reject(prefix ++ "struct Bad<T:equality>{value:Number<T>}", "E_GENERIC_REQUIREMENT", "T");
-    try reject(prefix ++ "struct Bad<T:copy>{value:Number<bool>}", "E_GENERIC_REQUIREMENT", "bool");
-    try reject(prefix ++ "domain Id:i64{}struct Bad<T:copy>{value:Number<Id>}", "E_GENERIC_REQUIREMENT", "Id");
-    try reject(prefix ++ "struct Bad<T:copy>{value:Key<[0]T>}", "E_GENERIC_REQUIREMENT", "[0]T");
-    try reject(prefix ++ "struct Bad<T:copy>{value:Key<Key<i64>>}", "E_GENERIC_REQUIREMENT", "Key<i64>");
-    var repaired = try language.Compilation.init(t.allocator, "repaired.my", prefix ++ "struct Good<T:integer>{key:Key<T>,number:Number<T>,flag:Key<bool>}");
+    const prefix =
+        \\class Key[T: equality]:
+        \\    value: T
+        \\
+        \\
+        \\class Number[T: integer]:
+        \\    value: T
+    ;
+    try reject(prefix ++
+        \\class Bad[T]:
+        \\    value: Key[T]
+    , "E_GENERIC_REQUIREMENT", "T");
+    try reject(prefix ++
+        \\class Bad[T: equality]:
+        \\    value: Number[T]
+    , "E_GENERIC_REQUIREMENT", "T");
+    try reject(prefix ++
+        \\class Bad[T]:
+        \\    value: Number[bool]
+    , "E_GENERIC_REQUIREMENT", "bool");
+    try reject(prefix ++
+        \\domain Id: i64:
+        \\    pass
+        \\
+        \\
+        \\class Bad[T]:
+        \\    value: Number[Id]
+    , "E_GENERIC_REQUIREMENT", "Id");
+    try reject(prefix ++
+        \\class Bad[T]:
+        \\    value: Key[[0]T]
+    , "E_GENERIC_REQUIREMENT", "[0]T");
+    try reject(prefix ++
+        \\class Bad[T]:
+        \\    value: Key[Key[i64]]
+    , "E_GENERIC_REQUIREMENT", "Key<i64>");
+    var repaired = try language.Compilation.init(t.allocator, "repaired.my", prefix ++
+        \\class Good[T: integer]:
+        \\    key: Key[T]
+        \\    number: Number[T]
+        \\    flag: Key[bool]
+    );
     defer repaired.deinit();
     var sink: language.diagnostic.Sink = .{ .allocator = repaired.arena.allocator() };
     const index = try collect(&repaired, &sink);
@@ -115,20 +247,111 @@ test "nominal template requirements reject insufficient symbolic promises and co
     try t.expectEqual(@as(usize, 0), sink.items.items.len);
 }
 test "nominal template requirements preserve transitive owner and pending result obligations" {
-    const prefix = "struct Box<T:copy>{value:T}resource File:filesystem;";
-    try reject(prefix ++ "struct Bad{value:Box<File>}", "E_GENERIC_REQUIREMENT", "File");
-    try reject(prefix ++ "struct Bad{value:Box<Outer>}struct Outer{inner:Inner}struct Inner{file:File}", "E_GENERIC_REQUIREMENT", "Outer");
-    try reject(prefix ++ "result Answer{ok:i64,err:i64}struct Pending{answer:Answer}struct Bad{value:Box<[1]Pending>}", "E_GENERIC_REQUIREMENT", "[1]Pending");
-    try reject(prefix ++ "struct Owner<T:copy>{file:File,value:T}struct Bad{value:Box<Owner<i64>>}", "E_GENERIC_REQUIREMENT", "Owner<i64>");
-    try reject(prefix ++ "struct Bad{value:Box<Box<File>>}", "E_GENERIC_REQUIREMENT", "File");
+    const prefix =
+        \\class Box[T]:
+        \\    value: T
+        \\
+        \\
+        \\resource File: filesystem
+    ;
+    try reject(prefix ++
+        \\class Bad:
+        \\    value: Box[File]
+    , "E_GENERIC_REQUIREMENT", "File");
+    try reject(prefix ++
+        \\class Bad:
+        \\    value: Box[Outer]
+        \\
+        \\
+        \\class Outer:
+        \\    inner: Inner
+        \\
+        \\
+        \\class Inner:
+        \\    file: File
+    , "E_GENERIC_REQUIREMENT", "Outer");
+    try reject(prefix ++
+        \\result Answer:
+        \\    ok: i64,
+        \\    err: i64
+        \\
+        \\
+        \\class Pending:
+        \\    answer: Answer
+        \\
+        \\
+        \\class Bad:
+        \\    value: Box[[1]Pending]
+    , "E_GENERIC_REQUIREMENT", "[1]Pending");
+    try reject(prefix ++
+        \\class Owner[T]:
+        \\    file: File
+        \\    value: T
+        \\
+        \\
+        \\class Bad:
+        \\    value: Box[Owner[i64]]
+    , "E_GENERIC_REQUIREMENT", "Owner<i64>");
+    try reject(prefix ++
+        \\class Bad:
+        \\    value: Box[Box[File]]
+    , "E_GENERIC_REQUIREMENT", "File");
 }
 test "nominal template arrays validate lengths keys and symbolic enum table boundaries" {
-    try reject("struct Box<T:copy>{value:[2u8]T}", "E_ARRAY_LENGTH", "2u8");
-    try reject("enum Key{one,two}struct Box<T:copy>{value:[Key]T}", "E_GENERIC_ARRAY_KEY", "[Key]T");
-    try reject("struct Key{}struct Box<T:copy>{value:[Key]i64}", "E_TABLE_KEY", "Key");
-    try reject("enum Key<T:integer>{one,two}struct Box<T:copy>{value:[Key<bool>]i64}", "E_GENERIC_REQUIREMENT", "bool");
-    var compilation = try language.Compilation.init(t.allocator, "valid.my", "struct Box<T:copy>{value:T}resource File:filesystem;enum Key{one,two}enum Tag<T:copy>{first,second}" ++
-        "struct Valid<U:integer>{empty:Box<[0]File>,table:[Key]Box<i64>,tags:[Tag<i64>]bool,pair:Box<[2]U>}");
+    try reject(
+        \\class Box[T]:
+        \\    value: [2u8]T
+    , "E_ARRAY_LENGTH", "2u8");
+    try reject(
+        \\enum Key:
+        \\    one,
+        \\    two
+        \\
+        \\
+        \\class Box[T]:
+        \\    value: [Key]T
+    , "E_GENERIC_ARRAY_KEY", "[Key]T");
+    try reject(
+        \\class Key:
+        \\    pass
+        \\
+        \\
+        \\class Box[T]:
+        \\    value: [Key]i64
+    , "E_TABLE_KEY", "Key");
+    try reject(
+        \\enum Key[T: integer]:
+        \\    one,
+        \\    two
+        \\
+        \\
+        \\class Box[T]:
+        \\    value: [Key[bool]]i64
+    , "E_GENERIC_REQUIREMENT", "bool");
+    var compilation = try language.Compilation.init(t.allocator, "valid.my",
+        \\class Box[T]:
+        \\    value: T
+        \\
+        \\
+        \\resource File: filesystem
+        \\
+        \\
+        \\enum Key:
+        \\    one,
+        \\    two
+        \\
+        \\
+        \\enum Tag[T]:
+        \\    first,
+        \\    second
+        \\
+        \\
+        \\class Valid[U: integer]:
+        \\    empty: Box[[0]File]
+        \\    table: [Key]Box[i64]
+        \\    tags: [Tag[i64]]bool
+        \\    pair: Box[[2]U]
+    );
     defer compilation.deinit();
     var sink: language.diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
     const index = try collect(&compilation, &sink);
@@ -137,14 +360,30 @@ test "nominal template arrays validate lengths keys and symbolic enum table boun
 test "nominal guarantee propagation handles long reverse ordered declaration chains" {
     var text: std.Io.Writer.Allocating = .init(t.allocator);
     defer text.deinit();
-    try text.writer.writeAll("struct Box<T:copy>{value:T}resource File:filesystem;");
+    try text.writer.writeAll(
+        \\class Box[T]:
+        \\    value: T
+        \\
+        \\
+        \\resource File: filesystem
+    );
     for (0..1200) |i| try text.writer.print("struct Link{d}{{next:Link{d}}}", .{ i, i + 1 });
-    try text.writer.writeAll("struct Link1200{file:File}struct Bad{value:Box<Link0>}");
+    try text.writer.writeAll(
+        \\class Link1200:
+        \\    file: File
+        \\
+        \\
+        \\class Bad:
+        \\    value: Box[Link0]
+    );
     try reject(text.written(), "E_GENERIC_REQUIREMENT", "Link0");
 }
 
 test "nominal expression checking enforces the work budget without issuing executable type IDs" {
-    var compilation = try language.Compilation.init(t.allocator, "budget.my", "struct Box<T:copy>{value:T}");
+    var compilation = try language.Compilation.init(t.allocator, "budget.my",
+        \\class Box[T]:
+        \\    value: T
+    );
     defer compilation.deinit();
     var sink: language.diagnostic.Sink = .{ .allocator = compilation.arena.allocator() };
     var index = try collect(&compilation, &sink);
@@ -159,10 +398,44 @@ const Modules = struct {
     strict: bool = false,
     fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         const self: *Modules = @ptrCast(@alignCast(context.?));
-        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main;import left as l;import right as r;" ++
-            "struct Holder<T:copy>{a:l::Box<T>,b:r::Box<T>,c:l::Box<T>}fn main()->i64{return 0;}");
-        if (std.mem.eql(u8, path, "left.my")) return allocator.dupe(u8, if (self.strict) "module left;export Box;struct Box<U:equality>{value:U}" else "module left;export Box;struct Box<U:copy>{value:U}");
-        if (std.mem.eql(u8, path, "right.my")) return allocator.dupe(u8, "module right;export Box;struct Box<U:copy>{value:U}");
+        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
+            \\module main
+            \\import left as l
+            \\import right as r
+            \\
+            \\
+            \\class Holder[T]:
+            \\    a: l.Box[T]
+            \\    b: r.Box[T]
+            \\    c: l.Box[T]
+            \\
+            \\
+            \\def main() -> i64:
+            \\    return 0
+        );
+        if (std.mem.eql(u8, path, "left.my")) return allocator.dupe(u8, if (self.strict)
+            \\module left
+            \\export Box
+            \\
+            \\
+            \\class Box[U: equality]:
+            \\    value: U
+        else
+            \\module left
+            \\export Box
+            \\
+            \\
+            \\class Box[U]:
+            \\    value: U
+        );
+        if (std.mem.eql(u8, path, "right.my")) return allocator.dupe(u8,
+            \\module right
+            \\export Box
+            \\
+            \\
+            \\class Box[U]:
+            \\    value: U
+        );
         return error.NotFound;
     }
 };

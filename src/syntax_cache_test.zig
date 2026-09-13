@@ -5,7 +5,14 @@ const graph = @import("project.zig");
 const interfaces = @import("interfaces.zig");
 const Cache = @import("compiler.zig").syntax_cache.Cache;
 const Files = struct {
-    main: []const u8 = "module main;import data;fn main()->i64{return data::value();}",
+    main: []const u8 =
+        \\module main
+        \\import data
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return data.value()
+    ,
     data: []const u8 = initial,
     fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) graph.ReadError![]u8 {
         const self: *Files = @ptrCast(@alignCast(context.?));
@@ -17,8 +24,32 @@ const Files = struct {
         return .{ .context = self, .read = read };
     }
 };
-const initial = "module data;export value;struct Pair{n:i64}fn value()->i64{let x=new Pair{n:7};return x.n;}";
-const changed = "module data;export value;struct Pair{n:i64}fn value()->i64{let x=new Pair{n:9};return x.n;}";
+const initial =
+    \\module data
+    \\export value
+    \\
+    \\
+    \\class Pair:
+    \\    n: i64
+    \\
+    \\
+    \\def value() -> i64:
+    \\    x = Pair(n=7)
+    \\    return x.n
+;
+const changed =
+    \\module data
+    \\export value
+    \\
+    \\
+    \\class Pair:
+    \\    n: i64
+    \\
+    \\
+    \\def value() -> i64:
+    \\    x = Pair(n=9)
+    \\    return x.n
+;
 fn execute(allocator: std.mem.Allocator, files: *Files, cache: *Cache, clear: bool) !i64 {
     var project = graph.Project.init(allocator);
     defer project.deinit();
@@ -77,12 +108,25 @@ test "cached syntax never suppresses fresh interface or semantic errors" {
     defer cache.deinit();
     var files: Files = .{};
     _ = try execute(t.allocator, &files, &cache, false);
-    files.data = "module data;export value;fn value()->bool{return true;}";
+    files.data =
+        \\module data
+        \\export value
+        \\
+        \\
+        \\def value() -> bool:
+        \\    return True
+    ;
     try t.expectError(error.SourceError, execute(t.allocator, &files, &cache, false));
     const hits = cache.statistics.hits;
     try t.expectError(error.SourceError, execute(t.allocator, &files, &cache, false));
     try t.expectEqual(hits + 2, cache.statistics.hits);
-    files.data = "module data;fn value()->i64{return 7;}";
+    files.data =
+        \\module data
+        \\
+        \\
+        \\def value() -> i64:
+        \\    return 7
+    ;
     try t.expectError(error.SourceError, execute(t.allocator, &files, &cache, false));
     files.data = initial;
     try t.expectEqual(@as(i64, 7), try execute(t.allocator, &files, &cache, false));
@@ -107,7 +151,15 @@ test "incremental source provider preserves TooLarge and missing-file failures" 
 test "cached quoted byte arrays survive source relocation and cache eviction" {
     var cache = Cache.init(t.allocator, .{});
     defer cache.deinit();
-    var files: Files = .{ .data = "module data;export value;fn value()->i64{let s=\"a\\x00b\";return cast<i64>(s[2]);}" };
+    var files: Files = .{ .data =
+        \\module data
+        \\export value
+        \\
+        \\
+        \\def value() -> i64:
+        \\    s = b"a\x00b"
+        \\    return cast<i64>(s[2])
+    };
     try t.expectEqual(@as(i64, 98), try execute(t.allocator, &files, &cache, false));
     try t.expectEqual(@as(i64, 98), try execute(t.allocator, &files, &cache, true));
     try t.expectEqual(@as(usize, 2), cache.statistics.hits);

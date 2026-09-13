@@ -74,5 +74,9 @@ test "malformed format strings and unconvertible values are rejected" {
 
 // spec-case: PY-FSTRING-1
 test "an f prefix stays an ordinary identifier in legacy brace sources" {
-    try execute("fn main() -> i64 { let f = 42; return f; }", 42);
+    try execute(
+        \\def main() -> i64:
+        \\    f = 42
+        \\    return f
+    , 42);
 }

@@ -24,7 +24,17 @@ fn evaluate(bytes: []const u8, expected: i64) !void {
 
 // spec: FAMILIAR-STMT-1
 test "newlines closing braces and EOF replace semicolons while same line statements require separation" {
-    try evaluate("type Number=i64\nconst ANSWER:Number=42\nfn main()->i64{\nlet value=ANSWER // retained comment\nreturn value\n}", 42);
+    try evaluate(
+        \\type Number = i64
+        \\
+        \\
+        \\const ANSWER: Number = 42
+        \\
+        \\
+        \\def main() -> i64:
+        \\    value = ANSWER # retained comment
+        \\    return value
+    , 42);
     var invalid = try language.Compilation.init(t.allocator, "missing-separator.my", "fn main()->i64{let x=41 return x+1}");
     defer invalid.deinit();
     try t.expectError(error.SourceError, invalid.check());
@@ -33,33 +43,117 @@ test "newlines closing braces and EOF replace semicolons while same line stateme
 
 // spec: FAMILIAR-STMT-2
 test "postfix question propagates success and error with postfix precedence" {
-    try evaluate("result R{ok:i64,err:i64}\nfn first()->R{return new R.ok(41)}\n" ++
-        "fn next()->R{let n=first()?\nreturn new R.ok(n+1)}\n" ++
-        "fn main()->i64{match next(){R.ok(n)=>{return n},R.err(e)=>{return e}}}", 42);
-    try evaluate("result R{ok:i64,err:i64}\nfn first()->R{return new R.err(42)}\n" ++
-        "fn next()->R{return new R.ok(first()?+1)}\n" ++
-        "fn main()->i64{match next(){R.ok(n)=>{return n},R.err(e)=>{return e}}}", 42);
+    try evaluate(
+        \\result R:
+        \\    ok: i64,
+        \\    err: i64
+        \\
+        \\
+        \\def first() -> R:
+        \\    return Ok(41)
+        \\
+        \\
+        \\def next() -> R:
+        \\    n = first()?
+        \\    return Ok(n + 1)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    match next():
+        \\        case R.ok(n):
+        \\            return n
+        \\        case R.err(e):
+        \\            return e
+    , 42);
+    try evaluate(
+        \\result R:
+        \\    ok: i64,
+        \\    err: i64
+        \\
+        \\
+        \\def first() -> R:
+        \\    return Err(42)
+        \\
+        \\
+        \\def next() -> R:
+        \\    return Ok(first()? + 1)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    match next():
+        \\        case R.ok(n):
+        \\            return n
+        \\        case R.err(e):
+        \\            return e
+    , 42);
 }
 
 // spec: FAMILIAR-STMT-3
 test "parentheses spell unit types values and bare returns" {
-    try evaluate("type Done=()\nfn nothing()->Done{return\n}\nfn explicit()->(){return ()}\n" ++
-        "fn identity<T:copy>(value:T)->T{return value}\n" ++
-        "fn main()->i64{nothing()\nexplicit()\nidentity::<()>(())\nreturn 42}", 42);
+    try evaluate(
+        \\type Done = None
+        \\
+        \\
+        \\def nothing() -> Done:
+        \\    return
+        \\
+        \\
+        \\def explicit():
+        \\    return None
+        \\
+        \\
+        \\def identity[T](value: T) -> T:
+        \\    return value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    nothing()
+        \\    explicit()
+        \\    identity[None](None)
+        \\    return 42
+    , 42);
 }
 
 // spec: FAMILIAR-STMT-4
 test "trailing call commas and multiline binary operators preserve semantics" {
-    try evaluate("fn add(a:i64,b:i64,)->i64{return a+b}\nfn main()->i64{\n" ++
-        "let value=add(20,22,)\nreturn (cast<i64>(value,)\n+0)\n}", 42);
-    try evaluate("fn main()->i64{let value=40\n+2\nreturn value}", 42);
-    try evaluate("fn main()->i64{let values=new [3]i64[10,20,12];\n" ++
-        "return values[0]\n+values[1]\n+values[2];}", 42);
+    try evaluate(
+        \\def add(a: i64, b: i64) -> i64:
+        \\    return a + b
+        \\
+        \\
+        \\def main() -> i64:
+        \\    value = add(20, 22)
+        \\    return cast<i64>(value) + 0
+    , 42);
+    try evaluate(
+        \\def main() -> i64:
+        \\    value = 40 + 2
+        \\    return value
+    , 42);
+    try evaluate(
+        \\def main() -> i64:
+        \\    values: [3]i64 = [10, 20, 12]
+        \\    return values[0] + values[1] + values[2]
+    , 42);
 }
 
 // spec: FAMILIAR-STMT-5
 test "module declaration discovery and formatting accept newline terminated directives" {
-    const bytes = "module example\nimport dependency as dep\nexport Value\ntype Value=i64\nexport main\nfn main()->i64{return 42}";
+    const bytes =
+        \\module example
+        \\import dependency as dep
+        \\export Value
+        \\
+        \\
+        \\type Value = i64
+        \\
+        \\
+        \\export main
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 42
+    ;
     var compilation = try language.Compilation.init(t.allocator, "example.my", bytes);
     defer compilation.deinit();
     const declarations = try compilation.listDeclarations(t.allocator);
@@ -76,14 +170,39 @@ test "module declaration discovery and formatting accept newline terminated dire
 
 // spec: FAMILIAR-STMT-8
 test "nested generic record constructors retain list type arguments and field contexts" {
-    try evaluate("struct Holder<T:copy>{value:T}\nfn main()->i64{\n" ++
-        "let holder=Holder<List<i64>>{value:[],}\nlet values=holder.value\nvalues.push(42)\nreturn values[0]}", 42);
+    try evaluate(
+        \\class Holder[T]:
+        \\    value: T
+        \\
+        \\
+        \\def main() -> i64:
+        \\    holder = Holder[List[i64]](value=[])
+        \\    values = holder.value
+        \\    values.push(42)
+        \\    return values[0]
+    , 42);
 }
 
 // spec: FAMILIAR-STMT-9
 test "newline suffixes end an expression outside parentheses and continue inside parentheses" {
-    try evaluate("fn add(a:i64,b:i64)->i64{return a+b}\nfn main()->i64{return (add\n(20,22))}", 42);
-    var compilation = try language.Compilation.init(t.allocator, "newline-suffix.my", "fn add(a:i64)->i64{return a}\nfn main()->i64{let callback=add\n(42)\nreturn 0}");
+    try evaluate(
+        \\def add(a: i64, b: i64) -> i64:
+        \\    return a + b
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return add(20, 22)
+    , 42);
+    var compilation = try language.Compilation.init(t.allocator, "newline-suffix.my",
+        \\def add(a: i64) -> i64:
+        \\    return a
+        \\
+        \\
+        \\def main() -> i64:
+        \\    callback = add
+        \\    42
+        \\    return 0
+    );
     defer compilation.deinit();
     try compilation.parse();
     const syntax = compilation.syntax.?;
@@ -97,7 +216,21 @@ test "newline suffixes end an expression outside parentheses and continue inside
 
 // spec: FAMILIAR-STMT-7
 test "condition calls admit nested record constructors without consuming condition blocks" {
-    try evaluate("struct point{Value:i64}\nfn predicate(first:point,value:point)->bool{return first.Value==value.Value}\n" ++
-        "fn main()->i64{let flag=true\nlet item=point{Value:42}\n" ++
-        "if flag{if !false && predicate(item,point{Value:42}){return 42}}\nreturn 0}", 42);
+    try evaluate(
+        \\class point:
+        \\    Value: i64
+        \\
+        \\
+        \\def predicate(first: point, value: point) -> bool:
+        \\    return first.Value == value.Value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    flag = True
+        \\    item = point(Value=42)
+        \\    if flag:
+        \\        if not False and predicate(item, point(Value=42)):
+        \\            return 42
+        \\    return 0
+    , 42);
 }

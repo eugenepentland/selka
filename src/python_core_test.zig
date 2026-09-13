@@ -28,11 +28,28 @@ const Modules = struct {
             \\    return [1, 2]
         );
         if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
-        return allocator.dupe(u8, "module main;import values;" ++
-            "fn main()->i64{let option:Option<i64>=values::maybe();" ++
-            "match option{Option<i64>.some(n)=>{if n!=1{return 1;}},Option<i64>.none=>{return 2;}}" ++
-            "let numbers:List<i64>=values::items();if len(numbers)!=2{return 3;}" ++
-            "match values::answer(){Result<i64,i64>.ok(n)=>{return n;},Result<i64,i64>.err(e)=>{return e;}}}");
+        return allocator.dupe(u8,
+            \\module main
+            \\import values
+            \\
+            \\
+            \\def main() -> i64:
+            \\    option: Option[i64] = values.maybe()
+            \\    match option:
+            \\        case Option.some(n):
+            \\            if n != 1:
+            \\                return 1
+            \\        case Option.none:
+            \\            return 2
+            \\    numbers: List[i64] = values.items()
+            \\    if len(numbers) != 2:
+            \\        return 3
+            \\    match values.answer():
+            \\        case Result.ok(n):
+            \\            return n
+            \\        case Result.err(e):
+            \\            return e
+        );
     }
 };
 // spec: PYTHON-CORE-1
@@ -47,15 +64,48 @@ test "prelude List Result and Option keep one identity across modules and spelli
 }
 // spec: PYTHON-CORE-2
 test "unit and checked-result main adapt to scalar status without changing guest call signatures" {
-    try run("fn main()->unit{}", 0);
-    try run("fn main()->Result<unit,i64>{return Ok(());}", 0);
-    try run("fn main()->Result<unit,i64>{return Err(42);}", 42);
-    try run("fn main()->Result<i64,i64>{return Ok(42);}", 42);
+    try run(
+        \\def main():
+        \\    pass
+    , 0);
+    try run(
+        \\def main() -> Result[None, i64]:
+        \\    return Ok(None)
+    , 0);
+    try run(
+        \\def main() -> Result[None, i64]:
+        \\    return Err(42)
+    , 42);
+    try run(
+        \\def main() -> Result[i64, i64]:
+        \\    return Ok(42)
+    , 42);
 }
 // spec: PYTHON-CORE-4
 test "floating literals operators and comparisons use numeric binary64 semantics" {
-    try run("fn add(x:float,y:float)->float{return x+y;}fn main()->i64{let value=add(1.5,2.5)*10.0+2.0;if value==42.0{return 42;}return 1;}", 42);
-    try run("fn main()->i64{let zero=-0.0;let nan=0.0/0.0;if zero!=0.0{return 1;}if nan==nan{return 2;}if !(nan!=nan){return 3;}return 42;}", 42);
+    try run(
+        \\def add(x: float, y: float) -> float:
+        \\    return x + y
+        \\
+        \\
+        \\def main() -> i64:
+        \\    value = add(1.5, 2.5) * 10.0 + 2.0
+        \\    if value == 42.0:
+        \\        return 42
+        \\    return 1
+    , 42);
+    try run(
+        \\def main() -> i64:
+        \\    zero = -0.0
+        \\    nan = divtrunc(0.0, 0.0)
+        \\    if zero != 0.0:
+        \\        return 1
+        \\    if nan == nan:
+        \\        return 2
+        \\    if not (nan != nan):
+        \\        return 3
+        \\    return 42
+    , 42);
 }
 // spec-case: PYTHON-CORE-4
 test "floating comparisons and remainder preserve operand evaluation once in source order" {
@@ -154,9 +204,28 @@ test "Python string and float defaults remain typed and independent across repea
 }
 // spec: PYTHON-CORE-3
 test "representable integer literals inherit parameter local and expression contexts" {
-    try run("fn widen(x:u8)->i64{return cast<i64>(x);}fn main()->i64{let n:u8=40;return widen(n+2);}", 42);
-    try run("fn main()->i64{let n:i8=-128;let wide:u64=18446744073709551615;_ = wide;return cast<i64>(n)+170;}", 42);
-    var compilation = try language.Compilation.init(t.allocator, "range.my", "fn main()->i64{let x:u8=256;_ = x;return 0;}");
+    try run(
+        \\def widen(x: u8) -> i64:
+        \\    return cast<i64>(x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    n: u8 = 40
+        \\    return widen(n + 2)
+    , 42);
+    try run(
+        \\def main() -> i64:
+        \\    n: i8 = -128
+        \\    wide: u64 = 18446744073709551615
+        \\    _ = wide
+        \\    return cast<i64>(n) + 170
+    , 42);
+    var compilation = try language.Compilation.init(t.allocator, "range.my",
+        \\def main() -> i64:
+        \\    x: u8 = 256
+        \\    _ = x
+        \\    return 0
+    );
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqualStrings("E_INTEGER_RANGE", compilation.diagnostics.items[0].code);

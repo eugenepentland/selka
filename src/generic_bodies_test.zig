@@ -5,11 +5,34 @@ const language = @import("compiler.zig");
 const bodies = @import("generic_bodies.zig");
 const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
-const pure = "fn identity<T:copy>(x:T)->T{return x;}" ++
-    "fn equal<T:equality>(x:T,y:T)->bool{return x==y;}" ++
-    "fn arithmetic<T:integer>(x:T,y:T)->T noalloc{let mut value=x;value+=y;" ++
-    "while value<cast<T>(10){value=value+cast<T>(1);}if value==y{return -value;}else{return value;}}" ++
-    "fn minimum<T:copy>(x:T)->i8{_ = x;return -128i8;}fn main()->i64{return 0;}";
+const pure =
+    \\def identity[T](x: T) -> T:
+    \\    return x
+    \\
+    \\
+    \\def equal[T: equality](x: T, y: T) -> bool:
+    \\    return x == y
+    \\
+    \\
+    \\def arithmetic[T: integer](x: T, y: T) -> T noalloc:
+    \\    value = x
+    \\    value += y
+    \\    while value < cast<T>(10):
+    \\        value = value + cast<T>(1)
+    \\    if value == y:
+    \\        return -value
+    \\    else:
+    \\        return value
+    \\
+    \\
+    \\def minimum[T](x: T) -> i8:
+    \\    _ = x
+    \\    return -128i8
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return 0
+;
 fn scenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "generic.my", pure);
     defer compilation.deinit();
@@ -36,8 +59,14 @@ test "generic body contracts preserve original module source locations" {
     defer compilation.deinit();
     const allocator = compilation.arena.allocator();
     compilation.src = try source.Source.initMapped(allocator, &.{
-        try source.Source.init(allocator, "main.my", "fn main()->i64{return 0;}"),
-        try source.Source.init(allocator, "library.my", "fn bad<T:copy>(x:T,y:T)->T{return x+y;}"),
+        try source.Source.init(allocator, "main.my",
+            \\def main() -> i64:
+            \\    return 0
+        ),
+        try source.Source.init(allocator, "library.my",
+            \\def bad[T](x: T, y: T) -> T:
+            \\    return x + y
+        ),
     });
     try t.expectError(error.SourceError, compilation.check());
     const failure = compilation.diagnostics.items[0];
@@ -67,27 +96,96 @@ test "generic body contracts bound left-deep expression checking" {
     }
 }
 test "generic body contracts reject top-level and type-parameter shadowing" {
-    try reject("fn f<T:copy>(x:T)->T{let main=x;return main;}fn main()->i64{return 0;}", "E_SHADOWING");
-    try reject("struct T{}fn f<T:copy>(x:T)->T{return x;}", "E_SHADOWING");
-    try reject("fn f<T:copy>(x:T)->T{let T=x;return T;}", "E_SHADOWING");
+    try reject(
+        \\def f[T](x: T) -> T:
+        \\    main = x
+        \\    return main
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_SHADOWING");
+    try reject(
+        \\class T:
+        \\    pass
+        \\
+        \\
+        \\def f[T](x: T) -> T:
+        \\    return x
+    , "E_SHADOWING");
+    try reject(
+        \\def f[T](x: T) -> T:
+        \\    T = x
+        \\    return T
+    , "E_SHADOWING");
 }
 
 test "generic body contracts reject undeclared operations mismatches and invalid control flow" {
     const cases = [_]struct { text: []const u8, code: []const u8 }{
-        .{ .text = "fn f<T:copy>(x:T,y:T)->T{return x+y;}", .code = "E_GENERIC_OPERATION" },
-        .{ .text = "fn f<T:copy>(x:T,y:T)->bool{return x==y;}", .code = "E_GENERIC_OPERATION" },
-        .{ .text = "fn f<T:equality>(x:T,y:T)->bool{return x<y;}", .code = "E_GENERIC_OPERATION" },
-        .{ .text = "fn f<T:integer,U:integer>(x:T,y:U)->T{return x+y;}", .code = "E_GENERIC_TYPE" },
-        .{ .text = "fn f<T:copy>(x:T)->T{return 1;}", .code = "E_GENERIC_TYPE" },
-        .{ .text = "fn f<T:integer>(x:T)->T{return x+1;}", .code = "E_GENERIC_TYPE" },
-        .{ .text = "fn f<T:copy>(x:T)->T{x=x;return x;}", .code = "E_IMMUTABLE" },
-        .{ .text = "fn f<T:copy>(x:T)->T{if true{let y=x;}return y;}", .code = "E_UNKNOWN_NAME" },
-        .{ .text = "fn f<T:copy>(x:T)->T{let x=x;return x;}", .code = "E_SHADOWING" },
-        .{ .text = "fn f<T:copy>(x:T)->T{if true{return x;}}", .code = "E_MISSING_RETURN" },
-        .{ .text = "fn f<T:copy>(x:T)->T{while true{return x;}}", .code = "E_MISSING_RETURN" },
-        .{ .text = "fn f<T:copy>(x:T)->T{return x;_ = x;}", .code = "E_UNREACHABLE" },
-        .{ .text = "fn f<T:copy>(x:T)->i8{_ = x;return 128i8;}", .code = "E_INTEGER_RANGE" },
-        .{ .text = "fn f<T:copy>(x:T)->T{return other::<T>(x);}", .code = "E_UNKNOWN_FUNCTION" },
+        .{ .text =
+        \\def f[T](x: T, y: T) -> T:
+        \\    return x + y
+        , .code = "E_GENERIC_OPERATION" },
+        .{ .text =
+        \\def f[T](x: T, y: T) -> bool:
+        \\    return x == y
+        , .code = "E_GENERIC_OPERATION" },
+        .{ .text =
+        \\def f[T: equality](x: T, y: T) -> bool:
+        \\    return x < y
+        , .code = "E_GENERIC_OPERATION" },
+        .{ .text =
+        \\def f[T: integer, U: integer](x: T, y: U) -> T:
+        \\    return x + y
+        , .code = "E_GENERIC_TYPE" },
+        .{ .text =
+        \\def f[T](x: T) -> T:
+        \\    return 1
+        , .code = "E_GENERIC_TYPE" },
+        .{ .text =
+        \\def f[T: integer](x: T) -> T:
+        \\    return x + 1
+        , .code = "E_GENERIC_TYPE" },
+        .{ .text =
+        \\def f[T](x: T) -> T:
+        \\    x = x
+        \\    return x
+        , .code = "E_IMMUTABLE" },
+        .{ .text =
+        \\def f[T](x: T) -> T:
+        \\    if True:
+        \\        y = x
+        \\    return y
+        , .code = "E_UNKNOWN_NAME" },
+        .{ .text =
+        \\def f[T](x: T) -> T:
+        \\    x = x
+        \\    return x
+        , .code = "E_SHADOWING" },
+        .{ .text =
+        \\def f[T](x: T) -> T:
+        \\    if True:
+        \\        return x
+        , .code = "E_MISSING_RETURN" },
+        .{ .text =
+        \\def f[T](x: T) -> T:
+        \\    while True:
+        \\        return x
+        , .code = "E_MISSING_RETURN" },
+        .{ .text =
+        \\def f[T](x: T) -> T:
+        \\    return x
+        \\    _ = x
+        , .code = "E_UNREACHABLE" },
+        .{ .text =
+        \\def f[T](x: T) -> i8:
+        \\    _ = x
+        \\    return 128i8
+        , .code = "E_INTEGER_RANGE" },
+        .{ .text =
+        \\def f[T](x: T) -> T:
+        \\    return other[T](x)
+        , .code = "E_UNKNOWN_FUNCTION" },
     };
     for (cases) |case| try reject(case.text, case.code);
 }

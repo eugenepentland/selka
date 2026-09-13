@@ -4,12 +4,53 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const templates = @import("nominal_templates.zig");
 const layouts = @import("nominal_layouts.zig");
-const fixture = "struct Empty<T:copy>{}struct Box<T:copy>{value:T}" ++
-    "struct Pair<A:copy,B:copy>{first:A,second:B}struct Other<A:copy,B:copy>{first:A,second:B}" ++
-    "struct Model<T:copy>{a:Pair<i64,bool>,b:Pair<i64,bool>,c:Pair<bool,i64>,d:Other<i64,bool>,nested:Box<Box<T>>}" ++
-    "struct Grow<T:copy>{marker:Empty<Grow<[1]T>>}" ++
-    "struct Left<T:copy>{box:Box<T>}struct Right<T:copy>{box:Box<T>}" ++
-    "enum Key<T:copy>{a,b}struct Table{data:[Key<i64>]Box<i64>}";
+const fixture =
+    \\class Empty[T]:
+    \\    pass
+    \\
+    \\
+    \\class Box[T]:
+    \\    value: T
+    \\
+    \\
+    \\class Pair[A, B]:
+    \\    first: A
+    \\    second: B
+    \\
+    \\
+    \\class Other[A, B]:
+    \\    first: A
+    \\    second: B
+    \\
+    \\
+    \\class Model[T]:
+    \\    a: Pair[i64, bool]
+    \\    b: Pair[i64, bool]
+    \\    c: Pair[bool, i64]
+    \\    d: Other[i64, bool]
+    \\    nested: Box[Box[T]]
+    \\
+    \\
+    \\class Grow[T]:
+    \\    marker: Empty[Grow[[1]T]]
+    \\
+    \\
+    \\class Left[T]:
+    \\    box: Box[T]
+    \\
+    \\
+    \\class Right[T]:
+    \\    box: Box[T]
+    \\
+    \\
+    \\enum Key[T]:
+    \\    a,
+    \\    b
+    \\
+    \\
+    \\class Table:
+    \\    data: [Key[i64]]Box[i64]
+;
 fn root(graph: layouts.Graph, index: templates.Index, name: []const u8) !layouts.Node {
     const id = index.names.get(name);
     try t.expect(id != null);
@@ -67,8 +108,18 @@ fn reject(text: []const u8, code: []const u8, detail: []const u8) !void {
     try t.expect(compilation.program == null and compilation.code == null);
 }
 test "nominal layout expansion bounds argument growth without host stack recursion" {
-    try reject("struct Grow<T:copy>{next:Grow<[1]T>}", "E_GENERIC_LIMIT", "4096 type instances");
-    try reject("struct Box<T:copy>{value:T}struct Grow<T:copy>{next:Grow<Box<T>>}", "E_GENERIC_LIMIT", "4096 type instances");
+    try reject(
+        \\class Grow[T]:
+        \\    next: Grow[[1]T]
+    , "E_GENERIC_LIMIT", "4096 type instances");
+    try reject(
+        \\class Box[T]:
+        \\    value: T
+        \\
+        \\
+        \\class Grow[T]:
+        \\    next: Grow[Box[T]]
+    , "E_GENERIC_LIMIT", "4096 type instances");
 }
 fn identitySource(allocator: std.mem.Allocator, count: usize, wrap: bool) ![]u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
@@ -116,9 +167,15 @@ test "nominal layout expansion bounds repeated field work independently of ident
 fn longSource(allocator: std.mem.Allocator) ![]u8 {
     var text: std.Io.Writer.Allocating = .init(allocator);
     defer text.deinit();
-    try text.writer.writeAll("struct Marker<T:copy>{}");
+    try text.writer.writeAll(
+        \\class Marker[T]:
+        \\    pass
+    );
     for (0..1200) |i| try text.writer.print("struct Link{d}{{next:Link{d}}}", .{ i, i + 1 });
-    try text.writer.writeAll("struct Link1200{value:i64}");
+    try text.writer.writeAll(
+        \\class Link1200:
+        \\    value: i64
+    );
     return text.toOwnedSlice();
 }
 test "nominal layout checking handles long finite declaration chains iteratively" {
@@ -127,7 +184,14 @@ test "nominal layout checking handles long finite declaration chains iteratively
     try finite(text);
 }
 fn cycleScenario(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, "cycle.my", "struct Box<T:copy>{value:T}struct Loop<U:copy>{box:Box<Loop<U>>}");
+    var compilation = try language.Compilation.init(allocator, "cycle.my",
+        \\class Box[T]:
+        \\    value: T
+        \\
+        \\
+        \\class Loop[U]:
+        \\    box: Box[Loop[U]]
+    );
     defer compilation.deinit();
     try compilation.parse();
     var sink: language.diagnostic.Sink = .{ .allocator = allocator };
@@ -152,8 +216,25 @@ test "nominal layout cycle diagnostics preserve closing fields and clean up allo
 
 const Modules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
-        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main;import model as m;fn main()->i64{return 0;}");
-        if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8, "module model;struct Box<T:copy>{value:T}struct Loop<U:copy>{box:Box<Loop<U>>}");
+        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
+            \\module main
+            \\import model as m
+            \\
+            \\
+            \\def main() -> i64:
+            \\    return 0
+        );
+        if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8,
+            \\module model
+            \\
+            \\
+            \\class Box[T]:
+            \\    value: T
+            \\
+            \\
+            \\class Loop[U]:
+            \\    box: Box[Loop[U]]
+        );
         return error.NotFound;
     }
 };

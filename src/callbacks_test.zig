@@ -14,13 +14,38 @@ fn run(source: []const u8, expected: i64) !void {
 }
 // spec: CALLBACK-1
 test "callbacks infer function values and invoke passed exact signatures" {
-    try run("fn inc(x:i64)->i64 effects(){return x+1;}fn main()->i64{let f=inc;return f(4);}", 5);
-    try run("fn inc(x:i64)->i64 effects(){return x+1;}fn apply(f:fn(i64)->i64 effects(),x:i64)->i64{return f(x);}" ++
-        "fn main()->i64{return apply(inc,8);}", 9);
+    try run(
+        \\def inc(x: i64) -> i64 effects():
+        \\    return x + 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    f = inc
+        \\    return f(4)
+    , 5);
+    try run(
+        \\def inc(x: i64) -> i64 effects():
+        \\    return x + 1
+        \\
+        \\
+        \\def apply(f: fn(i64) -> i64 effects(), x: i64) -> i64:
+        \\    return f(x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return apply(inc, 8)
+    , 9);
 }
 
 fn reject(source: []const u8, code: []const u8) !void {
-    const complete = try std.mem.concat(t.allocator, u8, &.{ source, if (std.mem.indexOf(u8, source, "fn main") == null) "fn main()->i64{return 0;}" else "" });
+    const complete = try std.mem.concat(t.allocator, u8, &.{
+        source,
+        if (std.mem.indexOf(u8, source, "fn main") == null)
+            \\def main() -> i64:
+            \\    return 0
+        else
+            "",
+    });
     defer t.allocator.free(complete);
     var c = try language.Compilation.init(t.allocator, "invalid-callback.my", complete);
     defer c.deinit();
@@ -28,9 +53,26 @@ fn reject(source: []const u8, code: []const u8) !void {
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
 
-const allocation_source = "struct Box{value:[2]i64}fn make(ctx:i64,n:i64)->Box effects(){return new Box{value:new [2]i64 [n+ctx,n+1]};}" ++
-    "fn apply<T:copy>(f:fn(T,i64)->Box effects(),ctx:T,n:i64)->Box{return f(ctx,n);}" ++
-    "fn main()->i64{let context=0;let a=apply::<i64>(make,context,7);let f=make;let b=f(context,9);return a.value[0]+b.value[1];}";
+const allocation_source =
+    \\class Box:
+    \\    value: [2]i64
+    \\
+    \\
+    \\def make(ctx: i64, n: i64) -> Box effects():
+    \\    return Box(value=[n + ctx, n + 1])
+    \\
+    \\
+    \\def apply[T](f: fn(T, i64) -> Box effects(), ctx: T, n: i64) -> Box:
+    \\    return f(ctx, n)
+    \\
+    \\
+    \\def main() -> i64:
+    \\    context = 0
+    \\    a = apply[i64](make, context, 7)
+    \\    f = make
+    \\    b = f(context, 9)
+    \\    return a.value[0] + b.value[1]
+;
 
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "allocation-callback.my", allocation_source);
@@ -48,16 +90,54 @@ test "callbacks compile format execute and emit under every failed allocation" {
     try t.checkAllAllocationFailures(stable.allocator(), allocationScenario, .{});
 }
 
-const module_source = "module main;import helpers as c;" ++
-    "fn descending(a:i64,b:i64)->bool effects(){return a>b;}fn twice(x:i64)->i64 effects(){return x*2;}" ++
-    "fn main()->i64{let a=new [4]i64 [3,1,4,2];let sorted=c::sort_by(a,descending);" ++
-    "let doubled=c::transform(sorted,twice);return doubled[0]*10+doubled[3];}";
-const helpers_source = "module helpers;export sort_by;export transform;" ++
-    "fn sort_by(a:[4]i64,less:fn(i64,i64)->bool effects())->[4]i64{let mut v=a;let mut i=0;" ++
-    "while i<4{let mut j=0;while j<3{if less(v[j+1],v[j]){let tmp=v[j];v=replace(v,j,v[j+1]);" ++
-    "v=replace(v,j+1,tmp);}j+=1;}i+=1;}return v;}" ++
-    "fn transform(a:[4]i64,f:fn(i64)->i64 effects())->[4]i64{let mut v=a;let mut i=0;" ++
-    "while i<4{v=replace(v,i,f(v[i]));i+=1;}return v;}";
+const module_source =
+    \\module main
+    \\import helpers as c
+    \\
+    \\
+    \\def descending(a: i64, b: i64) -> bool effects():
+    \\    return a > b
+    \\
+    \\
+    \\def twice(x: i64) -> i64 effects():
+    \\    return x * 2
+    \\
+    \\
+    \\def main() -> i64:
+    \\    a: [4]i64 = [3, 1, 4, 2]
+    \\    sorted = c.sort_by(a, descending)
+    \\    doubled = c.transform(sorted, twice)
+    \\    return doubled[0] * 10 + doubled[3]
+;
+const helpers_source =
+    \\module helpers
+    \\export sort_by
+    \\export transform
+    \\
+    \\
+    \\def sort_by(a: [4]i64, less: fn(i64, i64) -> bool effects()) -> [4]i64:
+    \\    v = a
+    \\    i = 0
+    \\    while i < 4:
+    \\        j = 0
+    \\        while j < 3:
+    \\            if less(v[j + 1], v[j]):
+    \\                tmp = v[j]
+    \\                v = replace(v, j, v[j + 1])
+    \\                v = replace(v, j + 1, tmp)
+    \\            j += 1
+    \\        i += 1
+    \\    return v
+    \\
+    \\
+    \\def transform(a: [4]i64, f: fn(i64) -> i64 effects()) -> [4]i64:
+    \\    v = a
+    \\    i = 0
+    \\    while i < 4:
+    \\        v = replace(v, i, f(v[i]))
+    \\        i += 1
+    \\    return v
+;
 fn moduleRead(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
     const bytes = if (std.mem.eql(u8, path, "main.my")) module_source else if (std.mem.eql(u8, path, "helpers.my")) helpers_source else return error.NotFound;
     if (bytes.len > limit) return error.TooLarge;
@@ -72,8 +152,19 @@ test "callbacks drive sorting and visitor helpers across module boundaries" {
 }
 
 test "callbacks reject forged target signatures and invalid dynamic calls" {
-    const source = "fn f(x:i64)->i64 effects(){return x;}fn g(x:bool)->i64 effects(){return 0;}" ++
-        "fn main()->i64{let cb=f;return cb(1);}";
+    const source =
+        \\def f(x: i64) -> i64 effects():
+        \\    return x
+        \\
+        \\
+        \\def g(x: bool) -> i64 effects():
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    cb = f
+        \\    return cb(1)
+    ;
     var c = try language.Compilation.init(t.allocator, "forged-callback.my", source);
     defer c.deinit();
     try c.emit();
@@ -109,17 +200,64 @@ fn invokeInstruction(instructions: []language.bytecode.Instruction) !*language.b
 }
 
 test "callbacks retain values through records arrays and ordinary generic forwarding" {
-    try run("type F=fn(i64)->i64 effects();struct Box<T:copy>{value:T}" ++
-        "fn inc(x:i64)->i64 effects(){return x+1;}fn get<T:copy>(b:Box<T>)->T{return b.value;}" ++
-        "fn repeat<T:copy>(f:F,x:i64,tag:T)->i64{_ = tag;return f(f(x));}" ++
-        "fn main()->i64{let b=new Box<F>{value:inc};let all=new [1]F [get::<F>(b)];let f=all[0];return repeat::<bool>(f,5,true);}", 7);
-    try run("fn inc(x:i64)->i64 effects(){return x+1;}fn choose()->fn(i64)->i64 effects() {return inc;}" ++
-        "fn main()->i64{let f=choose();return f(8);}", 9);
+    try run(
+        \\type F = fn(i64) -> i64 effects()
+        \\
+        \\
+        \\class Box[T]:
+        \\    value: T
+        \\
+        \\
+        \\def inc(x: i64) -> i64 effects():
+        \\    return x + 1
+        \\
+        \\
+        \\def get[T](b: Box[T]) -> T:
+        \\    return b.value
+        \\
+        \\
+        \\def repeat[T](f: F, x: i64, tag: T) -> i64:
+        \\    _ = tag
+        \\    return f(f(x))
+        \\
+        \\
+        \\def main() -> i64:
+        \\    b = Box[F](value=inc)
+        \\    all: [1]F = [get[F](b)]
+        \\    f = all[0]
+        \\    return repeat[bool](f, 5, True)
+    , 7);
+    try run(
+        \\def inc(x: i64) -> i64 effects():
+        \\    return x + 1
+        \\
+        \\
+        \\def choose() -> fn(i64) -> i64 effects():
+        \\    return inc
+        \\
+        \\
+        \\def main() -> i64:
+        \\    f = choose()
+        \\    return f(8)
+    , 9);
 }
 
 test "callbacks reject malformed invoke metadata and dynamically mismatched signatures" {
-    const source = "fn f(x:i64)->i64 effects(){return x;}fn g(x:bool)->i64 effects(){return 0;}" ++
-        "fn main()->i64{let unused=g;_ = unused;let cb=f;return cb(1);}";
+    const source =
+        \\def f(x: i64) -> i64 effects():
+        \\    return x
+        \\
+        \\
+        \\def g(x: bool) -> i64 effects():
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    unused = g
+        \\    _ = unused
+        \\    cb = f
+        \\    return cb(1)
+    ;
     var c = try language.Compilation.init(t.allocator, "malformed-invoke.my", source);
     defer c.deinit();
     try c.emit();

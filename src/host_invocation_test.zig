@@ -5,10 +5,47 @@ const language = @import("compiler.zig");
 const vm = language.vm;
 const host = language.host_functions;
 const typed = @import("typed.zig");
-const source = "module app;export Point;export Checked;export evaluate;export transform;" ++
-    "struct Point{x:i64,y:i64}struct Other{x:i64,y:i64}result Checked{ok:Point,err:i64}" ++
-    "host fn transform(p:Point)->Checked effects(host);fn evaluate(p:Point)->Checked{return transform(p);}" ++
-    "fn hidden()->i64{return 9;}fn nodata()->unit{}fn main()->i64{return 0;}";
+const source =
+    \\module app
+    \\export Point
+    \\export Checked
+    \\export evaluate
+    \\export transform
+    \\
+    \\
+    \\class Point:
+    \\    x: i64
+    \\    y: i64
+    \\
+    \\
+    \\class Other:
+    \\    x: i64
+    \\    y: i64
+    \\
+    \\
+    \\result Checked:
+    \\    ok: Point,
+    \\    err: i64
+    \\
+    \\
+    \\host def transform(p: Point) -> Checked effects(host)
+    \\
+    \\
+    \\def evaluate(p: Point) -> Checked:
+    \\    return transform(p)
+    \\
+    \\
+    \\def hidden() -> i64:
+    \\    return 9
+    \\
+    \\
+    \\def nodata():
+    \\    pass
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return 0
+;
 const Inputs = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
         if (!std.mem.eql(u8, path, "app.my")) return error.NotFound;

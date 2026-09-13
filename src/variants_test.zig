@@ -21,7 +21,20 @@ const event = "union Event { count: i64, flag: bool, empty } ";
 
 // spec: CORE-8
 test "exhaustive matching detects added variants even on statically known values" {
-    const source = "enum Choice { first, second, added } fn main() -> i64 { match new Choice.first { Choice.first => { return 1; }, Choice.second => { return 2; } } }";
+    const source =
+        \\enum Choice:
+        \\    first,
+        \\    second,
+        \\    added
+        \\
+        \\
+        \\def main() -> i64:
+        \\    match Choice.first:
+        \\        case Choice.first:
+        \\            return 1
+        \\        case Choice.second:
+        \\            return 2
+    ;
     var compilation = try language.Compilation.init(testing.allocator, "added.my", source);
     defer compilation.deinit();
     try testing.expectError(error.SourceError, compilation.check());
@@ -29,23 +42,108 @@ test "exhaustive matching detects added variants even on statically known values
     try testing.expectEqualStrings("E_INCOMPLETE_MATCH", diagnostic.code);
     try testing.expect(std.mem.indexOf(u8, diagnostic.message, "added") != null);
     try testing.expectEqualStrings("added", compilation.src.text(diagnostic.related.?.span));
-    try reject(event ++ "fn main() -> i64 { match new Event.empty { Event.empty => { return 0; } } }", "E_INCOMPLETE_MATCH");
-    try reject(choice ++ "fn main() -> i64 { match new Choice.first {} return 0; }", "E_INCOMPLETE_MATCH");
+    try reject(event ++
+        \\def main() -> i64:
+        \\    match Event.empty:
+        \\        case Event.empty:
+        \\            return 0
+    , "E_INCOMPLETE_MATCH");
+    try reject(choice ++
+        \\def main() -> i64:
+        \\    match Choice.first:
+        \\    return 0
+    , "E_INCOMPLETE_MATCH");
     try reject(choice ++ "fn main() -> i64 { match new Choice.first { else => { return 0; } } }", "E_SYNTAX");
 }
 
 test "match return analysis and control flow joins handle empty arms loops and nesting" {
-    try reject(choice ++ "fn main() -> i64 { match new Choice.first { Choice.first => { return 1; }, Choice.second => {}, Choice.third => { return 3; } } }", "E_MISSING_RETURN");
-    try reject("enum One { only } fn main() -> i64 { match new One.only { One.only => { return 1; } } return 2; }", "E_UNREACHABLE");
-    try result(choice ++ "fn main() -> i64 { let mut n = 0; while n < 4 { match new Choice.first { Choice.second => { return 90; }, Choice.first => { n += 1; }, Choice.third => {} } } return n; }", 4);
-    try result("enum One { only } union U { item: One } fn main() -> i64 { match new U.item(new One.only) { U.item(x) => { match x { One.only => { return 9; } } } } }", 9);
-    try result(choice ++ "fn main() -> i64 { let mut n = 7; match new Choice.second { Choice.first => { n = 8; }, Choice.second => {}, Choice.third => { n = 9; } } return n; }", 7);
+    try reject(choice ++
+        \\def main() -> i64:
+        \\    match Choice.first:
+        \\        case Choice.first:
+        \\            return 1
+        \\        case Choice.second:
+        \\            pass
+        \\        case Choice.third:
+        \\            return 3
+    , "E_MISSING_RETURN");
+    try reject(
+        \\enum One:
+        \\    only
+        \\
+        \\
+        \\def main() -> i64:
+        \\    match One.only:
+        \\        case One.only:
+        \\            return 1
+        \\    return 2
+    , "E_UNREACHABLE");
+    try result(choice ++
+        \\def main() -> i64:
+        \\    n = 0
+        \\    while n < 4:
+        \\        match Choice.first:
+        \\            case Choice.second:
+        \\                return 90
+        \\            case Choice.first:
+        \\                n += 1
+        \\            case Choice.third:
+        \\                pass
+        \\    return n
+    , 4);
+    try result(
+        \\enum One:
+        \\    only
+        \\
+        \\
+        \\union U:
+        \\    item: One
+        \\
+        \\
+        \\def main() -> i64:
+        \\    match U.item(One.only):
+        \\        case U.item(x):
+        \\            match x:
+        \\                case One.only:
+        \\                    return 9
+    , 9);
+    try result(choice ++
+        \\def main() -> i64:
+        \\    n = 7
+        \\    match Choice.second:
+        \\        case Choice.first:
+        \\            n = 8
+        \\        case Choice.second:
+        \\            pass
+        \\        case Choice.third:
+        \\            n = 9
+        \\    return n
+    , 7);
 }
 
-const nested = "struct Box { n: i64 } union Item { boxes: [2]Box, empty } fn value(x: Item) -> i64 { " ++
-    "match x { Item.empty => { return 0; }, Item.boxes(values) => { return values[0].n + " ++
-    "values[1].n; } } } fn main() -> i64 { let a = new Item.boxes(new [2]Box [new Box { " ++
-    "n: 3 }, new Box { n: 7 }]); let b = a; return value(a) + value(b); }";
+const nested =
+    \\class Box:
+    \\    n: i64
+    \\
+    \\
+    \\union Item:
+    \\    boxes: [2]Box,
+    \\    empty
+    \\
+    \\
+    \\def value(x: Item) -> i64:
+    \\    match x:
+    \\        case Item.empty:
+    \\            return 0
+    \\        case Item.boxes(values):
+    \\            return values[0].n + values[1].n
+    \\
+    \\
+    \\def main() -> i64:
+    \\    a = Item.boxes([Box(n=3), Box(n=7)])
+    \\    b = a
+    \\    return value(a) + value(b)
+;
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, fixture_path, nested);
     defer compilation.deinit();
@@ -62,10 +160,26 @@ test "variant payloads dispatch fixups dumps and discovery clean up at every all
 }
 
 test "variant copies and payload bindings retain bounded storage across overwrites and traps" {
-    const source = "union State { running: i64, stopped } fn main() -> i64 { let mut state = new " ++
-        "State.running(0); let mut done = false; while !done { match state { State.running(n) " ++
-        "=> { if n < 10000 { state = new State.running(n + 1); } else { state = new " ++
-        "State.stopped; } }, State.stopped => { done = true; } } } return 10000; }";
+    const source =
+        \\union State:
+        \\    running: i64,
+        \\    stopped
+        \\
+        \\
+        \\def main() -> i64:
+        \\    state = State.running(0)
+        \\    done = False
+        \\    while not done:
+        \\        match state:
+        \\            case State.running(n):
+        \\                if n < 10000:
+        \\                    state = State.running(n + 1)
+        \\                else:
+        \\                    state = State.stopped
+        \\            case State.stopped:
+        \\                done = True
+        \\    return 10000
+    ;
     var compilation = try language.Compilation.init(testing.allocator, "loop.my", source);
     defer compilation.deinit();
     try compilation.emit();
@@ -91,11 +205,47 @@ test "variant copies and payload bindings retain bounded storage across overwrit
 }
 
 test "duplicate identity retains resolved variants arms and payload bindings" {
-    const source = "union U { a: i64, b: i64 } fn one(x: U) -> i64 { match x { U.a(n) => { return n; }, " ++
-        "U.b(n) => { return n + 1; } } } fn two(y: U) -> i64 { match y { U.a(v) => { return v;" ++
-        " }, U.b(w) => { return w + 1; } } } fn changed(x: U) -> i64 { match x { U.a(n) => { " ++
-        "return n + 1; }, U.b(n) => { return n; } } } fn a() -> U { return new U.a(1); } fn " ++
-        "b() -> U { return new U.b(1); } fn main() -> i64 { return 0; }";
+    const source =
+        \\union U:
+        \\    a: i64,
+        \\    b: i64
+        \\
+        \\
+        \\def one(x: U) -> i64:
+        \\    match x:
+        \\        case U.a(n):
+        \\            return n
+        \\        case U.b(n):
+        \\            return n + 1
+        \\
+        \\
+        \\def two(y: U) -> i64:
+        \\    match y:
+        \\        case U.a(v):
+        \\            return v
+        \\        case U.b(w):
+        \\            return w + 1
+        \\
+        \\
+        \\def changed(x: U) -> i64:
+        \\    match x:
+        \\        case U.a(n):
+        \\            return n + 1
+        \\        case U.b(n):
+        \\            return n
+        \\
+        \\
+        \\def a() -> U:
+        \\    return U.a(1)
+        \\
+        \\
+        \\def b() -> U:
+        \\    return U.b(1)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ;
     var compilation = try language.Compilation.init(testing.allocator, "duplicates.my", source);
     defer compilation.deinit();
     try compilation.check();

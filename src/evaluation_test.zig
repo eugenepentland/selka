@@ -2,7 +2,19 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const eval = language.evaluation;
-const pure = "struct Pair { a:i64,b:i64 } fn sum(p:Pair)->i64{return p.a+p.b;} fn main()->i64{return sum(new Pair{a:3,b:4});}";
+const pure =
+    \\class Pair:
+    \\    a: i64
+    \\    b: i64
+    \\
+    \\
+    \\def sum(p: Pair) -> i64:
+    \\    return p.a + p.b
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return sum(Pair(a=3, b=4))
+;
 fn evaluate(allocator: std.mem.Allocator, c: *language.Compilation, options: eval.Options) !language.vm.Result {
     var sink: language.diagnostic.Sink = .{ .allocator = c.arena.allocator(), .items = c.diagnostics };
     defer c.diagnostics = sink.items;
@@ -31,7 +43,10 @@ test "restricted evaluator preserves aggregate values and every instruction/fram
     }
     try t.expectEqualStrings("R_FRAME_LIMIT", (try evaluate(t.allocator, &c, .{ .max_frames = 1 })).trap.code);
     try t.expectEqualStrings("R_EVAL_MEMORY", (try evaluate(t.allocator, &c, .{ .max_bytes = 1 })).trap.code);
-    var recursive = try language.Compilation.init(t.allocator, "recursive.my", "fn main()->i64{return main();}");
+    var recursive = try language.Compilation.init(t.allocator, "recursive.my",
+        \\def main() -> i64:
+        \\    return main()
+    );
     defer recursive.deinit();
     try recursive.emit();
     try t.expectEqualStrings("R_EVAL_MEMORY", (try evaluate(t.allocator, &recursive, .{ .max_bytes = 65536, .max_frames = 100000 })).trap.code);
@@ -53,7 +68,13 @@ test "restricted evaluator releases host storage through allocation failures" {
 }
 
 test "evaluation preflight validates eligibility without executing traps or nontermination" {
-    for ([_][]const u8{ "fn main()->i64{return 1/0;}", "fn main()->i64{return main();}" }) |text| {
+    for ([_][]const u8{
+        \\def main() -> i64:
+        \\    return divtrunc(1, 0)
+        ,
+        \\def main() -> i64:
+        \\    return main()
+    }) |text| {
         var c = try language.Compilation.init(t.allocator, "preflight.my", text);
         defer c.deinit();
         try c.emit();

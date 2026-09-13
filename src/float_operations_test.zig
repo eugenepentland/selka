@@ -22,7 +22,11 @@ test "binary64 IEEE boundaries canonical NaNs signed zero and FloatConversion" {
     try t.expectEqual(@as(u64, 0), try floats.unary(.f64_to_u64, @bitCast(@as(f64, -0.75))));
 }
 
-const intrinsic_source = "fn main()->i64{let root=f64_to_u64(f64_sqrt(f64_from_u64(1764u64)));return cast<i64>(root);}";
+const intrinsic_source =
+    \\def main() -> i64:
+    \\    root = f64_to_u64(f64_sqrt(f64_from_u64(1764u64)))
+    \\    return cast<i64>(root)
+;
 fn intrinsicScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "float.my", intrinsic_source);
     defer c.deinit();
@@ -30,10 +34,19 @@ fn intrinsicScenario(allocator: std.mem.Allocator) !void {
 }
 // spec-case: FLOAT-DOMAIN-1
 test "float intrinsics evaluate constants reject raw operands and clean failed allocations" {
-    var good = try language.Compilation.init(t.allocator, "float.my", "const V:u64=f64_to_u64(f64_sqrt(f64_from_u64(1764u64)));fn main()->i64{return cast<i64>(V);}");
+    var good = try language.Compilation.init(t.allocator, "float.my",
+        \\const V: u64 = f64_to_u64(f64_sqrt(f64_from_u64(1764u64)))
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return cast<i64>(V)
+    );
     defer good.deinit();
     try t.expectEqual(@as(i64, 42), (try good.execute(t.allocator)).value);
-    var bad = try language.Compilation.init(t.allocator, "float.my", "fn main()->i64{return f64_sqrt(1);}");
+    var bad = try language.Compilation.init(t.allocator, "float.my",
+        \\def main() -> i64:
+        \\    return f64_sqrt(1)
+    );
     defer bad.deinit();
     try t.expectError(error.SourceError, bad.check());
     try t.expectEqualStrings("E_TYPE", bad.diagnostics.items[0].code);

@@ -5,15 +5,35 @@ const language = @import("mylang");
 const bridge = @import("host.zig");
 const application = @import("app.zig");
 const declarations =
-    \\module io;export length;export byte;export put;export issue;
-    \\host fn length(file:i64)->i64 effects(host);
-    \\host fn byte(file:i64,position:i64)->u8 effects(host);
-    \\host fn put(value:u8)->i64 effects(host);
-    \\host fn issue(code:i64,file:i64,position:i64)->i64 effects(host);
+    \\module io
+    \\export length
+    \\export byte
+    \\export put
+    \\export issue
+    \\
+    \\
+    \\host def length(file: i64) -> i64 effects(host)
+    \\
+    \\
+    \\host def byte(file: i64, position: i64) -> u8 effects(host)
+    \\
+    \\
+    \\host def put(value: u8) -> i64 effects(host)
+    \\
+    \\
+    \\host def issue(code: i64, file: i64, position: i64) -> i64 effects(host)
 ;
 const main_source =
-    \\module main;import io;
-    \\fn main()->i64{let n=io::length(0);_ = io::put(65u8);while n==2{_ = io::put(66u8);}return n;}
+    \\module main
+    \\import io
+    \\
+    \\
+    \\def main() -> i64:
+    \\    n = io.length(0)
+    \\    _ = io.put(65u8)
+    \\    while n == 2:
+    \\        _ = io.put(66u8)
+    \\    return n
 ;
 fn provider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
     const bytes = if (std.mem.eql(u8, path, "io.my")) declarations else if (std.mem.eql(u8, path, "main.my")) main_source else return error.NotFound;
@@ -112,7 +132,13 @@ test "disk initSource and initDisk release failed compilations and reload bounde
     try temp.dir.writeFile(t.io, .{ .sub_path = "io.my", .data = "module io; broken" });
     try t.expectError(error.SourceError, app.initDisk(t.allocator, t.io, root));
     try temp.dir.writeFile(t.io, .{ .sub_path = "io.my", .data = declarations });
-    try temp.dir.writeFile(t.io, .{ .sub_path = "main.my", .data = "module main; fn main()->i64 { return true; }" });
+    try temp.dir.writeFile(t.io, .{ .sub_path = "main.my", .data =
+        \\module main
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return True
+    });
     try t.expectError(error.SourceError, app.initDisk(t.allocator, t.io, root));
     try temp.dir.writeFile(t.io, .{ .sub_path = "main.my", .data = main_source });
     try app.initDisk(t.allocator, t.io, root);
@@ -161,14 +187,16 @@ test {
 }
 
 const named_main =
-    \\module main;import io;
-    \\fn main()->i64{
-    \\let inputs=io::inputs();
-    \\_ = io::put(io::byte(io::Document.id(inputs.circuit),0));
-    \\_ = io::put(io::byte(io::Document.id(inputs.pinout),0));
-    \\_ = io::put(io::byte(io::Document.id(inputs.interface),0));
-    \\return 0;
-    \\}
+    \\module main
+    \\import io
+    \\
+    \\
+    \\def main() -> i64:
+    \\    inputs = io.inputs()
+    \\    _ = io.put(io.byte(io.Document.id(inputs.circuit), 0))
+    \\    _ = io.put(io.byte(io.Document.id(inputs.pinout), 0))
+    \\    _ = io.put(io.byte(io.Document.id(inputs.interface), 0))
+    \\    return 0
 ;
 fn namedProvider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
     const bytes = if (std.mem.eql(u8, path, "io.my")) @embedFile("guest/io.my") else if (std.mem.eql(u8, path, "main.my")) named_main else return error.NotFound;

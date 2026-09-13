@@ -2,7 +2,20 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
-const definitions = "struct Box<T:copy>{value:T}union Slot<T:copy>{none,some:T}result R<T:copy>{ok:T,err:i64}";
+const definitions =
+    \\class Box[T]:
+    \\    value: T
+    \\
+    \\
+    \\union Slot[T]:
+    \\    none,
+    \\    some: T
+    \\
+    \\
+    \\result R[T]:
+    \\    ok: T,
+    \\    err: i64
+;
 fn run(allocator: std.mem.Allocator, text: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(allocator, "nominal-body.my", text);
     defer compilation.deinit();
@@ -19,27 +32,107 @@ fn reject(text: []const u8, code: []const u8) !void {
     try t.expectEqualStrings(code, compilation.diagnostics.items[0].code);
 }
 const basic = definitions ++
-    "fn pack<T:copy>(x:T)->Box<T>{return new Box<T>{value:x};}fn extract<T:copy>(box:Box<T>)->T{return box.value;}" ++
-    "fn alter<T:copy>(box:Box<T>,x:T)->Box<T>{let mut y=box;y.value=x;return y;}" ++
-    "fn slot<T:copy>(x:T)->Slot<T>{return new Slot<T>.some(x);}fn choose<T:copy>(x:Slot<T>,fallback:T)->T{" ++
-    "match x{Slot<T>.none=>{return fallback;},Slot<T>.some(value)=>{return value;}}}" ++
-    "fn main()->i64{return extract::<i64>(alter::<i64>(pack::<i64>(3),choose::<i64>(slot::<i64>(7),0)));}";
+    \\def pack[T](x: T) -> Box[T]:
+    \\    return Box[T](value=x)
+    \\
+    \\
+    \\def extract[T](box: Box[T]) -> T:
+    \\    return box.value
+    \\
+    \\
+    \\def alter[T](box: Box[T], x: T) -> Box[T]:
+    \\    y = box
+    \\    y.value = x
+    \\    return y
+    \\
+    \\
+    \\def slot[T](x: T) -> Slot[T]:
+    \\    return Slot.some(x)
+    \\
+    \\
+    \\def choose[T](x: Slot[T], fallback: T) -> T:
+    \\    match x:
+    \\        case Slot.none:
+    \\            return fallback
+    \\        case Slot.some(value):
+    \\            return value
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return extract[i64](alter[i64](pack[i64](3), choose[i64](slot[i64](7), 0)))
+;
 // spec: NOMINAL-BODY-1
 test "nominal bodies construct project update match and forward symbolic arguments" {
     try run(t.allocator, basic, 7);
 }
 test "nominal bodies reject invalid uncalled field payload and identity operations" {
-    try reject(definitions ++ "fn wrong<T:copy>(x:T)->Box<T>{return new Box<T>{value:1};}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
-    try reject(definitions ++ "fn wrong<T:copy>(x:Box<T>)->T{return x.missing;}fn main()->i64{return 0;}", "E_UNKNOWN_FIELD");
-    try reject(definitions ++ "fn wrong<T:copy>(x:Slot<T>)->i64{match x{Slot<T>.none=>{return 1;}}}fn main()->i64{return 0;}", "E_INCOMPLETE_MATCH");
-    try reject(definitions ++ "fn wrong<T:copy,U:copy>(x:Box<T>)->Box<U>{return x;}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
+    try reject(definitions ++
+        \\def wrong[T](x: T) -> Box[T]:
+        \\    return Box[T](value=1)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_GENERIC_TYPE");
+    try reject(definitions ++
+        \\def wrong[T](x: Box[T]) -> T:
+        \\    return x.missing
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_UNKNOWN_FIELD");
+    try reject(definitions ++
+        \\def wrong[T](x: Slot[T]) -> i64:
+        \\    match x:
+        \\        case Slot.none:
+        \\            return 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_INCOMPLETE_MATCH");
+    try reject(definitions ++
+        \\def wrong[T, U](x: Box[T]) -> Box[U]:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_GENERIC_TYPE");
 }
-const results = definitions ++ "result Output<T:copy>{err:i64,ok:Box<T>}" ++
-    "fn plus<T:integer>(x:R<T>)->Output<T>{let n=x?;return new Output<T>.ok(new Box<T>{value:n+n});}" ++
-    "fn main()->i64{match plus::<i64>(new R<i64>.ok(6)){Output<i64>.ok(box)=>{return box.value;},Output<i64>.err(e)=>{return e;}}}";
+const results = definitions ++
+    \\result Output[T]:
+    \\    err: i64,
+    \\    ok: Box[T]
+    \\
+    \\
+    \\def plus[T: integer](x: R[T]) -> Output[T]:
+    \\    n = x?
+    \\    return Output.ok(Box[T](value=n + n))
+    \\
+    \\
+    \\def main() -> i64:
+    \\    match plus[i64](R.ok(6)):
+    \\        case Output.ok(box):
+    \\            return box.value
+    \\        case Output.err(e):
+    \\            return e
+;
 const arrays = definitions ++
-    "fn pairs<T:copy>(x:T)->[2]T{return new [2]T[x,x];}fn boxed<T:copy>(x:T)->Box<[2]T>{return new Box<[2]T>{value:pairs::<T>(x)};}" ++
-    "fn main()->i64{let a=pairs::<i64>(1);let b=boxed::<i64>(8);return a[0]+b.value[1];}";
+    \\def pairs[T](x: T) -> [2]T:
+    \\    return [x, x]
+    \\
+    \\
+    \\def boxed[T](x: T) -> Box[[2]T]:
+    \\    return Box[[2]T](value=pairs[T](x))
+    \\
+    \\
+    \\def main() -> i64:
+    \\    a = pairs[i64](1)
+    \\    b = boxed[i64](8)
+    \\    return a[0] + b.value[1]
+;
 test "nominal bodies reuse concrete array identities created by earlier function specialization" {
     try run(t.allocator, arrays, 9);
 }
@@ -52,11 +145,34 @@ test "nominal bodies release shape catalogs and VM storage after every allocatio
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), allocations, .{});
 }
-const module_source = "module model;export Box;export pack;export extract;struct Box<T:copy>{value:T}" ++
-    "fn pack<T:copy>(x:T)->Box<T>{return new Box<T>{value:x};}fn extract<T:copy>(box:Box<T>)->T{return box.value;}";
+const module_source =
+    \\module model
+    \\export Box
+    \\export pack
+    \\export extract
+    \\
+    \\
+    \\class Box[T]:
+    \\    value: T
+    \\
+    \\
+    \\def pack[T](x: T) -> Box[T]:
+    \\    return Box[T](value=x)
+    \\
+    \\
+    \\def extract[T](box: Box[T]) -> T:
+    \\    return box.value
+;
 const Modules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
-        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main;import model as m;fn main()->i64{return m::extract::<i64>(m::pack::<i64>(23));}");
+        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
+            \\module main
+            \\import model as m
+            \\
+            \\
+            \\def main() -> i64:
+            \\    return m.extract[i64](m.pack[i64](23))
+        );
         if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8, module_source);
         return error.NotFound;
     }
@@ -78,7 +194,14 @@ test "nominal bodies preserve imported declaration identity through specializati
     try t.checkAllAllocationFailures(stable.allocator(), moduleScenario, .{});
 }
 test "nominal bodies bound growing function specialization before executable output" {
-    const source_text = definitions ++ "fn grow<T:copy>(x:T)->i64{return grow::<Box<T>>(new Box<T>{value:x});}fn main()->i64{return grow::<i64>(0);}";
+    const source_text = definitions ++
+        \\def grow[T](x: T) -> i64:
+        \\    return grow[Box[T]](Box[T](value=x))
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return grow[i64](0)
+    ;
     var compilation = try language.Compilation.init(t.allocator, "growing-nominal.my", source_text);
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.emit());
@@ -87,6 +210,21 @@ test "nominal bodies bound growing function specialization before executable out
 }
 test "nominal bodies propagate results with named error remapping and obligations" {
     try run(t.allocator, results, 12);
-    try reject(definitions ++ "fn drop<T:copy>(r:R<T>)->i64{return 0;}fn main()->i64{return 0;}", "E_RESULT_UNHANDLED");
-    try run(t.allocator, definitions ++ "fn drop<T:copy>(r:R<T>)->i64{_ = r;return 4;}fn main()->i64{return drop::<i64>(new R<i64>.ok(1));}", 4);
+    try reject(definitions ++
+        \\def drop[T](r: R[T]) -> i64:
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_RESULT_UNHANDLED");
+    try run(t.allocator, definitions ++
+        \\def drop[T](r: R[T]) -> i64:
+        \\    _ = r
+        \\    return 4
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return drop[i64](R.ok(1))
+    , 4);
 }

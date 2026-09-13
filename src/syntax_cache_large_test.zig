@@ -53,10 +53,34 @@ test "default syntax retention survives 97 modules and matches fresh execution a
     var fresh = language.syntax_cache.Cache.init(t.allocator, .{ .max_entries = 0 });
     defer fresh.deinit();
     const sources = [_][]const u8{
-        "module m0;export value;fn value()->i64{return 1;}",
-        "module m0;export value;fn value()->i64{return 2;}",
-        "module m0;export value;fn value()->i64{return true;}",
-        "module m0;export value;fn value()->i64{return 1;}",
+        \\module m0
+        \\export value
+        \\
+        \\
+        \\def value() -> i64:
+        \\    return 1
+        ,
+        \\module m0
+        \\export value
+        \\
+        \\
+        \\def value() -> i64:
+        \\    return 2
+        ,
+        \\module m0
+        \\export value
+        \\
+        \\
+        \\def value() -> i64:
+        \\    return True
+        ,
+        \\module m0
+        \\export value
+        \\
+        \\
+        \\def value() -> i64:
+        \\    return 1
+        ,
     };
     for (sources, 0..) |source, i| {
         entries[1].bytes = source;

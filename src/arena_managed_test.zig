@@ -427,7 +427,11 @@ test "arena source formatting preserves the with statement" {
 }
 
 test "with outside python syntax keeps its identifier spelling" {
-    const source = "fn main()->i64{let with=42;return with;}";
+    const source =
+        \\def main() -> i64:
+        \\    with = 42
+        \\    return with
+    ;
     var compilation = try language.Compilation.init(t.allocator, "brace.my", source);
     defer compilation.deinit();
     const result = try compilation.executeWithOptions(t.allocator, .{});

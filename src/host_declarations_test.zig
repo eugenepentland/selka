@@ -3,8 +3,13 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const effects = @import("effect_set.zig");
-const main_source = "fn main()->i64{return 0;}";
-const declaration = "host fn measure(x:i64)->i64 effects(host);";
+const main_source =
+    \\def main() -> i64:
+    \\    return 0
+;
+const declaration =
+    \\host def measure(x: i64) -> i64 effects(host)
+;
 fn reject(bytes: []const u8, code: []const u8) !void {
     var c = try language.Compilation.init(t.allocator, "host-invalid.my", bytes);
     defer c.deinit();
@@ -12,7 +17,10 @@ fn reject(bytes: []const u8, code: []const u8) !void {
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
 test "host calls cannot enter effect-free invocation or compile-time evaluation" {
-    var c = try language.Compilation.init(t.allocator, "host-eval.my", declaration ++ "fn main()->i64{return measure(1);}");
+    var c = try language.Compilation.init(t.allocator, "host-eval.my", declaration ++
+        \\def main() -> i64:
+        \\    return measure(1)
+    );
     defer c.deinit();
     try c.emit();
     try t.expectError(error.InvocationEffects, language.vm.invoke(t.allocator, c.code.?, c.code.?.main, &.{}, .{}));
@@ -21,7 +29,17 @@ test "host calls cannot enter effect-free invocation or compile-time evaluation"
     try t.expectEqualStrings("E_EVAL_EFFECT", sink.items.items[0].code);
 }
 test "host declarations preserve contextual names formatting and separate external implementations" {
-    const bytes = declaration ++ "host fn other(x:i64)->i64 effects(host);fn host(x:i64)->i64{return x;}fn main()->i64{return host(3);}";
+    const bytes = declaration ++
+        \\host def other(x: i64) -> i64 effects(host)
+        \\
+        \\
+        \\def host(x: i64) -> i64:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return host(3)
+    ;
     var c = try language.Compilation.init(t.allocator, "host-format.my", bytes);
     defer c.deinit();
     const formatted = try c.format(t.allocator);
@@ -73,11 +91,43 @@ test "host bytecode validation rejects forged bodies signatures entry and effect
     try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, code));
 }
 test "host effects propagate through ordinary generic and uncalled helper paths" {
-    try reject(declaration ++ "fn main()->i64 effects(){return measure(1);}", "E_EFFECT_BOUND");
-    try reject(declaration ++ "fn helper()->i64{return measure(1);}fn f<T:copy>(x:T)->i64 effects(){_ = x;return helper();}" ++ main_source, "E_EFFECT_BOUND");
-    try reject("host fn read()->i64 effects(host,filesystem);fn main()->i64 effects(host){return read();}", "E_EFFECT_BOUND");
-    try reject(declaration ++ "fn main()->i64{return measure(true);}", "E_TYPE");
-    try reject("result R{ok:i64,err:i64}host fn f()->R effects(host);fn main()->i64{let value=f();return 0;}", "E_RESULT_UNHANDLED");
+    try reject(declaration ++
+        \\def main() -> i64 effects():
+        \\    return measure(1)
+    , "E_EFFECT_BOUND");
+    try reject(declaration ++
+        \\def helper() -> i64:
+        \\    return measure(1)
+        \\
+        \\
+        \\def f[T](x: T) -> i64 effects():
+        \\    _ = x
+        \\    return helper()
+    ++ main_source, "E_EFFECT_BOUND");
+    try reject(
+        \\host def read() -> i64 effects(host,filesystem)
+        \\
+        \\
+        \\def main() -> i64 effects(host):
+        \\    return read()
+    , "E_EFFECT_BOUND");
+    try reject(declaration ++
+        \\def main() -> i64:
+        \\    return measure(True)
+    , "E_TYPE");
+    try reject(
+        \\result R:
+        \\    ok: i64,
+        \\    err: i64
+        \\
+        \\
+        \\host def f() -> R effects(host)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    value = f()
+        \\    return 0
+    , "E_RESULT_UNHANDLED");
 }
 // spec: HOST-SOURCE-1
 test "host source declarations require explicit value signatures effects and guest main" {
@@ -87,9 +137,20 @@ test "host source declarations require explicit value signatures effects and gue
     try reject("host fn f<T:copy>(x:T)->T effects(host);" ++ main_source, "E_HOST_DECLARATION");
     try reject("host conversion fn f(x:i64)->i64 effects(host);" ++ main_source, "E_HOST_DECLARATION");
     try reject("domain D:i64{host fn f()->i64 effects(host);}" ++ main_source, "E_HOST_DECLARATION");
-    try reject("host fn f()->clock_cap effects(host);" ++ main_source, "E_HOST_SIGNATURE");
-    try reject("resource File:filesystem;host fn f(x:File)->i64 effects(host);" ++ main_source, "E_HOST_SIGNATURE");
-    try reject("host fn f(x:List<i64>)->i64 effects(host);" ++ main_source, "E_HOST_SIGNATURE");
+    try reject(
+        \\host def f() -> clock_cap effects(host)
+    ++ main_source, "E_HOST_SIGNATURE");
+    try reject(
+        \\resource File: filesystem
+        \\
+        \\
+        \\host def f(x: File) -> i64 effects(host)
+    ++ main_source, "E_HOST_SIGNATURE");
+    try reject(
+        \\host def f(x: List[i64]) -> i64 effects(host)
+    ++ main_source, "E_HOST_SIGNATURE");
     try reject("host fn f()->i64 effects(host){return 1;}" ++ main_source, "E_SYNTAX");
-    try reject("host fn main()->i64 effects(host);", "E_MAIN");
+    try reject(
+        \\host def main() -> i64 effects(host)
+    , "E_MAIN");
 }

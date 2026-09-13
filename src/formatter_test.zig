@@ -42,7 +42,13 @@ fn roundTrip(allocator: std.mem.Allocator, text: []const u8) !void {
 // spec: TOOL-4
 test "formatter canonical indentation preserves inline standalone and trailing comments" {
     const text = "// heading\r\nfn main( )->i64{ // body\r\nlet x=1; // value\n// return note\nreturn x+2;} // end";
-    const expected = "// heading\nfn main() -> i64 { // body\n    let x = 1; // value\n    // return note\n    return x + 2;\n} // end\n";
+    const expected =
+        \\# heading
+        \\def main() -> i64: # body
+        \\    x = 1 # value
+        \\    # return note
+        \\    return x + 2 # end
+    ;
     var c = try language.Compilation.init(t.allocator, "fmt.my", text);
     defer c.deinit();
     const formatted = try c.format(t.allocator);
@@ -55,7 +61,10 @@ test "formatter canonical indentation preserves inline standalone and trailing c
 }
 // spec: TOOL-5
 test "formatting accepts incomplete semantic work but rejects invalid syntax" {
-    var c = try language.Compilation.init(t.allocator, "fmt.my", "fn unfinished()->Unknown{return missing;} ");
+    var c = try language.Compilation.init(t.allocator, "fmt.my",
+        \\def unfinished() -> Unknown:
+        \\    return missing
+    );
     defer c.deinit();
     const formatted = try c.format(t.allocator);
     defer t.allocator.free(formatted);
@@ -70,7 +79,16 @@ test "formatter handles empty and comment-only input canonically" {
     try roundTrip(t.allocator, " // one\n\n// two");
 }
 fn failureScenario(allocator: std.mem.Allocator) !void {
-    try roundTrip(allocator, "struct A{x:i64,y:i64} fn main()->i64{let a=new A{x:1,y:2}; // kept\nreturn a.x+a.y;}");
+    try roundTrip(allocator,
+        \\class A:
+        \\    x: i64
+        \\    y: i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    a = A(x=1, y=2) # kept
+        \\    return a.x + a.y
+    );
 }
 test "formatter parser comments output and idempotence release every failed allocation" {
     var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
@@ -136,7 +154,16 @@ test "module formatter rejects malformed headers and bodies but permits unresolv
         defer c.deinit();
         try t.expectError(error.SourceError, c.formatModule(t.allocator));
     }
-    var c = try language.Compilation.init(t.allocator, "draft.my", "module differently_named; import absent as x; import other as x; export Missing; fn draft()->Unknown{return absent();}");
+    var c = try language.Compilation.init(t.allocator, "draft.my",
+        \\module differently_named
+        \\import absent as x
+        \\import other as x
+        \\export Missing
+        \\
+        \\
+        \\def draft() -> Unknown:
+        \\    return absent()
+    );
     defer c.deinit();
     const text = try c.formatModule(t.allocator);
     defer t.allocator.free(text);

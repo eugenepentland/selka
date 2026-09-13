@@ -21,10 +21,41 @@ const Files = struct {
         return .{ .context = self, .read = read };
     }
 };
-const units = "module units; export Distance; domain Distance: i64 { private fn raw(x: i64) -> Distance { return wrap<Distance>(x); } fn make(x: i64) -> Distance { return Distance.raw(x); } } fn hidden() -> i64 { return 9; }";
-const entry = "module main; import units; export Sample; export echo; struct Sample { distance: " ++
-    "units::Distance } fn echo(x: [2]units :: Distance) -> [2]units::Distance { return x; " ++
-    "} fn main() -> i64 { let x = units::Distance.make(2); return 0; }";
+const units =
+    \\module units
+    \\export Distance
+    \\
+    \\
+    \\domain Distance: i64:
+    \\    private def raw(x: i64) -> Distance:
+    \\        return wrap<Distance>(x)
+    \\
+    \\    def make(x: i64) -> Distance:
+    \\        return Distance.raw(x)
+    \\
+    \\
+    \\def hidden() -> i64:
+    \\    return 9
+;
+const entry =
+    \\module main
+    \\import units
+    \\export Sample
+    \\export echo
+    \\
+    \\
+    \\class Sample:
+    \\    distance: units.Distance
+    \\
+    \\
+    \\def echo(x: [2]units.Distance) -> [2]units.Distance:
+    \\    return x
+    \\
+    \\
+    \\def main() -> i64:
+    \\    x = units.Distance.make(2)
+    \\    return 0
+;
 fn scenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = entry }, .{ .path = units_path, .bytes = units } } };
     var project = graph.Project.init(allocator);
@@ -73,14 +104,86 @@ fn reject(body: []const u8, code: []const u8) !void {
 // spec: PROJ-3
 test "module interfaces reject duplicate exports missing symbols and private type leaks" {
     try reject("module main; export Missing;", "E_UNKNOWN_EXPORT");
-    try reject("module main; export X; export X; struct X {}", "E_DUPLICATE_EXPORT");
-    try reject("module main; import units; struct units {}", "E_IMPORT_ALIAS");
-    try reject("module main; struct X {} fn X() -> i64 { return 0; }", "E_DUPLICATE_SYMBOL");
-    try reject("module main; export f; struct Secret {} fn f(x: Secret) -> i64 { return 0; }", "E_PRIVATE_INTERFACE");
-    try reject("module main; export Box; struct Secret {} struct Box { value: [2]Secret }", "E_PRIVATE_INTERFACE");
-    try reject("module main; export Box; struct Secret {} union Box { value: Secret }", "E_PRIVATE_INTERFACE");
-    try reject("module main; export f; fn f(x: absent::Thing) -> i64 { return 0; }", "E_UNKNOWN_IMPORT");
-    try reject("module main; export f; fn f(x: Missing) -> i64 { return 0; }", "E_UNKNOWN_SYMBOL");
+    try reject(
+        \\module main
+        \\export X
+        \\export X
+        \\
+        \\
+        \\class X:
+        \\    pass
+    , "E_DUPLICATE_EXPORT");
+    try reject(
+        \\module main
+        \\import units
+        \\
+        \\
+        \\class units:
+        \\    pass
+    , "E_IMPORT_ALIAS");
+    try reject(
+        \\module main
+        \\
+        \\
+        \\class X:
+        \\    pass
+        \\
+        \\
+        \\def X() -> i64:
+        \\    return 0
+    , "E_DUPLICATE_SYMBOL");
+    try reject(
+        \\module main
+        \\export f
+        \\
+        \\
+        \\class Secret:
+        \\    pass
+        \\
+        \\
+        \\def f(x: Secret) -> i64:
+        \\    return 0
+    , "E_PRIVATE_INTERFACE");
+    try reject(
+        \\module main
+        \\export Box
+        \\
+        \\
+        \\class Secret:
+        \\    pass
+        \\
+        \\
+        \\class Box:
+        \\    value: [2]Secret
+    , "E_PRIVATE_INTERFACE");
+    try reject(
+        \\module main
+        \\export Box
+        \\
+        \\
+        \\class Secret:
+        \\    pass
+        \\
+        \\
+        \\union Box:
+        \\    value: Secret
+    , "E_PRIVATE_INTERFACE");
+    try reject(
+        \\module main
+        \\export f
+        \\
+        \\
+        \\def f(x: absent.Thing) -> i64:
+        \\    return 0
+    , "E_UNKNOWN_IMPORT");
+    try reject(
+        \\module main
+        \\export f
+        \\
+        \\
+        \\def f(x: Missing) -> i64:
+        \\    return 0
+    , "E_UNKNOWN_SYMBOL");
     try reject("module main; fn broken( ;", "E_SYNTAX");
 }
 test "module privacy rejects direct private access wrong kinds and transitive import names" {
@@ -107,8 +210,34 @@ test "module privacy rejects direct private access wrong kinds and transitive im
 }
 
 test "module grammar parses qualified variant match constructors and free calls" {
-    const text = "module main; import units; fn main() -> i64 { let x = new units::Choice.a; let y = units::helper(); match x { units::Choice.a => { return y; } } }";
-    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = text }, .{ .path = units_path, .bytes = "module units; export Choice; export helper; enum Choice { a } fn helper() -> i64 { return 1; }" } } };
+    const text =
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def main() -> i64:
+        \\    x = units.Choice.a
+        \\    y = units.helper()
+        \\    match x:
+        \\        case units.Choice.a:
+        \\            return y
+    ;
+    var files: Files = .{ .entries = &.{
+        .{ .path = "main.my", .bytes = text },
+        .{ .path = units_path, .bytes =
+        \\module units
+        \\export Choice
+        \\export helper
+        \\
+        \\
+        \\enum Choice:
+        \\    a
+        \\
+        \\
+        \\def helper() -> i64:
+        \\    return 1
+        },
+    } };
     var project = graph.Project.init(t.allocator);
     defer project.deinit();
     try project.load(files.provider(), "main", .{});
@@ -149,10 +278,32 @@ test "module AST relocation retains source spelling namespace ownership and node
 }
 
 fn checkedScenario(allocator: std.mem.Allocator) !void {
-    var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = "module main; import units; fn main() -> i64 { let x = units::Distance.make(12); " ++
-        "return units::Distance.number(x); }" }, .{ .path = units_path, .bytes = "module units; export Distance; domain Distance: i64 { private fn raw(x: i64) -> " ++
-        "Distance { return wrap<Distance>(x); } fn make(x: i64) -> Distance { return " ++
-        "Distance.raw(x); } fn number(x: Distance) -> i64 { return unwrap(x); } }" } } };
+    var files: Files = .{ .entries = &.{
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def main() -> i64:
+        \\    x = units.Distance.make(12)
+        \\    return units.Distance.number(x)
+        },
+        .{ .path = units_path, .bytes =
+        \\module units
+        \\export Distance
+        \\
+        \\
+        \\domain Distance: i64:
+        \\    private def raw(x: i64) -> Distance:
+        \\        return wrap<Distance>(x)
+        \\
+        \\    def make(x: i64) -> Distance:
+        \\        return Distance.raw(x)
+        \\
+        \\    def number(x: Distance) -> i64:
+        \\        return unwrap(x)
+        },
+    } };
     var project = graph.Project.init(allocator);
     defer project.deinit();
     try project.load(files.provider(), "main", .{});
@@ -183,10 +334,42 @@ fn rejectChecked(main: []const u8, dependency: []const u8, code: []const u8) !vo
 }
 test "shared record types cross module boundaries and hidden names do not shadow caller locals" {
     var files: Files = .{ .entries = &.{
-        .{ .path = "main.my", .bytes = "module main; import units; fn main() -> i64 { let hidden = 7; let x = units::make(hidden); return units::value(x); }" },
-        .{ .path = units_path, .bytes = "module units; export X; export make; export value; struct X { number: i64 } fn " ++
-            "hidden() -> i64 { return 99; } fn make(n: i64) -> X { return new X { number: n }; } " ++
-            "fn value(x: X) -> i64 { return x.number; } fn main() -> i64 { return 88; }" },
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def main() -> i64:
+        \\    hidden = 7
+        \\    x = units.make(hidden)
+        \\    return units.value(x)
+        },
+        .{ .path = units_path, .bytes =
+        \\module units
+        \\export X
+        \\export make
+        \\export value
+        \\
+        \\
+        \\class X:
+        \\    number: i64
+        \\
+        \\
+        \\def hidden() -> i64:
+        \\    return 99
+        \\
+        \\
+        \\def make(n: i64) -> X:
+        \\    return X(number=n)
+        \\
+        \\
+        \\def value(x: X) -> i64:
+        \\    return x.number
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 88
+        },
     } };
     var project = graph.Project.init(t.allocator);
     defer project.deinit();
@@ -213,17 +396,84 @@ fn grouped(analysis: duplicates_module.Analysis, program: @import("typed.zig").P
 }
 fn discoveryScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
-        .{ .path = "main.my", .bytes = "module main; import left; import right; fn main() -> i64 { return 0; }" },
-        .{ .path = "left.my", .bytes = "module left; import shared as s; struct Box { n: i64 } fn pure(x: i64) -> i64 { " ++
-            "return x * 2 + 3; } fn nominal(x: Box) -> Box { return x; } fn helper(x: i64) -> i64 " ++
-            "{ return x + 1; } fn wrapper(x: i64) -> i64 { return helper(x); } fn shared_use(x: " ++
-            "s::Box) -> i64 { return s::number(x); }" },
-        .{ .path = "right.my", .bytes = "module right; import shared as q; struct Box { n: i64 } fn pure(value: i64) -> i64 { " ++
-            "return value * 2 + 3; } fn nominal(value: Box) -> Box { return value; } fn " ++
-            "helper(value: i64) -> i64 { return value + 1; } fn wrapper(value: i64) -> i64 { " ++
-            "return helper(value); } fn shared_use(value: q::Box) -> i64 { return " ++
-            "q::number(value); }" },
-        .{ .path = "shared.my", .bytes = "module shared; export Box; export number; struct Box { n: i64 } fn number(x: Box) -> i64 { return x.n; }" },
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\import left
+        \\import right
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        },
+        .{ .path = "left.my", .bytes =
+        \\module left
+        \\import shared as s
+        \\
+        \\
+        \\class Box:
+        \\    n: i64
+        \\
+        \\
+        \\def pure(x: i64) -> i64:
+        \\    return x * 2 + 3
+        \\
+        \\
+        \\def nominal(x: Box) -> Box:
+        \\    return x
+        \\
+        \\
+        \\def helper(x: i64) -> i64:
+        \\    return x + 1
+        \\
+        \\
+        \\def wrapper(x: i64) -> i64:
+        \\    return helper(x)
+        \\
+        \\
+        \\def shared_use(x: s.Box) -> i64:
+        \\    return s.number(x)
+        },
+        .{ .path = "right.my", .bytes =
+        \\module right
+        \\import shared as q
+        \\
+        \\
+        \\class Box:
+        \\    n: i64
+        \\
+        \\
+        \\def pure(value: i64) -> i64:
+        \\    return value * 2 + 3
+        \\
+        \\
+        \\def nominal(value: Box) -> Box:
+        \\    return value
+        \\
+        \\
+        \\def helper(value: i64) -> i64:
+        \\    return value + 1
+        \\
+        \\
+        \\def wrapper(value: i64) -> i64:
+        \\    return helper(value)
+        \\
+        \\
+        \\def shared_use(value: q.Box) -> i64:
+        \\    return q.number(value)
+        },
+        .{ .path = "shared.my", .bytes =
+        \\module shared
+        \\export Box
+        \\export number
+        \\
+        \\
+        \\class Box:
+        \\    n: i64
+        \\
+        \\
+        \\def number(x: Box) -> i64:
+        \\    return x.n
+        },
     } };
     var project = graph.Project.init(allocator);
     defer project.deinit();
@@ -249,12 +499,52 @@ test "module duplicate discovery preserves nominal types and callees while norma
 
 fn qualityScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
-        .{ .path = "main.my", .bytes = "module main; import api; fn main() -> i64 { return api::used(); }" },
-        .{ .path = "api.my", .bytes = "module api; export used; export unused; export D; fn used() -> i64 { return 7; } fn " ++
-            "unused() -> i64 { return helper(); } fn helper() -> i64 { return 2; } fn isolated() " ++
-            "-> i64 { return 3; } fn cycle_a() -> i64 { return cycle_b(); } fn cycle_b() -> i64 { " ++
-            "return cycle_a(); } domain D: i64 { private fn raw(x: i64) -> D { return wrap<D>(x); " ++
-            "} fn make(x: i64) -> D { return D.raw(x); } }" },
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\import api
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return api.used()
+        },
+        .{ .path = "api.my", .bytes =
+        \\module api
+        \\export used
+        \\export unused
+        \\export D
+        \\
+        \\
+        \\def used() -> i64:
+        \\    return 7
+        \\
+        \\
+        \\def unused() -> i64:
+        \\    return helper()
+        \\
+        \\
+        \\def helper() -> i64:
+        \\    return 2
+        \\
+        \\
+        \\def isolated() -> i64:
+        \\    return 3
+        \\
+        \\
+        \\def cycle_a() -> i64:
+        \\    return cycle_b()
+        \\
+        \\
+        \\def cycle_b() -> i64:
+        \\    return cycle_a()
+        \\
+        \\
+        \\domain D: i64:
+        \\    private def raw(x: i64) -> D:
+        \\        return wrap<D>(x)
+        \\
+        \\    def make(x: i64) -> D:
+        \\        return D.raw(x)
+        },
     } };
     var project = graph.Project.init(allocator);
     defer project.deinit();
@@ -294,8 +584,22 @@ test "module quality reports distinguish main export and private helper reachabi
 
 fn nativeModuleScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
-        .{ .path = "main.my", .bytes = "module main; import helper; fn main() -> i64 { return helper::twice(7); }" },
-        .{ .path = "helper.my", .bytes = "module helper; export twice; fn twice(x: i64) -> i64 { return x * 2; }" },
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\import helper
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return helper.twice(7)
+        },
+        .{ .path = "helper.my", .bytes =
+        \\module helper
+        \\export twice
+        \\
+        \\
+        \\def twice(x: i64) -> i64:
+        \\    return x * 2
+        },
     } };
     var project = graph.Project.init(allocator);
     defer project.deinit();
@@ -340,7 +644,13 @@ fn expectQualifiedSyntax(syntax: @import("ast.zig").Program, src: @import("sourc
 }
 
 test "AST relocation rejects dangling expression and statement identities" {
-    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = "module main;fn main()->i64{return 0;}" }} };
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes =
+        \\module main
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    }} };
     var project = graph.Project.init(t.allocator);
     defer project.deinit();
     try project.load(files.provider(), "main", .{});
@@ -354,7 +664,17 @@ test "AST relocation rejects dangling expression and statement identities" {
     try t.expectError(error.InvalidStatementId, @import("project_syntax.zig").build(&index));
 }
 test "public type selection rejects private and unknown nominal types" {
-    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = "module main;struct Hidden{n:i64}fn main()->i64{return 0;}" }} };
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes =
+        \\module main
+        \\
+        \\
+        \\class Hidden:
+        \\    n: i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    }} };
     var project = graph.Project.init(t.allocator);
     defer project.deinit();
     try project.load(files.provider(), "main", .{});
@@ -365,7 +685,18 @@ test "public type selection rejects private and unknown nominal types" {
 }
 
 test "schema rendering rejects an exported declaration missing its checked type" {
-    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = "module main;export Visible;struct Visible{n:i64}fn main()->i64{return 0;}" }} };
+    var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes =
+        \\module main
+        \\export Visible
+        \\
+        \\
+        \\class Visible:
+        \\    n: i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    }} };
     var project = graph.Project.init(t.allocator);
     defer project.deinit();
     try project.load(files.provider(), "main", .{});
@@ -377,8 +708,30 @@ test "schema rendering rejects an exported declaration missing its checked type"
 }
 
 test "generic syntax module interfaces retain scoped type names without hiding private concrete types" {
-    try reject("module main;export f;struct Secret{}fn f<T:copy>(x:T,y:[2]Secret)->T{return x;}", "E_PRIVATE_INTERFACE");
-    const text = "module main;export echo;fn echo<T:copy>(x:[2]T)->[2]T{return x;}fn main()->i64{return 0;}";
+    try reject(
+        \\module main
+        \\export f
+        \\
+        \\
+        \\class Secret:
+        \\    pass
+        \\
+        \\
+        \\def f[T](x: T, y: [2]Secret) -> T:
+        \\    return x
+    , "E_PRIVATE_INTERFACE");
+    const text =
+        \\module main
+        \\export echo
+        \\
+        \\
+        \\def echo[T](x: [2]T) -> [2]T:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ;
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = text }} };
     var cache = @import("syntax_cache.zig").Cache.init(t.allocator, .{});
     defer cache.deinit();
@@ -396,31 +749,170 @@ test "generic syntax module interfaces retain scoped type names without hiding p
 }
 
 test "generic requirements checkGenericRequirements validates exported and uncalled private templates" {
-    try reject("module main;export f;fn f<T:unknown>(x:T)->T{return x;}", "E_GENERIC_REQUIREMENT");
-    try reject("module main;fn private_template<T:unknown>(x:T)->T{return x;}fn main()->i64{return 0;}", "E_GENERIC_REQUIREMENT");
+    try reject(
+        \\module main
+        \\export f
+        \\
+        \\
+        \\def f[T: unknown](x: T) -> T:
+        \\    return x
+    , "E_GENERIC_REQUIREMENT");
+    try reject(
+        \\module main
+        \\
+        \\
+        \\def private_template[T: unknown](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "E_GENERIC_REQUIREMENT");
 }
 
 test "generic body contracts respect module-local declaration and import scopes" {
-    try rejectChecked("module main;import units;fn f<T:copy>(x:T)->T{let units=x;return units;}fn main()->i64{return 0;}", "module units;", "E_SHADOWING");
-    try acceptChecked("module main;import units;fn f<T:copy>(x:T)->T{return x;}fn main()->i64{return 0;}", "module units;struct T{}");
-    try rejectChecked("module main;import units;fn main()->i64{return 0;}", "module units;fn bad<T:copy>(x:T,y:T)->T{return x+y;}", "E_GENERIC_OPERATION");
+    try rejectChecked(
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def f[T](x: T) -> T:
+        \\    units = x
+        \\    return units
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "module units;", "E_SHADOWING");
+    try acceptChecked(
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def f[T](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ,
+        \\module units
+        \\
+        \\
+        \\class T:
+        \\    pass
+    );
+    try rejectChecked(
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ,
+        \\module units
+        \\
+        \\
+        \\def bad[T](x: T, y: T) -> T:
+        \\    return x + y
+    , "E_GENERIC_OPERATION");
 }
 
 test "generic calls preserve imported declaration identity and private boundaries" {
-    const main = "module main;import units;fn identity<T:integer>(x:T)->T{return x;}fn forward<T:copy>(x:T)->T{return units::identity::<T>(x);}fn main()->i64{return 0;}";
-    const dependency = "module units;export identity;fn identity<U:copy>(x:U)->U{return x;}";
+    const main =
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def identity[T: integer](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def forward[T](x: T) -> T:
+        \\    return units.identity[T](x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ;
+    const dependency =
+        \\module units
+        \\export identity
+        \\
+        \\
+        \\def identity[U](x: U) -> U:
+        \\    return x
+    ;
     try acceptChecked(main, dependency);
-    const domain_main = "module main;import units;fn forward<T:copy>(x:T)->T{return units::D.make::<T>(x);}fn main()->i64{return 0;}";
-    const domain_dependency = "module units;export D;domain D:i64{private fn hidden<T:copy>(x:T)->T{return x;}fn make<U:copy>(x:U)->U{return D.hidden::<U>(x);}}";
+    const domain_main =
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def forward[T](x: T) -> T:
+        \\    return units.D.make::<T>(x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ;
+    const domain_dependency =
+        \\module units
+        \\export D
+        \\
+        \\
+        \\domain D: i64:
+        \\    private def hidden[T](x: T) -> T:
+        \\        return x
+        \\
+        \\    def make[U](x: U) -> U:
+        \\        return D.hidden::<U>(x)
+    ;
     try acceptChecked(domain_main, domain_dependency);
-    try rejectChecked(main, "module units;fn identity<U:copy>(x:U)->U{return x;}", "E_PRIVATE_SYMBOL");
-    try rejectChecked(main, "module units;export identity;fn identity<U:integer>(x:U)->U{return x;}", "E_GENERIC_ARGUMENT");
+    try rejectChecked(main,
+        \\module units
+        \\
+        \\
+        \\def identity[U](x: U) -> U:
+        \\    return x
+    , "E_PRIVATE_SYMBOL");
+    try rejectChecked(main,
+        \\module units
+        \\export identity
+        \\
+        \\
+        \\def identity[U: integer](x: U) -> U:
+        \\    return x
+    , "E_GENERIC_ARGUMENT");
 }
 
 fn genericCallsScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
-        .{ .path = "main.my", .bytes = "module main;import units;fn forward<T:integer>(x:T)->T{return units::identity::<T>(x);}fn main()->i64{return 0;}" },
-        .{ .path = units_path, .bytes = "module units;export identity;fn identity<U:copy>(x:U)->U{_ = helper(1);return x;}fn helper(x:i64)->i64{return x+1;}" },
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def forward[T: integer](x: T) -> T:
+        \\    return units.identity[T](x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        },
+        .{ .path = units_path, .bytes =
+        \\module units
+        \\export identity
+        \\
+        \\
+        \\def identity[U](x: U) -> U:
+        \\    _ = helper(1)
+        \\    return x
+        \\
+        \\
+        \\def helper(x: i64) -> i64:
+        \\    return x + 1
+        },
     } };
     var project = graph.Project.init(allocator);
     defer project.deinit();
@@ -440,8 +932,26 @@ test "generic calls module resolution and signature substitution release allocat
 
 test "generic calls requirement diagnostics link caller and imported declaration locations" {
     var files: Files = .{ .entries = &.{
-        .{ .path = "main.my", .bytes = "module main;import units;fn forward<T:copy>(x:T)->T{return units::identity::<T>(x);}fn main()->i64{return 0;}" },
-        .{ .path = units_path, .bytes = "module units;export identity;fn identity<U:integer>(x:U)->U{return x;}" },
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def forward[T](x: T) -> T:
+        \\    return units.identity[T](x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        },
+        .{ .path = units_path, .bytes =
+        \\module units
+        \\export identity
+        \\
+        \\
+        \\def identity[U: integer](x: U) -> U:
+        \\    return x
+        },
     } };
     var project = graph.Project.init(t.allocator);
     defer project.deinit();
@@ -472,14 +982,59 @@ fn acceptChecked(main: []const u8, dependency: []const u8) !void {
 
 fn genericExecutionScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
-        .{ .path = "main.my", .bytes = "module main;import units;fn id<T:integer>(x:T)->T{return x;}" ++
-            "fn main()->i64{_ = units::id::<units::Box>(new units::Box{value:1});" ++
-            "let mut x=0;x=units::set::<i64>(x,2);" ++
-            "let values=new [1]i64 [x];return units::run()+id::<i64>(units::head::<i64>(values));}" },
-        .{ .path = units_path, .bytes = "module units;export run;export id;export set;export head;export view;export Box;struct Box{value:i64}" ++
-            "fn view<T:copy>(v:[1]T)->[1]T{return v;}" ++
-            "fn head<T:copy>(v:[1]T)->T{let seen=view::<T>(v);return seen[0];}" ++
-            "fn set<T:copy>(x:T,y:T)->T{_ = x;return y;}fn id<T:copy>(x:T)->T{return x;}fn run()->i64{if id::<bool>(true){return id::<i64>(5);}return 0;}" },
+        .{ .path = "main.my", .bytes =
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def id[T: integer](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    _ = units.id[units.Box](units.Box(value=1))
+        \\    x = 0
+        \\    x = units.set[i64](x, 2)
+        \\    values: [1]i64 = [x]
+        \\    return units.run() + id[i64](units.head[i64](values))
+        },
+        .{ .path = units_path, .bytes =
+        \\module units
+        \\export run
+        \\export id
+        \\export set
+        \\export head
+        \\export view
+        \\export Box
+        \\
+        \\
+        \\class Box:
+        \\    value: i64
+        \\
+        \\
+        \\def view[T](v: [1]T) -> [1]T:
+        \\    return v
+        \\
+        \\
+        \\def head[T](v: [1]T) -> T:
+        \\    seen = view[T](v)
+        \\    return seen[0]
+        \\
+        \\
+        \\def set[T](x: T, y: T) -> T:
+        \\    _ = x
+        \\    return y
+        \\
+        \\
+        \\def id[T](x: T) -> T:
+        \\    return x
+        \\
+        \\
+        \\def run() -> i64:
+        \\    if id[bool](True):
+        \\        return id[i64](5)
+        \\    return 0
+        },
     } };
     var project = graph.Project.init(allocator);
     defer project.deinit();
@@ -511,20 +1066,99 @@ test "generic execution retains module identities and ordinary public schema roo
 
 // spec: EXPORT-PLACEMENT-1
 test "exports after declarations retain interface validation and scope boundaries" {
-    try acceptChecked("module main;import units;fn main()->i64{return units::value()-42;}", "module units;fn value()->i64{return 42;}export value;");
-    try reject("module main; struct Value { n:i64 } export Missing;", "E_UNKNOWN_EXPORT");
-    try reject("module main; export Value; struct Value { n:i64 } export Value;", "E_DUPLICATE_EXPORT");
-    try reject("module main; struct Secret {} fn value(x:Secret)->i64{return 0;} export value;", "E_PRIVATE_INTERFACE");
+    try acceptChecked(
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return units.value() - 42
+    ,
+        \\module units
+        \\
+        \\
+        \\def value() -> i64:
+        \\    return 42
+        \\
+        \\
+        \\export value
+    );
+    try reject(
+        \\module main
+        \\
+        \\
+        \\class Value:
+        \\    n: i64
+        \\
+        \\
+        \\export Missing
+    , "E_UNKNOWN_EXPORT");
+    try reject(
+        \\module main
+        \\export Value
+        \\
+        \\
+        \\class Value:
+        \\    n: i64
+        \\
+        \\
+        \\export Value
+    , "E_DUPLICATE_EXPORT");
+    try reject(
+        \\module main
+        \\
+        \\
+        \\class Secret:
+        \\    pass
+        \\
+        \\
+        \\def value(x: Secret) -> i64:
+        \\    return 0
+        \\
+        \\
+        \\export value
+    , "E_PRIVATE_INTERFACE");
     try reject("module main; fn value()->i64{export value; return 0;}", "E_SYNTAX");
     try reject("module main; struct Value { export Value; }", "E_SYNTAX");
     try reject("module main; fn value()->i64{return 0;} import units;", "E_SYNTAX");
 }
 
 fn scatteredExports(allocator: std.mem.Allocator) !void {
-    const body = "module main;export Value;struct Value{n:i64}export value;" ++
-        "fn value()->i64{let export=42;return export;}" ++
-        "type Number=i64;export Number;const answer:Number=42;export answer;" ++
-        "fn main()->i64{return value()-answer;}export main;";
+    const body =
+        \\module main
+        \\export Value
+        \\
+        \\
+        \\class Value:
+        \\    n: i64
+        \\
+        \\
+        \\export value
+        \\
+        \\
+        \\def value() -> i64:
+        \\    export = 42
+        \\    return export
+        \\
+        \\
+        \\type Number = i64
+        \\
+        \\
+        \\export Number
+        \\
+        \\
+        \\const answer: Number = 42
+        \\
+        \\
+        \\export answer
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return value() - answer
+        \\
+        \\
+        \\export main
+    ;
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = body }} };
     var project = graph.Project.init(allocator);
     defer project.deinit();
@@ -552,7 +1186,17 @@ test "scattered exports preserve source order and spans through compilation and 
 }
 
 test "late duplicate export diagnostics locate both original directives" {
-    const body = "module main;export value;fn value()->i64{return 0;}export value;";
+    const body =
+        \\module main
+        \\export value
+        \\
+        \\
+        \\def value() -> i64:
+        \\    return 0
+        \\
+        \\
+        \\export value
+    ;
     var files: Files = .{ .entries = &.{.{ .path = "main.my", .bytes = body }} };
     var project = graph.Project.init(t.allocator);
     defer project.deinit();
@@ -564,35 +1208,244 @@ test "late duplicate export diagnostics locate both original directives" {
 }
 
 test "cross module bodies enforce private functions private types nominal identity and local shadowing" {
-    try rejectChecked("module main; import units; fn main() -> i64 { return units::hidden(); }", units, "E_PRIVATE_SYMBOL");
-    try rejectChecked("module main; import units; fn main() -> i64 { _ = units::Distance.raw(1); return 0; }", units, "E_PRIVATE_SYMBOL");
-    try rejectChecked("module main; import units; fn main() -> i64 { let x = new units::Hidden {}; return 0; }", "module units; struct Hidden {}", "E_PRIVATE_SYMBOL");
-    try rejectChecked("module main; import units; struct X {} fn main() -> i64 { return units::take(new X {}); }", "module units; export X; export take; struct X {} fn take(x: X) -> i64 { return 0; }", "E_TYPE");
-    try rejectChecked("module main; import units; fn main() -> i64 { let units = 1; return units; }", units, "E_SHADOWING");
-    try rejectChecked("module main; import units; fn main() -> i64 { return hidden(); }", units, "E_UNKNOWN_SYMBOL");
-    try rejectChecked("module main; import units; fn main() -> i64 { return 0; }", "module units; fn bad() -> i64 { return true; }", "E_TYPE");
-    try rejectChecked("module main; import units; fn main() -> i64 { return 0; }", "module units; struct Recursive { next: Recursive }", "E_RECURSIVE_RECORD");
+    try rejectChecked(
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return units.hidden()
+    , units, "E_PRIVATE_SYMBOL");
+    try rejectChecked(
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def main() -> i64:
+        \\    _ = units.Distance.raw(1)
+        \\    return 0
+    , units, "E_PRIVATE_SYMBOL");
+    try rejectChecked(
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def main() -> i64:
+        \\    x = units.Hidden()
+        \\    return 0
+    ,
+        \\module units
+        \\
+        \\
+        \\class Hidden:
+        \\    pass
+    , "E_PRIVATE_SYMBOL");
+    try rejectChecked(
+        \\module main
+        \\import units
+        \\
+        \\
+        \\class X:
+        \\    pass
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return units.take(X())
+    ,
+        \\module units
+        \\export X
+        \\export take
+        \\
+        \\
+        \\class X:
+        \\    pass
+        \\
+        \\
+        \\def take(x: X) -> i64:
+        \\    return 0
+    , "E_TYPE");
+    try rejectChecked(
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def main() -> i64:
+        \\    units = 1
+        \\    return units
+    , units, "E_SHADOWING");
+    try rejectChecked(
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return hidden()
+    , units, "E_UNKNOWN_SYMBOL");
+    try rejectChecked(
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ,
+        \\module units
+        \\
+        \\
+        \\def bad() -> i64:
+        \\    return True
+    , "E_TYPE");
+    try rejectChecked(
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ,
+        \\module units
+        \\
+        \\
+        \\class Recursive:
+        \\    next: Recursive
+    , "E_RECURSIVE_RECORD");
 }
 
 test "generic calls concrete helpers retain imported identity and private domain boundaries" {
-    const caller = "module main;import units;fn helper(x:i64)->bool{return x==0;}fn f<T:copy>(x:T)->i64{_ = x;return units::helper(1);}fn main()->i64{return 0;}";
-    try acceptChecked(caller, "module units;export helper;fn helper(x:i64)->i64{return leaf(x);}fn leaf(x:i64)->i64{return x+1;}");
-    try rejectChecked(caller, "module units;fn helper(x:i64)->i64{return x;}", "E_PRIVATE_SYMBOL");
-    const domain_caller = "module main;import units;fn f<T:copy>(x:T)->i64{_ = x;return units::D.helper(1);}fn main()->i64{return 0;}";
-    try acceptChecked(domain_caller, "module units;export D;domain D:i64{fn helper(x:i64)->i64{return D.leaf(x);}private fn leaf(x:i64)->i64{return x+1;}}");
-    try rejectChecked(domain_caller, "module units;export D;domain D:i64{fn helper(x:i64)->i64{return E.leaf(x);}}domain E:i64{private fn leaf(x:i64)->i64{return x;}}", "E_PRIVATE_FUNCTION");
+    const caller =
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def helper(x: i64) -> bool:
+        \\    return x == 0
+        \\
+        \\
+        \\def f[T](x: T) -> i64:
+        \\    _ = x
+        \\    return units.helper(1)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ;
+    try acceptChecked(caller,
+        \\module units
+        \\export helper
+        \\
+        \\
+        \\def helper(x: i64) -> i64:
+        \\    return leaf(x)
+        \\
+        \\
+        \\def leaf(x: i64) -> i64:
+        \\    return x + 1
+    );
+    try rejectChecked(caller,
+        \\module units
+        \\
+        \\
+        \\def helper(x: i64) -> i64:
+        \\    return x
+    , "E_PRIVATE_SYMBOL");
+    const domain_caller =
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def f[T](x: T) -> i64:
+        \\    _ = x
+        \\    return units.D.helper(1)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ;
+    try acceptChecked(domain_caller,
+        \\module units
+        \\export D
+        \\
+        \\
+        \\domain D: i64:
+        \\    def helper(x: i64) -> i64:
+        \\        return D.leaf(x)
+        \\
+        \\    private def leaf(x: i64) -> i64:
+        \\        return x + 1
+    );
+    try rejectChecked(domain_caller,
+        \\module units
+        \\export D
+        \\
+        \\
+        \\domain D: i64:
+        \\    def helper(x: i64) -> i64:
+        \\        return E.leaf(x)
+        \\
+        \\
+        \\domain E: i64:
+        \\    private def leaf(x: i64) -> i64:
+        \\        return x
+    , "E_PRIVATE_FUNCTION");
 }
 
 test "interface closure includes domain backing and enum table keys" {
     try reject("module main; export D; domain Hidden: i64 {} domain D: Hidden {}", "E_PRIVATE_INTERFACE");
-    try reject("module main; export Table; enum Key { a, b } struct Table { values: [Key]i64 }", "E_PRIVATE_INTERFACE");
+    try reject(
+        \\module main
+        \\export Table
+        \\
+        \\
+        \\enum Key:
+        \\    a,
+        \\    b
+        \\
+        \\
+        \\class Table:
+        \\    values: [Key]i64
+    , "E_PRIVATE_INTERFACE");
     try reject("module main; export units; import units;", "E_SYNTAX");
 }
 
 // spec: ERGONOMIC-INTEGRATION-1
 test "cross module effect and recoverable result obligations are enforced" {
-    try rejectChecked("module main; import units; fn main() -> i64 noalloc { return units::allocate(); }", "module units; export allocate; fn allocate() -> i64 { let values: List<i64> = []; " ++
-        "values.push(1); return values[0u64]; }", "E_EFFECT_BOUND");
-    try rejectChecked("module main; import units; fn main() -> i64 { let pending = units::fallible(); return 0; }", "module units; export R; export fallible; result R { ok: i64, err: i64 } " ++
-        "fn fallible() -> R { return new R.ok(7); }", "E_RESULT_UNHANDLED");
+    try rejectChecked(
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def main() -> i64 noalloc:
+        \\    return units.allocate()
+    ,
+        \\module units
+        \\export allocate
+        \\
+        \\
+        \\def allocate() -> i64:
+        \\    values: List[i64] = []
+        \\    values.push(1)
+        \\    return values[0u64]
+    , "E_EFFECT_BOUND");
+    try rejectChecked(
+        \\module main
+        \\import units
+        \\
+        \\
+        \\def main() -> i64:
+        \\    pending = units.fallible()
+        \\    return 0
+    ,
+        \\module units
+        \\export R
+        \\export fallible
+        \\
+        \\
+        \\result R:
+        \\    ok: i64,
+        \\    err: i64
+        \\
+        \\
+        \\def fallible() -> R:
+        \\    return Ok(7)
+    , "E_RESULT_UNHANDLED");
 }

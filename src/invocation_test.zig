@@ -7,12 +7,29 @@ fn find(program: language.bytecode.Program, name: []const u8) typed.FunctionId {
     for (program.functions) |function| if (std.mem.eql(u8, function.name, name)) return function.id;
     unreachable;
 }
-const domain_source = "result Decoded{ok:Positive,err:i64} domain Positive:i64{private fn " ++
-    "raw(x:i64)->Positive{return wrap<Positive>(x);} fn decode(x:i64)->Decoded{if " ++
-    "x<=0{return new Decoded.err(-1);}return new Decoded.ok(Positive.raw(x));} fn " ++
-    "encode(x:Positive)->i64{return unwrap(x);}}";
+const domain_source =
+    \\result Decoded:
+    \\    ok: Positive,
+    \\    err: i64
+    \\
+    \\
+    \\domain Positive: i64:
+    \\    private def raw(x: i64) -> Positive:
+    \\        return wrap<Positive>(x)
+    \\
+    \\    def decode(x: i64) -> Decoded:
+    \\        if x <= 0:
+    \\            return Err(-1)
+    \\        return Ok(Positive.raw(x))
+    \\
+    \\    def encode(x: Positive) -> i64:
+    \\        return unwrap(x)
+;
 fn scenario(allocator: std.mem.Allocator) !void {
-    var c = try language.Compilation.init(allocator, "invoke.my", domain_source ++ " fn main()->i64{return 5;}");
+    var c = try language.Compilation.init(allocator, "invoke.my", domain_source ++
+        \\def main() -> i64:
+        \\    return 5
+    );
     defer c.deinit();
     try c.emit();
     const code = c.code.?;
@@ -39,7 +56,22 @@ test "typed invocation runs domain factories and keeps integer entry execution u
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
 test "typed invocation reports exact execution budgets and bounds argument traversal" {
-    var c = try language.Compilation.init(t.allocator, "limits.my", "struct R{x:i64} fn pair(a:R,b:R)->i64{return a.x+b.x;} fn loop(x:i64)->i64{return loop(x);} fn main()->i64{return 0;}");
+    var c = try language.Compilation.init(t.allocator, "limits.my",
+        \\class R:
+        \\    x: i64
+        \\
+        \\
+        \\def pair(a: R, b: R) -> i64:
+        \\    return a.x + b.x
+        \\
+        \\
+        \\def loop(x: i64) -> i64:
+        \\    return loop(x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer c.deinit();
     try c.emit();
     const code = c.code.?;
@@ -77,8 +109,18 @@ test "typed invocation reports exact execution budgets and bounds argument trave
 }
 const ProjectSource = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
-        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main;import data;fn main()->i64{return 0;}");
-        if (std.mem.eql(u8, path, "data.my")) return allocator.dupe(u8, "module data;export Positive;export Decoded;" ++ domain_source ++ " fn hidden()->i64{return 7;}");
+        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
+            \\module main
+            \\import data
+            \\
+            \\
+            \\def main() -> i64:
+            \\    return 0
+        );
+        if (std.mem.eql(u8, path, "data.my")) return allocator.dupe(u8, "module data;export Positive;export Decoded;" ++ domain_source ++
+            \\def hidden() -> i64:
+            \\    return 7
+        );
         return error.NotFound;
     }
 };
@@ -106,7 +148,19 @@ test "project typed invocation selects exports and public domain methods under a
 }
 
 fn aggregateCopyScenario(allocator: std.mem.Allocator) !void {
-    var c = try language.Compilation.init(allocator, "copy-failure.my", "struct R{a:[2]i64,b:[2]i64} fn pass(x:R)->R{return x;} fn main()->i64{return 0;}");
+    var c = try language.Compilation.init(allocator, "copy-failure.my",
+        \\class R:
+        \\    a: [2]i64
+        \\    b: [2]i64
+        \\
+        \\
+        \\def pass(x: R) -> R:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer c.deinit();
     try c.emit();
     const id = find(c.code.?, "pass");

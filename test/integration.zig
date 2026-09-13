@@ -3,7 +3,13 @@ const std = @import("std");
 const testing = std.testing;
 const compiler_path = @import("test_options").compiler_path;
 const arena_example_path = @import("test_options").arena_example_path;
-const host_program = "host fn measure(x:i64)->i64 effects(host);fn main()->i64{return measure(6);}";
+const host_program =
+    \\host def measure(x: i64) -> i64 effects(host)
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return measure(6)
+;
 test "CLI checks host declarations and reports missing VM registration as a located trap" {
     try invoke("check", host_program, 0, "", "");
     try invoke("run", host_program, 1, "", "error[R_HOST_REGISTRATION]");
@@ -67,7 +73,10 @@ test "CLI run and check success" {
 }
 // spec: VM-TIMING-1
 test "CLI execution timings preserve results and runtime diagnostics" {
-    const source = "fn main() -> i64 { return 42; }";
+    const source =
+        \\def main() -> i64:
+        \\    return 42
+    ;
     for ([_][]const u8{ "--dispatch=optimized", "--dispatch=generic" }) |dispatch| {
         const outcome = try runFixture("run", source, &.{ "--timings", dispatch });
         defer testing.allocator.free(outcome.stdout);
@@ -78,7 +87,10 @@ test "CLI execution timings preserve results and runtime diagnostics" {
         try testing.expect(std.mem.startsWith(u8, outcome.stderr, prefix));
         _ = try std.fmt.parseInt(u64, std.mem.trim(u8, outcome.stderr[prefix.len..], "\n"), 10);
     }
-    try invokeOptions("run", "fn main() -> i64 { return 1 / 0; }", &.{"--timings"}, 1, "", "error[R_DIVISION_BY_ZERO]");
+    try invokeOptions("run",
+        \\def main() -> i64:
+        \\    return divtrunc(1, 0)
+    , &.{"--timings"}, 1, "", "error[R_DIVISION_BY_ZERO]");
     try invokeOptions("run", source, &.{ "--timings", "--timings" }, 2, "", "usage:");
     try invokeOptions("check", source, &.{"--timings"}, 2, "", "usage:");
 }
@@ -88,8 +100,14 @@ test "CLI dumps actual instructions" {
 // spec: CLI-1
 test "CLI distinguishes source errors runtime traps and Usage errors" {
     try invoke("check", "fn main() -> i64 { return 1 + ; }", 1, "", "error[E_EXPRESSION]");
-    try invoke("check", "fn main() -> i64 { return 9223372036854775807 + 1; }", 0, "", "");
-    try invoke("run", "fn main() -> i64 { return 9223372036854775807 + 1; }", 1, "", "error[R_OVERFLOW]");
+    try invoke("check",
+        \\def main() -> i64:
+        \\    return 9223372036854775807 + 1
+    , 0, "", "");
+    try invoke("run",
+        \\def main() -> i64:
+        \\    return 9223372036854775807 + 1
+    , 1, "", "error[R_OVERFLOW]");
     try invoke("unknown", "", 2, "", "usage:");
 }
 // spec: CLI-2
@@ -114,18 +132,42 @@ test "CLI missing arguments and missing files are host or usage failures" {
     try testing.expect(std.mem.indexOf(u8, absent.stderr, "FileNotFound") != null);
 }
 test "CLI binding warnings do not alter status or result output" {
-    const text = "fn main() -> i64 { let mut x = 7; return x; }";
+    const text =
+        \\def main() -> i64:
+        \\    x = 7
+        \\    return x
+    ;
     try invoke("run", text, 0, "7\n", "warning[W_UNNECESSARY_MUT]");
     try invoke("check", text, 0, "", "warning[W_UNNECESSARY_MUT]");
-    try invoke("run", "fn main() -> i64 { let unused = 9223372036854775807 + 1; return 7; }", 1, "", "error[R_OVERFLOW]");
-    try invoke("run", "fn main() -> i64 { return -9223372036854775808; }", 0, "-9223372036854775808\n", "");
-    try invoke("check", "fn main() -> i64 { let mut x = true; x = 1; return 7; }", 1, "", "error[E_TYPE]");
+    try invoke("run",
+        \\def main() -> i64:
+        \\    unused = 9223372036854775807 + 1
+        \\    return 7
+    , 1, "", "error[R_OVERFLOW]");
+    try invoke("run",
+        \\def main() -> i64:
+        \\    return -9223372036854775808
+    , 0, "-9223372036854775808\n", "");
+    try invoke("check",
+        \\def main() -> i64:
+        \\    x = True
+        \\    x = 1
+        \\    return 7
+    , 1, "", "error[E_TYPE]");
 }
 test "CLI step budgets count dispatch and reject invalid options" {
-    const text = "fn main() -> i64 { return 1; }";
+    const text =
+        \\def main() -> i64:
+        \\    return 1
+    ;
     try invokeOptions("run", text, &.{"--max-steps=2"}, 0, "1\n", "");
     try invokeOptions("run", text, &.{"--max-steps=1"}, 1, "", "error[R_STEP_LIMIT]");
-    try invokeOptions("run", "fn main() -> i64 { while true {} return 1; }", &.{"--max-steps=100"}, 1, "", "error[R_STEP_LIMIT]");
+    try invokeOptions("run",
+        \\def main() -> i64:
+        \\    while True:
+        \\        pass
+        \\    return 1
+    , &.{"--max-steps=100"}, 1, "", "error[R_STEP_LIMIT]");
     for ([_][]const u8{ "--max-steps=0", "--max-steps=-1", "--max-steps=+1", "--max-steps=", "--max-steps=abc", "--max-steps=18446744073709551616", "--unknown=1" }) |option| {
         try invokeOptions("run", text, &.{option}, 2, "", "usage:");
     }
@@ -137,12 +179,42 @@ test "CLI step budgets count dispatch and reject invalid options" {
 test "CLI executes the exact plan acceptance programs and recursive functions" {
     try invoke("run", @embedFile("fixtures/sum.my"), 0, "4950\n", "");
     try invoke("run", @embedFile("fixtures/gcd.my"), 0, "6\n", "");
-    try invoke("run", "fn fact(n: i64) -> i64 { if n <= 1 { return 1; } return n * fact(n - 1); } fn main() -> i64 { return fact(10); }", 0, "3628800\n", "");
-    try invoke("run", "fn main() -> i64 { return 1 + add(add(2, 3), add(4, 5)); } fn add(a: i64, b: i64) -> i64 { return a + b; }", 0, "15\n", "");
-    try invoke("run", "fn main() -> i64 { return bad(); } fn bad() -> i64 { return 1 / 0; }", 1, "", "in main at");
+    try invoke("run",
+        \\def fact(n: i64) -> i64:
+        \\    if n <= 1:
+        \\        return 1
+        \\    return n * fact(n - 1)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return fact(10)
+    , 0, "3628800\n", "");
+    try invoke("run",
+        \\def main() -> i64:
+        \\    return 1 + add(add(2, 3), add(4, 5))
+        \\
+        \\
+        \\def add(a: i64, b: i64) -> i64:
+        \\    return a + b
+    , 0, "15\n", "");
+    try invoke("run",
+        \\def main() -> i64:
+        \\    return bad()
+        \\
+        \\
+        \\def bad() -> i64:
+        \\    return divtrunc(1, 0)
+    , 1, "", "in main at");
 }
 test "CLI frame budgets count main and reject invalid overrides" {
-    const text = "fn main() -> i64 { return f(); } fn f() -> i64 { return 7; }";
+    const text =
+        \\def main() -> i64:
+        \\    return f()
+        \\
+        \\
+        \\def f() -> i64:
+        \\    return 7
+    ;
     try invokeOptions("run", text, &.{"--max-frames=2"}, 0, "7\n", "");
     try invokeOptions("run", text, &.{"--max-frames=1"}, 1, "", "error[R_FRAME_LIMIT]");
     try invokeOptions("run", text, &.{ "--max-frames=2", "--max-steps=4" }, 0, "7\n", "");
@@ -157,7 +229,10 @@ test "all commands reject invalid programs before execution and locate runtime t
     for ([_][]const u8{ "check", "run", "dump-bytecode" }) |command| {
         try invoke(command, @embedFile("fixtures/rejected.my"), 1, "", ":2:12: error[E_UNKNOWN_NAME]");
         try invoke(command, "", 1, "", "error[E_MAIN]");
-        try invoke(command, "fn main() -> bool { return true; }", 1, "", "error[E_TYPE]");
+        try invoke(command,
+            \\def main() -> bool:
+            \\    return True
+        , 1, "", "error[E_TYPE]");
     }
     try invoke("check", @embedFile("fixtures/trap.my"), 0, "", "");
     try invoke("run", @embedFile("fixtures/trap.my"), 1, "", ":2:9: error[R_DIVISION_BY_ZERO]");
@@ -169,7 +244,18 @@ test "oversized source is a host resource failure with no result output" {
     try invoke("run", text, 2, "", "host failure:");
 }
 test "duplicate discovery is separate advisory analysis with explicit options" {
-    const source = "fn a(n: i64) -> i64 { return n * 2 + 1; } fn b(x: i64) -> i64 { return x * 2 + 1; } fn main() -> i64 { return 7; }";
+    const source =
+        \\def a(n: i64) -> i64:
+        \\    return n * 2 + 1
+        \\
+        \\
+        \\def b(x: i64) -> i64:
+        \\    return x * 2 + 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 7
+    ;
     const outcome = try runFixture("discover-duplicates", source, &.{ "--min-nodes=1", "--population=reference", "--timings" });
     defer testing.allocator.free(outcome.stdout);
     defer testing.allocator.free(outcome.stderr);
@@ -179,7 +265,10 @@ test "duplicate discovery is separate advisory analysis with explicit options" {
     try testing.expect(std.mem.indexOf(u8, outcome.stderr, "discovery_ns=") != null);
     try invoke("check", source, 0, "", "");
     try invoke("run", source, 0, "7\n", "");
-    try invoke("discover-duplicates", "fn main() -> i64 { return unknown; }", 1, "", "error[E_UNKNOWN_NAME]");
+    try invoke("discover-duplicates",
+        \\def main() -> i64:
+        \\    return unknown
+    , 1, "", "error[E_UNKNOWN_NAME]");
     for ([_][]const u8{ "--min-nodes=0", "--min-nodes=", "--min-nodes=-1", "--population=unknown", "--max-steps=10" }) |option| {
         try invokeOptions("discover-duplicates", source, &.{option}, 2, "", "usage:");
     }
@@ -197,7 +286,23 @@ test "CLI checks runs and dumps records and declared complete conversions" {
     try testing.expectEqualStrings("", dumped.stderr);
     try testing.expect(std.mem.indexOf(u8, dumped.stdout, "conversion function to_view(source: Source) -> View") != null);
     try testing.expect(std.mem.indexOf(u8, dumped.stdout, "MAKE_RECORD") != null);
-    const incomplete = "struct Source { x: i64, added: bool } struct View { y: i64 } conversion fn convert(src: Source) -> View { return new View { y: src.x }; } fn main() -> i64 { return 0; }";
+    const incomplete =
+        \\class Source:
+        \\    x: i64
+        \\    added: bool
+        \\
+        \\
+        \\class View:
+        \\    y: i64
+        \\
+        \\
+        \\conversion def convert(src: Source) -> View:
+        \\    return View(y=src.x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ;
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| {
         try invoke(command, incomplete, 1, "", "error[E_INCOMPLETE_CONVERSION]");
     }
@@ -211,7 +316,21 @@ test "CLI checks resource ownership completion and implicit cleanup effects with
     defer testing.allocator.free(dumped.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
     for ([_][]const u8{ "ACQUIRE_RESOURCE", "COMPLETE_RESOURCE", "effects {filesystem}", "provider filesystem (owned)" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
-    const invalid = "resource File: filesystem; struct Wrapper { file: File } fn cleanup(input: Wrapper) -> i64 noio { return 0; } fn main() -> i64 { return 0; }";
+    const invalid =
+        \\resource File: filesystem
+        \\
+        \\
+        \\class Wrapper:
+        \\    file: File
+        \\
+        \\
+        \\def cleanup(input: Wrapper) -> i64 noio:
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ;
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_EFFECT_BOUND]");
 }
 test "CLI checks resource data operations effects and required mutation without ambient providers" {
@@ -227,7 +346,18 @@ test "CLI checks resource data operations effects and required mutation without 
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_IMMUTABLE]");
 }
 test "CLI approximate discovery is advisory explains drift and reports budget exhaustion" {
-    const source = "fn a(x: i64) -> i64 { return x * 2 + 1; } fn b(x: i64) -> i64 { return x * 2 + 3; } fn main() -> i64 { return 0; }";
+    const source =
+        \\def a(x: i64) -> i64:
+        \\    return x * 2 + 1
+        \\
+        \\
+        \\def b(x: i64) -> i64:
+        \\    return x * 2 + 3
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ;
     const outcome = try runFixture("discover-duplicates", source, &.{ "--approximate", "--min-nodes=1" });
     defer testing.allocator.free(outcome.stdout);
     defer testing.allocator.free(outcome.stderr);
@@ -242,7 +372,14 @@ test "CLI approximate discovery is advisory explains drift and reports budget ex
     try invokeOptions("check", source, &.{"--approximate"}, 2, "", "usage:");
 }
 test "CLI static quality report uses advisory thresholds and rejects invalid options" {
-    const source = "fn helper(x: i64) -> i64 { return x; } fn main() -> i64 { return helper(7); }";
+    const source =
+        \\def helper(x: i64) -> i64:
+        \\    return x
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return helper(7)
+    ;
     const outcome = try runFixture("report-quality", source, &.{"--max-line-bytes=1"});
     defer testing.allocator.free(outcome.stdout);
     defer testing.allocator.free(outcome.stderr);
@@ -250,15 +387,30 @@ test "CLI static quality report uses advisory thresholds and rejects invalid opt
     for ([_][]const u8{ "quality-v1", "calls helper", "reachable-from-main=true", "exceeds configured 1", "Runtime coverage and assertions: not measured" }) |part| try testing.expect(std.mem.indexOf(u8, outcome.stdout, part) != null);
     for ([_][]const []const u8{ &.{"--max-nesting=-1"}, &.{"--max-decisions="}, &.{ "--max-parameters=1", "--max-parameters=2" }, &.{"--max-steps=1"} }) |options| try invokeOptions("report-quality", source, options, 2, "", "usage:");
     try invokeOptions("run", source, &.{"--max-nesting=1"}, 2, "", "usage:");
-    try invoke("report-quality", "fn main() -> i64 { return false; }", 1, "", "error[E_TYPE]");
+    try invoke("report-quality",
+        \\def main() -> i64:
+        \\    return False
+    , 1, "", "error[E_TYPE]");
 }
 test "CLI formatter supports stdout check mode and syntax-only formatting" {
-    const compact = "fn main()->i64{return 7;}";
-    const formatted = "fn main() -> i64 {\n    return 7;\n}\n";
+    const compact =
+        \\def main() -> i64:
+        \\    return 7
+    ;
+    const formatted =
+        \\def main() -> i64:
+        \\    return 7
+    ;
     try invoke("fmt", compact, 0, formatted, "");
     try invokeOptions("fmt", compact, &.{"--check"}, 1, "", "formatting differs");
     try invokeOptions("fmt", formatted, &.{"--check"}, 0, "", "");
-    try invoke("fmt", "fn main()->i64{return false;}", 0, "fn main() -> i64 {\n    return false;\n}\n", "");
+    try invoke("fmt",
+        \\def main() -> i64:
+        \\    return False
+    , 0,
+        \\def main() -> i64:
+        \\    return False
+    , "");
     try invoke("fmt", "fn main()->i64{return +;}", 1, "", "error[E_EXPRESSION]");
     try invokeOptions("fmt", compact, &.{ "--check", "--check" }, 2, "", "usage:");
     try invokeOptions("check", compact, &.{"--check"}, 2, "", "usage:");
@@ -267,7 +419,14 @@ test "CLI module discovery loads real files and diagnoses cross-file cycles" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
     try temp.dir.createDirPath(testing.io, "shared");
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input; import shared.data as data; fn main() -> i64 { return 0; }" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
+        \\module input
+        \\import shared.data as data
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "shared/data.my", .data = "module shared.data;" });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
     defer testing.allocator.free(path);
@@ -296,7 +455,13 @@ test "CLI module discovery keeps header validity separate from compilation" {
     try testing.expect(std.mem.indexOf(u8, result.stdout, "header discovery only") != null);
     try invoke("list-modules", "module input; import missing;", 1, "", "E_MODULE_READ");
     try invokeOptions("list-modules", "module input;", &.{"--max-steps=10"}, 2, "", "usage:");
-    const compilation = try runFixture("check", "module input; fn main() -> i64 { return 0; }", &.{});
+    const compilation = try runFixture("check",
+        \\module input
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , &.{});
     defer testing.allocator.free(compilation.stdout);
     defer testing.allocator.free(compilation.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, compilation.term);
@@ -304,8 +469,28 @@ test "CLI module discovery keeps header validity separate from compilation" {
 test "CLI module interfaces parse bodies and check exported signature visibility" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input; import units; export Sample; struct Sample { distance: units::Distance } fn main() -> i64 { return unknown(); }" });
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "units.my", .data = "module units; export Distance; domain Distance: i64 { fn make(x: i64) -> Distance { return wrap<Distance>(x); } }" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
+        \\module input
+        \\import units
+        \\export Sample
+        \\
+        \\
+        \\class Sample:
+        \\    distance: units.Distance
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return unknown()
+    });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "units.my", .data =
+        \\module units
+        \\export Distance
+        \\
+        \\
+        \\domain Distance: i64:
+        \\    def make(x: i64) -> Distance:
+        \\        return wrap<Distance>(x)
+    });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
     defer testing.allocator.free(path);
     const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "list-interfaces", path } });
@@ -322,14 +507,39 @@ test "CLI module interfaces parse bodies and check exported signature visibility
     try testing.expectEqualStrings("", hidden.stdout);
     for ([_][]const u8{ "E_PRIVATE_SYMBOL", "input.my:1:", "units.my:1:" }) |part| try testing.expect(std.mem.indexOf(u8, hidden.stderr, part) != null);
     try invoke("list-interfaces", "module input; fn broken( ;", 1, "", "E_SYNTAX");
-    try invoke("list-interfaces", "module input; export f; struct Secret {} fn f() -> Secret { return new Secret {}; }", 1, "", "E_PRIVATE_INTERFACE");
+    try invoke("list-interfaces",
+        \\module input
+        \\export f
+        \\
+        \\
+        \\class Secret:
+        \\    pass
+        \\
+        \\
+        \\def f() -> Secret:
+        \\    return Secret()
+    , 1, "", "E_PRIVATE_INTERFACE");
     try invokeOptions("list-interfaces", "module input;", &.{"--check"}, 2, "", "usage:");
 }
 test "CLI checks and runs module programs with private boundaries and cross-file traps" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input; import helper; fn main() -> i64 { return helper::value(); }" });
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper; export value; fn value() -> i64 { return 42; }" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
+        \\module input
+        \\import helper
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return helper.value()
+    });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data =
+        \\module helper
+        \\export value
+        \\
+        \\
+        \\def value() -> i64:
+        \\    return 42
+    });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
     defer testing.allocator.free(path);
     for ([_][]const u8{ "check-project", "run-project", "eval-project" }) |command| {
@@ -345,26 +555,65 @@ test "CLI checks and runs module programs with private boundaries and cross-file
         try testing.expectEqualStrings(if (std.mem.eql(u8, command, "check-project")) "" else "42\n", result.stdout);
         try testing.expectEqualStrings("", result.stderr);
     }
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper; export value; fn value() -> i64 { return 1 / 0; }" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data =
+        \\module helper
+        \\export value
+        \\
+        \\
+        \\def value() -> i64:
+        \\    return divtrunc(1, 0)
+    });
     const trap = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path, "--print-result" } });
     defer testing.allocator.free(trap.stdout);
     defer testing.allocator.free(trap.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, trap.term);
     for ([_][]const u8{ "R_DIVISION_BY_ZERO", "helper.my:1:", "input.my:1:" }) |part| try testing.expect(std.mem.indexOf(u8, trap.stderr, part) != null);
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper; fn value() -> i64 { return 42; }" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data =
+        \\module helper
+        \\
+        \\
+        \\def value() -> i64:
+        \\    return 42
+    });
     const hidden = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-project", path } });
     defer testing.allocator.free(hidden.stdout);
     defer testing.allocator.free(hidden.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, hidden.term);
     for ([_][]const u8{ "E_PRIVATE_SYMBOL", "helper.my:1:", "input.my:1:" }) |part| try testing.expect(std.mem.indexOf(u8, hidden.stderr, part) != null);
-    try invokeOptions("run-project", "module input; fn main() -> i64 { return 7; }", &.{"--max-steps=1"}, 1, "", "R_STEP_LIMIT");
-    try invokeOptions("check-project", "module input; fn main() -> i64 { return 7; }", &.{"--max-steps=1"}, 2, "", "usage:");
+    try invokeOptions("run-project",
+        \\module input
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 7
+    , &.{"--max-steps=1"}, 1, "", "R_STEP_LIMIT");
+    try invokeOptions("check-project",
+        \\module input
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 7
+    , &.{"--max-steps=1"}, 2, "", "usage:");
 }
 test "CLI checkProjectPolicy distinguishes language failures policy failures and configuration failures" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input; import core; fn main() -> i64 { return core::value(); }" });
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "core.my", .data = "module core; export value; fn value() -> i64 { return 7; }" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
+        \\module input
+        \\import core
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return core.value()
+    });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "core.my", .data =
+        \\module core
+        \\export value
+        \\
+        \\
+        \\def value() -> i64:
+        \\    return 7
+    });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "rules file.json", .data = "{\"version\":1,\"default_action\":\"deny\",\"rules\":[]}" });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
     defer testing.allocator.free(path);
@@ -396,22 +645,64 @@ test "CLI checkProjectPolicy distinguishes language failures policy failures and
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, config_error.term);
     try testing.expectEqualStrings("", config_error.stdout);
     try testing.expect(std.mem.indexOf(u8, config_error.stderr, "UnsupportedPolicyVersion") != null);
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "core.my", .data = "module core; export value; fn value() -> i64 { return true; }" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "core.my", .data =
+        \\module core
+        \\export value
+        \\
+        \\
+        \\def value() -> i64:
+        \\    return True
+    });
     const invalid = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-policy", path, option } });
     defer testing.allocator.free(invalid.stdout);
     defer testing.allocator.free(invalid.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, invalid.term);
     try testing.expectEqualStrings("", invalid.stdout);
     try testing.expect(std.mem.indexOf(u8, invalid.stderr, "E_TYPE") != null);
-    try invoke("check-policy", "module input; fn main() -> i64 { return 0; }", 2, "", "usage:");
-    try invokeOptions("check-project", "module input; fn main() -> i64 { return 0; }", &.{"--policy=some.json"}, 2, "", "usage:");
-    try invokeOptions("check-policy", "module input; fn main() -> i64 { return 0; }", &.{ "--policy=a", "--policy=b" }, 2, "", "usage:");
+    try invoke("check-policy",
+        \\module input
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , 2, "", "usage:");
+    try invokeOptions("check-project",
+        \\module input
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , &.{"--policy=some.json"}, 2, "", "usage:");
+    try invokeOptions("check-policy",
+        \\module input
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , &.{ "--policy=a", "--policy=b" }, 2, "", "usage:");
 }
 test "CLI discovers cross module duplicates with options and rejects invalid dependencies" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input; import helper; fn twice(value: i64) -> i64 { return value * 2 + 3; } fn main() -> i64 { return 0; }" });
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper; fn copy(x: i64) -> i64 { return x * 2 + 3; }" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
+        \\module input
+        \\import helper
+        \\
+        \\
+        \\def twice(value: i64) -> i64:
+        \\    return value * 2 + 3
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data =
+        \\module helper
+        \\
+        \\
+        \\def copy(x: i64) -> i64:
+        \\    return x * 2 + 3
+    });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
     defer testing.allocator.free(path);
     const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "discover-project-duplicates", path, "--min-nodes=1", "--approximate", "--max-work=1", "--population=reference", "--timings" } });
@@ -421,21 +712,57 @@ test "CLI discovers cross module duplicates with options and rejects invalid dep
     for ([_][]const u8{ "scope: reachable module graph", "population=reference", "input::twice", "helper::copy", "input.my:1:", "helper.my:1:", "approximate near-v3", "truncated=true" }) |part| try testing.expect(std.mem.indexOf(u8, result.stdout, part) != null);
     try testing.expect(std.mem.indexOf(u8, result.stderr, "project_frontend_ns=") != null);
     try testing.expect(std.mem.indexOf(u8, result.stderr, "modules=2") != null);
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper; fn copy(x: i64) -> i64 { return true; }" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data =
+        \\module helper
+        \\
+        \\
+        \\def copy(x: i64) -> i64:
+        \\    return True
+    });
     const invalid = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "discover-project-duplicates", path } });
     defer testing.allocator.free(invalid.stdout);
     defer testing.allocator.free(invalid.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, invalid.term);
     try testing.expectEqualStrings("", invalid.stdout);
     try testing.expect(std.mem.indexOf(u8, invalid.stderr, "E_TYPE") != null);
-    try invokeOptions("discover-project-duplicates", "module input; fn main() -> i64 { return 0; }", &.{"--max-work=1"}, 2, "", "usage:");
-    try invokeOptions("discover-project-duplicates", "module input; fn main() -> i64 { return 0; }", &.{"--max-steps=1"}, 2, "", "usage:");
+    try invokeOptions("discover-project-duplicates",
+        \\module input
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , &.{"--max-work=1"}, 2, "", "usage:");
+    try invokeOptions("discover-project-duplicates",
+        \\module input
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , &.{"--max-steps=1"}, 2, "", "usage:");
 }
 test "CLI module quality reports preserve export roots and advisory thresholds" {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input; import api; fn main() -> i64 { return 0; }" });
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "api.my", .data = "module api;\nexport entry;\nfn entry() -> i64 {\n return hidden();\n}\nfn hidden() -> i64 { return 1; }" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
+        \\module input
+        \\import api
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "api.my", .data =
+        \\module api
+        \\export entry
+        \\
+        \\
+        \\def entry() -> i64:
+        \\    return hidden()
+        \\
+        \\
+        \\def hidden() -> i64:
+        \\    return 1
+    });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
     defer testing.allocator.free(path);
     const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "report-project-quality", path, "--max-function-lines=1" } });
@@ -445,26 +772,67 @@ test "CLI module quality reports preserve export roots and advisory thresholds" 
     try testing.expectEqualStrings("", result.stderr);
     for ([_][]const u8{ "quality-modules-v1", "api.my:3:", "api::entry; private=false; reachable-from-main=false", "module-exported=true reachable-from-exports=true", "module-exported=false reachable-from-exports=true", "function-lines 3 exceeds configured 1", "calls api::hidden at api.my:4:", "Runtime coverage and assertions: not measured" }) |part| try testing.expect(std.mem.indexOf(u8, result.stdout, part) != null);
     try testing.expect(std.mem.indexOf(u8, result.stdout, "no call path from main or exported interfaces") == null);
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "api.my", .data = "module api; fn invalid() -> i64 { return true; }" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "api.my", .data =
+        \\module api
+        \\
+        \\
+        \\def invalid() -> i64:
+        \\    return True
+    });
     const invalid = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "report-project-quality", path } });
     defer testing.allocator.free(invalid.stdout);
     defer testing.allocator.free(invalid.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, invalid.term);
     try testing.expectEqualStrings("", invalid.stdout);
     try testing.expect(std.mem.indexOf(u8, invalid.stderr, "E_TYPE") != null);
-    try invokeOptions("report-project-quality", "module input; fn main() -> i64 { return 0; }", &.{"--approximate"}, 2, "", "usage:");
+    try invokeOptions("report-project-quality",
+        \\module input
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , &.{"--approximate"}, 2, "", "usage:");
 }
 test "CLI module formatting is syntax only and project checking reports every changed file" {
-    const draft = "module input;import absent as a;export Missing;fn f(x:a :: T)->a::T{return x;}";
-    const formatted = "module input;\nimport absent as a;\nexport Missing;\nfn f(x: a::T) -> a::T {\n    return x;\n}\n";
+    const draft =
+        \\module input
+        \\import absent as a
+        \\export Missing
+        \\
+        \\
+        \\def f(x: a.T) -> a.T:
+        \\    return x
+    ;
+    const formatted =
+        \\module input
+        \\import absent as a
+        \\export Missing
+        \\
+        \\
+        \\def f(x: a.T) -> a.T:
+        \\    return x
+    ;
     try invoke("fmt-module", draft, 0, formatted, "");
     try invokeOptions("fmt-module", draft, &.{"--check"}, 1, "", "formatting differs");
     try invokeOptions("fmt-module", formatted, &.{"--check"}, 0, "", "");
     try invoke("fmt-module", "module input; fn broken( ;", 1, "", "E_SYNTAX");
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input;import child;fn main()->i64{return unknown();}" });
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "child.my", .data = "module child;fn f()->Missing{return unknown();}" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
+        \\module input
+        \\import child
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return unknown()
+    });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "child.my", .data =
+        \\module child
+        \\
+        \\
+        \\def f() -> Missing:
+        \\    return unknown()
+    });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
     defer testing.allocator.free(path);
     const changed = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "fmt-project", path, "--check" } });
@@ -510,7 +878,19 @@ test "CLI schema inputs load fresh generated modules and reject malformed manife
     defer testing.allocator.free(path);
     const option = try std.fmt.allocPrint(testing.allocator, "--inputs={s}", .{path});
     defer testing.allocator.free(option);
-    const source = "module input; import config; export read; fn read()->i64{return config::value();} fn main()->i64{return 0;}";
+    const source =
+        \\module input
+        \\import config
+        \\export read
+        \\
+        \\
+        \\def read() -> i64:
+        \\    return config.value()
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ;
     const result = try runFixture("schema-project", source, &.{option});
     defer testing.allocator.free(result.stdout);
     defer testing.allocator.free(result.stderr);
@@ -523,7 +903,13 @@ test "CLI schema inputs load fresh generated modules and reject malformed manife
 fn sessionScript(script: []const u8, flags: []const []const u8, expected_status: u8) ![]u8 {
     var temp = testing.tmpDir(.{});
     defer temp.cleanup();
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input;fn main()->i64{return 0;}" });
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data =
+        \\module input
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    });
     try temp.dir.writeFile(testing.io, .{ .sub_path = "commands", .data = script });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
     defer testing.allocator.free(path);
@@ -557,38 +943,151 @@ test "CLI sessionCheck returns host failure without terminating the session" {
     try testing.expect(std.mem.indexOf(u8, replies, "\"action\":\"quit\",\"status\":0") != null);
 }
 test "CLI executes generic fixed arrays and reports uncalled template shape errors" {
-    try invoke("run", "fn twice<T:integer>(x:T)->[2]T{return new [2]T[x,x+x];}fn main()->i64{return twice::<i64>(6)[1];}", 0, "12\n", "");
-    try invokeOptions("check", "fn bad<T:copy>(a:[2]T)->[3]T{return a;}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_TYPE\"");
+    try invoke("run",
+        \\def twice[T: integer](x: T) -> [2]T:
+        \\    return [x, x + x]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return twice[i64](6)[1]
+    , 0, "12\n", "");
+    try invokeOptions("check",
+        \\def bad[T](a: [2]T) -> [3]T:
+        \\    return a
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_TYPE\"");
 }
 test "CLI formats nominal templates and runs programs with unused declarations" {
-    const source = "struct Box<T:copy>{value:T}fn main()->i64{return 0;}";
-    try invoke("fmt", source, 0, "struct Box<T: copy> {\n    value: T\n}\nfn main() -> i64 {\n    return 0;\n}\n", "");
+    const source =
+        \\class Box[T]:
+        \\    value: T
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    ;
+    try invoke("fmt", source, 0,
+        \\class Box[T]:
+        \\    value: T
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , "");
     try invokeOptions("run", source, &.{"--diagnostics=json"}, 0, "0\n", "");
 }
 test "CLI reports unused nominal template requirement errors" {
-    try invokeOptions("check", "struct Key<T:equality>{value:T}struct Bad<U:copy>{key:Key<U>}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_REQUIREMENT\"");
-    try invokeOptions("check", "struct Bad<T:copy>{value:Missing}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_UNKNOWN_TYPE\"");
+    try invokeOptions("check",
+        \\class Key[T: equality]:
+        \\    value: T
+        \\
+        \\
+        \\class Bad[U]:
+        \\    key: Key[U]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_REQUIREMENT\"");
+    try invokeOptions("check",
+        \\class Bad[T]:
+        \\    value: Missing
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_UNKNOWN_TYPE\"");
 }
 test "CLI rejects recursive nominal layouts but preserves finite nested and phantom forms" {
-    try invokeOptions("check", "struct Node<T:copy>{next:Node<T>}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_RECURSIVE_RECORD\"");
-    try invokeOptions("check", "struct Box<T:copy>{value:T}struct Empty<T:copy>{}struct Finite<U:copy>{nested:Box<Box<U>>,phantom:Empty<Finite<[1]U>>}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 0, "", "");
+    try invokeOptions("check",
+        \\class Node[T]:
+        \\    next: Node[T]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_RECURSIVE_RECORD\"");
+    try invokeOptions("check",
+        \\class Box[T]:
+        \\    value: T
+        \\
+        \\
+        \\class Empty[T]:
+        \\    pass
+        \\
+        \\
+        \\class Finite[U]:
+        \\    nested: Box[Box[U]]
+        \\    phantom: Empty[Finite[[1]U]]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , &.{"--diagnostics=json"}, 0, "", "");
 }
 test "CLI executes concrete nominal instances and reports argument identity errors" {
-    const definitions = "struct Box<T:copy>{value:T}union Slot<T:copy>{none,some:T}";
-    const program = definitions ++ "fn main()->i64{let slot=new Slot<Box<i64>>.some(new Box<i64>{value:12});" ++
-        "match slot{Slot<Box<i64>>.none=>{return 0;},Slot<Box<i64>>.some(box)=>{return box.value;}}}";
+    const definitions =
+        \\class Box[T]:
+        \\    value: T
+        \\
+        \\
+        \\union Slot[T]:
+        \\    none,
+        \\    some: T
+    ;
+    const program = definitions ++
+        \\def main() -> i64:
+        \\    slot: Slot[Box[i64]] = Slot.some(Box[i64](value=12))
+        \\    match slot:
+        \\        case Slot.none:
+        \\            return 0
+        \\        case Slot.some(box):
+        \\            return box.value
+    ;
     try invoke("run", program, 0, "12\n", "");
     try invokeOptions("check", definitions ++
-        "fn takes(box:Box<i64>)->i64{return box.value;}fn main()->i64{return takes(new Box<bool>{value:true});}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_TYPE\"");
+        \\def takes(box: Box[i64]) -> i64:
+        \\    return box.value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return takes(Box[bool](value=True))
+    , &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_TYPE\"");
 }
 test "CLI specializes nominal generic bodies and reports uncalled shape errors" {
-    const definitions = "struct Box<T:copy>{value:T}";
-    try invoke("run", definitions ++ "fn pack<T:copy>(x:T)->Box<T>{return new Box<T>{value:x};}fn main()->i64{return pack::<i64>(31).value;}", 0, "31\n", "");
-    try invokeOptions("check", definitions ++ "fn bad<T:copy>(x:T)->Box<T>{return new Box<T>{value:1};}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_TYPE\"");
+    const definitions =
+        \\class Box[T]:
+        \\    value: T
+    ;
+    try invoke("run", definitions ++
+        \\def pack[T](x: T) -> Box[T]:
+        \\    return Box[T](value=x)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return pack[i64](31).value
+    , 0, "31\n", "");
+    try invokeOptions("check", definitions ++
+        \\def bad[T](x: T) -> Box[T]:
+        \\    return Box[T](value=1)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_TYPE\"");
 }
 // spec: DEPENDENCIES-1
 test "CLI project-dependencies buildIndex emits checked graph identity and rejects invalid bodies" {
-    const outcome = try runFixture("project-dependencies", "module input; fn main()->i64 { return 7; }", &.{});
+    const outcome = try runFixture("project-dependencies",
+        \\module input
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 7
+    , &.{});
     defer testing.allocator.free(outcome.stdout);
     defer testing.allocator.free(outcome.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
@@ -598,8 +1097,21 @@ test "CLI project-dependencies buildIndex emits checked graph identity and rejec
     try testing.expect(parsed.value.object.get("complete").?.bool);
     try testing.expectEqualStrings("input.my", parsed.value.object.get("inputs").?.array.items[0].object.get("path").?.string);
     try testing.expectEqual(@as(usize, 64), parsed.value.object.get("implementation").?.object.get("compiler_sha256").?.string.len);
-    try invoke("project-dependencies", "module input; fn main()->i64 { return true; }", 1, "", "E_TYPE");
-    try invoke("project-dependencies", "module input; export absent; fn main()->i64 { return 0; }", 1, "", "error[");
+    try invoke("project-dependencies",
+        \\module input
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return True
+    , 1, "", "E_TYPE");
+    try invoke("project-dependencies",
+        \\module input
+        \\export absent
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , 1, "", "error[");
 }
 // spec: FEATURE-REPORT-1
 test "CLI features identify installed compiler without source input" {
@@ -616,18 +1128,47 @@ test "CLI features identify installed compiler without source input" {
     try testing.expectEqualStrings("vm", report.get("features").?.object.get("primary_backend").?.string);
     // The identity is the compiler's embedded build-time digest, not a fresh hash of its
     // own executable, so a receipt from the same compiler reports exactly the same value.
-    const receipt = try runFixture("project-dependencies", "module input; fn main()->i64 { return 7; }", &.{});
+    const receipt = try runFixture("project-dependencies",
+        \\module input
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 7
+    , &.{});
     defer testing.allocator.free(receipt.stdout);
     defer testing.allocator.free(receipt.stderr);
     const graph = try std.json.parseFromSlice(std.json.Value, testing.allocator, receipt.stdout, .{});
     defer graph.deinit();
     try testing.expectEqualStrings(report.get("compiler_sha256").?.string, graph.value.object.get("implementation").?.object.get("compiler_sha256").?.string);
 }
-const listing_module = "module input;\nimport math;\nimport shared.units as units;\n" ++
-    "export Count;\n// leading comment\n// second line\ntype Count = i64;\n\n" ++
-    "const LIMIT: Count = 3; // trailing note\nstruct Job { id: Count }\n" ++
-    "host fn measure(x: i64) -> i64 effects(host);\nexport main;\n" ++
-    "fn main() -> i64 { return LIMIT; }\n";
+const listing_module =
+    \\module input
+    \\import math
+    \\import shared.units as units
+    \\export Count
+    \\
+    \\
+    \\# leading comment
+    \\# second line
+    \\type Count = i64
+    \\
+    \\
+    \\const LIMIT: Count = 3 # trailing note
+    \\
+    \\
+    \\class Job:
+    \\    id: Count
+    \\
+    \\
+    \\host def measure(x: i64) -> i64 effects(host)
+    \\
+    \\
+    \\export main
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return LIMIT
+;
 const Listing = struct {
     version: []const u8,
     module: ?[]const u8,
@@ -691,16 +1232,44 @@ test "CLI declaration listing accounts for every byte with disjoint ordered rang
 }
 test "CLI declaration listing separates parse failures from checking and usage failures" {
     try invoke("list-declarations", "fn main() -> i64 { return 1 + ; }", 1, "", "error[E_EXPRESSION]");
-    try invokeOptions("list-declarations", "module m; export absent; fn main() -> i64 { return 0; }", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_UNKNOWN_EXPORT\"");
-    try invokeOptions("list-declarations", "fn main() -> i64 { return 0; }", &.{"--check"}, 2, "", "usage:");
-    const unchecked = "module m; fn main() -> i64 { let flag: bool = 1; return flag; }";
+    try invokeOptions("list-declarations",
+        \\module m
+        \\export absent
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    , &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_UNKNOWN_EXPORT\"");
+    try invokeOptions("list-declarations",
+        \\def main() -> i64:
+        \\    return 0
+    , &.{"--check"}, 2, "", "usage:");
+    const unchecked =
+        \\module m
+        \\
+        \\
+        \\def main() -> i64:
+        \\    flag: bool = 1
+        \\    return flag
+    ;
     const outcome = try runFixture("list-declarations", unchecked, &.{});
     defer testing.allocator.free(outcome.stdout);
     defer testing.allocator.free(outcome.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
     try testing.expect(std.mem.indexOf(u8, outcome.stdout, "\"kind\":\"fn\",\"name\":\"main\"") != null);
 }
-const legacy_migration = "// Keep this note.\nstruct Point { x: i64 }\nfn main() -> i64 {\n    let p = new Point { x: 42 };\n    if !(p.x < 0) && true { return p.x; }\n    return 0;\n}\n";
+const legacy_migration =
+    \\# Keep this note.
+    \\class Point:
+    \\    x: i64
+    \\
+    \\
+    \\def main() -> i64:
+    \\    p = Point(x=42)
+    \\    if not (p.x < 0) and True:
+    \\        return p.x
+    \\    return 0
+;
 const python_migration = "# Keep this note.\nclass Point:\n    x: i64\n\n\ndef main() -> i64:\n    p = Point(x=42)\n    if not (p.x < 0) and True:\n        return p.x\n    return 0\n";
 // spec-case: MIGRATE-1
 test "CLI migrate prints checked Python source and is idempotent" {
@@ -741,16 +1310,50 @@ test "CLI migrate rewrites files in place and walks a module graph" {
     const bytes = try temp.dir.readFileAlloc(testing.io, "input.my", testing.allocator, .limited(4096));
     defer testing.allocator.free(bytes);
     try testing.expectEqualStrings(python_migration, bytes);
-    const module = "module input;\nexport main;\nfn main() -> i64 { let value = 42; return value; }\n";
+    const module =
+        \\module input
+        \\export main
+        \\
+        \\
+        \\def main() -> i64:
+        \\    value = 42
+        \\    return value
+    ;
     try invokeOptions("migrate-project", module, &.{"--check"}, 0, "", "");
     try invokeOptions("migrate-project", "module input;\nfn main() -> i64 { { let a = 1; _ = a; } { let a = 2; _ = a; } return 0; }\n", &.{"--check"}, 1, "", "error[E_MIGRATE_UNSUPPORTED]");
 }
 test "CLI executes control flow and preserves discarded traps" {
-    try invoke("run", "fn main() -> i64 { let mut sum = 0; let mut i = 0; while i < 100 { sum += i; i += 1; } return sum; }", 0, "4950\n", "");
-    try invoke("run", "fn main() -> i64 { if false && 1 / 0 == 0 { return 1; } else { return 7; } }", 0, "7\n", "");
-    try invoke("run", "fn main() -> i64 { _ = 1 / 0; return 7; }", 1, "", "error[R_DIVISION_BY_ZERO]");
-    try invoke("run", "fn main() -> i64 { while true { return 7; } }", 0, "7\n", "");
-    try invoke("check", "fn main() -> i64 { while true { break; } }", 1, "", "error[E_MISSING_RETURN]");
+    try invoke("run",
+        \\def main() -> i64:
+        \\    sum = 0
+        \\    i = 0
+        \\    while i < 100:
+        \\        sum += i
+        \\        i += 1
+        \\    return sum
+    , 0, "4950\n", "");
+    try invoke("run",
+        \\def main() -> i64:
+        \\    if False and divtrunc(1, 0) == 0:
+        \\        return 1
+        \\    else:
+        \\        return 7
+    , 0, "7\n", "");
+    try invoke("run",
+        \\def main() -> i64:
+        \\    _ = divtrunc(1, 0)
+        \\    return 7
+    , 1, "", "error[R_DIVISION_BY_ZERO]");
+    try invoke("run",
+        \\def main() -> i64:
+        \\    while True:
+        \\        return 7
+    , 0, "7\n", "");
+    try invoke("check",
+        \\def main() -> i64:
+        \\    while True:
+        \\        break
+    , 1, "", "error[E_MISSING_RETURN]");
 }
 test "all commands preserve stdout and deterministic advisory stderr" {
     const source = @embedFile("fixtures/warnings.my");
@@ -769,11 +1372,30 @@ test "all commands preserve stdout and deterministic advisory stderr" {
 }
 test "CLI preserves integer width bounds and explicit casts" {
     try invoke("run", @embedFile("fixtures/integers.my"), 0, "6148914691236516950\n", "");
-    try invoke("check", "fn main() -> i64 { _ = cast<u8>(256); return 0; }", 0, "", "");
-    try invoke("run", "fn main() -> i64 { _ = cast<u8>(256); return 0; }", 1, "", "error[R_OVERFLOW]");
-    try invoke("run", "fn main() -> i64 { _ = 255u8 + 1u8; return 0; }", 1, "", "error[R_OVERFLOW]");
-    try invoke("check", "fn main() -> i64 { _ = 256u8; return 0; }", 1, "", "error[E_INTEGER_RANGE]");
-    try invoke("check", "fn main() -> u8 { return 0u8; }", 1, "", "error[E_TYPE]");
+    try invoke("check",
+        \\def main() -> i64:
+        \\    _ = cast<u8>(256)
+        \\    return 0
+    , 0, "", "");
+    try invoke("run",
+        \\def main() -> i64:
+        \\    _ = cast<u8>(256)
+        \\    return 0
+    , 1, "", "error[R_OVERFLOW]");
+    try invoke("run",
+        \\def main() -> i64:
+        \\    _ = 255u8 + 1u8
+        \\    return 0
+    , 1, "", "error[R_OVERFLOW]");
+    try invoke("check",
+        \\def main() -> i64:
+        \\    _ = 256u8
+        \\    return 0
+    , 1, "", "error[E_INTEGER_RANGE]");
+    try invoke("check",
+        \\def main() -> u8:
+        \\    return 0u8
+    , 1, "", "error[E_TYPE]");
 }
 test "CLI checks array schemas dumps indexing and reports bounds traps" {
     try invoke("run", @embedFile("fixtures/arrays.my"), 0, "44\n", "");
@@ -786,14 +1408,25 @@ test "CLI checks array schemas dumps indexing and reports bounds traps" {
     for ([_][]const u8{ "array [3]i64", "GET_INDEX [3]i64", "REPLACE_INDEX [3]i64", "ARRAY_LENGTH [3]i64" }) |instruction| {
         try testing.expect(std.mem.indexOf(u8, dumped.stdout, instruction) != null);
     }
-    const invalid = "fn main() -> i64 { _ = new [2]i64 [1]; return 0; }";
+    const invalid =
+        \\def main() -> i64:
+        \\    _ = [1]
+        \\    return 0
+    ;
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| {
         try invoke(command, invalid, 1, "", "error[E_ARRAY_ARITY]");
     }
-    const bounds = "fn main() -> i64 {\n    return new [1]i64 [7][-1];\n}";
+    const bounds =
+        \\def main() -> i64:
+        \\    return [7][-1]
+    ;
     try invoke("check", bounds, 0, "", "");
     try invoke("run", bounds, 1, "", ":2:12: error[R_INDEX_BOUNDS]");
-    try invoke("run", "fn main() -> i64 { _ = replace(new [1]u8 [7u8], 18446744073709551615u64, 8u8); return 0; }", 1, "", "error[R_INDEX_BOUNDS]");
+    try invoke("run",
+        \\def main() -> i64:
+        \\    _ = replace([7u8], 18446744073709551615u64, 8u8)
+        \\    return 0
+    , 1, "", "error[R_INDEX_BOUNDS]");
 }
 test "CLI checks domain privacy unit mismatches and qualified factory execution" {
     try invoke("run", @embedFile("fixtures/domains.my"), 0, "1003\n", "");
@@ -806,14 +1439,46 @@ test "CLI checks domain privacy unit mismatches and qualified factory execution"
     for ([_][]const u8{ "domain Millimeters", "private function Millimeters.raw", "WRAP_DOMAIN Millimeters", "UNWRAP_DOMAIN Seconds" }) |instruction| {
         try testing.expect(std.mem.indexOf(u8, dumped.stdout, instruction) != null);
     }
-    const private = "domain D: i64 { private fn raw(n: i64) -> D { return wrap<D>(n); } } fn main() -> i64 { _ = D.raw(1); return 0; }";
+    const private =
+        \\domain D: i64:
+        \\    private def raw(n: i64) -> D:
+        \\        return wrap<D>(n)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    _ = D.raw(1)
+        \\    return 0
+    ;
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| {
         try invoke(command, private, 1, "", "error[E_PRIVATE_FUNCTION]");
     }
-    try invoke("check", "domain D: i64 {} fn main() -> i64 { _ = wrap<D>(1); return 0; }", 1, "", "error[E_PRIVATE_DOMAIN]");
-    try invoke("check", "domain Seconds: i64 { fn from(n: i64) -> Seconds { return wrap<Seconds>(n); } } domai" ++
-        "n Millimeters: i64 {} fn distance(n: Millimeters) -> i64 { _ = n; return 0; } fn " ++
-        "main() -> i64 { return distance(Seconds.from(1)); }", 1, "", "expected Millimeters, found Seconds");
+    try invoke("check",
+        \\domain D: i64:
+        \\    pass
+        \\
+        \\
+        \\def main() -> i64:
+        \\    _ = wrap<D>(1)
+        \\    return 0
+    , 1, "", "error[E_PRIVATE_DOMAIN]");
+    try invoke("check",
+        \\domain Seconds: i64:
+        \\    def from(n: i64) -> Seconds:
+        \\        return wrap<Seconds>(n)
+        \\
+        \\
+        \\domain Millimeters: i64:
+        \\    pass
+        \\
+        \\
+        \\def distance(n: Millimeters) -> i64:
+        \\    _ = n
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return distance(Seconds.from(1))
+    , 1, "", "expected Millimeters, found Seconds");
 }
 test "CLI executes variants dumps dispatch and rejects newly incomplete matches" {
     try invoke("run", @embedFile("fixtures/variants.my"), 0, "24\n", "");
@@ -824,10 +1489,41 @@ test "CLI executes variants dumps dispatch and rejects newly incomplete matches"
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
     try testing.expectEqualStrings("", dumped.stderr);
     for ([_][]const u8{ "enum Color", "union Shape", "MAKE_VARIANT Shape.point", "SWITCH_VARIANT Shape" }) |instruction| try testing.expect(std.mem.indexOf(u8, dumped.stdout, instruction) != null);
-    const added = "enum Color { red, green, added } fn main() -> i64 { match new Color.red { Color.red => { return 1; }, Color.green => { return 2; } } }";
+    const added =
+        \\enum Color:
+        \\    red,
+        \\    green,
+        \\    added
+        \\
+        \\
+        \\def main() -> i64:
+        \\    match Color.red:
+        \\        case Color.red:
+        \\            return 1
+        \\        case Color.green:
+        \\            return 2
+    ;
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, added, 1, "", "match does not handle variant `added`");
-    try invoke("check", "union U { value: i64, empty } fn main() -> i64 { _ = new U.value(true); return 0; }", 1, "", "error[E_TYPE]");
-    try invoke("run", "union U { value: i64 } fn main() -> i64 { match new U.value(1 / 0) { U.value(_) => { return 0; } } }", 1, "", "error[R_DIVISION_BY_ZERO]");
+    try invoke("check",
+        \\union U:
+        \\    value: i64,
+        \\    empty
+        \\
+        \\
+        \\def main() -> i64:
+        \\    _ = U.value(True)
+        \\    return 0
+    , 1, "", "error[E_TYPE]");
+    try invoke("run",
+        \\union U:
+        \\    value: i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    match U.value(divtrunc(1, 0)):
+        \\        case U.value(_):
+        \\            return 0
+    , 1, "", "error[R_DIVISION_BY_ZERO]");
 }
 test "CLI executes complete enum tables and rejects missing mappings in every command" {
     try invoke("run", @embedFile("fixtures/tables.my"), 0, "1407\n", "");
@@ -838,10 +1534,33 @@ test "CLI executes complete enum tables and rejects missing mappings in every co
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
     try testing.expectEqualStrings("", dumped.stderr);
     for ([_][]const u8{ "table [Status]u16", "GET_INDEX [Status]u16", "REPLACE_INDEX [Status]u16" }) |instruction| try testing.expect(std.mem.indexOf(u8, dumped.stdout, instruction) != null);
-    const added = "enum Key { old, added } fn main() -> i64 { return new [Key]i64 { old: 7 }[new Key.old]; }";
+    const added =
+        \\enum Key:
+        \\    old,
+        \\    added
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return {Key.old: 7}[Key.old]
+    ;
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, added, 1, "", "missing initializer for key `added`");
-    try invoke("check", "enum Key { a } fn main() -> i64 { return new [Key]i64 { a: 7 }[0]; }", 1, "", "expected Key, found i64");
-    try invoke("check", "enum Key { a } fn main() -> i64 { _ = new [Key]i64 [7]; return 0; }", 1, "", "error[E_TABLE_CONSTRUCTION]");
+    try invoke("check",
+        \\enum Key:
+        \\    a
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return {Key.a: 7}[0]
+    , 1, "", "expected Key, found i64");
+    try invoke("check",
+        \\enum Key:
+        \\    a
+        \\
+        \\
+        \\def main() -> i64:
+        \\    _ = [7]
+        \\    return 0
+    , 1, "", "error[E_TABLE_CONSTRUCTION]");
 }
 test "CLI handles recoverable results and rejects silent error loss" {
     const source = @embedFile("fixtures/results.my");
@@ -852,9 +1571,27 @@ test "CLI handles recoverable results and rejects silent error loss" {
     defer testing.allocator.free(dumped.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
     for ([_][]const u8{ "result Quotient", "ACKNOWLEDGE Quotient" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
-    const ignored = "result R { ok: i64, err: i64 } fn main() -> i64 { let r = new R.err(7); return 0; }";
+    const ignored =
+        \\result R:
+        \\    ok: i64,
+        \\    err: i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    r: R = Err(7)
+        \\    return 0
+    ;
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, ignored, 1, "", "error[E_RESULT_UNHANDLED]");
-    try invoke("check", "result R { ok: i64, err: i64 } fn main() -> i64 { new R.err(7); return 0; }", 1, "", "error[E_EXPLICIT_DISCARD_REQUIRED]");
+    try invoke("check",
+        \\result R:
+        \\    ok: i64,
+        \\    err: i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    Err(7)
+        \\    return 0
+    , 1, "", "error[E_EXPLICIT_DISCARD_REQUIRED]");
 }
 test "CLI checks external capabilities but cannot silently grant ambient providers" {
     const source = @embedFile("fixtures/external-capabilities.my");
@@ -865,7 +1602,16 @@ test "CLI checks external capabilities but cannot silently grant ambient provide
     defer testing.allocator.free(dumped.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
     for ([_][]const u8{ "EXTERNAL_clock", "EXTERNAL_random", "effects {clock, random}" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
-    const invalid = "result T { ok: i64, err: i64 } fn main(c: clock_cap) -> i64 effects() { _ = clock_now<T>(c); return 0; }";
+    const invalid =
+        \\result T:
+        \\    ok: i64,
+        \\    err: i64
+        \\
+        \\
+        \\def main(c: clock_cap) -> i64 effects():
+        \\    _ = clock_now<T>(c)
+        \\    return 0
+    ;
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_EFFECT_BOUND]");
 }
 test "CLI checks bounded environment access without granting ambient process access" {
@@ -877,7 +1623,22 @@ test "CLI checks bounded environment access without granting ambient process acc
     defer testing.allocator.free(dumped.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
     for ([_][]const u8{ "ENVIRONMENT_GET", "effects {environment}" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
-    const invalid = "struct Entry { bytes: [1]u8, length: u64, present: bool } result Lookup { ok: Entry, err: i64 } fn main(env: environment_cap) -> i64 effects() { _ = environment_get<Lookup>(env, new [1]u8 [75u8]); return 0; }";
+    const invalid =
+        \\class Entry:
+        \\    bytes: [1]u8
+        \\    length: u64
+        \\    present: bool
+        \\
+        \\
+        \\result Lookup:
+        \\    ok: Entry,
+        \\    err: i64
+        \\
+        \\
+        \\def main(env: environment_cap) -> i64 effects():
+        \\    _ = environment_get<Lookup>(env, [75u8])
+        \\    return 0
+    ;
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_EFFECT_BOUND]");
 }
 test "CLI exposes resource permission attenuation and rejects malformed permission sets" {
@@ -894,13 +1655,17 @@ test "CLI exposes resource permission attenuation and rejects malformed permissi
 }
 
 const clock_program =
-    \\result Time { ok: i64, err: i64 }
-    \\fn main(clock: Clock) -> i64 {
-    \\    match clock_now<Time>(clock) {
-    \\        Time.ok(now) => { return now - now; },
-    \\        Time.err(code) => { return code; }
-    \\    }
-    \\}
+    \\result Time:
+    \\    ok: i64,
+    \\    err: i64
+    \\
+    \\
+    \\def main(clock: Clock) -> i64:
+    \\    match clock_now<Time>(clock):
+    \\        case Time.ok(now):
+    \\            return now - now
+    \\        case Time.err(code):
+    \\            return code
 ;
 // spec: CAPABILITY-1
 test "CLI accepts Python capability spellings and lets a declared type keep the name" {
@@ -913,10 +1678,27 @@ test "CLI accepts Python capability spellings and lets a declared type keep the 
         \\    return Clock(ticks=7).ticks
     ;
     try invoke("run", declared, 0, "7\n", "");
-    const entropy = "result Word { ok: u64, err: i64 }\nfn main(rng: Entropy) -> i64 { _ = random_u64<Word>(rng); return 0; }";
+    const entropy =
+        \\result Word:
+        \\    ok: u64,
+        \\    err: i64
+        \\
+        \\
+        \\def main(rng: Entropy) -> i64:
+        \\    _ = random_u64<Word>(rng)
+        \\    return 0
+    ;
     try invoke("check", entropy, 0, "", "");
-    try invoke("check", "fn main(env: Environment) -> i64 { _ = env; return 0; }", 0, "", "");
-    try invoke("check", "fn main(fs: Filesystem) -> i64 { _ = fs; return 0; }", 0, "", "");
+    try invoke("check",
+        \\def main(env: Environment) -> i64:
+        \\    _ = env
+        \\    return 0
+    , 0, "", "");
+    try invoke("check",
+        \\def main(fs: Filesystem) -> i64:
+        \\    _ = fs
+        \\    return 0
+    , 0, "", "");
 }
 // spec: CAPABILITY-2
 test "CLI grant flags reject repeats empty values and commands that do not execute" {
@@ -936,9 +1718,22 @@ test "CLI grant flags reject repeats empty values and commands that do not execu
 }
 // spec: CAPABILITY-3
 test "CLI refuses an ungranted entry capability only while --restrict is active" {
-    const environment = "struct Entry { bytes: [8]u8, length: u64, present: bool }\n" ++
-        "result Lookup { ok: Entry, err: i64 }\n" ++
-        "fn main(env: Environment) -> i64 { _ = environment_get<Lookup>(env, new [4]u8 [80u8, 65u8, 84u8, 72u8]); return 0; }";
+    const environment =
+        \\class Entry:
+        \\    bytes: [8]u8
+        \\    length: u64
+        \\    present: bool
+        \\
+        \\
+        \\result Lookup:
+        \\    ok: Entry,
+        \\    err: i64
+        \\
+        \\
+        \\def main(env: Environment) -> i64:
+        \\    _ = environment_get<Lookup>(env, [80u8, 65u8, 84u8, 72u8])
+        \\    return 0
+    ;
     for ([_][]const u8{ clock_program, environment }) |program| {
         try invokeOptions("run", program, &.{"--restrict"}, 2, "", "--restrict is active");
         try invokeOptions("run", program, &.{"--restrict"}, 2, "", "drop --restrict");
@@ -948,17 +1743,26 @@ test "CLI refuses an ungranted entry capability only while --restrict is active"
     try invokeOptions("run", clock_program, &.{ "--restrict", "--allow-clock" }, 0, "0\n", "");
     try invokeOptions("run", environment, &.{ "--restrict", "--allow-env=PATH" }, 0, "0\n", "");
     // A grant the entry point never requests is simply never read.
-    try invokeOptions("run", "fn main() -> i64 { return 4; }", &.{ "--restrict", "--allow-clock", "--allow-random=7" }, 0, "4\n", "");
+    try invokeOptions("run",
+        \\def main() -> i64:
+        \\    return 4
+    , &.{ "--restrict", "--allow-clock", "--allow-random=7" }, 0, "4\n", "");
 }
 // spec: CAPABILITY-5
 test "CLI clock entropy and environment providers honour their grants" {
-    const seeded = "result Word { ok: u64, err: i64 }\n" ++
-        "fn main(rng: Entropy) -> i64 {\n" ++
-        "    match random_u64<Word>(rng) {\n" ++
-        "        Word.ok(value) => { return cast<i64>(value % 1000u64); },\n" ++
-        "        Word.err(code) => { return code; }\n" ++
-        "    }\n" ++
-        "}\n";
+    const seeded =
+        \\result Word:
+        \\    ok: u64,
+        \\    err: i64
+        \\
+        \\
+        \\def main(rng: Entropy) -> i64:
+        \\    match random_u64<Word>(rng):
+        \\        case Word.ok(value):
+        \\            return cast<i64>(value % 1000u64)
+        \\        case Word.err(code):
+        \\            return code
+    ;
     const first = try runFixture("run", seeded, &.{"--allow-random=11"});
     defer testing.allocator.free(first.stdout);
     defer testing.allocator.free(first.stderr);
@@ -967,14 +1771,25 @@ test "CLI clock entropy and environment providers honour their grants" {
     defer testing.allocator.free(again.stderr);
     try testing.expectEqualStrings(first.stdout, again.stdout);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, first.term);
-    const missing = "struct Entry { bytes: [8]u8, length: u64, present: bool }\n" ++
-        "result Lookup { ok: Entry, err: i64 }\n" ++
-        "fn main(env: Environment) -> i64 {\n" ++
-        "    match environment_get<Lookup>(env, new [4]u8 [80u8, 65u8, 84u8, 72u8]) {\n" ++
-        "        Lookup.ok(entry) => { return cast<i64>(entry.length) - cast<i64>(entry.length); },\n" ++
-        "        Lookup.err(code) => { return code; }\n" ++
-        "    }\n" ++
-        "}\n";
+    const missing =
+        \\class Entry:
+        \\    bytes: [8]u8
+        \\    length: u64
+        \\    present: bool
+        \\
+        \\
+        \\result Lookup:
+        \\    ok: Entry,
+        \\    err: i64
+        \\
+        \\
+        \\def main(env: Environment) -> i64:
+        \\    match environment_get<Lookup>(env, [80u8, 65u8, 84u8, 72u8]):
+        \\        case Lookup.ok(entry):
+        \\            return cast<i64>(entry.length) - cast<i64>(entry.length)
+        \\        case Lookup.err(code):
+        \\            return code
+    ;
     // PATH is outside this allowlist, so the lookup is denied rather than answered.
     try invokeOptions("run", missing, &.{ "--restrict", "--allow-env=OTHER" }, 0, "2\n", "");
 }

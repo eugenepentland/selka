@@ -23,7 +23,13 @@ test "break and continue target nearest loops and preserve generic flow and form
             if (generic) "fn work<T:copy>()->i64{" else "fn work()->i64{",
             "let mut sum=0;let mut i=0;while i<5{i+=1;if i==2{continue;}" ++
                 "let mut j=0;while j<10{j+=1;if j==3{break;}sum+=i;}if i==4{break;}}return sum;}",
-            if (generic) "fn main()->i64{return work::<bool>();}" else "fn main()->i64{return work();}",
+            if (generic)
+                \\def main() -> i64:
+                \\    return work[bool]()
+            else
+                \\def main() -> i64:
+                \\    return work()
+            ,
         });
         defer t.allocator.free(source);
         try execute(source, 16);

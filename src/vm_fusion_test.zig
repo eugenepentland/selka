@@ -33,39 +33,193 @@ fn compareBudgets(source: []const u8) !void {
 // spec: VM-FUSION-1
 test "fused arithmetic branches calls and reads preserve every budget cutoff" {
     const sources = [_][]const u8{
-        "fn f(x:i64,y:i64)->i64{return x/y+x%y;}fn main()->i64{return f(4294967295,65537);}",
-        "fn f(x:i64,y:i64)->i64{return x/y+x%y;}fn main()->i64{return f(4294967296,65537);}",
-        "fn f(x:i64,y:i64)->i64{return x/y+x%y;}fn main()->i64{return f(-4294967295,65537);}",
-        "fn main()->i64{let mut a=3;let mut b=7;let mut n=0;while n<3{a=b;b=a;n+=1;}return a*10+b;}",
-        "fn main()->i64{let mut a=false;let mut b=true;a=b;b=a;if b{return 1;}return 0;}",
-        "fn main()->i64{let mut n=2;while n*n<=100{if n%3==0{n+=2;}else{n+=1;}}return n;}",
-        "fn f(x:i64,y:i64)->i64{if x*y>5{return 1;}return 0;}fn main()->i64{return f(9223372036854775807,2);}",
-        "fn main()->i64{let mut i=0;let mut t=1;while i<4{t=t*3+i;i+=1;}return t;}",
-        "fn f(n:i64)->i64{if n<2{return n;}return f(n-1)+f(n-2);}fn main()->i64{return f(5);}",
-        "fn f(x:i64,y:i64)->i64{return x/y;}fn main()->i64{return f(-9223372036854775808,-1);}",
-        "fn f(x:i64,y:i64)->i64{return x%y;}fn main()->i64{return f(7,0);}",
-        "fn f(x:i64,y:i64)->i64{return x+y;}fn main()->i64{return f(9223372036854775807,1);}",
-        "fn main()->i64{let a=new [3]i64 [2,4,6];let mut i=0;let mut t=0;while i<4{t+=a[i];i+=1;}return t;}",
-        "fn main()->i64{let a=new [3]i64 [2,4,6];let i=7;let d=0;return a[i%d];}",
-        "fn f(n:i64)->bool{if n<1{return false;}return true;}fn main()->i64{let b=f(2);if b{return 3;}return 4;}",
+        \\def f(x: i64, y: i64) -> i64:
+        \\    return divtrunc(x, y) + remtrunc(x, y)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f(4294967295, 65537)
+        ,
+        \\def f(x: i64, y: i64) -> i64:
+        \\    return divtrunc(x, y) + remtrunc(x, y)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f(4294967296, 65537)
+        ,
+        \\def f(x: i64, y: i64) -> i64:
+        \\    return divtrunc(x, y) + remtrunc(x, y)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f(-4294967295, 65537)
+        ,
+        \\def main() -> i64:
+        \\    a = 3
+        \\    b = 7
+        \\    n = 0
+        \\    while n < 3:
+        \\        a = b
+        \\        b = a
+        \\        n += 1
+        \\    return a * 10 + b
+        ,
+        \\def main() -> i64:
+        \\    a = False
+        \\    b = True
+        \\    a = b
+        \\    b = a
+        \\    if b:
+        \\        return 1
+        \\    return 0
+        ,
+        \\def main() -> i64:
+        \\    n = 2
+        \\    while n * n <= 100:
+        \\        if remtrunc(n, 3) == 0:
+        \\            n += 2
+        \\        else:
+        \\            n += 1
+        \\    return n
+        ,
+        \\def f(x: i64, y: i64) -> i64:
+        \\    if x * y > 5:
+        \\        return 1
+        \\    return 0
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f(9223372036854775807, 2)
+        ,
+        \\def main() -> i64:
+        \\    i = 0
+        \\    t = 1
+        \\    while i < 4:
+        \\        t = t * 3 + i
+        \\        i += 1
+        \\    return t
+        ,
+        \\def f(n: i64) -> i64:
+        \\    if n < 2:
+        \\        return n
+        \\    return f(n - 1) + f(n - 2)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f(5)
+        ,
+        \\def f(x: i64, y: i64) -> i64:
+        \\    return divtrunc(x, y)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f(-9223372036854775808, -1)
+        ,
+        \\def f(x: i64, y: i64) -> i64:
+        \\    return remtrunc(x, y)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f(7, 0)
+        ,
+        \\def f(x: i64, y: i64) -> i64:
+        \\    return x + y
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f(9223372036854775807, 1)
+        ,
+        \\def main() -> i64:
+        \\    a: [3]i64 = [2, 4, 6]
+        \\    i = 0
+        \\    t = 0
+        \\    while i < 4:
+        \\        t += a[i]
+        \\        i += 1
+        \\    return t
+        ,
+        \\def main() -> i64:
+        \\    a: [3]i64 = [2, 4, 6]
+        \\    i = 7
+        \\    d = 0
+        \\    return a[remtrunc(i, d)]
+        ,
+        \\def f(n: i64) -> bool:
+        \\    if n < 1:
+        \\        return False
+        \\    return True
+        \\
+        \\
+        \\def main() -> i64:
+        \\    b = f(2)
+        \\    if b:
+        \\        return 3
+        \\    return 4
+        ,
     };
     for (sources) |source| try compareBudgets(source);
 }
 // spec: VM-FUSION-7
 test "chained arithmetic preserves intermediate traps and every budget cutoff" {
     const sources = [_][]const u8{
-        "fn f(x:i64,y:i64,z:i64)->i64{return x*y%z;}fn main()->i64{return f(123,456,97);}",
-        "fn f(x:i64,y:i64,z:i64)->i64{return x*y%z;}fn main()->i64{return f(9223372036854775807,2,0);}",
-        "fn f(x:i64,y:i64,z:i64)->i64{return x*y%z;}fn main()->i64{return f(123,456,0);}",
-        "fn f(x:i64,y:i64,z:i64)->i64{return x+y+z;}fn main()->i64{return f(9223372036854775806,1,1);}",
-        "fn f(x:i64,y:i64,z:i64)->i64{return (x-y)/z;}fn main()->i64{return f(-9223372036854775808,0,-1);}",
-        "fn main()->i64{let mut i=0;let mut total=0;while i<3{let mut j=0;while j<4{total+=(i*j)%7;j+=1;}i+=1;}return total;}",
+        \\def f(x: i64, y: i64, z: i64) -> i64:
+        \\    return remtrunc(x * y, z)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f(123, 456, 97)
+        ,
+        \\def f(x: i64, y: i64, z: i64) -> i64:
+        \\    return remtrunc(x * y, z)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f(9223372036854775807, 2, 0)
+        ,
+        \\def f(x: i64, y: i64, z: i64) -> i64:
+        \\    return remtrunc(x * y, z)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f(123, 456, 0)
+        ,
+        \\def f(x: i64, y: i64, z: i64) -> i64:
+        \\    return x + y + z
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f(9223372036854775806, 1, 1)
+        ,
+        \\def f(x: i64, y: i64, z: i64) -> i64:
+        \\    return divtrunc(x - y, z)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f(-9223372036854775808, 0, -1)
+        ,
+        \\def main() -> i64:
+        \\    i = 0
+        \\    total = 0
+        \\    while i < 3:
+        \\        j = 0
+        \\        while j < 4:
+        \\            total += remtrunc(i * j, 7)
+        \\            j += 1
+        \\        i += 1
+        \\    return total
+        ,
     };
     for (sources) |source| try compareBudgets(source);
 }
 // spec: VM-FUSION-3
 test "requested instruction trace is identical under both dispatch settings" {
-    var c = try language.Compilation.init(t.allocator, "trace.my", "fn main()->i64{let mut n=0;while n<3{n+=1;}return n;}");
+    var c = try language.Compilation.init(t.allocator, "trace.my",
+        \\def main() -> i64:
+        \\    n = 0
+        \\    while n < 3:
+        \\        n += 1
+        \\    return n
+    );
     defer c.deinit();
     var events_a: [128]language.vm_trace.Event = undefined;
     var events_b: [128]language.vm_trace.Event = undefined;
@@ -83,8 +237,18 @@ test "requested instruction trace is identical under both dispatch settings" {
     }
 }
 fn allocationScenario(allocator: std.mem.Allocator) !void {
-    var c = try language.Compilation.init(allocator, "allocation.my", "fn f(n:i64)->i64{if n<1{return n;}return f(n-1)+1;}" ++
-        "fn main()->i64{let a=new [2]i64 [3,7];let n=f(6);return a[n%2];}");
+    var c = try language.Compilation.init(allocator, "allocation.my",
+        \\def f(n: i64) -> i64:
+        \\    if n < 1:
+        \\        return n
+        \\    return f(n - 1) + 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    a: [2]i64 = [3, 7]
+        \\    n = f(6)
+        \\    return a[remtrunc(n, 2)]
+    );
     defer c.deinit();
     try t.expectEqual(@as(i64, 3), (try c.execute(allocator)).value);
 }
@@ -102,7 +266,15 @@ test "fusion cache collisions and scalar frame growth preserve results" {
     };
     const sources = [_][]const u8{
         "fn main()->i64{let mut n=0;let mut i=0;while i<3{" ++ increments ++ "i+=1;}return n;}",
-        "fn f(n:i64)->i64{if n<1{return n;}return f(n-1)+1;}fn main()->i64{return f(80);}",
+        \\def f(n: i64) -> i64:
+        \\    if n < 1:
+        \\        return n
+        \\    return f(n - 1) + 1
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return f(80)
+        ,
     };
     for (sources, [_]i64{ 420, 80 }) |source, expected| {
         var c = try language.Compilation.init(t.allocator, "collision.my", source);
@@ -116,7 +288,15 @@ test "fusion cache collisions and scalar frame growth preserve results" {
 
 // spec: VM-FUSION-6
 test "invocation normalizes scalar bindings before optimized local access" {
-    var c = try language.Compilation.init(t.allocator, "bindings.my", "fn increment(x:i64)->i64{let y=x+1;return y;}fn main()->i64{return 0;}");
+    var c = try language.Compilation.init(t.allocator, "bindings.my",
+        \\def increment(x: i64) -> i64:
+        \\    y = x + 1
+        \\    return y
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    );
     defer c.deinit();
     try c.emit();
     for (c.code.?.functions, 0..) |function, index| {
@@ -132,6 +312,16 @@ test "invocation normalizes scalar bindings before optimized local access" {
 
 // spec: VM-FUSION-2
 test "fused execution preserves managed list aliases across calls" {
-    try compareBudgets("fn bump(values:List<i64>)->i64{values[0u64]=values[0u64]+1;return values[0u64];}" ++
-        "fn main()->i64{let values:List<i64>=[];values.push(3);_ = bump(values);return values[0u64]+2;}");
+    try compareBudgets(
+        \\def bump(values: List[i64]) -> i64:
+        \\    values[0u64] = values[0u64] + 1
+        \\    return values[0u64]
+        \\
+        \\
+        \\def main() -> i64:
+        \\    values: List[i64] = []
+        \\    values.push(3)
+        \\    _ = bump(values)
+        \\    return values[0u64] + 2
+    );
 }

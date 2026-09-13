@@ -13,7 +13,13 @@ const Provider = struct {
     }
 };
 fn scenario(allocator: std.mem.Allocator) !void {
-    var c = try language.Compilation.init(allocator, "replay.my", "host fn measure(n:i64)->i64 effects(host);fn main()->i64{return measure(1)+measure(2);}");
+    var c = try language.Compilation.init(allocator, "replay.my",
+        \\host def measure(n: i64) -> i64 effects(host)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return measure(1) + measure(2)
+    );
     defer c.deinit();
     try c.emit();
     var provider: Provider = .{};

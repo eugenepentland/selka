@@ -2,7 +2,15 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
-const program = "fn first<T:copy>(x:T)->T{return x;}fn main()->i64{let a=first::<[4]u8>(\"A\\x00\\xffB\");return cast<i64>(a[0])+cast<i64>(a[2])+cast<i64>(len(\"µ\"));}";
+const program =
+    \\def first[T](x: T) -> T:
+    \\    return x
+    \\
+    \\
+    \\def main() -> i64:
+    \\    a = first[[4]u8](b"A\x00\xffB")
+    \\    return cast<i64>(a[0]) + cast<i64>(a[2]) + cast<i64>(len(b"µ"))
+;
 fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "bytes.my", program);
     defer c.deinit();
@@ -26,7 +34,14 @@ test "byte literals reject invalid escapes and retain ordinary array type checks
         .{ .text = "fn main()->i64{return len(\"\\x+f\");}", .code = "E_BYTE_ESCAPE" },
         .{ .text = "fn main()->i64{return len(\"\\x0\");}", .code = "E_BYTE_ESCAPE" },
         .{ .text = "fn main()->i64{return len(\"x\n\");}", .code = "E_BYTE_LITERAL" },
-        .{ .text = "fn f()->[1]u8{return \"ab\";}fn main()->i64{return 0;}", .code = "E_TYPE" },
+        .{ .text =
+        \\def f() -> [1]u8:
+        \\    return b"ab"
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        , .code = "E_TYPE" },
     }) |case| {
         var c = try language.Compilation.init(t.allocator, "bad-byte.my", case.text);
         defer c.deinit();

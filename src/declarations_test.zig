@@ -4,24 +4,57 @@ const t = std.testing;
 const language = @import("compiler.zig");
 
 const kinds_module =
-    \\module kinds;
-    \\import math;
-    \\import shared.units as units;
-    \\// leading comment
-    \\// second line
-    \\type Count = i64;
-    \\export Count;
+    \\module kinds
+    \\import math
+    \\import shared.units as units
     \\
-    \\const LIMIT: Count = 3;
-    \\struct Job { id: Count }
-    \\enum Colour { red, green }
-    \\union Shape { dot: i64, line: i64 }
-    \\result Outcome { ok: i64, err: i64 }
-    \\domain Distance: i64 { fn make(x: i64) -> Distance { return wrap<Distance>(x); } }
-    \\resource Handle: filesystem;
-    \\host fn measure(x: i64) -> i64 effects(host);
-    \\export main;
-    \\fn main() -> i64 { return LIMIT; }
+    \\
+    \\# leading comment
+    \\# second line
+    \\type Count = i64
+    \\
+    \\
+    \\export Count
+    \\
+    \\
+    \\const LIMIT: Count = 3
+    \\
+    \\
+    \\class Job:
+    \\    id: Count
+    \\
+    \\
+    \\enum Colour:
+    \\    red,
+    \\    green
+    \\
+    \\
+    \\union Shape:
+    \\    dot: i64,
+    \\    line: i64
+    \\
+    \\
+    \\result Outcome:
+    \\    ok: i64,
+    \\    err: i64
+    \\
+    \\
+    \\domain Distance: i64:
+    \\    def make(x: i64) -> Distance:
+    \\        return wrap<Distance>(x)
+    \\
+    \\
+    \\resource Handle: filesystem
+    \\
+    \\
+    \\host def measure(x: i64) -> i64 effects(host)
+    \\
+    \\
+    \\export main
+    \\
+    \\
+    \\def main() -> i64:
+    \\    return LIMIT
 ;
 
 const Range = struct { start: usize, end: usize };
@@ -37,14 +70,32 @@ const Expected = struct { kind: []const u8, name: []const u8, exported: bool, te
 const expected_declarations = [_]Expected{
     .{ .kind = "alias", .name = "Count", .exported = true, .text = "type Count = i64;", .comment = "// leading comment" },
     .{ .kind = "const", .name = "LIMIT", .exported = false, .text = "const LIMIT: Count = 3;", .comment = "const LIMIT: Count = 3;" },
-    .{ .kind = "struct", .name = "Job", .exported = false, .text = "struct Job { id: Count }", .comment = "struct Job { id: Count }" },
+    .{ .kind = "struct", .name = "Job", .exported = false, .text =
+    \\class Job:
+    \\    id: Count
+    , .comment =
+    \\class Job:
+    \\    id: Count
+    },
     .{ .kind = "enum", .name = "Colour", .exported = false, .text = "enum Colour { red, green }", .comment = "enum Colour { red, green }" },
     .{ .kind = "union", .name = "Shape", .exported = false, .text = "union Shape { dot: i64, line: i64 }", .comment = "union Shape { dot: i64, line: i64 }" },
     .{ .kind = "result", .name = "Outcome", .exported = false, .text = "result Outcome { ok: i64, err: i64 }", .comment = "result Outcome { ok: i64, err: i64 }" },
-    .{ .kind = "domain", .name = "Distance", .exported = false, .text = "domain Distance: i64 { fn make(x: i64) -> Distance { return wrap<Distance>(x); } }", .comment = "domain Distance" },
+    .{ .kind = "domain", .name = "Distance", .exported = false, .text =
+    \\domain Distance: i64:
+    \\    def make(x: i64) -> Distance:
+    \\        return wrap<Distance>(x)
+    , .comment = "domain Distance" },
     .{ .kind = "resource", .name = "Handle", .exported = false, .text = "resource Handle: filesystem;", .comment = "resource Handle: filesystem;" },
-    .{ .kind = "host_fn", .name = "measure", .exported = false, .text = "host fn measure(x: i64) -> i64 effects(host);", .comment = "host fn measure" },
-    .{ .kind = "fn", .name = "main", .exported = true, .text = "fn main() -> i64 { return LIMIT; }", .comment = "fn main() -> i64 { return LIMIT; }" },
+    .{ .kind = "host_fn", .name = "measure", .exported = false, .text =
+    \\host def measure(x: i64) -> i64 effects(host)
+    , .comment = "host fn measure" },
+    .{ .kind = "fn", .name = "main", .exported = true, .text =
+    \\def main() -> i64:
+    \\    return LIMIT
+    , .comment =
+    \\def main() -> i64:
+    \\    return LIMIT
+    },
 };
 
 fn list(allocator: std.mem.Allocator, path: []const u8, text: []const u8) ![]u8 {
@@ -91,13 +142,35 @@ test "declaration listing reports every top-level kind with names exports and by
 }
 
 test "declaration listing parses without checking and rejects unresolved exports" {
-    const unchecked = "module m; fn main() -> i64 { let flag: bool = 1; return flag; }";
+    const unchecked =
+        \\module m
+        \\
+        \\
+        \\def main() -> i64:
+        \\    flag: bool = 1
+        \\    return flag
+    ;
     const listing = try list(t.allocator, "unchecked.my", unchecked);
     defer t.allocator.free(listing);
     try t.expect(std.mem.indexOf(u8, listing, "\"name\":\"main\"") != null);
     const cases = [_]struct { text: []const u8, code: []const u8 }{
-        .{ .text = "module m; export missing; fn main() -> i64 { return 0; }", .code = "E_UNKNOWN_EXPORT" },
-        .{ .text = "module m; export main; export main; fn main() -> i64 { return 0; }", .code = "E_DUPLICATE_EXPORT" },
+        .{ .text =
+        \\module m
+        \\export missing
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        , .code = "E_UNKNOWN_EXPORT" },
+        .{ .text =
+        \\module m
+        \\export main
+        \\export main
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+        , .code = "E_DUPLICATE_EXPORT" },
         .{ .text = "fn main() -> i64 { return 1 + ; }", .code = "E_EXPRESSION" },
         .{ .text = "module m; fn broken( ;", .code = "E_SYNTAX" },
     };
@@ -110,7 +183,18 @@ test "declaration listing parses without checking and rejects unresolved exports
 }
 
 test "single-file listings report no module header and preserve declaration order" {
-    const text = "// note\nconst X: i64 = 4;\nstruct Point { x: i64 }\nfn main() -> i64 { return X; }";
+    const text =
+        \\# note
+        \\const X: i64 = 4
+        \\
+        \\
+        \\class Point:
+        \\    x: i64
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return X
+    ;
     const listing = try list(t.allocator, "single.my", text);
     defer t.allocator.free(listing);
     const parsed = try std.json.parseFromSlice(Wire, t.allocator, listing, .{});

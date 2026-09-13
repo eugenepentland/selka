@@ -99,7 +99,13 @@ test "trial generic slot snapshots preserve distinct ID payloads at the trusted 
 test "board initDisk releases compilation and registry when the host schema is absent" {
     var temp = t.tmpDir(.{});
     defer temp.cleanup();
-    try temp.dir.writeFile(t.io, .{ .sub_path = "main.my", .data = "module main; fn main()->i64 { return 0; }" });
+    try temp.dir.writeFile(t.io, .{ .sub_path = "main.my", .data =
+        \\module main
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return 0
+    });
     const root = try temp.dir.realPathFileAlloc(t.io, ".", t.allocator);
     defer t.allocator.free(root);
     var app: application.App = undefined;
