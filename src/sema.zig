@@ -337,7 +337,9 @@ const Checker = struct {
         const target = try self.callDeclaration(input, span);
         return self.specialize(target.declaration, target.call, span);
     }
-    fn callDeclaration(self: *Checker, input: @FieldType(@FieldType(ast.Node, "data"), "call"), _: source.Span) Error!ResolvedCall {
+    fn callDeclaration(self: *Checker, raw: @FieldType(@FieldType(ast.Node, "data"), "call"), _: source.Span) Error!ResolvedCall {
+        const applied = try @import("call_type_arguments.zig").split(self.src, self.syntax, self.catalog.module_names, raw, self.sink);
+        const input = applied orelse raw;
         if (std.mem.eql(u8, self.src.text(input.name), "todo") and input.owner == null) {
             _ = try self.ty(input.type_arguments[0]);
             return self.sink.typedHole(input.name, input.type_arguments[0]);
@@ -562,6 +564,12 @@ const Checker = struct {
             if (try @import("record_calls.zig").lower(self.allocator, self.src, self.catalog, call, self.sink)) |record| {
                 node.data = record.data;
                 return node;
+            }
+            if (call.owner == null or !self.active.contains(self.src.text(call.owner.?))) {
+                if (try @import("variant_calls.zig").lower(self.src, self.catalog, call, node.span, self.sink)) |variant| {
+                    node.data = variant.data;
+                    return node;
+                }
             }
             if (call.owner) |owner| if (self.active.get(self.src.text(owner))) |slot| {
                 const value_type = self.locals.items[@backingInt(slot)].ty;

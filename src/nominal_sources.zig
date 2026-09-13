@@ -50,6 +50,10 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     var result: Sources = .{};
     try result.addScopes(allocator, src, program, sink);
     inline for (.{ "applications", "arrays", "callbacks" }) |category| for (@field(program.types.expressions, category)) |syntax| {
+        // `f[T](x)` parses as an application in call position; its base names a function, not a type.
+        if (comptime std.mem.eql(u8, category, "applications")) {
+            if (try @import("call_type_arguments.zig").functionApplication(src, program, index.context.names, syntax, sink)) continue;
+        }
         const scope = result.scope(syntax.span);
         const parameters: []const requirements.Parameter = if (scope) |found| found.parameters else &.{};
         const expression = try index.expression(syntax.span, parameters);

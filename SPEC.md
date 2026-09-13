@@ -433,6 +433,11 @@ manifest records implementation coverage, not a test certificate.
 - [PYTHON-2] Python functions support ordinary mutable assignment, annotated bindings, `True`/`False`/`None`, `and`/`or`/`not`, `pass`, `elif`, omitted unit return annotations, `int` as i64, and square type parameters whose omitted requirement defaults to copy.
 - [PYTHON-3] Python value records use `class` with annotated fields and named construction; square-bracket type applications and `match`/`case` preserve contextual variant names and underscore payload discards for semantic resolution.
 
+- [PY-VARIANT-1] `Type.case(value)` constructs an enum or tagged-union variant carrying its declared payload wherever the legacy surface writes `new Type.case(value)`; `Type.case` without parentheses stays the payload-free construction and contextual `Ok`/`Err`/`Some`/`None` are unchanged. The payload evaluates once and `match`/`case` patterns keep the same spelling.
+- [PY-GENERIC-1] `f[T](x)` applies explicit type arguments to a generic function, the Python spelling of legacy `f::<T>(x)`. A square-bracket application in call position names a function when the base is a declared function and a generic record otherwise, so `Box[T](field=v)` construction is unchanged and the nominal type catalog never resolves a function application as a type.
+- [PY-GENERIC-2] Explicit call type arguments reach the same instance as inference, and the wrong number of arguments or an undeclared base name is rejected.
+- [PY-VARIANT-2] Variant construction resolves through the declared type identity, so a local binding shadowing the type name keeps ordinary member resolution and a name that is not a declared case stays an ordinary call. Supplying no payload, more than one payload, a payload to an empty case, or a payload of the wrong type is rejected.
+
 
 - [PY-COLLECTIONS-1] Managed list literals infer homogeneous element types or use contextual list types; append, nested indexes, receiver expressions, and indexed writes evaluate operands once. Legacy writes retain receiver-first order; Python function writes evaluate the assigned value before the target. Signed negative indexes count from the end.
 - [PY-COLLECTIONS-2] List slices copy the selected elements into a fresh managed list, normalize negative endpoints and clamp to bounds. `len(list)` returns signed i64.
