@@ -87,8 +87,9 @@ def main() -> int:
   host allocations the VM makes for frames, operand stacks or result wrappers, so
   a `noalloc` function is not a promise of an allocation-free process.
 - The bound is not an authority grant. A function annotated `effects(filesystem)`
-  still needs a `Filesystem` value to do anything with the filesystem, and the
-  command line still has to grant it.
+  still needs a `Filesystem` value to do anything with the filesystem, and that
+  value comes from the entry point's parameters — which `mylang run` provisions
+  by default and `--restrict` withholds until a matching `--allow-*` grants it.
 - The bytecode validator recomputes every summary from the emitted instructions
   and rejects a forged annotation, so an effect cannot be hidden by editing
   metadata.
