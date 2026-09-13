@@ -49,6 +49,6 @@ and a located trap during acknowledgement.
 
 This is concrete result support, not generic type constructors. Symbolic
 success/error shapes and associated constraints remain pending. [Partial field moves](generic-fields.md) now preserve remaining obligations and
-field-aware path merges. [Concrete owned flow](generic-owned.md) now preserves cleanup and transfer.
+field-aware path merges. [Concrete owned flow](../legacy/experiments/generic-owned.md) now preserves cleanup and transfer.
 Runtime operations/regions, generic codec constraints and public generic tooling
 remain open.

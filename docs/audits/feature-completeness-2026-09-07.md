@@ -92,7 +92,7 @@ Add checked node accessors, named node kinds, optional field results, array/obje
 
 **Status:** language support exists; library contracts are fragmented. **Layer:** library/builtin adapters. **Effort:** M.
 
-Named unions/results, `try`, must-handle obligations, generic nominal wrappers, and partial moves already work. Many [buffer operations](../experiments/buffer-operations.md), [resource operations](../experiments/source-resources.md), and standard modules still use provisional `i64` codes and separately declared status types.
+Named unions/results, `try`, must-handle obligations, generic nominal wrappers, and partial moves already work. Many [buffer operations](../legacy/experiments/buffer-operations.md), [resource operations](../experiments/source-resources.md), and standard modules still use provisional `i64` codes and separately declared status types.
 
 Publish reusable option/result conventions and named error categories, with explicit adapters where builtins currently require numeric error payloads. Add context-preserving error conversion helpers without implicit loss of owned error resources. Dedicated nullable syntax is not required.
 
@@ -122,7 +122,7 @@ Start with bounded copied blocks and explicit short-read/write results, retainin
 
 **Status:** capabilities/resource operations implemented; general application integration incomplete. **Layer:** trusted host/library. **Effort:** M–L.
 
-The filesystem-entry probe fails with `CapabilityUnavailable` in the ordinary CLI. [Resource requests](../experiments/source-resources.md) are provider-defined byte protocols. [Attenuation](../experiments/attenuation.md) narrows read/write/complete operations but does not derive directory or endpoint scopes. Existing native provider experiments do not make the current VM CLI a general file/network application runner.
+The filesystem-entry probe fails with `CapabilityUnavailable` in the ordinary CLI. [Resource requests](../experiments/source-resources.md) are provider-defined byte protocols. [Attenuation](../legacy/experiments/attenuation.md) narrows read/write/complete operations but does not derive directory or endpoint scopes. Existing native provider experiments do not make the current VM CLI a general file/network application runner.
 
 Provide documented host adapters, grant configuration, directory/endpoint policies, and predictable errors. Keep process launching a separately granted future operation. Broad HTTP/TLS/async support should follow an actual application need.
 
@@ -140,7 +140,7 @@ Tests currently rely heavily on Zig roots, Python drivers, and external applicat
 
 **Status:** substantial targeted tests; broader assurance remains work. **Layer:** validation. **Effort:** ongoing M–L.
 
-Existing ownership, arena, generic, JSON, and host tests include allocation-failure and trap-boundary coverage. The [borrowing audit](../experiments/b-audit.md) explicitly scopes its guarantees; it is not a full-language soundness proof. This audit found restrictions and coverage needs, not a demonstrated memory-corruption exploit.
+Existing ownership, arena, generic, JSON, and host tests include allocation-failure and trap-boundary coverage. The [borrowing audit](../legacy/experiments/b-audit.md) explicitly scopes its guarantees; it is not a full-language soundness proof. This audit found restrictions and coverage needs, not a demonstrated memory-corruption exploit.
 
 Add generated valid/invalid programs combining ownership, partial moves, generic specialization, arena escape, JSON, host failure, and control flow. Compare generic and concrete behavior; exercise Debug/optimized host builds and allocator failures. Fuzz parsing/checking and typed runtime boundaries with independent invariants and retained minimized failures. Existing bytecode validation is not an advertised hostile-bytecode sandbox.
 
@@ -152,7 +152,7 @@ Add generated valid/invalid programs combining ownership, partial moves, generic
 
 **Status:** whole-allocation conflicts. **Layer:** borrow checker/VM leases. **Effort:** L.
 
-The disjoint-slice probe rejects with `E_BORROW_CONFLICT`; [borrowing rules](../experiments/borrowing.md) lock whole allocations. Add an explicit checked split operation before attempting arbitrary index-range proofs. Runtime checks establish the partition; static and runtime loan identities preserve sibling independence and suspend the original parent.
+The disjoint-slice probe rejects with `E_BORROW_CONFLICT`; [borrowing rules](../legacy/experiments/borrowing.md) lock whole allocations. Add an explicit checked split operation before attempting arbitrary index-range proofs. Runtime checks establish the partition; static and runtime loan identities preserve sibling independence and suspend the original parent.
 
 **Acceptance:** write one half while reading/writing the other; reject overlap, parent reuse, buffer growth, owner destruction, and invalid split bounds. Cover empty partitions, nested splits, returned views, and cleanup. Rust's [checked mutable splitting API](https://doc.rust-lang.org/std/primitive.slice.html#method.split_at_mut_checked) supplies a useful precedent. This feature does not itself introduce threads.
 
@@ -160,7 +160,7 @@ The disjoint-slice probe rejects with `E_BORROW_CONFLICT`; [borrowing rules](../
 
 **Status:** deliberate restriction. **Layer:** type/region system. **Effort:** L–XL.
 
-[Reference returns](../experiments/returned-references.md) have one declared input origin; reference fields reject in the probe. [Arena analysis](../experiments/source-arenas.md) conservatively merges dependencies and can retain dependencies from unrelated helper inputs.
+[Reference returns](../legacy/experiments/returned-references.md) have one declared input origin; reference fields reject in the probe. [Arena analysis](../legacy/experiments/source-arenas.md) conservatively merges dependencies and can retain dependencies from unrelated helper inputs.
 
 First improve owner-return provenance and field-sensitive region summaries where real helpers are blocked. Then consider lifetime-parameterized stored references and returns selecting between multiple inputs. Do not weaken checks simply to accept examples.
 
@@ -206,7 +206,7 @@ Start with explicit local dependency roots and immutable version/hash manifests;
 
 **Status:** logical quotas and host budgets exist; no general total-byte promise. **Layer:** allocator/runtime/embedding. **Effort:** M–L.
 
-[Buffer quotas](../experiments/ownership.md) count slots/live allocations, while immutable values and VM bookkeeping allocate separately. Execution arenas may retain backing after logical owner release. The root allocator capability shares authority and quotas; independent child budget attenuation is not provided by source arenas.
+[Buffer quotas](../legacy/experiments/ownership.md) count slots/live allocations, while immutable values and VM bookkeeping allocate separately. Execution arenas may retain backing after logical owner release. The root allocator capability shares authority and quotas; independent child budget attenuation is not provided by source arenas.
 
 Expose named accounting categories and high-water statistics, configurable application budgets, and optional child quotas that cannot amplify authority. Define whether and which exhaustion paths are guest-recoverable; actual host `OutOfMemory` currently terminates execution with cleanup. Keep `noalloc` explicitly scoped to guest backing operations.
 
@@ -244,7 +244,7 @@ The installed emitter rejects both host declarations and source JSON. Extend cov
 
 **Priority:** P3 application requirement. **Status:** no guest threading/async memory model. **Layer:** language/runtime/host. **Effort:** XL for shared-memory threads.
 
-[The memory store](../experiments/borrowing.md) is single-thread-owned; host callbacks are synchronous and require lifetime/serialization discipline. An arena does not make concurrent allocation/reset safe. Improve neither claim by merely allowing more borrow syntax.
+[The memory store](../legacy/experiments/borrowing.md) is single-thread-owned; host callbacks are synchronous and require lifetime/serialization discipline. An arena does not make concurrent allocation/reset safe. Improve neither claim by merely allowing more borrow syntax.
 
 Choose isolated workers/message passing, scoped parallel work with disjoint ownership, or shared-memory threads deliberately. Define transfer/share rules, synchronized bookkeeping/refcounts/allocators, host provider behavior, cancellation, joining, and arena lifetime/reset coordination. Async I/O also needs a scheduling and suspended-borrow design.
 

@@ -57,10 +57,10 @@ Reassignment replenishes a binding only after remaining result obligations are
 handled. [The partial-field record](generic-fields.md) documents executable and
 allocation-failure acceptance.
 
-[Concrete owned fields](generic-owned.md) now participate in whole/partial move
-state, cleanup and transitive cleanup-effect bounds. [Buffer/pool acquisition and mutation](generic-runtime.md) now check explicit
+[Concrete owned fields](../legacy/experiments/generic-owned.md) now participate in whole/partial move
+state, cleanup and transitive cleanup-effect bounds. [Buffer/pool acquisition and mutation](../legacy/experiments/generic-runtime.md) now check explicit
 authority and effects. [Provider operations](generic-providers.md) now enforce capability/result/effect
-contracts. [Concrete local array/buffer views](generic-local-views.md) now preserve
-owner access and input provenance. [Generic arena/reset scopes](generic-regions.md)
+contracts. [Concrete local array/buffer views](../legacy/experiments/generic-local-views.md) now preserve
+owner access and input provenance. [Generic arena/reset scopes](../legacy/experiments/generic-regions.md)
 now track allocator origins and reject escapes. Generic result constructors and
 associated success/error constraints remain pending independently.

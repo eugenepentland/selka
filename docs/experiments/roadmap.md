@@ -119,40 +119,40 @@ foundation, record frontend, integer widths, and completed array work.
 [nominal domains and private construction](domains.md). [Closed variants and exhaustive
 matching](variants.md) are also implemented. [Complete enum-indexed tables](tables.md) finish A2.
 Borrowing and slices now enforce allocation identity, bounds, and lifetime
-checks. Returned-reference contracts now complete [B acceptance](b-audit.md).
+checks. Returned-reference contracts now complete [B acceptance](../legacy/experiments/b-audit.md).
 
 
-[B backend memory and lifetime rules](borrowing.md) now establish allocation,
+[B backend memory and lifetime rules](../legacy/experiments/borrowing.md) now establish allocation,
 lease, bounds, and store identity without guest host pointers. Scoped shared/exclusive
 references now use this registry through checked source and VM instructions.
-Reference parameters now support checked call reborrows. [Bounded slices](slices.md) now support
+Reference parameters now support checked call reborrows. [Bounded slices](../legacy/experiments/slices.md) now support
 checked narrowing, element access, and slice parameters. Returned-reference
-lifetime contracts are implemented; [the B audit](b-audit.md) records acceptance.
+lifetime contracts are implemented; [the B audit](../legacy/experiments/b-audit.md) records acceptance.
 
 
 [Typed recoverable results and handling obligations](results.md) establish the
 minimal error-value foundation for C/D. They preserve obligations through binding,
 wrapping, and helper calls, with exhaustive handling or explicit acknowledgement.
 [Propagation](propagation.md) now checks early-return obligations and borrow
-cleanup. [Owned-buffer transfers and partial-acquisition cleanup](ownership.md) now have backend acceptance evidence. [Source ownership and recoverable acquisition](owned-buffers.md) now integrate that cleanup into the VM; [buffer operations/views](buffer-operations.md) now pass acceptance. [Transitive allocation bounds](effects.md) now pass acceptance. [Explicit allocator capabilities](allocator-capabilities.md) now pass acceptance. [Clock/random capability operations](external-capabilities.md) now pass acceptance. [Source filesystem/network resource lifecycle and cleanup effects](source-resources.md) now pass; [bounded environment lookup](environment.md) now passes; [resource reads/writes](resource-io.md) now pass; [permission attenuation](attenuation.md) now passes; [borrowed slice I/O](resource-slices.md) now passes; [partial field moves](partial-fields.md) and [source pools/handles](source-pools.md) now pass; [source arena scopes](source-arenas.md) now pass.
+cleanup. [Owned-buffer transfers and partial-acquisition cleanup](../legacy/experiments/ownership.md) now have backend acceptance evidence. [Source ownership and recoverable acquisition](../legacy/experiments/owned-buffers.md) now integrate that cleanup into the VM; [buffer operations/views](../legacy/experiments/buffer-operations.md) now pass acceptance. [Transitive allocation bounds](effects.md) now pass acceptance. [Explicit allocator capabilities](../legacy/experiments/allocator-capabilities.md) now pass acceptance. [Clock/random capability operations](external-capabilities.md) now pass acceptance. [Source filesystem/network resource lifecycle and cleanup effects](source-resources.md) now pass; [bounded environment lookup](environment.md) now passes; [resource reads/writes](resource-io.md) now pass; [permission attenuation](../legacy/experiments/attenuation.md) now passes; [borrowed slice I/O](../legacy/experiments/resource-slices.md) now passes; [partial field moves](../legacy/experiments/partial-fields.md) and [source pools/handles](../legacy/experiments/source-pools.md) now pass; [source arena scopes](../legacy/experiments/source-arenas.md) now pass.
 
 [External resource backend acceptance](external-resources.md) now covers explicit
 fallible completion, fallback release, scoped transfers, and reverse cleanup.
 [Source and VM integration with cleanup-effect inference](source-resources.md) now
-pass acceptance. [Non-consuming copyable field inspection](owned-field-reads.md) now supports
-code-dependent retry; [partial field moves](partial-fields.md) now pass.
+pass acceptance. [Non-consuming copyable field inspection](../legacy/experiments/owned-field-reads.md) now supports
+code-dependent retry; [partial field moves](../legacy/experiments/partial-fields.md) now pass.
 
 [Environment capability acceptance](environment.md) now covers bounded read-only
 lookup, provider identity, missing/empty distinctions, and transitive effects.
 
-[Typed-handle pools](typed-pools.md) now provide backend graph, stale-ID, snapshot,
-slot-reuse, and bulk-clear acceptance. [Source pool/handle integration](source-pools.md) now passes; [source arena scopes](source-arenas.md) now pass.
+[Typed-handle pools](../legacy/experiments/typed-pools.md) now provide backend graph, stale-ID, snapshot,
+slot-reuse, and bulk-clear acceptance. [Source pool/handle integration](../legacy/experiments/source-pools.md) now passes; [source arena scopes](../legacy/experiments/source-arenas.md) now pass.
 
-[Arena backing and region reset](arenas.md) now have backend borrow, lifetime,
-snapshot, and storage-reuse acceptance. [Source arena scopes and escape checks](source-arenas.md) now pass.
+[Arena backing and region reset](../legacy/experiments/arenas.md) now have backend borrow, lifetime,
+snapshot, and storage-reuse acceptance. [Source arena scopes and escape checks](../legacy/experiments/source-arenas.md) now pass.
 
-[Execution-lifetime arenas](arena-execution.md) now run source programs through
-the VM and CLI; [nested source arena scopes and escape checking](source-arenas.md) now pass.
+[Execution-lifetime arenas](../legacy/experiments/arena-execution.md) now run source programs through
+the VM and CLI; [nested source arena scopes and escape checking](../legacy/experiments/source-arenas.md) now pass.
 
 [Approximate discovery](approximate-discovery.md) now reports bounded near matches
 separately from exact groups, with changed facts and explicit incomplete-search status.
@@ -168,21 +168,21 @@ stdout output plus a syntax-only check mode. The [verification driver](verificat
 filtered/dependency reporting, executed parity, rejection sentinels, specification
 markers, and timing observations separate from performance gates.
 
-[Scalar native execution](native-execution.md) now uses direct C branches and
+[Scalar native execution](../legacy/experiments/native-execution.md) now uses direct C branches and
 explicit frames, with executed VM/native parity and explicit unsupported-feature
 diagnostics.
 
-[Partial field moves](partial-fields.md) now preserve remaining record fields,
+[Partial field moves](../legacy/experiments/partial-fields.md) now preserve remaining record fields,
 resource cleanup, and per-field result obligations across checked control flow.
 
-[Source pools and nominal handles](source-pools.md) now integrate graph operations,
+[Source pools and nominal handles](../legacy/experiments/source-pools.md) now integrate graph operations,
 allocator authority, execution quotas, snapshots, and ownership cleanup.
 
-[Checked region backing](region-backing.md) now shares allocator authority and
+[Checked region backing](../legacy/experiments/region-backing.md) now shares allocator authority and
 lifetime guards between buffers and pools, with independent retained snapshots.
-[Lexical source arena scopes and conservative escape checking](source-arenas.md) now pass.
+[Lexical source arena scopes and conservative escape checking](../legacy/experiments/source-arenas.md) now pass.
 
-[Explicit source arena reset](arena-reset.md) now reclaims unused chunks with typed
+[Explicit source arena reset](../legacy/experiments/arena-reset.md) now reclaims unused chunks with typed
 results, stable allocator authority, and live-owner/child guards.
 
 [Module header discovery](module-discovery.md) now loads shared dependencies once,
@@ -219,13 +219,13 @@ integration remains pending.
 [Module formatting](module-formatting.md) now preserves headers, qualified names, and
 comment gaps, with syntax-only per-file output and reachable-project check mode.
 
-[Scalar module native execution](module-native.md) now emits/builds module programs
+[Scalar module native execution](../legacy/experiments/module-native.md) now emits/builds module programs
 with executed VM/native path/trace parity; broader native operations remain pending.
 
-[Native nominal scalar domains](native-domains.md) now retain frontend privacy/type
+[Native nominal scalar domains](../legacy/experiments/native-domains.md) now retain frontend privacy/type
 checks and VM instruction-budget parity with scalar backing representation.
 
-[Native closed enums](native-enums.md) now support construction, equality, calls,
+[Native closed enums](../legacy/experiments/native-enums.md) now support construction, equality, calls,
 mutation, and exhaustive dispatch with executed VM/native parity.
 
 [Module graph boundary acceptance](module-scaling.md) now checks execution, reports,
@@ -275,11 +275,11 @@ fresh source provenance independently of reusable public-schema/artifact identit
 bounded, owned JSON pointers in compiler diagnostics and embedding APIs, preserving
 allocation-error classification and explicitly marking truncated paths.
 
-[Native packed variants and results](native-variants.md) extend construction, matching,
-transfers, acknowledgement, and propagation. [Native aggregates](native-aggregates.md)
+[Native packed variants and results](../legacy/experiments/native-variants.md) extend construction, matching,
+transfers, acknowledgement, and propagation. [Native aggregates](../legacy/experiments/native-aggregates.md)
 add records, arrays, tables, conversions/updates, boxed payloads and wider layouts,
-plus allocation-failure cleanup and bounded-live-storage acceptance. [Native ordinary-value references](native-references.md) now support scoped loans,
-parameters, returned views, and checked slices. [Native owned buffers](native-buffers.md)
+plus allocation-failure cleanup and bounded-live-storage acceptance. [Native ordinary-value references](../legacy/experiments/native-references.md) now support scoped loans,
+parameters, returned views, and checked slices. [Native owned buffers](../legacy/experiments/native-buffers.md)
 add root allocator entry parameters, ownership transfer, growth, mutation, and buffer
 slices with VM/native and allocation-failure acceptance. Native pools and external resource operations remain pending.
 
@@ -333,22 +333,22 @@ a serial check/clear/quit CLI protocol, with fresh source/manifests, status and
 cache observations, error recovery, and bounded request framing. Semantic query
 reuse and persistent storage remain pending.
 
-[Native lexical arenas](native-arenas.md) are implemented with chunk backing,
+[Native lexical arenas](../legacy/experiments/native-arenas.md) are implemented with chunk backing,
 reset, allocator identity, and frame cleanup; Debug/ReleaseFast parity and sanitizer
 acceptance pass.
 Native external resources remain pending.
 
-[Native pools](native-pools.md) now implement handles, operations, quotas, and
+[Native pools](../legacy/experiments/native-pools.md) now implement handles, operations, quotas, and
 root/arena cleanup; full Debug/ReleaseFast acceptance and sanitizer cleanup checks pass.
 
-[Native clock/random providers](native-providers.md) now use explicit C adapters
+[Native clock/random providers](../legacy/experiments/native-providers.md) now use explicit C adapters
 with typed results and missing-grant checks; full Debug/ReleaseFast acceptance passes.
 
-[Native environment lookup](native-environment.md) now preserves bounded bytes,
+[Native environment lookup](../legacy/experiments/native-environment.md) now preserves bounded bytes,
 missing/empty values, padding, snapshots, and explicit grants through provider ABI v2.
 Complete Debug/ReleaseFast acceptance passes.
 
-[Native resource implementation](native-resources.md) now has a normal-cleanup
+[Native resource implementation](../legacy/experiments/native-resources.md) now has a normal-cleanup
 ordering correction, counted emergency ownership unwind, and an executable
 destruction-order harness. Full Debug/ReleaseFast unwind acceptance passes; native
 filesystem/network operations remain pending. Propagation now boxes outgoing

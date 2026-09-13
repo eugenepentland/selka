@@ -7,6 +7,11 @@ way. What changes is *when* they are freed. Every managed allocation performed
 while the block runs is tagged with that block, and the whole tag is released in
 one step when the block ends.
 
+This is the language's only manual-memory control. There is no explicit storage
+tier, no allocator parameter to thread and no borrow annotation to write: an
+arena block is the single place where a program says anything about *when*
+memory goes away.
+
 ```mylang
 # doc: expect 204
 def squares(limit: int) -> list[int]:
@@ -193,8 +198,9 @@ scope entries and bulk-released objects separately from `reclaimed`, so a progra
 can tell which mechanism freed what.
 
 Allocation inside an arena is still allocation: it contributes the
-`managed_allocation` effect, so `noalloc` and `nogc` reject it exactly as before,
-and `escape` carries that effect too. Entering the block itself needs no effect.
+`managed_allocation` effect, so `noalloc` rejects it exactly as it rejects
+allocation outside a block, and `escape` carries that effect too. Entering the
+block itself needs no effect.
 
 ## Limits
 
@@ -208,16 +214,11 @@ Honest list of what this first step does not do:
   statement; `acquire_resource`/`complete_resource` keep their existing spelling.
 - Arena scopes are rejected inside generic function bodies with
   `E_GENERIC_BODY_UNSUPPORTED`.
-- Both native backends reject a program containing an arena scope explicitly:
-  the C backend with `E_NATIVE_FEATURE`, the QBE backend with
-  `E_QBE_UNSUPPORTED`. The VM is the backend for this feature.
+- The QBE native backend rejects a program containing an arena scope explicitly,
+  with `E_QBE_UNSUPPORTED`. The VM is the backend for this feature.
 - The static rules are conservative in one direction and shallow in the other.
   They reject some safe programs (any assignment of a managed-bearing value to an
   outer binding, even one that could never reach arena storage) and they do not
   attempt to see through helpers — the runtime barrier does that instead.
 - `escape` copies. There is no move or promotion of an object that happens to be
   uniquely referenced.
-- The older explicit-storage tier (`arena heap as x { }`, `buffer`, `pool`, the
-  `allocator` capability) is unchanged and unrelated. It cannot hold managed
-  references and managed lists cannot hold its values. That tier is scheduled for
-  removal; this facility is its replacement.

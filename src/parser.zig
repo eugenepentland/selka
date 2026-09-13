@@ -101,7 +101,6 @@ pub const Parser = struct {
             .kw_u16,
             .kw_u32,
             .kw_u64,
-            .kw_allocator,
             .kw_filesystem_cap,
             .kw_network_cap,
             .kw_environment_cap,
@@ -120,19 +119,8 @@ pub const Parser = struct {
     fn callbackType(self: *Parser, first: Span) diagnostic.Error!Span {
         _ = try self.expect(.lparen);
         var parameters: std.ArrayList(Span) = .empty;
-        var borrowed: u16 = 0;
-        var slices: u16 = 0;
         if (self.current().tag != .rparen) while (true) {
             if (parameters.items.len == 16) return self.sink.fail(eGenericLimit, first, "callbacks support at most 16 value parameters");
-            const bit = @as(u16, 1) << @as(u4, @intCast(parameters.items.len));
-            if (self.take(.ampersand)) {
-                if (self.take(.kw_mut)) return self.sink.fail("E_CALLBACK_TYPE", first, "callback context parameters are readonly borrows");
-                borrowed |= bit;
-                if (self.current().tag == .lbracket and self.tokens[self.cursor.pos + 1].tag == .rbracket) {
-                    self.cursor.pos += 2;
-                    slices |= bit;
-                }
-            }
             try parameters.append(self.arena.allocator(), try self.typeName());
             if (!self.take(.comma) or self.current().tag == .rparen) break;
         };
@@ -141,7 +129,7 @@ pub const Parser = struct {
         const result = try self.typeName();
         const bound = try self.effectBound() orelse return self.sink.fail("E_CALLBACK_EFFECTS", first, "callback types require an explicit effects ceiling");
         const span: Span = .join(first, self.tokens[self.cursor.pos - 1].span);
-        try self.syntax.callbacks.append(self.arena.allocator(), .{ .span = span, .parameters = try parameters.toOwnedSlice(self.arena.allocator()), .return_type = result, .effect_bound = bound, .borrowed = borrowed, .slices = slices });
+        try self.syntax.callbacks.append(self.arena.allocator(), .{ .span = span, .parameters = try parameters.toOwnedSlice(self.arena.allocator()), .return_type = result, .effect_bound = bound });
         return span;
     }
     fn nominalTypeName(self: *Parser) diagnostic.Error!Span {
@@ -213,8 +201,6 @@ pub const Parser = struct {
         var functions: std.ArrayList(ast.Function) = .empty;
         var records: std.ArrayList(ast.Record) = .empty;
         var domains: std.ArrayList(ast.Domain) = .empty;
-        var pools: std.ArrayList(ast.Pool) = .empty;
-        var buffers: std.ArrayList(ast.Domain) = .empty;
         var resources: std.ArrayList(ast.Domain) = .empty;
         var variants: std.ArrayList(ast.Variants) = .empty;
         while (self.current().tag != .eof) {
@@ -244,30 +230,6 @@ pub const Parser = struct {
                 statements[0] = ret;
                 const body = try self.addStatement(.{ .span = .join(name, end), .data = .{ .block = statements } });
                 try functions.append(self.arena.allocator(), .{ .policy = .{ .constant = true, .effect_bound = .{ .allowed = 0, .span = name } }, .signature = .{ .parameters = &.{}, .return_type = ty }, .name = name, .body = body });
-                continue;
-            }
-            if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "pool")) {
-                self.cursor.pos += 1;
-                const name = try self.expect(.ident);
-                const type_parameters = try self.typeParameters();
-                _ = try self.expect(.lparen);
-                const handle = try self.expect(.ident);
-                _ = try self.expect(.rparen);
-                _ = try self.expect(.colon);
-                const element = try self.typeName();
-                _ = try self.expect(.semicolon);
-                try pools.append(self.arena.allocator(), .{ .type_parameters = type_parameters, .name = name.span, .handle = handle.span, .element = element });
-                continue;
-            }
-            if (self.current().tag == .ident and (std.mem.eql(u8, self.src.text(self.current().span), "buffer") or std.mem.eql(u8, self.src.text(self.current().span), "list"))) {
-                const managed = std.mem.eql(u8, self.src.text(self.current().span), "list");
-                self.cursor.pos += 1;
-                const name = try self.expect(.ident);
-                const type_parameters = try self.typeParameters();
-                _ = try self.expect(.colon);
-                const element = try self.typeName();
-                _ = try self.expect(.semicolon);
-                try buffers.append(self.arena.allocator(), .{ .managed = managed, .type_parameters = type_parameters, .name = name.span, .backing = element });
                 continue;
             }
             if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "resource")) {
@@ -337,9 +299,7 @@ pub const Parser = struct {
         }
         return .{
             .types = .{
-                .pools = try pools.toOwnedSlice(self.arena.allocator()),
                 .resources = try resources.toOwnedSlice(self.arena.allocator()),
-                .buffers = try buffers.toOwnedSlice(self.arena.allocator()),
                 .variants = try variants.toOwnedSlice(self.arena.allocator()),
                 .domains = try domains.toOwnedSlice(self.arena.allocator()),
                 .expressions = .{
@@ -373,21 +333,10 @@ pub const Parser = struct {
         var parameters = try self.functionParameters();
         const close_parameters = try self.expect(.rparen);
         const annotated_return = self.take(.arrow);
-        const reference: ?bool = if (self.take(.ampersand)) self.take(.kw_mut) else null;
-        const slice = reference != null and self.current().tag == .lbracket and self.tokens[self.cursor.pos + 1].tag == .rbracket;
-        if (slice) self.cursor.pos += 2;
         const return_type = if (annotated_return) try self.typeName() else Span{ .start = close_parameters.span.end, .end = close_parameters.span.end };
-        var return_reference: ?ast.ReturnReference = null;
-        if (reference) |mutable| {
-            const from = try self.expect(.ident);
-            if (!std.mem.eql(u8, self.src.text(from.span), "from")) return self.sink.fail("E_RETURN_LIFETIME", from.span, "reference result requires `from` followed by a reference parameter name");
-            return_reference = .{ .source = (try self.expect(.ident)).span, .mutable = mutable, .slice = slice };
-        }
         if (host) |span| {
             if (owner != null or restricted or conversion) return self.sink.fail("E_HOST_DECLARATION", span, "host declarations must be ordinary top-level functions");
             if (type_parameters.len != 0) return self.sink.fail("E_HOST_DECLARATION", span, "generic host declarations are not supported");
-            if (return_reference != null) return self.sink.fail("E_HOST_SIGNATURE", span, "host results must be copied ordinary values");
-            for (parameters.items) |parameter| if (parameter.reference != null) return self.sink.fail("E_HOST_SIGNATURE", parameter.name, "host parameters must be copied ordinary values");
             if (self.current().tag != .ident or !std.mem.eql(u8, self.src.text(self.current().span), "effects")) return self.sink.fail("E_HOST_EFFECTS", span, "host declarations require an explicit effects(host, ...) contract");
         }
         const effect_bound = try self.effectBound();
@@ -406,7 +355,6 @@ pub const Parser = struct {
             },
             .signature = .{
                 .type_parameters = type_parameters,
-                .return_reference = return_reference,
                 .parameters = try parameters.toOwnedSlice(self.arena.allocator()),
                 .return_type = return_type,
             },
@@ -420,17 +368,11 @@ pub const Parser = struct {
         if (self.current().tag != .rparen) while (true) {
             const parameter = try self.expect(.ident);
             _ = try self.expect(.colon);
-            const reference: ?bool = if (self.take(.ampersand)) self.take(.kw_mut) else null;
-            const slice = reference != null and self.current().tag == .lbracket and self.tokens[self.cursor.pos + 1].tag == .rbracket;
-            if (slice) {
-                self.cursor.pos += 2;
-            }
             const ty = try self.typeName();
             const default_value = if (self.take(.equal)) try self.defaultArgument() else null;
-            if (default_value != null and reference != null) return self.sink.fail(eDefaultArgument, parameter.span, "reference parameters cannot have defaults");
             if (default_seen and default_value == null) return self.sink.fail(eDefaultArgument, parameter.span, "required parameters must precede parameters with defaults");
             default_seen = default_seen or default_value != null;
-            try parameters.append(self.arena.allocator(), .{ .name = parameter.span, .ty = ty, .reference = reference, .slice = slice, .default_value = default_value });
+            try parameters.append(self.arena.allocator(), .{ .name = parameter.span, .ty = ty, .default_value = default_value });
             if (!self.take(.comma) or self.current().tag == .rparen) break;
         };
         return parameters;
@@ -477,7 +419,6 @@ pub const Parser = struct {
                     _ = try self.expect(.lparen);
                     const field = try self.constraintParameter();
                     _ = try self.expect(.rparen);
-                    if (field.reference != null) return self.sink.fail(eRequirement, field.name, "structural fields are copied values, not references");
                     try fields.append(self.arena.allocator(), field);
                 } else if (std.mem.eql(u8, self.src.text(requirement), "op")) {
                     try operations.append(self.arena.allocator(), try self.operationConstraint());
@@ -501,10 +442,7 @@ pub const Parser = struct {
     fn constraintParameter(self: *Parser) diagnostic.Error!ast.Parameter {
         const name = (try self.expect(.ident)).span;
         _ = try self.expect(.colon);
-        const reference: ?bool = if (self.take(.ampersand)) self.take(.kw_mut) else null;
-        const slice = reference != null and self.current().tag == .lbracket and self.tokens[self.cursor.pos + 1].tag == .rbracket;
-        if (slice) self.cursor.pos += 2;
-        return .{ .name = name, .ty = try self.typeName(), .reference = reference, .slice = slice };
+        return .{ .name = name, .ty = try self.typeName() };
     }
     fn operationConstraint(self: *Parser) diagnostic.Error!ast.Operation {
         _ = try self.expect(.lparen);
@@ -523,13 +461,6 @@ pub const Parser = struct {
         const bound = try self.effectBound() orelse return self.sink.fail(eRequirement, name, "structural operations require an explicit effects bound");
         _ = try self.expect(.rparen);
         return .{ .name = name, .parameters = try parameters.toOwnedSlice(self.arena.allocator()), .return_type = result, .effect_bound = bound };
-    }
-    fn borrowCallSuffix(self: *Parser) bool {
-        return switch (self.current().tag) {
-            .lparen, .dot => true,
-            .colon => self.module_syntax or self.genericCallSuffix(),
-            else => false,
-        };
     }
     fn genericCallSuffix(self: *Parser) bool {
         if (self.cursor.pos + 2 >= self.tokens.len) return false;
@@ -594,84 +525,6 @@ pub const Parser = struct {
         const close = try self.expect(.rbrace);
         return self.addStatement(.{ .span = .join(open.span, close.span), .data = .{ .block = try statements.toOwnedSlice(self.arena.allocator()) } });
     }
-    fn splitBorrow(self: *Parser, first: Span) diagnostic.Error!ast.StatementId {
-        const owner = (try self.expect(.ident)).span;
-        const at = (try self.expect(.ident)).span;
-        if (!std.mem.eql(u8, self.src.text(at), "at")) return self.sink.fail(syntax_code, at, "split requires `at` before its midpoint");
-        const middle = try self.expression(0);
-        _ = try self.expect(.kw_as);
-        const left = (try self.expect(.ident)).span;
-        _ = try self.expect(.comma);
-        const right = (try self.expect(.ident)).span;
-        const body = try self.block();
-        return self.addStatement(.{
-            .span = .join(first, self.syntax.statements.items[@backingInt(body)].span),
-            .data = .{ .borrow = .{ .owner = owner, .name = left, .mutable = true, .body = body, .split = .{ .right = right, .middle = middle } } },
-        });
-    }
-    fn borrowClause(self: *Parser, first: Span) diagnostic.Error!ast.Statement {
-        const mutable = self.take(.kw_mut);
-        const owner_position = self.cursor.pos;
-        const owner = try self.expect(.ident);
-        if (self.borrowCallSuffix()) {
-            self.cursor.pos = owner_position;
-            const call = try self.expression(0);
-            _ = try self.expect(.kw_as);
-            const name = try self.expect(.ident);
-            return .{ .span = first, .data = .{ .borrow_call = .{ .call = call, .name = name.span, .mutable = mutable, .body = undefined } } };
-        }
-        var range: ?ast.Range = null;
-        var whole_slice = false;
-        if (self.take(.lbracket)) {
-            if (self.take(.dot_dot)) {
-                whole_slice = true;
-            } else {
-                const start = try self.expression(0);
-                _ = try self.expect(.dot_dot);
-                range = .{ .start = start, .end = try self.expression(0) };
-            }
-            _ = try self.expect(.rbracket);
-        }
-        _ = try self.expect(.kw_as);
-        const name = try self.expect(.ident);
-        return .{ .span = first, .data = .{ .borrow = .{
-            .owner = owner.span,
-            .name = name.span,
-            .mutable = mutable,
-            .body = undefined,
-            .range = range,
-            .whole_slice = whole_slice,
-        } } };
-    }
-    fn borrowStatement(self: *Parser, first: Span) diagnostic.Error!ast.StatementId {
-        var clauses: std.ArrayList(ast.Statement) = .empty;
-        // Charge lowered scopes to the existing nesting bound too: a flat list
-        // must not create unbounded recursion in downstream syntax consumers.
-        const depth = self.cursor.depth;
-        defer self.cursor.depth = depth;
-        var beginning = first;
-        while (true) {
-            if (clauses.items.len != 0) try self.enter();
-            try clauses.append(self.arena.allocator(), try self.borrowClause(beginning));
-            if (!self.take(.comma)) break;
-            beginning = self.current().span;
-        }
-        var body = try self.block();
-        const end = self.syntax.statements.items[@backingInt(body)].span;
-        var i = clauses.items.len;
-        while (i > 0) {
-            i -= 1;
-            var clause = clauses.items[i];
-            clause.span = .join(clause.span, end);
-            switch (clause.data) {
-                .borrow => |*borrow| borrow.body = body,
-                .borrow_call => |*borrow| borrow.body = body,
-                else => unreachable,
-            }
-            body = try self.addStatement(clause);
-        }
-        return body;
-    }
     fn managedArenaStatement(self: *Parser, first: Span) diagnostic.Error!ast.StatementId {
         const head = self.current();
         if (head.tag != .kw_arena) return self.sink.fail(syntax_code, head.span, "with currently supports only `with arena()` region scopes");
@@ -700,18 +553,6 @@ pub const Parser = struct {
         const first = self.current();
         if (first.tag == .lbrace) return self.block();
         if (self.take(.kw_with)) return self.managedArenaStatement(first.span);
-        if (self.take(.kw_arena)) {
-            const parent = try self.expression(0);
-            _ = try self.expect(.kw_as);
-            const name = try self.expect(.ident);
-            const body = try self.block();
-            return self.addStatement(.{ .span = .join(first.span, self.syntax.statements.items[@backingInt(body)].span), .data = .{ .arena_scope = .{ .parent = parent, .name = name.span, .body = body } } });
-        }
-        if (first.tag == .ident and std.mem.eql(u8, self.src.text(first.span), "split") and self.cursor.pos + 1 < self.tokens.len and self.tokens[self.cursor.pos + 1].tag == .ident) {
-            self.cursor.pos += 1;
-            return self.splitBorrow(first.span);
-        }
-        if (self.take(.kw_borrow)) return self.borrowStatement(first.span);
         if (self.take(.kw_match)) {
             const value = try self.conditionExpression();
             _ = try self.expect(.lbrace);
@@ -749,34 +590,6 @@ pub const Parser = struct {
         }
         var implicit_discard = false;
         const data: @FieldType(ast.Statement, "data") = switch (first.tag) {
-            .kw_write_slice => write: {
-                self.cursor.pos += 1;
-                _ = try self.expect(.lparen);
-                const name = try self.expect(.ident);
-                _ = try self.expect(.comma);
-                const index = try self.expression(0);
-                _ = try self.expect(.comma);
-                const value = try self.expression(0);
-                _ = try self.expect(.rparen);
-                break :write .{ .write_slice = .{ .name = name.span, .index = index, .value = value } };
-            },
-            .kw_write_ref => write: {
-                self.cursor.pos += 1;
-                _ = try self.expect(.lparen);
-                const name = try self.expect(.ident);
-                _ = try self.expect(.comma);
-                const value = try self.expression(0);
-                _ = try self.expect(.rparen);
-                break :write .{ .write_ref = .{ .name = name.span, .value = value } };
-            },
-            .kw_acknowledge => acknowledged: {
-                self.cursor.pos += 1;
-                break :acknowledged .{ .acknowledge = try self.expression(0) };
-            },
-            .kw_discard => discard: {
-                self.cursor.pos += 1;
-                break :discard .{ .discard = try self.expression(0) };
-            },
             .kw_pass => no_op: {
                 self.cursor.pos += 1;
                 break :no_op .{ .block = &.{} };
@@ -900,31 +713,9 @@ pub const Parser = struct {
         defer self.cursor.depth -= 1;
         const token = self.current();
         var left: ast.NodeId = switch (token.tag) {
-            .kw_len_pool, .kw_capacity_pool, .kw_read_pool, .kw_replace_pool, .kw_insert_pool, .kw_remove_pool, .kw_clear_pool => try self.parsePool(token),
-            .kw_len_list, .kw_read_list, .kw_append_list, .kw_write_list => try self.parseBuffer(token),
-            .kw_len_buffer, .kw_capacity_buffer, .kw_read_buffer, .kw_write_buffer, .kw_append_buffer, .kw_resize_buffer, .kw_reserve_buffer, .kw_take_buffer, .kw_truncate_buffer => try self.parseBuffer(token),
             .kw_restrict_resource => try self.parseRestrict(token),
-            .kw_read_resource_slice, .kw_write_resource_slice => try self.parseSliceIo(token),
             .kw_read_resource, .kw_write_resource => try self.parseResourceIo(token),
             .kw_environment_get => try self.parseEnvironment(token),
-            .kw_read_field, .kw_take_field => read: {
-                self.cursor.pos += 1;
-                _ = try self.expect(.lparen);
-                const owner = try self.expect(.ident);
-                _ = try self.expect(.comma);
-                const field = try self.expect(.ident);
-                const close = try self.expect(.rparen);
-                break :read try self.append(.{
-                    .span = .join(token.span, close.span),
-                    .data = if (token.tag == .kw_take_field) .{ .take_field = .{
-                        .owner = owner.span,
-                        .field = field.span,
-                    } } else .{ .read_field = .{
-                        .owner = owner.span,
-                        .field = field.span,
-                    } },
-                });
-            },
             .kw_acquire_resource, .kw_complete_resource => try self.parseResource(token),
             .kw_clock_now, .kw_random_u64 => external: {
                 self.cursor.pos += 1;
@@ -935,29 +726,6 @@ pub const Parser = struct {
                 const capability = try self.expression(0);
                 const close = try self.expect(.rparen);
                 break :external try self.append(.{ .span = .join(token.span, close.span), .data = .{ .external_read = .{ .kind = if (token.tag == .kw_clock_now) .clock else .random, .ty = ty, .capability = capability } } });
-            },
-            .kw_read_slice => read: {
-                self.cursor.pos += 1;
-                _ = try self.expect(.lparen);
-                const name = try self.expect(.ident);
-                _ = try self.expect(.comma);
-                const index = try self.expression(0);
-                const close = try self.expect(.rparen);
-                break :read try self.append(.{ .span = .join(token.span, close.span), .data = .{ .read_slice = .{ .name = name.span, .index = index } } });
-            },
-            .kw_len_slice => length: {
-                self.cursor.pos += 1;
-                _ = try self.expect(.lparen);
-                const name = try self.expect(.ident);
-                const close = try self.expect(.rparen);
-                break :length try self.append(.{ .span = .join(token.span, close.span), .data = .{ .len_slice = name.span } });
-            },
-            .kw_read_ref => read: {
-                self.cursor.pos += 1;
-                _ = try self.expect(.lparen);
-                const name = try self.expect(.ident);
-                const close = try self.expect(.rparen);
-                break :read try self.append(.{ .span = .join(token.span, close.span), .data = .{ .read_ref = name.span } });
             },
             .kw_f64_add,
             .kw_f64_sub,
@@ -979,7 +747,7 @@ pub const Parser = struct {
             .kw_saturating_mul,
             => try self.parseIntegerOperation(token),
             .kw_f64_sqrt, .kw_f64_floor, .kw_f64_ceil, .kw_f64_trunc, .kw_f64_abs, .kw_f64_neg, .kw_f64_from_u64, .kw_f64_to_u64 => try self.parseFloatUnary(token),
-            .kw_new_list, .kw_reset_arena, .kw_cast, .kw_wrap, .kw_acquire_buffer, .kw_acquire_pool => try self.parseCast(token),
+            .kw_cast, .kw_wrap => try self.parseCast(token),
             .kw_new => try self.parseRecord(token),
             .lbracket => list: {
                 _ = self.take(.lbracket);
@@ -993,14 +761,6 @@ pub const Parser = struct {
             },
             .kw_match => try self.parseMatchExpression(token),
             .kw_len, .kw_replace, .kw_unwrap => try self.parseBuiltin(token),
-            .kw_update => update: {
-                self.cursor.pos += 1;
-                _ = try self.expect(.lparen);
-                const base = try self.expression(0);
-                _ = try self.expect(.rparen);
-                const fields = try self.fieldInitializers();
-                break :update try self.append(.{ .span = .join(token.span, self.tokens[self.cursor.pos - 1].span), .data = .{ .update = .{ .base = base, .fields = fields } } });
-            },
             .kw_todo => try self.parseHole(token),
             .kw_codec_encode, .kw_codec_decode => try self.parseCodecOperation(token),
             .kw_none => none: {
@@ -1009,11 +769,6 @@ pub const Parser = struct {
             },
             .lbrace => try self.parseDictionary(token),
             .integer, .bytes, .ident, .kw_true, .kw_false => try self.parseLeaf(token),
-            .kw_try => propagated: {
-                self.cursor.pos += 1;
-                const value = try self.expression(if (std.mem.eql(u8, self.src.text(token.span), "not")) 3 else 7);
-                break :propagated try self.append(.{ .span = .join(token.span, self.syntax.nodes.items[@backingInt(value)].span), .data = .{ .propagate = value } });
-            },
             .minus, .bang => unary: {
                 self.cursor.pos += 1;
                 const operand = try self.expression(if (std.mem.eql(u8, self.src.text(token.span), "not")) 3 else 7);
@@ -1140,66 +895,6 @@ pub const Parser = struct {
         const close = try self.expect(.rbrace);
         return self.append(.{ .span = .join(token.span, close.span), .data = .{ .dictionary_literal = try entries.toOwnedSlice(self.arena.allocator()) } });
     }
-    fn parsePool(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
-        self.cursor.pos += 1;
-        const kind: @import("pool_operations.zig").Kind = switch (token.tag) {
-            .kw_len_pool => .length,
-            .kw_capacity_pool => .capacity,
-            .kw_read_pool => .read,
-            .kw_replace_pool => .replace,
-            .kw_insert_pool => .insert,
-            .kw_remove_pool => .remove,
-            .kw_clear_pool => .clear,
-            else => unreachable,
-        };
-        const result: ?Span = if (kind.fallible()) result: {
-            _ = try self.expect(.lt);
-            const ty = try self.typeName();
-            _ = try self.expect(.gt);
-            break :result ty;
-        } else null;
-        _ = try self.expect(.lparen);
-        const owner = try self.expect(.ident);
-        const arguments = try self.arena.allocator().alloc(ast.NodeId, kind.arity());
-        for (arguments) |*argument| {
-            _ = try self.expect(.comma);
-            argument.* = try self.expression(0);
-        }
-        const close = try self.expect(.rparen);
-        return self.append(.{ .span = .join(token.span, close.span), .data = .{ .pool_operation = .{ .kind = kind, .owner = owner.span, .result = result, .arguments = arguments } } });
-    }
-
-    fn parseBuffer(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
-        self.cursor.pos += 1;
-        const kind: @import("buffer_operations.zig").Kind = switch (token.tag) {
-            .kw_len_buffer, .kw_len_list => .length,
-            .kw_capacity_buffer => .capacity,
-            .kw_read_buffer, .kw_read_list => .read,
-            .kw_write_buffer, .kw_write_list => .write,
-            .kw_append_buffer, .kw_append_list => .append,
-            .kw_resize_buffer => .resize,
-            .kw_reserve_buffer => .reserve,
-            .kw_take_buffer => .take,
-            .kw_truncate_buffer => .truncate,
-            else => unreachable,
-        };
-        const result: ?Span = if (kind.mutates() and token.tag != .kw_append_list and token.tag != .kw_write_list) result: {
-            _ = try self.expect(.lt);
-            const ty = try self.typeName();
-            _ = try self.expect(.gt);
-            break :result ty;
-        } else null;
-        _ = try self.expect(.lparen);
-        const owner = try self.expect(.ident);
-        const arguments = try self.arena.allocator().alloc(ast.NodeId, kind.arity());
-        for (arguments) |*argument| {
-            _ = try self.expect(.comma);
-            argument.* = try self.expression(0);
-        }
-        const close = try self.expect(.rparen);
-        return self.append(.{ .span = .join(token.span, close.span), .data = .{ .buffer_operation = .{ .kind = kind, .owner = owner.span, .result = result, .arguments = arguments } } });
-    }
-
     fn parseRestrict(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.pos += 1;
         _ = try self.expect(.lt);
@@ -1217,28 +912,6 @@ pub const Parser = struct {
         const value = try self.expression(0);
         const close = try self.expect(.rparen);
         return self.append(.{ .span = .join(token.span, close.span), .data = .{ .restrict_resource = .{ .permissions = permissions, .value = value } } });
-    }
-
-    fn parseSliceIo(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
-        self.cursor.pos += 1;
-        _ = try self.expect(.lt);
-        const ty = try self.typeName();
-        _ = try self.expect(.gt);
-        _ = try self.expect(.lparen);
-        const owner = try self.expect(.ident);
-        _ = try self.expect(.comma);
-        const reference = try self.expect(.ident);
-        const close = try self.expect(.rparen);
-        return self.append(.{
-            .span = .join(token.span, close.span),
-            .data = .{ .resource_io = .{
-                .kind = if (token.tag == .kw_read_resource_slice) .read else .write,
-                .owner = owner.span,
-                .ty = ty,
-                .value = null,
-                .reference = reference.span,
-            } },
-        });
     }
 
     fn parseResourceIo(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
@@ -1301,31 +974,15 @@ pub const Parser = struct {
         _ = try self.expect(.gt);
         _ = try self.expect(.lparen);
         const first = try self.expression(0);
-        const value = if (token.tag == .kw_acquire_buffer or token.tag == .kw_acquire_pool) value: {
-            _ = try self.expect(.comma);
-            break :value try self.expression(0);
-        } else first;
         const close = try self.expect(.rparen);
         return self.append(.{
             .span = .join(token.span, close.span),
-            .data = if (token.tag == .kw_reset_arena) .{ .reset_arena = .{
+            .data = if (token.tag == .kw_cast) .{ .cast = .{
                 .ty = ty,
-                .value = value,
-            } } else if (token.tag == .kw_acquire_pool) .{ .acquire_pool = .{
-                .ty = ty,
-                .allocator = first,
-                .value = value,
-            } } else if (token.tag == .kw_acquire_buffer or token.tag == .kw_new_list) .{ .acquire_buffer = .{
-                .managed = token.tag == .kw_new_list,
-                .ty = ty,
-                .allocator = first,
-                .value = value,
-            } } else if (token.tag == .kw_cast) .{ .cast = .{
-                .ty = ty,
-                .value = value,
+                .value = first,
             } } else .{ .wrap = .{
                 .ty = ty,
-                .value = value,
+                .value = first,
             } },
         });
     }
@@ -1451,10 +1108,8 @@ pub const Parser = struct {
             pattern.name = (try self.expect(.ident)).span;
         }
         if (self.take(.lparen)) {
-            if (self.take(.kw_discard)) pattern.discard_payload = true else {
-                const binding = (try self.expect(.ident)).span;
-                if (std.mem.eql(u8, self.src.text(binding), "_")) pattern.discard_payload = true else pattern.binding = binding;
-            }
+            const binding = (try self.expect(.ident)).span;
+            if (std.mem.eql(u8, self.src.text(binding), "_")) pattern.discard_payload = true else pattern.binding = binding;
             _ = try self.expect(.rparen);
         }
         return pattern;

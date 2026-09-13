@@ -7,7 +7,7 @@ No representative record or guessed method is substituted during universal check
 
 ```my
 fn value<T: copy + field(value: i64)>(item: T) -> i64 {
-    return read_field(item, value);
+    return item.value;
 }
 fn selected<T: copy + field(value: U), U: copy>(item: T) -> U {
     return item.value;
@@ -18,14 +18,14 @@ fn score<T: copy + op(score(item: T) -> i64 effects())>(item: T) -> i64 effects(
 ```
 
 `field` names a required field and its exact type. Different record declarations
-may satisfy the same contract, and extra fields are retained by `update`. Nominal
+may satisfy the same contract, and extra fields are retained by a record update. Nominal
 type identity is never erased: equally shaped domain IDs or unrelated type
 parameters remain different types. Field requirements require `copy`, and each
 promised field must also be copyable without result obligations. Consequently
 unknown extra fields cannot hide owned values or unhandled results. A domain's
 private representation never satisfies a structural field requirement.
 
-Declared fields support ordinary projection, `read_field` and record updates.
+Declared fields support ordinary projection and record updates.
 The contract is a minimum field inventory, so it cannot justify `new T { ... }`:
 construction requires knowledge of every field and rejects even in an uncalled
 template. Undeclared fields are also rejected before instantiation.
@@ -38,15 +38,12 @@ Its declared effects may be a subset of the required ceiling. Its body remains
 subject to ordinary effect checking. The generic caller conservatively receives
 the full operation ceiling, independent of which implementation is later chosen.
 
-Reference arguments use `name: &Type` or `name: &mut Type`. Existing reference
-permission, exclusive aliasing, region and result-obligation rules apply to calls.
-Owned/result-bearing arguments may transfer by value; they cannot be exposed as
-borrowed operation parameters. Returned checked results must be handled or
-transferred as usual. Required operations cannot grant access to private domain
-representation or private methods.
+Operation arguments are ordinary values. Result-obligation rules apply to calls:
+returned checked results must be handled or transferred as usual. Required
+operations cannot grant access to private domain representation or private methods.
 
 Forwarding checks field names and substituted field types, and checks operation
-names, argument/result types, reference permissions and effect ceilings. A helper's
+names, argument/result types and effect ceilings. A helper's
 stronger requirements cannot be inferred from its current body or from one concrete
 call. Missing declarations reject the forwarding template even when it is unused.
 
@@ -55,8 +52,8 @@ Current deliberate limits:
 - Structural requirements belong to function templates. Declaring them on nominal
   type parameters rejects explicitly; ordinary existing nominal constraints remain.
 - Signature types are named concrete types or type parameters, including qualified
-  module names. Inline arrays, slices, generic applications and reference results
-  in structural contracts reject explicitly.
+  module names. Inline arrays and generic applications in structural contracts
+  reject explicitly.
 - Fields describe records; operations describe domains. This does not introduce
   methods on records, arbitrary operator overloading or implicit duck typing.
 - The existing limits of sixteen type parameters and sixteen total requirements
@@ -66,7 +63,7 @@ Current deliberate limits:
 Malformed declarations report `E_GENERIC_REQUIREMENT`. Unsatisfied concrete or
 forwarded operation contracts report `E_GENERIC_ARGUMENT`; symbolic field/type
 mismatches retain `E_UNKNOWN_FIELD`, `E_GENERIC_TYPE` or the existing unsupported
-shape diagnostic. Borrow and effect violations retain their ordinary stable codes.
+shape diagnostic. Effect violations retain their ordinary stable codes.
 Source spans survive module linking, syntax copies and formatting.
 
 Use the installed compiler with `examples/structural-constraints.my`:

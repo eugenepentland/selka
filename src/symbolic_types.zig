@@ -4,7 +4,7 @@ const requirements = @import("generic_requirements.zig");
 /// An abstract type; arrays preserve their element expression without representative substitution.
 pub const Value = union(enum) { callback: *const Callback, length: usize, length_parameter: usize, concrete: typed.Type, parameter: usize, array: *const Array, nominal: *Nominal };
 /// A callback signature retains abstract argument types without storing context values.
-pub const Callback = struct { parameters: []const Value, result: Value, effects: @import("effect_set.zig").Mask, borrowed: u16, slices: u16 };
+pub const Callback = struct { parameters: []const Value, result: Value, effects: @import("effect_set.zig").Mask };
 /// Symbolic applications keep declaration identity and ordered arguments, with lazy stored-member caches.
 pub const Nominal = struct { declaration: usize, arguments: []const Value, schema: ?*Schema = null, properties: ?Properties = null };
 /// A declared field or variant payload after substitution into the caller's parameter scope.
@@ -52,14 +52,14 @@ pub fn same(a: Value, b: Value, catalog: Catalog) bool {
 fn sameCallback(a: Callback, other: Value, catalog: Catalog) bool {
     if (other == .callback) {
         const b = other.callback;
-        if (a.effects != b.effects or a.borrowed != b.borrowed or a.slices != b.slices) return false;
+        if (a.effects != b.effects) return false;
         if (a.parameters.len != b.parameters.len or !same(a.result, b.result, catalog)) return false;
         for (a.parameters, b.parameters) |x, y| if (!same(x, y, catalog)) return false;
         return true;
     }
     if (other != .concrete) return false;
     const b = @import("callables.zig").signature(other.concrete, catalog.records) orelse return false;
-    if (a.effects != b.effects or a.borrowed != b.borrowed or a.slices != b.slices) return false;
+    if (a.effects != b.effects) return false;
     if (a.parameters.len != b.parameters.len or !same(a.result, .{ .concrete = b.return_type }, catalog)) return false;
     for (a.parameters, b.parameters) |x, y| if (!same(x, .{ .concrete = y }, catalog)) return false;
     return true;
@@ -77,7 +77,7 @@ fn sameIdentity(value: Value, id: @import("nominal_layouts.zig").Id, catalog: Ca
         const callback = value.callback;
         if (node.key.base != .callback or node.key.arguments.len != callback.parameters.len + 1) return false;
         const contract = node.key.base.callback;
-        if (callback.effects != contract.effects or callback.borrowed != contract.borrowed or callback.slices != contract.slices) return false;
+        if (callback.effects != contract.effects) return false;
         for (callback.parameters, node.key.arguments[0..callback.parameters.len]) |parameter, key| if (!sameIdentity(parameter, key, catalog)) return false;
         return sameIdentity(callback.result, node.key.arguments[callback.parameters.len], catalog);
     }

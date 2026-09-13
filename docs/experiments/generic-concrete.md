@@ -56,5 +56,5 @@ exhaustive scoped matching and complete enum-table construction.
 
 [Concrete result handling](generic-results.md) now adds transfer, acknowledgement,
 propagation and control-flow obligations. [Partial field state](generic-fields.md) now preserves remaining obligations;
-[concrete owned flow](generic-owned.md) now retains transfer and cleanup effects.
+[concrete owned flow](../legacy/experiments/generic-owned.md) now retains transfer and cleanup effects.
 Runtime operations and region scopes remain pending.

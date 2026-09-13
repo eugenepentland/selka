@@ -4,8 +4,6 @@ const std = @import("std");
 const provider_contracts = @import("provider_contracts.zig");
 const external_resources = @import("external_resources.zig");
 const values = @import("value.zig");
-const Acquisition = struct { allocator: NodeId, capacity: NodeId, managed: bool = false };
-const FieldAccess = struct { reference: ?ReferenceId = null, owner: LocalId, field: usize };
 const Span = @import("source.zig").Span;
 /// Index of a checked expression in Program.nodes.
 pub const NodeId = enum(usize) { _ };
@@ -13,12 +11,6 @@ pub const NodeId = enum(usize) { _ };
 pub const StatementId = enum(usize) { _ };
 /// Index of a resolved function in Program.functions.
 pub const FunctionId = enum(usize) { _ };
-/// Index of a function-local reference descriptor.
-pub const ReferenceId = enum(usize) { _ };
-/// Checked borrow provenance, owner slot, element type, and mutability metadata.
-pub const Reference = struct { mode: ReferenceMode = .{}, name: []const u8, declaration: Span, owner: LocalId, parent: ?ReferenceId, ty: Type, mutable: bool };
-/// Distinguish slice views and incoming parameter loans from local whole-value loans.
-pub const ReferenceMode = struct { split_sibling: ?ReferenceId = null, temporary: bool = false, slice: bool = false, parameter: bool = false };
 /// Index of a function-local value slot.
 pub const LocalId = enum(usize) { _ };
 pub const Type = values.Type;
@@ -71,26 +63,18 @@ pub const Node = struct {
         unit,
         block_value: struct { body: StatementId, value: NodeId },
         function_value: FunctionId,
-        invoke: struct { callee: NodeId, arguments: []const NodeId, references: []const ReferenceId = &.{} },
+        invoke: struct { callee: NodeId, arguments: []const NodeId },
         local: LocalId,
-        read_ref: ReferenceId,
-        read_field: FieldAccess,
-        take_field: FieldAccess,
-        propagate: struct { value: NodeId, output: Type, cleanup: []const ReferenceId },
-        read_slice: struct { reference: ReferenceId, index: NodeId },
-        len_slice: ReferenceId,
-        buffer_operation: struct { reference: ?ReferenceId = null, kind: @import("buffer_operations.zig").Kind, owner: LocalId, arguments: []const NodeId },
-        pool_operation: struct { reference: ?ReferenceId = null, kind: @import("pool_operations.zig").Kind, owner: LocalId, arguments: []const NodeId },
+        propagate: struct { value: NodeId, output: Type },
+        buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: LocalId, arguments: []const NodeId },
         acquire_resource: struct { capability: NodeId, request: NodeId },
         complete_resource: NodeId,
-        resource_io: struct { reference: ?ReferenceId = null, kind: external_resources.IoKind, owner: LocalId, value: ?NodeId },
+        resource_io: struct { kind: external_resources.IoKind, owner: LocalId, value: ?NodeId },
         restrict_resource: struct { permissions: external_resources.Permissions, value: NodeId },
         environment_get: struct { capability: NodeId, name: NodeId },
         external_read: struct { kind: @import("external_capabilities.zig").Kind, capability: NodeId },
-        acquire_pool: Acquisition,
-        acquire_buffer: Acquisition,
+        acquire_buffer: struct { capacity: NodeId },
         json_codec: struct { document: bool = false, decode: bool, arguments: [3]NodeId },
-        reset_arena: NodeId,
         arena_escape: NodeId,
         cast: NodeId,
         wrap: NodeId,
@@ -101,9 +85,8 @@ pub const Node = struct {
         replace: struct { base: NodeId, index: NodeId, value: NodeId },
         length: NodeId,
         record: []const FieldInit,
-        update: struct { base: NodeId, fields: []const FieldInit },
         field: struct { base: NodeId, index: usize },
-        call: struct { evaluation: ?struct { body: StatementId, cleanup: []const LocalId } = null, function: FunctionId, arguments: []const NodeId, references: []const ReferenceId = &.{}, literals: []const LiteralArgument = &.{} },
+        call: struct { evaluation: ?struct { body: StatementId, cleanup: []const LocalId } = null, function: FunctionId, arguments: []const NodeId },
         unary: struct { op: UnaryOp, operand: NodeId, op_span: Span },
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
     },
@@ -119,11 +102,9 @@ pub const Variants = struct { fallible: bool = false, is_union: bool, cases: []c
 /// Fixed element count and type, with an optional enum key for tables.
 pub const Array = struct { element: Type, length: usize, key: ?Type = null };
 // Aggregate schemas retain nominal record identities and intern structural arrays.
-/// Resolved pool element type and its nominal handle type.
-pub const Pool = values.PoolSchema;
 /// Declared domain wire type and resolved decoder/encoder function identities.
 pub const Codec = struct { wire: Type, decode: FunctionId, encode: FunctionId };
-/// Nominal aggregate schema and associated array, domain, pool, or variant metadata.
+/// Nominal aggregate schema and associated array, domain, collection, or variant metadata.
 pub const Record = struct {
     collection: @import("runtime_values.zig").CollectionShape = .{},
     managed: bool = false,
@@ -159,13 +140,11 @@ pub const RecordShape = struct {
     array: ?Array = null,
     domain: ?Type = null,
     variants: ?Variants = null,
-    pool: ?Pool = null,
-    handle_pool: ?Type = null,
     buffer: ?Type = null,
     resource: ?external_resources.Kind = null,
-    /// Identify representations carrying a buffer, resource, pool, or handle identity.
+    /// Identify representations carrying a managed collection or resource identity.
     pub fn hasRuntimeIdentity(self: RecordShape) bool {
-        return self.pool != null or self.handle_pool != null or self.buffer != null or self.resource != null;
+        return self.buffer != null or self.resource != null;
     }
     fn hasValueRepresentation(self: RecordShape) bool {
         return self.array != null or self.domain != null or self.variants != null;
@@ -177,19 +156,9 @@ pub const Callable = struct {
     parameters: []const Type,
     return_type: Type,
     effects: effect_set.Mask,
-    borrowed: u16 = 0,
-    slices: u16 = 0,
-    /// Borrowed contexts are supplied separately from the value operand stack.
+    /// Every callback parameter is an ordinary operand-stack value.
     pub fn valueCount(self: Callable) usize {
-        return self.parameters.len - @popCount(self.borrowed);
-    }
-    /// Each readonly context loan lasts only for the synchronous invocation.
-    pub fn borrows(self: Callable, index: usize) bool {
-        return self.borrowed & (@as(u16, 1) << @as(u4, @intCast(index))) != 0;
-    }
-    /// Distinguish borrowed element slices from whole-value contexts.
-    pub fn slice(self: Callable, index: usize) bool {
-        return self.slices & (@as(u16, 1) << @as(u4, @intCast(index))) != 0;
+        return self.parameters.len;
     }
 };
 /// Ownership and public schema policy for each concrete type.
@@ -211,33 +180,13 @@ pub fn resultShape(ty: Type, records: []const Record) ?ResultShape {
     }
     return .{ .ok_type = variants.cases[ok orelse return null].payload.?, .error_type = variants.cases[err orelse return null].payload.?, .ok_tag = ok.?, .error_tag = err.? };
 }
-/// Element type for numeric fixed-array and owned-buffer views; enum tables are not slices.
-pub fn sliceElement(ty: Type, records: []const Record) ?Type {
-    if (!ty.isAggregate() or ty.recordIndex() >= records.len) return null;
-    const shape = records[ty.recordIndex()].shape;
-    if (records[ty.recordIndex()].managed) return null;
-    if (shape.buffer) |element| return if (moveOnly(element, records) or requiresHandling(element, records)) null else element;
-    if (shape.array) |array| {
-        if (array.key != null) return null;
-        if (!moveOnly(array.element, records) and !requiresHandling(array.element, records)) return array.element;
-    }
-    return null;
-}
-/// Resolve a buffer/pool acquisition result with the required i64 error payload.
-pub fn acquisitionShape(ty: Type, records: []const Record, pool: bool) ?ResultShape {
-    const result = resultShape(ty, records) orelse return null;
-    if (!result.ok_type.isAggregate() or result.error_type != .i64) return null;
-    const schema = records[result.ok_type.recordIndex()];
-    if (if (pool) schema.shape.pool == null else schema.shape.buffer == null) return null;
-    return result;
-}
 /// Equality supported by concrete expressions and generic equality requirements.
 pub fn supportsEquality(ty: Type, records: []const Record) bool {
     if (ty.isInteger() or ty == .bool) return true;
     if (!ty.isAggregate()) return false;
     const record = records[ty.recordIndex()];
     if (record.contract.callback != null) return false;
-    return record.isEnum() or record.shape.handle_pool != null or record.shape.domain != null;
+    return record.isEnum() or record.shape.domain != null;
 }
 /// Determine whether a type carries ownership that forbids implicit copying.
 pub fn moveOnly(ty: Type, records: []const Record) bool {
@@ -262,52 +211,35 @@ pub const Statement = struct {
     span: Span,
     terminates: bool,
     owned_cleanup: []const LocalId = &.{},
-    cleanup: []const ReferenceId = &.{},
     data: union(enum) {
-        arena_scope: struct { parent: NodeId, slot: LocalId, body: StatementId },
         managed_arena: struct { watermark: LocalId, body: StatementId },
         block: []const StatementId,
         ret: NodeId,
-        ret_ref: ReferenceId,
-        borrow_call: struct { call: NodeId, reference: ReferenceId, body: StatementId },
-        borrow: struct { split: ?struct { right: ReferenceId, middle: NodeId } = null, reference: ReferenceId, body: StatementId, range: ?Range = null },
-        write_slice: struct { reference: ReferenceId, index: NodeId, value: NodeId },
-        write_ref: struct { reference: ReferenceId, value: NodeId },
         discard: NodeId,
-        acknowledge: NodeId,
         branch: struct { condition: NodeId, then_body: StatementId, else_body: ?StatementId },
         match: struct { value: NodeId, arms: []const MatchArm },
         loop: struct { id: usize = 0, condition: NodeId, body: StatementId, step: ?StatementId = null },
-        loop_exit: struct { target: usize, continuing: bool, regions: []const LocalId, arenas: []const LocalId = &.{} },
+        loop_exit: struct { target: usize, continuing: bool, arenas: []const LocalId = &.{} },
         initialize: Store,
         assign: Store,
     },
 };
 /// Resolved case tag, optional payload local, and checked arm body.
 pub const MatchArm = struct { tag: usize, slot: ?LocalId, body: StatementId };
-/// Checked expressions supplying the start and end of a slice.
-pub const Range = struct { start: NodeId, end: NodeId };
-/// A byte literal materialized and borrowed only for the duration of one call.
-pub const LiteralArgument = struct { value: NodeId, owner: LocalId, reference: ReferenceId, length: usize };
 /// Local type, declaration, usage counts, and tracked ownership/borrow state.
 pub const Local = struct {
     ownership: LocalOwnership = .{},
-    parameter: LocalParameter = .{},
     usage: LocalUsage = .{},
     name: []const u8,
     declaration: Span,
     ty: Type,
     mutable: bool,
 };
-/// Compile-time ownership availability, partial moves, and arena provenance.
-pub const LocalOwnership = struct { transfer_span: ?Span = null, arena_depth: usize = 0, partial_fields: []const ?Span = &.{}, transfer_available: bool = false };
-/// Passing convention for a reference or slice parameter binding.
-pub const LocalParameter = struct { slice_parameter: bool = false, reference_parameter: ?bool = null };
-/// Static binding reads, writes, and mutability evidence used by quality diagnostics.
-pub const LocalUsage = struct { temporary: bool = false, mutable_borrow: bool = false, reads: usize = 0, writes: usize = 0 };
+/// Compile-time ownership availability and managed arena provenance.
+pub const LocalOwnership = struct { transfer_span: ?Span = null, arena_depth: usize = 0, transfer_available: bool = false };
+/// Static binding reads and writes used by quality diagnostics.
+pub const LocalUsage = struct { temporary: bool = false, reads: usize = 0, writes: usize = 0 };
 
-/// Caller parameter provenance and mutability of a returned reference or slice.
-pub const ReturnReference = struct { parameter: LocalId, mutable: bool, slice: bool };
 /// Checked function signature, local/reference metadata, effects, and body identity.
 pub const Function = struct {
     policy: FunctionPolicy = .{},
@@ -329,18 +261,16 @@ pub const FunctionPolicy = struct {
     restricted: bool = false,
     conversion: bool = false,
 };
-/// Resolved value result, parameter count, and optional returned-reference contract.
+/// Resolved value result and parameter count of a checked function.
 pub const FunctionSignature = struct {
     constant_arguments: []const ?usize = &.{},
     return_type: Type = .i64,
     parameter_count: usize = 0,
-    return_reference: ?ReturnReference = null,
 };
-/// Checked function body and its lexical local/reference tables.
+/// Checked function body and its lexical local table.
 pub const FunctionScope = struct {
     body: StatementId,
     locals: []const Local = &.{},
-    references: []const Reference = &.{},
 };
 /// Borrowed checked expression, statement, function, and nominal schema tables.
 /// Checked transparent name and its canonical target, retained for public interfaces.
@@ -359,9 +289,9 @@ pub fn byteRequest(ty: Type, records: []const Record) bool {
     const array = records[ty.recordIndex()].shape.array orelse return false;
     return array.element == .u8 and array.key == null;
 }
-/// Acquisition consumes an owned u8 buffer or accepts an ordinary fixed byte array.
+/// Acquisition accepts an ordinary fixed byte array without an enum key.
 pub fn acquisitionBytes(ty: Type, records: []const Record) bool {
-    return sliceElement(ty, records) == .u8;
+    return byteRequest(ty, records);
 }
 /// Result schema and fields needed to preserve a resource on failed completion.
 pub const CompletionShape = struct { result: ResultShape, resource_type: Type, resource_field: usize, code_field: usize };
@@ -426,14 +356,3 @@ fn providerFields(schema: Record, records: []const Record, operation: provider_c
     return slots;
 }
 
-/// Distinct descendants of explicit split siblings cannot overlap.
-pub fn disjointReferences(references: []const Reference, left: ReferenceId, right: ReferenceId) bool {
-    var a: ?ReferenceId = left;
-    while (a) |first| : (a = references[@backingInt(first)].parent) {
-        var b: ?ReferenceId = right;
-        while (b) |second| : (b = references[@backingInt(second)].parent) {
-            if (references[@backingInt(first)].mode.split_sibling == second) return true;
-        }
-    }
-    return false;
-}

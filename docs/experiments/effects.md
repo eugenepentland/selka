@@ -2,7 +2,7 @@
 
 Status: effect inference, explicit bounds, allocation checking through calls, witness
 diagnostics, and independent emission validation are implemented. [Explicit allocator
-capabilities](allocator-capabilities.md) now replace implicit allocation access.
+capabilities](../legacy/experiments/allocator-capabilities.md) now replace implicit allocation access.
 External capability operations/resources, their cleanup effects, and arenas/pools
 remain pending. C is not complete.
 

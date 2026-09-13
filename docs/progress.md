@@ -355,7 +355,7 @@ allocations leave locks and parent relationships unchanged. Recycled slots keep
 All 133 tests pass in Debug and ReleaseFast (114 core, 19 actual CLI). New backend
 tests cover identity exhaustion, alias conflicts, child lifetimes, bounds, nested
 values, allocation-failure cleanup, and rollback after failed borrow creation.
-Formatting and whitespace checks pass. [The B record](experiments/borrowing.md)
+Formatting and whitespace checks pass. [The B record](legacy/experiments/borrowing.md)
 distinguishes this implementation from the remaining language work.
 
 B remains in progress: reference/slice syntax, static checks, VM integration, and
@@ -423,7 +423,7 @@ array lengths with the same element type. Ranges and indices accept integer widt
 with negative, reversed, overflowing, and out-of-range checks before host casts.
 Whole-array locks preserve the existing conservative alias rules. Slice writes
 preserve array/element snapshots by replacing the whole immutable array value;
-[slice semantics](experiments/slices.md) records the linear immediate-copy cost.
+[slice semantics](legacy/experiments/slices.md) records the linear immediate-copy cost.
 
 The VM carries private offset/length metadata alongside generation-checked leases.
 Call forwarding, recursive narrowing, normal exits, and early returns retain
@@ -461,7 +461,7 @@ return, invalid provenance metadata, and 10,000 returned-loan cycles within 16 K
 live runtime allocation. The returned-reference example prints 20. Formatting and
 whitespace checks pass on the pinned Guardian Zig snapshot.
 
-[B acceptance](experiments/b-audit.md) maps scoped references, common helpers,
+[B acceptance](legacy/experiments/b-audit.md) maps scoped references, common helpers,
 bounded slices, lifetime identity, returned provenance, and cleanup to code/tests.
 B is complete within its declared restricted-lifetime experiment. C/D ownership,
 resources, recoverable errors, capabilities/effects, arenas/pools, and all other
@@ -542,7 +542,7 @@ all acquisition-path allocation failures, and 10,000 ownership cycles within
 16 KiB live runtime allocation. Reserved edits, moves, destruction, and nonempty
 rollback succeed with allocation disabled. Formatting and whitespace checks pass.
 
-[The ownership record](experiments/ownership.md) states API contracts and costs.
+[The ownership record](legacy/experiments/ownership.md) states API contracts and costs.
 This is a backend checkpoint: source ownership, resource VM integration, guest
 acquisition results, capabilities/effects, arenas/pools, and the other unfinished
 roadmap tracks remain pending. Exact discovery remains exact-v13 because no guest
@@ -566,7 +566,7 @@ instruction/frame traps, malformed bytecode, and 10,000 source ownership cycles
 under a one-owner quota and 16 KiB live runtime allocation. The buffers example
 returns 21. Formatting and whitespace checks pass. Discovery is exact-v14.
 
-[Source ownership semantics](experiments/owned-buffers.md) documents restrictions:
+[Source ownership semantics](legacy/experiments/owned-buffers.md) documents restrictions:
 acquisition currently creates empty buffers; buffer operations and borrowed views
 are next. External resources, allocator/external capabilities, transitive effects,
 arenas/pools, abstraction work, and every other unfinished track remain pending.
@@ -594,7 +594,7 @@ instruction trap boundary of mutation/returned-view cases, and 10,000 returned-v
 writes within 16 KiB live runtime storage and a one-owner quota. The buffer-view
 example returns 19. Formatting and whitespace checks pass. Discovery is exact-v15.
 
-[Buffer semantics and costs](experiments/buffer-operations.md) distinguishes backing
+[Buffer semantics and costs](legacy/experiments/buffer-operations.md) distinguishes backing
 storage growth from result/VM allocation; no transitive effect guarantee is claimed.
 External resources, explicit capabilities, effects including cleanup, arenas/pools,
 abstractions, and every other unfinished roadmap track remain pending. C is not
@@ -643,7 +643,7 @@ and VM operand checks, and every allocation failure. Existing partial-acquisitio
 trap, and bounded-storage tests pass with the new arguments. The allocator-capability
 example returns 3. Formatting/whitespace checks pass; discovery is exact-v17.
 
-[Allocator capability semantics](experiments/allocator-capabilities.md) defines the
+[Allocator capability semantics](legacy/experiments/allocator-capabilities.md) defines the
 trusted entry boundary and current single-store limit. External capabilities and
 operations/resources, cleanup/completion effects, attenuation, arenas/pools, and all
 other unfinished roadmap work remain pending. C is not complete. Guardian gates
@@ -751,7 +751,7 @@ malformed emission, discovery identity, and allocation failures. Existing resour
 retry, trap, and bounded-memory tests pass with the non-consuming operation.
 Formatting and whitespace checks pass.
 
-[Field-read semantics](experiments/owned-field-reads.md) distinguishes inspection
+[Field-read semantics](legacy/experiments/owned-field-reads.md) distinguishes inspection
 from ordinary consuming projection. Partial field moves and owned-wrapper borrowing
 remain pending, along with environment/data operations, attenuation, arenas/pools,
 and all other unfinished roadmap tracks. Guardian was not exercised; hosted CI has
@@ -826,7 +826,7 @@ source/bytecode permissions, normalized discovery, and all allocation failures. 
 fixtures verify checking/dumps, absent-provider denial, and permission rejection.
 Formatting and whitespace checks pass. Discovery is exact-v23.
 
-[Attenuation semantics](experiments/attenuation.md) distinguishes resource operation
+[Attenuation semantics](legacy/experiments/attenuation.md) distinguishes resource operation
 permissions from acquisition/release authority, provider scope, revocation, and
 independent quotas. Slice I/O, partial field moves, arenas/pools, and every other
 unfinished roadmap track remain in scope. C is not complete. Guardian was not
@@ -851,7 +851,7 @@ instruction-budget boundary for both storage routes. 10,000 slice read/write cyc
 fit within 16 KiB live VM storage. CLI checks/dumps/denied execution and exclusive-destination
 enforcement pass. Formatting and whitespace checks pass. Discovery is exact-v24.
 
-[Resource slice semantics](experiments/resource-slices.md) documents staging/copy
+[Resource slice semantics](legacy/experiments/resource-slices.md) documents staging/copy
 costs and trusted callback boundaries. Partial field moves, arenas/pools, and all
 other unfinished roadmap tracks remain in scope. C is not complete. Guardian was
 not exercised; hosted CI has not run. The full roadmap goal remains active.
@@ -874,7 +874,7 @@ snapshots, all allocation failures, identity/generation exhaustion, and 10,000
 graph/reset cycles within 4 KiB live allocation. Formatting and whitespace checks
 pass. Discovery stays exact-v24 because no guest syntax or semantics changed.
 
-[Typed-pool semantics](experiments/typed-pools.md) records ownership hooks, storage
+[Typed-pool semantics](legacy/experiments/typed-pools.md) records ownership hooks, storage
 costs, cleanup order, and backend limits. Source pool/handle integration, arenas,
 partial field moves, generics, and all other unfinished roadmap tracks remain in
 scope. C/D are not complete. Guardian was not exercised; hosted CI has not run.
@@ -898,7 +898,7 @@ cycles with host allocation disabled, and 10,000 create/grow/reset cycles within
 16 KiB live allocation. Formatting and whitespace checks pass. Discovery remains
 exact-v24 because the guest language has not changed.
 
-[Arena semantics](experiments/arenas.md) records stable-address requirements, parent
+[Arena semantics](legacy/experiments/arenas.md) records stable-address requirements, parent
 snapshot ownership, retention costs, and physical-versus-logical memory limits.
 Source arena scopes, escape checks, allocator forwarding, pool/handle integration,
 partial field moves, and every other unfinished track remain in scope. C is not
@@ -923,7 +923,7 @@ live runtime storage with zero live bytes between runs. CLI selection, matching
 output, traps, and invalid options pass. Formatting and whitespace checks pass.
 Discovery remains exact-v24: this changes runtime backing, not source semantics.
 
-[Execution arena semantics](experiments/arena-execution.md) documents one region per
+[Execution arena semantics](legacy/experiments/arena-execution.md) documents one region per
 execution and accumulation until execution end; logical quotas are not physical
 arena byte bounds. Nested source arena scopes, escape checks, source reset, pool/
 handle integration, partial field moves, and all other unfinished roadmap tracks
@@ -1055,7 +1055,7 @@ rejection, quoted paths, and malformed budgets pass. Generator determinism and a
 allocation failures pass; formatting and whitespace checks pass. Final repeats used
 cached Zig suites and executed the Python/native tests again.
 
-[Native execution semantics](experiments/native-execution.md) records the hosted C
+[Native execution semantics](legacy/experiments/native-execution.md) records the hosted C
 route, supported scalar subset, and limits. No speed claim, whole-language native
 support, or native allocator-fault-injection coverage is asserted. This satisfies
 the tracked scalar native acceptance experiment; native expansion requires its own
@@ -1086,7 +1086,7 @@ boundary on both memory backends, malformed bytecode, and external release order
 20,000 buffers. Formatter coverage grows to 29 valid CLI fixtures. Formatting and
 whitespace checks pass. Exact discovery advances to exact-v25 with read/take identity.
 
-[Partial-field semantics](experiments/partial-fields.md) documents runtime uniqueness,
+[Partial-field semantics](legacy/experiments/partial-fields.md) documents runtime uniqueness,
 state-copy costs, result obligations, complete binding replacement, and native
 unsupported-feature behavior. Source pool/arena integration, generics, modules,
 compile-time/schema/incremental work, and every other unfinished roadmap requirement
@@ -1117,7 +1117,7 @@ with zero bytes remaining afterward. Actual CLI graph execution returns 52 in bo
 memory modes. Formatter coverage grows to 30 valid fixtures; formatting and whitespace
 checks pass. Exact discovery advances to exact-v26; near-v1 and quality-v1 remain.
 
-[Source-pool semantics](experiments/source-pools.md) records syntax, error codes,
+[Source-pool semantics](legacy/experiments/source-pools.md) records syntax, error codes,
 logical quotas, parent-allocator backing, snapshot/ID rules, and native limitations.
 Pool registries currently use the VM parent allocator even with arena buffer backing.
 Nested source arena scopes/escape checking and arena-backed pools, generics, modules,
@@ -1152,7 +1152,7 @@ now installs the failure allocator at Store creation and enables failure after s
 retaining its failed-growth/failed-transfer/noalloc assertions without changing allocator
 identity midway through live allocations.
 
-[Checked region backing](experiments/region-backing.md) documents the embedding API,
+[Checked region backing](legacy/experiments/region-backing.md) documents the embedding API,
 quota/lease rules, independent arena chunks, reset preflight, and teardown ordering.
 This completes a runtime prerequisite, not the source arena experiment: lexical arena
 syntax, allocator/owner provenance, and static escape checking remain pending. Generics,
@@ -1191,7 +1191,7 @@ in-place resize with the same failure-allocator pattern used by other exhaustive
 sweeps. The resulting complete Debug and ReleaseFast runs pass with all failure
 points exercised consistently.
 
-[Source arena semantics](experiments/source-arenas.md) documents field-insensitive,
+[Source arena semantics](legacy/experiments/source-arenas.md) documents field-insensitive,
 flow-insensitive, conservative call dependencies and their possible safe-program
 rejections. It also records runtime closure guards, snapshots, diagnostics, and
 teardown order. Functions without local arenas need no new relative-lifetime analysis.
@@ -1225,7 +1225,7 @@ same bound. Both paths unwind to zero bytes. Actual CLI execution returns 3 and
 formatter coverage grows to 32 valid fixtures. Formatting and whitespace checks
 pass. Exact discovery advances to exact-v28; near-v1 and quality-v1 remain unchanged.
 
-[Arena reset semantics](experiments/arena-reset.md) records error codes, capability
+[Arena reset semantics](legacy/experiments/arena-reset.md) records error codes, capability
 preservation, owner/child guards, snapshot behavior, and the distinction from the
 embedding root-reset API. Generics, modules/interfaces, compile-time/schema/incremental
 work, broader native support, and all other unfinished roadmap requirements remain
@@ -1511,7 +1511,7 @@ modes; unsupported uncalled dependencies and private-call rejection are checked.
 Zig acceptance also covers deterministic repeated native module emission and every
 host allocation failure through loading, indexing, checking, lowering, and emission.
 Actual CLI rejections have no partial generated stdout. Formatting and whitespace
-checks pass. [Module native semantics](experiments/module-native.md) records commands,
+checks pass. [Module native semantics](legacy/experiments/module-native.md) records commands,
 parity scope, and limitations. Aggregates, nominal-domain operations, borrowing,
 capabilities/resources, pools, arenas, and other wider native operations remain
 unsupported; this milestone does not claim full-language native execution.
@@ -1541,7 +1541,7 @@ also compare original file locations and call frames.
 
 Zig tests retain private-constructor and nominal mismatch rejection and sweep every
 host allocation failure through native domain emission and VM execution. Formatting
-and whitespace checks pass. [Native domain semantics](experiments/native-domains.md)
+and whitespace checks pass. [Native domain semantics](legacy/experiments/native-domains.md)
 describes representation, privacy, logical instruction counts, and host-allocation
 limits. Records/arrays/variants, references, owned buffers/resources, pools, arenas,
 and other wider native operations remain pending, alongside generics, compile-time/
@@ -2776,7 +2776,7 @@ all 468 existing native allocation-failure cases. Guardian passes all 88 checks.
 
 This is a prerequisite for observable resource release callbacks. Emergency
 ownership unwind, native filesystem/network operations, and the wider roadmap
-remain pending; see [native resource implementation](experiments/native-resources.md).
+remain pending; see [native resource implementation](legacy/experiments/native-resources.md).
 
 ## 2026-09-06: Native emergency ownership unwind
 
@@ -3688,7 +3688,7 @@ restoration. Array snapshots preserve value semantics. Concrete whole-array
 reference inputs may supply returned slices under their declared input lifetime;
 local array/buffer views cannot escape that way.
 
-See [the view contract](experiments/generic-local-views.md) and
+See [the view contract](legacy/experiments/generic-local-views.md) and
 `examples/generic-local-views.my` (22). Tests cover uncalled invalid templates,
 shape/element/permission errors, transfers inside bounds, active-owner conflicts,
 empty/nested views, source-located bounds traps, returned-input provenance and
@@ -3726,7 +3726,7 @@ Returns, propagated errors, outer bindings and longer-lived buffer/pool storage
 reject shorter-lived dependencies before instantiation. Heap-backed owners,
 plain snapshots and inert handles can leave an arena scope under their ordinary
 rules. Reset retains runtime checks for live storage and child regions. See
-[the generic region contract](experiments/generic-regions.md) and
+[the generic region contract](legacy/experiments/generic-regions.md) and
 `examples/generic-regions.my` (3).
 
 Validation: final Debug `zig build test` passes 27/27 steps and 714/714 core/CLI

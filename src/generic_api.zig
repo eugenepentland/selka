@@ -6,15 +6,14 @@ const interfaces = @import("interfaces.zig");
 const effects = @import("effect_set.zig");
 const Parameter = struct { constant_length: bool, name: []const u8, requirements: []const []const u8, field_requirements: []const Value, operation_requirements: []const Operation };
 const Operation = struct { name: []const u8, parameters: []const Value, result: []const u8, declared_effects: []const []const u8 };
-const Value = struct { name: []const u8, type: []const u8, reference: ?bool, slice: bool };
+const Value = struct { name: []const u8, type: []const u8 };
 const Case = struct { name: []const u8, payload: ?[]const u8 };
-const Provenance = struct { parameter: []const u8, mutable: bool, slice: bool };
 const Location = struct { path: []const u8, start: usize, end: usize, line: usize, column: usize, sha256: []const u8 };
 /// Symbolic constructor/function declaration; borrowed strings remain owned by the checked project.
 pub const Template = struct {
     name: []const u8,
     module: []const u8,
-    kind: enum { function, record, tagged_union, result, enumeration, list, buffer, pool, handle },
+    kind: enum { function, record, tagged_union, result, enumeration },
     contract: Contract,
     shape: Shape = .{},
     imports: []const @import("source_receipt.zig").Import,
@@ -30,10 +29,9 @@ const Contract = struct {
 const Signature = struct {
     parameters: ?[]const Value = null,
     result: ?[]const u8 = null,
-    return_reference: ?Provenance = null,
     declared_effects: ?[]const []const u8 = null,
 };
-const Shape = struct { fields: ?[]const Value = null, cases: ?[]const Case = null, element: ?[]const u8 = null, handle: ?[]const u8 = null };
+const Shape = struct { fields: ?[]const Value = null, cases: ?[]const Case = null };
 
 const Context = struct {
     allocator: std.mem.Allocator,
@@ -75,8 +73,6 @@ const Context = struct {
         for (out, parameters_) |*item, parameter| item.* = .{
             .name = self.src().text(parameter.name),
             .type = self.src().text(parameter.ty),
-            .reference = parameter.reference,
-            .slice = parameter.slice,
         };
         return out;
     }
@@ -115,11 +111,6 @@ const Context = struct {
         var out = try self.base(declaration.name, declaration.signature.type_parameters);
         out.contract.signature.parameters = try self.values(declaration.signature.parameters);
         out.contract.signature.result = self.src().text(declaration.signature.return_type);
-        if (declaration.signature.return_reference) |ref| out.contract.signature.return_reference = .{
-            .parameter = self.src().text(ref.source),
-            .mutable = ref.mutable,
-            .slice = ref.slice,
-        };
         if (declaration.policy.effect_bound) |bound| {
             out.contract.signature.declared_effects = try self.effectNames(bound.allowed);
         }
@@ -146,28 +137,6 @@ pub fn collect(arena: std.mem.Allocator, index: *const interfaces.Index) std.mem
             item.shape.fields = try context.values(record.fields);
             try out.append(arena, item);
         }
-        for (unit.syntax.types.buffers) |buffer| {
-            if (buffer.type_parameters.len == 0 or !context.visible(buffer.name)) continue;
-            var item = try context.base(buffer.name, buffer.type_parameters);
-            item.kind = if (buffer.managed) .list else .buffer;
-            item.shape.element = context.src().text(buffer.backing);
-            try out.append(arena, item);
-        }
-        for (unit.syntax.types.pools) |pool| {
-            if (pool.type_parameters.len == 0) continue;
-            if (context.visible(pool.name)) {
-                var item = try context.base(pool.name, pool.type_parameters);
-                item.kind = .pool;
-                item.shape.element = context.src().text(pool.element);
-                item.shape.handle = context.src().text(pool.handle);
-                try out.append(arena, item);
-            }
-            if (context.visible(pool.handle)) {
-                var item = try context.base(pool.handle, pool.type_parameters);
-                item.kind = .handle;
-                try out.append(arena, item);
-            }
-        }
         for (unit.syntax.types.variants) |variant| {
             if (variant.type_parameters.len == 0 or !context.visible(variant.name)) continue;
             var item = try context.base(variant.name, variant.type_parameters);
@@ -186,9 +155,8 @@ pub fn collect(arena: std.mem.Allocator, index: *const interfaces.Index) std.mem
 }
 /// Whether an exported source symbol denotes a constructor rather than a concrete type.
 pub fn isConstructor(unit: interfaces.Unit, span: source.Span) bool {
-    inline for (.{ "records", "variants", "buffers", "pools" }) |category| for (@field(unit.syntax.types, category)) |declaration| {
+    inline for (.{ "records", "variants" }) |category| for (@field(unit.syntax.types, category)) |declaration| {
         if (declaration.name.start == span.start and declaration.type_parameters.len != 0) return true;
-        if (@hasField(@TypeOf(declaration), "handle")) if (declaration.handle.start == span.start and declaration.type_parameters.len != 0) return true;
     };
     return false;
 }

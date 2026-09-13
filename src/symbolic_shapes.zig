@@ -48,7 +48,7 @@ pub const Context = struct {
                 const values = try self.arena.allocator().alloc(Value, callback.arguments.len);
                 for (callback.arguments, values) |argument, *value| value.* = try self.expression(argument, arguments, depth + 1, span);
                 const signature = try self.arena.allocator().create(symbolic.Callback);
-                signature.* = .{ .parameters = values[0 .. values.len - 1], .result = values[values.len - 1], .effects = callback.syntax.effect_bound.allowed, .borrowed = callback.syntax.borrowed, .slices = callback.syntax.slices };
+                signature.* = .{ .parameters = values[0 .. values.len - 1], .result = values[values.len - 1], .effects = callback.syntax.effect_bound.allowed };
                 break :result .{ .callback = signature };
             },
             .builtin => |ty| .{ .concrete = ty },
@@ -106,8 +106,6 @@ pub const Context = struct {
         if (value != .concrete or !value.concrete.isAggregate()) return null;
         const shape = self.catalog.records[value.concrete.recordIndex()];
         if (shape.shape.buffer != null) return .buffer;
-        if (shape.shape.pool != null) return .pool;
-        if (shape.shape.handle_pool != null) return .handle;
         if (shape.shape.variants) |variants| return if (variants.fallible) .result else if (variants.is_union) .variants else .enumeration;
         return if (shape.isRecord()) .record else null;
     }
@@ -231,9 +229,7 @@ pub const Context = struct {
                 .cleanup = if (ty.isAggregate()) self.contracts.cleanup[ty.recordIndex()] else 0,
             },
             .nominal => |nominal_value| switch (self.kind(value).?) {
-                .buffer => if (self.managed(value)) .{} else .{ .move_only = true, .region = true },
-                .pool => .{ .move_only = true, .region = true },
-                .handle => .{},
+                .buffer => .{},
                 else => nominal_value.properties,
             },
             .array => null,

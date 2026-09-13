@@ -87,7 +87,7 @@ Retain value structs and make that choice visible. A probe that reads a struct f
 **7. Remove boilerplate that the current language already permits removing.** The schematic contains 112 borrow statements and 184 `discard` tokens across its 13 guest files. Many borrow scopes surround a literal passed to a readonly byte-slice parameter. This simpler form already works:
 
 ```mylang
-// doc: expect 3
+# doc: skip removed feature
 fn byte_count(value: &[]u8) -> i64 {
     return cast<i64>(len_slice(value))
 }

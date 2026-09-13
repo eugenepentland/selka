@@ -3,9 +3,9 @@
 Source capabilities, synchronous embedding providers, recoverable read results,
 and transitive clock/random effects are implemented. This record describes the
 initial clock/random experiment. Later milestones add [environment lookup](environment.md),
-[external resources](source-resources.md), [attenuation](attenuation.md),
-[arenas](source-arenas.md), and [pools](source-pools.md).
-[Native clock/random adapters](native-providers.md) extend the C backend.
+[external resources](source-resources.md), [attenuation](../legacy/experiments/attenuation.md),
+[arenas](../legacy/experiments/source-arenas.md), and [pools](../legacy/experiments/source-pools.md).
+[Native clock/random adapters](../legacy/experiments/native-providers.md) extend the C backend.
 
 ## Source contract
 

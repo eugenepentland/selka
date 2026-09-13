@@ -37,19 +37,6 @@ pub fn fromBytes(allocator: std.mem.Allocator, bytes: []const u8, ty: typed.Type
 
 /// Copy an acquisition request without borrowing guest backing into a provider call.
 pub fn acquisitionBytes(allocator: std.mem.Allocator, value: typed.Value, ty: typed.Type, records: []const typed.Record) ToOwnedBytesError![]u8 {
-    if (typed.byteRequest(ty, records)) return toOwnedBytes(allocator, value, ty, records);
     if (!typed.acquisitionBytes(ty, records)) return error.InternalError;
-    if (!value.isOwned(.resource) or value.typeOf() != ty) return error.InternalError;
-    const resource = value.owned.resource;
-    const info = resource.store.bufferInfo(resource.owner) catch return error.InternalError;
-    if (info.element_type != .u8) return error.InternalError;
-    const bytes = try allocator.alloc(u8, info.length);
-    errdefer allocator.free(bytes);
-    for (bytes, 0..) |*byte, i| {
-        const item = resource.store.readOwner(resource.owner, i) catch return error.InternalError;
-        defer item.release(allocator);
-        if (item.typeOf() != .u8) return error.InternalError;
-        byte.* = std.math.cast(u8, try item.asInteger()) orelse return error.InternalError;
-    }
-    return bytes;
+    return toOwnedBytes(allocator, value, ty, records);
 }

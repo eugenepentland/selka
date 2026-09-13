@@ -28,7 +28,7 @@ pub const Application = struct { syntax: ast.TypeApplication, declaration: usize
 /// Named record field or closed variant case, including payload-free cases.
 pub const Field = struct { name: Span, ty: ?Expression, builtin_name: ?[]const u8 = null };
 /// Declaration category determines equality and owner/result obligations independently of spelling.
-pub const Kind = enum { record, variants, result, enumeration, domain, buffer, resource, pool, handle };
+pub const Kind = enum { record, variants, result, enumeration, domain, buffer, resource };
 /// Template metadata is arena-owned and has no executable placeholder type ID.
 pub const Declaration = struct {
     builtin_name: ?[]const u8 = null,
@@ -304,9 +304,9 @@ pub const Index = struct {
         for (self.declarations.items, 0..) |*declaration, id| {
             declaration.guarantees = switch (declaration.kind) {
                 .record, .variants => copyGuarantee(),
-                .enumeration, .domain, .handle => .{ .bits = 19 },
-                .buffer => if (declaration.managed) copyGuarantee() else .{},
-                .resource, .pool, .result => .{},
+                .enumeration, .domain => .{ .bits = 19 },
+                .buffer => copyGuarantee(),
+                .resource, .result => .{},
             };
             if (!declaration.guarantees.contains(.copy)) try pending.append(allocator, id);
         }
@@ -413,15 +413,11 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     var index: Index = .{ .context = .{ .allocator = allocator, .src = src, .sink = sink, .names = module_names } };
     for (program.types.records) |declaration| try index.add(declaration.name, declaration.type_parameters, .record);
     for (program.types.variants) |declaration| try index.add(declaration.name, declaration.type_parameters, if (declaration.fallible) .result else if (declaration.is_union) .variants else .enumeration);
-    inline for (.{ "domains", "buffers", "resources" }, .{ Kind.domain, .buffer, .resource }) |category, kind| {
+    inline for (.{ "domains", "resources" }, .{ Kind.domain, .resource }) |category, kind| {
         for (@field(program.types, category)) |declaration| {
             try index.add(declaration.name, declaration.type_parameters, kind);
             index.declarations.items[index.declarations.items.len - 1].managed = declaration.managed;
         }
-    }
-    for (program.types.pools) |pool| {
-        try index.add(pool.name, pool.type_parameters, .pool);
-        try index.add(pool.handle, pool.type_parameters, .handle);
     }
     for (program.types.expressions.aliases) |alias| {
         const key = if (module_names) |names| try names.declaration(alias.name) else src.text(alias.name);
@@ -435,17 +431,15 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     for (program.types.expressions.applications) |syntax| try index.syntax.applications.put(allocator, syntax.span.start, syntax);
     for (program.types.records) |declaration| try index.fields(declaration.name, declaration.fields);
     for (program.types.variants) |declaration| try index.fields(declaration.name, declaration.cases);
-    for (program.types.buffers) |declaration| try index.backing(declaration.name, declaration.backing);
-    for (program.types.pools) |declaration| try index.backing(declaration.name, declaration.element);
     try index.inferGuarantees();
     index.inferStorable();
     for (index.declarations.items) |declaration| {
-        if (declaration.parameters.len == 0 or (declaration.kind != .buffer and declaration.kind != .pool)) continue;
+        if (declaration.parameters.len == 0 or declaration.kind != .buffer) continue;
         const element = declaration.fields[0];
-        if (!index.guarantees(element.ty.?, declaration.parameters).contains(if (declaration.kind == .buffer and !declaration.managed) .storable else .copy)) return sink.fail(
+        if (!index.guarantees(element.ty.?, declaration.parameters).contains(.copy)) return sink.fail(
             eRequirement,
             element.name,
-            "buffer elements must guarantee storable; list and pool elements must guarantee copy",
+            "managed collection elements must guarantee copy",
         );
     }
     for (index.declarations.items) |declaration| for (declaration.fields) |field| if (field.ty) |value| try index.checkArguments(value, declaration.parameters);

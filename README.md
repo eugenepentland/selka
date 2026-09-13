@@ -19,9 +19,8 @@ cases. Three exploratory agent maintenance blocks have since completed; see
 [the audit](docs/audits/feature-completeness-2026-09-07.md). These do not establish
 a comparative productivity advantage.
 Expensive geometry can remain in Zig/C/Rust behind explicit typed wrappers.
-The C backend remains available as a comparison and compatibility path while
-QBE completes its behavior, API, and performance gates. LLVM and a custom native
-backend remain future work. Native feature descriptions below include the C experiments.
+QBE is the only native backend. LLVM and a custom native backend remain future
+work.
 
 New application code uses [Python-style syntax](docs/python-syntax.md): `def`,
 indented blocks, ordinary assignments, `list[T]`, strings, dictionaries, and
@@ -86,10 +85,10 @@ result-cache behavior.
 
 ## GC-default application preview
 
-Managed lists now allocate and grow without allocator parameters or collection
-borrows. The schematic guest uses them throughout its application model. See
+Managed lists allocate and grow with no allocator parameters and no ownership
+annotations. The schematic guest uses them throughout its application model. See
 [managed memory](docs/managed-memory.md) and [the runnable example](examples/gc-default/main.my).
-Explicit owned storage and resources retain their existing safety rules.
+[Managed arenas](docs/arenas.md) are the one way to control when they are freed.
 
 ## Real schematic pilot
 
@@ -141,23 +140,20 @@ zig build fmt-check
 ```
 
 `zig build test` runs checker/VM, actual CLI, and interpreter/tooling integration
-acceptance. `zig build test-interpreter` is an explicit alias. Both retain all
-core tests, including inexpensive C-emission checks, without compiling guest C.
-CI uses this default suite in Debug and ReleaseFast.
+acceptance. `zig build test-interpreter` is an explicit alias. CI uses this
+default suite in Debug and ReleaseFast.
 
-Native compilation/parity integration remains available on demand:
+QBE native compilation and parity integration remain available on demand:
 
 ```sh
-zig build test-native --summary all
-zig build test-all --summary all
+zig build test-qbe --summary all
+zig build test-qbe-build --summary all
+zig build test-native-tests --summary all
+zig build test-c-ffi --summary all
 ```
 
-`test-native` runs the native drivers and the corpus with native execution;
-`test-all` combines both suites. Guardian gates each acceptance route. Native
-testing compiles guest C in its documented modes; `-Doptimize` selects the host
-compiler/VM mode. Use a disk-backed `TMPDIR` with sufficient space for large native
-runs. The default corpus driver needs only `--compiler`; direct native corpus
-runs also require `--native --zig /path/to/zig`.
+Guardian gates each acceptance route. `-Doptimize` selects the host compiler/VM
+mode. Use a disk-backed `TMPDIR` with sufficient space for large native runs.
 
 The example prints `7`. A successful program result is printed to stdout, not
 used as the exit code. Success exits 0, source errors and guest traps exit 1,
@@ -193,7 +189,7 @@ with `--diagnostics=json`. Source locations, notes, VM traces and cached warning
 stay on stderr; command results keep their stdout format.
 
 [Ownership diagnostic provenance](docs/experiments/diagnostic-provenance.md) now
-shows the invalid use, the earlier borrow/transfer, and the value declaration.
+shows the invalid use, the earlier transfer, and the value declaration.
 Repair fixtures check these locations and execute the corrected programs.
 `src/root_test.zig` is the unit test root, and `test/integration.zig` contains the
 actual CLI tests. Python acceptance drivers remain in `tests/`. There are no
@@ -206,8 +202,8 @@ The [typed VM host interface](docs/experiments/host-functions.md) supports expli
 `host fn` declarations, transitive effects and program-bound registrations. It
 copies ordinary values through bounded synchronous sessions, including imported
 calls and typed results. Host-enabled typed application invocation now accepts
-snapshots and returns owned reports through exported guest functions. Borrowed
-and runtime-owned boundary values reject.
+snapshots and returns owned reports through exported guest functions.
+Runtime-owned boundary values reject.
 
 The scalar MVP (M0–M5) is implemented and audited: owned source buffers, source locations, lexer,
 parser, separate untyped/typed representations, per-function instructions,
@@ -215,7 +211,8 @@ an iterative VM with typed locals, jumps, and explicit call frames, deterministi
 
 The accepted subset has one `fn main() -> i64` and typed helper functions, with
 local bindings, assignment,
-nested blocks, branches, loops, explicit discard, and typed returns.
+nested blocks, branches, loops, discarded expression statements (`_ = expr`),
+and typed returns.
 [Unit procedures](docs/experiments/unit-procedures.md) use `-> unit`, ordinary call
 statements, and bare returns or fallthrough; other values retain explicit handling.
 It supports integer and boolean values,
@@ -261,13 +258,6 @@ Closed enums/tagged unions and exhaustive matching are also implemented
 ([variant semantics](docs/experiments/variants.md)); `examples/variants.my` returns
 24. Complete enum-indexed tables finish A2
 ([table semantics](docs/experiments/tables.md)); `examples/tables.my` returns 1407.
-Borrowing and slices are implemented: a [memory/lease backend](docs/experiments/borrowing.md)
-and scoped source references are implemented, including static access checking and VM
-cleanup. `examples/references.my` returns 23. Shared/exclusive reference parameters
-also work; `examples/reference-parameters.my` returns 19. [Bounded slices](docs/experiments/slices.md),
-slice parameters, and checked narrowing are implemented; `examples/slices.my` returns 13.
-[Returned-reference contracts](docs/experiments/returned-references.md) complete B
-([acceptance audit](docs/experiments/b-audit.md)); `examples/returned-references.my` returns 20.
 Resource/capability operations and modules have subsequent implemented milestones
 below. Broader native interfaces, generic contracts, and other pending roadmap work
 are not yet complete.
@@ -276,23 +266,13 @@ See [implemented semantics](docs/semantics.md) and [verification/progress](docs/
 
 
 [Typed recoverable results](docs/experiments/results.md) now carry handling
-obligations through bindings, helpers, and wrappers. Exhaustive matches, returns,
-and explicit `acknowledge` handle them; ordinary discard and silent overwrite are
-rejected. `examples/results.my` returns 7. [Explicit `try` propagation](docs/experiments/propagation.md)
-checks early-return obligations and cleans up active borrows; `examples/propagation.my`
-returns 20. C/D remain in progress.
+obligations through bindings, helpers, and wrappers. Exhaustive matches and
+returns handle them; a silently overwritten obligation is rejected.
+`examples/results.my` returns 7. [Postfix `?` propagation](docs/experiments/propagation.md)
+checks early-return obligations; `examples/propagation.my` returns 20.
 
-The [owned-buffer backend](docs/experiments/ownership.md) now supports consuming
-transfers, reserved-capacity edits, growth limits, and partial-acquisition cleanup.
-[Source acquisition and moves](docs/experiments/owned-buffers.md) now support buffer
-results, owned wrappers, and lexical/early-return cleanup; `examples/buffers.my`
-returns 21. [Buffer operations and views](docs/experiments/buffer-operations.md) now
-include checked mutations, queries, slices, and returned-view helpers;
-`examples/buffer-views.my` returns 19. [Transitive effect bounds](docs/experiments/effects.md)
-now reject direct or indirect guest allocation under `noalloc`; `examples/effects.my`
-returns 14. [Explicit allocator capabilities](docs/experiments/allocator-capabilities.md)
-now flow from the entry point through helper parameters; acquisition and reserve
-require them. `examples/allocator-capabilities.my` returns 3.
+[Transitive effect bounds](docs/experiments/effects.md)
+now reject direct or indirect managed allocation under `noalloc`.
 [Clock and randomness capabilities](docs/experiments/external-capabilities.md) now
 require injected host providers and contribute distinct transitive effects. The
 CLI checks their example but cannot run it without providers. Further capability
@@ -305,42 +285,18 @@ connects those rules to nominal types, explicit filesystem/network grants, owned
 error results, and transitive cleanup effects. Providers remain injected; the CLI
 checks the example but denies execution without providers.
 
-[Non-consuming field reads](docs/experiments/owned-field-reads.md) now let completion
-handlers inspect error codes before transferring or retrying the owned resource.
-[Partial field moves](docs/experiments/partial-fields.md) are now implemented.
-
 [Bounded environment lookup](docs/experiments/environment.md) now uses explicit
 entry grants and injected providers, preserving missing/empty distinctions and
 rejecting oversized values without truncation.
 
 [Resource reads/writes](docs/experiments/resource-io.md) now expose bounded byte
-snapshots, explicit EOF, and actual write counts while retaining ownership. Borrowed slice
-I/O is described below; operating-system adapters remain separate work.
+snapshots, explicit EOF, and actual write counts while retaining ownership.
+Operating-system adapters remain separate work.
 
-[Resource permission attenuation](docs/experiments/attenuation.md) now lets helpers
-receive reduced read/write/complete authority. Acquisition receives those permissions,
-and copies cannot restore removed rights or increase the shared quota.
-
-[Borrowed resource slice I/O](docs/experiments/resource-slices.md) now reads into
-existing array/buffer ranges and writes exact populated ranges while enforcing
-exclusive destinations, lifetime checks, and snapshot preservation.
-
-[Typed-handle pool backend](docs/experiments/typed-pools.md) now supports nominal
-ID categories, stale-handle rejection, cyclic graphs, slot reuse, retained snapshots,
-and bulk clearing. [Source pools](docs/experiments/source-pools.md) now expose these
-operations with allocator authority and quotas; [checked region backing](docs/experiments/region-backing.md)
-also supports arena-backed pool registries.
-
-[Arena backing and checked region reset](docs/experiments/arenas.md) now separate
-buffer backing from retained snapshots, reject live borrows before reset, and reuse
-backing/registries across cycles. [Source arena scopes](docs/experiments/source-arenas.md) are implemented.
-
-[Execution-lifetime arena selection](docs/experiments/arena-execution.md) now runs
-existing source programs with `run --memory=arena` or embedding option
-`memory_backing = .arena`. General allocation remains the default. Explicit [source arena scopes](docs/experiments/source-arenas.md)
-now reclaim backing at lexical boundaries; execution-lifetime arena backing can
-accumulate until execution ends.
-Pool registries now follow this selection; retained node snapshots use the parent allocator.
+[Managed arenas](docs/arenas.md) provide the language's only manual-memory control:
+`with arena() as scratch:` frees everything a phase of work allocated in one step,
+and `scratch.escape(value)` copies a result out.
+`zig build run -- run-project examples/arena-managed/main.my` returns `38`.
 
 [Approximate discovery](docs/experiments/approximate-discovery.md) is available with
 `discover-duplicates --approximate`. It reports canonical edits between near matches
@@ -361,34 +317,10 @@ dependencies; reports distinguish selected success from full-manifest success.
 The eight Python driver tests also run under `zig build test`, alongside the
 core/CLI suites and the interpreter/tooling integration drivers.
 
-[Scalar native execution](docs/experiments/native-execution.md) is available with
-`emit-c` and `python3 scripts/native.py examples/sum.my -o /tmp/native-sum`.
-The pinned Zig compiles direct C branches and explicit frames. The backend now
-covers all current bytecode operations, including aggregates, borrowing and
-resources, with VM/native parity and allocation-failure acceptance.
+Source programs use [declared codec operations](docs/experiments/source-codecs.md)
+to convert between domain values and their typed wire representations.
 
-[Native embedding](docs/experiments/native-embedding.md) builds a shared library
-with `python3 scripts/native.py examples/sum.my --library -o /tmp/libsum.so`.
-A C host supplies providers and budgets and receives a scalar result or bounded
-diagnostic through `mylang_native_run_v1`; calls return without printing or exiting.
-Module libraries also support [exported scalar calls](docs/experiments/native-calls.md)
-by qualified name through `mylang_native_call_v1`, with checked integer/Boolean
-arguments and full-width results. [Native aggregate calls](docs/experiments/native-wire.md)
-copy ordinary record, array and variant trees through caller-owned buffers.
-Generated Python wrappers also accept a [schema-pinned NativeClient](docs/experiments/native-bindings.md),
-which calls a matching shared library without a compiler subprocess, including
-declared domain codecs with typed decoder rejection errors. Source programs can
-also use [declared codec operations](docs/experiments/source-codecs.md) to convert
-between domain values and their typed wire representations.
-
-[Partial record field moves](docs/experiments/partial-fields.md) use
-`take_field(owner, field)` to transfer individual fields immediately while preserving
-access to the remainder and enforcing result obligations and branch consistency.
-
-Source [pools and nominal handles](docs/experiments/source-pools.md) now support
-cyclic graphs, snapshot reads, checked IDs, and shared execution quotas. Run
-`zig build run -- run examples/pools.my` for the graph fixture (result `52`).
-Source arena scopes and pure generic specialization are implemented.
+Pure generic specialization is implemented.
 [Concrete generic records and arrays](docs/experiments/generic-concrete.md) now
 support fixed data schemas alongside symbolic parameters; broader generic
 contracts remain pending. [Generic aggregate updates](docs/experiments/generic-updates.md)
@@ -399,21 +331,10 @@ now retain exact payload types and exhaustive cases.
 acknowledgement, propagation and obligations across control-flow paths.
 [Generic partial fields](docs/experiments/generic-fields.md) now track remaining
 result obligations and reject mismatched field moves across those paths.
-[Concrete owned generic values](docs/experiments/generic-owned.md) now preserve
-transfers, implicit cleanup and transitive resource cleanup effects.
-[Generic buffer/pool operations](docs/experiments/generic-runtime.md) now check
-explicit allocator authority, mutation contracts and allocation effects.
 [Generic provider operations](docs/experiments/generic-providers.md) now retain
-capability, result, permission and effect contracts.
-[Generic local views](docs/experiments/generic-local-views.md) now support concrete
-array/buffer ranges and slices returned from declared whole-array inputs, with
-ownership/access checks before instantiation. The VM example
-`examples/generic-local-views.my` returns `22`.
-[Generic arena scopes/reset](docs/experiments/generic-regions.md) now preserve
-allocator origins through aggregates, references and helper writes, rejecting
-escapes before instantiation. `examples/generic-regions.my` returns `3`.
+capability, result and effect contracts.
 [Generic fixed arrays](docs/experiments/generic-arrays.md) now support `[N]T`
-construction, nested substitution, nominal-ID membership and borrowed views.
+construction, nested substitution and nominal-ID membership.
 `examples/generic-arrays.my` returns `3`.
 [Nominal template syntax and interfaces](docs/experiments/nominal-type-syntax.md)
 now retain declarations and nested applications. [Declaration checking](docs/experiments/nominal-template-checks.md)
@@ -437,7 +358,7 @@ now uses one optional `Slot<T>` union and one membership helper for distinct IDs
 support named fields and public domain operations. [Public generic tooling](docs/experiments/generic-public-tooling.md)
 exposes symbolic templates separately from concrete callable exports.
 [Generic codec constraints and source serialization](docs/experiments/source-json.md)
-let `.my` programs encode and decode typed JSON through owned byte buffers.
+let `.my` programs encode and decode typed JSON.
 `examples/structural-constraints.my` returns `12`; `examples/source-json.my` returns `42`.
 
 [Compiler navigation](docs/experiments/navigation-client.md) finds qualified
@@ -456,14 +377,6 @@ partial declarations. The optional bounded cache supports equivalent worktrees.
 retaining 256 parsed modules within the existing memory budget; semantic reuse
 below module/project granularity remains conditional on demonstrated cost.
 
-[Lexical arenas](docs/experiments/source-arenas.md) use `arena heap as scratch { ... }`
-with conservative escape checks and cleanup across returns/errors.
-`zig build run -- run examples/arenas.my` returns `50`.
-
-[Typed arena reset](docs/experiments/arena-reset.md) reclaims unused chunks inside
-a scope while preserving its allocator. `zig build run -- run examples/arena-reset.my`
-returns `3` after exercising guarded reset and reuse.
-
 Module header discovery is available with `zig build run -- list-modules examples/modules/main.my`.
 It reports bounded import graphs and cycles. `list-interfaces` on the same entry
 parses module bodies and checks explicit exports and signature visibility; full body checking/execution is available through `check-project`/`run-project`. See [module discovery](docs/experiments/module-discovery.md)
@@ -471,7 +384,7 @@ and [module interfaces](docs/experiments/module-interfaces.md).
 
 `zig build run -- run-project examples/modules/main.my` now returns 12 through a
 shared domain factory. `check-project` validates all imported bodies with nominal
-types, private boundaries, ownership, borrowing, and effects. See
+types, private boundaries, ownership, and effects. See
 [module execution](docs/experiments/module-execution.md) for scope and remaining work.
 
 Optional dependency policy is available through `check-policy <entry.my> --policy=<rules.json>`.
@@ -494,18 +407,6 @@ Neither command writes source files; see [module formatting](docs/experiments/mo
 `list-declarations <file.my>` prints a parse-only `declarations-v1` JSON listing of
 top-level declarations with their kinds, exports and original byte ranges. It resolves
 no imports and checks nothing; see [declaration listing](docs/experiments/list-declarations.md).
-
-Scalar module projects support `emit-project-c` and `scripts/native.py --project`.
-Try the [module-native example](docs/experiments/module-native.md); resource
-operations still require broader native implementation.
-
-Native code now supports [nominal scalar domains](docs/experiments/native-domains.md),
-including `examples/modules/domain_main.my` (12), while preserving checked private
-construction and explicit accessors. Native resources remain pending.
-
-Native [closed enums](docs/experiments/native-enums.md) now support construction,
-equality, calls, mutation, and exhaustive matches in single-file and module programs.
-Try `examples/native-enums.my` with the native builder.
 
 `eval-project` provides [restricted evaluation](docs/experiments/restricted-evaluation.md)
 for effect-free, parameter-free project entry points, with explicit step, frame,
@@ -595,30 +496,9 @@ one. Located embedding APIs retain the failure path independently of parsed docu
 large paths are bounded and explicitly marked as truncated. See
 [codec diagnostics](docs/experiments/codec-diagnostics.md) for path semantics and limits.
 
-Native [packed unions and results](docs/experiments/native-variants.md) support
-nested scalar payloads, matching, transfers, acknowledgement, and propagation
-within a 127-bit layout. [Native aggregates](docs/experiments/native-aggregates.md)
-add records, arrays, tables, conversions/updates, and boxed variants beyond this
-limit. [Native borrowing and slices](docs/experiments/native-references.md) now support
-scoped loans, parameters, returned views, and snapshot-preserving writes.
-[Native owned buffers](docs/experiments/native-buffers.md) add root allocators,
-mutation, growth, and borrowed views with VM/native and cleanup acceptance.
-[Native lexical arenas](docs/experiments/native-arenas.md)
-now support chunk backing, checked reset, and scope/return cleanup.
-[Native pools](docs/experiments/native-pools.md) add generation-checked handles,
-snapshots, operations, and shared quotas on root/arena storage.
 [Direct C imports](docs/c-ffi.md) support `extern fn` scalar calls through QBE,
 with repeatable `--link`, `--link-library`, and `--library-path` build/test options.
 See [the libc example](examples/c-ffi/main.my).
-
-[Native clock/random providers](docs/experiments/native-providers.md) use explicit
-C adapters selected with the native builder’s `--provider` option.
-[Native environment lookup](docs/experiments/native-environment.md) extends that
-interface with bounded bytes, missing/empty distinctions, and independent snapshots.
-[Native resource lifecycle providers](docs/experiments/native-resources.md) add
-filesystem/network acquisition, retryable completion, and ownership cleanup.
-Native array/slice resource I/O now supports partial transfers, EOF, snapshots,
-and failure cleanup through explicit provider adapters.
 
 The [ordinary application corpus](examples/corpus/README.md) adds a multi-module
 invoice calculator and packet decoder, tested against independent Python oracles.
@@ -673,8 +553,8 @@ Automatic project checking: `python3 scripts/watch.py examples/modules/main.my`
 reuses one compiler session and rechecks source/manifest content changes. See
 [watch behavior and bounds](docs/experiments/watch.md).
 
-Native builds support `--report` for emission/C build timings and publication
+Native builds support `--report` for emission and link timings and publication
 status. Failed builds preserve the last executable; byte-identical successful
-builds preserve its timestamp. See [native publication](docs/experiments/native-build-publication.md).
+builds preserve its timestamp.
 
 The [owner/generic maintenance calibration](docs/experiments/direct-agent-maintenance-20260907.md) records two fresh agents completing three sequential stages each, with preserved command and grading evidence. It establishes feasibility on small tasks, not a language productivity advantage.

@@ -78,7 +78,7 @@ owned error, or handle/acknowledge the error and let fallback release run.
 Existing handling checks prevent silent loss of the result. Existing whole-value
 projection rules still apply: projecting `failure.resource` transfers its owner;
 projecting `failure.code` consumes the wrapper and releases its resource. `read_field(failure, code)` now inspects the code without consuming the wrapper,
-allowing code-dependent retry. See [non-consuming field reads](owned-field-reads.md).
+allowing code-dependent retry. See [non-consuming field reads](../legacy/experiments/owned-field-reads.md).
 Partial field moves and owned-wrapper borrowing remain pending.
 
 Host OOM is terminal for the run, so the resource is released if completion failed.

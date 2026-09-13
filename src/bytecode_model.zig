@@ -99,10 +99,9 @@ pub const Function = struct {
     id: typed.FunctionId,
     name: []const u8,
 };
-/// Lowered instructions and the checked lexical local/reference tables they address.
+/// Lowered instructions and the checked lexical local table they address.
 pub const FunctionScope = struct {
     locals: []const typed.Local = &.{},
-    references: []const typed.Reference = &.{},
     instructions: []const Instruction,
 };
 /// Complete instruction program and its nominal type metadata.

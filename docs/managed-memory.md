@@ -1,9 +1,10 @@
 # Managed application collections
 
-Ordinary dynamic lists now allocate on a tracing heap without allocator parameters,
-move operations, or collection borrow scopes. This is the first GC-default
-application subset; explicit owned buffers, pools, arenas, and resource cleanup
-remain available with their existing contracts.
+Ordinary dynamic lists allocate on a tracing heap. There are no allocator
+parameters, no move operations and no collection borrow scopes: managed memory is
+the only way application code allocates. [Managed arenas](arenas.md) are the one
+escape hatch, and they change *when* managed objects are freed rather than how
+they are written.
 
 ```mylang
 // doc: expect 42
@@ -27,13 +28,10 @@ append with `nodes.push(value)`, and count with `nodes.len()`. These operations
 currently use a named local or parameter as their receiver. An empty literal needs
 an expected list type from an annotation, return type, or parameter.
 
-The earlier named `list Nodes: Node;` declaration and
-`new_list<Nodes>(initial_capacity)` construction remain supported. Capacity is a reserve hint, not a fixed
-limit. `len_list`, `read_list`, `append_list`, and `write_list` operate directly on
-list values; mutations return `unit`. Invalid indices trap with `R_LIST_BOUNDS`.
-Allocation failure terminates the execution with cleanup, rather than returning a
-recoverable collection result. Keep application cardinality checks where input
-limits are part of its contract.
+Capacity is a reserve hint, not a fixed limit. Mutations return `unit`. Invalid
+indices trap with `R_LIST_BOUNDS`. Allocation failure terminates the execution
+with cleanup, rather than returning a recoverable collection result. Keep
+application cardinality checks where input limits are part of its contract.
 
 List elements can be ordinary copyable values, records, and other managed lists.
 Recursive graphs through list references are supported:
@@ -42,14 +40,13 @@ Recursive graphs through list references are supported:
 struct Node { value: i64, children: List<Node> }
 ```
 
-Records retain value semantics. This release does not introduce `ref struct`, a
-Unicode string object, capturing closures, or managed hash maps. Byte literals
-and existing byte/text APIs keep their previous behavior. Owned resources, allocator/provider capabilities, and
-must-handle results cannot be hidden inside freely aliased lists. Explicit buffers
-and pools cannot contain managed references, including references nested inside
-records or arrays. Managed interior borrows are not supported. Host invocation,
-JSON encoding of managed graphs, and native C emission reject unsupported managed
-boundaries; ordinary scalar host calls from managed applications still work.
+Records retain value semantics. This release does not introduce `ref struct`,
+capturing closures, or managed hash maps. Byte literals and the managed
+[`bytes`](bytes.md) type keep their documented behavior. Owned resources, provider
+capabilities, and must-handle results cannot be hidden inside freely aliased
+lists. Managed interior borrows are not supported. Host invocation, JSON encoding
+of managed graphs, and QBE native emission reject unsupported managed boundaries;
+ordinary scalar host calls from managed applications still work.
 
 ## Collection and allocation contracts
 
@@ -63,17 +60,18 @@ reference counting alone is not the reclamation algorithm.
 
 Automatic collection runs at managed allocation safepoints according to a simple
 object-count threshold. This prototype is not a tuned latency or byte-budget
-policy. Host allocators still determine total memory availability. Explicit-buffer
-slot quotas do not count managed list storage. VM `memory.gc.statistics` reports
+policy. Host allocators still determine total memory availability.
+VM `memory.gc.statistics` reports
 created, reclaimed-during-collection, live/peak objects, live capacity slots, and
 collection counts; final teardown zeroes live counts separately from reclamation.
 
 Managed construction and append carry the transitive `managed_allocation` effect.
-`nogc` excludes that effect; `noalloc` excludes both managed and explicit guest
-backing allocation. Neither promises zero host allocation for value representation
-or VM bookkeeping. Reads and fixed-slot writes are permitted under either bound.
-Managed allocation remains managed inside an `arena` block; the ambient arena
-never redirects it. Managed mutation is not a promise of purity or exclusive access.
+`noalloc` excludes it, meaning "performs no managed allocation". It does not
+promise zero host allocation for value representation or VM bookkeeping. Reads and
+fixed-slot writes are permitted under that bound. Inside a
+[`with arena() as name:`](arenas.md) block the same managed allocation happens; only
+its release point moves. Managed mutation is not a promise of purity or exclusive
+access.
 
 `mylang run-project examples/gc-default/main.my --gc-stress` collects at every
 managed construction/append safepoint. It should print `142`. Stress mode is a

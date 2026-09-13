@@ -1,8 +1,6 @@
 //! Untyped expression and statement tables preserve source spelling and locations.
 const effect_set = @import("effect_set.zig");
 const std = @import("std");
-const Acquisition = struct { ty: Span, allocator: NodeId, value: NodeId, managed: bool = false };
-const FieldAccess = struct { owner: Span, field: Span };
 const Span = @import("source.zig").Span;
 /// Index of a parsed expression in the syntax program.
 pub const NodeId = enum(usize) { _ };
@@ -69,23 +67,13 @@ pub const Node = struct {
         unit,
         match_expression: struct { value: NodeId, arms: []const MatchValueArm },
         name: Span,
-        read_ref: Span,
-        read_field: FieldAccess,
-        take_field: FieldAccess,
         propagate: NodeId,
-        read_slice: struct { name: Span, index: NodeId },
-        len_slice: Span,
-        buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: Span, result: ?Span, arguments: []const NodeId },
-        pool_operation: struct { kind: @import("pool_operations.zig").Kind, owner: Span, result: ?Span, arguments: []const NodeId },
         acquire_resource: struct { ty: Span, capability: NodeId, request: NodeId },
         complete_resource: struct { ty: Span, value: NodeId },
-        resource_io: struct { reference: ?Span = null, kind: @import("external_resources.zig").IoKind, owner: Span, ty: Span, value: ?NodeId },
+        resource_io: struct { kind: @import("external_resources.zig").IoKind, owner: Span, ty: Span, value: ?NodeId },
         restrict_resource: struct { permissions: @import("external_resources.zig").Permissions, value: NodeId },
         environment_get: struct { ty: Span, capability: NodeId, name: NodeId },
         external_read: struct { kind: @import("external_capabilities.zig").Kind, ty: Span, capability: NodeId },
-        acquire_pool: Acquisition,
-        acquire_buffer: Acquisition,
-        reset_arena: TypedValue,
         arena_escape: struct { arena: Span, value: NodeId },
         cast: TypedValue,
         wrap: TypedValue,
@@ -96,7 +84,6 @@ pub const Node = struct {
         replace: struct { base: NodeId, index: NodeId, value: NodeId },
         length: NodeId,
         record: struct { name: Span, fields: []const FieldInit },
-        update: struct { base: NodeId, fields: []const FieldInit },
         field: struct { base: NodeId, name: Span },
         call: struct { argument_names: []const ?Span = &.{}, evaluation_order: []const usize = &.{}, owner: ?Span = null, type_arguments: []const Span = &.{}, name: Span, arguments: []const NodeId },
         unary: struct { op: UnaryOp, operand: NodeId, op_span: Span },
@@ -108,19 +95,13 @@ pub const Statement = struct {
     span: Span,
     implicit_discard: bool = false,
     data: union(enum) {
-        arena_scope: struct { parent: NodeId, name: Span, body: StatementId },
         managed_arena: struct { name: ?Span, body: StatementId },
         block: []const StatementId,
         ret: NodeId,
         loop_exit: bool,
         for_each: struct { name: Span, index_name: ?Span, iterable: NodeId, body: StatementId },
         for_range: struct { name: Span, start: NodeId, end: NodeId, body: StatementId },
-        borrow_call: struct { call: NodeId, name: Span, mutable: bool, body: StatementId },
-        borrow: struct { split: ?struct { right: Span, middle: NodeId } = null, owner: Span, name: Span, mutable: bool, body: StatementId, range: ?Range = null, whole_slice: bool = false },
-        write_slice: struct { name: Span, index: NodeId, value: NodeId },
-        write_ref: struct { name: Span, value: NodeId },
         discard: NodeId,
-        acknowledge: NodeId,
         branch: struct { condition: NodeId, then_body: StatementId, else_body: ?StatementId },
         match: struct { value: NodeId, arms: []const MatchArm },
         loop: struct { condition: NodeId, body: StatementId },
@@ -140,18 +121,12 @@ pub const Variants = struct { type_parameters: []const TypeParameter = &.{}, fal
 pub const FieldInit = struct { name: Span, value: NodeId };
 /// Parsed record name and ordered field declarations.
 pub const Record = struct { type_parameters: []const TypeParameter = &.{}, name: Span, fields: []const Parameter };
-/// Parsed start and end expressions for a slice range.
-pub const Range = struct { start: NodeId, end: NodeId };
-/// Source name/type and optional reference or slice passing mode.
-pub const Parameter = struct { default_value: ?NodeId = null, name: Span, ty: Span, reference: ?bool = null, slice: bool = false };
-/// Source names of a pool, its nominal handle, and its element type.
-pub const Pool = struct { type_parameters: []const TypeParameter = &.{}, name: Span, handle: Span, element: Span };
+/// Source parameter name, declared type, and optional literal default.
+pub const Parameter = struct { default_value: ?NodeId = null, name: Span, ty: Span };
 /// Source-spelled wire type and domain decoder/encoder names.
 pub const Codec = struct { wire: Span, decode: Span, encode: Span };
 /// Nominal domain declaration with backing type and optional explicit codec.
 pub const Domain = struct { managed: bool = false, type_parameters: []const TypeParameter = &.{}, name: Span, backing: Span, codec: ?Codec = null };
-/// Declared caller parameter provenance of a returned reference or slice.
-pub const ReturnReference = struct { source: Span, mutable: bool, slice: bool };
 /// Parsed signature, visibility, effect bound, provenance annotation, and body.
 pub const Function = struct { policy: FunctionPolicy = .{}, signature: FunctionSignature, name: Span, body: StatementId };
 /// Source visibility and declared effect bound before name/type resolution.
@@ -181,8 +156,8 @@ pub const Operation = struct {
     return_type: Span,
     effect_bound: effect_set.Bound,
 };
-/// Source parameter and result spellings with optional reference provenance.
-pub const FunctionSignature = struct { type_parameters: []const TypeParameter = &.{}, return_reference: ?ReturnReference = null, parameters: []const Parameter, return_type: Span };
+/// Source parameter and result spellings of one declared function.
+pub const FunctionSignature = struct { type_parameters: []const TypeParameter = &.{}, parameters: []const Parameter, return_type: Span };
 
 /// Fixed integer length or enum key spelling of an array/table type.
 pub const ArrayIndex = union(enum) { length: Span, enum_type: Span };
@@ -197,8 +172,6 @@ pub const Program = struct {
 };
 /// Source type declarations collected separately from function bodies and expression tables.
 pub const TypeDeclarations = struct {
-    pools: []const Pool = &.{},
-    buffers: []const Domain = &.{},
     resources: []const Domain = &.{},
     domains: []const Domain = &.{},
     variants: []const Variants = &.{},
@@ -213,6 +186,6 @@ pub const TypeApplication = struct { span: Span, name: Span, arguments: []const 
 pub const TypeAlias = struct { name: Span, target: Span };
 /// Structural type syntax, concrete nominal applications and transparent aliases.
 /// Noncapturing callable value signature with an explicit effect ceiling.
-pub const CallbackType = struct { span: Span, parameters: []const Span, return_type: Span, effect_bound: effect_set.Bound, borrowed: u16 = 0, slices: u16 = 0 };
+pub const CallbackType = struct { span: Span, parameters: []const Span, return_type: Span, effect_bound: effect_set.Bound };
 /// Source catalog of structural types and nominal type applications.
 pub const TypeExpressions = struct { callbacks: []const CallbackType = &.{}, arrays: []const ArrayType = &.{}, applications: []const TypeApplication = &.{}, aliases: []const TypeAlias = &.{} };

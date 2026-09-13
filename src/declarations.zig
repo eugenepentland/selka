@@ -20,8 +20,6 @@ pub const Kind = enum {
     @"union",
     result,
     domain,
-    buffer,
-    pool,
     resource,
     @"fn",
     host_fn,
@@ -220,11 +218,7 @@ const Scan = struct {
             .kw_union => .{ .kind = .@"union", .braced = true },
             .kw_domain => .{ .kind = .domain, .braced = true },
             .kw_struct => .{ .kind = .@"struct", .braced = true },
-            .ident => if (self.word(self.pos, "pool"))
-                .{ .kind = .pool, .braced = false }
-            else if (self.word(self.pos, "buffer"))
-                .{ .kind = .buffer, .braced = false }
-            else if (self.word(self.pos, "resource"))
+            .ident => if (self.word(self.pos, "resource"))
                 .{ .kind = .resource, .braced = false }
             else if (self.word(self.pos, "result"))
                 .{ .kind = .result, .braced = true }
@@ -272,8 +266,6 @@ fn declared(syntax: ast.Program, kind: Kind, index: usize) ?source.Span {
         .alias => if (index < types.expressions.aliases.len) types.expressions.aliases[index].name else null,
         .@"struct" => if (index < types.records.len) types.records[index].name else null,
         .domain => if (index < types.domains.len) types.domains[index].name else null,
-        .buffer => if (index < types.buffers.len) types.buffers[index].name else null,
-        .pool => if (index < types.pools.len) types.pools[index].name else null,
         .resource => if (index < types.resources.len) types.resources[index].name else null,
         .@"enum", .@"union", .result => variantName(types.variants, kind, index),
         .@"const", .@"fn", .host_fn, .extern_fn => functionName(syntax.functions, kind, index),

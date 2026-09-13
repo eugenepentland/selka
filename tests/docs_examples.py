@@ -269,9 +269,10 @@ def mistagged(fence):
 
 
 def documents(root, pattern):
-    """Every documentation file in scan order, honouring an optional path filter."""
+    """Every documentation file in scan order, minus docs/legacy/, honouring an optional path filter."""
     found = [root / "README.md", root / "SPEC.md"] + sorted((root / "docs").rglob("*.md"))
     relative = [path for path in found if path.exists()]
+    relative = [path for path in relative if not path.relative_to(root).as_posix().startswith("docs/legacy/")]
     if pattern:
         relative = [path for path in relative if fnmatch(path.relative_to(root).as_posix(), pattern)]
     return relative

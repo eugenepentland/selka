@@ -45,11 +45,7 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
     const writer = &output.writer;
     var nodes: usize = 0;
     writer.print("{s} fn {s} {d} {d}\n", .{ version, typed.typeName(function.signature.return_type, program.records), function.signature.parameter_count, function.scope.locals.len }) catch return error.OutOfMemory;
-    if (function.signature.return_reference) |contract| {
-        writer.print("return reference from {d} mutable {} slice {}\n", .{ @backingInt(contract.parameter), contract.mutable, contract.slice }) catch return error.OutOfMemory;
-    } else {
-        writer.writeAll("return value\n") catch return error.OutOfMemory;
-    }
+    writer.writeAll("return value\n") catch return error.OutOfMemory;
     writer.print("effects {d} bound {?d}\n", .{ function.policy.effects, if (function.policy.effect_bound) |bound| @as(?@import("effect_set.zig").Mask, bound.allowed) else null }) catch return error.OutOfMemory;
     writer.print("conversion {}\n", .{function.policy.conversion}) catch return error.OutOfMemory;
     if (function.policy.owner) |owner| writer.print("owner domain {s}\n", .{typed.typeName(owner, program.records)}) catch return error.OutOfMemory else writer.writeAll("owner none\n") catch return error.OutOfMemory;
@@ -57,21 +53,9 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
     // Slot identities are declaration order within a function, including parameters.
     // Names, spans, and advisory use counters have no role in structural equality.
     for (function.scope.locals) |local| {
-        writer.print("local {s} {} reference {?} slice {}\n", .{
+        writer.print("local {s} {}\n", .{
             typed.typeName(local.ty, program.records),
             local.mutable,
-            local.parameter.reference_parameter,
-            local.parameter.slice_parameter,
-        }) catch return error.OutOfMemory;
-    }
-    for (function.scope.references) |reference| {
-        writer.print("reference {s} owner {d} parent {?d} mutable {} parameter {} slice {}\n", .{
-            typed.typeName(reference.ty, program.records),
-            @backingInt(reference.owner),
-            if (reference.parent) |parent| @as(?usize, @backingInt(parent)) else null,
-            reference.mutable,
-            reference.mode.parameter,
-            reference.mode.slice,
         }) catch return error.OutOfMemory;
     }
     try work.append(allocator, .{ .statement = function.scope.body });

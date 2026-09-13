@@ -164,17 +164,6 @@ const Builder = struct {
             });
             try self.edge(owner, self.typeId(program, local.ty), if (i < function.signature.parameter_count) "accepts" else uses_type, local.declaration);
         }
-        for (function.scope.references) |reference| {
-            if (reference.mode.temporary) continue;
-            try self.add(reference.declaration, .{
-                .id = try self.scopedId(owner, "reference", reference.name, reference.declaration),
-                .name = reference.name,
-                .kind = "reference",
-                .location = try self.location(reference.declaration),
-                .details = .{ .type_name = typed.typeName(reference.ty, program.records) },
-            });
-            try self.edge(owner, self.typeId(program, reference.ty), uses_type, reference.declaration);
-        }
         var walker = try walk.Walker.init(self.allocator, program, function.scope.body);
         defer walker.deinit();
         while (try walker.next()) |item| switch (item) {

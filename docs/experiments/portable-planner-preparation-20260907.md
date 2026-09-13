@@ -2,7 +2,7 @@
 
 This preparation precedes application timing for fresh exploratory trios on
 `planner-input-boundary`, `planner-priority` and `planner-cycle-groups`. It extends
-the earlier [library readiness](../stdlib-application-parity.md); earlier frozen
+the earlier [library readiness](../legacy/stdlib-application-parity.md); earlier frozen
 rotation artifacts and timings remain unchanged.
 
 Both `.my` CLI test launchers accept an explicit executable `MYLANG_IO`, otherwise

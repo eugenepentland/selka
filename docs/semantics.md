@@ -152,22 +152,22 @@ value snapshots; return cleanup ends child leases before parents. References
 cannot be copied or stored in values. `&T` and `&mut T` parameters accept
 active references through temporary call reborrows; value arguments evaluate
 before those loans begin. Returned-reference contracts name an input with `from parameter`; callers use
-`borrow [mut] helper(...) as result { ... }` to receive the view. See [the borrowing contract](experiments/borrowing.md).
+`borrow [mut] helper(...) as result { ... }` to receive the view. See [the borrowing contract](legacy/experiments/borrowing.md).
 
 
 Bounded slices use `borrow [mut] owner[start..end] as name { ... }`, with
 `read_slice`, `write_slice`, and `len_slice`. `&[]T` and `&mut []T` parameters
 accept varying lengths of the same element type. Bounds and exclusive suspension
 remain checked in both host modes; slice writes preserve existing value snapshots.
-See [slice semantics and costs](experiments/slices.md).
+See [slice semantics and costs](legacy/experiments/slices.md).
 
 
 Returned references must derive from the single declared reference input and
 preserve its type, slice shape, and permissions. Borrowed local storage and copied
 input values cannot escape. The VM captures a valid result view, ends callee loans,
 and reborrows the caller input for the receiving scope. See
-[returned-reference semantics](experiments/returned-references.md) and
-[B acceptance](experiments/b-audit.md). This completes the restricted borrowing
+[returned-reference semantics](legacy/experiments/returned-references.md) and
+[B acceptance](legacy/experiments/b-audit.md). This completes the restricted borrowing
 experiment; buffer acquisition/moves are now supported separately, with allocator and clock/random capabilities described below.
 
 
@@ -191,11 +191,11 @@ separate from recoverable errors.
 returns an empty buffer or a capacity error through a declared result. Buffers and
 wrappers containing them transfer on use and reject reuse; ordinary owned values
 clean up at block/match exits, return, and propagated failure. Results retain their
-explicit handling obligations. See [source ownership semantics and current limits](experiments/owned-buffers.md).
-[Buffer operations and views](experiments/buffer-operations.md) now provide length/capacity
+explicit handling obligations. See [source ownership semantics and current limits](legacy/experiments/owned-buffers.md).
+[Buffer operations and views](legacy/experiments/buffer-operations.md) now provide length/capacity
 queries, retained reads, typed mutation statuses, and borrowed slices that work with
 existing slice helpers and returned-view contracts. Allocator/external capabilities,
-resource I/O, and source pools are described below; [nested arena scopes](experiments/source-arenas.md) are implemented.
+resource I/O, and source pools are described below; [nested arena scopes](legacy/experiments/source-arenas.md) are implemented.
 
 
 Function annotations `noalloc`, `noio`, and `effects(...)` bound inferred effects.
@@ -211,7 +211,7 @@ The opaque `allocator` capability is supplied only to a requesting entry paramet
 Helpers receive it explicitly; acquisition and reserve require it, and copies share
 the same execution quotas. Numeric casts and effect declarations cannot manufacture
 capabilities. The embedding runtime can deny provisioning. See [allocator authority
-semantics](experiments/allocator-capabilities.md).
+semantics](legacy/experiments/allocator-capabilities.md).
 
 Opaque `clock_cap` and `random_cap` entry grants authorize `clock_now<R>(cap)`
 and `random_u64<R>(cap)`. Their declared results carry i64/u64 success and i64
@@ -237,7 +237,7 @@ remain pending.
 live owner or satisfying pending result obligations. This supports error-code
 inspection before retrying with an owned completion failure. Owned/result fields
 cannot be copied; shared/exclusive access rules still apply. Ordinary projection
-keeps its existing consuming behavior. See [field-read semantics](experiments/owned-field-reads.md).
+keeps its existing consuming behavior. See [field-read semantics](legacy/experiments/owned-field-reads.md).
 
 
 `environment_get<Result>(env, name)` uses an explicit `environment_cap` and fixed
@@ -260,7 +260,7 @@ See [resource I/O semantics](experiments/resource-io.md). Slice/range I/O remain
 operation permissions with a named subset. Copies cannot restore removed rights.
 Acquisition passes restrictions to the provider; owned reads/writes/completion check
 them before callbacks. Denied operations retain ownership and fallback release stays
-available. Provider scope and quotas remain shared. See [attenuation semantics](experiments/attenuation.md).
+available. Provider scope and quotas remain shared. See [attenuation semantics](legacy/experiments/attenuation.md).
 
 
 `read_resource_slice<Result>(owner, destination)` reads into an exclusive u8 slice;
@@ -268,8 +268,8 @@ available. Provider scope and quotas remain shared. See [attenuation semantics](
 Read results report length/EOF and update only the successful prefix, retaining
 array snapshots and untouched bytes. Writes send exactly the chosen range. Lease
 checks apply to fixed arrays, initialized buffers, parameters, and returned views.
-See [resource slice I/O](experiments/resource-slices.md) for staging costs and failure
-semantics. Source pools are described below. [Nested source arena scopes](experiments/source-arenas.md) are implemented;
+See [resource slice I/O](legacy/experiments/resource-slices.md) for staging costs and failure
+semantics. Source pools are described below. [Nested source arena scopes](legacy/experiments/source-arenas.md) are implemented;
 execution-lifetime arenas are tracked in the experiment roadmap.
 
 
@@ -279,7 +279,7 @@ of a partial record are rejected. Untouched copyable fields remain readable thro
 `read_field`, and other fields can be taken independently. Branch/loop states track
 field availability; remaining result fields still require handling. Complete binding
 replacement restores fields after any remaining obligations are satisfied. Cleanup
-releases only remaining fields; see [partial field moves](experiments/partial-fields.md).
+releases only remaining fields; see [partial field moves](legacy/experiments/partial-fields.md).
 
 
 ## Source pools and nominal handles
@@ -288,10 +288,10 @@ releases only remaining fields; see [partial field moves](experiments/partial-fi
 Allocator-authorized acquisition reserves capacity; typed result operations insert,
 read snapshots, replace, and remove nodes. Clear invalidates IDs while retaining
 capacity. IDs compare by pool/slot/generation; stale and foreign access returns
-typed errors. [Source-pool semantics](experiments/source-pools.md) specifies quotas,
-effects, cleanup, and errors. [Checked region backing](experiments/region-backing.md)
+typed errors. [Source-pool semantics](legacy/experiments/source-pools.md) specifies quotas,
+effects, cleanup, and errors. [Checked region backing](legacy/experiments/region-backing.md)
 now allocates pool registries in execution arenas while preserving parent-owned
-snapshots. [Lexical source scopes and conservative escape checking](experiments/source-arenas.md)
+snapshots. [Lexical source scopes and conservative escape checking](legacy/experiments/source-arenas.md)
 now enforce lifetime boundaries through calls, wrappers, and mutation.
 
 
@@ -299,12 +299,12 @@ now enforce lifetime boundaries through calls, wrappers, and mutation.
 capabilities and owners cannot escape to outer bindings or return values; plain
 snapshots and inert IDs may escape. Scope entry contributes allocation effects.
 Normal exits, returns, propagation, and traps clean up owners before backing.
-[Source arena semantics](experiments/source-arenas.md) records the conservative
+[Source arena semantics](legacy/experiments/source-arenas.md) records the conservative
 field/call/assignment rules, diagnostics, and runtime guards.
 
 
 `reset_arena<Status>(scratch)` requires a bool/i64 result declaration and returns
 true after freeing unused lexical-arena chunks. Live owners, active children, and
 invalid/root capabilities return typed errors without changing storage. Allocator
-copies remain valid after success. [Arena reset semantics](experiments/arena-reset.md)
+copies remain valid after success. [Arena reset semantics](legacy/experiments/arena-reset.md)
 specifies error codes, ownership guards, noalloc behavior, and snapshot survival.

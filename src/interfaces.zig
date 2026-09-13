@@ -137,10 +137,9 @@ pub const Index = struct {
     }
     fn declaredTypeParameters(self: *Index, id: Identity) []const ast.TypeParameter {
         const declaration = self.units[id.module].symbols.items[id.symbol].span;
-        inline for (.{ "records", "variants", "buffers", "pools" }) |category| {
+        inline for (.{ "records", "variants" }) |category| {
             for (@field(self.units[id.module].syntax.types, category)) |item| {
                 if (item.name.start == declaration.start) return item.type_parameters;
-                if (@hasField(@TypeOf(item), "handle")) if (item.handle.start == declaration.start) return item.type_parameters;
             }
         }
         return &.{};
@@ -203,14 +202,6 @@ pub const Index = struct {
         for (unit.syntax.types.domains) |domain| {
             if (unit.symbols.items[unit.names.get(project.modules.items[module].src.text(domain.name)).?].exported) try self.signatureType(module, domain.backing);
         }
-        for (unit.syntax.types.buffers) |buffer| {
-            try self.checkNominalParameters(module, buffer.type_parameters);
-            if (unit.symbols.items[unit.names.get(project.modules.items[module].src.text(buffer.name)).?].exported) try self.genericSignatureType(module, buffer.backing, buffer.type_parameters);
-        }
-        for (unit.syntax.types.pools) |pool| {
-            try self.checkNominalParameters(module, pool.type_parameters);
-            if (unit.symbols.items[unit.names.get(project.modules.items[module].src.text(pool.name)).?].exported) try self.genericSignatureType(module, pool.element, pool.type_parameters);
-        }
         for (unit.syntax.functions) |function| {
             try self.checkGenericRequirements(module, function.signature.type_parameters);
             const src = project.modules.items[module].src;
@@ -256,11 +247,10 @@ pub fn buildWithCache(project: *graph.Project, cache: ?*@import("syntax_cache.zi
         const module = project.modules.items[module_id];
         const syntax = try moduleSyntax(project, module_id, cache);
         index.units[module_id] = .{ .syntax = syntax };
-        inline for (.{ "records", "domains", "variants", "buffers", "resources", "pools" }) |field| {
+        inline for (.{ "records", "domains", "variants", "resources" }) |field| {
             for (@field(syntax.types, field)) |declaration| try index.add(module_id, declaration.name, .type, null, false);
         }
         for (syntax.types.expressions.aliases) |alias| try index.add(module_id, alias.name, .type, null, false);
-        for (syntax.types.pools) |pool| try index.add(module_id, pool.handle, .type, null, false);
         for (syntax.functions) |function| try index.add(module_id, function.name, .function, function.policy.owner, function.policy.restricted);
         for (module.exports) |exported| {
             const id = index.units[module_id].names.get(exported.name) orelse return project.fail("E_UNKNOWN_EXPORT", "export names no local declaration", .{ .module = module_id, .span = exported.span }, null);

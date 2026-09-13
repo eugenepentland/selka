@@ -46,4 +46,4 @@ The standard filesystem additions also use read-authorized `m:path` metadata and
 only. Snapshots default to 256 entries/64 KiB; limits are configurable together in
 `Context.snapshot_limits`, and per-transfer reads remain capped at 64 KiB. Metadata
 stats the final symlink itself; listing refuses to follow a symlink directory.
-See [the typed guest APIs and wire contract](../standard-io.md#metadata-and-directory-snapshots).
+See [the typed guest APIs and wire contract](../legacy/standard-io.md#metadata-and-directory-snapshots).

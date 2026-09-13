@@ -56,15 +56,7 @@ test {
     _ = @import("host_invocation_test.zig");
     _ = @import("diagnostic_output_test.zig");
     _ = @import("diagnostic_recovery_test.zig");
-    _ = @import("provenance_test.zig");
-    _ = @import("lifetime_provenance_test.zig");
-    _ = @import("generic_returned_references_test.zig");
-    _ = @import("generic_borrows_test.zig");
-    _ = @import("borrow_syntax_test.zig");
     _ = @import("generic_local_views_test.zig");
-    _ = @import("generic_regions_test.zig");
-    _ = @import("generic_slices_test.zig");
-    _ = @import("generic_references_test.zig");
     _ = @import("generic_inference_test.zig");
     _ = @import("generic_execution_test.zig");
     _ = @import("generic_instances_test.zig");
@@ -73,7 +65,6 @@ test {
     _ = @import("generic_concrete_test.zig");
     _ = @import("generic_results_test.zig");
     _ = @import("generic_fields_test.zig");
-    _ = @import("generic_owned_test.zig");
     _ = @import("generic_runtime_test.zig");
     _ = @import("generic_providers_test.zig");
     _ = @import("generic_requirements_test.zig");
@@ -96,7 +87,6 @@ test {
     _ = @import("structural_constraints_test.zig");
     _ = @import("source_json_test.zig");
     _ = @import("formatter_test.zig");
-    _ = @import("partial_fields_test.zig");
     _ = @import("value_test.zig");
     _ = @import("records_test.zig");
     _ = @import("integers_test.zig");
@@ -105,33 +95,17 @@ test {
     _ = @import("variants_test.zig");
     _ = @import("tables_test.zig");
     _ = @import("memory_test.zig");
-    _ = @import("owned_scope_test.zig");
-    _ = @import("buffers_test.zig");
-    _ = @import("pools_test.zig");
-    _ = @import("regions_test.zig");
-    _ = @import("arena_source_test.zig");
     _ = @import("arena_managed_test.zig");
     _ = @import("gc_regions.zig");
-    _ = @import("arena_reset_test.zig");
     _ = @import("effects_test.zig");
     _ = @import("evaluation_test.zig");
     _ = @import("input_manifest_test.zig");
     _ = @import("typed_json_test.zig");
-    _ = @import("allocator_capabilities_test.zig");
     _ = @import("external_capabilities_test.zig");
     _ = @import("external_resources_test.zig");
     _ = @import("resource_source_test.zig");
-    _ = @import("field_reads_test.zig");
     _ = @import("environment_test.zig");
     _ = @import("resource_io_test.zig");
-    _ = @import("attenuation_test.zig");
-    _ = @import("resource_slice_test.zig");
-    _ = @import("typed_pool_test.zig");
-    _ = @import("arena_test.zig");
-    _ = @import("arena_execution_test.zig");
-    _ = @import("references_test.zig");
-    _ = @import("slices_test.zig");
-    _ = @import("returned_references_test.zig");
     _ = @import("results_test.zig");
     _ = @import("propagation_test.zig");
     _ = @import("invocation_test.zig");
@@ -161,7 +135,6 @@ test {
     _ = @import("type_aliases_test.zig");
 }
 test {
-    _ = @import("owned_buffers_test.zig");
 }
 test {
     _ = @import("familiar_statements_test.zig");

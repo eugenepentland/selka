@@ -30,7 +30,7 @@ const Builder = struct {
         defer if (array_prefix) |prefix| allocator.free(prefix);
         switch (node.key.base) {
             .callback => |mask| {
-                array_prefix = try std.fmt.allocPrint(allocator, "fn@{d}:{d}:{d}:", .{ mask.effects, mask.borrowed, mask.slices });
+                array_prefix = try std.fmt.allocPrint(allocator, "fn@{d}:", .{mask.effects});
                 base = array_prefix.?;
             },
             .parameter => return,
@@ -132,8 +132,6 @@ const Builder = struct {
                     .parameters = parameters[0 .. node.key.arguments.len - 1],
                     .return_type = try self.runtimeType(node.key.arguments[node.key.arguments.len - 1]),
                     .effects = node.key.base.callback.effects,
-                    .borrowed = node.key.base.callback.borrowed,
-                    .slices = node.key.base.callback.slices,
                 };
                 for (storage.items) |record| if (record.contract.callback) |existing| {
                     if (@import("callables.zig").equal(existing, contract)) {
@@ -251,8 +249,6 @@ const Builder = struct {
                     .parameters = parameters,
                     .return_type = try self.runtimeType(node.key.arguments[parameters.len]),
                     .effects = node.key.base.callback.effects,
-                    .borrowed = node.key.base.callback.borrowed,
-                    .slices = node.key.base.callback.slices,
                 };
                 continue;
             }
@@ -278,8 +274,6 @@ const Builder = struct {
                         }
                     }
                 },
-                .pool => schema.shape.pool = .{ .element = try self.runtimeType(node.edges[0].target), .handle = try self.named(id + 1, node.key.arguments) },
-                .handle => schema.shape.handle_pool = try self.named(id - 1, node.key.arguments),
                 .domain, .resource => try self.special(declaration, schema),
             }
         }

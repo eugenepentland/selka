@@ -35,7 +35,7 @@ const Definition = struct {
     pool: ?[]const u8 = null,
     authority: ?[]const u8 = null,
 };
-const Parameter = struct { name: []const u8, type: []const u8, mode: enum { value, shared_reference, exclusive_reference, shared_slice, exclusive_slice } };
+const Parameter = struct { name: []const u8, type: []const u8, mode: enum { value } };
 const ReturnReference = struct { parameter: usize, mutable: bool, slice: bool };
 const Function = struct { name: []const u8, parameters: []const Parameter, result: []const u8, return_reference: ?ReturnReference, effects: []const []const u8 };
 const Graph = struct {
@@ -151,7 +151,7 @@ pub fn render(allocator: std.mem.Allocator, index: *interfaces.Index, program: t
         for (parameters, function.scope.locals[0..function.signature.parameter_count]) |*parameter, local| parameter.* = .{
             .name = local.name,
             .type = try graph.reference(local.ty),
-            .mode = if (local.parameter.reference_parameter) |mutable| (if (local.parameter.slice_parameter) (if (mutable) .exclusive_slice else .shared_slice) else (if (mutable) .exclusive_reference else .shared_reference)) else .value,
+            .mode = .value,
         };
         var names: std.ArrayList([]const u8) = .empty;
         inline for (std.meta.tags(effects.Effect)) |effect| {

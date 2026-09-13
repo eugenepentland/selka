@@ -9,10 +9,9 @@ const Checker = struct {
     sink: *diagnostic.Sink,
     fn finishLayout(self: *Checker, record_index: usize, schema: typed.Record) Error!void {
         const records = self.records;
-        const sink = self.sink;
         var requires_handling = false;
         var can_store = schema.shape.resource == null;
-        var move_only = (schema.shape.buffer != null and !schema.managed) or schema.shape.resource != null or schema.shape.pool != null;
+        var move_only = schema.shape.resource != null;
         if (schema.shape.variants) |variants| {
             requires_handling = variants.fallible;
             for (variants.cases) |case| if (case.payload) |payload| {
@@ -30,20 +29,6 @@ const Checker = struct {
                 can_store = can_store and typed.storable(field.ty, records);
                 move_only = move_only or typed.moveOnly(field.ty, records);
             }
-        }
-        if (schema.shape.buffer) |element| {
-            if (!schema.managed and !typed.storable(element, records)) return sink.fail(
-                "E_BUFFER_ELEMENT",
-                schema.declaration,
-                "buffer elements must be storable values without result obligations or external resources",
-            );
-        }
-        if (schema.shape.pool) |pool| {
-            if (typed.moveOnly(pool.element, records) or typed.requiresHandling(pool.element, records)) return sink.fail(
-                "E_POOL_ELEMENT",
-                schema.declaration,
-                "pool elements must be ordinary copyable values without result obligations",
-            );
         }
         records[record_index].contract.storable = can_store and !requires_handling;
         records[record_index].contract.move_only = move_only;
@@ -69,7 +54,7 @@ const Checker = struct {
                 const last = work.items.len - 1;
                 const visit = work.items[last];
                 const schema = records[visit.record];
-                const container = schema.shape.array != null or schema.shape.buffer != null or schema.shape.pool != null;
+                const container = schema.shape.array != null or schema.shape.buffer != null;
                 const edge_count = if (schema.managed) @as(usize, 0) else if (schema.shape.variants) |v| v.cases.len else if (container) @as(usize, 1) else schema.fields.len;
                 if (visit.next_field == edge_count) {
                     try self.finishLayout(visit.record, schema);
@@ -89,10 +74,6 @@ const Checker = struct {
                 } else if (schema.shape.buffer) |element| .{
                     .name = "element",
                     .ty = element,
-                    .declaration = schema.declaration,
-                } else if (schema.shape.pool) |pool| .{
-                    .name = "element",
-                    .ty = pool.element,
                     .declaration = schema.declaration,
                 } else schema.fields[visit.next_field];
                 if (!field.ty.isAggregate()) continue;
@@ -115,17 +96,11 @@ pub fn validate(allocator: std.mem.Allocator, records: []typed.Record, sink: *di
         const element = schema.shape.buffer.?;
         if (!typed.storable(element, records) or typed.moveOnly(element, records)) return sink.fail("E_LIST_ELEMENT", schema.declaration, "managed list elements must be copyable values without resources or result obligations");
     };
-    const managed = try dependencies(allocator, records, false);
-    defer allocator.free(managed);
     const capabilities = try dependencies(allocator, records, true);
     defer allocator.free(capabilities);
     for (records) |schema| if (schema.managed) {
         if (carries(schema.shape.buffer.?, capabilities, true)) return sink.fail("E_LIST_CAPABILITY", schema.declaration, "managed list elements cannot contain allocator or provider capabilities");
     };
-    for (records) |schema| {
-        const element = if (schema.shape.buffer) |buffer| buffer else if (schema.shape.pool) |pool| pool.element else continue;
-        if (!schema.managed and carries(element, managed, false)) return sink.fail("E_UNTRACED_MANAGED", schema.declaration, "explicit buffers and pools cannot store managed references; use a managed list");
-    }
 }
 
 fn carries(ty: typed.Type, contains: []const bool, capability: bool) bool {

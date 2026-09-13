@@ -42,7 +42,7 @@ still need additional abstract rules and reject explicitly. They are not
 silently skipped. Valid bodies in the supported subset now execute through
 [concrete specialization](generic-execution.md).
 
-[Borrowed input parameters](generic-references.md) now permit explicit mutation
+[Borrowed input parameters](../legacy/experiments/generic-references.md) now permit explicit mutation
 through exclusive references. External effectful operations remain unsupported. This does not implement abstract
 call-effect inference, general move-only/result handling, reference provenance,
 region escape checking, or complete generic body validation. Those remain required
@@ -71,5 +71,5 @@ generics or completion of the full template-body contract.
 
 [Concrete result handling](generic-results.md) now adds transfer, acknowledgement,
 propagation and control-flow obligations. [Partial field state](generic-fields.md) now preserves remaining obligations;
-[concrete owned flow](generic-owned.md) now retains transfer and cleanup effects.
+[concrete owned flow](../legacy/experiments/generic-owned.md) now retains transfer and cleanup effects.
 Runtime operations and region scopes remain pending.

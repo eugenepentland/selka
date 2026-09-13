@@ -45,10 +45,10 @@ public type-argument invocation remain unfinished tooling work.
 
 ## Boundaries and acceptance
 
-Shared/exclusive reference inputs now have [separate acceptance](generic-references.md).
-[Slice inputs](generic-slices.md) are supported too. Lexical
-borrow scopes now have [separate acceptance](generic-borrows.md), as do
-[reference results](generic-returned-references.md). Conversions, general effectful/owned generic bodies, user-defined
+Shared/exclusive reference inputs now have [separate acceptance](../legacy/experiments/generic-references.md).
+[Slice inputs](../legacy/experiments/generic-slices.md) are supported too. Lexical
+borrow scopes now have [separate acceptance](../legacy/experiments/generic-borrows.md), as do
+[reference results](../legacy/experiments/generic-returned-references.md). Conversions, general effectful/owned generic bodies, user-defined
 requirements, and nominal/composite operations beyond the current abstract rules
 still reject explicitly. Builtin `copy`, `equality`, and `integer` constraints do
 not imply arbitrary operations, lifetime contracts, or move-only support.
@@ -76,5 +76,5 @@ construction, field/index projection and imported pure helper calls.
 
 [Concrete result handling](generic-results.md) now adds transfer, acknowledgement,
 propagation and control-flow obligations. [Partial field state](generic-fields.md) now preserves remaining obligations;
-[concrete owned flow](generic-owned.md) now retains transfer and cleanup effects.
+[concrete owned flow](../legacy/experiments/generic-owned.md) now retains transfer and cleanup effects.
 Runtime operations and region scopes remain pending.

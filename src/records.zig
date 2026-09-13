@@ -34,11 +34,8 @@ fn collectDeclarations(allocator: std.mem.Allocator, src: Source, program: ast.P
     const domains = program.types.domains;
     const variant_types = program.types.variants;
     const arrays = program.types.expressions.arrays;
-    const buffers = program.types.buffers;
     const resources = program.types.resources;
-    const pools = program.types.pools;
-    const pool_base = declarations.len + domains.len + variant_types.len + buffers.len + resources.len;
-    const named_count = pool_base + pools.len * 2;
+    const named_count = declarations.len + domains.len + variant_types.len + resources.len;
     const storage = try allocator.alloc(typed.Record, named_count + arrays.len);
     var catalog: Catalog = .{
         .module_names = module_names,
@@ -73,10 +70,7 @@ const Collector = struct {
         const declarations = self.program.types.records;
         const domains = self.program.types.domains;
         const variant_types = self.program.types.variants;
-        const buffers = self.program.types.buffers;
         const resources = self.program.types.resources;
-        const pools = self.program.types.pools;
-        const pool_base = self.program.types.records.len + self.program.types.domains.len + self.program.types.variants.len + self.program.types.buffers.len + self.program.types.resources.len;
         for (declarations, 0..) |declaration, i| {
             const name = if (module_names) |names| try names.declaration(declaration.name) else src.text(declaration.name);
             if (catalog.names.get(name)) |previous| return sink.failRelated(
@@ -140,26 +134,10 @@ const Collector = struct {
                 },
             };
         }
-        for (buffers, 0..) |declaration, offset| {
-            const name = if (module_names) |names| try names.declaration(declaration.name) else src.text(declaration.name);
-            if (catalog.names.get(name)) |previous| return sink.failRelated(eDuplicateType, declaration.name, typeIsAlreadyDeclared, .{ .span = storage[previous.recordIndex()].declaration, .message = previousTypeDeclaration });
-            const index = declarations.len + domains.len + variant_types.len + offset;
-            const id: typed.Type = @fromBackingInt(index + typed.Type.record_base);
-            try catalog.names.put(allocator, name, id);
-            storage[index] = .{
-                .id = id,
-                .name = name,
-                .declaration = declaration.name,
-                .fields = &.{},
-                .contract = .{
-                    .move_only = true,
-                },
-            };
-        }
         for (resources, 0..) |declaration, offset| {
             const name = if (module_names) |names| try names.declaration(declaration.name) else src.text(declaration.name);
             if (catalog.names.get(name)) |previous| return sink.failRelated(eDuplicateType, declaration.name, typeIsAlreadyDeclared, .{ .span = storage[previous.recordIndex()].declaration, .message = previousTypeDeclaration });
-            const index = declarations.len + domains.len + variant_types.len + buffers.len + offset;
+            const index = declarations.len + domains.len + variant_types.len + offset;
             const id: typed.Type = @fromBackingInt(index + typed.Type.record_base);
             const kind = std.meta.stringToEnum(@import("external_resources.zig").Kind, src.text(declaration.backing)) orelse return sink.fail("E_RESOURCE_KIND", declaration.backing, "resource kind must be filesystem or network");
             try catalog.names.put(allocator, name, id);
@@ -175,17 +153,6 @@ const Collector = struct {
                     .move_only = true,
                 },
             };
-        }
-        for (pools, 0..) |declaration, offset| {
-            for ([_]Span{ declaration.name, declaration.handle }, 0..) |span, part| {
-                const name = if (module_names) |names| try names.declaration(span) else src.text(span);
-                if (catalog.names.get(name)) |previous| return sink.failRelated(eDuplicateType, span, typeIsAlreadyDeclared, .{ .span = storage[previous.recordIndex()].declaration, .message = previousTypeDeclaration });
-                const index = pool_base + offset * 2 + part;
-                const id: typed.Type = @fromBackingInt(index + typed.Type.record_base);
-                try catalog.names.put(allocator, name, id);
-                storage[index] = .{ .id = id, .name = name, .declaration = span, .fields = &.{} };
-                if (part == 1) storage[index].shape.handle_pool = storage[index - 1].id;
-            }
         }
     }
     fn internArrays(self: *Collector) Error!void {
@@ -267,9 +234,6 @@ const Collector = struct {
         const declarations = self.program.types.records;
         const domains = self.program.types.domains;
         const variant_types = self.program.types.variants;
-        const buffers = self.program.types.buffers;
-        const pools = self.program.types.pools;
-        const pool_base = self.program.types.records.len + self.program.types.domains.len + self.program.types.variants.len + self.program.types.buffers.len + self.program.types.resources.len;
         for (declarations, catalog.records[0..declarations.len], 0..) |declaration, *out, i| {
             const fields = try allocator.alloc(typed.Field, declaration.fields.len);
             for (declaration.fields, fields, 0..) |field, *resolved, j| {
@@ -299,14 +263,6 @@ const Collector = struct {
                 if (cases.len != 2 or !named_cases) return sink.fail("E_RESULT_SCHEMA", declaration.name, "a result declares exactly `ok: Value` and `err: Error` payload cases");
                 for (cases) |case| if (case.payload == null) return sink.fail("E_RESULT_SCHEMA", case.declaration, "result cases require explicit payload types");
             }
-        }
-        for (buffers, 0..) |declaration, offset| {
-            storage[declarations.len + domains.len + variant_types.len + offset].shape.buffer = try catalog.resolve(src, declaration.backing, sink);
-            storage[declarations.len + domains.len + variant_types.len + offset].managed = declaration.managed;
-        }
-        for (pools, 0..) |declaration, offset| {
-            const index = pool_base + offset * 2;
-            storage[index].shape.pool = .{ .element = try catalog.resolve(src, declaration.element, sink), .handle = storage[index + 1].id };
         }
     }
 };

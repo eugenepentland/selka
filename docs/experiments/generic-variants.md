@@ -35,7 +35,7 @@ Both scalar and record payload representations are exercised.
 
 [Concrete result-bearing variants](generic-results.md) now retain handling
 obligations across matches and propagation. [Partial field state](generic-fields.md) now supports extracting concrete
-result-bearing record payloads. [Concrete owned flow](generic-owned.md) now retains cleanup effects.
+result-bearing record payloads. [Concrete owned flow](../legacy/experiments/generic-owned.md) now retains cleanup effects.
 Runtime operations/regions, parameter-dependent structural types, codec
 constraints, public generic tooling and the remaining roadmap still need work.
 Concrete specialization continues to apply full semantic, ownership, region and

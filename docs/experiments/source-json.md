@@ -1,10 +1,15 @@
 # Typed JSON from language source
 
-Source programs can now encode checked values into owned bytes and decode those
-bytes without a host wrapper or a Zig rebuild. These operations use the existing
+Source programs can encode checked values into bytes and decode those bytes
+without a host wrapper or a Zig rebuild. These operations use the existing
 `typed-json-v1` envelope and checked type identities used by the CLI boundary.
 
+The signatures below are written in the explicit-storage spelling that was
+removed on 2026-09-13; the operations survive, but their managed `bytes`
+spelling is not settled yet, so the examples on this page are not executed.
+
 ```my
+# doc: skip removed feature
 buffer Bytes: u8;
 result Encoded { ok: Bytes, err: i64 }
 struct Item { count: u64, ready: bool }

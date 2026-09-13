@@ -198,10 +198,8 @@ fn invokeInner(operation: *Operation, compilation: *project_compile.Compilation,
 }
 fn preflight(allocator: std.mem.Allocator, records: []const typed.Record, function: typed.Function) !void {
     if (function.policy.effects != 0) return error.InvocationEffects;
-    if (function.signature.return_reference != null) return error.InvocationReference;
     try @import("data_type.zig").checkCodecs(allocator, records, function.signature.return_type);
     for (function.scope.locals[0..function.signature.parameter_count]) |parameter| {
-        if (parameter.parameter.reference_parameter != null) return error.InvocationReference;
         try @import("data_type.zig").checkCodecs(allocator, records, parameter.ty);
     }
 }

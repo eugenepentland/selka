@@ -4,7 +4,7 @@ Status: source and backend reads/writes are implemented for injected filesystem
 and network resource providers. Operations retain ownership and expose partial
 progress. Fixed byte arrays are supported; slice-based I/O, partial field moves,
 arenas/pools, and other roadmap tracks remain pending. [Resource permission
-attenuation](attenuation.md) now limits acquisition and subsequent operations. The CLI still
+attenuation](../legacy/experiments/attenuation.md) now limits acquisition and subsequent operations. The CLI still
 provides no operating-system resource adapter or ambient authority.
 
 ```text
@@ -86,7 +86,7 @@ rejection across commands. Formatting/whitespace checks pass on the pinned Zig.
 
 ## Subsequent borrowed-slice integration
 
-[Resource slice I/O](resource-slices.md) now accepts shared/exclusive byte views for
+[Resource slice I/O](../legacy/experiments/resource-slices.md) now accepts shared/exclusive byte views for
 writes and exclusive destinations for reads. It supports fixed arrays, owned buffers,
 reference parameters, and returned/narrowed views, and can write only the populated
 range. The fixed-array-only restriction above describes this earlier checkpoint.

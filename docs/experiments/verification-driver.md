@@ -50,7 +50,7 @@ is retained, including cache hits and the subprocess's own test-selection eviden
 - Parity requires two or more actual commands, validates each expected result, then
   compares exit status and byte-identical stdout. Stderr remains diagnostic evidence,
   not parity output. The supplied fixture compares general/arena VM memory backends;
-  it remains separate from [scalar native parity](native-execution.md), which now runs
+  it remains separate from [scalar native parity](../legacy/experiments/native-execution.md), which now runs
   inside the compiler-test steps.
 - Mutation steps require a nonzero expected exit and a diagnostic marker. The
   supplied immutable-assignment sentinel verifies that a deliberate invalid change

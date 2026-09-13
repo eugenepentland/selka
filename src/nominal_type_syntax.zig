@@ -4,7 +4,7 @@ const ast = @import("ast.zig");
 /// Whether the program declares or applies a parameterized nominal type.
 pub fn present(program: ast.Program) bool {
     for (program.nodes.items) |node| if (node.data == .list_literal or node.data == .text or node.data == .dictionary_literal) return true;
-    inline for (.{ "records", "variants", "buffers", "pools" }) |category| {
+    inline for (.{ "records", "variants" }) |category| {
         for (@field(program.types, category)) |declaration| if (declaration.type_parameters.len != 0) return true;
     }
     for (program.functions) |function| for (function.signature.type_parameters) |parameter| {

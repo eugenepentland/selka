@@ -224,25 +224,21 @@ function cannot construct them.
 
 Like `str`, `bytes` is accepted in exported module signatures but is not an
 ordinary data type at wire boundaries. JSON encoding and decoding reject it with
-`E_JSON_CODEC`, `host fn` signatures reject it with `E_HOST_SIGNATURE`, and the
-compatibility C backend rejects any managed value with `E_NATIVE_FEATURE`. The
+`E_JSON_CODEC` and `host fn` signatures reject it with `E_HOST_SIGNATURE`. The
 QBE native backend supports byte-string construction, `len`, indexing, equality
 and single-byte membership; the remaining operations report `E_QBE_UNSUPPORTED`
 and run in the VM.
 
-Explicit byte storage still exists during the transition. A `b"..."` literal
-keeps its fixed `[N]u8` array reading exactly where the context demands one — an
-array annotation, or a readonly `&[]u8` slice parameter — so existing explicit
-code compiles unchanged while new code uses `bytes`.
+A `b"..."` literal still reads as a fixed `[N]u8` array exactly where the context
+demands one — an array annotation — so array-shaped host and fixture code keeps
+compiling. Everywhere else a byte literal is a `bytes` value.
 
 ```mylang
 # doc: expect 131
-def checksum(view: &[]u8) -> i64 noalloc:
+def checksum(view: bytes) -> int:
     total = 0
-    index = 0u64
-    while index < len_slice(view):
-        total += cast<i64>(read_slice(view, index))
-        index += 1u64
+    for byte in view:
+        total += byte
     return total
 
 
