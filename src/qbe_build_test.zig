@@ -6,7 +6,6 @@ test {
     _ = @import("qbe_build_options.zig");
     _ = @import("qbe_build_outputs.zig");
     _ = @import("qbe_build_host.zig");
-    _ = @import("qbe_build_json.zig");
     _ = @import("qbe_build_embed.zig");
     _ = @import("qbe_build_shapes.zig");
 }

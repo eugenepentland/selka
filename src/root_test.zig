@@ -12,7 +12,6 @@ test {
     _ = @import("qbe_build.zig");
     _ = @import("qbe_build_cache.zig");
     _ = @import("qbe_build_host.zig");
-    _ = @import("qbe_build_json.zig");
     _ = @import("qbe_build_value.zig");
     _ = @import("qbe_build_options.zig");
     _ = @import("qbe_build_outputs.zig");
@@ -35,8 +34,6 @@ test {
     _ = @import("allocation_budget_test.zig");
     _ = @import("float_operations_test.zig");
     _ = @import("integer_operations_test.zig");
-    _ = @import("native_typed_json.zig");
-    _ = @import("native_json_bridge.zig");
     _ = @import("scoped_providers_test.zig");
     _ = @import("byte_literal_test.zig");
     _ = @import("nominal_provider_contracts_test.zig");

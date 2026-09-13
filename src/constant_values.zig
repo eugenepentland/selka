@@ -104,7 +104,6 @@ const Evaluator = struct {
             call_arguments.release(self.context.sink.allocator, call, bound);
             _ = try self.scalar(function.signature.return_type);
             for (function.signature.parameters) |parameter| {
-                if (parameter.reference != null or parameter.slice) return self.context.sink.fail(eEffect, parameter.ty, "compile-time parameters cannot borrow runtime memory");
                 _ = try self.scalar(parameter.ty);
             }
             return index;

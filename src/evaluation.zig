@@ -71,7 +71,6 @@ fn process(allocator: std.mem.Allocator, program: bc.Program, sink: *diagnostic.
     return vm.runWithOptions(bounded, program, .{
         .max_steps = options.max_steps,
         .max_frames = options.max_frames,
-        .memory = .{ .provide_allocator = false },
     }) catch |err| switch (err) {
         error.OutOfMemory => memoryTrap(),
         else => return err,

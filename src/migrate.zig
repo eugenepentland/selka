@@ -73,8 +73,6 @@ const Kind = enum {
     record,
     variants,
     domain,
-    buffer,
-    pool,
     resource,
     function,
 };
@@ -351,11 +349,7 @@ const Walk = struct {
             .kw_enum, .kw_union => .{ .kind = .variants, .braced = true },
             .kw_domain => .{ .kind = .domain, .braced = true },
             .kw_struct => .{ .kind = .record, .braced = true },
-            .ident => if (self.word(at, "pool"))
-                .{ .kind = .pool, .braced = false }
-            else if (self.word(at, "buffer") or self.word(at, "list"))
-                .{ .kind = .buffer, .braced = false }
-            else if (self.word(at, "resource"))
+            .ident => if (self.word(at, "resource"))
                 .{ .kind = .resource, .braced = false }
             else if (self.word(at, "result"))
                 .{ .kind = .variants, .braced = true }
@@ -375,8 +369,6 @@ const Walk = struct {
             .record => try self.record(item.name),
             .variants => try self.variants(item.name),
             .domain => try self.domain(item.name),
-            .buffer => try self.buffer(item.name),
-            .pool => try self.pool(item.name),
             .resource => try self.resource(item.name),
             .function => try self.function(self.findFunction(item.name) orelse return error.InternalError),
         }
@@ -443,7 +435,6 @@ const Walk = struct {
             for (item.fields) |field| {
                 try self.flush(field.name.start);
                 try self.line();
-                if (field.reference != null) try self.reject(field.name, "a reference record field");
                 try self.out.text(self.src.text(field.name));
                 try self.out.text(": ");
                 try self.typeName(field.ty);
@@ -527,32 +518,6 @@ const Walk = struct {
         self.advance(@max(entry.decode.end, entry.encode.end));
     }
 
-    fn buffer(self: *Walk, name: Span) Error!void {
-        for (self.syntax.types.buffers) |item| {
-            if (item.name.start != name.start) continue;
-            try self.out.text(if (item.managed) "list " else "buffer ");
-            try self.out.text(self.src.text(name));
-            try self.typeParameters(item.type_parameters);
-            try self.out.text(": ");
-            return self.typeName(item.backing);
-        }
-        return error.InternalError;
-    }
-
-    fn pool(self: *Walk, name: Span) Error!void {
-        for (self.syntax.types.pools) |item| {
-            if (item.name.start != name.start) continue;
-            try self.out.text("pool ");
-            try self.out.text(self.src.text(name));
-            try self.typeParameters(item.type_parameters);
-            try self.out.text("(");
-            try self.out.text(self.src.text(item.handle));
-            try self.out.text("): ");
-            return self.typeName(item.element);
-        }
-        return error.InternalError;
-    }
-
     fn resource(self: *Walk, name: Span) Error!void {
         for (self.syntax.types.resources) |item| {
             if (item.name.start != name.start) continue;
@@ -578,7 +543,6 @@ const Walk = struct {
         try self.out.text("(");
         for (item.signature.parameters, 0..) |parameter, index| {
             if (index != 0) try self.out.text(", ");
-            if (parameter.reference != null) try self.reject(parameter.name, "a borrowed reference parameter");
             try self.out.text(self.src.text(parameter.name));
             try self.out.text(": ");
             try self.typeName(parameter.ty);
@@ -588,7 +552,6 @@ const Walk = struct {
             }
         }
         try self.out.text(")");
-        if (item.signature.return_reference != null) try self.reject(item.name, "a returned reference result");
         if (!self.omittedReturn(item.signature.return_type)) {
             try self.out.text(" -> ");
             try self.typeName(item.signature.return_type);
@@ -717,7 +680,6 @@ const Walk = struct {
         try self.out.text("(");
         for (item.parameters, 0..) |parameter, index| {
             if (index != 0) try self.out.text(", ");
-            if (parameter.reference != null) try self.reject(parameter.name, "a borrowed contract parameter");
             try self.out.text(self.src.text(parameter.name));
             try self.out.text(": ");
             try self.typeName(parameter.ty);
@@ -793,10 +755,6 @@ const Walk = struct {
                 });
                 try self.expression(assignment.value, 0);
             },
-            .acknowledge => try self.rejectStatement(item.span, "acknowledge"),
-            .write_slice => try self.rejectStatement(item.span, "write_slice"),
-            .write_ref => try self.rejectStatement(item.span, "write_ref"),
-            .arena_scope => try self.rejectStatement(item.span, "an arena scope"),
             .managed_arena => |scope| {
                 try self.out.text("with arena()");
                 if (scope.name) |name| {
@@ -806,8 +764,6 @@ const Walk = struct {
                 try self.out.text(":");
                 try self.indented(scope.body);
             },
-            .borrow_call => try self.rejectStatement(item.span, "a borrow of a call result"),
-            .borrow => |borrow| try self.rejectStatement(item.span, if (borrow.split != null) "a split borrow" else "a borrow scope"),
         }
     }
 
@@ -1014,22 +970,13 @@ const Walk = struct {
             .list_operation => |write| try self.listOperation(item, write),
             .external_read => |read| try self.generic(if (read.kind == .clock) "clock_now" else "random_u64", read.ty, read.capability),
             .environment_get => |read| try self.environment(read),
-            .acquire_buffer => |acquired| try self.acquisition(item, acquired),
             .match_expression => try self.rejectValue(item.span, "a match expression"),
             .array => try self.rejectValue(item.span, "a fixed array literal"),
-            .update => try self.rejectValue(item.span, "update"),
-            .read_ref => try self.rejectValue(item.span, "read_ref"),
-            .read_slice => try self.rejectValue(item.span, "read_slice"),
-            .len_slice => try self.rejectValue(item.span, "len_slice"),
-            .read_field => try self.rejectValue(item.span, "read_field"),
-            .take_field => try self.rejectValue(item.span, "take_field"),
-            .reset_arena => try self.rejectValue(item.span, "reset_arena"),
-            .acquire_pool => try self.rejectValue(item.span, "acquire_pool"),
             .restrict_resource => try self.rejectValue(item.span, "restrict_resource"),
             .acquire_resource => try self.rejectValue(item.span, "acquire_resource"),
             .complete_resource => try self.rejectValue(item.span, "complete_resource"),
             .resource_io => try self.rejectValue(item.span, "resource input or output"),
-            .buffer_operation, .pool_operation => try self.rejectValue(item.span, self.leadingWord(item.span)),
+            .buffer_operation => try self.rejectValue(item.span, self.leadingWord(item.span)),
         }
     }
 
@@ -1183,12 +1130,6 @@ const Walk = struct {
         try self.out.text(", ");
         try self.expression(read.name, 0);
         try self.out.text(")");
-    }
-
-    /// Managed list creation survives; explicit buffer acquisition does not.
-    fn acquisition(self: *Walk, item: ast.Node, acquired: @FieldType(@FieldType(ast.Node, "data"), "acquire_buffer")) Error!void {
-        if (!acquired.managed) return self.rejectValue(item.span, "acquire_buffer");
-        try self.generic("new_list", acquired.ty, acquired.value);
     }
 
     fn listOperation(self: *Walk, item: ast.Node, write: @FieldType(@FieldType(ast.Node, "data"), "list_operation")) Error!void {

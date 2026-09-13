@@ -58,9 +58,6 @@ fn execute(init: std.process.Init, options: @import("limits.zig").Options, timin
     defer grants.deinit();
     var vm_options = grants.options();
     vm_options.max_steps = options.execution.steps;
-    vm_options.memory.backing_allocator = observations.backing.allocator();
-    vm_options.memory.statistics = &observations.buffers;
-    vm_options.pools.statistics = &observations.pools;
     timings.begin("vm_execution", false);
     const result = try language.vm.runWithHost(runtime_allocator, program.compilation.code.?, vm_options, &registry, .{ .max_calls = options.execution.calls, .max_work = options.execution.work });
     timings.end();

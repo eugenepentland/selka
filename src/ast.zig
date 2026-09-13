@@ -57,6 +57,7 @@ pub const Node = struct {
         list_literal: []const NodeId,
         method_call: struct { base: NodeId, name: Span, arguments: []const NodeId },
         list_operation: struct { base: NodeId, kind: @import("buffer_operations.zig").Kind, arguments: []const NodeId },
+        buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: Span, arguments: []const NodeId },
         slice: struct { base: NodeId, start: ?NodeId, end: ?NodeId },
         integer: Span,
         bytes: []const u8,

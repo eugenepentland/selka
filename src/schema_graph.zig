@@ -15,7 +15,7 @@ const Field = struct { name: []const u8, type: []const u8 };
 const Case = struct { name: []const u8, payload: ?[]const u8 };
 const Codec = struct { wire: []const u8, decode: []const u8, encode: []const u8, error_type: []const u8 };
 const Definition = struct {
-    callback: ?struct { parameters: []const []const u8, result: []const u8, effects: @import("effect_set.zig").Mask, borrowed: u16, slices: u16 } = null,
+    callback: ?struct { parameters: []const []const u8, result: []const u8, effects: @import("effect_set.zig").Mask } = null,
     codec: ?Codec = null,
     name: []const u8,
     kind: enum { unit, callback, integer, boolean, capability, record, array, table, domain, enumeration, tagged_union, result, list, buffer, resource, pool, handle },
@@ -37,7 +37,7 @@ const Definition = struct {
 };
 const Parameter = struct { name: []const u8, type: []const u8, mode: enum { value } };
 const ReturnReference = struct { parameter: usize, mutable: bool, slice: bool };
-const Function = struct { name: []const u8, parameters: []const Parameter, result: []const u8, return_reference: ?ReturnReference, effects: []const []const u8 };
+const Function = struct { name: []const u8, parameters: []const Parameter, result: []const u8, effects: []const []const u8 };
 const Graph = struct {
     allocator: std.mem.Allocator,
     records: []const typed.Record,
@@ -71,7 +71,7 @@ const Graph = struct {
             for (contract.parameters, parameters) |parameter, *out_type| out_type.* = try self.reference(parameter);
             out.kind = .callback;
             out.@"opaque" = true;
-            out.callback = .{ .parameters = parameters, .result = try self.reference(contract.return_type), .effects = contract.effects, .borrowed = contract.borrowed, .slices = contract.slices };
+            out.callback = .{ .parameters = parameters, .result = try self.reference(contract.return_type), .effects = contract.effects };
             return out;
         }
         // Domains may only be constructed through their checked factories. Runtime
@@ -86,11 +86,6 @@ const Graph = struct {
             }
             if (record.shape.buffer) |element| out.element = try self.reference(element);
             if (record.shape.resource) |kind| out.authority = @tagName(kind);
-            if (record.shape.pool) |pool| {
-                out.element = try self.reference(pool.element);
-                out.handle = try self.reference(pool.handle);
-            }
-            if (record.shape.handle_pool) |pool| out.pool = try self.reference(pool);
         } else if (record.shape.array) |array| {
             out.kind = if (array.key != null) .table else .array;
             out.element = try self.reference(array.element);
@@ -162,7 +157,6 @@ pub fn render(allocator: std.mem.Allocator, index: *interfaces.Index, program: t
             .parameters = parameters,
             .result = try graph.reference(function.signature.return_type),
             .effects = names.items,
-            .return_reference = if (function.signature.return_reference) |ref| .{ .parameter = @backingInt(ref.parameter), .mutable = ref.mutable, .slice = ref.slice } else null,
         };
     }
     var definitions: std.ArrayList(Definition) = .empty;
@@ -189,5 +183,5 @@ fn identityKind(record: typed.Record) @FieldType(Definition, "kind") {
     if (record.managed) return .list;
     if (record.shape.buffer != null) return .buffer;
     if (record.shape.resource != null) return .resource;
-    return if (record.shape.pool != null) .pool else .handle;
+    return .handle;
 }

@@ -126,9 +126,6 @@ pub const Catalog = struct {
     fn build(self: *Catalog, record: typed.Record) Error!Layout {
         if (record.managed) return .{ .kind = .managed, .size = 8, .alignment = 8, .copy = .reference, .trace = true };
         if (record.contract.callback != null) return .{ .kind = .callable, .size = 8, .alignment = 8 };
-        if (record.shape.buffer != null) return .{ .kind = .owned_buffer, .size = 8, .alignment = 8, .copy = .prohibited, .trace = true, .drop = true };
-        if (record.shape.pool != null) return .{ .kind = .owned_pool, .size = 8, .alignment = 8, .copy = .prohibited, .trace = true, .drop = true };
-        if (record.shape.handle_pool != null) return .{ .kind = .pool_handle, .size = 24, .alignment = 8 };
         if (record.shape.resource != null) return .{ .kind = .resource, .size = 8, .alignment = 8, .copy = .prohibited, .trace = true, .drop = true };
         if (record.shape.hasRuntimeIdentity()) return .{ .kind = .handle, .size = 8, .alignment = 8, .copy = if (record.contract.move_only) .prohibited else .bytes, .drop = record.contract.move_only };
         if (record.shape.array) |array| {

@@ -80,13 +80,9 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
         },
         .cmp_domain => |comparison| try writer.print("CMP_DOMAIN {s} {s}", .{ typed.typeName(comparison.ty, program.records), @tagName(comparison.predicate) }),
         .cmp_enum => |comparison| try writer.print("CMP_ENUM {s} {s}", .{ typed.typeName(comparison.ty, program.records), @tagName(comparison.predicate) }),
-        .reset_arena => |ty| try writer.print("RESET_ARENA {f}", .{ty}),
         .begin_arena => |watermark| try writer.print("BEGIN_ARENA locals={d}", .{@backingInt(watermark)}),
         .end_arena => |watermark| try writer.print("END_ARENA locals={d}", .{@backingInt(watermark)}),
         .arena_escape => |ty| try writer.print("ARENA_ESCAPE {f}", .{ty}),
-        .begin_region => |slot| try writer.print("BEGIN_REGION local={d}", .{@backingInt(slot)}),
-        .end_region => |slot| try writer.print("END_REGION local={d}", .{@backingInt(slot)}),
-        .cmp_handle => |comparison| try writer.print("CMP_HANDLE {s} {s}", .{ typed.typeName(comparison.ty, program.records), @tagName(comparison.predicate) }),
         .wrap_domain => |ty| try writer.print("WRAP_DOMAIN {s}", .{typed.typeName(ty, program.records)}),
         .unwrap_domain => |ty| try writer.print("UNWRAP_DOMAIN {s}", .{typed.typeName(ty, program.records)}),
         .cast_integer => |ty| try writer.print("CAST_INT {f}", .{ty}),
@@ -94,38 +90,15 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
         .binary_integer => |binary| try writer.print("INT_BINARY {f} {s}", .{ binary.ty, @tagName(binary.op) }),
         .push_unit => try writer.writeAll("PUSH_UNIT"),
         .push_bool => |value| try writer.print("PUSH_BOOL {}", .{value}),
-        .begin_slice => |id| try writer.print("BEGIN_SLICE {d}", .{@backingInt(id)}),
-        .read_slice => |id| try writer.print("READ_SLICE {d}", .{@backingInt(id)}),
-        .write_slice => |id| try writer.print("WRITE_SLICE {d}", .{@backingInt(id)}),
-        .len_slice => |id| try writer.print("LEN_SLICE {d}", .{@backingInt(id)}),
-        .split_borrow => |pair| try writer.print("SPLIT_BORROW {d} {d}", .{ @backingInt(pair.left), @backingInt(pair.right) }),
-        .begin_borrow => |id| try writer.print("BEGIN_BORROW {d}", .{@backingInt(id)}),
-        .end_borrow => |id| try writer.print("END_BORROW {d}", .{@backingInt(id)}),
-        .read_ref => |id| try writer.print("READ_REF {d}", .{@backingInt(id)}),
-        .write_ref => |id| try writer.print("WRITE_REF {d}", .{@backingInt(id)}),
         .buffer_operation => |operation| {
             try writer.print("BUFFER_{s} local={d} -> {s}", .{
                 @tagName(operation.kind),
                 @backingInt(operation.owner),
                 typed.typeName(operation.output, program.records),
             });
-            if (operation.reference) |id| try writer.print(reference_format, .{@backingInt(id)});
-        },
-        .pool_operation => |operation| {
-            try writer.print("POOL_{s} local={d} -> {s}", .{
-                @tagName(operation.kind),
-                @backingInt(operation.owner),
-                typed.typeName(operation.output, program.records),
-            });
-            if (operation.reference) |id| try writer.print(reference_format, .{@backingInt(id)});
-        },
-        .take_field => |read| try writer.print("TAKE_FIELD local={d} field={d} -> {s}", .{ @backingInt(read.owner), read.field, typed.typeName(read.output, program.records) }),
-        .read_field => |read| {
-            try writer.print("READ_FIELD local={d} field={d} -> {s}", .{ @backingInt(read.owner), read.field, typed.typeName(read.output, program.records) });
-            if (read.reference) |id| try writer.print(reference_format, .{@backingInt(id)});
         },
         .resource_io => |io| try writer.print("RESOURCE_{s} local={d} -> {s}", .{
-            if (io.reference != null) (if (io.kind == .read) "read_slice" else "write_slice") else @tagName(io.kind),
+            @tagName(io.kind),
             @backingInt(io.owner),
             typed.typeName(io.output, program.records),
         }),
@@ -134,7 +107,6 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
         .complete_resource => |output| try writer.print("COMPLETE_RESOURCE -> {s}", .{typed.typeName(output, program.records)}),
         .acquire_resource => |acquire| try writer.print("ACQUIRE_RESOURCE -> {s}", .{typed.typeName(acquire.output, program.records)}),
         .external_read => |read| try writer.print("EXTERNAL_{s} -> {s}", .{ @tagName(read.kind), typed.typeName(read.output, program.records) }),
-        .acquire_pool => |ty| try writer.print("ACQUIRE_POOL {f}", .{ty}),
         .acquire_buffer => |ty| try writer.print("ACQUIRE_BUFFER {f}", .{ty}),
         .move_local => |slot| try writer.print("MOVE_LOCAL {d}", .{@backingInt(slot)}),
         .drop_local => |slot| try writer.print("DROP_LOCAL {d}", .{@backingInt(slot)}),
@@ -158,21 +130,8 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
         .add_i64_checked => try writer.writeAll("ADD_I64_CHECKED"),
         .sub_i64_checked => try writer.writeAll("SUB_I64_CHECKED"),
         .mul_i64_checked => try writer.writeAll("MUL_I64_CHECKED"),
-        .call_borrow => |call| try writer.print("CALL_BORROW {d} ({s}) refs={any} result={d}", .{
-            @backingInt(call.function),
-            program.functions[@backingInt(call.function)].name,
-            call.references,
-            @backingInt(call.destination),
-        }),
-        .capture_ref => |id| try writer.print("CAPTURE_REF {d}", .{@backingInt(id)}),
-        .ret_ref => try writer.writeAll("RETURN_REF"),
-        .call_refs => |call| try writer.print("CALL_REFS {d} ({s}) refs={any}", .{
-            @backingInt(call.function),
-            program.functions[@backingInt(call.function)].name,
-            call.references,
-        }),
         .function_value => |value| try writer.print("FUNCTION_VALUE {d} type {d}", .{ @backingInt(value.function), @backingInt(value.ty) }),
-        .invoke => |call| try writer.print("INVOKE type {d} references {any}", .{ @backingInt(call.ty), call.references }),
+        .invoke => |ty| try writer.print("INVOKE type {d}", .{@backingInt(ty)}),
         .call => |id| try writer.print("CALL {d} ({s})", .{ @backingInt(id), program.functions[@backingInt(id)].name }),
         .ret => try writer.writeAll("RET"),
     }

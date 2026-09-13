@@ -48,7 +48,6 @@ pub fn generateWithInterface(allocator: std.mem.Allocator, program: bytecode.Pro
     const runtime_data = @import("native_descriptors.zig").generate(a, &layouts) catch |err| return layoutError(err);
     const wire_types = @import("qbe_wire.zig").describe(a, &layouts) catch |err| return layoutError(err);
     const codecs = @import("qbe_codecs.zig").describe(a, program, &layouts) catch |err| return layoutError(err);
-    const json = @import("qbe_json.zig").describe(a, program, &layouts) catch |err| return if (err == error.OutOfMemory or err == error.WriteFailed) error.OutOfMemory else error.InternalError;
     var text_format = false;
     for (program.functions) |function| for (function.scope.instructions) |instruction| {
         if (instruction.op != .cast_integer) continue;
@@ -60,7 +59,6 @@ pub fn generateWithInterface(allocator: std.mem.Allocator, program: bytecode.Pro
         .host = host,
         .text_format = text_format,
         .entry_parameters = entry_parameters,
-        .json = json,
         .wire_types = wire_types,
         .codecs = codecs,
         .schema = interface.schema,

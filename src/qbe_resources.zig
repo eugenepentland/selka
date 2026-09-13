@@ -6,7 +6,7 @@ pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 /// Bind operation lowering to the concrete backend emitter.
 pub fn Lower(comptime E: type) type {
     return struct {
-        const result = @import("qbe_owned.zig").Lower(E).result;
+        const result = @import("qbe_results.zig").Lower(E).result;
         /// Lower resource authority and ownership transitions against provider helpers.
         pub fn emit(self: *E, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) Error!void {
             const h = stack.len;
@@ -74,13 +74,7 @@ pub fn Lower(comptime E: type) type {
             try self.print(" %v{d} =l copy %aux{d}\n call $memset(l %v{d}, w 0, l {d})\n", .{ output, self.pc, output, @max(8, (try self.layout(shape.ok_type)).size) });
             var slot = stack.len;
             var bytes: Bytes = undefined;
-            if (io.reference) |reference| {
-                const ptr = try self.load("r", @backingInt(reference));
-                const length_ptr = self.temp();
-                const length = self.temp();
-                try self.print(" %v{d} =l add %r{d}, 8\n %v{d} =l loadl %v{d}\n", .{ length_ptr, @backingInt(reference), length, length_ptr });
-                bytes = .{ .pointer = ptr, .length = length };
-            } else if (io.kind == .write) {
+            if (io.kind == .write) {
                 slot -= 1;
                 bytes = try byteView(self, try self.load("s", slot), io.input.?);
             } else {
@@ -96,8 +90,8 @@ pub fn Lower(comptime E: type) type {
                 value = self.temp();
                 try self.print(" %v{d} =l loadl %scratch\n", .{value});
             } else {
-                const length_field = if (io.reference != null) typed.resourceSliceReadShape(io.output, self.program.records).?.length_field else typed.resourceReadShape(io.output, self.program.records).?.length_field;
-                const flag_field = if (io.reference != null) typed.resourceSliceReadShape(io.output, self.program.records).?.eof_field else typed.resourceReadShape(io.output, self.program.records).?.flag_field;
+                const length_field = typed.resourceReadShape(io.output, self.program.records).?.length_field;
+                const flag_field = typed.resourceReadShape(io.output, self.program.records).?.flag_field;
                 const length = try self.field(shape.ok_type, length_field);
                 const flag = try self.field(shape.ok_type, flag_field);
                 const length_ptr = try self.address(output, length.offset);
@@ -106,7 +100,7 @@ pub fn Lower(comptime E: type) type {
                 try self.print(" %v{d} =l loaduw %scratch\n", .{eof});
                 try self.writeValue(try self.address(output, flag.offset), eof, .bool);
             }
-            if (io.kind == .write and io.reference == null) {
+            if (io.kind == .write) {
                 const input_type = io.input.?;
                 if ((try self.layout(input_type)).drop) {
                     try self.print(" call $myl_native_owned_drop(l %heap, l extern ${s}, l %s{d})\n", .{ try self.descriptor(input_type), slot });

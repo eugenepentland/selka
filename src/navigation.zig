@@ -172,7 +172,6 @@ const Builder = struct {
                 const statement = program.statements[@backingInt(statement_id)];
                 switch (statement.data) {
                     .assign, .initialize => |store| try self.edge(owner, self.id(function.scope.locals[@backingInt(store.slot)].declaration), "write", statement.span),
-                    inline .write_ref, .write_slice => |write| try self.edge(owner, self.id(function.scope.references[@backingInt(write.reference)].declaration), "write", statement.span),
                     else => {},
                 }
             },
@@ -184,9 +183,7 @@ const Builder = struct {
             .function_value => |target| try self.edge(owner, self.id(program.functions[@backingInt(target)].declaration), "function_value", node.span),
             .call => |call| try self.edge(owner, self.id(program.functions[@backingInt(call.function)].declaration), "call", node.span),
             .local => |local| try self.edge(owner, self.id(function.scope.locals[@backingInt(local)].declaration), "read", node.span),
-            .read_ref => |reference| try self.edge(owner, self.id(function.scope.references[@backingInt(reference)].declaration), "read", node.span),
             .field => |field| try self.edge(owner, self.fieldId(program, program.nodes[@backingInt(field.base)].ty, field.index), "field_read", node.span),
-            .read_field, .take_field => |field| try self.edge(owner, self.fieldId(program, function.scope.locals[@backingInt(field.owner)].ty, field.field), "field_read", node.span),
             .record => |fields| for (fields) |field| {
                 try self.edge(owner, self.fieldId(program, node.ty, field.index), "field_initialize", node.span);
             },

@@ -156,17 +156,12 @@ const State = struct {
         self.runtime = try self.cache.object("runtime", "qbe_runtime.c", .c_file);
         try self.add(self.runtime);
         for ([_][]const u8{
-            "native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_owned.c", "native_pool.c", "qbe_regions.c", "qbe_stack.c", "qbe_providers.c", "qbe_resources.c", "native_equal.c",
+            "native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "qbe_stack.c", "qbe_providers.c", "qbe_resources.c", "native_equal.c",
         }) |source| try self.add(try self.cache.object("support", source, .c_file));
         const metadata = try self.cache.object("metadata", try outputs.metadata(a, self.manifest), .c_text);
         self.metadata_reused = metadata.reused;
         try self.add(metadata);
         if (v.boolean(v.get(self.manifest, "text_format"))) try self.add(try self.cache.object("format", "native_format.zig", .zig_file));
-        const json = v.get(self.manifest, "json");
-        if (json != .null) {
-            try self.add(try self.cache.object("json-helpers", try @import("qbe_build_json.zig").source(a, json, v.get(self.manifest, "wire_types")), .c_text));
-            try self.add(try self.cache.object("json-bridge", "native_json_bridge.zig", .zig_file));
-        }
     }
     fn link(self: *State, parsed: options.Options, output: []const u8) !bool {
         const a = self.context.allocator;

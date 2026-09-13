@@ -178,7 +178,7 @@ pub fn Builder(comptime Checker: type) type {
         /// Construct a fresh list and append elements in source order.
         pub fn literal(self: Self, ty: typed.Type, values: []const typed.NodeId) Error!typed.Node {
             const capacity = try self.integer(@intCast(values.len));
-            const acquire = try self.node(ty, .{ .acquire_buffer = .{ .allocator = capacity, .capacity = capacity, .managed = true } });
+            const acquire = try self.node(ty, .{ .acquire_buffer = .{ .capacity = capacity } });
             const owner = try self.local(ty);
             var statements: std.ArrayList(typed.StatementId) = .empty;
             try statements.append(self.checker.allocator, try self.stmt(.{ .initialize = .{ .slot = owner, .value = acquire } }));
@@ -198,7 +198,7 @@ pub fn Builder(comptime Checker: type) type {
             const index_slot = try self.local(.i64);
             const limit_slot = try self.local(.i64);
             const zero = try self.integer(0);
-            const acquire = try self.node(ty, .{ .acquire_buffer = .{ .allocator = zero, .capacity = zero, .managed = true } });
+            const acquire = try self.node(ty, .{ .acquire_buffer = .{ .capacity = zero } });
             const i = try self.read(index_slot);
             const loop_id = self.checker.loops.next;
             self.checker.loops.next += 1;

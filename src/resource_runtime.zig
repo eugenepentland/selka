@@ -150,39 +150,6 @@ pub const Runtime = struct {
         defer payload.release(self.allocator);
         return typed.Value.createVariant(self.allocator, output, shape.ok_tag, payload);
     }
-    /// Execute resource IO through a validated guest byte slice and return its typed result.
-    pub fn ioSlice(self: *Runtime, records: []const typed.Record, memory: *@import("memory.zig").Store, request: SliceRequest) IoSliceError!typed.Value {
-        const kind = request.kind;
-        const output = request.output;
-        const value = request.value;
-        const view = request.view;
-        if (!value.isOwned(.external_resource)) return error.InternalError;
-        const resource = value.owned.external_resource;
-        if (resource.store != try self.storeFor(typed.resourceKind(resource.ty, records) orelse return error.InternalError)) return error.InvalidOwner;
-        const owner = resource.owner orelse return error.InvalidOwner;
-        var prepared = try @import("byte_slices.zig").Prepared.init(self.allocator, memory, view, kind == .read, records);
-        defer prepared.deinit();
-        const shape = typed.resultShape(output, records).?;
-        if (kind == .write) {
-            const length = resource.store.write(owner, prepared.bytes) catch |err| {
-                const code = recoverable(err) orelse return err;
-                return typed.Value.createVariant(self.allocator, output, shape.error_tag, .{ .i64 = code });
-            };
-            return typed.Value.createVariant(self.allocator, output, shape.ok_tag, typed.Value.number(.u64, length));
-        }
-        const read = resource.store.read(owner, prepared.bytes) catch |err| {
-            const code = recoverable(err) orelse return err;
-            return typed.Value.createVariant(self.allocator, output, shape.error_tag, .{ .i64 = code });
-        };
-        try prepared.commit(read.length);
-        const read_shape = typed.resourceSliceReadShape(output, records).?;
-        var fields: [2]typed.Value = undefined;
-        fields[read_shape.length_field] = typed.Value.number(.u64, read.length);
-        fields[read_shape.eof_field] = .{ .bool = read.eof };
-        const payload = try typed.Value.create(self.allocator, shape.ok_type, &fields);
-        defer payload.release(self.allocator);
-        return typed.Value.createVariant(self.allocator, output, shape.ok_tag, payload);
-    }
     /// Complete a resource and construct a result that preserves ownership on provider failure.
     pub fn complete(self: *Runtime, output: typed.Type, records: []const typed.Record, value: typed.Value) AcquireError!typed.Value {
         const shape = typed.completionShape(output, records).?;
@@ -215,5 +182,3 @@ fn recoverable(err: resources.Error) ?i64 {
 
 /// Borrowed resource operation operands and their checked result/input types.
 pub const IoRequest = struct { kind: resources.IoKind, output: typed.Type, value: typed.Value, input: ?typed.Value, input_type: ?typed.Type };
-/// Borrowed resource operation over a checked memory slice.
-pub const SliceRequest = struct { kind: resources.IoKind, output: typed.Type, value: typed.Value, view: @import("byte_slices.zig").View };

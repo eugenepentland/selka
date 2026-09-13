@@ -253,11 +253,10 @@ fn single(function: bc.Function, pc: usize) Entry {
     return .{};
 }
 fn scalarFunction(function: bc.Function) bool {
-    if (function.policy.host != null or function.scope.references.len != 0 or function.signature.return_reference != null) return false;
+    if (function.policy.host != null) return false;
     if (function.signature.return_type != .i64 and function.signature.return_type != .bool) return false;
     for (function.scope.locals) |local| {
         if (local.ty != .i64 and local.ty != .bool) return false;
-        if (local.parameter.reference_parameter != null) return false;
     }
     return true;
 }

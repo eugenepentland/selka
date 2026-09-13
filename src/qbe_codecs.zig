@@ -6,12 +6,11 @@ const bytecode = @import("bytecode_model.zig");
 /// Checked decode/encode methods and their declared rejection representation.
 pub const Codec = struct { domain: []const u8, wire: []const u8, decode: usize, encode: usize, result: []const u8, ok: usize, err: usize, error_type: []const u8 };
 /// Domain conversion shapes independent of source JSON expressions.
-pub const Metadata = struct { types: []const @import("qbe_wire.zig").Type, codecs: []const Codec, callbacks: []const @import("qbe_json.zig").Callback };
+pub const Metadata = struct { types: []const @import("qbe_wire.zig").Type, codecs: []const Codec };
 
 /// Derive metadata even when a project uses no source JSON expressions.
 pub fn describe(allocator: std.mem.Allocator, program: bytecode.Program, catalog: *native.Catalog) native.Error!Metadata {
     var codecs: std.ArrayList(Codec) = .empty;
-    var callbacks: std.ArrayList(@import("qbe_json.zig").Callback) = .empty;
     for (program.records) |record| if (record.contract.codec) |codec| {
         const result = program.functions[@backingInt(codec.decode)].signature.return_type;
         const shape = typed.resultShape(result, program.records) orelse return error.InvalidType;
@@ -25,17 +24,6 @@ pub fn describe(allocator: std.mem.Allocator, program: bytecode.Program, catalog
             .err = shape.error_tag,
             .error_type = typed.typeName(shape.error_type, program.records),
         });
-        for ([_]typed.FunctionId{ codec.decode, codec.encode }) |id| {
-            const function = program.functions[@backingInt(id)];
-            var digest: [32]u8 = undefined;
-            std.crypto.hash.sha2.Sha256.hash(function.name, &digest, .{});
-            try callbacks.append(allocator, .{
-                .index = @backingInt(id),
-                .symbol = try std.fmt.allocPrint(allocator, "myl_f_{s}", .{std.fmt.bytesToHex(digest, .lower)}),
-                .input = typed.typeName(function.scope.locals[0].ty, program.records),
-                .output = typed.typeName(function.signature.return_type, program.records),
-            });
-        }
     };
-    return .{ .types = try @import("qbe_wire.zig").describeWithDomains(allocator, catalog, true), .codecs = try codecs.toOwnedSlice(allocator), .callbacks = try callbacks.toOwnedSlice(allocator) };
+    return .{ .types = try @import("qbe_wire.zig").describeWithDomains(allocator, catalog, true), .codecs = try codecs.toOwnedSlice(allocator) };
 }

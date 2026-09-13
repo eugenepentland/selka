@@ -17,7 +17,7 @@ pub const Context = struct {
     src: source.Source,
     sink: *diagnostic.Sink,
     parameters: []const @import("generic_requirements.zig").Parameter,
-    contracts: struct { regions: []const bool, cleanup: []const @import("effect_set.zig").Mask },
+    contracts: struct { cleanup: []const @import("effect_set.zig").Mask },
     work: *usize,
 
     fn charge(self: Context, span: source.Span) Error!void {
@@ -132,16 +132,15 @@ pub const Context = struct {
         if (value == .concrete) return .{ .concrete = self.catalog.records[value.concrete.recordIndex()].collection.key.? };
         return (try self.schema(value, span)).fields[0].ty.?;
     }
-    /// Resolve an owner's element and nominal handle without inventing a concrete type.
-    pub fn container(self: Context, value: Value, span: source.Span, pool: bool) Error!?struct { element: Value, handle: Value } {
-        if (self.kind(value) != (if (pool) templates.Kind.pool else .buffer)) return null;
+    /// Resolve a managed collection's element type without inventing a concrete type.
+    pub fn container(self: Context, value: Value, span: source.Span) Error!?struct { element: Value } {
+        if (self.kind(value) != templates.Kind.buffer) return null;
         if (value == .nominal) {
             const shape = try self.schema(value, span);
             const element_index: usize = if (self.collectionKind(value) == .dictionary) 1 else 0;
-            return .{ .element = shape.fields[element_index].ty.?, .handle = if (pool) try self.nominal(value.nominal.declaration + 1, value.nominal.arguments) else .{ .concrete = .bool } };
+            return .{ .element = shape.fields[element_index].ty.? };
         }
-        const shape = self.catalog.records[value.concrete.recordIndex()].shape;
-        return .{ .element = .{ .concrete = if (pool) shape.pool.?.element else shape.buffer.? }, .handle = .{ .concrete = if (pool) shape.pool.?.handle else .bool } };
+        return .{ .element = .{ .concrete = self.catalog.records[value.concrete.recordIndex()].shape.buffer.? } };
     }
     /// Recognize named result payloads while keeping symbolic arguments intact.
     pub fn matchResult(self: Context, value: Value, span: source.Span) Error!?symbolic.ResultShape {
@@ -219,13 +218,11 @@ pub const Context = struct {
             .length, .length_parameter => .{},
             .parameter => |id| .{
                 .move_only = self.parameters[id].requirements.contains(.storable) and !self.parameters[id].requirements.contains(.copy),
-                .region = !self.parameters[id].requirements.contains(.equality) and !self.parameters[id].requirements.contains(.codec),
                 .requires_handling = self.parameters[id].requirements.contains(.codec) and !self.parameters[id].requirements.contains(.storable),
             },
             .concrete => |ty| .{
                 .move_only = typed.moveOnly(ty, self.catalog.records),
                 .requires_handling = typed.requiresHandling(ty, self.catalog.records),
-                .region = @import("region_check.zig").carries(ty, self.contracts.regions),
                 .cleanup = if (ty.isAggregate()) self.contracts.cleanup[ty.recordIndex()] else 0,
             },
             .nominal => |nominal_value| switch (self.kind(value).?) {
@@ -275,7 +272,6 @@ pub const Context = struct {
             const parent = &stack.items[stack.items.len - 1].result;
             parent.move_only = parent.move_only or result.?.move_only;
             parent.requires_handling = parent.requires_handling or result.?.requires_handling;
-            parent.region = parent.region or result.?.region;
             parent.cleanup |= result.?.cleanup;
         }
         return error.InternalError;

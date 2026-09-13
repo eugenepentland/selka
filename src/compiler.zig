@@ -1,7 +1,5 @@
 //! One request owns source, syntax, semantic nodes, and lowered instructions.
 /// Failures returned by format; callers must handle these boundary errors.
-pub const memory = @import("memory.zig");
-pub const pool_runtime = @import("pool_runtime.zig");
 pub const allocation_budget = @import("codec_memory.zig");
 pub const FormatError = error{
     OutOfMemory,
@@ -95,8 +93,8 @@ const typed = @import("typed.zig");
 const sema = @import("sema.zig");
 const lower = @import("lower.zig");
 pub const bytecode = @import("bytecode.zig");
-pub const navigation_partial = @import("navigation_partial.zig");
 pub const navigation = @import("navigation.zig");
+pub const navigation_partial = @import("navigation_partial.zig");
 pub const quality = @import("quality.zig");
 pub const duplicates = @import("duplicates.zig");
 pub const vm_trace = @import("vm_trace.zig");

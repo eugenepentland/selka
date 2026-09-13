@@ -41,7 +41,6 @@ pub fn Lower(comptime E: type) type {
 }
 /// Lower one managed collection operation using native typed storage.
 fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const typed.Type) Error!void {
-    if (op.reference != null) return self.reject(self.pc);
     const ty = self.function.scope.locals[@backingInt(op.owner)].ty;
     const schema = self.program.records[ty.recordIndex()];
     if (!schema.managed) return self.reject(self.pc);

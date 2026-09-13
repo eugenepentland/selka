@@ -88,14 +88,6 @@ const Facts = struct {
                     if (instruction.op == .function_value) try self.edge(instruction.op.function_value.function, .indirect);
                 };
             },
-            .json_codec => {
-                try self.reason("conservative-json-codec-callback-set");
-                for (self.program.records) |record| if (record.contract.codec) |codec| {
-                    try self.edge(codec.decode, .codec);
-                    try self.edge(codec.encode, .codec);
-                    try self.typeInput(record.id);
-                };
-            },
             .external_read, .environment_get, .acquire_resource, .complete_resource, .resource_io, .restrict_resource => {
                 self.external = true;
                 try self.reason("external-capability-operation");

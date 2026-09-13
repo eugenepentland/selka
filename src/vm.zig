@@ -36,24 +36,18 @@ const bc = @import("bytecode.zig");
 const fusion = @import("vm_fusion.zig");
 const integers = @import("integers.zig");
 const typed = @import("typed.zig");
-const memory = @import("memory.zig");
 const gc_heap = @import("gc_heap.zig");
 const gc_regions = @import("gc_regions.zig");
 const external = @import("external_capabilities.zig");
 const Diagnostic = @import("diagnostic.zig").Diagnostic;
 const environment = @import("environment.zig");
-const pool_runtime = @import("pool_runtime.zig");
 const resource_runtime = @import("resource_runtime.zig");
-/// Select independent general allocations or arena-backed VM storage.
 /// Host failures and invalid checked execution state returned by the VM.
 pub const RunError = invocation_contract.RunError;
 /// Invocation additionally checks exported function identity and argument contracts.
 pub const InvokeError = invocation_contract.InvokeError;
-/// Select general allocation or arena backing for a VM execution.
-pub const MemoryBacking = enum { general, arena };
 /// Execution quotas, optional statistics, and explicitly supplied host authority.
 pub const Options = struct {
-    pools: PoolOptions = .{},
     memory: MemoryOptions = .{},
     environment: ?environment.Provider = null,
     resources: resource_runtime.Options = .{},
@@ -68,23 +62,12 @@ pub const GcOptions = struct {
     stress: bool = false,
     statistics: ?*gc_heap.Statistics = null,
 };
-/// Backing policy, owner quotas, and optional execution-memory observations.
+/// Collection stress options and optional execution-memory observations.
 pub const MemoryOptions = struct {
     gc: GcOptions = .{},
     /// Select original dispatch for differential execution and memory measurements.
     optimize_dispatch: bool = true,
-    backing: MemoryBacking = .general,
-    /// Optional guest buffer/pool backing allocator; excludes snapshots and VM metadata.
-    backing_allocator: ?std.mem.Allocator = null,
-    limits: memory.Limits = .{},
-    statistics: ?*memory.Statistics = null,
-    provide_allocator: bool = true,
     trace: ?*@import("vm_trace.zig").Trace = null,
-};
-/// Pool quotas and optional observations copied after execution cleanup.
-pub const PoolOptions = struct {
-    limits: pool_runtime.Limits = .{},
-    statistics: ?*pool_runtime.Statistics = null,
 };
 /// Scalar entry-point outcome or a source-located runtime trap.
 pub const Result = union(enum) { value: i64, trap: Diagnostic };
@@ -131,18 +114,9 @@ noinline fn growOperandStack(stack: *std.ArrayList(typed.Value), allocator: std.
     try stack.ensureUnusedCapacity(allocator, 1);
 }
 const Span = @import("source.zig").Span;
-const Slice = struct { start: usize, length: usize };
-const Reference = struct { direct: bool = false, lease: memory.Borrow, slice: ?Slice = null };
-const ReturnTarget = struct { destination: usize, parent: memory.Borrow, allocation: memory.Allocation, mutable: bool };
-const CapturedReference = struct { direct: bool = false, slice: ?Slice };
-const ActiveRegion = struct { capability: memory.AllocatorCapability, slot: typed.LocalId };
 const ActiveArena = struct { watermark: usize, frame: usize };
 const Frame = struct {
-    region_base: usize = 0,
     arena_base: usize = 0,
-    return_target: ?ReturnTarget = null,
-    captured: ?CapturedReference = null,
-    reference_base: usize = 0,
     function: typed.FunctionId,
     pc: usize = 0,
     local_base: usize,
@@ -158,10 +132,6 @@ noinline fn growFrames(frames: *std.ArrayList(Frame), allocator: std.mem.Allocat
 }
 noinline fn growLocals(locals: *std.ArrayList(?Value), allocator: std.mem.Allocator, capacity: usize) !void {
     try locals.ensureTotalCapacity(allocator, capacity);
-}
-fn reborrowFull(store: *memory.Store, parent: memory.Borrow, kind: memory.Kind) memory.Error!memory.Borrow {
-    const view = try store.describe(parent);
-    return store.reborrow(parent, 0, view.length, kind);
 }
 fn trap(code: []const u8, message: []const u8, span: Span, frames: []const Frame, program: bc.Program) ValueResult {
     var diagnostic: Diagnostic = .{ .code = code, .message = message, .span = span };
@@ -235,19 +205,15 @@ fn invocationEntry(allocator: std.mem.Allocator, program: bc.Program, function_i
     const function = program.functions[@backingInt(function_id)];
     if (function.policy.restricted) return error.PrivateInvocationFunction;
     if (function.policy.effects & ~allowed_effects != 0) return error.InvocationEffects;
-    if (function.signature.return_reference != null) return error.InvocationReference;
     if (arguments.len != function.signature.parameter_count) return error.InvocationArity;
     try @import("data_type.zig").check(allocator, program.records, function.signature.return_type, true);
     for (function.scope.locals[0..function.signature.parameter_count]) |parameter| {
-        if (parameter.parameter.reference_parameter != null) return error.InvocationReference;
         try @import("data_type.zig").check(allocator, program.records, parameter.ty, true);
     }
     return .{ .id = function_id, .arguments = arguments, .limits = options.arguments, .steps_executed = options.steps_executed };
 }
 fn runInvocation(allocator: std.mem.Allocator, program: bc.Program, options: InvokeOptions, entry: Entry) RunError!ValueResult {
-    return runValues(allocator, program, .{ .max_steps = options.max_steps, .max_frames = options.max_frames, .memory = .{
-        .provide_allocator = false,
-    } }, entry);
+    return runValues(allocator, program, .{ .max_steps = options.max_steps, .max_frames = options.max_frames }, entry);
 }
 
 const HostExecution = struct { registry: *const vm_host.Registry, session: host.Session };
@@ -275,29 +241,13 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
         managed_heap.deinit();
         if (options.memory.gc.statistics) |statistics| statistics.* = managed_heap.statistics;
     }
-    var region: @import("arena.zig").Arena = undefined;
-    try region.initWithBacking(allocator, options.memory.backing_allocator orelse allocator, options.memory.limits);
-    const storage = &region.store;
-    if (options.memory.backing == .general) storage.backing.allocator = options.memory.backing_allocator;
-    defer {
-        region.deinit();
-        if (options.memory.statistics) |statistics| statistics.* = storage.statistics;
-    }
-    var pools: pool_runtime.Runtime = .{ .allocator = allocator, .limits = options.pools.limits };
-    defer {
-        std.debug.assert(pools.statistics.live_pools == 0);
-        if (options.pools.statistics) |statistics| statistics.* = pools.statistics;
-    }
-    var environment_execution = environment.Runtime.init(storage.identity, options.environment);
+    const execution_identity = try @import("wiring/identity.zig").acquire();
+    var environment_execution = environment.Runtime.init(execution_identity, options.environment);
     defer environment_execution.close();
     var resource_execution = try resource_runtime.Runtime.init(allocator, options.resources);
     defer resource_execution.deinit();
-    var external_runtime = external.Runtime.init(storage.identity, options.external);
+    var external_runtime = external.Runtime.init(execution_identity, options.external);
     defer external_runtime.close();
-    var owners: std.AutoHashMapUnmanaged(usize, memory.Allocation) = .empty;
-    defer owners.deinit(allocator);
-    var references: std.ArrayList(?Reference) = .empty;
-    defer references.deinit(allocator);
     var stack: std.ArrayList(typed.Value) = .empty;
     var locals: std.ArrayList(?typed.Value) = .empty;
     defer {
@@ -312,8 +262,6 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
         releaseValues(stack.items, allocator);
         stack.deinit(allocator);
     }
-    var active_regions: std.ArrayList(ActiveRegion) = .empty;
-    defer active_regions.deinit(allocator);
     var active_arenas: std.ArrayList(ActiveArena) = .empty;
     defer active_arenas.deinit(allocator);
     var frames: std.ArrayList(Frame) = .empty;
@@ -325,9 +273,6 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
     for (entry.scope.locals[0..entry.signature.parameter_count], 0..) |parameter, index| {
         if (entry_request.arguments) |values| {
             locals.items[index] = try copier.copy(allocator, parameter.ty, values[index]);
-        } else if (parameter.ty == .allocator) {
-            if (!options.memory.provide_allocator) return error.CapabilityUnavailable;
-            locals.items[index] = .{ .capability = .{ .allocator = try storage.allocatorCapability() } };
         } else if (parameter.ty == .environment_cap) {
             locals.items[index] = .{ .capability = .{ .environment_capability = try environment_execution.grant() } };
         } else if (parameter.ty.resourceKind()) |kind| {
@@ -336,19 +281,15 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
             locals.items[index] = .{ .capability = .{ .external = try external_runtime.grant(parameter.ty.externalKind().?) } };
         }
     }
-    try references.resize(allocator, program.functions[@backingInt(entry_request.id)].scope.references.len);
-    @memset(references.items, null);
     try appendFrame(&frames, allocator, .{ .function = entry_request.id, .local_base = 0, .operand_base = 0, .call_span = .{ .start = 0, .end = 0 } });
     var execution: Execution = .{
         .allocator = allocator,
         .program = program,
         .options = options,
         .steps = &steps,
-        .storage = storage,
         .managed_heap = &managed_heap,
-        .pools = &pools,
         .providers = .{ .host = entry_request.host, .environment = &environment_execution, .resources = &resource_execution, .external = &external_runtime },
-        .state = .{ .arenas = &active_arenas, .stack = &stack, .locals = &locals, .owners = &owners, .references = &references, .active_regions = &active_regions, .frames = &frames },
+        .state = .{ .arenas = &active_arenas, .stack = &stack, .locals = &locals, .frames = &frames },
     };
     while (frames.items.len != 0) {
         if (quickened.enabled and try runOptimized(&execution, &quickened)) return execution.outcome;
@@ -378,13 +319,9 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
             .array_length => step.executeArrayLength(),
             .make_variant => step.executeMakeVariant(),
             .switch_variant => step.executeSwitchVariant(),
-            .reset_arena => step.executeResetArena(),
             .begin_arena => step.executeBeginArena(),
             .end_arena => step.executeEndArena(),
             .arena_escape => step.executeArenaEscape(),
-            .begin_region => step.executeBeginRegion(),
-            .end_region => step.executeEndRegion(),
-            .cmp_handle => step.executeCmpHandle(),
             .cmp_domain => step.executeCmpDomain(),
             .cmp_enum => step.executeCmpEnum(),
             .wrap_domain => step.executeWrapDomain(),
@@ -399,15 +336,6 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
             .push_i64 => step.executePushI64(),
             .push_bool => step.executePushBool(),
             .push_unit => step.executePushUnit(),
-            .begin_borrow, .begin_slice => step.executeBeginBorrow(),
-            .split_borrow => step.executeSplitBorrow(),
-            .end_borrow => step.executeEndBorrow(),
-            .len_slice => step.executeLenSlice(),
-            .read_slice => step.executeReadSlice(),
-            .write_slice => step.executeWriteSlice(),
-            .read_ref => step.executeReadRef(),
-            .write_ref => step.executeWriteRef(),
-            .pool_operation => step.executePoolOperation(),
             .buffer_operation => step.executeBufferOperation(),
             .acquire_resource => step.executeAcquireResource(),
             .resource_io => step.executeResourceIo(),
@@ -415,18 +343,13 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
             .environment_get => step.executeEnvironmentGet(),
             .complete_resource => step.executeCompleteResource(),
             .external_read => step.executeExternalRead(),
-            .acquire_pool => step.executeAcquirePool(),
             .acquire_buffer => step.executeAcquireBuffer(),
-            .json_codec => step.executeJson(),
             .move_local => step.executeMoveLocal(),
             .drop_local => step.executeDropLocal(),
-            .take_field => step.executeTakeField(),
-            .read_field => step.executeReadField(),
             .load_local => step.executeLoadLocal(),
             .store_local => step.executeStoreLocal(),
-            .capture_ref => step.executeCaptureRef(),
-            .call, .call_refs, .call_borrow => step.executeCall(),
-            .ret, .ret_ref => step.executeRet(),
+            .call => step.executeCall(),
+            .ret => step.executeRet(),
             .not_bool => step.executeNotBool(),
             .neg_i64_checked => step.executeNegI64Checked(),
             .add_i64_checked, .sub_i64_checked, .mul_i64_checked => step.executeAddI64Checked(),
@@ -447,21 +370,6 @@ fn arrayIndex(value: typed.Value, schema: typed.Array) error{InternalError}!i128
     return value.asInteger();
 }
 
-fn memoryFailure(err: memory.Error, instruction: bc.Instruction, frames: []const Frame, program: bc.Program) error{ OutOfMemory, IdentityExhausted }!ValueResult {
-    return switch (err) {
-        error.RegionInUse => trap("R_REGION_IN_USE", "arena backing still has live owners", instruction.span, frames, program),
-        error.InvalidCapability => trap(capability_code, "allocator capability is not valid for this execution", instruction.span, frames, program),
-        error.OutOfMemory => error.OutOfMemory,
-        error.IdentityExhausted => error.IdentityExhausted,
-        error.BorrowConflict => trap("R_BORROW_CONFLICT", "access conflicts with an active borrow", instruction.span, frames, program),
-        error.BorrowSuspended => trap("R_BORROW_SUSPENDED", "reference is suspended by an active child borrow", instruction.span, frames, program),
-        error.ReadOnly => trap("R_REFERENCE_READ_ONLY", "reference does not permit writing", instruction.span, frames, program),
-        error.Bounds => trap("R_REFERENCE_BOUNDS", "reference access is outside its bounds", instruction.span, frames, program),
-        error.TypeMismatch => trap("R_REFERENCE_TYPE", "reference write has the wrong element type", instruction.span, frames, program),
-        else => trap(reference_lifetime_code, "reference or owner lifetime is invalid", instruction.span, frames, program),
-    };
-}
-
 // An execution borrows the stores and collections owned by runValues. Individual
 // instruction handlers cannot outlive that invocation or retain frame pointers.
 const Execution = struct {
@@ -470,9 +378,7 @@ const Execution = struct {
     program: bc.Program,
     options: Options,
     steps: *u64,
-    storage: *memory.Store,
     managed_heap: *gc_heap.Heap,
-    pools: *pool_runtime.Runtime,
     providers: Providers,
     state: State,
 };
@@ -486,17 +392,11 @@ const State = struct {
     arenas: *std.ArrayList(ActiveArena),
     stack: *std.ArrayList(typed.Value),
     locals: *std.ArrayList(?typed.Value),
-    owners: *std.AutoHashMapUnmanaged(usize, memory.Allocation),
-    references: *std.ArrayList(?Reference),
-    active_regions: *std.ArrayList(ActiveRegion),
     frames: *std.ArrayList(Frame),
 };
 // Keep scalar dispatch separate from the large generic handler loop so the host
 // compiler can retain hot state in registers across fused operations.
 noinline fn runOptimized(execution: *Execution, plan: *fusion.Plan) !bool {
-    // Fused operations cannot create borrowing-store owners. The generic path
-    // resumes before any operation that can change this execution-wide invariant.
-    if (execution.state.owners.count() != 0) return false;
     var fast_steps = execution.steps.*;
     defer execution.steps.* = fast_steps;
     const frames = execution.state.frames;
@@ -803,8 +703,6 @@ const Step = struct {
             .local_base = local_base,
             .operand_base = argument_base,
             .call_span = self.instruction.span,
-            .reference_base = state.references.items.len,
-            .region_base = state.active_regions.items.len,
             .arena_base = state.arenas.items.len,
         };
         try appendFrame(state.frames, execution.allocator, frame);
@@ -821,12 +719,6 @@ const Step = struct {
         } else if (expected == .bool) {
             if (value.* != .bool) return error.InternalError;
         } else return error.InternalError;
-        // Eligibility excludes reference slots and owned locals; the optimized
-        // loop checks that the borrowing store owns no locals before entering.
-        std.debug.assert(state.references.items.len == frame.reference_base);
-        std.debug.assert(state.active_regions.items.len == frame.region_base);
-        std.debug.assert(frame.return_target == null);
-        std.debug.assert(frame.captured == null);
         state.locals.items.len = frame.local_base;
         state.frames.items.len -= 1;
         if (state.frames.items.len == 0) {
@@ -1101,15 +993,11 @@ const Step = struct {
 
     fn executeSwitchVariant(self: *Step) !bool {
         const allocator = self.execution.allocator;
-        const program = self.execution.program;
-        const storage = self.execution.storage;
         const stack = self.execution.state.stack;
         const locals = self.execution.state.locals;
-        const owners = self.execution.state.owners;
         const frames = self.execution.state.frames;
         const frame = self.frame.*;
         const frame_index = self.frame_index;
-        const instruction = self.instruction.*;
         const function = self.execution.program.functions[@backingInt(self.frame.function)];
         const dispatch = self.instruction.op.switch_variant;
         const input = try pop(stack, frame.operand_base);
@@ -1125,39 +1013,10 @@ const Step = struct {
                 return error.InternalError;
             }
             const index = frame.local_base + @backingInt(slot);
-            if (owners.get(index)) |owner| {
-                defer payload.release(allocator);
-                storage.writeOwner(owner, 0, payload) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-            } else {
-                if (locals.items[index]) |old| old.release(allocator);
-                locals.items[index] = payload;
-            }
+            if (locals.items[index]) |old| old.release(allocator);
+            locals.items[index] = payload;
         }
         frames.items[frame_index].pc = arm.target;
-        return false;
-    }
-
-    fn executeResetArena(self: *Step) !bool {
-        const allocator = self.execution.allocator;
-        const program = self.execution.program;
-        const storage = self.execution.storage;
-        const stack = self.execution.state.stack;
-        const frame = self.frame.*;
-        const output = self.instruction.op.reset_arena;
-        const capability = try pop(stack, frame.operand_base);
-        defer capability.release(allocator);
-        if (!capability.isCapability(.allocator)) return error.InternalError;
-        var status: i64 = 0;
-        storage.resetRegion(capability.capability.allocator) catch |err| {
-            status = switch (err) {
-                error.RegionInUse => 1,
-                error.ChildrenActive => 2,
-                error.InvalidCapability => 3,
-                else => return error.InternalError,
-            };
-        };
-        const shape = typed.resultShape(output, program.records).?;
-        try pushOwned(stack, allocator, try typed.Value.createVariant(allocator, output, if (status == 0) shape.ok_tag else shape.error_tag, if (status == 0) .{ .bool = true } else .{ .i64 = status }));
         return false;
     }
 
@@ -1210,67 +1069,6 @@ const Step = struct {
         if (value.typeOf() != self.instruction.op.arena_escape) return error.InternalError;
         const copied = gc_regions.escape(self.execution.managed_heap, value) catch |err| return self.managedFailure(err);
         try pushOwned(stack, allocator, copied);
-        return false;
-    }
-
-    fn executeBeginRegion(self: *Step) !bool {
-        const allocator = self.execution.allocator;
-        const program = self.execution.program;
-        const storage = self.execution.storage;
-        const stack = self.execution.state.stack;
-        const locals = self.execution.state.locals;
-        const active_regions = self.execution.state.active_regions;
-        const frames = self.execution.state.frames;
-        const frame = self.frame.*;
-        const instruction = self.instruction.*;
-        const slot = self.instruction.op.begin_region;
-        const parent = try pop(stack, frame.operand_base);
-        defer parent.release(allocator);
-        if (!parent.isCapability(.allocator)) return error.InternalError;
-        const capability = storage.beginRegion(parent.capability.allocator) catch |err| switch (err) {
-            error.CapacityLimit => return self.finish(trap("R_REGION_LIMIT", "execution region limit exceeded", instruction.span, frames.items, program)),
-            else => return self.finish(try memoryFailure(err, instruction, frames.items, program)),
-        };
-        active_regions.append(allocator, .{ .capability = capability, .slot = slot }) catch |err| {
-            try storage.endRegion(capability);
-            return err;
-        };
-        const index = frame.local_base + @backingInt(slot);
-        if (locals.items[index]) |old| old.release(allocator);
-        locals.items[index] = .{ .capability = .{ .allocator = capability } };
-        return false;
-    }
-
-    fn executeEndRegion(self: *Step) !bool {
-        const program = self.execution.program;
-        const storage = self.execution.storage;
-        const locals = self.execution.state.locals;
-        const active_regions = self.execution.state.active_regions;
-        const frames = self.execution.state.frames;
-        const frame = self.frame.*;
-        const instruction = self.instruction.*;
-        const slot = self.instruction.op.end_region;
-        if (active_regions.items.len <= frame.region_base) return error.InternalError;
-        const active_region = active_regions.items[active_regions.items.len - 1];
-        if (active_region.slot != slot) return error.InternalError;
-        storage.endRegion(active_region.capability) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-        _ = active_regions.pop();
-        locals.items[frame.local_base + @backingInt(slot)] = null;
-        return false;
-    }
-
-    fn executeCmpHandle(self: *Step) !bool {
-        const allocator = self.execution.allocator;
-        const stack = self.execution.state.stack;
-        const frame = self.frame.*;
-        const comparison = self.instruction.op.cmp_handle;
-        const right = try pop(stack, frame.operand_base);
-        defer right.release(allocator);
-        const left = try pop(stack, frame.operand_base);
-        defer left.release(allocator);
-        if (left != .handle or right != .handle or left.typeOf() != comparison.ty or right.typeOf() != comparison.ty) return error.InternalError;
-        const equal = std.meta.eql(left.handle.id, right.handle.id);
-        try appendValue(stack, allocator, .{ .bool = if (comparison.predicate == .eq) equal else !equal });
         return false;
     }
 
@@ -1464,343 +1262,19 @@ const Step = struct {
         return false;
     }
 
-    fn executeBeginBorrow(self: *Step) !bool {
-        const allocator = self.execution.allocator;
-        const program = self.execution.program;
-        const storage = self.execution.storage;
-        const stack = self.execution.state.stack;
-        const locals = self.execution.state.locals;
-        const owners = self.execution.state.owners;
-        const references = self.execution.state.references;
-        const frames = self.execution.state.frames;
-        const frame = self.frame.*;
-        const instruction = self.instruction.*;
-        const function = self.execution.program.functions[@backingInt(self.frame.function)];
-        const id = switch (self.instruction.op) {
-            .begin_borrow, .begin_slice => |value| value,
-            else => unreachable,
-        };
-        const index = frame.reference_base + @backingInt(id);
-        if (references.items[index] != null) return self.finish(trap(reference_lifetime_code, "reference is already active", instruction.span, frames.items, program));
-        const metadata = function.scope.references[@backingInt(id)];
-        var slice: ?Slice = null;
-        var direct = false;
-        if (metadata.mode.slice) {
-            if (metadata.parent) |parent| {
-                const previous = references.items[frame.reference_base + @backingInt(parent)] orelse return self.finish(trap(reference_lifetime_code, "parent reference is not active", instruction.span, frames.items, program));
-                direct = previous.direct;
-                if (previous.slice) |view| slice = view else {
-                    const array_type = function.scope.references[@backingInt(parent)].ty;
-                    slice = .{ .start = 0, .length = program.records[array_type.recordIndex()].shape.array.?.length };
-                }
-            } else {
-                const owner_type = function.scope.locals[@backingInt(metadata.owner)].ty;
-                const schema = program.records[owner_type.recordIndex()];
-                if (schema.shape.buffer != null) {
-                    const local = try self.operationOwner(metadata.owner, null, false);
-                    defer local.release(allocator);
-                    if (!local.isOwned(.resource)) return error.InternalError;
-                    const info = storage.bufferInfo(local.owned.resource.owner) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-                    slice = .{ .start = 0, .length = info.length };
-                    direct = true;
-                } else slice = .{ .start = 0, .length = schema.shape.array.?.length };
-            }
-            if (instruction.op == .begin_slice) {
-                const end = try numeric(stack, frame.operand_base, null, allocator);
-                const start = try numeric(stack, frame.operand_base, null, allocator);
-                if (start < 0 or end < start or end > slice.?.length) return self.finish(trap(slice_bounds_code, "slice range is outside its source bounds", instruction.span, frames.items, program));
-                slice = .{ .start = slice.?.start + @as(usize, @intCast(start)), .length = @intCast(end - start) };
-            }
-        }
-        const kind: memory.Kind = if (metadata.mutable) .exclusive else .shared;
-        const reference = if (metadata.parent) |parent| child: {
-            const parent_reference = references.items[frame.reference_base + @backingInt(parent)] orelse return self.finish(trap(reference_lifetime_code, "parent reference is not active", instruction.span, frames.items, program));
-            break :child reborrowFull(storage, parent_reference.lease, kind) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-        } else root: {
-            const local_index = frame.local_base + @backingInt(metadata.owner);
-            if (direct) {
-                const value = try self.operationOwner(metadata.owner, null, false);
-                defer value.release(allocator);
-                const resource = value.owned.resource;
-                const info = storage.bufferInfo(resource.owner) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-                break :root storage.borrow(resource.owner, 0, info.length, kind) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-            }
-            var allocation = owners.get(local_index);
-            if (allocation == null) {
-                const old = locals.items[local_index] orelse return error.InternalError;
-                const created = try storage.create(function.scope.locals[@backingInt(metadata.owner)].ty, &.{old});
-                // The store owns created memory if inserting the owner map fails.
-                try owners.put(allocator, local_index, created);
-                locals.items[local_index] = null;
-                old.release(allocator);
-                allocation = created;
-            }
-            break :root storage.borrow(allocation.?, 0, 1, kind) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-        };
-        references.items[index] = .{ .direct = direct, .lease = reference, .slice = slice };
-        return false;
-    }
-
-    fn executeSplitBorrow(self: *Step) !bool {
-        const execution = self.execution;
-        const frame = self.frame.*;
-        const instruction = self.instruction.*;
-        const pair = instruction.op.split_borrow;
-        const references = execution.state.references;
-        const function = execution.program.functions[@backingInt(frame.function)];
-        const parent_id = function.scope.references[@backingInt(pair.left)].parent.?;
-        const parent = references.items[frame.reference_base + @backingInt(parent_id)] orelse return self.finish(trap(reference_lifetime_code, inactive_slice_message, instruction.span, execution.state.frames.items, execution.program));
-        const view = parent.slice orelse return error.InternalError;
-        const middle = try numeric(execution.state.stack, frame.operand_base, null, execution.allocator);
-        if (middle < 0 or middle > view.length) return self.finish(trap(slice_bounds_code, "split point is outside its source bounds", instruction.span, execution.state.frames.items, execution.program));
-        const left = frame.reference_base + @backingInt(pair.left);
-        const right = frame.reference_base + @backingInt(pair.right);
-        if (references.items[left] != null or references.items[right] != null) return self.finish(trap(reference_lifetime_code, "split reference is already active", instruction.span, execution.state.frames.items, execution.program));
-        const at: usize = @intCast(middle);
-        const divided = (if (parent.direct)
-            execution.storage.split(parent.lease, view.start, view.length, at)
-        else
-            execution.storage.splitFields(parent.lease, view.start, view.length, at)) catch |err| return self.finish(try memoryFailure(err, instruction, execution.state.frames.items, execution.program));
-        references.items[left] = .{ .direct = parent.direct, .lease = divided.left, .slice = .{ .start = if (parent.direct) 0 else view.start, .length = at } };
-        references.items[right] = .{ .direct = parent.direct, .lease = divided.right, .slice = .{ .start = if (parent.direct) 0 else view.start + at, .length = view.length - at } };
-        return false;
-    }
-
-    fn executeEndBorrow(self: *Step) !bool {
-        const program = self.execution.program;
-        const storage = self.execution.storage;
-        const references = self.execution.state.references;
-        const frames = self.execution.state.frames;
-        const frame = self.frame.*;
-        const instruction = self.instruction.*;
-        const id = self.instruction.op.end_borrow;
-        const index = frame.reference_base + @backingInt(id);
-        const reference = references.items[index] orelse return self.finish(trap(reference_lifetime_code, inactive_reference_message, instruction.span, frames.items, program));
-        storage.end(reference.lease) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-        references.items[index] = null;
-        return false;
-    }
-
-    fn executeLenSlice(self: *Step) !bool {
-        const allocator = self.execution.allocator;
-        const program = self.execution.program;
-        const storage = self.execution.storage;
-        const stack = self.execution.state.stack;
-        const references = self.execution.state.references;
-        const frames = self.execution.state.frames;
-        const frame = self.frame.*;
-        const instruction = self.instruction.*;
-        const id = self.instruction.op.len_slice;
-        const reference = references.items[frame.reference_base + @backingInt(id)] orelse return self.finish(trap(reference_lifetime_code, inactive_slice_message, instruction.span, frames.items, program));
-        _ = storage.describe(reference.lease) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-        const view = reference.slice orelse return error.InternalError;
-        try appendValue(stack, allocator, typed.Value.number(.u64, view.length));
-        return false;
-    }
-
-    fn executeReadSlice(self: *Step) !bool {
-        const allocator = self.execution.allocator;
-        const program = self.execution.program;
-        const storage = self.execution.storage;
-        const stack = self.execution.state.stack;
-        const references = self.execution.state.references;
-        const frames = self.execution.state.frames;
-        const frame = self.frame.*;
-        const instruction = self.instruction.*;
-        const id = self.instruction.op.read_slice;
-        const index = try numeric(stack, frame.operand_base, null, allocator);
-        const reference = references.items[frame.reference_base + @backingInt(id)] orelse return self.finish(trap(reference_lifetime_code, inactive_slice_message, instruction.span, frames.items, program));
-        const view = reference.slice orelse return error.InternalError;
-        if (index < 0 or index >= view.length) return self.finish(trap(slice_bounds_code, "slice index is outside its bounds", instruction.span, frames.items, program));
-        if (reference.direct) {
-            const value = storage.read(reference.lease, view.start + @as(usize, @intCast(index))) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-            try pushOwned(stack, allocator, value);
-            return false;
-        }
-        const value = storage.readField(reference.lease, view.start + @as(usize, @intCast(index))) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-        try pushOwned(stack, allocator, value);
-        return false;
-    }
-
-    fn executeWriteSlice(self: *Step) !bool {
-        const allocator = self.execution.allocator;
-        const program = self.execution.program;
-        const storage = self.execution.storage;
-        const stack = self.execution.state.stack;
-        const references = self.execution.state.references;
-        const frames = self.execution.state.frames;
-        const frame = self.frame.*;
-        const instruction = self.instruction.*;
-        const function = self.execution.program.functions[@backingInt(self.frame.function)];
-        const id = self.instruction.op.write_slice;
-        const value = try pop(stack, frame.operand_base);
-        defer value.release(allocator);
-        const index = try numeric(stack, frame.operand_base, null, allocator);
-        const reference = references.items[frame.reference_base + @backingInt(id)] orelse return self.finish(trap(reference_lifetime_code, inactive_slice_message, instruction.span, frames.items, program));
-        const view = reference.slice orelse return error.InternalError;
-        if (index < 0 or index >= view.length) return self.finish(trap(slice_bounds_code, "slice index is outside its bounds", instruction.span, frames.items, program));
-        if (value.typeOf() != function.scope.references[@backingInt(id)].ty) return self.finish(trap("R_REFERENCE_TYPE", "slice write has the wrong element type", instruction.span, frames.items, program));
-        if (reference.direct) {
-            storage.write(reference.lease, view.start + @as(usize, @intCast(index)), value) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-            return false;
-        }
-        storage.writeField(reference.lease, view.start + @as(usize, @intCast(index)), value) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-        return false;
-    }
-
-    fn executeReadRef(self: *Step) !bool {
-        const allocator = self.execution.allocator;
-        const program = self.execution.program;
-        const storage = self.execution.storage;
-        const stack = self.execution.state.stack;
-        const references = self.execution.state.references;
-        const frames = self.execution.state.frames;
-        const frame = self.frame.*;
-        const instruction = self.instruction.*;
-        const id = self.instruction.op.read_ref;
-        const reference = references.items[frame.reference_base + @backingInt(id)] orelse return self.finish(trap(reference_lifetime_code, inactive_reference_message, instruction.span, frames.items, program));
-        const value = storage.read(reference.lease, 0) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-        try pushOwned(stack, allocator, value);
-        return false;
-    }
-
-    fn executeWriteRef(self: *Step) !bool {
-        const allocator = self.execution.allocator;
-        const program = self.execution.program;
-        const storage = self.execution.storage;
-        const stack = self.execution.state.stack;
-        const references = self.execution.state.references;
-        const frames = self.execution.state.frames;
-        const frame = self.frame.*;
-        const instruction = self.instruction.*;
-        const id = self.instruction.op.write_ref;
-        const value = try pop(stack, frame.operand_base);
-        defer value.release(allocator);
-        const reference = references.items[frame.reference_base + @backingInt(id)] orelse return self.finish(trap(reference_lifetime_code, inactive_reference_message, instruction.span, frames.items, program));
-        storage.write(reference.lease, 0, value) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-        return false;
-    }
-
-    fn operationOwner(self: *Step, owner: typed.LocalId, reference_id: ?typed.ReferenceId, mutable: bool) !typed.Value {
-        const storage = self.execution.storage;
-        const state = self.execution.state;
-        if (reference_id) |id| {
-            const reference = state.references.items[self.frame.reference_base + @backingInt(id)] orelse return error.InternalError;
-            const view = try storage.describe(reference.lease);
-            if (mutable and view.kind != .exclusive) return error.InternalError;
-            return storage.read(reference.lease, 0);
-        }
-        const index = self.frame.local_base + @backingInt(owner);
-        if (state.owners.get(index)) |allocation| {
-            try storage.checkOwnerAccess(allocation, mutable);
-            return storage.readOwner(allocation, 0);
-        }
-        return (state.locals.items[index] orelse return error.InternalError).retain();
-    }
-
-    fn executePoolOperation(self: *Step) !bool {
-        const allocator = self.execution.allocator;
-        const program = self.execution.program;
-        const pools = self.execution.pools;
-        const stack = self.execution.state.stack;
-        const frame = self.frame.*;
-        const operation = self.instruction.op.pool_operation;
-        const count = operation.kind.arity();
-        if (stack.items.len - frame.operand_base < count) return error.InternalError;
-        const start = stack.items.len - count;
-        const local = try self.operationOwner(operation.owner, operation.reference, operation.kind.mutates());
-        defer local.release(allocator);
-        if (!local.isOwned(.pool) or local.owned.pool.runtime != pools) return error.InternalError;
-        const schema = program.records[local.owned.pool.ty.recordIndex()].shape.pool orelse return error.InternalError;
-        var status: i64 = 0;
-        const output = local.owned.pool.perform(operation.kind, schema, stack.items[start..]) catch |err| failed: {
-            status = switch (err) {
-                error.InvalidHandle => 1,
-                error.ForeignPool => 2,
-                error.CapacityLimit => 3,
-                error.OutOfMemory => return error.OutOfMemory,
-                else => return error.InternalError,
-            };
-            if (!operation.kind.fallible()) return error.InternalError;
-            break :failed typed.Value{ .i64 = status };
-        };
-        defer output.release(allocator);
-        for (stack.items[start..]) |argument| argument.release(allocator);
-        stack.shrinkRetainingCapacity(start);
-        if (operation.kind.fallible()) {
-            const shape = typed.resultShape(operation.output, program.records).?;
-            try pushOwned(stack, allocator, try typed.Value.createVariant(allocator, operation.output, if (status == 0) shape.ok_tag else shape.error_tag, output));
-        } else try pushOwned(stack, allocator, output.retain());
-        return false;
-    }
-
     fn executeBufferOperation(self: *Step) !bool {
-        const allocator = self.execution.allocator;
-        const program = self.execution.program;
-        const storage = self.execution.storage;
         const stack = self.execution.state.stack;
-        const frames = self.execution.state.frames;
         const frame = self.frame.*;
-        const instruction = self.instruction.*;
         const operation = self.instruction.op.buffer_operation;
         const count = operation.kind.arity();
         if (stack.items.len - frame.operand_base < count) return error.InternalError;
         const start = stack.items.len - count;
         const arguments = stack.items[start..];
-        const local = try self.operationOwner(operation.owner, operation.reference, operation.kind.mutates());
-        defer local.release(allocator);
-        if (local == .managed) return self.executeManagedOperation(local, arguments, start);
-        if (!local.isOwned(.resource) or local.owned.resource.store != storage) return error.InternalError;
-        const owner = local.owned.resource.owner;
-        const info = storage.bufferInfo(owner) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-        const number: i128 = if (count != 0 and operation.kind != .append) try arguments[if (operation.kind == .reserve) 1 else 0].asInteger() else 0;
-        if (operation.kind == .reserve) {
-            if (!arguments[0].isCapability(.allocator)) return error.InternalError;
-            storage.checkAllocationAllocator(owner, arguments[0].capability.allocator) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-        }
-        var status: i64 = 0;
-        const output: typed.Value = switch (operation.kind) {
-            .length => typed.Value.number(.u64, info.length),
-            .capacity => typed.Value.number(.u64, info.capacity),
-            .read => read: {
-                if (number < 0 or number >= info.length) return self.finish(trap("R_BUFFER_BOUNDS", "buffer index is outside initialized bounds", instruction.span, frames.items, program));
-                break :read storage.readOwner(owner, @intCast(number)) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-            },
-            .take => taking: {
-                const shape = typed.resultShape(operation.output, program.records).?;
-                if (number < 0 or number >= info.length) break :taking try typed.Value.createVariant(allocator, operation.output, shape.error_tag, .{ .i64 = 3 });
-                const value = storage.takeOwner(owner, @intCast(number)) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-                defer value.release(allocator);
-                break :taking try typed.Value.createVariant(allocator, operation.output, shape.ok_tag, value);
-            },
-            else => mutation: {
-                if (operation.kind != .append and (number < 0 or number > std.math.maxInt(usize))) {
-                    status = if (operation.kind == .reserve) 1 else 3;
-                } else {
-                    const index: usize = @intCast(number);
-                    const result: memory.Error!void = switch (operation.kind) {
-                        .write => storage.writeOwner(owner, index, arguments[1]),
-                        .append => storage.appendWithinCapacity(owner, arguments[0]),
-                        .resize => storage.resizeWithinCapacity(owner, index, arguments[1]),
-                        .reserve => reserveBuffer(storage, owner, index),
-                        .truncate => storage.truncateOwner(owner, index),
-                        else => unreachable,
-                    };
-                    result catch |err| switch (err) {
-                        error.CapacityLimit => status = 1,
-                        error.NoCapacity => status = 2,
-                        error.Bounds => status = 3,
-                        else => return self.finish(try memoryFailure(err, instruction, frames.items, program)),
-                    };
-                }
-                const shape = typed.resultShape(operation.output, program.records).?;
-                break :mutation try typed.Value.createVariant(allocator, operation.output, if (status == 0) shape.ok_tag else shape.error_tag, if (status == 0) .{ .bool = true } else .{ .i64 = status });
-            },
-        };
-        releaseValues(arguments, allocator);
-        stack.shrinkRetainingCapacity(start);
-        try pushOwned(stack, allocator, output);
-        return false;
+        const owner = self.local_values[@backingInt(operation.owner)] orelse return error.InternalError;
+        const local = owner.retain();
+        defer local.release(self.execution.allocator);
+        if (local != .managed) return error.InternalError;
+        return self.executeManagedOperation(local, arguments, start);
     }
 
     fn executeManagedOperation(self: *Step, list: Value, arguments: []const Value, start: usize) !bool {
@@ -2027,45 +1501,13 @@ const Step = struct {
     fn executeResourceIo(self: *Step) !bool {
         const allocator = self.execution.allocator;
         const program = self.execution.program;
-        const storage = self.execution.storage;
         const resource_execution = self.execution.providers.resources;
         const stack = self.execution.state.stack;
         const locals = self.execution.state.locals;
-        const references = self.execution.state.references;
         const frames = self.execution.state.frames;
         const frame = self.frame.*;
         const instruction = self.instruction.*;
         const io = self.instruction.op.resource_io;
-        if (io.reference) |id| {
-            const reference = references.items[frame.reference_base + @backingInt(id)] orelse return self.finish(trap(reference_lifetime_code, "resource I/O slice is not active", instruction.span, frames.items, program));
-            const slice = reference.slice orelse return error.InternalError;
-            const owner = locals.items[frame.local_base + @backingInt(io.owner)] orelse return error.InternalError;
-            const output = resource_execution.ioSlice(program.records, storage, .{ .kind = io.kind, .output = io.output, .value = owner, .view = .{
-                .lease = reference.lease,
-                .direct = reference.direct,
-                .start = slice.start,
-                .length = slice.length,
-            } }) catch |err| switch (err) {
-                error.InvalidCapability, error.InvalidOwner, error.Closed => return self.finish(trap(capability_code, "resource I/O owner is stale or invalid", instruction.span, frames.items, program)),
-                error.IdentityExhausted,
-                error.MemoryClosed,
-                error.ForeignMemory,
-                error.InvalidAllocation,
-                error.ExpiredBorrow,
-                error.BorrowConflict,
-                error.BorrowSuspended,
-                error.ChildrenActive,
-                error.ReadOnly,
-                error.Bounds,
-                error.TypeMismatch,
-                error.CapacityLimit,
-                error.NoCapacity,
-                => return self.finish(try memoryFailure(@errorCast(err), instruction, frames.items, program)),
-                else => return err,
-            };
-            try pushOwned(stack, allocator, output);
-            return false;
-        }
         const input = if (io.kind == .write) try pop(stack, frame.operand_base) else null;
         defer if (input) |value| value.release(allocator);
         const owner = locals.items[frame.local_base + @backingInt(io.owner)] orelse return error.InternalError;
@@ -2165,113 +1607,20 @@ const Step = struct {
         return false;
     }
 
-    fn executeAcquirePool(self: *Step) !bool {
-        const allocator = self.execution.allocator;
-        const program = self.execution.program;
-        const storage = self.execution.storage;
-        const pools = self.execution.pools;
-        const stack = self.execution.state.stack;
-        const frames = self.execution.state.frames;
-        const frame = self.frame.*;
-        const instruction = self.instruction.*;
-        const ty = self.instruction.op.acquire_pool;
-        const capacity = try numeric(stack, frame.operand_base, null, allocator);
-        const authority = try pop(stack, frame.operand_base);
-        defer authority.release(allocator);
-        if (!authority.isCapability(.allocator)) return error.InternalError;
-        storage.checkAllocator(authority.capability.allocator) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-        const shape = typed.resultShape(ty, program.records).?;
-        var status: i64 = 1;
-        const owner: ?typed.Value = if (capacity < 0 or capacity > std.math.maxInt(usize)) null else pools.acquireAuthorized(shape.ok_type, @intCast(capacity), storage, authority.capability.allocator) catch |err| switch (err) {
-            error.CapacityLimit => null,
-            error.IdentityExhausted => exhausted: {
-                status = 2;
-                break :exhausted null;
-            },
-            error.OutOfMemory => return error.OutOfMemory,
-            else => return error.InternalError,
-        };
-        if (owner) |value| {
-            defer value.release(allocator);
-            try pushOwned(stack, allocator, try typed.Value.createVariant(allocator, ty, shape.ok_tag, value));
-        } else {
-            try pushOwned(stack, allocator, try typed.Value.createVariant(allocator, ty, shape.error_tag, .{ .i64 = status }));
-        }
-        return false;
-    }
-
-    fn executeJson(self: *Step) !bool {
-        const execution = self.execution;
-        const allocator = execution.allocator;
-        const stack = execution.state.stack;
-        const limit = try numeric(stack, self.frame.operand_base, null, allocator);
-        const input = try pop(stack, self.frame.operand_base);
-        defer input.release(allocator);
-        const authority = try pop(stack, self.frame.operand_base);
-        defer authority.release(allocator);
-        const outcome = @import("runtime_json.zig").run(allocator, .{
-            .program = execution.program,
-            .storage = execution.storage,
-            .steps = execution.options.max_steps - execution.steps.*,
-            .frames = execution.options.max_frames - execution.state.frames.items.len,
-            .dispatch = invoke,
-        }, .{ .op = self.instruction.op.json_codec, .authority = authority, .input = input, .limit = limit }) catch |err| switch (err) {
-            error.CodecFrameLimit => return self.finish(trap(frame_limit_code, "JSON codec active frame budget exhausted", self.instruction.span, execution.state.frames.items, execution.program)),
-            error.CodecStepLimit => return self.finish(trap("R_STEP_LIMIT", "JSON codec instruction budget exhausted", self.instruction.span, execution.state.frames.items, execution.program)),
-            else => |failure| return failure,
-        };
-        execution.steps.* += outcome.steps;
-        try pushOwned(stack, allocator, outcome.value);
-        return false;
-    }
     fn executeAcquireBuffer(self: *Step) !bool {
         const allocator = self.execution.allocator;
         const program = self.execution.program;
-        const storage = self.execution.storage;
         const stack = self.execution.state.stack;
         const frames = self.execution.state.frames;
         const frame = self.frame.*;
         const instruction = self.instruction.*;
         const ty = self.instruction.op.acquire_buffer;
         const capacity = try numeric(stack, frame.operand_base, null, allocator);
-        if (program.records[ty.recordIndex()].managed) {
-            if (capacity < 0 or capacity > std.math.maxInt(usize)) return self.finish(trap("R_LIST_CAPACITY", "list capacity is outside supported bounds", instruction.span, frames.items, program));
-            const value = self.execution.managed_heap.create(ty, program.records[ty.recordIndex()].shape.buffer.?, @intCast(capacity)) catch |err| return self.managedFailure(err);
-            try pushOwned(stack, allocator, value);
-            return false;
-        }
-        const authority = try pop(stack, frame.operand_base);
-        defer authority.release(allocator);
-        if (!authority.isCapability(.allocator)) return error.InternalError;
-        storage.checkAllocator(authority.capability.allocator) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-        const shape = typed.resultShape(ty, program.records).?;
-        const element = program.records[shape.ok_type.recordIndex()].shape.buffer.?;
-        const owner: ?memory.Allocation = if (capacity < 0 or capacity > std.math.maxInt(usize)) null else storage.createAuthorized(authority.capability.allocator, element, &.{}, @intCast(capacity)) catch |err| switch (err) {
-            error.CapacityLimit => null,
-            else => return self.finish(try memoryFailure(err, instruction, frames.items, program)),
-        };
-        if (owner) |allocation| {
-            const resource = typed.Value.ownBuffer(allocator, shape.ok_type, storage, allocation) catch |err| {
-                try storage.destroy(allocation);
-                return err;
-            };
-            defer resource.release(allocator);
-            try pushOwned(stack, allocator, try typed.Value.createVariant(allocator, ty, shape.ok_tag, resource));
-        } else {
-            try pushOwned(stack, allocator, try typed.Value.createVariant(allocator, ty, shape.error_tag, .{ .i64 = 1 }));
-        }
+        if (!program.records[ty.recordIndex()].managed) return error.InternalError;
+        if (capacity < 0 or capacity > std.math.maxInt(usize)) return self.finish(trap("R_LIST_CAPACITY", "list capacity is outside supported bounds", instruction.span, frames.items, program));
+        const value = self.execution.managed_heap.create(ty, program.records[ty.recordIndex()].shape.buffer.?, @intCast(capacity)) catch |err| return self.managedFailure(err);
+        try pushOwned(stack, allocator, value);
         return false;
-    }
-
-    fn restoreLocalOwner(self: *Step, index: usize) !void {
-        const state = self.execution.state;
-        if (state.owners.get(index)) |allocation| {
-            const value = try self.execution.storage.readOwner(allocation, 0);
-            errdefer value.release(self.execution.allocator);
-            try self.execution.storage.destroy(allocation);
-            _ = state.owners.remove(index);
-            state.locals.items[index] = value;
-        }
     }
 
     fn executeMoveLocal(self: *Step) !bool {
@@ -2281,7 +1630,6 @@ const Step = struct {
         const frame = self.frame.*;
         const slot = self.instruction.op.move_local;
         const index = frame.local_base + @backingInt(slot);
-        try self.restoreLocalOwner(index);
         const value = locals.items[index] orelse return error.InternalError;
         locals.items[index] = null;
         try pushOwned(stack, allocator, value);
@@ -2291,111 +1639,42 @@ const Step = struct {
     fn executeDropLocal(self: *Step) !bool {
         const allocator = self.execution.allocator;
         const locals = self.execution.state.locals;
-        const owners = self.execution.state.owners;
         const frame = self.frame.*;
         const slot = self.instruction.op.drop_local;
         const index = frame.local_base + @backingInt(slot);
-        if (owners.get(index)) |owner| {
-            self.execution.storage.destroy(owner) catch |err| return self.finish(try memoryFailure(err, self.instruction.*, self.execution.state.frames.items, self.execution.program));
-            _ = owners.remove(index);
-        }
         if (locals.items[index]) |value| value.release(allocator);
         locals.items[index] = null;
-        return false;
-    }
-
-    fn executeTakeField(self: *Step) !bool {
-        const allocator = self.execution.allocator;
-        const stack = self.execution.state.stack;
-        const locals = self.execution.state.locals;
-        const frame = self.frame.*;
-        const take = self.instruction.op.take_field;
-        const index = frame.local_base + @backingInt(take.owner);
-        try self.restoreLocalOwner(index);
-        const owner = locals.items[index] orelse return error.InternalError;
-        const value = try owner.takeField(allocator, take.field);
-        try pushOwned(stack, allocator, value);
-        return false;
-    }
-
-    fn executeReadField(self: *Step) !bool {
-        const allocator = self.execution.allocator;
-        const stack = self.execution.state.stack;
-        const function = self.execution.program.functions[@backingInt(self.frame.function)];
-        const read = self.instruction.op.read_field;
-        const owner = try self.operationOwner(read.owner, read.reference, false);
-        defer owner.release(allocator);
-        if (owner.typeOf() != function.scope.locals[@backingInt(read.owner)].ty) return error.InternalError;
-        const value = try owner.getField(read.field);
-        if (value.typeOf() != read.output) {
-            value.release(allocator);
-            return error.InternalError;
-        }
-        try pushOwned(stack, allocator, value);
         return false;
     }
 
     fn executeLoadLocal(self: *Step) !bool {
         const allocator = self.execution.allocator;
         const program = self.execution.program;
-        const storage = self.execution.storage;
         const stack = self.execution.state.stack;
         const locals = self.execution.state.locals;
-        const owners = self.execution.state.owners;
-        const frames = self.execution.state.frames;
         const frame = self.frame.*;
-        const instruction = self.instruction.*;
         const function = self.execution.program.functions[@backingInt(self.frame.function)];
         const slot = self.instruction.op.load_local;
         if (typed.moveOnly(function.scope.locals[@backingInt(slot)].ty, program.records)) return error.InternalError;
         const index = frame.local_base + @backingInt(slot);
-        const value = if (owners.get(index)) |owner| storage.readOwner(owner, 0) catch |err|
-            return self.finish(try memoryFailure(err, instruction, frames.items, program)) else (locals.items[index] orelse return error.InternalError).retain();
+        const value = (locals.items[index] orelse return error.InternalError).retain();
         try pushOwned(stack, allocator, value);
         return false;
     }
 
     fn executeStoreLocal(self: *Step) !bool {
         const allocator = self.execution.allocator;
-        const program = self.execution.program;
-        const storage = self.execution.storage;
         const stack = self.execution.state.stack;
         const locals = self.execution.state.locals;
-        const owners = self.execution.state.owners;
-        const frames = self.execution.state.frames;
         const frame = self.frame.*;
-        const instruction = self.instruction.*;
         const function = self.execution.program.functions[@backingInt(self.frame.function)];
         const slot = self.instruction.op.store_local;
         const value = try pop(stack, frame.operand_base);
-        var transferred = false;
-        defer if (!transferred) value.release(allocator);
+        errdefer value.release(allocator);
         if (value.typeOf() != function.scope.locals[@backingInt(slot)].ty) return error.InternalError;
         const index = frame.local_base + @backingInt(slot);
-        if (owners.get(index)) |owner| {
-            storage.writeOwner(owner, 0, value) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-        } else {
-            if (locals.items[index]) |old| old.release(allocator);
-            locals.items[index] = value;
-            transferred = true;
-        }
-        return false;
-    }
-
-    fn executeCaptureRef(self: *Step) !bool {
-        const program = self.execution.program;
-        const storage = self.execution.storage;
-        const references = self.execution.state.references;
-        const frames = self.execution.state.frames;
-        const frame = self.frame.*;
-        const frame_index = self.frame_index;
-        const instruction = self.instruction.*;
-        const id = self.instruction.op.capture_ref;
-        const reference = references.items[frame.reference_base + @backingInt(id)] orelse return self.finish(trap(reference_lifetime_code, "returned reference is not active", instruction.span, frames.items, program));
-        const target = frame.return_target orelse return error.InternalError;
-        const view = storage.describe(reference.lease) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-        if (!std.meta.eql(view.allocation, target.allocation) or frame.captured != null) return self.finish(trap(reference_lifetime_code, "returned reference does not belong to the declared input", instruction.span, frames.items, program));
-        frames.items[frame_index].captured = .{ .direct = reference.direct, .slice = reference.slice };
+        if (locals.items[index]) |old| old.release(allocator);
+        locals.items[index] = value;
         return false;
     }
 
@@ -2430,27 +1709,14 @@ const Step = struct {
         const allocator = self.execution.allocator;
         const program = self.execution.program;
         const options = self.execution.options;
-        const storage = self.execution.storage;
         const stack = self.execution.state.stack;
         const locals = self.execution.state.locals;
-        const references = self.execution.state.references;
-        const active_regions = self.execution.state.active_regions;
         const frames = self.execution.state.frames;
         const frame = self.frame.*;
         const instruction = self.instruction.*;
-        const function = self.execution.program.functions[@backingInt(self.frame.function)];
         const id = switch (instruction.op) {
-            .invoke => |call| try self.indirectTarget(call.ty),
+            .invoke => |callback_type| try self.indirectTarget(callback_type),
             .call => |id| id,
-            .call_refs => |call| call.function,
-            .call_borrow => |call| call.function,
-            else => unreachable,
-        };
-        const loan_arguments: []const typed.ReferenceId = switch (instruction.op) {
-            .invoke => |call| call.references,
-            .call => &.{},
-            .call_refs => |call| call.references,
-            .call_borrow => |call| call.references,
             else => unreachable,
         };
         const callee = program.functions[@backingInt(id)];
@@ -2460,7 +1726,6 @@ const Step = struct {
         const argument_base = stack.items.len - value_count;
         var argument_index = argument_base;
         for (callee.scope.locals[0..callee.signature.parameter_count]) |parameter| {
-            if (parameter.parameter.reference_parameter != null) continue;
             if (stack.items[argument_index].typeOf() != parameter.ty) return error.InternalError;
             argument_index += 1;
         }
@@ -2473,45 +1738,18 @@ const Step = struct {
             try pushOwned(stack, allocator, result);
             return false;
         }
-        var return_target: ?ReturnTarget = null;
-        if (instruction.op == .call_borrow) {
-            const destination = instruction.op.call_borrow.destination;
-            const target_index = frame.reference_base + @backingInt(destination);
-            if (references.items[target_index] != null) return self.finish(trap(reference_lifetime_code, "result reference is already active", instruction.span, frames.items, program));
-            const metadata = function.scope.references[@backingInt(destination)];
-            const parent = references.items[frame.reference_base + @backingInt(metadata.parent.?)] orelse return self.finish(trap(reference_lifetime_code, "result input reference is not active", instruction.span, frames.items, program));
-            const view = storage.describe(parent.lease) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-            return_target = .{ .destination = target_index, .parent = parent.lease, .allocation = view.allocation, .mutable = metadata.mutable };
-        }
-        const reference_base = references.items.len;
-        const reference_end = std.math.add(usize, reference_base, callee.scope.references.len) catch return error.OutOfMemory;
-        try references.resize(allocator, reference_end);
-        @memset(references.items[reference_base..], null);
-        var loan_index: usize = 0;
-        for (callee.scope.references, 0..) |parameter, index| {
-            if (!parameter.mode.parameter) continue;
-            const parent = references.items[frame.reference_base + @backingInt(loan_arguments[loan_index])] orelse
-                return self.finish(trap(reference_lifetime_code, "reference argument is not active", instruction.span, frames.items, program));
-            loan_index += 1;
-            const child = reborrowFull(storage, parent.lease, if (parameter.mutable) .exclusive else .shared) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-            references.items[reference_base + index] = .{ .direct = parent.direct, .lease = child, .slice = parent.slice };
-        }
         const local_base = locals.items.len;
         const local_end = std.math.add(usize, local_base, callee.scope.locals.len) catch return error.OutOfMemory;
         try locals.resize(allocator, local_end);
         @memset(locals.items[local_base..], null);
         argument_index = argument_base;
-        for (callee.scope.locals[0..callee.signature.parameter_count], 0..) |parameter, index| {
-            if (parameter.parameter.reference_parameter != null) continue;
+        for (0..callee.signature.parameter_count) |index| {
             locals.items[local_base + index] = stack.items[argument_index];
             argument_index += 1;
         }
         stack.shrinkRetainingCapacity(argument_base);
         try appendFrame(frames, allocator, .{
-            .region_base = active_regions.items.len,
             .arena_base = self.execution.state.arenas.items.len,
-            .return_target = return_target,
-            .reference_base = reference_base,
             .function = id,
             .local_base = local_base,
             .operand_base = argument_base,
@@ -2522,37 +1760,20 @@ const Step = struct {
 
     fn executeRet(self: *Step) !bool {
         const allocator = self.execution.allocator;
-        const program = self.execution.program;
-        const storage = self.execution.storage;
         const stack = self.execution.state.stack;
         const locals = self.execution.state.locals;
-        const owners = self.execution.state.owners;
-        const references = self.execution.state.references;
-        const active_regions = self.execution.state.active_regions;
         const frames = self.execution.state.frames;
         const frame = self.frame.*;
-        const instruction = self.instruction.*;
         const function = self.execution.program.functions[@backingInt(self.frame.function)];
-        const value: ?typed.Value = if (instruction.op == .ret) try pop(stack, frame.operand_base) else null;
+        const value = try pop(stack, frame.operand_base);
         var transferred = false;
-        defer if (!transferred) {
-            if (value) |owned| owned.release(allocator);
-        };
+        defer if (!transferred) value.release(allocator);
         if (stack.items.len != frame.operand_base) return error.InternalError;
-        if (value) |owned| {
-            if (owned.typeOf() != function.signature.return_type) return error.InternalError;
-        } else if (frame.captured == null or frame.return_target == null) return self.finish(trap(reference_lifetime_code, "reference return has no captured result", instruction.span, frames.items, program));
-        for (references.items[frame.reference_base..]) |reference| if (reference != null) return self.finish(trap(reference_lifetime_code, "function returned with an active reference", instruction.span, frames.items, program));
-        references.shrinkRetainingCapacity(frame.reference_base);
+        if (value.typeOf() != function.signature.return_type) return error.InternalError;
         var cleanup_index = locals.items.len;
         while (cleanup_index > frame.local_base) {
             cleanup_index -= 1;
-            const index = cleanup_index;
-            const local = &locals.items[index];
-            if (owners.get(index)) |owner| {
-                storage.destroy(owner) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-                _ = owners.remove(index);
-            }
+            const local = &locals.items[cleanup_index];
             if (local.*) |owned| owned.release(allocator);
             local.* = null;
         }
@@ -2562,21 +1783,10 @@ const Step = struct {
             _ = arenas.pop();
             gc_regions.end(self.execution.managed_heap);
         }
-        while (active_regions.items.len > frame.region_base) {
-            const active_region = active_regions.items[active_regions.items.len - 1];
-            storage.endRegion(active_region.capability) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-            _ = active_regions.pop();
-        }
         _ = frames.pop();
-        if (value) |owned| {
-            transferred = true;
-            if (frames.items.len == 0) return self.finish(.{ .value = owned });
-            try pushOwned(stack, allocator, owned);
-        } else {
-            const target = frame.return_target.?;
-            const lease = reborrowFull(storage, target.parent, if (target.mutable) .exclusive else .shared) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
-            references.items[target.destination] = .{ .direct = frame.captured.?.direct, .lease = lease, .slice = frame.captured.?.slice };
-        }
+        transferred = true;
+        if (frames.items.len == 0) return self.finish(.{ .value = value });
+        try pushOwned(stack, allocator, value);
         return false;
     }
 
@@ -2653,6 +1863,3 @@ const Step = struct {
     }
 };
 
-fn reserveBuffer(storage: *memory.Store, owner: memory.Allocation, count: usize) memory.Error!void {
-    _ = try storage.reserve(owner, count);
-}

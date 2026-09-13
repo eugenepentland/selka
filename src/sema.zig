@@ -571,7 +571,7 @@ const Checker = struct {
                     const kind = buffer_operations.method(name) orelse
                         return self.sink.fail("E_LIST_METHOD", call.name, "unknown managed collection method");
                     if (call.type_arguments.len != 0 or call.arguments.len != kind.arity()) return self.sink.fail("E_ARITY", node.span, "list method argument count does not match its signature");
-                    node.data = .{ .buffer_operation = .{ .kind = kind, .owner = owner, .result = null, .arguments = call.arguments } };
+                    node.data = .{ .buffer_operation = .{ .kind = kind, .owner = owner, .arguments = call.arguments } };
                 }
             };
         }
@@ -952,12 +952,6 @@ const Checker = struct {
                 try self.queueFields(work, record.fields);
                 return true;
             },
-            .update => |update| {
-                try work.append(self.allocator, .{ .id = id, .emit = true });
-                try self.queueFields(work, update.fields);
-                try work.append(self.allocator, .{ .id = update.base });
-                return true;
-            },
             .field => |field| {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
                 try work.append(self.allocator, .{ .id = field.base });
@@ -1081,7 +1075,6 @@ const Checker = struct {
             }
         }
         try self.requireArenaOperation(owner, operation.kind, arguments);
-        if (operation.result != null) return self.sink.fail(eListType, operation.owner, "managed list mutations return unit without a result type");
         out.ty = if (operation.kind.mutates()) .unit else if (operation.kind == .read) element else if (operation.kind == .contains) .bool else .u64;
         out.data = .{ .buffer_operation = .{ .kind = operation.kind, .owner = owner, .arguments = arguments } };
     }
@@ -1629,13 +1622,6 @@ const Checker = struct {
             .record => |record| {
                 out.ty = try self.ty(record.name);
                 out.data = .{ .record = try self.fields(out.ty, record.fields, true, node.span) };
-            },
-            .update => |update| {
-                const base = self.resolved[@backingInt(update.base)].?;
-                out.ty = self.nodes.items[@backingInt(base)].ty;
-                const replacements = try self.fields(out.ty, update.fields, false, node.span);
-                for (replacements) |field| if (self.requiresHandling(self.catalog.records[out.ty.recordIndex()].fields[field.index].ty)) return self.sink.fail(eResultOperation, node.span, "update would drop a result-bearing field");
-                out.data = .{ .update = .{ .base = base, .fields = replacements } };
             },
             .field => |field| try self.checkField(node, field, &out),
             .bytes, .text => |bytes| try self.checkTextLiteral(node, bytes, &out),

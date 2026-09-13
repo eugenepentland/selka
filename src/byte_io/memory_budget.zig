@@ -43,8 +43,6 @@ fn statistic(budget: Memory) struct { limit: usize, live: usize, peak: usize } {
 pub const Observations = struct {
     backing: Memory,
     bookkeeping: Memory,
-    buffers: @import("mylang").memory.Statistics = .{},
-    pools: @import("mylang").pool_runtime.Statistics = .{},
 };
 /// Emit best-effort accounting after resource cleanup without allocating memory.
 pub fn report(io: std.Io, config: Config, total: Memory, vm: Memory, host: Memory, observations: Observations) void {
@@ -58,7 +56,6 @@ pub fn report(io: std.Io, config: Config, total: Memory, vm: Memory, host: Memor
         .vm = statistic(vm),
         .host = statistic(host),
         .vm_categories = .{ .guest_backing = statistic(observations.backing), .bookkeeping_and_snapshots = statistic(observations.bookkeeping) },
-        .logical_slots = .{ .buffers = observations.buffers, .pools = observations.pools },
     }, .{}, &writer) catch return;
     writer.writeByte('\n') catch return;
     std.Io.File.stderr().writeStreamingAll(io, writer.buffered()) catch return;

@@ -12,7 +12,7 @@ pub const Field = struct { name: []const u8, span: @import("source.zig").Span, t
 /// Shared view of concrete and parameterized record/variant members.
 pub const Schema = struct { kind: @import("nominal_templates.zig").Kind, fields: []const Field, key: ?typed.Type = null };
 /// Stored-value contracts are independent of nominal argument identity.
-pub const Properties = struct { move_only: bool = false, requires_handling: bool = false, region: bool = false, cleanup: @import("effect_set.zig").Mask = 0 };
+pub const Properties = struct { move_only: bool = false, requires_handling: bool = false, cleanup: @import("effect_set.zig").Mask = 0 };
 /// Named result payload types before runtime specialization.
 pub const ResultShape = struct { ok_type: Value, error_type: Value };
 const Catalog = @import("type_catalog.zig").Catalog;

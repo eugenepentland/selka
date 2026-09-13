@@ -557,10 +557,6 @@ const ArgumentParser = struct {
             self.saw_dispatch = true;
             const mode = arg["--dispatch=".len..];
             self.options.memory.optimize_dispatch = if (std.mem.eql(u8, mode, "optimized")) true else if (std.mem.eql(u8, mode, "generic")) false else return error.Usage;
-        } else if (std.mem.startsWith(u8, arg, "--memory=")) {
-            if ((self.command != .run and self.command != .@"run-project") or self.saw_memory) return error.Usage;
-            self.saw_memory = true;
-            self.options.memory.backing = std.meta.stringToEnum(language.vm.MemoryBacking, arg["--memory=".len..]) orelse return error.Usage;
         } else return false;
         return true;
     }

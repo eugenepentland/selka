@@ -77,7 +77,7 @@ const Analyzer = struct {
                     result = restrict.ty;
                 },
                 .resource_io => |io| {
-                    pops = if (io.kind == .write and io.reference == null) 1 else 0;
+                    pops = if (io.kind == .write) 1 else 0;
                     result = io.output;
                 },
                 .external_read => |read| {
@@ -88,24 +88,8 @@ const Analyzer = struct {
                     pops = 2;
                     result = get.output;
                 },
-                .reset_arena => |ty| {
-                    pops = 1;
-                    result = ty;
-                },
-                .json_codec => |codec| {
-                    pops = 3;
-                    result = codec.output;
-                },
-                .acquire_pool => |ty| {
-                    pops = 2;
-                    result = ty;
-                },
-                .pool_operation => |operation| {
-                    pops = operation.kind.arity();
-                    result = operation.output;
-                },
                 .acquire_buffer => |ty| {
-                    pops = if (self.program.records[ty.recordIndex()].managed) 1 else 2;
+                    pops = 1;
                     result = ty;
                 },
                 .buffer_operation => |operation| {
@@ -117,8 +101,8 @@ const Analyzer = struct {
                     result = typed.resultShape(propagate.input, self.program.records).?.ok_type;
                 },
                 .function_value => |value| result = value.ty,
-                .invoke => |invocation| {
-                    const signature = self.program.records[invocation.ty.recordIndex()].contract.callback.?;
+                .invoke => |callback_type| {
+                    const signature = self.program.records[callback_type.recordIndex()].contract.callback.?;
                     pops = signature.valueCount() + 1;
                     result = signature.return_type;
                 },
@@ -199,7 +183,7 @@ const Analyzer = struct {
                     result = variant.ty;
                 },
                 .switch_variant => pops = 1,
-                .cmp_i64, .cmp_bool, .cmp_domain, .cmp_enum, .cmp_handle => {
+                .cmp_i64, .cmp_bool, .cmp_domain, .cmp_enum => {
                     pops = 2;
                     result = .bool;
                 },
@@ -212,29 +196,10 @@ const Analyzer = struct {
                     pops = 1;
                     result = if (unary == .f64_to_i64) .i64 else .u64;
                 },
-                .begin_borrow, .end_borrow, .capture_ref, .end_region, .begin_arena, .end_arena => {},
+                .begin_arena, .end_arena => {},
                 .arena_escape => |ty| {
                     pops = 1;
                     result = ty;
-                },
-                .begin_region => pops = 1,
-                .begin_slice => pops = 2,
-                .split_borrow => pops = 1,
-                .len_slice => result = .u64,
-                .read_slice => |reference| {
-                    pops = 1;
-                    result = self.function.scope.references[@backingInt(reference)].ty;
-                },
-                .write_slice => pops = 2,
-                .ret_ref => {},
-                .read_ref => |reference| result = self.function.scope.references[@backingInt(reference)].ty,
-                .write_ref => pops = 1,
-                .read_field, .take_field => |access| result = access.output,
-                .call_refs, .call_borrow => {
-                    const target = if (op == .call_refs) op.call_refs.function else op.call_borrow.function;
-                    const callee = self.program.functions[@backingInt(target)];
-                    pops = bytecode.valueParameterCount(callee);
-                    if (op == .call_refs) result = callee.signature.return_type;
                 },
                 .call => |target| {
                     const callee = self.program.functions[@backingInt(target)];
@@ -247,7 +212,7 @@ const Analyzer = struct {
             if (result) |ty| try stack.append(self.allocator, ty);
             maximum = @max(maximum, stack.items.len);
             switch (op) {
-                .ret, .ret_ref => {},
+                .ret => {},
                 .try_result => |propagate| {
                     try self.merge(pc + 1, stack.items, &queue);
                     try self.merge(propagate.error_target, &.{propagate.output}, &queue);

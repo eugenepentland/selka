@@ -24,7 +24,7 @@ pub const Context = struct {
             if (!std.mem.eql(u8, self.src.text(function.name), self.src.text(name))) continue;
             const owner = function.policy.owner orelse continue;
             if (try self.catalog.resolve(self.src, owner, self.sink) != target) continue;
-            const unsupported_signature = function.signature.type_parameters.len != 0 or function.signature.return_reference != null;
+            const unsupported_signature = function.signature.type_parameters.len != 0;
             if (function.policy.restricted or function.policy.conversion or unsupported_signature or function.policy.effect_bound == null)
                 return self.sink.fail(eArgument, name, "required operation must be public, nongeneric, return a value, and declare effects");
             return function;
@@ -50,8 +50,8 @@ pub const Context = struct {
             if (function.policy.effect_bound.?.allowed & ~operation.effect_bound.allowed != 0) return self.sink.fail(eArgument, operation.name, "operation effect ceiling exceeds the required contract");
             if (function.signature.parameters.len != operation.parameters.len) return self.sink.fail(eArgument, operation.name, "operation parameter count differs from contract");
             for (function.signature.parameters, operation.parameters) |actual, expected| {
-                if (actual.reference != expected.reference or actual.slice != expected.slice or try self.catalog.resolve(self.src, actual.ty, self.sink) != try self.ty(allocator, expected.ty, parameters, arguments))
-                    return self.sink.fail(eArgument, expected.name, "operation parameter type or reference permission differs from contract");
+                if (try self.catalog.resolve(self.src, actual.ty, self.sink) != try self.ty(allocator, expected.ty, parameters, arguments))
+                    return self.sink.fail(eArgument, expected.name, "operation parameter type differs from contract");
             }
             if (try self.catalog.resolve(self.src, function.signature.return_type, self.sink) != try self.ty(allocator, operation.return_type, parameters, arguments))
                 return self.sink.fail(eArgument, operation.name, "operation result type differs from contract");
