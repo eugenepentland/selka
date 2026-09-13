@@ -1,6 +1,7 @@
-//! `--allow-*` command-line authority. A grant provisions a host provider; an
-//! entry point that names a capability nobody granted is rejected before the
-//! first guest instruction runs, with a diagnostic naming the missing flag.
+//! Command-line authority. `mylang run` and `run-project` grant every capability
+//! by default, the way an ordinary interpreter does. `--restrict` switches the
+//! command to deny-by-default, and only then do the `--allow-*` flags narrow
+//! anything or can an entry point be refused for lack of a grant.
 const std = @import("std");
 const language = @import("mylang");
 const providers = @import("cli_providers.zig");
@@ -11,10 +12,14 @@ pub const max_directories = 8;
 const clock_flag = "--allow-clock";
 const random_flag = "--allow-random";
 const environment_flag = "--allow-env";
+/// The flag that turns the default grant of every capability into a denial.
+pub const restrict_flag = "--restrict";
 /// One requested directory grant, borrowed from argv for the process lifetime.
 pub const Directory = struct { path: []const u8, writable: bool };
 
-/// Parsed `--allow-*` options; every field defaults to no authority at all.
+/// Parsed authority options. Without `--restrict` every capability is granted
+/// and the `--allow-*` flags narrow nothing; `--allow-random=SEED` still pins the
+/// entropy seed, because it selects a stream rather than withholding one.
 pub const Config = struct {
     directories: [max_directories]Directory = @splat(.{ .path = "", .writable = false }),
     count: usize = 0,
@@ -23,9 +28,15 @@ pub const Config = struct {
     /// Absent for no grant, otherwise an optional reproducible seed.
     entropy: ??u64 = null,
     clock: bool = false,
+    restricted: bool = false,
 
-    /// Consume one recognized grant option, rejecting duplicates and empty paths.
+    /// Consume one recognized authority option, rejecting duplicates and empty paths.
     pub fn parse(self: *Config, argument: []const u8) error{Usage}!bool {
+        if (std.mem.eql(u8, argument, restrict_flag)) {
+            if (self.restricted) return error.Usage;
+            self.restricted = true;
+            return true;
+        }
         inline for (.{ "--allow-read=", "--allow-write=" }, .{ false, true }) |prefix, writes| {
             if (std.mem.startsWith(u8, argument, prefix)) return self.directory(argument[prefix.len..], writes);
         }
@@ -88,8 +99,10 @@ pub fn flagFor(ty: language.values.Type) ?[]const u8 {
     };
 }
 
-/// Name the first entry parameter whose capability the command line did not grant.
+/// Name the first entry parameter whose capability the command line did not
+/// grant. Only `--restrict` can withhold one; the default grants them all.
 pub fn ungranted(program: language.bytecode.Program, config: Config) ?[]const u8 {
+    if (!config.restricted) return null;
     const entry = program.functions[@backingInt(program.main)];
     for (entry.scope.locals[0..entry.signature.parameter_count]) |parameter| {
         const granted = switch (parameter.ty) {
@@ -113,7 +126,9 @@ pub const State = struct {
     environment: providers.Environment,
     config: Config,
 
-    /// Open every granted directory; no guest file is acquired here.
+    /// Open every granted directory; no guest file is acquired here. The default
+    /// mode opens nothing: one direct root over the working directory resolves
+    /// relative paths against it and lets absolute paths name themselves.
     pub fn init(self: *State, allocator: std.mem.Allocator, io: std.Io, request: Request) std.Io.Dir.OpenError!void {
         self.* = .{
             .context = .{ .allocator = allocator, .io = io },
@@ -122,6 +137,11 @@ pub const State = struct {
             .environment = .{ .environ = request.environ, .names = request.config.environment orelse "" },
             .config = request.config,
         };
+        if (!request.config.restricted) {
+            self.roots[0] = .{ .dir = .cwd(), .writable = true, .direct = true };
+            self.context.roots = self.roots[0..1];
+            return;
+        }
         var opened: usize = 0;
         errdefer for (self.roots[0..opened]) |root| root.dir.close(io);
         while (opened < request.config.count) : (opened += 1) {
@@ -130,23 +150,27 @@ pub const State = struct {
         }
         self.context.roots = self.roots[0..opened];
     }
-    /// Close acquired resources before the directory grants they borrow.
+    /// Close acquired resources before the directory grants they borrow. The
+    /// default mode borrows the working directory and opened nothing to close.
     pub fn deinit(self: *State) void {
         self.context.deinit();
-        for (self.context.roots) |root| root.dir.close(self.context.io);
+        if (self.config.restricted) for (self.context.roots) |root| root.dir.close(self.context.io);
         self.context.roots = &.{};
     }
     /// Apply the granted authority to execution options, leaving budgets unchanged.
+    /// Write authority always implies read authority, so a default or write grant
+    /// can never be narrower than a read grant.
     pub fn apply(self: *State, base: language.vm.Options) language.vm.Options {
+        const writable = !self.config.restricted or self.config.anyWritable();
         var options = base;
         options.resources = .{
             .filesystem = if (self.context.roots.len != 0) self.context.filesystem() else null,
             // Resource mask bits are read=1, write=2, complete=4.
-            .filesystem_permissions = if (self.config.anyWritable()) 7 else 5,
+            .filesystem_permissions = if (writable) 7 else 5,
         };
-        if (self.config.clock) options.external.clock = self.clock.provider();
-        if (self.config.entropy != null) options.external.random = self.entropy.provider();
-        if (self.config.environment != null) options.environment = self.environment.provider();
+        if (!self.config.restricted or self.config.clock) options.external.clock = self.clock.provider();
+        if (!self.config.restricted or self.config.entropy != null) options.external.random = self.entropy.provider();
+        if (!self.config.restricted or self.config.environment != null) options.environment = self.environment.provider();
         return options;
     }
 };
