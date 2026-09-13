@@ -9,17 +9,57 @@ import sys
 import tempfile
 
 ROOT=Path(__file__).resolve().parents[1]
-SOURCE='''module main;
-export Pair;export Choice;export add;export echo_pair;export echo_array;export echo_choice;export fail;
-struct Pair{x:i64,flag:bool}
-union Choice{none,value:i64}
-fn add(a:i64,b:i64)->i64{return a+b;}
-fn echo_pair(p:Pair)->Pair{let mut q=p;q.x=p.x+1;q.flag=!p.flag;return q;}
-fn echo_array(a:[3]i64)->[3]i64{return replace(a,1,42);}
-fn echo_choice(c:Choice)->Choice{return c;}
-fn fail(x:i64)->i64{return 1/x;}
-fn hidden(x:i64)->i64{return x;}
-fn main()->i64{return 42;}
+SOURCE='''module main
+export Pair
+export Choice
+export add
+export echo_pair
+export echo_array
+export echo_choice
+export fail
+
+
+class Pair:
+    x: i64
+    flag: bool
+
+
+union Choice:
+    none,
+    value: i64
+
+
+def add(a: i64, b: i64) -> i64:
+    return a + b
+
+
+def echo_pair(p: Pair) -> Pair:
+    q = p
+    q.x = p.x + 1
+    q.flag = not p.flag
+    return q
+
+
+def echo_array(a: [3]i64) -> [3]i64:
+    return replace(a, 1, 42)
+
+
+def echo_choice(c: Choice) -> Choice:
+    return c
+
+
+def fail(x: i64) -> i64:
+    return divtrunc(1, x)
+
+
+def hidden(x: i64) -> i64:
+    return x
+
+
+def main() -> i64:
+    return 42
+
+
 '''
 HOST=r'''
 #include "native_host.h"
@@ -74,10 +114,10 @@ def main():
     with tempfile.TemporaryDirectory(prefix='mylang-qbe-native-calls-') as directory:
         directory=Path(directory)
         source,host,library,binary=directory/'main.my',directory/'host.c',directory/'guest.so',directory/'host'
-        parameters=','.join(f'a{i}:i64' for i in range(160))
-        many=f'export many;fn many({parameters})->i64{{return '+'+'.join(f'a{i}' for i in range(160))+';}'
-        source.write_text(SOURCE+many+'export large;fn large(a:[1024]i64)->[1024]i64{return a;}'+
-                          'export packed;fn packed(a:[128]i64,b:[128]i64,c:[128]i64,d:[128]i64,e:[128]i64)->[128]i64{return e;}')
+        parameters=', '.join(f'a{i}: i64' for i in range(160))
+        many=f'export many\n\n\ndef many({parameters}) -> i64:\n    return '+' + '.join(f'a{i}' for i in range(160))+'\n\n\n'
+        source.write_text(SOURCE+many+'export large\n\n\ndef large(a: [1024]i64) -> [1024]i64:\n    return a\n\n\n'+
+                          'export packed\n\n\ndef packed(a: [128]i64, b: [128]i64, c: [128]i64, d: [128]i64, e: [128]i64) -> [128]i64:\n    return e\n')
         many_host='MylangScalar scalars[160];MylangWireNode nodes[160],many_output;for(size_t i=0;i<160;++i){scalars[i]=(MylangScalar){"i64",i};nodes[i]=(MylangWireNode){"i64",i,0};}' \
             'assert(mylang_native_call_v1("main::many",scalars,160,NULL,&call)==0 && call.value.bits==12720);' \
             'assert(mylang_native_call_values_v1("main::many",nodes,160,&many_output,1,NULL,&result)==0 && many_output.bits==12720);'
