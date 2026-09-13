@@ -41,5 +41,5 @@ pub fn arity(name: []const u8) ?usize {
 }
 /// Nonprimitive builtin names accepted by exported module signatures.
 pub fn scalar(name: []const u8) bool {
-    return std.mem.eql(u8, name, "str") or std.mem.eql(u8, name, "float");
+    return std.mem.eql(u8, name, "str") or std.mem.eql(u8, name, "bytes") or std.mem.eql(u8, name, "float");
 }

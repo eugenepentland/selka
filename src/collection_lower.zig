@@ -6,16 +6,51 @@ const Error = @import("diagnostic.zig").Error;
 /// Shared diagnostic for invalid managed collection types.
 pub const list_type_error = "E_LIST_TYPE";
 const Kind = @import("buffer_operations.zig").Kind;
+const nominal = @import("nominal_catalog.zig");
+const Catalog = @import("type_catalog.zig").Catalog;
 
 /// Materialize the canonical built-in list application for inferred elements.
-pub fn listType(catalog: *@import("type_catalog.zig").Catalog, element: typed.Type, span: Span) Error!typed.Type {
+pub fn listType(catalog: *Catalog, element: typed.Type, span: Span) Error!typed.Type {
     const state = catalog.templates.store orelse return error.InternalError;
     const declaration = state.index.names.get("List") orelse return error.InternalError;
-    return @import("nominal_catalog.zig").instantiateLengths(catalog, declaration, &.{element}, &.{}, span);
+    return nominal.instantiateLengths(catalog, declaration, &.{element}, &.{}, span);
+}
+
+/// Materialize a parameterless prelude collection such as `str` or `bytes`.
+pub fn preludeType(catalog: *Catalog, name: []const u8, span: Span) Error!typed.Type {
+    const state = catalog.templates.store orelse return error.InternalError;
+    const declaration = state.index.names.get(name) orelse return error.InternalError;
+    const builtin = state.index.declarations.items[declaration].builtin_name orelse return error.InternalError;
+    if (!std.mem.eql(u8, builtin, name)) return error.InternalError;
+    return nominal.instantiateLengths(catalog, declaration, &.{}, &.{}, span);
+}
+
+/// Materialize the builtin checked result used by fallible byte conversions.
+pub fn resultType(catalog: *Catalog, ok: typed.Type, failure: typed.Type, span: Span) Error!typed.Type {
+    const state = catalog.templates.store orelse return error.InternalError;
+    const declaration = state.index.names.get("Result") orelse return error.InternalError;
+    return nominal.instantiateLengths(catalog, declaration, &.{ ok, failure }, &.{}, span);
+}
+
+/// Resolve the output of a managed byte-string operation.
+fn bytesOperationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Span) Error!typed.Type {
+    const element = catalog.records[owner.recordIndex()].shape.buffer.?;
+    return switch (kind) {
+        .length, .find => .i64,
+        .contains, .starts_with, .ends_with => .bool,
+        .iteration_check => .unit,
+        .read => element,
+        .slice, .join => owner,
+        .split => listType(catalog, owner, span),
+        .to_list => listType(catalog, .i64, span),
+        .hex => preludeType(catalog, "str", span),
+        .decode => resultType(catalog, try preludeType(catalog, "str", span), try preludeType(catalog, "str", span), span),
+        else => error.InternalError,
+    };
 }
 
 /// Resolve a managed operation output without conflating list, text, and map schemas.
-pub fn operationType(catalog: *@import("type_catalog.zig").Catalog, owner: typed.Type, kind: Kind, span: Span) Error!typed.Type {
+pub fn operationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Span) Error!typed.Type {
     const schema = catalog.records[owner.recordIndex()];
     const element = schema.shape.buffer.?;
     if (schema.collection.kind == .list) return switch (kind) {
@@ -25,8 +60,11 @@ pub fn operationType(catalog: *@import("type_catalog.zig").Catalog, owner: typed
         .append, .write, .iteration_check => .unit,
         else => error.InternalError,
     };
+    if (schema.collection.kind == .bytes) return bytesOperationType(catalog, owner, kind, span);
     const dictionary = schema.collection.kind == .dictionary;
     return switch (kind) {
+        .encode => if (!dictionary) preludeType(catalog, "bytes", span) else error.InternalError,
+        .from_hex => if (!dictionary) resultType(catalog, try preludeType(catalog, "bytes", span), owner, span) else error.InternalError,
         .length => .i64,
         .contains => .bool,
         .iteration_check => .unit,

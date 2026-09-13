@@ -12,6 +12,11 @@ const Span = @import("source.zig").Span;
 const diagnostic = @import("diagnostic.zig");
 const Witness = struct { span: Span, via: ?usize = null };
 const Edge = struct { caller: usize, span: Span };
+fn allocatingSequence(records: []const typed.Record, ty: typed.Type) bool {
+    if (!ty.isAggregate() or ty.recordIndex() >= records.len) return false;
+    const kind = records[ty.recordIndex()].collection.kind;
+    return kind == .string or kind == .bytes;
+}
 const State = struct { mask: sets.Mask = 0, witnesses: [std.meta.tags(sets.Effect).len]?Witness = @splat(null), callers: std.ArrayList(Edge) = .empty, queued: bool = false };
 const Graph = struct {
     allocator: std.mem.Allocator,
@@ -87,16 +92,16 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
                 .environment_get => graph.direct(index, .environment, node.span),
                 .external_read => |read| graph.direct(index, read.kind.effect(), node.span),
                 .json_codec, .acquire_pool => graph.direct(index, .allocation, node.span),
-                .cast => if (node.ty.isAggregate() and program.records[node.ty.recordIndex()].collection.kind == .string) {
+                .cast => if (allocatingSequence(program.records, node.ty)) {
                     graph.direct(index, .managed_allocation, node.span);
                 },
                 .array => if (node.ty.isAggregate() and program.records[node.ty.recordIndex()].managed) {
                     graph.direct(index, .managed_allocation, node.span);
                 },
-                .binary => |binary| if (binary.op == .add and node.ty.isAggregate() and program.records[node.ty.recordIndex()].collection.kind == .string) {
+                .binary => |binary| if (binary.op == .add and allocatingSequence(program.records, node.ty)) {
                     graph.direct(index, .managed_allocation, node.span);
                 },
-                .index => if (node.ty.isAggregate() and program.records[node.ty.recordIndex()].collection.kind == .string) {
+                .index => if (allocatingSequence(program.records, node.ty)) {
                     graph.direct(index, .managed_allocation, node.span);
                 },
                 .acquire_buffer => graph.direct(index, if (program.records[node.ty.recordIndex()].managed) .managed_allocation else .allocation, node.span),
@@ -223,16 +228,16 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
             .environment_get => graph.direct(index, .environment, instruction.span),
             .external_read => |read| graph.direct(index, read.kind.effect(), instruction.span),
             .begin_region, .json_codec, .acquire_pool => graph.direct(index, .allocation, instruction.span),
-            .cast_integer => |ty| if (ty.isAggregate() and program.records[ty.recordIndex()].collection.kind == .string) {
+            .cast_integer => |ty| if (allocatingSequence(program.records, ty)) {
                 graph.direct(index, .managed_allocation, instruction.span);
             },
             .make_record => |record| if (try managedType(program.records, record.ty)) {
                 graph.direct(index, .managed_allocation, instruction.span);
             },
-            .binary_integer => |binary| if (binary.op == .add and binary.ty.isAggregate() and program.records[binary.ty.recordIndex()].collection.kind == .string) {
+            .binary_integer => |binary| if (binary.op == .add and allocatingSequence(program.records, binary.ty)) {
                 graph.direct(index, .managed_allocation, instruction.span);
             },
-            .get_index => |ty| if (ty.isAggregate() and program.records[ty.recordIndex()].collection.kind == .string) {
+            .get_index => |ty| if (allocatingSequence(program.records, ty)) {
                 graph.direct(index, .managed_allocation, instruction.span);
             },
             .acquire_buffer => |ty| graph.direct(index, if (try managedType(program.records, ty)) .managed_allocation else .allocation, instruction.span),

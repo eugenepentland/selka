@@ -19,6 +19,7 @@
     "inferred-list-literals-and-slices",
     "collection-iteration",
     "managed-unicode-strings",
+    "managed-bytes",
     "managed-insertion-ordered-dictionaries",
     "ordinary-binary64-float",
     "contextual-option-constructors",

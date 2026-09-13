@@ -19,11 +19,19 @@ pub const Kind = enum {
     values,
     split,
     join,
+    encode,
+    decode,
+    to_list,
+    hex,
+    from_hex,
+    starts_with,
+    ends_with,
+    find,
     /// Return the required source argument count for this buffer builtin.
     pub fn arity(self: Kind) usize {
         return switch (self) {
-            .length, .capacity, .keys, .values => 0,
-            .iteration_check, .key_at, .read, .append, .take, .truncate, .contains, .split, .join => 1,
+            .length, .capacity, .keys, .values, .encode, .decode, .to_list, .hex, .from_hex => 0,
+            .iteration_check, .key_at, .read, .append, .take, .truncate, .contains, .split, .join, .starts_with, .ends_with, .find => 1,
             .write, .resize, .reserve, .get, .slice => 2,
         };
     }
@@ -35,6 +43,7 @@ pub const Kind = enum {
     pub fn mutates(self: Kind) bool {
         return switch (self) {
             .length, .capacity, .iteration_check, .key_at, .read, .get, .contains, .keys, .values, .split, .join => false,
+            .encode, .decode, .to_list, .hex, .from_hex, .starts_with, .ends_with, .find => false,
             else => true,
         };
     }
@@ -45,7 +54,9 @@ pub fn method(name: []const u8) ?Kind {
     const std = @import("std");
     if (std.mem.eql(u8, name, "push") or std.mem.eql(u8, name, "append")) return .append;
     if (std.mem.eql(u8, name, "len")) return .length;
-    inline for (.{ "get", "contains", "keys", "values", "split", "join" }) |spelling| {
+    if (std.mem.eql(u8, name, "startswith")) return .starts_with;
+    if (std.mem.eql(u8, name, "endswith")) return .ends_with;
+    inline for (.{ "get", "contains", "keys", "values", "split", "join", "encode", "decode", "to_list", "hex", "find" }) |spelling| {
         if (std.mem.eql(u8, name, spelling)) return @field(Kind, spelling);
     }
     return null;
@@ -54,6 +65,7 @@ pub fn method(name: []const u8) ?Kind {
 pub fn managedAllocation(kind: Kind, dictionary: bool) bool {
     return switch (kind) {
         .append, .split, .join, .keys, .values, .slice => true,
+        .encode, .decode, .to_list, .hex, .from_hex => true,
         .write => dictionary,
         else => false,
     };

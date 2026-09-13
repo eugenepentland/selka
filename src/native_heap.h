@@ -18,7 +18,7 @@ struct myl_native_type {
     size_t count;
     size_t stride;
     unsigned kind;
-    unsigned collection_kind; /* 0 opaque, 1 list, 2 string, 3 dictionary */
+    unsigned collection_kind; /* 0 opaque, 1 list, 2 string, 3 dictionary, 4 bytes */
     const myl_native_type *element, *key;
 };
 enum { MYL_NATIVE_PLAIN, MYL_NATIVE_POINTER, MYL_NATIVE_RECORD,
