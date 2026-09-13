@@ -52,6 +52,29 @@ test "unit and checked-result main adapt to scalar status without changing guest
     try run("fn main()->Result<unit,i64>{return Err(42);}", 42);
     try run("fn main()->Result<i64,i64>{return Ok(42);}", 42);
 }
+
+const Entries = struct {
+    fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
+        if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
+        return allocator.dupe(u8, "module main\n\ndef main() -> Result[None, int]:\n    return Ok(None)\n");
+    }
+};
+// spec-case: PYTHON-CORE-2
+test "PYTHON-CORE-2 a project with an adapted entry still emits native units" {
+    var project = language.project.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(.{ .context = null, .read = Entries.read }, "main", .{});
+    var index = try language.interfaces.build(&project);
+    var compilation = try language.project_compile.Compilation.init(&index);
+    const manifest = compilation.emitQbe(t.allocator) catch |err| {
+        for (compilation.diagnostics.items.items) |diag| debug.print("{s}: {s}\n", .{ diag.code, diag.message });
+        return err;
+    };
+    defer t.allocator.free(manifest);
+    // The synthesized wrapper is the entry symbol and names no public export.
+    try t.expect(std.mem.indexOf(u8, manifest, "language-schema-v1") != null);
+    try t.expect(std.mem.indexOf(u8, manifest, "qbe-units-v1") != null);
+}
 // spec: PYTHON-CORE-4
 test "floating literals operators and comparisons use numeric binary64 semantics" {
     try run("fn add(x:float,y:float)->float{return x+y;}fn main()->i64{let value=add(1.5,2.5)*10.0+2.0;if value==42.0{return 42;}return 1;}", 42);

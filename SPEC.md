@@ -480,7 +480,7 @@ depends on it.
 ## Python-oriented core values
 
 - [PYTHON-CORE-1] Prelude List, Result and Option have one nominal identity shared across modules and across the Python and brace spellings; unrelated user nominal declarations remain distinct.
-- [PYTHON-CORE-2] Unit and Result<unit/int,int> entry functions adapt to the scalar runner status convention while retaining their ordinary guest signatures.
+- [PYTHON-CORE-2] Unit and Result<unit/int,int> entry functions adapt to the scalar runner status convention while retaining their ordinary guest signatures. The synthesized wrapper is not a source declaration, so no public interface names it and a project with such an entry emits native units like any other.
 - [PYTHON-CORE-3] Representable unsuffixed integer constants inherit numeric contexts; explicit suffixes retain their types and out-of-range constants are rejected.
 - [PYTHON-CORE-4] Decimal float literals and ordinary arithmetic/comparisons use binary64 numeric semantics, including equal signed zeros and unordered NaNs.
 

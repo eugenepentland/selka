@@ -49,7 +49,8 @@ pub fn generateWithInterface(allocator: std.mem.Allocator, program: bytecode.Pro
     for (entry_parameters, entry_function.scope.locals[0..entry_parameters.len]) |*parameter, local| parameter.* = layouts.identity(local.ty) catch |err| return layoutError(err);
     const descriptors = @import("native_descriptors.zig").generate(a, &layouts) catch |err| return layoutError(err);
     const renderers = @import("native_render.zig").generate(a, &layouts, program) catch |err| return layoutError(err);
-    const runtime_data = try std.mem.concat(a, u8, &.{ descriptors, renderers });
+    // A program that never prints carries no renderers, and copies nothing.
+    const runtime_data = if (renderers.len == 0) descriptors else try std.mem.concat(a, u8, &.{ descriptors, renderers });
     const wire_types = @import("qbe_wire.zig").describe(a, &layouts) catch |err| return layoutError(err);
     const codecs = @import("qbe_codecs.zig").describe(a, program, &layouts) catch |err| return layoutError(err);
     var text_format = false;

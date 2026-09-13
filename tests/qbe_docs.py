@@ -76,7 +76,10 @@ def schematic(args, temp):
         (work / 'main.my').write_text(f'module main\nimport {module}\n\ndef main() -> int:\n    return 0\n')
         emitted = invoke([args.compiler, 'emit-project-qbe', work / 'main.my'])
         assert emitted.returncode == 0, (module, emitted.stderr.decode(errors='replace'))
-    return len(modules)
+    # The guest's own entry returns Result[None, int] and reaches native units too.
+    entry = invoke([args.compiler, 'emit-project-qbe', ROOT / 'src/schematic/guest/main.my'])
+    assert entry.returncode == 0, entry.stderr.decode(errors='replace')
+    return len(modules) + 1
 
 
 def main():
