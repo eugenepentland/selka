@@ -596,7 +596,7 @@ const Checker = struct {
         const value = self.resolved[@backingInt(id)].?;
         const ty_value = self.nodes.items[@backingInt(value)].ty;
         if (expected_text) {
-            const text_type = self.catalog.names.get("str") orelse return error.InternalError;
+            const text_type = try collections.preludeType(&self.catalog, "str", self.nodes.items[@backingInt(value)].span);
             try self.require(ty_value, text_type, self.nodes.items[@backingInt(value)].span);
             return value;
         }
@@ -952,11 +952,11 @@ const Checker = struct {
         }
         if (try self.printBuiltin(call)) {
             _ = try io_builtins.printArguments(self.src, call, self.sink);
-            const text_type = self.catalog.names.get("str");
+            const text_type = try collections.preludeType(&self.catalog, "str", node.span);
             var index = call.arguments.len;
             while (index > 0) {
                 index -= 1;
-                if (call.argument_names.len != 0 and call.argument_names[index] != null) if (text_type) |ty_value| try self.hint(call.arguments[index], ty_value);
+                if (call.argument_names.len != 0 and call.argument_names[index] != null) try self.hint(call.arguments[index], text_type);
                 try work.append(self.allocator, .{ .id = call.arguments[index] });
             }
             return true;

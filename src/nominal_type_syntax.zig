@@ -19,15 +19,20 @@ pub fn presentInSource(program: ast.Program, src: Source) bool {
     return present(program) or textUsed(src) or byteLiteral(program, src) or fileSyntax(program, src);
 }
 
-/// Recognize the file surface, whose results are `str`, `bytes` and `list[str]`.
+/// Recognize the I/O surface, whose operands and results are `str`, `bytes` and
+/// `list[str]`: the file builtins and a `print` call with `sep=`/`end=` text.
 pub fn fileSyntax(program: ast.Program, src: Source) bool {
+    const std = @import("std");
     const files = @import("file_operations.zig");
     for (program.nodes.items) |node| {
         if (node.data != .call) continue;
         const call = node.data.call;
         if (call.owner) |owner| {
             if (files.method(src.text(call.name)) != null and src.text(owner).len != 0) return true;
-        } else if (files.access(src.text(call.name)) != null) return true;
+            continue;
+        }
+        if (files.access(src.text(call.name)) != null) return true;
+        if (call.argument_names.len != 0 and std.mem.eql(u8, src.text(call.name), "print")) return true;
     }
     return false;
 }
