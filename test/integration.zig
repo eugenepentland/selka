@@ -916,8 +916,8 @@ test "CLI accepts Python capability spellings and lets a declared type keep the 
     try invoke("run", declared, 0, "7\n", "");
     const entropy = "result Word { ok: u64, err: i64 }\nfn main(rng: Entropy) -> i64 { _ = random_u64<Word>(rng); return 0; }";
     try invoke("check", entropy, 0, "", "");
-    try invoke("check", "fn main(env: Environment) -> i64 { return 0; }", 0, "", "");
-    try invoke("check", "fn main(fs: Filesystem) -> i64 { return 0; }", 0, "", "");
+    try invoke("check", "fn main(env: Environment) -> i64 { _ = env; return 0; }", 0, "", "");
+    try invoke("check", "fn main(fs: Filesystem) -> i64 { _ = fs; return 0; }", 0, "", "");
 }
 // spec: CAPABILITY-2
 test "CLI grant flags reject repeats empty values and commands that do not execute" {
@@ -1059,7 +1059,7 @@ test "CLI resolves the Python capability spellings inside projects that import m
     defer testing.allocator.free(granted.stdout);
     defer testing.allocator.free(granted.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, granted.term);
-    try testing.expectEqualStrings("clock\nentropy\nFalse\n", granted.stdout);
+    try testing.expectEqualStrings("clock 0\nentropy 1\nFalse\n", granted.stdout);
     const ungranted = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path } });
     defer testing.allocator.free(ungranted.stdout);
     defer testing.allocator.free(ungranted.stderr);
