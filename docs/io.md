@@ -1,8 +1,10 @@
 # Printing, files and command-line authority
 
 `print` and the file surface give application code the I/O a Python programmer
-expects. Printing needs no capability; touching the filesystem, the clock,
-entropy or the environment does, and the command line grants it explicitly.
+expects. Printing needs no capability. Touching the filesystem, the clock,
+entropy or the environment does, and the entry point names each one it needs —
+but `mylang run` grants them all by default, so an ordinary program just runs.
+Pass `--restrict` when you want the command to withhold authority instead.
 
 ## print
 
@@ -97,33 +99,47 @@ existing `filesystem_cap`, `network_cap`, `clock_cap`, `random_cap` and
 only when no declared or imported type claims the name, so a module with its own
 `class Clock` still gets its own type.
 
-The command line grants them:
+`mylang run` and `run-project` grant every capability by default: the filesystem
+with no directory restriction, the clock, entropy and the whole process
+environment. Relative paths resolve against the process working directory and
+absolute paths name themselves, exactly as they would for any other program.
 
-| Flag | Grant |
+`--restrict` switches the command to deny-by-default. Only then do these flags
+narrow anything:
+
+| Flag | Grant under `--restrict` |
 | --- | --- |
-| `--allow-read=DIR` | read the directory tree at `DIR` (repeatable) |
-| `--allow-write=DIR` | read and write that tree, including create, truncate, `mkdir` and `remove` |
+| `--allow-read=DIR` | read the directory tree at `DIR` (repeatable, up to eight) |
+| `--allow-write=DIR` | read **and** write that tree, including create, truncate, `mkdir` and `remove` |
 | `--allow-clock` | wall-clock time in Unix-epoch nanoseconds |
 | `--allow-random[=SEED]` | a pseudorandom stream, reproducible when `SEED` is given |
 | `--allow-env[=NAME,...]` | the process environment, restricted to the named variables |
 | `--allow-all` | clock, entropy, every environment name, and read/write on the working directory |
 
+Without `--restrict` these flags are accepted and narrow nothing, so a command
+line written for an older build keeps working. The one exception is
+`--allow-random=SEED`, which pins the entropy seed in either mode because it
+selects a stream rather than withholding one; an unseeded stream is seeded from
+the wall clock.
+
 Running a program whose `main` requests an ungranted capability fails before the
-first guest instruction, naming the flag:
+first guest instruction — and that can only happen under `--restrict`:
 
 ```text
-$ mylang run report.my
-mylang: the entry point requests a capability this command line did not grant; pass --allow-read=DIR
+$ mylang run report.my --restrict
+mylang: --restrict is active and this command line did not grant a capability the entry point requests; pass --allow-read=DIR, or drop --restrict to grant every capability
 ```
 
-Helpers receive authority as ordinary arguments; nothing is ambient, and no cast
-or copy mints a capability.
+The language itself is unchanged: helpers receive authority as ordinary
+arguments, nothing is ambient, and no cast or copy mints a capability. What the
+default changes is only how generous the command line is.
 
-**These grants are an authority boundary for guest source, not a sandbox.** The
-providers run inside the compiler process, the host filesystem tree is trusted,
-directory handles keep their authority across renames, and directory scoping does
-not distinguish hard links to the same inode. A compromised compiler, or a host
-that edits the adapters, is outside this boundary.
+**Neither mode is a sandbox.** The providers run inside the compiler process, the
+host filesystem tree is trusted, directory handles keep their authority across
+renames, and directory scoping does not distinguish hard links to the same inode.
+A compromised compiler, or a host that edits the adapters, is outside this
+boundary. `--restrict` is a way to say what a program is allowed to reach, not a
+containment mechanism.
 
 ## Files
 
@@ -204,10 +220,15 @@ The whole-path helpers are:
 Their error text names the operation, the path and a readable reason, for example
 `read 'absent.txt': failed: the path does not exist or could not be used`.
 
-Paths are relative and are resolved against each granted directory in order; the
-first root where the operation succeeds wins. A path with an empty, `.`, `..`,
-NUL or backslash component is denied before anything is opened, as is any writing
-mode against a directory granted read-only:
+By default a path resolves the way it would for any other process: relative to
+the working directory, or absolutely when it starts with `/`.
+
+Under `--restrict`, paths must be relative and are resolved against each granted
+directory in order; the first root where the operation succeeds wins. A path with
+an empty, `.`, `..`, NUL or backslash component is denied before anything is
+opened, as is any writing mode against a directory granted read-only. A directory
+granted with `--allow-write` is always readable too, so write authority is never
+narrower than read authority:
 
 ```mylang
 # doc: allow-read notes

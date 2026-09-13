@@ -271,11 +271,13 @@ def options(unit, command):
     # keeps asserting the entry point's int result, which `run` reports on request.
     prints = any(PRINT_CALL.search(member.source) for member in unit.members)
     argv = [] if prints else ["--print-result"]
+    grants = []
     for name, flag in (("allow-read", "--allow-read="), ("allow-write", "--allow-write=")):
         for member in unit.members:
             for directory in values(member, name):
-                argv.append(flag + str(FIXTURES / directory.strip()))
-    return argv
+                grants.append(flag + str(FIXTURES / directory.strip()))
+    # A grant directive says exactly what the example may reach, so it denies the rest.
+    return argv + (["--restrict", *grants] if grants else [])
 
 
 def mistagged(fence):

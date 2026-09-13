@@ -208,3 +208,54 @@ test "a context without any granted root reports the filesystem as unavailable" 
     defer store.deinit();
     try t.expectError(error.Unavailable, store.acquire(try store.grant(), "r:any"));
 }
+
+// spec-case: CAPABILITY-4
+test "a direct root applies the whole path, allows traversal and keeps write authority" {
+    var temporary = t.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "notes.txt", .data = "alpha\n" });
+    try temporary.dir.createDir(t.io, "nested", .default_dir);
+    try temporary.dir.writeFile(t.io, .{ .sub_path = "nested/deep.txt", .data = "beta\n" });
+    var context: scoped.Context = .{ .allocator = t.allocator, .io = t.io, .roots = &.{.{ .dir = temporary.dir, .writable = true, .direct = true }} };
+    defer context.deinit();
+    var store = try resources.Store.init(t.allocator, .filesystem, context.filesystem(), 8);
+    defer store.deinit();
+    const authority = try store.grant();
+    // A scoped root would refuse `.` and `..`; a direct root resolves them, and a
+    // read-only capability still refuses every writing mode.
+    const readonly = try store.restrict(authority, resources.permissionBit(.read));
+    for ([_]struct { request: []const u8, allowed: bool }{
+        .{ .request = "r:./notes.txt", .allowed = true },
+        .{ .request = "r:nested/../notes.txt", .allowed = true },
+        .{ .request = "r:nested/deep.txt", .allowed = true },
+        .{ .request = "c:made.txt", .allowed = false },
+        .{ .request = "t:notes.txt", .allowed = false },
+        .{ .request = "k:folder", .allowed = false },
+        .{ .request = "x:notes.txt", .allowed = false },
+        .{ .request = "a:notes.txt", .allowed = false },
+    }) |case| {
+        if (!case.allowed) {
+            try t.expectError(error.Denied, store.acquire(readonly, case.request));
+            continue;
+        }
+        const owner = try store.acquire(readonly, case.request);
+        try store.complete(owner);
+    }
+    try t.expectError(error.Failed, store.acquire(authority, "r:absent.txt"));
+    try t.expectError(error.Denied, store.acquire(authority, "q:notes.txt"));
+    try t.expectError(error.FileNotFound, temporary.dir.access(t.io, "made.txt", .{}));
+    const created = try store.acquire(authority, "c:made.txt");
+    try store.complete(created);
+    try temporary.dir.access(t.io, "made.txt", .{});
+}
+
+test "a scoped request rejects the paths a direct request accepts" {
+    for ([_][]const u8{ "r:./a", "r:../a", "r:a/../b", "r:" }) |request| {
+        try t.expectError(error.Denied, scoped.fileRequest(request, resources.all_permissions));
+        // The same request decodes cleanly when only the mode is checked.
+        _ = try scoped.openRequest(request, resources.all_permissions);
+    }
+    try t.expectError(error.Denied, scoped.openRequest("q:a", resources.all_permissions));
+    try scoped.scopedSpec(.{ .mode = 'l', .path = "" });
+    try t.expectError(error.Denied, scoped.scopedSpec(.{ .mode = 'r', .path = "" }));
+}

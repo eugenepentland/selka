@@ -47,8 +47,12 @@ traffic are not rolled back on a later guest failure.
 Applications using mylang-io still import their explicit `io` host declaration
 (length, byte and put), as in the existing byte-I/O runner contract.
 
-`mylang run --allow-read=DIR` and `--allow-write=DIR` configure the same adapter
-for ordinary programs; see [printing, files and authority](../io.md).
+`mylang run` configures the same adapter for ordinary programs. By default it
+supplies one `direct` root over the process working directory, which applies the
+whole path at once and follows symlinks, so paths resolve as they would for any
+other process. `--restrict` replaces that with the scoped roots named by
+`--allow-read=DIR` and `--allow-write=DIR`; see
+[printing, files and authority](../io.md).
 
 The standard filesystem additions also use read-authorized `m:path` metadata and
 `l:path` directory snapshots. Empty paths name the granted root for these two modes

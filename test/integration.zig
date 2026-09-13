@@ -205,7 +205,7 @@ test "CLI checks runs and dumps records and declared complete conversions" {
 test "CLI checks resource ownership completion and implicit cleanup effects without ambient access" {
     const source = @embedFile("fixtures/resources.my");
     try invoke("check", source, 0, "", "");
-    try invoke("run", source, 2, "", "did not grant; pass --allow-");
+    try invokeOptions("run", source, &.{"--restrict"}, 2, "", "did not grant; pass --allow-");
     const dumped = try runFixture("dump-bytecode", source, &.{});
     defer testing.allocator.free(dumped.stdout);
     defer testing.allocator.free(dumped.stderr);
@@ -217,7 +217,7 @@ test "CLI checks resource ownership completion and implicit cleanup effects with
 test "CLI checks resource data operations effects and required mutation without ambient providers" {
     const source = @embedFile("fixtures/resource-io.my");
     try invoke("check", source, 0, "", "");
-    try invoke("run", source, 2, "", "did not grant; pass --allow-");
+    try invokeOptions("run", source, &.{"--restrict"}, 2, "", "did not grant; pass --allow-");
     const dumped = try runFixture("dump-bytecode", source, &.{});
     defer testing.allocator.free(dumped.stdout);
     defer testing.allocator.free(dumped.stderr);
@@ -860,7 +860,7 @@ test "CLI handles recoverable results and rejects silent error loss" {
 test "CLI checks external capabilities but cannot silently grant ambient providers" {
     const source = @embedFile("fixtures/external-capabilities.my");
     try invoke("check", source, 0, "", "");
-    try invoke("run", source, 2, "", "did not grant; pass --allow-");
+    try invokeOptions("run", source, &.{"--restrict"}, 2, "", "did not grant; pass --allow-");
     const dumped = try runFixture("dump-bytecode", source, &.{});
     defer testing.allocator.free(dumped.stdout);
     defer testing.allocator.free(dumped.stderr);
@@ -872,7 +872,7 @@ test "CLI checks external capabilities but cannot silently grant ambient provide
 test "CLI checks bounded environment access without granting ambient process access" {
     const source = @embedFile("fixtures/environment.my");
     try invoke("check", source, 0, "", "");
-    try invoke("run", source, 2, "", "did not grant; pass --allow-");
+    try invokeOptions("run", source, &.{"--restrict"}, 2, "", "did not grant; pass --allow-");
     const dumped = try runFixture("dump-bytecode", source, &.{});
     defer testing.allocator.free(dumped.stdout);
     defer testing.allocator.free(dumped.stderr);
@@ -884,7 +884,7 @@ test "CLI checks bounded environment access without granting ambient process acc
 test "CLI exposes resource permission attenuation and rejects malformed permission sets" {
     const source = @embedFile("fixtures/attenuation.my");
     try invoke("check", source, 0, "", "");
-    try invoke("run", source, 2, "", "did not grant; pass --allow-");
+    try invokeOptions("run", source, &.{"--restrict"}, 2, "", "did not grant; pass --allow-");
     const dumped = try runFixture("dump-bytecode", source, &.{});
     defer testing.allocator.free(dumped.stdout);
     defer testing.allocator.free(dumped.stderr);
@@ -929,21 +929,27 @@ test "CLI grant flags reject repeats empty values and commands that do not execu
         &.{ "--allow-env=PATH", "--allow-env" },
         &.{ "--allow-all", "--allow-clock" },
         &.{"--allow-nonsense"},
+        &.{ "--restrict", "--restrict" },
     }) |options| try invokeOptions("run", clock_program, options, 2, "", "usage:");
     try invokeOptions("check", clock_program, &.{"--allow-clock"}, 2, "", "usage:");
+    try invokeOptions("check", clock_program, &.{"--restrict"}, 2, "", "usage:");
     try invokeOptions("dump-bytecode", clock_program, &.{"--allow-clock"}, 2, "", "usage:");
 }
 // spec: CAPABILITY-3
-test "CLI refuses an ungranted entry capability before execution and names its flag" {
-    try invoke("run", clock_program, 2, "", "--allow-clock");
-    try invokeOptions("run", clock_program, &.{"--allow-clock"}, 0, "0\n", "");
-    // A granted capability the entry point never requests is simply never read.
-    try invokeOptions("run", "fn main() -> i64 { return 4; }", &.{ "--allow-clock", "--allow-random=7" }, 0, "4\n", "");
+test "CLI refuses an ungranted entry capability only while --restrict is active" {
     const environment = "struct Entry { bytes: [8]u8, length: u64, present: bool }\n" ++
         "result Lookup { ok: Entry, err: i64 }\n" ++
         "fn main(env: Environment) -> i64 { _ = environment_get<Lookup>(env, new [4]u8 [80u8, 65u8, 84u8, 72u8]); return 0; }";
-    try invoke("run", environment, 2, "", "--allow-env");
-    try invokeOptions("run", environment, &.{"--allow-env=PATH"}, 0, "0\n", "");
+    for ([_][]const u8{ clock_program, environment }) |program| {
+        try invokeOptions("run", program, &.{"--restrict"}, 2, "", "--restrict is active");
+        try invokeOptions("run", program, &.{"--restrict"}, 2, "", "drop --restrict");
+        // The default grants every capability, so the same program runs unchanged.
+        try invoke("run", program, 0, "0\n", "");
+    }
+    try invokeOptions("run", clock_program, &.{ "--restrict", "--allow-clock" }, 0, "0\n", "");
+    try invokeOptions("run", environment, &.{ "--restrict", "--allow-env=PATH" }, 0, "0\n", "");
+    // A grant the entry point never requests is simply never read.
+    try invokeOptions("run", "fn main() -> i64 { return 4; }", &.{ "--restrict", "--allow-clock", "--allow-random=7" }, 0, "4\n", "");
 }
 // spec: CAPABILITY-5
 test "CLI clock entropy and environment providers honour their grants" {
@@ -971,7 +977,7 @@ test "CLI clock entropy and environment providers honour their grants" {
         "    }\n" ++
         "}\n";
     // PATH is outside this allowlist, so the lookup is denied rather than answered.
-    try invokeOptions("run", missing, &.{"--allow-env=OTHER"}, 0, "2\n", "");
+    try invokeOptions("run", missing, &.{ "--restrict", "--allow-env=OTHER" }, 0, "2\n", "");
 }
 
 // spec-case: CAPABILITY-4
@@ -996,13 +1002,13 @@ test "CLI directory grants scope the file surface and separate reading from writ
     ;
     // These fixtures pass --print-result, so the entry point's `0` follows the program's output.
     const denied = "Err('read \\'../escape\\': denied: outside the granted directories, or the mode needs a write grant')\n0\n";
-    try invokeOptions("run", program, &.{read_grant}, 0, "Ok('alpha\\n')\n" ++
+    try invokeOptions("run", program, &.{ "--restrict", read_grant }, 0, "Ok('alpha\\n')\n" ++
         "Err('write \\'copy.txt\\': denied: outside the granted directories, or the mode needs a write grant')\n" ++ denied, "");
-    try invokeOptions("run", program, &.{write_grant}, 0, "Ok('alpha\\n')\nOk(None)\n" ++ denied, "");
+    try invokeOptions("run", program, &.{ "--restrict", write_grant }, 0, "Ok('alpha\\n')\nOk(None)\n" ++ denied, "");
     const written = try temporary.dir.readFileAlloc(testing.io, "copy.txt", testing.allocator, .limited(32));
     defer testing.allocator.free(written);
     try testing.expectEqualStrings("beta\n", written);
-    try invoke("run", program, 2, "", "--allow-read=DIR");
+    try invokeOptions("run", program, &.{"--restrict"}, 2, "", "--allow-read=DIR");
 }
 // spec-case: IO-1
 test "CLI streams program output and reports the entry result only on request" {
@@ -1054,15 +1060,53 @@ test "CLI resolves the Python capability spellings inside projects that import m
     const grant = try std.fmt.allocPrint(testing.allocator, "--allow-read={s}", .{directory});
     defer testing.allocator.free(grant);
     const granted = try std.process.run(testing.allocator, testing.io, .{
-        .argv = &.{ compiler_path, "run-project", path, "--allow-clock", "--allow-random=5", grant },
+        .argv = &.{ compiler_path, "run-project", path, "--restrict", "--allow-clock", "--allow-random=5", grant },
     });
     defer testing.allocator.free(granted.stdout);
     defer testing.allocator.free(granted.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, granted.term);
     try testing.expectEqualStrings("clock 0\nentropy 1\nFalse\n", granted.stdout);
-    const ungranted = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path } });
+    const ungranted = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path, "--restrict" } });
     defer testing.allocator.free(ungranted.stdout);
     defer testing.allocator.free(ungranted.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, ungranted.term);
     try testing.expect(std.mem.indexOf(u8, ungranted.stderr, "--allow-clock") != null);
+}
+
+// spec-case: CAPABILITY-2
+// spec-case: CAPABILITY-4
+test "CLI grants every capability by default and resolves paths against the working directory" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "notes.txt", .data = "alpha\n" });
+    const anchor = try temporary.dir.realPathFileAlloc(testing.io, "notes.txt", testing.allocator);
+    defer testing.allocator.free(anchor);
+    const directory = std.fs.path.dirname(anchor).?;
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data =
+        \\def main(fs: Filesystem) -> int:
+        \\    print(read_text(fs, "notes.txt"))
+        \\    print(write_text(fs, "made.txt", "beta\n"))
+        \\    print(read_text(fs, "../escape"))
+        \\    return 0
+    });
+    const entry = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(entry);
+    // A relative guest path resolves against the process working directory, and
+    // a path that leaves it is an ordinary filesystem failure rather than a denial.
+    const outcome = try std.process.run(testing.allocator, testing.io, .{
+        .argv = &.{ compiler_path, "run", entry },
+        .cwd = directory,
+    });
+    defer testing.allocator.free(outcome.stdout);
+    defer testing.allocator.free(outcome.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+    try testing.expectEqualStrings("Ok('alpha\\n')\nOk(None)\n" ++
+        "Err('read \\'../escape\\': failed: the path does not exist or could not be used')\n", outcome.stdout);
+    const written = try temporary.dir.readFileAlloc(testing.io, "made.txt", testing.allocator, .limited(32));
+    defer testing.allocator.free(written);
+    try testing.expectEqualStrings("beta\n", written);
+    // An absolute path names itself, and `--allow-*` without `--restrict` narrows nothing.
+    const absolute = try std.fmt.allocPrint(testing.allocator, "def main(fs: Filesystem) -> int:\n    print(read_text(fs, \"{s}\"))\n    return 0\n", .{anchor});
+    defer testing.allocator.free(absolute);
+    try invokeOptions("run", absolute, &.{"--allow-read=."}, 0, "Ok('alpha\\n')\n0\n", "");
 }
