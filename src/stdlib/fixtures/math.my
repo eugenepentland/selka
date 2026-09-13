@@ -1,0 +1,158 @@
+module main
+import math
+
+
+def close(a: float, b: float) -> bool:
+    return math.fabs(a - b) <= 1.0e-12 * math.fmax(1.0, math.fabs(b))
+
+
+def roots() -> int:
+    if math.sqrt(1764.0) != 42.0:
+        return 1
+    if not close(math.sqrt(2.0), 1.4142135623730951):
+        return 2
+    if math.sqrt(0.0) != 0.0 or math.sqrt(1.0) != 1.0:
+        return 3
+    if not math.is_nan(math.sqrt(0.0 - 1.0)) or not math.is_nan(math.sqrt(math.nan())):
+        return 4
+    if math.sqrt(1.0e300) != 1.0e150 or math.sqrt(4.0e-300) != 2.0e-150:
+        return 5
+    if math.sqrt(math.infinity()) != math.infinity():
+        return 6
+    return 0
+
+
+def rounding() -> int:
+    if math.floor(0.0 - 1.5) != 0.0 - 2.0 or math.ceil(0.0 - 1.5) != 0.0 - 1.0:
+        return 10
+    if math.floor(1.5) != 1.0 or math.ceil(1.5) != 2.0:
+        return 11
+    if math.round(0.0 - 2.5) != 0.0 - 3.0 or math.round(2.5) != 3.0:
+        return 12
+    if math.round(0.49999999999999994) != 0.0:
+        return 13
+    if math.trunc(0.0 - 1.9) != 0.0 - 1.0 or math.trunc(1.9) != 1.0:
+        return 14
+    if math.floor(math.infinity()) != math.infinity():
+        return 15
+    if math.trunc(1.0e300) != 1.0e300:
+        return 16
+    return 0
+
+
+def classification() -> int:
+    if not math.is_inf(math.infinity()) or math.is_finite(math.nan()):
+        return 20
+    if math.is_nan(1.0) or not math.is_finite(1.7976931348623157e308):
+        return 21
+    if math.fabs(0.0 - 0.0) != 0.0 or math.fabs(0.0 - 3.0) != 3.0:
+        return 22
+    if math.sign(0.0 - 3.0) != 0 - 1 or math.sign(3.0) != 1 or math.sign(0.0) != 0:
+        return 23
+    if math.sign(math.nan()) != 0:
+        return 24
+    return 0
+
+
+def powers() -> int:
+    if math.pow(2.0, 10) != 1024.0 or math.pow(2.0, 0 - 2) != 0.25:
+        return 30
+    if math.pow(3.0, 0) != 1.0 or math.pow(0.0, 3) != 0.0:
+        return 31
+    if math.pow(0.0 - 1.0, 9223372036854775807) != 0.0 - 1.0:
+        return 32
+    if math.pow(0.0 - 1.0, 0 - 9223372036854775807 - 1) != 1.0:
+        return 33
+    if not math.is_inf(math.pow(10.0, 400)):
+        return 34
+    return 0
+
+
+def integers() -> int:
+    if math.min(3, 9) != 3 or math.max(3, 9) != 9:
+        return 40
+    if math.clamp(99, 0, 42) != 42 or math.clamp(0 - 5, 0, 42) != 0:
+        return 41
+    if math.clamp(7, 0, 42) != 7 or math.clamp(7, 42, 0) != 42:
+        return 42
+    if math.fmin(1.0, 2.0) != 1.0 or math.fmax(1.0, 2.0) != 2.0:
+        return 43
+    if not math.is_nan(math.fmin(math.nan(), 1.0)):
+        return 44
+    return 0
+
+
+def divisors() -> int:
+    match math.gcd(0 - 12, 18):
+        case Ok(value):
+            if value != 6:
+                return 50
+        case Err(_):
+            return 51
+    match math.gcd(0, 0):
+        case Ok(value):
+            if value != 0:
+                return 52
+        case Err(_):
+            return 53
+    match math.gcd(0 - 9223372036854775807 - 1, 0):
+        case Ok(_):
+            return 54
+        case Err(_):
+            _ = 0
+    match math.lcm(4, 6):
+        case Ok(value):
+            if value != 12:
+                return 55
+        case Err(_):
+            return 56
+    match math.lcm(4611686018427387904, 3):
+        case Ok(_):
+            return 57
+        case Err(_):
+            _ = 0
+    return 0
+
+
+def square_roots() -> int:
+    match math.isqrt(9223372036854775807):
+        case Ok(value):
+            if value != 3037000499:
+                return 60
+        case Err(_):
+            return 61
+    match math.isqrt(0):
+        case Ok(value):
+            if value != 0:
+                return 62
+        case Err(_):
+            return 63
+    match math.isqrt(15):
+        case Ok(value):
+            if value != 3:
+                return 64
+        case Err(_):
+            return 65
+    match math.isqrt(0 - 1):
+        case Ok(_):
+            return 66
+        case Err(_):
+            _ = 0
+    match math.abs(0 - 9223372036854775807 - 1):
+        case Ok(_):
+            return 67
+        case Err(_):
+            _ = 0
+    return 0
+
+
+def main() -> int:
+    checks = [roots(), rounding(), classification(), powers(), integers(), divisors(), square_roots()]
+    for value in checks:
+        if value != 0:
+            return value
+    if math.pi() <= 3.1415926 or math.pi() >= 3.1415927:
+        return 70
+    if math.e() <= 2.7182818 or math.e() >= 2.7182819:
+        return 71
+    return 42

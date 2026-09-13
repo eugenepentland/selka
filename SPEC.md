@@ -192,7 +192,7 @@ are bounded at 300 million each and VM execution at 2 billion steps; the coordin
 also enforces wall/CPU/memory limits. The executable is built outside application
 sessions; editing guest files requires no Zig rebuild or language Guardian run.
 
-- [STANDARD-MODULES-1] Reserved standard sources load identically through all project providers and participate in source budgets, dependency graphs and digests.
+- [STANDARD-MODULES-1] Reserved standard sources load identically through all project providers and participate in source budgets, dependency graphs and digests. They are ordinary Python-syntax guest modules over managed types and may import one another.
 
 - [PLAIN-JSON-1] The strict document parser produces a checked i64 tape for a JSON text. It rejects duplicate decoded keys, invalid Unicode, integers outside i64, nonfinite numbers, trailing data and container depth over 64. Its byte budget is at most 1 MiB; scratch and output allocation remain bounded.
 - [PLAIN-JSON-2] Ordinary JSON validation applies to every subtree, including unused fields: decoded duplicate keys, malformed UTF-8, out-of-range integers, nonfinite floats, trailing bytes and excessive nesting reject.
@@ -229,7 +229,6 @@ manifest records implementation coverage, not a test certificate.
 - [BYTE-IO-BULK-1] The byte application host optionally registers io::read_block(i64)->Block and io::write_block(Block)->i64 for a copied plain Block with bytes:[256]u8 followed by count:i64. Reads return up to 256 useful bytes with zero padding, count zero at EOF, and reject offsets outside [0,input length]. Writes reject counts outside [0,256], append up to remaining unpublished output capacity, and return the accepted count. Each call charges one work unit plus transferred bytes before mutation; allocation/work failure never appends a partial block. Existing scalar declarations remain compatible. Output is published only after successful guest exit.
 - [BYTE-IO-LIMITS-1] mylang-io accepts unique decimal --max-input, --max-output, --max-steps, --max-calls and --max-work values using = syntax after --project DIRECTORY. Input/output limits may be zero; execution budgets must be positive. Unknown flags, duplicate limits, non-decimal values and overflow reject before invocation. The configured input limit, output publication capacity and VM/host budgets are enforced without changing default limits.
 
-- [UNIT-CONVENTION-1] Reserved std_unit exports the empty ordinary record Unit and noalloc unit()->Unit constructor. Unit is a copyable normal value accepted by generic functions and result payloads; successful operations with no useful payload need no dummy integer. Fallible Result<Unit,E> keeps its must-handle obligation.
 - [SCOPED-PROVIDERS-1] Packaged resource adapters accept only relative normal path components under an open directory and exact configured numeric TCP endpoints. Read-only acquisition rejects write/create/truncate modes before effects; network adapters do not resolve DNS or follow redirects.
 - [SCOPED-PROVIDERS-2] Directory adapters reject symlink path components, create exclusively, truncate only opened regular files, report actual partial I/O and close all provider handles when their stores end. The host keeps directory and endpoint grants alive until provider stores close.
 - [SCOPED-PROVIDERS-3] The packaged synchronous TCP adapter connects only after an exact endpoint grant match, transfers bounded byte chunks with reported progress, and closes the connection on completion or cleanup.
@@ -267,7 +266,7 @@ manifest records implementation coverage, not a test certificate.
 - [VM-TRACE-1] Optional `memory.trace` observations record instruction/source identity and the top operand before execution into a caller-owned bounded buffer. Scalar values can explain branch conditions; aggregates record only type identity. Full buffers count omitted events without changing guest work/steps or retaining guest owners. Traces are debugging samples, not complete causal proofs or portable replay logs.
 
 
-- [FLOAT-DOMAIN-1] std_math::F64 supplies explicit IEEE binary64 operations over a nominal u64 representation, canonical arithmetic NaNs, numeric comparisons, checked integer conversion and exact bit serialization; builtin f64 syntax is not introduced.
+- [FLOAT-DOMAIN-1] Builtin float is IEEE binary64: separate arithmetic operations with canonical arithmetic NaNs, numeric comparisons in which signed zeros compare equal and every NaN comparison is false, and checked conversion to and from signed integers. The raw f64_* intrinsics over u64 representations remain available for code that owns a bit pattern; the f64 spelling is not a type name.
 
 - [STRUCTURAL-COMPOSITE-1] Structural field and operation signatures substitute fixed arrays and nominal applications. Result obligations remain transferred by value. Invalid unused templates still reject.
 
@@ -287,9 +286,9 @@ manifest records implementation coverage, not a test certificate.
 
 - [SEMANTIC-CALLBACK-1] Function-name values may infer callback schemas while checking bodies, so semantic body reuse stays disabled for these programs until snapshots can safely remap their inferred types. Fresh and changed-source callback execution retain identical signatures and outcomes.
 
-- [STANDARD-TIME-RANDOM-1] Standard durations and Unix nanosecond instants use checked full-width arithmetic; SplitMix64 seeded state has stable word sequences and bounded rejection sampling with retained state on exhaustion.
-- [STANDARD-TIME-RANDOM-2] Standard clock and entropy calls require explicit capabilities, retain typed provider failures, and report initialized byte prefixes on partial entropy failure; host allocation failure aborts normally.
-- [STANDARD-TIME-RANDOM-3] Standard provider wrappers preserve source effect ceilings; rejection sampling honors the caller's maximum draw count and empty entropy fills perform no reads.
+- [STANDARD-TIME-RANDOM-1] Standard durations and Unix nanosecond instants use checked signed arithmetic that reports overflow, reversal and unrepresentable spans as Result failures instead of wrapping or trapping; seeded SplitMix64 has stable word sequences, a shared stream across copies of a generator, and inclusive integer sampling that covers the whole signed range without modulo bias.
+- [STANDARD-TIME-RANDOM-2] Standard clock and entropy calls require explicit capabilities and keep the unavailable, denied and failed provider categories apart in their reported messages; a later failed read leaves earlier results intact and host allocation failure aborts normally.
+- [STANDARD-TIME-RANDOM-3] Standard provider wrappers preserve source effect ceilings, so a caller declaring a narrower ceiling than clock or random plus managed allocation is rejected while checking; one entropy-seeded generator performs exactly one provider read and replays identically from its state word.
 
 - [TYPE-ALIAS-SCHEMA-1] Exported transparent aliases retain their checked canonical target in public schemas and native interfaces, including scalar, array, chained and concrete generic targets.
 
@@ -299,9 +298,19 @@ manifest records implementation coverage, not a test certificate.
 - [SCOPED-DIRECTORY-2] Failed directory snapshot construction releases partial bytes and open directories before returning; allocation failures never publish a live snapshot handle.
 
 
+## Standard library over managed types
+
+- [STANDARD-MATH-1] Standard math classifies, rounds and roots binary64 values with IEEE behaviour preserved at zeros, infinities and not-a-number; sqrt reduces by exact powers of four and refines by Newton iteration, pow takes an integer exponent whose magnitude saturates by parity, and abs, gcd, lcm and isqrt report the values the signed range cannot hold as Result failures.
+- [STANDARD-STRINGS-1] Standard strings add the classification, search, trimming, padding, case mapping and numeric conversion that builtin str lacks. to_int accepts exactly the signed range and rejects every other text; to_float accumulates an exact integer mantissa with one power-of-ten scaling; format_int covers bases 2 to 36 including the most negative integer, and format_float rounds halves away from zero and rejects magnitudes it cannot render.
+- [STANDARD-SORT-1] Standard ordering is a stable merge over a copy that leaves its input unchanged, for integers, binary64 values, Unicode code point order on text, and any element type through an integer key callback. Binary search, extrema and duplicate removal report absence through Option and keep first-occurrence order.
+- [STANDARD-PATH-1] Standard path operations are pure text algebra with no filesystem authority: joining honours an absolute right side, basename and dirname agree with the trailing-separator convention, splitext ignores a leading dot, and normalize removes duplicate separators, single dots and resolvable parents while keeping unresolvable ones.
+- [STANDARD-CODECS-1] Standard base64 emits canonical padding for both RFC 4648 alphabets and decodes only canonical input, rejecting a length that is not a multiple of four, a symbol outside the alphabet, padding before the final group and a final group with nonzero unused bits. Hexadecimal transcoding accepts either letter case and rejects odd lengths.
+- [STANDARD-JSON-1] Standard JSON parses strict RFC 8259 text into a recursive union, rejecting comments, trailing commas, leading zeros, bare fractions and exponents, unescaped control characters, lone surrogates, duplicate object keys, trailing text and nesting past a fixed limit, and naming the byte offset in every message. Objects keep parsed key order, a number without fraction or exponent that fits the signed range stays exact, and rendering round-trips a parsed document without added whitespace.
+- [STANDARD-POOL-1] A standard pool hands out copyable generational handles into a reusable slot store. Removing a slot advances its generation so every earlier handle stops matching; a stale, out-of-range or foreign handle reports absence rather than trapping, released slots are reused before the store grows, and copies of a pool value refer to one shared store.
+
 ## Application library parity
 
-- [STANDARD-INTEGER-EXTREMA-1] std_math integer min/max compare exact values at every supported integer width without arithmetic overflow. Existing F64 operations remain available.
+- [STANDARD-INTEGER-EXTREMA-1] Standard math integer min, max and clamp compare exact values at every supported integer width without arithmetic overflow, including both ends of each signed and unsigned range.
 
 ## Ordinary JSON schema helpers
 
@@ -422,7 +431,7 @@ manifest records implementation coverage, not a test certificate.
 
 ## Python-oriented core values
 
-- [PYTHON-CORE-1] Standard-library List, Result, and Option have the same nominal identities as their prelude forms; unrelated user nominal declarations remain distinct.
+- [PYTHON-CORE-1] Prelude List, Result and Option have one nominal identity shared across modules and across the Python and brace spellings; unrelated user nominal declarations remain distinct.
 - [PYTHON-CORE-2] Unit and Result<unit/int,int> entry functions adapt to the scalar runner status convention while retaining their ordinary guest signatures.
 - [PYTHON-CORE-3] Representable unsuffixed integer constants inherit numeric contexts; explicit suffixes retain their types and out-of-range constants are rejected.
 - [PYTHON-CORE-4] Decimal float literals and ordinary arithmetic/comparisons use binary64 numeric semantics, including equal signed zeros and unordered NaNs.

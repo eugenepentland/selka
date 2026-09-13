@@ -2,12 +2,16 @@
 const std = @import("std");
 const Module = struct { path: []const u8, text: []const u8 };
 const modules = [_]Module{
-    .{ .path = "std_iter.my", .text = @embedFile("stdlib/std_iter.my") },
-    .{ .path = "std_math.my", .text = @embedFile("stdlib/std_math.my") },
-    .{ .path = "std_result.my", .text = @embedFile("stdlib/std_result.my") },
-    .{ .path = "std_unit.my", .text = @embedFile("stdlib/std_unit.my") },
-    .{ .path = "std_time.my", .text = @embedFile("stdlib/std_time.my") },
-    .{ .path = "std_random.my", .text = @embedFile("stdlib/std_random.my") },
+    .{ .path = "base64.my", .text = @embedFile("stdlib/base64.my") },
+    .{ .path = "hex.my", .text = @embedFile("stdlib/hex.my") },
+    .{ .path = "json.my", .text = @embedFile("stdlib/json.my") },
+    .{ .path = "math.my", .text = @embedFile("stdlib/math.my") },
+    .{ .path = "path.my", .text = @embedFile("stdlib/path.my") },
+    .{ .path = "pool.my", .text = @embedFile("stdlib/pool.my") },
+    .{ .path = "random.my", .text = @embedFile("stdlib/random.my") },
+    .{ .path = "sort.my", .text = @embedFile("stdlib/sort.my") },
+    .{ .path = "strings.my", .text = @embedFile("stdlib/strings.my") },
+    .{ .path = "time.my", .text = @embedFile("stdlib/time.my") },
 };
 /// Return a library-owned source view, or null for an ordinary project module.
 pub fn source(path: []const u8) ?[]const u8 {

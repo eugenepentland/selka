@@ -60,7 +60,8 @@ def seconds(count: int) -> Result[Duration, str]:
 
 # A duration for a count of units, checked against the nanosecond range.
 def scaled(count: int, unit: int) -> Result[Duration, str]:
-    if count > limit() // unit or count < (0 - limit() - 1) // unit:
+    reach = limit() // unit
+    if count > reach or count < 0 - reach:
         return Err("duration does not fit a 64-bit nanosecond count")
     return Ok(Duration(nanoseconds=count * unit))
 

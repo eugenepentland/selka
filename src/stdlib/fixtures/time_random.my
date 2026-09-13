@@ -1,125 +1,206 @@
-module main;
-import std_time as t;
-import std_random as r;
-fn main() -> i64 {
-    let first = r::next(r::seed(0u64));
-    if first.value != 16294208416658607535u64 {
-        return 1;
-    }
-    let second = r::next(first.generator);
-    if second.value != 7960286522194355700u64 {
-        return 2;
-    }
-    match r::bounded(r::seed(0u64), 10u64, 8u64) {
-        r::Bounded.ok(draw) => {
-            if draw.value != 5u64 {
-                return 3;
-            }
-        },
-        r::Bounded.err(_) => {
-            return 4;
-        }
-    }
-    match r::bounded(r::seed(0u64), 0u64, 8u64) {
-        r::Bounded.ok(_) => {
-            return 5;
-        },
-        r::Bounded.err(e) => {
-            if e.error != new r::Error.invalid_bound {
-                return 6;
-            }
-        }
-    }
-    match r::bounded(r::seed(0u64), 10u64, 0u64) {
-        r::Bounded.ok(_) => {
-            return 7;
-        },
-        r::Bounded.err(e) => {
-            if e.error != new r::Error.exhausted || e.generator.state != 0u64 {
-                return 8;
-            }
-        }
-    }
-    match r::bounded(r::seed(3u64), 9223372036854775809u64, 1u64) {
-        r::Bounded.ok(_) => {
-            return 22;
-        },
-        r::Bounded.err(e) => {
-            if e.error != new r::Error.exhausted || e.generator.state != r::next(r::seed(3u64)).generator.state {
-                return 23;
-            }
-        }
-    }
-    let earliest = new t::Instant {
-        unix_nanoseconds: - 9223372036854775808
-    };
-    let latest = new t::Instant {
-        unix_nanoseconds: 9223372036854775807
-    };
-    match t::elapsed(earliest, latest) {
-        t::Span.ok(d) => {
-            if d.nanoseconds != 18446744073709551615u64 {
-                return 9;
-            }
-            match t::add(earliest, d) {
-                t::Measured.ok(end) => {
-                    if end.unix_nanoseconds != latest.unix_nanoseconds {
-                        return 10;
-                    }
-                },
-                t::Measured.err(_) => {
-                    return 11;
-                }
-            }
-        },
-        t::Span.err(_) => {
-            return 12;
-        }
-    }
-    match t::add(latest, new t::Duration {
-        nanoseconds: 1u64
-    }) {
-        t::Measured.ok(_) => {
-            return 13;
-        },
-        t::Measured.err(e) => {
-            if e != new t::Error.overflow {
-                return 14;
-            }
-        }
-    }
-    match t::elapsed(latest, earliest) {
-        t::Span.ok(_) => {
-            return 15;
-        },
-        t::Span.err(e) => {
-            if e != new t::Error.reversed {
-                return 16;
-            }
-        }
-    }
-    match t::seconds(18446744073709551615u64) {
-        t::Span.ok(_) => {
-            return 17;
-        },
-        t::Span.err(e) => {
-            if e != new t::Error.overflow {
-                return 18;
-            }
-        }
-    }
-    match t::milliseconds(42u64) {
-        t::Span.ok(d) => {
-            if d.nanoseconds != 42000000u64 {
-                return 19;
-            }
-        },
-        t::Span.err(_) => {
-            return 20;
-        }
-    }
-    if !t::expired(earliest, latest) || t::expired(latest, earliest) {
-        return 21;
-    }
-    return 0;
-}
+module main
+import random
+import time
+
+
+def streams() -> int:
+    generator = random.seeded(42)
+    first = random.next_word(generator)
+    alias = generator
+    second = random.next_word(alias)
+    if first == second:
+        return 1
+    replay = random.seeded(42)
+    if random.next_word(replay) != first or random.next_word(replay) != second:
+        return 2
+    if random.next_word(generator) != random.next_word(replay):
+        return 3
+    if first != 13679457532755275413u64:
+        return 4
+    if random.next_word(random.seeded(0)) != 16294208416658607535u64:
+        return 5
+    if random.next_word(random.from_word(18446744073709551615u64)) != random.next_word(random.seeded(0 - 1)):
+        return 6
+    return 0
+
+
+def fractions() -> int:
+    generator = random.seeded(7)
+    draw = 0
+    while draw < 500:
+        value = random.random(generator)
+        if value < 0.0 or value >= 1.0:
+            return 10
+        draw += 1
+    return 0
+
+
+def ranges() -> int:
+    generator = random.seeded(1)
+    draw = 0
+    low = 0
+    high = 0
+    while draw < 500:
+        match random.randint(generator, 0 - 3, 3):
+            case Ok(value):
+                if value < 0 - 3 or value > 3:
+                    return 20
+                if value == 0 - 3:
+                    low += 1
+                if value == 3:
+                    high += 1
+            case Err(_):
+                return 21
+        draw += 1
+    if low == 0 or high == 0:
+        return 22
+    match random.randint(generator, 5, 4):
+        case Ok(_):
+            return 23
+        case Err(_):
+            _ = 0
+    match random.randint(generator, 0 - 9223372036854775807 - 1, 9223372036854775807):
+        case Ok(_):
+            _ = 0
+        case Err(_):
+            return 24
+    match random.randint(generator, 0 - 9223372036854775807 - 1, 0):
+        case Ok(value):
+            if value > 0:
+                return 25
+        case Err(_):
+            return 26
+    match random.randint(generator, 7, 7):
+        case Ok(value):
+            if value != 7:
+                return 27
+        case Err(_):
+            return 28
+    return 0
+
+
+def permutations() -> int:
+    generator = random.seeded(5)
+    items = [1, 2, 3, 4, 5]
+    random.shuffle(generator, items)
+    total = 0
+    for value in items:
+        total += value
+    if total != 15 or len(items) != 5:
+        return 30
+    match random.choice(generator, items):
+        case Some(value):
+            if value < 1 or value > 5:
+                return 31
+        case None:
+            return 32
+    empty: list[int] = []
+    match random.choice(generator, empty):
+        case Some(_):
+            return 33
+        case None:
+            _ = 0
+    random.shuffle(generator, empty)
+    return 0
+
+
+def durations() -> int:
+    match time.seconds(2):
+        case Ok(duration):
+            if duration.nanoseconds != 2000000000 or time.to_milliseconds(duration) != 2000:
+                return 40
+            if time.to_seconds(duration) != 2.0:
+                return 41
+        case Err(_):
+            return 42
+    match time.milliseconds(9223372036854):
+        case Ok(_):
+            _ = 0
+        case Err(_):
+            return 43
+    match time.seconds(9223372037):
+        case Ok(_):
+            return 44
+        case Err(_):
+            _ = 0
+    match time.microseconds(0 - 9223372036854776):
+        case Ok(_):
+            return 45
+        case Err(_):
+            _ = 0
+    if time.to_milliseconds(time.nanoseconds(0 - 1500000)) != 0 - 1:
+        return 46
+    if time.to_milliseconds(time.nanoseconds(0 - 9223372036854775807 - 1)) != 0 - 9223372036854:
+        return 47
+    if time.compare(time.nanoseconds(1), time.nanoseconds(2)) != 0 - 1:
+        return 48
+    if time.compare(time.nanoseconds(2), time.nanoseconds(2)) != 0:
+        return 49
+    return 0
+
+
+def arithmetic() -> int:
+    match time.sum(time.nanoseconds(9223372036854775807), time.nanoseconds(1)):
+        case Ok(_):
+            return 50
+        case Err(_):
+            _ = 0
+    match time.sum(time.nanoseconds(0 - 9223372036854775807 - 1), time.nanoseconds(0 - 1)):
+        case Ok(_):
+            return 51
+        case Err(_):
+            _ = 0
+    match time.difference(time.nanoseconds(5), time.nanoseconds(0 - 9223372036854775807 - 1)):
+        case Ok(_):
+            return 52
+        case Err(_):
+            _ = 0
+    match time.difference(time.nanoseconds(5), time.nanoseconds(2)):
+        case Ok(span):
+            if span.nanoseconds != 3:
+                return 53
+        case Err(_):
+            return 54
+    return 0
+
+
+def instants() -> int:
+    start = time.from_unix_nanoseconds(1000)
+    match time.after(start, time.nanoseconds(500)):
+        case Ok(later):
+            if later.unix_nanoseconds != 1500:
+                return 60
+            if not time.expired(start, later) or time.expired(later, start):
+                return 61
+            match time.elapsed(start, later):
+                case Ok(span):
+                    if span.nanoseconds != 500:
+                        return 62
+                case Err(_):
+                    return 63
+        case Err(_):
+            return 64
+    match time.after(time.from_unix_nanoseconds(9223372036854775807), time.nanoseconds(1)):
+        case Ok(_):
+            return 65
+        case Err(_):
+            _ = 0
+    match time.elapsed(time.from_unix_nanoseconds(10), time.from_unix_nanoseconds(5)):
+        case Ok(_):
+            return 66
+        case Err(_):
+            _ = 0
+    match time.elapsed(time.from_unix_nanoseconds(0 - 9223372036854775807 - 1), time.from_unix_nanoseconds(9223372036854775807)):
+        case Ok(_):
+            return 67
+        case Err(_):
+            _ = 0
+    return 0
+
+
+def main() -> int:
+    checks = [streams(), fractions(), ranges(), permutations(), durations(), arithmetic(), instants()]
+    for value in checks:
+        if value != 0:
+            return value
+    return 0
