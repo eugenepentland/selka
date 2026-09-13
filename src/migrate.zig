@@ -57,8 +57,30 @@ const Output = struct {
     }
 };
 
-/// Allocator, policy, file dialect, and queued partial-output markers.
-const Context = struct { allocator: std.mem.Allocator, options: Options, module: bool, notes: std.ArrayList([]const u8) = .empty };
+/// Allocator, policy, file dialect, queued partial-output markers, and the unsigned
+/// bindings in scope, which decide whether legacy `/` and `%` already floor.
+const Context = struct {
+    allocator: std.mem.Allocator,
+    options: Options,
+    module: bool,
+    notes: std.ArrayList([]const u8) = .empty,
+    unsigned: std.StringHashMapUnmanaged(void) = .empty,
+    declared: std.StringHashMapUnmanaged(usize) = .empty,
+};
+
+/// Report whether a source type spelling names an unsigned integer width.
+fn unsignedType(text: []const u8) bool {
+    inline for (.{ "u8", "u16", "u32", "u64" }) |width| {
+        if (std.mem.eql(u8, text, width)) return true;
+    }
+    return false;
+}
+
+/// Report whether an integer literal carries an unsigned width suffix.
+fn unsignedLiteral(text: []const u8) bool {
+    const at = std.mem.indexOfScalar(u8, text, 'u') orelse return false;
+    return unsignedType(text[at..]);
+}
 
 /// Kind and source extent of one top-level construct, in original file order.
 const Item = struct { kind: Kind, name: Span, start: usize, end: usize };
@@ -531,12 +553,18 @@ const Walk = struct {
     }
 
     fn function(self: *Walk, item: ast.Function) Error!void {
+        self.ctx.unsigned.clearRetainingCapacity();
+        self.ctx.declared.clearRetainingCapacity();
+        try self.countDeclarations(item.body);
+        for (item.signature.parameters) |parameter| {
+            try self.declare(parameter.name);
+        }
+        for (item.signature.parameters) |parameter| {
+            if (unsignedType(self.src.text(parameter.ty))) try self.ctx.unsigned.put(self.ctx.allocator, self.src.text(parameter.name), {});
+        }
         if (item.policy.c_abi) try self.out.text("extern ") else if (item.policy.host != null) try self.out.text("host ");
         if (item.policy.restricted) try self.out.text("private ");
-        if (item.policy.conversion) {
-            try self.reject(item.name, "a conversion function, whose body requires legacy record construction");
-            try self.out.text("conversion ");
-        }
+        if (item.policy.conversion) try self.out.text("conversion ");
         try self.out.text("def ");
         try self.out.text(self.src.text(item.name));
         try self.typeParameters(item.signature.type_parameters);
@@ -732,7 +760,7 @@ const Walk = struct {
     fn statement(self: *Walk, id: ast.StatementId) Error!void {
         const item = self.stmt(id);
         switch (item.data) {
-            .block => try self.rejectStatement(item.span, "a bare nested scope block"),
+            .block => |children| try self.scopeBlock(item, children),
             .ret => |result| try self.returnStatement(item, result),
             .loop_exit => |is_continue| try self.out.text(if (is_continue) "continue" else "break"),
             .for_each => |loop| try self.forEach(loop),
@@ -769,6 +797,79 @@ const Walk = struct {
                 try self.indented(scope.body);
             },
         }
+    }
+
+    /// Python has no bare scope block, so inline one whose bindings are unique in the
+    /// enclosing function. A name declared twice would change meaning once the braces go.
+    fn scopeBlock(self: *Walk, item: ast.Statement, children: []const ast.StatementId) Error!void {
+        for (children) |child| {
+            if (try self.reusedName(child)) return self.rejectStatement(item.span, "a bare nested scope block");
+        }
+        if (children.len == 0) return self.out.text("pass");
+        for (children, 0..) |child, index| {
+            const span = self.stmt(child).span;
+            try self.flush(span.start);
+            if (index != 0) try self.line();
+            try self.statement(child);
+            self.advance(span.end);
+        }
+        try self.flush(if (item.span.end > item.span.start) item.span.end - 1 else item.span.end);
+        self.advance(item.span.end);
+    }
+
+    /// Report whether a statement declares a name that another declaration in this function
+    /// also introduces, which inlining would collapse into one binding.
+    fn reusedName(self: *Walk, id: ast.StatementId) Error!bool {
+        const item = self.stmt(id);
+        return switch (item.data) {
+            .binding => |declared| self.repeated(declared.name),
+            .for_each => |loop| self.repeated(loop.name) or (loop.index_name != null and self.repeated(loop.index_name.?)),
+            .for_range => |loop| self.repeated(loop.name),
+            .managed_arena => |scope| scope.name != null and self.repeated(scope.name.?),
+            else => false,
+        };
+    }
+
+    fn repeated(self: *Walk, name: Span) bool {
+        return (self.ctx.declared.get(self.src.text(name)) orelse 0) > 1;
+    }
+
+    /// Count every declaration of each name in one function body, including its parameters.
+    fn countDeclarations(self: *Walk, id: ast.StatementId) Error!void {
+        const item = self.stmt(id);
+        switch (item.data) {
+            .block => |children| for (children) |child| try self.countDeclarations(child),
+            .binding => |declared| try self.declare(declared.name),
+            .for_each => |loop| {
+                try self.declare(loop.name);
+                if (loop.index_name) |index| try self.declare(index);
+                try self.countDeclarations(loop.body);
+            },
+            .for_range => |loop| {
+                try self.declare(loop.name);
+                try self.countDeclarations(loop.body);
+            },
+            .branch => |choice| {
+                try self.countDeclarations(choice.then_body);
+                if (choice.else_body) |otherwise| try self.countDeclarations(otherwise);
+            },
+            .loop => |loop| try self.countDeclarations(loop.body),
+            .match => |cases| for (cases.arms) |arm| {
+                if (arm.binding) |bound| try self.declare(bound);
+                try self.countDeclarations(arm.body);
+            },
+            .managed_arena => |scope| {
+                if (scope.name) |name| try self.declare(name);
+                try self.countDeclarations(scope.body);
+            },
+            else => {},
+        }
+    }
+
+    fn declare(self: *Walk, name: Span) Error!void {
+        const key = self.src.text(name);
+        const entry = self.ctx.declared.getOrPut(self.ctx.allocator, key) catch return error.OutOfMemory;
+        entry.value_ptr.* = if (entry.found_existing) entry.value_ptr.* + 1 else 1;
     }
 
     fn returnStatement(self: *Walk, item: ast.Statement, result: ast.NodeId) Error!void {
@@ -835,7 +936,7 @@ const Walk = struct {
             try self.line();
             try self.out.text("case ");
             if (arm.ty.end > arm.ty.start) {
-                try self.typeName(arm.ty);
+                try self.variantTypeName(arm.ty);
                 try self.out.text(".");
             }
             try self.out.text(self.src.text(arm.name));
@@ -860,12 +961,52 @@ const Walk = struct {
         }
         try self.out.text(" = ");
         try self.expression(item.value, 0);
+        const declared = if (item.annotation) |annotation| unsignedType(self.src.text(annotation)) else false;
+        if (declared or self.unsignedValue(item.value)) try self.ctx.unsigned.put(self.ctx.allocator, self.src.text(item.name), {});
     }
 
-    /// Contextual Ok/Err needs an expected type, so an unannotated binding gains one.
+    /// Report whether an expression is certainly an unsigned integer, so legacy truncating
+    /// `/` and `%` already agree with Python's flooring `//` and `%` on it. Operand types
+    /// match on both sides of an integer operator, so one unsigned side settles the pair.
+    fn unsignedValue(self: *Walk, id: ast.NodeId) bool {
+        const item = self.node(id);
+        return switch (item.data) {
+            .integer => |span| unsignedLiteral(self.src.text(span)),
+            .length => true,
+            .cast, .wrap => |typedValue| unsignedType(self.src.text(typedValue.ty)),
+            .name => |span| self.ctx.unsigned.contains(self.src.text(span)),
+            .binary => |binary| binary.op != .python_div and
+                (self.unsignedValue(binary.left) or self.unsignedValue(binary.right)),
+            .call => |call| self.returnsUnsigned(call.name),
+            else => false,
+        };
+    }
+
+    /// Report whether a declared function in this file returns an unsigned integer.
+    fn returnsUnsigned(self: *Walk, name: Span) bool {
+        const called = self.src.text(name);
+        for (self.syntax.functions) |declared| {
+            if (!std.mem.eql(u8, self.src.text(declared.name), called)) continue;
+            return unsignedType(self.src.text(declared.signature.return_type));
+        }
+        return false;
+    }
+
+    /// Contextual literals need an expected type, so an unannotated binding gains one.
+    /// Contextual `Ok`/`Err`, fixed arrays and enum-indexed tables all lose their type
+    /// spelling in the Python surface and recover it from the binding annotation.
     fn inferredResult(self: *Walk, initializer: ast.NodeId) ?Span {
         const item = self.node(initializer);
+        if (item.data == .array) return item.data.array.ty;
+        if (item.data == .record) {
+            const name = item.data.record.name;
+            const spelled = self.src.text(name);
+            return if (spelled.len != 0 and spelled[0] == '[') name else null;
+        }
         if (item.data != .variant) return null;
+        // A generic variant loses its arguments in the Python spelling and recovers them here.
+        const named = self.src.text(item.data.variant.ty);
+        if (std.mem.indexOfAny(u8, named, "<[") != null) return item.data.variant.ty;
         if (self.resultCase(item.data.variant) == null) return null;
         return item.data.variant.ty;
     }
@@ -907,7 +1048,7 @@ const Walk = struct {
             .integer => |span| try self.out.text(self.src.text(span)),
             .boolean => |flag| try self.out.text(if (flag) "True" else "False"),
             .unit => try self.out.text("None"),
-            .name => |span| try self.qualified(span),
+            .name => |span| try self.qualified(self.src.text(span)),
             .text => try self.out.text(self.src.text(item.span)),
             .bytes => try self.byteLiteral(item.span),
             .list_literal => |values| try self.sequence(values, "[", "]"),
@@ -975,7 +1116,7 @@ const Walk = struct {
             .external_read => |read| try self.generic(if (read.kind == .clock) "clock_now" else "random_u64", read.ty, read.capability),
             .environment_get => |read| try self.environment(read),
             .match_expression => try self.rejectValue(item.span, "a match expression"),
-            .array => try self.rejectValue(item.span, "a fixed array literal"),
+            .array => |literal| try self.sequence(literal.values, "[", "]"),
             .restrict_resource => try self.rejectValue(item.span, "restrict_resource"),
             .acquire_resource => try self.rejectValue(item.span, "acquire_resource"),
             .complete_resource => try self.rejectValue(item.span, "complete_resource"),
@@ -1013,7 +1154,7 @@ const Walk = struct {
 
     fn recordLiteral(self: *Walk, literal: @FieldType(@FieldType(ast.Node, "data"), "record")) Error!void {
         const spelled = self.src.text(literal.name);
-        if (spelled.len == 0 or spelled[0] == '[') return self.rejectValue(literal.name, "an enum-indexed table literal");
+        if (spelled.len != 0 and spelled[0] == '[') return self.tableLiteral(literal);
         try self.typeName(literal.name);
         try self.out.text("(");
         for (literal.fields, 0..) |field, index| {
@@ -1025,22 +1166,59 @@ const Walk = struct {
         try self.out.text(")");
     }
 
+    /// `new [Kind]T { case: v }` becomes the dict literal `{Kind.case: v}` the checker accepts.
+    fn tableLiteral(self: *Walk, literal: @FieldType(@FieldType(ast.Node, "data"), "record")) Error!void {
+        const key = self.tableKey(literal.name) orelse return self.rejectValue(literal.name, "an enum-indexed table literal");
+        try self.out.text("{");
+        for (literal.fields, 0..) |field, index| {
+            if (index != 0) try self.out.text(", ");
+            try self.typeName(key);
+            try self.out.text(".");
+            try self.out.text(self.src.text(field.name));
+            try self.out.text(": ");
+            try self.expression(field.value, 0);
+        }
+        try self.out.text("}");
+    }
+
+    /// Key enum of an enum-indexed table type spelling, or null for a numeric array.
+    fn tableKey(self: *Walk, name: Span) ?Span {
+        for (self.syntax.types.expressions.arrays) |array| {
+            if (array.span.start != name.start or array.span.end != name.end) continue;
+            return if (array.index == .enum_type) array.index.enum_type else null;
+        }
+        return null;
+    }
+
     /// Payload-free cases keep their qualified spelling; result payloads use Ok/Err.
     fn variantValue(self: *Walk, item: ast.Node, literal: @FieldType(@FieldType(ast.Node, "data"), "variant")) Error!void {
         const payload = literal.value orelse {
-            try self.typeName(literal.ty);
+            try self.variantTypeName(literal.ty);
             try self.out.text(".");
             try self.out.text(self.src.text(literal.name));
             return;
         };
-        const case = self.resultCase(literal) orelse {
-            try self.reject(item.span, "a payload variant outside a checked result");
-            try self.out.text("todo<i64>()");
+        if (self.resultCase(literal)) |case| {
+            try self.out.text(if (case) "Ok(" else "Err(");
+            try self.expression(payload, 0);
+            try self.out.text(")");
             return;
-        };
-        try self.out.text(if (case) "Ok(" else "Err(");
+        }
+        _ = item;
+        try self.variantTypeName(literal.ty);
+        try self.out.text(".");
+        try self.out.text(self.src.text(literal.name));
+        try self.out.text("(");
         try self.expression(payload, 0);
         try self.out.text(")");
+    }
+
+    /// A generic variant infers its arguments from context, so only its template is named.
+    /// `new Slot<Box<i64>>.some(v)` becomes `Slot.some(v)`, which no index expression mimics.
+    fn variantTypeName(self: *Walk, span: Span) Error!void {
+        const text = self.src.text(span);
+        const applied = std.mem.indexOfAny(u8, text, "<[") orelse return self.typeName(span);
+        try self.qualified(std.mem.trimEnd(u8, text[0..applied], " \t"));
     }
 
     /// Report whether a variant construction names the ok or err case of a result type.
@@ -1073,17 +1251,20 @@ const Walk = struct {
         const name = self.src.text(call.name);
         const keyword_generic = std.mem.eql(u8, name, "todo") or std.mem.startsWith(u8, name, "codec_");
         if (call.owner) |owner| {
-            try self.qualified(owner);
+            try self.qualified(self.src.text(owner));
             try self.out.text(".");
         }
-        try self.qualified(call.name);
+        try self.qualified(self.src.text(call.name));
         if (call.type_arguments.len != 0) {
-            try self.out.text(if (keyword_generic) "<" else "::<");
+            // `f[T](x)` is the Python spelling; a keyword intrinsic and an owner-qualified
+            // call both keep the angle-bracket form, which the Python parser also accepts.
+            const square = !keyword_generic and call.owner == null;
+            try self.out.text(if (square) "[" else if (keyword_generic) "<" else "::<");
             for (call.type_arguments, 0..) |argument, index| {
                 if (index != 0) try self.out.text(", ");
                 try self.typeName(argument);
             }
-            try self.out.text(">");
+            try self.out.text(if (square) "]" else ">");
         }
         try self.arguments(call.arguments, call.argument_names);
     }
@@ -1155,9 +1336,17 @@ const Walk = struct {
             try self.out.text(")");
             return;
         }
-        if (binary.op == .div or binary.op == .rem) {
-            const construct = if (binary.op == .div) "truncating integer division" else "truncating integer remainder";
-            try self.reject(binary.op_span, construct);
+        // Legacy `/` and `%` truncate toward zero; Python `//` and `%` floor. They agree on
+        // unsigned operands, and the prelude helpers preserve the original rounding otherwise.
+        const truncating = binary.op == .div or binary.op == .rem;
+        const unsigned = self.unsignedValue(binary.left) or self.unsignedValue(binary.right);
+        if (truncating and !unsigned) {
+            try self.out.text(if (binary.op == .div) "divtrunc(" else "remtrunc(");
+            try self.expression(binary.left, 0);
+            try self.out.text(", ");
+            try self.expression(binary.right, 0);
+            try self.out.text(")");
+            return;
         }
         const level = precedenceOf(item);
         try self.expression(binary.left, level);
@@ -1189,8 +1378,7 @@ const Walk = struct {
     }
 
     /// Rewrite one qualified name, replacing legacy `::` with Python dots.
-    fn qualified(self: *Walk, span: Span) Error!void {
-        const text = self.src.text(span);
+    fn qualified(self: *Walk, text: []const u8) Error!void {
         var parts = std.mem.splitSequence(u8, text, "::");
         var first = true;
         while (parts.next()) |part| {

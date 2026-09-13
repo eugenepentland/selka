@@ -77,6 +77,13 @@ def main() -> i64:
 | `new S { a: 1 }`, `S { a: 1 }` | `S(a=1)` |
 | `new R.ok(v)`, `new R.err(e)` on a result | `Ok(v)`, `Err(e)` |
 | `new E.case` without a payload | `E.case` |
+| `new E.case(v)` on an enum or union | `E.case(v)` |
+| `new Slot<A>.case(v)` on a generic variant | `Slot.case(v)`, with a binding annotation |
+| `new [N]T [a, b]` | `[a, b]`, with a binding annotation |
+| `new [Kind]T { case: v }` | `{Kind.case: v}`, with a binding annotation |
+| `f::<T>(x)` | `f[T](x)` |
+| truncating `a / b`, `a % b` | `a // b`, `a % b` when unsigned, else `divtrunc`/`remtrunc` |
+| a bare `{ }` scope block | its statements, inlined |
 | `enum`/`union`/`result`/`domain` bodies | the same keyword with an indented suite |
 | `buffer`/`list`/`pool`/`resource`/`type`/`const` | unchanged apart from the dropped `;` |
 | `if/else if/else`, `while`, `for i in a..b` | `if/elif/else`, `while`, `for i in range(a, b)` |
@@ -104,13 +111,16 @@ construct rather than being approximated:
   `arena … as`, `reset_arena`, `acquire_buffer`/`*_buffer`, `acquire_pool`/`*_pool`,
   `acquire_resource`/`complete_resource`/`restrict_resource`/`*_resource*`,
   `take_field`, `read_field`, `acknowledge` and `update(v) { }`.
-- Bare `{ }` scope blocks, match expressions, fixed array literals and
-  enum-indexed table literals.
-- Payload construction for an enum or union case that is not a result `ok`/`err`,
-  because `new` is the only spelling that carries a payload.
-- `conversion fn`, whose body must return an explicit `new T { }` construction.
-- Truncating integer `/` and `%`. Python `//` and `%` floor instead of truncating,
-  so migrating them would silently change results for negative operands.
+- Match expressions.
+- A bare `{ }` scope block whose bindings are not unique in its function. A block whose
+  names appear nowhere else is inlined, because inlining cannot change which binding a
+  later statement reads.
+
+Truncating `/` and `%` never migrate silently. They become `//` and `%` only where an
+operand is certainly unsigned — an unsigned literal suffix, `len`, an unsigned cast, an
+unsigned parameter or binding, or a call declared to return one — because the two
+roundings agree there. Every other occurrence becomes a `divtrunc`/`remtrunc` call, which
+keeps the original rounding and is also available to new code.
 
 With `--allow-partial` the rest of the file is still printed and each gap is
 marked with a `# MIGRATE: unsupported <construct>` comment plus a warning.

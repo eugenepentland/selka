@@ -108,3 +108,44 @@ test "a local binding shadowing a union name keeps ordinary member resolution" {
         \\    return 0
     , "E_LIST_METHOD");
 }
+
+// spec: PY-VARIANT-3
+test "a generic variant infers its type arguments from the expected type" {
+    try execute(
+        \\class Box[T]:
+        \\    value: T
+        \\
+        \\union Slot[T]:
+        \\    none,
+        \\    some: T
+        \\
+        \\def wrap[T](value: T) -> Slot[T]:
+        \\    return Slot.some(value)
+        \\
+        \\def choose[T](slot: Slot[T], fallback: T) -> T:
+        \\    match slot:
+        \\        case Slot.none:
+        \\            return fallback
+        \\        case Slot.some(value):
+        \\            return value
+        \\
+        \\def main() -> i64:
+        \\    held: Slot[Box[i64]] = Slot.some(Box[i64](value=42))
+        \\    empty: Slot[i64] = Slot.none
+        \\    return choose(held, Box[i64](value=0)).value + choose(wrap[i64](0), 0) + choose(empty, 0)
+    , 42);
+}
+
+// spec-case: PY-VARIANT-3
+test "a generic variant without an expected type reports its missing arguments" {
+    try reject(
+        \\union Slot[T]:
+        \\    none,
+        \\    some: T
+        \\
+        \\def main() -> i64:
+        \\    held = Slot.some(1)
+        \\    _ = held
+        \\    return 0
+    , "E_GENERIC_INFERENCE");
+}

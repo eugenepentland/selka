@@ -1059,7 +1059,13 @@ pub const Parser = struct {
     fn methodSuffix(self: *Parser) bool {
         if (self.current().tag != .dot) return false;
         if (self.cursor.pos + 2 >= self.tokens.len) return false;
-        return (self.tokens[self.cursor.pos + 1].tag == .ident or self.tokens[self.cursor.pos + 1].tag == .kw_len) and (self.tokens[self.cursor.pos + 2].tag == .lparen or self.tokens[self.cursor.pos + 2].tag == .colon);
+        const member = self.tokens[self.cursor.pos + 1].tag;
+        if (member != .ident and member != .kw_len) return false;
+        if (self.tokens[self.cursor.pos + 2].tag == .lparen) return true;
+        // `owner.name::<T>(…)` keeps its explicit type arguments; a bare `Owner.name:` is a
+        // member access, such as an enum case keying a table literal entry.
+        if (self.tokens[self.cursor.pos + 2].tag != .colon or self.cursor.pos + 4 >= self.tokens.len) return false;
+        return self.tokens[self.cursor.pos + 3].tag == .colon and self.tokens[self.cursor.pos + 4].tag == .lt;
     }
 
     fn parseHole(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
@@ -1154,6 +1160,9 @@ pub const Parser = struct {
         }
         return false;
     }
+    /// Recognize `Ident[...](…)`, a square-bracket type application applied to arguments.
+    /// A dot after the closing bracket makes the head an ordinary index and member access
+    /// instead, because `items[at].append(v)` and `Box[T](v)` are otherwise indistinguishable.
     fn appliedConstructorAhead(self: *Parser) bool {
         if (!self.pythonSyntax()) return false;
         var position = self.cursor.pos;
@@ -1167,7 +1176,8 @@ pub const Parser = struct {
             }
             if (self.tokens[position].tag == .rbracket) brackets -|= 1;
             switch (self.tokens[position].tag) {
-                .ident, .dot, .colon, .lbracket, .rbracket, .lt, .gt, .comma, .kw_i64, .kw_i8, .kw_i16, .kw_i32, .kw_u8, .kw_u16, .kw_u32, .kw_u64, .kw_bool, .kw_none => {},
+                .dot => if (applied and brackets == 0) return false,
+                .ident, .colon, .lbracket, .rbracket, .lt, .gt, .comma, .kw_i64, .kw_i8, .kw_i16, .kw_i32, .kw_u8, .kw_u16, .kw_u32, .kw_u64, .kw_bool, .kw_none => {},
                 .lparen => return applied,
                 else => return false,
             }

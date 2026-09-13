@@ -22,6 +22,7 @@ test {
     _ = @import("python_syntax_test.zig");
     _ = @import("python_variants_test.zig");
     _ = @import("python_generics_test.zig");
+    _ = @import("python_arrays_test.zig");
     _ = @import("unit_test.zig");
     _ = @import("declarations_test.zig");
     _ = @import("migrate_test.zig");

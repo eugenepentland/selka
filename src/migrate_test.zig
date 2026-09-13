@@ -428,3 +428,107 @@ test "constructs without a Python spelling are rejected with their source spans"
         \\}
     , "no Python spelling for a fixed array literal", "new [2]i64 [1, 2]");
 }
+
+// spec: MIGRATE-9
+test "contextual literals print with the annotation that supplies their type" {
+    try expectMigration(
+        \\enum Kind { first, second }
+        \\union Link { none, some: i64 }
+        \\fn pick<T: copy>(value: T) -> T { return value; }
+        \\fn main() -> i64 {
+        \\    let held = new Link.some(2);
+        \\    let fixed = new [2]i64 [1, 2];
+        \\    let codes = new [Kind]i64 { first: 3, second: 4 };
+        \\    let chosen = pick::<i64>(5);
+        \\    match held {
+        \\        Link.none => { return 0; },
+        \\        Link.some(value) => { return value + fixed[0] + codes[new Kind.first] + chosen; }
+        \\    }
+        \\}
+        \\
+    ,
+        \\enum Kind:
+        \\    first,
+        \\    second
+        \\
+        \\
+        \\union Link:
+        \\    none,
+        \\    some: i64
+        \\
+        \\
+        \\def pick[T](value: T) -> T:
+        \\    return value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    held = Link.some(2)
+        \\    fixed: [2]i64 = [1, 2]
+        \\    codes: [Kind]i64 = {Kind.first: 3, Kind.second: 4}
+        \\    chosen = pick[i64](5)
+        \\    match held:
+        \\        case Link.none:
+        \\            return 0
+        \\        case Link.some(value):
+        \\            return value + fixed[0] + codes[Kind.first] + chosen
+        \\
+    );
+}
+
+// spec: MIGRATE-10
+test "truncating division keeps its rounding unless an operand is certainly unsigned" {
+    try expectMigration(
+        \\fn split(signed: i64, wide: u64) -> i64 {
+        \\    let quotient = signed / 2;
+        \\    let counted = wide % 3u64;
+        \\    let sized = len(new [4]i64 [0, 0, 0, 0]) / 2;
+        \\    return quotient + cast<i64>(counted) + cast<i64>(sized) + signed % 3;
+        \\}
+        \\fn main() -> i64 { return split(7, 9u64); }
+        \\
+    ,
+        \\def split(signed: i64, wide: u64) -> i64:
+        \\    quotient = divtrunc(signed, 2)
+        \\    counted = wide % 3u64
+        \\    sized = len([0, 0, 0, 0]) // 2
+        \\    return quotient + cast<i64>(counted) + cast<i64>(sized) + remtrunc(signed, 3)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return split(7, 9u64)
+        \\
+    );
+}
+
+// spec-case: MIGRATE-5
+test "a bare scope block inlines when its bindings are unique and reports otherwise" {
+    try expectMigration(
+        \\fn main() -> i64 {
+        \\    let factor = 7;
+        \\    let mut total = 0;
+        \\    {
+        \\        let amount = 3;
+        \\        total = factor * amount;
+        \\    }
+        \\    return total;
+        \\}
+        \\
+    ,
+        \\def main() -> i64:
+        \\    factor = 7
+        \\    total = 0
+        \\    amount = 3
+        \\    total = factor * amount
+        \\    return total
+        \\
+    );
+    try expectRejection(
+        \\fn main() -> i64 {
+        \\    let mut total = 0;
+        \\    { let amount = 1; total += amount; }
+        \\    { let amount = 2; total += amount; }
+        \\    return total;
+        \\}
+        \\
+    , "no Python spelling for a bare nested scope block", "{ let amount = 1; total += amount; }");
+}

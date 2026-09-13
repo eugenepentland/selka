@@ -54,6 +54,9 @@ const integer_literal = @import("integer_literal.zig");
 const float_syntax = @import("float_syntax.zig");
 const numeric_surface = @import("numeric_surface.zig");
 const prelude = @import("prelude.zig");
+const arrays = @import("array_literals.zig");
+const variant_calls = @import("variant_calls.zig");
+const truncating = @import("truncating_math.zig");
 
 const Checker = struct {
     allocator: std.mem.Allocator,
@@ -117,7 +120,7 @@ const Checker = struct {
             );
             const source_record = try self.catalog.record(self.locals.items[0].ty, function.signature.parameters[0].ty, sink);
             _ = try self.catalog.record(self.return_type, function.signature.return_type, sink);
-            try conversionBody(src, self.syntax, function, sink);
+            try conversionBody(self, function);
             self.conversion_fields = try allocator.alloc(bool, source_record.fields.len);
             @memset(self.conversion_fields.?, false);
         }
@@ -565,8 +568,17 @@ const Checker = struct {
                 node.data = record.data;
                 return node;
             }
+            if (call.owner == null) {
+                const name = self.src.text(call.name);
+                const shadowed = self.active.contains(name) or self.functions.contains(name) or
+                    (if (self.catalog.module_names) |names| try names.topLevel(call.name) else false);
+                if (try truncating.lower(self.src, call, node.span, shadowed, self.sink)) |helper| {
+                    node.data = helper.data;
+                    return node;
+                }
+            }
             if (call.owner == null or !self.active.contains(self.src.text(call.owner.?))) {
-                if (try @import("variant_calls.zig").lower(self.src, self.catalog, call, node.span, self.sink)) |variant| {
+                if (try variant_calls.lower(self.src, self.catalog, call, node.span, self.sink)) |variant| {
                     node.data = variant.data;
                     return node;
                 }
@@ -587,7 +599,7 @@ const Checker = struct {
             const field = node.data.field;
             const base = self.syntax.nodes.items[@backingInt(field.base)];
             if (base.data == .name and !self.active.contains(self.src.text(base.data.name))) {
-                if (try self.catalog.variantType(self.src, base.data.name, self.sink) != null)
+                if (try variant_calls.declaresVariant(self.src, self.catalog, base.data.name, self.sink))
                     node.data = .{ .variant = .{ .ty = base.data.name, .name = field.name, .value = null } };
             }
         }
@@ -683,8 +695,21 @@ const Checker = struct {
         try statements.append(self.allocator, refresh);
         return .{ .owner = owner, .index = index, .value = try b.read(saved), .refresh = refresh };
     }
+    /// Build a fixed array from a list literal whose context already demands `[N]T`.
+    fn checkFixedArray(self: *Checker, node: ast.Node, inputs: []const ast.NodeId, temporaries: []const typed.Type, expected: typed.Type) Error!typed.Node {
+        const shape = arrays.fixed(self.catalog, expected).?;
+        if (inputs.len != shape.length) return arrays.wrongLength(self.allocator, node.span, inputs.len, shape, self.sink);
+        const values = try self.allocator.alloc(typed.NodeId, inputs.len);
+        for (inputs, values) |input, *value| {
+            try self.hint(input, shape.element);
+            value.* = try self.expressionWithTemporaries(input, temporaries);
+            try self.require(self.nodes.items[@backingInt(value.*)].ty, shape.element, self.syntax.nodes.items[@backingInt(input)].span);
+        }
+        return .{ .span = node.span, .ty = expected, .data = .{ .array = values } };
+    }
     fn checkListLiteral(self: *Checker, node: ast.Node, inputs: []const ast.NodeId, temporaries: []const typed.Type) Error!typed.Node {
         var expected = self.expected_types.get(node.span);
+        if (expected) |ty_value| if (arrays.fixed(self.catalog, ty_value) != null) return self.checkFixedArray(node, inputs, temporaries, ty_value);
         var element: ?typed.Type = if (expected) |ty_value| try self.listElement(ty_value, node.span) else null;
         if (inputs.len == 0 and expected == null) return self.sink.fail("E_LIST_INFERENCE", node.span, "empty list requires an expected List type");
         const values = try self.allocator.alloc(typed.NodeId, inputs.len);
@@ -842,6 +867,14 @@ const Checker = struct {
         }
         return false;
     }
+    /// An intrinsic demanding a fixed `[N]u8` lets a list literal adopt its own length,
+    /// so a byte sequence needs no type spelling the Python surface cannot write.
+    fn hintByteArray(self: *Checker, id: ast.NodeId) Error!void {
+        const node = self.syntax.nodes.items[@backingInt(id)];
+        if (node.data != .list_literal) return;
+        const bytes = try self.catalog.instantiateArray(self.allocator, .u8, node.data.list_literal.len, node.span, self.sink);
+        try self.hint(id, bytes);
+    }
     fn queueDictionary(self: *Checker, work: *std.ArrayList(Work), id: ast.NodeId) Error!bool {
         const node = self.syntax.nodes.items[@backingInt(id)];
         const entries = node.data.dictionary_literal;
@@ -854,14 +887,21 @@ const Checker = struct {
             if (expected) |expected_type| if (expected_type.isAggregate() and self.catalog.records[expected_type.recordIndex()].collection.kind == .dictionary) {
                 const schema = self.catalog.records[expected_type.recordIndex()];
                 try self.hint(entries[index], if (index % 2 == 0) schema.collection.key.? else schema.shape.buffer.?);
+            } else if (arrays.table(self.catalog, expected_type)) |_| {
+                if (index % 2 == 1) try self.hint(entries[index], self.catalog.records[expected_type.recordIndex()].shape.array.?.element);
             };
             try work.append(self.allocator, .{ .id = entries[index] });
         }
         return true;
     }
+    /// Resolve a variant construction's type, letting a generic template adopt its context.
+    fn variantType(self: *Checker, variant: @FieldType(@FieldType(ast.Node, "data"), "variant"), at: source.Span) Error!typed.Type {
+        if (try variant_calls.contextual(self.src, self.catalog, variant.ty, self.expected_types.get(at), self.sink)) |found| return found;
+        return self.ty(variant.ty);
+    }
     fn queueVariant(self: *Checker, work: *std.ArrayList(Work), id: ast.NodeId, variant: @FieldType(@FieldType(ast.Node, "data"), "variant")) Error!bool {
         if (variant.value) |value| {
-            const variant_type = try self.ty(variant.ty);
+            const variant_type = try self.variantType(variant, self.syntax.nodes.items[@backingInt(id)].span);
             const tag = try self.catalog.variant(variant_type, self.src, variant.name, self.sink);
             if (self.catalog.records[variant_type.recordIndex()].shape.variants.?.cases[tag].payload) |payload| try self.hint(value, payload);
             try work.append(self.allocator, .{ .id = id, .emit = true });
@@ -923,6 +963,7 @@ const Checker = struct {
             },
             .environment_get => |get| {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
+                try self.hintByteArray(get.name);
                 try work.append(self.allocator, .{ .id = get.name });
                 try work.append(self.allocator, .{ .id = get.capability });
                 return true;
@@ -1328,8 +1369,17 @@ const Checker = struct {
         out.data = .{ .unary = .{ .op = std.meta.stringToEnum(typed.UnaryOp, @tagName(u.op)).?, .operand = operand, .op_span = u.op_span } };
         return out;
     }
+    /// Build an enum-indexed table from a dict literal whose context already demands `[Kind]T`.
+    fn checkTableLiteral(self: *Checker, node: ast.Node, entries: []const ast.NodeId, expected: typed.Type, out: *typed.Node) Error!void {
+        const key = arrays.table(self.catalog, expected).?;
+        const context: arrays.Context = .{ .src = self.src, .syntax = self.syntax, .catalog = self.catalog, .key = key };
+        const named = try arrays.initializers(self.allocator, context, entries, self.sink);
+        out.ty = expected;
+        out.data = .{ .record = try self.fields(expected, named, true, node.span) };
+    }
     fn checkDictionaryLiteral(self: *Checker, node: ast.Node, entries: []const ast.NodeId, out: *typed.Node) Error!void {
         const expected = self.expected_types.get(node.span);
+        if (expected) |ty_value| if (arrays.table(self.catalog, ty_value) != null) return self.checkTableLiteral(node, entries, ty_value, out);
         if (expected) |expected_type| {
             out.ty = expected_type;
         } else {
@@ -1580,7 +1630,7 @@ const Checker = struct {
                 out.data = .{ .propagate = .{ .value = value, .output = self.return_type } };
             },
             .variant => |variant| {
-                out.ty = try self.ty(variant.ty);
+                out.ty = try self.variantType(variant, node.span);
                 const tag = try self.catalog.variant(out.ty, self.src, variant.name, self.sink);
                 const schema = (try self.catalog.variants(out.ty, node.span, self.sink)).cases[tag];
                 const value = if (variant.value) |input| self.resolved[@backingInt(input)].? else null;
@@ -1678,6 +1728,10 @@ const Checker = struct {
         if (node.data == .index and out.data == .block_value) return 2;
         if (node.data == .length and out.data == .block_value) return 1;
         if (node.data == .bytes or node.data == .text or node.data == .integer) return 0;
+        // A list literal checks its own elements, so none of them reach the caller's stack;
+        // a dict literal queues every key and value, whether it builds a dict or a table.
+        if (node.data == .list_literal) return 0;
+        if (node.data == .dictionary_literal) return node.data.dictionary_literal.len;
         if (node.data == .binary) return 2;
         if (node.data == .call and try self.numericConversion(node.data.call) != null) return node.data.call.arguments.len;
         return switch (out.data) {
@@ -1879,7 +1933,8 @@ const Checker = struct {
     }
     fn patternTag(self: *Checker, value_type: typed.Type, type_span: source.Span, name: source.Span) Error!usize {
         if (type_span.start != type_span.end) {
-            try self.require(try self.ty(type_span), value_type, type_span);
+            const contextual = try variant_calls.contextual(self.src, self.catalog, type_span, value_type, self.sink);
+            try self.require(contextual orelse try self.ty(type_span), value_type, type_span);
             return self.catalog.variant(value_type, self.src, name, self.sink);
         }
         const spelling = self.src.text(name);
@@ -2465,13 +2520,16 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
 
 // This initial conversion form is declarative. Restricting its body avoids
 // pretending arbitrary control/data flow proves source-field accounting.
-fn conversionBody(src: source.Source, program: ast.Program, function: ast.Function, sink: *diagnostic.Sink) Error!void {
+fn conversionBody(self: *Checker, function: ast.Function) Error!void {
+    const src = self.src;
+    const program = self.syntax;
+    const sink = self.sink;
     const statements = program.statements.items[@backingInt(function.body)].data.block;
     for (statements) |id| {
         const stmt = program.statements.items[@backingInt(id)];
         switch (stmt.data) {
             .ret => |value| {
-                if (program.nodes.items[@backingInt(value)].data != .record)
+                if (!try constructsRecord(self, program.nodes.items[@backingInt(value)]))
                     return sink.fail(eConversionBody, stmt.span, "conversion must return an explicit complete record construction");
             },
             .discard => |value| {
@@ -2484,6 +2542,15 @@ fn conversionBody(src: source.Source, program: ast.Program, function: ast.Functi
             else => return sink.fail(eConversionBody, stmt.span, "conversion bodies contain named source-field discards followed by a complete record construction; use helpers for transformations"),
         }
     }
+}
+
+/// Accept both record construction spellings: legacy `new T { a: 1 }` and Python `T(a=1)`.
+/// Both check with complete field accounting, so the conversion contract is unchanged.
+fn constructsRecord(self: *Checker, node: ast.Node) Error!bool {
+    if (node.data == .record) return true;
+    if (node.data != .call) return false;
+    const lowered = try @import("record_calls.zig").lower(self.allocator, self.src, self.catalog, node.data.call, self.sink);
+    return lowered != null;
 }
 
 const functionName = @import("function_identity.zig").localName;

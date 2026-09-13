@@ -16,6 +16,9 @@ const Error = diagnostic.Error;
 const effects = @import("effects.zig");
 const effect_set = @import("effect_set.zig");
 const Names = @import("module_names.zig").Names;
+const variant_calls = @import("variant_calls.zig");
+const arrays = @import("array_literals.zig");
+const truncating = @import("truncating_math.zig");
 const eShadowing = diagnostic.shadowing;
 const eResultOperation = diagnostic.result_operation;
 const eResultPath = diagnostic.result_path;
@@ -352,7 +355,9 @@ const Checker = struct {
         for (parameters, arguments) |parameter, argument| if (std.mem.eql(u8, text, self.src.text(parameter.name))) return argument;
         return self.concreteType(span);
     }
-    fn resolveCall(self: *Checker, invocation: Call) Error!Call {
+    fn resolveCall(self: *Checker, raw: Call) Error!Call {
+        const applied = try @import("call_type_arguments.zig").split(self.src, self.program, self.module_names, raw, self.sink);
+        const invocation = applied orelse raw;
         const codec = @import("source_codec.zig");
         if (!codec.operation(self.src.text(invocation.name)) or invocation.owner != null) return invocation;
         if (invocation.type_arguments.len != 1 or invocation.arguments.len != 1) return self.sink.fail("E_CODEC_ARITY", invocation.name, "codec operation requires one explicit domain type and one value argument");
@@ -395,8 +400,18 @@ const Checker = struct {
         try self.same(try self.expressionExpected(assignment.value, expected), expected, node.span);
         return .{ .concrete = .unit };
     }
+    /// Build an enum-indexed table from a dict literal whose context already demands `[Kind]T`.
+    fn tableLiteral(self: *Checker, node: ast.Node, entries: []const ast.NodeId, expected: Symbolic, key: typed.Type) Error!Symbolic {
+        const context: arrays.Context = .{ .src = self.src, .syntax = self.program, .catalog = self.catalog, .key = key };
+        const named = try arrays.initializers(self.allocator, context, entries, self.sink);
+        try self.recordFields(expected, named, true, node.span);
+        return expected;
+    }
     fn dictionaryLiteral(self: *Checker, node: ast.Node, entries: []const ast.NodeId) Error!Symbolic {
         var expected = self.expected_types.get(node.span);
+        if (expected) |value| if (symbolic.array(value, self.catalog.records)) |shape| {
+            if (shape.key) |key| return self.tableLiteral(node, entries, value, key);
+        };
         if (expected == null and entries.len == 0) return self.sink.fail("E_DICT_INFERENCE", node.span, "empty dictionary requires an expected dictionary type");
         if (expected == null) expected = try self.shapes().nominal(self.catalog.templates.store.?.index.names.get("dict").?, &.{ try self.expression(entries[0]), try self.expression(entries[1]) });
         if (self.shapes().collectionKind(expected.?) != .dictionary) return self.sink.fail("E_DICT_TYPE", node.span, "dictionary literal requires a dictionary type");
@@ -413,8 +428,19 @@ const Checker = struct {
         self.seedEffect(.managed_allocation);
         return expected.?;
     }
+    /// Build a fixed array from a list literal whose context already demands `[N]T`.
+    fn fixedArrayLiteral(self: *Checker, node: ast.Node, inputs: []const ast.NodeId, expected: Symbolic) Error!Symbolic {
+        const shape = try self.arrayShape(expected, node.span);
+        if (shape.length_parameter != null) return self.sink.fail(diagnostic.generic_length, node.span, "array literal construction requires a fixed length in an uncalled template");
+        if (inputs.len != shape.length) return self.sink.fail("E_ARRAY_LENGTH", node.span, "list literal length differs from the expected fixed array");
+        for (inputs) |input| try self.same(try self.expressionExpected(input, shape.element), shape.element, node.span);
+        return expected;
+    }
     fn listLiteral(self: *Checker, node: ast.Node, inputs: []const ast.NodeId) Error!Symbolic {
         var expected = self.expected_types.get(node.span);
+        if (expected) |ty_value| if (symbolic.array(ty_value, self.catalog.records)) |shape| {
+            if (shape.key == null) return self.fixedArrayLiteral(node, inputs, ty_value);
+        };
         var element: ?Symbolic = if (expected) |ty_value| try self.collectionElement(ty_value, node.span) else null;
         if (inputs.len == 0 and expected == null) return self.sink.fail("E_LIST_INFERENCE", node.span, "empty list requires an expected List type");
         for (inputs) |input| {
@@ -563,6 +589,8 @@ const Checker = struct {
             _ = try self.ty(input_call.type_arguments[0]);
             return self.sink.typedHole(input_call.name, input_call.type_arguments[0]);
         }
+        if (try self.truncatingHelper(input_call, span)) |value| return value;
+        if (try self.variantConstruction(input_call, span)) |value| return value;
         if (try self.managedMethod(input_call, span)) |value| return value;
         if (try self.contextualResult(input_call, span)) |value| return value;
         if (try self.contextualOption(input_call, span)) |value| return value;
@@ -963,12 +991,39 @@ const Checker = struct {
     fn enumMember(self: *Checker, field: @FieldType(@FieldType(ast.Node, "data"), "field"), span: source.Span) Error!?Symbolic {
         const base = self.program.nodes.items[@backingInt(field.base)];
         if (base.data != .name or self.active.contains(self.src.text(base.data.name))) return null;
-        if (try self.catalog.variantType(self.src, base.data.name, self.sink) == null) return null;
+        if (!try variant_calls.declaresVariant(self.src, self.catalog, base.data.name, self.sink)) return null;
         const value = try self.variantValue(.{ .ty = base.data.name, .name = field.name, .value = null }, span);
         return value;
     }
+    /// Resolve a variant construction's type spelling; a bare generic template name carries no
+    /// arguments and adopts the expected symbolic type of its use site instead.
+    fn variantType(self: *Checker, ty_span: source.Span, span: source.Span) Error!Symbolic {
+        return self.variantTypeFrom(ty_span, self.expected_types.get(span));
+    }
+    fn variantTypeFrom(self: *Checker, ty_span: source.Span, expected: ?Symbolic) Error!Symbolic {
+        const id = variant_calls.templateDeclaration(self.src, self.catalog, ty_span) orelse return self.ty(ty_span);
+        if (expected) |value| if (value == .nominal and value.nominal.declaration == id) return value;
+        return self.sink.fail("E_GENERIC_INFERENCE", ty_span, variant_calls.inference_message);
+    }
+    /// Lower `divtrunc(a, b)` and `remtrunc(a, b)` to their truncating integer operators.
+    fn truncatingHelper(self: *Checker, invocation: Call, span: source.Span) Error!?Symbolic {
+        const name = self.src.text(invocation.name);
+        const shadowed = self.active.contains(name) or self.functions.contains(name);
+        const node = try truncating.lower(self.src, invocation, span, shadowed, self.sink) orelse return null;
+        const value = try self.binary(node.data.binary);
+        return value;
+    }
+    /// Lower `Type.case(value)` construction before resolving the member as a function.
+    fn variantConstruction(self: *Checker, invocation: Call, span: source.Span) Error!?Symbolic {
+        const owner = invocation.owner orelse return null;
+        if (invocation.type_arguments.len != 0 or self.active.contains(self.src.text(owner))) return null;
+        if (!try variant_calls.namesCase(self.src, self.catalog, owner, invocation.name, self.sink)) return null;
+        if (invocation.arguments.len != 1) return self.sink.fail("E_ARITY", invocation.name, "variant construction takes exactly one payload");
+        const built = try self.variantValue(.{ .ty = owner, .name = invocation.name, .value = invocation.arguments[0] }, span);
+        return built;
+    }
     fn variantValue(self: *Checker, variant: @FieldType(@FieldType(ast.Node, "data"), "variant"), span: source.Span) Error!Symbolic {
-        const result = try self.ty(variant.ty);
+        const result = try self.variantType(variant.ty, span);
         const shape = try self.shapes().requireVariants(result, span);
         const tag = try self.shapes().memberIndex(shape, variant.name);
         const payload = shape.fields[tag].ty;
@@ -978,7 +1033,7 @@ const Checker = struct {
     }
     fn patternTag(self: *Checker, value: Symbolic, variants: symbolic.Schema, type_span: source.Span, name: source.Span) Error!usize {
         if (type_span.start != type_span.end) {
-            try self.same(try self.ty(type_span), value, type_span);
+            try self.same(try self.variantTypeFrom(type_span, value), value, type_span);
             return self.shapes().memberIndex(variants, name);
         }
         const canonical = @import("prelude.zig").caseName(self.src.text(name));

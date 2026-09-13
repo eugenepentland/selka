@@ -57,7 +57,18 @@ Representable unsuffixed integer literals adopt an expected integer type.
 `float` is binary64 and accepts literals such as `1.5` and `4.2e1`, ordinary
 arithmetic and comparisons, and `float(integer)` / `int(float)` conversion.
 `/` produces a float; `//` rounds the quotient down and `%` follows that quotient.
-Float-to-int conversion truncates toward zero and traps outside the signed range.
+`divtrunc(a, b)` and `remtrunc(a, b)` round toward zero instead, for binary formats and
+C interfaces that need that rounding. Float-to-int conversion truncates toward zero and
+traps outside the signed range.
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    spread = -7
+    floored = spread // 2
+    toward_zero = divtrunc(spread, 2)
+    return (toward_zero - floored) * 42
+```
 
 Lists infer a homogeneous element type from nonempty literals. They share mutable
 storage; assignment does not copy their contents. Use `items.append(value)`,
@@ -88,6 +99,59 @@ Classes declare **value records**, with annotated fields and named construction:
 underlying collections. Ordinary field assignment updates a record local or a
 record held in a list slot.
 
+Enums and tagged unions declare closed cases. `Kind.first` constructs a case without a
+payload and `Kind.first(value)` constructs one with its declared payload; `match`/`case`
+uses the same spelling. A generic variant names only its template, because `Slot[int].some`
+cannot be told apart from an index followed by a member, so `Slot.some(v)` takes its type
+arguments from the expected type.
+
+```mylang
+# doc: expect 42
+class Point:
+    x: int
+    y: int
+
+union Shape:
+    empty,
+    radius: int,
+    point: Point
+
+def score(shape: Shape) -> int:
+    match shape:
+        case Shape.empty:
+            return 0
+        case Shape.radius(r):
+            return r * r
+        case Shape.point(p):
+            return p.x + p.y
+
+def main() -> int:
+    return score(Shape.point(Point(x=2, y=4))) + score(Shape.radius(6))
+```
+
+A fixed array `[N]T` and an enum-indexed table `[Kind]T` have no constructor keyword:
+a list literal becomes the array and a dict literal keyed by `Kind.case` becomes the
+table whenever the surrounding annotation, parameter, field or result demands one. The
+array length is checked statically and the table requires every case exactly once.
+
+```mylang
+# doc: expect 42
+enum Status:
+    ok,
+    missing
+
+def codes() -> [Status]int:
+    return {Status.missing: 4, Status.ok: 38}
+
+def total(values: [2]int) -> int:
+    return values[0] + values[1]
+
+def main() -> int:
+    fixed: [2]int = [0, 0]
+    table = codes()
+    return total(fixed) + table[Status.ok] + table[Status.missing]
+```
+
 Checked errors use the following explicit extension to Python syntax:
 
 ```mylang
@@ -112,7 +176,8 @@ library identities. The legacy `std_unit.Unit` empty record remains a separate
 compatibility type; ordinary procedures use `None`.
 
 Generic functions and classes use square brackets, for example
-`def identity[T](value: T) -> T:`. Calls infer type arguments when possible.
+`def identity[T](value: T) -> T:`. Calls infer type arguments when possible, and
+`identity[int](2)` supplies them explicitly.
 Unconstrained parameters default to copyable values. Additional operations on an
 abstract type require the existing explicit generic contracts.
 
