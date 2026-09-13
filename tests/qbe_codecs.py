@@ -33,9 +33,9 @@ def main():
         entry,provider,source,library,binary=directory/'main.my',directory/'data.my',directory/'host.c',directory/'guest.so',directory/'host'
         entry.write_text(MAIN)
         for boxed in (False,True):
-            data=DATA.replace('EXPORT_REJECTION','export Rejection;' if boxed else '').replace('REJECTION','struct Rejection{n:i64}' if boxed else '')
-            data=data.replace('ERROR_TYPE','Rejection' if boxed else 'i64').replace('ERROR_VALUE','new Rejection{n:-10}' if boxed else '-10')
-            data=data.replace('return new Wire{n:unwrap(x)+1};','if unwrap(x)==26{return new Wire{n:1/(unwrap(x)-26)};}return new Wire{n:unwrap(x)+1};')
+            data=DATA.replace('EXPORT_REJECTION','export Rejection' if boxed else '').replace('REJECTION','class Rejection:\n    n: i64' if boxed else '')
+            data=data.replace('ERROR_TYPE','Rejection' if boxed else 'i64').replace('ERROR_VALUE','Rejection(n=-10)' if boxed else '-10')
+            data=data.replace('return Wire(n=unwrap(x) + 1)','if unwrap(x) == 26:\n            return Wire(n=divtrunc(1, unwrap(x) - 26))\n        return Wire(n=unwrap(x) + 1)')
             provider.write_text(data)
             source.write_text(headers+f'#define BOXED {int(boxed)}\n'+host)
             run([sys.executable,ROOT/'scripts/qbe.py',entry,'--project','--library','--compiler',args.compiler.resolve(),

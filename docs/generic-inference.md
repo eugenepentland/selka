@@ -20,7 +20,7 @@ def main() -> i64:
     return forward(first(values)) + values[1]
 ```
 
-`identity(1u8)` infers `u8`; it does not widen the argument. Explicit calls such as `identity::<u8>(1u8)` remain available and share the same specialization. Recursive and mutually recursive calls infer from signatures without expanding bodies during abstract checking.
+`identity(1u8)` infers `u8`; it does not widen the argument. Explicit calls such as `identity[u8](1u8)` remain available and share the same specialization. Recursive and mutually recursive calls infer from signatures without expanding bodies during abstract checking.
 
 Inference matches checked argument types against parameter signatures, following fixed arrays (including const lengths), nominal applications, and callback signatures. Generic callers retain their own symbolic type and length identities. Every occurrence of a parameter must agree; `same(1, true)` cannot choose a common type for two `T` inputs. Normal requirements, structural contracts, effects, result handling, and ownership rules apply after inference. Expressions are checked and evaluated once, in their usual order.
 

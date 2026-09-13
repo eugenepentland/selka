@@ -213,11 +213,11 @@ The scalar MVP (M0–M5) is implemented and audited: owned source buffers, sourc
 parser, separate untyped/typed representations, per-function instructions,
 an iterative VM with typed locals, jumps, and explicit call frames, deterministic dumps, binding diagnostics, and actual-CLI tests.
 
-The accepted subset has one `fn main() -> i64` and typed helper functions, with
+The accepted subset has one `def main() -> int` and typed helper functions, with
 local bindings, assignment,
 nested blocks, branches, loops, discarded expression statements (`_ = expr`),
 and typed returns.
-[Unit procedures](docs/experiments/unit-procedures.md) use `-> unit`, ordinary call
+[Unit procedures](docs/experiments/unit-procedures.md) omit the return annotation, ordinary call
 statements, and bare returns or fallthrough; other values retain explicit handling.
 It supports integer and boolean values,
 optional local type annotations, unary `-` and `!`, binary `+`, `-`, `*`, `/`, `%`, short-circuit `&&` and `||`,
