@@ -57,11 +57,12 @@ def compare(args, label, entry, project, argv, cache):
 
 
 def schematic(args, temp):
-    """Lower every schematic guest module natively.
+    """Lower the schematic guest natively.
 
-    The guest's own entry is registered with a VM host, so only its modules are
-    checked here: each one must reach native QBE units, including the byte-string
-    and managed-text code the application leans on.
+    Its host functions are registered by a VM host, so the application is checked
+    rather than linked: every module and the guest's own `Result[None, int]` entry
+    must reach native QBE units, including the byte-string and managed-text code
+    the application leans on.
     """
     work = temp / 'schematic'
     shutil.rmtree(work, ignore_errors=True)

@@ -190,14 +190,15 @@ def main():
                          '--compiler', compiler, '--qbe', args.qbe, '--zig', args.zig,
                          '--cache-dir', temp / 'cache'], None)
             assert built.returncode == 0, (text, built.stderr.decode())
-            outcomes = []
-            for command in ([compiler, 'run', source, '--print-result', *options], [output, *options]):
-                work = temp / 'work'
-                shutil.rmtree(work, ignore_errors=True)
-                work.mkdir()
-                prepare(work)
-                outcomes.append(signature(run(command, work)))
-            assert outcomes[0] == outcomes[1], (text, options, outcomes)
+            for stress in ([], ['--gc-stress']):
+                outcomes = []
+                for command in ([compiler, 'run', source, '--print-result', *options, *stress], [output, *options, *stress]):
+                    work = temp / 'work'
+                    shutil.rmtree(work, ignore_errors=True)
+                    work.mkdir()
+                    prepare(work)
+                    outcomes.append(signature(run(command, work)))
+                assert outcomes[0] == outcomes[1], (text, options, stress, outcomes)
             count += 1
     print(f'QBE file surface parity: {count} cases passed')
 
