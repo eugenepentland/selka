@@ -91,7 +91,7 @@ destruction and on final cleanup. Lifetime operations and cleanup do not allocat
 
 ## Scoped source references
 
-```text
+```mylang
 fn main() -> i64 {
     let mut count = 1;
     borrow mut count as edit {

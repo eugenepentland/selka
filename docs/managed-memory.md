@@ -5,7 +5,8 @@ move operations, or collection borrow scopes. This is the first GC-default
 application subset; explicit owned buffers, pools, arenas, and resource cleanup
 remain available with their existing contracts.
 
-```rust
+```mylang
+// doc: expect 42
 fn main() -> i64 {
     let values: List<i64> = []
     let alias = values

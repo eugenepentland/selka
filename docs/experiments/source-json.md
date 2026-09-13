@@ -60,6 +60,7 @@ cannot acquire authority or recursively perform allocating JSON operations.
 ## Generic codec requirements
 
 ```my
+// doc: skip fragment: continues the Encoded declarations of the block above
 fn encode<T: codec>(heap: allocator, value: T) -> Encoded {
     return json_encode::<Encoded>(heap, value, 4096);
 }

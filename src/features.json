@@ -135,7 +135,8 @@
     "nonmoving-tracing-gc",
     "managed-list-cycles",
     "nogc-effects",
-    "std_list"
+    "std_list",
+    "doc-examples"
   ],
   "unsupported": [
     "stored-reference-fields",

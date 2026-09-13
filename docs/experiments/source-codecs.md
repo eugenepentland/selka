@@ -4,6 +4,7 @@ Source expressions can invoke a domain's declared codec without depending on its
 method names:
 
 ```mylang
+// doc: skip fragment: statements without the Positive domain and Wire declarations
 match codec_decode<Positive>(new Wire { n: 7 }) {
     Decoded.ok(value) => { return codec_encode<Positive>(value).n; },
     Decoded.err(error) => { return error; }

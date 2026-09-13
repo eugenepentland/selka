@@ -8,7 +8,8 @@ and pools remain pending. C is not complete.
 
 ## Source contract
 
-```text
+```mylang
+// doc: expect 3
 buffer Numbers: i64;
 result Acquired { ok: Numbers, err: i64 }
 result Status { ok: bool, err: i64 }

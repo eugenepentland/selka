@@ -7,7 +7,7 @@ pending work.
 
 ## Syntax and type identity
 
-```text
+```mylang
 fn sum(values: [3]i64) -> i64 {
     let mut index = 0u64;
     let mut total = 0;

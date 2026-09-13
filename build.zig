@@ -528,6 +528,11 @@ pub fn build(b: *std.Build) void {
     calls.addFileArg(exe.getEmittedBin());
     calls.setCwd(b.path("."));
     test_step.dependOn(&calls.step);
+    const docs_examples = b.addSystemCommand(&.{ "python3", "tests/docs_examples.py", "--compiler" });
+    docs_examples.addFileArg(exe.getEmittedBin());
+    docs_examples.setCwd(b.path("."));
+    b.step("test-docs", "Execute every fenced documentation example").dependOn(&docs_examples.step);
+    test_step.dependOn(&docs_examples.step);
     const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("src"), b.path("tests"), b.path("test") }, .check = true });
     b.step("fmt-check", "Check canonical Zig formatting").dependOn(&fmt.step);
 }

@@ -8,7 +8,7 @@ are separate work.
 
 ## Contract and syntax
 
-```text
+```mylang
 fn tail(values: &mut []i64) -> &mut []i64 from values {
     borrow mut values[1..len_slice(values)] as rest {
         return rest;

@@ -4,6 +4,7 @@ The interpreter accepts byte-string literals directly at readonly byte-slice
 parameters:
 
 ~~~my
+// doc: skip fragment: statements without their enclosing function or document
 discard std_text::emit("hello");
 let role = std_json::field(document, component, "pin_roles");
 return std_json::textis(document, role, "input");
@@ -45,6 +46,7 @@ floating-point API here. It is not a lossless JSON round-trip API.
 Borrow the document for queries:
 
 ~~~my
+// doc: skip fragment: statements without their enclosing function or document
 borrow document[0..len_buffer(document)] as view {
     let count = std_json::field(view, 1, "count");
     if std_json::get(view, count, 0) == 4 {

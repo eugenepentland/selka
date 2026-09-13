@@ -3,6 +3,7 @@
 Use `[..]` to borrow all initialized elements without repeating an owner's length:
 
 ```my
+// doc: skip fragment: statement body without its enclosing function or owner
 borrow mut values[..] as view {
     write_slice(view, 0, 42);
 }
@@ -19,6 +20,7 @@ both bounds; `values[..end]` and `values[start..]` are not supported.
 Independent borrows can share one declaration and block:
 
 ```my
+// doc: skip fragment: statement body without its enclosing function or owners
 borrow mut ids[..] as ids_view,
        mut durations[..] as durations_view,
        needs[..] as needs_view {
