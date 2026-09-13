@@ -114,9 +114,7 @@
     "capturing-closures",
     "python-dynamic-object-model"
   ],
-  "native_exclusions": [
-    "managed-collections"
-  ],
+  "native_exclusions": [],
   "limits": {
     "generic_calls": "explicit arguments or complete inference from call inputs; ambiguous and unmaterialized phantom arguments require explicit specialization",
     "unit": "unit/None procedures; main accepts int, unit, or Result[int/unit,int]; copied host/JSON unit signatures remain excluded",

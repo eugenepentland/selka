@@ -42,21 +42,11 @@ pub fn Lower(comptime E: type) type {
     };
 }
 
-/// Store a checked byte conversion whose success and error payloads are both
-/// managed references, so the status selects the tag rather than the payload.
+/// Store a checked byte conversion, whose payload the runtime left in scratch.
 fn emitPayloadResult(comptime E: type, self: *E, ty: typed.Type, status: usize, base: usize) Error!void {
-    const shape = typed.resultShape(ty, self.program.records) orelse return error.InternalError;
     const value = self.temp();
     try self.print(" %v{d} =l loadl %scratch\n", .{value});
-    const pointer = try self.aggregatePointer();
-    const payload = try self.address(pointer, (try self.layout(ty)).payload_offset);
-    const label = self.temp();
-    try self.print(" jnz %v{d}, @byteserr{d}, @bytesok{d}\n@byteserr{d}\n storew {d}, %v{d}\n", .{ status, label, label, label, shape.error_tag, pointer });
-    try self.writeValue(payload, value, shape.error_type);
-    try self.print(" jmp @bytesdone{d}\n@bytesok{d}\n storew {d}, %v{d}\n", .{ label, label, shape.ok_tag, pointer });
-    try self.writeValue(payload, value, shape.ok_type);
-    try self.print(" jmp @bytesdone{d}\n@bytesdone{d}\n", .{ label, label });
-    try self.store(base, pointer);
+    return @import("qbe_results.zig").Lower(E).payload(self, .{ .ty = ty, .status = status, .value = value, .slot = base });
 }
 
 fn emitBoolean(comptime E: type, self: *E, result: usize, slot: usize) Error!void {

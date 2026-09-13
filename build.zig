@@ -317,6 +317,18 @@ pub fn build(b: *std.Build) void {
     qbe_managed.addFileArg(qbe_tool);
     qbe_managed.setCwd(b.path("."));
     qbe_step.dependOn(&qbe_managed.step);
+    const qbe_files = b.addSystemCommand(&.{ "python3", "tests/qbe_files.py", "--compiler" });
+    qbe_files.addFileArg(exe.getEmittedBin());
+    qbe_files.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe" });
+    qbe_files.addFileArg(qbe_tool);
+    qbe_files.setCwd(b.path("."));
+    qbe_step.dependOn(&qbe_files.step);
+    const qbe_documents = b.addSystemCommand(&.{ "python3", "tests/qbe_docs.py", "--compiler" });
+    qbe_documents.addFileArg(exe.getEmittedBin());
+    qbe_documents.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe" });
+    qbe_documents.addFileArg(qbe_tool);
+    qbe_documents.setCwd(b.path("."));
+    qbe_step.dependOn(&qbe_documents.step);
     const qbe_output = b.addSystemCommand(&.{ "python3", "tests/qbe_io.py", "--compiler" });
     qbe_output.addFileArg(exe.getEmittedBin());
     qbe_output.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe" });

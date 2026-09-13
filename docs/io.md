@@ -259,18 +259,24 @@ def main() -> int:
         return 0
 ```
 
-Generic function bodies reject file operations, and the QBE native backend
-rejects them with `E_QBE_UNSUPPORTED`; the file surface runs on the VM only.
+Generic function bodies reject file operations. The native backend runs them.
 
 ## The native backend
 
-`print` and every file operation are rejected by the QBE native lowering with a
-located `E_QBE_UNSUPPORTED`, so `mylang emit-qbe`, `mylang build` and `mylang
-build --run` all fail on a program that uses them. `mylang build --run`
-therefore takes no `--allow-*` flags; they belong to `mylang run` and
-`run-project`, which execute on the VM.
+`print` and every file operation run on the QBE native backend as well as the
+VM, so `mylang build` and `mylang build --run` accept a program that uses them.
+A native executable grants every capability by default, exactly as `mylang run`
+does, and takes the same `--restrict` and `--allow-*` options; `mylang build
+--run` forwards them after `--`:
 
-Generic function bodies also reject `print` and the file builtins, with
+```text
+$ mylang build report.my --run -- --restrict --allow-read=notes
+```
+
+A native executable always writes the entry point's `int` result after the
+program's own output, the way `mylang run --print-result` does.
+
+Generic function bodies still reject `print` and the file builtins, with
 `E_GENERIC_BODY_UNSUPPORTED`. Write an ordinary function and call it from the
 generic one.
 

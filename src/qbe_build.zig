@@ -172,7 +172,8 @@ const State = struct {
         for ([_][]const u8{
             "native_heap.c",    "native_collections.c", "native_text.c",  "native_dictionary.c", "qbe_stack.c",
             "qbe_providers.c",  "qbe_resources.c",      "native_equal.c", "native_bytes.c",      "qbe_bytes.c",
-            "native_regions.c", "qbe_arena.c",          "native_print.c", "qbe_io.c",
+            "native_regions.c", "qbe_arena.c",          "native_print.c", "qbe_io.c",            "native_scoped.c",
+            "qbe_grants.c",     "qbe_files.c",
         }) |source| try self.add(try self.cache.object("support", source, .c_file));
         const metadata = try self.cache.object("metadata", try outputs.metadata(a, self.manifest), .c_text);
         self.metadata_reused = metadata.reused;

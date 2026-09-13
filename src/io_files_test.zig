@@ -280,14 +280,44 @@ test "IO-12 the file surface is rejected under noio by generic bodies and by the
         \\        _ = f.seek(0)
         \\    return 0
     , "E_FILE_ARGUMENT");
+}
+
+// spec-case: IO-12
+test "IO-12 the native backend lowers the whole file surface" {
     var compilation = try language.Compilation.init(t.allocator, module,
+        \\def count(fs: Filesystem) -> Result[int, str]:
+        \\    total = 0
+        \\    with open(fs, "lines.txt", "r")? as f:
+        \\        for line in f.readlines():
+        \\            total = total + len(line)
+        \\    return Ok(total)
+        \\
         \\def main(fs: Filesystem) -> int:
+        \\    _ = read_text(fs, "notes.txt")
+        \\    _ = read_file(fs, "notes.txt")
+        \\    _ = write_text(fs, "notes.txt", "x")
+        \\    _ = write_file(fs, "notes.txt", b"x")
         \\    _ = exists(fs, "notes.txt")
-        \\    return 0
+        \\    _ = listdir(fs, ".")
+        \\    _ = mkdir(fs, "made")
+        \\    _ = remove(fs, "made")
+        \\    with open(fs, "notes.txt", "wb") as f:
+        \\        _ = f.write(b"x")
+        \\        f.flush()
+        \\        f.close()
+        \\    match count(fs):
+        \\        case Ok(value):
+        \\            return value
+        \\        case Err(message):
+        \\            return 0 - len(message)
     );
     defer compilation.deinit();
-    try t.expectError(error.SourceError, compilation.emitQbe(t.allocator));
-    try t.expectEqualStrings("E_QBE_UNSUPPORTED", compilation.diagnostics.items[0].code);
+    const manifest = try compilation.emitQbe(t.allocator);
+    defer t.allocator.free(manifest);
+    try t.expect(std.mem.indexOf(u8, manifest, "myl_qbe_file_access") != null);
+    try t.expect(std.mem.indexOf(u8, manifest, "myl_qbe_file_method") != null);
+    // An open handle is one owned resource word, dropped at every scope exit.
+    try t.expect(std.mem.indexOf(u8, manifest, "myl_native_owned_drop") != null);
 }
 
 test "file operations report a readable reason for every provider failure" {

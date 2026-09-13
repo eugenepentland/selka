@@ -136,7 +136,7 @@ def entry_wrapper(entry, parameters, provider=False):
         raise ValueError('unsupported native entry capability')
     packed = len(parameters) > 128
     declaration = ', uint64_t *' if packed else ', uint64_t' * len(parameters)
-    lines = ['#include "qbe_runtime.h"', '#include "native_providers.h"', '#include <stdlib.h>',
+    lines = ['#include "qbe_grants.h"', '#include "native_providers.h"', '#include <stdlib.h>',
              'extern void myl_qbe_host_begin(void *);',
              'extern uint64_t '+entry+'(void *'+declaration+');',
              'static uint64_t entry_run(void *ctx) {',
@@ -156,7 +156,7 @@ def entry_wrapper(entry, parameters, provider=False):
     setup = 'MylangNativeProviders providers=mylang_native_providers();' if provider else ''
     pointer = '&providers' if provider else 'NULL'
     lines.append('int main(int argc,char **argv) { '+setup+
-                 ' return mylang_qbe_run_providers(entry_run,argc,argv,'+pointer+'); }')
+                 ' return mylang_qbe_run_grants(entry_run,argc,argv,'+pointer+'); }')
     return '\n'.join(lines)+'\n'
 
 
@@ -215,7 +215,9 @@ def main():
                          'native_dictionary.h', 'native_dictionary.c', 'qbe_stack.c', 'qbe_providers.c', 'qbe_resources.c', 'native_equal.h', 'native_equal.c',
                          'native_bytes.h', 'native_bytes.c', 'qbe_bytes.h', 'qbe_bytes.c',
                          'native_regions.h', 'native_regions.c', 'qbe_arena.h', 'qbe_arena.c',
-                         'native_print.h', 'native_print.c', 'qbe_io.h', 'qbe_io.c']},
+                         'native_print.h', 'native_print.c', 'qbe_io.h', 'qbe_io.c',
+                         'native_scoped.h', 'native_scoped.c', 'qbe_grants.h', 'qbe_grants.c',
+                         'qbe_files.h', 'qbe_files.c']},
         }
         cache = args.cache_dir.resolve()
         cache.mkdir(parents=True, exist_ok=True)
@@ -241,7 +243,7 @@ def main():
         runtime_obj, runtime_reused = cached_object(cache, runtime_key,
             lambda temporary, candidate: run([zig, 'cc', *flags, '-c', runtime, '-o', candidate]))
         objects.append(runtime_obj)
-        for support in ['native_heap', 'native_collections', 'native_text', 'native_dictionary', 'qbe_stack', 'qbe_providers', 'qbe_resources', 'native_equal', 'native_bytes', 'qbe_bytes', 'native_regions', 'qbe_arena', 'native_print', 'qbe_io']:
+        for support in ['native_heap', 'native_collections', 'native_text', 'native_dictionary', 'qbe_stack', 'qbe_providers', 'qbe_resources', 'native_equal', 'native_bytes', 'qbe_bytes', 'native_regions', 'qbe_arena', 'native_print', 'qbe_io', 'native_scoped', 'qbe_grants', 'qbe_files']:
             support_key = key_for({'environment': environment, 'kind': support})
             support_obj, _ = cached_object(cache, support_key,
                 lambda temporary, candidate, support=support: run([zig, 'cc', *flags, '-c', ROOT / 'src' / (support+'.c'), '-o', candidate]))

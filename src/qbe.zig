@@ -83,7 +83,9 @@ fn layoutError(err: native_types.Error) GenerateError {
     return if (err == error.OutOfMemory) error.OutOfMemory else error.InternalError;
 }
 fn scalar(ty: typed.Type, records: []const typed.Record) bool {
-    if (ty.isInteger() or ty == .bool or ty == .unit or ty.capabilityIndex() != null) return true;
+    // An open file and a capability are both one opaque native word.
+    const authority = ty.capabilityIndex() != null or ty.isFile();
+    if (ty.isInteger() or ty == .bool or ty == .unit or authority) return true;
     if (!ty.isAggregate() or ty.recordIndex() >= records.len) return false;
     const record = records[ty.recordIndex()];
     if (record.managed or record.contract.callback != null or ownedPointer(record)) return true;
@@ -270,6 +272,8 @@ const Emitter = struct {
             .acquire_resource,
             .complete_resource,
             .resource_io,
+            .file_access,
+            .file_method,
             => true,
             else => false,
         };
@@ -431,6 +435,7 @@ const Emitter = struct {
             .acquire_resource,
             .complete_resource,
             .resource_io,
+            .file_access,
             => true,
             .load_local, .move_local => |slot| !self.isScalar(self.function.scope.locals[@backingInt(slot)].ty),
             .call => |id| self.largeResult(self.program.functions[@backingInt(id)]) catch false,
@@ -717,7 +722,8 @@ const Emitter = struct {
             .external_read, .environment_get => try @import("qbe_boundaries.zig").emit(self, op, stack),
             .begin_arena, .end_arena, .arena_escape => try arena_lower.Lower(Emitter).emit(self, op, stack),
             .print => |output| try @import("qbe_io.zig").Lower(Emitter).emit(self, output, stack),
-            .file_access, .file_method => return self.reject(self.pc),
+            .file_access => |call| try @import("qbe_files.zig").Lower(Emitter).access(self, call, stack),
+            .file_method => |call| try @import("qbe_files.zig").Lower(Emitter).method(self, call, stack),
             .try_result => |propagate| {
                 const source = try self.load("s", h - 1);
                 const input = typed.resultShape(propagate.input, self.program.records).?;

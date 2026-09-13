@@ -68,11 +68,11 @@ failure:
     if (parent != root) close(parent);
     return -1;
 }
-static int open_leaf(int parent, const char *name, unsigned char mode) {
+static int open_leaf(int parent, const char *name, unsigned char mode, int follow) {
     if (mode == 'c') return openat(parent, name, O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0666);
     if (mode == 'a') return openat(parent, name, O_WRONLY | O_CREAT | O_CLOEXEC, 0666);
     int flags = mode == 'r' ? O_RDONLY : O_WRONLY;
-    return openat(parent, name, flags | O_NOFOLLOW | O_CLOEXEC);
+    return openat(parent, name, flags | (follow ? 0 : O_NOFOLLOW) | O_CLOEXEC);
 }
 static unsigned char kind_of(mode_t value) {
     if (S_ISREG(value)) return 1;
@@ -149,12 +149,15 @@ static unsigned char *change(int parent, const char *name, unsigned char mode, s
     *length = 1;
     return bytes;
 }
-static MylangResourceResult acquire_in(MylangScoped *scoped, int root, unsigned char mode, const char *path, size_t length) {
+static MylangResourceResult acquire_in(MylangScoped *scoped, MylangScopedRoot entry, unsigned char mode, const char *path, size_t length) {
     MylangResourceResult result = {MYLANG_PROVIDER_FAILED, 0};
+    int root = entry.fd;
     size_t slot = free_slot(scoped);
     if (slot == SIZE_MAX) { result.status = MYLANG_PROVIDER_DENIED; return result; }
     size_t last = 0;
-    int parent = walk(root, path, length, &last);
+    /* A direct root hands the whole path to one operation, the way an ordinary
+       process resolves it; a scoped root opens each component without symlinks. */
+    int parent = entry.direct ? root : walk(root, path, length, &last);
     if (parent < 0) { result.status = from_errno(); return result; }
     char name[NAME_LIMIT + 1];
     size_t width = length - last;
@@ -170,7 +173,7 @@ static MylangResourceResult acquire_in(MylangScoped *scoped, int root, unsigned 
         result.handle = slot;
         return result;
     }
-    int fd = open_leaf(parent, name, mode);
+    int fd = open_leaf(parent, name, mode, entry.direct);
     if (parent != root) close(parent);
     if (fd < 0) { result.status = from_errno(); return result; }
     struct stat info;
@@ -193,11 +196,11 @@ static MylangResourceResult acquire(void *context, const uint8_t *request, size_
     if (!(permissions & (reading ? 1u : 2u))) return result;
     const char *path = (const char *)request + 2;
     size_t width = length - 2;
-    if (!valid_path(path, width, mode)) return result;
     MylangProviderStatus failure = MYLANG_PROVIDER_DENIED;
     for (size_t i = 0; i < scoped->count; ++i) {
         if (writing_mode(mode) && !scoped->roots[i].writable) continue;
-        MylangResourceResult attempt = acquire_in(scoped, scoped->roots[i].fd, mode, path, width);
+        if (!scoped->roots[i].direct && !valid_path(path, width, mode)) continue;
+        MylangResourceResult attempt = acquire_in(scoped, scoped->roots[i], mode, path, width);
         if (attempt.status == MYLANG_PROVIDER_OK || attempt.status == MYLANG_PROVIDER_OUT_OF_MEMORY) return attempt;
         failure = attempt.status;
     }
@@ -269,12 +272,18 @@ void mylang_scoped_init(MylangScoped *scoped) {
     memset(scoped, 0, sizeof *scoped);
     for (size_t i = 0; i < MYLANG_SCOPED_HANDLES; ++i) scoped->handles[i].fd = -1;
 }
-int mylang_scoped_grant(MylangScoped *scoped, const char *path, int writable) {
+static int grant(MylangScoped *scoped, const char *path, int writable, int direct) {
     if (scoped->count >= MYLANG_SCOPED_ROOTS) return 0;
     int fd = open(path, O_RDONLY | O_DIRECTORY | O_CLOEXEC);
     if (fd < 0) return 0;
-    scoped->roots[scoped->count++] = (MylangScopedRoot){fd, writable};
+    scoped->roots[scoped->count++] = (MylangScopedRoot){fd, writable, direct};
     return 1;
+}
+int mylang_scoped_grant(MylangScoped *scoped, const char *path, int writable) {
+    return grant(scoped, path, writable, 0);
+}
+int mylang_scoped_working_directory(MylangScoped *scoped) {
+    return grant(scoped, ".", 1, 1);
 }
 void mylang_scoped_close(MylangScoped *scoped) {
     for (size_t i = 0; i < MYLANG_SCOPED_HANDLES; ++i)
