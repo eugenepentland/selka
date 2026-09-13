@@ -255,6 +255,28 @@ const CanonicalWriter = struct {
                 try work.append(allocator, .{ .expression = read.capability });
             },
             .acquire_buffer => |acquire| try work.append(allocator, .{ .expression = acquire.capacity }),
+            .file_access => |call| {
+                writer.print("file access {s} mode={c} text={}\n", .{ @tagName(call.kind), call.mode, call.text }) catch return error.OutOfMemory;
+                var index = call.arguments.len;
+                while (index > 0) {
+                    index -= 1;
+                    try work.append(allocator, .{ .expression = call.arguments[index] });
+                }
+            },
+            .file_method => |call| {
+                writer.print("file method {s} local={d} text={}\n", .{ @tagName(call.kind), @backingInt(call.owner), call.text }) catch return error.OutOfMemory;
+                if (call.argument) |value| try work.append(allocator, .{ .expression = value });
+            },
+            .print => |output| {
+                writer.print("print {d} {d}{d}\n", .{ output.arguments.len, @intFromBool(output.separator != null), @intFromBool(output.terminator != null) }) catch return error.OutOfMemory;
+                if (output.terminator) |value| try work.append(allocator, .{ .expression = value });
+                if (output.separator) |value| try work.append(allocator, .{ .expression = value });
+                var index = output.arguments.len;
+                while (index > 0) {
+                    index -= 1;
+                    try work.append(allocator, .{ .expression = output.arguments[index] });
+                }
+            },
             .arena_escape, .cast, .wrap, .unwrap => |operand| try work.append(allocator, .{ .expression = operand }),
             .record => |fields| {
                 try recordFields(allocator, writer, work, program, node.ty, fields);
@@ -316,11 +338,12 @@ const CanonicalWriter = struct {
         switch (statement.data) {
             .assertion => |claim| {
                 writer.print("message {s}\n", .{claim.message}) catch return error.OutOfMemory;
-                try self.expression(claim.condition);
+                try work.append(allocator, .{ .expression = claim.condition });
             },
-            .managed_arena => |scope| {
-                writer.print("managed arena locals={d}\n", .{@backingInt(scope.watermark)}) catch return error.OutOfMemory;
+            .with_scope => |scope| {
+                writer.print("with locals={d} resource={d}\n", .{ @backingInt(scope.slot), @intFromBool(scope.resource != null) }) catch return error.OutOfMemory;
                 try work.append(allocator, .{ .statement = scope.body });
+                if (scope.resource) |value| try work.append(allocator, .{ .expression = value });
             },
             .block => |children| {
                 writer.print("children {d}\n", .{children.len}) catch return error.OutOfMemory;

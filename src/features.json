@@ -102,7 +102,10 @@
     "standard-pool",
     "standard-random",
     "standard-time",
-    "doc-examples"
+    "doc-examples",
+    "python-print-and-output-effect",
+    "python-file-surface",
+    "command-line-capability-grants"
   ],
   "unsupported": [
     "stored-reference-fields",

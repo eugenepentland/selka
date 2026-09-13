@@ -290,6 +290,11 @@ const Checker = struct {
         try self.seedCleanup(ty_value);
     }
     fn callTarget(self: *Checker, invocation: Call, call_span: source.Span) Error!ast.Function {
+        if (invocation.owner == null) {
+            const spelling = self.src.text(invocation.name);
+            const reserved = std.mem.eql(u8, spelling, "print") or @import("file_operations.zig").access(spelling) != null;
+            if (reserved and !self.functions.contains(spelling)) return self.sink.fail(eUnsupported, invocation.name, "`print` and the file builtins are not supported inside generic function bodies");
+        }
         const key = if (self.module_names) |names|
             try names.reference(invocation.owner orelse invocation.name, .function, if (invocation.owner != null) invocation.name else null, if (self.owner) |owner| self.src.text(owner) else null, self.sink)
         else
@@ -812,6 +817,7 @@ const Checker = struct {
             },
             .unwrap => |input| try self.domainBacking(try self.expression(input), node.span),
             .arena_escape => return self.sink.fail(eUnsupported, node.span, "managed arena scopes and escape copies are not supported inside generic function bodies"),
+            .file_operation => return self.sink.fail(eUnsupported, node.span, "file operations are not supported inside generic function bodies"),
             .buffer_operation => |operation| try self.bufferValue(operation),
             .external_read => |read| try self.externalValue(read),
             .environment_get => |get| try self.environmentValue(get),
@@ -1267,7 +1273,7 @@ const Checker = struct {
         defer self.depth -= 1;
         switch (statement_value.data) {
             .block => |statements| return self.block(statements),
-            .managed_arena => return self.sink.fail(eUnsupported, statement_value.span, "managed arena scopes are not supported inside generic function bodies"),
+            .with_scope => return self.sink.fail(eUnsupported, statement_value.span, "`with` resource scopes are not supported inside generic function bodies"),
             .match => |match| return self.matchValue(match, statement_value.span),
             .ret => |value| {
                 try self.returnValue(value, statement_value.span);

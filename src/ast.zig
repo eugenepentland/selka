@@ -58,6 +58,7 @@ pub const Node = struct {
         method_call: struct { base: NodeId, name: Span, arguments: []const NodeId },
         list_operation: struct { base: NodeId, kind: @import("buffer_operations.zig").Kind, arguments: []const NodeId },
         buffer_operation: struct { kind: @import("buffer_operations.zig").Kind, owner: Span, arguments: []const NodeId },
+        file_operation: struct { kind: @import("file_operations.zig").Method, owner: Span, argument: ?NodeId },
         slice: struct { base: NodeId, start: ?NodeId, end: ?NodeId },
         integer: Span,
         bytes: []const u8,
@@ -98,7 +99,7 @@ pub const Statement = struct {
     span: Span,
     implicit_discard: bool = false,
     data: union(enum) {
-        managed_arena: struct { name: ?Span, body: StatementId },
+        with_scope: struct { resource: ?NodeId, name: ?Span, body: StatementId },
         block: []const StatementId,
         assertion: Assertion,
         ret: NodeId,

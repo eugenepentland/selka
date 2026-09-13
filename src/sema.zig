@@ -6,6 +6,9 @@ const collections = @import("collection_lower.zig");
 const needs_list = "operation requires a managed list";
 const eListType = @import("collection_lower.zig").list_type_error;
 const call_arguments = @import("call_arguments.zig");
+const io_builtins = @import("io_builtins.zig");
+const io_render = @import("io_render.zig");
+const file_operations = @import("file_operations.zig");
 const callables = @import("callables.zig");
 const callback_type_code = "E_CALLBACK_TYPE";
 const eResultOperation = diagnostic.result_operation;
@@ -57,6 +60,8 @@ const LoopScope = struct { id: usize, before: []const Pending, arenas: usize = 0
 const ArenaScope = struct { name: []const u8, declaration: source.Span, watermark: typed.LocalId };
 const eArenaEscape = "E_ARENA_ESCAPE";
 const eArenaBinding = "E_ARENA_BINDING";
+const eWithResource = "E_WITH_RESOURCE";
+const eFileArgument = "E_FILE_ARGUMENT";
 const Pending = struct { available: bool, transfer_span: ?source.Span };
 const Work = struct { default_value: bool = false, id: ast.NodeId, emit: bool = false, checkpoint: bool = false, verify: ?[]const Pending = null };
 const FieldDestination = struct { owner: typed.LocalId, index: ?typed.NodeId, value: typed.NodeId, refresh: typed.StatementId };
@@ -104,6 +109,8 @@ const Checker = struct {
     conversion_fields: ?[]bool = null,
     managed_types: []bool = &.{},
     owner: ?typed.Type = null,
+    /// The `with open(...)` head whose failure traps instead of yielding a result.
+    trapping_open: ?source.Span = null,
 
     fn checkFunction(self: *Checker, i: usize) Error!typed.Function {
         const allocator = self.allocator;
@@ -559,6 +566,106 @@ const Checker = struct {
             out.* = try self.numericBuilder(node.span).toInteger(value);
         } else out.* = .{ .span = node.span, .ty = .i64, .data = .{ .cast = value } };
     }
+    /// Whole-path file helpers are reserved under the same shadowing rule as `print`.
+    fn fileAccessBuiltin(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?file_operations.Access {
+        if (call.owner != null) return null;
+        const name = self.src.text(call.name);
+        const kind = file_operations.access(name) orelse return null;
+        if (self.active.contains(name) or self.functions.contains(name)) return null;
+        if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return null;
+        return kind;
+    }
+    fn fileShapes(self: *Checker, span: source.Span) Error!typed.FileShapes {
+        const text = try collections.preludeType(&self.catalog, "str", span);
+        const bytes = try collections.preludeType(&self.catalog, "bytes", span);
+        return .{ .text = text, .bytes = bytes, .list = try collections.listType(&self.catalog, text, span) };
+    }
+    /// The declared result of one whole-path helper, given the open mode it saw.
+    fn fileAccessType(self: *Checker, kind: file_operations.Access, mode: file_operations.Mode, span: source.Span) Error!typed.Type {
+        const shapes = try self.fileShapes(span);
+        const payload: typed.Type = switch (kind) {
+            .open => if (mode.text) .text_file else .file,
+            .read_file => shapes.bytes,
+            .read_text => shapes.text,
+            .listdir => shapes.list,
+            .exists => return .bool,
+            else => .unit,
+        };
+        return collections.resultType(&self.catalog, payload, shapes.text, span);
+    }
+    fn checkFileAccess(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), kind: file_operations.Access, out: *typed.Node) Error!void {
+        try call_arguments.positional(call, self.sink);
+        if (call.type_arguments.len != 0 or call.arguments.len != kind.arity()) return self.sink.fail("E_ARITY", node.span, "this file operation's argument count does not match its signature");
+        const shapes = try self.fileShapes(node.span);
+        const arguments = try self.allocator.alloc(typed.NodeId, call.arguments.len);
+        for (call.arguments, arguments) |id, *slot| slot.* = self.resolved[@backingInt(id)].?;
+        try self.require(self.nodes.items[@backingInt(arguments[0])].ty, .filesystem_cap, node.span);
+        try self.require(self.nodes.items[@backingInt(arguments[1])].ty, shapes.text, self.nodes.items[@backingInt(arguments[1])].span);
+        const mode = try self.openMode(call, kind);
+        if (kind == .write_file) try self.require(self.nodes.items[@backingInt(arguments[2])].ty, shapes.bytes, node.span);
+        if (kind == .write_text) try self.require(self.nodes.items[@backingInt(arguments[2])].ty, shapes.text, node.span);
+        const direct = kind == .open and self.trapping_open != null and std.meta.eql(self.trapping_open.?, node.span);
+        out.ty = if (direct) (if (mode.text) .text_file else .file) else try self.fileAccessType(kind, mode, node.span);
+        out.data = .{ .file_access = .{ .kind = kind, .mode = mode.letter, .text = mode.text, .arguments = arguments, .shapes = shapes } };
+    }
+    /// `open` needs a literal mode so the checker knows whether reads yield text.
+    fn openMode(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call"), kind: file_operations.Access) Error!file_operations.Mode {
+        if (kind != .open) return .{ .letter = 'r', .text = kind == .read_text or kind == .write_text };
+        const spelling = self.syntax.nodes.items[@backingInt(call.arguments[2])];
+        if (spelling.data != .text) return self.sink.fail(eFileArgument, spelling.span, "open requires a literal mode such as \"rb\", \"r\", \"wb\", \"w\", \"ab\" or \"a\"");
+        return file_operations.parseMode(spelling.data.text) orelse self.sink.fail(eFileArgument, spelling.span, "unsupported open mode; use \"r\", \"w\", \"a\" with an optional \"b\" or \"t\"");
+    }
+    /// A file method's result type follows its receiver's text or binary mode.
+    fn checkFileMethod(self: *Checker, node: ast.Node, operation: @FieldType(@FieldType(ast.Node, "data"), "file_operation"), out: *typed.Node) Error!void {
+        const slot = self.active.get(self.src.text(operation.owner)).?;
+        const text = self.locals.items[@backingInt(slot)].ty == .text_file;
+        const shapes = try self.fileShapes(node.span);
+        const element: typed.Type = if (text) shapes.text else shapes.bytes;
+        const argument: ?typed.NodeId = if (operation.argument) |id| self.resolved[@backingInt(id)].? else null;
+        if (operation.kind == .write) try self.require(self.nodes.items[@backingInt(argument.?)].ty, element, node.span);
+        if (operation.kind == .read) if (argument) |id| try self.require(self.nodes.items[@backingInt(id)].ty, .i64, node.span);
+        out.ty = switch (operation.kind) {
+            .read, .readline => element,
+            .readlines => try collections.listType(&self.catalog, element, node.span),
+            .write => .i64,
+            .flush, .close => .unit,
+        };
+        out.data = .{ .file_method = .{ .kind = operation.kind, .owner = slot, .text = text, .argument = argument, .shapes = shapes } };
+    }
+    /// `print` is reserved unless a local binding or declared function shadows it.
+    fn printBuiltin(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
+        if (call.owner != null or !std.mem.eql(u8, self.src.text(call.name), "print")) return false;
+        if (self.active.contains("print") or self.functions.contains("print")) return false;
+        if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return false;
+        return true;
+    }
+    fn checkPrintOperand(self: *Checker, id: ast.NodeId, expected_text: bool) Error!typed.NodeId {
+        const value = self.resolved[@backingInt(id)].?;
+        const ty_value = self.nodes.items[@backingInt(value)].ty;
+        if (expected_text) {
+            const text_type = try collections.preludeType(&self.catalog, "str", self.nodes.items[@backingInt(value)].span);
+            try self.require(ty_value, text_type, self.nodes.items[@backingInt(value)].span);
+            return value;
+        }
+        if (!io_render.printable(ty_value, self.catalog.records)) return self.sink.fail(
+            io_builtins.argument_code,
+            self.nodes.items[@backingInt(value)].span,
+            "print cannot render this value; capabilities, files, owned resources and callbacks have no Python spelling",
+        );
+        return value;
+    }
+    fn checkPrint(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
+        const split = try io_builtins.printArguments(self.src, call, self.sink);
+        const arguments = try self.allocator.alloc(typed.NodeId, split.values.len);
+        for (split.values, arguments) |id, *slot| slot.* = try self.checkPrintOperand(id, false);
+        out.ty = .unit;
+        out.data = .{ .print = .{
+            .arguments = arguments,
+            .separator = if (split.separator) |id| try self.checkPrintOperand(id, true) else null,
+            .terminator = if (split.terminator) |id| try self.checkPrintOperand(id, true) else null,
+        } };
+        _ = node;
+    }
     fn optionConstructor(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
         if (call.owner != null or call.type_arguments.len != 0 or !std.mem.eql(u8, self.src.text(call.name), "Some")) return false;
         if (self.active.contains("Some") or self.functions.contains("Some")) return false;
@@ -627,6 +734,16 @@ const Checker = struct {
             }
             if (call.owner) |owner| if (self.active.get(self.src.text(owner))) |slot| {
                 const value_type = self.locals.items[@backingInt(slot)].ty;
+                if (value_type.isFile()) {
+                    try call_arguments.positional(call, self.sink);
+                    const kind = file_operations.method(self.src.text(call.name)) orelse
+                        return self.sink.fail(eFileArgument, call.name, "unknown file method; open handles support read, readline, readlines, write, flush and close");
+                    const most: usize = @intFromBool(kind.takesArgument());
+                    const least: usize = @intFromBool(kind.requiresArgument());
+                    if (call.type_arguments.len != 0 or call.arguments.len > most or call.arguments.len < least) return self.sink.fail("E_ARITY", node.span, "file method argument count does not match its signature");
+                    node.data = .{ .file_operation = .{ .kind = kind, .owner = owner, .argument = if (call.arguments.len == 0) null else call.arguments[0] } };
+                    return node;
+                }
                 if (value_type.isAggregate() and self.catalog.records[value_type.recordIndex()].managed) {
                     try call_arguments.positional(call, self.sink);
                     const name = self.src.text(call.name);
@@ -1007,6 +1124,27 @@ const Checker = struct {
             return true;
         }
 
+        if (try self.fileAccessBuiltin(call) != null) {
+            try call_arguments.positional(call, self.sink);
+            var index = call.arguments.len;
+            while (index > 0) {
+                index -= 1;
+                try work.append(self.allocator, .{ .id = call.arguments[index] });
+            }
+            return true;
+        }
+        if (try self.printBuiltin(call)) {
+            _ = try io_builtins.printArguments(self.src, call, self.sink);
+            // Only a keyword operand needs the text type, and only then is it materialized.
+            const text_type = if (call.argument_names.len == 0) null else try collections.preludeType(&self.catalog, "str", node.span);
+            var index = call.arguments.len;
+            while (index > 0) {
+                index -= 1;
+                if (call.argument_names.len != 0 and call.argument_names[index] != null) try self.hint(call.arguments[index], text_type.?);
+                try work.append(self.allocator, .{ .id = call.arguments[index] });
+            }
+            return true;
+        }
         if (try self.resultConstructor(call)) |ok| {
             try call_arguments.positional(call, self.sink);
             if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "Ok and Err require one payload");
@@ -1063,6 +1201,11 @@ const Checker = struct {
     fn queueExpression(self: *Checker, work: *std.ArrayList(Work), id: ast.NodeId) Error!bool {
         const node = try self.collectionSyntax(id);
         switch (node.data) {
+            .file_operation => |operation| {
+                try work.append(self.allocator, .{ .id = id, .emit = true });
+                if (operation.argument) |value| try work.append(self.allocator, .{ .id = value });
+                return true;
+            },
             .buffer_operation => |operation| {
                 try self.hintBufferArguments(operation);
                 try work.append(self.allocator, .{ .id = id, .emit = true });
@@ -1401,6 +1544,11 @@ const Checker = struct {
             name,
             "an arena binding is opaque; it cannot be stored, passed, returned or compared, and its only operation is `escape(value)`",
         );
+        if (self.active.get(self.src.text(name))) |bound| if (self.locals.items[@backingInt(bound)].ty.isFile()) return self.sink.fail(
+            eWithResource,
+            name,
+            "an open file binding cannot be stored, passed or returned; call its methods instead, and iterate lines with `for line in name.readlines():`",
+        );
         if (!self.active.contains(self.src.text(name))) {
             const constants: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = self.sink, .catalog = self.catalog };
             if (try constants.lookup(name)) |index| {
@@ -1475,6 +1623,8 @@ const Checker = struct {
             out.data = .{ .cast = value };
             return;
         }
+        if (try self.fileAccessBuiltin(input)) |kind| return self.checkFileAccess(node, input, kind, out);
+        if (try self.printBuiltin(input)) return self.checkPrint(node, input, out);
         if (self.byteConversion(input)) |conversion| return self.checkByteConversion(node, input, conversion, out);
         if (try self.resultConstructor(input)) |ok| {
             try call_arguments.positional(input, self.sink);
@@ -1742,6 +1892,7 @@ const Checker = struct {
             .method_call => return self.checkCollectionMethod(node, temporaries),
             .slice => return self.checkCollectionSlice(node, temporaries),
             .buffer_operation => |operation| try self.checkBufferOperation(node, operation, &out),
+            .file_operation => |operation| try self.checkFileMethod(node, operation, &out),
             .acquire_resource => |acquire| try self.checkAcquireResource(node, acquire, &out),
             .restrict_resource => |restrict| {
                 const value = self.resolved[@backingInt(restrict.value)].?;
@@ -1917,6 +2068,9 @@ const Checker = struct {
             .call => |call| call.arguments.len,
             .buffer_operation => |operation| operation.arguments.len,
             .resource_io => |io| if (io.value != null) 1 else 0,
+            .print => |output| output.arguments.len + @intFromBool(output.separator != null) + @intFromBool(output.terminator != null),
+            .file_access => |call| call.arguments.len,
+            .file_method => |call| @intFromBool(call.argument != null),
         };
     }
     fn expressionWithTemporaries(self: *Checker, root: ast.NodeId, inherited: []const typed.Type) Error!typed.NodeId {
@@ -1959,6 +2113,7 @@ const Checker = struct {
         return self.resolved[@backingInt(root)].?;
     }
     fn needsLocalCleanup(self: *Checker, local_type: typed.Type) Error!bool {
+        if (local_type.isFile()) return true;
         if (typed.moveOnly(local_type, self.catalog.records)) return true;
         return self.managedBearing(local_type);
     }
@@ -2063,7 +2218,36 @@ const Checker = struct {
         );
         return self.failArenaEscape(span, message, null);
     }
-    fn statementManagedArena(self: *Checker, stmt: ast.Statement, scope: @FieldType(@FieldType(ast.Statement, "data"), "managed_arena"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
+    /// A file `with` scope binds one open handle and closes it at every exit.
+    fn statementWithFile(self: *Checker, stmt: ast.Statement, scope: @FieldType(@FieldType(ast.Statement, "data"), "with_scope"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
+        const head = self.syntax.nodes.items[@backingInt(scope.resource.?)];
+        if (head.data == .call) if (try self.fileAccessBuiltin(head.data.call)) |kind| {
+            if (kind == .open) self.trapping_open = head.span;
+        };
+        defer self.trapping_open = null;
+        const value = try self.expression(scope.resource.?);
+        const value_type = self.nodes.items[@backingInt(value)].ty;
+        if (!value_type.isFile()) {
+            const guidance = if (typed.resultShape(value_type, self.catalog.records) != null)
+                "`with` opens an arena or a file; `open` returns a Result, so propagate it with `open(...)?` or match it first"
+            else
+                "`with` opens `arena()` or a file handle; no other value can be used as a resource";
+            return self.sink.fail(eWithResource, self.nodes.items[@backingInt(value)].span, guidance);
+        }
+        const declared = scope.name orelse return self.sink.fail(eWithResource, stmt.span, "a file `with` scope requires a binding, as in `with open(fs, path, \"rb\")? as f:`");
+        const name = self.src.text(declared);
+        if (try self.topLevel(declared) or self.active.contains(name)) return self.sink.fail(eShadowing, declared, "file name shadows an active name");
+        for (self.arenas.items) |active| if (std.mem.eql(u8, active.name, name)) return self.sink.fail(eShadowing, declared, "file name shadows an enclosing arena scope");
+        const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
+        try self.locals.append(self.allocator, .{ .name = name, .declaration = declared, .ty = value_type, .mutable = false, .usage = .{ .reads = 1 } });
+        try self.active.put(self.allocator, name, slot);
+        defer _ = self.active.remove(name);
+        const body = try self.statement(scope.body);
+        flow.terminates = body.terminates;
+        return .{ .with_scope = .{ .slot = slot, .resource = value, .body = body.id } };
+    }
+    fn statementWithScope(self: *Checker, stmt: ast.Statement, scope: @FieldType(@FieldType(ast.Statement, "data"), "with_scope"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
+        if (scope.resource != null) return self.statementWithFile(stmt, scope, flow);
         var name: []const u8 = "";
         if (scope.name) |declared| {
             name = self.src.text(declared);
@@ -2075,7 +2259,7 @@ const Checker = struct {
         defer _ = self.arenas.pop();
         const body = try self.statement(scope.body);
         flow.terminates = body.terminates;
-        return .{ .managed_arena = .{ .watermark = watermark, .body = body.id } };
+        return .{ .with_scope = .{ .slot = watermark, .resource = null, .body = body.id } };
     }
     fn statementBlock(self: *Checker, stmt: ast.Statement, children: @FieldType(@FieldType(ast.Statement, "data"), "block"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         const first_local = self.locals.items.len;
@@ -2581,7 +2765,7 @@ const Checker = struct {
         const stmt = self.syntax.statements.items[@backingInt(statement_id)];
         var flow: StatementFlow = .{};
         const data: @FieldType(typed.Statement, "data") = switch (stmt.data) {
-            .managed_arena => |scope| try self.statementManagedArena(stmt, scope, &flow),
+            .with_scope => |scope| try self.statementWithScope(stmt, scope, &flow),
             .block => |children| try self.statementBlock(stmt, children, &flow),
             .match => |match| try self.statementMatch(stmt, match, &flow),
             .discard => |expr| try self.statementDiscard(stmt, expr, &flow),

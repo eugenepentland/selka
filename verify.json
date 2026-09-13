@@ -80,6 +80,7 @@
         [
           "zig-out/bin/mylang",
           "run",
+          "--print-result",
           "tests/verification/smoke.my"
         ]
       ],
@@ -95,12 +96,14 @@
         [
           "zig-out/bin/mylang",
           "run",
+          "--print-result",
           "tests/verification/smoke.my",
           "--dispatch=optimized"
         ],
         [
           "zig-out/bin/mylang",
           "run",
+          "--print-result",
           "tests/verification/smoke.my",
           "--dispatch=generic"
         ]
@@ -153,6 +156,7 @@
         [
           "zig-out/bin/mylang",
           "run",
+          "--print-result",
           "tests/verification/smoke.my"
         ]
       ],

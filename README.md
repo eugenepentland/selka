@@ -134,7 +134,7 @@ or establish a development-speed improvement.
 
 ```sh
 zig build
-zig-out/bin/mylang run examples/arithmetic.my
+zig-out/bin/mylang run examples/arithmetic.my --print-result
 zig-out/bin/mylang check examples/arithmetic.my
 zig-out/bin/mylang dump-bytecode examples/arithmetic.my
 zig build test --summary all

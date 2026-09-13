@@ -19,9 +19,10 @@ def main() -> int:
     return total
 ```
 
-Save this as `main.my`, then run `zig-out/bin/mylang run main.my`. It prints `42`.
-Use `check` instead of `run` for type checking, or `run-project` for a project
-with imports. The [schematic application](../src/schematic/guest/main.my) is a
+Save this as `main.my`, then run `zig-out/bin/mylang run main.my --print-result`.
+It prints `42`; without that flag `run` prints only what the program prints
+itself. Use `check` instead of `run` for type checking, or `run-project` for a
+project with imports. The [schematic application](../src/schematic/guest/main.my) is a
 larger example; its [instructions](../experiments/schematic/README.md) describe
 rendering and GC stress testing.
 
@@ -231,9 +232,20 @@ Generic functions and classes use square brackets, for example
 Unconstrained parameters default to copyable values. Additional operations on an
 abstract type require the existing explicit generic contracts.
 
-Wrap a phase of work in `with arena() as scratch:` to free everything it allocates
-in one step and copy the result out with `scratch.escape(value)`; see
-[managed arenas](arenas.md).
+`print(values...)` writes its arguments separated by spaces with a trailing
+newline, and accepts `sep=` and `end=`. `mylang run` streams that output as it
+happens and reports the entry point's `int` result only with `--print-result`.
+
+Files are Python-shaped over explicit authority. The entry point asks for a
+`Filesystem` capability by parameter type, `mylang run --allow-read=DIR` or
+`--allow-write=DIR` grants it, and every file call takes that capability first:
+`with open(fs, path, "rb") as f:`, `f.read()`, `f.write(data)`, plus
+`read_text`, `write_text`, `exists`, `listdir`, `mkdir` and `remove`. See
+[printing, files and command-line authority](io.md).
+
+`with` is one statement form with two resource kinds. Wrap a phase of work in
+`with arena() as scratch:` to free everything it allocates in one step and copy
+the result out with `scratch.escape(value)`; see [managed arenas](arenas.md).
 
 Ten modules ship inside the compiler and are imported by name: `math`, `strings`,
 `sort`, `path`, `hex`, `base64`, `json`, `pool`, `random` and `time`. They are

@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def compare(compiler, source, executable, options, name):
-    vm = invoke([compiler, 'run', source, *options])
+    vm = invoke([compiler, 'run', source, '--print-result', *options])
     native = invoke([executable, *options])
     try:
         assert signature(vm) == signature(native)

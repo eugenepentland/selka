@@ -64,7 +64,7 @@ def guest_units(directory, manifest, inputs):
     for index, value in enumerate(inputs):
         entry.write_text(unit_main(value))
         phase = f'unit-{index:03}'
-        result = command(directory, phase, [manifest['tools']['compiler']['path'], 'run-project', entry, '--diagnostics=json'])
+        result = command(directory, phase, [manifest['tools']['compiler']['path'], 'run-project', entry, '--print-result', '--diagnostics=json'])
         if result['status'] != 'passed':
             return {'phase': 'execution', 'passed': False, 'input_index': index}
         if (directory / (phase + '.stdout')).read_text().strip() != str(value * 1000):

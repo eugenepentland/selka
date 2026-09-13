@@ -44,6 +44,9 @@ pub const Instruction = struct {
         environment_get: struct { output: typed.Type, name: typed.Type },
         external_read: struct { kind: @import("external_capabilities.zig").Kind, output: typed.Type },
         acquire_buffer: typed.Type,
+        print: Print,
+        file_access: FileAccess,
+        file_method: FileMethod,
         move_local: typed.LocalId,
         drop_local: typed.LocalId,
         load_local: typed.LocalId,
@@ -69,6 +72,12 @@ pub const Instruction = struct {
         ret,
     },
 };
+/// Whole-path file helper; operands are the capability, the path and any input.
+pub const FileAccess = struct { kind: @import("file_operations.zig").Access, mode: u8, text: bool, operands: usize, output: typed.Type, shapes: typed.FileShapes };
+/// Method on an open handle held in a local slot, with one optional operand.
+pub const FileMethod = struct { kind: @import("file_operations.zig").Method, owner: typed.LocalId, text: bool, argument: bool, output: typed.Type, shapes: typed.FileShapes };
+/// Static argument types and whether explicit `sep=`/`end=` operands follow them.
+pub const Print = struct { types: []const typed.Type, separator: bool, terminator: bool };
 /// Checked function signature, locals, and instruction body.
 pub const Function = struct {
     policy: typed.FunctionPolicy = .{},

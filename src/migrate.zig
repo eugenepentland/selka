@@ -788,8 +788,11 @@ const Walk = struct {
                 });
                 try self.expression(assignment.value, 0);
             },
-            .managed_arena => |scope| {
-                try self.out.text("with arena()");
+            .with_scope => |scope| {
+                if (scope.resource) |opened| {
+                    try self.out.text("with ");
+                    try self.expression(opened, 0);
+                } else try self.out.text("with arena()");
                 if (scope.name) |name| {
                     try self.out.text(" as ");
                     try self.out.text(self.src.text(name));
@@ -826,7 +829,7 @@ const Walk = struct {
             .binding => |declared| self.repeated(declared.name),
             .for_each => |loop| self.repeated(loop.name) or (loop.index_name != null and self.repeated(loop.index_name.?)),
             .for_range => |loop| self.repeated(loop.name),
-            .managed_arena => |scope| scope.name != null and self.repeated(scope.name.?),
+            .with_scope => |scope| scope.name != null and self.repeated(scope.name.?),
             else => false,
         };
     }
@@ -859,7 +862,7 @@ const Walk = struct {
                 if (arm.binding) |bound| try self.declare(bound);
                 try self.countDeclarations(arm.body);
             },
-            .managed_arena => |scope| {
+            .with_scope => |scope| {
                 if (scope.name) |name| try self.declare(name);
                 try self.countDeclarations(scope.body);
             },
@@ -1130,7 +1133,7 @@ const Walk = struct {
             .acquire_resource => try self.rejectValue(item.span, "acquire_resource"),
             .complete_resource => try self.rejectValue(item.span, "complete_resource"),
             .resource_io => try self.rejectValue(item.span, "resource input or output"),
-            .buffer_operation => try self.rejectValue(item.span, self.leadingWord(item.span)),
+            .buffer_operation, .file_operation => try self.rejectValue(item.span, self.leadingWord(item.span)),
         }
     }
 

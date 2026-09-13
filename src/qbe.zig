@@ -706,7 +706,7 @@ const Emitter = struct {
         switch (op) {
             .acquire_resource, .complete_resource, .resource_io, .restrict_resource => try @import("qbe_resources.zig").Lower(Emitter).emit(self, op, stack),
             .external_read, .environment_get => try @import("qbe_boundaries.zig").emit(self, op, stack),
-            .begin_arena, .end_arena, .arena_escape => return self.reject(self.pc),
+            .begin_arena, .end_arena, .arena_escape, .print, .file_access, .file_method => return self.reject(self.pc),
             .try_result => |propagate| {
                 const source = try self.load("s", h - 1);
                 const input = typed.resultShape(propagate.input, self.program.records).?;

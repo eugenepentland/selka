@@ -145,7 +145,7 @@ def main():
         count = 0
         for text in cases():
             source.write_text(text)
-            vm = run([args.compiler.resolve(), 'run', source])
+            vm = run([args.compiler.resolve(), 'run', source, '--print-result'])
             built = run([sys.executable, ROOT / 'scripts/qbe.py', source, '-o', output,
                          '--compiler', args.compiler.resolve(), '--qbe', args.qbe,
                          '--zig', args.zig, '--cache-dir', temp / 'cache'])

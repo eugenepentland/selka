@@ -509,7 +509,7 @@ pub const Parser = struct {
             const effect = std.meta.stringToEnum(sets.Effect, self.src.text(name.span)) orelse return self.sink.fail(
                 "E_UNKNOWN_EFFECT",
                 name.span,
-                "unknown effect; expected managed_allocation, filesystem, network, clock, random, environment, or host",
+                "unknown effect; expected managed_allocation, filesystem, network, clock, random, environment, output, or host",
             );
             if (allowed & sets.bit(effect) != 0) return self.sink.fail("E_DUPLICATE_EFFECT", name.span, "effect appears more than once in this bound");
             allowed |= sets.bit(effect);
@@ -535,17 +535,21 @@ pub const Parser = struct {
         const close = try self.expect(.rbrace);
         return self.addStatement(.{ .span = .join(open.span, close.span), .data = .{ .block = try statements.toOwnedSlice(self.arena.allocator()) } });
     }
-    fn managedArenaStatement(self: *Parser, first: Span) diagnostic.Error!ast.StatementId {
-        const head = self.current();
-        if (head.tag != .kw_arena) return self.sink.fail(syntax_code, head.span, "with currently supports only `with arena()` region scopes");
-        self.cursor.pos += 1;
-        _ = try self.expect(.lparen);
-        _ = try self.expect(.rparen);
+    /// One `with` form covers both resource kinds: `with arena()` opens a managed
+    /// region, and any other expression must produce an open file handle.
+    fn withStatement(self: *Parser, first: Span) diagnostic.Error!ast.StatementId {
+        const arena = self.current().tag == .kw_arena;
+        const resource: ?ast.NodeId = if (arena) resource: {
+            self.cursor.pos += 1;
+            _ = try self.expect(.lparen);
+            _ = try self.expect(.rparen);
+            break :resource null;
+        } else try self.conditionExpression();
         const name: ?Span = if (self.take(.kw_as)) (try self.expect(.ident)).span else null;
         const body = try self.block();
         return self.addStatement(.{
             .span = .join(first, self.syntax.statements.items[@backingInt(body)].span),
-            .data = .{ .managed_arena = .{ .name = name, .body = body } },
+            .data = .{ .with_scope = .{ .resource = resource, .name = name, .body = body } },
         });
     }
     fn conditionExpression(self: *Parser) diagnostic.Error!ast.NodeId {
@@ -562,7 +566,7 @@ pub const Parser = struct {
         defer self.cursor.depth -= 1;
         const first = self.current();
         if (first.tag == .lbrace) return self.block();
-        if (self.take(.kw_with)) return self.managedArenaStatement(first.span);
+        if (self.take(.kw_with)) return self.withStatement(first.span);
         if (self.take(.kw_match)) {
             const value = try self.conditionExpression();
             _ = try self.expect(.lbrace);

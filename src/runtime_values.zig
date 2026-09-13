@@ -20,8 +20,12 @@ pub const Type = enum(usize) {
     network_cap,
     environment_cap,
     unit,
+    /// An open byte-oriented file owned by the guest through a `with` scope.
+    file,
+    /// An open UTF-8 text file; its reads produce `str` rather than `bytes`.
+    text_file,
     _,
-    pub const record_base: usize = 15;
+    pub const record_base: usize = 17;
     /// Return the compact builtin capability index, or null for non-capabilities.
     pub fn capabilityIndex(self: Type) ?u3 {
         return switch (self) {
@@ -48,6 +52,10 @@ pub const Type = enum(usize) {
             .random_cap => .random,
             else => null,
         };
+    }
+    /// Identify an open file handle, whose cleanup closes a provider resource.
+    pub fn isFile(self: Type) bool {
+        return self == .file or self == .text_file;
     }
     /// Integer width and signedness used for range checks and native layout.
     pub const Integer = struct { bits: u7, signed: bool };

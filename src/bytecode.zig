@@ -150,6 +150,10 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
         .acquire_resource => |acquire| try validateOpAcquireResource(program, acquire),
         .external_read => |read| try validateOpExternalRead(program, read),
         .acquire_buffer => |ty| try validateOpAcquireBuffer(program, ty),
+        .print => |output| for (output.types) |ty| {
+            if (!validType(ty, program) or !@import("io_render.zig").printable(ty, program.records)) return error.InternalError;
+        },
+        .file_access, .file_method => try validateOpFile(program, function, instruction.op),
         .cast_integer => |ty| {
             const text_target = validType(ty, program) and sequenceType(program, ty);
             if (!ty.isInteger() and !text_target) return error.InternalError;
@@ -334,6 +338,24 @@ fn validateOpExternalRead(program: Program, read: @FieldType(@FieldType(Instruct
     if (shape.ok_type != (if (read.kind == .clock) typed.Type.i64 else typed.Type.u64) or shape.error_type != .i64) return error.InternalError;
 }
 
+/// Check one file operation's operand count, owner slot and declared payloads.
+fn validateOpFile(program: Program, function: Function, op: @FieldType(Instruction, "op")) Error!void {
+    const files = @import("file_operations.zig");
+    switch (op) {
+        .file_access => |call| {
+            if (call.operands != call.kind.arity() or !validType(call.output, program)) return error.InternalError;
+            if (call.output.isFile() and call.kind != .open) return error.InternalError;
+            if (call.kind == .open and files.parseMode(&.{call.mode}) == null) return error.InternalError;
+        },
+        .file_method => |call| {
+            if (@backingInt(call.owner) >= function.scope.locals.len) return error.InternalError;
+            if (!function.scope.locals[@backingInt(call.owner)].ty.isFile()) return error.InternalError;
+            if (call.kind.requiresArgument() and !call.argument) return error.InternalError;
+            if (call.argument and !call.kind.takesArgument()) return error.InternalError;
+        },
+        else => return error.InternalError,
+    }
+}
 fn validateOpAcquireBuffer(program: Program, ty: @FieldType(@FieldType(Instruction, "op"), "acquire_buffer")) Error!void {
     if (!validType(ty, program) or !ty.isAggregate()) return error.InternalError;
     const record = program.records[ty.recordIndex()];
@@ -437,6 +459,20 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
                 if (height < 2) return error.InternalError;
                 height -= 1;
             },
+            .print => |output| {
+                const operands = output.types.len + @intFromBool(output.separator) + @intFromBool(output.terminator);
+                if (height < operands) return error.InternalError;
+                height = height - operands + 1;
+            },
+            .file_access => |call| {
+                if (height < call.operands) return error.InternalError;
+                height = height - call.operands + 1;
+            },
+            .file_method => |call| {
+                if (call.argument) {
+                    if (height == 0) return error.InternalError;
+                } else height += 1;
+            },
             .arena_escape,
             .acquire_buffer,
             .restrict_resource,
@@ -505,7 +541,7 @@ fn validateIndices(allocator: std.mem.Allocator, indices: []const usize, count: 
 }
 
 fn validType(ty: typed.Type, program: Program) bool {
-    if (ty == .unit) return true;
+    if (ty == .unit or ty.isFile()) return true;
     return ty.isInteger() or ty == .bool or ty.capabilityIndex() != null or (ty.isAggregate() and ty.recordIndex() < program.records.len);
 }
 

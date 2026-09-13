@@ -38,23 +38,27 @@ pub const Config = struct {
 pub const State = struct {
     context: scoped.Context,
     config: Config,
+    roots: [1]scoped.Root = undefined,
     /// Open only the configured root directory. No guest file or endpoint is acquired here.
     pub fn init(self: *State, allocator: std.mem.Allocator, io: std.Io, config: Config) (std.Io.Dir.OpenError || error{InvalidArguments})!void {
         if (config.writable and config.directory == null) return error.InvalidArguments;
         self.* = .{ .context = .{ .allocator = allocator, .io = io }, .config = config };
         self.context.endpoints = self.config.endpoints[0..self.config.count];
-        if (config.directory) |path| self.context.directory = try std.Io.Dir.cwd().openDir(io, path, .{});
+        if (config.directory) |path| {
+            self.roots[0] = .{ .dir = try std.Io.Dir.cwd().openDir(io, path, .{}), .writable = config.writable };
+            self.context.roots = self.roots[0..1];
+        }
     }
     /// Close resources before their borrowed directory grant.
     pub fn deinit(self: *State) void {
         self.context.deinit();
-        if (self.context.directory) |directory| directory.close(self.context.io);
+        for (self.context.roots) |root| root.dir.close(self.context.io);
     }
     /// Apply the CLI permission mask at capability provisioning as well as acquisition.
     pub fn options(self: *State) language.vm.Options {
         return .{
             .resources = .{
-                .filesystem = if (self.context.directory != null) self.context.filesystem() else null,
+                .filesystem = if (self.context.roots.len != 0) self.context.filesystem() else null,
                 .network = if (self.config.count != 0) self.context.network() else null,
                 // Resource mask bits are read=1, write=2, complete=4.
                 .filesystem_permissions = if (self.config.writable) 7 else 5,

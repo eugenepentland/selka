@@ -24,7 +24,25 @@ pub fn present(program: ast.Program) bool {
 
 /// Select builtin nominal text/numeric schemas without requiring a generic use.
 pub fn presentInSource(program: ast.Program, src: Source) bool {
-    return present(program) or preludeUsed(src) or byteLiteral(program, src);
+    return present(program) or preludeUsed(src) or byteLiteral(program, src) or fileSyntax(program, src);
+}
+
+/// Recognize the I/O surface, whose operands and results are `str`, `bytes` and
+/// `list[str]`: the file builtins and a `print` call with `sep=`/`end=` text.
+pub fn fileSyntax(program: ast.Program, src: Source) bool {
+    const std = @import("std");
+    const files = @import("file_operations.zig");
+    for (program.nodes.items) |node| {
+        if (node.data != .call) continue;
+        const call = node.data.call;
+        if (call.owner) |owner| {
+            if (files.method(src.text(call.name)) != null and src.text(owner).len != 0) return true;
+            continue;
+        }
+        if (files.access(src.text(call.name)) != null) return true;
+        if (call.argument_names.len != 0 and std.mem.eql(u8, src.text(call.name), "print")) return true;
+    }
+    return false;
 }
 
 /// Recognize the `b` prefix that distinguishes managed byte strings from fixed arrays.
@@ -42,6 +60,7 @@ pub fn byteLiteral(program: ast.Program, src: Source) bool {
 pub fn bytesSyntax(program: ast.Program, src: Source) bool {
     const std = @import("std");
     if (byteLiteral(program, src)) return true;
+    if (fileSyntax(program, src)) return true;
     for (program.functions) |function| if (std.mem.eql(u8, src.text(function.name), "bytes")) return false;
     if (wordUsed(src, &.{"bytes"})) return true;
     for (program.nodes.items) |node| {
@@ -94,5 +113,16 @@ pub fn wordUsed(src: Source, names: []const []const u8) bool {
 /// Materialize text only when a literal or explicit text type needs its schema.
 pub fn textRequired(program: ast.Program, src: Source) bool {
     for (program.nodes.items) |node| if (node.data == .text or node.data == .format) return true;
-    return textUsed(src);
+    // Printing and the file surface format and answer text, so they need its schema too.
+    return textUsed(src) or fileSyntax(program, src) or printed(program, src);
+}
+
+/// Recognize any `print` call, whose operands are converted to text.
+fn printed(program: ast.Program, src: Source) bool {
+    const std = @import("std");
+    for (program.nodes.items) |node| {
+        if (node.data != .call or node.data.call.owner != null) continue;
+        if (std.mem.eql(u8, src.text(node.data.call.name), "print")) return true;
+    }
+    return false;
 }

@@ -13,6 +13,7 @@
         [
           "/home/epentland/ai/canopy/mylang/zig-out/bin/mylang",
           "run-project",
+          "--print-result",
           "main.my"
         ]
       ],

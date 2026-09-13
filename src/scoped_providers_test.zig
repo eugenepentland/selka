@@ -5,11 +5,14 @@ const scoped = @import("compiler.zig").scoped_providers;
 const resources = @import("external_resources.zig");
 // spec: SCOPED-PROVIDERS-1
 test "scoped provider paths and acquisition permissions reject before effects" {
-    for ([_][]const u8{ "r:../escape", "r:/absolute", "r:a/../b", "r:a//b", "r:./a", "r:a\\b", "r:a\x00b", "r:", "x:a" }) |request|
+    for ([_][]const u8{ "r:../escape", "r:/absolute", "r:a/../b", "r:a//b", "r:./a", "r:a\\b", "r:a\x00b", "r:", "z:a" }) |request|
         try t.expectError(error.Denied, scoped.fileRequest(request, resources.all_permissions));
     try t.expectError(error.Denied, scoped.fileRequest("w:a", resources.permissionBit(.read)));
     try t.expectError(error.Denied, scoped.fileRequest("c:a", resources.permissionBit(.read)));
     try t.expectError(error.Denied, scoped.fileRequest("t:a", resources.permissionBit(.read)));
+    try t.expectError(error.Denied, scoped.fileRequest("k:a", resources.permissionBit(.read)));
+    try t.expectError(error.Denied, scoped.fileRequest("x:a", resources.permissionBit(.read)));
+    try t.expect(scoped.writingMode('k') and scoped.writingMode('x') and !scoped.writingMode('m'));
     try t.expectEqualStrings("nested/a", (try scoped.fileRequest("r:nested/a", resources.permissionBit(.read))).path);
     const allowed = [_]scoped.Endpoint{.{ .name = "127.0.0.1:9000", .address = try std.Io.net.IpAddress.parseLiteral("127.0.0.1:9000") }};
     _ = try scoped.endpoint(&allowed, "127.0.0.1:9000");
@@ -20,7 +23,7 @@ test "scoped provider paths and acquisition permissions reject before effects" {
 test "scoped filesystem handles partial IO cleanup exclusive creation and symlink denial" {
     var temporary = t.tmpDir(.{});
     defer temporary.cleanup();
-    var context: scoped.Context = .{ .allocator = t.allocator, .io = t.io, .directory = temporary.dir };
+    var context: scoped.Context = .{ .allocator = t.allocator, .io = t.io, .roots = &.{.{ .dir = temporary.dir, .writable = true }} };
     defer context.deinit();
     var store = try resources.Store.init(t.allocator, .filesystem, context.filesystem(), 8);
     defer store.deinit();
@@ -84,7 +87,7 @@ test "scoped metadata and listing snapshots preserve read authority and bounded 
     try temporary.dir.writeFile(t.io, .{ .sub_path = "data", .data = "abc" });
     try temporary.dir.createDir(t.io, "nested", .default_dir);
     try temporary.dir.symLink(t.io, "data", "link", .{});
-    var context: scoped.Context = .{ .allocator = t.allocator, .io = t.io, .directory = temporary.dir };
+    var context: scoped.Context = .{ .allocator = t.allocator, .io = t.io, .roots = &.{.{ .dir = temporary.dir, .writable = true }} };
     defer context.deinit();
     var store = try resources.Store.init(t.allocator, .filesystem, context.filesystem(), 8);
     defer store.deinit();
@@ -143,7 +146,7 @@ test "scoped directory snapshots retain the 64KiB transfer cap with larger confi
         _ = try std.fmt.bufPrint(name[250..], "{d:0>5}", .{index});
         try temporary.dir.writeFile(t.io, .{ .sub_path = &name, .data = "" });
     }
-    var context: scoped.Context = .{ .allocator = t.allocator, .io = t.io, .directory = temporary.dir, .snapshot_limits = .{ .bytes = 80 * 1024, .entries = 260 } };
+    var context: scoped.Context = .{ .allocator = t.allocator, .io = t.io, .roots = &.{.{ .dir = temporary.dir, .writable = true }}, .snapshot_limits = .{ .bytes = 80 * 1024, .entries = 260 } };
     defer context.deinit();
     var store = try resources.Store.init(t.allocator, .filesystem, context.filesystem(), 1);
     defer store.deinit();
@@ -157,4 +160,51 @@ test "scoped directory snapshots retain the 64KiB transfer cap with larger confi
     try t.expectEqual(@as(usize, 260 * 258 + 1 - 64 * 1024), last.length);
     try t.expect(last.eof);
     try store.release(list);
+}
+
+// spec: CAPABILITY-4
+test "multiple directory roots resolve in order and only writable roots accept changes" {
+    var first = t.tmpDir(.{});
+    defer first.cleanup();
+    var second = t.tmpDir(.{});
+    defer second.cleanup();
+    try second.dir.writeFile(t.io, .{ .sub_path = "only-second", .data = "second" });
+    var context: scoped.Context = .{ .allocator = t.allocator, .io = t.io, .roots = &.{
+        .{ .dir = first.dir, .writable = false },
+        .{ .dir = second.dir, .writable = true },
+    } };
+    defer context.deinit();
+    var store = try resources.Store.init(t.allocator, .filesystem, context.filesystem(), 8);
+    defer store.deinit();
+    const authority = try store.grant();
+    // The first root has no such file, so the search falls through to the second.
+    const found = try store.acquire(authority, "r:only-second");
+    var bytes: [6]u8 = undefined;
+    try t.expectEqual(@as(usize, 6), (try store.read(found, &bytes)).length);
+    try t.expectEqualStrings("second", &bytes);
+    try store.complete(found);
+    try t.expectError(error.Failed, store.acquire(authority, "r:absent"));
+    // Creation skips the read-only root entirely and lands in the writable one.
+    const created = try store.acquire(authority, "c:made");
+    try store.complete(created);
+    try t.expectError(error.FileNotFound, first.dir.access(t.io, "made", .{}));
+    try second.dir.access(t.io, "made", .{});
+    const directory = try store.acquire(authority, "k:folder");
+    try store.complete(directory);
+    try second.dir.access(t.io, "folder", .{});
+    try t.expectError(error.Failed, store.acquire(authority, "k:folder"));
+    const removed = try store.acquire(authority, "x:made");
+    try store.complete(removed);
+    try t.expectError(error.FileNotFound, second.dir.access(t.io, "made", .{}));
+    const dropped = try store.acquire(authority, "x:folder");
+    try store.complete(dropped);
+    try t.expectError(error.Failed, store.acquire(authority, "x:folder"));
+}
+
+test "a context without any granted root reports the filesystem as unavailable" {
+    var context: scoped.Context = .{ .allocator = t.allocator, .io = t.io };
+    defer context.deinit();
+    var store = try resources.Store.init(t.allocator, .filesystem, context.filesystem(), 8);
+    defer store.deinit();
+    try t.expectError(error.Unavailable, store.acquire(try store.grant(), "r:any"));
 }

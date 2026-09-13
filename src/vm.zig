@@ -18,6 +18,8 @@ const division_zero_message = "division or remainder by zero";
 const division_zero_code = "R_DIVISION_BY_ZERO";
 const callables = @import("callables.zig");
 const capability_code = "R_CAPABILITY";
+const output_code = "R_OUTPUT";
+const file_code = "R_FILE";
 const slice_bounds_code = "R_SLICE_BOUNDS";
 const overflow_code = "R_OVERFLOW";
 const assert_code = "R_ASSERT";
@@ -45,6 +47,8 @@ const external = @import("external_capabilities.zig");
 const Diagnostic = @import("diagnostic.zig").Diagnostic;
 const environment = @import("environment.zig");
 const resource_runtime = @import("resource_runtime.zig");
+const io_render = @import("io_render.zig");
+const file_resources = @import("file_resources.zig");
 /// Host failures and invalid checked execution state returned by the VM.
 pub const RunError = invocation_contract.RunError;
 /// Invocation additionally checks exported function identity and argument contracts.
@@ -55,6 +59,8 @@ pub const Options = struct {
     environment: ?environment.Provider = null,
     resources: resource_runtime.Options = .{},
     external: external.Providers = .{},
+    /// Standard output for `print`; an absent writer discards program output.
+    output: ?*std.Io.Writer = null,
     max_steps: u64 = 10_000_000,
     max_frames: u64 = 1024,
 };
@@ -99,6 +105,11 @@ fn boolean(value: typed.Value, allocator: std.mem.Allocator) error{InternalError
     defer value.release(allocator);
     if (value != .bool) return error.InternalError;
     return value.bool;
+}
+/// Copy a managed `str` or `bytes` operand into caller-owned host bytes.
+fn sequenceBytes(heap: *gc_heap.Heap, value: typed.Value) ![]u8 {
+    if (value == .managed and value.managed.collection.kind == .bytes) return managed_bytes.toOwned(heap, value);
+    return managed_text.encode(heap, value);
 }
 fn releaseValues(values: []const typed.Value, allocator: std.mem.Allocator) void {
     var i = values.len;
@@ -350,6 +361,9 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
             .complete_resource => step.executeCompleteResource(),
             .external_read => step.executeExternalRead(),
             .acquire_buffer => step.executeAcquireBuffer(),
+            .print => step.executePrint(),
+            .file_access => step.executeFileAccess(),
+            .file_method => step.executeFileMethod(),
             .move_local => step.executeMoveLocal(),
             .drop_local => step.executeDropLocal(),
             .load_local => step.executeLoadLocal(),
@@ -1709,6 +1723,122 @@ const Step = struct {
         return false;
     }
 
+    /// Borrow the filesystem store the granted capability names, if one exists.
+    fn fileContext(self: *Step, shapes: typed.FileShapes, output: typed.Type) !file_resources.Context {
+        const store = self.execution.providers.resources.storeFor(.filesystem) catch return error.Unavailable;
+        return .{
+            .heap = self.execution.managed_heap,
+            .records = self.execution.program.records,
+            .store = store,
+            .shapes = .{ .output = output, .text = shapes.text, .bytes = shapes.bytes, .list = shapes.list },
+        };
+    }
+    fn executeFileAccess(self: *Step) !bool {
+        const allocator = self.execution.allocator;
+        const stack = self.execution.state.stack;
+        const frame = self.frame.*;
+        const call = self.instruction.op.file_access;
+        const input = if (call.operands == 3) try pop(stack, frame.operand_base) else null;
+        defer if (input) |value| value.release(allocator);
+        const path = try pop(stack, frame.operand_base);
+        defer path.release(allocator);
+        const capability = try pop(stack, frame.operand_base);
+        defer capability.release(allocator);
+        const path_bytes = managed_text.encode(self.execution.managed_heap, path) catch |err| return self.fileFailure(err);
+        defer allocator.free(path_bytes);
+        const input_bytes = if (input) |value| sequenceBytes(self.execution.managed_heap, value) catch |err| return self.fileFailure(err) else null;
+        defer if (input_bytes) |bytes| allocator.free(bytes);
+        const context = self.fileContext(call.shapes, call.output) catch |err| return self.fileFailure(err);
+        const output = file_resources.access(context, .{
+            .kind = call.kind,
+            .mode = call.mode,
+            .text = call.text,
+            .capability = capability,
+            .path = path_bytes,
+            .input = input_bytes,
+        }) catch |err| return self.fileFailure(err);
+        // UNTESTED-ERROR: host allocation failure only; the allocation-failure sweeps cover it and it names no guest-visible error
+        errdefer output.release(allocator);
+        try pushOwned(stack, allocator, output);
+        return false;
+    }
+    fn executeFileMethod(self: *Step) !bool {
+        const allocator = self.execution.allocator;
+        const stack = self.execution.state.stack;
+        const locals = self.execution.state.locals;
+        const frame = self.frame.*;
+        const call = self.instruction.op.file_method;
+        const argument = if (call.argument) try pop(stack, frame.operand_base) else null;
+        defer if (argument) |value| value.release(allocator);
+        const owner = locals.items[frame.local_base + @backingInt(call.owner)] orelse return error.InternalError;
+        const bytes = if (argument) |value| (if (call.kind == .write) sequenceBytes(self.execution.managed_heap, value) catch |err| return self.fileFailure(err) else null) else null;
+        defer if (bytes) |owned| allocator.free(owned);
+        const count: ?i64 = if (call.kind == .read) (if (argument) |value| @as(i64, @intCast(try value.asInteger())) else null) else null;
+        const context = self.fileContext(call.shapes, call.output) catch |err| return self.fileFailure(err);
+        const output = file_resources.method(context, .{
+            .kind = call.kind,
+            .owner = owner,
+            .text = call.text,
+            .count = count,
+            .input = bytes,
+        }) catch |err| return self.fileFailure(err);
+        try pushOwned(stack, allocator, output);
+        return false;
+    }
+    /// A refused file operation ends the run at its source site; only host
+    /// allocation failure and emission faults escape as VM errors.
+    fn fileFailure(self: *Step, err: anyerror) RunError!bool {
+        if (err == error.OutOfMemory) return error.OutOfMemory;
+        if (err == error.InternalError or err == error.InvalidProvider) return error.InternalError;
+        const code = if (err == error.ArenaEscape) arena_escape_code else file_code;
+        return self.finish(trap(code, file_resources.reason(err), self.instruction.span, self.execution.state.frames.items, self.execution.program));
+    }
+    /// Checked `print` operands always have a rendering; a refusal is an emission fault.
+    fn write(writer: *std.Io.Writer, records: []const typed.Record, value: typed.Value) !void {
+        io_render.render(writer, records, value, 0) catch |err| switch (err) {
+            error.Unprintable => return error.InternalError,
+            else => |failure| return failure,
+        };
+    }
+    /// Render every operand once and publish the whole line through the host writer.
+    fn executePrint(self: *Step) !bool {
+        const allocator = self.execution.allocator;
+        const stack = self.execution.state.stack;
+        const frame = self.frame.*;
+        const output = self.instruction.op.print;
+        const terminator = if (output.terminator) try pop(stack, frame.operand_base) else null;
+        defer if (terminator) |value| value.release(allocator);
+        const separator = if (output.separator) try pop(stack, frame.operand_base) else null;
+        defer if (separator) |value| value.release(allocator);
+        const operands = try allocator.alloc(typed.Value, output.types.len);
+        defer {
+            releaseValues(operands, allocator);
+            allocator.free(operands);
+        }
+        var index = operands.len;
+        while (index > 0) {
+            index -= 1;
+            operands[index] = try pop(stack, frame.operand_base);
+        }
+        self.renderLine(operands, separator, terminator) catch |err| switch (err) {
+            error.WriteFailed => return self.finish(trap(output_code, "standard output rejected program output", self.instruction.span, self.execution.state.frames.items, self.execution.program)),
+            else => |failure| return failure,
+        };
+        try pushOwned(stack, allocator, .unit);
+        return false;
+    }
+    fn renderLine(self: *Step, operands: []const typed.Value, separator: ?Value, terminator: ?Value) !void {
+        const writer = self.execution.options.output orelse return;
+        const records = self.execution.program.records;
+        for (operands, 0..) |operand, index| {
+            if (index != 0) {
+                if (separator) |value| try write(writer, records, value) else try writer.writeByte(' ');
+            }
+            try write(writer, records, operand);
+        }
+        if (terminator) |value| try write(writer, records, value) else try writer.writeByte('\n');
+        try writer.flush();
+    }
     fn executeMoveLocal(self: *Step) !bool {
         const allocator = self.execution.allocator;
         const stack = self.execution.state.stack;

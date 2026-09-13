@@ -64,7 +64,8 @@ pub const Runtime = struct {
             } else if (self.statistics) |statistics| statistics[index] = .{};
         }
     }
-    fn storeFor(self: *Runtime, kind: resources.Kind) !*resources.Store {
+    /// Borrow the provider store of one resource family, or report it unavailable.
+    pub fn storeFor(self: *Runtime, kind: resources.Kind) error{CapabilityUnavailable}!*resources.Store {
         return if (self.stores[if (kind == .filesystem) @as(usize, 0) else 1]) |*store| store else error.CapabilityUnavailable;
     }
     /// Produce typed authority for an available provider family.
