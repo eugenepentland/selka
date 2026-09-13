@@ -21,28 +21,15 @@ test "binary64 IEEE boundaries canonical NaNs signed zero and FloatConversion" {
     try t.expectError(error.FloatConversion, floats.unary(.f64_to_u64, @bitCast(@as(f64, 18446744073709551616.0))));
     try t.expectEqual(@as(u64, 0), try floats.unary(.f64_to_u64, @bitCast(@as(f64, -0.75))));
 }
-fn provider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
-    if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
-    return allocator.dupe(u8, "module main;import std_math as m;" ++
-        "fn main()->i64{let a=m::sqrt(m::from_i64(1764));" ++
-        "if !m::eq(m::neg(m::from_i64(0)),m::from_i64(0)){return 1;}" ++
-        "let limit=m::from_i64(-9223372036854775808);" ++
-        "match m::to_i64(limit){m::Signed.ok(n)=>{if n != -9223372036854775808{return 2;}},m::Signed.err(e)=>{return e;}}" ++
-        "match m::to_i64(a){m::Signed.ok(n)=>{return n;},m::Signed.err(e)=>{return e;}}}");
+
+const intrinsic_source = "fn main()->i64{let root=f64_to_u64(f64_sqrt(f64_from_u64(1764u64)));return cast<i64>(root);}";
+fn intrinsicScenario(allocator: std.mem.Allocator) !void {
+    var c = try language.Compilation.init(allocator, "float.my", intrinsic_source);
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 42), (try c.execute(allocator)).value);
 }
-fn scenario(allocator: std.mem.Allocator) !void {
-    var program: language.embedded_project.Program = undefined;
-    try program.init(allocator, .{ .context = null, .read = provider });
-    defer program.deinit();
-    const result = try language.vm.run(allocator, program.compilation.code.?);
-    try t.expectEqual(@as(i64, 42), result.value);
-}
-test "std_math nominal F64 operations and signed conversions clean allocation failures" {
-    try scenario(t.allocator);
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
-}
-test "float intrinsics evaluate constants and reject Bool or signed raw operands" {
+// spec-case: FLOAT-DOMAIN-1
+test "float intrinsics evaluate constants reject raw operands and clean failed allocations" {
     var good = try language.Compilation.init(t.allocator, "float.my", "const V:u64=f64_to_u64(f64_sqrt(f64_from_u64(1764u64)));fn main()->i64{return cast<i64>(V);}");
     defer good.deinit();
     try t.expectEqual(@as(i64, 42), (try good.execute(t.allocator)).value);
@@ -50,27 +37,24 @@ test "float intrinsics evaluate constants and reject Bool or signed raw operands
     defer bad.deinit();
     try t.expectError(error.SourceError, bad.check());
     try t.expectEqualStrings("E_TYPE", bad.diagnostics.items[0].code);
+    try intrinsicScenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), intrinsicScenario, .{});
 }
 
-test "std_math F64 codecs preserve noncanonical NaN representation exactly" {
-    var program: language.embedded_project.Program = undefined;
-    try program.init(t.allocator, .{ .context = null, .read = provider });
-    defer program.deinit();
-    const code = program.compilation.code.?;
-    const codec = @import("codec_json.zig");
-    var failure: codec.Failure = .{};
-    defer failure.deinit(t.allocator);
-    var found = false;
-    for (code.records) |record| {
-        if (!std.mem.endsWith(u8, record.name, "::F64")) continue;
-        found = true;
-        const bytes = try std.fmt.allocPrint(t.allocator, "{{\"version\":\"typed-json-v1\",\"type\":\"{s}\",\"value\":\"9218868437227405313\"}}", .{record.name});
-        defer t.allocator.free(bytes);
-        const value = try codec.decode(t.allocator, code, record.id, bytes, .{}, &failure);
-        defer value.release(t.allocator);
-        const encoded = try codec.encode(t.allocator, code, record.id, value, .{}, &failure);
-        defer t.allocator.free(encoded);
-        try t.expectEqualStrings(bytes, encoded);
-    }
-    try t.expect(found);
+// spec-case: FLOAT-DOMAIN-1
+test "ordinary float values reach the same binary64 semantics without a nominal domain" {
+    var c = try language.Compilation.init(t.allocator, "float.my", "def main() -> int:\n" ++
+        "    if 0.1 + 0.2 == 0.3:\n" ++
+        "        return 1\n" ++
+        "    if 1.0 / 0.0 <= 1.7976931348623157e308:\n" ++
+        "        return 2\n" ++
+        "    nan = 0.0 / 0.0\n" ++
+        "    if nan == nan:\n" ++
+        "        return 3\n" ++
+        "    if 0.0 - 0.0 != 0.0:\n" ++
+        "        return 4\n" ++
+        "    return int(21.0 * 2.0)\n");
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 42), (try c.execute(t.allocator)).value);
 }

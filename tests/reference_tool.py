@@ -45,7 +45,7 @@ def main():
         overview = (output / 'reference.md').read_text()
         api = (output / 'api.md').read_text()
         assert len(overview) < 12000 and 'stored-reference-fields' in overview
-        assert 'std_iter::' in api and 'std_result::' in api and 'Generic templates' in api
+        assert 'sort::' in api and 'json::' in api and 'Generic templates' in api
         # API names come from compiler output, including template signatures, not source regexes.
         assert all(function['name'] in api for function in schema['schema']['functions'])
         assert all(template['name'] in api for template in schema['schema']['generic_templates'])
@@ -67,11 +67,11 @@ def main():
         (output / 'manifest.json').write_text(json.dumps(stale, ensure_ascii=False, indent=2) + '\n')
         assert 'compiler identity changed' in run('--check', success=False).stderr
 
-        run('--module', 'std_math')
+        run('--module', 'math')
         small_schema = json.loads((output / 'schema.json').read_text())
-        assert [row['module'] for row in small_schema['source']['sources']] == ['std_math', 'reference']
-        assert 'std_iter::' not in (output / 'api.md').read_text()
-        run('--module', 'std_math; import bogus', success=False)
+        assert [row['module'] for row in small_schema['source']['sources']] == ['math', 'reference']
+        assert 'sort::' not in (output / 'api.md').read_text()
+        run('--module', 'math; import bogus', success=False)
         run('--module', 'std_does_not_exist', success=False)
         # Failed regeneration must leave the preceding reference intact.
         run('--check')

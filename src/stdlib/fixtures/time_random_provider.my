@@ -1,42 +1,35 @@
-module main;
-import std_time as t;
-import std_random as r;
-fn main(clock: clock_cap, random: random_cap) -> i64 {
-    match t::now(clock) {
-        t::Measured.ok(value) => {
-            if value.unix_nanoseconds != - 7 {
-                return 1;
-            }
-        },
-        t::Measured.err(e) => {
-            if e == new t::Error.denied {
-                return 42;
-            }
-            if e == new t::Error.unavailable {
-                return 43;
-            }
-            return 44;
-        }
-    }
-    match r::entropy_bounded(random, 10u64, 4u64) {
-        r::Sample.ok(n) => {
-            if n != 6u64 {
-                return 6;
-            }
-        },
-        r::Sample.err(_) => {
-            return 7;
-        }
-    }
-    match r::seed_from_entropy(random) {
-        r::Seeded.ok(g) => {
-            if g.state != 72623859790382856u64 {
-                return 8;
-            }
-        },
-        r::Seeded.err(_) => {
-            return 9;
-        }
-    }
-    return 0;
-}
+module main
+import time
+import random
+
+
+def code_of(message: str) -> int:
+    if message == "clock capability was denied" or message == "entropy capability was denied":
+        return 42
+    if message == "clock capability is unavailable" or message == "entropy capability is unavailable":
+        return 43
+    return 44
+
+
+def main(clock: clock_cap, entropy: random_cap) -> int:
+    match time.now(clock):
+        case Ok(instant):
+            if instant.unix_nanoseconds != 0 - 7:
+                return 1
+        case Err(message):
+            return code_of(message)
+    first = 0u64
+    match random.from_entropy(entropy):
+        case Ok(generator):
+            first = generator.state[0]
+        case Err(message):
+            return code_of(message)
+    if first != 72623859790382856u64:
+        return 2
+    match random.from_entropy(entropy):
+        case Ok(generator):
+            if generator.state[0] != first:
+                return 3
+        case Err(_):
+            return 9
+    return 0

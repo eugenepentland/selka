@@ -25,6 +25,13 @@ test {
     _ = @import("migrate_test.zig");
     _ = @import("vm_fusion_test.zig");
     _ = @import("stdlib_time_random_test.zig");
+    _ = @import("stdlib_math_test.zig");
+    _ = @import("stdlib_strings_test.zig");
+    _ = @import("stdlib_sort_test.zig");
+    _ = @import("stdlib_path_test.zig");
+    _ = @import("stdlib_codecs_test.zig");
+    _ = @import("stdlib_json_test.zig");
+    _ = @import("stdlib_pool_test.zig");
     _ = @import("const_lengths_test.zig");
     _ = @import("source_evaluation_test.zig");
     _ = @import("callbacks_test.zig");
@@ -119,7 +126,6 @@ test {
     _ = @import("builtin_context_test.zig");
     _ = @import("json_document_test.zig");
     _ = @import("standard_library_test.zig");
-    _ = @import("unit_convention_test.zig");
     _ = @import("loop_exit_test.zig");
     _ = @import("constants_test.zig");
     _ = @import("for_range_test.zig");

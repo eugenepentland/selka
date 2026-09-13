@@ -144,7 +144,7 @@ class Incremental(unittest.TestCase):
         if COMPILER is None:
             self.skipTest("supply --compiler to exercise actual compiler receipt")
         import subprocess
-        (self.root / "main.my").write_text("module main;import std_math;fn main()->i64{return 0;}")
+        (self.root / "main.my").write_text("module main;import math;fn main()->i64{return 0;}")
         process = subprocess.run([str(COMPILER), "project-dependencies", str(self.root / "main.my")],
                                  capture_output=True, check=True)
         (self.root / "graph.json").write_bytes(process.stdout)

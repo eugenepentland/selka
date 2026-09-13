@@ -1,0 +1,63 @@
+module main
+import path
+
+
+def joins() -> int:
+    if path.join("/usr", "lib") != "/usr/lib" or path.join("/usr/", "lib") != "/usr/lib":
+        return 1
+    if path.join("usr", "/lib") != "/lib" or path.join("", "lib") != "lib":
+        return 2
+    if path.join("usr", "") != "usr":
+        return 3
+    if path.join_all(["a", "b", "c"]) != "a/b/c":
+        return 4
+    empty: list[str] = []
+    if path.join_all(empty) != "":
+        return 5
+    return 0
+
+
+def splits() -> int:
+    if path.basename("/a/b.txt") != "b.txt" or path.basename("/a/b/") != "":
+        return 10
+    if path.basename("b.txt") != "b.txt":
+        return 11
+    if path.dirname("/a/b.txt") != "/a" or path.dirname("/a") != "/" or path.dirname("a") != "":
+        return 12
+    if path.dirname("/a//b") != "/a":
+        return 13
+    if path.extension("/a/b.tar.gz") != ".gz" or path.stem("/a/b.tar.gz") != "b.tar":
+        return 14
+    if path.extension("/a/.bashrc") != "" or path.extension("/a/b") != "":
+        return 15
+    if path.splitext("/a/b.txt").root != "/a/b":
+        return 16
+    if path.splitext("/a/b").extension != "":
+        return 17
+    return 0
+
+
+def shapes() -> int:
+    if path.normalize("/a//b/./c/../d") != "/a/b/d":
+        return 20
+    if path.normalize("a/../../b") != "../b" or path.normalize("/../a") != "/a":
+        return 21
+    if path.normalize("") != "." or path.normalize("./") != "." or path.normalize("a/..") != ".":
+        return 22
+    if path.normalize("/") != "/":
+        return 23
+    if not path.is_absolute("/x") or path.is_absolute("x") or path.is_absolute(""):
+        return 24
+    if len(path.components("/a/b/")) != 2 or path.components("/a/./b")[1] != "b":
+        return 25
+    if path.separator() != "/":
+        return 26
+    return 0
+
+
+def main() -> int:
+    checks = [joins(), splits(), shapes()]
+    for value in checks:
+        if value != 0:
+            return value
+    return 42

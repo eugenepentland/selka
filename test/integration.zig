@@ -618,7 +618,7 @@ test "CLI features identify installed compiler without source input" {
     defer graph.deinit();
     try testing.expectEqualStrings(report.get("compiler_sha256").?.string, graph.value.object.get("implementation").?.object.get("compiler_sha256").?.string);
 }
-const listing_module = "module input;\nimport std_math;\nimport shared.units as units;\n" ++
+const listing_module = "module input;\nimport math;\nimport shared.units as units;\n" ++
     "export Count;\n// leading comment\n// second line\ntype Count = i64;\n\n" ++
     "const LIMIT: Count = 3; // trailing note\nstruct Job { id: Count }\n" ++
     "host fn measure(x: i64) -> i64 effects(host);\nexport main;\n" ++

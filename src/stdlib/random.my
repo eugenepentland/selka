@@ -1,0 +1,130 @@
+module random
+export Random
+export seeded
+export from_word
+export from_entropy
+export next_word
+export random
+export randint
+export choice
+export shuffle
+
+
+# One SplitMix64 stream. The state lives in a managed cell, so copies of a
+# Random value advance together instead of forking the sequence.
+class Random:
+    state: list[u64]
+
+
+# Typed carrier for one host entropy read.
+result Entropy:
+    ok: u64,
+    err: int
+
+
+# Two's-complement word for a signed seed, including the most negative one.
+def to_word(value: int) -> u64:
+    if value < 0:
+        return wrapping_sub(0u64, cast<u64>(0 - (value + 1)) + 1u64)
+    return cast<u64>(value)
+
+
+# A reproducible generator for a raw 64-bit state word.
+def from_word(word: u64) -> Random:
+    cells: list[u64] = []
+    cells.append(word)
+    return Random(state=cells)
+
+
+# A reproducible generator for a signed seed; equal seeds give equal streams.
+def seeded(seed: int) -> Random:
+    return from_word(to_word(seed))
+
+
+# A generator seeded from the host entropy capability.
+def from_entropy(capability: random_cap) -> Result[Random, str] effects(random, managed_allocation):
+    match random_u64<Entropy>(capability):
+        case Entropy.ok(word):
+            return Ok(from_word(word))
+        case Entropy.err(code):
+            if code == 1:
+                return Err("entropy capability is unavailable")
+            if code == 2:
+                return Err("entropy capability was denied")
+            return Err("entropy capability failed")
+
+
+# The next SplitMix64 word, advancing the shared state exactly once.
+def next_word(generator: Random) -> u64:
+    state = wrapping_add(generator.state[0], 11400714819323198485u64)
+    generator.state[0] = state
+    word = wrapping_mul(bit_xor(state, shift_right(state, 30u64)), 13787848793156543929u64)
+    word = wrapping_mul(bit_xor(word, shift_right(word, 27u64)), 10723151780598845931u64)
+    return bit_xor(word, shift_right(word, 31u64))
+
+
+# A float uniformly drawn from the 2^53 multiples of 2^-53 in [0, 1).
+def random(generator: Random) -> float:
+    drawn = shift_right(next_word(generator), 11u64)
+    return float(cast<i64>(drawn)) / 9007199254740992.0
+
+
+# Distance between two signed bounds, computed without overflowing either width.
+def span(low: int, high: int) -> u64:
+    if low >= 0 or high < 0:
+        return cast<u64>(high - low)
+    return cast<u64>(high) + cast<u64>(0 - (low + 1)) + 1u64
+
+
+# An unbiased word below a modulus, retrying the biased tail of the range.
+def below(generator: Random, modulus: u64) -> u64:
+    if modulus == 0u64:
+        return next_word(generator)
+    threshold = wrapping_sub(0u64, modulus) % modulus
+    word = next_word(generator)
+    while word < threshold:
+        word = next_word(generator)
+    return word % modulus
+
+
+# A signed bound shifted by an unsigned offset, in steps that each stay in range.
+def offset(low: int, value: u64) -> int:
+    third = value // 3u64
+    rest = value - third - third
+    return low + cast<i64>(third) + cast<i64>(third) + cast<i64>(rest)
+
+
+# A uniform integer in an inclusive range, covering the full signed width.
+def randint(generator: Random, low: int, high: int) -> Result[int, str]:
+    if low > high:
+        return Err("randint needs low <= high")
+    width = span(low, high)
+    if width == 18446744073709551615u64:
+        return Ok(offset(low, next_word(generator)))
+    return Ok(offset(low, below(generator, width + 1u64)))
+
+
+# A uniformly chosen element, or nothing when the list is empty.
+def choice[T: copy + storable](generator: Random, items: list[T]) -> Option[T]:
+    if len(items) == 0:
+        return None
+    match randint(generator, 0, len(items) - 1):
+        case Ok(index):
+            return Some(items[index])
+        case Err(_):
+            return None
+
+
+# A list permuted in place by an unbiased Fisher-Yates pass.
+def shuffle[T: copy + storable](generator: Random, items: list[T]):
+    index = len(items) - 1
+    while index > 0:
+        match randint(generator, 0, index):
+            case Ok(pick):
+                held = items[index]
+                items[index] = items[pick]
+                items[pick] = held
+            case Err(_):
+                index = 0
+        index -= 1
+    return

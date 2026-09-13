@@ -26,6 +26,7 @@ intend to use; historical counts are not current verification receipts.
 | Resources | External resource owners, explicit completion and deterministic cleanup | [source resources](experiments/source-resources.md); [resource reads and writes](experiments/resource-io.md); no ambient operating-system authority |
 | Authority | Explicit host capabilities and transitive effect ceilings; `mylang run --allow-*` grants them from the command line | [effects](../examples/effects.my); [command-line grants](io.md#capabilities); [byte runner scoped directory/endpoint grants](experiments/scoped-providers.md) |
 | Modules | Disk imports, explicit exports, nominal identity and embedded standard modules | [domain codecs](../examples/domain-codecs/main.my); [local locked package roots](experiments/local-packages.md); no network version resolver |
+| Standard library | Ten embedded Python-syntax modules over managed types: `math`, `strings`, `sort`, `path`, `hex`, `base64`, `json`, `pool`, `random`, `time` | [standard library](standard-library.md); no transcendental functions, no ordering contract for a generic sort, no filesystem or network module |
 | Data interchange | Typed JSON codecs at the CLI and host boundary, and managed byte strings | [managed byte strings](bytes.md); `bytes` is not a Unicode string type; guest-source JSON operations were removed with the explicit storage tier |
 | Development | Independent function diagnostics, navigation, parse-only declaration listing, formatting, syntax/exact-verdict/function-body caches, affected verification | [navigation](experiments/navigation-client.md); [declaration listing](experiments/list-declarations.md) reports kinds and byte ranges without checking; [changed-source reuse](../experiments/semantic-incremental/README.md) preserves fresh global checks with conservative fallback |
 | Documentation | Every fenced `mylang` example in README, SPEC and docs is run, type-checked or explicitly skipped by the default test gate | [executable documentation](experiments/doc-examples.md); directives pin expected output, expected diagnostics and explicit skips |
@@ -47,7 +48,7 @@ allocation, not all compiler/VM/host allocation. Host callbacks are
 trusted implementations of documented contracts. These limits are part of the
 current model, not guarantees supplied by a future backend or thread system.
 
-`float` provides decimal literals and ordinary numeric operators. `std_math::F64` retains named IEEE binary64 arithmetic, basic math, checked integer conversion and exact bit codecs; see [floating-point.md](floating-point.md).
+`float` provides decimal literals and ordinary numeric operators over IEEE binary64; the standard `math` module adds classification, rounding, roots and integer helpers, and the raw `f64_*` intrinsics over `u64` representations remain available. See [floating-point.md](floating-point.md).
 
 Scalar constants may call bounded nongeneric source functions with scalar locals and control flow; see [source-evaluation.md](source-evaluation.md).
 
@@ -61,7 +62,7 @@ Generic functions and nominal declarations support explicit `const N:u64` length
 
 [Typed noncapturing callbacks](experiments/callbacks.md) support reusable sorting and visitors with explicit signatures and effect ceilings. Captures remain excluded.
 
-The [standard library guide](standard-library.md) lists the embedded modules that ship with the compiler and their bounded contracts.
+The [standard library guide](standard-library.md) lists the ten embedded modules that ship with the compiler, their signatures and their bounded contracts. They are ordinary guest source over `list`, `dict`, `str`, `bytes`, `Option` and `Result`, so nothing in them needs an allocator argument or a storage annotation.
 
 Python-style procedures omit their return annotation or use `-> None`, bare `return`, and natural fallthrough; ordinary calls may stand alone only when returning unit. See [unit procedures](experiments/unit-procedures.md).
 

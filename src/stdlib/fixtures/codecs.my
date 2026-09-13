@@ -1,0 +1,89 @@
+module main
+import base64
+import hex
+
+
+def roundtrip(data: bytes) -> bool:
+    match base64.b64decode(base64.b64encode(data)):
+        case Ok(value):
+            return value == data
+        case Err(_):
+            return False
+
+
+def rejects(text: bytes) -> bool:
+    match base64.b64decode(text):
+        case Ok(_):
+            return False
+        case Err(_):
+            return True
+
+
+def vectors() -> int:
+    if base64.b64encode(b"") != b"" or base64.b64encode(b"f") != b"Zg==":
+        return 1
+    if base64.b64encode(b"fo") != b"Zm8=" or base64.b64encode(b"foo") != b"Zm9v":
+        return 2
+    if base64.b64encode(b"foob") != b"Zm9vYg==" or base64.b64encode(b"foobar") != b"Zm9vYmFy":
+        return 3
+    if not roundtrip(b"") or not roundtrip(b"\x00\xff\x10any carnal pleasure"):
+        return 4
+    if base64.urlsafe_b64encode(b"\xfb\xff") != b"-_8=" or base64.b64encode(b"\xfb\xff") != b"+/8=":
+        return 5
+    match base64.urlsafe_b64decode(b"-_8="):
+        case Ok(value):
+            if value != b"\xfb\xff":
+                return 6
+        case Err(_):
+            return 7
+    match base64.urlsafe_b64decode(b"+/8="):
+        case Ok(_):
+            return 8
+        case Err(_):
+            _ = 0
+    return 0
+
+
+def refusals() -> int:
+    if not rejects(b"Zg=") or not rejects(b"Zg") or not rejects(b"Z==="):
+        return 10
+    if not rejects(b"Zg=A") or not rejects(b"=Zg=") or not rejects(b"Zm9*"):
+        return 11
+    if not rejects(b"Zh==") or not rejects(b"Zm93"[0:3]):
+        return 12
+    match base64.b64decode(b"Zg=="):
+        case Ok(value):
+            if value != b"f":
+                return 13
+        case Err(_):
+            return 14
+    return 0
+
+
+def digits() -> int:
+    if hex.encode(b"\x0f\xa0") != "0fa0" or hex.encode_upper(b"\x0f\xa0") != "0FA0":
+        return 20
+    if hex.encode(b"") != "":
+        return 21
+    match hex.decode("0FA0"):
+        case Ok(value):
+            if value != b"\x0f\xa0":
+                return 22
+        case Err(_):
+            return 23
+    match hex.decode("0f0"):
+        case Ok(_):
+            return 24
+        case Err(_):
+            _ = 0
+    if hex.is_hex("0f0") or not hex.is_hex("0f0a") or not hex.is_hex(""):
+        return 25
+    return 0
+
+
+def main() -> int:
+    checks = [vectors(), refusals(), digits()]
+    for value in checks:
+        if value != 0:
+            return value
+    return 42
