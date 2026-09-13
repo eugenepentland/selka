@@ -184,7 +184,7 @@ test "operators propagation matching and generics adopt Python spellings" {
         \\    let answer = try checked(40);
         \\    match checked(answer) {
         \\        Answer.ok(v) => { return identity::<i64>(v) + 2; },
-        \\        Answer.err(e) => { return e; },
+        \\        Answer.err(e) => { return e; }
         \\    }
         \\}
     ,
@@ -240,7 +240,7 @@ test "unannotated result bindings gain the annotation contextual Ok requires" {
         \\    let value = new Answer.ok(42);
         \\    match value {
         \\        Answer.ok(v) => { return v; },
-        \\        Answer.err(e) => { return e; },
+        \\        Answer.err(e) => { return e; }
         \\    }
         \\}
     ,

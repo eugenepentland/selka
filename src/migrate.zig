@@ -1208,8 +1208,10 @@ const Walk = struct {
                 try self.expression(unary.operand, Precedence.unary);
             },
             .not => {
+                // Python `not` binds looser than every comparison, so a compound
+                // operand keeps explicit parentheses rather than relying on that.
                 try self.out.text("not ");
-                try self.expression(unary.operand, Precedence.inversion);
+                try self.expression(unary.operand, Precedence.call);
             },
             else => {
                 try self.out.text(@tagName(unary.op));
