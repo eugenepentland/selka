@@ -420,3 +420,45 @@ test "migration releases every allocation when the allocator fails" {
     var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(no_resize.allocator(), parityScenario, .{});
 }
+
+// spec: MIGRATE-8
+test "python-only arena scopes and escapes reprint in their canonical spelling" {
+    const text =
+        \\def collect(count: int) -> list[int]:
+        \\    values: list[int] = []
+        \\    for index in range(count):
+        \\        values.append(index)
+        \\    return values
+        \\
+        \\def main() -> int:
+        \\    kept: list[int] = []
+        \\    with arena() as scratch:
+        \\        kept = scratch.escape(collect(3))
+        \\    with arena():
+        \\        _ = collect(2)
+        \\    return len(kept)
+        \\
+    ;
+    const passthrough = try convert(t.allocator, text, .{});
+    defer t.allocator.free(passthrough);
+    try t.expectEqualStrings(text, passthrough);
+    const reprinted = try convert(t.allocator, text, .{ .reprint = true });
+    defer t.allocator.free(reprinted);
+    try t.expectEqualStrings(
+        \\def collect(count: int) -> list[int]:
+        \\    values: list[int] = []
+        \\    for index in range(count):
+        \\        values.append(index)
+        \\    return values
+        \\
+        \\
+        \\def main() -> int:
+        \\    kept: list[int] = []
+        \\    with arena() as scratch:
+        \\        kept = scratch.escape(collect(3))
+        \\    with arena():
+        \\        _ = collect(2)
+        \\    return len(kept)
+        \\
+    , reprinted);
+}

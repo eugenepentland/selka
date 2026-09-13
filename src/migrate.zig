@@ -15,7 +15,13 @@ const Tag = lex.Tag;
 pub const unsupported_code = "E_MIGRATE_UNSUPPORTED";
 
 /// Translation policy; partial output reports every gap instead of stopping at the first.
-pub const Options = struct { allow_partial: bool = false };
+pub const Options = struct {
+    /// Emit the remaining source with markers instead of failing on the first gap.
+    allow_partial: bool = false,
+    /// Print Python-surface input from its syntax tree instead of returning it byte for byte,
+    /// which verifies the printer's spelling of Python-only forms such as `with arena()`.
+    reprint: bool = false,
+};
 
 /// Failures returned by render; callers must handle these boundary errors.
 pub const Error = diagnostic.Error;
@@ -112,7 +118,7 @@ pub fn render(allocator: std.mem.Allocator, src: source.Source, options: Options
     const module = tokens[0].tag == .ident and std.mem.eql(u8, src.text(tokens[0].span), "module");
     var syntax_parser: parser.Parser = .{ .src = src, .arena = &arena, .tokens = tokens, .sink = sink };
     const syntax = if (module) try syntax_parser.parseModule() else try syntax_parser.parse();
-    if (lex.isPythonSource(src.bytes)) return allocator.dupe(u8, src.bytes);
+    if (lex.isPythonSource(src.bytes) and !options.reprint) return allocator.dupe(u8, src.bytes);
     var output: std.Io.Writer.Allocating = .init(allocator);
     errdefer output.deinit();
     var out: Output = .{ .writer = &output.writer };
@@ -791,6 +797,15 @@ const Walk = struct {
             .write_slice => try self.rejectStatement(item.span, "write_slice"),
             .write_ref => try self.rejectStatement(item.span, "write_ref"),
             .arena_scope => try self.rejectStatement(item.span, "an arena scope"),
+            .managed_arena => |scope| {
+                try self.out.text("with arena()");
+                if (scope.name) |name| {
+                    try self.out.text(" as ");
+                    try self.out.text(self.src.text(name));
+                }
+                try self.out.text(":");
+                try self.indented(scope.body);
+            },
             .borrow_call => try self.rejectStatement(item.span, "a borrow of a call result"),
             .borrow => |borrow| try self.rejectStatement(item.span, if (borrow.split != null) "a split borrow" else "a borrow scope"),
         }
@@ -941,6 +956,12 @@ const Walk = struct {
             .variant => |literal| try self.variantValue(item, literal),
             .call => |call| try self.callValue(call),
             .method_call => |call| try self.methodCall(call),
+            .arena_escape => |escape| {
+                try self.out.text(self.src.text(escape.arena));
+                try self.out.text(".escape(");
+                try self.expression(escape.value, 0);
+                try self.out.text(")");
+            },
             .field => |access| {
                 try self.expression(access.base, Precedence.call);
                 try self.out.text(".");
