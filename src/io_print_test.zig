@@ -120,9 +120,38 @@ test "generic function bodies reject the reserved io builtins with a located dia
 }
 
 // spec: IO-6
-test "IO-6 the native backend rejects print explicitly" {
-    var compilation = try language.Compilation.init(t.allocator, module, "def main() -> int:\n    print(1)\n    return 0\n");
+test "IO-6 the native backend lowers print through generated per-type renderers" {
+    const source =
+        \\class Point:
+        \\    x: int
+        \\    y: float
+        \\
+        \\enum Colour { red, green }
+        \\
+        \\def main() -> int:
+        \\    rows: dict[str, list[bytes]] = {"a": [b"\\x00"]}
+        \\    found: Option[Point] = Some(Point(x=1, y=2.5))
+        \\    print(rows, found, Colour.green, sep="-", end="!\\n")
+        \\    print()
+        \\    return 0
+    ;
+    var compilation = try language.Compilation.init(t.allocator, module, source);
     defer compilation.deinit();
-    try t.expectError(error.SourceError, compilation.emitQbe(t.allocator));
-    try t.expectEqualStrings("E_QBE_UNSUPPORTED", compilation.diagnostics.items[0].code);
+    const manifest = try compilation.emitQbe(t.allocator);
+    defer t.allocator.free(manifest);
+    for ([_][]const u8{ "myl_qbe_print_begin", "myl_qbe_print_finish", "myl_qbe_print_raw", "myl_print_dictionary", "myl_print_bytes", "myl_print_record", "myl_print_variant", "myl_print_float" }) |symbol| {
+        try t.expect(std.mem.indexOf(u8, manifest, symbol) != null);
+    }
+    // Case spellings and field names travel in the generated renderers.
+    try t.expect(std.mem.indexOf(u8, manifest, "\\\"Colour.green\\\"") != null);
+    try t.expect(std.mem.indexOf(u8, manifest, "\\\"Some\\\"") != null);
+}
+
+// spec-case: IO-6
+test "IO-6 a program that never prints carries no rendering runtime" {
+    var compilation = try language.Compilation.init(t.allocator, module, "def main() -> int:\n    return 7\n");
+    defer compilation.deinit();
+    const manifest = try compilation.emitQbe(t.allocator);
+    defer t.allocator.free(manifest);
+    try t.expect(std.mem.indexOf(u8, manifest, "native_print.h") == null);
 }

@@ -67,9 +67,9 @@ def main() -> int noio:
     return 0
 ```
 
-Write `effects(output)` to permit printing under an explicit bound. Standard
-output is a VM-only surface: the QBE native backend rejects `print` with
-`E_QBE_UNSUPPORTED`.
+Write `effects(output)` to permit printing under an explicit bound. `print`
+runs on the QBE native backend as well as the VM, with byte-identical
+rendering.
 
 ## What `mylang run` prints
 
