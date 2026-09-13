@@ -975,8 +975,9 @@ test "CLI directory grants scope the file surface and separate reading from writ
     var temporary = testing.tmpDir(.{});
     defer temporary.cleanup();
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "notes.txt", .data = "alpha\n" });
-    const directory = try temporary.dir.realPathAlloc(testing.io, ".", testing.allocator);
-    defer testing.allocator.free(directory);
+    const anchor = try temporary.dir.realPathFileAlloc(testing.io, "notes.txt", testing.allocator);
+    defer testing.allocator.free(anchor);
+    const directory = std.fs.path.dirname(anchor).?;
     const read_grant = try std.fmt.allocPrint(testing.allocator, "--allow-read={s}", .{directory});
     defer testing.allocator.free(read_grant);
     const write_grant = try std.fmt.allocPrint(testing.allocator, "--allow-write={s}", .{directory});
@@ -1043,8 +1044,7 @@ test "CLI resolves the Python capability spellings inside projects that import m
     try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = entry });
     const path = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
     defer testing.allocator.free(path);
-    const directory = try temporary.dir.realPathAlloc(testing.io, ".", testing.allocator);
-    defer testing.allocator.free(directory);
+    const directory = std.fs.path.dirname(path).?;
     const grant = try std.fmt.allocPrint(testing.allocator, "--allow-read={s}", .{directory});
     defer testing.allocator.free(grant);
     const granted = try std.process.run(testing.allocator, testing.io, .{

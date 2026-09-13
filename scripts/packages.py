@@ -92,7 +92,9 @@ def run(entry, lock_path, compiler, action, receipt_path=None):
             return dependencies
         receipt = {'version': 'package-build-v1', 'lock_sha256': navigate.digest(manifest),
                    'compiler_sha256': compiler_hash, 'dependencies': json.loads(dependencies.stdout)}
-        result = subprocess.run([str(compiler), action, str(staged_entry)],
+        # `run-project` reports the entry point's int result only on request.
+        reporting = ['--print-result'] if action == 'run-project' else []
+        result = subprocess.run([str(compiler), action, str(staged_entry), *reporting],
                                 capture_output=True, text=True, timeout=60)
         if navigate.compiler_identity(compiler) != compiler_hash:
             raise ValueError('compiler changed during package build')

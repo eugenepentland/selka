@@ -192,7 +192,7 @@ test "multiple directory roots resolve in order and only writable roots accept c
     const directory = try store.acquire(authority, "k:folder");
     try store.complete(directory);
     try second.dir.access(t.io, "folder", .{});
-    try t.expectError(error.Denied, store.acquire(authority, "k:folder"));
+    try t.expectError(error.Failed, store.acquire(authority, "k:folder"));
     const removed = try store.acquire(authority, "x:made");
     try store.complete(removed);
     try t.expectError(error.FileNotFound, second.dir.access(t.io, "made", .{}));

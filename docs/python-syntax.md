@@ -19,9 +19,10 @@ def main() -> int:
     return total
 ```
 
-Save this as `main.my`, then run `zig-out/bin/mylang run main.my`. It prints `42`.
-Use `check` instead of `run` for type checking, or `run-project` for a project
-with imports. The [schematic application](../src/schematic/guest/main.my) is a
+Save this as `main.my`, then run `zig-out/bin/mylang run main.my --print-result`.
+It prints `42`; without that flag `run` prints only what the program prints
+itself. Use `check` instead of `run` for type checking, or `run-project` for a
+project with imports. The [schematic application](../src/schematic/guest/main.my) is a
 larger example; its [instructions](../experiments/schematic/README.md) describe
 rendering and GC stress testing.
 

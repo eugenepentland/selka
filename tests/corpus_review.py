@@ -129,9 +129,9 @@ def tools_review(compiler, directory, name):
         mutation(compiler, directory, 'catalog.my', 'import money;', 'import money;\nimport delivery;', status=3, command='check-policy')
         # An independent policy edit must not change the separate packaging source.
         path = directory / 'delivery.my'
-        baseline = int(run([compiler, 'run-project', entry]).stdout)
+        baseline = int(run([compiler, 'run-project', entry, '--print-result']).stdout)
         path.write_text(path.read_text().replace('cents = 100', 'cents = 101', 1))
-        assert int(run([compiler, 'run-project', entry]).stdout) == baseline + 1
+        assert int(run([compiler, 'run-project', entry, '--print-result']).stdout) == baseline + 1
         assert (directory / 'packaging.my').read_bytes() == original['packaging.my']
         path.write_bytes(original['delivery.my'])
         manifest = directory / 'declared-inputs.json'
@@ -177,7 +177,7 @@ def main():
             entry = directory / 'main.my'
             for source, expected in cases(name):
                 (directory / 'inputs.my').write_text(source)
-                actual = run([compiler, 'run-project', entry])
+                actual = run([compiler, 'run-project', entry, '--print-result'])
                 assert int(actual.stdout) == expected, (name, source, expected, actual.stdout)
                 comparisons += 1
         print(f'ordinary corpus (VM only): 2 applications, 13 modules, 48 input cases, {comparisons} independent-oracle execution checks; duplicates/quality, policy, schema/bindings, declared inputs, and change-impact rejection passed')

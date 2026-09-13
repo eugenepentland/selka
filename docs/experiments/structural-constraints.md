@@ -69,7 +69,7 @@ Source spans survive module linking, syntax copies and formatting.
 Use the installed compiler with `examples/structural-constraints.my`:
 
 ```sh
-zig-out/bin/mylang run examples/structural-constraints.my
+zig-out/bin/mylang run examples/structural-constraints.my --print-result
 # 12
 zig-out/bin/mylang fmt --check examples/structural-constraints.my
 ```

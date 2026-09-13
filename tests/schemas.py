@@ -110,7 +110,7 @@ struct Hidden { secret: i32 }
             'wire': 'data::Wire', 'decode': 'data::Positive.from_wire',
             'encode': 'data::Positive.to_wire', 'error_type': 'i64'}
         assert 'Positive.raw' not in codec_raw
-        execution = subprocess.run([compiler, 'run-project', str(entry)], capture_output=True, text=True)
+        execution = subprocess.run([compiler, 'run-project', str(entry), '--print-result'], capture_output=True, text=True)
         assert execution.returncode == 0 and execution.stdout == '7\n', execution.stderr
         data.write_text(codec_source.replace('decode: from_wire', 'decode: alternate').replace(
             '    private fn raw', '    fn alternate(x: Wire) -> Decoded { return Positive.from_wire(x); }\n    private fn raw'))

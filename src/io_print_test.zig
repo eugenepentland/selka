@@ -73,7 +73,7 @@ test "IO-3 print accepts sep and end keyword arguments and rejects other keyword
     try expectOutput("def main() -> int:\n    print(1, 2, sep=\"\", end=\"!\")\n    return 0\n", "12!");
     try reject("def main() -> int:\n    print(1, flush=True)\n    return 0\n", "E_IO_ARGUMENT");
     try reject("def main() -> int:\n    print(1, sep=\"-\", sep=\",\")\n    return 0\n", "E_IO_ARGUMENT");
-    try reject("def main() -> int:\n    print(sep=\"-\", 1)\n    return 0\n", "E_IO_ARGUMENT");
+    try reject("def main() -> int:\n    print(sep=\"-\", 1)\n    return 0\n", "E_CALL_ARGUMENT");
     try reject("def main() -> int:\n    print(1, sep=2)\n    return 0\n", "E_TYPE");
 }
 

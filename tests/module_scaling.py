@@ -67,7 +67,7 @@ def main():
                             '--min-nodes=1', '--max-work=1').stdout
         assert '0 candidate groups; 256/256 functions indexed' in duplicates, duplicates
         assert 'truncated=true' in duplicates, duplicates
-        assert invoke(compiler, 'run-project', entry, '--max-frames=256').stdout == '256\n'
+        assert invoke(compiler, 'run-project', entry, '--print-result', '--max-frames=256').stdout == '256\n'
         limited = invoke(compiler, 'run-project', entry, '--max-frames=255',
                          status=1, code='R_FRAME_LIMIT')
         assert 'm254.my:5:' in limited.stderr, limited.stderr
@@ -78,7 +78,7 @@ def main():
         before = [line for line in graph.splitlines() if ' path=' in line]
         after = [line for line in changed.splitlines() if ' path=' in line]
         assert sum(a != b for a, b in zip(before, after)) == 1
-        assert invoke(compiler, 'run-project', entry).stdout == '257\n'
+        assert invoke(compiler, 'run-project', entry, '--print-result').stdout == '257\n'
         leaf.write_text(saved.replace('return 1;', 'return true;'), encoding='utf-8')
         invalid = invoke(compiler, 'check-project', entry, status=1)
         assert invalid.stdout == '' and 'm255.my:4:' in invalid.stderr, invalid.stderr
@@ -102,7 +102,7 @@ def main():
         assert graph.count('  import ') == 4096
         assert graph == invoke(compiler, 'list-modules', entry).stdout
         invoke(compiler, 'check-project', entry)
-        assert invoke(compiler, 'run-project', entry).stdout == '0\n'
+        assert invoke(compiler, 'run-project', entry, '--print-result').stdout == '0\n'
         dense(wide, 4097)
         invoke(compiler, 'check-project', entry, status=1, code='E_IMPORT_LIMIT')
         print('module scaling: shared 92-module DAG at 4096 imports, deterministic '
