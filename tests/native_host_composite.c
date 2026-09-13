@@ -10,7 +10,7 @@ static const char *echo(void *context,MylangHostCall *call) {
     return NULL;
 }
 static const char *parameters[]={"Outcome"};
-static const MylangHostBinding bindings[]={{"echo",parameters,1,"Outcome",64,64,NULL,echo}};
+static const MylangHostBinding bindings[]={{"echo",parameters,1,"Outcome",32,32,NULL,echo}};
 MylangNativeProviders mylang_native_providers(void) {
     return (MylangNativeProviders){.host={.bindings=bindings,.count=1}};
 }

@@ -26,7 +26,7 @@ static const char *callback(void *unused,MylangHostCall *call) {
 }
 int main(void) {
     const char *parameters[]={"i8"};
-    MylangHostBinding binding={"test",parameters,1,"i8",64,64,NULL,callback};
+    MylangHostBinding binding={"test",parameters,1,"i8",32,32,NULL,callback};
     MylangNativeProviders providers={.host={.bindings=&binding,.count=1,.max_calls=1}};
     MylQbeContext context={.providers=&providers};
     int8_t input=-7,output=0;

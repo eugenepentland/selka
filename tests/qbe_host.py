@@ -25,7 +25,7 @@ static const char *echo(void *ctx,MylangHostCall *call) {
 }
 int main(void) {
     static const char *params[]={"Outcome"};
-    static const MylangHostBinding binding={"echo",params,1,"Outcome",64,64,NULL,echo};
+    static const MylangHostBinding binding={"echo",params,1,"Outcome",32,32,NULL,echo};
     MylangNativeProviders providers={.host={.bindings=&binding,.count=1,.max_calls=1}};
     MylangRunOptions options={.providers=&providers};
     MylangRunResult result;
@@ -87,7 +87,7 @@ def main():
                 'for(unsigned i=0;i<2200;i++)if(call->arguments[i].bits!=i)return "HostFailure";'
                 'call->output[0]=(MylangHostNode){"i64",42,0};call->output_nodes=1;return 0;}'
                 'static const char *parameters[]={' + ','.join('"i64"' for _ in range(2200)) + '};'
-                'static const MylangHostBinding binding={"wide",parameters,2200,"i64",64,64,0,wide};'
+                'static const MylangHostBinding binding={"wide",parameters,2200,"i64",32,32,0,wide};'
                 'MylangNativeProviders mylang_native_providers(void){'
                 'return (MylangNativeProviders){.host={.bindings=&binding,.count=1}};}')
             wide_output = project / (mode + '-wide')
