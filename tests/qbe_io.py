@@ -22,7 +22,10 @@ def cases():
     x: int
     y: int
 
-enum Colour { red, green }
+enum Colour:
+    red,
+    green
+
 
 union Shape:
     dot,
