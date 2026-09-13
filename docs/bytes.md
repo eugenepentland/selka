@@ -248,3 +248,28 @@ def main() -> int:
         return 1
     return checksum(b"AB") + managed[0] - 65
 ```
+
+## Byte literals
+
+`b"..."` and `b'...'` are the two spellings of a byte-string literal and differ
+only in the quote character. The recognized escapes are `\n`, `\r`, `\t`, `\0`,
+`\\`, `\"` and exactly two hexadecimal digits after `\x`; any other escape, and
+an unterminated literal, is a located source error. Text outside an escape
+contributes its UTF-8 encoding, so one non-ASCII character can be several bytes,
+and an empty literal has length zero. A single literal is limited to 65,536
+decoded bytes, beyond which it reports `E_BYTE_LITERAL_LIMIT`.
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    if b'ok' != b"ok":
+        return 1
+    escapes = b"\x2a\t\n\r\0\\\""
+    if len(escapes) != 7:
+        return 2
+    if escapes[4] != 0 or escapes[6] != 34:
+        return 3
+    if len(b"") != 0 or len(b"é") != 2:
+        return 4
+    return escapes[0]
+```

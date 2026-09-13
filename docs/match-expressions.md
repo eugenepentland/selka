@@ -32,3 +32,42 @@ Ordinary and generic functions share these rules. Lowering uses exhaustive
 variant dispatch and an internal result local, then yields that local. The VM
 and the QBE native backend share the same lowering, including owned payload
 cleanup.
+
+## Wildcard arms
+
+A `match` statement may end with `case _`, which takes every variant no earlier
+arm named and discards that variant's payload. It must be the last arm and must
+cover at least one variant; an earlier position, or a match whose arms are
+already exhaustive, reports `E_WILDCARD_ARM`. A wildcard also refuses to cover a
+variant whose payload still carries an unhandled result, reporting
+`E_RESULT_DISCARD`, because dropping that payload would drop its obligation;
+that variant needs its own arm. The value-producing form above has no wildcard,
+so every one of its arms names a variant.
+
+```mylang
+# doc: expect-error E_WILDCARD_ARM
+union Event:
+    start,
+    tick: int,
+    stop: int
+
+
+def weight(event: Event) -> int:
+    match event:
+        case Event.tick(count):
+            return count
+        case _:
+            return 0
+
+
+def misplaced(event: Event) -> int:
+    match event:
+        case _:
+            return 0
+        case Event.tick(count):
+            return count
+
+
+def main() -> int:
+    return weight(Event.tick(42))
+```

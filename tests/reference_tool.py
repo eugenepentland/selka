@@ -44,7 +44,14 @@ def main():
             assert hashlib.sha256((output / filename).read_bytes()).hexdigest() == expected
         overview = (output / 'reference.md').read_text()
         api = (output / 'api.md').read_text()
-        assert len(overview) < 12000 and 'stored-reference-fields' in overview
+        assert len(overview) < 32000 and 'stored-reference-fields' in overview
+        # `implemented` is an object keyed by slug, so the overview can name each feature's
+        # kind, one-line summary and the documentation section that demonstrates it.
+        implemented = features['features']['implemented']
+        assert isinstance(implemented, dict) and len(implemented) > 80
+        assert all(entry['kind'] in ('language', 'tooling') and entry['summary'] and '.md#' in entry['doc']
+                   for entry in implemented.values())
+        assert 'managed-arenas [language] ' in overview and 'docs/arenas.md#managed-arenas' in overview
         assert 'sort::' in api and 'json::' in api and 'Generic templates' in api
         # API names come from compiler output, including template signatures, not source regexes.
         assert all(function['name'] in api for function in schema['schema']['functions'])
