@@ -9,7 +9,7 @@ INTERFACES = ('files', 'store')
 
 def create(directory, *, language, interface='files'):
     """The same three repairs, cases and contract; `interface` only rewrites the guide."""
-    if language not in ('my', 'python', 'zig'):
+    if language not in ('my', 'python', 'zig', 'rust'):
         raise ValueError('unknown practice language')
     if interface not in INTERFACES:
         raise ValueError('unknown practice interface')
@@ -44,7 +44,7 @@ def load(directory):
         raise ValueError('invalid practice manifest')
     body = {key: value for key, value in manifest.items() if key != 'sha256'}
     if (digest(body) != manifest['sha256'] or manifest['version'] != 'practice-pack-v1' or
-            manifest['language'] not in ('my', 'python', 'zig') or manifest['status'] != 'draft-unreviewed' or
+            manifest['language'] not in ('my', 'python', 'zig', 'rust') or manifest['status'] != 'draft-unreviewed' or
             manifest['scored_launch_enabled'] is not False):
         raise ValueError('invalid or changed draft practice pack')
     verify_snapshot(directory / 'starter', manifest['starter'])

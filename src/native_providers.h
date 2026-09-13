@@ -42,7 +42,7 @@ typedef struct {
     MylangResourceRead (*read)(void *, uint64_t, uint8_t *, size_t);
     MylangResourceWrite (*write)(void *, uint64_t, const uint8_t *, size_t);
 } MylangResourceProvider;
-typedef struct {
+typedef struct MylangNativeProvidersTag {
     void *clock_context;
     MylangClockResult (*clock_now)(void *context);
     void *random_context;

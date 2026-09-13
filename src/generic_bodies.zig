@@ -1,6 +1,12 @@
 //! Symbolic template checking preserves types, ownership and effects without representative substitution.
+const call_arguments = @import("call_arguments.zig");
 const eResultDiscard = diagnostic.result_discard;
 const std = @import("std");
+const numeric_surface = @import("numeric_surface.zig");
+const float_syntax = @import("float_syntax.zig");
+const integer_literal = @import("integer_literal.zig");
+const buffer_operations = @import("buffer_operations.zig");
+const BufferKind = buffer_operations.Kind;
 const source_json = @import("source_json.zig");
 const eReferenceArgument = diagnostic.reference_argument;
 const ast = @import("ast.zig");
@@ -19,6 +25,7 @@ const eResultPath = diagnostic.result_path;
 const eTryReturn = "E_TRY_RETURN";
 const eArgument = diagnostic.generic_argument;
 const eBorrowConflict = diagnostic.borrow_conflict;
+const eListType = @import("collection_lower.zig").list_type_error;
 const eUnsupported = "E_GENERIC_BODY_UNSUPPORTED";
 const region_check = @import("region_check.zig");
 const Regions = @import("generic_regions.zig");
@@ -66,6 +73,7 @@ const Checker = struct {
     sink: *diagnostic.Sink,
     parameters: []const requirements.Parameter,
     result: Symbolic,
+    expected_types: std.AutoHashMapUnmanaged(source.Span, Symbolic) = .empty,
     return_reference: ?Return = null,
     functions: *const FunctionMap,
     pending: *std.ArrayList(usize),
@@ -88,8 +96,9 @@ const Checker = struct {
         if (function.signature.return_reference == null) try self.seedCleanup(self.result);
         for (function.signature.parameters) |parameter| {
             const parameter_type = try self.ty(parameter.ty);
+            if (parameter.default_value) |value| try self.same(try self.expressionExpected(value, parameter_type), parameter_type, parameter.ty);
             if (parameter.reference != null and (try self.properties(parameter_type)).requires_handling) return sink.fail(diagnostic.result_borrow, parameter.ty, "result-bearing parameters must transfer by value");
-            try self.bindMode(parameter.name, parameter_type, false, parameter.reference == false);
+            try self.bindMode(parameter.name, parameter_type, function.policy.python, parameter.reference == false);
             self.locals.items[self.locals.items.len - 1].reference = parameter.reference;
             self.locals.items[self.locals.items.len - 1].slice = parameter.slice;
             if (parameter.reference != null) self.locals.items[self.locals.items.len - 1].root = self.locals.items.len - 1;
@@ -498,7 +507,7 @@ const Checker = struct {
             try self.same(ref.ty, self.result, span);
             try self.regions.require(self.locals.items[ref.root.?].origin, .{ .depth = 0 }, span);
         } else {
-            try self.same(try self.expression(value), self.result, span);
+            try self.same(try self.expressionExpected(value, self.result), self.result, span);
             try self.regions.require(self.last_origin, .{ .depth = 0 }, span);
         }
         try self.requireHandled(0, span);
@@ -625,17 +634,217 @@ const Checker = struct {
         self.effect_masks[self.function_index] |= contract.effects;
         return contract.result;
     }
-    fn call(self: *Checker, input_call: Call, span: source.Span, allow_reference: bool) Error!Symbolic {
+    fn collectionElement(self: *Checker, owner: Symbolic, span: source.Span) Error!Symbolic {
+        if (!self.shapes().managed(owner)) return self.sink.fail(eListType, span, "operation requires a managed list");
+        if (self.shapes().collectionKind(owner) == .string) return owner;
+        return (try self.shapes().container(owner, span, false)).?.element;
+    }
+    fn fieldAssignment(self: *Checker, node: ast.Node) Error!Symbolic {
+        const assignment = node.data.field_assignment;
+        var root = assignment.target;
+        while (self.program.nodes.items[@backingInt(root)].data == .field) root = self.program.nodes.items[@backingInt(root)].data.field.base;
+        const root_node = self.program.nodes.items[@backingInt(root)];
+        if (root_node.data == .name) {
+            const binding = try self.local(root_node.data.name);
+            if (!binding.mutable) return self.sink.fail(diagnostic.immutable, root_node.span, "record field assignment requires a mutable binding");
+            try self.runtimeOwner(root_node.data.name, true);
+        } else if (root_node.data != .index) return self.sink.fail("E_ASSIGNMENT_TARGET", root_node.span, "field assignment requires a mutable local record or list slot");
+        const expected = try self.expression(assignment.target);
+        try self.same(try self.expressionExpected(assignment.value, expected), expected, node.span);
+        return .{ .concrete = .unit };
+    }
+    fn dictionaryLiteral(self: *Checker, node: ast.Node, entries: []const ast.NodeId) Error!Symbolic {
+        var expected = self.expected_types.get(node.span);
+        if (expected == null and entries.len == 0) return self.sink.fail("E_DICT_INFERENCE", node.span, "empty dictionary requires an expected dictionary type");
+        if (expected == null) expected = try self.shapes().nominal(self.catalog.templates.store.?.index.names.get("dict").?, &.{ try self.expression(entries[0]), try self.expression(entries[1]) });
+        if (self.shapes().collectionKind(expected.?) != .dictionary) return self.sink.fail("E_DICT_TYPE", node.span, "dictionary literal requires a dictionary type");
+        const key = try self.shapes().collectionKey(expected.?, node.span);
+        const element = try self.collectionElement(expected.?, node.span);
+        if (self.shapes().collectionKind(key) != .string) try self.supports(key, .integer, node.span);
+        try self.supports(element, .copy, node.span);
+        try self.supports(element, .storable, node.span);
+        if (try self.requiresHandling(element)) return self.sink.fail(eResultOperation, node.span, "dictionary values cannot contain pending results");
+        for (entries, 0..) |input, index| {
+            const target = if (index % 2 == 0) key else element;
+            try self.same(try self.expressionExpected(input, target), target, node.span);
+        }
+        self.seedEffect(.managed_allocation);
+        return expected.?;
+    }
+    fn listLiteral(self: *Checker, node: ast.Node, inputs: []const ast.NodeId) Error!Symbolic {
+        var expected = self.expected_types.get(node.span);
+        var element: ?Symbolic = if (expected) |ty_value| try self.collectionElement(ty_value, node.span) else null;
+        if (inputs.len == 0 and expected == null) return self.sink.fail("E_LIST_INFERENCE", node.span, "empty list requires an expected List type");
+        for (inputs) |input| {
+            const value = if (element) |ty_value| try self.expressionExpected(input, ty_value) else try self.expression(input);
+            if (element) |ty_value| try self.same(value, ty_value, node.span) else element = value;
+        }
+        try self.supports(element.?, .copy, node.span);
+        try self.supports(element.?, .storable, node.span);
+        if (try self.requiresHandling(element.?)) return self.sink.fail(eResultOperation, node.span, "list elements cannot contain pending results");
+        if (expected == null) expected = try self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{element.?});
+        self.seedEffect(.managed_allocation);
+        return expected.?;
+    }
+    fn collectionOperation(self: *Checker, owner: Symbolic, operation: struct { kind: BufferKind, inputs: []const ast.NodeId, span: source.Span }) Error!Symbolic {
+        const family = self.shapes().collectionKind(owner) orelse return self.sink.fail(eListType, operation.span, "operation requires a managed collection");
+        const element = try self.collectionElement(owner, operation.span);
+        const key = if (family == .dictionary) try self.shapes().collectionKey(owner, operation.span) else element;
+        const kind = operation.kind;
+        if (operation.inputs.len != kind.arity()) return self.sink.fail("E_ARITY", operation.span, "collection argument count differs from its signature");
+        const output: Symbolic = switch (kind) {
+            .length => .{ .concrete = if (family == .list) typed.Type.u64 else .i64 },
+            .read, .get => element,
+            .contains => .{ .concrete = .bool },
+            .append, .write => .{ .concrete = .unit },
+            .keys, .values, .split => try self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{if (kind == .keys) key else if (kind == .split) owner else element}),
+            .join => owner,
+            else => return self.sink.fail(eUnsupported, operation.span, "unsupported collection operation in generic body"),
+        };
+        if (family == .string and (kind == .write or kind == .append or kind == .get)) return self.sink.fail("E_TEXT_IMMUTABLE", operation.span, "strings are immutable");
+        if (family != .string and (kind == .split or kind == .join)) return self.sink.fail(eListType, operation.span, "split and join require str");
+        if (family != .dictionary and (kind == .keys or kind == .values or kind == .get)) return self.sink.fail(eListType, operation.span, "mapping operation requires a dictionary");
+        for (operation.inputs, 0..) |input, index| {
+            const integer = family != .dictionary and index == 0 and (kind == .read or kind == .write);
+            const expected = if (family == .dictionary) (if (index == 0) key else element) else if (kind == .join) try self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{owner}) else element;
+            if (integer) try self.supports(try self.expression(input), .integer, operation.span) else try self.same(try self.expressionExpected(input, expected), expected, operation.span);
+        }
+        if (buffer_operations.managedAllocation(kind, family == .dictionary) or (family == .string and kind == .read)) self.seedEffect(.managed_allocation);
+        return output;
+    }
+    fn listOperation(self: *Checker, node: ast.Node, operation: @FieldType(@FieldType(ast.Node, "data"), "list_operation")) Error!Symbolic {
+        return self.collectionOperation(try self.expression(operation.base), .{ .kind = operation.kind, .inputs = operation.arguments, .span = node.span });
+    }
+    fn listMethod(self: *Checker, node: ast.Node) Error!Symbolic {
+        const method = node.data.method_call;
+        const kind = buffer_operations.method(self.src.text(method.name)) orelse return self.sink.fail("E_LIST_METHOD", method.name, "unknown collection method");
+        return self.listOperation(node, .{ .base = method.base, .kind = kind, .arguments = method.arguments });
+    }
+    fn listSlice(self: *Checker, node: ast.Node) Error!Symbolic {
+        const slice = node.data.slice;
+        const owner = try self.expression(slice.base);
+        _ = try self.collectionElement(owner, node.span);
+        if (slice.start) |input| try self.supports(try self.expression(input), .integer, node.span);
+        if (slice.end) |input| try self.supports(try self.expression(input), .integer, node.span);
+        self.seedEffect(.managed_allocation);
+        return owner;
+    }
+    fn managedMethod(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
+        if (input_call.owner) |owner| if (self.active.get(self.src.text(owner))) |slot| {
+            if (self.shapes().managed(self.locals.items[slot].ty)) {
+                const kind = buffer_operations.method(self.src.text(input_call.name)) orelse return self.sink.fail("E_LIST_METHOD", input_call.name, "unknown collection method");
+                if (input_call.type_arguments.len != 0) return self.sink.fail("E_ARITY", span, "collection methods do not take explicit type arguments");
+                const result = try self.collectionOperation(self.locals.items[slot].ty, .{ .kind = kind, .inputs = input_call.arguments, .span = span });
+                return result;
+            }
+        };
+        return null;
+    }
+    fn floatType(self: *Checker) Symbolic {
+        return .{ .concrete = self.catalog.names.get("float").? };
+    }
+    fn isFloat(self: *Checker, value: Symbolic) bool {
+        return value == .concrete and numeric_surface.isFloat(value.concrete, self.catalog.records);
+    }
+    fn scalarConstructor(self: *Checker, invocation: Call, span: source.Span) Error!?Symbolic {
+        if (invocation.owner != null or invocation.type_arguments.len != 0) return null;
+        const name = self.src.text(invocation.name);
+        const floating = std.mem.eql(u8, name, "float");
+        if (!floating and !std.mem.eql(u8, name, "int")) return null;
+        if (self.active.contains(name) or self.functions.contains(name)) return null;
+        if (self.module_names) |names| if (try names.topLevel(invocation.name)) return null;
+        if (invocation.arguments.len != 1) return self.sink.fail("E_ARITY", span, "numeric conversions require one argument");
+        const input = try self.expression(invocation.arguments[0]);
+        if (!self.isFloat(input)) try self.supports(input, .integer, span);
+        return if (floating) self.floatType() else .{ .concrete = .i64 };
+    }
+    fn optionElement(self: *Checker, value: Symbolic, span: source.Span) Error!Symbolic {
+        const shape = try self.shapes().schema(value, span);
+        if (shape.kind == .variants and shape.fields.len == 2) {
+            var element: ?Symbolic = null;
+            var none = false;
+            for (shape.fields) |field| {
+                if (std.mem.eql(u8, field.name, "some")) element = field.ty;
+                if (std.mem.eql(u8, field.name, "none") and field.ty == null) none = true;
+            }
+            if (none) if (element) |item| return item;
+        }
+        return self.sink.fail("E_TYPE", span, "Some and contextual None require Option");
+    }
+    fn contextualOption(self: *Checker, invocation: Call, span: source.Span) Error!?Symbolic {
+        if (invocation.owner != null or invocation.type_arguments.len != 0 or !std.mem.eql(u8, self.src.text(invocation.name), "Some")) return null;
+        if (self.active.contains("Some") or self.functions.contains("Some")) return null;
+        if (self.module_names) |names| if (try names.topLevel(invocation.name)) return null;
+        if (invocation.arguments.len != 1) return self.sink.fail("E_ARITY", span, "Some requires one payload");
+        const expected = self.expected_types.get(span) orelse return self.sink.fail("E_OPTION_INFERENCE", span, "Some requires an expected Option type");
+        const element = try self.optionElement(expected, span);
+        try self.same(try self.expressionExpected(invocation.arguments[0], element), element, span);
+        return expected;
+    }
+    fn numericLiteral(self: *Checker, span: source.Span, minimum: bool) Error!Symbolic {
+        const expected = self.expected_types.get(span);
+        if (float_syntax.isLiteral(self.src.text(span)) or (expected != null and self.isFloat(expected.?))) return self.floatType();
+        return .{ .concrete = (try integer_literal.parseExpected(self.src, span, minimum, if (expected != null and expected.? == .concrete) expected.?.concrete else null, self.sink)).ty };
+    }
+    fn contextualResult(self: *Checker, invocation: Call, span: source.Span) Error!?Symbolic {
+        if (invocation.owner != null or invocation.type_arguments.len != 0) return null;
+        const name = self.src.text(invocation.name);
+        if (self.active.contains(name) or self.functions.contains(name)) return null;
+        const ok = std.mem.eql(u8, name, "Ok");
+        if (!ok and !std.mem.eql(u8, name, "Err")) return null;
+        if (self.module_names) |names| if (try names.topLevel(invocation.name)) return null;
+        if (invocation.arguments.len != 1) return self.sink.fail("E_ARITY", span, "Ok and Err require one payload");
+        const expected = self.expected_types.get(span) orelse return self.sink.fail("E_RESULT_INFERENCE", span, "Ok and Err require an expected Result type");
+        const shape = try self.resultShape(expected, span, "E_TYPE");
+        const payload = if (ok) shape.ok_type else shape.error_type;
+        try self.same(try self.expressionExpected(invocation.arguments[0], payload), payload, span);
+        return expected;
+    }
+    fn textConstructor(self: *Checker, call_value: Call, span: source.Span) Error!?Symbolic {
+        if (call_value.owner != null or !std.mem.eql(u8, self.src.text(call_value.name), "str")) return null;
+        if (self.active.contains("str") or self.functions.contains("str")) return null;
+        const target = self.catalog.names.get("str") orelse return null;
+        if (self.catalog.records[target.recordIndex()].collection.kind != .string) return null;
+        if (call_value.arguments.len != 1 or call_value.type_arguments.len != 0) return self.sink.fail("E_ARITY", span, "str requires one value argument");
+        const value = try self.expression(call_value.arguments[0]);
+        if (value == .concrete) {
+            const scalar = value.concrete.isInteger() or value.concrete == .bool or value.concrete == .unit;
+            const aggregate = value.concrete.isAggregate() and (self.shapes().collectionKind(value) == .string or std.mem.eql(u8, self.catalog.records[value.concrete.recordIndex()].name, "float"));
+            if (!scalar and !aggregate) return self.sink.fail("E_TEXT_CONVERSION", span, "str requires a scalar or str value");
+        } else try self.supports(value, .integer, span);
+        self.seedEffect(.managed_allocation);
+        return Symbolic{ .concrete = target };
+    }
+    fn specialCall(self: *Checker, input_call: Call, span: source.Span) Error!?Symbolic {
+        if (try self.textConstructor(input_call, span)) |value| return value;
         if (std.mem.eql(u8, self.src.text(input_call.name), "todo") and input_call.owner == null) {
             _ = try self.ty(input_call.type_arguments[0]);
             return self.sink.typedHole(input_call.name, input_call.type_arguments[0]);
         }
-        if (input_call.owner == null and self.active.contains(self.src.text(input_call.name))) return self.indirectCall(input_call);
-        if (input_call.owner == null) if (source_json.operation(self.src.text(input_call.name))) |decode| return self.jsonCall(input_call, decode);
+        if (try self.managedMethod(input_call, span)) |value| return value;
+        if (try self.contextualResult(input_call, span)) |value| return value;
+        if (try self.contextualOption(input_call, span)) |value| return value;
+        if (try self.scalarConstructor(input_call, span)) |value| return value;
+        if (input_call.owner == null and self.active.contains(self.src.text(input_call.name))) {
+            const value = try self.indirectCall(input_call);
+            return value;
+        }
+        if (input_call.owner == null) if (source_json.operation(self.src.text(input_call.name))) |decode| {
+            const value = try self.jsonCall(input_call, decode);
+            return value;
+        };
         if (try self.operationCall(input_call)) |result| return result;
-        const invocation = try self.resolveCall(input_call);
-        const function = try self.callTarget(invocation, input_call.name);
+        return null;
+    }
+    fn call(self: *Checker, input_call: Call, span: source.Span, allow_reference: bool) Error!Symbolic {
+        if (try self.specialCall(input_call, span)) |value| {
+            try call_arguments.positional(input_call, self.sink);
+            return value;
+        }
+        const resolved = try self.resolveCall(input_call);
+        const function = try self.callTarget(resolved, input_call.name);
         const signature = function.signature;
+        const invocation = try call_arguments.bind(self.field_arena.allocator(), self.src, resolved, signature.parameters, self.sink);
         if (function.policy.conversion) return self.sink.fail(eUnsupported, span, "generic conversions still need abstract checking");
         if (signature.return_reference != null and !allow_reference) return self.sink.fail(diagnostic.reference_result, span, "reference-returning calls require a borrow scope");
         if (invocation.type_arguments.len != 0 and invocation.type_arguments.len != signature.type_parameters.len) return self.sink.fail("E_GENERIC_ARITY", span, "explicit type argument count does not match generic parameters");
@@ -655,7 +864,10 @@ const Checker = struct {
         for (required, arguments) |parameter, argument| try self.structural(argument, parameter, signature.type_parameters, arguments);
         var loans: std.ArrayList(usize) = .empty;
         defer loans.deinit(self.allocator);
-        for (invocation.arguments, signature.parameters, 0..) |input, parameter, input_index| {
+        for (0..invocation.arguments.len) |source_index| {
+            const input_index = call_arguments.parameterPosition(invocation, source_index);
+            const input = invocation.arguments[input_index];
+            const parameter = signature.parameters[input_index];
             const expected = try self.substituted(parameter.ty, signature.type_parameters, arguments);
             const node = self.program.nodes.items[@backingInt(input)];
             if (parameter.reference) |mutable| {
@@ -673,7 +885,7 @@ const Checker = struct {
                 try self.enter(node.span);
                 self.depth -= 1;
                 try self.claimLoan(&loans, node.data.name);
-            } else try self.same(if (actuals) |values| values[input_index] else try self.expression(input), expected, node.span);
+            } else try self.same(if (actuals) |values| values[input_index] else try self.expressionExpected(input, expected), expected, node.span);
         }
         for (invocation.arguments, signature.parameters) |input, parameter| {
             if (parameter.reference == true) {
@@ -701,7 +913,11 @@ const Checker = struct {
         var inference: @import("generic_inference.zig").Context = .{ .src = self.src, .catalog = self.catalog, .parameters = signature.type_parameters, .sink = self.sink, .site = invocation.name };
         const actuals = try self.allocator.alloc(Symbolic, invocation.arguments.len);
         errdefer self.allocator.free(actuals);
-        for (invocation.arguments, signature.parameters, actuals) |input, parameter, *actual| {
+        for (0..invocation.arguments.len) |source_index| {
+            const position = call_arguments.parameterPosition(invocation, source_index);
+            const input = invocation.arguments[position];
+            const parameter = signature.parameters[position];
+            const actual = &actuals[position];
             const node = self.program.nodes.items[@backingInt(input)];
             if (parameter.reference != null and node.data != .bytes) {
                 if (node.data != .name) return self.sink.fail(eReferenceArgument, node.span, "reference parameter requires an active reference name");
@@ -820,6 +1036,10 @@ const Checker = struct {
             }
         }
     }
+    fn expressionExpected(self: *Checker, id: ast.NodeId, expected: Symbolic) Error!Symbolic {
+        try self.expected_types.put(self.allocator, self.program.nodes.items[@backingInt(id)].span, expected);
+        return self.expression(id);
+    }
     fn expression(self: *Checker, id: ast.NodeId) Error!Symbolic {
         const before = self.temporary_results;
         self.expression_depth += 1;
@@ -851,7 +1071,10 @@ const Checker = struct {
         return .{ .concrete = backing };
     }
     fn expressionValue(self: *Checker, id: ast.NodeId) Error!Symbolic {
-        const node = self.program.nodes.items[@backingInt(id)];
+        var node = self.program.nodes.items[@backingInt(id)];
+        if (node.data == .call) if (try @import("record_calls.zig").lower(self.field_arena.allocator(), self.src, self.catalog, node.data.call, self.sink)) |record| {
+            node.data = record.data;
+        };
         try self.enter(node.span);
         defer self.depth -= 1;
         return switch (node.data) {
@@ -904,22 +1127,43 @@ const Checker = struct {
             },
             .call => |invocation| try self.call(invocation, node.span, false),
             .propagate => |operand| try self.propagateValue(operand, node.span),
-            .bytes => try self.concreteType(node.span),
-            .unit => .{ .concrete = .unit },
+            .bytes, .text => try self.concreteType(node.span),
+            .membership => |membership| member: {
+                const needle = try self.expression(membership.needle);
+                const container = try self.expression(membership.container);
+                const expected = if (self.shapes().collectionKind(container) == .dictionary) try self.shapes().collectionKey(container, node.span) else try self.collectionElement(container, node.span);
+                try self.same(needle, expected, node.span);
+                break :member .{ .concrete = .bool };
+            },
+            .dictionary_literal => |entries| try self.dictionaryLiteral(node, entries),
+            .unit => unit: {
+                if (self.expected_types.get(node.span)) |expected| if (self.shapes().kind(expected) == .variants) {
+                    _ = try self.optionElement(expected, node.span);
+                    break :unit expected;
+                };
+                break :unit .{ .concrete = .unit };
+            },
             .boolean => .{ .concrete = .bool },
-            .integer => |span| .{ .concrete = (try @import("integer_literal.zig").parse(self.src, span, false, self.sink)).ty },
+            .integer => |span| try self.numericLiteral(span, false),
             .unary => |unary| result: {
                 const child = self.program.nodes.items[@backingInt(unary.operand)];
                 const operand: Symbolic = if (unary.op == .neg and child.data == .integer)
-                    .{ .concrete = (try @import("integer_literal.zig").parse(self.src, child.data.integer, true, self.sink)).ty }
+                    try self.numericLiteral(child.data.integer, true)
                 else
                     try self.expression(unary.operand);
-                if (unary.op == .neg) try self.supports(operand, .integer, unary.op_span) else try self.same(operand, .{ .concrete = if (unary.op == .not) .bool else .u64 }, unary.op_span);
+                if (unary.op == .neg) {
+                    if (!self.isFloat(operand)) try self.supports(operand, .integer, unary.op_span);
+                } else try self.same(operand, .{ .concrete = if (unary.op == .not) .bool else .u64 }, unary.op_span);
                 break :result operand;
             },
             .binary => |operation| try self.binary(operation),
             .record => |record| try self.recordValue(record, node.span),
             .variant => |variant| try self.variantValue(variant, node.span),
+            .field_assignment => try self.fieldAssignment(node),
+            .list_literal => |inputs| try self.listLiteral(node, inputs),
+            .list_operation => |operation| try self.listOperation(node, operation),
+            .method_call => try self.listMethod(node),
+            .slice => try self.listSlice(node),
             .array => |array| try self.arrayValue(array, node.span),
             .update => |update| result: {
                 const base = try self.expression(update.base);
@@ -934,6 +1178,7 @@ const Checker = struct {
                 break :result base;
             },
             .field => |field| result: {
+                if (try self.enumMember(field, node.span)) |value| break :result value;
                 const base = try self.expression(field.base);
                 const shape = try self.shapes().requireRecord(base, node.span, false);
                 const index = try self.shapes().memberIndex(shape, field.name);
@@ -944,12 +1189,21 @@ const Checker = struct {
             },
             .length => |input| result: {
                 const base = try self.expression(input);
+                if (self.shapes().managed(base)) break :result .{ .concrete = .i64 };
                 _ = try self.arrayShape(base, node.span);
                 if ((try self.requiresHandling(base))) return self.sink.fail(eResultOperation, node.span, "length would drop result-bearing elements");
                 break :result .{ .concrete = .u64 };
             },
             .index => |access| result: {
-                const shape = try self.arrayIndex(try self.expression(access.base), access.index, node.span);
+                const base = try self.expression(access.base);
+                if (self.shapes().managed(base)) {
+                    if (self.shapes().collectionKind(base) == .dictionary) {
+                        try self.same(try self.expression(access.index), try self.shapes().collectionKey(base, node.span), node.span);
+                    } else try self.supports(try self.expression(access.index), .integer, node.span);
+                    if (self.shapes().collectionKind(base) == .string) self.seedEffect(.managed_allocation);
+                    break :result try self.collectionElement(base, node.span);
+                }
+                const shape = try self.arrayIndex(base, access.index, node.span);
                 if (shape.length != 1 and (try self.requiresHandling(shape.element))) return self.sink.fail(eResultOperation, node.span, "indexing would drop other result-bearing elements");
                 break :result shape.element;
             },
@@ -1035,7 +1289,7 @@ const Checker = struct {
             _ = try self.reference(span, mutates, false);
             return;
         }
-        if (!binding.available) return self.sink.failTransfer(diagnostic.owned_consumed, span, binding.name, binding.transfer_span);
+        if (!self.shapes().managed(binding.ty) and !binding.available) return self.sink.failTransfer(diagnostic.owned_consumed, span, binding.name, binding.transfer_span);
         if (mutates and !binding.mutable) return self.sink.fail(diagnostic.immutable, span, "mutation requires a let mut binding");
         try self.ownerAccess(binding.*, mutates, span);
     }
@@ -1055,11 +1309,12 @@ const Checker = struct {
         try self.regionRead(owner.*);
         const shape = (try self.shapes().container(owner.ty, operation.owner, false)) orelse return self.sink.fail("E_BUFFER_TYPE", operation.owner, "operation requires a buffer value binding");
         const element = shape.element;
+        const managed = self.shapes().managed(owner.ty);
         if (operation.kind == .read or operation.kind == .resize) try self.supports(element, .copy, operation.owner);
         for (operation.arguments, 0..) |input, index| {
-            const value = try self.expression(input);
-            const at = self.program.nodes.items[@backingInt(input)].span;
             const writes_element = index == 1 and (operation.kind == .write or operation.kind == .resize);
+            const value = if (operation.kind == .append or writes_element) try self.expressionExpected(input, element) else try self.expression(input);
+            const at = self.program.nodes.items[@backingInt(input)].span;
             if (operation.kind == .reserve and index == 0) {
                 try self.same(value, .{ .concrete = .allocator }, at);
             } else if (operation.kind == .append or writes_element) {
@@ -1067,8 +1322,10 @@ const Checker = struct {
                 try self.regions.require(self.last_origin, .{ .node = self.locals.items[owner.root orelse self.active.get(self.src.text(operation.owner)).?].origin }, at);
             } else try self.supports(value, .integer, at);
         }
-        try self.runtimeOwner(operation.owner, operation.kind.mutates());
+        try self.runtimeOwner(operation.owner, operation.kind.mutates() and !managed);
+        if (managed and operation.kind == .append) self.seedEffect(.managed_allocation);
         if (operation.kind.allocates()) self.seedEffect(.allocation);
+        if (managed and operation.kind.mutates() and operation.result == null) return .{ .concrete = .unit };
         const success: Symbolic = if (operation.kind == .take or operation.kind == .read) element else if (operation.result != null) .{ .concrete = .bool } else .{ .concrete = .u64 };
         return self.symbolicOperationResult(operation.result, success, "E_BUFFER_RESULT");
     }
@@ -1092,7 +1349,14 @@ const Checker = struct {
         return self.symbolicOperationResult(operation.result, success, "E_POOL_RESULT");
     }
     fn acquireValue(self: *Checker, acquire: @FieldType(@FieldType(ast.Node, "data"), "acquire_buffer"), pool: bool, span: source.Span) Error!Symbolic {
-        const result = try self.ty(acquire.ty);
+        const inferred = acquire.managed and acquire.ty.start == acquire.ty.end;
+        const result = if (inferred) self.expected_types.get(span) orelse return self.sink.fail("E_LIST_INFERENCE", span, "empty list requires an expected List type") else try self.ty(acquire.ty);
+        if (acquire.managed) {
+            if (!self.shapes().managed(result)) return self.sink.fail(eListType, acquire.ty, "new_list requires a managed list type");
+            if (!inferred) try self.supports(try self.expression(acquire.value), .integer, span);
+            self.seedEffect(.managed_allocation);
+            return result;
+        }
         const code = if (pool) "E_POOL_RESULT" else "E_BUFFER_RESULT";
         const shape = try self.resultShape(result, acquire.ty, code);
         const kind_matches = try self.shapes().container(shape.ok_type, acquire.ty, pool) != null;
@@ -1138,14 +1402,30 @@ const Checker = struct {
         if (temporaries != 0) return self.sink.fail("E_RESULT_PROPAGATION", span, "propagation could drop an already evaluated result temporary");
         return input.ok_type;
     }
+    fn enumMember(self: *Checker, field: @FieldType(@FieldType(ast.Node, "data"), "field"), span: source.Span) Error!?Symbolic {
+        const base = self.program.nodes.items[@backingInt(field.base)];
+        if (base.data != .name or self.active.contains(self.src.text(base.data.name))) return null;
+        if (try self.catalog.variantType(self.src, base.data.name, self.sink) == null) return null;
+        const value = try self.variantValue(.{ .ty = base.data.name, .name = field.name, .value = null }, span);
+        return value;
+    }
     fn variantValue(self: *Checker, variant: @FieldType(@FieldType(ast.Node, "data"), "variant"), span: source.Span) Error!Symbolic {
         const result = try self.ty(variant.ty);
         const shape = try self.shapes().requireVariants(result, span);
         const tag = try self.shapes().memberIndex(shape, variant.name);
         const payload = shape.fields[tag].ty;
         if ((payload != null) != (variant.value != null)) return self.sink.fail("E_VARIANT_PAYLOAD", span, "construction must supply exactly the declared payload");
-        if (variant.value) |value| try self.same(try self.expression(value), payload.?, span);
+        if (variant.value) |value| try self.same(try self.expressionExpected(value, payload.?), payload.?, span);
         return result;
+    }
+    fn patternTag(self: *Checker, value: Symbolic, variants: symbolic.Schema, type_span: source.Span, name: source.Span) Error!usize {
+        if (type_span.start != type_span.end) {
+            try self.same(try self.ty(type_span), value, type_span);
+            return self.shapes().memberIndex(variants, name);
+        }
+        const canonical = @import("prelude.zig").caseName(self.src.text(name));
+        for (variants.fields, 0..) |candidate, index| if (std.mem.eql(u8, candidate.name, canonical)) return index;
+        return self.sink.fail("E_UNKNOWN_VARIANT", name, "case is not a variant of the matched type");
     }
     fn matchValue(self: *Checker, match: @FieldType(@FieldType(ast.Statement, "data"), "match"), span: source.Span) Error!bool {
         const value = try self.expression(match.value);
@@ -1161,8 +1441,7 @@ const Checker = struct {
         var terminated = true;
         for (match.arms) |arm| {
             self.restorePending(incoming);
-            try self.same(try self.ty(arm.ty), value, arm.ty);
-            const tag = try self.shapes().memberIndex(variants, arm.name);
+            const tag = try self.patternTag(value, variants, arm.ty, arm.name);
             if (seen[tag]) return self.sink.fail("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm");
             seen[tag] = true;
             const payload = variants.fields[tag].ty;
@@ -1201,8 +1480,7 @@ const Checker = struct {
         for (match.arms) |arm| {
             self.restorePending(incoming);
             self.temporary_results = outer_temporaries;
-            try self.same(try self.ty(arm.ty), value, arm.ty);
-            const tag = try self.shapes().memberIndex(variants, arm.name);
+            const tag = try self.patternTag(value, variants, arm.ty, arm.name);
             if (seen[tag]) return self.sink.fail("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm");
             seen[tag] = true;
             const payload = variants.fields[tag].ty;
@@ -1255,7 +1533,7 @@ const Checker = struct {
             if (seen[index]) return self.sink.fail(if (table_key != null) "E_DUPLICATE_KEY" else "E_DUPLICATE_FIELD", field.name, "named entry is initialized more than once");
             seen[index] = true;
             if (!complete and (try self.requiresHandling(shape.fields[index].ty.?))) return self.sink.fail(eResultOperation, field.name, "update would drop a result-bearing field");
-            try self.same(try self.expression(field.value), shape.fields[index].ty.?, field.name);
+            try self.same(try self.expressionExpected(field.value, shape.fields[index].ty.?), shape.fields[index].ty.?, field.name);
         }
         if (complete) for (seen) |present| {
             if (!present) return self.sink.fail(if (table_key != null) "E_INCOMPLETE_TABLE" else "E_MISSING_FIELD", span, "named construction must initialize every entry");
@@ -1268,7 +1546,24 @@ const Checker = struct {
         defer if (state) |snapshot| self.allocator.free(snapshot);
         const right = try self.expression(operation.right);
         if (state) |snapshot| try self.samePending(snapshot, operation.op_span, eResultPath);
+        if (self.isFloat(left) or self.isFloat(right) or operation.op == .python_div) {
+            if (!self.isFloat(left)) try self.supports(left, .integer, operation.op_span);
+            if (!self.isFloat(right)) try self.supports(right, .integer, operation.op_span);
+            return switch (operation.op) {
+                .add, .sub, .mul, .div, .python_div, .floor_div, .floor_rem => self.floatType(),
+                .eq, .ne, .lt, .le, .gt, .ge => .{ .concrete = .bool },
+                else => self.sink.fail("E_FLOAT_OPERATION", operation.op_span, "float supports arithmetic and numeric comparison"),
+            };
+        }
         try self.same(right, left, operation.op_span);
+        if (self.shapes().managed(left)) {
+            if (operation.op == .eq or operation.op == .ne) return .{ .concrete = .bool };
+            if (operation.op == .add and self.shapes().collectionKind(left) == .string) {
+                self.seedEffect(.managed_allocation);
+                return left;
+            }
+            return self.sink.fail("E_TEXT_OPERATOR", operation.op_span, "collection supports equality and str supports concatenation");
+        }
         switch (operation.op) {
             .f64_add, .f64_sub, .f64_mul, .f64_div, .f64_eq, .f64_lt, .f64_le => try self.same(left, .{ .concrete = .u64 }, operation.op_span),
             .logical_and, .logical_or => try self.same(left, .{ .concrete = .bool }, operation.op_span),
@@ -1285,6 +1580,8 @@ const Checker = struct {
             .mul,
             .div,
             .rem,
+            .floor_div,
+            .floor_rem,
             .bit_and,
             .bit_or,
             .bit_xor,
@@ -1351,7 +1648,7 @@ const Checker = struct {
                 return true;
             },
             .binding => |binding| {
-                const value = try self.expression(binding.value);
+                const value = if (binding.annotation) |annotation| try self.expressionExpected(binding.value, try self.ty(annotation)) else try self.expression(binding.value);
                 if (binding.annotation) |annotation| try self.same(value, try self.ty(annotation), annotation);
                 try self.bind(binding.name, value, binding.mutable);
                 const local_value = self.locals.items[self.locals.items.len - 1];
@@ -1359,10 +1656,18 @@ const Checker = struct {
                 try self.regions.require(self.last_origin, .{ .depth = local_value.arena_depth }, binding.name);
             },
             .assignment => |assignment| {
+                if (assignment.python and assignment.op == .set and !self.active.contains(self.src.text(assignment.name))) {
+                    const value = try self.expression(assignment.value);
+                    try self.bind(assignment.name, value, true);
+                    const local_value = self.locals.items[self.locals.items.len - 1];
+                    try self.regions.flow(self.last_origin, local_value.origin);
+                    try self.regions.require(self.last_origin, .{ .depth = local_value.arena_depth }, assignment.name);
+                    return false;
+                }
                 const target = try self.local(assignment.name);
                 if (!target.mutable) return self.sink.fail(diagnostic.immutable, assignment.name, "assignment requires a mutable binding");
                 try self.ownerAccess(target.*, true, assignment.name);
-                const value = try self.expression(assignment.value);
+                const value = try self.expressionExpected(assignment.value, target.ty);
                 try self.same(value, target.ty, assignment.op_span);
                 try self.regions.flow(self.last_origin, target.origin);
                 try self.regions.require(self.last_origin, .{ .depth = target.arena_depth }, assignment.name);
@@ -1402,8 +1707,24 @@ const Checker = struct {
                 if (ty_value == .parameter) try self.supports(ty_value, .storable, statement_value.span);
             },
             .branch => |branch| return self.branchValue(branch, statement_value.span),
+            .for_each => |each| {
+                const owner = try self.expression(each.iterable);
+                if (!self.shapes().managed(owner)) return self.sink.fail(eListType, statement_value.span, "iteration requires a list");
+                const shape = if (self.shapes().collectionKind(owner) == .dictionary) try self.shapes().collectionKey(owner, statement_value.span) else try self.collectionElement(owner, statement_value.span);
+                const first = self.locals.items.len;
+                try self.bind(each.name, shape, false);
+                if (each.index_name) |name| try self.bind(name, .{ .concrete = .i64 }, false);
+                defer self.endScope(first);
+                const before = try self.pendingState(self.locals.items.len);
+                defer self.allocator.free(before);
+                const previous = self.loop_pending;
+                self.loop_pending = before;
+                defer self.loop_pending = previous;
+                if (!try self.statement(each.body)) try self.samePending(before, statement_value.span, diagnostic.result_loop);
+                self.restorePending(before);
+            },
             .for_range => |range| {
-                const element = try self.expression(range.start);
+                const element: Symbolic = if (self.program.nodes.items[@backingInt(range.start)].data == .unit) .{ .concrete = .i64 } else try self.expression(range.start);
                 try self.supports(element, .integer, range.name);
                 try self.same(try self.expression(range.end), element, range.name);
                 const first = self.locals.items.len;
@@ -1527,6 +1848,7 @@ pub fn checkWithCatalog(allocator: std.mem.Allocator, src: source.Source, progra
         defer checker.regions.deinit();
         defer checker.locals.deinit(allocator);
         defer checker.active.deinit(allocator);
+        defer checker.expected_types.deinit(allocator);
         checker.checkFunction(function) catch |err| switch (err) {
             error.SourceError => failed = true,
             else => return err,

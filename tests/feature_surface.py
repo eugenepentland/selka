@@ -23,14 +23,14 @@ def main():
     features = json.loads(feature_run.stdout)
     assert features['compiler_sha256'] == identity
     examples = []
-    for document, expected in [('floating-point.md', '42\n'), ('source-evaluation.md', '45\n'), ('const-length-generics.md', '42\n')]:
+    for document, expected in [('python-syntax.md', '42\n'), ('floating-point.md', '42\n'), ('source-evaluation.md', '45\n'), ('const-length-generics.md', '42\n')]:
         text = (ROOT / 'docs' / document).read_text()
         source = re.search(r'```(?:mylang|my)\n(.*?)\n```', text, re.S).group(1)
         examples.append((document, source, expected, None))
     for path, expected in [('split-borrows.my', '39\n'), ('callbacks.my', '17\n'), ('callback-collections/main.my', '82\n')]:
         examples.append((path, (ROOT / 'examples' / path).read_text(), expected, None))
     examples.extend([
-        ('builtin-f64-excluded', 'fn main()->f64{return 0;}', '', 'E_UNKNOWN_TYPE'),
+        ('unknown-f64-alias-excluded', 'fn main()->f64{return 0;}', '', 'E_UNKNOWN_TYPE'),
         ('stored-references-excluded', 'struct View{value:&i64}fn main()->i64{return 0;}', '', 'E_TYPE'),
         ('unresolved-hole-excluded', 'fn main()->i64{return todo<i64>();}', '', 'E_TYPED_HOLE'),
     ])

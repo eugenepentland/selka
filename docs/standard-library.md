@@ -1,5 +1,7 @@
 # Standard library
 
+Ordinary application code uses builtin `list[T]`, `str`, and `dict[K, V]` with GC; see the [Python-style guide](python-syntax.md). The explicit-storage APIs below remain useful for bounded binary I/O and host interfaces. Their byte-oriented limits do not apply to managed Unicode strings.
+
 Standard modules are embedded in the compiler. Import their names directly;
 projects do not need to copy these files. Allocation and external authority stay
 explicit. The installed `--features` report identifies the executable actually
@@ -11,6 +13,7 @@ in use; this document describes the source tree.
 | Formatting | `std_math`, `std_format` | Integer extrema and empty-default reductions, nominal binary64 arithmetic, bounded decimal parsing and fixed-point formatting |
 | Collections | `std_collections`, `std_map`, `std_set`, `std_borrowed_set`, `std_queue` | Bounded vectors, linear maps/sets, queues, borrowed lookup/mutation, append-many, clear, stable filtering/deduplication, sorting/search |
 | Application primitives | `std_order`, `std_counter`, `std_ascii`, `std_iter`, `std_graph` | Range-key sorting/search and heaps, bounded frequencies, ASCII classes, distinct pairs and directed graph readiness |
+| Managed collections | `std_list` | Allocator-free shared lists, automatic growth, value reads, fixed-slot replacement and cycle collection |
 | Owned collections | `std_owned`, `std_owned_map` | Storable owned vectors and linear maps, consuming insertion/replacement, extraction, shrink-only truncation and deterministic cleanup |
 | Hashing | `std_hash`, `std_hash_map`, `std_hash_set`, `std_hash_bytes`, `std_hash_byte_set` | Deterministic hashes, bounded u64-key and inline byte-key tables, deletion/tombstones, replacement and explicit slot iteration |
 | Data interchange | `std_json`, `std_json_view`, `std_json_builder`, `std_encoding` | Typed/document JSON, checked node access, nested JSON construction, endian integers, hex and canonical padded base64 |
@@ -27,7 +30,8 @@ output. Buffered I/O operations return state and partial progress on recoverable
 failure, allowing a retry. File convenience calls close the file on failure.
 Always check the individual API contract before reusing an input after failure.
 
-Capacity limits do not automatically grow storage or grant more memory. Runtime
+Explicit-storage capacity limits do not automatically grow storage or grant more memory.
+Managed `std_list` collections grow automatically; see [managed memory](managed-memory.md). Runtime
 byte budgets additionally bound backing/bookkeeping allocations. Filesystem,
 clock and entropy functions require capabilities supplied by the host; importing
 a module grants no permissions. Synchronous provider operations are not timed
@@ -35,7 +39,8 @@ out by a VM instruction budget.
 
 ## Examples and focused references
 
-- [Word counts](../examples/standard-word-count/main.my) combines text splitting,
+- [Managed word counts](../examples/python-word-count/main.my) uses ordinary strings, dictionaries, and iteration without explicit storage.
+- [Bounded word counts](../examples/standard-word-count/main.my) combines text splitting,
   byte-key hashing and JSON construction. Its exported `histogram` handles up to
   16 unique space-delimited words, each at most 256 bytes, with bounded output.
 - [Buffered file example](../examples/standard-io/README.md) runs against an

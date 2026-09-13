@@ -1,58 +1,14 @@
-module main;
-import sexpr;
-import circuit;
-import svg;
-import validate;
-import ports;
-result Done {
-    ok: bool,
-    err: i64
-}
-fn render(heap: allocator) -> Done {
-    let source = try sexpr::parse(heap, 0);
-    let pinout = try sexpr::parse(heap, 1);
-    let interface = try sexpr::parse(heap, 2);
-    borrow source[0..len_buffer(source)] as nodes {
-        let validSource = validate::source(nodes);
-        if validSource != 0 {
-            return new Done.err(validSource);
-        }
-        let components = try circuit::collectParts(heap, nodes);
-        borrow components[0..len_buffer(components)] as parts {
-            borrow pinout[0..len_buffer(pinout)] as pin_names {
-                let validPinout = validate::pinoutCheck(pin_names);
-                if validPinout != 0 {
-                    return new Done.err(validPinout);
-                }
-                let wires = try circuit::collectPins(heap, nodes, parts, pin_names);
-                borrow wires[0..len_buffer(wires)] as pins {
-                    borrow interface[0..len_buffer(interface)] as lanes {
-                        let validModel = validate::model(nodes, parts, pins, pin_names);
-                        if validModel != 0 {
-                            return new Done.err(validModel);
-                        }
-                        let interfacePorts = try ports::collect(heap, nodes, lanes);
-                        borrow interfacePorts[0..len_buffer(interfacePorts)] as connections {
-                            let validPorts = ports::validate(connections, pins);
-                            if validPorts != 0 {
-                                return new Done.err(validPorts);
-                            }
-                            discard try svg::render(heap, nodes, parts, pins, pin_names, connections);
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return new Done.ok(true);
-}
-fn main(heap: allocator) -> i64 {
-    match render(heap) {
-        Done.ok(discard) => {
-            return 0;
-        },
-        Done.err(e) => {
-            return e;
-        }
-    }
-}
+module main
+import schematic_inputs
+import sexpr
+import schematic
+import svg
+
+def main() -> Result[None, int]:
+    inputs = schematic_inputs.load()
+    circuit = sexpr.parse(inputs.circuit)?
+    pinout = sexpr.parse(inputs.pinout)?
+    interface = sexpr.parse(inputs.interface)?
+    drawing = schematic.build(circuit, pinout, interface)?
+    svg.render(drawing)
+    return Ok(None)

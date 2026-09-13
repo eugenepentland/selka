@@ -43,7 +43,7 @@ const Builder = struct {
                 self.identities.items.items[id].ty = ty;
                 return;
             },
-            .named => |declaration| base = try self.declarationName(self.index.declarations.items[declaration].name),
+            .named => |declaration| base = self.index.declarations.items[declaration].builtin_name orelse try self.declarationName(self.index.declarations.items[declaration].name),
             .array => |array| {
                 if (array.length_parameter != null) return;
                 if (array.key) |key| {
@@ -77,8 +77,9 @@ const Builder = struct {
         return self.context.sink.fail(diagnostic.generic_limit, span, "nominal type display names exceed the 1 MiB compilation budget");
     }
     fn publicBase(self: Builder, id: usize) Error!bool {
-        const names = self.context.names orelse return true;
         const declaration = self.index.declarations.items[id];
+        if (declaration.builtin_name != null) return true;
+        const names = self.context.names orelse return true;
         const original = self.context.src.originalSpan(declaration.name) catch return error.InternalError;
         const unit = names.index.units[original.input];
         const symbol = unit.names.get(self.context.src.text(declaration.name)) orelse return error.InternalError;
@@ -175,7 +176,7 @@ const Builder = struct {
         const allocator = self.context.allocator;
         const fields_out = try allocator.alloc(typed.Field, declaration.fields.len);
         for (declaration.fields, fields_out, node.edges, 0..) |field, *out, edge, i| {
-            const name = self.context.src.text(field.name);
+            const name = field.builtin_name orelse self.context.src.text(field.name);
             out.* = .{ .name = name, .declaration = field.name, .ty = try self.runtimeType(edge.target) };
             try self.catalog.field_names.items[schema.id.recordIndex()].put(allocator, name, i);
         }
@@ -186,7 +187,7 @@ const Builder = struct {
         const cases = try allocator.alloc(typed.Variant, declaration.fields.len);
         var edge: usize = 0;
         for (declaration.fields, cases, 0..) |field, *out, i| {
-            const name = self.context.src.text(field.name);
+            const name = field.builtin_name orelse self.context.src.text(field.name);
             out.* = .{ .name = name, .declaration = field.name, .payload = null };
             if (field.ty != null) {
                 out.payload = try self.runtimeType(node.edges[edge].target);
@@ -212,6 +213,10 @@ const Builder = struct {
     fn special(self: Builder, declaration: templates.Declaration, schema: *typed.Record) Error!void {
         switch (declaration.kind) {
             .domain => {
+                if (declaration.builtin_name) |name| if (std.mem.eql(u8, name, "float")) {
+                    schema.shape.domain = .u64;
+                    return;
+                };
                 for (self.context.program.types.domains) |domain| if (domain.name.start == declaration.name.start) {
                     const backing = try self.catalog.resolve(self.context.src, domain.backing, self.context.sink);
                     if (!backing.isInteger() and backing != .bool) return self.context.sink.fail("E_DOMAIN_BASE", domain.backing, "domain backing must be a built-in integer or bool");
@@ -261,7 +266,17 @@ const Builder = struct {
             switch (declaration.kind) {
                 .record => try self.fields(node, schema, declaration),
                 .variants, .result, .enumeration => try self.variants(node, schema, declaration),
-                .buffer => schema.shape.buffer = try self.runtimeType(node.edges[0].target),
+                .buffer => {
+                    schema.shape.buffer = try self.runtimeType(node.edges[0].target);
+                    schema.managed = declaration.managed;
+                    if (declaration.builtin_name) |name| {
+                        if (std.mem.eql(u8, name, "str")) schema.collection.kind = .string;
+                        if (std.mem.eql(u8, name, "dict")) {
+                            schema.collection = .{ .kind = .dictionary, .key = schema.shape.buffer };
+                            schema.shape.buffer = try self.runtimeType(node.edges[1].target);
+                        }
+                    }
+                },
                 .pool => schema.shape.pool = .{ .element = try self.runtimeType(node.edges[0].target), .handle = try self.named(id + 1, node.key.arguments) },
                 .handle => schema.shape.handle_pool = try self.named(id - 1, node.key.arguments),
                 .domain, .resource => try self.special(declaration, schema),
@@ -275,6 +290,8 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     index.* = try templates.collect(allocator, src, program, sink, names);
     const graph = try allocator.create(layouts.Graph);
     graph.* = try layouts.collect(allocator, index, sink);
+    if (@import("nominal_type_syntax.zig").textRequired(program, src)) _ = try graph.materialize(.{ .named = index.names.get("str").? }, .{ .start = 0, .end = 0 });
+    if (@import("float_syntax.zig").used(src, program)) _ = try graph.materialize(.{ .named = index.names.get("float").? }, .{ .start = 0, .end = 0 });
     const store = try allocator.create(Store);
     store.* = .{ .context = .{ .allocator = allocator, .src = src, .program = program, .sink = sink, .names = names }, .index = index, .graph = graph };
     var catalog: Catalog = .{ .module_names = names, .records = &.{}, .names = .empty, .field_names = .empty };
@@ -283,7 +300,7 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     catalog.arrays.templates = sources.array_templates;
     catalog.templates.applications = sources.nominal_templates;
     for (index.declarations.items) |declaration| {
-        const name = if (names) |module| try module.declaration(declaration.name) else src.text(declaration.name);
+        const name = declaration.builtin_name orelse if (names) |module| try module.declaration(declaration.name) else src.text(declaration.name);
         if (declaration.parameters.len != 0) try catalog.templates.names.put(allocator, name, declaration.name);
     }
     const alias_ids = try allocator.alloc(layouts.Id, program.types.expressions.aliases.len);

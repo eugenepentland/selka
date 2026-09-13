@@ -110,9 +110,10 @@ pub fn generate(allocator: std.mem.Allocator, program: bc.Program, src: Source, 
     return generateWithInterface(allocator, program, src, sink, .{});
 }
 /// Checked public roots and optional canonical schema bytes from the same compilation.
-pub const Interface = struct { roots: []const typed.FunctionId = &.{}, schema: ?[]const u8 = null };
+pub const Interface = @import("native_interface.zig").Interface;
 /// Generate native C retaining the selected public roots and immutable schema identity.
 pub fn generateWithInterface(allocator: std.mem.Allocator, program: bc.Program, src: Source, sink: *diagnostic.Sink, interface: Interface) GenerateError![]u8 {
+    for (program.functions) |function| if (function.policy.c_abi) return sink.fail("E_EXTERN_BACKEND", function.policy.host.?, "direct C imports require the QBE backend");
     return generateInner(allocator, program, src, sink, interface) catch |err| switch (err) {
         error.WriteFailed => error.OutOfMemory,
         else => err,
@@ -120,6 +121,9 @@ pub fn generateWithInterface(allocator: std.mem.Allocator, program: bc.Program, 
 }
 fn generateInner(allocator: std.mem.Allocator, program: bc.Program, src: Source, sink: *diagnostic.Sink, interface: Interface) ![]u8 {
     try bc.validate(allocator, program);
+    for (program.records) |record| if (record.managed) {
+        return sink.fail(unsupported_feature, record.declaration, "managed lists currently execute in the VM; native GC roots are not implemented");
+    };
     var layout = try native_layout.Layout.init(allocator, program.records);
     defer layout.deinit();
     const wire_types = try native_wire.supported(allocator, program.records, false);
@@ -411,6 +415,12 @@ fn writeIndirect(context: InstructionOutput, invocation: @FieldType(@FieldType(b
     }
     try w.writeAll("default: host_failure(\"InternalError\");\n}\n");
 }
+fn floorOperation(w: *std.Io.Writer, operation: typed.BinaryOp, ty: typed.Type) !void {
+    try w.writeAll("if (b == 0) trap(\"R_DIVISION_BY_ZERO\"); V q = a / b, r = a % b; if (r != 0 && ((r < 0) != (b < 0))) { q -= 1; r += b; } push(checked(");
+    try w.writeAll(if (operation == .floor_div) "q, " else "r, ");
+    try limits(w, ty);
+    try w.writeAll("));\n");
+}
 fn writeOperation(context: InstructionOutput) !bool {
     const w = context.writer;
     const layout = context.layout;
@@ -620,6 +630,7 @@ fn writeOperation(context: InstructionOutput) !bool {
             };
             try w.writeAll("V b = pop(), a = pop(); ");
             switch (operation) {
+                .floor_div, .floor_rem => try floorOperation(w, operation, ty),
                 .eq, .ne, .lt, .le, .gt, .ge => try w.print("push(a {s} b);\n", .{predicate(operation)}),
                 .f64_add, .f64_sub, .f64_mul, .f64_div, .f64_eq, .f64_lt, .f64_le => {
                     const code = floatBinaryCode(operation);
@@ -775,6 +786,8 @@ fn floatUnaryCode(op: typed.UnaryOp) usize {
         .f64_neg => 5,
         .f64_from_u64 => 6,
         .f64_to_u64 => 7,
+        .f64_from_i64 => 8,
+        .f64_to_i64 => 9,
         else => unreachable,
     };
 }

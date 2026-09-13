@@ -51,6 +51,15 @@ static V float_unary(int op, uint64_t input) {
             a = trunc(a);
             if (!isfinite(a) || a < 0 || a >= 18446744073709551616.0) trap("R_FLOAT_CONVERSION");
             return (uint64_t)a;
+        case 8: {
+            int64_t signed_input;
+            memcpy(&signed_input, &input, sizeof signed_input);
+            return float_bits((double)signed_input);
+        }
+        case 9:
+            a = trunc(a);
+            if (!isfinite(a) || a < -9223372036854775808.0 || a >= 9223372036854775808.0) trap("R_FLOAT_CONVERSION");
+            return (int64_t)a;
         default: host_failure("InternalError");
     }
 }

@@ -4,7 +4,7 @@ const bc = @import("bytecode.zig");
 const typed = @import("typed.zig");
 const host = @import("host_functions.zig");
 /// Registration errors plus invalid bytecode or a different compiled program.
-pub const Error = host.Error || error{ InternalError, HostProgramMismatch };
+pub const Error = host.Error || error{ InternalError, HostProgramMismatch, ExternRequiresQbe };
 /// Owns registry metadata and borrows one immutable compiled program and host contexts.
 pub const Registry = struct {
     registry: host.Registry,
@@ -18,6 +18,7 @@ pub const Registry = struct {
         const temporary = scratch.allocator();
         var declarations: std.ArrayList(host.Declaration) = .empty;
         for (program.functions) |function| {
+            if (function.policy.c_abi) return error.ExternRequiresQbe;
             if (function.policy.host == null) continue;
             const parameters = try temporary.alloc(host.Parameter, function.signature.parameter_count);
             for (parameters, function.scope.locals) |*parameter, local| parameter.* = .{ .ty = local.ty };

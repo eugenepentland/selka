@@ -9,7 +9,7 @@ pub const Prepared = struct { digest: [32]u8, bodies: []source.Span, enabled: bo
 /// Ignore body contents while preserving source outside bodies and resolved type identities.
 pub fn prepare(allocator: std.mem.Allocator, src: source.Source, program: ast.Program, records: []const typed.Record) error{ OutOfMemory, InternalError }!Prepared {
     const bodies = try allocator.alloc(source.Span, program.functions.len);
-    var enabled = !@import("nominal_type_syntax.zig").present(program);
+    var enabled = !@import("nominal_type_syntax.zig").presentInSource(program, src);
     if (enabled and try functionValues(allocator, src, program)) enabled = false;
     for (program.functions, bodies) |function, *body| {
         body.* = program.statements.items[@backingInt(function.body)].span;
@@ -44,7 +44,7 @@ fn functionValues(allocator: std.mem.Allocator, src: source.Source, program: ast
     }
     for (program.nodes.items) |node| if (node.data == .name) {
         const text = src.text(node.data.name);
-        const start = if (std.mem.lastIndexOfScalar(u8, text, ':')) |at| at + 1 else 0;
+        const start = if (std.mem.lastIndexOfAny(u8, text, ":.")) |at| at + 1 else 0;
         const bare = std.mem.trim(u8, text[start..], " \t\r\n");
         if (names.contains(bare)) return true;
     };

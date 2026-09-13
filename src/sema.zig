@@ -1,4 +1,10 @@
 //! Scope and type checking use resolved binding identities, including advisory use counts.
+const buffer_operations = @import("buffer_operations.zig");
+const BufferKind = buffer_operations.Kind;
+const collections = @import("collection_lower.zig");
+const needs_list = "operation requires a managed list";
+const eListType = @import("collection_lower.zig").list_type_error;
+const call_arguments = @import("call_arguments.zig");
 const callables = @import("callables.zig");
 const eBorrowConflict = diagnostic.borrow_conflict;
 const callback_type_code = "E_CALLBACK_TYPE";
@@ -21,6 +27,8 @@ const eImmutable = diagnostic.immutable;
 const eResultDiscard = diagnostic.result_discard;
 const variantDeclaredHere = "variant declared here";
 const std = @import("std");
+const bufferOperation = "buffer_operation";
+const eCollectionMethod = "E_COLLECTION_METHOD";
 const eReferenceArgument = diagnostic.reference_argument;
 const source_json = @import("source_json.zig");
 const ast = @import("ast.zig");
@@ -34,7 +42,8 @@ const instances = @import("generic_instances.zig");
 const Names = @import("module_names.zig").Names;
 const LoopScope = struct { id: usize, before: []const Pending, references: usize, arena_depth: usize };
 const Pending = struct { available: bool, fields: field_moves.State, transfer_span: ?source.Span };
-const Work = struct { id: ast.NodeId, emit: bool = false, checkpoint: bool = false, verify: ?[]const Pending = null };
+const Work = struct { default_value: bool = false, id: ast.NodeId, emit: bool = false, checkpoint: bool = false, verify: ?[]const Pending = null };
+const FieldDestination = struct { owner: typed.LocalId, index: ?typed.NodeId, value: typed.NodeId, refresh: typed.StatementId };
 const CheckedStatement = struct { id: typed.StatementId, terminates: bool };
 
 const StatementFlow = struct {
@@ -42,6 +51,11 @@ const StatementFlow = struct {
     cleanup: []const typed.ReferenceId = &.{},
     owned_cleanup: []const typed.LocalId = &.{},
 };
+
+const integer_literal = @import("integer_literal.zig");
+const float_syntax = @import("float_syntax.zig");
+const numeric_surface = @import("numeric_surface.zig");
+const prelude = @import("prelude.zig");
 
 const Checker = struct {
     allocator: std.mem.Allocator,
@@ -53,6 +67,7 @@ const Checker = struct {
     locals: std.ArrayList(typed.Local) = .empty,
     active: std.StringHashMapUnmanaged(typed.LocalId) = .empty,
     resolved: []?typed.NodeId,
+    expected_types: std.AutoHashMapUnmanaged(source.Span, typed.Type) = .empty,
     functions: std.StringHashMapUnmanaged(instances.DeclarationId) = .empty,
     resolved_nodes: std.ArrayList(usize) = .empty,
     instance_keys: std.ArrayList(instances.Key) = .empty,
@@ -60,11 +75,13 @@ const Checker = struct {
     ordinary_ids: []?typed.FunctionId,
     ordinary_count: usize = 0,
     current_function: ?typed.FunctionId = null,
+    python_assignment_order: bool = false,
     loops: struct { active: std.ArrayList(LoopScope) = .empty, next: usize = 0 } = .{},
     return_type: typed.Type = .i64,
     arena_depth: usize = 0,
     catalog: records.Catalog,
     conversion_fields: ?[]bool = null,
+    managed_types: []bool = &.{},
     owner: ?typed.Type = null,
     return_reference: ?typed.ReturnReference = null,
     references: std.ArrayList(typed.Reference) = .empty,
@@ -76,10 +93,12 @@ const Checker = struct {
         const sink = self.sink;
         self.current_function = @fromBackingInt(i);
         const function = self.syntaxFunction(@fromBackingInt(i));
+        self.python_assignment_order = function.policy.python;
         const constant_context: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = self.sink, .catalog = self.catalog };
         const constant = if (function.policy.constant) try constant_context.evaluate(@backingInt(self.instance_keys.items[i].declaration)) else null;
         for (self.resolved_nodes.items) |node| self.resolved[node] = null;
         self.resolved_nodes.clearRetainingCapacity();
+        self.expected_types.clearRetainingCapacity();
         self.locals = .empty;
         self.references = .empty;
         self.active_refs.clearRetainingCapacity();
@@ -88,7 +107,12 @@ const Checker = struct {
         self.return_type = try self.ty(function.signature.return_type);
         self.return_reference = try self.returnContract(@fromBackingInt(i));
         try self.bindParameters(function);
-        if (function.policy.host != null) {
+        if (function.policy.c_abi) {
+            const foreign = @import("c_abi.zig");
+            if (!foreign.supported(self.return_type, self.catalog.records, true)) return sink.fail("E_EXTERN_SIGNATURE", function.signature.return_type, foreign.signature_message);
+            for (self.locals.items) |local| if (!foreign.supported(local.ty, self.catalog.records, false)) return sink.fail("E_EXTERN_SIGNATURE", local.declaration, foreign.signature_message);
+            if (!foreign.validSymbol(src.text(function.name))) return sink.fail("E_EXTERN_SYMBOL", function.name, "extern names must be C identifiers outside the reserved myl_/mylang_ runtime namespaces");
+        } else if (function.policy.host != null) {
             try checkHostType(allocator, self.catalog.records, self.return_type, function.signature.return_type, sink);
             for (self.locals.items) |local| try checkHostType(allocator, self.catalog.records, local.ty, local.declaration, sink);
         }
@@ -134,6 +158,7 @@ const Checker = struct {
         return .{
             .policy = .{
                 .host = function.policy.host,
+                .c_abi = function.policy.c_abi,
                 .effect_bound = function.policy.effect_bound,
                 .owner = self.owner,
                 .restricted = function.policy.restricted,
@@ -356,7 +381,7 @@ const Checker = struct {
         const target = try self.callDeclaration(input, span);
         return self.specialize(target.declaration, target.call, span);
     }
-    fn callDeclaration(self: *Checker, input: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span) Error!ResolvedCall {
+    fn callDeclaration(self: *Checker, input: @FieldType(@FieldType(ast.Node, "data"), "call"), _: source.Span) Error!ResolvedCall {
         if (std.mem.eql(u8, self.src.text(input.name), "todo") and input.owner == null) {
             _ = try self.ty(input.type_arguments[0]);
             return self.sink.typedHole(input.name, input.type_arguments[0]);
@@ -390,8 +415,8 @@ const Checker = struct {
                 .message = "private function declared here",
             },
         );
-        if (signature.signature.parameters.len != call.arguments.len) return self.sink.fail("E_ARITY", span, "argument count does not match function parameters");
-        return .{ .declaration = function, .call = call };
+        const bound = try call_arguments.bind(self.allocator, self.src, call, signature.signature.parameters, self.sink);
+        return .{ .declaration = function, .call = bound };
     }
     fn reference(self: *Checker, span: source.Span) Error!typed.ReferenceId {
         const id = self.active_refs.get(self.src.text(span)) orelse return self.sink.fail("E_REFERENCE_SCOPE", span, "reference is not active in this scope");
@@ -489,15 +514,21 @@ const Checker = struct {
     fn resolve(self: *Checker, name: source.Span) Error!typed.LocalId {
         return self.active.get(self.src.text(name)) orelse self.sink.fail("E_UNKNOWN_NAME", name, "name is not defined in this scope");
     }
-    const Literal = @import("integer_literal.zig").Literal;
+    const Literal = integer_literal.Literal;
     fn literal(self: *Checker, span: source.Span, allow_minimum: bool) Error!Literal {
-        return @import("integer_literal.zig").parse(self.src, span, allow_minimum, self.sink);
+        return integer_literal.parse(self.src, span, allow_minimum, self.sink);
     }
     fn minimum(self: *Checker, node: ast.Node) Error!?Literal {
         if (node.data != .unary or node.data.unary.op != .neg) return null;
         const child = self.syntax.nodes.items[@backingInt(node.data.unary.operand)];
-        if (child.data != .integer) return null;
-        const parsed = try self.literal(child.data.integer, true);
+        if (child.data != .integer or float_syntax.isLiteral(self.src.text(child.data.integer))) return null;
+        const expected = self.expected_types.get(node.span);
+        if (expected) |ty_value| if (numeric_surface.isFloat(ty_value, self.catalog.records)) return null;
+        const parsed = try integer_literal.parseExpected(self.src, child.data.integer, true, expected, self.sink);
+        if (expected != null and parsed.ty.isInteger()) {
+            if (!parsed.ty.fits(-parsed.value)) return self.sink.fail("E_INTEGER_RANGE", node.span, "negative integer literal does not fit its expected type");
+            return .{ .ty = parsed.ty, .value = -parsed.value };
+        }
         if (parsed.ty.integer().?.signed and parsed.value == -parsed.ty.min()) return .{ .ty = parsed.ty, .value = -parsed.value };
         return null;
     }
@@ -510,8 +541,403 @@ const Checker = struct {
     fn expression(self: *Checker, root: ast.NodeId) Error!typed.NodeId {
         return self.expressionMode(root, false);
     }
-    fn queueExpression(self: *Checker, work: *std.ArrayList(Work), id: ast.NodeId, allow_reference: bool) Error!bool {
+    fn hint(self: *Checker, id: ast.NodeId, expected: typed.Type) Error!void {
+        try self.expected_types.put(self.allocator, self.syntax.nodes.items[@backingInt(id)].span, expected);
+    }
+    fn checkInteger(self: *Checker, node: ast.Node) Error!typed.Node {
+        const token = node.data.integer;
+        const expected = self.expected_types.get(node.span);
+        const text = self.src.text(token);
+        if (float_syntax.isLiteral(text) or (expected != null and numeric_surface.isFloat(expected.?, self.catalog.records))) return self.numericBuilder(node.span).literal(text, self.sink);
+        const parsed = try integer_literal.parseExpected(self.src, token, false, expected, self.sink);
+        return .{ .span = node.span, .ty = parsed.ty, .data = .{ .integer = parsed.value } };
+    }
+    fn numericBuilder(self: *Checker, span: source.Span) numeric_surface.Builder {
+        return .{ .arena = self.allocator, .nodes = &self.nodes, .span = span, .float_type = self.catalog.names.get("float").? };
+    }
+    fn obviousNumericType(self: *Checker, id: ast.NodeId) ?typed.Type {
         const node = self.syntax.nodes.items[@backingInt(id)];
+        if (self.expected_types.get(node.span)) |expected| return expected;
+        if (node.data == .name) if (self.active.get(self.src.text(node.data.name))) |slot| return self.locals.items[@backingInt(slot)].ty;
+        if (node.data == .integer and float_syntax.isLiteral(self.src.text(node.data.integer))) return self.catalog.names.get("float");
+        return null;
+    }
+    fn hintBinary(self: *Checker, node: ast.Node) Error!void {
+        const binary = node.data.binary;
+        const expected = self.obviousNumericType(binary.left) orelse self.obviousNumericType(binary.right) orelse self.expected_types.get(node.span) orelse return;
+        if (!expected.isInteger() and !numeric_surface.isFloat(expected, self.catalog.records)) return;
+        try self.hint(binary.left, expected);
+        try self.hint(binary.right, expected);
+    }
+    fn expressionExpected(self: *Checker, id: ast.NodeId, expected: typed.Type) Error!typed.NodeId {
+        try self.hint(id, expected);
+        return self.expression(id);
+    }
+    fn resultConstructor(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?bool {
+        if (call.owner != null or call.type_arguments.len != 0) return null;
+        const name = self.src.text(call.name);
+        if (self.active.contains(name) or self.functions.contains(name)) return null;
+        if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return null;
+        if (std.mem.eql(u8, name, "Ok")) return true;
+        if (std.mem.eql(u8, name, "Err")) return false;
+        return null;
+    }
+    fn numericConversion(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?bool {
+        if (call.owner != null or call.type_arguments.len != 0) return null;
+        const name = self.src.text(call.name);
+        const floating = std.mem.eql(u8, name, "float");
+        if (!floating and !std.mem.eql(u8, name, "int")) return null;
+        if (self.active.contains(name) or self.functions.contains(name)) return null;
+        if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return null;
+        return floating;
+    }
+    fn checkNumericConversion(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), floating: bool, out: *typed.Node) Error!void {
+        const value = self.resolved[@backingInt(call.arguments[0])].?;
+        const ty_value = self.nodes.items[@backingInt(value)].ty;
+        const input_float = numeric_surface.isFloat(ty_value, self.catalog.records);
+        if (!input_float and !ty_value.isInteger()) return self.sink.fail("E_TYPE", node.span, "numeric conversion requires an integer or float");
+        if (floating) {
+            out.* = if (input_float) self.nodes.items[@backingInt(value)] else try self.numericBuilder(node.span).fromInteger(value);
+        } else if (input_float) {
+            out.* = try self.numericBuilder(node.span).toInteger(value);
+        } else out.* = .{ .span = node.span, .ty = .i64, .data = .{ .cast = value } };
+    }
+    fn optionConstructor(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
+        if (call.owner != null or call.type_arguments.len != 0 or !std.mem.eql(u8, self.src.text(call.name), "Some")) return false;
+        if (self.active.contains("Some") or self.functions.contains("Some")) return false;
+        if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return false;
+        return true;
+    }
+    fn expectedOption(self: *Checker, node: ast.Node) Error!struct { ty: typed.Type, shape: prelude.OptionShape } {
+        const expected = self.expected_types.get(node.span) orelse return self.sink.fail("E_OPTION_INFERENCE", node.span, "Some requires an expected Option type");
+        const shape = prelude.optionShape(expected, self.catalog.records) orelse return self.sink.fail("E_TYPE", node.span, "Some requires an expected Option type");
+        return .{ .ty = expected, .shape = shape };
+    }
+    fn checkOptionConstructor(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
+        const expected = try self.expectedOption(node);
+        const value = self.resolved[@backingInt(call.arguments[0])].?;
+        try self.require(self.nodes.items[@backingInt(value)].ty, expected.shape.element, node.span);
+        out.* = .{ .span = node.span, .ty = expected.ty, .data = .{ .variant = .{ .tag = expected.shape.some, .value = value } } };
+    }
+    fn checkUnit(self: *Checker, node: ast.Node) typed.Node {
+        if (self.expected_types.get(node.span)) |expected| if (prelude.optionShape(expected, self.catalog.records)) |shape| {
+            return .{ .span = node.span, .ty = expected, .data = .{ .variant = .{ .tag = shape.none, .value = null } } };
+        };
+        return .{ .span = node.span, .ty = .unit, .data = .unit };
+    }
+    fn expectedResult(self: *Checker, node: ast.Node) Error!typed.Type {
+        const expected = self.expected_types.get(node.span) orelse return self.sink.fail("E_RESULT_INFERENCE", node.span, "Ok and Err require a Result type from a binding, return, argument, or field");
+        if (typed.resultShape(expected, self.catalog.records) == null) return self.sink.fail("E_TYPE", node.span, "Ok and Err require an expected Result type");
+        return expected;
+    }
+    fn checkResultConstructor(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), ok: bool, out: *typed.Node) Error!void {
+        if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "Ok and Err require one payload");
+        out.ty = try self.expectedResult(node);
+        const shape = typed.resultShape(out.ty, self.catalog.records).?;
+        const value = self.resolved[@backingInt(call.arguments[0])].?;
+        try self.require(self.nodes.items[@backingInt(value)].ty, if (ok) shape.ok_type else shape.error_type, node.span);
+        out.data = .{ .variant = .{ .tag = if (ok) shape.ok_tag else shape.error_tag, .value = value } };
+    }
+    fn collectionSyntax(self: *Checker, id: ast.NodeId) Error!ast.Node {
+        var node = self.syntax.nodes.items[@backingInt(id)];
+        if (node.data == .call) {
+            const call = node.data.call;
+            if (try @import("record_calls.zig").lower(self.allocator, self.src, self.catalog, call, self.sink)) |record| {
+                node.data = record.data;
+                return node;
+            }
+            if (call.owner) |owner| if (self.active.get(self.src.text(owner))) |slot| {
+                const value_type = self.locals.items[@backingInt(slot)].ty;
+                if (value_type.isAggregate() and self.catalog.records[value_type.recordIndex()].managed) {
+                    try call_arguments.positional(call, self.sink);
+                    const name = self.src.text(call.name);
+                    const kind = buffer_operations.method(name) orelse
+                        return self.sink.fail("E_LIST_METHOD", call.name, "unknown managed collection method");
+                    if (call.type_arguments.len != 0 or call.arguments.len != kind.arity()) return self.sink.fail("E_ARITY", node.span, "list method argument count does not match its signature");
+                    node.data = .{ .buffer_operation = .{ .kind = kind, .owner = owner, .result = null, .arguments = call.arguments } };
+                }
+            };
+        }
+        if (node.data == .field) {
+            const field = node.data.field;
+            const base = self.syntax.nodes.items[@backingInt(field.base)];
+            if (base.data == .name and !self.active.contains(self.src.text(base.data.name))) {
+                if (try self.catalog.variantType(self.src, base.data.name, self.sink) != null)
+                    node.data = .{ .variant = .{ .ty = base.data.name, .name = field.name, .value = null } };
+            }
+        }
+        return node;
+    }
+    fn listElement(self: *Checker, ty_value: typed.Type, span: source.Span) Error!typed.Type {
+        if (!ty_value.isAggregate() or !self.catalog.records[ty_value.recordIndex()].managed) return self.sink.fail(eListType, span, needs_list);
+        if (self.catalog.records[ty_value.recordIndex()].collection.kind != .list) return self.sink.fail(eListType, span, needs_list);
+        return self.catalog.records[ty_value.recordIndex()].shape.buffer orelse return self.sink.fail(eListType, span, needs_list);
+    }
+    fn checkFieldAssignment(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
+        const assignment = node.data.field_assignment;
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
+        var path_fields: std.ArrayList(source.Span) = .empty;
+        var root = assignment.target;
+        while (self.syntax.nodes.items[@backingInt(root)].data == .field) {
+            const field = self.syntax.nodes.items[@backingInt(root)].data.field;
+            try path_fields.append(self.allocator, field.name);
+            root = field.base;
+        }
+        const root_node = self.syntax.nodes.items[@backingInt(root)];
+        var statements: std.ArrayList(typed.StatementId) = .empty;
+        const destination = try self.fieldDestination(root_node, &statements, temporaries);
+        var value = destination.value;
+        const bases = try self.allocator.alloc(typed.NodeId, path_fields.items.len);
+        const indices = try self.allocator.alloc(usize, path_fields.items.len);
+        for (0..path_fields.items.len) |i| {
+            const name = path_fields.items[path_fields.items.len - i - 1];
+            const ty_value = self.nodes.items[@backingInt(value)].ty;
+            const schema = try self.catalog.record(ty_value, name, self.sink);
+            if (self.transfers(ty_value)) return self.sink.fail(eResultOperation, name, "field assignment requires a copyable record without pending results");
+            const field = try self.catalog.field(ty_value, self.src, name, self.sink);
+            bases[i] = value;
+            indices[i] = field;
+            value = try b.node(schema.fields[field].ty, .{ .field = .{ .base = value, .index = field } });
+        }
+        const expected = self.nodes.items[@backingInt(value)].ty;
+        try self.hint(assignment.value, expected);
+        value = try self.expressionWithTemporaries(assignment.value, false, temporaries);
+        try self.require(self.nodes.items[@backingInt(value)].ty, expected, node.span);
+        const assigned = try b.local(expected);
+        const evaluate_value = try b.stmt(.{ .initialize = .{ .slot = assigned, .value = value } });
+        if (self.python_assignment_order) try statements.insert(self.allocator, 0, evaluate_value) else try statements.append(self.allocator, evaluate_value);
+        // Preserve unrelated fields changed through aliases while computing the RHS.
+        try statements.append(self.allocator, destination.refresh);
+        value = try b.read(assigned);
+        var i = bases.len;
+        while (i > 0) {
+            i -= 1;
+            value = try b.node(self.nodes.items[@backingInt(bases[i])].ty, .{ .update = .{
+                .base = bases[i],
+                .fields = try self.allocator.dupe(typed.FieldInit, &.{.{ .index = indices[i], .value = value }}),
+            } });
+        }
+        const write = if (destination.index) |index|
+            try b.stmt(.{ .discard = try b.operation(destination.owner, .write, &.{ index, value }) })
+        else
+            try b.stmt(.{ .assign = .{ .slot = destination.owner, .value = value } });
+        try statements.append(self.allocator, write);
+        return b.block(statements.items, try b.node(.unit, .unit));
+    }
+    fn fieldDestination(self: *Checker, root: ast.Node, statements: *std.ArrayList(typed.StatementId), temporaries: []const typed.Type) Error!FieldDestination {
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = root.span };
+        if (root.data == .name) {
+            const owner = try self.resolve(root.data.name);
+            try self.ownerAccess(owner, true, root.span);
+            if (!self.locals.items[@backingInt(owner)].mutable) return self.sink.fail(eImmutable, root.span, "record field assignment requires a mutable binding");
+            self.locals.items[@backingInt(owner)].usage.writes += 1;
+            self.locals.items[@backingInt(owner)].usage.reads += 1;
+            const saved = try b.local(self.locals.items[@backingInt(owner)].ty);
+            const refresh = try b.stmt(.{ .initialize = .{ .slot = saved, .value = try b.read(owner) } });
+            try statements.append(self.allocator, refresh);
+            return .{ .owner = owner, .index = null, .value = try b.read(saved), .refresh = refresh };
+        }
+        if (root.data != .index) return self.sink.fail("E_ASSIGNMENT_TARGET", root.span, "field assignment requires a mutable local record or list slot");
+        const access = root.data.index;
+        const base = try self.expressionWithTemporaries(access.base, false, temporaries);
+        const ty_value = self.nodes.items[@backingInt(base)].ty;
+        if (!ty_value.isAggregate() or !self.catalog.records[ty_value.recordIndex()].managed) return self.sink.fail(eCollectionMethod, root.span, "indexed field assignment requires a list or dictionary");
+        const schema = self.catalog.records[ty_value.recordIndex()];
+        if (schema.collection.kind == .string) return self.sink.fail(eCollectionMethod, root.span, "strings are immutable");
+        const element = schema.shape.buffer.?;
+        const owner = try b.local(ty_value);
+        try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = owner, .value = base } }));
+        const index_value = try self.expressionWithTemporaries(access.index, false, temporaries);
+        const dictionary = self.catalog.records[ty_value.recordIndex()].collection.kind == .dictionary;
+        const key_type = if (dictionary) self.catalog.records[ty_value.recordIndex()].collection.key.? else typed.Type.i64;
+        const index_slot = try b.local(key_type);
+        try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = index_slot, .value = if (dictionary) index_value else try b.index(owner, index_value, false) } }));
+        const index = try b.read(index_slot);
+        const saved = try b.local(element);
+        const refresh = try b.stmt(.{ .initialize = .{ .slot = saved, .value = try b.operation(owner, .read, &.{index}) } });
+        try statements.append(self.allocator, refresh);
+        return .{ .owner = owner, .index = index, .value = try b.read(saved), .refresh = refresh };
+    }
+    fn checkListLiteral(self: *Checker, node: ast.Node, inputs: []const ast.NodeId, temporaries: []const typed.Type) Error!typed.Node {
+        var expected = self.expected_types.get(node.span);
+        var element: ?typed.Type = if (expected) |ty_value| try self.listElement(ty_value, node.span) else null;
+        if (inputs.len == 0 and expected == null) return self.sink.fail("E_LIST_INFERENCE", node.span, "empty list requires an expected List type");
+        const values = try self.allocator.alloc(typed.NodeId, inputs.len);
+        for (inputs, values) |input, *value| {
+            if (element) |ty_value| try self.hint(input, ty_value);
+            value.* = try self.expressionWithTemporaries(input, false, temporaries);
+            const actual = self.nodes.items[@backingInt(value.*)].ty;
+            if (element) |ty_value| try self.require(actual, ty_value, self.syntax.nodes.items[@backingInt(input)].span) else element = actual;
+        }
+        if (expected == null) expected = try collections.listType(&self.catalog, element.?, node.span);
+        if (!typed.storable(element.?, self.catalog.records) or typed.moveOnly(element.?, self.catalog.records) or self.requiresHandling(element.?))
+            return self.sink.fail(eListType, node.span, "list elements require copyable storable values without pending results");
+        return (collections.Builder(Checker){ .checker = self, .span = node.span }).literal(expected.?, values);
+    }
+    fn checkCollectionMethod(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
+        const call = node.data.method_call;
+        const name = self.src.text(call.name);
+        const kind = buffer_operations.method(name) orelse return self.sink.fail("E_COLLECTION_METHOD", call.name, "unknown managed collection method");
+        return self.checkListAccess(node, .{ .base = call.base, .kind = kind, .inputs = call.arguments }, temporaries);
+    }
+    fn checkCollectionSlice(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
+        const slice = node.data.slice;
+        const base = try self.expressionWithTemporaries(slice.base, false, temporaries);
+        const input = self.nodes.items[@backingInt(base)].ty;
+        if (!input.isAggregate() or !self.catalog.records[input.recordIndex()].managed) return self.sink.fail(eCollectionMethod, node.span, "slicing requires a list or str");
+        const schema = self.catalog.records[input.recordIndex()];
+        if (schema.collection.kind == .dictionary) return self.sink.fail(eCollectionMethod, node.span, "dictionary keys do not support slices");
+        const start = if (slice.start) |value| try self.expressionWithTemporaries(value, false, temporaries) else null;
+        const end = if (slice.end) |value| try self.expressionWithTemporaries(value, false, temporaries) else null;
+        if (start) |value| try self.requireInteger(self.nodes.items[@backingInt(value)].ty, node.span);
+        if (end) |value| try self.requireInteger(self.nodes.items[@backingInt(value)].ty, node.span);
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
+        return if (schema.collection.kind == .string) b.textSlice(base, start, end) else b.slice(base, start, end);
+    }
+    fn checkListAccess(self: *Checker, node: ast.Node, operation: struct { base: ast.NodeId, kind: BufferKind, inputs: []const ast.NodeId, signed_length: bool = false }, temporaries: []const typed.Type) Error!typed.Node {
+        const base_input = operation.base;
+        const kind = operation.kind;
+        const inputs = operation.inputs;
+        const base = try self.expressionWithTemporaries(base_input, false, temporaries);
+        const owner_type = self.nodes.items[@backingInt(base)].ty;
+        if (owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].collection.kind != .list) return self.checkManagedAccess(node, .{ .base = base, .kind = kind, .inputs = inputs }, temporaries);
+        const supported = switch (kind) {
+            .append, .read, .write, .length, .contains => true,
+            else => false,
+        };
+        if (!supported) return self.sink.fail(eCollectionMethod, node.span, "operation is not supported by lists");
+        const element = try self.listElement(self.nodes.items[@backingInt(base)].ty, node.span);
+        if (inputs.len != kind.arity()) return self.sink.fail("E_ARITY", node.span, "collection method argument count differs from its signature");
+        const arguments = try self.allocator.alloc(typed.NodeId, inputs.len);
+        for (inputs, arguments, 0..) |input, *argument, i| {
+            const writes_element = kind == .append or kind == .contains or (kind == .write and i == 1);
+            if (writes_element) try self.hint(input, element);
+            argument.* = try self.expressionWithTemporaries(input, false, temporaries);
+            const actual = self.nodes.items[@backingInt(argument.*)].ty;
+            if (writes_element) try self.require(actual, element, node.span) else try self.requireInteger(actual, node.span);
+        }
+        return (collections.Builder(Checker){ .checker = self, .span = node.span, .python_assignment_order = self.python_assignment_order }).access(base, kind, arguments, operation.signed_length);
+    }
+    fn checkManagedAccess(self: *Checker, node: ast.Node, operation: struct { base: typed.NodeId, kind: BufferKind, inputs: []const ast.NodeId }, temporaries: []const typed.Type) Error!typed.Node {
+        const owner_type = self.nodes.items[@backingInt(operation.base)].ty;
+        const schema = self.catalog.records[owner_type.recordIndex()];
+        const dictionary = schema.collection.kind == .dictionary;
+        _ = collections.operationType(&self.catalog, owner_type, operation.kind, node.span) catch |err| switch (err) {
+            error.InternalError => return self.sink.fail(eCollectionMethod, node.span, "operation is not supported by this collection"),
+            else => return err,
+        };
+        if (operation.inputs.len != operation.kind.arity()) return self.sink.fail("E_ARITY", node.span, "collection method argument count differs from its signature");
+        const arguments = try self.allocator.alloc(typed.NodeId, operation.inputs.len);
+        for (operation.inputs, arguments, 0..) |input, *argument, index| {
+            const integer = !dictionary and (operation.kind == .read or operation.kind == .slice);
+            const expected = if (integer) typed.Type.i64 else if (dictionary) map_argument: {
+                break :map_argument if (index == 0) schema.collection.key.? else schema.shape.buffer.?;
+            } else if (operation.kind == .join) try self.collectionListType(owner_type, node.span) else owner_type;
+            try self.hint(input, expected);
+            argument.* = try self.expressionWithTemporaries(input, false, temporaries);
+            if (integer) try self.requireInteger(self.nodes.items[@backingInt(argument.*)].ty, node.span) else try self.require(self.nodes.items[@backingInt(argument.*)].ty, expected, node.span);
+        }
+        return (collections.Builder(Checker){ .checker = self, .span = node.span, .python_assignment_order = self.python_assignment_order }).access(operation.base, operation.kind, arguments, false);
+    }
+    fn hintBufferArguments(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation)) Error!void {
+        if (self.active.get(self.src.text(operation.owner))) |slot| {
+            const owner_type = self.locals.items[@backingInt(slot)].ty;
+            if (owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].collection.kind != .list) {
+                const schema = self.catalog.records[owner_type.recordIndex()];
+                if (schema.collection.kind == .dictionary) {
+                    if (operation.arguments.len > 0) try self.hint(operation.arguments[0], schema.collection.key.?);
+                    if (operation.arguments.len == 2) try self.hint(operation.arguments[1], schema.shape.buffer.?);
+                } else if ((operation.kind == .split or operation.kind == .contains) and operation.arguments.len == 1) try self.hint(operation.arguments[0], owner_type);
+                return;
+            }
+            if (owner_type.isAggregate()) if (self.catalog.records[owner_type.recordIndex()].shape.buffer) |element| {
+                if (operation.kind == .append and operation.arguments.len == 1) try self.hint(operation.arguments[0], element);
+                if (operation.kind == .write and operation.arguments.len == 2) try self.hint(operation.arguments[1], element);
+            };
+        }
+    }
+    fn hintRecordFields(self: *Checker, record: @FieldType(@FieldType(ast.Node, "data"), "record")) Error!void {
+        const record_type = try self.ty(record.name);
+        const schema = try self.catalog.constructor(record_type, record.name, self.sink);
+        for (record.fields) |field| {
+            const index = if (schema.tableKey()) |key| try self.catalog.variant(key, self.src, field.name, self.sink) else try self.catalog.field(schema.id, self.src, field.name, self.sink);
+            try self.hint(field.value, schema.fields[index].ty);
+        }
+    }
+    fn hintCallArguments(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call"), declaration: instances.DeclarationId, target: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span) Error!void {
+        const signature = self.syntax.functions[@backingInt(declaration)].signature;
+        const function = if (signature.type_parameters.len == 0) self.ordinary_ids[@backingInt(declaration)] else if (target.type_arguments.len != 0) try self.specialize(declaration, target, span) else null;
+        for (call.arguments, signature.parameters) |argument, parameter| {
+            if (parameter.reference != null) continue;
+            if (function) |function_id| {
+                try self.hint(argument, try self.functionType(function_id, parameter.ty));
+            } else if (self.catalog.arrays.resolved.get(parameter.ty.start)) |closed| {
+                try self.hint(argument, closed);
+            } else if (typed.Type.fromName(self.src.text(parameter.ty))) |closed| {
+                try self.hint(argument, closed);
+            }
+        }
+    }
+    fn queueBuiltinCall(self: *Checker, work: *std.ArrayList(Work), call: @FieldType(@FieldType(ast.Node, "data"), "call"), node: ast.Node) Error!bool {
+        if (try self.numericConversion(call) != null) {
+            try call_arguments.positional(call, self.sink);
+            if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "numeric conversions require one argument");
+            try work.append(self.allocator, .{ .id = call.arguments[0] });
+            return true;
+        }
+        if (try self.optionConstructor(call)) {
+            try call_arguments.positional(call, self.sink);
+            if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "Some requires one payload");
+            try self.hint(call.arguments[0], (try self.expectedOption(node)).shape.element);
+            try work.append(self.allocator, .{ .id = call.arguments[0] });
+            return true;
+        }
+        if (try self.textConstructor(call, node.span)) {
+            try call_arguments.positional(call, self.sink);
+            try work.append(self.allocator, .{ .id = call.arguments[0] });
+            return true;
+        }
+
+        if (try self.resultConstructor(call)) |ok| {
+            try call_arguments.positional(call, self.sink);
+            if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "Ok and Err require one payload");
+            const shape = typed.resultShape(try self.expectedResult(node), self.catalog.records).?;
+            try self.hint(call.arguments[0], if (ok) shape.ok_type else shape.error_type);
+            try work.append(self.allocator, .{ .id = call.arguments[0] });
+            return true;
+        }
+        return false;
+    }
+    fn queueDictionary(self: *Checker, work: *std.ArrayList(Work), id: ast.NodeId) Error!bool {
+        const node = self.syntax.nodes.items[@backingInt(id)];
+        const entries = node.data.dictionary_literal;
+
+        try work.append(self.allocator, .{ .id = id, .emit = true });
+        const expected = self.expected_types.get(node.span);
+        var index = entries.len;
+        while (index > 0) {
+            index -= 1;
+            if (expected) |expected_type| if (expected_type.isAggregate() and self.catalog.records[expected_type.recordIndex()].collection.kind == .dictionary) {
+                const schema = self.catalog.records[expected_type.recordIndex()];
+                try self.hint(entries[index], if (index % 2 == 0) schema.collection.key.? else schema.shape.buffer.?);
+            };
+            try work.append(self.allocator, .{ .id = entries[index] });
+        }
+        return true;
+    }
+    fn queueVariant(self: *Checker, work: *std.ArrayList(Work), id: ast.NodeId, variant: @FieldType(@FieldType(ast.Node, "data"), "variant")) Error!bool {
+        if (variant.value) |value| {
+            const variant_type = try self.ty(variant.ty);
+            const tag = try self.catalog.variant(variant_type, self.src, variant.name, self.sink);
+            if (self.catalog.records[variant_type.recordIndex()].shape.variants.?.cases[tag].payload) |payload| try self.hint(value, payload);
+            try work.append(self.allocator, .{ .id = id, .emit = true });
+            try work.append(self.allocator, .{ .id = value });
+            return true;
+        }
+        return false;
+    }
+    fn queueExpression(self: *Checker, work: *std.ArrayList(Work), id: ast.NodeId, allow_reference: bool) Error!bool {
+        const node = try self.collectionSyntax(id);
         switch (node.data) {
             .pool_operation => |operation| {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
@@ -523,6 +949,7 @@ const Checker = struct {
                 return true;
             },
             .buffer_operation => |operation| {
+                try self.hintBufferArguments(operation);
                 try work.append(self.allocator, .{ .id = id, .emit = true });
                 var i = operation.arguments.len;
                 while (i > 0) {
@@ -531,13 +958,7 @@ const Checker = struct {
                 }
                 return true;
             },
-            .variant => |variant| {
-                if (variant.value) |value| {
-                    try work.append(self.allocator, .{ .id = id, .emit = true });
-                    try work.append(self.allocator, .{ .id = value });
-                    return true;
-                }
-            },
+            .variant => |variant| return self.queueVariant(work, id, variant),
             .array => |array| {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
                 var i = array.values.len;
@@ -600,7 +1021,7 @@ const Checker = struct {
             .acquire_buffer, .acquire_pool => |acquire| {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
                 try work.append(self.allocator, .{ .id = acquire.value });
-                try work.append(self.allocator, .{ .id = acquire.allocator });
+                if (!acquire.managed) try work.append(self.allocator, .{ .id = acquire.allocator });
                 return true;
             },
             .reset_arena, .cast, .wrap => |cast| {
@@ -608,7 +1029,9 @@ const Checker = struct {
                 try work.append(self.allocator, .{ .id = cast.value });
                 return true;
             },
+            .dictionary_literal => return self.queueDictionary(work, id),
             .record => |record| {
+                try self.hintRecordFields(record);
                 try work.append(self.allocator, .{ .id = id, .emit = true });
                 try self.queueFields(work, record.fields);
                 return true;
@@ -631,6 +1054,7 @@ const Checker = struct {
             },
             .call => |call| {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
+                if (try self.queueBuiltinCall(work, call, node)) return true;
                 if (call.owner == null and (self.active.contains(self.src.text(call.name)) or source_json.operation(self.src.text(call.name)) != null)) {
                     var index = call.arguments.len;
                     const contract = if (self.active.get(self.src.text(call.name))) |slot| callables.signature(self.locals.items[@backingInt(slot)].ty, self.catalog.records) else null;
@@ -644,20 +1068,27 @@ const Checker = struct {
                 const target = try self.callDeclaration(call, node.span);
                 if (target.call.type_arguments.len != 0) _ = try self.specialize(target.declaration, target.call, node.span);
                 const signature = self.syntax.functions[@backingInt(target.declaration)];
+                try self.hintCallArguments(target.call, target.declaration, target.call, node.span);
                 if (signature.signature.return_reference != null and !(allow_reference)) return self.sink.fail(eReferenceResult, node.span, "reference-returning calls require a borrow scope");
-                var i = call.arguments.len;
+                var i = target.call.arguments.len;
                 while (i > 0) {
                     i -= 1;
-                    if (signature.signature.parameters[i].reference == null or self.syntax.nodes.items[@backingInt(call.arguments[i])].data == .bytes) try work.append(self.allocator, .{ .id = call.arguments[i] });
+                    const position = call_arguments.parameterPosition(target.call, i);
+                    const argument = target.call.arguments[position];
+                    const parameter = signature.signature.parameters[position];
+                    if (parameter.reference == null or self.syntax.nodes.items[@backingInt(argument)].data == .bytes)
+                        try work.append(self.allocator, .{ .id = argument, .default_value = parameter.default_value == argument });
                 }
                 return true;
             },
             .unary => |u| {
+                if (self.expected_types.get(node.span)) |expected| try self.hint(u.operand, expected);
                 try work.append(self.allocator, .{ .id = id, .emit = true });
                 try work.append(self.allocator, .{ .id = u.operand });
                 return true;
             },
             .binary => |b| {
+                try self.hintBinary(node);
                 try work.append(self.allocator, .{ .id = id, .emit = true });
                 try work.append(self.allocator, .{ .id = b.right, .checkpoint = b.op == .logical_and or b.op == .logical_or });
                 try work.append(self.allocator, .{ .id = b.left });
@@ -730,13 +1161,56 @@ const Checker = struct {
         }
         out.data = .{ .pool_operation = .{ .reference = access.reference, .kind = operation.kind, .owner = owner, .arguments = arguments } };
     }
-    fn checkBufferOperation(self: *Checker, _: ast.Node, operation: @FieldType(@FieldType(ast.Node, "data"), "buffer_operation"), out: *typed.Node) Error!void {
-        const access = try self.operationOwner(operation.owner, operation.kind.mutates());
+    fn collectionListType(self: *Checker, element: typed.Type, span: source.Span) Error!typed.Type {
+        const state = self.catalog.templates.store orelse return error.InternalError;
+        return @import("nominal_catalog.zig").instantiateLengths(&self.catalog, state.index.names.get("List").?, &.{element}, &.{}, span);
+    }
+    fn checkTextDictionary(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation), access: struct { owner: typed.LocalId, reference: ?typed.ReferenceId }, out: *typed.Node) Error!void {
         const owner = access.owner;
-        const local = &self.locals.items[@backingInt(owner)];
+        const local = self.locals.items[@backingInt(owner)];
+        const element = self.catalog.records[local.ty.recordIndex()].shape.buffer.?;
+
+        const schema = self.catalog.records[local.ty.recordIndex()];
+        const arguments = try self.allocator.alloc(typed.NodeId, operation.arguments.len);
+        for (operation.arguments, arguments) |input, *argument| argument.* = self.resolved[@backingInt(input)].?;
+        const dictionary = schema.collection.kind == .dictionary;
+        const output_element = if (dictionary) element else local.ty;
+        switch (operation.kind) {
+            .length => out.ty = .i64,
+            .read, .write, .get, .contains => {
+                if (!dictionary and operation.kind != .read and operation.kind != .contains) return self.sink.fail("E_TEXT_IMMUTABLE", operation.owner, "str values are immutable");
+                if (dictionary) {
+                    try self.require(self.nodes.items[@backingInt(arguments[0])].ty, schema.collection.key.?, operation.owner);
+                } else if (operation.kind == .contains) {
+                    try self.require(self.nodes.items[@backingInt(arguments[0])].ty, local.ty, operation.owner);
+                } else try self.requireInteger(self.nodes.items[@backingInt(arguments[0])].ty, operation.owner);
+                if (arguments.len == 2) try self.require(self.nodes.items[@backingInt(arguments[1])].ty, element, operation.owner);
+                out.ty = if (operation.kind == .write) .unit else if (operation.kind == .contains) .bool else output_element;
+            },
+            .keys, .values => {
+                if (!dictionary) return self.sink.fail(eCollectionMethod, operation.owner, "keys and values require a dictionary");
+                out.ty = try self.collectionListType(if (operation.kind == .keys) schema.collection.key.? else element, operation.owner);
+            },
+            .split, .join => {
+                if (dictionary) return self.sink.fail(eCollectionMethod, operation.owner, "split and join require str");
+                const list_type = try self.collectionListType(local.ty, operation.owner);
+                try self.require(self.nodes.items[@backingInt(arguments[0])].ty, if (operation.kind == .split) local.ty else list_type, operation.owner);
+                out.ty = if (operation.kind == .split) list_type else local.ty;
+            },
+            else => return self.sink.fail(eCollectionMethod, operation.owner, "operation is not supported by this collection"),
+        }
+        out.data = .{ .buffer_operation = .{ .reference = access.reference, .kind = operation.kind, .owner = owner, .arguments = arguments } };
+    }
+    fn checkBufferOperation(self: *Checker, _: ast.Node, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation), out: *typed.Node) Error!void {
+        const initial = try self.operationOwner(operation.owner, false);
+        const local = &self.locals.items[@backingInt(initial.owner)];
+        const managed = local.ty.isAggregate() and self.catalog.records[local.ty.recordIndex()].managed;
+        const access = if (managed) initial else try self.operationOwner(operation.owner, operation.kind.mutates());
+        const owner = access.owner;
         if (!local.ty.isAggregate() or self.catalog.records[local.ty.recordIndex()].shape.buffer == null) return self.sink.fail("E_BUFFER_TYPE", operation.owner, "operation requires an owned buffer binding");
-        if (!local.ownership.transfer_available) return self.sink.failTransfer(eOwnedConsumed, operation.owner, local.declaration, local.ownership.transfer_span);
-        if (operation.kind.mutates() and access.reference == null and !local.mutable) return self.sink.fail(eImmutable, operation.owner, "buffer mutation requires a let mut binding");
+        if (!managed and !local.ownership.transfer_available) return self.sink.failTransfer(eOwnedConsumed, operation.owner, local.declaration, local.ownership.transfer_span);
+        const needs_mutable_binding = !managed and operation.kind.mutates() and access.reference == null;
+        if (needs_mutable_binding and !local.mutable) return self.sink.fail(eImmutable, operation.owner, "buffer mutation requires a let mut binding");
         local.usage.reads += 1;
         if (operation.kind.mutates()) local.usage.writes += 1;
         const element = self.catalog.records[local.ty.recordIndex()].shape.buffer.?;
@@ -745,6 +1219,10 @@ const Checker = struct {
             operation.owner,
             "owned buffer elements require take_buffer or truncate_buffer; reads and resize fill would copy ownership",
         );
+        if (managed and self.catalog.records[local.ty.recordIndex()].collection.kind != .list) {
+            try self.checkTextDictionary(operation, .{ .owner = access.owner, .reference = access.reference }, out);
+            return;
+        }
         const arguments = try self.allocator.alloc(typed.NodeId, operation.arguments.len);
         for (operation.arguments, arguments, 0..) |input, *argument, argument_index| {
             argument.* = self.resolved[@backingInt(input)].?;
@@ -753,12 +1231,13 @@ const Checker = struct {
             const writes_element = argument_index == 1 and (operation.kind == .write or operation.kind == .resize);
             if (operation.kind == .reserve and argument_index == 0) {
                 try self.require(actual, .allocator, span);
-            } else if (operation.kind == .append or writes_element) {
+            } else if (operation.kind == .append or operation.kind == .contains or writes_element) {
                 try self.require(actual, element, span);
             } else {
                 try self.requireInteger(actual, span);
             }
         }
+        if (managed and operation.result != null) return self.sink.fail(eListType, operation.owner, "managed list mutations return unit without a result type");
         if (operation.result) |result_type| {
             out.ty = try self.ty(result_type);
             const shape = typed.resultShape(out.ty, self.catalog.records) orelse return self.sink.fail(
@@ -771,7 +1250,10 @@ const Checker = struct {
                 result_type,
                 "buffer mutation result requires matching success and i64 error payloads",
             );
-        } else out.ty = if (operation.kind == .read) element else .u64;
+        } else {
+            if (operation.kind.mutates() and !managed) return self.sink.fail(eListType, operation.owner, "list mutation requires a managed list");
+            out.ty = if (operation.kind.mutates()) .unit else if (operation.kind == .read) element else if (operation.kind == .contains) .bool else .u64;
+        }
         out.data = .{ .buffer_operation = .{ .reference = access.reference, .kind = operation.kind, .owner = owner, .arguments = arguments } };
     }
     fn checkAcquireResource(self: *Checker, _: ast.Node, acquire: @FieldType(@FieldType(ast.Node, "data"), "acquire_resource"), out: *typed.Node) Error!void {
@@ -817,16 +1299,26 @@ const Checker = struct {
         out.data = .{ .resource_io = .{ .kind = io.kind, .owner = owner, .value = value, .reference = slice_reference } };
     }
     fn checkAcquireBuffer(self: *Checker, node: ast.Node, acquire: @FieldType(@FieldType(ast.Node, "data"), "acquire_buffer"), out: *typed.Node) Error!void {
-        out.ty = try self.ty(acquire.ty);
+        const inferred = acquire.managed and acquire.ty.start == acquire.ty.end;
+        out.ty = if (inferred) self.expected_types.get(node.span) orelse return self.sink.fail("E_LIST_INFERENCE", node.span, "empty list requires an expected List type") else try self.ty(acquire.ty);
         const is_pool = node.data == .acquire_pool;
         const code: []const u8 = if (is_pool) ePoolResult else eBufferResult;
         const message: []const u8 = if (is_pool) "pool acquisition requires a pool success and i64 error result" else "buffer acquisition requires a buffer success and i64 error result";
-        _ = typed.acquisitionShape(out.ty, self.catalog.records, is_pool) orelse return self.sink.fail(code, acquire.ty, message);
-        const capacity = self.resolved[@backingInt(acquire.value)].?;
+        if (acquire.managed) {
+            if (!out.ty.isAggregate() or !self.catalog.records[out.ty.recordIndex()].managed) return self.sink.fail(eListType, acquire.ty, "new_list requires a managed list type");
+        } else {
+            const acquired = typed.acquisitionShape(out.ty, self.catalog.records, is_pool) orelse return self.sink.fail(code, acquire.ty, message);
+            if (self.catalog.records[acquired.ok_type.recordIndex()].managed) return self.sink.fail(eListType, acquire.ty, "managed lists require new_list");
+        }
+        var capacity = self.resolved[@backingInt(acquire.value)].?;
+        if (inferred) {
+            capacity = @fromBackingInt(self.nodes.items.len);
+            try self.nodes.append(self.allocator, .{ .span = node.span, .ty = .u64, .data = .{ .integer = 0 } });
+        }
         try self.requireInteger(self.nodes.items[@backingInt(capacity)].ty, node.span);
         const authority = self.resolved[@backingInt(acquire.allocator)].?;
-        try self.require(self.nodes.items[@backingInt(authority)].ty, .allocator, self.syntax.nodes.items[@backingInt(acquire.allocator)].span);
-        out.data = if (is_pool) .{ .acquire_pool = .{ .allocator = authority, .capacity = capacity } } else .{ .acquire_buffer = .{ .allocator = authority, .capacity = capacity } };
+        if (!acquire.managed) try self.require(self.nodes.items[@backingInt(authority)].ty, .allocator, self.syntax.nodes.items[@backingInt(acquire.allocator)].span);
+        out.data = if (is_pool) .{ .acquire_pool = .{ .allocator = authority, .capacity = capacity } } else .{ .acquire_buffer = .{ .allocator = authority, .capacity = capacity, .managed = acquire.managed } };
     }
     fn checkArray(self: *Checker, node: ast.Node, array: @FieldType(@FieldType(ast.Node, "data"), "array"), out: *typed.Node) Error!void {
         out.ty = try self.ty(array.ty);
@@ -959,10 +1451,42 @@ const Checker = struct {
         out.ty = self.locals.items[@backingInt(slot)].ty;
         out.data = .{ .local = slot };
     }
-    fn checkCall(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
-        if (call.owner == null and self.active.contains(self.src.text(call.name))) return self.indirectCall(node, call, out);
-        if (call.owner == null) if (source_json.operation(self.src.text(call.name))) |decode| return self.checkJson(call, decode, out);
-        const function = try self.callTarget(call, node.span);
+    fn textConstructor(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span) Error!bool {
+        if (call.owner != null or !std.mem.eql(u8, self.src.text(call.name), "str")) return false;
+        if (self.active.contains("str") or self.functions.contains("str")) return false;
+        const text_type = self.catalog.names.get("str") orelse return false;
+        if (self.catalog.records[text_type.recordIndex()].collection.kind != .string) return false;
+        if (call.arguments.len != 1) return self.sink.fail("E_ARITY", span, "str conversion requires one argument");
+        return true;
+    }
+    fn checkCall(self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
+        if (try self.numericConversion(input)) |floating| return self.checkNumericConversion(node, input, floating, out);
+        if (try self.optionConstructor(input)) return self.checkOptionConstructor(node, input, out);
+        if (try self.textConstructor(input, node.span)) {
+            const value = self.resolved[@backingInt(input.arguments[0])].?;
+            const input_type = self.nodes.items[@backingInt(value)].ty;
+            const aggregate_scalar = input_type.isAggregate() and (self.catalog.records[input_type.recordIndex()].collection.kind == .string or std.mem.eql(u8, self.catalog.records[input_type.recordIndex()].name, "float"));
+            const scalar = input_type.isInteger() or input_type == .bool or input_type == .unit;
+            if (!scalar and !aggregate_scalar) return self.sink.fail("E_TEXT_CONVERSION", node.span, "str conversion requires a scalar or str value");
+            out.ty = self.catalog.names.get("str") orelse return error.InternalError;
+            out.data = .{ .cast = value };
+            return;
+        }
+        if (try self.resultConstructor(input)) |ok| {
+            try call_arguments.positional(input, self.sink);
+            return self.checkResultConstructor(node, input, ok, out);
+        }
+        if (input.owner == null and self.active.contains(self.src.text(input.name))) {
+            try call_arguments.positional(input, self.sink);
+            return self.indirectCall(node, input, out);
+        }
+        if (input.owner == null) if (source_json.operation(self.src.text(input.name))) |decode| {
+            try call_arguments.positional(input, self.sink);
+            return self.checkJson(input, decode, out);
+        };
+        const target = try self.callDeclaration(input, node.span);
+        const call = target.call;
+        const function = try self.specialize(target.declaration, call, node.span);
         const signature = self.syntaxFunction(function);
         var arguments: std.ArrayList(typed.NodeId) = .empty;
         var loans: std.ArrayList(typed.ReferenceId) = .empty;
@@ -1008,6 +1532,13 @@ const Checker = struct {
         }
         out.ty = try self.functionType(function, signature.signature.return_type);
         out.data = .{ .call = .{ .function = function, .arguments = try arguments.toOwnedSlice(self.allocator), .references = try loans.toOwnedSlice(self.allocator), .literals = try literals.toOwnedSlice(self.allocator) } };
+        try (@import("call_evaluation.zig").Context{
+            .storage = .{ .nodes = &self.nodes, .locals = &self.locals, .statements = &self.statements },
+            .span = node.span,
+            .call = call,
+            .parameters = signature.signature.parameters,
+            .arena_depth = self.arena_depth,
+        }).apply(self.allocator, &out.data.call);
     }
     fn literalArgument(self: *Checker, arg: ast.NodeId, span: source.Span) Error!typed.LiteralArgument {
         const value = self.resolved[@backingInt(arg)].?;
@@ -1050,12 +1581,198 @@ const Checker = struct {
         if (self.transfers(out.ty)) return self.sink.fail("E_REFERENCE_VALUE", name, "read_ref cannot copy an owned value; use owner inspection or mutation operations");
         out.data = .{ .read_ref = id };
     }
+    fn numericOperands(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "binary")) Error!struct { left: typed.NodeId, right: typed.NodeId } {
+        var left = self.resolved[@backingInt(operation.left)].?;
+        var right = self.resolved[@backingInt(operation.right)].?;
+        const lt = self.nodes.items[@backingInt(left)].ty;
+        const rt = self.nodes.items[@backingInt(right)].ty;
+        const promote = operation.op == .python_div or numeric_surface.isFloat(lt, self.catalog.records) or numeric_surface.isFloat(rt, self.catalog.records);
+        if (promote) {
+            const builder = self.numericBuilder(operation.op_span);
+            if (lt.isInteger()) left = try builder.append(try builder.fromInteger(left));
+            if (rt.isInteger()) right = try builder.append(try builder.fromInteger(right));
+        }
+        return .{ .left = left, .right = right };
+    }
+    fn checkUnary(self: *Checker, node: ast.Node, u: @FieldType(@FieldType(ast.Node, "data"), "unary")) Error!typed.Node {
+        var out: typed.Node = undefined;
+        out.span = node.span;
+        const operand = self.resolved[@backingInt(u.operand)].?;
+        out.ty = if (u.op == .not) .bool else self.nodes.items[@backingInt(operand)].ty;
+        if (u.op == .neg and numeric_surface.isFloat(out.ty, self.catalog.records)) return self.numericBuilder(node.span).negate(operand);
+        if (u.op == .neg) try self.requireInteger(out.ty, u.op_span) else try self.require(self.nodes.items[@backingInt(operand)].ty, if (u.op == .not) .bool else .u64, u.op_span);
+        out.data = .{ .unary = .{ .op = std.meta.stringToEnum(typed.UnaryOp, @tagName(u.op)).?, .operand = operand, .op_span = u.op_span } };
+        return out;
+    }
+    fn checkDictionaryLiteral(self: *Checker, node: ast.Node, entries: []const ast.NodeId, out: *typed.Node) Error!void {
+        const expected = self.expected_types.get(node.span);
+        if (expected) |expected_type| {
+            out.ty = expected_type;
+        } else {
+            if (entries.len == 0) return self.sink.fail("E_DICT_INFERENCE", node.span, "empty dictionary requires a dict key/value annotation");
+            const state = self.catalog.templates.store orelse return error.InternalError;
+            const key = self.nodes.items[@backingInt(self.resolved[@backingInt(entries[0])].?)].ty;
+            const value = self.nodes.items[@backingInt(self.resolved[@backingInt(entries[1])].?)].ty;
+            out.ty = try @import("nominal_catalog.zig").instantiateLengths(&self.catalog, state.index.names.get("dict").?, &.{ key, value }, &.{}, node.span);
+        }
+        if (!out.ty.isAggregate() or self.catalog.records[out.ty.recordIndex()].collection.kind != .dictionary) return self.sink.fail("E_DICT_TYPE", node.span, "dictionary literal requires dict key/value types");
+        const schema = self.catalog.records[out.ty.recordIndex()];
+        const key = schema.collection.key.?;
+        const text_key = key.isAggregate() and self.catalog.records[key.recordIndex()].collection.kind == .string;
+        if (!key.isInteger() and !text_key) return self.sink.fail("E_DICT_KEY", node.span, "dictionary keys must be integers or str");
+        const items = try self.allocator.alloc(typed.NodeId, entries.len);
+        for (entries, items, 0..) |entry, *item, index| {
+            item.* = self.resolved[@backingInt(entry)].?;
+            try self.require(self.nodes.items[@backingInt(item.*)].ty, if (index % 2 == 0) key else schema.shape.buffer.?, self.syntax.nodes.items[@backingInt(entry)].span);
+        }
+        out.data = .{ .array = items };
+    }
+    fn checkTextLiteral(self: *Checker, node: ast.Node, bytes: []const u8, out: *typed.Node) Error!void {
+        out.ty = if (node.data == .text) try self.ty(node.span) else self.expected_types.get(node.span) orelse try self.ty(node.span);
+        if (out.ty.isAggregate() and self.catalog.records[out.ty.recordIndex()].collection.kind == .string) {
+            const view = std.unicode.Utf8View.init(bytes) catch return self.sink.fail("E_TEXT_UTF8", node.span, "str literals require valid UTF-8");
+            var iterator = view.iterator();
+            var points: std.ArrayList(typed.NodeId) = .empty;
+            while (iterator.nextCodepoint()) |point| {
+                const id: typed.NodeId = @fromBackingInt(@intCast(self.nodes.items.len));
+                try self.nodes.append(self.allocator, .{ .span = node.span, .ty = .u32, .data = .{ .integer = point } });
+                try points.append(self.allocator, id);
+            }
+            out.data = .{ .array = try points.toOwnedSlice(self.allocator) };
+        } else {
+            out.ty = try self.ty(node.span);
+            out.data = .{ .array = try self.byteValues(bytes, node.span) };
+        }
+    }
+    fn checkFloatBinary(self: *Checker, span: source.Span, op: ast.BinaryOp, left: typed.NodeId, right: typed.NodeId) Error!typed.Node {
+        const builder: collections.Builder(Checker) = .{ .checker = self, .span = span };
+        var statements: std.ArrayList(typed.StatementId) = .empty;
+        var values: [2]typed.NodeId = undefined;
+        for ([_]typed.NodeId{ left, right }, &values) |input, *value| {
+            const slot = try builder.local(self.nodes.items[@backingInt(input)].ty);
+            try statements.append(self.allocator, try builder.stmt(.{ .initialize = .{ .slot = slot, .value = input } }));
+            value.* = try builder.read(slot);
+        }
+        const result = try self.numericBuilder(span).binary(op, values[0], values[1], self.sink);
+        return builder.block(statements.items, try builder.node(result.ty, result.data));
+    }
+    fn checkValueBinary(self: *Checker, b: @FieldType(@FieldType(ast.Node, "data"), "binary"), out: *typed.Node) Error!void {
+        const operands = try self.numericOperands(b);
+        const left = operands.left;
+        const right = operands.right;
+        const lt = self.nodes.items[@backingInt(left)].ty;
+        const rt = self.nodes.items[@backingInt(right)].ty;
+        try self.require(rt, lt, b.op_span);
+        if (numeric_surface.isFloat(lt, self.catalog.records)) {
+            out.* = try self.checkFloatBinary(out.span, b.op, left, right);
+            return;
+        }
+        const text_operands = lt.isAggregate() and self.catalog.records[lt.recordIndex()].managed;
+        if (text_operands) {
+            const concatenation = b.op == .add and self.catalog.records[lt.recordIndex()].collection.kind == .string;
+            if (!concatenation and b.op != .eq and b.op != .ne) return self.sink.fail("E_TEXT_OPERATOR", b.op_span, "managed collections support equality and str supports concatenation");
+            out.ty = if (b.op == .add) lt else .bool;
+        } else switch (b.op) {
+            .f64_eq, .f64_lt, .f64_le => {
+                try self.require(lt, .u64, b.op_span);
+                out.ty = .bool;
+            },
+            .f64_add, .f64_sub, .f64_mul, .f64_div => {
+                try self.require(lt, .u64, b.op_span);
+                out.ty = .u64;
+            },
+            .logical_and, .logical_or => {
+                try self.require(lt, .bool, b.op_span);
+                out.ty = .bool;
+            },
+            .eq, .ne => {
+                if (!typed.supportsEquality(lt, self.catalog.records)) return self.sink.fail("E_TYPE", b.op_span, "aggregate equality is not defined; compare the relevant elements explicitly");
+                out.ty = .bool;
+            },
+            .lt, .le, .gt, .ge => {
+                try self.requireInteger(lt, b.op_span);
+                out.ty = .bool;
+            },
+            else => {
+                try self.requireInteger(lt, b.op_span);
+                out.ty = lt;
+            },
+        }
+        out.data = .{ .binary = .{
+            .op = std.meta.stringToEnum(typed.BinaryOp, @tagName(b.op)).?,
+            .left = left,
+            .right = right,
+            .op_span = b.op_span,
+        } };
+    }
+    fn checkMembership(self: *Checker, node: ast.Node, membership: @FieldType(@FieldType(ast.Node, "data"), "membership"), temporaries: []const typed.Type) Error!typed.Node {
+        const needle = try self.expressionWithTemporaries(membership.needle, false, temporaries);
+        const container = try self.expressionWithTemporaries(membership.container, false, temporaries);
+        const container_type = self.nodes.items[@backingInt(container)].ty;
+        if (!container_type.isAggregate() or !self.catalog.records[container_type.recordIndex()].managed) return self.sink.fail("E_MEMBERSHIP", node.span, "membership requires a list, dictionary, or str");
+        const schema = self.catalog.records[container_type.recordIndex()];
+        const expected = switch (schema.collection.kind) {
+            .list => schema.shape.buffer.?,
+            .dictionary => schema.collection.key.?,
+            .string => container_type,
+        };
+        try self.require(self.nodes.items[@backingInt(needle)].ty, expected, node.span);
+        const inputs = [_]typed.NodeId{ needle, container };
+        var locals: [2]typed.LocalId = undefined;
+        var statements: [2]typed.StatementId = undefined;
+        for (inputs, 0..) |input, i| {
+            locals[i] = @fromBackingInt(self.locals.items.len);
+            try self.locals.append(self.allocator, .{ .name = "<membership>", .declaration = node.span, .ty = self.nodes.items[@backingInt(input)].ty, .mutable = false, .usage = .{ .reads = 1, .temporary = true } });
+            statements[i] = @fromBackingInt(self.statements.items.len);
+            try self.statements.append(self.allocator, .{ .span = node.span, .terminates = false, .data = .{ .initialize = .{ .slot = locals[i], .value = input } } });
+        }
+        const needle_read: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = node.span, .ty = expected, .data = .{ .local = locals[0] } });
+        var result: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = node.span, .ty = .bool, .data = .{ .buffer_operation = .{ .owner = locals[1], .kind = .contains, .arguments = try self.allocator.dupe(typed.NodeId, &.{needle_read}) } } });
+        if (membership.negate) {
+            const inverse: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+            try self.nodes.append(self.allocator, .{ .span = node.span, .ty = .bool, .data = .{ .unary = .{ .op = .not, .operand = result, .op_span = node.span } } });
+            result = inverse;
+        }
+        const body: typed.StatementId = @fromBackingInt(self.statements.items.len);
+        try self.statements.append(self.allocator, .{ .span = node.span, .terminates = false, .data = .{ .block = try self.allocator.dupe(typed.StatementId, &statements) } });
+        return .{ .span = node.span, .ty = .bool, .data = .{ .block_value = .{ .body = body, .value = result } } };
+    }
+    fn checkValueIndex(self: *Checker, node: ast.Node, access: @FieldType(@FieldType(ast.Node, "data"), "index"), out: *typed.Node) Error!void {
+        const base = self.resolved[@backingInt(access.base)].?;
+        const index_value = self.resolved[@backingInt(access.index)].?;
+        const receiver_type = self.nodes.items[@backingInt(base)].ty;
+        if (receiver_type.isAggregate() and self.catalog.records[receiver_type.recordIndex()].collection.kind != .list) {
+            const receiver = self.catalog.records[receiver_type.recordIndex()];
+            if (receiver.collection.kind == .dictionary) {
+                try self.require(self.nodes.items[@backingInt(index_value)].ty, receiver.collection.key.?, node.span);
+            } else try self.requireInteger(self.nodes.items[@backingInt(index_value)].ty, node.span);
+            out.ty = if (receiver.collection.kind == .string) receiver_type else receiver.shape.buffer.?;
+            out.data = .{ .index = .{ .base = base, .index = index_value } };
+            return;
+        }
+        if (receiver_type.isAggregate() and self.catalog.records[receiver_type.recordIndex()].managed) {
+            out.* = try (collections.Builder(Checker){ .checker = self, .span = node.span }).access(base, .read, &.{index_value}, false);
+            return;
+        }
+        const schema = try self.catalog.array(receiver_type, node.span, self.sink);
+        try self.requireIndex(schema, self.nodes.items[@backingInt(index_value)].ty, self.syntax.nodes.items[@backingInt(access.index)].span);
+        if (self.requiresHandling(schema.element) and schema.length != 1) return self.sink.fail(eResultOperation, node.span, "indexing would drop other result-bearing elements; handle or transfer the entire array");
+        out.ty = schema.element;
+        out.data = .{ .index = .{ .base = base, .index = index_value } };
+    }
     fn checkedExpression(self: *Checker, node: ast.Node, minimum_literal: ?Literal, temporaries: []const typed.Type) Error!typed.Node {
         var out: typed.Node = .{ .span = node.span, .ty = .i64, .data = undefined };
         if (minimum_literal) |parsed| {
             out.ty = parsed.ty;
             out.data = .{ .integer = parsed.value };
         } else switch (node.data) {
+            .field_assignment => return self.checkFieldAssignment(node, temporaries),
+            .list_literal => |inputs| return self.checkListLiteral(node, inputs, temporaries),
+            .list_operation => |op| return self.checkListAccess(node, .{ .base = op.base, .kind = op.kind, .inputs = op.arguments }, temporaries),
+            .method_call => return self.checkCollectionMethod(node, temporaries),
+            .slice => return self.checkCollectionSlice(node, temporaries),
             .read_field, .take_field => |read| try self.checkReadField(node, read, &out),
             .pool_operation => |operation| try self.checkPoolOperation(node, operation, &out),
             .buffer_operation => |operation| try self.checkBufferOperation(node, operation, &out),
@@ -1134,15 +1851,7 @@ const Checker = struct {
                 out.data = .{ .variant = .{ .tag = tag, .value = value } };
             },
             .array => |array| try self.checkArray(node, array, &out),
-            .index => |access| {
-                const base = self.resolved[@backingInt(access.base)].?;
-                const index_value = self.resolved[@backingInt(access.index)].?;
-                const schema = try self.catalog.array(self.nodes.items[@backingInt(base)].ty, node.span, self.sink);
-                try self.requireIndex(schema, self.nodes.items[@backingInt(index_value)].ty, self.syntax.nodes.items[@backingInt(access.index)].span);
-                if (self.requiresHandling(schema.element) and schema.length != 1) return self.sink.fail(eResultOperation, node.span, "indexing would drop other result-bearing elements; handle or transfer the entire array");
-                out.ty = schema.element;
-                out.data = .{ .index = .{ .base = base, .index = index_value } };
-            },
+            .index => |access| try self.checkValueIndex(node, access, &out),
             .replace => |replace| {
                 const base = self.resolved[@backingInt(replace.base)].?;
                 const index_value = self.resolved[@backingInt(replace.index)].?;
@@ -1156,11 +1865,20 @@ const Checker = struct {
             },
             .length => |input| {
                 const base = self.resolved[@backingInt(input)].?;
-                _ = try self.catalog.array(self.nodes.items[@backingInt(base)].ty, node.span, self.sink);
+                const receiver_type = self.nodes.items[@backingInt(base)].ty;
+                if (receiver_type.isAggregate() and self.catalog.records[receiver_type.recordIndex()].collection.kind != .list) {
+                    out.ty = .i64;
+                    out.data = .{ .length = base };
+                    return out;
+                }
+                if (receiver_type.isAggregate() and self.catalog.records[receiver_type.recordIndex()].managed) return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(base, .length, &.{}, true);
+                _ = try self.catalog.array(receiver_type, node.span, self.sink);
                 if (self.requiresHandling(self.nodes.items[@backingInt(base)].ty)) return self.sink.fail(eResultOperation, node.span, "length evaluation would drop result-bearing elements");
                 out.ty = .u64;
                 out.data = .{ .length = base };
             },
+            .membership => |membership| return self.checkMembership(node, membership, temporaries),
+            .dictionary_literal => |entries| try self.checkDictionaryLiteral(node, entries, &out),
             .record => |record| {
                 out.ty = try self.ty(record.name);
                 out.data = .{ .record = try self.fields(out.ty, record.fields, true, node.span) };
@@ -1173,16 +1891,9 @@ const Checker = struct {
                 out.data = .{ .update = .{ .base = base, .fields = replacements } };
             },
             .field => |field| try self.checkField(node, field, &out),
-            .bytes => |bytes| {
-                out.ty = try self.ty(node.span);
-                out.data = .{ .array = try self.byteValues(bytes, node.span) };
-            },
+            .bytes, .text => |bytes| try self.checkTextLiteral(node, bytes, &out),
             .match_expression => |match| return self.matchExpression(node, match, temporaries),
-            .integer => |token| {
-                const parsed = try self.literal(token, false);
-                out.ty = parsed.ty;
-                out.data = .{ .integer = parsed.value };
-            },
+            .integer => return self.checkInteger(node),
             .wrap => |wrap| {
                 const value = self.resolved[@backingInt(wrap.value)].?;
                 out.ty = try self.ty(wrap.ty);
@@ -1213,10 +1924,7 @@ const Checker = struct {
                 try self.requireInteger(self.nodes.items[@backingInt(value)].ty, node.span);
                 out.data = .{ .cast = value };
             },
-            .unit => {
-                out.ty = .unit;
-                out.data = .unit;
-            },
+            .unit => return self.checkUnit(node),
             .boolean => |value| {
                 out.ty = .bool;
                 out.data = .{ .boolean = value };
@@ -1238,56 +1946,38 @@ const Checker = struct {
             .read_ref => |name| try self.checkReadReference(name, &out),
             .name => |name| try self.checkName(node, name, &out),
             .call => |call| try self.checkCall(node, call, &out),
-            .unary => |u| {
-                const operand = self.resolved[@backingInt(u.operand)].?;
-                out.ty = if (u.op == .not) .bool else self.nodes.items[@backingInt(operand)].ty;
-                if (u.op == .neg) try self.requireInteger(out.ty, u.op_span) else try self.require(self.nodes.items[@backingInt(operand)].ty, if (u.op == .not) .bool else .u64, u.op_span);
-                out.data = .{ .unary = .{ .op = std.meta.stringToEnum(typed.UnaryOp, @tagName(u.op)).?, .operand = operand, .op_span = u.op_span } };
-            },
-            .binary => |b| {
-                const left = self.resolved[@backingInt(b.left)].?;
-                const right = self.resolved[@backingInt(b.right)].?;
-                const lt = self.nodes.items[@backingInt(left)].ty;
-                const rt = self.nodes.items[@backingInt(right)].ty;
-                try self.require(rt, lt, b.op_span);
-                switch (b.op) {
-                    .f64_eq, .f64_lt, .f64_le => {
-                        try self.require(lt, .u64, b.op_span);
-                        out.ty = .bool;
-                    },
-                    .f64_add, .f64_sub, .f64_mul, .f64_div => {
-                        try self.require(lt, .u64, b.op_span);
-                        out.ty = .u64;
-                    },
-                    .logical_and, .logical_or => {
-                        try self.require(lt, .bool, b.op_span);
-                        out.ty = .bool;
-                    },
-                    .eq, .ne => {
-                        if (!typed.supportsEquality(lt, self.catalog.records)) return self.sink.fail("E_TYPE", b.op_span, "aggregate equality is not defined; compare the relevant elements explicitly");
-                        out.ty = .bool;
-                    },
-                    .lt, .le, .gt, .ge => {
-                        try self.requireInteger(lt, b.op_span);
-                        out.ty = .bool;
-                    },
-                    else => {
-                        try self.requireInteger(lt, b.op_span);
-                        out.ty = lt;
-                    },
-                }
-                out.data = .{ .binary = .{
-                    .op = std.meta.stringToEnum(typed.BinaryOp, @tagName(b.op)).?,
-                    .left = left,
-                    .right = right,
-                    .op_span = b.op_span,
-                } };
-            },
+            .unary => |u| return self.checkUnary(node, u),
+            .binary => |b| try self.checkValueBinary(b, &out),
         }
         return out;
     }
     fn expressionMode(self: *Checker, root: ast.NodeId, reference_result: bool) Error!typed.NodeId {
         return self.expressionWithTemporaries(root, reference_result, &.{});
+    }
+    fn consumedTemporaries(self: *Checker, node: ast.Node, out: typed.Node) Error!usize {
+        if (node.data == .index and out.data == .block_value) return 2;
+        if (node.data == .length and out.data == .block_value) return 1;
+        if (node.data == .bytes or node.data == .text or node.data == .integer) return 0;
+        if (node.data == .binary) return 2;
+        if (node.data == .call and try self.numericConversion(node.data.call) != null) return node.data.call.arguments.len;
+        return switch (out.data) {
+            .json_codec => 3,
+            .function_value, .unit, .integer, .boolean, .local, .read_ref, .read_field, .take_field, .len_slice, .block_value => 0,
+            .reset_arena, .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .external_read, .complete_resource, .restrict_resource => 1,
+            .acquire_buffer, .acquire_pool => |acquire| if (acquire.managed) 1 else 2,
+            .acquire_resource, .environment_get => 2,
+            .index, .binary => 2,
+            .replace => 3,
+            .variant => |variant| if (variant.value != null) 1 else 0,
+            .array => |values| values.len,
+            .record => |initializers| initializers.len,
+            .update => |update| update.fields.len + 1,
+            .invoke => |call| call.arguments.len,
+            .call => |call| call.arguments.len + call.literals.len,
+            .pool_operation => |operation| operation.arguments.len,
+            .buffer_operation => |operation| operation.arguments.len,
+            .resource_io => |io| if (io.value != null) 1 else 0,
+        };
     }
     fn expressionWithTemporaries(self: *Checker, root: ast.NodeId, reference_result: bool, inherited: []const typed.Type) Error!typed.NodeId {
         var work: std.ArrayList(Work) = .empty;
@@ -1308,30 +1998,17 @@ const Checker = struct {
                 continue;
             }
             const index = @backingInt(task.id);
-            if (self.resolved[index] != null) continue;
-            const node = self.syntax.nodes.items[index];
+            if (self.resolved[index]) |value| {
+                if (task.default_value) try temporaries.append(self.allocator, self.nodes.items[@backingInt(value)].ty);
+                continue;
+            }
+            const node = try self.collectionSyntax(task.id);
             const minimum_literal = try self.minimum(node);
             if (!task.emit and minimum_literal == null) {
                 if (try self.queueExpression(&work, task.id, reference_result and task.id == root)) continue;
             }
             const out = try self.checkedExpression(node, minimum_literal, temporaries.items);
-            const consumed: usize = if (node.data == .bytes) 0 else switch (out.data) {
-                .json_codec => 3,
-                .function_value, .unit, .integer, .boolean, .local, .read_ref, .read_field, .take_field, .len_slice, .block_value => 0,
-                .reset_arena, .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .external_read, .complete_resource, .restrict_resource => 1,
-                .acquire_buffer, .acquire_pool, .acquire_resource, .environment_get => 2,
-                .index, .binary => 2,
-                .replace => 3,
-                .variant => |variant| if (variant.value != null) 1 else 0,
-                .array => |values| values.len,
-                .record => |initializers| initializers.len,
-                .update => |update| update.fields.len + 1,
-                .invoke => |call| call.arguments.len,
-                .call => |call| call.arguments.len + call.literals.len,
-                .pool_operation => |operation| operation.arguments.len,
-                .buffer_operation => |operation| operation.arguments.len,
-                .resource_io => |io| if (io.value != null) 1 else 0,
-            };
+            const consumed = try self.consumedTemporaries(node, out);
             std.debug.assert(temporaries.items.len >= consumed);
             temporaries.shrinkRetainingCapacity(temporaries.items.len - consumed);
             try temporaries.append(self.allocator, out.ty);
@@ -1364,6 +2041,16 @@ const Checker = struct {
         flow.terminates = body.terminates;
         return .{ .arena_scope = .{ .parent = parent, .slot = slot, .body = body.id } };
     }
+    fn needsLocalCleanup(self: *Checker, local_type: typed.Type) Error!bool {
+        if (typed.moveOnly(local_type, self.catalog.records)) return true;
+        if (!local_type.isAggregate()) return false;
+        if (self.managed_types.len != self.catalog.records.len) {
+            const flags = try @import("record_layouts.zig").managedTypes(self.allocator, self.catalog.records);
+            self.allocator.free(self.managed_types);
+            self.managed_types = flags;
+        }
+        return self.managed_types[local_type.recordIndex()];
+    }
     fn statementBlock(self: *Checker, stmt: ast.Statement, children: @FieldType(@FieldType(ast.Statement, "data"), "block"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         const first_local = self.locals.items.len;
         defer for (self.locals.items[first_local..]) |local| {
@@ -1380,11 +2067,24 @@ const Checker = struct {
             try self.requireHandled(first_local, stmt.span);
             var owned: std.ArrayList(typed.LocalId) = .empty;
             for (self.locals.items[first_local..], first_local..) |local, index| {
-                if (typed.moveOnly(local.ty, self.catalog.records)) try owned.append(self.allocator, @fromBackingInt(index));
+                if (try self.needsLocalCleanup(local.ty)) try owned.append(self.allocator, @fromBackingInt(index));
             }
             flow.owned_cleanup = try owned.toOwnedSlice(self.allocator);
         }
         return .{ .block = try checked.toOwnedSlice(self.allocator) };
+    }
+    fn patternTag(self: *Checker, value_type: typed.Type, type_span: source.Span, name: source.Span) Error!usize {
+        if (type_span.start != type_span.end) {
+            try self.require(try self.ty(type_span), value_type, type_span);
+            return self.catalog.variant(value_type, self.src, name, self.sink);
+        }
+        const spelling = self.src.text(name);
+        const canonical = prelude.caseName(spelling);
+        const variants = try self.catalog.variants(value_type, name, self.sink);
+        for (variants.cases, 0..) |candidate, index| {
+            if (std.mem.eql(u8, candidate.name, canonical)) return index;
+        }
+        return self.sink.fail("E_UNKNOWN_VARIANT", name, "case is not a variant of the matched type");
     }
     fn statementMatch(self: *Checker, stmt: ast.Statement, match: @FieldType(@FieldType(ast.Statement, "data"), "match"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         const value = try self.expression(match.value);
@@ -1398,8 +2098,7 @@ const Checker = struct {
         flow.terminates = true;
         for (match.arms, arms) |arm, *out_arm| {
             self.restorePending(before);
-            try self.require(try self.ty(arm.ty), value_type, arm.ty);
-            const tag = try self.catalog.variant(value_type, self.src, arm.name, self.sink);
+            const tag = try self.patternTag(value_type, arm.ty, arm.name);
             if (seen[tag]) |previous| return self.sink.failRelated("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm", .{ .span = previous, .message = "previous arm" });
             seen[tag] = arm.name;
             const payload = variants.cases[tag].payload;
@@ -1437,7 +2136,7 @@ const Checker = struct {
             var body = try self.statement(arm.body);
             if (!body.terminates) {
                 try self.requireHandled(first_local, stmt.span);
-                if (slot) |payload_slot| if (typed.moveOnly(payload.?, self.catalog.records)) {
+                if (slot) |payload_slot| if (try self.needsLocalCleanup(payload.?)) {
                     const children = try self.allocator.dupe(typed.StatementId, &.{body.id});
                     const cleanup_slots = try self.allocator.dupe(typed.LocalId, &.{payload_slot});
                     body.id = @fromBackingInt(self.statements.items.len);
@@ -1469,8 +2168,7 @@ const Checker = struct {
         var result_type: ?typed.Type = null;
         for (match.arms, arms) |arm, *out_arm| {
             self.restorePending(before);
-            try self.require(try self.ty(arm.ty), value_type, arm.ty);
-            const tag = try self.catalog.variant(value_type, self.src, arm.name, self.sink);
+            const tag = try self.patternTag(value_type, arm.ty, arm.name);
             if (seen[tag]) |previous| return self.sink.failRelated("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm", .{ .span = previous, .message = "previous arm" });
             seen[tag] = arm.name;
             const payload = variants.cases[tag].payload;
@@ -1512,7 +2210,7 @@ const Checker = struct {
             const body_id: typed.StatementId = @fromBackingInt(self.statements.items.len);
             try self.statements.append(self.allocator, .{ .span = node.span, .terminates = false, .data = .{ .initialize = .{ .slot = result_slot, .value = arm_value } } });
             var body: CheckedStatement = .{ .id = body_id, .terminates = false };
-            if (slot) |payload_slot| if (typed.moveOnly(payload.?, self.catalog.records)) {
+            if (slot) |payload_slot| if (try self.needsLocalCleanup(payload.?)) {
                 const children = try self.allocator.dupe(typed.StatementId, &.{body.id});
                 const cleanup_slots = try self.allocator.dupe(typed.LocalId, &.{payload_slot});
                 body.id = @fromBackingInt(self.statements.items.len);
@@ -1620,6 +2318,7 @@ const Checker = struct {
             if (borrow.mutable) self.locals.items[@backingInt(owner)].usage.mutable_borrow = true;
         }
         const owner_type = self.locals.items[@backingInt(owner)].ty;
+        if (owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].managed) return self.sink.fail("E_LIST_BORROW", borrow.owner, "managed lists are passed by value; borrowing their storage is not supported");
         if (self.transfers(owner_type) and !self.locals.items[@backingInt(owner)].ownership.transfer_available) return self.sink.failTransfer(
             eOwnedConsumed,
             borrow.owner,
@@ -1710,10 +2409,66 @@ const Checker = struct {
         self.restorePending(before);
         return .{ .loop = .{ .id = loop_id, .condition = condition, .body = body.id } };
     }
+    fn statementForEach(self: *Checker, stmt: ast.Statement, each: @FieldType(@FieldType(ast.Statement, "data"), "for_each")) Error!@FieldType(typed.Statement, "data") {
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = stmt.span };
+        const iterable = try self.expression(each.iterable);
+        const iterable_type = self.nodes.items[@backingInt(iterable)].ty;
+        if (!iterable_type.isAggregate() or !self.catalog.records[iterable_type.recordIndex()].managed) return self.sink.fail(eCollectionMethod, stmt.span, "iteration requires a list, str, or dictionary");
+        const schema = self.catalog.records[iterable_type.recordIndex()];
+        const element = switch (schema.collection.kind) {
+            .list => schema.shape.buffer.?,
+            .string => iterable_type,
+            .dictionary => schema.collection.key.?,
+        };
+        const owner = try b.local(iterable_type);
+        const index = try b.local(.i64);
+        const limit = try b.local(.i64);
+        const value_slot = try b.local(element);
+        const names = [_]?source.Span{ each.name, each.index_name };
+        const slots = [_]typed.LocalId{ value_slot, index };
+        for (names) |maybe_name| if (maybe_name) |name| {
+            if (try self.topLevel(name) or self.active.contains(self.src.text(name)) or self.active_refs.contains(self.src.text(name))) return self.sink.fail(eShadowing, name, "iteration binding shadows an active declaration");
+        };
+        if (each.index_name) |name| if (std.mem.eql(u8, self.src.text(name), self.src.text(each.name))) return self.sink.fail(eShadowing, name, "iteration names must differ");
+        for (names, slots) |maybe_name, slot| if (maybe_name) |name| {
+            self.locals.items[@backingInt(slot)].name = self.src.text(name);
+            self.locals.items[@backingInt(slot)].declaration = name;
+            try self.active.put(self.allocator, self.src.text(name), slot);
+        };
+        defer for (names) |maybe_name| if (maybe_name) |name| {
+            _ = self.active.remove(self.src.text(name));
+        };
+        const before = try self.pendingState(self.locals.items.len);
+        const loop_id = self.loops.next;
+        self.loops.next += 1;
+        try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .references = self.references.items.len, .arena_depth = self.arena_depth });
+        defer _ = self.loops.active.pop();
+        const body = try self.statement(each.body);
+        if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
+        self.restorePending(before);
+        const i = try b.read(index);
+        const iteration_check = try b.stmt(.{ .discard = try b.operation(owner, .iteration_check, &.{try b.read(limit)}) });
+        const iteration = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{
+            iteration_check,
+            try b.stmt(.{ .initialize = .{ .slot = value_slot, .value = try b.operation(owner, if (schema.collection.kind == .dictionary) .key_at else .read, &.{i}) } }),
+            body.id,
+        }) });
+        const step = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{
+            iteration_check,
+            try b.stmt(.{ .assign = .{ .slot = index, .value = try b.binary(.add, i, try b.integer(1), .i64) } }),
+        }) });
+        return .{ .block = try self.allocator.dupe(typed.StatementId, &.{
+            try b.stmt(.{ .initialize = .{ .slot = owner, .value = iterable } }),
+            try b.stmt(.{ .initialize = .{ .slot = index, .value = try b.integer(0) } }),
+            try b.stmt(.{ .initialize = .{ .slot = limit, .value = try b.length(owner) } }),
+            try b.stmt(.{ .loop = .{ .id = loop_id, .condition = try b.binary(.lt, i, try b.read(limit), .bool), .body = iteration, .step = step } }),
+        }) };
+    }
     fn statementForRange(self: *Checker, stmt: ast.Statement, range: @FieldType(@FieldType(ast.Statement, "data"), "for_range")) Error!@FieldType(typed.Statement, "data") {
         const name = self.src.text(range.name);
         if (try self.topLevel(range.name) or self.active.contains(name) or self.active_refs.contains(name)) return self.sink.fail(eShadowing, range.name, "iteration binding shadows an active declaration");
-        const start = try self.expression(range.start);
+        const zero_start = self.syntax.nodes.items[@backingInt(range.start)].data == .unit;
+        const start = if (zero_start) try (collections.Builder(Checker){ .checker = self, .span = range.name }).integer(0) else try self.expression(range.start);
         const end = try self.expression(range.end);
         const element = self.nodes.items[@backingInt(start)].ty;
         try self.requireInteger(element, range.name);
@@ -1762,7 +2517,7 @@ const Checker = struct {
         var regions: std.ArrayList(typed.LocalId) = .empty;
         var refs: std.ArrayList(typed.ReferenceId) = .empty;
         for (self.locals.items[loop.before.len..], loop.before.len..) |local, index| {
-            if (typed.moveOnly(local.ty, self.catalog.records)) try owned.append(self.allocator, @fromBackingInt(index));
+            if (try self.needsLocalCleanup(local.ty)) try owned.append(self.allocator, @fromBackingInt(index));
             if (local.ty == .allocator and local.ownership.arena_depth > loop.arena_depth and self.active.get(local.name) == @as(typed.LocalId, @fromBackingInt(index)))
                 try regions.append(self.allocator, @fromBackingInt(index));
         }
@@ -1803,7 +2558,7 @@ const Checker = struct {
             if (contract.mutable and !ref.mutable) return self.sink.fail(eReferenceReadOnly, expression_node.span, "shared reference cannot supply an exclusive result");
             try self.require(ref.ty, self.return_type, stmt.span);
         } else {
-            value = try self.expression(expr);
+            value = try self.expressionExpected(expr, self.return_type);
             try self.require(self.nodes.items[@backingInt(value.?)].ty, self.return_type, stmt.span);
         }
         try self.requireHandled(0, stmt.span);
@@ -1815,7 +2570,7 @@ const Checker = struct {
         const name = self.src.text(b.name);
         if (try self.topLevel(b.name) or self.active.contains(name) or self.active_refs.contains(name))
             return self.sink.fail(eShadowing, b.name, "binding shadows an active local or top-level function");
-        const value = try self.expression(b.value);
+        const value = if (b.annotation) |annotation| try self.expressionExpected(b.value, try self.ty(annotation)) else try self.expression(b.value);
         const value_type = self.nodes.items[@backingInt(value)].ty;
         if (b.annotation) |annotation| try self.require(value_type, try self.ty(annotation), annotation);
         const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
@@ -1832,12 +2587,16 @@ const Checker = struct {
         try self.active.put(self.allocator, name, slot);
         return .{ .initialize = .{ .slot = slot, .value = value } };
     }
-    fn statementAssignment(self: *Checker, stmt: ast.Statement, a: @FieldType(@FieldType(ast.Statement, "data"), "assignment"), _: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
+    fn statementAssignment(self: *Checker, stmt: ast.Statement, a: @FieldType(@FieldType(ast.Statement, "data"), "assignment"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
+        const new_python_local = a.python and a.op == .set;
+        const unbound = !self.active.contains(self.src.text(a.name)) and !self.active_refs.contains(self.src.text(a.name));
+        if (new_python_local and unbound)
+            return self.statementBinding(stmt, .{ .name = a.name, .mutable = true, .annotation = null, .value = a.value }, flow);
         const slot = try self.resolve(a.name);
         try self.ownerAccess(slot, true, a.name);
         if (!self.locals.items[@backingInt(slot)].mutable)
             return self.sink.fail(eImmutable, a.name, "assignment requires a let mut binding");
-        var value = try self.expression(a.value);
+        var value = try self.expressionExpected(a.value, self.locals.items[@backingInt(slot)].ty);
         if (a.op != .set) {
             try self.requireInteger(self.locals.items[@backingInt(slot)].ty, a.op_span);
             try self.require(self.nodes.items[@backingInt(value)].ty, self.locals.items[@backingInt(slot)].ty, a.op_span);
@@ -1890,6 +2649,10 @@ const Checker = struct {
             if (try self.topLevel(parameter.name)) return sink.fail(eShadowing, parameter.name, "parameter shadows a top-level function");
             const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
             const parameter_type = try self.ty(parameter.ty);
+            if (parameter.default_value) |value| {
+                const checked = try self.expressionExpected(value, parameter_type);
+                try self.require(self.nodes.items[@backingInt(checked)].ty, parameter_type, parameter.ty);
+            }
             if (parameter.reference != null and self.requiresHandling(parameter_type)) return sink.fail(eResultBorrow, parameter.ty, "result-bearing parameters must transfer their handling obligation by value");
             try self.locals.append(
                 allocator,
@@ -1897,7 +2660,7 @@ const Checker = struct {
                     .name = name,
                     .declaration = parameter.name,
                     .ty = parameter_type,
-                    .mutable = false,
+                    .mutable = function.policy.python and function.policy.host == null,
                     .parameter = .{
                         .reference_parameter = parameter.reference,
                         .slice_parameter = parameter.slice,
@@ -1931,6 +2694,7 @@ const Checker = struct {
             .loop => |loop| try self.statementLoop(stmt, loop, &flow),
             .ret => |expr| try self.statementRet(stmt, expr, &flow),
             .loop_exit => |continuing| try self.statementLoopExit(stmt, continuing, &flow),
+            .for_each => |each| try self.statementForEach(stmt, each),
             .for_range => |range| try self.statementForRange(stmt, range),
             .binding => |b| try self.statementBinding(stmt, b, &flow),
             .assignment => |a| try self.statementAssignment(stmt, a, &flow),
@@ -1988,6 +2752,7 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     const ordinary_ids = try allocator.alloc(?typed.FunctionId, program.functions.len);
     @memset(ordinary_ids, null);
     var checker: Checker = .{ .allocator = allocator, .src = src, .syntax = program, .sink = sink, .resolved = resolved, .catalog = catalog, .ordinary_ids = ordinary_ids };
+    defer allocator.free(checker.managed_types);
     for (program.functions, 0..) |function, i| {
         if (function.policy.owner == null and source_json.operation(src.text(function.name)) != null) return sink.fail("E_RESERVED_FUNCTION", function.name, "JSON operation names are reserved compiler intrinsics");
         const name = if (module_names) |names| try names.functionDeclaration(function.policy.owner, function.name) else try functionName(allocator, src, function.policy.owner, function.name);
@@ -2024,7 +2789,7 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
         if (parameter.reference != null or entry_capabilities & bit != 0) return sink.fail("E_MAIN", parameter.name, "entry requests at most one value parameter of each capability kind");
         entry_capabilities |= bit;
     }
-    if (try checker.ty(entry.signature.return_type) != .i64) return sink.fail("E_TYPE", entry.signature.return_type, "main must return i64");
+    if (!@import("entry_adapter.zig").supported(try checker.ty(entry.signature.return_type), checker.catalog.records)) return sink.fail("E_TYPE", entry.signature.return_type, "main must return int, None, or Result<None/int,int>");
     var checked_functions: std.ArrayList(typed.Function) = .empty;
     var i: usize = 0;
     while (i < checker.instance_keys.items.len and (!contracts_failed or i < checker.ordinary_count)) : (i += 1) {
@@ -2053,9 +2818,10 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     // require a complete graph and must never see the partial function list.
     if (failed) return error.SourceError;
     const functions = try checked_functions.toOwnedSlice(allocator);
+    try @import("c_abi.zig").validateImports(allocator, functions, sink);
     var executable_names: std.StringHashMapUnmanaged(typed.FunctionId) = .empty;
     for (functions) |function| try executable_names.put(allocator, function.name, function.id);
-    const checked: typed.Program = .{
+    var checked: typed.Program = .{
         .aliases = try checker.catalog.aliases(allocator, src, program, sink),
         .nodes = try checker.nodes.toOwnedSlice(allocator),
         .statements = try checker.statements.toOwnedSlice(allocator),
@@ -2063,10 +2829,11 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
         .main = main,
         .records = checker.catalog.records,
     };
+    try @import("entry_adapter.zig").adapt(allocator, &checked);
     try @import("region_check.zig").check(allocator, checked, sink);
     try @import("effects.zig").check(allocator, checked, sink);
     try @import("domain_codecs.zig").check(allocator, src, program.types.domains, checker.catalog, .{ .items = functions, .names = executable_names }, sink);
-    try warnBindings(allocator, functions, sink);
+    try warnBindings(allocator, program, functions, sink);
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
     if (session) |*queries| try queries.remember(checked);
     return checked;
@@ -2104,17 +2871,20 @@ fn checkHostType(allocator: std.mem.Allocator, catalog: []const typed.Record, ty
     };
 }
 
-fn warnBindings(allocator: std.mem.Allocator, functions: []const typed.Function, sink: *diagnostic.Sink) Error!void {
+fn warnBindings(allocator: std.mem.Allocator, syntax: ast.Program, functions: []const typed.Function, sink: *diagnostic.Sink) Error!void {
     for (functions) |function| {
         if (function.policy.host != null) continue;
+        const python = pythonFunction(syntax, function.declaration);
         for (function.scope.locals) |local| {
+            if (local.usage.temporary) continue;
             if (local.usage.reads == 0) try sink.items.append(allocator, .{
                 .severity = .warning,
                 .code = "W_UNUSED_BINDING",
                 .span = local.declaration,
                 .message = "binding is never read; use it or remove it, preserving initializer effects with discard when needed",
             });
-            if (local.mutable and local.usage.writes == 0 and !local.usage.mutable_borrow) try sink.items.append(allocator, .{
+            const redundant_mut = local.mutable and local.usage.writes == 0 and !local.usage.mutable_borrow;
+            if (!python and redundant_mut) try sink.items.append(allocator, .{
                 .severity = .warning,
                 .code = "W_UNNECESSARY_MUT",
                 .span = local.declaration,
@@ -2122,4 +2892,9 @@ fn warnBindings(allocator: std.mem.Allocator, functions: []const typed.Function,
             });
         }
     }
+}
+
+fn pythonFunction(syntax: ast.Program, declaration: source.Span) bool {
+    for (syntax.functions) |function| if (function.name.start == declaration.start) return function.policy.python;
+    return false;
 }

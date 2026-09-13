@@ -291,3 +291,18 @@ test "project lifecycle rejects invalid budgets repeated loading and absent diag
     try t.expectError(error.ProjectAlreadyLoaded, project.load(files.provider(), "main", .{}));
     try t.expectEqual(@as(usize, 0), files.reads);
 }
+
+// spec: FAMILIAR-STMT-6
+test "project discovery respects newline imports exports and multiline declaration signatures" {
+    var files: Files = .{ .entries = &.{
+        .{ .path = "main.my", .bytes = "module main\nimport helper as h\nexport main\nfn main()\n->i64\n{return h::value()}" },
+        .{ .path = "helper.my", .bytes = "module helper\nexport value\ntype Number=i64\nconst ANSWER:Number=42\nfn value()->Number{return ANSWER}\nexport Number" },
+    } };
+    var project = p.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(files.provider(), "main", .{});
+    try t.expectEqual(@as(usize, 2), files.reads);
+    try t.expectEqual(@as(usize, 1), project.modules.items[0].imports.len);
+    try t.expectEqual(@as(usize, 1), project.modules.items[0].exports.len);
+    try t.expectEqual(@as(usize, 2), project.modules.items[1].exports.len);
+}

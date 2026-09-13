@@ -52,5 +52,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
 // spec: HOST-REPLAY-1
 test "host transcript wrap detects IncompleteTranscript and HostReplayMismatch with allocation failure cleanup" {
     try scenario(t.allocator);
-    try t.checkAllAllocationFailures(t.allocator, scenario, .{});
+    // Arena growth must not depend on whether the backing allocator can resize in place.
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }

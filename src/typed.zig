@@ -4,7 +4,7 @@ const std = @import("std");
 const provider_contracts = @import("provider_contracts.zig");
 const external_resources = @import("external_resources.zig");
 const values = @import("value.zig");
-const Acquisition = struct { allocator: NodeId, capacity: NodeId };
+const Acquisition = struct { allocator: NodeId, capacity: NodeId, managed: bool = false };
 const FieldAccess = struct { reference: ?ReferenceId = null, owner: LocalId, field: usize };
 const Span = @import("source.zig").Span;
 /// Index of a checked expression in Program.nodes.
@@ -30,6 +30,8 @@ pub const BinaryOp = enum {
     mul,
     div,
     rem,
+    floor_div,
+    floor_rem,
     logical_and,
     logical_or,
     eq,
@@ -58,7 +60,7 @@ pub const BinaryOp = enum {
     f64_le,
 };
 /// Checked numeric negation and Boolean inversion operations.
-pub const UnaryOp = enum { neg, not, f64_sqrt, f64_floor, f64_ceil, f64_trunc, f64_abs, f64_neg, f64_from_u64, f64_to_u64 };
+pub const UnaryOp = enum { neg, not, f64_sqrt, f64_floor, f64_ceil, f64_trunc, f64_abs, f64_neg, f64_from_u64, f64_to_u64, f64_from_i64, f64_to_i64 };
 /// Typed expression with resolved operands and source location.
 pub const Node = struct {
     ty: Type,
@@ -100,7 +102,7 @@ pub const Node = struct {
         record: []const FieldInit,
         update: struct { base: NodeId, fields: []const FieldInit },
         field: struct { base: NodeId, index: usize },
-        call: struct { function: FunctionId, arguments: []const NodeId, references: []const ReferenceId = &.{}, literals: []const LiteralArgument = &.{} },
+        call: struct { evaluation: ?struct { body: StatementId, cleanup: []const LocalId } = null, function: FunctionId, arguments: []const NodeId, references: []const ReferenceId = &.{}, literals: []const LiteralArgument = &.{} },
         unary: struct { op: UnaryOp, operand: NodeId, op_span: Span },
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
     },
@@ -122,6 +124,8 @@ pub const Pool = values.PoolSchema;
 pub const Codec = struct { wire: Type, decode: FunctionId, encode: FunctionId };
 /// Nominal aggregate schema and associated array, domain, pool, or variant metadata.
 pub const Record = struct {
+    collection: @import("runtime_values.zig").CollectionShape = .{},
+    managed: bool = false,
     id: Type,
     name: []const u8,
     declaration: Span,
@@ -210,6 +214,7 @@ pub fn resultShape(ty: Type, records: []const Record) ?ResultShape {
 pub fn sliceElement(ty: Type, records: []const Record) ?Type {
     if (!ty.isAggregate() or ty.recordIndex() >= records.len) return null;
     const shape = records[ty.recordIndex()].shape;
+    if (records[ty.recordIndex()].managed) return null;
     if (shape.buffer) |element| return if (moveOnly(element, records) or requiresHandling(element, records)) null else element;
     if (shape.array) |array| {
         if (array.key != null) return null;
@@ -314,6 +319,7 @@ pub const Function = struct {
 };
 /// Declared visibility and effect policy, with its inferred execution effects.
 pub const FunctionPolicy = struct {
+    c_abi: bool = false,
     host: ?Span = null,
     effect_bound: ?effect_set.Bound = null,
     effects: effect_set.Mask = 0,

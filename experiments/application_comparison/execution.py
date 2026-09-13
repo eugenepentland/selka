@@ -9,7 +9,7 @@ from .storage import canonical, digest, path_identity, snapshot, verify_snapshot
 
 
 def freeze_adapter(language, tools, commands, limits=None):
-    if language not in ('my', 'python', 'zig'):
+    if language not in ('my', 'python', 'zig', 'rust'):
         raise ValueError('unknown language')
     if not commands or commands[-1]['phase'] != 'run':
         raise ValueError('adapter must end with one run phase')

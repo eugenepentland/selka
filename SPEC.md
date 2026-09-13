@@ -39,6 +39,9 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [OWN-12] Releases arena backing and owners across every injected host allocation failure in the execution scenario.
 ## Projects and native output
 
+- [QBE-1] Emits deterministic independent QBE native function units with stable symbols and body-local instructions; unrelated body edits and declaration reordering preserve unchanged units. Unsupported native features fail before publishing output.
+- [QBE-2] Builds Linux x86-64 executables and shared libraries directly through the Zig CLI without Python or a compiler source checkout; bundled runtime inputs, verified object reuse, source diagnostics, and native API adapters preserve native build behavior. `--run` executes a temporary native binary with inherited I/O and propagated status, then removes it while retaining cached objects.
+
 - [EXPORT-PLACEMENT-1] Explicit `export Name;` directives may appear anywhere among top-level declarations after the module/import header. Discovery collects them in source order with original locations; duplicate and unknown exports and private interface leaks still reject. Exports inside function or type bodies reject, and formatting preserves directive order and comments.
 
 - [PROJ-1] Loads shared module dependencies once in dependency order and releases state on allocation failure.
@@ -68,7 +71,7 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 
 - [DECLARATION-LIST-1] `list-declarations` prints one parse-only `declarations-v1` JSON document with the declared module name or null for a single-file program, its import names and explicit aliases, its export directives, and every top-level declaration's kind, name, export flag, byte range and attached comment start. The kinds are exactly the top-level constructs the parser accepts: alias, const, struct, enum, union, result, domain, buffer, pool, resource, fn and host_fn. An export directive sets the named declaration's flag; unknown and duplicate export directives reject with the existing located diagnostics. Listing requires only parsing, so modules with type or ownership errors still list, and no name resolution, checking or execution is claimed.
 
-- [DECLARATION-LIST-2] Listed byte ranges are zero-based, half-open, disjoint and ordered by start. A declaration runs from its first token through its terminating semicolon or closing brace, and its comment start covers contiguous leading `//` lines with no blank line before the declaration. The module header, import statements, export directives and comment-and-declaration ranges account for every byte of the file except whitespace and line comments between them.
+- [DECLARATION-LIST-2] Listed byte ranges are zero-based, half-open, disjoint and ordered by start. A declaration runs from its first token through its terminating semicolon, closing brace, or final token before an implicit newline/EOF terminator, and its comment start covers contiguous leading `//` lines with no blank line before the declaration. The module header, import statements, export directives and comment-and-declaration ranges account for every byte of the file except whitespace and line comments between them.
 
 - [DEPENDENCIES-1] `project-dependencies` emits a versioned checked module graph with resolved imports, source byte hashes, implementation identity and exact consumed generated-input manifest hashes. It does not execute guest code; invalid projects emit no complete receipt.
 
@@ -249,11 +252,14 @@ sessions; editing guest files requires no Zig rebuild or language Guardian run.
 
 ## Guest application test tool
 
-The `scripts/test_project.py` runner discovers checked exported `test_` functions,
-invokes them with schema-pinned typed JSON, and compares structured expectations.
-It distinguishes skips, empty selections, traps, assertion failures and setup
-failures. It grants no host capabilities. Source/compiler changes invalidate
-results. See `docs/experiments/guest-tests.md` and `tests/guest_tests.py`.
+- [NATIVE-TEST-1] `mylang test` checks the project, discovers exported `test_` functions, validates named typed JSON inputs, and compares native results structurally. Boolean results default to true; other types require expectations. Filters and reasoned skips never turn an empty or all-skipped selection into success. Each execution uses a fresh bounded native process without implicit host grants.
+- [NATIVE-TEST-2] Successful deterministic tests may reuse verified receipts keyed by semantic dependency closure, call signature, relevant layouts, case settings, execution limits, and tool/runtime identity. Whitespace and unrelated body edits preserve valid results; affected helper edits invalidate consumers. Corrupt receipts are misses; failed or externally effectful executions are not reused. `--force` executes selected unskipped tests.
+- [NATIVE-TEST-3] Provider fixtures replace only existing dependency sources in private bounded snapshots, preserve the selected test signature and exported types, and never edit originals. Source/compiler changes invalidate the run before result publication. Native reports distinguish passed, cached, failed, and skipped cases; setup failures exit 2 and empty/all-skipped selections exit 3.
+
+The original `scripts/test_project.py` remains a VM comparison runner using
+schema-pinned typed calls and its existing report format. See
+`docs/experiments/guest-tests.md`, `tests/native_test_cli.py`, and
+`tests/guest_tests.py`.
 
 ## Installed feature identity
 
@@ -444,3 +450,121 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [UNIT-4] Unit fallthrough and early return release owned parameters through the ordinary cleanup paths.
 - [UNIT-5] Fallible values with unit success payloads retain all result obligations; a successful `try` yielding unit may appear as a standalone statement.
 - [UNIT-6] Public unit-returning functions remain callable within language modules. Their schema uses `kind: unit`; copied VM/host/native ABI invocation rejects unit-containing signatures explicitly instead of interpreting unit as a scalar or capability.
+
+## Managed tracing heap
+
+- [GC-ROOTS-1] Managed list aliases share stable identity and mutations. Retained execution values, including intermediate values and ordinary aggregate snapshots, root managed objects across allocation and stress collection.
+- [GC-CYCLES-1] Nonmoving tracing collection reclaims unreachable cycles, including cycles through ordinary aggregate fields, and preserves reachable cycles. Sweeping releases all dead-object edges before freeing any managed header.
+- [GC-BOUNDARY-1] Managed list operations enforce element types and bounds, reject foreign-execution managed references, and reject owned resources in managed storage.
+- [GC-FAILURE-1] Collector scratch allocation failure leaves the heap unchanged. Failed list allocation or growth preserves retained value cleanup, and execution teardown releases managed backing storage.
+
+- [GC-SOURCE-1] Managed list aliases in immutable local bindings and helper parameters share mutation without an explicit allocator capability.
+- [GC-SOURCE-2] Source programs can construct list/record cycles; a later managed allocation collects an unreachable cycle before execution shutdown.
+- [GC-SOURCE-3] Managed results held as intermediate call arguments or inside ordinary record snapshots survive collection triggered by later arguments and callee allocations.
+- [GC-SOURCE-4] Out-of-bounds managed reads and writes produce located R_LIST_BOUNDS traps and release execution roots and backing.
+- [GC-SOURCE-5] Native C generation rejects managed operations with E_NATIVE_FEATURE until that backend supports tracing GC.
+- [GC-SOURCE-6] Both noalloc and nogc reject transitive managed allocation and list growth; fixed-slot mutation and reads remain permitted.
+- [GC-SOURCE-7] Managed element declarations reject owned resources and unchecked results; explicit buffers and pools reject managed references, including references nested in ordinary aggregates.
+- [GC-SOURCE-8] Managed lists do not expose ordinary borrowed storage or slices; aliases are passed as managed values.
+- [GC-SOURCE-9] Bytecode validation rejects managed metadata on record shapes that are not managed containers.
+- [GC-SOURCE-10] Managed source execution releases intermediate roots and backing on every host allocation failure, including failures in collection and list growth.
+- [GC-GENERIC-1] Generic managed list creation, mutation, and identity helpers preserve shared aliases without allocator authority.
+- [GC-GENERIC-2] Recursive generic list and record declarations form managed reference graphs without recursive value layout.
+- [GC-GENERIC-3] Ordinary directly recursive value declarations remain rejected even when managed lists are available.
+- [GC-GENERIC-4] Source formatting preserves generic list declarations and contextual uses of list as a variant name.
+
+## Managed standard library
+
+- [GC-STDLIB-1] Embedded std_list supplies allocator-free generic construction, automatic append growth, copied-value reads, fixed-slot replacement and shared-reference assignment. The runnable GC example exercises these operations across helper calls.
+- [GC-GRAPH-1] Managed element validation visits each shared aggregate node once, avoiding exponential traversal of shared value graphs.
+- [GC-GENERIC-5] Managed list elements cannot contain allocator or provider capabilities, including nested records, arrays, and instantiated generic elements; declarations reject with E_LIST_CAPABILITY.
+- [GC-CAPABILITY-1] The managed runtime rejects capability values and capabilities nested in aggregates, preserving the source authority boundary for malformed runtime inputs.
+
+- [GC-SOURCE-11] Lexical block, break, and continue exits release managed local roots, including roots nested in copyable records, so unreachable cycles can be reclaimed at the next allocation before the enclosing function returns.
+
+- [FAMILIAR-STMT-1] Statements and unbraced declarations may omit a semicolon before a newline, closing brace, or EOF; separate statements on one line still require semicolons, and formatting preserves their boundaries.
+- [FAMILIAR-STMT-2] Postfix `?` propagates result errors and unwraps success with postfix precedence, retaining the existing `try` semantics.
+- [FAMILIAR-STMT-3] `()` spells both the unit type and unit value; bare return before a newline or closing brace returns unit.
+- [FAMILIAR-STMT-4] Calls and function parameters permit trailing commas; binary operators continue expressions across newlines, preserving existing multiline return expressions.
+- [FAMILIAR-STMT-5] Parse-only declaration listing and module formatting preserve newline-terminated module, import, export, and type directives.
+- [FAMILIAR-STMT-6] Project discovery recognizes newline-terminated directives and declarations while allowing multiline function signatures.
+
+## Familiar collection syntax
+
+- [FAMILIAR-COLLECTIONS-1] Managed list push(value), len(), indexing, and indexed assignment preserve shared aliases through immutable bindings.
+- [FAMILIAR-COLLECTIONS-2] Record construction accepts Type { fields } without new, including generic types, empty records, and trailing field commas; control-flow braces remain unambiguous.
+- [FAMILIAR-COLLECTIONS-3] Generic managed list methods and indexing preserve abstract element type checking.
+
+- [FAMILIAR-STMT-7] Condition expressions admit record constructors inside nested call arguments without confusing the following condition block with a constructor; record and field names remain case-sensitive identifiers.
+- [FAMILIAR-STMT-8] Record constructor syntax accepts nested generic type arguments, including List fields initialized with contextually typed empty lists.
+- [FAMILIAR-STMT-9] A newline separates postfix call suffixes from completed expressions outside parentheses, while parentheses permit multiline calls and suffixes.
+
+- [FAMILIAR-COLLECTIONS-4] Managed list methods reject invalid argument counts, unknown methods, mismatched element types, and noninteger indices.
+- [FAMILIAR-COLLECTIONS-5] Contextual managed construction and result compilation/execution release every partially allocated object on injected allocation failures.
+
+## Familiar prelude types and contextual constructors
+
+- [BUILTIN-CONTEXT-1] List<T> and Result<T,E> are available without imports or explicit declarations and use existing managed-list and fallible-result semantics.
+- [BUILTIN-CONTEXT-2] Empty lists and Ok/Err payload constructors use expected binding, return, and concrete call-argument types.
+- [BUILTIN-CONTEXT-3] Record fields and managed list elements propagate their expected types into nested empty list expressions.
+- [BUILTIN-CONTEXT-4] Ok(()) constructs successful Result<unit,E> values with normal handling obligations.
+- [BUILTIN-CONTEXT-5] Generic List and Result expressions preserve symbolic type parameters through empty list creation, mutation, and Ok construction.
+- [BUILTIN-CONTEXT-6] Contextual constructors reject missing or incompatible expected types, invalid generic arity, and forbidden managed capability elements.
+- [BUILTIN-CONTEXT-7] Explicitly declared List and Result types retain their own nominal identities and contextual constructors.
+- [BUILTIN-CONTEXT-8] Builtin List and Result types share canonical identity across imported module signatures without imports of a prelude module.
+- [BUILTIN-CONTEXT-9] A module-local List declaration shadows the prelude in that module while unrelated modules continue to resolve the builtin List.
+- [BUILTIN-CONTEXT-10] Module-local functions named Ok or Err take precedence over contextual constructors in both ordinary and generic bodies, without spurious constructor diagnostics.
+- [SCHEMATIC-INPUTS-1] The schematic host provides named circuit, pinout, and interface document handles through io.inputs; nominal Document values preserve the existing scalar byte I/O ABI, and older guests declaring only four byte callbacks remain supported.
+- [SCHEMATIC-INPUTS-2] Named input providers reject absent host documents instead of issuing unusable handles.
+
+- [MODULE-DOT-1] Direct import aliases accept dot-qualified function and type references, including generic records and imported domain methods; legacy `::` and local list methods retain their meanings.
+- [MODULE-DOT-2] Dot-qualified imported functions can be passed as values, and generic function bodies resolve dotted module type references through their declaring module.
+- [MODULE-DOT-3] Dotted qualification preserves private-symbol, private-domain-function, and import-alias-shadowing checks.
+- [MODULE-DOT-4] Dotted module parsing, namespace normalization, checking, and execution release all allocations on allocation failure.
+
+- [SCHEMATIC-MODEL-1] The schematic entry parses named document handles, builds one validated schematic value, and passes it to rendering; normal and collection-stress execution produce identical SVG and release all managed roots.
+- [MODULE-DOT-5] Semantic caching recognizes dotted imported function values and keeps callback type catalogs fresh across repeated requests and imported function edits.
+
+## Python-oriented core values
+
+- [PYTHON-CORE-1] Standard-library List, Result, and Option have the same nominal identities as their prelude forms; unrelated user nominal declarations remain distinct.
+- [PYTHON-CORE-2] Unit and Result<unit/int,int> entry functions adapt to the scalar runner status convention while retaining their ordinary guest signatures.
+- [PYTHON-CORE-3] Representable unsuffixed integer constants inherit numeric contexts; explicit suffixes retain their types and out-of-range constants are rejected.
+- [PYTHON-CORE-4] Decimal float literals and ordinary arithmetic/comparisons use binary64 numeric semantics, including equal signed zeros and unordered NaNs.
+
+## Python surface syntax
+
+- [PYTHON-1] Python `def`/`class` sources use colon and space-indented blocks, `#` comments, implicit continuation inside delimiters, and source-preserving virtual block delimiters. Missing blocks, inconsistent dedents, and indentation tabs are diagnosed. Legacy brace syntax remains accepted; formatting preserves Python layout and comments.
+- [PYTHON-2] Python functions support ordinary mutable assignment, annotated bindings, `True`/`False`/`None`, `and`/`or`/`not`, `pass`, `elif`, omitted unit return annotations, `int` as i64, and square type parameters whose omitted requirement defaults to copy.
+- [PYTHON-3] Python value records use `class` with annotated fields and named construction; square-bracket type applications and `match`/`case` preserve contextual variant names and underscore payload discards for semantic resolution.
+
+
+- [PY-COLLECTIONS-1] Managed list literals infer homogeneous element types or use contextual list types; append, nested indexes, receiver expressions, and indexed writes evaluate operands once. Legacy writes retain receiver-first order; Python function writes evaluate the assigned value before the target. Signed negative indexes count from the end.
+- [PY-COLLECTIONS-2] List slices copy the selected elements into a fresh managed list, normalize negative endpoints and clamp to bounds. `len(list)` returns signed i64.
+- [PY-COLLECTIONS-3] For-each and enumerate evaluate a list once and retain its initial iteration bound, rejecting structural mutation through aliases before the next body or step; range accepts end or start/end. Break and continue retain correct step semantics.
+
+- [PY-COLLECTIONS-4] Contextual nested literals preserve list types across fields and nested indexes.
+- [PY-COLLECTIONS-5] Field assignment reconstructs mutable local records or list-slot records with receiver/index operands evaluated once, retaining value semantics for previous copies.
+- [PY-COLLECTIONS-6] Generic list literals, iteration, slicing and writes preserve symbolic element types and allocation effects.
+- [PY-COLLECTIONS-7] Receiver calls, computed indexes and assignment values run exactly once in source order and survive collection at every allocation.
+- [PY-COLLECTIONS-8] Structural list mutation through an alias traps during continued iteration, including continue and the final step; break exits without another iteration check.
+- [PY-COLLECTIONS-9] Generic record field updates preserve managed alias copying and concrete value semantics.
+- [PY-COLLECTIONS-10] Slicing clamps negative and oversized endpoints, produces empty reversed intervals and copies list storage while retaining shallow element values.
+
+- [PY-COLLECTIONS-11] Contextual types attach to complete expressions so an annotated postfix expression does not incorrectly constrain its receiver literal.
+- [PY-COLLECTIONS-12] End-only range syntax starts at signed zero in runtime and compile-time scalar functions.
+
+- [PY-COLLECTIONS-13] Record field writeback retains unrelated fields changed through managed aliases during evaluation of the assigned value.
+
+
+- [PY-TEXT-1] Managed immutable text validates UTF-8, indexes Unicode scalar values (including negative indices), compares exact codepoints, concatenates, and splits/joins literal separators. Strings cannot be mutated through list operations. Scalar str conversions use Python Boolean/None spellings and numeric text. Python strings support Unicode escapes, codepoint slices, membership, and iteration; generic bodies preserve these types.
+- [PY-DICT-1] Managed dictionaries preserve insertion order and shared alias updates, compare integer/string keys by value, distinguish missing keys from defaults, trace key/value cycles, and fail allocation or capacity growth atomically. Managed data equality compares contents with cycle detection; dictionary equality ignores insertion order. Membership searches dictionary keys, list values, or a text substring. Python in/not in evaluate the needle before the container exactly once. Dictionary iteration returns keys in insertion order and traps if aliases change its size; generic dictionary literals preserve symbolic key/value types.
+
+- [SCHEMATIC-PYTHON-1] The Python-syntax schematic uses GC collections and unit output helpers; decimal output preserves negative values including the minimum signed integer under Python floor division and modulo semantics.
+- [PYTHON-CALL-1] Declared functions accept positional and keyword arguments with trailing scalar-literal defaults; argument effects run once in source order even when parameter order differs, including inferred generic calls.
+- [PYTHON-CALL-2] Calls reject unknown, duplicate, missing, excess, and misplaced arguments. Defaults require immutable scalar literals, their declared types are checked even in unused functions, and required parameters cannot follow defaults.
+- [PYTHON-CALL-3] Python constructor calls resolve records by declaration identity, support positional and named fields, generic records, and empty `class` declarations using `pass`.
+- [PYTHON-CALL-4] Keyword/default binding, source-order lowering, execution, and native emission release partial allocations on allocator failure.
+- [PYTHON-CALL-5] Editing a default value invalidates checked caller reuse and produces fresh call behavior.
+
+- [C-FFI-1] Explicit `extern fn` declarations use fixed-arity C scalar signatures on QBE: signed/unsigned 8/16/32/64-bit integers, bool, float as C double, and unit results as C void. They require effects(host), bypass provider registration, retain transitive external effects, and reject borrowed/aggregate/generic signatures. VM host registration and legacy C emission reject direct imports.

@@ -77,15 +77,27 @@ def verify_execution(directory, record, source, adapter, case, evidence):
             record.get('adapter_sha256') == adapter['sha256'] and
             record.get('request_sha256') == input_receipt['sha256'] and
             record.get('input') == input_receipt, 'execution input/source/adapter mismatch')
-    # This projection supports .my/Python runner adapters, neither uses Zig build reuse.
-    require('build_reuse' not in record, 'unexpected build reuse for my/Python execution')
     commands, steps = adapter['commands'], record['steps']
-    require(isinstance(steps,list) and len(steps) <= len(commands), 'invalid execution step count')
+    reuse = record.get('build_reuse')
+    if reuse is None:
+        expected_commands = commands
+    else:
+        require(adapter['language'] == 'zig' and commands[-2]['phase'] == 'build' and
+                commands[-1]['argv'] == ['/cache/app'], 'unexpected build reuse')
+        require(isinstance(reuse, dict) and reuse.get('policy') == 'suite-build-reuse-v1' and
+                reuse.get('key') == digest({'policy': 'suite-build-reuse-v1',
+                                            'source': source['sha256'], 'adapter': adapter['sha256']}) and
+                re.fullmatch('[0-9a-f]{64}', reuse.get('binary_sha256', '')) is not None and
+                re.fullmatch('[0-9a-f]{64}', reuse.get('prefix_steps_sha256', '')) is not None and
+                type(reuse.get('reused')) is bool and isinstance(reuse.get('origin_directory'), str),
+                'invalid build reuse receipt')
+        expected_commands = commands[-1:] if reuse['reused'] else commands
+    require(isinstance(steps,list) and len(steps) <= len(expected_commands), 'invalid execution step count')
     failed = None
     stdout = None
     for index,step in enumerate(steps):
         require(failed is None, 'execution continued after a failed step')
-        command = commands[index]
+        command = expected_commands[index]
         require(step.get('argv') == command['argv'] and step.get('phase') == command['phase'],
                 'execution command differs from adapter')
         evidence.note(directory/f'{index:02}.stdout'); evidence.note(directory/f'{index:02}.stderr')
@@ -98,11 +110,14 @@ def verify_execution(directory, record, source, adapter, case, evidence):
         require(outcome['passed'] is False and outcome.get('phase') == failed,
                 'failed execution claims successful outcome')
         return False
-    if len(steps) < len(commands):
+    if len(steps) < len(expected_commands):
         require(outcome['passed'] is False and outcome.get('failure') == 'phase-deadline' and
-                outcome.get('phase') == commands[len(steps)]['phase'], 'unfinished execution without deadline result')
+                outcome.get('phase') == expected_commands[len(steps)]['phase'], 'unfinished execution without deadline result')
         return False
-    require(bool(steps) and commands[-1]['phase'] == 'run', 'missing run step')
+    require(bool(steps) and expected_commands[-1]['phase'] == 'run', 'missing run step')
+    if reuse is not None and not reuse['reused']:
+        require(reuse['origin_directory'] == str(Path(directory).resolve()) and
+                reuse['prefix_steps_sha256'] == digest(steps[:-1]), 'invalid originating build receipt')
     try:
         parsed = execution.parse_output(stdout)
     except (ValueError, UnicodeError, RecursionError):
@@ -159,8 +174,10 @@ def project_attempt(root, reg, task, pair, arm, evidence):
     adapter=reg['configuration']['adapters'][arm]
     public_cases=evidence.read(Path(root)/task['task_id']/'pack/public/cases.json')
     baseline = manifest['baseline']['files']
+    transport = {'my': {'main.my', 'io.my'}, 'python': {'main.py'},
+                 'zig': {'main.zig'}, 'rust': {'main.rs', 'json.rs'}}[language]
     protected = {name:value for name,value in baseline.items() if '.trial-public' in Path(name).parts
-                 or Path(name).name in ('main.my','main.py','io.my')}
+                 or name in transport}
     require(manifest['protected'] == protected, 'protected runtime inventory mismatch')
     # Baselines are keyed by arm label; a legacy cohort's labels are its language names.
     frozen_baseline = Path(root)/task['task_id']/(arm+'-baseline')

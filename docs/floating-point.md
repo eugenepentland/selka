@@ -1,6 +1,6 @@
 # Binary64 through std_math
 
-Import `std_math` and use its nominal `F64` type. This stage provides floating arithmetic through named functions; builtin `f64` syntax, decimal floating literals and overloaded arithmetic operators are not introduced.
+Import `std_math` and use its nominal `F64` type. This compatibility API provides floating arithmetic through named functions. New code can use builtin `float`, decimal literals, and ordinary operators as described in the [Python-style guide](python-syntax.md). `F64` retains its explicit bit-codec contract and is distinct from ordinary `float`.
 
 ```mylang
 module main;

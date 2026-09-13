@@ -56,7 +56,7 @@ pub const Walker = struct {
                 .external_read => |read| try self.expr(read.capability),
                 .acquire_buffer, .acquire_pool => |acquire| {
                     try self.expr(acquire.capacity);
-                    try self.expr(acquire.allocator);
+                    if (!acquire.managed) try self.expr(acquire.allocator);
                 },
                 .reset_arena, .cast, .wrap, .unwrap, .length => |value| try self.expr(value),
                 .propagate => |p| try self.expr(p.value),
@@ -77,6 +77,7 @@ pub const Walker = struct {
                 .call => |call| {
                     try self.arguments(call.arguments);
                     for (call.literals) |literal| try self.expr(literal.value);
+                    if (call.evaluation) |evaluation| try self.stmt(evaluation.body);
                 },
                 .json_codec => |codec| try self.arguments(&codec.arguments),
                 .field => |field| try self.expr(field.base),

@@ -1,9 +1,11 @@
 //! Recursive descent for statements; precedence climbing for expressions.
 const syntax_code = "E_SYNTAX";
+const eDefaultArgument = "E_DEFAULT_ARGUMENT";
 const eRequirement = diagnostic.generic_requirement;
 const eGenericLimit = diagnostic.generic_limit;
 const external_resources = @import("external_resources.zig");
 const std = @import("std");
+const eIteration = "E_ITERATION";
 const effects = @import("effect_set.zig");
 const ast = @import("ast.zig");
 const lex = @import("lexer.zig");
@@ -15,7 +17,7 @@ pub const Parser = struct {
     arena: *std.heap.ArenaAllocator,
     tokens: []const lex.Token,
     sink: *diagnostic.Sink,
-    cursor: struct { pos: usize = 0, depth: usize = 0, equal_tail: ?usize = null } = .{},
+    cursor: struct { python_function: bool = false, python_mode: ?bool = null, pos: usize = 0, depth: usize = 0, equal_tail: ?usize = null, delimiters: usize = 0, record_literals: bool = true, record_boundary: usize = 0 } = .{},
     module_syntax: bool = false,
     syntax: struct {
         nodes: std.ArrayList(ast.Node) = .empty,
@@ -24,7 +26,12 @@ pub const Parser = struct {
         callbacks: std.ArrayList(ast.CallbackType) = .empty,
         applications: std.ArrayList(ast.TypeApplication) = .empty,
         aliases: std.ArrayList(ast.TypeAlias) = .empty,
+        import_aliases: std.StringHashMapUnmanaged(void) = .empty,
     } = .{},
+    fn pythonSyntax(self: *Parser) bool {
+        if (self.cursor.python_mode == null) self.cursor.python_mode = lex.isPythonSource(self.src.bytes);
+        return self.cursor.python_mode.?;
+    }
     fn current(self: *Parser) lex.Token {
         const token = self.tokens[self.cursor.pos];
         if (self.cursor.equal_tail == self.cursor.pos) return .{ .tag = .equal, .span = .{ .start = token.span.start + 1, .end = token.span.end } };
@@ -33,10 +40,22 @@ pub const Parser = struct {
     fn take(self: *Parser, tag: lex.Tag) bool {
         if (self.current().tag != tag) return false;
         self.cursor.pos += 1;
+        switch (tag) {
+            .lparen, .lbracket => self.cursor.delimiters += 1,
+            .rparen, .rbracket => self.cursor.delimiters -|= 1,
+            else => {},
+        }
         return true;
     }
     fn expect(self: *Parser, comptime tag: lex.Tag) diagnostic.Error!lex.Token {
+        if (tag == .rparen and self.current().tag == .comma) {
+            if (self.tokens[self.cursor.pos + 1].tag == .rparen) _ = self.take(.comma);
+        }
         const token = self.current();
+        if (tag == .semicolon and token.tag != .semicolon and lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos)) {
+            const end = self.tokens[self.cursor.pos - 1].span.end;
+            return .{ .tag = .semicolon, .span = .{ .start = end, .end = end } };
+        }
         if (!self.take(tag)) return self.sink.fail(syntax_code, token.span, "unexpected token; expected " ++ @tagName(tag));
         return token;
     }
@@ -45,7 +64,14 @@ pub const Parser = struct {
         self.cursor.depth += 1;
     }
     fn qualifiedTail(self: *Parser, first: Span) diagnostic.Error!Span {
-        if (!self.module_syntax or self.current().tag != .colon or self.genericCallSuffix()) return first;
+        if (!self.module_syntax) return first;
+        if (self.current().tag == .dot and self.syntax.import_aliases.contains(self.src.text(first))) {
+            if (!self.sameExpressionLine()) return first;
+            self.cursor.pos += 1;
+            return .join(first, (try self.expect(.ident)).span);
+        }
+        if (self.current().tag != .colon or self.genericCallSuffix()) return first;
+        if (self.tokens[self.cursor.pos + 1].tag != .colon) return first;
         self.cursor.pos += 1;
         _ = try self.expect(.colon);
         return .join(first, (try self.expect(.ident)).span);
@@ -55,6 +81,8 @@ pub const Parser = struct {
         defer self.cursor.depth -= 1;
         const token = self.current();
         if (self.take(.kw_fn)) return self.callbackType(token.span);
+        if (self.take(.kw_none)) return token.span;
+        if (self.take(.lparen)) return .join(token.span, (try self.expect(.rparen)).span);
         if (self.take(.lbracket)) {
             const index: ast.ArrayIndex = if (self.current().tag == .integer) .{ .length = (try self.expect(.integer)).span } else .{ .enum_type = try self.typeName() };
             _ = try self.expect(.rbracket);
@@ -106,7 +134,7 @@ pub const Parser = struct {
                 }
             }
             try parameters.append(self.arena.allocator(), try self.typeName());
-            if (!self.take(.comma)) break;
+            if (!self.take(.comma) or self.current().tag == .rparen) break;
         };
         _ = try self.expect(.rparen);
         _ = try self.expect(.arrow);
@@ -119,7 +147,8 @@ pub const Parser = struct {
     fn nominalTypeName(self: *Parser) diagnostic.Error!Span {
         const token = try self.expect(.ident);
         const name = try self.qualifiedTail(token.span);
-        if (!self.take(.lt)) return name;
+        const square = self.pythonSyntax() and self.take(.lbracket);
+        if (!square and !self.take(.lt)) return name;
         var arguments: std.ArrayList(Span) = .empty;
         while (true) {
             const argument = try self.genericArgument();
@@ -127,7 +156,7 @@ pub const Parser = struct {
             try arguments.append(self.arena.allocator(), argument);
             if (!self.take(.comma)) break;
         }
-        const close = try self.closeNominalType();
+        const close = if (square) try self.expect(.rbracket) else try self.closeNominalType();
         const span: Span = .join(name, close.span);
         try self.syntax.applications.append(self.arena.allocator(), .{ .span = span, .name = name, .arguments = try arguments.toOwnedSlice(self.arena.allocator()) });
         return span;
@@ -148,7 +177,8 @@ pub const Parser = struct {
         while (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "import")) {
             self.cursor.pos += 1;
             try self.moduleName();
-            if (self.take(.kw_as)) _ = try self.expect(.ident);
+            const alias = if (self.take(.kw_as)) (try self.expect(.ident)).span else self.tokens[self.cursor.pos - 1].span;
+            try self.syntax.import_aliases.put(self.arena.allocator(), self.src.text(alias), {});
             _ = try self.expect(.semicolon);
         }
         return self.parse();
@@ -229,14 +259,15 @@ pub const Parser = struct {
                 try pools.append(self.arena.allocator(), .{ .type_parameters = type_parameters, .name = name.span, .handle = handle.span, .element = element });
                 continue;
             }
-            if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "buffer")) {
+            if (self.current().tag == .ident and (std.mem.eql(u8, self.src.text(self.current().span), "buffer") or std.mem.eql(u8, self.src.text(self.current().span), "list"))) {
+                const managed = std.mem.eql(u8, self.src.text(self.current().span), "list");
                 self.cursor.pos += 1;
                 const name = try self.expect(.ident);
                 const type_parameters = try self.typeParameters();
                 _ = try self.expect(.colon);
                 const element = try self.typeName();
                 _ = try self.expect(.semicolon);
-                try buffers.append(self.arena.allocator(), .{ .type_parameters = type_parameters, .name = name.span, .backing = element });
+                try buffers.append(self.arena.allocator(), .{ .managed = managed, .type_parameters = type_parameters, .name = name.span, .backing = element });
                 continue;
             }
             if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "resource")) {
@@ -284,15 +315,19 @@ pub const Parser = struct {
                 continue;
             }
             if (self.take(.kw_struct)) {
+                const python_record = std.mem.eql(u8, self.src.text(self.tokens[self.cursor.pos - 1].span), "class");
                 const name = try self.expect(.ident);
                 const type_parameters = try self.typeParameters();
                 _ = try self.expect(.lbrace);
                 var fields: std.ArrayList(ast.Parameter) = .empty;
-                if (self.current().tag != .rbrace) while (true) {
+                const empty_record = python_record and self.take(.kw_pass);
+                if (empty_record) _ = try self.expect(.semicolon);
+                if (!empty_record and self.current().tag != .rbrace) while (true) {
                     const field = try self.expect(.ident);
                     _ = try self.expect(.colon);
                     try fields.append(self.arena.allocator(), .{ .name = field.span, .ty = try self.typeName() });
-                    if (!self.take(.comma)) break;
+                    const next_field = python_record and self.current().tag != .rbrace and lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos);
+                    if (!self.take(.comma) and !next_field) break;
                 };
                 _ = try self.expect(.rbrace);
                 try records.append(self.arena.allocator(), .{ .type_parameters = type_parameters, .name = name.span, .fields = try fields.toOwnedSlice(self.arena.allocator()) });
@@ -322,33 +357,26 @@ pub const Parser = struct {
         };
     }
     fn function(self: *Parser, owner: ?Span) diagnostic.Error!ast.Function {
-        const host: ?Span = if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "host")) self.current().span else null;
+        const c_abi = self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "extern");
+        const host: ?Span = if (c_abi or (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "host"))) self.current().span else null;
         if (host != null) self.cursor.pos += 1;
         const restricted = self.take(.kw_private);
         if (restricted and owner == null) return self.sink.fail("E_PRIVATE_SCOPE", self.tokens[self.cursor.pos - 1].span, "private functions must be declared inside a domain");
         const conversion = self.take(.kw_conversion);
-        _ = try self.expect(.kw_fn);
+        const head = try self.expect(.kw_fn);
+        const previous_python = self.cursor.python_function;
+        self.cursor.python_function = std.mem.eql(u8, self.src.text(head.span), "def");
+        defer self.cursor.python_function = previous_python;
         const name = try self.expect(.ident);
         const type_parameters = try self.typeParameters();
         _ = try self.expect(.lparen);
-        var parameters: std.ArrayList(ast.Parameter) = .empty;
-        if (self.current().tag != .rparen) while (true) {
-            const parameter = try self.expect(.ident);
-            _ = try self.expect(.colon);
-            const reference: ?bool = if (self.take(.ampersand)) self.take(.kw_mut) else null;
-            const slice = reference != null and self.current().tag == .lbracket and self.tokens[self.cursor.pos + 1].tag == .rbracket;
-            if (slice) {
-                self.cursor.pos += 2;
-            }
-            try parameters.append(self.arena.allocator(), .{ .name = parameter.span, .ty = try self.typeName(), .reference = reference, .slice = slice });
-            if (!self.take(.comma)) break;
-        };
-        _ = try self.expect(.rparen);
-        _ = try self.expect(.arrow);
+        var parameters = try self.functionParameters();
+        const close_parameters = try self.expect(.rparen);
+        const annotated_return = self.take(.arrow);
         const reference: ?bool = if (self.take(.ampersand)) self.take(.kw_mut) else null;
         const slice = reference != null and self.current().tag == .lbracket and self.tokens[self.cursor.pos + 1].tag == .rbracket;
         if (slice) self.cursor.pos += 2;
-        const return_type = try self.typeName();
+        const return_type = if (annotated_return) try self.typeName() else Span{ .start = close_parameters.span.end, .end = close_parameters.span.end };
         var return_reference: ?ast.ReturnReference = null;
         if (reference) |mutable| {
             const from = try self.expect(.ident);
@@ -364,10 +392,13 @@ pub const Parser = struct {
         }
         const effect_bound = try self.effectBound();
         if (host) |span| if (effect_bound.?.allowed & effects.bit(.host) == 0) return self.sink.fail("E_HOST_EFFECTS", span, "host declarations must include the host effect");
+        if (c_abi and !annotated_return) return self.sink.fail("E_EXTERN_SIGNATURE", name.span, "extern functions require an explicit return type (unit for C void)");
         const body = if (host != null) try self.addStatement(.{ .span = (try self.expect(.semicolon)).span, .data = .{ .block = &.{} } }) else try self.block();
         return .{
             .policy = .{
                 .host = host,
+                .c_abi = c_abi,
+                .python = self.cursor.python_function,
                 .effect_bound = effect_bound,
                 .owner = owner,
                 .restricted = restricted,
@@ -383,14 +414,52 @@ pub const Parser = struct {
             .body = body,
         };
     }
+    fn functionParameters(self: *Parser) diagnostic.Error!std.ArrayList(ast.Parameter) {
+        var parameters: std.ArrayList(ast.Parameter) = .empty;
+        var default_seen = false;
+        if (self.current().tag != .rparen) while (true) {
+            const parameter = try self.expect(.ident);
+            _ = try self.expect(.colon);
+            const reference: ?bool = if (self.take(.ampersand)) self.take(.kw_mut) else null;
+            const slice = reference != null and self.current().tag == .lbracket and self.tokens[self.cursor.pos + 1].tag == .rbracket;
+            if (slice) {
+                self.cursor.pos += 2;
+            }
+            const ty = try self.typeName();
+            const default_value = if (self.take(.equal)) try self.defaultArgument() else null;
+            if (default_value != null and reference != null) return self.sink.fail(eDefaultArgument, parameter.span, "reference parameters cannot have defaults");
+            if (default_seen and default_value == null) return self.sink.fail(eDefaultArgument, parameter.span, "required parameters must precede parameters with defaults");
+            default_seen = default_seen or default_value != null;
+            try parameters.append(self.arena.allocator(), .{ .name = parameter.span, .ty = ty, .reference = reference, .slice = slice, .default_value = default_value });
+            if (!self.take(.comma) or self.current().tag == .rparen) break;
+        };
+        return parameters;
+    }
+    fn defaultArgument(self: *Parser) diagnostic.Error!ast.NodeId {
+        const value = try self.expression(0);
+        const node = self.syntax.nodes.items[@backingInt(value)];
+        const literal = switch (node.data) {
+            .integer, .boolean, .unit, .text => true,
+            .unary => |unary| unary.op == .neg and self.syntax.nodes.items[@backingInt(unary.operand)].data == .integer,
+            else => false,
+        };
+        if (!literal) return self.sink.fail(eDefaultArgument, node.span, "defaults must be immutable scalar literals");
+        return value;
+    }
     fn typeParameters(self: *Parser) diagnostic.Error![]const ast.TypeParameter {
-        if (!self.take(.lt)) return &.{};
+        const square = self.take(.lbracket);
+        if (!square and !self.take(.lt)) return &.{};
         var parameters: std.ArrayList(ast.TypeParameter) = .empty;
         while (true) {
             const constant_length = self.take(.kw_const);
             const name = (try self.expect(.ident)).span;
             if (parameters.items.len == 16) return self.sink.fail(eGenericLimit, name, "at most 16 type parameters are permitted");
             for (parameters.items) |previous| if (std.mem.eql(u8, self.src.text(previous.name), self.src.text(name))) return self.sink.fail("E_GENERIC_PARAMETER", name, "duplicate type parameter");
+            if (square and !constant_length and self.current().tag != .colon) {
+                try parameters.append(self.arena.allocator(), .{ .name = name, .requirements = &.{}, .default_copy = true });
+                if (!self.take(.comma)) break;
+                continue;
+            }
             _ = try self.expect(.colon);
             if (constant_length) {
                 _ = try self.expect(.kw_u64);
@@ -426,7 +495,7 @@ pub const Parser = struct {
             });
             if (!self.take(.comma)) break;
         }
-        _ = try self.expect(.gt);
+        _ = if (square) try self.expect(.rbracket) else try self.expect(.gt);
         return parameters.toOwnedSlice(self.arena.allocator());
     }
     fn constraintParameter(self: *Parser) diagnostic.Error!ast.Parameter {
@@ -445,7 +514,7 @@ pub const Parser = struct {
         if (self.current().tag != .rparen) while (true) {
             if (parameters.items.len == 16) return self.sink.fail(eGenericLimit, self.current().span, "at most 16 structural operation parameters are permitted");
             try parameters.append(self.arena.allocator(), try self.constraintParameter());
-            if (!self.take(.comma)) break;
+            if (!self.take(.comma) or self.current().tag == .rparen) break;
         };
         _ = try self.expect(.rparen);
         _ = try self.expect(.arrow);
@@ -485,9 +554,10 @@ pub const Parser = struct {
         const token = self.current();
         if (token.tag != .ident) return null;
         const spelling = self.src.text(token.span);
-        if (std.mem.eql(u8, spelling, "noalloc") or std.mem.eql(u8, spelling, "noio")) {
+        if (std.mem.eql(u8, spelling, "noalloc") or std.mem.eql(u8, spelling, "nogc") or std.mem.eql(u8, spelling, "noio")) {
             self.cursor.pos += 1;
-            return .{ .span = token.span, .allowed = sets.all & ~(if (std.mem.eql(u8, spelling, "noalloc")) sets.bit(.allocation) else sets.io) };
+            const excluded = if (std.mem.eql(u8, spelling, "noalloc")) (sets.bit(.allocation) | sets.bit(.managed_allocation)) else if (std.mem.eql(u8, spelling, "nogc")) sets.bit(.managed_allocation) else sets.io;
+            return .{ .span = token.span, .allowed = sets.all & ~excluded };
         }
         if (!std.mem.eql(u8, spelling, "effects")) return null;
         self.cursor.pos += 1;
@@ -502,7 +572,7 @@ pub const Parser = struct {
             );
             if (allowed & sets.bit(effect) != 0) return self.sink.fail("E_DUPLICATE_EFFECT", name.span, "effect appears more than once in this bound");
             allowed |= sets.bit(effect);
-            if (!self.take(.comma)) break;
+            if (!self.take(.comma) or self.current().tag == .rparen) break;
         };
         const close = try self.expect(.rparen);
         return .{ .span = .join(token.span, close.span), .allowed = allowed };
@@ -602,6 +672,15 @@ pub const Parser = struct {
         }
         return body;
     }
+    fn conditionExpression(self: *Parser) diagnostic.Error!ast.NodeId {
+        const previous = self.cursor.record_literals;
+        const boundary = self.cursor.record_boundary;
+        self.cursor.record_literals = false;
+        self.cursor.record_boundary = self.cursor.delimiters;
+        defer self.cursor.record_literals = previous;
+        defer self.cursor.record_boundary = boundary;
+        return self.expression(0);
+    }
     fn statement(self: *Parser) diagnostic.Error!ast.StatementId {
         try self.enter();
         defer self.cursor.depth -= 1;
@@ -620,31 +699,24 @@ pub const Parser = struct {
         }
         if (self.take(.kw_borrow)) return self.borrowStatement(first.span);
         if (self.take(.kw_match)) {
-            const value = try self.expression(0);
+            const value = try self.conditionExpression();
             _ = try self.expect(.lbrace);
             var arms: std.ArrayList(ast.MatchArm) = .empty;
             if (self.current().tag != .rbrace) while (true) {
-                const ty = try self.nominalTypeName();
-                _ = try self.expect(.dot);
-                const name = try self.expect(.ident);
-                var binding: ?Span = null;
-                var discard_payload = false;
-                if (self.take(.lparen)) {
-                    if (self.take(.kw_discard)) discard_payload = true else binding = (try self.expect(.ident)).span;
-                    _ = try self.expect(.rparen);
-                }
-                _ = try self.expect(.fat_arrow);
+                const python_case = self.take(.kw_case);
+                const pattern = try self.matchPattern();
+                if (!python_case) _ = try self.expect(.fat_arrow);
                 const body = try self.block();
-                try arms.append(self.arena.allocator(), .{ .ty = ty, .name = name.span, .binding = binding, .discard_payload = discard_payload, .body = body });
-                if (!self.take(.comma)) break;
+                try arms.append(self.arena.allocator(), .{ .ty = pattern.ty, .name = pattern.name, .binding = pattern.binding, .discard_payload = pattern.discard_payload, .body = body });
+                if (!self.take(.comma) and self.current().tag != .kw_case) break;
             };
             const close = try self.expect(.rbrace);
             return self.addStatement(.{ .span = .join(first.span, close.span), .data = .{ .match = .{ .value = value, .arms = try arms.toOwnedSlice(self.arena.allocator()) } } });
         }
-        if (self.take(.kw_if)) {
-            const condition = try self.expression(0);
+        if (self.take(.kw_if) or self.take(.kw_elif)) {
+            const condition = try self.conditionExpression();
             const then_body = try self.block();
-            const else_body = if (self.take(.kw_else))
+            const else_body = if (self.current().tag == .kw_elif) try self.statement() else if (self.take(.kw_else))
                 if (self.current().tag == .kw_if) try self.statement() else try self.block()
             else
                 null;
@@ -655,17 +727,9 @@ pub const Parser = struct {
                 .else_body = else_body,
             } } });
         }
-        if (self.take(.kw_for)) {
-            const name = (try self.expect(.ident)).span;
-            _ = try self.expect(.kw_in);
-            const start = try self.expression(0);
-            _ = try self.expect(.dot_dot);
-            const end = try self.expression(0);
-            const body = try self.block();
-            return self.addStatement(.{ .span = .join(first.span, self.syntax.statements.items[@backingInt(body)].span), .data = .{ .for_range = .{ .name = name, .start = start, .end = end, .body = body } } });
-        }
+        if (self.take(.kw_for)) return self.forStatement(first);
         if (self.take(.kw_while)) {
-            const condition = try self.expression(0);
+            const condition = try self.conditionExpression();
             const body = try self.block();
             return self.addStatement(.{ .span = .join(first.span, self.syntax.statements.items[@backingInt(body)].span), .data = .{ .loop = .{ .condition = condition, .body = body } } });
         }
@@ -699,13 +763,17 @@ pub const Parser = struct {
                 self.cursor.pos += 1;
                 break :discard .{ .discard = try self.expression(0) };
             },
+            .kw_pass => no_op: {
+                self.cursor.pos += 1;
+                break :no_op .{ .block = &.{} };
+            },
             .kw_break, .kw_continue => exit: {
                 self.cursor.pos += 1;
                 break :exit .{ .loop_exit = first.tag == .kw_continue };
             },
             .kw_return => ret: {
                 self.cursor.pos += 1;
-                break :ret .{ .ret = if (self.current().tag == .semicolon) try self.append(.{ .span = first.span, .data = .unit }) else try self.expression(0) };
+                break :ret .{ .ret = if (self.current().tag == .semicolon or lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos)) try self.append(.{ .span = first.span, .data = .unit }) else try self.expression(0) };
             },
             .kw_let => binding: {
                 self.cursor.pos += 1;
@@ -716,6 +784,16 @@ pub const Parser = struct {
                 break :binding .{ .binding = .{ .name = name.span, .mutable = mutable, .annotation = annotation, .value = try self.expression(0) } };
             },
             .ident => assignment: {
+                if (self.cursor.python_function and self.tokens[self.cursor.pos + 1].tag == .colon and self.tokens[self.cursor.pos + 2].tag != .colon) {
+                    self.cursor.pos += 2;
+                    const annotation = try self.typeName();
+                    _ = try self.expect(.equal);
+                    break :assignment .{ .binding = .{ .name = first.span, .mutable = true, .annotation = annotation, .value = try self.expression(0) } };
+                }
+                if (self.cursor.python_function and std.mem.eql(u8, self.src.text(first.span), "_") and self.tokens[self.cursor.pos + 1].tag == .equal) {
+                    self.cursor.pos += 2;
+                    break :assignment .{ .discard = try self.expression(0) };
+                }
                 const operator = self.tokens[self.cursor.pos + 1];
                 const op: ast.AssignmentOp = switch (operator.tag) {
                     .equal => .set,
@@ -723,11 +801,11 @@ pub const Parser = struct {
                     .minus_equal => .sub,
                     else => {
                         implicit_discard = true;
-                        break :assignment .{ .discard = try self.expression(0) };
+                        break :assignment .{ .discard = try self.assignmentExpression() };
                     },
                 };
                 self.cursor.pos += 2;
-                break :assignment .{ .assignment = .{ .name = first.span, .value = try self.expression(0), .op = op, .op_span = operator.span } };
+                break :assignment .{ .assignment = .{ .name = first.span, .value = try self.expression(0), .op = op, .op_span = operator.span, .python = self.cursor.python_function } };
             },
             else => expression: {
                 implicit_discard = true;
@@ -737,6 +815,55 @@ pub const Parser = struct {
         const end = try self.expect(.semicolon);
         return self.addStatement(.{ .span = .join(first.span, end.span), .implicit_discard = implicit_discard, .data = data });
     }
+    fn forStatement(self: *Parser, first: lex.Token) diagnostic.Error!ast.StatementId {
+        const first_name = (try self.expect(.ident)).span;
+        const second_name = if (self.take(.comma)) (try self.expect(.ident)).span else null;
+        _ = try self.expect(.kw_in);
+        const input = try self.conditionExpression();
+        var start: ?ast.NodeId = null;
+        var end: ?ast.NodeId = null;
+        var iterable = input;
+        if (self.take(.dot_dot)) {
+            start = input;
+            end = try self.conditionExpression();
+        } else {
+            const node = self.syntax.nodes.items[@backingInt(input)];
+            if (node.data == .call and node.data.call.owner == null) {
+                const call = node.data.call;
+                if (std.mem.eql(u8, self.src.text(call.name), "range")) {
+                    if (call.arguments.len < 1 or call.arguments.len > 2) return self.sink.fail("E_ARITY", node.span, "range requires end or start, end");
+                    // Unit is an internal zero sentinel, avoiding fabricated source text.
+                    start = if (call.arguments.len == 2) call.arguments[0] else try self.append(.{ .span = call.name, .data = .unit });
+                    end = call.arguments[call.arguments.len - 1];
+                } else if (std.mem.eql(u8, self.src.text(call.name), "enumerate")) {
+                    if (call.arguments.len != 1 or second_name == null) return self.sink.fail("E_ARITY", node.span, "enumerate requires one iterable and two iteration names");
+                    iterable = call.arguments[0];
+                } else if (second_name != null) return self.sink.fail(eIteration, node.span, "two iteration names require enumerate");
+            } else if (second_name != null) return self.sink.fail(eIteration, node.span, "two iteration names require enumerate");
+        }
+        const body = try self.block();
+        const span: Span = .join(first.span, self.syntax.statements.items[@backingInt(body)].span);
+        if (start) |range_start| {
+            if (second_name != null) return self.sink.fail(eIteration, span, "range requires one iteration name");
+            return self.addStatement(.{ .span = span, .data = .{ .for_range = .{ .name = first_name, .start = range_start, .end = end.?, .body = body } } });
+        }
+        return self.addStatement(.{ .span = span, .data = .{ .for_each = .{ .name = second_name orelse first_name, .index_name = if (second_name != null) first_name else null, .iterable = iterable, .body = body } } });
+    }
+    fn assignmentExpression(self: *Parser) diagnostic.Error!ast.NodeId {
+        const value = try self.expression(0);
+        if (!self.take(.equal)) return value;
+        const target = self.syntax.nodes.items[@backingInt(value)];
+        if (target.data == .field) {
+            const assigned = try self.expression(0);
+            return self.append(.{ .span = .join(target.span, self.syntax.nodes.items[@backingInt(assigned)].span), .data = .{ .field_assignment = .{ .target = value, .value = assigned } } });
+        }
+        if (target.data != .index) return self.sink.fail("E_ASSIGNMENT_TARGET", target.span, "indexed assignment requires a list binding and index");
+        const arguments = try self.arena.allocator().alloc(ast.NodeId, 2);
+        arguments[0] = target.data.index.index;
+        arguments[1] = try self.expression(0);
+        return self.append(.{ .span = .join(target.span, self.syntax.nodes.items[@backingInt(arguments[1])].span), .data = .{ .list_operation = .{ .kind = .write, .base = target.data.index.base, .arguments = arguments } } });
+    }
+
     fn append(self: *Parser, node: ast.Node) diagnostic.Error!ast.NodeId {
         const id: ast.NodeId = @fromBackingInt(self.syntax.nodes.items.len);
         try self.syntax.nodes.append(self.arena.allocator(), node);
@@ -749,7 +876,7 @@ pub const Parser = struct {
             const name = try self.expect(.ident);
             _ = try self.expect(.colon);
             try fields.append(self.arena.allocator(), .{ .name = name.span, .value = try self.expression(0) });
-            if (!self.take(.comma)) break;
+            if (!self.take(.comma) or self.current().tag == .rbrace) break;
         };
         _ = try self.expect(.rbrace);
         return fields.toOwnedSlice(self.arena.allocator());
@@ -760,6 +887,7 @@ pub const Parser = struct {
         const token = self.current();
         var left: ast.NodeId = switch (token.tag) {
             .kw_len_pool, .kw_capacity_pool, .kw_read_pool, .kw_replace_pool, .kw_insert_pool, .kw_remove_pool, .kw_clear_pool => try self.parsePool(token),
+            .kw_len_list, .kw_read_list, .kw_append_list, .kw_write_list => try self.parseBuffer(token),
             .kw_len_buffer, .kw_capacity_buffer, .kw_read_buffer, .kw_write_buffer, .kw_append_buffer, .kw_resize_buffer, .kw_reserve_buffer, .kw_take_buffer, .kw_truncate_buffer => try self.parseBuffer(token),
             .kw_restrict_resource => try self.parseRestrict(token),
             .kw_read_resource_slice, .kw_write_resource_slice => try self.parseSliceIo(token),
@@ -837,8 +965,18 @@ pub const Parser = struct {
             .kw_saturating_mul,
             => try self.parseIntegerOperation(token),
             .kw_f64_sqrt, .kw_f64_floor, .kw_f64_ceil, .kw_f64_trunc, .kw_f64_abs, .kw_f64_neg, .kw_f64_from_u64, .kw_f64_to_u64 => try self.parseFloatUnary(token),
-            .kw_reset_arena, .kw_cast, .kw_wrap, .kw_acquire_buffer, .kw_acquire_pool => try self.parseCast(token),
+            .kw_new_list, .kw_reset_arena, .kw_cast, .kw_wrap, .kw_acquire_buffer, .kw_acquire_pool => try self.parseCast(token),
             .kw_new => try self.parseRecord(token),
+            .lbracket => list: {
+                _ = self.take(.lbracket);
+                var values: std.ArrayList(ast.NodeId) = .empty;
+                if (self.current().tag != .rbracket) while (true) {
+                    try values.append(self.arena.allocator(), try self.expression(0));
+                    if (!self.take(.comma) or self.current().tag == .rbracket) break;
+                };
+                const close = try self.expect(.rbracket);
+                break :list try self.append(.{ .span = .join(token.span, close.span), .data = .{ .list_literal = try values.toOwnedSlice(self.arena.allocator()) } });
+            },
             .kw_match => try self.parseMatchExpression(token),
             .kw_len, .kw_replace, .kw_unwrap => try self.parseBuiltin(token),
             .kw_update => update: {
@@ -851,15 +989,20 @@ pub const Parser = struct {
             },
             .kw_todo => try self.parseHole(token),
             .kw_codec_encode, .kw_codec_decode => try self.parseCodecOperation(token),
+            .kw_none => none: {
+                self.cursor.pos += 1;
+                break :none try self.append(.{ .span = token.span, .data = .unit });
+            },
+            .lbrace => try self.parseDictionary(token),
             .integer, .bytes, .ident, .kw_true, .kw_false => try self.parseLeaf(token),
             .kw_try => propagated: {
                 self.cursor.pos += 1;
-                const value = try self.expression(7);
+                const value = try self.expression(if (std.mem.eql(u8, self.src.text(token.span), "not")) 3 else 7);
                 break :propagated try self.append(.{ .span = .join(token.span, self.syntax.nodes.items[@backingInt(value)].span), .data = .{ .propagate = value } });
             },
             .minus, .bang => unary: {
                 self.cursor.pos += 1;
-                const operand = try self.expression(7);
+                const operand = try self.expression(if (std.mem.eql(u8, self.src.text(token.span), "not")) 3 else 7);
                 break :unary try self.append(.{
                     .span = .join(token.span, self.syntax.nodes.items[@backingInt(operand)].span),
                     .data = .{ .unary = .{
@@ -870,7 +1013,11 @@ pub const Parser = struct {
                 });
             },
             .lparen => group: {
-                self.cursor.pos += 1;
+                _ = self.take(.lparen);
+                const previous = self.cursor.record_literals;
+                self.cursor.record_literals = true;
+                defer self.cursor.record_literals = previous;
+                if (self.take(.rparen)) break :group try self.append(.{ .span = .join(token.span, self.tokens[self.cursor.pos - 1].span), .data = .unit });
                 const inner = try self.expression(0);
                 const close = try self.expect(.rparen);
                 self.syntax.nodes.items[@backingInt(inner)].span = .join(token.span, close.span);
@@ -879,53 +1026,105 @@ pub const Parser = struct {
             else => return self.sink.fail("E_EXPRESSION", token.span, "expected an expression"),
         };
         while (true) {
+            if (self.cursor.delimiters == 0 and self.current().tag != .rbrace and self.current().tag != .eof) {
+                if (lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos) and (self.cursor.python_function or binaryPrecedence(self.current().tag) == null)) break;
+            }
+            if (self.take(.question)) {
+                left = try self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, self.tokens[self.cursor.pos - 1].span), .data = .{ .propagate = left } });
+                continue;
+            }
             if (self.take(.lbracket)) {
-                const index = try self.expression(0);
-                const close = try self.expect(.rbracket);
-                left = try self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, close.span), .data = .{ .index = .{ .base = left, .index = index } } });
+                const start = if (self.current().tag == .colon) null else try self.expression(0);
+                if (self.take(.colon)) {
+                    const end = if (self.current().tag == .rbracket) null else try self.expression(0);
+                    const close = try self.expect(.rbracket);
+                    left = try self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, close.span), .data = .{ .slice = .{ .base = left, .start = start, .end = end } } });
+                } else {
+                    const close = try self.expect(.rbracket);
+                    left = try self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, close.span), .data = .{ .index = .{ .base = left, .index = start.? } } });
+                }
                 continue;
             }
             if (self.take(.dot)) {
-                const name = try self.expect(.ident);
-                left = try self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, name.span), .data = .{ .field = .{ .base = left, .name = name.span } } });
+                left = try self.parseMemberSuffix(left);
+                continue;
+            }
+            if (try self.parseMembership(left, min_precedence)) |membership| {
+                left = membership;
                 continue;
             }
             const op = self.current();
-            const precedence: u8 = switch (op.tag) {
-                .or_or => 1,
-                .and_and => 2,
-                .eq_eq, .bang_eq => 3,
-                .lt, .le, .gt, .ge => 4,
-                .plus, .minus => 5,
-                .star, .slash, .percent => 6,
-                else => break,
-            };
+            const precedence = binaryPrecedence(op.tag) orelse break;
             if (precedence < min_precedence) break;
             self.cursor.pos += 1;
             const right = try self.expression(precedence + 1);
             left = try self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, self.syntax.nodes.items[@backingInt(right)].span), .data = .{ .binary = .{
-                .op = switch (op.tag) {
-                    .plus => .add,
-                    .minus => .sub,
-                    .star => .mul,
-                    .slash => .div,
-                    .percent => .rem,
-                    .and_and => .logical_and,
-                    .or_or => .logical_or,
-                    .eq_eq => .eq,
-                    .bang_eq => .ne,
-                    .lt => .lt,
-                    .le => .le,
-                    .gt => .gt,
-                    .ge => .ge,
-                    else => unreachable,
-                },
+                .op = self.binaryOperator(op.tag),
                 .left = left,
                 .right = right,
                 .op_span = op.span,
             } } });
         }
         return left;
+    }
+    fn parseMemberSuffix(self: *Parser, left: ast.NodeId) diagnostic.Error!ast.NodeId {
+        const name = self.current();
+        if (name.tag == .kw_len) self.cursor.pos += 1 else _ = try self.expect(.ident);
+        if (self.take(.lparen)) {
+            var arguments: std.ArrayList(ast.NodeId) = .empty;
+            if (self.current().tag != .rparen) while (true) {
+                try arguments.append(self.arena.allocator(), try self.expression(0));
+                if (!self.take(.comma) or self.current().tag == .rparen) break;
+            };
+            const close = try self.expect(.rparen);
+            return self.append(.{
+                .span = .join(self.syntax.nodes.items[@backingInt(left)].span, close.span),
+                .data = .{ .method_call = .{ .base = left, .name = name.span, .arguments = try arguments.toOwnedSlice(self.arena.allocator()) } },
+            });
+        } else return self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, name.span), .data = .{ .field = .{ .base = left, .name = name.span } } });
+    }
+    fn binaryOperator(self: *Parser, tag: lex.Tag) ast.BinaryOp {
+        return switch (tag) {
+            .plus => .add,
+            .minus => .sub,
+            .star => .mul,
+            .slash => if (self.cursor.python_function) .python_div else .div,
+            .slash_slash => .floor_div,
+            .percent => if (self.cursor.python_function) .floor_rem else .rem,
+            .and_and => .logical_and,
+            .or_or => .logical_or,
+            .eq_eq => .eq,
+            .bang_eq => .ne,
+            .lt => .lt,
+            .le => .le,
+            .gt => .gt,
+            .ge => .ge,
+            else => unreachable,
+        };
+    }
+    fn parseMembership(self: *Parser, left: ast.NodeId, precedence: u8) diagnostic.Error!?ast.NodeId {
+        const not_in = self.current().tag == .bang and self.cursor.pos + 1 < self.tokens.len and self.tokens[self.cursor.pos + 1].tag == .kw_in;
+        if (precedence > 3 or (self.current().tag != .kw_in and !not_in)) return null;
+        self.cursor.pos += if (not_in) @as(usize, 2) else 1;
+        const container = try self.expression(4);
+        const span = Span.join(self.syntax.nodes.items[@backingInt(left)].span, self.syntax.nodes.items[@backingInt(container)].span);
+        const result = try self.append(.{ .span = span, .data = .{ .membership = .{ .needle = left, .container = container, .negate = not_in } } });
+        return result;
+    }
+    fn parseDictionary(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
+        self.cursor.delimiters += 1;
+        defer self.cursor.delimiters -= 1;
+
+        self.cursor.pos += 1;
+        var entries: std.ArrayList(ast.NodeId) = .empty;
+        while (self.current().tag != .rbrace) {
+            try entries.append(self.arena.allocator(), try self.expression(0));
+            _ = try self.expect(.colon);
+            try entries.append(self.arena.allocator(), try self.expression(0));
+            if (!self.take(.comma)) break;
+        }
+        const close = try self.expect(.rbrace);
+        return self.append(.{ .span = .join(token.span, close.span), .data = .{ .dictionary_literal = try entries.toOwnedSlice(self.arena.allocator()) } });
     }
     fn parsePool(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.pos += 1;
@@ -959,18 +1158,18 @@ pub const Parser = struct {
     fn parseBuffer(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.pos += 1;
         const kind: @import("buffer_operations.zig").Kind = switch (token.tag) {
-            .kw_len_buffer => .length,
+            .kw_len_buffer, .kw_len_list => .length,
             .kw_capacity_buffer => .capacity,
-            .kw_read_buffer => .read,
-            .kw_write_buffer => .write,
-            .kw_append_buffer => .append,
+            .kw_read_buffer, .kw_read_list => .read,
+            .kw_write_buffer, .kw_write_list => .write,
+            .kw_append_buffer, .kw_append_list => .append,
             .kw_resize_buffer => .resize,
             .kw_reserve_buffer => .reserve,
             .kw_take_buffer => .take,
             .kw_truncate_buffer => .truncate,
             else => unreachable,
         };
-        const result: ?Span = if (kind.mutates()) result: {
+        const result: ?Span = if (kind.mutates() and token.tag != .kw_append_list and token.tag != .kw_write_list) result: {
             _ = try self.expect(.lt);
             const ty = try self.typeName();
             _ = try self.expect(.gt);
@@ -1102,7 +1301,8 @@ pub const Parser = struct {
                 .ty = ty,
                 .allocator = first,
                 .value = value,
-            } } else if (token.tag == .kw_acquire_buffer) .{ .acquire_buffer = .{
+            } } else if (token.tag == .kw_acquire_buffer or token.tag == .kw_new_list) .{ .acquire_buffer = .{
+                .managed = token.tag == .kw_new_list,
                 .ty = ty,
                 .allocator = first,
                 .value = value,
@@ -1187,7 +1387,7 @@ pub const Parser = struct {
     fn methodSuffix(self: *Parser) bool {
         if (self.current().tag != .dot) return false;
         if (self.cursor.pos + 2 >= self.tokens.len) return false;
-        return self.tokens[self.cursor.pos + 1].tag == .ident and (self.tokens[self.cursor.pos + 2].tag == .lparen or self.tokens[self.cursor.pos + 2].tag == .colon);
+        return (self.tokens[self.cursor.pos + 1].tag == .ident or self.tokens[self.cursor.pos + 1].tag == .kw_len) and (self.tokens[self.cursor.pos + 2].tag == .lparen or self.tokens[self.cursor.pos + 2].tag == .colon);
     }
 
     fn parseHole(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
@@ -1214,7 +1414,7 @@ pub const Parser = struct {
         var arguments: std.ArrayList(ast.NodeId) = .empty;
         if (self.current().tag != .rparen) while (true) {
             try arguments.append(self.arena.allocator(), try self.expression(0));
-            if (!self.take(.comma)) break;
+            if (!self.take(.comma) or self.current().tag == .rparen) break;
         };
         const close = try self.expect(.rparen);
         return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{
@@ -1223,54 +1423,156 @@ pub const Parser = struct {
             .arguments = try arguments.toOwnedSlice(self.arena.allocator()),
         } } });
     }
+    const Pattern = struct { ty: Span, name: Span, binding: ?Span = null, discard_payload: bool = false };
+    fn matchPattern(self: *Parser) diagnostic.Error!Pattern {
+        const head = self.current();
+        const first = if (self.take(.kw_none)) head.span else try self.nominalTypeName();
+        const contextual = self.current().tag != .dot;
+        var pattern: Pattern = .{
+            .ty = if (contextual) .{ .start = first.start, .end = first.start } else first,
+            .name = first,
+        };
+        if (!contextual) {
+            _ = try self.expect(.dot);
+            pattern.name = (try self.expect(.ident)).span;
+        }
+        if (self.take(.lparen)) {
+            if (self.take(.kw_discard)) pattern.discard_payload = true else {
+                const binding = (try self.expect(.ident)).span;
+                if (std.mem.eql(u8, self.src.text(binding), "_")) pattern.discard_payload = true else pattern.binding = binding;
+            }
+            _ = try self.expect(.rparen);
+        }
+        return pattern;
+    }
     fn parseMatchExpression(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.pos += 1;
-        const value = try self.expression(0);
+        const value = try self.conditionExpression();
         _ = try self.expect(.lbrace);
         var arms: std.ArrayList(ast.MatchValueArm) = .empty;
         if (self.current().tag != .rbrace) while (true) {
-            const ty = try self.nominalTypeName();
-            _ = try self.expect(.dot);
-            const name = (try self.expect(.ident)).span;
-            var binding: ?Span = null;
-            var discard_payload = false;
-            if (self.take(.lparen)) {
-                if (self.take(.kw_discard)) discard_payload = true else binding = (try self.expect(.ident)).span;
-                _ = try self.expect(.rparen);
-            }
+            const pattern = try self.matchPattern();
             _ = try self.expect(.fat_arrow);
             const arm = try self.expression(0);
-            try arms.append(self.arena.allocator(), .{ .ty = ty, .name = name, .binding = binding, .discard_payload = discard_payload, .value = arm });
+            try arms.append(self.arena.allocator(), .{ .ty = pattern.ty, .name = pattern.name, .binding = pattern.binding, .discard_payload = pattern.discard_payload, .value = arm });
             if (!self.take(.comma)) break;
             if (self.current().tag == .rbrace) break;
         };
         const close = (try self.expect(.rbrace)).span;
         return self.append(.{ .span = .join(token.span, close), .data = .{ .match_expression = .{ .value = value, .arms = try arms.toOwnedSlice(self.arena.allocator()) } } });
     }
+    fn sameExpressionLine(self: *Parser) bool {
+        return self.cursor.delimiters != 0 or self.cursor.pos == 0 or std.mem.indexOfScalar(u8, self.src.bytes[self.tokens[self.cursor.pos - 1].span.end..self.current().span.start], '\n') == null;
+    }
+    fn recordLiteralAhead(self: *Parser) bool {
+        if (!self.cursor.record_literals and self.cursor.delimiters <= self.cursor.record_boundary) return false;
+        var position = self.cursor.pos;
+        var angles: usize = 0;
+        while (position < self.tokens.len) : (position += 1) {
+            if (position > self.cursor.pos and angles == 0 and self.cursor.delimiters == 0 and std.mem.indexOfScalar(u8, self.src.bytes[self.tokens[position - 1].span.end..self.tokens[position].span.start], '\n') != null) return false;
+            switch (self.tokens[position].tag) {
+                .ident, .colon, .dot, .kw_i64, .kw_i8, .kw_i16, .kw_i32, .kw_u8, .kw_u16, .kw_u32, .kw_u64, .kw_bool => {},
+                .comma => if (angles == 0) return false,
+                .lt => angles += 1,
+                .gt => {
+                    if (angles == 0) return false;
+                    angles -= 1;
+                },
+                .lbrace => return angles == 0,
+                else => return false,
+            }
+        }
+        return false;
+    }
+    fn appliedConstructorAhead(self: *Parser) bool {
+        if (!self.pythonSyntax()) return false;
+        var position = self.cursor.pos;
+        var brackets: usize = 0;
+        var applied = false;
+        while (position + 2 < self.tokens.len) : (position += 1) {
+            if (position > self.cursor.pos and brackets == 0 and std.mem.indexOfScalar(u8, self.src.bytes[self.tokens[position - 1].span.end..self.tokens[position].span.start], '\n') != null) return false;
+            if (self.tokens[position].tag == .lbracket) {
+                brackets += 1;
+                applied = true;
+            }
+            if (self.tokens[position].tag == .rbracket) brackets -|= 1;
+            switch (self.tokens[position].tag) {
+                .ident, .dot, .colon, .lbracket, .rbracket, .lt, .gt, .comma, .kw_i64, .kw_i8, .kw_i16, .kw_i32, .kw_u8, .kw_u16, .kw_u32, .kw_u64, .kw_bool, .kw_none => {},
+                .lparen => return applied,
+                else => return false,
+            }
+        }
+        return false;
+    }
+    const Arguments = struct { values: []const ast.NodeId, names: []const ?Span };
+    fn callArguments(self: *Parser) diagnostic.Error!Arguments {
+        var values: std.ArrayList(ast.NodeId) = .empty;
+        var names: std.ArrayList(?Span) = .empty;
+        var keyword_seen = false;
+        if (self.current().tag != .rparen) while (true) {
+            const keyword = self.current().tag == .ident and self.tokens[self.cursor.pos + 1].tag == .equal;
+            const name = if (keyword) self.current().span else null;
+            if (keyword) self.cursor.pos += 2;
+            if (keyword_seen and !keyword) return self.sink.fail("E_CALL_ARGUMENT", self.current().span, "positional arguments must precede keyword arguments");
+            keyword_seen = keyword_seen or keyword;
+            try names.append(self.arena.allocator(), name);
+            try values.append(self.arena.allocator(), try self.expression(0));
+            if (!self.take(.comma) or self.current().tag == .rparen) break;
+        };
+        return .{ .values = try values.toOwnedSlice(self.arena.allocator()), .names = if (keyword_seen) try names.toOwnedSlice(self.arena.allocator()) else &.{} };
+    }
     fn parseLeaf(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
+        if (token.tag == .ident and self.appliedConstructorAhead()) {
+            const name = try self.typeName();
+            _ = try self.expect(.lparen);
+            const arguments = try self.callArguments();
+            const close = try self.expect(.rparen);
+            return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{ .name = name, .arguments = arguments.values, .argument_names = arguments.names } } });
+        }
+        if (token.tag == .ident and self.recordLiteralAhead()) {
+            const name = try self.typeName();
+            const fields = try self.fieldInitializers();
+            return self.append(.{ .span = .join(token.span, self.tokens[self.cursor.pos - 1].span), .data = .{ .record = .{ .name = name, .fields = fields } } });
+        }
         self.cursor.pos += 1;
         var owner: ?Span = null;
         var name = if (token.tag == .ident) try self.qualifiedTail(token.span) else token.span;
-        if (token.tag == .ident and self.methodSuffix()) {
+        if (token.tag == .ident and self.sameExpressionLine() and self.methodSuffix()) {
             owner = name;
             self.cursor.pos += 1;
-            name = (try self.expect(.ident)).span;
+            name = if (self.current().tag == .kw_len) member: {
+                const member = self.current();
+                self.cursor.pos += 1;
+                break :member member.span;
+            } else (try self.expect(.ident)).span;
         }
         const type_arguments = if (token.tag == .ident) try self.typeArguments() else &.{};
-        if (token.tag == .ident and self.take(.lparen)) {
-            var arguments: std.ArrayList(ast.NodeId) = .empty;
-            if (self.current().tag != .rparen) while (true) {
-                try arguments.append(self.arena.allocator(), try self.expression(0));
-                if (!self.take(.comma)) break;
-            };
+        if (token.tag == .ident and self.sameExpressionLine() and self.take(.lparen)) {
+            const arguments = try self.callArguments();
             const close = try self.expect(.rparen);
-            return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{ .owner = owner, .type_arguments = type_arguments, .name = name, .arguments = try arguments.toOwnedSlice(self.arena.allocator()) } } });
+            return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{ .owner = owner, .type_arguments = type_arguments, .name = name, .arguments = arguments.values, .argument_names = arguments.names } } });
         }
         return self.append(.{ .span = name, .data = switch (token.tag) {
             .integer => .{ .integer = token.span },
-            .bytes => .{ .bytes = try @import("byte_literal.zig").decode(self.arena.allocator(), self.src, token.span, self.sink) },
+            .bytes => literal: {
+                const decoded = try @import("byte_literal.zig").decode(self.arena.allocator(), self.src, token.span, self.sink);
+                const python = if (comptime @hasField(@TypeOf(self.cursor), "python_function")) self.cursor.python_function else false;
+                break :literal if (python and self.src.text(token.span)[0] != 'b') .{ .text = decoded } else .{ .bytes = decoded };
+            },
             .ident => .{ .name = name },
             else => .{ .boolean = token.tag == .kw_true },
         } });
     }
 };
+
+fn binaryPrecedence(tag: lex.Tag) ?u8 {
+    return switch (tag) {
+        .or_or => 1,
+        .and_and => 2,
+        .eq_eq, .bang_eq => 3,
+        .lt, .le, .gt, .ge => 4,
+        .plus, .minus => 5,
+        .star, .slash, .slash_slash, .percent => 6,
+        else => null,
+    };
+}

@@ -180,3 +180,11 @@ test "corpus text helpers release partial owned allocations" {
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), textRuntimeAllocation, .{program.compilation.code.?});
 }
+
+// spec: GC-STDLIB-1
+test "standard managed lists grow and share aliases across generic library calls" {
+    try runLibrary("module main;import std_list;fn main()->i64{" ++
+        "let values=std_list::create::<i64>();let alias=values;" ++
+        "for i in 0..100{std_list::append(alias,i);}" ++
+        "std_list::set(alias,0u64,42);return std_list::get(values,0u64)+cast<i64>(std_list::count(values));}", 142);
+}

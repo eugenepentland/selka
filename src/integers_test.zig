@@ -84,7 +84,7 @@ test "integer widths remain distinct in functions records compound assignment an
 
 test "no implicit width or boolean conversions and unknown suffixes are rejected" {
     const cases = [_]struct { body: []const u8, code: []const u8 }{
-        .{ .body = "let n: i8 = 1; return 0;", .code = "E_TYPE" },
+        .{ .body = "let source = 1; let n: i8 = source; return 0;", .code = "E_TYPE" },
         .{ .body = "discard 1u8 + 1u16; return 0;", .code = "E_TYPE" },
         .{ .body = "discard cast<u8>(true); return 0;", .code = "E_TYPE" },
         .{ .body = "discard cast<bool>(1); return 0;", .code = "E_TYPE" },

@@ -15,10 +15,10 @@ const Field = struct { name: []const u8, type: []const u8 };
 const Case = struct { name: []const u8, payload: ?[]const u8 };
 const Codec = struct { wire: []const u8, decode: []const u8, encode: []const u8, error_type: []const u8 };
 const Definition = struct {
-    callback: ?struct { parameters: []const []const u8, result: []const u8, effects: u8, borrowed: u16, slices: u16 } = null,
+    callback: ?struct { parameters: []const []const u8, result: []const u8, effects: @import("effect_set.zig").Mask, borrowed: u16, slices: u16 } = null,
     codec: ?Codec = null,
     name: []const u8,
-    kind: enum { unit, callback, integer, boolean, capability, record, array, table, domain, enumeration, tagged_union, result, buffer, resource, pool, handle },
+    kind: enum { unit, callback, integer, boolean, capability, record, array, table, domain, enumeration, tagged_union, result, list, buffer, resource, pool, handle },
     move_only: bool = false,
     requires_handling: bool = false,
     @"opaque": bool = false,
@@ -77,7 +77,7 @@ const Graph = struct {
         // Domains may only be constructed through their checked factories. Runtime
         // owners/handles/capabilities have no portable reconstruction operation.
         if (record.shape.domain != null or record.shape.hasRuntimeIdentity()) {
-            out.kind = if (record.shape.domain != null) .domain else if (record.shape.buffer != null) .buffer else if (record.shape.resource != null) .resource else if (record.shape.pool != null) .pool else .handle;
+            out.kind = identityKind(record);
             out.@"opaque" = true;
             if (record.contract.codec) |codec| {
                 const decode = self.functions[@backingInt(codec.decode)];
@@ -182,4 +182,12 @@ pub fn render(allocator: std.mem.Allocator, index: *interfaces.Index, program: t
         .generic_templates_version = "generic-templates-v1",
         .generic_templates = try @import("generic_api.zig").collect(scratch, index),
     }, .{ .emit_null_optional_fields = false });
+}
+
+fn identityKind(record: typed.Record) @FieldType(Definition, "kind") {
+    if (record.shape.domain != null) return .domain;
+    if (record.managed) return .list;
+    if (record.shape.buffer != null) return .buffer;
+    if (record.shape.resource != null) return .resource;
+    return if (record.shape.pool != null) .pool else .handle;
 }

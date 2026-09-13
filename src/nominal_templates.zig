@@ -26,11 +26,13 @@ pub const Array = struct { syntax: ast.ArrayType, length: ?usize, length_paramet
 /// Ordered type arguments retain their nominal base identity and diagnostic sites.
 pub const Application = struct { syntax: ast.TypeApplication, declaration: usize, arguments: []const Expression };
 /// Named record field or closed variant case, including payload-free cases.
-pub const Field = struct { name: Span, ty: ?Expression };
+pub const Field = struct { name: Span, ty: ?Expression, builtin_name: ?[]const u8 = null };
 /// Declaration category determines equality and owner/result obligations independently of spelling.
 pub const Kind = enum { record, variants, result, enumeration, domain, buffer, resource, pool, handle };
 /// Template metadata is arena-owned and has no executable placeholder type ID.
 pub const Declaration = struct {
+    builtin_name: ?[]const u8 = null,
+    managed: bool = false,
     name: Span,
     parameters: []const requirements.Parameter,
     kind: Kind,
@@ -64,6 +66,63 @@ pub const Index = struct {
         try self.names.put(ctx.allocator, key, self.declarations.items.len);
         try self.declarations.append(ctx.allocator, entry);
     }
+    fn addBuiltin(self: *Index, name: []const u8, count: usize, kind: Kind) Error!void {
+        if (self.names.contains(name) or self.syntax.aliases.contains(name)) return;
+        const allocator = self.context.allocator;
+        const standard_name: ?[]const u8 = if (std.mem.eql(u8, name, "List")) "std_list::List" else if (std.mem.eql(u8, name, "Result")) "std_result::Result" else if (std.mem.eql(u8, name, "Option")) "std_result::Option" else null;
+        if (standard_name) |key| if (self.names.get(key)) |id| {
+            self.declarations.items[id].builtin_name = name;
+            try self.names.put(allocator, name, id);
+            return;
+        };
+        const span: Span = .{ .start = 0, .end = 0 };
+        const parameters = try allocator.alloc(requirements.Parameter, count);
+        const fields_out = try allocator.alloc(Field, count);
+        var copy_required: requirements.Set = .{};
+        copy_required.include(.copy);
+        for (parameters, fields_out, 0..) |*parameter_out, *field, i| {
+            parameter_out.* = .{ .name = span, .requirements = copy_required };
+            field.* = .{ .name = span, .ty = .{ .parameter = i }, .builtin_name = if (kind == .result) (if (i == 0) "ok" else "err") else null };
+        }
+        try self.names.put(allocator, name, self.declarations.items.len);
+        try self.declarations.append(allocator, .{
+            .builtin_name = name,
+            .name = span,
+            .parameters = parameters,
+            .kind = kind,
+            .fields = fields_out,
+            .managed = kind == .buffer,
+        });
+    }
+    fn addOption(self: *Index) Error!void {
+        try self.addBuiltin("Option", 1, .variants);
+        const id = self.names.get("Option") orelse return;
+        const declaration = &self.declarations.items[id];
+        if (declaration.builtin_name == null or declaration.name.end != 0) return;
+        const fields_out = try self.context.allocator.alloc(Field, 2);
+        const span: Span = .{ .start = 0, .end = 0 };
+        fields_out[0] = .{ .name = span, .ty = null, .builtin_name = "none" };
+        fields_out[1] = .{ .name = span, .ty = .{ .parameter = 0 }, .builtin_name = "some" };
+        declaration.fields = fields_out;
+    }
+    fn addPrelude(self: *Index, program: ast.Program) Error!void {
+        try self.addBuiltin("List", 1, .buffer);
+        if (!self.names.contains("list")) try self.names.put(self.context.allocator, "list", self.names.get("List").?);
+        try self.addBuiltin("Result", 2, .result);
+        try self.addOption();
+        if (@import("float_syntax.zig").used(self.context.src, program)) try self.addFloat();
+        try self.addBuiltin("str", 0, .buffer);
+        const text_declaration = &self.declarations.items[self.names.get("str").?];
+        if (text_declaration.builtin_name != null) text_declaration.fields = try self.context.allocator.dupe(Field, &.{.{ .name = .{ .start = 0, .end = 0 }, .ty = .{ .builtin = .u32 } }});
+        try self.addBuiltin("dict", 2, .buffer);
+    }
+    fn addFloat(self: *Index) Error!void {
+        if (self.names.contains("float") or self.syntax.aliases.contains("float")) return;
+        const span: Span = .{ .start = 0, .end = 0 };
+        const fields_out = try self.context.allocator.dupe(Field, &.{.{ .name = span, .ty = .{ .builtin = .u64 } }});
+        try self.names.put(self.context.allocator, "float", self.declarations.items.len);
+        try self.declarations.append(self.context.allocator, .{ .builtin_name = "float", .name = span, .parameters = &.{}, .kind = .domain, .fields = fields_out });
+    }
     fn lengthParameter(self: *Index, span: Span, parameters: []const requirements.Parameter) ?usize {
         const id = self.parameter(span, parameters) orelse return null;
         return if (parameters[id].constant_length) id else null;
@@ -77,7 +136,13 @@ pub const Index = struct {
     }
     fn lookup(self: *Index, span: Span) Error!usize {
         const ctx = self.context;
-        const key = if (ctx.names) |names| try names.reference(span, .type, null, null, ctx.sink) else ctx.src.text(span);
+        const text = ctx.src.text(span);
+        if (self.names.get(text)) |id| {
+            if (self.declarations.items[id].builtin_name != null) {
+                if (ctx.names == null or !try ctx.names.?.topLevel(span)) return id;
+            }
+        }
+        const key = if (ctx.names) |names| try names.reference(span, .type, null, null, ctx.sink) else text;
         return self.names.get(key) orelse ctx.sink.fail("E_UNKNOWN_TYPE", span, "type is not declared");
     }
     fn parameter(self: *Index, span: Span, parameters: []const requirements.Parameter) ?usize {
@@ -143,7 +208,7 @@ pub const Index = struct {
             return .{ .parameter = id };
         }
         if (typed.Type.fromName(ctx.src.text(span))) |ty| return .{ .builtin = ty };
-        if (self.syntax.aliases.count() != 0) {
+        if (self.syntax.aliases.count() != 0 and !(self.names.contains(ctx.src.text(span)) and self.declarations.items[self.names.get(ctx.src.text(span)).?].builtin_name != null)) {
             const alias_name = if (ctx.names) |names| try names.reference(span, .type, null, null, ctx.sink) else ctx.src.text(span);
             if (self.syntax.aliases.getPtr(alias_name)) |alias| {
                 if (alias.visiting) return ctx.sink.fail("E_ALIAS_CYCLE", span, "type aliases must have acyclic dependencies");
@@ -229,7 +294,8 @@ pub const Index = struct {
             declaration.guarantees = switch (declaration.kind) {
                 .record, .variants => copyGuarantee(),
                 .enumeration, .domain, .handle => .{ .bits = 19 },
-                .buffer, .resource, .pool, .result => .{},
+                .buffer => if (declaration.managed) copyGuarantee() else .{},
+                .resource, .pool, .result => .{},
             };
             if (!declaration.guarantees.contains(.copy)) try pending.append(allocator, id);
         }
@@ -337,7 +403,10 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     for (program.types.records) |declaration| try index.add(declaration.name, declaration.type_parameters, .record);
     for (program.types.variants) |declaration| try index.add(declaration.name, declaration.type_parameters, if (declaration.fallible) .result else if (declaration.is_union) .variants else .enumeration);
     inline for (.{ "domains", "buffers", "resources" }, .{ Kind.domain, .buffer, .resource }) |category, kind| {
-        for (@field(program.types, category)) |declaration| try index.add(declaration.name, declaration.type_parameters, kind);
+        for (@field(program.types, category)) |declaration| {
+            try index.add(declaration.name, declaration.type_parameters, kind);
+            index.declarations.items[index.declarations.items.len - 1].managed = declaration.managed;
+        }
     }
     for (program.types.pools) |pool| {
         try index.add(pool.name, pool.type_parameters, .pool);
@@ -349,6 +418,7 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
         try index.syntax.aliases.put(allocator, key, .{ .declaration = alias });
     }
     try index.checkParameters(program);
+    try index.addPrelude(program);
     for (program.types.expressions.callbacks) |syntax| try index.syntax.callbacks.put(allocator, syntax.span.start, syntax);
     for (program.types.expressions.arrays) |syntax| try index.syntax.arrays.put(allocator, syntax.span.start, syntax);
     for (program.types.expressions.applications) |syntax| try index.syntax.applications.put(allocator, syntax.span.start, syntax);
@@ -361,10 +431,10 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     for (index.declarations.items) |declaration| {
         if (declaration.parameters.len == 0 or (declaration.kind != .buffer and declaration.kind != .pool)) continue;
         const element = declaration.fields[0];
-        if (!index.guarantees(element.ty.?, declaration.parameters).contains(if (declaration.kind == .buffer) .storable else .copy)) return sink.fail(
+        if (!index.guarantees(element.ty.?, declaration.parameters).contains(if (declaration.kind == .buffer and !declaration.managed) .storable else .copy)) return sink.fail(
             eRequirement,
             element.name,
-            "buffer elements must guarantee storable; pool elements must guarantee copy",
+            "buffer elements must guarantee storable; list and pool elements must guarantee copy",
         );
     }
     for (index.declarations.items) |declaration| for (declaration.fields) |field| if (field.ty) |value| try index.checkArguments(value, declaration.parameters);

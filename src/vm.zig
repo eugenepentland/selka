@@ -14,12 +14,16 @@ const host = @import("host_functions.zig");
 const vm_host = @import("vm_host.zig");
 const value_copy = @import("value_copy.zig");
 const std = @import("std");
+const managed_equal = @import("managed_equal.zig");
+const managed_text = @import("managed_text.zig");
+const managed_dict = @import("managed_dict.zig");
 const invocation_contract = @import("invocation_contract.zig");
 const bc = @import("bytecode.zig");
 const fusion = @import("vm_fusion.zig");
 const integers = @import("integers.zig");
 const typed = @import("typed.zig");
 const memory = @import("memory.zig");
+const gc_heap = @import("gc_heap.zig");
 const external = @import("external_capabilities.zig");
 const Diagnostic = @import("diagnostic.zig").Diagnostic;
 const environment = @import("environment.zig");
@@ -42,8 +46,16 @@ pub const Options = struct {
     max_steps: u64 = 10_000_000,
     max_frames: u64 = 1024,
 };
+/// Collection stress mode and observations for each fresh managed execution heap.
+pub const GcStatistics = gc_heap.Statistics;
+/// Optional collection stress and counters, independent of explicit allocator authority.
+pub const GcOptions = struct {
+    stress: bool = false,
+    statistics: ?*gc_heap.Statistics = null,
+};
 /// Backing policy, owner quotas, and optional execution-memory observations.
 pub const MemoryOptions = struct {
+    gc: GcOptions = .{},
     /// Select original dispatch for differential execution and memory measurements.
     optimize_dispatch: bool = true,
     backing: MemoryBacking = .general,
@@ -240,6 +252,12 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
         if (function.policy.host) |span| return trap("R_HOST_REGISTRATION", "program requires explicitly registered host functions", span, &.{}, program);
     };
     var quickened: fusion.Plan = .{ .enabled = options.memory.optimize_dispatch and options.memory.trace == null };
+    var managed_heap = gc_heap.Heap.init(allocator);
+    managed_heap.stress = options.memory.gc.stress;
+    defer {
+        managed_heap.deinit();
+        if (options.memory.gc.statistics) |statistics| statistics.* = managed_heap.statistics;
+    }
     var region: @import("arena.zig").Arena = undefined;
     try region.initWithBacking(allocator, options.memory.backing_allocator orelse allocator, options.memory.limits);
     const storage = &region.store;
@@ -308,6 +326,7 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
         .options = options,
         .steps = &steps,
         .storage = storage,
+        .managed_heap = &managed_heap,
         .pools = &pools,
         .providers = .{ .host = entry_request.host, .environment = &environment_execution, .resources = &resource_execution, .external = &external_runtime },
         .state = .{ .stack = &stack, .locals = &locals, .owners = &owners, .references = &references, .active_regions = &active_regions, .frames = &frames },
@@ -430,6 +449,7 @@ const Execution = struct {
     options: Options,
     steps: *u64,
     storage: *memory.Store,
+    managed_heap: *gc_heap.Heap,
     pools: *pool_runtime.Runtime,
     providers: Providers,
     state: State,
@@ -882,6 +902,25 @@ const Step = struct {
         if (stack.items.len - frame.operand_base < record.fields) return error.InternalError;
         const start = stack.items.len - record.fields;
         const schema = program.records[record.ty.recordIndex()];
+        if (schema.managed and schema.collection.kind != .list) {
+            const heap = self.execution.managed_heap;
+            const result = if (schema.collection.kind == .dictionary)
+                managed_dict.create(heap, record.ty, schema.collection.key.?, schema.shape.buffer.?) catch |err| return self.collectionFailure(err)
+            else
+                try heap.create(record.ty, .u32, record.fields);
+            defer result.release(allocator);
+            if (schema.collection.kind == .dictionary) {
+                var index: usize = start;
+                while (index < stack.items.len) : (index += 2) managed_dict.write(heap, result, stack.items[index], stack.items[index + 1]) catch |err| return self.collectionFailure(err);
+            } else {
+                for (stack.items[start..]) |point| try heap.append(result, point);
+                result.managed.collection.kind = .string;
+            }
+            releaseValues(stack.items[start..], allocator);
+            stack.shrinkRetainingCapacity(start);
+            try pushOwned(stack, allocator, result.retain());
+            return false;
+        }
         for (stack.items[start..], 0..) |field, i| {
             const field_index = if (record.order.len == 0) i else record.order[i];
             if (field.typeOf() != schema.elementType(field_index)) return error.InternalError;
@@ -927,6 +966,15 @@ const Step = struct {
         const base = try pop(stack, frame.operand_base);
         defer base.release(allocator);
         if (base.typeOf() != ty) return error.InternalError;
+        if (base == .managed and base.managed.collection.kind != .list) {
+            const result = if (base.managed.collection.kind == .string)
+                managed_text.at(self.execution.managed_heap, base, try key.asInteger())
+            else
+                managed_dict.read(self.execution.managed_heap, base, key);
+            const value = result catch |err| return self.collectionFailure(err);
+            try pushOwned(stack, allocator, value);
+            return false;
+        }
         const schema = program.records[ty.recordIndex()].shape.array orelse return error.InternalError;
         const index = try arrayIndex(key, schema);
         if (index < 0 or index >= schema.length) return self.finish(trap(index_bounds_code, "array index is outside its declared bounds", instruction.span, frames.items, program));
@@ -968,6 +1016,12 @@ const Step = struct {
         const base = try pop(stack, frame.operand_base);
         defer base.release(allocator);
         if (base.typeOf() != ty) return error.InternalError;
+        if (base == .managed and base.managed.collection.kind != .list) {
+            const size = if (base.managed.collection.kind == .string) managed_text.len(self.execution.managed_heap, base) else managed_dict.len(self.execution.managed_heap, base);
+            const length = size catch |err| return self.collectionFailure(err);
+            try appendValue(stack, allocator, .{ .i64 = @intCast(length) });
+            return false;
+        }
         const schema = program.records[ty.recordIndex()].shape.array orelse return error.InternalError;
         try appendValue(stack, allocator, typed.Value.number(.u64, schema.length));
         return false;
@@ -1186,12 +1240,14 @@ const Step = struct {
     fn executeUnaryFloat(self: *Step) !bool {
         const allocator = self.execution.allocator;
         const stack = self.execution.state.stack;
-        const operand = try numeric(stack, self.frame.operand_base, .u64, allocator);
-        const value = @import("floats.zig").unary(self.instruction.op.unary_float, @intCast(operand)) catch |err| switch (err) {
-            error.FloatConversion => return self.finish(trap("R_FLOAT_CONVERSION", "floating value is outside the unsigned integer range", self.instruction.span, self.execution.state.frames.items, self.execution.program)),
+        const op = self.instruction.op.unary_float;
+        const operand = try numeric(stack, self.frame.operand_base, if (op == .f64_from_i64) .i64 else .u64, allocator);
+        const input: u64 = if (op == .f64_from_i64) @bitCast(@as(i64, @intCast(operand))) else @intCast(operand);
+        const value = @import("floats.zig").unary(op, input) catch |err| switch (err) {
+            error.FloatConversion => return self.finish(trap("R_FLOAT_CONVERSION", "floating value is outside the target integer range", self.instruction.span, self.execution.state.frames.items, self.execution.program)),
             else => return error.InternalError,
         };
-        try appendValue(stack, allocator, Value.number(.u64, value));
+        try appendValue(stack, allocator, if (op == .f64_to_i64) .{ .i64 = @bitCast(value) } else Value.number(.u64, value));
         return false;
     }
     fn executePushInteger(self: *Step) !bool {
@@ -1213,6 +1269,15 @@ const Step = struct {
             .cast_integer, .neg_integer => |value| value,
             else => unreachable,
         };
+        if (ty.isAggregate() and program.records[ty.recordIndex()].collection.kind == .string) {
+            const input = try pop(stack, frame.operand_base);
+            defer input.release(allocator);
+            const input_type = input.typeOf();
+            const floating = input_type.isAggregate() and std.mem.eql(u8, program.records[input_type.recordIndex()].name, "float");
+            const converted = managed_text.convert(self.execution.managed_heap, ty, input, floating) catch |err| return self.collectionFailure(err);
+            try pushOwned(stack, allocator, converted);
+            return false;
+        }
         const operand = try numeric(stack, frame.operand_base, if (instruction.op == .neg_integer) ty else null, allocator);
         const value = integers.cast(ty, if (instruction.op == .neg_integer) -operand else operand) catch |err| switch (err) {
             error.Overflow => return self.finish(trap(overflow_code, "integer conversion or negation exceeds the destination width", instruction.span, frames.items, program)),
@@ -1230,6 +1295,20 @@ const Step = struct {
         const frame = self.frame.*;
         const instruction = self.instruction.*;
         const binary = self.instruction.op.binary_integer;
+        if (binary.ty.isAggregate() and program.records[binary.ty.recordIndex()].managed) {
+            const text = managed_text;
+            const right_value = try pop(stack, frame.operand_base);
+            defer right_value.release(allocator);
+            const left_value = try pop(stack, frame.operand_base);
+            defer left_value.release(allocator);
+            const result: managed_dict.Error!Value = if (binary.op == .add) text.concat(self.execution.managed_heap, left_value, right_value) else comparison: {
+                const equal = managed_equal.equalWithRecords(self.execution.managed_heap, left_value, right_value, program.records) catch |err| break :comparison err;
+                break :comparison Value{ .bool = equal == (binary.op == .eq) };
+            };
+            const value = result catch |err| return self.collectionFailure(err);
+            try pushOwned(stack, allocator, value);
+            return false;
+        }
         const right = try numeric(stack, frame.operand_base, binary.ty, allocator);
         const left = try numeric(stack, frame.operand_base, binary.ty, allocator);
         const value = integers.binary(binary.ty, binary.op, left, right) catch |err| switch (err) {
@@ -1548,6 +1627,7 @@ const Step = struct {
         const arguments = stack.items[start..];
         const local = try self.operationOwner(operation.owner, operation.reference, operation.kind.mutates());
         defer local.release(allocator);
+        if (local == .managed) return self.executeManagedOperation(local, arguments, start);
         if (!local.isOwned(.resource) or local.owned.resource.store != storage) return error.InternalError;
         const owner = local.owned.resource.owner;
         const info = storage.bufferInfo(owner) catch |err| return self.finish(try memoryFailure(err, instruction, frames.items, program));
@@ -1599,6 +1679,118 @@ const Step = struct {
         stack.shrinkRetainingCapacity(start);
         try pushOwned(stack, allocator, output);
         return false;
+    }
+
+    fn executeManagedOperation(self: *Step, list: Value, arguments: []const Value, start: usize) !bool {
+        const execution = self.execution;
+        const heap = execution.managed_heap;
+        const operation = self.instruction.op.buffer_operation;
+        if (list.managed.collection.kind != .list) return self.executeTextDictionary(list, arguments, start);
+        const number = if (operation.kind == .read or operation.kind == .write) try arguments[0].asInteger() else 0;
+        if (number < 0 or number > std.math.maxInt(usize)) return self.finish(trap("R_LIST_BOUNDS", "list index is outside initialized bounds", self.instruction.span, execution.state.frames.items, execution.program));
+        const index: usize = @intCast(number);
+        const output: Value = switch (operation.kind) {
+            .iteration_check => checked: {
+                if (try arguments[0].asInteger() != try heap.len(list)) return self.finish(trap(
+                    "R_LIST_ITERATION_MUTATION",
+                    "list length changed during iteration",
+                    self.instruction.span,
+                    execution.state.frames.items,
+                    execution.program,
+                ));
+                break :checked .unit;
+            },
+            .contains => .{ .bool = managed_equal.containsWithRecords(heap, list, arguments[0], self.execution.program.records) catch |err| return self.collectionFailure(err) },
+            .length => Value.number(.u64, try heap.len(list)),
+            .capacity => Value.number(.u64, list.managed.items.capacity),
+            .read => heap.read(list, index) catch |err| return self.managedFailure(err),
+            .append => mutation: {
+                heap.append(list, arguments[0]) catch |err| return self.managedFailure(err);
+                break :mutation .unit;
+            },
+            .write => mutation: {
+                heap.write(list, index, arguments[1]) catch |err| return self.managedFailure(err);
+                break :mutation .unit;
+            },
+            else => return error.InternalError,
+        };
+        releaseValues(arguments, execution.allocator);
+        execution.state.stack.shrinkRetainingCapacity(start);
+        try pushOwned(execution.state.stack, execution.allocator, output);
+        return false;
+    }
+
+    fn executeTextDictionary(self: *Step, value: Value, arguments: []const Value, start: usize) !bool {
+        const heap = self.execution.managed_heap;
+        const operation = self.instruction.op.buffer_operation;
+        const dictionary = managed_dict;
+        const text = managed_text;
+        if (operation.kind == .iteration_check) {
+            const length = if (value.managed.collection.kind == .dictionary) (dictionary.len(heap, value) catch |err| return self.collectionFailure(err)) else (text.len(heap, value) catch |err| return self.collectionFailure(err));
+            if (length != try arguments[0].asInteger()) return self.finish(trap("R_LIST_ITERATION_MUTATION", "collection size changed during iteration", self.instruction.span, self.execution.state.frames.items, self.execution.program));
+            releaseValues(arguments, self.execution.allocator);
+            self.execution.state.stack.shrinkRetainingCapacity(start);
+            try pushOwned(self.execution.state.stack, self.execution.allocator, .unit);
+            return false;
+        }
+        const result: dictionary.Error!Value = if (value.managed.collection.kind == .string) switch (operation.kind) {
+            .length => length: {
+                const n = text.len(heap, value) catch |err| break :length err;
+                break :length Value{ .i64 = @intCast(n) };
+            },
+            .read => text.at(heap, value, try arguments[0].asInteger()),
+            .contains => contains: {
+                const found = managed_equal.containsWithRecords(heap, value, arguments[0], self.execution.program.records) catch |err| break :contains err;
+                break :contains Value{ .bool = found };
+            },
+            .slice => text.slice(heap, value, try arguments[0].asInteger(), try arguments[1].asInteger()),
+            .split => text.split(heap, operation.output, value, arguments[0]),
+            .join => text.join(heap, value, arguments[0]),
+            else => return error.InternalError,
+        } else switch (operation.kind) {
+            .length => length: {
+                const n = dictionary.len(heap, value) catch |err| break :length err;
+                break :length Value{ .i64 = @intCast(n) };
+            },
+            .read => dictionary.read(heap, value, arguments[0]),
+            .key_at => dictionary.keyAt(heap, value, try arguments[0].asInteger()),
+            .write => writing: {
+                dictionary.write(heap, value, arguments[0], arguments[1]) catch |err| break :writing err;
+                break :writing Value.unit;
+            },
+            .get => dictionary.get(heap, value, arguments[0], arguments[1]),
+            .contains => contains: {
+                const found = dictionary.contains(heap, value, arguments[0]) catch |err| break :contains err;
+                break :contains Value{ .bool = found };
+            },
+            .keys, .values => dictionary.snapshot(heap, value, operation.output, operation.kind == .keys),
+            else => return error.InternalError,
+        };
+        const output = result catch |err| return self.collectionFailure(err);
+        releaseValues(arguments, self.execution.allocator);
+        self.execution.state.stack.shrinkRetainingCapacity(start);
+        try pushOwned(self.execution.state.stack, self.execution.allocator, output);
+        return false;
+    }
+
+    fn collectionFailure(self: *Step, err: managed_dict.Error) RunError!bool {
+        const code: []const u8 = switch (err) {
+            error.Bounds => "R_TEXT_BOUNDS",
+            error.MissingKey => "R_MISSING_KEY",
+            error.EmptySeparator => "R_EMPTY_SEPARATOR",
+            error.InvalidKey, error.InvalidUtf8 => return error.InternalError,
+            error.OutOfMemory => return error.OutOfMemory,
+            error.CapacityLimit => return error.CapacityLimit,
+            error.ForeignMemory => return error.ForeignMemory,
+            error.InvalidDataValue => return error.InvalidDataValue,
+            error.TypeMismatch => return error.TypeMismatch,
+        };
+        return self.finish(trap(code, "collection operation failed", self.instruction.span, self.execution.state.frames.items, self.execution.program));
+    }
+
+    fn managedFailure(self: *Step, err: gc_heap.Error) !bool {
+        if (err == error.Bounds) return self.finish(trap("R_LIST_BOUNDS", "list index is outside initialized bounds", self.instruction.span, self.execution.state.frames.items, self.execution.program));
+        return err;
     }
 
     fn executeAcquireResource(self: *Step) !bool {
@@ -1832,6 +2024,12 @@ const Step = struct {
         const instruction = self.instruction.*;
         const ty = self.instruction.op.acquire_buffer;
         const capacity = try numeric(stack, frame.operand_base, null, allocator);
+        if (program.records[ty.recordIndex()].managed) {
+            if (capacity < 0 or capacity > std.math.maxInt(usize)) return self.finish(trap("R_LIST_CAPACITY", "list capacity is outside supported bounds", instruction.span, frames.items, program));
+            const value = try self.execution.managed_heap.create(ty, program.records[ty.recordIndex()].shape.buffer.?, @intCast(capacity));
+            try pushOwned(stack, allocator, value);
+            return false;
+        }
         const authority = try pop(stack, frame.operand_base);
         defer authority.release(allocator);
         if (!authority.isCapability(.allocator)) return error.InternalError;

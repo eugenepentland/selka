@@ -239,7 +239,12 @@ const Scanner = struct {
     // Discovery skips bodies without parsing them. Only declaration boundaries
     // can introduce exports; identifiers named export inside declarations cannot.
     fn skipDeclaration(self: *Scanner) void {
-        self.pos = lex.declarationEnd(self.tokens, self.pos, null);
+        const token = self.tokens[self.pos];
+        const braced = switch (token.tag) {
+            .kw_fn, .kw_struct, .kw_enum, .kw_union, .kw_domain, .kw_private, .kw_conversion => true,
+            else => self.isWord("result"),
+        };
+        self.pos = lex.declarationEnd(self.project.modules.items[self.id].src.bytes, self.tokens, self.pos, braced);
     }
     fn take(self: *Scanner, tag: lex.Tag) bool {
         if (self.tokens[self.pos].tag != tag) return false;
@@ -248,6 +253,11 @@ const Scanner = struct {
     }
     fn expect(self: *Scanner, tag: lex.Tag) diagnostic.Error!lex.Token {
         const token = self.tokens[self.pos];
+        const bytes = self.project.modules.items[self.id].src.bytes;
+        if (tag == .semicolon and token.tag != .semicolon and lex.implicitTerminator(bytes, self.tokens, self.pos)) {
+            const end = self.tokens[self.pos - 1].span.end;
+            return .{ .tag = .semicolon, .span = .{ .start = end, .end = end } };
+        }
         if (!self.take(tag)) return self.project.fail("E_MODULE_HEADER", "unexpected token in module/import header", .{ .module = self.id, .span = token.span }, null);
         return token;
     }

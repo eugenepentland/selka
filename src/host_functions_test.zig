@@ -34,7 +34,7 @@ test "host registration rejects unknown duplicate mismatched and denied contract
     var mismatch = binding;
     mismatch.signature.result.ty = .bool;
     try t.expectError(error.HostSignatureMismatch, r.register("geometry::measure", mismatch, 0));
-    try t.expectError(error.HostInvalidEffects, r.register("geometry::measure", binding, 0x80));
+    try t.expectError(error.HostInvalidEffects, r.register("geometry::measure", binding, 0x100));
     try r.register("geometry::measure", binding, 0);
     try t.expectError(error.HostDuplicateRegistration, r.register("geometry::measure", binding, 0));
     try t.expectEqual(@as(usize, 0), counter.calls);
@@ -62,7 +62,7 @@ test "host declarations reject duplicate names borrowed signatures authority and
     signature.result.ty = .allocator;
     try t.expectError(error.NotDataType, host.Registry.init(t.allocator, &.{}, &.{.{ .name = "f", .signature = signature }}));
     signature = scalar;
-    signature.effects = 0x80;
+    signature.effects = 0x100;
     try t.expectError(error.HostInvalidEffects, host.Registry.init(t.allocator, &.{}, &.{.{ .name = "f", .signature = signature }}));
 }
 test "host sessions enforce argument result call and work budgets with recovery and stale tokens" {

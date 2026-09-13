@@ -1,0 +1,1 @@
+struct Point{x:i64,y:i64}fn update_point(p:Point)->Point{return new Point{x:p.x+1,y:p.y+2};}fn main()->i64{let mut p=new Point{x:0,y:0};let mut i=0;while i<200000{p=update_point(p);i+=1;}return p.x+p.y;}

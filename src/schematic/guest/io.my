@@ -1,9 +1,41 @@
-module io;
-export length;
-export byte;
-export put;
-export issue;
-host fn length(file: i64) -> i64 effects(host);
-host fn byte(file: i64, position: i64) -> u8 effects(host);
-host fn put(value: u8) -> i64 effects(host);
-host fn issue(code: i64, file: i64, position: i64) -> i64 effects(host);
+module io
+export Document
+export Inputs
+export inputs
+export length
+export byte
+export put
+export issue
+# Document identities come from the host; application code uses their roles.
+
+
+domain Document: int:
+    def circuit() -> Document:
+        return wrap<Document>(circuit_input())
+    def pinout() -> Document:
+        return wrap<Document>(pinout_input())
+    def interface() -> Document:
+        return wrap<Document>(interface_input())
+    def id(document: Document) -> int noalloc:
+        return unwrap(document)
+
+
+class Inputs:
+    circuit: Document
+    pinout: Document
+    interface: Document
+
+
+def inputs() -> Inputs:
+    return Inputs(
+        circuit=Document.circuit(),
+        pinout=Document.pinout(),
+        interface=Document.interface()
+    )
+host def circuit_input() -> int effects(host)
+host def pinout_input() -> int effects(host)
+host def interface_input() -> int effects(host)
+host def length(file: int) -> int effects(host)
+host def byte(file: int, position: int) -> u8 effects(host)
+host def put(value: u8) -> int effects(host)
+host def issue(code: int, file: int, position: int) -> int effects(host)

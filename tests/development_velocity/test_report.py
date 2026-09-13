@@ -192,6 +192,47 @@ class ReportTests(unittest.TestCase):
         write_json(self.path/'private-grading/000/result.json',record);self.sync()
         attempt,_=self.project();self.assertFalse(attempt['behavior_pass'])
 
+    def test_zig_build_reuse_receipts_project_without_guardian(self):
+        commands = [
+            {'phase': 'check', 'argv': ['/tools/zig/zig', 'test', 'main.zig', '-ODebug']},
+            {'phase': 'build', 'argv': ['/tools/zig/zig', 'build-exe', 'main.zig', '-OReleaseSafe',
+                                       '-femit-bin=/cache/app']},
+            {'phase': 'run', 'argv': ['/cache/app']},
+        ]
+        adapter = {'language': 'zig', 'commands': commands}
+        adapter['sha256'] = digest(adapter)
+        _, input_receipt = payload({})
+        origin = self.root / 'zig-origin'
+        origin.mkdir()
+        steps = [{'phase': row['phase'], 'argv': row['argv'], 'isolated': True,
+                  'outcome': 'exited', 'returncode': 0} for row in commands]
+        reuse = {'policy': 'suite-build-reuse-v1',
+                 'key': digest({'policy': 'suite-build-reuse-v1', 'source': self.source['sha256'],
+                                'adapter': adapter['sha256']}),
+                 'binary_sha256': 'b' * 64, 'origin_directory': str(origin.resolve()),
+                 'prefix_steps_sha256': digest(steps[:-1]), 'reused': False}
+        record = {'version': 'application-check-v2', 'source_sha256': self.source['sha256'],
+                  'adapter_sha256': adapter['sha256'], 'request_sha256': input_receipt['sha256'],
+                  'input': input_receipt, 'steps': steps, 'build_reuse': reuse,
+                  'outcome': {'phase': 'behavior', 'passed': True, 'output': {}}}
+        write_json(origin / 'result.json', record)
+        for index in range(3):
+            (origin / f'{index:02}.stdout').write_text('{}\n' if index == 2 else '')
+            (origin / f'{index:02}.stderr').write_text('')
+        case = {'request': {}, 'expected': {}}
+        self.assertTrue(report.verify_execution(origin, record, self.source, adapter, case,
+                                                report.Evidence()))
+
+        reused = self.root / 'zig-reused'
+        reused.mkdir()
+        reuse = dict(reuse, reused=True)
+        record = dict(record, steps=[steps[-1]], build_reuse=reuse)
+        write_json(reused / 'result.json', record)
+        (reused / '00.stdout').write_text('{}\n')
+        (reused / '00.stderr').write_text('')
+        self.assertTrue(report.verify_execution(reused, record, self.source, adapter, case,
+                                                report.Evidence()))
+
     def test_scope_rejection_without_public_execution_is_retained(self):
         import shutil
         source=self.path/'submissions/000/source'

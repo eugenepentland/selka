@@ -1,161 +1,135 @@
-module sexpr;
-import io;
-import text;
-export Kind;
-export Node;
-export Nodes;
-export Parsed;
-export parse;
-export form;
-export at;
-enum Kind {
+module sexpr
+import io
+import text
+export Kind
+export Node
+export parse
+export form
+export at
+
+
+enum Kind:
     list,
     atom,
     string
-}
-struct Node {
-    kind: Kind,
-    span: text::Span,
-    next: i64
-}
-buffer Nodes: Node;
-result Parsed {
-    ok: Nodes,
-    err: i64
-}
-result Mutation {
-    ok: bool,
-    err: i64
-}
-fn at(nodes: &[]Node, index: i64) -> Node {
-    if index < 0 || index >= cast<i64>(len_slice(nodes)) {
-        return new Node {
-            kind: new Kind.atom,
-            span: text::empty(),
-            next: cast<i64>(len_slice(nodes))
-        };
-    }
-    return read_slice(nodes, index);
-}
-fn form(nodes: &[]Node, index: i64, name: &[]u8) -> bool {
-    let item = at(nodes, index);
-    if item.kind != new Kind.list || item.next == index + 1 {
-        return false;
-    }
-    return text::matches(at(nodes, index + 1).span, name);
-}
-fn parse(heap: allocator, file: i64) -> Parsed {
-    let mut nodes = try acquire_buffer<Parsed>(heap, 16384);
-    let mut stack = new [128]i64[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-    let mut depth = 0;
-    let mut p = 0;
-    let size = io::length(file);
-    discard try append_buffer<Mutation>(nodes, new Node {
-        kind: new Kind.list,
-        span: new text::Span {
-            file: file,
-            start: 0,
-            end: size
-        },
-        next: 0
-    });
-    while p < size {
-        let c = io::byte(file, p);
-        if c == 32u8 || c == 9u8 || c == 10u8 || c == 13u8 {
-            p += 1;
-        } else if c == 59u8 {
-            while p < size && io::byte(file, p) != 10u8 {
-                p += 1;
-            }
-        } else if c == 41u8 {
-            if depth == 0 {
-                discard io::issue(1, file, p);
-                return new Parsed.err(1);
-            }
-            depth -= 1;
-            let open = stack[depth];
-            discard try write_buffer<Mutation>(nodes, open, update(read_buffer(nodes, open)) {
-                next: cast<i64>(len_buffer(nodes))
-            });
-            p += 1;
-        } else {
-            let index = cast<i64>(len_buffer(nodes));
-            let start = p;
-            if index == 16384 {
-                discard io::issue(5, file, p);
-                return new Parsed.err(5);
-            }
-            let mut kind = new Kind.atom;
-            if c == 40u8 {
-                if depth == 128 {
-                    discard io::issue(2, file, p);
-                    return new Parsed.err(2);
-                }
-                stack = replace(stack, depth, index);
-                depth += 1;
-                kind = new Kind.list;
-                p += 1;
-            } else if c == 34u8 {
-                kind = new Kind.string;
-                p += 1;
-                let mut closed = false;
-                while p < size && !closed {
-                    let ch = io::byte(file, p);
-                    p += 1;
-                    if ch == 92u8 {
-                        if p == size {
-                            discard io::issue(3, file, start);
-                            return new Parsed.err(3);
-                        }
-                        let escape = io::byte(file, p);
-                        if escape != 92u8 && escape != 34u8 && escape != 110u8 && escape != 114u8 && escape != 116u8 {
-                            discard io::issue(6, file, p);
-                            return new Parsed.err(6);
-                        }
-                        p += 1;
-                    } else if ch == 34u8 {
-                        closed = true;
-                    }
-                }
-                if !closed {
-                    discard io::issue(3, file, start);
-                    return new Parsed.err(3);
-                }
-            } else {
-                let mut scanning = true;
-                while p < size && scanning {
-                    let ch = io::byte(file, p);
-                    if ch == 40u8 || ch == 41u8 || ch == 32u8 || ch == 9u8 || ch == 10u8 || ch == 13u8 || ch == 59u8 {
-                        scanning = false;
-                    } else {
-                        p += 1;
-                    }
-                }
-            }
-            let mut span = new text::Span {
-                file: file,
-                start: start,
-                end: p
-            };
-            if kind == new Kind.string {
-                span = update(span) {
-                    start: start + 1,
-                    end: p - 1
-                };
-            }
-            discard try append_buffer<Mutation>(nodes, new Node {
-                kind: kind,
-                span: span,
-                next: index + 1
-            });
-        }
-    }
-    if depth != 0 {
-        discard io::issue(4, file, size);
-        return new Parsed.err(4);
-    }
-    discard try write_buffer<Mutation>(nodes, 0, update(read_buffer(nodes, 0)) {
-        next: cast<i64>(len_buffer(nodes))
-    });
-    return new Parsed.ok(nodes);
-}
+
+
+class Node:
+    kind: Kind
+    span: text.Span
+    next: int
+
+
+def at(nodes: list[Node], index: int) -> Node:
+    if index < 0 or index >= len(nodes):
+        return Node(
+            kind=Kind.atom,
+            span=text.empty(),
+            next=len(nodes)
+        )
+    return nodes[index]
+
+
+def form(nodes: list[Node], index: int, name: &[]u8) -> bool:
+    item = at(nodes, index)
+    if item.kind != Kind.list or item.next == index + 1:
+        return False
+    return text.matches(at(nodes, index + 1).span, name)
+
+
+def parse(document: io.Document) -> Result[list[Node], int]:
+    file = io.Document.id(document)
+    nodes: list[Node] = []
+    stack: list[int] = []
+    depth = 0
+    p = 0
+    size = io.length(file)
+    nodes.append(Node(
+        kind=Kind.list,
+        span=text.Span(
+            file=file,
+            start=0,
+            end=size
+        ),
+        next=0
+    ))
+    while p < size:
+        c = io.byte(file, p)
+        if c == 32u8 or c == 9u8 or c == 10u8 or c == 13u8:
+            p += 1
+        elif c == 59u8:
+            while p < size and io.byte(file, p) != 10u8:
+                p += 1
+        elif c == 41u8:
+            if depth == 0:
+                _ = io.issue(1, file, p)
+                return Err(1)
+            depth -= 1
+            open = stack[depth]
+            nodes[open].next = len(nodes)
+            p += 1
+        else:
+            index = len(nodes)
+            start = p
+            if index == 16384:
+                _ = io.issue(5, file, p)
+                return Err(5)
+            kind = Kind.atom
+            if c == 40u8:
+                if depth == 128:
+                    _ = io.issue(2, file, p)
+                    return Err(2)
+                if depth == len(stack):
+                    stack.append(index)
+                else:
+                    stack[depth] = index
+                depth += 1
+                kind = Kind.list
+                p += 1
+            elif c == 34u8:
+                kind = Kind.string
+                p += 1
+                closed = False
+                while p < size and not closed:
+                    ch = io.byte(file, p)
+                    p += 1
+                    if ch == 92u8:
+                        if p == size:
+                            _ = io.issue(3, file, start)
+                            return Err(3)
+                        escape = io.byte(file, p)
+                        if escape != 92u8 and escape != 34u8 and escape != 110u8 and escape != 114u8 and escape != 116u8:
+                            _ = io.issue(6, file, p)
+                            return Err(6)
+                        p += 1
+                    elif ch == 34u8:
+                        closed = True
+                if not closed:
+                    _ = io.issue(3, file, start)
+                    return Err(3)
+            else:
+                scanning = True
+                while p < size and scanning:
+                    ch = io.byte(file, p)
+                    if ch == 40u8 or ch == 41u8 or ch == 32u8 or ch == 9u8 or ch == 10u8 or ch == 13u8 or ch == 59u8:
+                        scanning = False
+                    else:
+                        p += 1
+            span = text.Span(
+                file=file,
+                start=start,
+                end=p
+            )
+            if kind == Kind.string:
+                span.start = start + 1
+                span.end = p - 1
+            nodes.append(Node(
+                kind=kind,
+                span=span,
+                next=index + 1
+            ))
+    if depth != 0:
+        _ = io.issue(4, file, size)
+        return Err(4)
+    nodes[0].next = len(nodes)
+    return Ok(nodes)

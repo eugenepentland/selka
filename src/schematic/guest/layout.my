@@ -1,505 +1,402 @@
-module layout;
-import circuit as c;
-import text;
-import layout_graph as g;
-export Point;
-export Points;
-export Built;
-export build;
-export height;
-export rail;
-struct Point {
-    x: i64,
-    y: i64
-}
-buffer Points: Point;
-result Built {
-    ok: Points,
-    err: i64
-}
-result Mutation {
-    ok: bool,
-    err: i64
-}
-struct Row {
-    index: i64,
-    group: i64,
-    height: i64,
-    rail: i64,
-    side: i64,
-    y: i64
-}
-buffer Rows: Row;
-result RowsBuilt {
-    ok: Rows,
-    err: i64
-}
-fn rail(span: text::Span) -> bool {
-    return g::rail(span);
-}
-fn pinGroup(pin: c::Pin, parts: &[]c::Part, pins: &[]c::Pin, nets: &[]g::Net) -> i64 {
-    let id = g::find(nets, c::displayNet(pin.net, parts, pins));
-    if id < 0 {
-        return - 1;
-    }
-    return read_slice(nets, id).group;
-}
-fn railKind(span: text::Span) -> i64 {
-    let word = "GND";
-    borrow word[0..len(word)] as bytes {
-        if text::matches(span, bytes) {
-            return 1;
-        }
-    }
-    if g::rail(span) {
-        return 2;
-    }
-    return 0;
-}
-fn rowHeight(pin: c::Pin, pins: &[]c::Pin, parts: &[]c::Part) -> i64 {
-    if g::rail(c::displayNet(pin.net, parts, pins)) {
-        return 40;
-    }
-    let mut count = 0;
-    let mut hasBridge = false;
-    let mut i = 0;
-    while i < cast<i64>(len_slice(pins)) {
-        let other = read_slice(pins, i);
-        if read_slice(parts, other.part).kind != 0 && text::equal(pin.net, other.net) {
-            count += 1;
-            let mut j = 0;
-            while j < cast<i64>(len_slice(pins)) {
-                let farPin = read_slice(pins, j);
-                if farPin.part == other.part && farPin.number != other.number && !g::rail(farPin.net) {
-                    let mut k = 0;
-                    while k < cast<i64>(len_slice(pins)) {
-                        let hub = read_slice(pins, k);
-                        if read_slice(parts, hub.part).kind == 0 && text::equal(hub.net, farPin.net) {
-                            hasBridge = true;
-                        }
-                        k += 1;
-                    }
-                }
-                j += 1;
-            }
-        }
-        i += 1;
-    }
-    if count > 1 {
-        if !hasBridge {
-            return count * 40;
-        }
-        return 56 +(count - 1) * 40;
-    }
-    return 56;
-}
-fn collectRows(heap: allocator, parts: &[]c::Part, pins: &[]c::Pin, nets: &[]g::Net) -> RowsBuilt {
-    let mut out = try acquire_buffer<RowsBuilt>(heap, 1024);
-    let mut number = 1;
-    while number <= 128 {
-        let mut i = 0;
-        while i < cast<i64>(len_slice(pins)) {
-            let pin = read_slice(pins, i);
-            if read_slice(parts, pin.part).kind == 0 && !pin.nc && pin.number == number {
-                let group = pinGroup(pin, parts, pins, nets);
-                let mut present = false;
-                let mut n = 0;
-                while n < cast<i64>(len_buffer(out)) {
-                    if read_buffer(out, n).group == group {
-                        present = true;
-                    }
-                    n += 1;
-                }
-                if !present {
-                    let mut member = 1;
-                    while member <= 128 {
-                        let mut j = 0;
-                        while j < cast<i64>(len_slice(pins)) {
-                            let other = read_slice(pins, j);
-                            if other.part == pin.part && !other.nc && other.number == member && pinGroup(other, parts, pins, nets) == group {
-                                discard try append_buffer<Mutation>(out, new Row {
-                                    index: j,
-                                    group: group,
-                                    height: rowHeight(other, pins, parts),
-                                    rail: railKind(c::displayNet(other.net, parts, pins)),
-                                    side: 0,
-                                    y: 0
-                                });
-                            }
-                            j += 1;
-                        }
-                        member += 1;
-                    }
-                }
-            }
-            i += 1;
-        }
-        number += 1;
-    }
-    return new RowsBuilt.ok(out);
-}
-fn height(points: &[]Point) -> i64 {
-    let mut bottom = 160;
-    let mut i = 0;
-    while i < cast<i64>(len_slice(points)) {
-        if read_slice(points, i).y + 40 > bottom {
-            bottom = read_slice(points, i).y + 40;
-        }
-        i += 1;
-    }
-    return bottom;
-}
-fn placeRows(rows: &mut []Row) -> i64 {
-    let mut total = 0;
-    let mut i = 0;
-    while i < cast<i64>(len_slice(rows)) {
-        let row = read_slice(rows, i);
-        total += row.height;
-        if i == 0 || read_slice(rows, i - 1).group != row.group {
-            if row.rail == 1 {
-                total += 16;
-            }
-            if row.rail == 2 {
-                total += 56;
-            }
-        }
-        i += 1;
-    }
-    let mut prefix = 0;
-    let mut best = total * 100;
-    let mut split = cast<i64>(len_slice(rows));
-    i = 0;
-    while i + 1 < cast<i64>(len_slice(rows)) {
-        let row = read_slice(rows, i);
-        prefix += row.height;
-        if i == 0 || read_slice(rows, i - 1).group != row.group {
-            if row.rail == 1 {
-                prefix += 16;
-            }
-            if row.rail == 2 {
-                prefix += 56;
-            }
-        }
-        if read_slice(rows, i).group != read_slice(rows, i + 1).group {
-            let mut delta = total * 48 - 100 * prefix;
-            if delta < 0 {
-                delta = - delta;
-            }
-            if delta < best {
-                best = delta;
-                split = i + 1;
-            }
-        }
-        i += 1;
-    }
-    let mut y = 80;
-    i = 0;
-    while i < cast<i64>(len_slice(rows)) {
-        if i == split {
-            y = 80;
-        }
-        let row = read_slice(rows, i);
-        if i > 0 && i != split && read_slice(rows, i - 1).group != row.group {
-            if read_slice(rows, i - 1).rail == 1 {
-                y += 16;
-            }
-            if read_slice(rows, i - 1).rail == 2 {
-                y += 36;
-            }
-            if read_slice(rows, i - 1).height == 80 {
-                y += 16;
-            }
-        }
-        if row.rail == 2 &&(i == 0 || i == split || read_slice(rows, i - 1).group != row.group) {
-            y += 20;
-        }
-        let mut offset = 0;
-        if row.height > 56 {
-            offset =(row.height - 56) / 2;
-        }
-        if row.height == 80 {
-            offset = 20;
-        }
-        let mut side = - 1;
-        if i >= split {
-            side = 1;
-        }
-        write_slice(rows, i, update(row) {
-            side: side,
-            y: y + offset
-        });
-        y += row.height;
-        i += 1;
-    }
-    return 0;
-}
-fn nearest(pin: c::Pin, parts: &[]c::Part, pins: &[]c::Pin, rows: &[]Row, nets: &[]g::Net) -> i64 {
-    let group = pinGroup(pin, parts, pins, nets);
-    let id = g::find(nets, c::displayNet(pin.net, parts, pins));
-    let mut owner = - 1;
-    if id >= 0 {
-        owner = read_slice(nets, id).owner;
-    }
-    let mut fallback = - 1;
-    let mut i = 0;
-    while i < cast<i64>(len_slice(rows)) {
-        let row = read_slice(rows, i);
-        let hub = read_slice(pins, row.index);
-        if text::equal(pin.net, hub.net) {
-            return i;
-        }
-        if row.index == owner {
-            fallback = i;
-        }
-        if row.group == group && fallback < 0 {
-            fallback = i;
-        }
-        i += 1;
-    }
-    return fallback;
-}
-fn partPin(part: i64, number: i64, pins: &[]c::Pin) -> c::Pin {
-    let mut i = 0;
-    while i < cast<i64>(len_slice(pins)) {
-        let pin = read_slice(pins, i);
-        if pin.part == part && pin.number == number {
-            return pin;
-        }
-        i += 1;
-    }
-    return new c::Pin {
-        part: part,
-        number: number,
-        net: text::empty(),
-        nc: true
-    };
-}
-fn depth(pin: c::Pin, parts: &[]c::Part, pins: &[]c::Pin, nets: &[]g::Net) -> i64 {
-    let id = g::find(nets, c::displayNet(pin.net, parts, pins));
-    if id < 0 {
-        return 4096;
-    }
-    return read_slice(nets, id).distance;
-}
-fn innerPin(part: i64, parts: &[]c::Part, pins: &[]c::Pin, nets: &[]g::Net) -> c::Pin {
-    let a = partPin(part, 1, pins);
-    let b = partPin(part, 2, pins);
-    if g::rail(a.net) && !g::rail(b.net) {
-        return b;
-    }
-    if !g::rail(b.net) && depth(b, parts, pins, nets) < depth(a, parts, pins, nets) {
-        return b;
-    }
-    return a;
-}
-fn bridge(part: i64, parts: &[]c::Part, pins: &[]c::Pin, rows: &[]Row, nets: &[]g::Net) -> bool {
-    let a = partPin(part, 1, pins);
-    let b = partPin(part, 2, pins);
-    if g::rail(a.net) || g::rail(b.net) {
-        return false;
-    }
-    if depth(a, parts, pins, nets) != depth(b, parts, pins, nets) {
-        return false;
-    }
-    let ai = nearest(a, parts, pins, rows, nets);
-    let bi = nearest(b, parts, pins, rows, nets);
-    return ai >= 0 && bi >= 0 && ai != bi;
-}
-fn groundBranch(part: i64, parts: &[]c::Part, pins: &[]c::Pin, nets: &[]g::Net) -> bool {
-    let inner = innerPin(part, parts, pins, nets);
-    let outer = partPin(part, 3 - inner.number, pins);
-    if railKind(outer.net) == 1 {
-        return true;
-    }
-    if railKind(outer.net) == 2 {
-        return false;
-    }
-    let mut found = false;
-    let mut j = 0;
-    while j < cast<i64>(len_slice(parts)) {
-        if read_slice(parts, j).kind != 0 && j != part {
-            let a = partPin(j, 1, pins);
-            let b = partPin(j, 2, pins);
-            let mut other = text::empty();
-            if text::equal(a.net, outer.net) {
-                other = b.net;
-            }
-            if text::equal(b.net, outer.net) {
-                other = a.net;
-            }
-            if railKind(other) == 2 {
-                return false;
-            }
-            if railKind(other) == 1 {
-                found = true;
-            }
-        }
-        j += 1;
-    }
-    return found;
-}
-fn branch(part: i64, parts: &[]c::Part, pins: &[]c::Pin, rows: &[]Row, nets: &[]g::Net, remaining: i64) -> i64 {
-    if remaining == 0 {
-        return 0;
-    }
-    let inner = innerPin(part, parts, pins, nets);
-    let level = depth(inner, parts, pins, nets);
-    let mut offset = 0;
-    let mut j = 0;
-    if level > 0 {
-        let owner = nearest(inner, parts, pins, rows, nets);
-        while j < cast<i64>(len_slice(parts)) {
-            if read_slice(parts, j).kind != 0 && j != part {
-                let previous = innerPin(j, parts, pins, nets);
-                if depth(previous, parts, pins, nets) < level && nearest(previous, parts, pins, rows, nets) == owner {
-                    let outer = partPin(j, 3 - previous.number, pins);
-                    if text::equal(outer.net, inner.net) {
-                        offset = branch(j, parts, pins, rows, nets, remaining - 1);
-                        j = cast<i64>(len_slice(parts));
-                    }
-                }
-            }
-            j += 1;
-        }
-    }
-    let mut count = 0;
-    let mut rank = 0;
-    let mut hasBridge = false;
-    let grounded = groundBranch(part, parts, pins, nets);
-    j = 0;
-    while j < cast<i64>(len_slice(parts)) {
-        if read_slice(parts, j).kind != 0 {
-            let previous = innerPin(j, parts, pins, nets);
-            let a = partPin(j, 1, pins);
-            let b = partPin(j, 2, pins);
-            if bridge(j, parts, pins, rows, nets) {
-                if text::equal(a.net, inner.net) || text::equal(b.net, inner.net) {
-                    hasBridge = true;
-                }
-            } else if text::equal(previous.net, inner.net) {
-                count += 1;
-                let otherGround = groundBranch(j, parts, pins, nets);
-                if level > 0 {
-                    if j < part {
-                        rank += 1;
-                    }
-                } else if (otherGround && !grounded) ||(otherGround == grounded && j < part) {
-                    rank += 1;
-                }
-            }
-        }
-        j += 1;
-    }
-    if level == 0 {
-        let mut spacing = 20;
-        if hasBridge {
-            spacing = 40;
-        }
-        offset -=(count - 1) * spacing;
-    }
-    return offset + rank * 40;
-}
-fn endpoint(pin: c::Pin, parts: &[]c::Part, pins: &[]c::Pin, rows: &[]Row, nets: &[]g::Net) -> Point {
-    let inner = innerPin(pin.part, parts, pins, nets);
-    let chosen = nearest(inner, parts, pins, rows, nets);
-    if chosen < 0 {
-        return new Point {
-            x: 100 + pin.number * 60,
-            y: 80 + pin.part * 60
-        };
-    }
-    let row = read_slice(rows, chosen);
-    let mut edge = 352;
-    if row.side == 1 {
-        edge = 532;
-    }
-    let level = depth(inner, parts, pins, nets);
-    if bridge(pin.part, parts, pins, rows, nets) {
-        let target = nearest(pin, parts, pins, rows, nets);
-        let other = read_slice(rows, target);
-        let mut reach = 50;
-        if level > 0 {
-            reach = 170;
-        }
-        return new Point {
-            x: edge + row.side * reach,
-            y: other.y
-        };
-    }
-    let hub = read_slice(pins, row.index);
-    let mut count = 0;
-    let mut j = 0;
-    while j < cast<i64>(len_slice(parts)) {
-        if read_slice(parts, j).kind != 0 {
-            let attached = innerPin(j, parts, pins, nets);
-            if text::equal(attached.net, hub.net) && !bridge(j, parts, pins, rows, nets) {
-                count += 1;
-            }
-        }
-        j += 1;
-    }
-    let mut reach = 40;
-    if count > 1 {
-        reach = 60;
-    }
-    if pin.number != inner.number {
-        reach = 120;
-    }
-    let folded = c::displayNet(inner.net, parts, pins);
-    let localRail = railKind(inner.net) == 2 && !text::equal(folded, inner.net);
-    let mut y = row.y + branch(pin.part, parts, pins, rows, nets, 128);
-    if localRail {
-        reach = 70;
-        if pin.number != inner.number {
-            reach = 110;
-        }
-        y += 20;
-    }
-    let x = edge + row.side *(reach + level * 60);
-    return new Point {
-        x: x,
-        y: y
-    };
-}
-fn build(heap: allocator, parts: &[]c::Part, pins: &[]c::Pin) -> Built {
-    let nets = try g::build(heap, parts, pins);
-    let mut out = try acquire_buffer<Built>(heap, 1024);
-    borrow nets[0..len_buffer(nets)] as table {
-        let mut ordered = try collectRows(heap, parts, pins, table);
-        borrow mut ordered[0..len_buffer(ordered)] as mutable {
-            discard placeRows(mutable);
-        }
-        borrow ordered[0..len_buffer(ordered)] as placed {
-            let mut i = 0;
-            while i < cast<i64>(len_slice(pins)) {
-                let pin = read_slice(pins, i);
-                let mut point = new Point {
-                    x: - 1,
-                    y: - 1
-                };
-                if read_slice(parts, pin.part).kind == 0 {
-                    let mut j = 0;
-                    while j < cast<i64>(len_slice(placed)) {
-                        let row = read_slice(placed, j);
-                        if row.index == i {
-                            let mut x = 352;
-                            if row.side == 1 {
-                                x = 532;
-                            }
-                            point = new Point {
-                                x: x,
-                                y: row.y
-                            };
-                        }
-                        j += 1;
-                    }
-                } else {
-                    point = endpoint(pin, parts, pins, placed, table);
-                }
-                discard try append_buffer<Mutation>(out, point);
-                i += 1;
-            }
-        }
-    }
-    return new Built.ok(out);
-}
+module layout
+import circuit as c
+import text
+import layout_graph as g
+export Point
+export build
+export height
+export rail
+
+
+class Point:
+    x: int
+    y: int
+
+
+class Row:
+    index: int
+    group: int
+    height: int
+    rail: int
+    side: int
+    y: int
+
+
+def rail(span: text.Span) -> bool:
+    return g.rail(span)
+
+
+def pinGroup(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> int:
+    id = g.find(nets, c.displayNet(pin.net, parts, pins))
+    if id < 0:
+        return - 1
+    return nets[id].group
+
+
+def railKind(span: text.Span) -> int:
+    if text.matches(span, b"GND"):
+        return 1
+    if g.rail(span):
+        return 2
+    return 0
+
+
+def rowHeight(pin: c.Pin, pins: list[c.Pin], parts: list[c.Part]) -> int:
+    if g.rail(c.displayNet(pin.net, parts, pins)):
+        return 40
+    count = 0
+    hasBridge = False
+    i = 0
+    while i < len(pins):
+        other = pins[i]
+        if parts[other.part].kind != 0 and text.equal(pin.net, other.net):
+            count += 1
+            j = 0
+            while j < len(pins):
+                farPin = pins[j]
+                if farPin.part == other.part and farPin.number != other.number and not g.rail(farPin.net):
+                    k = 0
+                    while k < len(pins):
+                        hub = pins[k]
+                        if parts[hub.part].kind == 0 and text.equal(hub.net, farPin.net):
+                            hasBridge = True
+                        k += 1
+                j += 1
+        i += 1
+    if count > 1:
+        if not hasBridge:
+            return count * 40
+        return 56 +(count - 1) * 40
+    return 56
+
+
+def collectRows(parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> list[Row]:
+    out: list[Row] = []
+    number = 1
+    while number <= 128:
+        i = 0
+        while i < len(pins):
+            pin = pins[i]
+            if parts[pin.part].kind == 0 and not pin.nc and pin.number == number:
+                group = pinGroup(pin, parts, pins, nets)
+                present = False
+                n = 0
+                while n < len(out):
+                    if out[n].group == group:
+                        present = True
+                    n += 1
+                if not present:
+                    member = 1
+                    while member <= 128:
+                        j = 0
+                        while j < len(pins):
+                            other = pins[j]
+                            if other.part == pin.part and not other.nc and other.number == member and pinGroup(other, parts, pins, nets) == group:
+                                out.append(Row(
+                                    index=j,
+                                    group=group,
+                                    height=rowHeight(other, pins, parts),
+                                    rail=railKind(c.displayNet(other.net, parts, pins)),
+                                    side=0,
+                                    y=0
+                                ))
+                            j += 1
+                        member += 1
+            i += 1
+        number += 1
+    return out
+
+
+def height(points: list[Point]) -> int:
+    bottom = 160
+    i = 0
+    while i < len(points):
+        if points[i].y + 40 > bottom:
+            bottom = points[i].y + 40
+        i += 1
+    return bottom
+
+
+def placeRows(rows: list[Row]) -> int:
+    total = 0
+    i = 0
+    while i < len(rows):
+        row = rows[i]
+        total += row.height
+        if i == 0 or rows[i - 1].group != row.group:
+            if row.rail == 1:
+                total += 16
+            if row.rail == 2:
+                total += 56
+        i += 1
+    prefix = 0
+    best = total * 100
+    split = len(rows)
+    i = 0
+    while i + 1 < len(rows):
+        row = rows[i]
+        prefix += row.height
+        if i == 0 or rows[i - 1].group != row.group:
+            if row.rail == 1:
+                prefix += 16
+            if row.rail == 2:
+                prefix += 56
+        if rows[i].group != rows[i + 1].group:
+            delta = total * 48 - 100 * prefix
+            if delta < 0:
+                delta = - delta
+            if delta < best:
+                best = delta
+                split = i + 1
+        i += 1
+    y = 80
+    i = 0
+    while i < len(rows):
+        if i == split:
+            y = 80
+        row = rows[i]
+        if i > 0 and i != split and rows[i - 1].group != row.group:
+            if rows[i - 1].rail == 1:
+                y += 16
+            if rows[i - 1].rail == 2:
+                y += 36
+            if rows[i - 1].height == 80:
+                y += 16
+        if row.rail == 2  and (i == 0 or i == split or rows[i - 1].group != row.group):
+            y += 20
+        offset = 0
+        if row.height > 56:
+            offset =(row.height - 56) // 2
+        if row.height == 80:
+            offset = 20
+        side = - 1
+        if i >= split:
+            side = 1
+        rows[i].side = side
+        rows[i].y = y + offset
+        y += row.height
+        i += 1
+    return 0
+
+
+def nearest(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net]) -> int:
+    group = pinGroup(pin, parts, pins, nets)
+    id = g.find(nets, c.displayNet(pin.net, parts, pins))
+    owner = - 1
+    if id >= 0:
+        owner = nets[id].owner
+    fallback = - 1
+    i = 0
+    while i < len(rows):
+        row = rows[i]
+        hub = pins[row.index]
+        if text.equal(pin.net, hub.net):
+            return i
+        if row.index == owner:
+            fallback = i
+        if row.group == group and fallback < 0:
+            fallback = i
+        i += 1
+    return fallback
+
+
+def partPin(part: int, number: int, pins: list[c.Pin]) -> c.Pin:
+    i = 0
+    while i < len(pins):
+        pin = pins[i]
+        if pin.part == part and pin.number == number:
+            return pin
+        i += 1
+    return c.Pin(
+        part=part,
+        number=number,
+        net=text.empty(),
+        nc=True
+    )
+
+
+def depth(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> int:
+    id = g.find(nets, c.displayNet(pin.net, parts, pins))
+    if id < 0:
+        return 4096
+    return nets[id].distance
+
+
+def innerPin(part: int, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> c.Pin:
+    a = partPin(part, 1, pins)
+    b = partPin(part, 2, pins)
+    if g.rail(a.net) and not g.rail(b.net):
+        return b
+    if not g.rail(b.net) and depth(b, parts, pins, nets) < depth(a, parts, pins, nets):
+        return b
+    return a
+
+
+def bridge(part: int, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net]) -> bool:
+    a = partPin(part, 1, pins)
+    b = partPin(part, 2, pins)
+    if g.rail(a.net) or g.rail(b.net):
+        return False
+    if depth(a, parts, pins, nets) != depth(b, parts, pins, nets):
+        return False
+    ai = nearest(a, parts, pins, rows, nets)
+    bi = nearest(b, parts, pins, rows, nets)
+    return ai >= 0 and bi >= 0 and ai != bi
+
+
+def groundBranch(part: int, parts: list[c.Part], pins: list[c.Pin], nets: list[g.Net]) -> bool:
+    inner = innerPin(part, parts, pins, nets)
+    outer = partPin(part, 3 - inner.number, pins)
+    if railKind(outer.net) == 1:
+        return True
+    if railKind(outer.net) == 2:
+        return False
+    found = False
+    j = 0
+    while j < len(parts):
+        if parts[j].kind != 0 and j != part:
+            a = partPin(j, 1, pins)
+            b = partPin(j, 2, pins)
+            other = text.empty()
+            if text.equal(a.net, outer.net):
+                other = b.net
+            if text.equal(b.net, outer.net):
+                other = a.net
+            if railKind(other) == 2:
+                return False
+            if railKind(other) == 1:
+                found = True
+        j += 1
+    return found
+
+
+def branch(part: int, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net], remaining: int) -> int:
+    if remaining == 0:
+        return 0
+    inner = innerPin(part, parts, pins, nets)
+    level = depth(inner, parts, pins, nets)
+    offset = 0
+    j = 0
+    if level > 0:
+        owner = nearest(inner, parts, pins, rows, nets)
+        while j < len(parts):
+            if parts[j].kind != 0 and j != part:
+                previous = innerPin(j, parts, pins, nets)
+                if depth(previous, parts, pins, nets) < level and nearest(previous, parts, pins, rows, nets) == owner:
+                    outer = partPin(j, 3 - previous.number, pins)
+                    if text.equal(outer.net, inner.net):
+                        offset = branch(j, parts, pins, rows, nets, remaining - 1)
+                        j = len(parts)
+            j += 1
+    count = 0
+    rank = 0
+    hasBridge = False
+    grounded = groundBranch(part, parts, pins, nets)
+    j = 0
+    while j < len(parts):
+        if parts[j].kind != 0:
+            previous = innerPin(j, parts, pins, nets)
+            a = partPin(j, 1, pins)
+            b = partPin(j, 2, pins)
+            if bridge(j, parts, pins, rows, nets):
+                if text.equal(a.net, inner.net) or text.equal(b.net, inner.net):
+                    hasBridge = True
+            elif text.equal(previous.net, inner.net):
+                count += 1
+                otherGround = groundBranch(j, parts, pins, nets)
+                if level > 0:
+                    if j < part:
+                        rank += 1
+                elif (otherGround and not grounded)  or (otherGround == grounded and j < part):
+                    rank += 1
+        j += 1
+    if level == 0:
+        spacing = 20
+        if hasBridge:
+            spacing = 40
+        offset -=(count - 1) * spacing
+    return offset + rank * 40
+
+
+def endpoint(pin: c.Pin, parts: list[c.Part], pins: list[c.Pin], rows: list[Row], nets: list[g.Net]) -> Point:
+    inner = innerPin(pin.part, parts, pins, nets)
+    chosen = nearest(inner, parts, pins, rows, nets)
+    if chosen < 0:
+        return Point(
+            x=100 + pin.number * 60,
+            y=80 + pin.part * 60
+        )
+    row = rows[chosen]
+    edge = 352
+    if row.side == 1:
+        edge = 532
+    level = depth(inner, parts, pins, nets)
+    if bridge(pin.part, parts, pins, rows, nets):
+        target = nearest(pin, parts, pins, rows, nets)
+        other = rows[target]
+        reach = 50
+        if level > 0:
+            reach = 170
+        return Point(
+            x=edge + row.side * reach,
+            y=other.y
+        )
+    hub = pins[row.index]
+    count = 0
+    j = 0
+    while j < len(parts):
+        if parts[j].kind != 0:
+            attached = innerPin(j, parts, pins, nets)
+            if text.equal(attached.net, hub.net) and not bridge(j, parts, pins, rows, nets):
+                count += 1
+        j += 1
+    reach = 40
+    if count > 1:
+        reach = 60
+    if pin.number != inner.number:
+        reach = 120
+    folded = c.displayNet(inner.net, parts, pins)
+    localRail = railKind(inner.net) == 2 and not text.equal(folded, inner.net)
+    y = row.y + branch(pin.part, parts, pins, rows, nets, 128)
+    if localRail:
+        reach = 70
+        if pin.number != inner.number:
+            reach = 110
+        y += 20
+    x = edge + row.side *(reach + level * 60)
+    return Point(
+        x=x,
+        y=y
+    )
+
+
+def build(parts: list[c.Part], pins: list[c.Pin]) -> list[Point]:
+    nets = g.build(parts, pins)
+    out: list[Point] = []
+    ordered = collectRows(parts, pins, nets)
+    _ = placeRows(ordered)
+    i = 0
+    while i < len(pins):
+        pin = pins[i]
+        point = Point(
+            x=- 1,
+            y=- 1
+        )
+        if parts[pin.part].kind == 0:
+            j = 0
+            while j < len(ordered):
+                row = ordered[j]
+                if row.index == i:
+                    x = 352
+                    if row.side == 1:
+                        x = 532
+                    point = Point(
+                        x=x,
+                        y=row.y
+                    )
+                j += 1
+        else:
+            point = endpoint(pin, parts, pins, ordered, nets)
+        out.append(point)
+        i += 1
+    return out

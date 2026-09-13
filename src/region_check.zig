@@ -216,7 +216,7 @@ pub fn typeDependencies(allocator: std.mem.Allocator, records: []const typed.Rec
 }
 
 fn recordDepends(record: typed.Record, types: []const bool) bool {
-    var depends = record.shape.buffer != null or record.shape.pool != null;
+    var depends = (record.shape.buffer != null and !record.managed) or record.shape.pool != null;
     if (record.shape.array) |array| {
         depends = array.length != 0 and carries(array.element, types);
     } else if (record.shape.variants) |variants| {

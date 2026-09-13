@@ -6,11 +6,11 @@ from experiments.application_comparison.storage import read_json, source_files
 
 
 class PracticePackTests(unittest.TestCase):
-    def test_three_starters_have_identical_cases_and_exclude_solutions(self):
+    def test_language_starters_have_identical_cases_and_exclude_solutions(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
             checks = []
-            for language in ('my', 'python', 'zig'):
+            for language in ('my', 'python', 'zig', 'rust'):
                 directory = root / language
                 manifest = practice_pack.create(directory, language=language)
                 self.assertEqual(practice_pack.load(directory), manifest)

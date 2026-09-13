@@ -32,7 +32,7 @@ fn writeRecord(writer: *std.Io.Writer, program: bc.Program, record: typed.Record
         typed.typeName(pool.handle, program.records),
     });
     if (record.shape.handle_pool) |pool| try writer.print("  pool {s} (inert ID)\n", .{typed.typeName(pool, program.records)});
-    if (record.shape.buffer) |element| try writer.print("  element {s} (owned)\n", .{typed.typeName(element, program.records)});
+    if (record.shape.buffer) |element| try writer.print("  element {s} ({s})\n", .{ typed.typeName(element, program.records), if (record.managed) "managed" else "owned" });
     if (record.shape.domain) |backing| try writer.print("  backing {s} (private)\n", .{typed.typeName(backing, program.records)});
     for (record.fields, 0..) |field, i| try writer.print("  field {d}: {s}: {s}\n", .{ i, field.name, typed.typeName(field.ty, program.records) });
 }
@@ -58,7 +58,7 @@ fn writeFunction(writer: *std.Io.Writer, program: bc.Program, src: Source, funct
             function.scope.locals[@backingInt(contract.parameter)].name,
         });
     } else try writer.print(") -> {s}\n", .{typed.typeName(function.signature.return_type, program.records)});
-    if (function.policy.host != null) try writer.writeAll("  host declaration\n");
+    if (function.policy.c_abi) try writer.print("  extern C symbol {s}\n", .{@import("c_abi.zig").symbol(function.name)}) else if (function.policy.host != null) try writer.writeAll("  host declaration\n");
     if (function.policy.effects != 0 or function.policy.effect_bound != null) {
         try writer.writeAll("  effects ");
         try @import("effect_set.zig").write(writer, function.policy.effects);
@@ -214,7 +214,7 @@ fn recordKind(record: typed.Record) []const u8 {
     if (record.shape.pool != null) return "pool";
     if (record.shape.handle_pool != null) return "handle";
     if (record.shape.resource != null) return "resource";
-    if (record.shape.buffer != null) return "buffer";
+    if (record.shape.buffer != null) return if (record.managed) "list" else "buffer";
     if (record.tableKey() != null) return "table";
     if (record.shape.array != null) return "array";
     if (record.shape.domain != null) return "domain";

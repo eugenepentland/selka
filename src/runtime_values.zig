@@ -107,6 +107,11 @@ pub const Type = enum(usize) {
     }
     /// Resolve a builtin type spelling without consulting nominal schemas.
     pub fn fromName(name: []const u8) ?Type {
+        if (name.len == 0 or std.mem.eql(u8, name, "None")) return .unit;
+        if (std.mem.eql(u8, name, "int")) return .i64;
+        if (name.len >= 2 and name[0] == '(' and name[name.len - 1] == ')') {
+            if (std.mem.trim(u8, name[1 .. name.len - 1], " \t\r\n").len == 0) return .unit;
+        }
         return std.meta.stringToEnum(Type, name);
     }
     pub fn format(self: Type, writer: *std.Io.Writer) std.Io.Writer.Error!void {
@@ -121,6 +126,7 @@ pub const Value = union(enum) {
     bool: bool,
     integer: struct { ty: Type, value: i128 },
     aggregate: *Aggregate,
+    managed: *ManagedObject,
     owned: OwnedValue,
     handle: struct { ty: Type, id: Pools.Id },
     capability: CapabilityValue,
@@ -136,6 +142,7 @@ pub const Value = union(enum) {
             .bool => .bool,
             .integer => |n| n.ty,
             .aggregate => |record| record.ty,
+            .managed => |object| object.ty,
         };
     }
 
@@ -232,6 +239,7 @@ pub const Value = union(enum) {
     }
     /// Add a reference to owned backing and return another value sharing it.
     pub fn retain(self: Value) Value {
+        if (self == .managed) self.managed.retain();
         if (self == .owned) self.owned.retain();
         if (self == .aggregate) self.aggregate.references += 1;
         return self;
@@ -240,6 +248,10 @@ pub const Value = union(enum) {
     /// Release without allocation or recursive host calls. Zero-reference nodes
     /// temporarily form an intrusive work list; shared live nodes never change.
     pub fn release(self: Value, allocator: std.mem.Allocator) void {
+        if (self == .managed) {
+            self.managed.release();
+            return;
+        }
         if (self != .aggregate and self != .owned) return;
         releaseManaged(self, allocator);
     }
@@ -261,6 +273,10 @@ pub const Value = union(enum) {
     }
 
     fn enqueueRelease(value: Value, pending: *?*Aggregate, allocator: std.mem.Allocator) void {
+        if (value == .managed) {
+            value.managed.release();
+            return;
+        }
         if (value == .owned) {
             value.owned.release(allocator);
             return;
@@ -311,6 +327,40 @@ pub const Aggregate = struct {
     references: usize = 1,
     next: ?*Aggregate = null,
     release_index: usize = 0,
+};
+
+/// Stable object identity; resizing backing storage never moves this header.
+/// Managed collection representation family.
+pub const ManagedKind = enum { list, string, dictionary };
+
+/// Representation metadata shared by checked schemas and GC headers.
+pub const CollectionShape = struct { kind: ManagedKind = .list, key: ?Type = null };
+
+/// Stable GC identity with representation-specific collection metadata.
+pub const ManagedObject = struct {
+    collection: CollectionShape = .{},
+    heap: *anyopaque,
+    ty: Type,
+    element_type: Type,
+    items: std.ArrayList(Value) = .empty,
+    references: usize = 1,
+    next: ?*ManagedObject = null,
+    marked: bool = false,
+
+    /// Acquire another VM, aggregate, or heap-edge reference.
+    pub fn retain(self: *ManagedObject) void {
+        self.references += 1;
+    }
+    /// Drop a reference; tracing, rather than reference count zero, frees storage.
+    pub fn release(self: *ManagedObject) void {
+        std.debug.assert(self.references != 0);
+        self.references -= 1;
+    }
+    /// Read an independent retained element from an aliased list.
+    pub fn get(self: *ManagedObject, index: usize) error{Bounds}!Value {
+        if (index >= self.items.items.len) return error.Bounds;
+        return self.items.items[index].retain();
+    }
 };
 
 /// Reference-counted wrapper for an owned guest memory allocation.

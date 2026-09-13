@@ -2,8 +2,7 @@
 
 The language parses the supplied S-expression files, checks a bounded circuit
 model, expands the SPI interface, lays out the component groups and writes SVG
-while running on its bytecode VM. The Zig host supplies four typed byte-I/O
-operations. It does not call Netlisp's parser, circuit evaluator or SVG renderer.
+while running on its bytecode VM. The Zig host supplies typed byte-I/O operations and named document handles. It does not call Netlisp's parser, circuit evaluator or SVG renderer.
 
 [Open the generated Straps LMX2595 schematic](straps-synth-lmx2595.svg)
 ([PNG preview](straps-synth-lmx2595.png)).
@@ -31,6 +30,20 @@ python3 tests/schematic_svg.py --runner zig-out/bin/schematic-svg
 python3 tests/schematic_layout.py --runner zig-out/bin/schematic-svg
 ```
 
+To exercise the collector while inspecting the same rendered result:
+
+```sh
+zig-out/bin/schematic-svg --gc-stress --gc-report --project src/schematic/guest \
+  experiments/schematic/fixtures/straps-synth-lmx2595.sexp \
+  experiments/schematic/fixtures/lmx2595rhar.sexp \
+  experiments/schematic/fixtures/spi.sexp > /tmp/straps-synth-lmx2595-gc.svg
+cmp /tmp/straps-synth-lmx2595.svg /tmp/straps-synth-lmx2595-gc.svg
+```
+
+`--gc-stress` collects at managed allocation safepoints. `--gc-report` writes
+collection and object counts to stderr, leaving stdout as a clean SVG. Ordinary
+runs enable managed collection automatically; neither flag is needed to use GC.
+
 After the initial host build, edit any file in `src/schematic/guest/` and rerun
 the executable directly. It reloads imports from disk without Zig or Guardian.
 The project directory is required; missing/invalid source cannot fall back to an
@@ -53,12 +66,13 @@ network access, library discovery or guest filesystem access.
 
 ## Implemented language support
 
-Quoted byte literals now produce ordinary `[N]u8` arrays: `"<svg>"`, `"µ"` and
-`"\x00\xff"`. They preserve the existing type, borrow, generic and VM rules;
-there is no implicit terminator or separate string runtime. UTF-8 length counts
-encoded bytes. Supported escapes are `\n`, `\r`, `\t`, `\0`, `\\`, `\"` and
-`\xHH`; a literal is limited to 65,536 decoded bytes. Input files use owned
-buffers and borrowed views already present in the language.
+Python-style quoted literals create managed Unicode strings. The schematic's
+binary I/O helpers use explicit byte literals such as `b"<svg>"`, `b"µ"`, and
+`b"\x00\xff"`; these create `[N]u8` arrays with no implicit terminator. Their
+length counts encoded bytes and they are limited to 65,536 decoded bytes.
+Byte literals may be passed directly to `&[]u8` helper parameters; the compiler
+creates the temporary read-only view. The host owns input documents, and guest
+text spans identify their file and byte offsets.
 
 The application is in [`src/schematic/guest`](../../src/schematic/guest):
 `sexpr.my` handles tokenization and nested lists, `circuit.my` constructs and
@@ -68,6 +82,87 @@ escaping, `layout_graph.my` and `layout.my` derive functional groups and positio
 connectivity, and the SVG drawing modules emit the schematic. The wrapper explicitly registers
 `length`, `byte`, `put` and `issue`; output remains owned by the caller.
 The board trial and this tool share the Zig project-compilation lifecycle.
+
+## Entry point and named inputs
+
+The host supplies `io.Inputs` with `circuit`, `pinout`, and `interface` document
+handles. These are `io.Document` values, so accidentally passing an arbitrary
+integer to the parser is a type error. The byte-reading boundary keeps numeric
+indices internally; application code does not depend on their ordering.
+
+```python
+def main() -> Result[None, int]:
+    inputs = schematic_inputs.load()
+    circuit = sexpr.parse(inputs.circuit)?
+    pinout = sexpr.parse(inputs.pinout)?
+    interface = sexpr.parse(inputs.interface)?
+    drawing = schematic.build(circuit, pinout, interface)?
+    svg.render(drawing)
+    return Ok(None)
+```
+
+`schematic_inputs.load()` is an application module that obtains the three named
+host documents. Parsing receives a document handle. `schematic.build` validates
+and assembles one schematic value before SVG output starts. Postfix `?` returns
+validation errors immediately. Entry adaptation converts `Ok(None)` to scalar
+status zero and `Err(code)` to that code; the schematic host treats a nonzero
+status as failure. The general `mylang run` command prints the scalar result.
+
+## Managed application data
+
+The guest now uses GC-managed lists for parsed nodes, parser stacks, parts, pins,
+ports, graph edges, nets, placement rows, points and routed segments. Start with
+[`main.my`](../../src/schematic/guest/main.my): the application entry point takes
+named document handles and no allocator. The rendering pipeline passes one
+validated schematic value to the SVG renderer.
+There are no collection borrow scopes or resource moves in that pipeline.
+Parser and model validation still return errors for malformed circuit data.
+Layout functions return their lists directly because allocation no longer needs
+an application-level result wrapper.
+
+Collections use ordinary generic types and list syntax:
+
+```python
+nodes: list[Node] = []
+nodes.append(Node(
+    kind=Kind.list,
+    span=text.Span(file=file, start=0, end=size),
+    next=0,
+))
+first = nodes[0]
+nodes[0].next = len(nodes)
+```
+
+Lists grow automatically and assignments share their storage. Records remain
+values: changing `nodes[0].next` updates that slot while `first` retains its
+previous field values. Functions, classes, conditions, and loops use Python
+indentation; declarations use `int`, `list[T]`, and `Result[T, E]` annotations.
+The parser and renderer keep byte-oriented host I/O explicit with `b"..."`
+literals and `u8` at their boundary. Output helpers return `None`, so writing
+SVG needs ordinary calls without placeholder integer results or borrow blocks.
+
+[A small result-flow example](../../examples/gc-default/result-flow/main.my)
+shows list construction and result handling separately from the application.
+
+Useful files to inspect:
+
+- [`schematic_inputs.my`](../../src/schematic/guest/schematic_inputs.my): the application input entry point.
+- [`io.my`](../../src/schematic/guest/io.my): nominal document handles and byte host declarations.
+- [`schematic.my`](../../src/schematic/guest/schematic.my): validation and assembly
+  of the single value consumed by rendering.
+- [`sexpr.my`](../../src/schematic/guest/sexpr.my): list construction and updates
+  while parsing nested forms.
+- [`layout_graph.my`](../../src/schematic/guest/layout_graph.my): growing graph
+  tables and updating connected groups.
+- [`layout.my`](../../src/schematic/guest/layout.my): passing and mutating shared
+  lists through placement helpers.
+- [`svg.my`](../../src/schematic/guest/svg.my): rendering directly from managed
+  model and geometry lists.
+
+The host still owns the I/O session and output bytes. GC changes the guest model
+storage; it does not replace deterministic host resource cleanup. This pilot
+uses value records inside managed lists, rather than introducing a new mutable
+object class hierarchy.
 
 ## Supported subset and limits
 

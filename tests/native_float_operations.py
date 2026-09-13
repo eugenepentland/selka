@@ -37,6 +37,8 @@ def main():
     sources = [('fn main()->i64{' + body + 'return 0;}', (0, b'0\n'))]
     sources += [('fn main()->i64{discard f64_to_u64(' + value + 'u64);return 0;}', None)
                 for value in ('9218868437227405312', '4895412794951729152', '13830554455654793216')]
+    sources.append(('def main() -> int:\n    if -5 // 2 != -3 or 5 % -2 != -1:\n        return 1\n    if -5.0 % 2.0 != 1.0 or 5 / 2 != 2.5:\n        return 2\n    return int(float(-2) + 44.9) - 42\n', (0, b'0\n')))
+    sources.append(('def main() -> int:\n    return int(1.0 / 0.0)\n', None))
     with tempfile.TemporaryDirectory(prefix='mylang-float-ops-') as directory:
         directory = Path(directory)
         for source, expected in sources:

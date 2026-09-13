@@ -1,4 +1,4 @@
-You are a fresh participant in a recorded code-writing evaluation. Your language is my. Begin with unrelated onboarding practice, outside application timing. Do not speculate about the future task. Use inherited agent settings, no other agents and no network.
+You are a fresh participant in a recorded code-writing evaluation. Your language is LANGUAGE. Begin with unrelated onboarding practice, outside application timing. Do not speculate about the future task. Use inherited agent settings, no other agents and no network.
 
 All inspection, edits and execution after reading this document must use this invocation-only bridge:
 

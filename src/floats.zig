@@ -32,6 +32,11 @@ pub fn binary(op: typed.BinaryOp, left: u64, right: u64) Error!typed.Value {
 pub fn unary(op: typed.UnaryOp, input: u64) Error!u64 {
     @setFloatMode(.strict);
     const value: f64 = @bitCast(input);
+    if (op == .f64_to_i64) {
+        const truncated = @trunc(value);
+        if (!std.math.isFinite(truncated) or truncated < -9223372036854775808.0 or truncated >= 9223372036854775808.0) return error.FloatConversion;
+        return @bitCast(@as(i64, @intFromFloat(truncated)));
+    }
     if (op == .f64_to_u64) {
         const truncated = @trunc(value);
         if (!std.math.isFinite(truncated) or truncated < 0 or truncated >= 18446744073709551616.0) return error.FloatConversion;
@@ -45,6 +50,7 @@ pub fn unary(op: typed.UnaryOp, input: u64) Error!u64 {
         .f64_abs => @abs(value),
         .f64_neg => -value,
         .f64_from_u64 => @floatFromInt(input),
+        .f64_from_i64 => @floatFromInt(@as(i64, @bitCast(input))),
         else => return error.InternalError,
     };
     return bits(result);

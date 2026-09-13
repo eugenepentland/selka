@@ -74,7 +74,7 @@ test "table declarations and initialization reject invalid keys shapes values an
         .{ .source = color ++ "fn main() -> i64 { discard new [Color]i64 [1, 2, 3]; return 0; }", .code = "E_TABLE_CONSTRUCTION" },
         .{ .source = color ++ "fn main() -> i64 { discard new [Color]i64 { red: 1, red: 2, blue: 3 }; return 0; }", .code = "E_DUPLICATE_KEY" },
         .{ .source = color ++ "fn main() -> i64 { discard new [Color]i64 { red: 1, unknown: 2, blue: 3 }; return 0; }", .code = "E_UNKNOWN_VARIANT" },
-        .{ .source = color ++ "fn main() -> i64 { discard new [Color]u8 { red: 1, green: 2u8, blue: 3u8 }; return 0; }", .code = "E_TYPE" },
+        .{ .source = color ++ "fn main() -> i64 { discard new [Color]u8 { red: 1i64, green: 2u8, blue: 3u8 }; return 0; }", .code = "E_TYPE" },
         .{ .source = color ++ "fn main() -> i64 { let t = new [Color]i64 { red: 1, green: 2, blue: 3 }; discard replace(t, new Color.red, true); return 0; }", .code = "E_TYPE" },
         .{ .source = color ++ "fn main() -> i64 { let t = new [Color]i64 { red: 1, green: 2, blue: 3 }; return t.red; }", .code = "E_TYPE" },
         .{ .source = color ++ "fn main() -> i64 { let t = new [Color]i64 { red: 1, green: 2, blue: 3 }; discard update(t) { red: 4 }; return 0; }", .code = "E_TYPE" },

@@ -47,6 +47,7 @@ fn genericHead(tag: Tag) bool {
         .kw_remove_pool,
         .kw_acquire_pool,
         .kw_acquire_buffer,
+        .kw_new_list,
         .kw_acquire_resource,
         .kw_complete_resource,
         .kw_clock_now,
@@ -75,14 +76,14 @@ fn closes(tag: Tag) bool {
 }
 fn joinsClose(tag: Tag) bool {
     return switch (tag) {
-        .comma, .semicolon, .rparen, .rbracket, .dot, .kw_else => true,
+        .comma, .semicolon, .rparen, .rbracket, .dot, .question, .kw_else => true,
         else => false,
     };
 }
 fn spaceBetween(previous: Tag, current: Tag, generic_open: bool, previous_generic: bool) bool {
     if (generic_open or previous_generic) return false;
     switch (current) {
-        .rparen, .rbracket, .comma, .semicolon, .colon, .dot, .dot_dot => return false,
+        .rparen, .rbracket, .comma, .semicolon, .colon, .dot, .dot_dot, .question => return false,
         else => {},
     }
     switch (previous) {
@@ -126,6 +127,8 @@ fn splitTypeClosures(allocator: std.mem.Allocator, tokens: []const lex.Token, ap
     return adjusted;
 }
 pub fn format(allocator: std.mem.Allocator, bytes: []const u8, input_tokens: []const lex.Token, types: ast.TypeDeclarations) std.mem.Allocator.Error![]u8 {
+    // Indentation is syntax: preserve valid Python layout and its comments exactly.
+    if (lex.isPythonSource(bytes)) return allocator.dupe(u8, bytes);
     var adjusted = try splitTypeClosures(allocator, input_tokens, types.expressions.applications);
     defer adjusted.deinit(allocator);
     const tokens = if (adjusted.items.len != 0) adjusted.items else input_tokens;
@@ -149,7 +152,8 @@ pub fn format(allocator: std.mem.Allocator, bytes: []const u8, input_tokens: []c
         // while avoiding the ordinary annotation space after the second colon.
         const after_qualifier = previous == .colon and index >= 2 and tokens[index - 2].tag == .colon;
         if (token.tag == .rbrace) out.indent -= 1;
-        const break_before = (token.tag == .rbrace and previous != .lbrace) or previous == .semicolon or
+        const source_newline = std.mem.indexOfScalar(u8, bytes[end..token.span.start], '\n') != null;
+        const break_before = source_newline or (token.tag == .rbrace and previous != .lbrace) or previous == .semicolon or
             (previous == .lbrace and token.tag != .rbrace) or (previous == .comma and top == .lbrace) or
             (previous == .rbrace and !joinsClose(token.tag));
         const permits_space = previous != .eof and !(previous == .lbrace and token.tag == .rbrace);

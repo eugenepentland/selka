@@ -212,14 +212,9 @@ def project_cases(compiler, zig, root, temp):
     print(f"module native parity: {len(fixtures)} project fixtures, {pairs} executed comparisons including file paths/call frames across -O0/-O2; project builder and invalid-source checks passed")
 
 
-def main():
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--compiler", type=Path, required=True)
-    parser.add_argument("--zig", required=True)
-    args = parser.parse_args()
-    compiler = args.compiler.resolve()
-    root = Path(__file__).resolve().parents[1]
-    fixtures = [(name, (root / "test" / "fixtures" / f"{name}.my").read_text()) for name in ("arithmetic", "sum", "gcd")]
+def cases(root):
+    """Return the shared native value, ownership, reference and trap fixtures."""
+    fixtures = [(name, (root / "test" / "fixtures" / f"{name}.my").read_text()) for name in ("arithmetic", "sum", "gcd", "python-calls")]
     fixtures.append(("unit-result", "result Done{ok:unit,err:i64}fn noop()->unit{}fn done()->Done{return new Done.ok(noop());}fn chained()->Done{try done();return done();}fn main()->i64{match chained(){Done.ok(discard)=>{return 42;},Done.err(code)=>{return code;}}}"))
     fixtures.append(("unit-owned", "buffer Numbers:i64;result A{ok:Numbers,err:i64}fn consume(values:Numbers,early:bool)->unit{discard len_buffer(values);if early{return;}}fn main(heap:allocator)->i64{let mut i=0;while i<2{match acquire_buffer<A>(heap,2){A.ok(values)=>{consume(values,i==0);},A.err(code)=>{return code;}}i+=1;}return 42;}"))
     fixtures.append(("generic-pool", "pool P(Id):i64;result A{ok:P,err:i64}result H{ok:Id,err:i64}fn forward<T:copy>(pool:P)->P{return pool;}fn identity<T:copy>(value:T)->T{return value;}fn main(heap:allocator)->i64{match acquire_pool<A>(heap,1){A.ok(pool)=>{let mut moved=forward::<bool>(pool);match insert_pool<H>(moved,7){H.ok(id)=>{if id==identity::<Id>(id){return 7;}return 0;},H.err(e)=>{return e;}}},A.err(e)=>{return e;}}}"))
@@ -316,6 +311,17 @@ def main():
         ("capacity-overflow", "return code(reserve_buffer<S>(b,heap,18446744073709551615u64));"),
     ):
         fixtures.append(("buffer-" + name, buffer_prefix + "fn main(heap:allocator)->i64{match acquire_buffer<A>(heap,1){A.ok(acquired)=>{let mut b=acquired;" + body + "},A.err(e)=>{return e;}}}"))
+    return fixtures
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--compiler", type=Path, required=True)
+    parser.add_argument("--zig", required=True)
+    args = parser.parse_args()
+    compiler = args.compiler.resolve()
+    root = Path(__file__).resolve().parents[1]
+    fixtures = cases(root)
     pairs = 0
     with tempfile.TemporaryDirectory(prefix="mylang-native-parity-") as temp:
         temp = Path(temp)

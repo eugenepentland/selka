@@ -195,6 +195,14 @@ pub const Compilation = struct {
         return @import("native.zig").generate(allocator, self.code.?, self.src, &sink);
     }
 
+    /// Allocate independently compilable scalar QBE units after full checking.
+    pub fn emitQbe(self: *Compilation, allocator: std.mem.Allocator) EmitCError![]u8 {
+        try self.emit();
+        var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
+        defer self.diagnostics = sink.items;
+        return @import("qbe.zig").generate(allocator, self.code.?, self.src, &sink);
+    }
+
     /// Allocate a source-annotated disassembly of the lowered program.
     pub fn dump(self: *Compilation, allocator: std.mem.Allocator) EmitError![]u8 {
         try self.emit();

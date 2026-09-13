@@ -1,5 +1,6 @@
 //! Module declaration identities and export boundaries, before body type checking.
 const std = @import("std");
+const eGenericArity = "E_GENERIC_ARITY";
 const graph = @import("project.zig");
 const ast = @import("ast.zig");
 const source = @import("source.zig");
@@ -78,13 +79,14 @@ pub const Index = struct {
         }
         const src = self.project.modules.items[module].src;
         if (typed.Type.fromName(src.text(span)) != null) return;
+        if (!self.units[module].names.contains(src.text(span)) and @import("prelude.zig").scalar(src.text(span))) return;
         for (syntax.types.expressions.applications) |application| {
             if (application.span.start == span.start and application.span.end == span.end) return self.applicationType(module, application, &.{});
         }
         const id = try self.typeIdentity(module, span);
         try self.requirePublicType(module, span, id);
         if (self.declaredTypeParameters(id).len != 0) return self.project.fail(
-            "E_GENERIC_ARITY",
+            eGenericArity,
             "nominal type template requires explicit type arguments",
             .{ .module = module, .span = span },
             .{ .module = id.module, .span = self.units[id.module].symbols.items[id.symbol].span },
@@ -94,14 +96,11 @@ pub const Index = struct {
         const allocator = self.project.arena.allocator();
         const src = self.project.modules.items[module].src;
 
-        // Re-lex this short name to normalize whitespace/comments around ::.
+        // Re-lex this short name to normalize whitespace/comments around module separators.
         var sink: diagnostic.Sink = .{ .allocator = allocator };
         const tokens = try lexer.lex(allocator, src.text(span), &sink);
-        const text = src.text(span);
-        const alias = if (tokens.len == 5) text[tokens[0].span.start..tokens[0].span.end] else null;
-        const last = if (alias != null) tokens[3] else tokens[0];
-        const name = text[last.span.start..last.span.end];
-        return self.resolve(.{ .from = module, .alias = alias, .name = name, .kind = .type, .owner = null, .span = span });
+        const qualified = lexer.qualifiedName(src.text(span), tokens) orelse return error.InternalError;
+        return self.resolve(.{ .from = module, .alias = qualified.alias, .name = qualified.name, .kind = .type, .owner = null, .span = span });
     }
     fn requirePublicType(self: *Index, module: usize, span: source.Span, id: Identity) diagnostic.Error!void {
         const symbol = self.units[id.module].symbols.items[id.symbol];
@@ -115,12 +114,21 @@ pub const Index = struct {
             .{ .module = module, .span = application.name },
             null,
         );
+        const name = src.text(application.name);
+        if (!self.units[module].names.contains(name)) {
+            const arity = @import("prelude.zig").arity(name);
+            if (arity) |count| {
+                if (application.arguments.len != count) return self.project.fail(eGenericArity, "builtin type argument count does not match", .{ .module = module, .span = application.span }, null);
+                for (application.arguments) |argument| try self.genericSignatureType(module, argument, parameters);
+                return;
+            }
+        }
         const id = try self.typeIdentity(module, application.name);
         try self.requirePublicType(module, application.name, id);
         const declaration = self.units[id.module].symbols.items[id.symbol].span;
         const arity = self.declaredTypeParameters(id).len;
         if (arity != application.arguments.len) return self.project.fail(
-            "E_GENERIC_ARITY",
+            eGenericArity,
             "type application argument count does not match its declaration",
             .{ .module = module, .span = application.span },
             .{ .module = id.module, .span = declaration },
@@ -291,8 +299,6 @@ fn moduleSyntax(project: *graph.Project, module_id: usize, cache: ?*@import("syn
 fn parseModule(project: *graph.Project, module_id: usize, sink: *diagnostic.Sink) diagnostic.Error!ast.Program {
     const module = project.modules.items[module_id];
     const tokens = try lexer.lex(project.arena.allocator(), module.src.bytes, sink);
-    var start: usize = 0;
-    while (tokens[start].span.start < module.header.body_start) start += 1;
-    var parse: parser.Parser = .{ .src = module.src, .arena = &project.arena, .tokens = tokens, .cursor = .{ .pos = start }, .sink = sink, .module_syntax = true };
-    return parse.parse();
+    var parse: parser.Parser = .{ .src = module.src, .arena = &project.arena, .tokens = tokens, .sink = sink };
+    return parse.parseModule();
 }

@@ -111,12 +111,35 @@ pub const Context = struct {
         if (shape.shape.variants) |variants| return if (variants.fallible) .result else if (variants.is_union) .variants else .enumeration;
         return if (shape.isRecord()) .record else null;
     }
+    /// Identify copyable managed list identities in concrete and generic source types.
+    pub fn managed(self: Context, value: Value) bool {
+        if (value == .nominal) return self.catalog.templates.store.?.index.declarations.items[value.nominal.declaration].managed;
+        return value == .concrete and value.concrete.isAggregate() and self.catalog.records[value.concrete.recordIndex()].managed;
+    }
+    /// Distinguish symbolic managed lists, strings, and dictionaries.
+    pub fn collectionKind(self: Context, value: Value) ?@import("runtime_values.zig").ManagedKind {
+        if (!self.managed(value)) return null;
+        if (value == .concrete) return self.catalog.records[value.concrete.recordIndex()].collection.kind;
+        const declaration = self.catalog.templates.store.?.index.declarations.items[value.nominal.declaration];
+        if (declaration.builtin_name) |name| {
+            if (std.mem.eql(u8, name, "dict")) return .dictionary;
+            if (std.mem.eql(u8, name, "str")) return .string;
+        }
+        return .list;
+    }
+    /// Resolve symbolic dictionary keys without inventing concrete parameter types.
+    pub fn collectionKey(self: Context, value: Value, span: source.Span) Error!Value {
+        if (self.collectionKind(value) != .dictionary) return error.InternalError;
+        if (value == .concrete) return .{ .concrete = self.catalog.records[value.concrete.recordIndex()].collection.key.? };
+        return (try self.schema(value, span)).fields[0].ty.?;
+    }
     /// Resolve an owner's element and nominal handle without inventing a concrete type.
     pub fn container(self: Context, value: Value, span: source.Span, pool: bool) Error!?struct { element: Value, handle: Value } {
         if (self.kind(value) != (if (pool) templates.Kind.pool else .buffer)) return null;
         if (value == .nominal) {
             const shape = try self.schema(value, span);
-            return .{ .element = shape.fields[0].ty.?, .handle = if (pool) try self.nominal(value.nominal.declaration + 1, value.nominal.arguments) else .{ .concrete = .bool } };
+            const element_index: usize = if (self.collectionKind(value) == .dictionary) 1 else 0;
+            return .{ .element = shape.fields[element_index].ty.?, .handle = if (pool) try self.nominal(value.nominal.declaration + 1, value.nominal.arguments) else .{ .concrete = .bool } };
         }
         const shape = self.catalog.records[value.concrete.recordIndex()].shape;
         return .{ .element = .{ .concrete = if (pool) shape.pool.?.element else shape.buffer.? }, .handle = .{ .concrete = if (pool) shape.pool.?.handle else .bool } };
@@ -143,7 +166,7 @@ pub const Context = struct {
             const declaration = self.catalog.templates.store.?.index.declarations.items[nominal_value.declaration];
             const fields = try self.arena.allocator().alloc(symbolic.Field, declaration.fields.len);
             for (declaration.fields, fields) |field, *out| out.* = .{
-                .name = self.src.text(field.name),
+                .name = field.builtin_name orelse self.src.text(field.name),
                 .span = field.name,
                 .ty = if (field.ty) |ty| try self.expression(ty, nominal_value.arguments, 0, field.name) else null,
             };
@@ -207,7 +230,8 @@ pub const Context = struct {
                 .cleanup = if (ty.isAggregate()) self.contracts.cleanup[ty.recordIndex()] else 0,
             },
             .nominal => |nominal_value| switch (self.kind(value).?) {
-                .buffer, .pool => .{ .move_only = true, .region = true },
+                .buffer => if (self.managed(value)) .{} else .{ .move_only = true, .region = true },
+                .pool => .{ .move_only = true, .region = true },
                 .handle => .{},
                 else => nominal_value.properties,
             },

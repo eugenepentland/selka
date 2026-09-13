@@ -41,6 +41,7 @@ const Emitter = struct {
         try self.push(.{ .instruction = .{ .span = span, .op = op } });
     }
     fn emitCall(self: *Emitter, span: Span, call: @FieldType(@FieldType(typed.Node, "data"), "call")) !void {
+        if (call.evaluation) |evaluation| for (evaluation.cleanup) |slot| try self.instruction(span, .{ .drop_local = slot });
         for (call.literals) |literal| {
             try self.instruction(span, .{ .drop_local = literal.owner });
             try self.instruction(span, .{ .end_borrow = literal.reference });
@@ -61,6 +62,7 @@ const Emitter = struct {
             i -= 1;
             try self.push(.{ .expression = call.arguments[i] });
         }
+        if (call.evaluation) |evaluation| try self.push(.{ .statement = evaluation.body });
     }
     fn emitStatement(self: *Emitter, id: typed.StatementId) !void {
         const stmt = self.program.statements[@backingInt(id)];
@@ -333,7 +335,7 @@ const Emitter = struct {
             .acquire_buffer, .acquire_pool => |acquire| {
                 try self.instruction(node.span, if (node.data == .acquire_pool) .{ .acquire_pool = node.ty } else .{ .acquire_buffer = node.ty });
                 try self.push(.{ .expression = acquire.capacity });
-                try self.push(.{ .expression = acquire.allocator });
+                if (!acquire.managed) try self.push(.{ .expression = acquire.allocator });
             },
             .local => |slot| try self.instruction(node.span, if (typed.moveOnly(node.ty, self.program.records) or typed.requiresHandling(node.ty, self.program.records)) .{ .move_local = slot } else .{ .load_local = slot }),
             .function_value => |target| try self.instruction(node.span, .{ .function_value = .{ .ty = node.ty, .function = target } }),
@@ -423,6 +425,7 @@ const Emitter = struct {
 };
 fn binaryInstruction(binary: anytype, nodes: []const typed.Node, records: []const typed.Record) bc.Instruction {
     const operand_type = nodes[@backingInt(binary.left)].ty;
+    if (operand_type.isAggregate() and records[operand_type.recordIndex()].managed) return .{ .span = binary.op_span, .op = .{ .binary_integer = .{ .ty = operand_type, .op = binary.op } } };
     if (operand_type.isAggregate() and records[operand_type.recordIndex()].shape.handle_pool != null) return .{ .span = binary.op_span, .op = .{ .cmp_handle = .{ .ty = operand_type, .predicate = if (binary.op == .eq) .eq else .ne } } };
     if (operand_type.isAggregate() and records[operand_type.recordIndex()].shape.domain != null) return .{ .span = binary.op_span, .op = .{ .cmp_domain = .{ .ty = operand_type, .predicate = if (binary.op == .eq) .eq else .ne } } };
     if (operand_type.isAggregate()) return .{ .span = binary.op_span, .op = .{ .cmp_enum = .{ .ty = operand_type, .predicate = if (binary.op == .eq) .eq else .ne } } };
@@ -434,6 +437,8 @@ fn binaryInstruction(binary: anytype, nodes: []const typed.Node, records: []cons
         .mul => .mul_i64_checked,
         .div => .div_i64_checked,
         .rem => .rem_i64_checked,
+        .floor_div,
+        .floor_rem,
         .f64_add,
         .f64_sub,
         .f64_mul,
@@ -470,6 +475,7 @@ pub fn lower(allocator: std.mem.Allocator, program: typed.Program) LowerError!bc
         out.* = .{
             .policy = .{
                 .host = function.policy.host,
+                .c_abi = function.policy.c_abi,
                 .effect_bound = function.policy.effect_bound,
                 .effects = function.policy.effects,
                 .owner = function.policy.owner,

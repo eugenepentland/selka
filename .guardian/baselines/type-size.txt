@@ -1,2 +1,5 @@
 # guardian-snapshot v2
-8 src/runtime_values.zig|Value
+8 src/runtime_values.zig|ManagedObject
+9 src/runtime_values.zig|Value
+8 src/typed.zig|Record
+8 src/vm.zig|MemoryOptions

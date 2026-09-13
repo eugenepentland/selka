@@ -83,13 +83,36 @@ class RegisteredArms(unittest.TestCase):
         for arms in ([DEFAULT['candidate']], {'candidate': DEFAULT['candidate']},
                      [DEFAULT['candidate'], DEFAULT['candidate']],
                      [DEFAULT['comparator'], dict(DEFAULT['candidate'], interface='shell')],
-                     [DEFAULT['comparator'], dict(DEFAULT['candidate'], language='zig')],
+                     [DEFAULT['comparator'], dict(DEFAULT['candidate'], language='ruby')],
+                     [DEFAULT['comparator'], {'label': 'zig-store', 'language': 'zig', 'interface': 'store'}],
                      [DEFAULT['comparator'], dict(DEFAULT['candidate'], label='../escape')],
                      [DEFAULT['comparator'], {'label': 'my', 'language': 'my'}]):
             with self.subTest(arms=arms), self.assertRaises(ValueError):
                 runner.arm_definitions(arms)
         self.assertEqual(runner.arm_definitions(None), DEFAULT)
         self.assertEqual(runner.arm_definitions([DEFAULT['comparator'], DEFAULT['candidate']]), DEFAULT)
+
+    def test_zig_and_rust_files_arms_and_command_plans_are_explicit(self):
+        for language in ('zig', 'rust'):
+            arms = [DEFAULT['comparator'],
+                    {'label': language, 'language': language, 'interface': 'files'}]
+            self.assertEqual(runner.arm_definitions(arms)['candidate'], arms[1])
+            plan = runner.command_plan(language)
+            self.assertEqual(plan[-1]['phase'], 'run')
+            self.assertNotIn('guardian', {row['phase'] for row in plan})
+        self.assertEqual([row['phase'] for row in runner.command_plan('zig')],
+                         ['check', 'build', 'run'])
+        self.assertEqual([row['phase'] for row in runner.command_plan('rust')],
+                         ['build', 'run'])
+
+    def test_external_language_freeze_requires_complete_toolchain_before_creating_cohort(self):
+        with tempfile.TemporaryDirectory(prefix='development-toolchain-') as temporary:
+            study = Path(temporary) / 'study'
+            study.mkdir()
+            arms = [DEFAULT['candidate'], {'label': 'zig', 'language': 'zig', 'interface': 'files'}]
+            with self.assertRaisesRegex(ValueError, 'complete Zig toolchain'):
+                runner.freeze(study, 'fixture', readiness_fixture(temporary), arms=arms)
+            self.assertFalse((study / 'fixture').exists())
 
     def test_default_arms_keep_the_legacy_dispatch_randomization(self):
         legacy, armed = random.Random(20260908 + 1), random.Random(20260908 + 1)

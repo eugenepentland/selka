@@ -7,6 +7,11 @@ The implementation follows [the revision 3 plan](docs/plan.md) and
 [interpreter-first roadmap](docs/experiments/interpreter-first.md). The working
 language name and `.my` extension are provisional.
 
+The optional [incremental QBE native backend](docs/experiments/incremental-qbe.md)
+builds executables with `mylang build`, reusing individual native function objects
+while checking the frontend fresh. It supports the current typed operations, managed collections, resources,
+and embedding APIs on Linux x86-64; persistent frontend caching remains future work.
+
 Typed VM host-library calls now execute through explicit registrations. The
 [board-validation trial](experiments/board_trial/README.md) runs on the VM and
 matches a standalone Zig baseline against 87 fixed oracle cases and 60 transformed
@@ -14,9 +19,14 @@ cases. Three exploratory agent maintenance blocks have since completed; see
 [the audit](docs/audits/feature-completeness-2026-09-07.md). These do not establish
 a comparative productivity advantage.
 Expensive geometry can remain in Zig/C/Rust behind explicit typed wrappers.
-Completed C/native experiments remain available; further native compilation,
-LLVM, and direct x86_64 Linux work are deferred until the design and measurements
-justify them. Native feature descriptions below record the existing experiments.
+The C backend remains available as a comparison and compatibility path while
+QBE completes its behavior, API, and performance gates. LLVM and a custom native
+backend remain future work. Native feature descriptions below include the C experiments.
+
+New application code uses [Python-style syntax](docs/python-syntax.md): `def`,
+indented blocks, ordinary assignments, `list[T]`, strings, dictionaries, and
+tracing GC. Static types and checked results remain explicit. See the
+[GC example](examples/gc-default/main.my) and [schematic entry](src/schematic/guest/main.my).
 
 Current supported features and restrictions are indexed in the
 [current language reference](docs/current-language.md). Run `mylang --features`
@@ -39,6 +49,47 @@ The build targets the native host and depends on the sibling `../guardian-zig`
 checkout for compiler quality checks. The CLI
 uses this snapshot's `std.process.Init` and `std.Io` APIs. Do not substitute
 Zig 0.15 APIs or update the compiler version as part of a language feature.
+
+## Build a native application
+
+With QBE and the pinned Zig toolchain installed:
+
+```sh
+zig-out/bin/mylang build examples/factorial.my -o /tmp/factorial --report
+/tmp/factorial
+```
+
+To compile and execute without keeping a final binary, use:
+
+```sh
+zig-out/bin/mylang build examples/factorial.my --run
+```
+
+Add `--project` for a module entry or `--library` for a shared library. The compiler
+runs the native build directly; Python is not needed for application builds.
+`--qbe` and `--zig` select tool paths. See the
+[QBE build guide](docs/experiments/incremental-qbe.md) for installation, cache
+behavior, providers, and embedding.
+
+## Run guest tests
+
+```sh
+zig-out/bin/mylang test path/to/main.my --filter '*test_*'
+zig-out/bin/mylang test path/to/main.my --cases cases.json --json
+```
+
+Exported `test_` functions run as native QBE code with typed assertions and fresh
+execution state. Passed tests with unchanged semantic dependencies can be reused;
+`--force` reruns them. Python is not required. See the
+[guest test workflow](docs/experiments/guest-tests.md) for fixtures, budgets, and
+result-cache behavior.
+
+## GC-default application preview
+
+Managed lists now allocate and grow without allocator parameters or collection
+borrows. The schematic guest uses them throughout its application model. See
+[managed memory](docs/managed-memory.md) and [the runnable example](examples/gc-default/main.my).
+Explicit owned storage and resources retain their existing safety rules.
 
 ## Real schematic pilot
 
@@ -556,6 +607,10 @@ mutation, growth, and borrowed views with VM/native and cleanup acceptance.
 now support chunk backing, checked reset, and scope/return cleanup.
 [Native pools](docs/experiments/native-pools.md) add generation-checked handles,
 snapshots, operations, and shared quotas on root/arena storage.
+[Direct C imports](docs/c-ffi.md) support `extern fn` scalar calls through QBE,
+with repeatable `--link`, `--link-library`, and `--library-path` build/test options.
+See [the libc example](examples/c-ffi/main.my).
+
 [Native clock/random providers](docs/experiments/native-providers.md) use explicit
 C adapters selected with the native builder’s `--provider` option.
 [Native environment lookup](docs/experiments/native-environment.md) extends that

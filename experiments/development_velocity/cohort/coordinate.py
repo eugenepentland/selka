@@ -37,37 +37,44 @@ def attempt_dir(row):
     return ROOT / row['task'] / row['pair'] / row['arm']
 
 
+def agent_name(label):
+    """Launcher-safe context name; preserve canonical arm and prompt paths."""
+    return label.replace('-', '_')
+
+
 def prepare(index):
     row, label = item(index)
     result = runner.prepare(ROOT, row['task'], row['pair'], row['arm'])
     PROMPTS.mkdir(exist_ok=True)
-    content = TEMPLATES[row['interface']].read_text().replace('COHORT_ROOT', str(ROOT)).replace('PARTICIPANT_TOKEN', result['token']).replace('REPOSITORY_ROOT', REPO)
+    content = (TEMPLATES[row['interface']].read_text().replace('COHORT_ROOT', str(ROOT))
+               .replace('PARTICIPANT_TOKEN', result['token']).replace('REPOSITORY_ROOT', REPO)
+               .replace('LANGUAGE', row['language']))
     assert result['token'] in content and str(ROOT) in content and 'REPOSITORY_ROOT' not in content
     doc = PROMPTS / (label + '.md')
     with doc.open('x') as stream:
         stream.write(content)
     message = f'Read the public onboarding instructions at {doc}. Follow them to complete practice, then wait for the task handoff exactly as they describe and complete the task.'
-    record = dict(row, agent_name=label, initial_message=message,
+    record = dict(row, agent_name=agent_name(label), initial_message=message,
                   initial_message_sha256=hashlib.sha256(message.encode()).hexdigest(),
                   document=path_identity(doc), token=result['token'])
     write_json(PROMPTS / (label + '.json'), record)
     iteration_log.append(STUDY, 'participant-public-prompt', {k: record[k] for k in ('task', 'pair', 'arm', 'agent_name', 'initial_message_sha256', 'document')})
-    return {'agent_name': label, 'initial_message': message}
+    return {'agent_name': agent_name(label), 'initial_message': message}
 
 
 def bind(index):
     row, label = item(index)
     prompt = runner.read_json(PROMPTS / (label + '.json'))
-    return runner.bind_context(ROOT, row['task'], row['pair'], row['arm'], '/root/' + label, prompt['initial_message_sha256'])
+    return runner.bind_context(ROOT, row['task'], row['pair'], row['arm'], '/root/' + agent_name(label), prompt['initial_message_sha256'])
 
 
 def begin(index):
     row, label = item(index)
     message = HANDOFF[row['interface']]
     result = runner.begin(ROOT, row['task'], row['pair'], row['arm'], handoff=message)
-    write_json(PROMPTS / (label + '-handoff.json'), dict(row, agent_name=label, message=message,
+    write_json(PROMPTS / (label + '-handoff.json'), dict(row, agent_name=agent_name(label), message=message,
                message_sha256=hashlib.sha256(message.encode()).hexdigest(), prepared_at=runner.utc(), started=result))
-    return {'agent_name': label, 'started': result}
+    return {'agent_name': agent_name(label), 'started': result}
 
 
 def watch(index, limit=1500):
@@ -77,14 +84,14 @@ def watch(index, limit=1500):
     deadline = time.monotonic() + limit
     while not ready.exists():
         if time.monotonic() > deadline:
-            return {'agent_name': label, 'watch': 'practice did not finish within the watch limit'}
+            return {'agent_name': agent_name(label), 'watch': 'practice did not finish within the watch limit'}
         time.sleep(1)
     outcome = runner.read_json(ready)['outcome']
     if outcome != 'passed':
-        return {'agent_name': label, 'watch': 'practice outcome ' + outcome + '; not starting the task'}
+        return {'agent_name': agent_name(label), 'watch': 'practice outcome ' + outcome + '; not starting the task'}
     bound = bind(index)
     started = begin(index)
-    return {'agent_name': label, 'context_id': bound['context_id'], 'started': started['started']}
+    return {'agent_name': agent_name(label), 'context_id': bound['context_id'], 'started': started['started']}
 
 
 def grade(index):
@@ -96,7 +103,7 @@ def status(index):
     row, label = item(index)
     path = attempt_dir(row)
     manifest = runner.session.load(path)
-    return dict(row, agent_name=label, phase=manifest['phase'],
+    return dict(row, agent_name=agent_name(label), phase=manifest['phase'],
                 practice_ready=(path / 'practice-ready.json').exists(),
                 submissions=len(manifest['submissions']), seal_reason=manifest.get('seal_reason'),
                 elapsed_seconds=runner.session.elapsed(manifest['task_started'], runner.session.clock())

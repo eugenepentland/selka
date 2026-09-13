@@ -34,9 +34,20 @@ pub const Catalog = struct {
         if (self.arrays.resolved.get(span.start)) |ty| return ty;
         const name = src.text(span);
         if (typed.Type.fromName(name)) |builtin| return builtin;
+        if (@import("prelude.zig").scalar(name)) if (self.names.get(name)) |ty| return ty;
         const key = if (self.module_names) |names| try names.reference(span, .type, null, null, sink) else name;
         if (self.templates.names.contains(key)) return sink.fail("E_GENERIC_ARITY", span, "nominal template requires explicit type arguments");
         return self.names.get(key) orelse sink.fail("E_UNKNOWN_TYPE", span, "type is not declared");
+    }
+    /// Recognize a declared variant type before interpreting a dotted member as a field.
+    pub fn variantType(self: Catalog, src: Source, span: Span, sink: *diagnostic.Sink) Error!?typed.Type {
+        const key = if (self.module_names) |names| qualified: {
+            if (try names.symbolKind(span) != .type) return null;
+            break :qualified try names.reference(span, .type, null, null, sink);
+        } else src.text(span);
+        const value = self.names.get(key) orelse return null;
+        if (!value.isAggregate() or self.records[value.recordIndex()].shape.variants == null) return null;
+        return value;
     }
     /// Retain canonical alias targets for checked public schemas; resolution may fail with SourceError or OutOfMemory.
     pub fn aliases(self: Catalog, allocator: std.mem.Allocator, src: Source, syntax: @import("ast.zig").Program, sink: *diagnostic.Sink) Error![]const typed.TypeAlias {

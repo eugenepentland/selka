@@ -1,0 +1,27 @@
+module main
+
+def checked_count(count: int) -> Result[int, int]:
+    if count < 0:
+        return Err(1)
+    return Ok(count)
+
+
+def make_pins(count: int) -> Result[list[int], int]:
+    limit = checked_count(count)?
+    pins: list[int] = []
+    for pin in range(limit):
+        pins.append(pin)
+    return Ok(pins)
+
+
+def total(count: int) -> Result[int, int]:
+    pins = make_pins(count)?
+    return Ok(len(pins))
+
+
+def main() -> int:
+    match total(42):
+        case Ok(value):
+            return value
+        case Err(code):
+            return -code

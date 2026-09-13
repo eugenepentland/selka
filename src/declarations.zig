@@ -25,6 +25,7 @@ pub const Kind = enum {
     resource,
     @"fn",
     host_fn,
+    extern_fn,
 };
 
 /// Zero-based half-open byte range over the original file bytes.
@@ -118,7 +119,8 @@ fn commentStart(bytes: []const u8, start: usize) usize {
     if (std.mem.indexOfNone(u8, bytes[line..start], " \t\r") != null) return start;
     while (line > 0) {
         const previous = lineStart(bytes, line - 1);
-        if (!std.mem.startsWith(u8, std.mem.trim(u8, bytes[previous .. line - 1], " \t\r"), "//")) break;
+        const comment = std.mem.trim(u8, bytes[previous .. line - 1], " \t\r");
+        if (!std.mem.startsWith(u8, comment, "//") and !std.mem.startsWith(u8, comment, "#")) break;
         line = previous;
     }
     return line;
@@ -146,6 +148,10 @@ const Scan = struct {
     }
     /// The parser validated this grammar already, so a mismatch is an internal defect.
     fn expect(self: *Scan, want: lex.Tag) error{InternalError}!source.Span {
+        if (want == .semicolon and self.tokens[self.pos].tag != .semicolon and lex.implicitTerminator(self.src.bytes, self.tokens, self.pos)) {
+            const end = self.tokens[self.pos - 1].span.end;
+            return .{ .start = end, .end = end };
+        }
         if (self.tokens[self.pos].tag != want) return error.InternalError;
         defer self.pos += 1;
         return self.tokens[self.pos].span;
@@ -198,12 +204,13 @@ const Scan = struct {
             self.pos += 1;
             return .{ .kind = form.kind, .name = try self.expect(.ident), .braced = form.braced };
         }
-        const host = self.word(self.pos, "host");
+        const c_abi = self.word(self.pos, "extern");
+        const host = self.word(self.pos, "host") or c_abi;
         if (host) self.pos += 1;
         _ = self.take(.kw_private);
         _ = self.take(.kw_conversion);
         _ = try self.expect(.kw_fn);
-        return .{ .kind = if (host) .host_fn else .@"fn", .name = try self.expect(.ident), .braced = !host };
+        return .{ .kind = if (c_abi) .extern_fn else if (host) .host_fn else .@"fn", .name = try self.expect(.ident), .braced = !host };
     }
     fn simple(self: Scan) ?Simple {
         return switch (self.tokens[self.pos].tag) {
@@ -228,10 +235,13 @@ const Scan = struct {
     }
     /// Consume one declaration through its terminating brace or semicolon.
     fn body(self: *Scan, braced: bool) error{InternalError}!source.Span {
-        const at = lex.declarationEnd(self.tokens, self.pos, braced);
+        const at = lex.declarationEnd(self.src.bytes, self.tokens, self.pos, braced);
         if (at == self.pos) return error.InternalError;
         const last = self.tokens[at - 1];
-        if (last.tag != (if (braced) lex.Tag.rbrace else lex.Tag.semicolon)) return error.InternalError;
+        if (braced and last.tag != .rbrace) return error.InternalError;
+        if (!braced and last.tag != .semicolon) {
+            if (!lex.implicitTerminator(self.src.bytes, self.tokens, at)) return error.InternalError;
+        }
         self.pos = at;
         return last.span;
     }
@@ -266,7 +276,7 @@ fn declared(syntax: ast.Program, kind: Kind, index: usize) ?source.Span {
         .pool => if (index < types.pools.len) types.pools[index].name else null,
         .resource => if (index < types.resources.len) types.resources[index].name else null,
         .@"enum", .@"union", .result => variantName(types.variants, kind, index),
-        .@"const", .@"fn", .host_fn => functionName(syntax.functions, kind, index),
+        .@"const", .@"fn", .host_fn, .extern_fn => functionName(syntax.functions, kind, index),
     };
 }
 
@@ -285,7 +295,7 @@ fn functionName(functions: []const ast.Function, kind: Kind, index: usize) ?sour
     var seen: usize = 0;
     for (functions) |function| {
         if (function.policy.owner != null) continue;
-        const actual: Kind = if (function.policy.constant) .@"const" else if (function.policy.host != null) .host_fn else .@"fn";
+        const actual: Kind = if (function.policy.constant) .@"const" else if (function.policy.c_abi) .extern_fn else if (function.policy.host != null) .host_fn else .@"fn";
         if (actual != kind) continue;
         if (seen == index) return function.name;
         seen += 1;

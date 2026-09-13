@@ -12,7 +12,7 @@ const Checker = struct {
         const sink = self.sink;
         var requires_handling = false;
         var can_store = schema.shape.resource == null;
-        var move_only = schema.shape.buffer != null or schema.shape.resource != null or schema.shape.pool != null;
+        var move_only = (schema.shape.buffer != null and !schema.managed) or schema.shape.resource != null or schema.shape.pool != null;
         if (schema.shape.variants) |variants| {
             requires_handling = variants.fallible;
             for (variants.cases) |case| if (case.payload) |payload| {
@@ -32,7 +32,7 @@ const Checker = struct {
             }
         }
         if (schema.shape.buffer) |element| {
-            if (!typed.storable(element, records)) return sink.fail(
+            if (!schema.managed and !typed.storable(element, records)) return sink.fail(
                 "E_BUFFER_ELEMENT",
                 schema.declaration,
                 "buffer elements must be storable values without result obligations or external resources",
@@ -69,7 +69,8 @@ const Checker = struct {
                 const last = work.items.len - 1;
                 const visit = work.items[last];
                 const schema = records[visit.record];
-                const edge_count = if (schema.shape.variants) |v| v.cases.len else if (schema.shape.array != null or schema.shape.buffer != null or schema.shape.pool != null) @as(usize, 1) else schema.fields.len;
+                const container = schema.shape.array != null or schema.shape.buffer != null or schema.shape.pool != null;
+                const edge_count = if (schema.managed) @as(usize, 0) else if (schema.shape.variants) |v| v.cases.len else if (container) @as(usize, 1) else schema.fields.len;
                 if (visit.next_field == edge_count) {
                     try self.finishLayout(visit.record, schema);
                     states[visit.record] = .complete;
@@ -109,4 +110,55 @@ const Checker = struct {
 pub fn validate(allocator: std.mem.Allocator, records: []typed.Record, sink: *diagnostic.Sink) Error!void {
     var checker: Checker = .{ .allocator = allocator, .records = records, .sink = sink };
     try checker.validateLayouts();
+    // Managed edges do not affect value layout, but all their elements must be copyable.
+    for (records) |schema| if (schema.managed) {
+        const element = schema.shape.buffer.?;
+        if (!typed.storable(element, records) or typed.moveOnly(element, records)) return sink.fail("E_LIST_ELEMENT", schema.declaration, "managed list elements must be copyable values without resources or result obligations");
+    };
+    const managed = try dependencies(allocator, records, false);
+    defer allocator.free(managed);
+    const capabilities = try dependencies(allocator, records, true);
+    defer allocator.free(capabilities);
+    for (records) |schema| if (schema.managed) {
+        if (carries(schema.shape.buffer.?, capabilities, true)) return sink.fail("E_LIST_CAPABILITY", schema.declaration, "managed list elements cannot contain allocator or provider capabilities");
+    };
+    for (records) |schema| {
+        const element = if (schema.shape.buffer) |buffer| buffer else if (schema.shape.pool) |pool| pool.element else continue;
+        if (!schema.managed and carries(element, managed, false)) return sink.fail("E_UNTRACED_MANAGED", schema.declaration, "explicit buffers and pools cannot store managed references; use a managed list");
+    }
+}
+
+fn carries(ty: typed.Type, contains: []const bool, capability: bool) bool {
+    if (capability and ty.capabilityIndex() != null) return true;
+    return ty.isAggregate() and contains[ty.recordIndex()];
+}
+fn dependencies(allocator: std.mem.Allocator, records: []const typed.Record, capability: bool) std.mem.Allocator.Error![]bool {
+    const flags = try allocator.alloc(bool, records.len);
+    for (records, flags) |schema, *contains| contains.* = !capability and schema.managed;
+    var changed = true;
+    while (changed) {
+        changed = false;
+        for (records, 0..) |schema, index| {
+            if (flags[index]) continue;
+            if (recordCarries(schema, flags, capability)) {
+                flags[index] = true;
+                changed = true;
+            }
+        }
+    }
+    return flags;
+}
+fn recordCarries(schema: typed.Record, flags: []const bool, capability: bool) bool {
+    if (schema.shape.array) |array| if (carries(array.element, flags, capability)) return true;
+    if (schema.shape.domain) |domain| if (carries(domain, flags, capability)) return true;
+    if (schema.shape.variants) |variants| for (variants.cases) |case| {
+        if (case.payload) |payload| if (carries(payload, flags, capability)) return true;
+    };
+    for (schema.fields) |field| if (carries(field.ty, flags, capability)) return true;
+    return false;
+}
+
+/// Compute transitive managed references through value fields without recursive traversal.
+pub fn managedTypes(allocator: std.mem.Allocator, records: []const typed.Record) std.mem.Allocator.Error![]bool {
+    return dependencies(allocator, records, false);
 }

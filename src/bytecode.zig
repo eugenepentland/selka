@@ -25,6 +25,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
     try validateEntry(program);
     for (program.functions, 0..) |function, index| {
         try validateFunction(program, function, index);
+        if (function.policy.c_abi and function.policy.host == null) return error.InternalError;
         if (function.policy.host != null) {
             try validateHost(allocator, program, function);
             continue;
@@ -37,6 +38,7 @@ pub fn validate(allocator: std.mem.Allocator, program: Program) Error!void {
 fn validateRecords(program: Program) Error!void {
     for (program.records, 0..) |record, i| {
         if (@backingInt(record.id) != i + typed.Type.record_base) return error.InternalError;
+        if (record.managed and record.shape.buffer == null) return error.InternalError;
         try validatePoolRecord(program, record);
         try validateHandlePoolRecord(program, record);
         try validateResourceRecord(record);
@@ -106,6 +108,15 @@ fn validateHost(allocator: std.mem.Allocator, program: Program, function: Functi
     if (function.scope.instructions.len != 0 or function.scope.references.len != 0) return error.InternalError;
     if (function.policy.owner != null or function.policy.restricted or function.policy.conversion) return error.InternalError;
     if (function.signature.return_reference != null or function.signature.parameter_count != function.scope.locals.len) return error.InternalError;
+    if (function.policy.c_abi) {
+        const foreign = @import("c_abi.zig");
+        if (!foreign.validSymbol(foreign.symbol(function.name)) or !foreign.supported(function.signature.return_type, program.records, true)) return error.InternalError;
+        for (function.scope.locals) |parameter| {
+            if (parameter.parameter.reference_parameter != null or parameter.parameter.slice_parameter or parameter.mutable) return error.InternalError;
+            if (!foreign.supported(parameter.ty, program.records, false)) return error.InternalError;
+        }
+        return;
+    }
     try validateHostType(allocator, program.records, function.signature.return_type);
     for (function.scope.locals) |parameter| {
         if (parameter.parameter.reference_parameter != null or parameter.parameter.slice_parameter or parameter.mutable) return error.InternalError;
@@ -180,20 +191,21 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
         .acquire_pool => |ty| try validateOpAcquirePool(program, ty),
         .json_codec => |codec| try @import("codec_bytecode.zig").operation(allocator, program, codec),
         .acquire_buffer => |ty| try validateOpAcquireBuffer(program, ty),
-        .cast_integer, .neg_integer => |ty| if (!ty.isInteger()) {
+        .cast_integer => |ty| {
+            const text_target = validType(ty, program) and ty.isAggregate() and program.records[ty.recordIndex()].collection.kind == .string;
+            if (!ty.isInteger() and !text_target) return error.InternalError;
+        },
+        .neg_integer => |ty| if (!ty.isInteger()) {
             return error.InternalError;
         },
-        .binary_integer => |binary| {
-            if (!binary.ty.isInteger() or binary.op == .logical_and or binary.op == .logical_or) return error.InternalError;
-            try validateFloatBinary(binary.ty, binary.op);
-        },
+        .binary_integer => |binary| try validateCollectionBinary(program, binary),
         .split_borrow => |pair| try validateSplit(function, pair.left, pair.right),
         .begin_borrow, .begin_slice, .end_borrow, .read_ref, .write_ref, .read_slice, .write_slice, .len_slice => |id| try validateOpBeginBorrow(program, function, instruction, id),
         .load_local, .store_local, .move_local, .drop_local => |slot| if (@backingInt(slot) >= function.scope.locals.len or function.scope.locals[@backingInt(slot)].parameter.reference_parameter != null) {
             return error.InternalError;
         },
         .wrap_domain, .unwrap_domain => |ty| {
-            if (function.policy.owner != ty) return error.InternalError;
+            if (function.policy.owner != ty and !@import("numeric_surface.zig").isFloat(ty, program.records)) return error.InternalError;
             if (!ty.isAggregate()) return error.InternalError;
             if (!validType(ty, program)) return error.InternalError;
             if (program.records[ty.recordIndex()].shape.domain == null) return error.InternalError;
@@ -202,7 +214,9 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
         .get_index, .replace_index, .array_length => |ty| {
             if (!ty.isAggregate()) return error.InternalError;
             if (!validType(ty, program)) return error.InternalError;
-            if (program.records[ty.recordIndex()].shape.array == null) return error.InternalError;
+            const schema = program.records[ty.recordIndex()];
+            const collection = instruction.op != .replace_index and schema.managed and schema.collection.kind != .list;
+            if (schema.shape.array == null and !collection) return error.InternalError;
         },
         .update_record => |update| try validateOpUpdateRecord(allocator, program, update),
         .try_result => |propagate| try validateOpTryResult(program, function, propagate),
@@ -298,12 +312,66 @@ fn validateOpPoolOperation(program: Program, function: Function, operation: @Fie
     } else if (operation.output != expected) return error.InternalError;
 }
 
+fn validateCollectionBinary(program: Program, binary: @FieldType(@FieldType(Instruction, "op"), "binary_integer")) Error!void {
+    if (validType(binary.ty, program) and binary.ty.isAggregate() and program.records[binary.ty.recordIndex()].managed) {
+        const concatenate = binary.op == .add and program.records[binary.ty.recordIndex()].collection.kind == .string;
+        if (!concatenate and binary.op != .eq and binary.op != .ne) return error.InternalError;
+    } else {
+        if (!binary.ty.isInteger() or binary.op == .logical_and or binary.op == .logical_or) return error.InternalError;
+        try validateFloatBinary(binary.ty, binary.op);
+    }
+}
+
+fn validateManagedOperation(program: Program, local: typed.Local, operation: @FieldType(@FieldType(Instruction, "op"), "buffer_operation")) Error!void {
+    const schema = program.records[local.ty.recordIndex()];
+    const element = schema.shape.buffer.?;
+
+    if (operation.reference != null or local.parameter.reference_parameter != null) return error.InternalError;
+    if (schema.collection.kind != .list) {
+        const dictionary = schema.collection.kind == .dictionary;
+        const expected: typed.Type = switch (operation.kind) {
+            .length => .i64,
+            .iteration_check => .unit,
+            .key_at => if (dictionary) schema.collection.key.? else return error.InternalError,
+            .slice => if (!dictionary) local.ty else return error.InternalError,
+            .read => if (dictionary) element else local.ty,
+            .write => if (dictionary) .unit else return error.InternalError,
+            .get => if (dictionary) element else return error.InternalError,
+            .contains => .bool,
+            .join => if (!dictionary) local.ty else return error.InternalError,
+            .split, .keys, .values => list: {
+                if ((operation.kind == .split) == dictionary) return error.InternalError;
+                if (!operation.output.isAggregate()) return error.InternalError;
+                const result = program.records[operation.output.recordIndex()];
+                const member = if (operation.kind == .split) local.ty else if (operation.kind == .keys) schema.collection.key.? else element;
+                if (!result.managed or result.collection.kind != .list or result.shape.buffer != member) return error.InternalError;
+                break :list operation.output;
+            },
+            else => return error.InternalError,
+        };
+        if (operation.output != expected) return error.InternalError;
+        return;
+    }
+    const expected: typed.Type = switch (operation.kind) {
+        .length, .capacity => .u64,
+        .read => element,
+        .append, .write, .iteration_check => .unit,
+        .contains => .bool,
+        else => return error.InternalError,
+    };
+    if (operation.output != expected) return error.InternalError;
+    return;
+}
+
 fn validateOpBufferOperation(program: Program, function: Function, operation: @FieldType(@FieldType(Instruction, "op"), "buffer_operation")) Error!void {
     if (@backingInt(operation.owner) >= function.scope.locals.len or !validType(operation.output, program)) return error.InternalError;
     const local = function.scope.locals[@backingInt(operation.owner)];
     if (!local.ty.isAggregate()) return error.InternalError;
+    const schema = program.records[local.ty.recordIndex()];
+    const element = schema.shape.buffer orelse return error.InternalError;
+    if (schema.managed) return validateManagedOperation(program, local, operation);
+    if (operation.kind == .iteration_check) return error.InternalError;
     try validateOperationOwner(function, operation.owner, operation.reference, operation.kind.mutates());
-    const element = program.records[local.ty.recordIndex()].shape.buffer orelse return error.InternalError;
     if ((operation.kind == .read or operation.kind == .resize) and typed.moveOnly(element, program.records)) return error.InternalError;
     if (operation.kind.mutates()) {
         const shape = typed.resultShape(operation.output, program.records) orelse return error.InternalError;
@@ -353,10 +421,15 @@ fn validateOpAcquirePool(program: Program, ty: @FieldType(@FieldType(Instruction
 }
 
 fn validateOpAcquireBuffer(program: Program, ty: @FieldType(@FieldType(Instruction, "op"), "acquire_buffer")) Error!void {
+    if (validType(ty, program) and ty.isAggregate() and program.records[ty.recordIndex()].managed) {
+        if (program.records[ty.recordIndex()].shape.buffer == null) return error.InternalError;
+        return;
+    }
     const shape = typed.resultShape(ty, program.records) orelse return error.InternalError;
     if (!validType(shape.ok_type, program)) return error.InternalError;
     if (!shape.ok_type.isAggregate()) return error.InternalError;
     if (program.records[shape.ok_type.recordIndex()].shape.buffer == null) return error.InternalError;
+    if (program.records[shape.ok_type.recordIndex()].managed) return error.InternalError;
     if (shape.error_type != .i64) return error.InternalError;
 }
 
@@ -401,6 +474,11 @@ fn validateOpMakeRecord(allocator: std.mem.Allocator, program: Program, record: 
     if (program.records[record.ty.recordIndex()].shape.pool != null) return error.InternalError;
     if (program.records[record.ty.recordIndex()].shape.handle_pool != null) return error.InternalError;
     if (program.records[record.ty.recordIndex()].shape.resource != null) return error.InternalError;
+    if (program.records[record.ty.recordIndex()].managed and program.records[record.ty.recordIndex()].collection.kind != .list) {
+        if (record.order.len != 0) return error.InternalError;
+        if (program.records[record.ty.recordIndex()].collection.kind == .dictionary and record.fields % 2 != 0) return error.InternalError;
+        return;
+    }
     if (program.records[record.ty.recordIndex()].shape.buffer != null) return error.InternalError;
     if (program.records[record.ty.recordIndex()].shape.domain != null) return error.InternalError;
     if (program.records[record.ty.recordIndex()].shape.variants != null) return error.InternalError;
@@ -546,7 +624,8 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
                 if (height < 2) return error.InternalError;
                 height -= 2;
             },
-            .acquire_buffer, .acquire_pool, .acquire_resource, .environment_get => {
+            .acquire_buffer => |ty| height = try acquiredHeight(program, ty, height),
+            .acquire_pool, .acquire_resource, .environment_get => {
                 if (height < 2) return error.InternalError;
                 height -= 1;
             },
@@ -744,7 +823,8 @@ fn validateBufferRecord(program: Program, record: typed.Record) Error!void {
         if (!validType(element, program)) return error.InternalError;
         if (!typed.storable(element, program.records)) return error.InternalError;
         if (typed.requiresHandling(element, program.records)) return error.InternalError;
-        if (!record.contract.move_only) return error.InternalError;
+        if (record.contract.move_only == record.managed) return error.InternalError;
+        if (record.managed and typed.moveOnly(element, program.records)) return error.InternalError;
         if (record.contract.requires_handling) return error.InternalError;
         if (record.shape.array != null) return error.InternalError;
         if (record.shape.domain != null) return error.InternalError;
@@ -810,4 +890,10 @@ fn validateFloatUnary(op: typed.UnaryOp) Error!void {
 
 fn validateFloatBinary(ty: typed.Type, op: typed.BinaryOp) Error!void {
     if (std.mem.startsWith(u8, @tagName(op), "f64_") and ty != .u64) return error.InternalError;
+}
+
+fn acquiredHeight(program: Program, ty: typed.Type, height: usize) Error!usize {
+    const count: usize = if (program.records[ty.recordIndex()].managed) 1 else 2;
+    if (height < count) return error.InternalError;
+    return height - count + 1;
 }

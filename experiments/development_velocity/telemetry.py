@@ -159,7 +159,7 @@ class ObservedGateway(Gateway):
                          'after_bytes': len(files.get(name, b'')),
                          'before_lines': len(before_files.get(name, b'').splitlines()),
                          'after_lines': len(files.get(name, b'').splitlines())}
-                        for name in changed if Path(name).suffix in ('.my', '.py')]
+                        for name in changed if Path(name).suffix in ('.my', '.py', '.zig', '.rs')]
                 else:
                     record['source_size_changes'] = None
                 if 'capture_finished' in locals():

@@ -1,0 +1,1 @@
+fn main()->i64{let mut i=0;let mut total=0;while i<1000000{total+=i%97;i+=1;}return total;}

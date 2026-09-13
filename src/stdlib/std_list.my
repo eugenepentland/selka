@@ -1,0 +1,23 @@
+module std_list;
+export List;
+export create;
+export append;
+export get;
+export set;
+export count;
+list List < T: copy >: T;
+fn create < T: copy >() -> List<T> {
+    return new_list<List<T>>(0);
+}
+fn append < T: copy >(items: List<T>, value: T) -> unit {
+    append_list(items, value);
+}
+fn get < T: copy >(items: List<T>, index: u64) -> T nogc {
+    return read_list(items, index);
+}
+fn set < T: copy >(items: List<T>, index: u64, value: T) -> unit nogc {
+    write_list(items, index, value);
+}
+fn count < T: copy >(items: List<T>) -> u64 nogc {
+    return len_list(items);
+}

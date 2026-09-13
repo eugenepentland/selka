@@ -29,7 +29,7 @@ test "unit calls bare returns generic fallthrough and mutable loans preserve res
 // spec: UNIT-2
 test "unit remains distinct and implicit discard cannot lose ordinary or fallible values" {
     const invalid = [_][]const u8{
-        "fn main()->unit{}",
+        "fn main()->bool{return true;}",
         "result Done{ok:unit,err:i64}fn leak(x:Done)->unit{}fn main()->i64{return 0;}",
         "result Done{ok:unit,err:i64}fn leak<T:copy>(x:Done)->unit{}fn main()->i64{return 0;}",
         "fn f(x:&unit)->&unit from x{}fn main()->i64{return 0;}",

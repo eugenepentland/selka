@@ -29,11 +29,10 @@ pub const Names = struct {
         const text = self.src.text(span);
         var tokens_sink: diagnostic.Sink = .{ .allocator = self.allocator() };
         const tokens = try lexer.lex(self.allocator(), text, &tokens_sink);
-        const alias = if (tokens.len == 5) text[tokens[0].span.start..tokens[0].span.end] else null;
-        const last = if (alias != null) tokens[3] else tokens[0];
-        const bare = text[last.span.start..last.span.end];
+        const qualified = lexer.qualifiedName(text, tokens) orelse return error.InternalError;
+        const bare = qualified.name;
         const name = if (member) |method| try std.fmt.allocPrint(self.allocator(), "{s}.{s}", .{ bare, self.src.text(method) }) else bare;
-        const id = self.index.resolve(.{ .from = original.input, .alias = alias, .name = name, .kind = kind, .owner = current_owner, .span = original.span }) catch |err| {
+        const id = self.index.resolve(.{ .from = original.input, .alias = qualified.alias, .name = name, .kind = kind, .owner = current_owner, .span = original.span }) catch |err| {
             if (err != error.SourceError) return err;
             const problem = self.index.project.problem orelse return error.InternalError;
             const at = self.src.mappedSpan(problem.site.module, problem.site.span) catch return error.InternalError;
@@ -42,13 +41,36 @@ pub const Names = struct {
         };
         return std.fmt.allocPrint(self.allocator(), "{s}::{s}", .{ self.index.project.modules.items[id.module].name, self.index.units[id.module].symbols.items[id.symbol].name });
     }
+    /// Inspect declaration kind before selecting a call or constructor resolver.
+    /// The selected resolver still enforces import visibility and privacy.
+    pub fn symbolKind(self: Names, span: source.Span) diagnostic.Error!?interfaces.Kind {
+        const original = self.src.originalSpan(span) catch return error.InternalError;
+        const text = self.src.text(span);
+        var sink: diagnostic.Sink = .{ .allocator = self.allocator() };
+        const tokens = try lexer.lex(self.allocator(), text, &sink);
+        const qualified = lexer.qualifiedName(text, tokens) orelse return null;
+        var module = original.input;
+        if (qualified.alias) |alias| {
+            var found = false;
+            for (self.index.project.modules.items[module].imports) |imported| if (std.mem.eql(u8, alias, imported.alias)) {
+                module = imported.target;
+                found = true;
+                break;
+            };
+            if (!found) return null;
+        }
+        const unit = self.index.units[module];
+        const id = unit.names.get(qualified.name) orelse return null;
+        return unit.symbols.items[id].kind;
+    }
     /// Check whether a name belongs to the originating module's declarations or import aliases.
     pub fn topLevel(self: Names, span: source.Span) error{InternalError}!bool {
         const original = self.src.originalSpan(span) catch return error.InternalError;
         if (original.input >= self.index.units.len or original.input >= self.index.project.modules.items.len) return error.InternalError;
         const name = self.src.text(span);
         if (self.index.units[original.input].names.contains(name)) return true;
-        for (self.index.project.modules.items[original.input].imports) |imported| if (std.mem.eql(u8, name, imported.alias)) return true;
+        const prefix = name[0 .. std.mem.indexOfAny(u8, name, " \t\r\n:.") orelse name.len];
+        for (self.index.project.modules.items[original.input].imports) |imported| if (std.mem.eql(u8, prefix, imported.alias)) return true;
         return false;
     }
 };

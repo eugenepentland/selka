@@ -35,6 +35,7 @@ const modules = [_]Module{
     .{ .path = "std_io.my", .text = @embedFile("stdlib/std_io.my") },
     .{ .path = "std_path.my", .text = @embedFile("stdlib/std_path.my") },
     .{ .path = "std_fs.my", .text = @embedFile("stdlib/std_fs.my") },
+    .{ .path = "std_list.my", .text = @embedFile("stdlib/std_list.my") },
     .{ .path = "std_owned.my", .text = @embedFile("stdlib/std_owned.my") },
     .{ .path = "std_owned_map.my", .text = @embedFile("stdlib/std_owned_map.my") },
 };

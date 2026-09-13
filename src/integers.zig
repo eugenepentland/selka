@@ -20,6 +20,11 @@ pub fn binary(ty: typed.Type, op: typed.BinaryOp, left: i128, right: i128) Error
         .le => return .{ .bool = left <= right },
         .gt => return .{ .bool = left > right },
         .ge => return .{ .bool = left >= right },
+        .floor_div, .floor_rem => {
+            if (right == 0) return error.DivisionByZero;
+            const quotient = @divFloor(left, right);
+            return cast(ty, if (op == .floor_div) quotient else left - quotient * right);
+        },
         .div, .rem => {
             if (right == 0) return error.DivisionByZero;
             // Guest integers are at most 64 bits; i128 division cannot overflow.

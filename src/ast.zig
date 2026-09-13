@@ -1,7 +1,7 @@
 //! Untyped expression and statement tables preserve source spelling and locations.
 const effect_set = @import("effect_set.zig");
 const std = @import("std");
-const Acquisition = struct { ty: Span, allocator: NodeId, value: NodeId };
+const Acquisition = struct { ty: Span, allocator: NodeId, value: NodeId, managed: bool = false };
 const FieldAccess = struct { owner: Span, field: Span };
 const Span = @import("source.zig").Span;
 /// Index of a parsed expression in the syntax program.
@@ -15,6 +15,9 @@ pub const BinaryOp = enum {
     mul,
     div,
     rem,
+    floor_div,
+    floor_rem,
+    python_div,
     logical_and,
     logical_or,
     eq,
@@ -45,15 +48,23 @@ pub const BinaryOp = enum {
 /// Parsed simple, additive, and subtractive assignment forms.
 pub const AssignmentOp = enum { set, add, sub };
 /// Parsed negation and Boolean inversion operators.
-pub const UnaryOp = enum { neg, not, f64_sqrt, f64_floor, f64_ceil, f64_trunc, f64_abs, f64_neg, f64_from_u64, f64_to_u64 };
+pub const UnaryOp = enum { neg, not, f64_sqrt, f64_floor, f64_ceil, f64_trunc, f64_abs, f64_neg, f64_from_u64, f64_to_u64, f64_from_i64, f64_to_i64 };
 /// Source type spelling paired with an expression requiring that type.
 pub const TypedValue = struct { ty: Span, value: NodeId };
 /// Parsed expression with source-spelled names and unresolved operand identities.
 pub const Node = struct {
     span: Span,
     data: union(enum) {
+        field_assignment: struct { target: NodeId, value: NodeId },
+        list_literal: []const NodeId,
+        method_call: struct { base: NodeId, name: Span, arguments: []const NodeId },
+        list_operation: struct { base: NodeId, kind: @import("buffer_operations.zig").Kind, arguments: []const NodeId },
+        slice: struct { base: NodeId, start: ?NodeId, end: ?NodeId },
         integer: Span,
         bytes: []const u8,
+        text: []const u8,
+        dictionary_literal: []const NodeId,
+        membership: struct { needle: NodeId, container: NodeId, negate: bool = false },
         boolean: bool,
         unit,
         match_expression: struct { value: NodeId, arms: []const MatchValueArm },
@@ -86,7 +97,7 @@ pub const Node = struct {
         record: struct { name: Span, fields: []const FieldInit },
         update: struct { base: NodeId, fields: []const FieldInit },
         field: struct { base: NodeId, name: Span },
-        call: struct { owner: ?Span = null, type_arguments: []const Span = &.{}, name: Span, arguments: []const NodeId },
+        call: struct { argument_names: []const ?Span = &.{}, evaluation_order: []const usize = &.{}, owner: ?Span = null, type_arguments: []const Span = &.{}, name: Span, arguments: []const NodeId },
         unary: struct { op: UnaryOp, operand: NodeId, op_span: Span },
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
     },
@@ -100,6 +111,7 @@ pub const Statement = struct {
         block: []const StatementId,
         ret: NodeId,
         loop_exit: bool,
+        for_each: struct { name: Span, index_name: ?Span, iterable: NodeId, body: StatementId },
         for_range: struct { name: Span, start: NodeId, end: NodeId, body: StatementId },
         borrow_call: struct { call: NodeId, name: Span, mutable: bool, body: StatementId },
         borrow: struct { split: ?struct { right: Span, middle: NodeId } = null, owner: Span, name: Span, mutable: bool, body: StatementId, range: ?Range = null, whole_slice: bool = false },
@@ -111,7 +123,7 @@ pub const Statement = struct {
         match: struct { value: NodeId, arms: []const MatchArm },
         loop: struct { condition: NodeId, body: StatementId },
         binding: struct { name: Span, annotation: ?Span, mutable: bool, value: NodeId },
-        assignment: struct { name: Span, value: NodeId, op: AssignmentOp, op_span: Span },
+        assignment: struct { python: bool = false, name: Span, value: NodeId, op: AssignmentOp, op_span: Span },
     },
 };
 /// Expression match case with an optional payload binding and its yielded value.
@@ -129,20 +141,22 @@ pub const Record = struct { type_parameters: []const TypeParameter = &.{}, name:
 /// Parsed start and end expressions for a slice range.
 pub const Range = struct { start: NodeId, end: NodeId };
 /// Source name/type and optional reference or slice passing mode.
-pub const Parameter = struct { name: Span, ty: Span, reference: ?bool = null, slice: bool = false };
+pub const Parameter = struct { default_value: ?NodeId = null, name: Span, ty: Span, reference: ?bool = null, slice: bool = false };
 /// Source names of a pool, its nominal handle, and its element type.
 pub const Pool = struct { type_parameters: []const TypeParameter = &.{}, name: Span, handle: Span, element: Span };
 /// Source-spelled wire type and domain decoder/encoder names.
 pub const Codec = struct { wire: Span, decode: Span, encode: Span };
 /// Nominal domain declaration with backing type and optional explicit codec.
-pub const Domain = struct { type_parameters: []const TypeParameter = &.{}, name: Span, backing: Span, codec: ?Codec = null };
+pub const Domain = struct { managed: bool = false, type_parameters: []const TypeParameter = &.{}, name: Span, backing: Span, codec: ?Codec = null };
 /// Declared caller parameter provenance of a returned reference or slice.
 pub const ReturnReference = struct { source: Span, mutable: bool, slice: bool };
 /// Parsed signature, visibility, effect bound, provenance annotation, and body.
 pub const Function = struct { policy: FunctionPolicy = .{}, signature: FunctionSignature, name: Span, body: StatementId };
 /// Source visibility and declared effect bound before name/type resolution.
 pub const FunctionPolicy = struct {
+    python: bool = false,
     constant: bool = false,
+    c_abi: bool = false,
     host: ?Span = null,
     effect_bound: ?effect_set.Bound = null,
     owner: ?Span = null,
@@ -151,6 +165,7 @@ pub const FunctionPolicy = struct {
 };
 /// Named type variable with explicit source-spelled requirements.
 pub const TypeParameter = struct {
+    default_copy: bool = false,
     constant_length: bool = false,
     name: Span,
     requirements: []const Span,

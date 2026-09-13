@@ -1,5 +1,26 @@
 //! Unit test entry point, separate from the production compiler module.
 test {
+    _ = @import("native_test_cli_test.zig");
+    _ = @import("native_test_cases.zig");
+    _ = @import("native_test_snapshot.zig");
+    _ = @import("native_test_plan.zig");
+    _ = @import("native_test_dependencies.zig");
+    _ = @import("native_test_execute.zig");
+    _ = @import("native_test_wire.zig");
+
+    _ = @import("qbe_build_test.zig");
+    _ = @import("qbe_build.zig");
+    _ = @import("qbe_build_cache.zig");
+    _ = @import("qbe_build_host.zig");
+    _ = @import("qbe_build_json.zig");
+    _ = @import("qbe_build_value.zig");
+    _ = @import("qbe_build_options.zig");
+    _ = @import("qbe_build_outputs.zig");
+    _ = @import("qbe_build_io.zig");
+
+    _ = @import("python_core_test.zig");
+    _ = @import("python_calls_test.zig");
+    _ = @import("python_syntax_test.zig");
     _ = @import("unit_test.zig");
     _ = @import("declarations_test.zig");
     _ = @import("vm_fusion_test.zig");
@@ -116,6 +137,14 @@ test {
     _ = @import("codec_json_test.zig");
     _ = @import("call_json_test.zig");
     _ = @import("runtime_values_test.zig");
+    _ = @import("gc_heap_test.zig");
+    _ = @import("managed_values_test.zig");
+    _ = @import("python_values_test.zig");
+    _ = @import("managed_lists_test.zig");
+    _ = @import("python_collections_test.zig");
+    _ = @import("managed_frontend_test.zig");
+    _ = @import("familiar_collections_test.zig");
+    _ = @import("builtin_context_test.zig");
     _ = @import("literal_arguments_test.zig");
     _ = @import("json_document_test.zig");
     _ = @import("standard_library_test.zig");
@@ -129,4 +158,36 @@ test {
 }
 test {
     _ = @import("owned_buffers_test.zig");
+}
+test {
+    _ = @import("familiar_statements_test.zig");
+}
+test {
+    _ = @import("dotted_modules_test.zig");
+}
+
+test {
+    _ = @import("qbe_test.zig");
+}
+
+test {
+    _ = @import("native_ir_test.zig");
+    _ = @import("native_types_test.zig");
+    _ = @import("native_format.zig");
+    _ = @import("native_types.zig");
+    _ = @import("native_descriptors.zig");
+}
+
+test {
+    _ = @import("qbe_build_embed.zig");
+    _ = @import("qbe_build_shapes.zig");
+}
+
+test {
+    _ = @import("native_test_options.zig");
+    _ = @import("native_test_receipts.zig");
+}
+
+test {
+    _ = @import("c_abi_test.zig");
 }

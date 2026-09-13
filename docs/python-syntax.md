@@ -1,0 +1,139 @@
+# Python-style application code
+
+Use Python-style syntax for new application code. The compiler checks types before
+execution and manages ordinary lists, strings and dictionaries with tracing GC.
+There are no allocator arguments or ownership annotations in ordinary data code.
+
+```mylang
+class Node:
+    value: int
+    children: list[Node]
+
+def main() -> int:
+    nodes = [Node(value=40, children=[])]
+    nodes.append(Node(value=2, children=[]))
+    total = 0
+    for node in nodes:
+        total = total + node.value
+    return total
+```
+
+Save this as `main.my`, then run `zig-out/bin/mylang run main.my`. It prints `42`.
+Use `check` instead of `run` for type checking, or `run-project` for a project
+with imports. The [schematic application](../src/schematic/guest/main.my) is a
+larger example; its [instructions](../experiments/schematic/README.md) describe
+rendering and GC stress testing.
+
+Use `def`, `class`, four-space indentation, `#` comments, `True`, `False`, `None`,
+and `and`/`or`/`not`. Semicolons are unnecessary. Parenthesized expressions and
+collection literals may continue across lines. Tabs in indentation are rejected.
+`pass` represents an empty suite. An omitted function return annotation means
+`None`; functions may end naturally or use bare `return`.
+
+Assignments create mutable bindings and infer their types. An annotation is
+needed when inference is ambiguous: `children: list[Node] = []` or
+`counts: dict[str, int] = {}`. Function parameters, record fields, and non-unit
+return types are annotated. The compiler remains statically typed; reassigning
+an `int` local to a string is an error.
+
+Declared functions accept positional and keyword arguments, including defaults:
+
+```python
+def offset(value: int, amount: int = 2) -> int:
+    return value + amount
+
+# offset(value=40) returns 42
+```
+
+Arguments evaluate once in their written order, even when keywords reorder the
+parameters. Defaults must be immutable numeric, boolean, string, or `None`
+literals; mutable collection defaults are rejected. Required parameters precede
+those with defaults. Intrinsics and callback values require positional arguments.
+
+`int` is a checked signed 64-bit integer. Fixed-width `u8` through `u64` and
+`i8` through `i64` remain available for binary formats and host interfaces.
+Representable unsuffixed integer literals adopt an expected integer type.
+`float` is binary64 and accepts literals such as `1.5` and `4.2e1`, ordinary
+arithmetic and comparisons, and `float(integer)` / `int(float)` conversion.
+`/` produces a float; `//` rounds the quotient down and `%` follows that quotient.
+Float-to-int conversion truncates toward zero and traps outside the signed range.
+
+Lists infer a homogeneous element type from nonempty literals. They share mutable
+storage; assignment does not copy their contents. Use `items.append(value)`,
+`len(items)`, `items[index]`, `items[index] = value`, and `items[start:end]`.
+Negative indexes count from the end. Slices create independent list storage and
+copy the selected elements. Nested indexing and expression receivers work.
+
+Strings use ordinary single or double quotes and represent immutable UTF-8 text.
+Indexing and length count Unicode scalar values, rather than bytes or grapheme
+clusters. Use concatenation, equality, `split(separator)`, `separator.join(parts)`,
+and `str(value)` for scalar conversion. Strings also support slices and iteration. `b"..."` represents bytes for binary APIs.
+Dictionaries preserve insertion order and use `int` or `str` keys. Their values
+have a single inferred or annotated type. Updates through an alias are shared.
+Use `counts[key]`, `counts[key] = value`, `counts.get(key, fallback)`,
+`counts.keys()` and `counts.values()`. The latter two return snapshot lists.
+`key in counts`, `value in items`, and `substring in text` support `not in` too.
+Iterating a dictionary visits keys in insertion order; changing its size during
+iteration traps. The [word-count example](../examples/python-word-count/main.my)
+puts these operations together.
+
+`for value in items`, `for index, value in enumerate(items)`, and
+`for index in range(end)` / `range(start, end)` support `break` and `continue`.
+List iteration fixes its initial bound and rejects length changes through aliases.
+
+Classes declare **value records**, with annotated fields and named construction:
+`Node(value=42, children=[])`. They have no inheritance, methods, or implicit
+`self`. Assigning a record copies its fields; managed fields still share their
+underlying collections. Ordinary field assignment updates a record local or a
+record held in a list slot.
+
+Checked errors use the following explicit extension to Python syntax:
+
+```mylang
+def checked(value: int) -> Result[int, int]:
+    if value < 0:
+        return Err(1)
+    return Ok(value)
+
+def main() -> int:
+    match checked(42):
+        case Ok(value):
+            return value
+        case Err(code):
+            return code
+```
+
+`value = checked(42)?` propagates an error when the enclosing function returns a
+compatible `Result`. `Option[T]` represents an optional value: construct it with
+`Some(value)` or contextual `None`, then match `case Some(value)` / `case None`.
+Prelude `list`, `List`, `Result`, and `Option` share their corresponding standard
+library identities. The legacy `std_unit.Unit` empty record remains a separate
+compatibility type; ordinary procedures use `None`.
+
+Generic functions and classes use square brackets, for example
+`def identity[T](value: T) -> T:`. Calls infer type arguments when possible.
+Unconstrained parameters default to copyable values. Additional operations on an
+abstract type require the existing explicit generic contracts.
+
+Projects retain explicit `module`, `import`, and `export` declarations. Dotted
+names call imported functions and name imported types. Host capabilities and
+resource cleanup retain their checked contracts; the
+[advanced feature reference](current-language.md) covers those APIs.
+
+This is a Python-style statically checked language, not a Python interpreter.
+In particular:
+
+- New locals are block-scoped. Initialize a local before an `if` or loop if it is
+  needed afterward; nested blocks can reassign that existing local.
+- Integers have fixed width, conditions require booleans, and records are values.
+- Binary64 arithmetic follows IEEE behavior, including infinities/NaNs on floating
+  division by zero. It does not raise Python exceptions.
+- Lists are homogeneous; ranges currently accept one or two arguments and slices
+  have no step. Changing a list's length during iteration traps.
+- GC collections execute in the VM. Native GC roots and collection transport
+  across host/JSON boundaries are not implemented.
+- Formatting validates Python source and preserves its layout and comments.
+
+Legacy brace syntax remains accepted for existing code and advanced API examples.
+The [historical familiar syntax](familiar-syntax.md) page describes that spelling;
+new application examples should follow this guide.

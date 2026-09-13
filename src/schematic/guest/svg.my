@@ -1,486 +1,254 @@
-module svg;
-import ports as p;
-import sexpr as s;
-import circuit as c;
-import text;
-import draw as d;
-import layout as l;
-import layout_routes as r;
-export render;
-export Rendered;
-result Rendered {
-    ok: bool,
-    err: i64
-}
-fn instanceStart(item: c::Part) -> i64 {
-    {
-        let literal = "<g class=\"component\" data-ref=\"";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::escaped(item.ref);
-    {
-        let literal = "\" data-family=\"";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::escaped(item.family);
-    {
-        let literal = "\" data-value=\"";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::escaped(item.value);
-    {
-        let literal = "\"><title>";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::escaped(item.ref);
-    {
-        let literal = " — ";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::escaped(item.family);
-    {
-        let literal = " ";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::escaped(item.value);
-    {
-        let literal = "</title>";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    return 0;
-}
-fn pinStart(pin: c::Pin, display: text::Span, point: l::Point) -> i64 {
-    {
-        let literal = "<g data-pin=\"";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::decimal(pin.number);
-    {
-        let literal = "\" data-x=\"";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::decimal(point.x);
-    {
-        let literal = "\" data-y=\"";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::decimal(point.y);
-    if pin.nc {
-        {
-            let literal = "\" data-nc=\"true\"><title>";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-        discard text::escaped(pin.net);
-        {
-            let literal = "</title>";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-    } else {
-        {
-            let literal = "\" data-net=\"";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-        discard text::escaped(pin.net);
-        {
-            let literal = "\" data-electrical-net=\"";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-        discard text::escaped(display);
-        {
-            let literal = "\">";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-    }
-    return 0;
-}
-fn finishGroup() -> i64 {
-    {
-        let literal = "</g>";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    return 0;
-}
-fn displayRef(parts: &[]c::Part, index: i64) -> i64 {
-    let item = read_slice(parts, index);
-    let mut n = 0;
-    let mut i = 0;
-    while i <= index {
-        if read_slice(parts, i).kind == item.kind {
-            n += 1;
-        }
-        i += 1;
-    }
-    if item.kind == 0 {
-        {
-            let literal = "U";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-    } else if item.kind == 1 {
-        {
-            let literal = "C";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-    } else if item.kind == 2 {
-        {
-            let literal = "R";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-    } else {
-        {
-            let literal = "L";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-    }
-    return text::decimal(n);
-}
-fn passive(index: i64, parts: &[]c::Part, pins: &[]c::Pin, points: &[]l::Point) -> i64 {
-    let item = read_slice(parts, index);
-    let mut a = new l::Point {
-        x: 0,
-        y: 0
-    };
-    let mut b = a;
-    let mut i = 0;
-    while i < cast<i64>(len_slice(pins)) {
-        let pin = read_slice(pins, i);
-        if pin.part == index {
-            if pin.number == 1 {
-                a = read_slice(points, i);
-            } else {
-                b = read_slice(points, i);
-            }
-        }
-        i += 1;
-    }
-    let x =(a.x + b.x) / 2;
-    let y =(a.y + b.y) / 2;
-    discard instanceStart(item);
-    {
-        let literal = "<g transform=\"translate(";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::decimal(x);
-    {
-        let literal = " ";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::decimal(y);
-    {
-        let literal = ")";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    if a.x == b.x {
-        {
-            let literal = " rotate(90)";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-    }
-    {
-        let literal = "\"><rect class=\"symbol-clear\" x=\"-20\" y=\"-9\" width=\"40\" height=\"18\"/>";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard d::symbol(item.kind);
-    discard finishGroup();
-    if a.x == b.x {
-        let mut top = a.y;
-        let mut bottom = b.y;
-        if top > bottom {
-            top = b.y;
-            bottom = a.y;
-        }
-        discard d::line(x, top, x, y - 20);
-        discard d::line(x, y + 20, x, bottom);
-        discard d::labelStart(x + 10, y + 3, 0);
-    } else {
-        let mut left = a.x;
-        let mut right = b.x;
-        if left > right {
-            left = b.x;
-            right = a.x;
-        }
-        discard d::line(left, y, x - 20, y);
-        discard d::line(x + 20, y, right, y);
-        discard d::labelStart(x, y - 14, 1);
-    }
-    discard displayRef(parts, index);
-    {
-        let literal = " ";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::escaped(item.value);
-    discard d::labelEnd();
-    i = 0;
-    while i < cast<i64>(len_slice(pins)) {
-        let pin = read_slice(pins, i);
-        if pin.part == index {
-            discard pinStart(pin, c::displayNet(pin.net, parts, pins), read_slice(points, i));
-            discard finishGroup();
-        }
-        i += 1;
-    }
-    return finishGroup();
-}
-fn chip(index: i64, parts: &[]c::Part, pins: &[]c::Pin, points: &[]l::Point, pinout: &[]s::Node) -> i64 {
-    discard instanceStart(read_slice(parts, index));
-    discard d::rect(352, 20, 180, l::height(points) - 40);
-    discard d::labelStart(442, 38, 1);
-    discard displayRef(parts, index);
-    {
-        let literal = " ";
-        borrow literal[0..len(literal)] as bytes {
-            discard text::write(bytes);
-        }
-    }
-    discard text::escaped(read_slice(parts, index).family);
-    discard d::labelEnd();
-    let mut i = 0;
-    while i < cast<i64>(len_slice(pins)) {
-        let pin = read_slice(pins, i);
-        if pin.part == index {
-            let point = read_slice(points, i);
-            discard pinStart(pin, c::displayNet(pin.net, parts, pins), read_slice(points, i));
-            if !pin.nc {
-                let mut side = - 1;
-                let mut anchor = 0;
-                if point.x > 442 {
-                    side = 1;
-                    anchor = 2;
-                }
-                discard d::line(point.x, point.y, point.x + side * 40, point.y);
-                discard d::label(point.x - side * 8, point.y + 4, anchor, c::label(pinout, pin.number));
-                discard d::labelStart(point.x + side * 3, point.y - 3, 1);
-                discard text::decimal(pin.number);
-                discard d::labelEnd();
-            }
-            discard finishGroup();
-        }
-        i += 1;
-    }
-    return finishGroup();
-}
-fn portName(item: p::Port) -> i64 {
-    if item.prefix.start != item.prefix.end {
-        discard text::escaped(item.prefix);
-        {
-            let literal = "_";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-    }
-    return text::escaped(item.name);
-}
-fn ports(connections: &[]p::Port) -> i64 {
-    let mut i = 0;
-    while i < cast<i64>(len_slice(connections)) {
-        let item = read_slice(connections, i);
-        {
-            let literal = "<g class=\"port\" data-port=\"";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-        discard portName(item);
-        {
-            let literal = "\" data-direction=\"";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-        discard text::escaped(item.direction);
-        {
-            let literal = "\"><title>";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-        discard portName(item);
-        {
-            let literal = "</title></g>";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-        i += 1;
-    }
-    return 0;
-}
-fn ground(net: text::Span) -> bool {
-    let word = "GND";
-    borrow word[0..len(word)] as bytes {
-        return text::matches(net, bytes);
-    }
-}
-fn routes(segments: &[]r::Segment, connections: &[]p::Port) -> i64 {
-    let mut i = 0;
-    while i < cast<i64>(len_slice(segments)) {
-        let item = read_slice(segments, i);
-        {
-            let literal = "<g class=\"wire\" data-net=\"";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-        discard text::escaped(item.net);
-        {
-            let literal = "\">";
-            borrow literal[0..len(literal)] as bytes {
-                discard text::write(bytes);
-            }
-        }
-        discard d::line(item.x1, item.y1, item.x2, item.y2);
-        if item.terminal {
-            if ground(item.net) {
-                {
-                    let literal = "<g class=\"ground\">";
-                    borrow literal[0..len(literal)] as bytes {
-                        discard text::write(bytes);
-                    }
-                }
-                discard d::line(item.x2, item.y2, item.x2, item.y2 + 6);
-                discard d::line(item.x2 - 7, item.y2 + 6, item.x2 + 7, item.y2 + 6);
-                discard d::line(item.x2 - 4, item.y2 + 9, item.x2 + 4, item.y2 + 9);
-                discard d::line(item.x2 - 1, item.y2 + 12, item.x2 + 1, item.y2 + 12);
-                discard finishGroup();
-            } else if !r::external(item.net, connections) && !l::rail(item.net) {
-                {
-                    let literal = "<g class=\"dangling-marker\">";
-                    borrow literal[0..len(literal)] as bytes {
-                        discard text::write(bytes);
-                    }
-                }
-                discard d::line(item.x2 - 4, item.y2 - 4, item.x2 + 4, item.y2 + 4);
-                discard d::line(item.x2 - 4, item.y2 + 4, item.x2 + 4, item.y2 - 4);
-                discard finishGroup();
-            } else {
-                let mut side = 1;
-                let mut anchor = 0;
-                if item.x2 < 442 {
-                    side = - 1;
-                    anchor = 2;
-                }
-                {
-                    let literal = "<g class=\"net-label\">";
-                    borrow literal[0..len(literal)] as bytes {
-                        discard text::write(bytes);
-                    }
-                }
-                discard d::label(item.x2 + side * 12, item.y2 + 4, anchor, item.net);
-                discard finishGroup();
-            }
-        }
-        discard finishGroup();
-        i += 1;
-    }
-    return 0;
-}
-fn render(heap: allocator, nodes: &[]s::Node, parts: &[]c::Part, pins: &[]c::Pin, pinout: &[]s::Node, connections: &[]p::Port) -> Rendered {
-    let placed = try l::build(heap, parts, pins);
-    borrow placed[0..len_buffer(placed)] as points {
-        let routed = try r::build(heap, parts, pins, points, connections);
-        borrow routed[0..len_buffer(routed)] as segments {
-            {
-                let literal = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 884 ";
-                borrow literal[0..len(literal)] as bytes {
-                    discard text::write(bytes);
-                }
-            }
-            discard text::decimal(l::height(points));
-            {
-                let literal = "\" width=\"884\" height=\"";
-                borrow literal[0..len(literal)] as bytes {
-                    discard text::write(bytes);
-                }
-            }
-            discard text::decimal(l::height(points));
-            {
-                let literal = "\" role=\"img\"><title>";
-                borrow literal[0..len(literal)] as bytes {
-                    discard text::write(bytes);
-                }
-            }
-            discard text::escaped(c::title(nodes));
-            {
-                let literal = "</title><style>svg{background:#0d1117}text{font-family:Arial,sans-serif;font-size:11px;fill:#aaa;stroke:none}line,path{stroke:#4a9;stroke-width:1.5;fill:none}.chip{fill:#16213e;stroke:#4a9eff;stroke-width:2}.symbol rect,.symbol path,.symbol line{fill:none;stroke:#8888cc;stroke-width:1.5}.component>text{font-size:9px;fill:#888}.component>text:first-of-type{font-size:9px}.component:has(.chip)>text{fill:#4a9eff;font-size:12px;font-weight:bold}[data-pin]>line{stroke:#666}[data-pin]>text{font-size:12px}[data-pin]>text:last-child{font-size:9px;fill:#666}.symbol-clear{fill:#0d1117;stroke:none}.ground line{stroke:#d6bb24}.dangling-marker line{stroke:#666}.net-label text{fill:#4a9eff;font-size:11px;font-weight:bold}[data-nc]{display:none}</style><rect width=\"100%\" height=\"100%\" fill=\"#0d1117\"/>";
-                borrow literal[0..len(literal)] as bytes {
-                    discard text::write(bytes);
-                }
-            }
-            discard routes(segments, connections);
-            let mut i = 0;
-            while i < cast<i64>(len_slice(parts)) {
-                if read_slice(parts, i).kind == 0 {
-                    discard chip(i, parts, pins, points, pinout);
-                }
-                i += 1;
-            }
-            i = 0;
-            while i < cast<i64>(len_slice(parts)) {
-                if read_slice(parts, i).kind != 0 {
-                    discard passive(i, parts, pins, points);
-                }
-                i += 1;
-            }
-            discard ports(connections);
-            {
-                let literal = "</svg>";
-                borrow literal[0..len(literal)] as bytes {
-                    discard text::write(bytes);
-                }
-            }
-        }
-    }
-    return new Rendered.ok(true);
-}
+module svg
+import schematic
+import ports as p
+import sexpr as s
+import circuit as c
+import text
+import draw as d
+import layout as l
+import layout_routes as r
+export render
+
+
+def instanceStart(item: c.Part):
+    text.write(b"<g class=\"component\" data-ref=\"")
+    text.escaped(item.ref)
+    text.write(b"\" data-family=\"")
+    text.escaped(item.family)
+    text.write(b"\" data-value=\"")
+    text.escaped(item.value)
+    text.write(b"\"><title>")
+    text.escaped(item.ref)
+    text.write(b" — ")
+    text.escaped(item.family)
+    text.write(b" ")
+    text.escaped(item.value)
+    text.write(b"</title>")
+    return
+
+
+def pinStart(pin: c.Pin, display: text.Span, point: l.Point):
+    text.write(b"<g data-pin=\"")
+    text.decimal(pin.number)
+    text.write(b"\" data-x=\"")
+    text.decimal(point.x)
+    text.write(b"\" data-y=\"")
+    text.decimal(point.y)
+    if pin.nc:
+        text.write(b"\" data-nc=\"true\"><title>")
+        text.escaped(pin.net)
+        text.write(b"</title>")
+    else:
+        text.write(b"\" data-net=\"")
+        text.escaped(pin.net)
+        text.write(b"\" data-electrical-net=\"")
+        text.escaped(display)
+        text.write(b"\">")
+    return
+
+
+def finishGroup():
+    text.write(b"</g>")
+    return
+
+
+def displayRef(parts: list[c.Part], index: int):
+    item = parts[index]
+    n = 0
+    i = 0
+    while i <= index:
+        if parts[i].kind == item.kind:
+            n += 1
+        i += 1
+    if item.kind == 0:
+        text.write(b"U")
+    elif item.kind == 1:
+        text.write(b"C")
+    elif item.kind == 2:
+        text.write(b"R")
+    else:
+        text.write(b"L")
+    return text.decimal(n)
+
+
+def passive(index: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point]):
+    item = parts[index]
+    a = l.Point(
+        x=0,
+        y=0
+    )
+    b = a
+    i = 0
+    while i < len(pins):
+        pin = pins[i]
+        if pin.part == index:
+            if pin.number == 1:
+                a = points[i]
+            else:
+                b = points[i]
+        i += 1
+    x =(a.x + b.x) // 2
+    y =(a.y + b.y) // 2
+    instanceStart(item)
+    text.write(b"<g transform=\"translate(")
+    text.decimal(x)
+    text.write(b" ")
+    text.decimal(y)
+    text.write(b")")
+    if a.x == b.x:
+        text.write(b" rotate(90)")
+    text.write(b"\"><rect class=\"symbol-clear\" x=\"-20\" y=\"-9\" width=\"40\" height=\"18\"/>")
+    d.symbol(item.kind)
+    finishGroup()
+    if a.x == b.x:
+        top = a.y
+        bottom = b.y
+        if top > bottom:
+            top = b.y
+            bottom = a.y
+        d.line(x, top, x, y - 20)
+        d.line(x, y + 20, x, bottom)
+        d.labelStart(x + 10, y + 3, 0)
+    else:
+        left = a.x
+        right = b.x
+        if left > right:
+            left = b.x
+            right = a.x
+        d.line(left, y, x - 20, y)
+        d.line(x + 20, y, right, y)
+        d.labelStart(x, y - 14, 1)
+    displayRef(parts, index)
+    text.write(b" ")
+    text.escaped(item.value)
+    d.labelEnd()
+    i = 0
+    while i < len(pins):
+        pin = pins[i]
+        if pin.part == index:
+            pinStart(pin, c.displayNet(pin.net, parts, pins), points[i])
+            finishGroup()
+        i += 1
+    return finishGroup()
+
+
+def chip(index: int, parts: list[c.Part], pins: list[c.Pin], points: list[l.Point], pinout: list[s.Node]):
+    instanceStart(parts[index])
+    d.rect(352, 20, 180, l.height(points) - 40)
+    d.labelStart(442, 38, 1)
+    displayRef(parts, index)
+    text.write(b" ")
+    text.escaped(parts[index].family)
+    d.labelEnd()
+    i = 0
+    while i < len(pins):
+        pin = pins[i]
+        if pin.part == index:
+            point = points[i]
+            pinStart(pin, c.displayNet(pin.net, parts, pins), points[i])
+            if not pin.nc:
+                side = - 1
+                anchor = 0
+                if point.x > 442:
+                    side = 1
+                    anchor = 2
+                d.line(point.x, point.y, point.x + side * 40, point.y)
+                d.label(point.x - side * 8, point.y + 4, anchor, c.label(pinout, pin.number))
+                d.labelStart(point.x + side * 3, point.y - 3, 1)
+                text.decimal(pin.number)
+                d.labelEnd()
+            finishGroup()
+        i += 1
+    return finishGroup()
+
+
+def portName(item: p.Port):
+    if item.prefix.start != item.prefix.end:
+        text.escaped(item.prefix)
+        text.write(b"_")
+    return text.escaped(item.name)
+
+
+def ports(connections: list[p.Port]):
+    i = 0
+    while i < len(connections):
+        item = connections[i]
+        text.write(b"<g class=\"port\" data-port=\"")
+        portName(item)
+        text.write(b"\" data-direction=\"")
+        text.escaped(item.direction)
+        text.write(b"\"><title>")
+        portName(item)
+        text.write(b"</title></g>")
+        i += 1
+    return
+
+
+def ground(net: text.Span) -> bool:
+    return text.matches(net, b"GND")
+
+
+def routes(segments: list[r.Segment], connections: list[p.Port]):
+    i = 0
+    while i < len(segments):
+        item = segments[i]
+        text.write(b"<g class=\"wire\" data-net=\"")
+        text.escaped(item.net)
+        text.write(b"\">")
+        d.line(item.x1, item.y1, item.x2, item.y2)
+        if item.terminal:
+            if ground(item.net):
+                text.write(b"<g class=\"ground\">")
+                d.line(item.x2, item.y2, item.x2, item.y2 + 6)
+                d.line(item.x2 - 7, item.y2 + 6, item.x2 + 7, item.y2 + 6)
+                d.line(item.x2 - 4, item.y2 + 9, item.x2 + 4, item.y2 + 9)
+                d.line(item.x2 - 1, item.y2 + 12, item.x2 + 1, item.y2 + 12)
+                finishGroup()
+            elif not r.external(item.net, connections) and not l.rail(item.net):
+                text.write(b"<g class=\"dangling-marker\">")
+                d.line(item.x2 - 4, item.y2 - 4, item.x2 + 4, item.y2 + 4)
+                d.line(item.x2 - 4, item.y2 + 4, item.x2 + 4, item.y2 - 4)
+                finishGroup()
+            else:
+                side = 1
+                anchor = 0
+                if item.x2 < 442:
+                    side = - 1
+                    anchor = 2
+                text.write(b"<g class=\"net-label\">")
+                d.label(item.x2 + side * 12, item.y2 + 4, anchor, item.net)
+                finishGroup()
+        finishGroup()
+        i += 1
+    return
+
+
+def render(drawing: schematic.Schematic):
+    nodes = drawing.nodes
+    parts = drawing.parts
+    pins = drawing.pins
+    pinout = drawing.pinout
+    connections = drawing.connections
+    points = l.build(parts, pins)
+    segments = r.build(parts, pins, points, connections)
+    text.write(b"<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 884 ")
+    text.decimal(l.height(points))
+    text.write(b"\" width=\"884\" height=\"")
+    text.decimal(l.height(points))
+    text.write(b"\" role=\"img\"><title>")
+    text.escaped(c.title(nodes))
+    text.write(b"</title><style>svg{background:#0d1117}text{font-family:Arial,sans-serif;font-size:11px;fill:#aaa;stroke:none}line,path{stroke:#4a9;stroke-width:1.5;fill:none}.chip{fill:#16213e;stroke:#4a9eff;stroke-width:2}.symbol rect,.symbol path,.symbol line{fill:none;stroke:#8888cc;stroke-width:1.5}.component>text{font-size:9px;fill:#888}.component>text:first-of-type{font-size:9px}.component:has(.chip)>text{fill:#4a9eff;font-size:12px;font-weight:bold}[data-pin]>line{stroke:#666}[data-pin]>text{font-size:12px}[data-pin]>text:last-child{font-size:9px;fill:#666}.symbol-clear{fill:#0d1117;stroke:none}.ground line{stroke:#d6bb24}.dangling-marker line{stroke:#666}.net-label text{fill:#4a9eff;font-size:11px;font-weight:bold}[data-nc]{display:none}</style><rect width=\"100%\" height=\"100%\" fill=\"#0d1117\"/>")
+    routes(segments, connections)
+    i = 0
+    while i < len(parts):
+        if parts[i].kind == 0:
+            chip(i, parts, pins, points, pinout)
+        i += 1
+    i = 0
+    while i < len(parts):
+        if parts[i].kind != 0:
+            passive(i, parts, pins, points)
+        i += 1
+    ports(connections)
+    text.write(b"</svg>")
+    return

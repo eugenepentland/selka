@@ -7,7 +7,8 @@ from pathlib import Path
 import time
 from .storage import digest, inventory, locked, read_json, snapshot, source_files, verify_snapshot, write_json
 
-LANGUAGES = frozenset(('my', 'python', 'zig'))
+LANGUAGES = frozenset(('my', 'python', 'zig', 'rust'))
+TRIO_LANGUAGES = frozenset(('my', 'python', 'zig'))
 ARMS = ('main', 'language-focused', 'declaration-store')
 
 
@@ -186,7 +187,7 @@ def matched_trio(roots):
     if len(roots) != 3:
         raise ValueError('grading requires three sealed languages')
     manifests = [load(root) for root in roots]
-    if {item['language'] for item in manifests} != LANGUAGES:
+    if {item['language'] for item in manifests} != TRIO_LANGUAGES:
         raise ValueError('grading requires my, python and zig exactly once')
     if any(item['phase'] != 'sealed' for item in manifests):
         raise ValueError('all three submissions must be sealed before grading')

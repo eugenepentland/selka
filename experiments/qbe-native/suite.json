@@ -1,0 +1,44 @@
+{
+  "version": "qbe-performance-suite-v1",
+  "warmups": 5,
+  "samples": 21,
+  "maximum_ratio": 1.1,
+  "workloads": [
+    {
+      "name": "integers",
+      "source": "integers.my",
+      "sha256": "11b3488869e0b37bd1f184f28936f93467599169851da649b8b644535eb74edb",
+      "expected": 47999055
+    },
+    {
+      "name": "calls",
+      "source": "calls.my",
+      "sha256": "320aecd9376c25b3aa0df7542c8f35d3727d96c93b8b3dabee1fbbcaf5da6677",
+      "expected": 499999500000
+    },
+    {
+      "name": "aggregates",
+      "source": "aggregates.my",
+      "sha256": "b8ca1b53bb41e1a901eb547074a50a037106be0388d82c1985de80bd69cc0021",
+      "expected": 600000
+    },
+    {
+      "name": "floats",
+      "source": "floats.my",
+      "sha256": "e8e960be71bbe0165b3a73e2b028dc4343028e8829e0892b12a154f50a139731",
+      "expected": 500000
+    },
+    {
+      "name": "collections",
+      "source": "collections.my",
+      "sha256": "b8cdd8845fa859dd571608675f17477a99e42cc452b4340b57d8f0afbed2a39f",
+      "expected": 84000
+    },
+    {
+      "name": "json",
+      "source": "json.my",
+      "sha256": "85c180733d7a2711508900faac0af2249fa1de1be79d44348ad9a3cfa21943d3",
+      "expected": 84000
+    }
+  ]
+}

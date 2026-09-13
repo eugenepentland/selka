@@ -147,6 +147,7 @@ pub const Graph = struct {
     }
     fn roots(self: *Graph) Error!void {
         for (self.templates.declarations.items, 0..) |declaration, id| {
+            if (declaration.builtin_name != null) continue;
             var arguments: [16]Id = undefined;
             for (declaration.parameters, 0..) |parameter, i| arguments[i] = try self.intern(.{ .base = .{ .parameter = .{ .declaration = id, .index = i } }, .arguments = &.{} }, parameter.name);
             try self.need(try self.intern(.{ .base = .{ .named = id }, .arguments = arguments[0..declaration.parameters.len] }, declaration.name));
@@ -201,7 +202,7 @@ pub const Graph = struct {
                 const top = stack.items.len - 1;
                 const visit = stack.items[top];
                 const node = self.nodes.items[@backingInt(visit.id)];
-                if (visit.next == node.edges.len) {
+                if (visit.next == node.edges.len or (node.key.base == .named and self.templates.declarations.items[node.key.base.named].managed)) {
                     self.nodes.items[@backingInt(visit.id)].state = .complete;
                     _ = stack.pop();
                     continue;

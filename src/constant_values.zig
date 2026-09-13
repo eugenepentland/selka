@@ -1,4 +1,5 @@
 //! Bounded scalar constant evaluation with checked arithmetic and acyclic dependencies.
+const call_arguments = @import("call_arguments.zig");
 const std = @import("std");
 const ast = @import("ast.zig");
 const typed = @import("typed.zig");
@@ -99,7 +100,8 @@ const Evaluator = struct {
             if (!std.mem.eql(u8, name, target)) continue;
             if (function.policy.host != null or function.signature.type_parameters.len != 0 or function.signature.return_reference != null)
                 return self.context.sink.fail(eEffect, span, "compile-time calls cannot use host functions, generics or references");
-            if (function.signature.parameters.len != call.arguments.len) return self.context.sink.fail("E_ARITY", span, "compile-time argument count differs from function parameters");
+            const bound = try call_arguments.bind(self.context.sink.allocator, self.context.src, call, function.signature.parameters, self.context.sink);
+            call_arguments.release(self.context.sink.allocator, call, bound);
             _ = try self.scalar(function.signature.return_type);
             for (function.signature.parameters) |parameter| {
                 if (parameter.reference != null or parameter.slice) return self.context.sink.fail(eEffect, parameter.ty, "compile-time parameters cannot borrow runtime memory");
@@ -153,7 +155,7 @@ const Evaluator = struct {
                 try self.validateStatement(loop.body, depth + 1);
             },
             .for_range => |range| {
-                try self.validateExpression(range.start, depth + 1);
+                if (self.context.program.nodes.items[@backingInt(range.start)].data != .unit) try self.validateExpression(range.start, depth + 1);
                 try self.validateExpression(range.end, depth + 1);
                 const before = self.frame.locals.items.len;
                 defer self.frame.locals.shrinkRetainingCapacity(before);
@@ -163,12 +165,18 @@ const Evaluator = struct {
             else => return self.context.sink.fail(eEffect, stmt.span, "compile-time function bodies permit scalar locals, branches and loops; runtime memory and effects are excluded"),
         }
     }
-    fn executeCall(self: *Evaluator, invocation: Call, span: source.Span, depth: usize) Error!typed.Value {
-        const index = try self.callIndex(invocation, span);
+    fn executeCall(self: *Evaluator, input: Call, span: source.Span, depth: usize) Error!typed.Value {
+        const index = try self.callIndex(input, span);
         const function = self.context.program.functions[index];
+        const invocation = try call_arguments.bind(self.context.sink.allocator, self.context.src, input, function.signature.parameters, self.context.sink);
+        defer call_arguments.release(self.context.sink.allocator, input, invocation);
         const arguments = try self.context.sink.allocator.alloc(typed.Value, invocation.arguments.len);
         defer self.context.sink.allocator.free(arguments);
-        for (invocation.arguments, function.signature.parameters, arguments) |argument, parameter, *value| {
+        for (0..invocation.arguments.len) |source_index| {
+            const position = call_arguments.parameterPosition(invocation, source_index);
+            const argument = invocation.arguments[position];
+            const parameter = function.signature.parameters[position];
+            const value = &arguments[position];
             value.* = try self.expression(argument, depth + 1);
             if (value.typeOf() != try self.scalar(parameter.ty)) return self.context.sink.fail("E_TYPE", parameter.ty, "compile-time argument type differs from parameter");
         }
@@ -244,7 +252,7 @@ const Evaluator = struct {
         self.frame.locals.items[index].value = value;
     }
     fn rangeLoop(self: *Evaluator, range: Range, depth: usize) Error!Flow {
-        var start = try self.expression(range.start, depth + 1);
+        var start: typed.Value = if (self.context.program.nodes.items[@backingInt(range.start)].data == .unit) .{ .i64 = 0 } else try self.expression(range.start, depth + 1);
         const end = try self.expression(range.end, depth + 1);
         if (!start.typeOf().isInteger() or start.typeOf() != end.typeOf()) return self.context.sink.fail("E_TYPE", range.name, "compile-time range requires matching integers");
         const before = self.frame.locals.items.len;

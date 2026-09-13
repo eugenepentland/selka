@@ -86,9 +86,24 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
                 .resource_io => |io| graph.direct(index, typed.resourceKind(function.scope.locals[@backingInt(io.owner)].ty, program.records).?.effect(), node.span),
                 .environment_get => graph.direct(index, .environment, node.span),
                 .external_read => |read| graph.direct(index, read.kind.effect(), node.span),
-                .json_codec, .acquire_buffer, .acquire_pool => graph.direct(index, .allocation, node.span),
-                .buffer_operation => |op| if (op.kind.allocates()) {
-                    graph.direct(index, .allocation, node.span);
+                .json_codec, .acquire_pool => graph.direct(index, .allocation, node.span),
+                .cast => if (node.ty.isAggregate() and program.records[node.ty.recordIndex()].collection.kind == .string) {
+                    graph.direct(index, .managed_allocation, node.span);
+                },
+                .array => if (node.ty.isAggregate() and program.records[node.ty.recordIndex()].managed) {
+                    graph.direct(index, .managed_allocation, node.span);
+                },
+                .binary => |binary| if (binary.op == .add and node.ty.isAggregate() and program.records[node.ty.recordIndex()].collection.kind == .string) {
+                    graph.direct(index, .managed_allocation, node.span);
+                },
+                .index => if (node.ty.isAggregate() and program.records[node.ty.recordIndex()].collection.kind == .string) {
+                    graph.direct(index, .managed_allocation, node.span);
+                },
+                .acquire_buffer => graph.direct(index, if (program.records[node.ty.recordIndex()].managed) .managed_allocation else .allocation, node.span),
+                .buffer_operation => |op| {
+                    const managed = program.records[function.scope.locals[@backingInt(op.owner)].ty.recordIndex()].managed;
+                    const dictionary = program.records[function.scope.locals[@backingInt(op.owner)].ty.recordIndex()].collection.kind == .dictionary;
+                    if (managed and @import("buffer_operations.zig").managedAllocation(op.kind, dictionary)) graph.direct(index, .managed_allocation, node.span) else if (op.kind.allocates()) graph.direct(index, .allocation, node.span);
                 },
                 .invoke => |call| {
                     const contract = @import("callables.zig").signature(program.nodes[@backingInt(call.callee)].ty, program.records).?;
@@ -112,20 +127,16 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
                 .propagate,
                 .read_slice,
                 .len_slice,
-                .cast,
                 .wrap,
                 .variant,
                 .block_value,
                 .unwrap,
-                .array,
-                .index,
                 .replace,
                 .length,
                 .record,
                 .update,
                 .field,
                 .unary,
-                .binary,
                 => {},
             }
         };
@@ -211,9 +222,27 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
             },
             .environment_get => graph.direct(index, .environment, instruction.span),
             .external_read => |read| graph.direct(index, read.kind.effect(), instruction.span),
-            .begin_region, .json_codec, .acquire_buffer, .acquire_pool => graph.direct(index, .allocation, instruction.span),
-            .buffer_operation => |op| if (op.kind.allocates()) {
-                graph.direct(index, .allocation, instruction.span);
+            .begin_region, .json_codec, .acquire_pool => graph.direct(index, .allocation, instruction.span),
+            .cast_integer => |ty| if (ty.isAggregate() and program.records[ty.recordIndex()].collection.kind == .string) {
+                graph.direct(index, .managed_allocation, instruction.span);
+            },
+            .make_record => |record| if (try managedType(program.records, record.ty)) {
+                graph.direct(index, .managed_allocation, instruction.span);
+            },
+            .binary_integer => |binary| if (binary.op == .add and binary.ty.isAggregate() and program.records[binary.ty.recordIndex()].collection.kind == .string) {
+                graph.direct(index, .managed_allocation, instruction.span);
+            },
+            .get_index => |ty| if (ty.isAggregate() and program.records[ty.recordIndex()].collection.kind == .string) {
+                graph.direct(index, .managed_allocation, instruction.span);
+            },
+            .acquire_buffer => |ty| graph.direct(index, if (try managedType(program.records, ty)) .managed_allocation else .allocation, instruction.span),
+            .buffer_operation => |op| {
+                if (@backingInt(op.owner) >= function.scope.locals.len) return error.InternalError;
+                const managed = try managedType(program.records, function.scope.locals[@backingInt(op.owner)].ty);
+                const dictionary = program.records[function.scope.locals[@backingInt(op.owner)].ty.recordIndex()].collection.kind == .dictionary;
+                if (managed and @import("buffer_operations.zig").managedAllocation(op.kind, dictionary)) {
+                    graph.direct(index, .managed_allocation, instruction.span);
+                } else if (op.kind.allocates()) graph.direct(index, .allocation, instruction.span);
             },
             .invoke => |invocation| {
                 const ty = invocation.ty;
@@ -241,7 +270,6 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
             .push_bool,
             .push_unit,
             .push_integer,
-            .cast_integer,
             .wrap_domain,
             .make_variant,
             .switch_variant,
@@ -250,11 +278,8 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
             .cmp_handle,
             .unwrap_domain,
             .neg_integer,
-            .binary_integer,
-            .make_record,
             .update_record,
             .get_field,
-            .get_index,
             .replace_index,
             .array_length,
             .split_borrow,
@@ -359,4 +384,10 @@ fn seedHost(graph: *Graph, index: usize, bound: ?sets.Bound, span: Span) error{I
     const allowed = (bound orelse return error.InternalError).allowed;
     if (allowed & ~sets.all != 0 or allowed & sets.bit(.host) == 0) return error.InternalError;
     for (std.meta.tags(sets.Effect)) |effect| if (allowed & sets.bit(effect) != 0) graph.direct(index, effect, span);
+}
+
+fn managedType(records: []const typed.Record, ty: typed.Type) ValidateError!bool {
+    if (!ty.isAggregate()) return error.InternalError;
+    if (ty.recordIndex() >= records.len) return error.InternalError;
+    return records[ty.recordIndex()].managed;
 }

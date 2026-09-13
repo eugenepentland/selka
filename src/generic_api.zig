@@ -14,7 +14,7 @@ const Location = struct { path: []const u8, start: usize, end: usize, line: usiz
 pub const Template = struct {
     name: []const u8,
     module: []const u8,
-    kind: enum { function, record, tagged_union, result, enumeration, buffer, pool, handle },
+    kind: enum { function, record, tagged_union, result, enumeration, list, buffer, pool, handle },
     contract: Contract,
     shape: Shape = .{},
     imports: []const @import("source_receipt.zig").Import,
@@ -50,8 +50,9 @@ const Context = struct {
     fn parameters(self: Context, parameters_: []const ast.TypeParameter) ![]const Parameter {
         const out = try self.allocator.alloc(Parameter, parameters_.len);
         for (out, parameters_) |*item, parameter| {
-            const requirements = try self.allocator.alloc([]const u8, parameter.requirements.len);
-            for (requirements, parameter.requirements) |*requirement, span| requirement.* = self.src().text(span);
+            const requirements = try self.allocator.alloc([]const u8, if (parameter.default_copy) 1 else parameter.requirements.len);
+            if (parameter.default_copy) requirements[0] = "copy";
+            for (requirements[0..parameter.requirements.len], parameter.requirements) |*requirement, span| requirement.* = self.src().text(span);
             const operations = try self.allocator.alloc(Operation, parameter.operation_requirements.len);
             for (operations, parameter.operation_requirements) |*operation, original| operation.* = .{
                 .name = self.src().text(original.name),
@@ -148,7 +149,7 @@ pub fn collect(arena: std.mem.Allocator, index: *const interfaces.Index) std.mem
         for (unit.syntax.types.buffers) |buffer| {
             if (buffer.type_parameters.len == 0 or !context.visible(buffer.name)) continue;
             var item = try context.base(buffer.name, buffer.type_parameters);
-            item.kind = .buffer;
+            item.kind = if (buffer.managed) .list else .buffer;
             item.shape.element = context.src().text(buffer.backing);
             try out.append(arena, item);
         }

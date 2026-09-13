@@ -50,7 +50,7 @@ fn canonical(allocator: std.mem.Allocator, program: typed.Program, function: typ
     } else {
         writer.writeAll("return value\n") catch return error.OutOfMemory;
     }
-    writer.print("effects {d} bound {?d}\n", .{ function.policy.effects, if (function.policy.effect_bound) |bound| @as(?u8, bound.allowed) else null }) catch return error.OutOfMemory;
+    writer.print("effects {d} bound {?d}\n", .{ function.policy.effects, if (function.policy.effect_bound) |bound| @as(?@import("effect_set.zig").Mask, bound.allowed) else null }) catch return error.OutOfMemory;
     writer.print("conversion {}\n", .{function.policy.conversion}) catch return error.OutOfMemory;
     if (function.policy.owner) |owner| writer.print("owner domain {s}\n", .{typed.typeName(owner, program.records)}) catch return error.OutOfMemory else writer.writeAll("owner none\n") catch return error.OutOfMemory;
     writer.print("private {}\n", .{function.policy.restricted}) catch return error.OutOfMemory;

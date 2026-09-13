@@ -1,0 +1,3 @@
+const std=@import("std");const m=@import("model.zig");
+pub fn reserve(stock:*std.StringHashMap(i64),active:*std.StringHashMap(m.Reservation),token:[]const u8,item:[]const u8,n:i64)![]const u8{if(active.contains(token))return "duplicate-token";const q=stock.get(item) orelse return "unknown-item";if(q<n)return "insufficient";try stock.put(item,q-n);try active.put(token,.{.item=item,.quantity=n});return "reserved";}
+pub fn release(stock:*std.StringHashMap(i64),active:*std.StringHashMap(m.Reservation),token:[]const u8)![]const u8{const r=active.get(token) orelse return "unknown-token";try stock.put(r.item,stock.get(r.item).?+r.quantity);_=active.remove(token);return "released";}

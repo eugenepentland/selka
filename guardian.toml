@@ -3,7 +3,7 @@ required_inputs = ["src/compiler.zig", "src/main.zig", "src/root_test.zig", "tes
 
 [policy]
 profile = "strict"
-# Pin Value at eight distinct runtime families; all new type-size offenders still block.
+# Track deliberate runtime families and memory options; new type-size growth still blocks.
 ratchet = ["type-size"]
 
 [gate]

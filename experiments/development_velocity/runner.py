@@ -37,6 +37,7 @@ ROLES = ('candidate', 'comparator')
 DEFAULT_ARMS = {'candidate': {'label': 'my', 'language': 'my', 'interface': 'files'},
                 'comparator': {'label': 'python', 'language': 'python', 'interface': 'files'}}
 STORE_TOOLS = {'store_importer': 'scripts/store.py', 'store_server': 'scripts/store_server.py'}
+LANGUAGES = ('my', 'python', 'zig', 'rust')
 
 
 GATEWAYS = {'files': telemetry.ObservedGateway, 'store': telemetry.StoreGateway}
@@ -48,6 +49,28 @@ OPERATIONS = {'files': ('command', 'check', 'finish', 'output', HANDOFF),
               'store': telemetry.STORE_VERBS + (HANDOFF,)}
 # Onboarding in a store arm has to have committed each of these before the clock.
 STORE_PRACTICE_OPS = ('add', 'remove')
+
+
+def command_plan(language):
+    """Exact frozen verification plan for a files arm; Zig deliberately omits Guardian."""
+    if language == 'my':
+        return [{'phase': 'run', 'argv': ['/tools/byte_io', '--project', '/work', '--timings=json']}]
+    if language == 'python':
+        return [{'phase': 'run', 'argv': ['/usr/bin/python3', '-B', '/tools/profile_python']}]
+    if language == 'zig':
+        return [
+            {'phase': 'check', 'argv': ['/tools/zig/zig', 'test', 'main.zig', '-ODebug']},
+            {'phase': 'build', 'argv': ['/tools/zig/zig', 'build-exe', 'main.zig', '-OReleaseSafe',
+                                       '-femit-bin=/cache/app']},
+            {'phase': 'run', 'argv': ['/cache/app']},
+        ]
+    if language == 'rust':
+        return [
+            {'phase': 'build', 'argv': ['/tools/rust/bin/rustc', '--edition=2021', '-O',
+                                       '/work/main.rs', '-o', '/work/app']},
+            {'phase': 'run', 'argv': ['/work/app']},
+        ]
+    raise ValueError('unknown arm language')
 
 
 def store_module(tools):
@@ -118,8 +141,10 @@ def arm_definitions(arms):
             raise ValueError('each arm records label, language and interface')
         if not isinstance(arm['label'], str) or re.fullmatch('[a-z][a-z0-9-]{0,31}', arm['label']) is None:
             raise ValueError('arm label must be a plain lowercase name')
-        if arm['language'] not in ('my', 'python') or arm['interface'] not in telemetry.INTERFACES:
+        if arm['language'] not in LANGUAGES or arm['interface'] not in telemetry.INTERFACES:
             raise ValueError('unknown arm language or interface')
+        if arm['interface'] == 'store' and arm['language'] != 'my':
+            raise ValueError('the declaration store interface exists only for .my')
         result[role] = {key: arm[key] for key in ('label', 'language', 'interface')}
     if result['candidate']['label'] == result['comparator']['label']:
         raise ValueError('arm labels must be distinct')
@@ -138,11 +163,25 @@ def arm_row(reg, arm):
     raise ValueError('unregistered attempt')
 
 
-def freeze(study, cohort_name, readiness_path, *, pairs=1, arms=None):
+def freeze(study, cohort_name, readiness_path, *, pairs=1, arms=None, language_tools=None):
     """No task clocks start here. All construction checks must already pass."""
     study = Path(study).resolve(strict=True)
     arms = arm_definitions(arms)
     ordered = [arms[role] for role in ROLES]
+    language_tools = {} if language_tools is None else dict(language_tools)
+    if set(language_tools) - {'zig', 'rust'}:
+        raise ValueError('language tools may provide only zig and rust toolchains')
+    external = {}
+    if any(arm['language'] == 'zig' for arm in ordered):
+        zig = Path(language_tools.get('zig', ''))
+        if not zig.is_dir() or not (zig / 'zig').is_file() or not (zig / 'lib').is_dir():
+            raise ValueError('a complete Zig toolchain directory is required')
+        external['zig'] = zig.resolve(strict=True)
+    if any(arm['language'] == 'rust' for arm in ordered):
+        rust = Path(language_tools.get('rust', ''))
+        if not rust.is_dir() or not (rust / 'bin/rustc').is_file() or not (rust / 'lib').is_dir():
+            raise ValueError('a complete Rust toolchain directory is required')
+        external['rust'] = rust.resolve(strict=True)
     for arm in ordered:
         if arm['interface'] == 'store':
             for relative in STORE_TOOLS.values():
@@ -179,10 +218,11 @@ def freeze(study, cohort_name, readiness_path, *, pairs=1, arms=None):
                'stdlib': str(toolchain / 'stdlib'), 'workflow': str(toolchain / 'workflow')},
         'python': {'profile_python': str(toolchain / 'profile_python.py')},
     }
-    commands = {
-        'my': [{'phase': 'run', 'argv': ['/tools/byte_io', '--project', '/work', '--timings=json']}],
-        'python': [{'phase': 'run', 'argv': ['/usr/bin/python3', '-B', '/tools/profile_python']}],
-    }
+    commands = {language: command_plan(language) for language in {arm['language'] for arm in ordered}}
+    if any(arm['language'] == 'zig' for arm in ordered):
+        by_language['zig'] = {'zig': str(external['zig'])}
+    if any(arm['language'] == 'rust' for arm in ordered):
+        by_language['rust'] = {'rust': str(external['rust'])}
     toolchains, adapters, store_tools, practice_receipts = {}, {}, {}, {}
     for arm in ordered:
         label, language = arm['label'], arm['language']
@@ -243,7 +283,10 @@ def freeze(study, cohort_name, readiness_path, *, pairs=1, arms=None):
             if canonical_my and language == 'my':
                 canonicalize(baseline, toolchain / 'mylang', store_source)
             shutil.copytree(directory / 'pack/public', baseline / '.trial-public')
-            shutil.copy2(HERE / ('PARTICIPANT-STORE.md' if arm['interface'] == 'store' else 'PARTICIPANT.md'),
+            guide = ('PARTICIPANT-STORE.md' if arm['interface'] == 'store' else
+                     'PARTICIPANT-ZIG.md' if language == 'zig' else
+                     'PARTICIPANT-RUST.md' if language == 'rust' else 'PARTICIPANT.md')
+            shutil.copy2(HERE / guide,
                          baseline / '.trial-public/WORKFLOW.md')
             shutil.copy2(HERE / 'QUALITY.md', baseline / '.trial-public/QUALITY.md')
             if language == 'my':
@@ -325,15 +368,18 @@ def prepare(root, task, pair, arm):
     language = definition['language']
     attempt.parent.mkdir(exist_ok=True)
     baseline = Path(root) / task / (arm + '-baseline')
+    transport_names = {'my': ('main.my', 'io.my'), 'python': ('main.py',),
+                       'zig': ('main.zig',), 'rust': ('main.rs', 'json.rs')}[language]
     protected = [str(p.relative_to(baseline)) for p in baseline.rglob('*') if p.is_file() and (
-        '.trial-public' in p.parts or p.name in ('main.my', 'main.py', 'io.my'))]
+        '.trial-public' in p.parts or str(p.relative_to(baseline)) in transport_names)]
     config = reg['configuration']
     practice = attempt.parent / (arm + '-practice-pack')
     shutil.copytree(config['practice'][arm]['path'], practice)
     participant = '-'.join((reg['candidate_id'], task, pair, arm))
     session.prepare(attempt, baseline, language=language, block=task, cohort=reg['candidate_id'],
                     participant=participant, model=config['model'], pair_id=pair, kind='calibration',
-                    arm='declaration-store' if definition['interface'] == 'store' else 'main',
+                    arm=('declaration-store' if definition['interface'] == 'store' else
+                         'language-focused' if language == 'zig' else 'main'),
                     preparation_seconds=1200, task_seconds=int(row['budget_seconds']),
                     protected=protected, max_submissions=20)
     shutil.copytree(practice / 'starter', attempt / 'practice', dirs_exist_ok=True)
@@ -579,6 +625,8 @@ def main():
     parser.add_argument('--cohort'); parser.add_argument('--readiness', type=Path)
     parser.add_argument('--pairs', type=int, default=1)
     parser.add_argument('--arms', default=None)  # JSON [comparator, candidate] arm definitions.
+    parser.add_argument('--zig', type=Path)  # Complete toolchain directory, containing zig and lib/.
+    parser.add_argument('--rust-toolchain', type=Path)  # Directory containing bin/rustc and lib/.
     parser.add_argument('--context-id'); parser.add_argument('--prompt-sha256')
     parser.add_argument('--token')
     parser.add_argument('--handoff', default=None)  # Coordinator handoff text, stored by begin.
@@ -589,7 +637,9 @@ def main():
     args = parser.parse_args()
     if args.operation == 'freeze':
         result = freeze(args.root, args.cohort, args.readiness, pairs=args.pairs,
-                        arms=None if args.arms is None else json.loads(args.arms))
+                        arms=None if args.arms is None else json.loads(args.arms),
+                        language_tools={name: str(path) for name, path in
+                                        (('zig', args.zig), ('rust', args.rust_toolchain)) if path is not None})
     elif args.operation == 'bind-context':
         result = bind_context(args.root, args.task, args.pair, args.arm, args.context_id, args.prompt_sha256)
     elif args.operation == 'participant':

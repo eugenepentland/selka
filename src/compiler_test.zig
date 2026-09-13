@@ -376,6 +376,7 @@ test "forward mutual recursive and nested calls preserve caller operands" {
 }
 
 test "function signatures entry points and all uncalled bodies are checked" {
+    try programResult("fn f(n:i64,)->i64{return n;}fn main()->i64{return f(42,);}", 42);
     const cases = [_]struct { text: []const u8, code: []const u8 }{
         .{ .text = "fn main() -> i64 { return 1; } fn main() -> i64 { return 2; }", .code = "E_DUPLICATE_FUNCTION" },
         .{ .text = "fn f() -> i64 { return 1; } fn f() -> bool { return true; } fn main() -> i64 { return 0; }", .code = "E_DUPLICATE_FUNCTION" },
@@ -394,8 +395,7 @@ test "function signatures entry points and all uncalled bodies are checked" {
         .{ .text = "fn f() -> bool {} fn main() -> i64 { return 0; }", .code = "E_MISSING_RETURN" },
         .{ .text = "fn main() -> i64 { return 0; } fn f() -> i64 { return unknown; }", .code = "E_UNKNOWN_NAME" },
         .{ .text = "fn main() -> i64 { f(); return 0; } fn f() -> i64 { return 1; }", .code = "E_EXPLICIT_DISCARD_REQUIRED" },
-        .{ .text = "fn main() -> i64 { return main(1,); }", .code = "E_EXPRESSION" },
-        .{ .text = "fn f(n: i64,) -> i64 { return n; } fn main() -> i64 { return 0; }", .code = "E_SYNTAX" },
+        .{ .text = "fn main() -> i64 { return main(1,); }", .code = "E_ARITY" },
     };
     for (cases) |case| {
         var compilation = try language.Compilation.init(testing.allocator, "functions.my", case.text);

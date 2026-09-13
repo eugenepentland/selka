@@ -55,3 +55,19 @@ test "semantic project body reuse relocates module spans and invalidates changed
     try agree(&files, &cache);
     try t.expectEqual(@as(usize, 1), cache.statistics.reused);
 }
+
+// spec: MODULE-DOT-5
+test "dotted imported function values keep callback type catalogs fresh across cache requests" {
+    var entries = [_]File{
+        .{ .path = "main.my", .bytes = "module main\nimport data as d\nfn main()->i64{let helper=d.value\nreturn helper()}" },
+        .{ .path = "data.my", .bytes = "module data\nexport value\nfn value()->i64 effects(){return 41}" },
+    };
+    var files: Files = .{ .entries = &entries };
+    var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
+    defer cache.deinit();
+    try agree(&files, &cache);
+    entries[1].bytes = "module data\nexport value\nfn value()->i64 effects(){return 42}";
+    try agree(&files, &cache);
+    try t.expectEqual(@as(usize, 0), cache.statistics.reused);
+    try t.expect(cache.statistics.bypassed >= 2);
+}

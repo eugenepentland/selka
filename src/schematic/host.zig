@@ -14,17 +14,26 @@ pub const Context = struct {
     pub fn deinit(self: *Context) void {
         self.output.deinit(self.allocator);
     }
-    /// Register only the four explicitly supported scalar byte operations.
+    /// Register declared byte operations and named input providers; older guests may omit providers.
     pub fn install(self: *Context, registry: *language.vm_host.Registry) language.vm_host.Error!void {
         const i64_type = language.host_functions.Parameter{ .ty = .i64 };
         const u8_type = language.host_functions.Parameter{ .ty = .u8 };
         const Rule = struct { name: []const u8, args: []const host.Parameter, result: host.Parameter, invoke: *const fn (*host.Call) host.CallbackError!language.vm.Value };
         for ([_]Rule{
+            .{ .name = "io::circuit_input", .args = &.{}, .result = i64_type, .invoke = circuitInput },
+            .{ .name = "io::pinout_input", .args = &.{}, .result = i64_type, .invoke = pinoutInput },
+            .{ .name = "io::interface_input", .args = &.{}, .result = i64_type, .invoke = interfaceInput },
             .{ .name = "io::length", .args = &.{i64_type}, .result = i64_type, .invoke = length },
             .{ .name = "io::byte", .args = &.{ i64_type, i64_type }, .result = u8_type, .invoke = byte },
             .{ .name = "io::put", .args = &.{u8_type}, .result = i64_type, .invoke = put },
             .{ .name = "io::issue", .args = &.{ i64_type, i64_type, i64_type }, .result = i64_type, .invoke = reportIssue },
-        }) |rule| try registry.register(rule.name, .{ .signature = .{ .parameters = rule.args, .result = rule.result, .effects = 1 << 6 }, .context = self, .invoke = rule.invoke }, 1 << 6);
+        }) |rule| {
+            _ = registry.registry.resolve(rule.name) catch |err| switch (err) {
+                error.HostUnknownFunction => continue,
+                else => return err,
+            };
+            try registry.register(rule.name, .{ .signature = .{ .parameters = rule.args, .result = rule.result, .effects = 1 << 6 }, .context = self, .invoke = rule.invoke }, 1 << 6);
+        }
     }
     fn context(call: *host.Call) *Context {
         return @ptrCast(@alignCast(call.context.?));
@@ -32,6 +41,20 @@ pub const Context = struct {
     fn document(self: *Context, id: i64) host.CallbackError![]const u8 {
         if (id < 0 or id >= self.documents.len) return error.HostFailure;
         return self.documents[@intCast(id)];
+    }
+    fn input(call: *host.Call, index: i64) host.CallbackError!language.vm.Value {
+        try call.consume(1);
+        _ = try context(call).document(index);
+        return .{ .i64 = index };
+    }
+    fn circuitInput(call: *host.Call) host.CallbackError!language.vm.Value {
+        return input(call, 0);
+    }
+    fn pinoutInput(call: *host.Call) host.CallbackError!language.vm.Value {
+        return input(call, 1);
+    }
+    fn interfaceInput(call: *host.Call) host.CallbackError!language.vm.Value {
+        return input(call, 2);
     }
     fn length(call: *host.Call) host.CallbackError!language.vm.Value {
         try call.consume(1);

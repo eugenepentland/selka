@@ -1,190 +1,134 @@
-module layout_graph;
-import circuit as c;
-import text;
-import io;
-export Net;
-export Nets;
-export Built;
-export build;
-export find;
-export rail;
-struct Net {
-    span: text::Span,
-    group: i64,
-    owner: i64,
-    distance: i64
-}
-struct Edge {
-    a: i64,
-    b: i64
-}
-buffer Edges: Edge;
-result EdgesBuilt {
-    ok: Edges,
-    err: i64
-}
-buffer Nets: Net;
-result Built {
-    ok: Nets,
-    err: i64
-}
-result Mutation {
-    ok: bool,
-    err: i64
-}
-fn rail(span: text::Span) -> bool {
-    let ground = "GND";
-    borrow ground[0..len(ground)] as word {
-        if text::matches(span, word) {
-            return true;
-        }
-    }
-    return span.end - span.start >= 2 && io::byte(span.file, span.start) == 86u8 && io::byte(span.file, span.start + 1) == 95u8;
-}
-fn find(nets: &[]Net, span: text::Span) -> i64 {
-    let mut i = 0;
-    while i < cast<i64>(len_slice(nets)) {
-        if text::equal(read_slice(nets, i).span, span) {
-            return i;
-        }
-        i += 1;
-    }
-    return - 1;
-}
-fn build(heap: allocator, parts: &[]c::Part, pins: &[]c::Pin) -> Built {
-    let mut nets = try acquire_buffer<Built>(heap, 1024);
-    let mut edges = try acquire_buffer<EdgesBuilt>(heap, 128);
-    let mut i = 0;
-    while i < cast<i64>(len_slice(pins)) {
-        let pin = read_slice(pins, i);
-        if !pin.nc {
-            let span = c::displayNet(pin.net, parts, pins);
-            let mut present = false;
-            let mut n = 0;
-            while n < cast<i64>(len_buffer(nets)) {
-                if text::equal(read_buffer(nets, n).span, span) {
-                    present = true;
-                }
-                n += 1;
-            }
-            if !present {
-                discard try append_buffer<Mutation>(nets, new Net {
-                    span: span,
-                    group: cast<i64>(len_buffer(nets)),
-                    owner: - 1,
-                    distance: 4096
-                });
-            }
-        }
-        i += 1;
-    }
-    let mut part = 0;
-    while part < cast<i64>(len_slice(parts)) {
-        if read_slice(parts, part).kind != 0 {
-            let mut a = text::empty();
-            let mut b = text::empty();
-            i = 0;
-            while i < cast<i64>(len_slice(pins)) {
-                let pin = read_slice(pins, i);
-                if pin.part == part && !pin.nc {
-                    if pin.number == 1 {
-                        a = c::displayNet(pin.net, parts, pins);
-                    }
-                    if pin.number == 2 {
-                        b = c::displayNet(pin.net, parts, pins);
-                    }
-                }
-                i += 1;
-            }
-            if !rail(a) && !rail(b) {
-                let mut na = - 1;
-                let mut nb = - 1;
-                let mut ga = - 1;
-                let mut gb = - 1;
-                i = 0;
-                while i < cast<i64>(len_buffer(nets)) {
-                    let item = read_buffer(nets, i);
-                    if text::equal(item.span, a) {
-                        ga = item.group;
-                        na = i;
-                    }
-                    if text::equal(item.span, b) {
-                        gb = item.group;
-                        nb = i;
-                    }
-                    i += 1;
-                }
-                if na >= 0 && nb >= 0 {
-                    discard try append_buffer<Mutation>(edges, new Edge {
-                        a: na,
-                        b: nb
-                    });
-                }
-                if ga >= 0 && gb >= 0 && ga != gb {
-                    borrow mut nets[0..len_buffer(nets)] as table {
-                        i = 0;
-                        while i < cast<i64>(len_slice(table)) {
-                            let item = read_slice(table, i);
-                            if item.group == gb {
-                                write_slice(table, i, update(item) {
-                                    group: ga
-                                });
-                            }
-                            i += 1;
-                        }
-                    }
-                }
-            }
-        }
-        part += 1;
-    }
-    borrow mut nets[0..len_buffer(nets)] as table {
-        i = 0;
-        while i < cast<i64>(len_slice(pins)) {
-            let pin = read_slice(pins, i);
-            if !pin.nc && read_slice(parts, pin.part).kind == 0 {
-                let span = c::displayNet(pin.net, parts, pins);
-                let mut n = 0;
-                while n < cast<i64>(len_slice(table)) {
-                    let item = read_slice(table, n);
-                    if item.owner < 0 && text::equal(item.span, span) {
-                        write_slice(table, n, update(item) {
-                            owner: i,
-                            distance: 0
-                        });
-                    }
-                    n += 1;
-                }
-            }
-            i += 1;
-        }
-        let mut changed = true;
-        let mut pass = 0;
-        while changed && pass < 128 {
-            changed = false;
-            i = 0;
-            while i < cast<i64>(len_buffer(edges)) {
-                let edge = read_buffer(edges, i);
-                let a = read_slice(table, edge.a);
-                let b = read_slice(table, edge.b);
-                if a.distance + 1 < b.distance ||(a.owner >= 0 && b.owner >= 0 && a.distance + 1 == b.distance && read_slice(pins, a.owner).number < read_slice(pins, b.owner).number) {
-                    write_slice(table, edge.b, update(b) {
-                        owner: a.owner,
-                        distance: a.distance + 1
-                    });
-                    changed = true;
-                }
-                if b.distance + 1 < a.distance ||(a.owner >= 0 && b.owner >= 0 && b.distance + 1 == a.distance && read_slice(pins, b.owner).number < read_slice(pins, a.owner).number) {
-                    write_slice(table, edge.a, update(a) {
-                        owner: b.owner,
-                        distance: b.distance + 1
-                    });
-                    changed = true;
-                }
-                i += 1;
-            }
-            pass += 1;
-        }
-    }
-    return new Built.ok(nets);
-}
+module layout_graph
+import circuit as c
+import text
+import io
+export Net
+export build
+export find
+export rail
+
+
+class Net:
+    span: text.Span
+    group: int
+    owner: int
+    distance: int
+
+
+class Edge:
+    a: int
+    b: int
+
+
+def rail(span: text.Span) -> bool:
+    if text.matches(span, b"GND"):
+        return True
+    return span.end - span.start >= 2 and io.byte(span.file, span.start) == 86u8 and io.byte(span.file, span.start + 1) == 95u8
+
+
+def find(nets: list[Net], span: text.Span) -> int:
+    i = 0
+    while i < len(nets):
+        if text.equal(nets[i].span, span):
+            return i
+        i += 1
+    return - 1
+
+
+def build(parts: list[c.Part], pins: list[c.Pin]) -> list[Net]:
+    nets: list[Net] = []
+    edges: list[Edge] = []
+    i = 0
+    while i < len(pins):
+        pin = pins[i]
+        if not pin.nc:
+            span = c.displayNet(pin.net, parts, pins)
+            present = False
+            n = 0
+            while n < len(nets):
+                if text.equal(nets[n].span, span):
+                    present = True
+                n += 1
+            if not present:
+                nets.append(Net(
+                    span=span,
+                    group=len(nets),
+                    owner=- 1,
+                    distance=4096
+                ))
+        i += 1
+    part = 0
+    while part < len(parts):
+        if parts[part].kind != 0:
+            a = text.empty()
+            b = text.empty()
+            i = 0
+            while i < len(pins):
+                pin = pins[i]
+                if pin.part == part and not pin.nc:
+                    if pin.number == 1:
+                        a = c.displayNet(pin.net, parts, pins)
+                    if pin.number == 2:
+                        b = c.displayNet(pin.net, parts, pins)
+                i += 1
+            if not rail(a) and not rail(b):
+                na = - 1
+                nb = - 1
+                ga = - 1
+                gb = - 1
+                i = 0
+                while i < len(nets):
+                    item = nets[i]
+                    if text.equal(item.span, a):
+                        ga = item.group
+                        na = i
+                    if text.equal(item.span, b):
+                        gb = item.group
+                        nb = i
+                    i += 1
+                if na >= 0 and nb >= 0:
+                    edges.append(Edge(
+                        a=na,
+                        b=nb
+                    ))
+                if ga >= 0 and gb >= 0 and ga != gb:
+                    i = 0
+                    while i < len(nets):
+                        item = nets[i]
+                        if item.group == gb:
+                            nets[i].group = ga
+                        i += 1
+        part += 1
+    i = 0
+    while i < len(pins):
+        pin = pins[i]
+        if not pin.nc and parts[pin.part].kind == 0:
+            span = c.displayNet(pin.net, parts, pins)
+            n = 0
+            while n < len(nets):
+                item = nets[n]
+                if item.owner < 0 and text.equal(item.span, span):
+                    nets[n].owner = i
+                    nets[n].distance = 0
+                n += 1
+        i += 1
+    changed = True
+    passes = 0
+    while changed and passes < 128:
+        changed = False
+        i = 0
+        while i < len(edges):
+            edge = edges[i]
+            a = nets[edge.a]
+            b = nets[edge.b]
+            if a.distance + 1 < b.distance  or (a.owner >= 0 and b.owner >= 0 and a.distance + 1 == b.distance and pins[a.owner].number < pins[b.owner].number):
+                nets[edge.b].owner = a.owner
+                nets[edge.b].distance = a.distance + 1
+                changed = True
+            if b.distance + 1 < a.distance  or (a.owner >= 0 and b.owner >= 0 and b.distance + 1 == a.distance and pins[b.owner].number < pins[a.owner].number):
+                nets[edge.a].owner = b.owner
+                nets[edge.a].distance = b.distance + 1
+                changed = True
+            i += 1
+        passes += 1
+    return nets

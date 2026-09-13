@@ -29,12 +29,16 @@ fn supports(ty: typed.Type, records: []const typed.Record, depth: usize, work: *
 }
 /// Owned byte buffers are the explicit input/output boundary, never raw pointers.
 pub fn byteBuffer(ty: typed.Type, records: []const typed.Record) bool {
-    return ty.isAggregate() and ty.recordIndex() < records.len and records[ty.recordIndex()].shape.buffer == .u8;
+    if (!ty.isAggregate() or ty.recordIndex() >= records.len) return false;
+    if (records[ty.recordIndex()].managed) return false;
+    return records[ty.recordIndex()].shape.buffer == .u8;
 }
 
 /// Plain JSON documents use a generic tape of i64 words.
 pub fn wordBuffer(ty: typed.Type, records: []const typed.Record) bool {
-    return ty.isAggregate() and ty.recordIndex() < records.len and records[ty.recordIndex()].shape.buffer == .i64;
+    if (!ty.isAggregate() or ty.recordIndex() >= records.len) return false;
+    if (records[ty.recordIndex()].managed) return false;
+    return records[ty.recordIndex()].shape.buffer == .i64;
 }
 /// Plain parsing deliberately does not use the typed-json-v1 envelope.
 pub fn isDocument(name: []const u8) bool {

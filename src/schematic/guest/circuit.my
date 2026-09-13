@@ -1,319 +1,234 @@
-module circuit;
-import io;
-import text;
-import sexpr as s;
-export Part;
-export Pin;
-export Parts;
-export Pins;
-export PartResult;
-export PinResult;
-export collectParts;
-export collectPins;
-export body;
-export title;
-export label;
-export group;
-export displayNet;
-struct Part {
-    node: i64,
-    ref: text::Span,
-    family: text::Span,
-    value: text::Span,
-    kind: i64
-}
-struct Pin {
-    part: i64,
-    number: i64,
-    net: text::Span,
+module circuit
+import io
+import text
+import sexpr as s
+export Part
+export Pin
+export collectParts
+export collectPins
+export body
+export title
+export label
+export group
+export displayNet
+
+
+class Part:
+    node: int
+    ref: text.Span
+    family: text.Span
+    value: text.Span
+    kind: int
+
+
+class Pin:
+    part: int
+    number: int
+    net: text.Span
     nc: bool
-}
-buffer Parts: Part;
-buffer Pins: Pin;
-result PartResult {
-    ok: Parts,
-    err: i64
-}
-result PinResult {
-    ok: Pins,
-    err: i64
-}
-result Mutation {
-    ok: bool,
-    err: i64
-}
-fn instanceForm(nodes: &[]s::Node, index: i64) -> bool {
-    let word = "instance";
-    borrow word[0..len(word)] as w {
-        return s::form(nodes, index, w);
-    }
-}
-fn blockForm(nodes: &[]s::Node, index: i64) -> bool {
-    let word = "design-block";
-    borrow word[0..len(word)] as w {
-        return s::form(nodes, index, w);
-    }
-}
-fn moduleForm(nodes: &[]s::Node, index: i64) -> bool {
-    let word = "defmodule";
-    borrow word[0..len(word)] as w {
-        return s::form(nodes, index, w);
-    }
-}
-fn pinForm(nodes: &[]s::Node, index: i64) -> bool {
-    let word = "pin";
-    borrow word[0..len(word)] as w {
-        return s::form(nodes, index, w);
-    }
-}
-fn ncForm(nodes: &[]s::Node, index: i64) -> bool {
-    let word = "nc-ok";
-    borrow word[0..len(word)] as w {
-        return s::form(nodes, index, w);
-    }
-}
-fn groupForm(nodes: &[]s::Node, index: i64) -> bool {
-    let word = "group";
-    borrow word[0..len(word)] as w {
-        return s::form(nodes, index, w);
-    }
-}
-fn body(nodes: &[]s::Node) -> i64 {
-    let mut i = 1;
-    while i < cast<i64>(len_slice(nodes)) {
-        if blockForm(nodes, i) {
-            return i;
-        }
-        if moduleForm(nodes, i) {
-            i += 1;
-        } else {
-            i = s::at(nodes, i).next;
-        }
-    }
-    return - 1;
-}
-fn title(nodes: &[]s::Node) -> text::Span {
-    let b = body(nodes);
-    if b < 0 {
-        return text::empty();
-    }
-    return s::at(nodes, b + 2).span;
-}
-fn kind(family: text::Span) -> i64 {
-    {
-        let word = "cap-0402";
-        borrow word[0..len(word)] as w {
-            if text::matches(family, w) {
-                return 1;
-            }
-        }
-    }
-    {
-        let word = "cap-0603";
-        borrow word[0..len(word)] as w {
-            if text::matches(family, w) {
-                return 1;
-            }
-        }
-    }
-    {
-        let word = "res-0402";
-        borrow word[0..len(word)] as w {
-            if text::matches(family, w) {
-                return 2;
-            }
-        }
-    }
-    {
-        let word = "ind-0402";
-        borrow word[0..len(word)] as w {
-            if text::matches(family, w) {
-                return 3;
-            }
-        }
-    }
-    return 0;
-}
-fn collectParts(heap: allocator, nodes: &[]s::Node) -> PartResult {
-    let mut out = try acquire_buffer<PartResult>(heap, 128);
-    let b = body(nodes);
-    if b < 0 {
-        discard io::issue(10, 0, 0);
-        return new PartResult.err(10);
-    }
-    let mut i = b + 3;
-    while i < s::at(nodes, b).next {
-        if instanceForm(nodes, i) {
-            let ref = s::at(nodes, i + 2);
-            let spec = s::at(nodes, i + 3);
-            if i + 3 >= s::at(nodes, i).next {
-                discard io::issue(11, 0, ref.span.start);
-                return new PartResult.err(11);
-            }
-            if !text::identifier(ref.span) || ref.kind != new s::Kind.string {
-                discard io::issue(11, 0, ref.span.start);
-                return new PartResult.err(11);
-            }
-            let mut family = spec.span;
-            let mut value = text::empty();
-            if spec.kind == new s::Kind.list {
-                family = s::at(nodes, i + 4).span;
-                value = s::at(nodes, i + 5).span;
-            }
-            if len_buffer(out) == 128u64 {
-                discard io::issue(5, 0, ref.span.start);
-                return new PartResult.err(5);
-            }
-            let mut j = 0;
-            while j < cast<i64>(len_buffer(out)) {
-                if text::equal(read_buffer(out, j).ref, ref.span) {
-                    discard io::issue(12, 0, ref.span.start);
-                    return new PartResult.err(12);
-                }
-                j += 1;
-            }
-            discard try append_buffer<Mutation>(out, new Part {
-                node: i,
-                ref: ref.span,
-                family: family,
-                value: value,
-                kind: kind(family)
-            });
-        }
-        i = s::at(nodes, i).next;
-    }
-    return new PartResult.ok(out);
-}
-fn label(pinout: &[]s::Node, number: i64) -> text::Span {
-    let mut i = 1;
-    while i < cast<i64>(len_slice(pinout)) {
-        if pinForm(pinout, i) && text::number(s::at(pinout, i + 2).span) == number {
-            return s::at(pinout, i + 3).span;
-        }
-        i += 1;
-    }
-    return text::empty();
-}
-fn collectPins(heap: allocator, nodes: &[]s::Node, parts: &[]Part, pinout: &[]s::Node) -> PinResult {
-    let mut out = try acquire_buffer<PinResult>(heap, 1024);
-    let mut part = 0;
-    while part < cast<i64>(len_slice(parts)) {
-        let item = read_slice(parts, part);
-        let mut f = s::at(nodes, item.node + 3).next;
-        while f < s::at(nodes, item.node).next {
-            let nc = ncForm(nodes, f);
-            if pinForm(nodes, f) || nc {
-                let mut netindex = f + 2;
-                while netindex < s::at(nodes, f).next && s::at(nodes, netindex).kind != new s::Kind.string {
-                    netindex = s::at(nodes, netindex).next;
-                }
-                if netindex == s::at(nodes, f).next || netindex == f + 2 {
-                    discard io::issue(13, 0, s::at(nodes, f).span.start);
-                    return new PinResult.err(13);
-                }
-                let net = s::at(nodes, netindex).span;
-                if (!nc && !text::identifier(net)) || net.start == net.end {
-                    discard io::issue(13, 0, net.start);
-                    return new PinResult.err(13);
-                }
-                let mut p = f + 2;
-                while p < netindex {
-                    let number = text::number(s::at(nodes, p).span);
-                    let mut valid = number == 1 || number == 2;
-                    if item.kind == 0 {
-                        let named = label(pinout, number);
-                        valid = named.end > named.start;
-                    }
-                    if !valid {
-                        discard io::issue(14, 0, s::at(nodes, p).span.start);
-                        return new PinResult.err(14);
-                    }
-                    let mut j = 0;
-                    while j < cast<i64>(len_buffer(out)) {
-                        let previous = read_buffer(out, j);
-                        if previous.part == part && previous.number == number {
-                            discard io::issue(15, 0, s::at(nodes, p).span.start);
-                            return new PinResult.err(15);
-                        }
-                        j += 1;
-                    }
-                    if len_buffer(out) == 1024u64 {
-                        discard io::issue(5, 0, net.start);
-                        return new PinResult.err(5);
-                    }
-                    discard try append_buffer<Mutation>(out, new Pin {
-                        part: part,
-                        number: number,
-                        net: net,
-                        nc: nc
-                    });
-                    p = s::at(nodes, p).next;
-                }
-            }
-            f = s::at(nodes, f).next;
-        }
-        part += 1;
-    }
-    return new PinResult.ok(out);
-}
-fn group(nodes: &[]s::Node, reference: text::Span) -> text::Span {
-    let mut i = 1;
-    while i < cast<i64>(len_slice(nodes)) {
-        if groupForm(nodes, i) {
-            let mut child = i + 3;
-            while child < s::at(nodes, i).next {
-                if text::equal(s::at(nodes, child).span, reference) {
-                    return s::at(nodes, i + 2).span;
-                }
-                child = s::at(nodes, child).next;
-            }
-        }
-        i += 1;
-    }
-    return text::empty();
-}
-// Netlisp per-pad supply branches fold only when the named host pad and trunk exist.
-fn displayNet(net: text::Span, parts: &[]Part, pins: &[]Pin) -> text::Span {
-    let mut last = - 1;
-    let mut previous = - 1;
-    let mut i = net.start;
-    while i < net.end {
-        if io::byte(net.file, i) == 46u8 {
-            previous = last;
-            last = i;
-        }
-        i += 1;
-    }
-    if previous <= net.start || last <= previous + 1 || last + 1 == net.end {
-        return net;
-    }
-    let base = update(net) {
-        end: previous
-    };
-    let ref = update(net) {
-        start: previous + 1,
-        end: last
-    };
-    let number = text::number(update(net) {
-        start: last + 1
-    });
-    let mut trunk = false;
-    let mut host = false;
-    i = 0;
-    while i < cast<i64>(len_slice(pins)) {
-        let pin = read_slice(pins, i);
-        if !pin.nc {
-            if text::equal(pin.net, base) {
-                trunk = true;
-            }
-            if pin.number == number && text::equal(pin.net, net) && text::equal(read_slice(parts, pin.part).ref, ref) {
-                host = true;
-            }
-        }
-        i += 1;
-    }
-    if trunk && host {
-        return base;
-    }
-    return net;
-}
+
+
+def instanceForm(nodes: list[s.Node], index: int) -> bool:
+    return s.form(nodes, index, b"instance")
+
+
+def blockForm(nodes: list[s.Node], index: int) -> bool:
+    return s.form(nodes, index, b"design-block")
+
+
+def moduleForm(nodes: list[s.Node], index: int) -> bool:
+    return s.form(nodes, index, b"defmodule")
+
+
+def pinForm(nodes: list[s.Node], index: int) -> bool:
+    return s.form(nodes, index, b"pin")
+
+
+def ncForm(nodes: list[s.Node], index: int) -> bool:
+    return s.form(nodes, index, b"nc-ok")
+
+
+def groupForm(nodes: list[s.Node], index: int) -> bool:
+    return s.form(nodes, index, b"group")
+
+
+def body(nodes: list[s.Node]) -> int:
+    i = 1
+    while i < len(nodes):
+        if blockForm(nodes, i):
+            return i
+        if moduleForm(nodes, i):
+            i += 1
+        else:
+            i = s.at(nodes, i).next
+    return - 1
+
+
+def title(nodes: list[s.Node]) -> text.Span:
+    b = body(nodes)
+    if b < 0:
+        return text.empty()
+    return s.at(nodes, b + 2).span
+
+
+def kind(family: text.Span) -> int:
+    if text.matches(family, b"cap-0402"):
+        return 1
+    if text.matches(family, b"cap-0603"):
+        return 1
+    if text.matches(family, b"res-0402"):
+        return 2
+    if text.matches(family, b"ind-0402"):
+        return 3
+    return 0
+
+
+def collectParts(nodes: list[s.Node]) -> Result[list[Part], int]:
+    out: list[Part] = []
+    b = body(nodes)
+    if b < 0:
+        _ = io.issue(10, 0, 0)
+        return Err(10)
+    i = b + 3
+    while i < s.at(nodes, b).next:
+        if instanceForm(nodes, i):
+            ref = s.at(nodes, i + 2)
+            spec = s.at(nodes, i + 3)
+            if i + 3 >= s.at(nodes, i).next:
+                _ = io.issue(11, 0, ref.span.start)
+                return Err(11)
+            if not text.identifier(ref.span) or ref.kind != s.Kind.string:
+                _ = io.issue(11, 0, ref.span.start)
+                return Err(11)
+            family = spec.span
+            value = text.empty()
+            if spec.kind == s.Kind.list:
+                family = s.at(nodes, i + 4).span
+                value = s.at(nodes, i + 5).span
+            if out.len() == 128u64:
+                _ = io.issue(5, 0, ref.span.start)
+                return Err(5)
+            j = 0
+            while j < len(out):
+                if text.equal(out[j].ref, ref.span):
+                    _ = io.issue(12, 0, ref.span.start)
+                    return Err(12)
+                j += 1
+            out.append(Part(
+                node=i,
+                ref=ref.span,
+                family=family,
+                value=value,
+                kind=kind(family)
+            ))
+        i = s.at(nodes, i).next
+    return Ok(out)
+
+
+def label(pinout: list[s.Node], number: int) -> text.Span:
+    i = 1
+    while i < len(pinout):
+        if pinForm(pinout, i) and text.number(s.at(pinout, i + 2).span) == number:
+            return s.at(pinout, i + 3).span
+        i += 1
+    return text.empty()
+
+
+def collectPins(nodes: list[s.Node], parts: list[Part], pinout: list[s.Node]) -> Result[list[Pin], int]:
+    out: list[Pin] = []
+    part = 0
+    while part < len(parts):
+        item = parts[part]
+        f = s.at(nodes, item.node + 3).next
+        while f < s.at(nodes, item.node).next:
+            nc = ncForm(nodes, f)
+            if pinForm(nodes, f) or nc:
+                netindex = f + 2
+                while netindex < s.at(nodes, f).next and s.at(nodes, netindex).kind != s.Kind.string:
+                    netindex = s.at(nodes, netindex).next
+                if netindex == s.at(nodes, f).next or netindex == f + 2:
+                    _ = io.issue(13, 0, s.at(nodes, f).span.start)
+                    return Err(13)
+                net = s.at(nodes, netindex).span
+                if (not nc and not text.identifier(net)) or net.start == net.end:
+                    _ = io.issue(13, 0, net.start)
+                    return Err(13)
+                p = f + 2
+                while p < netindex:
+                    number = text.number(s.at(nodes, p).span)
+                    valid = number == 1 or number == 2
+                    if item.kind == 0:
+                        named = label(pinout, number)
+                        valid = named.end > named.start
+                    if not valid:
+                        _ = io.issue(14, 0, s.at(nodes, p).span.start)
+                        return Err(14)
+                    j = 0
+                    while j < len(out):
+                        previous = out[j]
+                        if previous.part == part and previous.number == number:
+                            _ = io.issue(15, 0, s.at(nodes, p).span.start)
+                            return Err(15)
+                        j += 1
+                    if out.len() == 1024u64:
+                        _ = io.issue(5, 0, net.start)
+                        return Err(5)
+                    out.append(Pin(
+                        part=part,
+                        number=number,
+                        net=net,
+                        nc=nc
+                    ))
+                    p = s.at(nodes, p).next
+            f = s.at(nodes, f).next
+        part += 1
+    return Ok(out)
+
+
+def group(nodes: list[s.Node], reference: text.Span) -> text.Span:
+    i = 1
+    while i < len(nodes):
+        if groupForm(nodes, i):
+            child = i + 3
+            while child < s.at(nodes, i).next:
+                if text.equal(s.at(nodes, child).span, reference):
+                    return s.at(nodes, i + 2).span
+                child = s.at(nodes, child).next
+        i += 1
+    return text.empty()
+# Netlisp per-pad supply branches fold only when the named host pad and trunk exist.
+
+
+def displayNet(net: text.Span, parts: list[Part], pins: list[Pin]) -> text.Span:
+    last = - 1
+    previous = - 1
+    i = net.start
+    while i < net.end:
+        if io.byte(net.file, i) == 46u8:
+            previous = last
+            last = i
+        i += 1
+    if previous <= net.start or last <= previous + 1 or last + 1 == net.end:
+        return net
+    base = net
+    base.end = previous
+    ref = net
+    ref.start = previous + 1
+    ref.end = last
+    number_span = net
+    number_span.start = last + 1
+    number = text.number(number_span)
+    trunk = False
+    host = False
+    i = 0
+    while i < len(pins):
+        pin = pins[i]
+        if not pin.nc:
+            if text.equal(pin.net, base):
+                trunk = True
+            if pin.number == number and text.equal(pin.net, net) and text.equal(parts[pin.part].ref, ref):
+                host = True
+        i += 1
+    if trunk and host:
+        return base
+    return net
