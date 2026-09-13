@@ -122,3 +122,40 @@ void myl_native_heap_release(myl_native_heap *heap, void *payload) {
     heap->objects_live--;
     free(object);
 }
+
+/* Release every external resource reachable from a value, nesting through
+   ordinary records, arrays and variants. Managed collections are traced by the
+   collector instead, so they are not owners here. */
+static void myl_native_schedule(myl_native_drop_link **work, const myl_native_type *type, void *value) {
+    if (type->kind == MYL_NATIVE_RESOURCE) {
+        void *owner = NULL;
+        memcpy(&owner, value, sizeof owner);
+        memset(value, 0, sizeof owner);
+        if (!owner) return;
+        myl_native_drop_link *link = &((myl_native_resource *)owner)->work;
+        *link = (myl_native_drop_link){.next = *work, .owner = owner, .kind = type->kind};
+        *work = link;
+    } else if (type->kind == MYL_NATIVE_ARRAY) {
+        for (size_t i = 0; i < type->count; i++)
+            myl_native_schedule(work, type->fields[0].type, (unsigned char *)value + i * type->stride);
+    } else if (type->kind == MYL_NATIVE_RECORD || type->kind == MYL_NATIVE_VARIANT) {
+        uint32_t tag = 0;
+        if (type->kind == MYL_NATIVE_VARIANT) memcpy(&tag, value, sizeof tag);
+        for (size_t i = 0; i < type->field_count; i++) {
+            const myl_native_field *field = &type->fields[i];
+            if (type->kind == MYL_NATIVE_RECORD || field->tag == tag)
+                myl_native_schedule(work, field->type, (unsigned char *)value + field->offset);
+        }
+    }
+}
+
+void myl_native_owned_drop(myl_native_heap *heap, const myl_native_type *type, void *value) {
+    (void)heap;
+    myl_native_drop_link *work = NULL;
+    myl_native_schedule(&work, type, value);
+    while (work) {
+        myl_native_resource *owner = work->owner;
+        work = work->next;
+        owner->drop(owner);
+    }
+}

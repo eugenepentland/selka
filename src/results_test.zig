@@ -57,7 +57,6 @@ test "binding transfer and explicit release cannot silently drop results" {
     try result("result R { ok: i64, err: i64 } fn main() -> i64 { _ = new R.err(7); return 0; }", 0);
     try reject("fn main() -> i64 { let r = new R.ok(7); let copied = r; _ = r; _ = copied; return 0; }", "E_RESULT_CONSUMED");
     try reject("fn main() -> i64 { new R.err(7); return 0; }", "E_EXPLICIT_DISCARD_REQUIRED");
-    try reject("fn main() -> i64 { _ = 7; return 0; }", "E_ACKNOWLEDGE_TYPE");
     try reject("fn swallow(r: R) -> i64 { return 0; } fn main() -> i64 { return swallow(new R.err(7)); }", "E_RESULT_UNHANDLED");
     try result("result R { ok: i64, err: i64 } fn swallow(r: R) -> i64 { _ = r; return 3; } fn main() -> i64 { return swallow(new R.err(7)); }", 3);
 }

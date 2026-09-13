@@ -70,4 +70,6 @@ void *myl_native_heap_alloc(myl_native_heap *heap,
 void myl_native_heap_collect(myl_native_heap *heap);
 /* Explicit owned storage release. Caller removes all roots/references first. */
 void myl_native_heap_release(myl_native_heap *heap, void *payload);
+/// Release every external resource reachable from a value in place.
+void myl_native_owned_drop(myl_native_heap *heap, const myl_native_type *type, void *value);
 #endif

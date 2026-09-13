@@ -2,7 +2,6 @@
 #define MYLANG_QBE_RUNTIME_H
 #include <stdint.h>
 #include "native_heap.h"
-#include "native_pool.h"
 
 struct MylangNativeProvidersTag;
 /* Native ABI v2: execution context and sticky structured traps.
@@ -36,16 +35,7 @@ typedef struct {
     MylQbeTrace trace[16];
     uint64_t trace_count, omitted_frames;
 } MylQbeResult;
-int myl_qbe_owned_new(void *, const myl_native_type *, uint64_t authority, int64_t capacity, size_t limit, myl_native_owned_buffer **);
-int myl_qbe_owned_reserve(void *, myl_native_owned_buffer *, uint64_t authority, int64_t capacity, size_t limit);
-int myl_qbe_pool_new(void *, const myl_native_type *, uint64_t authority, int64_t capacity, myl_native_pool **);
-uint64_t myl_qbe_region_begin(void *, uint64_t parent);
-void myl_qbe_region_end(void *, uint64_t identity);
 void myl_qbe_fail_capability(void *);
-void myl_qbe_fail_region_in_use(void *);
-void myl_qbe_fail_region_limit(void *);
-int myl_qbe_region_reset(void *, uint64_t identity);
-void myl_qbe_fail_identity(void *);
 uint64_t myl_qbe_on_stack(uint64_t (*entry)(void *), MylQbeContext *);
 void *myl_qbe_frame_allocate(void *, uint64_t bytes);
 void myl_qbe_frame_release(void *, void *);

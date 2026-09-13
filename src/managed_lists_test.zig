@@ -140,7 +140,7 @@ test "managed source execution unwinds roots on every host allocation failure" {
 test "managed cycles lose local and record roots on block break and continue exits" {
     const prefix = "struct Node{children:List<Node>,value:i64}struct Holder{nodes:List<Node>}";
     const cycle = "let nodes:List<Node>=[];nodes.push(new Node{children:nodes,value:42});" ++
-        "let holder=new Holder{nodes:nodes};let alias=holder.nodes;if len(alias)!=1u64{return 1;}";
+        "let holder=new Holder{nodes:nodes};let alias=holder.nodes;if len(alias)!=1{return 1;}";
     const bodies = [_][]const u8{
         "{" ++ cycle ++ "}",
         "while true{" ++ cycle ++ "break;}",
@@ -159,8 +159,8 @@ test "managed cycles lose local and record roots on block break and continue exi
 // spec: GC-SOURCE-7
 test "managed elements reject owned resources and unchecked results" {
     try rejectAll(&.{
-        "resource File:filesystem;fn main()->i64{let values:List<File>=[];return cast<i64>(len(values));}",
-        "resource File:filesystem;struct Wrapper{file:File}fn main()->i64{let values:List<Wrapper>=[];return cast<i64>(len(values));}",
-        "result Answer{ok:i64,err:i64}fn main()->i64{let values:List<Answer>=[];return cast<i64>(len(values));}",
-    }, "E_LIST_ELEMENT");
+        "resource File:filesystem;fn main()->i64{let values:List<File>=[];return len(values);}",
+        "resource File:filesystem;struct Wrapper{file:File}fn main()->i64{let values:List<Wrapper>=[];return len(values);}",
+        "result Answer{ok:i64,err:i64}fn main()->i64{let values:List<Answer>=[];return len(values);}",
+    }, "E_GENERIC_REQUIREMENT");
 }

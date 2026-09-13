@@ -8,7 +8,7 @@ ROOT=Path(__file__).resolve().parents[1]
 def source(metadata, types):
     types=metadata.get('types',types)
     by_name={item['name']:i for i,item in enumerate(types)}
-    lines=['#include "qbe_runtime.h"','#include "native_host.h"','#include "native_owned.h"',
+    lines=['#include "qbe_runtime.h"','#include "native_host.h"',
            '#include <stdlib.h>','#include <string.h>',metadata['schema'],
            'extern const myl_native_type '+metadata['byte_descriptor']+';',
            '#define JSON_BYTE_DESCRIPTOR '+metadata['byte_descriptor'],

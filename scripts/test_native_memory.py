@@ -17,8 +17,6 @@ def main():
         for suite, sources in (
             ("native_heap", ["native_heap.c"]),
             ("native_collections", ["native_heap.c", "native_collections.c"]),
-            ("native_owned", ["native_heap.c", "native_collections.c", "native_owned.c", "native_pool.c"]),
-            ("native_pool", ["native_heap.c", "native_collections.c", "native_owned.c", "native_pool.c"]),
             ("native_text_dictionary", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c"]),
             ("native_equal", ["native_heap.c", "native_collections.c", "native_text.c", "native_dictionary.c", "native_equal.c"]),
         ):

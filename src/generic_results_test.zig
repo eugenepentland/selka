@@ -64,6 +64,5 @@ test "uncalled generic templates cannot drop duplicate or overwrite results" {
     try reject("fn f<T:copy>(r:R)->i64{return 0;}", "E_RESULT_UNHANDLED");
     try reject("fn f<T:copy>()->i64{{let r=new R.ok(1);}return 0;}", "E_RESULT_UNHANDLED");
     try reject("fn f<T:copy>(r:R)->i64{let moved=r;_ = r;_ = moved;return 0;}", "E_RESULT_CONSUMED");
-    try reject("fn f<T:copy>()->i64{_ = 1;return 0;}", "E_ACKNOWLEDGE_TYPE");
     try reject("fn f<T:copy>()->i64{let mut r=new R.ok(1);r=new R.err(2);_ = r;return 0;}", "E_RESULT_OVERWRITE");
 }

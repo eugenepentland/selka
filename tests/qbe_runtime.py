@@ -35,16 +35,6 @@ def main():
                             '-I', ROOT / 'src', ROOT / 'src/qbe_runtime.c', ROOT / 'src/qbe_stack.c', ROOT / 'src/native_heap.c',
                             ROOT / 'tests/qbe_runtime.c', '-lm', '-o', executable])
             assert compiled.returncode == 0, compiled.stderr
-            regions = Path(directory) / 'regions'
-            checked = run([args.zig, 'cc', '-std=c11', '-Wall', '-Wextra', '-Werror',
-                           optimization, '-fsanitize=undefined', '-fno-sanitize-recover=all',
-                           '-I', ROOT / 'src',
-                           *[ROOT / 'src' / name for name in ('qbe_runtime.c', 'qbe_stack.c', 'qbe_regions.c', 'native_heap.c',
-                             'native_collections.c', 'native_owned.c', 'native_pool.c')],
-                           ROOT / 'tests/qbe_regions.c', '-lm', '-o', regions])
-            assert checked.returncode == 0, checked.stderr
-            checked = run([regions])
-            assert checked.returncode == 0 and not checked.stderr, checked
             providers = Path(directory) / 'providers'
             checked = run([args.zig, 'cc', '-std=c11', '-Wall', '-Wextra', '-Werror',
                            optimization, '-fsanitize=undefined', '-fno-sanitize-recover=all',

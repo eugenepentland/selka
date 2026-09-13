@@ -131,8 +131,8 @@ test "semantic cache rechecks transitive effects when only a callee body changes
     var cache = Cache.init(t.allocator, 4 * 1024 * 1024);
     defer cache.deinit();
     const caller = "fn main()->i64 noalloc{return change();}";
-    try compare(t.allocator, &cache, "fn change()->i64{return 42;}" ++ caller, 42);
-    try compare(t.allocator, &cache, "fn change()->i64{let values:List<i64>=[];values.push(1);return 42;}" ++ caller, null);
+    try compare(t.allocator, &cache, caller ++ "fn change()->i64{return 42;}", 42);
+    try compare(t.allocator, &cache, caller ++ "fn change()->i64{let values:List<i64>=[];values.push(1);return 42;}", null);
     try t.expectEqual(@as(usize, 1), cache.statistics.reused);
     try t.expectEqual(@as(usize, 1), cache.statistics.stored);
 }
