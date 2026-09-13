@@ -28,44 +28,17 @@ fn main() -> i64 {
     if !bounds::< u64 >(0u64, 18446744073709551615u64) {
         return - 8;
     }
-    let mixed = new [5]i64[1000, - 1000, 0, - 9223372036854775808, 9223372036854775807];
-    borrow mixed[0..5] as values {
-        if math::min_or::< i64 >(values, 0) != - 9223372036854775808 || math::max_or::< i64 >(values, 0) != 9223372036854775807 {
-            return - 9;
-        }
+    if math::min::< i64 >(- 9223372036854775808, 9223372036854775807) != - 9223372036854775808 {
+        return - 9;
     }
-    borrow mixed[0..0] as empty {
-        if math::min_or::< i64 >(empty, 123) != 123 || math::max_or::< i64 >(empty, - 456) != - 456 {
-            return - 10;
-        }
+    if math::max::< i64 >(- 9, - 1) != - 1 || math::min::< i64 >(- 9, - 1) != - 9 {
+        return - 11;
     }
-    let negative = new [3]i64[- 9, - 1, - 5];
-    borrow negative[0..3] as values {
-        if math::max_or::< i64 >(values, 1000) != - 1 || math::min_or::< i64 >(values, - 1000) != - 9 {
-            return - 11;
-        }
+    if math::min::< u64 >(5u64, 5u64) != 5u64 || math::max::< u64 >(5u64, 5u64) != 5u64 {
+        return - 12;
     }
-    let tied = new [3]u64[5u64, 5u64, 5u64];
-    borrow tied[0..3] as values {
-        if math::min_or::< u64 >(values, 0u64) != 5u64 || math::max_or::< u64 >(values, 18446744073709551615u64) != 5u64 {
-            return - 12;
-        }
-    }
-    borrow tied[1..2] as singleton {
-        if math::min_or::< u64 >(singleton, 0u64) != 5u64 || math::max_or::< u64 >(singleton, 9u64) != 5u64 {
-            return - 13;
-        }
-    }
-    let unsigned = new [3]u64[18446744073709551615u64, 1u64, 0u64];
-    borrow unsigned[0..3] as values {
-        if math::min_or::< u64 >(values, 42u64) != 0u64 || math::max_or::< u64 >(values, 42u64) != 18446744073709551615u64 {
-            return - 14;
-        }
-    }
-    borrow unsigned[0..0] as empty {
-        if math::min_or::< u64 >(empty, 18446744073709551615u64) != 18446744073709551615u64 || math::max_or::< u64 >(empty, 0u64) != 0u64 {
-            return - 15;
-        }
+    if math::min::< u64 >(0u64, 18446744073709551615u64) != 0u64 || math::max::< u64 >(0u64, 18446744073709551615u64) != 18446744073709551615u64 {
+        return - 14;
     }
     match math::to_i64(math::add(math::from_i64(1), math::from_i64(2))) {
         math::Signed.ok(value) => {

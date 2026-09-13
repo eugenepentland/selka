@@ -13,7 +13,7 @@ const declarations =
 ;
 const main_source =
     \\module main;import io;
-    \\fn main()->i64{let n=io::length(0);discard io::put(65u8);while n==2{discard io::put(66u8);}return n;}
+    \\fn main()->i64{let n=io::length(0);_ = io::put(65u8);while n==2{_ = io::put(66u8);}return n;}
 ;
 fn provider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
     const bytes = if (std.mem.eql(u8, path, "io.my")) declarations else if (std.mem.eql(u8, path, "main.my")) main_source else return error.NotFound;
@@ -164,9 +164,9 @@ const named_main =
     \\module main;import io;
     \\fn main()->i64{
     \\let inputs=io::inputs();
-    \\discard io::put(io::byte(io::Document.id(inputs.circuit),0));
-    \\discard io::put(io::byte(io::Document.id(inputs.pinout),0));
-    \\discard io::put(io::byte(io::Document.id(inputs.interface),0));
+    \\_ = io::put(io::byte(io::Document.id(inputs.circuit),0));
+    \\_ = io::put(io::byte(io::Document.id(inputs.pinout),0));
+    \\_ = io::put(io::byte(io::Document.id(inputs.interface),0));
     \\return 0;
     \\}
 ;

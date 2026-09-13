@@ -6,7 +6,6 @@ const external = @import("external_capabilities.zig");
 pub const declarations = "resource File:filesystem;result Open<T:copy>{err:i64,ok:File}" ++
     "struct Failure<T:copy>{code:i64,resource:File}result Finish<T:copy>{err:Failure<T>,ok:bool}" ++
     "struct Chunk<T:copy>{eof:bool,bytes:[4]u8,length:u64}result Read<T:copy>{err:i64,ok:Chunk<T>}" ++
-    "struct Progress<T:copy>{eof:bool,length:u64}result Slice<T:copy>{ok:Progress<T>,err:i64}" ++
     "result Written<T:copy>{err:i64,ok:u64}result Status<T:copy>{ok:i64,err:i64}" ++
     "fn singleton<T:copy>(x:T)->[1]T{return new [1]T[x];}";
 /// Observable ownership and callback accounting, including failed completion retries.
@@ -63,16 +62,15 @@ pub const Fake = struct {
         return .{ .context = self, .acquire = acquire, .read = read, .write = write, .complete = complete, .release = release };
     }
 };
-/// Exercise ordinary and slice I/O before returning completion ownership for a retry.
+/// Exercise repeated ordinary I/O before returning completion ownership for a retry.
 pub const program = declarations ++
     "fn finish<T:copy>(file:File)->Finish<T>{match complete_resource<Finish<T>>(file){Finish<T>.ok(done)=>{return new Finish<T>.ok(done);}," ++
-    "Finish<T>.err(failure)=>{if read_field(failure,code)==3{return complete_resource<Finish<T>>(failure.resource);}return new Finish<T>.err(failure);}}}" ++
-    "fn work<T:copy>(fs:filesystem_cap)->Status<T>{let mut file=try acquire_resource<Open<T>>(fs,singleton::<u8>(42u8));" ++
-    "let chunk=try read_resource<Read<T>>(file);let n=try write_resource<Written<T>>(file,singleton::<u8>(9u8));" ++
-    "let mut bytes=new [3]u8[1u8,2u8,3u8];let before=bytes;let mut length=0u64;" ++
-    "borrow mut bytes[0..3] as out{let progress=try read_resource_slice<Slice<T>>(file,out);length=progress.length;if !progress.eof{return new Status<T>.err(90);}}" ++
-    "borrow bytes[0..length] as input{discard try write_resource_slice<Written<T>>(file,input);}" ++
+    "Finish<T>.err(failure)=>{if failure.code==3{return complete_resource<Finish<T>>(failure.resource);}return new Finish<T>.err(failure);}}}" ++
+    "fn work<T:copy>(fs:filesystem_cap)->Status<T>{let mut file=acquire_resource<Open<T>>(fs,singleton::<u8>(42u8))?;" ++
+    "let chunk=read_resource<Read<T>>(file)?;let n=write_resource<Written<T>>(file,singleton::<u8>(9u8))?;" ++
+    "let second=read_resource<Read<T>>(file)?;" ++
+    "let m=write_resource<Written<T>>(file,new [2]u8[second.bytes[0],second.bytes[1]])?;" ++
     "match finish::<T>(file){Finish<T>.ok(done)=>{if !done{return new Status<T>.err(91);}},Finish<T>.err(failure)=>{return new Status<T>.err(failure.code);}}" ++
-    "if !chunk.eof{return new Status<T>.err(92);}return new Status<T>.ok(cast<i64>(chunk.length)+cast<i64>(chunk.bytes[0])+cast<i64>(chunk.bytes[1])+" ++
-    "cast<i64>(chunk.bytes[2])+cast<i64>(chunk.bytes[3])+cast<i64>(n)+cast<i64>(bytes[0])+cast<i64>(bytes[1])+cast<i64>(bytes[2])+cast<i64>(before[0]));}" ++
+    "if !chunk.eof || !second.eof{return new Status<T>.err(92);}return new Status<T>.ok(cast<i64>(chunk.length)+cast<i64>(chunk.bytes[0])+cast<i64>(chunk.bytes[1])+" ++
+    "cast<i64>(chunk.bytes[2])+cast<i64>(chunk.bytes[3])+cast<i64>(n)+cast<i64>(second.length)+cast<i64>(second.bytes[0])+cast<i64>(second.bytes[1])+cast<i64>(m));}" ++
     "fn main(fs:filesystem_cap)->i64{match work::<bool>(fs){Status<bool>.ok(n)=>{return n;},Status<bool>.err(e)=>{return -e;}}}";

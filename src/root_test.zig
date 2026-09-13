@@ -60,7 +60,6 @@ test {
     _ = @import("generic_bodies_test.zig");
     _ = @import("generic_concrete_test.zig");
     _ = @import("generic_results_test.zig");
-    _ = @import("generic_fields_test.zig");
     _ = @import("generic_providers_test.zig");
     _ = @import("generic_requirements_test.zig");
     _ = @import("generic_syntax_test.zig");

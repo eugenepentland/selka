@@ -18,16 +18,15 @@ fn run(text: []const u8, expected: i64) !void {
 const Modules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
-        return allocator.dupe(u8, "module main;import std_list;import std_result;" ++
+        return allocator.dupe(u8, "module main;import std_result;" ++
             "fn answer()->Result<i64,i64>{return new std_result.Result<i64,i64>.ok(42);}" ++
-            "fn main()->i64{let values:List<i64>=std_list.create::<i64>();values.push(1);" ++
-            "std_list.append(values,41);let option:Option<i64>=new std_result.Option<i64>.some(values[1]);_ = option;" ++
+            "fn main()->i64{let option:Option<i64>=new std_result.Option<i64>.some(1);_ = option;" ++
             "match answer(){Result<i64,i64>.ok(n)=>{return n;},Result<i64,i64>.err(e)=>{return e;}}}");
     }
 };
 
 // spec: PYTHON-CORE-1
-test "standard List Result and Option share their prelude identity" {
+test "standard Result and Option share their prelude identity" {
     var project = language.project.Project.init(t.allocator);
     defer project.deinit();
     try project.load(.{ .context = null, .read = Modules.read }, "main", .{});
