@@ -78,3 +78,302 @@ managed construction/append safepoint. It should print `142`. Stress mode is a
 rooting correctness check, not a performance mode. See the
 [schematic instructions](../experiments/schematic/README.md) for the real migrated
 application and normal/stress SVG comparison.
+
+## Managed lists
+
+`list[T]` is the growable sequence application code reaches for. Its storage lives
+on the tracing heap, so there is no allocator argument to thread and no free to
+write. Assignment and argument passing copy a reference rather than the contents,
+so every alias observes the same appends and slot writes. Elements must be
+copyable storable values — scalars, records, strings, byte strings and other
+managed collections — which keeps owned resources, provider capabilities and
+unchecked results out of freely aliased storage. Reading an element yields a
+snapshot of that value, never an interior pointer into growable storage.
+
+```mylang
+# doc: expect 42
+def widen(target: list[int]) -> None:
+    target.append(2)
+
+def main() -> int:
+    values: list[int] = [40]
+    alias = values
+    widen(alias)
+    return values[0] + alias[1]
+```
+
+## List methods and indexing
+
+A list answers one method by name, `append(value)`; there is no `insert`, `pop`,
+`remove`, `extend` or `sort`, and length is the free function `len(values)`
+rather than a method. `values[index]` reads a slot and `values[index] = value`
+overwrites one, so an indexed write never grows the list. Negative indexes count
+from the end, and an index outside the list traps with a located `R_LIST_BOUNDS`
+instead of returning a default. Receivers may be arbitrary expressions and nested
+indexes work; the receiver, the index and the assigned value are each evaluated
+exactly once, and a Python-surface indexed write evaluates the assigned value
+before the target it writes into. Ordering helpers live in the
+[`sort` module](standard-library.md#sort), which returns new lists and leaves its
+input untouched.
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    scores: list[int] = [10, 20, 30]
+    scores.append(40)
+    scores[1] = scores[1] + 5
+    if len(scores) != 4:
+        return 1
+    if scores[-1] != 40:
+        return 2
+    return scores[-1] + scores[1] - scores[0] - 13
+```
+
+## Inferred literals and slices
+
+A nonempty list literal infers one homogeneous element type from its elements, so
+an annotation is only needed when the literal cannot speak for itself. `[]` has
+nothing to infer from: it takes its type from an annotation, field, parameter or
+return type, and otherwise reports `E_LIST_INFERENCE`. `values[start:end]` copies
+the selected elements into a fresh list — negative endpoints count from the end,
+both endpoints clamp to the list, a reversed interval produces an empty list, and
+an omitted endpoint means the start or the end. The copy is shallow: the new list
+owns its own storage, but records and nested collections inside it are still
+shared with the original.
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    readings = [3, 12, 7, 20]
+    empty: list[int] = []
+    window = readings[1:3]
+    window[0] = 0
+    if readings[1] != 12:
+        return 1
+    if len(readings[2:99]) != 2:
+        return 2
+    if len(readings[3:1]) != 0:
+        return 3
+    if len(readings[-2:]) != 2:
+        return 4
+    return window[1] * 6 + len(empty)
+```
+
+## Insertion-ordered dictionaries
+
+`dict[K, V]` keeps its entries in the order their keys were first inserted, and
+rewriting an existing key leaves that key in its original position. Keys are
+`int` or `str`; anything else is rejected with `E_DICT_KEY`, because those are the
+types the runtime compares and hashes by value. Values are any copyable storable
+type, including lists and other dictionaries. `counts[key]` traps with
+`R_MISSING_KEY` when the key is absent, so `counts.get(key, fallback)` is the
+lookup that always answers, while `counts.keys()` and `counts.values()` allocate
+fresh snapshot lists rather than live views. A dictionary is shared by assignment
+exactly as a list is.
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    counts: dict[str, int] = {}
+    counts["pear"] = 2
+    counts["apple"] = 3
+    counts["pear"] = counts["pear"] + 1
+    order: list[str] = []
+    for name in counts:
+        order.append(name)
+    if order[0] != "pear":
+        return 1
+    if counts.get("plum", 0) != 0:
+        return 2
+    if len(counts.keys()) != 2:
+        return 3
+    total = 0
+    for amount in counts.values():
+        total += amount
+    return total * 7
+```
+
+## Iterating collections
+
+`for name in source` visits a list's elements, a string's Unicode scalar values,
+a [byte string](bytes.md)'s octets as `int`, and a dictionary's keys in insertion
+order. `for index, value in enumerate(source)` adds the position, and
+`for index in range(end)` or `range(start, end)` counts integers; there is no step
+argument. `break` and `continue` carry their Python meanings. A loop fixes its
+bound when it starts and rechecks it before each step, so changing the
+collection's length through an alias during iteration traps with
+`R_LIST_ITERATION_MUTATION` rather than reading past the end.
+
+```mylang
+# doc: expect 19
+def main() -> int:
+    words = ["alpha", "beta"]
+    letters = 0
+    for word in words:
+        for letter in word:
+            letters += 1
+    weighted = 0
+    for index, word in enumerate(words):
+        weighted += index * len(word)
+    octets = 0
+    for octet in b"\x01\x02":
+        octets += octet
+    counts: dict[str, int] = {"a": 1, "b": 2}
+    keyed = ""
+    for key in counts:
+        keyed = keyed + key
+    if keyed != "ab":
+        return 1
+    stepped = 0
+    for number in range(1, 5):
+        if number == 3:
+            continue
+        if number == 4:
+            break
+        stepped += number
+    return letters + weighted + octets + stepped
+```
+
+## Membership and value equality
+
+`in` and `not in` ask a container about its contents: a list is searched for an
+equal element, a dictionary for a key, a string for a substring, and a byte
+string for a single octet or a contiguous subsequence. The needle is evaluated
+before the container, and each is evaluated exactly once. `==` and `!=` compare
+contents rather than identities, recursing through nested lists, dictionaries and
+records with cycle detection so a self-referential graph still terminates;
+dictionary equality ignores insertion order. There is no identity comparison
+operator, so two separately built lists holding equal elements are equal.
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    left: list[int] = [1, 2, 3]
+    right: list[int] = [1, 2, 3]
+    if left != right:
+        return 1
+    if 2 not in left:
+        return 2
+    if 9 in left:
+        return 3
+    nested: list[list[int]] = [left]
+    twin: list[list[int]] = [right]
+    if nested != twin:
+        return 4
+    counts: dict[str, int] = {"a": 1, "b": 2}
+    other: dict[str, int] = {"b": 2, "a": 1}
+    if counts != other:
+        return 5
+    if "a" not in counts:
+        return 6
+    if "ell" not in "hello":
+        return 7
+    if "zz" in "hello":
+        return 8
+    return len(left) * 14
+```
+
+## List comprehensions
+
+`[expression for name in source if condition]` builds a fresh managed list in one
+checked pass over a list, string, byte string or dictionary. It takes exactly one
+generator and at most one filter, the filter runs before the expression, and the
+binding exists only inside the comprehension and may not shadow an active name.
+The source collection is unchanged, and the produced value has to be a copyable
+storable list element. Nested generators, generator expressions, and dictionary
+or set comprehensions are not provided; write an ordinary `for` loop for those.
+
+```mylang
+# doc: expect 21
+def main() -> int:
+    readings: list[int] = [3, 12, 7, 20]
+    doubled = [value * 2 for value in readings]
+    large = [value for value in readings if value > 10]
+    labels = [str(value) for value in large]
+    initials = [letter for letter in "mylang" if letter != "m"]
+    counts: dict[str, int] = {"a": 1, "bb": 2}
+    widths = [len(key) for key in counts]
+    if len(doubled) != 4:
+        return 1
+    if labels[0] != "12":
+        return 2
+    if len(initials) != 5:
+        return 3
+    if len(readings) != 4:
+        return 4
+    return doubled[0] + large[0] + widths[0] + widths[1]
+```
+
+## The tracing collector
+
+Each execution owns one single-threaded, nonmoving tracing heap, so a managed
+object keeps a stable identity for its whole lifetime and no address ever moves
+under a running program. Collection runs at managed allocation safepoints on a
+simple object-count threshold; this is a prototype policy rather than a tuned
+latency or byte budget, and the host allocator still decides how much memory
+exists at all. Nothing in the surface language frees an object:
+[`with arena() as name:`](arenas.md) changes only *when* a region's objects are
+released, not how they are written. `mylang run --gc-stress` collects at every
+safepoint, which is a rooting correctness check rather than a performance mode.
+
+```mylang
+# doc: expect 1225
+def batch(size: int) -> int:
+    scratch: list[str] = []
+    for index in range(size):
+        scratch.append(f"item {index}")
+    return len(scratch)
+
+def main() -> int:
+    kept: list[int] = []
+    for step in range(50):
+        kept.append(batch(step))
+    total = 0
+    for value in kept:
+        total += value
+    return total
+```
+
+Every `scratch` list and every interpolated string in that program is unreachable
+as soon as `batch` returns, and the collector reclaims them during a later
+allocation without the program saying anything.
+
+## Reclaiming cycles
+
+Reference counts on execution values exist to protect temporary roots — operands,
+intermediate results and retained aggregate snapshots — across an allocation that
+might collect. They are not the reclamation algorithm. Collection subtracts the
+edges internal to the managed graph, marks what the remaining roots reach and
+sweeps the rest, so a cycle nothing outside points at is reclaimed like any other
+garbage, and sweeping releases every dead edge before freeing a single object
+header. Records are values rather than references, so a cycle is always formed
+through the managed collections their fields hold.
+
+```mylang
+# doc: expect 42
+class Node:
+    name: str
+    peers: list[Node]
+
+def linked() -> int:
+    left = Node(name="left", peers=[])
+    right = Node(name="right", peers=[])
+    left.peers.append(right)
+    right.peers.append(left)
+    hop = left.peers[0]
+    back = hop.peers[0]
+    if back.name != "left":
+        return 0
+    return len(hop.peers) + len(left.peers)
+
+def main() -> int:
+    total = 0
+    for step in range(20):
+        total += linked()
+    return total + 2
+```
+
+`left.peers` reaches `right.peers` and back again, so neither list can be freed by
+dropping a count to zero; each round of the loop leaves a whole cycle unreachable
+and the tracing pass collects it. The same program under `--gc-stress`, which
+collects at every safepoint, returns the same answer.

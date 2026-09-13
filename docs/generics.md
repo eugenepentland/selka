@@ -1,0 +1,151 @@
+# Generic functions and types
+
+A generic declaration is a template over type parameters. Nothing about it exists
+at runtime: a call or a type annotation supplies concrete arguments, and the
+compiler produces one specialization per distinct argument list. Templates are
+checked before any specialization exists, so a template that no program ever
+calls still has to type-check.
+
+## Generic functions
+
+`def name[T](...)` declares a function template. Each parameter may carry a
+requirement — `copy`, `equality` or `integer`, where `integer` implies `equality`
+and `equality` implies `copy` — and the body is checked once against that
+requirement alone, without substituting a representative type. A requirement the
+body needs but the signature does not declare is an error in the template rather
+than at the call. Write the type arguments explicitly as `f[int](x)`, or omit the
+whole list when the value arguments determine every parameter; see
+[generic call inference](generic-inference.md).
+
+```mylang
+# doc: expect 42
+def pick[T](first: T, second: T, take_first: bool) -> T:
+    if take_first:
+        return first
+    return second
+
+def double[T: integer](value: T) -> T:
+    return value + value
+
+def main() -> int:
+    return double[int](pick[int](21, 0, True))
+```
+
+## Generic records and unions
+
+`class Name[T]:` and `union Name[T]:` take the same parameter lists. An instance
+is identified by the declaration plus its ordered arguments, so `Box[int]` and
+`Box[bool]` are unrelated types that never share a schema, and two declarations
+with identical fields stay distinct. Construct a generic record with its
+arguments spelled out, `Box[int](value=7)`, because a square-bracket application
+in call position names a record when the base is a type. A generic union case
+names only its template — `Slot.some(value)`, never `Slot[int].some(value)`,
+which cannot be told apart from an index followed by a call — so its arguments
+come from the expected type of a binding annotation, parameter, field or result,
+and `E_GENERIC_INFERENCE` is reported when no context supplies them.
+
+```mylang
+# doc: expect 42
+class Box[T]:
+    value: T
+
+union Slot[T]:
+    none,
+    some: T
+
+def contents[T](slot: Slot[T], fallback: T) -> T:
+    match slot:
+        case Slot.none:
+            return fallback
+        case Slot.some(value):
+            return value
+
+def main() -> int:
+    box = Box[int](value=7)
+    filled: Slot[int] = Slot.some(box.value)
+    empty: Slot[int] = Slot.none
+    return contents[int](filled, 0) + contents[int](empty, 35)
+```
+
+## Structural contracts
+
+A bound may name a shape instead of a nominal type. `field(name: Type)` requires
+the argument type to declare a field of exactly that name and type;
+`op(name(arg: T) -> R effects(...))` requires a public, nongeneric type-owned
+operation with exactly that signature and effect ceiling, called as `T.name(arg)`
+in the body. Both follow `copy` in the parameter's bound. A contract exposes only
+what it names: it does not reveal a domain's backing value and it does not
+authorize constructing a value of an unknown record. Because checking is
+universal, a caller bound only by `copy` cannot forward to a function that
+requires a field — every link in a forwarding chain repeats the contract, or the
+call rejects with `E_GENERIC_BODY_UNSUPPORTED`.
+
+```mylang
+# doc: expect 42
+class Reading:
+    value: int
+
+class TaggedReading:
+    tag: bool
+    value: int
+
+def value_of[T: copy + field(value: int)](item: T) -> int:
+    return item.value
+
+def forward[U: copy + field(value: int)](item: U) -> int:
+    return value_of[U](item)
+
+def main() -> int:
+    return value_of[Reading](Reading(value=12)) + forward[TaggedReading](TaggedReading(tag=True, value=30))
+```
+
+One bound may list several requirements joined by `+`, and each requirement's
+signature may itself mention fixed arrays, nominal applications and the
+function's other type parameters. Requirements match by exact type, never by
+coercion or subtyping.
+
+## Composite structural signatures
+
+A composite contract lets one parameter carry the shape of a whole record while a
+second parameter carries the element type that shape is written in terms of. The
+same substitution reaches through fixed-array lengths and nominal applications,
+so `field(items: [2]U)` and `field(box: Box[U])` constrain `T` and bind `U` in
+one signature. A repeated requirement name rejects with `E_GENERIC_REQUIREMENT`,
+as does a structural requirement written on a `class` or `union` declaration
+rather than on a function parameter; an invalid template rejects even when it is
+never called.
+
+```mylang
+# doc: expect 42
+class Box[U]:
+    value: U
+
+class Frame:
+    items: [2]int
+    box: Box[int]
+
+def boxed[T: copy + field(items: [2]U) + field(box: Box[U]), U: copy](frame: T) -> U:
+    return frame.box.value
+
+def main() -> int:
+    frame = Frame(items=[1, 2], box=Box[int](value=42))
+    return boxed[Frame, int](frame)
+```
+
+## Limits
+
+- A declaration takes at most 16 combined type and constant-length arguments, and
+  a program is bounded at 4,096 function specializations.
+- `main` cannot be generic.
+- Generic function bodies reject `print`, the file builtins and `with arena()`
+  with `E_GENERIC_BODY_UNSUPPORTED`. Write an ordinary function and call it from
+  the generic one.
+- Structural contracts apply to function type parameters only.
+- The public schema lists generic templates separately from concrete functions
+  and types. A template cannot be invoked through the JSON API without explicit
+  specialization, and schema export of a generic type constructor is unsupported.
+
+## Related pages
+
+- [Generic call inference](generic-inference.md) — when the type arguments can be omitted
+- [Constant length parameters](const-length-generics.md) — `const N: u64` alongside type parameters

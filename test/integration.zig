@@ -1141,6 +1141,31 @@ test "CLI features identify installed compiler without source input" {
     defer graph.deinit();
     try testing.expectEqualStrings(report.get("compiler_sha256").?.string, graph.value.object.get("implementation").?.object.get("compiler_sha256").?.string);
 }
+// spec: FEATURE-REPORT-2
+test "every implemented feature carries a kind, a summary and a documentation pointer" {
+    const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "--features" } });
+    defer testing.allocator.free(result.stdout);
+    defer testing.allocator.free(result.stderr);
+    const parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, result.stdout, .{});
+    defer parsed.deinit();
+    const features = parsed.value.object.get("features").?.object;
+    const implemented = features.get("implemented").?.object;
+    try testing.expect(implemented.count() > 80);
+    var entries = implemented.iterator();
+    while (entries.next()) |entry| {
+        const feature = entry.value_ptr.*.object;
+        const kind = feature.get("kind").?.string;
+        try testing.expect(std.mem.eql(u8, kind, "language") or std.mem.eql(u8, kind, "tooling"));
+        try testing.expect(feature.get("summary").?.string.len > 0);
+        const pointer = feature.get("doc").?.string;
+        try testing.expect(std.mem.indexOf(u8, pointer, ".md#") != null);
+        try testing.expect(std.mem.indexOf(u8, pointer, "..") == null);
+    }
+    // A slug whose form no longer exists is retired with a date and a note, not deleted.
+    const retired = features.get("removed").?.object.get("record-literals-without-new").?.object;
+    try testing.expectEqualStrings("2026-09-13", retired.get("date").?.string);
+    try testing.expect(retired.get("note").?.string.len > 0);
+}
 const listing_module =
     \\module input
     \\import math

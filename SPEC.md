@@ -219,6 +219,31 @@ built. The same identity appears in every receipt's `implementation`, so a recei
 feature report from one compiler always agree. The current reference is
 `docs/current-language.md`; historical checkpoint prose does not supersede it. The
 manifest records implementation coverage, not a test certificate.
+- [FEATURE-REPORT-2] The manifest's `implemented` section is a JSON object keyed by feature
+slug. Every entry carries `kind`, either `language` or `tooling`, a one-line `summary`, and a
+`doc` pointer of the form `<page>.md#<heading-anchor>` naming the documentation section that
+demonstrates the feature. A slug that stops describing a real form moves to `removed` with a
+date and a note rather than disappearing.
+- [DOCCOV-1] `mylang doc-coverage [<repo-root>]` resolves every implemented feature's `doc`
+pointer against that checkout. A pointer without an anchor, a page that does not exist, a page
+reached through a `..` component, a page under `docs/legacy/` whose examples the runner never
+executes, and an anchor matching no heading are all reported failures.
+A heading's anchor is its text lowercased with punctuation dropped, spaces turned into hyphens,
+and hyphens and underscores kept; its section runs to the next heading of the same or higher
+level, and headings inside fenced blocks are not headings. A `language` section must contain a
+fence tagged `mylang` or `my` that the documentation runner executes — one tagged
+`# doc: skip` or `# doc: not-mylang` does not count. A `tooling` section must contain a fence
+tagged `bash`, `sh`, `console` or `text`, or an executable program fence.
+- [DOCCOV-2] Every `export` of every `src/stdlib/*.my` module must be named as a whole word in
+that module's `## <module>` section of `docs/standard-library.md`, every such section must
+carry an executed example, and every exported definition must have a `#` comment line directly
+above it in the module source.
+- [DOCCOV-3] The command prints per-page feature counts, the standard-module and export totals,
+and one line per failure, then a failure count. It exits 0 only when nothing failed, 1 when
+anything is undocumented, and 2 for an unusable command line. A missing or malformed
+`features.json`, an unreadable page and an unlistable `src/stdlib` are reported as failures
+rather than host errors. `zig build test-doc-coverage` runs it, and the default `test` step
+depends on it.
 - [DIAGNOSTIC-RECOVERY-1] Semantic checking recovers at ordinary and symbolic function boundaries after a source error, reports independent function faults in source order, and deduplicates repeated errors at the same source range and code. It stops within the failed function and skips whole-program verification when any body is incomplete; syntax, type-catalog, and namespace construction remain prerequisites. A failed check never publishes typed code or permits execution. Repeating a failed compilation check preserves diagnostics rather than appending duplicates.
 
 ## Proven parameter return regions

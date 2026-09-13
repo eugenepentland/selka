@@ -2,111 +2,523 @@
   "language_version": "0.1.0",
   "primary_backend": "vm",
   "native_backend": "qbe-with-host-support",
-  "implemented": [
-    "direct-c-scalar-imports-qbe",
-    "explicit-native-link-inputs",
-    "python-free-native-build-driver",
-    "python-free-native-guest-tests",
-    "affected-native-test-result-reuse",
-    "isolated-source-provider-test-fixtures",
-    "keyword-arguments-and-immutable-defaults",
-    "positional-and-named-record-constructors",
-    "collection-membership-and-value-equality",
-    "managed-arenas",
-    "python-indented-syntax",
-    "python-payload-variant-construction",
-    "python-contextual-array-and-table-literals",
-    "python-call-type-arguments",
-    "truncating-division-helpers",
-    "assert-statements",
-    "python-string-methods",
-    "format-strings",
-    "list-comprehensions",
-    "wildcard-match-arms",
-    "prelude-float-operations",
-    "string-to-number-parsing",
-    "legacy-migration",
-    "python-assignments-and-value-records",
-    "canonical-prelude-types",
-    "inferred-list-literals-and-slices",
-    "collection-iteration",
-    "managed-unicode-strings",
-    "managed-bytes",
-    "managed-insertion-ordered-dictionaries",
-    "ordinary-binary64-float",
-    "contextual-option-constructors",
-    "unit-and-result-entry",
-    "optional-semicolons",
-    "dotted-module-qualification",
-    "builtin-list-and-result-types",
-    "contextual-empty-list-and-result-constructors",
-    "list-methods-and-indexing",
-    "record-literals-without-new",
-    "postfix-error-propagation",
-    "fixed-width-integers",
-    "named-integer-bitwise-shifts",
-    "wrapping-saturating-integers",
-    "booleans",
-    "unit-procedures",
-    "byte-literals",
-    "nominal-records",
-    "tagged-unions",
-    "checked-results",
-    "generic-functions",
-    "generic-call-argument-inference",
-    "const-length-generics",
-    "generic-nominals",
-    "structural-contracts",
-    "capability-effects",
-    "disk-modules",
-    "typed-json",
-    "scoped-directory-and-endpoint-providers",
-    "scoped-filesystem-metadata-and-listings",
-    "flexible-top-level-export-placement",
-    "source-navigation",
-    "syntax-cache",
-    "exact-verdict-cache",
-    "independent-function-diagnostics",
-    "copied-block-byte-io",
-    "configurable-byte-io-budgets",
-    "scalar-module-constants",
-    "bounded-source-constant-functions",
-    "structured-loop-exits",
-    "integer-range-iteration",
-    "value-producing-matches",
-    "transparent-type-aliases",
-    "composite-structural-signatures",
-    "local-locked-packages",
-    "nested-runtime-byte-budgets",
-    "memory-accounting-categories",
-    "typed-holes",
-    "bounded-vm-trace",
-    "in-memory-host-replay",
-    "named-executable-laws",
-    "isolated-process-workers",
-    "bounded-scalar-source-evaluation",
-    "deterministic-test-provider-fixtures",
-    "typed-noncapturing-function-values",
-    "bounded-guest-callbacks",
-    "changed-source-function-body-cache",
-    "managed-lists",
-    "nonmoving-tracing-gc",
-    "managed-list-cycles",
-    "standard-math",
-    "standard-strings",
-    "standard-sort",
-    "standard-path",
-    "standard-hex",
-    "standard-base64",
-    "standard-json",
-    "standard-pool",
-    "standard-random",
-    "standard-time",
-    "doc-examples",
-    "python-print-and-output-effect",
-    "python-file-surface",
-    "command-line-capability-grants"
-  ],
+  "implemented": {
+    "direct-c-scalar-imports-qbe": {
+      "kind": "tooling",
+      "summary": "`extern fn` declarations call fixed-arity C scalar functions directly from QBE native builds.",
+      "doc": "docs/c-ffi.md#direct-c-imports"
+    },
+    "explicit-native-link-inputs": {
+      "kind": "tooling",
+      "summary": "`mylang build` and `mylang test` accept repeatable object, library and search-path link inputs.",
+      "doc": "docs/c-ffi.md#linking-your-code"
+    },
+    "python-free-native-build-driver": {
+      "kind": "tooling",
+      "summary": "`mylang build` drives QBE, the assembler and the linker itself, with no Python installer in the loop.",
+      "doc": "docs/tooling/native-build.md#mylang-build"
+    },
+    "python-free-native-guest-tests": {
+      "kind": "tooling",
+      "summary": "`mylang test` discovers exported `test_` functions and runs them as fresh native processes.",
+      "doc": "docs/tooling/guest-tests.md#mylang-test"
+    },
+    "affected-native-test-result-reuse": {
+      "kind": "tooling",
+      "summary": "A native test run reuses receipts for cases whose sources and compiler identity did not change.",
+      "doc": "docs/tooling/guest-tests.md#reusing-unaffected-results"
+    },
+    "isolated-source-provider-test-fixtures": {
+      "kind": "tooling",
+      "summary": "A test case may replace dependency sources inside a private bounded snapshot that never edits the originals.",
+      "doc": "docs/tooling/guest-tests.md#isolated-source-provider-fixtures"
+    },
+    "keyword-arguments-and-immutable-defaults": {
+      "kind": "language",
+      "summary": "Calls accept positional and keyword arguments with trailing immutable scalar defaults.",
+      "doc": "docs/functions.md#keyword-arguments-and-defaults"
+    },
+    "positional-and-named-record-constructors": {
+      "kind": "language",
+      "summary": "A record is constructed by calling its type with positional or named fields.",
+      "doc": "docs/records-and-unions.md#positional-and-named-constructors"
+    },
+    "collection-membership-and-value-equality": {
+      "kind": "language",
+      "summary": "`in`, `not in`, `==` and `!=` compare managed collection contents rather than identities.",
+      "doc": "docs/managed-memory.md#membership-and-value-equality"
+    },
+    "managed-arenas": {
+      "kind": "language",
+      "summary": "`with arena() as name:` releases every managed object allocated during the block in one step.",
+      "doc": "docs/arenas.md#managed-arenas"
+    },
+    "python-indented-syntax": {
+      "kind": "language",
+      "summary": "`def`, `class`, four-space indentation and `#` comments are the canonical source spelling.",
+      "doc": "docs/python-syntax.md#python-style-application-code"
+    },
+    "python-payload-variant-construction": {
+      "kind": "language",
+      "summary": "`Shape.radius(4)` builds a payload variant and `case Shape.radius(r)` takes it apart.",
+      "doc": "docs/records-and-unions.md#payload-variant-construction"
+    },
+    "python-contextual-array-and-table-literals": {
+      "kind": "language",
+      "summary": "A list literal becomes a fixed `[N]T` array and a dict literal an enum-indexed `[Kind]T` table when the context demands one.",
+      "doc": "docs/records-and-unions.md#fixed-arrays-and-enum-tables"
+    },
+    "python-call-type-arguments": {
+      "kind": "language",
+      "summary": "`identity[int](2)` supplies a generic call's type arguments explicitly in Python syntax.",
+      "doc": "docs/functions.md#explicit-call-type-arguments"
+    },
+    "truncating-division-helpers": {
+      "kind": "language",
+      "summary": "`divtrunc` and `remtrunc` round toward zero where `//` and `%` round down.",
+      "doc": "docs/integer-operations.md#truncating-division"
+    },
+    "assert-statements": {
+      "kind": "language",
+      "summary": "`assert condition` and `assert condition, \"message\"` trap `R_ASSERT` under every effect bound.",
+      "doc": "docs/statements.md#assert-statements"
+    },
+    "python-string-methods": {
+      "kind": "language",
+      "summary": "`str` answers Python's strip, case, search, classification and padding methods with fresh strings.",
+      "doc": "docs/text.md#string-methods"
+    },
+    "format-strings": {
+      "kind": "language",
+      "summary": "`f\"...\"` interpolates scalar expressions, with `{{` and `}}` for literal braces.",
+      "doc": "docs/text.md#format-strings"
+    },
+    "list-comprehensions": {
+      "kind": "language",
+      "summary": "`[expression for name in source if condition]` builds a managed list in one expression.",
+      "doc": "docs/managed-memory.md#list-comprehensions"
+    },
+    "wildcard-match-arms": {
+      "kind": "language",
+      "summary": "A final `case _` covers every variant no earlier arm named.",
+      "doc": "docs/match-expressions.md#wildcard-arms"
+    },
+    "prelude-float-operations": {
+      "kind": "language",
+      "summary": "Prelude helpers convert, compare and classify binary64 values without importing a module.",
+      "doc": "docs/floating-point.md#prelude-float-helpers"
+    },
+    "string-to-number-parsing": {
+      "kind": "language",
+      "summary": "`int(text)` and `float(text)` answer `Option` rather than raising on text that is not a number.",
+      "doc": "docs/text.md#parsing-numbers-from-text"
+    },
+    "legacy-migration": {
+      "kind": "tooling",
+      "summary": "`mylang migrate` rewrites brace-syntax sources into the canonical Python surface and reports every gap.",
+      "doc": "docs/experiments/migration.md#checked-migration-to-the-python-surface"
+    },
+    "python-assignments-and-value-records": {
+      "kind": "language",
+      "summary": "Assignment creates a mutable block-scoped local and records keep value semantics on copy.",
+      "doc": "docs/statements.md#assignments-and-value-records"
+    },
+    "canonical-prelude-types": {
+      "kind": "language",
+      "summary": "`list`, `dict`, `str`, `bytes`, `Option` and `Result` have one identity in every module.",
+      "doc": "docs/results-and-options.md#canonical-prelude-types"
+    },
+    "inferred-list-literals-and-slices": {
+      "kind": "language",
+      "summary": "A list literal infers its element type and `values[a:b]` copies a clamped range into a fresh list.",
+      "doc": "docs/managed-memory.md#inferred-literals-and-slices"
+    },
+    "collection-iteration": {
+      "kind": "language",
+      "summary": "`for` visits lists, strings, byte strings and dictionary keys, with `enumerate` for indexes.",
+      "doc": "docs/managed-memory.md#iterating-collections"
+    },
+    "managed-unicode-strings": {
+      "kind": "language",
+      "summary": "`str` is an immutable garbage-collected sequence of Unicode scalar values.",
+      "doc": "docs/text.md#managed-unicode-strings"
+    },
+    "managed-bytes": {
+      "kind": "language",
+      "summary": "`bytes` is an immutable garbage-collected byte string with Python indexing, slicing and search.",
+      "doc": "docs/bytes.md#managed-byte-strings"
+    },
+    "managed-insertion-ordered-dictionaries": {
+      "kind": "language",
+      "summary": "`dict` keeps insertion order over `int` or `str` keys and copyable values.",
+      "doc": "docs/managed-memory.md#insertion-ordered-dictionaries"
+    },
+    "ordinary-binary64-float": {
+      "kind": "language",
+      "summary": "`float` is IEEE binary64 with ordinary literals, operators, comparisons and integer conversions.",
+      "doc": "docs/floating-point.md#binary64-floating-point"
+    },
+    "contextual-option-constructors": {
+      "kind": "language",
+      "summary": "`Some(value)` and a bare `None` take their `Option[T]` type from the surrounding context.",
+      "doc": "docs/results-and-options.md#option-constructors"
+    },
+    "unit-and-result-entry": {
+      "kind": "language",
+      "summary": "`main` may return `int`, `None` or `Result[int, int]` / `Result[None, int]`.",
+      "doc": "docs/functions.md#entry-point-signatures"
+    },
+    "optional-semicolons": {
+      "kind": "language",
+      "summary": "A statement ends at a newline; semicolons remain valid for several statements on one line.",
+      "doc": "docs/statements.md#statement-endings"
+    },
+    "dotted-module-qualification": {
+      "kind": "language",
+      "summary": "An imported module's exports are named `module.name`, including its types.",
+      "doc": "docs/modules.md#dotted-qualification"
+    },
+    "builtin-list-and-result-types": {
+      "kind": "language",
+      "summary": "`list[T]` and `Result[T, E]` are prelude types that need no declaration or import.",
+      "doc": "docs/results-and-options.md#builtin-list-and-result-types"
+    },
+    "contextual-empty-list-and-result-constructors": {
+      "kind": "language",
+      "summary": "An empty `[]`, `{}`, `Ok(...)` or `Err(...)` takes its type from the annotation, field or result it fills.",
+      "doc": "docs/results-and-options.md#contextual-empty-constructors"
+    },
+    "list-methods-and-indexing": {
+      "kind": "language",
+      "summary": "Lists answer `append`, `len`, indexing with negative positions and indexed writes.",
+      "doc": "docs/managed-memory.md#list-methods-and-indexing"
+    },
+    "postfix-error-propagation": {
+      "kind": "language",
+      "summary": "`expression?` returns a failed `Result` to the caller and unwraps a successful one.",
+      "doc": "docs/results-and-options.md#postfix-error-propagation"
+    },
+    "fixed-width-integers": {
+      "kind": "language",
+      "summary": "`int` is checked signed 64-bit; `i8`-`i64` and `u8`-`u64` are available for binary formats.",
+      "doc": "docs/integer-operations.md#fixed-width-integers"
+    },
+    "named-integer-bitwise-shifts": {
+      "kind": "language",
+      "summary": "`bit_and`, `bit_or`, `bit_xor`, `shift_left` and `shift_right` are named operations over one integer type.",
+      "doc": "docs/integer-operations.md#bitwise-and-shift-helpers"
+    },
+    "wrapping-saturating-integers": {
+      "kind": "language",
+      "summary": "`wrapping_*` reduces modulo the declared width and `saturating_*` clamps to its bounds.",
+      "doc": "docs/integer-operations.md#wrapping-and-saturating-arithmetic"
+    },
+    "booleans": {
+      "kind": "language",
+      "summary": "`True`, `False`, `and`, `or` and `not` are the only condition type; integers do not stand in.",
+      "doc": "docs/statements.md#booleans-and-conditions"
+    },
+    "unit-procedures": {
+      "kind": "language",
+      "summary": "A procedure omits its return annotation or writes `-> None`, ends naturally or with bare `return`.",
+      "doc": "docs/functions.md#unit-procedures"
+    },
+    "byte-literals": {
+      "kind": "language",
+      "summary": "`b\"...\"` and `b'...'` write byte strings with escapes and a decoded-size limit.",
+      "doc": "docs/bytes.md#byte-literals"
+    },
+    "nominal-records": {
+      "kind": "language",
+      "summary": "`class` declares a nominal record of annotated fields with value semantics.",
+      "doc": "docs/records-and-unions.md#records"
+    },
+    "tagged-unions": {
+      "kind": "language",
+      "summary": "`union` declares a tagged variant type whose cases are matched exhaustively.",
+      "doc": "docs/records-and-unions.md#tagged-unions"
+    },
+    "checked-results": {
+      "kind": "language",
+      "summary": "`Result[T, E]` carries `Ok`/`Err` and must be handled before it is discarded.",
+      "doc": "docs/results-and-options.md#checked-results"
+    },
+    "generic-functions": {
+      "kind": "language",
+      "summary": "`def name[T](...)` declares a template specialized per concrete argument type.",
+      "doc": "docs/generics.md#generic-functions"
+    },
+    "generic-call-argument-inference": {
+      "kind": "language",
+      "summary": "A generic call omits its type arguments when the argument types determine every parameter.",
+      "doc": "docs/generic-inference.md#generic-call-inference"
+    },
+    "const-length-generics": {
+      "kind": "language",
+      "summary": "A `const N: u64` parameter carries a bounded array length through generic signatures.",
+      "doc": "docs/const-length-generics.md#constant-length-parameters"
+    },
+    "generic-nominals": {
+      "kind": "language",
+      "summary": "`class` and `union` declarations take type parameters and specialize by argument identity.",
+      "doc": "docs/generics.md#generic-records-and-unions"
+    },
+    "structural-contracts": {
+      "kind": "language",
+      "summary": "A generic parameter may require named fields or operations instead of a nominal bound.",
+      "doc": "docs/generics.md#structural-contracts"
+    },
+    "capability-effects": {
+      "kind": "language",
+      "summary": "A function's declared effect ceiling bounds everything it transitively calls.",
+      "doc": "docs/effects.md#capability-effects"
+    },
+    "disk-modules": {
+      "kind": "language",
+      "summary": "A project is `module`/`import`/`export` declarations over files resolved from disk.",
+      "doc": "docs/modules.md#disk-modules"
+    },
+    "typed-json": {
+      "kind": "language",
+      "summary": "Exported signatures over JSON-compatible types are validated and encoded as `typed-json-v1`.",
+      "doc": "docs/typed-json.md#typed-json-boundaries"
+    },
+    "scoped-directory-and-endpoint-providers": {
+      "kind": "tooling",
+      "summary": "The byte runner grants a guest a named directory or network endpoint instead of ambient authority.",
+      "doc": "docs/tooling/byte-runner.md#scoped-directory-and-endpoint-providers"
+    },
+    "scoped-filesystem-metadata-and-listings": {
+      "kind": "tooling",
+      "summary": "Scoped directory providers answer bounded metadata and directory listings.",
+      "doc": "docs/tooling/byte-runner.md#filesystem-metadata-and-listings"
+    },
+    "flexible-top-level-export-placement": {
+      "kind": "language",
+      "summary": "`export` may appear anywhere at the top level, before or after the declaration it names.",
+      "doc": "docs/modules.md#export-placement"
+    },
+    "source-navigation": {
+      "kind": "tooling",
+      "summary": "`index-project` reports definitions, references and a pinned source snapshot as JSON.",
+      "doc": "docs/tooling/navigation.md#source-navigation"
+    },
+    "syntax-cache": {
+      "kind": "tooling",
+      "summary": "Parsed syntax trees are reused across commands when the source bytes are unchanged.",
+      "doc": "docs/tooling/caches.md#syntax-cache"
+    },
+    "exact-verdict-cache": {
+      "kind": "tooling",
+      "summary": "A whole-program checking verdict is reused when the compiler and the source snapshot both match.",
+      "doc": "docs/tooling/caches.md#exact-verdict-cache"
+    },
+    "independent-function-diagnostics": {
+      "kind": "language",
+      "summary": "One `check` reports the first fault in each independently checked function instead of stopping at the first.",
+      "doc": "docs/diagnostic-recovery.md#checking-independent-function-faults"
+    },
+    "copied-block-byte-io": {
+      "kind": "tooling",
+      "summary": "The byte host moves data in copied bounded blocks rather than shared buffers.",
+      "doc": "docs/byte-io-bulk.md#bounded-byte-block-io"
+    },
+    "configurable-byte-io-budgets": {
+      "kind": "tooling",
+      "summary": "Input, output and execution budgets for the byte runner are set on its command line.",
+      "doc": "docs/tooling/byte-runner.md#budgets"
+    },
+    "scalar-module-constants": {
+      "kind": "language",
+      "summary": "`const NAME: T = expression` folds an immutable scalar at check time.",
+      "doc": "docs/module-constants.md#immutable-scalar-constants"
+    },
+    "bounded-source-constant-functions": {
+      "kind": "language",
+      "summary": "A constant initializer may call bounded nongeneric scalar source functions.",
+      "doc": "docs/source-evaluation.md#bounded-source-evaluation-in-constants"
+    },
+    "structured-loop-exits": {
+      "kind": "language",
+      "summary": "`break` and `continue` leave or restart the nearest enclosing loop with checked cleanup.",
+      "doc": "docs/structured-loop-exits.md#structured-loop-exits"
+    },
+    "integer-range-iteration": {
+      "kind": "language",
+      "summary": "`for index in range(start, end)` visits a half-open ascending integer range.",
+      "doc": "docs/range-iteration.md#integer-range-iteration"
+    },
+    "value-producing-matches": {
+      "kind": "language",
+      "summary": "A match used as an expression yields one value from exhaustive arms.",
+      "doc": "docs/match-expressions.md#value-producing-matches"
+    },
+    "transparent-type-aliases": {
+      "kind": "language",
+      "summary": "`type Name = Target` is another spelling for an existing type, not a new identity.",
+      "doc": "docs/type-aliases.md#transparent-type-aliases"
+    },
+    "composite-structural-signatures": {
+      "kind": "language",
+      "summary": "One structural contract may require several fields and operations together.",
+      "doc": "docs/generics.md#composite-structural-signatures"
+    },
+    "local-locked-packages": {
+      "kind": "tooling",
+      "summary": "Imports resolve through a locked local package root with pinned content hashes.",
+      "doc": "docs/tooling/packages.md#local-locked-packages"
+    },
+    "nested-runtime-byte-budgets": {
+      "kind": "tooling",
+      "summary": "Runtime byte budgets nest, so an inner region can never exceed the region containing it.",
+      "doc": "docs/tooling/runtime-budgets.md#nested-byte-budgets"
+    },
+    "memory-accounting-categories": {
+      "kind": "tooling",
+      "summary": "Runtime memory reports separate the VM and host totals, and split the VM's between guest backing and bookkeeping.",
+      "doc": "docs/tooling/runtime-budgets.md#memory-accounting-categories"
+    },
+    "typed-holes": {
+      "kind": "language",
+      "summary": "`todo[T]()` declares an unfinished implementation with a checked type and blocks publication.",
+      "doc": "docs/typed-holes.md#typed-holes"
+    },
+    "bounded-vm-trace": {
+      "kind": "tooling",
+      "summary": "A bounded VM trace records the last instructions before a trap for inspection.",
+      "doc": "docs/tooling/agent-tools.md#bounded-vm-traces"
+    },
+    "in-memory-host-replay": {
+      "kind": "tooling",
+      "summary": "Host calls made during one execution are recorded and replayed without the host.",
+      "doc": "docs/tooling/agent-tools.md#in-memory-host-replay"
+    },
+    "named-executable-laws": {
+      "kind": "tooling",
+      "summary": "A named law is an executable property statement checked with the rest of the suite.",
+      "doc": "docs/tooling/agent-tools.md#named-executable-laws"
+    },
+    "isolated-process-workers": {
+      "kind": "tooling",
+      "summary": "Bounded parallel work runs in isolated processes exchanging copied typed messages.",
+      "doc": "docs/tooling/workers.md#isolated-process-workers"
+    },
+    "bounded-scalar-source-evaluation": {
+      "kind": "tooling",
+      "summary": "`eval-project` runs an effect-free parameter-free entry point under explicit step and byte budgets.",
+      "doc": "docs/tooling/evaluation.md#bounded-scalar-source-evaluation"
+    },
+    "deterministic-test-provider-fixtures": {
+      "kind": "tooling",
+      "summary": "A guest test runs with no ambient authority, and a case may replace a dependency's source to make a reading deterministic.",
+      "doc": "docs/tooling/guest-tests.md#deterministic-provider-fixtures"
+    },
+    "typed-noncapturing-function-values": {
+      "kind": "language",
+      "summary": "A function value has a declared signature and captures nothing.",
+      "doc": "docs/functions.md#function-values"
+    },
+    "bounded-guest-callbacks": {
+      "kind": "language",
+      "summary": "A callback parameter declares its signature and an exact effect ceiling.",
+      "doc": "docs/functions.md#bounded-callbacks"
+    },
+    "changed-source-function-body-cache": {
+      "kind": "tooling",
+      "summary": "Unchanged function bodies reuse their checked results when other functions in the module change.",
+      "doc": "docs/tooling/caches.md#function-body-cache"
+    },
+    "managed-lists": {
+      "kind": "language",
+      "summary": "`list[T]` is a growing garbage-collected sequence shared by assignment.",
+      "doc": "docs/managed-memory.md#managed-lists"
+    },
+    "nonmoving-tracing-gc": {
+      "kind": "language",
+      "summary": "A single-threaded nonmoving tracing collector reclaims managed objects at allocation safepoints.",
+      "doc": "docs/managed-memory.md#the-tracing-collector"
+    },
+    "managed-list-cycles": {
+      "kind": "language",
+      "summary": "Cyclic managed graphs are reclaimed; reference counting only protects temporary roots.",
+      "doc": "docs/managed-memory.md#reclaiming-cycles"
+    },
+    "standard-math": {
+      "kind": "language",
+      "summary": "`math` provides classification, rounding, roots, powers and integer helpers over `float` and `int`.",
+      "doc": "docs/standard-library.md#math"
+    },
+    "standard-strings": {
+      "kind": "language",
+      "summary": "`strings` provides classification, search, trimming, padding and number formatting over `str`.",
+      "doc": "docs/standard-library.md#strings"
+    },
+    "standard-sort": {
+      "kind": "language",
+      "summary": "`sort` provides stable ordering, binary search, extrema and deduplication over managed lists.",
+      "doc": "docs/standard-library.md#sort"
+    },
+    "standard-path": {
+      "kind": "language",
+      "summary": "`path` joins, splits and normalizes POSIX-style path text without touching the filesystem.",
+      "doc": "docs/standard-library.md#path"
+    },
+    "standard-hex": {
+      "kind": "language",
+      "summary": "`hex` encodes and decodes hexadecimal text for byte strings in either letter case.",
+      "doc": "docs/standard-library.md#hex"
+    },
+    "standard-base64": {
+      "kind": "language",
+      "summary": "`base64` encodes and decodes standard and URL-safe base64 text.",
+      "doc": "docs/standard-library.md#base64"
+    },
+    "standard-json": {
+      "kind": "language",
+      "summary": "`json` parses and renders ordinary JSON documents as a bounded managed tree.",
+      "doc": "docs/standard-library.md#json"
+    },
+    "standard-pool": {
+      "kind": "language",
+      "summary": "`pool` provides generation-checked handles into a reusable slot table.",
+      "doc": "docs/standard-library.md#pool"
+    },
+    "standard-random": {
+      "kind": "language",
+      "summary": "`random` provides a deterministic SplitMix64 stream seeded explicitly or from an entropy capability.",
+      "doc": "docs/standard-library.md#random"
+    },
+    "standard-time": {
+      "kind": "language",
+      "summary": "`time` provides durations, instants and Unix wall-clock readings behind a clock capability.",
+      "doc": "docs/standard-library.md#time"
+    },
+    "doc-examples": {
+      "kind": "tooling",
+      "summary": "Every fenced documentation example is run, type-checked or explicitly skipped by the default gate.",
+      "doc": "docs/tooling/documentation-gate.md#executable-examples"
+    },
+    "python-print-and-output-effect": {
+      "kind": "language",
+      "summary": "`print` renders values Python-style and contributes an `output` effect.",
+      "doc": "docs/io.md#print"
+    },
+    "python-file-surface": {
+      "kind": "language",
+      "summary": "`with open(...)`, handle methods and whole-path helpers read and write inside granted directories.",
+      "doc": "docs/io.md#files"
+    },
+    "command-line-capability-grants": {
+      "kind": "tooling",
+      "summary": "`mylang run` grants every capability by default; `--restrict` denies them and `--allow-*` narrows what it grants back.",
+      "doc": "docs/io.md#capabilities"
+    },
+    "documented-feature-coverage": {
+      "kind": "tooling",
+      "summary": "`mylang doc-coverage` fails the build when an implemented feature or a standard export has no documented example.",
+      "doc": "docs/tooling/documentation-gate.md#feature-and-export-coverage"
+    }
+  },
   "unsupported": [
     "stored-reference-fields",
     "guest-shared-memory-threads",
@@ -147,6 +559,10 @@
     "c-backend": {
       "date": "2026-09-13",
       "note": "emit-c/emit-project-c, src/native.zig and the C-only runtime. QBE is the only native backend."
+    },
+    "record-literals-without-new": {
+      "date": "2026-09-13",
+      "note": "merged into positional-and-named-record-constructors; the `new T { ... }` spelling it was named against left with the legacy brace syntax."
     }
   }
 }

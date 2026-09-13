@@ -71,3 +71,37 @@ Statements may end at a newline, `}`, or end of file. Semicolons remain valid an
 `()` is an alternative spelling for the unit type and unit value. `return` followed by a newline or closing brace returns unit. Postfix `expression?` propagates a failed result to the caller, with postfix precedence. Calls and parameter lists accept trailing commas.
 
 [Checked legacy migration](experiments/migration.md) rewrites brace-syntax sources into the canonical Python surface and reports every construct without a Python spelling.
+
+## Feature reference pages
+
+Every implemented feature has a section with a runnable example on one of the
+pages below, and `mylang doc-coverage` fails the build when one does not; see
+[documentation gates](tooling/documentation-gate.md). `mylang --features` reports
+the same inventory with each feature's one-line summary and the pointer at its
+section.
+
+Language surface:
+
+- [Python-style application code](python-syntax.md) — the canonical syntax, end to end
+- [Statements and bindings](statements.md), [functions and calls](functions.md)
+- [Records, unions and enums](records-and-unions.md), [results and options](results-and-options.md)
+- [Text and strings](text.md), [managed byte strings](bytes.md)
+- [Managed application collections](managed-memory.md), [managed arenas](arenas.md)
+- [Generic functions and types](generics.md), [generic call inference](generic-inference.md), [constant length parameters](const-length-generics.md)
+- [Explicit integer operations](integer-operations.md), [binary64 floating point](floating-point.md)
+- [Modules, imports and exports](modules.md), [immutable scalar constants](module-constants.md), [transparent type aliases](type-aliases.md)
+- [Capabilities and effects](effects.md), [printing, files and command-line authority](io.md)
+- [Integer range iteration](range-iteration.md), [structured loop exits](structured-loop-exits.md), [value-producing matches](match-expressions.md)
+- [Standard library](standard-library.md), [time and randomness](standard-time-random.md)
+- [Typed JSON boundaries](typed-json.md), [typed holes](typed-holes.md)
+- [Bounded source evaluation in constants](source-evaluation.md), [checking independent function faults](diagnostic-recovery.md)
+- [Direct C imports](c-ffi.md), [bounded byte block I/O](byte-io-bulk.md)
+
+Tooling:
+
+- [Native builds](tooling/native-build.md), [guest tests](tooling/guest-tests.md)
+- [Compiler caches](tooling/caches.md), [source navigation](tooling/navigation.md)
+- [Agent-facing inspection](tooling/agent-tools.md), [documentation gates](tooling/documentation-gate.md)
+- [Local packages](tooling/packages.md), [isolated workers](tooling/workers.md)
+- [The byte runner host](tooling/byte-runner.md), [runtime budgets](tooling/runtime-budgets.md)
+- [Bounded evaluation](tooling/evaluation.md), [command phase timings](tooling/timings.md)

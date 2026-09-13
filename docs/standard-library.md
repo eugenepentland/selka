@@ -232,6 +232,26 @@ is_hex(text: str) -> bool
 uppercase rendering and a predicate, and names the operations the way the other
 codecs do.
 
+```mylang
+# doc: expect 42
+module main
+import hex
+
+def main() -> int:
+    text = hex.encode(b"\x0f\xa0")
+    if text != "0fa0" or hex.encode_upper(b"\x0f\xa0") != "0FA0":
+        return 1
+    if not hex.is_hex(text) or hex.is_hex("0fg0"):
+        return 2
+    match hex.decode(text):
+        case Ok(raw):
+            if raw != b"\x0f\xa0":
+                return 3
+            return len(raw) * 21
+        case Err(message):
+            return 0 - len(message)
+```
+
 ## base64
 
 ```text
