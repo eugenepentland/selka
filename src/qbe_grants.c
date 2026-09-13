@@ -129,23 +129,30 @@ static int writable(const MylangGrants *grants) {
     for (size_t i = 0; i < grants->count; ++i) if (grants->directories[i].writable) return 1;
     return 0;
 }
-/* Apply the granted authority. A `--restrict` command line decides every
-   capability, replacing a linked provider; the default grants only fill in what
-   no linked provider already supplies. Write authority always implies read
-   authority, so a default or write grant is never narrower than a read grant. */
-static int provision(MylangGrants *grants, MylangNativeProviders *providers) {
+/* Apply the granted authority. A linked native provider is the program's whole
+   authority unless `--restrict` is given; with no provider linked the command
+   line decides, granting every capability by default. Write authority always
+   implies read authority, so a default or write grant is never narrower than a
+   read grant. */
+static int provision(MylangGrants *grants, MylangNativeProviders *providers, int linked) {
     (void)mylang_host_charge;
-    int decides = grants->restricted;
+    if (linked && !grants->restricted) return 1;
     if (!roots(grants)) return 0;
-    if (grants->scoped.count && (decides || !providers->filesystem.acquire))
-        providers->filesystem = mylang_scoped_provider(&grants->scoped, writable(grants) ? 7u : 5u);
-    if (decides ? grants->clock : !providers->clock_now) providers->clock_now = clock_now;
-    if (decides ? grants->entropy : !providers->random_u64) {
+    int open = !grants->restricted;
+    const MylangResourceProvider absent = {0};
+    providers->filesystem = grants->scoped.count ? mylang_scoped_provider(&grants->scoped, writable(grants) ? 7u : 5u) : absent;
+    providers->network = absent;
+    providers->clock_now = open || grants->clock ? clock_now : NULL;
+    providers->random_context = NULL;
+    providers->random_u64 = NULL;
+    if (open || grants->entropy) {
         if (!grants->entropy) grants->state = (uint64_t)clock_now(NULL).value;
         providers->random_context = &grants->state;
         providers->random_u64 = random_u64;
     }
-    if (decides ? grants->environment : !providers->environment_get) {
+    providers->environment_context = NULL;
+    providers->environment_get = NULL;
+    if (open || grants->environment) {
         providers->environment_context = (void *)(uintptr_t)grants->names;
         providers->environment_get = environment_get;
     }
@@ -170,7 +177,7 @@ int mylang_qbe_run_grants(uint64_t (*entry)(void *), int argc, char **argv, cons
     }
     MylangNativeProviders providers = base ? *base : (MylangNativeProviders){0};
     int status = 2;
-    if (provision(&grants, &providers)) status = mylang_qbe_run_providers(entry, count, kept, &providers);
+    if (provision(&grants, &providers, base != NULL)) status = mylang_qbe_run_providers(entry, count, kept, &providers);
     else fputs("mylang: a requested directory grant could not be opened\n", stderr);
     free(kept);
     mylang_scoped_close(&grants.scoped);
