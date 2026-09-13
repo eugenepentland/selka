@@ -239,7 +239,7 @@ fn validateManagedOperation(program: Program, local: typed.Local, operation: Buf
         const byte_string = schema.collection.kind == .bytes;
         const expected: typed.Type = switch (operation.kind) {
             .length => .i64,
-            .find => if (byte_string) .i64 else return error.InternalError,
+            .find => if (dictionary) return error.InternalError else .i64,
             .iteration_check => .unit,
             .key_at => if (dictionary) schema.collection.key.? else return error.InternalError,
             .slice => if (!dictionary) local.ty else return error.InternalError,
@@ -247,10 +247,14 @@ fn validateManagedOperation(program: Program, local: typed.Local, operation: Buf
             .write => if (dictionary) .unit else return error.InternalError,
             .get => if (dictionary) element else return error.InternalError,
             .contains => .bool,
-            .starts_with, .ends_with => if (byte_string) .bool else return error.InternalError,
+            .starts_with, .ends_with => if (dictionary) return error.InternalError else .bool,
             .to_list, .hex, .decode => if (byte_string) try validateConversion(program, operation) else return error.InternalError,
             .encode, .from_hex => if (schema.collection.kind == .string) try validateConversion(program, operation) else return error.InternalError,
             .join => if (!dictionary) local.ty else return error.InternalError,
+            .strip, .lstrip, .rstrip, .upper, .lower, .replace, .zfill => if (dictionary or byte_string) return error.InternalError else local.ty,
+            .is_digit, .is_alpha, .is_space => if (dictionary or byte_string) return error.InternalError else .bool,
+            .count => if (dictionary or byte_string) return error.InternalError else .i64,
+            .splitlines, .parse_int, .parse_float => if (dictionary or byte_string) return error.InternalError else operation.output,
             .split, .keys, .values => list: {
                 if ((operation.kind == .split) == dictionary) return error.InternalError;
                 if (!operation.output.isAggregate()) return error.InternalError;

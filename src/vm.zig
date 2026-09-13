@@ -30,6 +30,8 @@ const value_copy = @import("value_copy.zig");
 const std = @import("std");
 const managed_equal = @import("managed_equal.zig");
 const managed_text = @import("managed_text.zig");
+const text_ops = @import("managed_text_ops.zig");
+const prelude = @import("prelude.zig");
 const managed_bytes = @import("managed_bytes.zig");
 const managed_dict = @import("managed_dict.zig");
 const invocation_contract = @import("invocation_contract.zig");
@@ -1357,6 +1359,32 @@ const Step = struct {
             .split => text.split(heap, operation.output, value, arguments[0]),
             .join => text.join(heap, value, arguments[0]),
             .encode, .from_hex => return self.executeByteString(value, arguments, start),
+            .parse_int, .parse_float, .splitlines => return self.executeTextProduction(value, arguments, start),
+            .strip, .lstrip, .rstrip => text_ops.trim(heap, value, switch (operation.kind) {
+                .lstrip => .leading,
+                .rstrip => .trailing,
+                else => .both,
+            }),
+            .upper, .lower => text_ops.mapCase(heap, value, operation.kind == .upper),
+            .replace => text_ops.replace(heap, value, arguments[0], arguments[1]),
+            .zfill => text_ops.zfill(heap, value, try arguments[0].asInteger()),
+            .starts_with, .ends_with => edge: {
+                const found = text_ops.edge(heap, value, arguments[0], operation.kind == .starts_with) catch |err| break :edge err;
+                break :edge Value{ .bool = found };
+            },
+            .is_digit, .is_alpha, .is_space => classified: {
+                const kind: text_ops.Class = switch (operation.kind) {
+                    .is_digit => .digit,
+                    .is_alpha => .alpha,
+                    else => .space,
+                };
+                const found = text_ops.every(heap, value, kind) catch |err| break :classified err;
+                break :classified Value{ .bool = found };
+            },
+            .find, .count => measured: {
+                const number = (if (operation.kind == .find) text_ops.find(heap, value, arguments[0]) else text_ops.count(heap, value, arguments[0])) catch |err| break :measured err;
+                break :measured Value{ .i64 = number };
+            },
             else => return error.InternalError,
         } else switch (operation.kind) {
             .length => length: {
@@ -1378,6 +1406,51 @@ const Step = struct {
             else => return error.InternalError,
         };
         const output = result catch |err| return self.collectionFailure(err);
+        releaseValues(arguments, self.execution.allocator);
+        self.execution.state.stack.shrinkRetainingCapacity(start);
+        try pushOwned(self.execution.state.stack, self.execution.allocator, output);
+        return false;
+    }
+
+    /// String operations whose result is a fresh collection or an optional value.
+    fn executeTextProduction(self: *Step, value: Value, arguments: []const Value, start: usize) !bool {
+        const allocator = self.execution.allocator;
+        const heap = self.execution.managed_heap;
+        const operation = self.instruction.op.buffer_operation;
+        if (operation.kind == .splitlines) {
+            const lines = text_ops.splitLines(heap, operation.output, value) catch |err| return self.collectionFailure(err);
+            return self.finishTextProduction(lines, arguments, start);
+        }
+        const shape = prelude.optionShape(operation.output, self.execution.program.records) orelse return error.InternalError;
+        const payload = try self.parsedValue(value, shape.element);
+        defer if (payload) |found| found.release(allocator);
+        const output = try typed.Value.createVariant(allocator, operation.output, if (payload == null) shape.none else shape.some, payload);
+        return self.finishTextProduction(output, arguments, start);
+    }
+
+    /// Parse text as the requested scalar, returning null when it is not exactly one.
+    fn parsedValue(self: *Step, value: Value, element: typed.Type) !?Value {
+        const allocator = self.execution.allocator;
+        const heap = self.execution.managed_heap;
+        if (self.instruction.op.buffer_operation.kind == .parse_int) {
+            const number = text_ops.parseInteger(heap, value) catch |err| return self.textFailure(err);
+            return if (number) |found| Value{ .i64 = found } else null;
+        }
+        const number = text_ops.parseFloat(heap, value) catch |err| return self.textFailure(err);
+        const bits = if (number) |found| @as(u64, @bitCast(found)) else return null;
+        const wrapped = try typed.Value.create(allocator, element, &.{Value.number(.u64, bits)});
+        return wrapped;
+    }
+
+    fn textFailure(self: *Step, err: managed_text.Error) !?Value {
+        _ = self;
+        return switch (err) {
+            error.OutOfMemory => error.OutOfMemory,
+            else => error.InternalError,
+        };
+    }
+
+    fn finishTextProduction(self: *Step, output: Value, arguments: []const Value, start: usize) !bool {
         releaseValues(arguments, self.execution.allocator);
         self.execution.state.stack.shrinkRetainingCapacity(start);
         try pushOwned(self.execution.state.stack, self.execution.allocator, output);

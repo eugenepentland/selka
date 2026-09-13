@@ -436,6 +436,18 @@ const Checker = struct {
         for (inputs) |input| try self.same(try self.expressionExpected(input, shape.element), shape.element, node.span);
         return expected;
     }
+    /// Every f-string piece converts to text, so the whole literal is `str`.
+    fn formatValue(self: *Checker, parts: []const ast.NodeId, span: source.Span) Error!Symbolic {
+        const str_type: Symbolic = .{ .concrete = self.catalog.names.get("str") orelse return error.InternalError };
+        for (parts) |part| {
+            const value = try self.expression(part);
+            if (symbolic.same(value, str_type, self.catalog)) continue;
+            if (self.isFloat(value)) continue;
+            try self.supports(value, .integer, span);
+        }
+        self.seedEffect(.managed_allocation);
+        return str_type;
+    }
     fn listLiteral(self: *Checker, node: ast.Node, inputs: []const ast.NodeId) Error!Symbolic {
         var expected = self.expected_types.get(node.span);
         if (expected) |ty_value| if (symbolic.array(ty_value, self.catalog.records)) |shape| {
@@ -461,6 +473,9 @@ const Checker = struct {
         const kind = operation.kind;
         if (operation.inputs.len != kind.arity()) return self.sink.fail("E_ARITY", operation.span, "collection argument count differs from its signature");
         const output: Symbolic = switch (kind) {
+            .strip, .lstrip, .rstrip, .upper, .lower, .replace, .zfill => owner,
+            .is_digit, .is_alpha, .is_space => .{ .concrete = .bool },
+            .count => .{ .concrete = .i64 },
             .length => .{ .concrete = if (family == .list) typed.Type.u64 else .i64 },
             .read, .get => element,
             .contains => .{ .concrete = .bool },
@@ -829,6 +844,7 @@ const Checker = struct {
             .variant => |variant| try self.variantValue(variant, node.span),
             .field_assignment => try self.fieldAssignment(node),
             .list_literal => |inputs| try self.listLiteral(node, inputs),
+            .format => |parts| try self.formatValue(parts, node.span),
             .list_operation => |operation| try self.listOperation(node, operation),
             .method_call => try self.listMethod(node),
             .slice => try self.listSlice(node),

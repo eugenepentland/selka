@@ -62,6 +62,7 @@ pub const Node = struct {
         integer: Span,
         bytes: []const u8,
         text: []const u8,
+        format: []const NodeId,
         dictionary_literal: []const NodeId,
         membership: struct { needle: NodeId, container: NodeId, negate: bool = false },
         boolean: bool,

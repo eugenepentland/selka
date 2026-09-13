@@ -3,7 +3,7 @@ const Source = @import("source.zig").Source;
 const ast = @import("ast.zig");
 /// Whether the program declares or applies a parameterized nominal type.
 pub fn present(program: ast.Program) bool {
-    for (program.nodes.items) |node| if (node.data == .list_literal or node.data == .text or node.data == .dictionary_literal) return true;
+    for (program.nodes.items) |node| if (node.data == .list_literal or node.data == .text or node.data == .dictionary_literal or node.data == .format) return true;
     inline for (.{ "records", "variants" }) |category| {
         for (@field(program.types, category)) |declaration| if (declaration.type_parameters.len != 0) return true;
     }
@@ -78,6 +78,6 @@ pub fn wordUsed(src: Source, names: []const []const u8) bool {
 
 /// Materialize text only when a literal or explicit text type needs its schema.
 pub fn textRequired(program: ast.Program, src: Source) bool {
-    for (program.nodes.items) |node| if (node.data == .text) return true;
+    for (program.nodes.items) |node| if (node.data == .text or node.data == .format) return true;
     return textUsed(src);
 }

@@ -16,7 +16,15 @@ const eConversionBody = "E_CONVERSION_BODY";
 const eByteConversion = "E_BYTES_CONVERSION";
 /// Managed collection methods whose only argument has the receiver's own sequence type.
 fn sequenceArgument(kind: BufferKind) bool {
-    return kind == .split or kind == .contains or kind == .starts_with or kind == .ends_with or kind == .find;
+    return switch (kind) {
+        .split, .contains, .starts_with, .ends_with, .find, .count, .replace => true,
+        else => false,
+    };
+}
+
+/// String methods whose only operand is a scalar width rather than more text.
+fn widthArgument(kind: BufferKind) bool {
+    return kind == .zfill;
 }
 const eResourceResult = diagnostic.resource_result;
 const eResourceIoResult = "E_RESOURCE_IO_RESULT";
@@ -28,6 +36,8 @@ const variantDeclaredHere = "variant declared here";
 const std = @import("std");
 const bufferOperation = "buffer_operation";
 const eCollectionMethod = "E_COLLECTION_METHOD";
+const unsupported_collection = "operation is not supported by this collection";
+
 const ast = @import("ast.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
@@ -510,7 +520,13 @@ const Checker = struct {
         const value = self.resolved[@backingInt(call.arguments[0])].?;
         const ty_value = self.nodes.items[@backingInt(value)].ty;
         const input_float = numeric_surface.isFloat(ty_value, self.catalog.records);
-        if (!input_float and !ty_value.isInteger()) return self.sink.fail("E_TYPE", node.span, "numeric conversion requires an integer or float");
+        // `int(text)` and `float(text)` parse rather than convert, so they answer an Option.
+        if (ty_value.isAggregate() and self.catalog.records[ty_value.recordIndex()].collection.kind == .string) {
+            const builder: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
+            out.* = try builder.access(value, if (floating) .parse_float else .parse_int, &.{}, false);
+            return;
+        }
+        if (!input_float and !ty_value.isInteger()) return self.sink.fail("E_TYPE", node.span, "numeric conversion requires an integer, float or str");
         if (floating) {
             out.* = if (input_float) self.nodes.items[@backingInt(value)] else try self.numericBuilder(node.span).fromInteger(value);
         } else if (input_float) {
@@ -724,6 +740,34 @@ const Checker = struct {
             return self.sink.fail(eListType, node.span, "list elements require copyable storable values without pending results");
         return (collections.Builder(Checker){ .checker = self, .span = node.span }).literal(expected.?, values);
     }
+    /// Convert one interpolated value to text, reusing the `str` conversion rules.
+    fn formatPart(self: *Checker, value: typed.NodeId, str_type: typed.Type, span: source.Span) Error!typed.NodeId {
+        const ty_value = self.nodes.items[@backingInt(value)].ty;
+        if (ty_value == str_type) return value;
+        const numeric = ty_value.isInteger() or ty_value == .bool or ty_value == .unit;
+        if (!numeric and !numeric_surface.isFloat(ty_value, self.catalog.records)) return self.sink.fail(
+            "E_TEXT_CONVERSION",
+            span,
+            "format string interpolation requires a scalar or str value",
+        );
+        const id: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = span, .ty = str_type, .data = .{ .cast = value } });
+        return id;
+    }
+
+    /// Concatenate an f-string's literal chunks and converted interpolations.
+    fn checkFormat(self: *Checker, node: ast.Node, parts: []const ast.NodeId, temporaries: []const typed.Type) Error!typed.Node {
+        const str_type = self.catalog.names.get("str") orelse return error.InternalError;
+        const builder: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
+        var result: ?typed.NodeId = null;
+        for (parts) |part| {
+            const span = self.syntax.nodes.items[@backingInt(part)].span;
+            const value = try self.formatPart(try self.expressionWithTemporaries(part, temporaries), str_type, span);
+            result = if (result) |left| try builder.binary(.add, left, value, str_type) else value;
+        }
+        return self.nodes.items[@backingInt(result orelse return error.InternalError)];
+    }
+
     fn checkCollectionMethod(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
         const call = node.data.method_call;
         const name = self.src.text(call.name);
@@ -777,13 +821,13 @@ const Checker = struct {
         const schema = self.catalog.records[owner_type.recordIndex()];
         const dictionary = schema.collection.kind == .dictionary;
         _ = collections.operationType(&self.catalog, owner_type, operation.kind, node.span) catch |err| switch (err) {
-            error.InternalError => return self.sink.fail(eCollectionMethod, node.span, "operation is not supported by this collection"),
+            error.InternalError => return self.sink.fail(eCollectionMethod, node.span, unsupported_collection),
             else => return err,
         };
         if (operation.inputs.len != operation.kind.arity()) return self.sink.fail("E_ARITY", node.span, "collection method argument count differs from its signature");
         const arguments = try self.allocator.alloc(typed.NodeId, operation.inputs.len);
         for (operation.inputs, arguments, 0..) |input, *argument, index| {
-            const integer = !dictionary and (operation.kind == .read or operation.kind == .slice);
+            const integer = !dictionary and (operation.kind == .read or operation.kind == .slice or widthArgument(operation.kind));
             const expected = if (integer) typed.Type.i64 else if (dictionary) map_argument: {
                 break :map_argument if (index == 0) schema.collection.key.? else schema.shape.buffer.?;
             } else if (operation.kind == .join) try self.collectionListType(owner_type, node.span) else owner_type;
@@ -802,6 +846,8 @@ const Checker = struct {
                 if (schema.collection.kind == .dictionary) {
                     if (operation.arguments.len > 0) try self.hint(operation.arguments[0], schema.collection.key.?);
                     if (operation.arguments.len == 2) try self.hint(operation.arguments[1], schema.shape.buffer.?);
+                } else if (operation.kind == .replace and operation.arguments.len == 2) {
+                    for (operation.arguments) |argument| try self.hint(argument, owner_type);
                 } else if (sequenceArgument(operation.kind) and operation.arguments.len == 1) {
                     const byte_needle = schema.collection.kind == .bytes and operation.kind == .contains;
                     if (!byte_needle) try self.hint(operation.arguments[0], owner_type);
@@ -1065,9 +1111,20 @@ const Checker = struct {
         switch (operation.kind) {
             .length => out.ty = .i64,
             .find, .starts_with, .ends_with => {
-                if (!byte_string) return self.sink.fail(eCollectionMethod, operation.owner, "prefix, suffix and search operations require bytes");
+                if (dictionary) return self.sink.fail(eCollectionMethod, operation.owner, "prefix, suffix and search operations require str or bytes");
                 try self.require(self.nodes.items[@backingInt(arguments[0])].ty, local.ty, operation.owner);
                 out.ty = if (operation.kind == .find) .i64 else .bool;
+            },
+            .strip, .lstrip, .rstrip, .upper, .lower, .splitlines, .replace, .count, .zfill, .is_digit, .is_alpha, .is_space, .parse_int, .parse_float => {
+                if (dictionary or byte_string) return self.sink.fail(eCollectionMethod, operation.owner, "this method requires str");
+                for (arguments) |argument| {
+                    const actual = self.nodes.items[@backingInt(argument)].ty;
+                    if (widthArgument(operation.kind)) try self.requireInteger(actual, operation.owner) else try self.require(actual, local.ty, operation.owner);
+                }
+                out.ty = collections.operationType(&self.catalog, local.ty, operation.kind, operation.owner) catch |err| switch (err) {
+                    error.InternalError => return self.sink.fail(eCollectionMethod, operation.owner, unsupported_collection),
+                    else => return err,
+                };
             },
             .to_list, .hex, .decode, .encode, .from_hex => out.ty = collections.operationType(&self.catalog, local.ty, operation.kind, operation.owner) catch |err| switch (err) {
                 error.InternalError => return self.sink.fail(eCollectionMethod, operation.owner, "conversion is not supported by this collection"),
@@ -1096,7 +1153,7 @@ const Checker = struct {
                 try self.require(self.nodes.items[@backingInt(arguments[0])].ty, if (operation.kind == .split) local.ty else list_type, operation.owner);
                 out.ty = if (operation.kind == .split) list_type else local.ty;
             },
-            else => return self.sink.fail(eCollectionMethod, operation.owner, "operation is not supported by this collection"),
+            else => return self.sink.fail(eCollectionMethod, operation.owner, unsupported_collection),
         }
         out.data = .{ .buffer_operation = .{ .kind = operation.kind, .owner = owner, .arguments = arguments } };
     }
@@ -1570,6 +1627,7 @@ const Checker = struct {
         } else switch (node.data) {
             .field_assignment => return self.checkFieldAssignment(node, temporaries),
             .list_literal => |inputs| return self.checkListLiteral(node, inputs, temporaries),
+            .format => |parts| return self.checkFormat(node, parts, temporaries),
             .list_operation => |op| return self.checkListAccess(node, .{ .base = op.base, .kind = op.kind, .inputs = op.arguments }, temporaries),
             .method_call => return self.checkCollectionMethod(node, temporaries),
             .slice => return self.checkCollectionSlice(node, temporaries),
@@ -1730,7 +1788,7 @@ const Checker = struct {
         if (node.data == .bytes or node.data == .text or node.data == .integer) return 0;
         // A list literal checks its own elements, so none of them reach the caller's stack;
         // a dict literal queues every key and value, whether it builds a dict or a table.
-        if (node.data == .list_literal) return 0;
+        if (node.data == .list_literal or node.data == .format) return 0;
         if (node.data == .dictionary_literal) return node.data.dictionary_literal.len;
         if (node.data == .binary) return 2;
         if (node.data == .call and try self.numericConversion(node.data.call) != null) return node.data.call.arguments.len;

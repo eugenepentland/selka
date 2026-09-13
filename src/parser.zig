@@ -11,6 +11,8 @@ const ast = @import("ast.zig");
 const lex = @import("lexer.zig");
 const Span = @import("source.zig").Span;
 const diagnostic = @import("diagnostic.zig");
+const byte_literal = @import("byte_literal.zig");
+const format_strings = @import("format_strings.zig");
 /// Token cursor and allocator-backed syntax builder with bounded recursive nesting.
 pub const Parser = struct {
     src: @import("source.zig").Source,
@@ -602,7 +604,7 @@ pub const Parser = struct {
                 if (self.take(.comma)) {
                     const quoted = try self.expect(.bytes);
                     literal = quoted.span;
-                    message = try @import("byte_literal.zig").decode(self.arena.allocator(), self.src, quoted.span, self.sink);
+                    message = try byte_literal.decode(self.arena.allocator(), self.src, quoted.span, self.sink);
                 }
                 break :check .{ .assertion = .{ .condition = condition, .message = message, .literal = literal } };
             },
@@ -780,6 +782,7 @@ pub const Parser = struct {
                 self.cursor.pos += 1;
                 break :none try self.append(.{ .span = token.span, .data = .unit });
             },
+            .format => try self.parseFormat(token),
             .lbrace => try self.parseDictionary(token),
             .integer, .bytes, .ident, .kw_true, .kw_false => try self.parseLeaf(token),
             .minus, .bang => unary: {
@@ -851,7 +854,8 @@ pub const Parser = struct {
     }
     fn parseMemberSuffix(self: *Parser, left: ast.NodeId) diagnostic.Error!ast.NodeId {
         const name = self.current();
-        if (name.tag == .kw_len) self.cursor.pos += 1 else _ = try self.expect(.ident);
+        // `len` and `replace` are reserved intrinsics; both are ordinary method names too.
+        if (name.tag == .kw_len or name.tag == .kw_replace) self.cursor.pos += 1 else _ = try self.expect(.ident);
         if (self.take(.lparen)) {
             var arguments: std.ArrayList(ast.NodeId) = .empty;
             if (self.current().tag != .rparen) while (true) {
@@ -893,6 +897,51 @@ pub const Parser = struct {
         const result = try self.append(.{ .span = span, .data = .{ .membership = .{ .needle = left, .container = container, .negate = not_in } } });
         return result;
     }
+    /// Build `f"a{x}b"` as its alternating literal and interpolated pieces.
+    /// Each hole is tokenized from the original bytes, so its spans stay absolute.
+    fn parseFormat(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
+        self.cursor.pos += 1;
+        const allocator = self.arena.allocator();
+        const pieces = try format_strings.split(allocator, self.src, token.span, self.sink);
+        var parts: std.ArrayList(ast.NodeId) = .empty;
+        for (pieces) |piece| switch (piece) {
+            .literal => |span| try parts.append(allocator, try self.formatLiteral(span)),
+            .brace => |span| try parts.append(allocator, try self.append(.{ .span = span, .data = .{ .text = self.src.bytes[span.start .. span.start + 1] } })),
+            .hole => |span| try parts.append(allocator, try self.formatHole(span)),
+        };
+        return self.append(.{ .span = token.span, .data = .{ .format = try parts.toOwnedSlice(allocator) } });
+    }
+
+    /// Decode one literal chunk with the ordinary escapes by lending it surrounding quotes.
+    fn formatLiteral(self: *Parser, span: Span) diagnostic.Error!ast.NodeId {
+        const quoted: Span = .{ .start = span.start - 1, .end = span.end + 1 };
+        const decoded = try byte_literal.decode(self.arena.allocator(), self.src, quoted, self.sink);
+        return self.append(.{ .span = span, .data = .{ .text = decoded } });
+    }
+
+    /// Parse one interpolation as an ordinary expression over its own token range.
+    fn formatHole(self: *Parser, span: Span) diagnostic.Error!ast.NodeId {
+        const tokens = try lex.lexRange(self.arena.allocator(), self.src.bytes, span, self.sink);
+        const outer = self.tokens;
+        const position = self.cursor.pos;
+        const delimiters = self.cursor.delimiters;
+        self.tokens = tokens;
+        self.cursor.pos = 0;
+        self.cursor.delimiters += 1;
+        defer {
+            self.tokens = outer;
+            self.cursor.pos = position;
+            self.cursor.delimiters = delimiters;
+        }
+        const value = try self.expression(0);
+        if (self.current().tag != .eof) return self.sink.fail(
+            format_strings.code,
+            self.current().span,
+            "a format string interpolation holds exactly one expression",
+        );
+        return value;
+    }
+
     fn parseDictionary(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.delimiters += 1;
         defer self.cursor.delimiters -= 1;
@@ -1072,7 +1121,7 @@ pub const Parser = struct {
         if (self.current().tag != .dot) return false;
         if (self.cursor.pos + 2 >= self.tokens.len) return false;
         const member = self.tokens[self.cursor.pos + 1].tag;
-        if (member != .ident and member != .kw_len) return false;
+        if (member != .ident and member != .kw_len and member != .kw_replace) return false;
         if (self.tokens[self.cursor.pos + 2].tag == .lparen) return true;
         // `owner.name::<T>(…)` keeps its explicit type arguments; a bare `Owner.name:` is a
         // member access, such as an enum case keying a table literal entry.
@@ -1247,7 +1296,7 @@ pub const Parser = struct {
         return self.append(.{ .span = name, .data = switch (token.tag) {
             .integer => .{ .integer = token.span },
             .bytes => literal: {
-                const decoded = try @import("byte_literal.zig").decode(self.arena.allocator(), self.src, token.span, self.sink);
+                const decoded = try byte_literal.decode(self.arena.allocator(), self.src, token.span, self.sink);
                 const python = if (comptime @hasField(@TypeOf(self.cursor), "python_function")) self.cursor.python_function else false;
                 break :literal if (python and self.src.text(token.span)[0] != 'b') .{ .text = decoded } else .{ .bytes = decoded };
             },

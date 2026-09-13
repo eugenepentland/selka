@@ -76,6 +76,29 @@ storage; assignment does not copy their contents. Use `items.append(value)`,
 Negative indexes count from the end. Slices create independent list storage and
 copy the selected elements. Nested indexing and expression receivers work.
 
+An `f"..."` literal interpolates `{expression}` holes, converting each one exactly as
+`str(value)` does and concatenating the result. `{{` and `}}` write single braces. Holes take
+any expression but no format specification, so round a float or pad a number before
+interpolating it.
+
+```mylang
+# doc: expect 42
+def label(count: int, items: list[int]) -> str:
+    return f"total {count} of {len(items)}"
+
+def main() -> int:
+    if label(7, [1, 2, 3]) == "total 7 of 3":
+        return 42
+    return 0
+```
+
+Strings answer `strip`/`lstrip`/`rstrip`, `upper`/`lower`, `replace(old, new)`,
+`startswith`/`endswith`, `find(sub)` (-1 when absent), `count(sub)`, `zfill(width)`,
+`splitlines()`, and `isdigit`/`isalpha`/`isspace`. Every one returns a fresh value, so no
+alias changes. `ljust` and `rjust` are absent, because intrinsic methods take no defaulted
+arguments. `int(text)` and `float(text)` return `Option[int]` and `Option[float]`: the
+language has no exceptions, so a string that is not exactly one number answers `None`.
+
 Strings use ordinary single or double quotes and represent immutable UTF-8 text.
 Indexing and length count Unicode scalar values, rather than bytes or grapheme
 clusters. Use concatenation, equality, `split(separator)`, `separator.join(parts)`,

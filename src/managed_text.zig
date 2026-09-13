@@ -49,7 +49,8 @@ pub fn equal(heap: *gc.Heap, left: Value, right: Value) Error!bool {
     for (a.items.items, b.items.items) |x, y| if (x.integer.value != y.integer.value) return false;
     return true;
 }
-fn fromPoints(heap: *gc.Heap, ty: Type, points: []const Value) Error!Value {
+/// Build immutable text from already-validated Unicode scalar values.
+pub fn fromPoints(heap: *gc.Heap, ty: Type, points: []const Value) Error!Value {
     const result = try heap.create(ty, .u32, points.len);
     errdefer result.release(heap.allocator);
     for (points) |point| try heap.append(result, point);
