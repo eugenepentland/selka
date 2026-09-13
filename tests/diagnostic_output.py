@@ -111,7 +111,7 @@ def modules(compiler, root):
         assert problem(messages, 'R_DIVISION_BY_ZERO')['location']['path'] == 'main.my'
     request, messages = invoke(compiler, 'eval-project', entry, '--evaluation-request')
     assert json.loads(request)['evaluation'] == 'not-executed' and messages == []
-    entry.write_text('module main;fn main()->i64{let heap=7;_ = heap;return 7;}')
+    entry.write_text('module main;fn main(c:clock_cap)->i64{_ = c;return 7;}')
     _, messages = invoke(compiler, 'eval-project', entry, '--evaluation-request', status=1)
     problem(messages, 'E_EVAL_INPUT')
     entry.write_text('module main;fn main()->i64{let unused=1;return 7;}')

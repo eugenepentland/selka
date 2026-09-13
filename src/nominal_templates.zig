@@ -69,7 +69,7 @@ pub const Index = struct {
     fn addBuiltin(self: *Index, name: []const u8, count: usize, kind: Kind) Error!void {
         if (self.names.contains(name) or self.syntax.aliases.contains(name)) return;
         const allocator = self.context.allocator;
-        const standard_name: ?[]const u8 = if (std.mem.eql(u8, name, "List")) "std_list::List" else if (std.mem.eql(u8, name, "Result")) "std_result::Result" else if (std.mem.eql(u8, name, "Option")) "std_result::Option" else null;
+        const standard_name: ?[]const u8 = if (std.mem.eql(u8, name, "Result")) "std_result::Result" else if (std.mem.eql(u8, name, "Option")) "std_result::Option" else null;
         if (standard_name) |key| if (self.names.get(key)) |id| {
             self.declarations.items[id].builtin_name = name;
             try self.names.put(allocator, name, id);
