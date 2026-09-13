@@ -237,10 +237,11 @@ newline, and accepts `sep=` and `end=`. `mylang run` streams that output as it
 happens and reports the entry point's `int` result only with `--print-result`.
 
 Files are Python-shaped over explicit authority. The entry point asks for a
-`Filesystem` capability by parameter type, `mylang run --allow-read=DIR` or
-`--allow-write=DIR` grants it, and every file call takes that capability first:
-`with open(fs, path, "rb") as f:`, `f.read()`, `f.write(data)`, plus
-`read_text`, `write_text`, `exists`, `listdir`, `mkdir` and `remove`. See
+`Filesystem` capability by parameter type and every file call takes that
+capability first: `with open(fs, path, "rb") as f:`, `f.read()`, `f.write(data)`,
+plus `read_text`, `write_text`, `exists`, `listdir`, `mkdir` and `remove`.
+`mylang run` grants the filesystem, clock, entropy and environment by default;
+`--restrict` withholds them and turns on the `--allow-*` flags. See
 [printing, files and command-line authority](io.md).
 
 `with` is one statement form with two resource kinds. Wrap a phase of work in

@@ -19,9 +19,10 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "same codec budgets)\n  input-module: reads a typed JSON manifest and writes generated " ++
     "module source\n  run/run-project: --max-steps=N --max-frames=N --dispatch=optimized|generic --gc-stress " ++
     "--print-result\n  " ++
-    "run/run-project authority: --allow-read=DIR --allow-write=DIR (repeatable) --allow-clock " ++
-    "--allow-random[=SEED] --allow-env[=NAME,...] --allow-all; an entry point requesting an " ++
-    "ungranted capability exits 2 before execution\n  " ++
+    "run/run-project authority: every capability is granted by default; --restrict denies them " ++
+    "and enables --allow-read=DIR --allow-write=DIR (repeatable) --allow-clock --allow-random[=SEED] " ++
+    "--allow-env[=NAME,...] --allow-all. Under --restrict an entry point requesting an ungranted " ++
+    "capability exits 2 before execution; --allow-random=SEED pins the seed in either mode\n  " ++
     "run: --timings (VM execution nanoseconds on stderr; excludes source compilation)\n  " ++
     "eval-project: --max-steps=N --max-frames=N --max-eval-bytes=N " ++
     "--evaluation-report|--evaluation-request --inputs=manifest.json (repeat for up to 16 " ++
@@ -277,8 +278,13 @@ fn run(init: Context, parsed: Parsed) !u8 {
 }
 
 /// Report the flag that would grant an entry point the authority it asked for.
+/// Only `--restrict` can withhold one, so the message names the active mode.
 fn reportUngranted(init: Context, flag: []const u8) !u8 {
-    const message = try std.fmt.allocPrint(init.gpa, "mylang: the entry point requests a capability this command line did not grant; pass {s}\n", .{flag});
+    const message = try std.fmt.allocPrint(
+        init.gpa,
+        "mylang: --restrict is active and this command line did not grant a capability the entry point requests; pass {s}, or drop --restrict to grant every capability\n",
+        .{flag},
+    );
     defer init.gpa.free(message);
     try init.text(message);
     return 2;
@@ -553,9 +559,9 @@ const ArgumentParser = struct {
         }
         return false;
     }
-    /// Capability grants apply only to the commands that execute a program.
+    /// Authority options apply only to the commands that execute a program.
     fn grantOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
-        if (!std.mem.startsWith(u8, arg, "--allow-")) return false;
+        if (!std.mem.startsWith(u8, arg, "--allow-") and !std.mem.eql(u8, arg, grants.restrict_flag)) return false;
         if (self.command != .run and self.command != .@"run-project") return error.Usage;
         if (!try self.grants.parse(arg)) return error.Usage;
         return true;
