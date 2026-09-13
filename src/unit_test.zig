@@ -67,3 +67,36 @@ test "unit result payloads still require handling and propagation only drops suc
         try t.expectError(error.SourceError, invalid.check());
     }
 }
+
+// spec: UNIT-2
+test "unit remains distinct and implicit discard cannot lose ordinary or fallible values" {
+    const invalid = [_][]const u8{
+        "fn main()->bool{return true;}",
+        "result Done{ok:unit,err:i64}fn leak(x:Done)->unit{}fn main()->i64{return 0;}",
+        "result Done{ok:unit,err:i64}fn leak<T:copy>(x:Done)->unit{}fn main()->i64{return 0;}",
+        "fn main()->i64{return;}",
+        "fn f()->unit{return 0;}fn main()->i64{return 0;}",
+        "fn f()->i64{return 7;}fn main()->i64{f();return 0;}",
+        "fn f<T:copy>(x:T)->unit{x;}fn main()->i64{return 0;}",
+        "fn f()->unit{}fn main()->i64{return f();}",
+        "fn f()->unit{}fn main()->i64{if f(){return 1;}return 0;}",
+        "fn f()->unit{}fn main()->i64{return f()+1;}",
+    };
+    for (invalid) |text| {
+        var c = try language.Compilation.init(t.allocator, "invalid.my", text);
+        defer c.deinit();
+        try t.expectError(error.SourceError, c.check());
+    }
+}
+
+// spec: UNIT-4
+test "unit fallthrough and early return release managed parameters without losing result obligations" {
+    const text = "result A{ok:List<i64>,err:i64}" ++
+        "fn consume(values:List<i64>,early:bool)->unit{_ = len(values);if early{return;}}" ++
+        "fn produce()->A{let values:List<i64>=[];values.push(1);values.push(2);return new A.ok(values);}" ++
+        "fn main()->i64{let mut i=0;while i<2{match produce(){" ++
+        "A.ok(values)=>{consume(values,i==0);},A.err(code)=>{return code;}}i+=1;}return 42;}";
+    var c = try language.Compilation.init(t.allocator, "cleanup.my", text);
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 42), (try c.execute(t.allocator)).value);
+}

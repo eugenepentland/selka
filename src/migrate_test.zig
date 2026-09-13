@@ -393,3 +393,32 @@ test "migration releases every allocation when the allocator fails" {
     var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(no_resize.allocator(), parityScenario, .{});
 }
+
+// spec: MIGRATE-5
+test "constructs without a Python spelling are rejected with their source spans" {
+    try expectRejection(
+        \\fn main() -> i64 {
+        \\    let a = 7;
+        \\    { let b = 1; }
+        \\    return a;
+        \\}
+    , "no Python spelling for a bare nested scope block", "{ let b = 1; }");
+    try expectRejection(
+        \\fn main() -> i64 {
+        \\    return 7 / 2;
+        \\}
+    , "no Python spelling for truncating integer division", "/");
+    try expectRejection(
+        \\union Choice { none, value: i64 }
+        \\fn main() -> i64 {
+        \\    let c = new Choice.value(7);
+        \\    return 0;
+        \\}
+    , "no Python spelling for a payload variant outside a checked result", "new Choice.value(7)");
+    try expectRejection(
+        \\fn main() -> i64 {
+        \\    let a = new [2]i64 [1, 2];
+        \\    return a[0];
+        \\}
+    , "no Python spelling for a fixed array literal", "new [2]i64 [1, 2]");
+}

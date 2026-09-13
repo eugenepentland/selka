@@ -138,3 +138,11 @@ test "nominal instances keep growing phantom arguments outside runtime storage" 
     try run(t.allocator, "struct Empty<T:copy>{}struct Grow<T:copy>{marker:Empty<Grow<[1]T>>}" ++
         "fn main()->i64{_ = new Grow<i64>{marker:new Empty<Grow<[1]i64>>{}};return 1;}", 1);
 }
+
+// spec: NOMINAL-INSTANCE-1
+test "nominal instances construct assign nest and exhaustively match on the VM" {
+    try run(t.allocator, basic, 16);
+    try run(t.allocator, definitions ++
+        "fn plus(input:Answer<i64>)->Answer<i64>{return new Answer<i64>.ok((input?)+1);}" ++
+        "fn main()->i64{match plus(new Answer<i64>.ok(4)){Answer<i64>.ok(n)=>{return n;},Answer<i64>.err(_)=>{return 0;}}}", 5);
+}

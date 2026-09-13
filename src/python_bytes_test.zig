@@ -214,3 +214,49 @@ test "PY-BYTES-4 byte strings are region allocated escaped and barrier checked u
         \\    return len(outer)
     , "R_ARENA_ESCAPE");
 }
+
+// spec: PY-BYTES-2
+test "PY-BYTES-2 integer list text and hexadecimal conversions round trip" {
+    try run(
+        \\def decoded(raw: bytes) -> Result[str, str]:
+        \\    return raw.decode()
+        \\def parsed(digits: str) -> Result[bytes, str]:
+        \\    return bytes.fromhex(digits)
+        \\def main() -> int:
+        \\    values: list[int] = [0, 65, 255]
+        \\    raw = bytes(values)
+        \\    if raw != b"\x00A\xff":
+        \\        return 1
+        \\    back = raw.to_list()
+        \\    if len(back) != 3 or back[2] != 255:
+        \\        return 2
+        \\    if raw.hex() != "0041ff":
+        \\        return 3
+        \\    encoded = "hé".encode()
+        \\    if len(encoded) != 3:
+        \\        return 4
+        \\    match decoded(encoded):
+        \\        case Ok(value):
+        \\            if value != "hé":
+        \\                return 5
+        \\        case Err(message):
+        \\            return 0 - len(message)
+        \\    match decoded(b"\xff\xfe"):
+        \\        case Ok(value):
+        \\            return 0 - len(value)
+        \\        case Err(message):
+        \\            if len(message) == 0:
+        \\                return 6
+        \\    match parsed("0041ff"):
+        \\        case Ok(value):
+        \\            if value != raw:
+        \\                return 7
+        \\        case Err(message):
+        \\            return 0 - len(message)
+        \\    match parsed("00g1"):
+        \\        case Ok(value):
+        \\            return 0 - len(value)
+        \\        case Err(message):
+        \\            return 42
+    , 42);
+}
