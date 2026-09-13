@@ -14,9 +14,6 @@ fn result(text: []const u8, expected: i64) !void {
         return err;
     };
     try t.expectEqual(expected, execution.value);
-    const native = try compilation.emitC(t.allocator);
-    defer t.allocator.free(native);
-    try t.expect(native.len > 0);
 }
 fn reject(text: []const u8, code: []const u8) !void {
     var compilation = try language.Compilation.init(t.allocator, "invalid-borrow-syntax.my", text);

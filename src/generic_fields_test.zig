@@ -57,8 +57,6 @@ fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "generic-fields.my", program);
     defer c.deinit();
     try t.expectEqual(@as(i64, 17), (try c.execute(allocator)).value);
-    const native = try c.emitC(allocator);
-    defer allocator.free(native);
 }
 test "generic fieldValue snapshots scopes replenishment and propagation survive allocation failures" {
     try scenario(t.allocator);

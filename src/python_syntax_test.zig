@@ -37,8 +37,6 @@ fn scenario(allocator: std.mem.Allocator) !void {
     const formatted = try c.format(allocator);
     defer allocator.free(formatted);
     try t.expectEqualStrings(program, formatted);
-    const native = try c.emitC(allocator);
-    defer allocator.free(native);
 }
 
 // spec: PYTHON-1

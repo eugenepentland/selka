@@ -2,7 +2,6 @@
   "language_version": "0.1.0",
   "primary_backend": "vm",
   "native_backend": "qbe-with-host-and-json-support",
-  "compatibility_native_backend": "c",
   "implemented": [
     "direct-c-scalar-imports-qbe",
     "explicit-native-link-inputs",

@@ -96,9 +96,6 @@ fn schemaScenario(allocator: std.mem.Allocator) !void {
     try t.expectEqualStrings("[2]i64", exports[0].string);
     try t.expectEqualStrings("i64", exports[1].string);
     try t.expectEqualStrings(exports[2].string, exports[3].string);
-    const emitted = try program.compilation.emitC(allocator);
-    defer allocator.free(emitted);
-    try t.expect(emitted.len > 0);
 }
 // spec: TYPE-ALIAS-SCHEMA-1
 test "public scalar array and generic aliases retain canonical schemas and native emission" {

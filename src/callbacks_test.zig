@@ -11,8 +11,6 @@ fn run(source: []const u8, expected: i64) !void {
         return err;
     };
     try t.expectEqual(expected, outcome.value);
-    const generated = try c.emitC(t.allocator);
-    defer t.allocator.free(generated);
 }
 // spec: CALLBACK-1
 test "callbacks infer function values and invoke passed exact signatures" {
@@ -72,8 +70,6 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
     var copy = try language.Compilation.init(allocator, "formatted.my", formatted);
     defer copy.deinit();
     try t.expectEqual(@as(i64, 17), (try copy.execute(allocator)).value);
-    const generated = try copy.emitC(allocator);
-    defer allocator.free(generated);
 }
 
 test "callbacks compile format execute and emit under every failed allocation" {
@@ -97,8 +93,6 @@ test "callbacks drive standard library sorting and visitors across module bounda
     try program.init(t.allocator, .{ .context = null, .read = moduleRead });
     defer program.deinit();
     try t.expectEqual(@as(i64, 82), (try language.vm.run(t.allocator, program.compilation.code.?)).value);
-    const generated = try program.compilation.emitC(t.allocator);
-    defer t.allocator.free(generated);
 }
 
 test "callbacks reject forged target signatures and invalid dynamic calls" {
@@ -210,8 +204,6 @@ test "generic collection callbacks sort search and filter borrowed JSON document
     defer program.deinit();
     const outcome = try language.vm.run(t.allocator, program.compilation.code.?);
     try t.expectEqual(@as(i64, 42), outcome.value);
-    const generated = try program.compilation.emitC(t.allocator);
-    defer t.allocator.free(generated);
 }
 
 test "callback context loans preserve alias and region limits in concrete and generic bodies" {

@@ -29,10 +29,6 @@ fn scenario(allocator: std.mem.Allocator) !void {
     const text = try trap.render(allocator, compilation.src);
     defer allocator.free(text);
     for ([_][]const u8{ "part1.my:2:", "R_DIVISION_BY_ZERO", "in main at part0.my:", "in helper at part1.my:" }) |part| try t.expect(std.mem.indexOf(u8, text, part) != null);
-    const native = try compilation.emitC(allocator);
-    defer allocator.free(native);
-    try t.expect(std.mem.indexOf(u8, native, "\\160\\141\\162\\164\\060\\056\\155\\171") != null);
-    try t.expect(std.mem.indexOf(u8, native, "\\160\\141\\162\\164\\061\\056\\155\\171") != null);
     const dump = try compilation.dump(allocator);
     defer allocator.free(dump);
     try t.expect(std.mem.indexOf(u8, dump, "; part0.my:") != null);

@@ -79,14 +79,6 @@ fn reject(text: []const u8, expected: []const u8) !void {
     try t.expectEqualStrings(expected, compilation.diagnostics.items[0].code);
 }
 
-// spec: GC-SOURCE-5
-test "managed code rejects native backend with an explicit feature diagnostic" {
-    var compilation = try language.Compilation.init(t.allocator, "managed-native.my", "list Numbers:i64;fn main()->i64{let values=new_list<Numbers>(0u64);append_list(values,42);return read_list(values,0u64);}");
-    defer compilation.deinit();
-    try t.expectError(error.SourceError, compilation.emitC(t.allocator));
-    try t.expectEqualStrings("E_NATIVE_FEATURE", compilation.diagnostics.items[0].code);
-}
-
 // spec: GC-SOURCE-6
 test "noalloc and nogc reject transitive managed allocation while permitting fixed-slot mutation" {
     for ([_][]const u8{ "noalloc", "nogc" }) |bound| {

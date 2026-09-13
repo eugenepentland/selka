@@ -237,8 +237,6 @@ fn splitAllocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, fixture_path, source);
     defer compilation.deinit();
     try testing.expectEqual(@as(i64, 9), (try compilation.execute(allocator)).value);
-    const c = try compilation.emitC(allocator);
-    defer allocator.free(c);
 }
 
 test "split slices compilation and execution release every failed allocation" {

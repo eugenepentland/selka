@@ -106,9 +106,6 @@ test "Python keyword scalar and reference calls emit native source with identica
     var c = try language.Compilation.init(t.allocator, "native-calls.my", text);
     defer c.deinit();
     try t.expectEqual(@as(i64, 2442), (try c.execute(t.allocator)).value);
-    const native = try c.emitC(t.allocator);
-    defer t.allocator.free(native);
-    try t.expect(native.len > 0);
 }
 
 // spec-case: PYTHON-CALL-4

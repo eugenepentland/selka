@@ -36,7 +36,6 @@ test "direct C imports preserve formatting and reject VM registry and legacy C e
     forged.functions = functions;
     try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, forged));
     try t.expectError(error.ExternRequiresQbe, @import("vm_host.zig").Registry.init(t.allocator, c.code.?));
-    try t.expectError(error.SourceError, c.emitC(t.allocator));
 }
 test "direct C supports bool void and binary64 without provider registration" {
     var c = try language.Compilation.init(t.allocator, "foreign.my", "extern fn floor(x:float)->float effects(host);extern fn flush()->unit effects(host);extern fn invert(x:bool)->bool effects(host);" ++ entry);

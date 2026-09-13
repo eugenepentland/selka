@@ -15,9 +15,6 @@ fn scenario(allocator: std.mem.Allocator) !void {
         "borrow a[0..3] as s{return cast<i64>(sum::<i8>(s))+cast<i64>(original[0])+local::<i64>(2,5)+siblings::<i64>(2);}}");
     defer compilation.deinit();
     try t.expectEqual(@as(i64, 22), (try compilation.execute(allocator)).value);
-    const generated = try compilation.emitC(allocator);
-    defer allocator.free(generated);
-    try t.expect(generated.len > 0);
 }
 // spec: GENERIC-BORROW-1
 test "generic borrows recursively narrow slices and restore owners and parents" {

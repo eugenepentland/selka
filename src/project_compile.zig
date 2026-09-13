@@ -17,8 +17,8 @@ pub const CheckError = error{
     SourceError,
     InternalError,
 };
-/// Failures returned by emitC; callers must handle these boundary errors.
-pub const EmitCError = error{
+/// Failures returned by emitQbe; callers must handle these boundary errors.
+pub const EmitNativeError = error{
     InternalError,
     OutOfMemory,
     SourceError,
@@ -117,21 +117,8 @@ pub const Compilation = struct {
         var names: Names = .{ .index = self.index, .src = self.src };
         self.program = try @import("sema.zig").checkCached(self.index.project.arena.allocator(), self.src, self.syntax, &self.diagnostics, &names, cache);
     }
-    /// Allocate native C output after checking and lowering the complete project.
-    pub fn emitC(self: *Compilation, allocator: @import("std").mem.Allocator) EmitCError![]u8 {
-        try self.emit();
-        const roots = try self.exportRoots(allocator);
-        defer allocator.free(roots);
-        const schema = @import("schema_graph.zig").render(allocator, self.index, self.program.?, roots) catch |err| switch (err) {
-            error.OutOfMemory => return error.OutOfMemory,
-            error.SourceError => return error.SourceError,
-            else => return error.InternalError,
-        };
-        defer allocator.free(schema);
-        return @import("native.zig").generateWithInterface(allocator, self.code.?, self.src, &self.diagnostics, .{ .roots = roots, .schema = schema });
-    }
     /// Allocate independently compilable scalar QBE units after full project checking.
-    pub fn emitQbe(self: *Compilation, allocator: @import("std").mem.Allocator) EmitCError![]u8 {
+    pub fn emitQbe(self: *Compilation, allocator: @import("std").mem.Allocator) EmitNativeError![]u8 {
         try self.emit();
         const roots = try self.exportRoots(allocator);
         defer allocator.free(roots);

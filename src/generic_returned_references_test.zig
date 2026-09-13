@@ -14,9 +14,6 @@ fn scenario(allocator: std.mem.Allocator) !void {
         "let b=7;let flag=true;borrow flag as f{borrow b as r{borrow choose::<i64,bool>(f,r) as selected{return read::<i64>(selected)+cast<i64>(a[0])+cast<i64>(a[1])+cast<i64>(old[1]);}}}}");
     defer compilation.deinit();
     try t.expectEqual(@as(i64, 22), (try compilation.execute(allocator)).value);
-    const generated = try compilation.emitC(allocator);
-    defer allocator.free(generated);
-    try t.expect(generated.len > 0);
 }
 // spec: GENERIC-RETURN-1
 test "generic returned references execute forwarded specialized views and restore parent access" {

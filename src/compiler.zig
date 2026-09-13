@@ -14,8 +14,8 @@ pub const EmitError = error{
     OutOfMemory,
     SourceError,
 };
-/// Failures returned by emitC; callers must handle these boundary errors.
-pub const EmitCError = EmitError || error{
+/// Failures returned by emitQbe; callers must handle these boundary errors.
+pub const EmitNativeError = EmitError || error{
     WriteFailed,
 };
 
@@ -189,16 +189,8 @@ pub const Compilation = struct {
         return vm.runWithOptions(allocator, self.code.?, options);
     }
 
-    /// Validate native support and allocate C source with the caller allocator.
-    pub fn emitC(self: *Compilation, allocator: std.mem.Allocator) EmitCError![]u8 {
-        try self.emit();
-        var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
-        defer self.diagnostics = sink.items;
-        return @import("native.zig").generate(allocator, self.code.?, self.src, &sink);
-    }
-
     /// Allocate independently compilable scalar QBE units after full checking.
-    pub fn emitQbe(self: *Compilation, allocator: std.mem.Allocator) EmitCError![]u8 {
+    pub fn emitQbe(self: *Compilation, allocator: std.mem.Allocator) EmitNativeError![]u8 {
         try self.emit();
         var sink: diagnostic.Sink = .{ .allocator = self.arena.allocator(), .items = self.diagnostics };
         defer self.diagnostics = sink.items;

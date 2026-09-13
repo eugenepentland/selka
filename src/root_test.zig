@@ -96,7 +96,6 @@ test {
     _ = @import("structural_constraints_test.zig");
     _ = @import("source_json_test.zig");
     _ = @import("formatter_test.zig");
-    _ = @import("native_test.zig");
     _ = @import("partial_fields_test.zig");
     _ = @import("value_test.zig");
     _ = @import("records_test.zig");

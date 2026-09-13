@@ -69,8 +69,6 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "generic-results.my", scenario_source);
     defer c.deinit();
     try t.expectEqual(@as(i64, 9), (try c.execute(allocator)).value);
-    const native = try c.emitC(allocator);
-    defer allocator.free(native);
 }
 test "generic result construction nested matching and native emission survive allocation failures" {
     try run(nested_source, 5);

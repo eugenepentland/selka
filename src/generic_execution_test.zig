@@ -13,9 +13,6 @@ fn scenario(allocator: std.mem.Allocator) !void {
     try t.expectEqual(@as(i64, 28), (try compilation.execute(allocator)).value);
     // main plus two forward, two sum, and three id specializations.
     try t.expectEqual(@as(usize, 8), compilation.program.?.functions.len);
-    const generated = try compilation.emitC(allocator);
-    defer allocator.free(generated);
-    try t.expect(generated.len > 0);
 }
 // spec: GENERIC-EXECUTION-1
 test "generic execution specializes widths forwarding recursion and shared instances" {

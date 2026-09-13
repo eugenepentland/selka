@@ -328,9 +328,6 @@ test "owner reference restoreLocalOwner unwinds nested owned cells under allocat
     try compilation.emit();
     var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(no_resize.allocator(), ownerReferenceRuntime, .{compilation.code.?});
-    const generated = try compilation.emitC(t.allocator);
-    defer t.allocator.free(generated);
-    try t.expect(std.mem.indexOf(u8, generated, "reference_owner(") != null);
 }
 
 test "whole owner reborrows return references and grow buffers before fresh element views" {

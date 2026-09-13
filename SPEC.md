@@ -48,9 +48,6 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [PROJ-2] Reports module cycles with both the importing location and the related source location.
 - [PROJ-3] Rejects duplicate exports, missing exported symbols, and private types exposed through public interfaces.
 - [PROJ-4] Reports related declarations in their original source files after project source mapping.
-- [PROJ-5] Emits deterministic native C for scalar programs and releases compiler allocations on injected failure.
-- [PROJ-6] Validates every function before native emission, including uncalled functions, and rejects invalid source without partial output.
-- [PROJ-7] Retains static lifetime and exclusivity checks when compiling supported references to native C.
 ## Discovery and formatting
 
 - [TOOL-1] Groups exact duplicate bodies after binding renaming while preserving resolved binding identity.
@@ -85,19 +82,12 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [CACHE-1] Reusing unchanged module syntax preserves fresh semantic checks and changed results, with independent returned storage and bounded cache retention.
 - [CLI-5] Persistent checking sessions reuse unchanged parses and allow clearing retained cache storage between requests.
 
-- [NATIVE-BUFFER-1] Native emission supports root allocator parameters and owned buffer results while cleaning failed compiler allocations.
 
-- [NATIVE-ARENA-1] Native arena scopes preserve allocator lifetime, reset rejection, and cleanup on returns and failures.
 
-- [NATIVE-POOL-1] Native pools preserve generation-checked handles, shared quotas, immutable snapshots, and root/arena ownership cleanup.
 
-- [NATIVE-PROVIDER-1] Native clock/random reads require explicit host providers, preserve full-width results and recoverable errors, and reject missing grants before guest execution.
 
-- [NATIVE-ENVIRONMENT-1] Native environment lookup preserves bounded output, missing/empty distinctions, zero padding, typed failures, and explicit provider grants.
 
-- [NATIVE-RESOURCE-1] Native resource lifecycle emission preserves nominal owners, explicit grants, permission intersection, retryable completion errors, and pending-handle cleanup before older guest values.
 
-- [NATIVE-RESOURCE-IO-1] Native resource reads/writes preserve permissions, bounded partial counts, EOF, fixed-array zero padding, slice snapshots, and unchanged guest bytes on provider failure.
 
 - [NOMINAL-TYPE-SYNTAX-1] Nominal declarations retain explicit type parameters and requirements; nested named applications retain base and argument spans through parsing, formatting, syntax caching and module relocation. Lists are bounded at 16 and nesting at 256; module interfaces check exported type privacy, constructor kind, application arity and parameter shadowing. Malformed nominal declarations follow NOMINAL-TEMPLATE-CHECK-1; concrete specialization follows NOMINAL-INSTANCE-1.
 - [GENERIC-SYNTAX-1] Generic syntax retains named type parameters, nonempty explicit requirement lists, and explicit `::<...>` call type arguments through owned AST copying and formatting; duplicate parameters/requirements and lists beyond 16 are rejected. Executable specialization must preserve these annotations through contract validation before lowering.
@@ -128,19 +118,12 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 
 - [GENERIC-DIAGNOSTIC-1] Checked specializations retain explicit ordered concrete type arguments. Human-readable function names include those types, preserve qualified nominal names, and do not depend on discovery ordinals. Traces and reports use these names, while public-root selection uses specialization metadata rather than spelling.
 
-- [NATIVE-EMBED-1] Generated C can expose a versioned embedding entry instead of main, returning scalar entry results, bounded located traps and host failures without printing or exiting. Providers and budgets are explicit; repeated calls reset guest state and release storage. Overlapping calls to one generated program return Busy. Arbitrary exported-function and aggregate ABI invocation remain unfinished.
 
-- [NATIVE-CALL-1] Native named calls expose only resolved module exports, excluding private functions and internal generic instances. The initial scalar ABI validates exact builtin type names, argument counts and integer/Boolean ranges; unsupported public signatures fail explicitly. Calls return located traps, release storage and permit subsequent invocations.
 
-- [NATIVE-WIRE-1] Native public value calls copy bounded preorder scalar/record/array/variant trees into guest storage and copy results into caller-owned output. Exact schema identities, counts, tags and ranges are validated. Insufficient output reports required capacity without writing output or retaining guest storage. Domain and resource identities remain opaque.
 
-- [NATIVE-SCHEMA-1] Native module libraries expose immutable canonical public schema bytes and their SHA-256 from the same checked compilation as the emitted code. Queries execute no guest code. Single-file libraries without a public schema report absence. Field, case, type and public-function contract changes alter compatibility identity; source location and compatible implementation-only changes need not.
 
-- [NATIVE-BINDINGS-1] Generated Python bindings may call an explicitly selected native shared library only after verifying its canonical public schema hash. Ordinary typed wrappers retain value validation and snapshots, report bounded native traps and host failures, and never retry capacity failures implicitly. Declared domain codecs use the opt-in native codec API with typed rejection errors and shared call limits; ordinary calls retain their original ABI. Reference/capability signatures remain unavailable through this client.
 
-- [NATIVE-CODEC-1] Native embedding can internally invoke compiler-selected declared codec functions while preserving surrounding operands, frames, cleanup ownership and shared instruction/frame budgets. This internal path does not expose arbitrary private functions or accept unvalidated raw domain values through the public wire API.
 
-- [NATIVE-CODEC-WIRE-1] Opt-in native domain calls run declared decoders before public invocation and each output encoder once, with shared instruction/frame/call quotas. Typed decoder rejection values and domain context survive cleanup; prepared output prevents partial publication and duplicate encoding. The ordinary value ABI retains its domain opacity.
 
 - [SOURCE-CODEC-1] `codec_decode<Domain>(wire)` returns the declared decoder's typed result and `codec_encode<Domain>(value)` returns its declared wire value. Both resolve through explicit domain codec contracts and preserve ordinary call typing, ownership, effects, runtime budgets and source diagnostics. They do not expose backing construction or provide JSON byte serialization.
 
@@ -320,11 +303,8 @@ supersede it. The manifest records implementation coverage, not a test certifica
   mutation. read_ref and take_field cannot copy or move a borrowed owner. Whole
   partial owners reject borrowing. Element slices are borrowed from owners in
   separate lexical scopes, so growth cannot invalidate an outstanding view.
-- [NATIVE-HOST-1] Native C host declarations use a checked copied preorder-value ABI with exact qualified function/type names, effect bounds and explicit grants. All host registrations preflight before guest instructions; calls and sticky callback work charges share execution budgets, input/output copies share node/depth limits, and malformed results fail with cleanup. Provider ABI version 5 adds the host registry without exposing guest pointers.
-- [NATIVE-HOST-2] Native copied host values preserve nominal domains, records, arrays and fallible variants across generic calls; scalar domain equality compares the same checked backing values as the VM. Invalid host result structures trap before a guest result is published.
 - [NATIVE-JSON-1] Native ordinary json_parse links the same strict parser used by the VM through a versioned support-object ABI. It preserves malformed/limit/budget errors, UTF-8 and duplicate-key rejection, tape layout, instruction charges and allocator-region ownership, and frees parser output on native failures. Typed source domain codecs invoke isolated compiled methods with copied data.
 - [NATIVE-JSON-2] Native typed source JSON for ordinary integers, booleans, records, arrays, enums and result/union variants uses the normative typed-json-v1 encoder/decoder, preserving byte/traversal quotas, canonical output and named nominal identities.
-- [NATIVE-JSON-3] Native source JSON invokes checked domain methods as compiled code in isolated operand/frame/object registries, copies input and result values, preserves remaining frame/step and 256-call budgets, and restores caller state after domain rejection or traps.
 
 - [NATIVE-JSON-4] Typed native JSON releases temporary metadata, copied values and codec output at every parent allocator failure position.
 
@@ -462,7 +442,6 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [GC-SOURCE-2] Source programs can construct list/record cycles; a later managed allocation collects an unreachable cycle before execution shutdown.
 - [GC-SOURCE-3] Managed results held as intermediate call arguments or inside ordinary record snapshots survive collection triggered by later arguments and callee allocations.
 - [GC-SOURCE-4] Out-of-bounds managed reads and writes produce located R_LIST_BOUNDS traps and release execution roots and backing.
-- [GC-SOURCE-5] Native C generation rejects managed operations with E_NATIVE_FEATURE until that backend supports tracing GC.
 - [GC-SOURCE-6] Both noalloc and nogc reject transitive managed allocation and list growth; fixed-slot mutation and reads remain permitted.
 - [GC-SOURCE-7] Managed element declarations reject owned resources and unchecked results; explicit buffers and pools reject managed references, including references nested in ordinary aggregates.
 - [GC-SOURCE-8] Managed lists do not expose ordinary borrowed storage or slices; aliases are passed as managed values.
@@ -491,7 +470,7 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [ARENA-MANAGED-5] Normal exit, `return`, `?` propagation, `break`/`continue` out of the block, and traps or host allocation failure unwinding through it all release the arena exactly once. Frame-owned values are released before the bulk free, and at an explicit block exit any binding declared before the block that still reaches arena storage traps with `R_ARENA_ESCAPE` as a defence in depth. An arena scope is always closed by the frame that opened it; a mismatched close is an internal-error rejection.
 - [ARENA-MANAGED-6] Tracing collection continues to run at managed allocation safepoints inside an arena, including under `--gc-stress`; arena objects are traced normally and a swept arena object leaves its arena. Collection is suspended only for the duration of one `escape` copy, whose partly built clones are not yet rooted. Allocation inside an arena still contributes the `managed_allocation` effect, so `noalloc` and `nogc` reject it; entering a scope itself contributes no effect.
 - [ARENA-MANAGED-7] Arena scopes, bulk release, and escape copies unwind cleanly on every host allocation failure, leaving no live managed objects at execution teardown.
-- [ARENA-MANAGED-8] Managed arena scopes are rejected explicitly by both native backends: the C backend reports `E_NATIVE_FEATURE` and the QBE backend reports `E_QBE_UNSUPPORTED`. Generic function bodies reject them with `E_GENERIC_BODY_UNSUPPORTED`.
+- [ARENA-MANAGED-8] Managed arena scopes are rejected explicitly by the native backend, which reports `E_QBE_UNSUPPORTED`. Generic function bodies reject them with `E_GENERIC_BODY_UNSUPPORTED`.
 
 - [FAMILIAR-STMT-1] Statements and unbraced declarations may omit a semicolon before a newline, closing brace, or EOF; separate statements on one line still require semicolons, and formatting preserves their boundaries.
 - [FAMILIAR-STMT-2] Postfix `?` propagates result errors and unwraps success with postfix precedence, retaining the existing `try` semantics.

@@ -12,9 +12,6 @@ fn scenario(allocator: std.mem.Allocator) !void {
     defer compilation.deinit();
     try t.expectEqual(@as(i64, 28), (try compilation.execute(allocator)).value);
     try t.expectEqual(@as(usize, 8), compilation.program.?.functions.len);
-    const generated = try compilation.emitC(allocator);
-    defer allocator.free(generated);
-    try t.expect(generated.len > 0);
 }
 // spec: GENERIC-INFERENCE-1
 test "generic inferCall allocation failures preserve widths forwarding recursion and instance reuse" {

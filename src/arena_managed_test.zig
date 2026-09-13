@@ -450,16 +450,12 @@ test "ARENA-MANAGED-7 arena scopes and escape copies unwind on every allocation 
 }
 
 // spec: ARENA-MANAGED-8
-test "ARENA-MANAGED-8 native backends reject managed arena scopes explicitly" {
+test "ARENA-MANAGED-8 the native backend rejects managed arena scopes explicitly" {
     const source =
         \\def main() -> int:
         \\    with arena() as scratch:
         \\        return 7
     ;
-    var native = try language.Compilation.init(t.allocator, module, source);
-    defer native.deinit();
-    try t.expectError(error.SourceError, native.emitC(t.allocator));
-    try t.expectEqualStrings("E_NATIVE_FEATURE", native.diagnostics.items[0].code);
     var qbe = try language.Compilation.init(t.allocator, module, source);
     defer qbe.deinit();
     try t.expectError(error.SourceError, qbe.emitQbe(t.allocator));

@@ -13,9 +13,6 @@ fn scenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "generic-reference.my", source_text);
     defer compilation.deinit();
     try t.expectEqual(@as(i64, 16), (try compilation.execute(allocator)).value);
-    const generated = try compilation.emitC(allocator);
-    defer allocator.free(generated);
-    try t.expect(generated.len > 0);
 }
 // spec: GENERIC-REFERENCE-1
 test "generic references execute shared reads exclusive writes and forwarding across instances" {

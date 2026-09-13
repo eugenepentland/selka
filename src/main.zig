@@ -9,7 +9,7 @@ const Reporting = struct { timings: bool = false, timings_json: bool = false, di
 const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--json] [--force]\n       mylang build <file.my> (-o <output> | --run) [--help]\n       mylang " ++
     "<invoke-project|check-value-project|schema-project|input-module|check|run|dump-bytecode|di" ++
     "scover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fm" ++
-    "t-module|fmt-project|migrate|migrate-project|emit-c|emit-project-c|emit-qbe|emit-project-qbe|eval-project|list-modules|list-interfaces|list-" ++
+    "t-module|fmt-project|migrate|migrate-project|emit-qbe|emit-project-qbe|eval-project|list-modules|list-interfaces|list-" ++
     "declarations|check" ++
     "-project|run-project|check-policy> <file.my>\n  schema-project: --schema-report (include " ++
     "checked source and compiler identities)\n  check-value-project: --value=path.json " ++
@@ -106,7 +106,6 @@ fn run(init: Context, parsed: Parsed) !u8 {
         .@"report-project-quality",
         .@"fmt-project",
         .@"migrate-project",
-        .@"emit-project-c",
         .@"emit-project-qbe",
         => return listModules(init, parsed),
         else => {},
@@ -174,7 +173,7 @@ fn run(init: Context, parsed: Parsed) !u8 {
     init.timings.counts.typed_nodes = compilation.program.?.nodes.len + compilation.program.?.statements.len;
     init.timings.end();
     const check_ns = if (parsed.reporting.timings) check_start.durationTo(std.Io.Timestamp.now(init.io, .awake)).nanoseconds else 0;
-    if (parsed.command != .@"emit-c" and parsed.command != .@"emit-qbe") try report(init, &compilation);
+    if (parsed.command != .@"emit-qbe") try report(init, &compilation);
     switch (parsed.command) {
         .@"index-project",
         .@"project-dependencies",
@@ -190,7 +189,6 @@ fn run(init: Context, parsed: Parsed) !u8 {
         .@"migrate-project",
         .migrate,
         .@"list-declarations",
-        .@"emit-project-c",
         .@"emit-project-qbe",
         .@"list-modules",
         .@"list-interfaces",
@@ -200,8 +198,8 @@ fn run(init: Context, parsed: Parsed) !u8 {
         .@"discover-project-duplicates",
         .@"report-project-quality",
         => unreachable,
-        .@"emit-c", .@"emit-qbe" => {
-            const generated = emitMeasuredNative(init, &compilation, parsed.command == .@"emit-qbe") catch |err| switch (err) {
+        .@"emit-qbe" => {
+            const generated = emitMeasuredNative(init, &compilation) catch |err| switch (err) {
                 error.SourceError => {
                     try report(init, &compilation);
                     return 1;
@@ -304,7 +302,6 @@ const Command = enum {
     @"schema-project",
     @"input-module",
     @"eval-project",
-    @"emit-project-c",
     @"emit-project-qbe",
     @"fmt-project",
     @"fmt-module",
@@ -315,7 +312,6 @@ const Command = enum {
     @"run-project",
     @"list-interfaces",
     @"list-modules",
-    @"emit-c",
     @"emit-qbe",
     @"list-declarations",
     @"migrate-project",
@@ -690,7 +686,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
         init.timings.counts.ast_nodes = compilation.syntax.nodes.items.len + compilation.syntax.statements.items.len;
         init.timings.counts.typed_nodes = compilation.program.?.nodes.len + compilation.program.?.statements.len;
         init.timings.end();
-        if (parsed.command == .@"emit-project-c" or parsed.command == .@"emit-project-qbe") break :result (try emitProjectNative(init, &compilation, parsed.command == .@"emit-project-qbe")) orelse return 1;
+        if (parsed.command == .@"emit-project-qbe") break :result (try emitProjectNative(init, &compilation)) orelse return 1;
         if (parsed.command != .@"eval-project") try reportProject(init, &compilation);
         if (parsed.command == .@"project-dependencies") break :result try dependencyReport(init, &compilation, files.inputs);
         if (parsed.command == .@"check-project") return rememberCheck(verdict, &project, &compilation);
@@ -740,8 +736,8 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     return 0;
 }
 
-fn emitProjectNative(init: Context, compilation: *language.project_compile.Compilation, qbe: bool) !?[]u8 {
-    const generated = emitMeasuredNative(init, compilation, qbe) catch |err| switch (err) {
+fn emitProjectNative(init: Context, compilation: *language.project_compile.Compilation) !?[]u8 {
+    const generated = emitMeasuredNative(init, compilation) catch |err| switch (err) {
         error.SourceError => {
             try reportProject(init, compilation);
             return null;
@@ -1297,11 +1293,11 @@ fn executionPhase(command: Command) []const u8 {
     return if (command == .@"eval-project") "evaluation" else "vm_execution";
 }
 
-fn emitMeasuredNative(init: Context, compilation: anytype, qbe: bool) ![]u8 {
+fn emitMeasuredNative(init: Context, compilation: anytype) ![]u8 {
     init.timings.begin(lowering_phase, false);
     try compilation.emit();
     init.timings.begin("native_emission", false);
-    const generated = if (qbe) try compilation.emitQbe(init.gpa) else try compilation.emitC(init.gpa);
+    const generated = try compilation.emitQbe(init.gpa);
     init.timings.end();
     return generated;
 }

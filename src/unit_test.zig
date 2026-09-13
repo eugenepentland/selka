@@ -15,9 +15,6 @@ fn scenario(allocator: std.mem.Allocator) !void {
         const result = try c.executeWithOptions(allocator, .{ .memory = .{ .optimize_dispatch = optimized } });
         try t.expectEqual(@as(i64, 42), result.value);
     }
-    const generated = try c.emitC(allocator);
-    defer allocator.free(generated);
-    try t.expect(std.mem.indexOf(u8, generated, "unit: zero-payload token") != null);
 }
 // spec: UNIT-1
 test "unit calls bare returns generic fallthrough and mutable loans preserve results with allocation failures" {
@@ -72,8 +69,6 @@ test "unit fallthrough and early return release owned parameters without losing 
     var c = try language.Compilation.init(t.allocator, "cleanup.my", text);
     defer c.deinit();
     try t.expectEqual(@as(i64, 42), (try c.execute(t.allocator)).value);
-    const generated = try c.emitC(t.allocator);
-    defer t.allocator.free(generated);
 }
 
 // spec: UNIT-5
@@ -108,8 +103,5 @@ test "public unit schemas describe a distinct type while unsupported copied ABIs
     defer parsed.deinit();
     try t.expect(std.mem.indexOf(u8, schema, "\"kind\":\"unit\"") != null);
     try t.expectError(error.NotDataType, guest.compilation.invokePublic(t.allocator, "main::finish", &.{}, .{}));
-    const generated = try guest.compilation.emitC(t.allocator);
-    defer t.allocator.free(generated);
-    try t.expect(std.mem.indexOf(u8, generated, "UnsupportedSignature") != null);
     try t.expectEqual(@as(i64, 42), (try language.vm.run(t.allocator, guest.compilation.code.?)).value);
 }

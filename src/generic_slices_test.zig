@@ -13,9 +13,6 @@ fn scenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "generic-slice.my", example);
     defer compilation.deinit();
     try t.expectEqual(@as(i64, 13), (try compilation.execute(allocator)).value);
-    const generated = try compilation.emitC(allocator);
-    defer allocator.free(generated);
-    try t.expect(generated.len > 0);
 }
 // spec: GENERIC-SLICE-1
 test "generic slices execute mutation forwarding multiple element types and empty views" {

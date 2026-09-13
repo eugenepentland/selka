@@ -44,8 +44,6 @@ fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "generic-owned.my", program);
     defer c.deinit();
     try t.expectEqual(@as(i64, 14), (try c.execute(allocator)).value);
-    const native = try c.emitC(allocator);
-    defer allocator.free(native);
 }
 test "generic owned transfers partial extraction replacement and cleanup survive allocation failure" {
     try scenario(t.allocator);
@@ -65,7 +63,5 @@ test "generic pool owners transfer while handles retain ordinary copy identity" 
     var c = try language.Compilation.init(t.allocator, "generic-pool.my", bytes);
     defer c.deinit();
     try t.expectEqual(@as(i64, 7), (try c.execute(t.allocator)).value);
-    const native = try c.emitC(t.allocator);
-    defer t.allocator.free(native);
     try reject("pool P(Id):i64;fn f<T:copy>(pool:P)->P{discard pool;return pool;}fn main()->i64{return 0;}", "E_OWNED_CONSUMED");
 }

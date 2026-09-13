@@ -52,8 +52,6 @@ fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "generic-runtime.my", program);
     defer c.deinit();
     try t.expectEqual(@as(i64, 33), (try c.execute(allocator)).value);
-    const native = try c.emitC(allocator);
-    defer allocator.free(native);
 }
 test "generic bufferValue poolValue acquisition mutation and propagation survive allocation failures" {
     try scenario(t.allocator);

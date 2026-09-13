@@ -136,8 +136,6 @@ fn compositeLifecycle(allocator: std.mem.Allocator) !void {
     var copy = try language.Compilation.init(allocator, "formatted.my", formatted);
     defer copy.deinit();
     try t.expectEqual(@as(i64, 7), (try copy.execute(allocator)).value);
-    const generated = try copy.emitC(allocator);
-    defer allocator.free(generated);
 }
 
 test "structural composite contracts forward distinct substitutions and survive allocation failures" {

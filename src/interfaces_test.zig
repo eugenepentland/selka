@@ -346,12 +346,12 @@ fn nativeModuleScenario(allocator: std.mem.Allocator) !void {
     try project.load(files.provider(), "main", .{});
     var index = try interfaces.build(&project);
     var compilation = try project_compile_module.Compilation.init(&index);
-    const first = try compilation.emitC(allocator);
+    const first = try compilation.emitQbe(allocator);
     defer allocator.free(first);
-    const second = try compilation.emitC(allocator);
+    const second = try compilation.emitQbe(allocator);
     defer allocator.free(second);
     try t.expectEqualStrings(first, second);
-    try t.expect(std.mem.indexOf(u8, first, "source_paths = paths") != null);
+    try t.expect(std.mem.indexOf(u8, first, "helper") != null);
 }
 test "module native emission is deterministic and cleans all failed allocations" {
     try nativeModuleScenario(t.allocator);
@@ -555,9 +555,6 @@ fn genericExecutionScenario(allocator: std.mem.Allocator) !void {
     const schema = try @import("schema.zig").render(allocator, &compilation);
     defer allocator.free(schema);
     try t.expect(std.mem.indexOf(u8, schema, "::<") == null);
-    const generated = try compilation.emitC(allocator);
-    defer allocator.free(generated);
-    try t.expect(generated.len > 0);
 }
 test "generic execution retains module identities and ordinary public schema roots" {
     try genericExecutionScenario(t.allocator);
@@ -599,9 +596,6 @@ fn scatteredExports(allocator: std.mem.Allocator) !void {
     var compilation = try project_compile_module.Compilation.init(&index);
     try compilation.emit();
     try t.expectEqual(@as(i64, 0), (try @import("vm.zig").runWithOptions(allocator, compilation.code.?, .{})).value);
-    const generated = try compilation.emitC(allocator);
-    defer allocator.free(generated);
-    try t.expect(generated.len > 0);
 }
 
 test "scattered exports preserve source order and spans through compilation and allocation failures" {
@@ -640,7 +634,4 @@ test "late exports inferred generic calls and unit procedures compose across mod
     var compilation = try project_compile_module.Compilation.init(&index);
     try compilation.emit();
     try t.expectEqual(@as(i64, 41), (try @import("vm.zig").runWithOptions(t.allocator, compilation.code.?, .{})).value);
-    const generated = try compilation.emitC(t.allocator);
-    defer t.allocator.free(generated);
-    try t.expect(generated.len > 0);
 }

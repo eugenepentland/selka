@@ -12,8 +12,6 @@ fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "concrete.my", program);
     defer c.deinit();
     try t.expectEqual(@as(i64, 17), (try c.execute(allocator)).value);
-    const native = try c.emitC(allocator);
-    defer allocator.free(native);
 }
 // spec: GENERIC-CONCRETE-1
 test "generic concrete records and arrays retain checked shapes under allocation failures" {
@@ -55,8 +53,6 @@ fn updateScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "updates.my", updates);
     defer c.deinit();
     try t.expectEqual(@as(i64, 35), (try c.execute(allocator)).value);
-    const generated = try c.emitC(allocator);
-    defer allocator.free(generated);
     var table = try language.Compilation.init(allocator, "table-update.my", "enum Key{first,second}" ++
         "fn put<T:integer>(p:[Key]i64,key:Key,value:T)->[Key]i64{return replace(p,key,cast<i64>(value));}" ++
         "fn main()->i64{let old=new [Key]i64{first:1,second:2};let changed=put::<u8>(old,new Key.first,8u8);return old[new Key.first]+changed[new Key.first];}");
@@ -89,8 +85,6 @@ fn variantScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "variants.my", variants);
     defer c.deinit();
     try t.expectEqual(@as(i64, 9), (try c.execute(allocator)).value);
-    const generated = try c.emitC(allocator);
-    defer allocator.free(generated);
 }
 // spec: GENERIC-VARIANT-1
 test "generic concrete variants construct and match with scoped payloads under allocation failures" {

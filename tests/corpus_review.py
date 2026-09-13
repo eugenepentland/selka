@@ -165,11 +165,7 @@ def tools_review(compiler, directory, name):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', type=Path, required=True)
-    parser.add_argument('--native', action='store_true', help='also compile and execute C in O0/O2')
-    parser.add_argument('--zig', help='Zig compiler path (required with --native)')
     args = parser.parse_args()
-    if args.native and not args.zig:
-        parser.error("--native requires --zig")
     compiler = args.compiler.resolve()
     comparisons = 0
     with tempfile.TemporaryDirectory(prefix='mylang-corpus-') as temporary:
@@ -185,18 +181,7 @@ def main():
                     actual = run([compiler, 'run-project', entry, f'--memory={memory}'])
                     assert int(actual.stdout) == expected, (name, source, expected, actual.stdout)
                     comparisons += 1
-                if args.native:
-                    emitted = run([compiler, 'emit-project-c', entry])
-                    c_source = directory / 'program.c'
-                    c_source.write_text(emitted.stdout)
-                    for mode in ('-O0', '-O2'):
-                        executable = directory / 'program'
-                        run([args.zig, 'cc', '-std=c11', mode, '-fsanitize=undefined', '-fno-sanitize-recover=undefined', c_source, '-o', executable])
-                        actual = run([executable])
-                        assert int(actual.stdout) == expected, (name, mode, source, expected, actual.stdout)
-                        comparisons += 1
-        backend = 'VM and native O0/O2' if args.native else 'VM only'
-        print(f'ordinary corpus ({backend}): 2 applications, 13 modules, 48 input cases, {comparisons} independent-oracle execution checks; duplicates/quality, policy, schema/bindings, declared inputs, and change-impact rejection passed')
+        print(f'ordinary corpus (VM only): 2 applications, 13 modules, 48 input cases, {comparisons} independent-oracle execution checks; duplicates/quality, policy, schema/bindings, declared inputs, and change-impact rejection passed')
 
 if __name__ == '__main__':
     main()
