@@ -14,7 +14,9 @@ independently cached object per guest function and links those objects with the
 bundled runtime. `--run` replaces `-o`: it executes a temporary binary with
 inherited stdin, stdout, stderr and working directory, returns that program's
 exit status, and removes the binary afterwards while keeping the cached objects;
-runtime options go after `--`. Build tools resolve from `--qbe`/`--zig` first,
+runtime options go after `--`, including the same `--restrict` and `--allow-*`
+capability options `mylang run` takes: a native executable grants every
+capability by default and `--restrict` denies them. Build tools resolve from `--qbe`/`--zig` first,
 then from executables sitting beside the running `mylang`, then from `PATH`, and
 never from the working directory. `amd64_sysv` is the only supported target, a
 module entry needs `--project`, `--library` produces a shared library, and a
