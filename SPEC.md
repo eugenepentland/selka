@@ -342,7 +342,7 @@ manifest records implementation coverage, not a test certificate.
 
 - [GC-ROOTS-1] Managed list aliases share stable identity and mutations. Retained execution values, including intermediate values and ordinary aggregate snapshots, root managed objects across allocation and stress collection.
 - [GC-CYCLES-1] Nonmoving tracing collection reclaims unreachable cycles, including cycles through ordinary aggregate fields, and preserves reachable cycles. Sweeping releases all dead-object edges before freeing any managed header.
-- [GC-BOUNDARY-1] Managed list operations enforce element types and bounds, reject foreign-execution managed references, and reject owned resources in managed storage.
+- [GC-BOUNDARY-1] Managed list operations enforce element types and bounds and reject foreign-execution managed references.
 - [GC-FAILURE-1] Collector scratch allocation failure leaves the heap unchanged. Failed list allocation or growth preserves retained value cleanup, and execution teardown releases managed backing storage.
 
 - [GC-SOURCE-1] Managed list aliases in immutable local bindings and helper parameters share mutation without explicit allocator authority.
