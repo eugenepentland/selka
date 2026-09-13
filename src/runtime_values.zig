@@ -331,7 +331,7 @@ pub const Aggregate = struct {
 
 /// Stable object identity; resizing backing storage never moves this header.
 /// Managed collection representation family.
-pub const ManagedKind = enum { list, string, dictionary };
+pub const ManagedKind = enum { list, string, dictionary, bytes };
 
 /// Representation metadata shared by checked schemas and GC headers.
 pub const CollectionShape = struct { kind: ManagedKind = .list, key: ?Type = null };

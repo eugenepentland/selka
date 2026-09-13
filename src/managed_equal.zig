@@ -4,6 +4,7 @@ const values = @import("runtime_values.zig");
 const gc = @import("gc_heap.zig");
 const dict = @import("managed_dict.zig");
 const text = @import("managed_text.zig");
+const byte_strings = @import("managed_bytes.zig");
 const Value = values.Value;
 const Record = @import("typed.zig").Record;
 const Pair = struct { left: Value, right: Value };
@@ -66,6 +67,10 @@ pub fn containsWithRecords(heap: *gc.Heap, container: Value, needle: Value, reco
             if (needle.typeOf() != container.managed.element_type) return error.TypeMismatch;
             for (container.managed.items.items) |item| if (try equalWithRecords(heap, item, needle, records)) return true;
             return false;
+        },
+        .bytes => return byte_strings.contains(heap, container, needle) catch |err| switch (err) {
+            error.ByteRange, error.InvalidHex => error.InvalidDataValue,
+            else => |other| other,
         },
         .string => {
             const part = try text.object(heap, needle);

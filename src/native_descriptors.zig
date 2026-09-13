@@ -74,6 +74,7 @@ fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, 
             .list => 1,
             .string => 2,
             .dictionary => 3,
+            .bytes => 4,
         };
         const element_type: typed.Type = if (record.collection.kind == .string) .u32 else record.shape.buffer orelse return error.InvalidType;
         element = try std.fmt.allocPrint(a, "&{s}", .{try symbol(a, catalog, element_type)});

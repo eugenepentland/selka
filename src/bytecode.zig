@@ -4,6 +4,8 @@ const std = @import("std");
 const typed = @import("typed.zig");
 const external_resources = @import("external_resources.zig");
 const model = @import("bytecode_model.zig");
+const ManagedKind = @import("runtime_values.zig").ManagedKind;
+const BufferOperation = @FieldType(@FieldType(Instruction, "op"), "buffer_operation");
 pub const Predicate = model.Predicate;
 pub const Equality = model.Equality;
 pub const SwitchArm = model.SwitchArm;
@@ -194,7 +196,7 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
         .json_codec => |codec| try @import("codec_bytecode.zig").operation(allocator, program, codec),
         .acquire_buffer => |ty| try validateOpAcquireBuffer(program, ty),
         .cast_integer => |ty| {
-            const text_target = validType(ty, program) and ty.isAggregate() and program.records[ty.recordIndex()].collection.kind == .string;
+            const text_target = validType(ty, program) and sequenceType(program, ty);
             if (!ty.isInteger() and !text_target) return error.InternalError;
         },
         .neg_integer => |ty| if (!ty.isInteger()) {
@@ -322,9 +324,15 @@ fn validateOpPoolOperation(program: Program, function: Function, operation: @Fie
     } else if (operation.output != expected) return error.InternalError;
 }
 
+fn sequenceType(program: Program, ty: typed.Type) bool {
+    if (!ty.isAggregate() or ty.recordIndex() >= program.records.len) return false;
+    const kind = program.records[ty.recordIndex()].collection.kind;
+    return kind == .string or kind == .bytes;
+}
+
 fn validateCollectionBinary(program: Program, binary: @FieldType(@FieldType(Instruction, "op"), "binary_integer")) Error!void {
     if (validType(binary.ty, program) and binary.ty.isAggregate() and program.records[binary.ty.recordIndex()].managed) {
-        const concatenate = binary.op == .add and program.records[binary.ty.recordIndex()].collection.kind == .string;
+        const concatenate = binary.op == .add and sequenceType(program, binary.ty);
         if (!concatenate and binary.op != .eq and binary.op != .ne) return error.InternalError;
     } else {
         if (!binary.ty.isInteger() or binary.op == .logical_and or binary.op == .logical_or) return error.InternalError;
@@ -332,22 +340,27 @@ fn validateCollectionBinary(program: Program, binary: @FieldType(@FieldType(Inst
     }
 }
 
-fn validateManagedOperation(program: Program, local: typed.Local, operation: @FieldType(@FieldType(Instruction, "op"), "buffer_operation")) Error!void {
+fn validateManagedOperation(program: Program, local: typed.Local, operation: BufferOperation) Error!void {
     const schema = program.records[local.ty.recordIndex()];
     const element = schema.shape.buffer.?;
 
     if (operation.reference != null or local.parameter.reference_parameter != null) return error.InternalError;
     if (schema.collection.kind != .list) {
         const dictionary = schema.collection.kind == .dictionary;
+        const byte_string = schema.collection.kind == .bytes;
         const expected: typed.Type = switch (operation.kind) {
             .length => .i64,
+            .find => if (byte_string) .i64 else return error.InternalError,
             .iteration_check => .unit,
             .key_at => if (dictionary) schema.collection.key.? else return error.InternalError,
             .slice => if (!dictionary) local.ty else return error.InternalError,
-            .read => if (dictionary) element else local.ty,
+            .read => if (dictionary or byte_string) element else local.ty,
             .write => if (dictionary) .unit else return error.InternalError,
             .get => if (dictionary) element else return error.InternalError,
             .contains => .bool,
+            .starts_with, .ends_with => if (byte_string) .bool else return error.InternalError,
+            .to_list, .hex, .decode => if (byte_string) try validateConversion(program, operation) else return error.InternalError,
+            .encode, .from_hex => if (schema.collection.kind == .string) try validateConversion(program, operation) else return error.InternalError,
             .join => if (!dictionary) local.ty else return error.InternalError,
             .split, .keys, .values => list: {
                 if ((operation.kind == .split) == dictionary) return error.InternalError;
@@ -373,7 +386,29 @@ fn validateManagedOperation(program: Program, local: typed.Local, operation: @Fi
     return;
 }
 
-fn validateOpBufferOperation(program: Program, function: Function, operation: @FieldType(@FieldType(Instruction, "op"), "buffer_operation")) Error!void {
+fn validateConversion(program: Program, operation: BufferOperation) Error!typed.Type {
+    const output = operation.output;
+    if (!output.isAggregate() or !validType(output, program)) return error.InternalError;
+    const schema = program.records[output.recordIndex()];
+    const wanted: ?ManagedKind = switch (operation.kind) {
+        .to_list => .list,
+        .hex => .string,
+        .encode => .bytes,
+        else => null,
+    };
+    if (wanted) |kind| {
+        if (!schema.managed or schema.collection.kind != kind) return error.InternalError;
+        if (kind == .list and schema.shape.buffer != .i64) return error.InternalError;
+        return output;
+    }
+    const shape = typed.resultShape(output, program.records) orelse return error.InternalError;
+    const payload = program.records[shape.ok_type.recordIndex()];
+    if (!shape.ok_type.isAggregate() or !payload.managed) return error.InternalError;
+    if (payload.collection.kind != (if (operation.kind == .decode) ManagedKind.string else ManagedKind.bytes)) return error.InternalError;
+    return output;
+}
+
+fn validateOpBufferOperation(program: Program, function: Function, operation: BufferOperation) Error!void {
     if (@backingInt(operation.owner) >= function.scope.locals.len or !validType(operation.output, program)) return error.InternalError;
     const local = function.scope.locals[@backingInt(operation.owner)];
     if (!local.ty.isAggregate()) return error.InternalError;

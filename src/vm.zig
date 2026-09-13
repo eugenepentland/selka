@@ -2,6 +2,18 @@
 const frame_limit_code = "R_FRAME_LIMIT";
 const index_bounds_code = "R_INDEX_BOUNDS";
 const arena_escape_code = "R_ARENA_ESCAPE";
+const list_bounds_code = "R_LIST_BOUNDS";
+const list_bounds_message = "list index is outside initialized bounds";
+const iteration_mutation_code = "R_LIST_ITERATION_MUTATION";
+const invalid_utf8_message = "invalid UTF-8 in byte string";
+const invalid_hex_message = "hexadecimal text requires an even number of hex digits";
+
+fn byteCount(result: managed_bytes.Error!usize) managed_bytes.Error!Value {
+    return Value{ .i64 = @intCast(try result) };
+}
+fn byteTruth(result: managed_bytes.Error!bool) managed_bytes.Error!Value {
+    return Value{ .bool = try result };
+}
 const division_zero_message = "division or remainder by zero";
 const division_zero_code = "R_DIVISION_BY_ZERO";
 const callables = @import("callables.zig");
@@ -17,6 +29,7 @@ const value_copy = @import("value_copy.zig");
 const std = @import("std");
 const managed_equal = @import("managed_equal.zig");
 const managed_text = @import("managed_text.zig");
+const managed_bytes = @import("managed_bytes.zig");
 const managed_dict = @import("managed_dict.zig");
 const invocation_contract = @import("invocation_contract.zig");
 const bc = @import("bytecode.zig");
@@ -943,14 +956,14 @@ const Step = struct {
             const result = if (schema.collection.kind == .dictionary)
                 managed_dict.create(heap, record.ty, schema.collection.key.?, schema.shape.buffer.?) catch |err| return self.collectionFailure(err)
             else
-                heap.create(record.ty, .u32, record.fields) catch |err| return self.managedFailure(err);
+                heap.create(record.ty, if (schema.collection.kind == .bytes) .u8 else .u32, record.fields) catch |err| return self.managedFailure(err);
             defer result.release(allocator);
             if (schema.collection.kind == .dictionary) {
                 var index: usize = start;
                 while (index < stack.items.len) : (index += 2) managed_dict.write(heap, result, stack.items[index], stack.items[index + 1]) catch |err| return self.collectionFailure(err);
             } else {
                 for (stack.items[start..]) |point| heap.append(result, point) catch |err| return self.managedFailure(err);
-                result.managed.collection.kind = .string;
+                result.managed.collection.kind = schema.collection.kind;
             }
             releaseValues(stack.items[start..], allocator);
             stack.shrinkRetainingCapacity(start);
@@ -1003,6 +1016,11 @@ const Step = struct {
         defer base.release(allocator);
         if (base.typeOf() != ty) return error.InternalError;
         if (base == .managed and base.managed.collection.kind != .list) {
+            if (base.managed.collection.kind == .bytes) {
+                const byte = managed_bytes.at(self.execution.managed_heap, base, try key.asInteger()) catch |err| return self.bytesFailure(err);
+                try pushOwned(stack, allocator, byte);
+                return false;
+            }
             const result = if (base.managed.collection.kind == .string)
                 managed_text.at(self.execution.managed_heap, base, try key.asInteger())
             else
@@ -1053,7 +1071,11 @@ const Step = struct {
         defer base.release(allocator);
         if (base.typeOf() != ty) return error.InternalError;
         if (base == .managed and base.managed.collection.kind != .list) {
-            const size = if (base.managed.collection.kind == .string) managed_text.len(self.execution.managed_heap, base) else managed_dict.len(self.execution.managed_heap, base);
+            const size = switch (base.managed.collection.kind) {
+                .string => managed_text.len(self.execution.managed_heap, base),
+                .bytes => managed_bytes.len(self.execution.managed_heap, base) catch |err| return self.bytesFailure(err),
+                else => managed_dict.len(self.execution.managed_heap, base),
+            };
             const length = size catch |err| return self.collectionFailure(err);
             try appendValue(stack, allocator, .{ .i64 = @intCast(length) });
             return false;
@@ -1357,6 +1379,13 @@ const Step = struct {
             .cast_integer, .neg_integer => |value| value,
             else => unreachable,
         };
+        if (ty.isAggregate() and program.records[ty.recordIndex()].collection.kind == .bytes) {
+            const input = try pop(stack, frame.operand_base);
+            defer input.release(allocator);
+            const built = managed_bytes.fromList(self.execution.managed_heap, ty, input) catch |err| return self.bytesFailure(err);
+            try pushOwned(stack, allocator, built);
+            return false;
+        }
         if (ty.isAggregate() and program.records[ty.recordIndex()].collection.kind == .string) {
             const input = try pop(stack, frame.operand_base);
             defer input.release(allocator);
@@ -1389,6 +1418,11 @@ const Step = struct {
             defer right_value.release(allocator);
             const left_value = try pop(stack, frame.operand_base);
             defer left_value.release(allocator);
+            if (binary.op == .add and program.records[binary.ty.recordIndex()].collection.kind == .bytes) {
+                const joined = managed_bytes.concat(self.execution.managed_heap, left_value, right_value) catch |err| return self.bytesFailure(err);
+                try pushOwned(stack, allocator, joined);
+                return false;
+            }
             const result: managed_dict.Error!Value = if (binary.op == .add) text.concat(self.execution.managed_heap, left_value, right_value) else comparison: {
                 const equal = managed_equal.equalWithRecords(self.execution.managed_heap, left_value, right_value, program.records) catch |err| break :comparison err;
                 break :comparison Value{ .bool = equal == (binary.op == .eq) };
@@ -1773,14 +1807,15 @@ const Step = struct {
         const execution = self.execution;
         const heap = execution.managed_heap;
         const operation = self.instruction.op.buffer_operation;
+        if (list.managed.collection.kind == .bytes) return self.executeByteString(list, arguments, start);
         if (list.managed.collection.kind != .list) return self.executeTextDictionary(list, arguments, start);
         const number = if (operation.kind == .read or operation.kind == .write) try arguments[0].asInteger() else 0;
-        if (number < 0 or number > std.math.maxInt(usize)) return self.finish(trap("R_LIST_BOUNDS", "list index is outside initialized bounds", self.instruction.span, execution.state.frames.items, execution.program));
+        if (number < 0 or number > std.math.maxInt(usize)) return self.finish(trap(list_bounds_code, list_bounds_message, self.instruction.span, execution.state.frames.items, execution.program));
         const index: usize = @intCast(number);
         const output: Value = switch (operation.kind) {
             .iteration_check => checked: {
                 if (try arguments[0].asInteger() != heap.len(list) catch |err| return self.managedFailure(err)) return self.finish(trap(
-                    "R_LIST_ITERATION_MUTATION",
+                    iteration_mutation_code,
                     "list length changed during iteration",
                     self.instruction.span,
                     execution.state.frames.items,
@@ -1815,7 +1850,7 @@ const Step = struct {
         const text = managed_text;
         if (operation.kind == .iteration_check) {
             const length = if (value.managed.collection.kind == .dictionary) (dictionary.len(heap, value) catch |err| return self.collectionFailure(err)) else (text.len(heap, value) catch |err| return self.collectionFailure(err));
-            if (length != try arguments[0].asInteger()) return self.finish(trap("R_LIST_ITERATION_MUTATION", "collection size changed during iteration", self.instruction.span, self.execution.state.frames.items, self.execution.program));
+            if (length != try arguments[0].asInteger()) return self.finish(trap(iteration_mutation_code, "collection size changed during iteration", self.instruction.span, self.execution.state.frames.items, self.execution.program));
             releaseValues(arguments, self.execution.allocator);
             self.execution.state.stack.shrinkRetainingCapacity(start);
             try pushOwned(self.execution.state.stack, self.execution.allocator, .unit);
@@ -1834,6 +1869,7 @@ const Step = struct {
             .slice => text.slice(heap, value, try arguments[0].asInteger(), try arguments[1].asInteger()),
             .split => text.split(heap, operation.output, value, arguments[0]),
             .join => text.join(heap, value, arguments[0]),
+            .encode, .from_hex => return self.executeByteString(value, arguments, start),
             else => return error.InternalError,
         } else switch (operation.kind) {
             .length => length: {
@@ -1861,6 +1897,78 @@ const Step = struct {
         return false;
     }
 
+    fn executeByteString(self: *Step, value: Value, arguments: []const Value, start: usize) !bool {
+        const heap = self.execution.managed_heap;
+        const operation = self.instruction.op.buffer_operation;
+        if (operation.kind == .decode or operation.kind == .from_hex) return self.executeByteResult(value, arguments, start, operation.kind == .from_hex);
+        const result: managed_bytes.Error!Value = switch (operation.kind) {
+            .length => byteCount(managed_bytes.len(heap, value)),
+            .iteration_check => check: {
+                const size = managed_bytes.len(heap, value) catch |err| break :check err;
+                if (size != try arguments[0].asInteger()) return self.finish(trap(iteration_mutation_code, "collection size changed during iteration", self.instruction.span, self.execution.state.frames.items, self.execution.program));
+                break :check Value.unit;
+            },
+            .read => managed_bytes.at(heap, value, try arguments[0].asInteger()),
+            .slice => managed_bytes.slice(heap, value, try arguments[0].asInteger(), try arguments[1].asInteger()),
+            .split => managed_bytes.split(heap, operation.output, value, arguments[0]),
+            .join => managed_bytes.join(heap, value, arguments[0]),
+            .contains => byteTruth(managed_bytes.contains(heap, value, arguments[0])),
+            .starts_with => byteTruth(managed_bytes.startsWith(heap, value, arguments[0])),
+            .ends_with => byteTruth(managed_bytes.endsWith(heap, value, arguments[0])),
+            .find => found: {
+                const at = managed_bytes.find(heap, value, arguments[0]) catch |err| break :found err;
+                break :found Value{ .i64 = at };
+            },
+            .to_list => managed_bytes.toList(heap, operation.output, value),
+            .hex => managed_bytes.hex(heap, operation.output, value),
+            .encode => managed_bytes.encode(heap, operation.output, value),
+            else => return error.InternalError,
+        };
+        const output = result catch |err| return self.bytesFailure(err);
+        releaseValues(arguments, self.execution.allocator);
+        self.execution.state.stack.shrinkRetainingCapacity(start);
+        try pushOwned(self.execution.state.stack, self.execution.allocator, output);
+        return false;
+    }
+
+    fn executeByteResult(self: *Step, value: Value, arguments: []const Value, start: usize, hexadecimal: bool) !bool {
+        const allocator = self.execution.allocator;
+        const heap = self.execution.managed_heap;
+        const operation = self.instruction.op.buffer_operation;
+        const shape = typed.resultShape(operation.output, self.execution.program.records) orelse return error.InternalError;
+        var tag = shape.ok_tag;
+        const produced = if (hexadecimal) managed_bytes.fromHex(heap, shape.ok_type, value) else managed_bytes.decode(heap, shape.ok_type, value);
+        const payload = produced catch |err| switch (err) {
+            error.InvalidUtf8, error.InvalidHex => message: {
+                tag = shape.error_tag;
+                break :message managed_text.create(heap, shape.error_type, if (hexadecimal) invalid_hex_message else invalid_utf8_message) catch |other| return self.bytesFailure(other);
+            },
+            else => return self.bytesFailure(err),
+        };
+        defer payload.release(allocator);
+        const output = try typed.Value.createVariant(allocator, operation.output, tag, payload);
+        releaseValues(arguments, allocator);
+        self.execution.state.stack.shrinkRetainingCapacity(start);
+        try pushOwned(self.execution.state.stack, allocator, output);
+        return false;
+    }
+
+    fn bytesFailure(self: *Step, err: managed_bytes.Error) RunError!bool {
+        const code: []const u8 = switch (err) {
+            error.Bounds => list_bounds_code,
+            error.ArenaEscape => return self.managedFailure(error.ArenaEscape),
+            error.ByteRange => "R_BYTE_RANGE",
+            error.EmptySeparator => "R_EMPTY_SEPARATOR",
+            error.InvalidHex, error.InvalidUtf8 => return error.InternalError,
+            error.OutOfMemory => return error.OutOfMemory,
+            error.CapacityLimit => return error.CapacityLimit,
+            error.ForeignMemory => return error.ForeignMemory,
+            error.InvalidDataValue => return error.InvalidDataValue,
+            error.TypeMismatch => return error.TypeMismatch,
+        };
+        return self.finish(trap(code, "byte string operation failed", self.instruction.span, self.execution.state.frames.items, self.execution.program));
+    }
+
     fn collectionFailure(self: *Step, err: managed_dict.Error) RunError!bool {
         const code: []const u8 = switch (err) {
             error.Bounds => "R_TEXT_BOUNDS",
@@ -1879,7 +1987,7 @@ const Step = struct {
 
     fn managedFailure(self: *Step, err: gc_heap.Error) !bool {
         switch (err) {
-            error.Bounds => return self.finish(trap("R_LIST_BOUNDS", "list index is outside initialized bounds", self.instruction.span, self.execution.state.frames.items, self.execution.program)),
+            error.Bounds => return self.finish(trap(list_bounds_code, list_bounds_message, self.instruction.span, self.execution.state.frames.items, self.execution.program)),
             error.ArenaEscape => return self.finish(trap(
                 arena_escape_code,
                 "storing a value allocated in this arena into an object that outlives it would leave a dangling reference",

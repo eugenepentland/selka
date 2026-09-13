@@ -114,6 +114,23 @@ def main() -> int:
         return 1
     return 42
 '''
+    yield '''def main() -> int:
+    raw = b"hi\\x00\\xff"
+    if len(raw) != 4:
+        return 1
+    if raw[0] != 104 or raw[-1] != 255:
+        return 2
+    if raw != b"hi\\x00\\xff" or raw == b"hi":
+        return 3
+    total = 0
+    for value in raw:
+        total += value
+    return total - 388
+'''
+    yield '''def main() -> int:
+    raw = b"ab"
+    return raw[2]
+'''
 
 
 def main():

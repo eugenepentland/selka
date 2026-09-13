@@ -47,6 +47,11 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
     if (!schema.managed) return self.reject(self.pc);
     if (schema.collection.kind == .string) return textOperation(E, self, op, stack);
     if (schema.collection.kind == .dictionary) return dictionaryOperation(E, self, op, stack);
+    // Byte strings share the native list representation; only its reading operations are lowered.
+    if (schema.collection.kind == .bytes) switch (op.kind) {
+        .length, .iteration_check, .read => {},
+        else => return self.reject(self.pc),
+    };
     const h = stack.len;
     const base = h - op.kind.arity();
     const list = try self.load("l", @backingInt(op.owner));

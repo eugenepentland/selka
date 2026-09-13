@@ -271,6 +271,7 @@ const Builder = struct {
                     schema.managed = declaration.managed;
                     if (declaration.builtin_name) |name| {
                         if (std.mem.eql(u8, name, "str")) schema.collection.kind = .string;
+                        if (std.mem.eql(u8, name, "bytes")) schema.collection.kind = .bytes;
                         if (std.mem.eql(u8, name, "dict")) {
                             schema.collection = .{ .kind = .dictionary, .key = schema.shape.buffer };
                             schema.shape.buffer = try self.runtimeType(node.edges[1].target);
@@ -291,6 +292,10 @@ pub fn collect(allocator: std.mem.Allocator, src: source.Source, program: ast.Pr
     const graph = try allocator.create(layouts.Graph);
     graph.* = try layouts.collect(allocator, index, sink);
     if (@import("nominal_type_syntax.zig").textRequired(program, src)) _ = try graph.materialize(.{ .named = index.names.get("str").? }, .{ .start = 0, .end = 0 });
+    if (index.names.get("bytes")) |declaration| {
+        const builtin = index.declarations.items[declaration].builtin_name;
+        if (builtin != null and std.mem.eql(u8, builtin.?, "bytes")) _ = try graph.materialize(.{ .named = declaration }, .{ .start = 0, .end = 0 });
+    }
     if (@import("float_syntax.zig").used(src, program)) _ = try graph.materialize(.{ .named = index.names.get("float").? }, .{ .start = 0, .end = 0 });
     const store = try allocator.create(Store);
     store.* = .{ .context = .{ .allocator = allocator, .src = src, .program = program, .sink = sink, .names = names }, .index = index, .graph = graph };

@@ -142,7 +142,9 @@ test {
     _ = @import("runtime_values_test.zig");
     _ = @import("gc_heap_test.zig");
     _ = @import("managed_values_test.zig");
+    _ = @import("managed_bytes_test.zig");
     _ = @import("python_values_test.zig");
+    _ = @import("python_bytes_test.zig");
     _ = @import("managed_lists_test.zig");
     _ = @import("python_collections_test.zig");
     _ = @import("managed_frontend_test.zig");

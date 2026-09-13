@@ -139,6 +139,9 @@ In particular:
   across host/JSON boundaries are not implemented.
 - Formatting validates Python source and preserves its layout and comments.
 
+Byte-oriented code uses the managed `bytes` type; see
+[managed byte strings](bytes.md) for its literals, operations and conversions.
+
 Legacy brace syntax remains accepted for existing code and advanced API examples.
 The [historical familiar syntax](familiar-syntax.md) page describes that spelling;
 new application examples should follow this guide.

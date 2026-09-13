@@ -1,5 +1,6 @@
 //! Scope and type checking use resolved binding identities, including advisory use counts.
 const buffer_operations = @import("buffer_operations.zig");
+const ManagedKind = @import("runtime_values.zig").ManagedKind;
 const BufferKind = buffer_operations.Kind;
 const collections = @import("collection_lower.zig");
 const needs_list = "operation requires a managed list";
@@ -15,6 +16,11 @@ const eResultPath = diagnostic.result_path;
 const eReturnLifetime = diagnostic.return_lifetime;
 const eShadowing = diagnostic.shadowing;
 const eConversionBody = "E_CONVERSION_BODY";
+const eByteConversion = "E_BYTES_CONVERSION";
+/// Managed collection methods whose only argument has the receiver's own sequence type.
+fn sequenceArgument(kind: BufferKind) bool {
+    return kind == .split or kind == .contains or kind == .starts_with or kind == .ends_with or kind == .find;
+}
 const eResourceResult = diagnostic.resource_result;
 const eReferenceReadOnly = diagnostic.reference_read_only;
 const eBufferResult = "E_BUFFER_RESULT";
@@ -755,7 +761,7 @@ const Checker = struct {
         const ty_value = self.nodes.items[@backingInt(base)].ty;
         if (!ty_value.isAggregate() or !self.catalog.records[ty_value.recordIndex()].managed) return self.sink.fail(eCollectionMethod, root.span, "indexed field assignment requires a list or dictionary");
         const schema = self.catalog.records[ty_value.recordIndex()];
-        if (schema.collection.kind == .string) return self.sink.fail(eCollectionMethod, root.span, "strings are immutable");
+        if (schema.collection.kind == .string or schema.collection.kind == .bytes) return self.sink.fail(eCollectionMethod, root.span, "str and bytes are immutable");
         const element = schema.shape.buffer.?;
         const owner = try b.local(ty_value);
         try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = owner, .value = base } }));
@@ -804,7 +810,7 @@ const Checker = struct {
         if (start) |value| try self.requireInteger(self.nodes.items[@backingInt(value)].ty, node.span);
         if (end) |value| try self.requireInteger(self.nodes.items[@backingInt(value)].ty, node.span);
         const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
-        return if (schema.collection.kind == .string) b.textSlice(base, start, end) else b.slice(base, start, end);
+        return if (schema.collection.kind == .list) b.slice(base, start, end) else b.textSlice(base, start, end);
     }
     fn checkListAccess(self: *Checker, node: ast.Node, operation: struct { base: ast.NodeId, kind: BufferKind, inputs: []const ast.NodeId, signed_length: bool = false }, temporaries: []const typed.Type) Error!typed.Node {
         const base_input = operation.base;
@@ -864,7 +870,10 @@ const Checker = struct {
                 if (schema.collection.kind == .dictionary) {
                     if (operation.arguments.len > 0) try self.hint(operation.arguments[0], schema.collection.key.?);
                     if (operation.arguments.len == 2) try self.hint(operation.arguments[1], schema.shape.buffer.?);
-                } else if ((operation.kind == .split or operation.kind == .contains) and operation.arguments.len == 1) try self.hint(operation.arguments[0], owner_type);
+                } else if (sequenceArgument(operation.kind) and operation.arguments.len == 1) {
+                    const byte_needle = schema.collection.kind == .bytes and operation.kind == .contains;
+                    if (!byte_needle) try self.hint(operation.arguments[0], owner_type);
+                }
                 return;
             }
             if (owner_type.isAggregate()) if (self.catalog.records[owner_type.recordIndex()].shape.buffer) |element| {
@@ -911,6 +920,12 @@ const Checker = struct {
         }
         if (try self.textConstructor(call, node.span)) {
             try call_arguments.positional(call, self.sink);
+            try work.append(self.allocator, .{ .id = call.arguments[0] });
+            return true;
+        }
+        if (self.byteConversion(call) != null) {
+            try call_arguments.positional(call, self.sink);
+            if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "byte conversions require one argument");
             try work.append(self.allocator, .{ .id = call.arguments[0] });
             return true;
         }
@@ -1098,7 +1113,9 @@ const Checker = struct {
                     const position = call_arguments.parameterPosition(target.call, i);
                     const argument = target.call.arguments[position];
                     const parameter = signature.signature.parameters[position];
-                    if (parameter.reference == null or self.syntax.nodes.items[@backingInt(argument)].data == .bytes)
+                    const literal_bytes = self.syntax.nodes.items[@backingInt(argument)].data == .bytes;
+                    if (parameter.reference != null and literal_bytes) try self.hint(argument, try self.ty(self.syntax.nodes.items[@backingInt(argument)].span));
+                    if (parameter.reference == null or literal_bytes)
                         try work.append(self.allocator, .{ .id = argument, .default_value = parameter.default_value == argument });
                 }
                 return true;
@@ -1196,15 +1213,28 @@ const Checker = struct {
         const arguments = try self.allocator.alloc(typed.NodeId, operation.arguments.len);
         for (operation.arguments, arguments) |input, *argument| argument.* = self.resolved[@backingInt(input)].?;
         const dictionary = schema.collection.kind == .dictionary;
-        const output_element = if (dictionary) element else local.ty;
+        const byte_string = schema.collection.kind == .bytes;
+        const output_element = if (dictionary or byte_string) element else local.ty;
         switch (operation.kind) {
             .length => out.ty = .i64,
+            .find, .starts_with, .ends_with => {
+                if (!byte_string) return self.sink.fail(eCollectionMethod, operation.owner, "prefix, suffix and search operations require bytes");
+                try self.require(self.nodes.items[@backingInt(arguments[0])].ty, local.ty, operation.owner);
+                out.ty = if (operation.kind == .find) .i64 else .bool;
+            },
+            .to_list, .hex, .decode, .encode, .from_hex => out.ty = collections.operationType(&self.catalog, local.ty, operation.kind, operation.owner) catch |err| switch (err) {
+                error.InternalError => return self.sink.fail(eCollectionMethod, operation.owner, "conversion is not supported by this collection"),
+                else => return err,
+            },
             .read, .write, .get, .contains => {
                 if (!dictionary and operation.kind != .read and operation.kind != .contains) return self.sink.fail("E_TEXT_IMMUTABLE", operation.owner, "str values are immutable");
                 if (dictionary) {
                     try self.require(self.nodes.items[@backingInt(arguments[0])].ty, schema.collection.key.?, operation.owner);
                 } else if (operation.kind == .contains) {
-                    try self.require(self.nodes.items[@backingInt(arguments[0])].ty, local.ty, operation.owner);
+                    var needle = arguments[0];
+                    const wanted = if (byte_string) try self.byteMembership(operation.owner, &needle, local.ty) else local.ty;
+                    arguments[0] = needle;
+                    try self.require(self.nodes.items[@backingInt(needle)].ty, wanted, operation.owner);
                 } else try self.requireInteger(self.nodes.items[@backingInt(arguments[0])].ty, operation.owner);
                 if (arguments.len == 2) try self.require(self.nodes.items[@backingInt(arguments[1])].ty, element, operation.owner);
                 out.ty = if (operation.kind == .write) .unit else if (operation.kind == .contains) .bool else output_element;
@@ -1479,6 +1509,32 @@ const Checker = struct {
         out.ty = self.locals.items[@backingInt(slot)].ty;
         out.data = .{ .local = slot };
     }
+    /// Python-spelled byte-string constructors that are not ordinary function calls.
+    const ByteConversion = enum { from_list, from_hex };
+    fn byteConversion(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) ?ByteConversion {
+        if (self.active.contains("bytes") or self.functions.contains("bytes")) return null;
+        const target = self.catalog.names.get("bytes") orelse return null;
+        if (!target.isAggregate() or self.catalog.records[target.recordIndex()].collection.kind != .bytes) return null;
+        if (call.owner) |owner| {
+            if (!std.mem.eql(u8, self.src.text(owner), "bytes")) return null;
+            return if (std.mem.eql(u8, self.src.text(call.name), "fromhex")) .from_hex else null;
+        }
+        return if (std.mem.eql(u8, self.src.text(call.name), "bytes")) .from_list else null;
+    }
+    fn checkByteConversion(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), conversion: ByteConversion, out: *typed.Node) Error!void {
+        const value = self.resolved[@backingInt(call.arguments[0])].?;
+        const input_type = self.nodes.items[@backingInt(value)].ty;
+        const schema = if (input_type.isAggregate()) self.catalog.records[input_type.recordIndex()] else null;
+        if (conversion == .from_hex) {
+            if (schema == null or schema.?.collection.kind != .string) return self.sink.fail(eByteConversion, node.span, "bytes.fromhex requires a str argument");
+            out.* = try (collections.Builder(Checker){ .checker = self, .span = node.span }).access(value, .from_hex, &.{}, false);
+            return;
+        }
+        const integer_list = schema != null and schema.?.managed and schema.?.collection.kind == .list;
+        if (!integer_list or schema.?.shape.buffer != .i64) return self.sink.fail(eByteConversion, node.span, "bytes() requires a list[int] argument");
+        out.ty = self.catalog.names.get("bytes") orelse return error.InternalError;
+        out.data = .{ .cast = value };
+    }
     fn textConstructor(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span) Error!bool {
         if (call.owner != null or !std.mem.eql(u8, self.src.text(call.name), "str")) return false;
         if (self.active.contains("str") or self.functions.contains("str")) return false;
@@ -1500,6 +1556,7 @@ const Checker = struct {
             out.data = .{ .cast = value };
             return;
         }
+        if (self.byteConversion(input)) |conversion| return self.checkByteConversion(node, input, conversion, out);
         if (try self.resultConstructor(input)) |ok| {
             try call_arguments.positional(input, self.sink);
             return self.checkResultConstructor(node, input, ok, out);
@@ -1655,8 +1712,20 @@ const Checker = struct {
         }
         out.data = .{ .array = items };
     }
+    fn byteLiteralType(self: *Checker, node: ast.Node) Error!typed.Type {
+        const spelling = self.src.text(node.span);
+        if (spelling.len == 0 or spelling[0] != 'b') return self.ty(node.span);
+        return collections.preludeType(&self.catalog, "bytes", node.span) catch |err| switch (err) {
+            error.InternalError => self.ty(node.span),
+            else => err,
+        };
+    }
     fn checkTextLiteral(self: *Checker, node: ast.Node, bytes: []const u8, out: *typed.Node) Error!void {
-        out.ty = if (node.data == .text) try self.ty(node.span) else self.expected_types.get(node.span) orelse try self.ty(node.span);
+        out.ty = if (node.data == .text) try self.ty(node.span) else self.expected_types.get(node.span) orelse try self.byteLiteralType(node);
+        if (out.ty.isAggregate() and self.catalog.records[out.ty.recordIndex()].collection.kind == .bytes) {
+            out.data = .{ .array = try self.byteValues(bytes, node.span) };
+            return;
+        }
         if (out.ty.isAggregate() and self.catalog.records[out.ty.recordIndex()].collection.kind == .string) {
             const view = std.unicode.Utf8View.init(bytes) catch return self.sink.fail("E_TEXT_UTF8", node.span, "str literals require valid UTF-8");
             var iterator = view.iterator();
@@ -1697,8 +1766,9 @@ const Checker = struct {
         }
         const text_operands = lt.isAggregate() and self.catalog.records[lt.recordIndex()].managed;
         if (text_operands) {
-            const concatenation = b.op == .add and self.catalog.records[lt.recordIndex()].collection.kind == .string;
-            if (!concatenation and b.op != .eq and b.op != .ne) return self.sink.fail("E_TEXT_OPERATOR", b.op_span, "managed collections support equality and str supports concatenation");
+            const sequence = self.catalog.records[lt.recordIndex()].collection.kind;
+            const concatenation = b.op == .add and (sequence == .string or sequence == .bytes);
+            if (!concatenation and b.op != .eq and b.op != .ne) return self.sink.fail("E_TEXT_OPERATOR", b.op_span, "managed collections support equality and str/bytes support concatenation");
             out.ty = if (b.op == .add) lt else .bool;
         } else switch (b.op) {
             .f64_eq, .f64_lt, .f64_le => {
@@ -1739,13 +1809,15 @@ const Checker = struct {
         const container_type = self.nodes.items[@backingInt(container)].ty;
         if (!container_type.isAggregate() or !self.catalog.records[container_type.recordIndex()].managed) return self.sink.fail("E_MEMBERSHIP", node.span, "membership requires a list, dictionary, or str");
         const schema = self.catalog.records[container_type.recordIndex()];
+        var member = needle;
         const expected = switch (schema.collection.kind) {
             .list => schema.shape.buffer.?,
             .dictionary => schema.collection.key.?,
             .string => container_type,
+            .bytes => try self.byteMembership(node.span, &member, container_type),
         };
-        try self.require(self.nodes.items[@backingInt(needle)].ty, expected, node.span);
-        const inputs = [_]typed.NodeId{ needle, container };
+        try self.require(self.nodes.items[@backingInt(member)].ty, expected, node.span);
+        const inputs = [_]typed.NodeId{ member, container };
         var locals: [2]typed.LocalId = undefined;
         var statements: [2]typed.StatementId = undefined;
         for (inputs, 0..) |input, i| {
@@ -1767,6 +1839,13 @@ const Checker = struct {
         try self.statements.append(self.allocator, .{ .span = node.span, .terminates = false, .data = .{ .block = try self.allocator.dupe(typed.StatementId, &statements) } });
         return .{ .span = node.span, .ty = .bool, .data = .{ .block_value = .{ .body = body, .value = result } } };
     }
+    /// Byte membership accepts either a byte scalar, widened to int, or a whole subsequence.
+    fn byteMembership(self: *Checker, span: source.Span, needle: *typed.NodeId, container_type: typed.Type) Error!typed.Type {
+        const actual = self.nodes.items[@backingInt(needle.*)].ty;
+        if (!actual.isInteger()) return container_type;
+        if (actual != .i64) needle.* = try (collections.Builder(Checker){ .checker = self, .span = span }).node(.i64, .{ .cast = needle.* });
+        return .i64;
+    }
     fn checkValueIndex(self: *Checker, node: ast.Node, access: @FieldType(@FieldType(ast.Node, "data"), "index"), out: *typed.Node) Error!void {
         const base = self.resolved[@backingInt(access.base)].?;
         const index_value = self.resolved[@backingInt(access.index)].?;
@@ -1776,6 +1855,12 @@ const Checker = struct {
             if (receiver.collection.kind == .dictionary) {
                 try self.require(self.nodes.items[@backingInt(index_value)].ty, receiver.collection.key.?, node.span);
             } else try self.requireInteger(self.nodes.items[@backingInt(index_value)].ty, node.span);
+            if (receiver.collection.kind == .bytes) {
+                const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
+                out.ty = .i64;
+                out.data = .{ .cast = try b.node(receiver.shape.buffer.?, .{ .index = .{ .base = base, .index = index_value } }) };
+                return;
+            }
             out.ty = if (receiver.collection.kind == .string) receiver_type else receiver.shape.buffer.?;
             out.data = .{ .index = .{ .base = base, .index = index_value } };
             return;
@@ -2562,6 +2647,7 @@ const Checker = struct {
         const element = switch (schema.collection.kind) {
             .list => schema.shape.buffer.?,
             .string => iterable_type,
+            .bytes => typed.Type.i64,
             .dictionary => schema.collection.key.?,
         };
         const owner = try b.local(iterable_type);
@@ -2594,7 +2680,7 @@ const Checker = struct {
         const iteration_check = try b.stmt(.{ .discard = try b.operation(owner, .iteration_check, &.{try b.read(limit)}) });
         const iteration = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{
             iteration_check,
-            try b.stmt(.{ .initialize = .{ .slot = value_slot, .value = try b.operation(owner, if (schema.collection.kind == .dictionary) .key_at else .read, &.{i}) } }),
+            try b.stmt(.{ .initialize = .{ .slot = value_slot, .value = try self.iterationValue(b, owner, schema.collection.kind, i) } }),
             body.id,
         }) });
         const step = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{
@@ -2607,6 +2693,11 @@ const Checker = struct {
             try b.stmt(.{ .initialize = .{ .slot = limit, .value = try b.length(owner) } }),
             try b.stmt(.{ .loop = .{ .id = loop_id, .condition = try b.binary(.lt, i, try b.read(limit), .bool), .body = iteration, .step = step } }),
         }) };
+    }
+    fn iterationValue(self: *Checker, b: collections.Builder(Checker), owner: typed.LocalId, kind: ManagedKind, index: typed.NodeId) Error!typed.NodeId {
+        _ = self;
+        const read = try b.operation(owner, if (kind == .dictionary) .key_at else .read, &.{index});
+        return if (kind == .bytes) b.node(.i64, .{ .cast = read }) else read;
     }
     fn statementForRange(self: *Checker, stmt: ast.Statement, range: @FieldType(@FieldType(ast.Statement, "data"), "for_range")) Error!@FieldType(typed.Statement, "data") {
         const name = self.src.text(range.name);

@@ -124,6 +124,7 @@ pub const Context = struct {
         if (declaration.builtin_name) |name| {
             if (std.mem.eql(u8, name, "dict")) return .dictionary;
             if (std.mem.eql(u8, name, "str")) return .string;
+            if (std.mem.eql(u8, name, "bytes")) return .bytes;
         }
         return .list;
     }

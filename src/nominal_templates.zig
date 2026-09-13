@@ -114,7 +114,17 @@ pub const Index = struct {
         try self.addBuiltin("str", 0, .buffer);
         const text_declaration = &self.declarations.items[self.names.get("str").?];
         if (text_declaration.builtin_name != null) text_declaration.fields = try self.context.allocator.dupe(Field, &.{.{ .name = .{ .start = 0, .end = 0 }, .ty = .{ .builtin = .u32 } }});
+        if (@import("nominal_type_syntax.zig").bytesSyntax(program, self.context.src)) try self.addByteString();
         try self.addBuiltin("dict", 2, .buffer);
+    }
+    fn addByteString(self: *Index) Error!void {
+        try self.addBuiltin("bytes", 0, .buffer);
+        const declaration = &self.declarations.items[self.names.get("bytes") orelse return];
+        if (declaration.builtin_name == null) return;
+        declaration.fields = try self.context.allocator.dupe(Field, &.{.{ .name = .{ .start = 0, .end = 0 }, .ty = .{ .builtin = .u8 } }});
+        // Guarantees are inferred once; a byte string registered from a later type lookup sets its own.
+        declaration.guarantees.include(.copy);
+        declaration.guarantees.include(.storable);
     }
     fn addFloat(self: *Index) Error!void {
         if (self.names.contains("float") or self.syntax.aliases.contains("float")) return;
@@ -137,6 +147,7 @@ pub const Index = struct {
     fn lookup(self: *Index, span: Span) Error!usize {
         const ctx = self.context;
         const text = ctx.src.text(span);
+        if (std.mem.eql(u8, text, "bytes") and !self.names.contains("bytes")) try self.addByteString();
         if (self.names.get(text)) |id| {
             if (self.declarations.items[id].builtin_name != null) {
                 if (ctx.names == null or !try ctx.names.?.topLevel(span)) return id;
