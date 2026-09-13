@@ -94,3 +94,27 @@ Validation: focused Zig tests cover ties, subnormals, infinities, canonical NaNs
 signed zeros, checked conversions, constants and library allocation failures.
 These tests establish behavior on the tested host, not certification of every
 native target.
+
+## Prelude float helpers
+
+`sqrt`, `floor`, `ceil`, `trunc` and `abs` are the float operations reachable
+without an import, alongside the `float(value)` and `int(value)` conversions.
+Each takes one `float` and answers a `float`; a non-float argument is an `E_TYPE`
+error. Nonfinite inputs pass through the same rules the operators use, so the
+square root of a NaN is a NaN and compares equal to nothing. `round`, `pow`, the
+classification predicates and the rounding modes not listed here live in the
+[standard `math` module](standard-library.md#math).
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    if sqrt(2.25) != 1.5:
+        return 1
+    if floor(-1.5) != -2.0 or ceil(-1.5) != -1.0:
+        return 2
+    if trunc(-1.9) != -1.0 or abs(-2.5) != 2.5:
+        return 3
+    if sqrt(0.0 / 0.0) == sqrt(0.0 / 0.0):
+        return 4
+    return int(abs(float(-42)))
+```
