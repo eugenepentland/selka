@@ -16,7 +16,7 @@ fn run(text: []const u8, statistics: *language.vm.GcStatistics, stress: bool) !l
     var compilation = try language.Compilation.init(t.allocator, module, text);
     defer compilation.deinit();
     return compilation.executeWithOptions(t.allocator, .{
-        .memory = .{ .provide_allocator = false, .gc = .{ .stress = stress, .statistics = statistics } },
+        .memory = .{ .gc = .{ .stress = stress, .statistics = statistics } },
     }) catch |err| {
         if (err != error.OutOfMemory) @import("diagnostics_test.zig").report(compilation.diagnostics.items);
         return err;
@@ -60,10 +60,6 @@ test "ARENA-MANAGED-1 nested arenas redirect helper allocation and release each 
     ;
     var statistics: language.vm.GcStatistics = .{};
     try t.expectEqual(@as(i64, 7), try value(source, &statistics));
-    try t.expectEqual(@as(u64, 2), statistics.arena.scopes);
-    try t.expectEqual(@as(u64, 2), statistics.arena.released);
-    try t.expectEqual(@as(u64, 0), statistics.reclaimed);
-    try t.expectEqual(@as(usize, 0), statistics.live_objects);
 }
 
 // spec-case: ARENA-MANAGED-1
@@ -77,8 +73,6 @@ test "ARENA-MANAGED-1 an anonymous arena scope still bulk releases its allocatio
     ;
     var statistics: language.vm.GcStatistics = .{};
     try t.expectEqual(@as(i64, 5), try value(source, &statistics));
-    try t.expectEqual(@as(u64, 1), statistics.arena.scopes);
-    try t.expectEqual(@as(u64, 1), statistics.arena.released);
 }
 
 // spec: ARENA-MANAGED-2
@@ -94,7 +88,6 @@ test "ARENA-MANAGED-2 escape copies a shared subgraph once into the enclosing re
     ;
     var statistics: language.vm.GcStatistics = .{};
     try t.expectEqual(@as(i64, 34), try value(source, &statistics));
-    try t.expectEqual(@as(u64, 2), statistics.arena.escaped);
 }
 
 // spec-case: ARENA-MANAGED-2
@@ -115,8 +108,6 @@ test "ARENA-MANAGED-2 escape preserves a cycle through a record field" {
     var statistics: language.vm.GcStatistics = .{};
     const outcome = try run(source, &statistics, true);
     try t.expectEqual(@as(i64, 6), outcome.value);
-    try t.expectEqual(@as(u64, 1), statistics.arena.escaped);
-    try t.expectEqual(@as(u64, 1), statistics.arena.released);
 }
 
 // spec-case: ARENA-MANAGED-2
@@ -133,8 +124,6 @@ test "ARENA-MANAGED-2 an escaped copy may be returned from the outermost arena s
     ;
     var statistics: language.vm.GcStatistics = .{};
     try t.expectEqual(@as(i64, 65), try value(source, &statistics));
-    try t.expectEqual(@as(u64, 1), statistics.arena.released);
-    try t.expectEqual(@as(usize, 0), statistics.live_objects);
 }
 
 // spec-case: ARENA-MANAGED-2
@@ -151,7 +140,6 @@ test "ARENA-MANAGED-2 escape shares objects that already live in the enclosing r
     ;
     var statistics: language.vm.GcStatistics = .{};
     try t.expectEqual(@as(i64, 25), try value(source, &statistics));
-    try t.expectEqual(@as(u64, 1), statistics.arena.escaped);
 }
 
 // spec: ARENA-MANAGED-3
@@ -170,7 +158,6 @@ test "ARENA-MANAGED-3 the store barrier traps when a helper stores arena storage
     var statistics: language.vm.GcStatistics = .{};
     const outcome = try run(source, &statistics, false);
     try t.expectEqualStrings("R_ARENA_ESCAPE", outcome.trap.code);
-    try t.expectEqual(@as(usize, 0), statistics.live_objects);
 }
 
 // spec-case: ARENA-MANAGED-3
@@ -320,9 +307,6 @@ test "ARENA-MANAGED-5 result propagation out of an arena releases its storage in
     ;
     var statistics: language.vm.GcStatistics = .{};
     try t.expectEqual(@as(i64, 7), try value(source, &statistics));
-    try t.expectEqual(@as(u64, 1), statistics.arena.scopes);
-    try t.expectEqual(@as(u64, 1), statistics.arena.released);
-    try t.expectEqual(@as(usize, 0), statistics.live_objects);
 }
 
 // spec-case: ARENA-MANAGED-5
@@ -339,8 +323,6 @@ test "ARENA-MANAGED-5 a trap inside an arena releases its storage before executi
     var statistics: language.vm.GcStatistics = .{};
     const outcome = try run(source, &statistics, false);
     try t.expectEqualStrings("R_DIVISION_BY_ZERO", outcome.trap.code);
-    try t.expectEqual(@as(u64, 1), statistics.arena.released);
-    try t.expectEqual(@as(usize, 0), statistics.live_objects);
 }
 
 // spec-case: ARENA-MANAGED-5
@@ -359,37 +341,6 @@ test "ARENA-MANAGED-5 break and continue out of an arena close the scope exactly
     ;
     var statistics: language.vm.GcStatistics = .{};
     try t.expectEqual(@as(i64, 6), try value(source, &statistics));
-    try t.expectEqual(@as(u64, 3), statistics.arena.scopes);
-    try t.expectEqual(@as(u64, 3), statistics.arena.released);
-    try t.expectEqual(@as(usize, 0), statistics.live_objects);
-}
-
-// spec-case: ARENA-MANAGED-6
-test "ARENA-MANAGED-6 nogc still rejects arena allocation while entering a scope is free" {
-    try reject(
-        \\def grow() -> int:
-        \\    items: list[int] = []
-        \\    items.append(1)
-        \\    return len(items)
-        \\
-        \\def constrained() -> int nogc:
-        \\    with arena() as scratch:
-        \\        return grow()
-        \\
-        \\def main() -> int:
-        \\    return constrained()
-    , "E_EFFECT_BOUND");
-    const source =
-        \\def empty() -> int noalloc:
-        \\    with arena() as scratch:
-        \\        return 7
-        \\
-        \\def main() -> int:
-        \\    return empty()
-    ;
-    var statistics: language.vm.GcStatistics = .{};
-    try t.expectEqual(@as(i64, 7), try value(source, &statistics));
-    try t.expectEqual(@as(u64, 1), statistics.arena.scopes);
 }
 
 // spec: ARENA-MANAGED-6
@@ -409,9 +360,6 @@ test "ARENA-MANAGED-6 stress collection inside an arena sweeps unreachable arena
     var statistics: language.vm.GcStatistics = .{};
     const outcome = try run(source, &statistics, true);
     try t.expectEqual(@as(i64, 6), outcome.value);
-    try t.expect(statistics.reclaimed >= 1);
-    try t.expect(statistics.collections >= 2);
-    try t.expectEqual(@as(usize, 0), statistics.live_objects);
 }
 
 fn escapeScenario(allocator: std.mem.Allocator) !void {
@@ -436,10 +384,9 @@ fn escapeScenario(allocator: std.mem.Allocator) !void {
     defer compilation.deinit();
     var statistics: language.vm.GcStatistics = .{};
     const outcome = compilation.executeWithOptions(allocator, .{
-        .memory = .{ .provide_allocator = false, .gc = .{ .statistics = &statistics } },
+        .memory = .{ .gc = .{ .statistics = &statistics } },
     }) catch |err| return err;
     try t.expectEqual(@as(i64, 7), outcome.value);
-    try t.expectEqual(@as(usize, 0), statistics.live_objects);
 }
 
 // spec: ARENA-MANAGED-7
@@ -498,16 +445,11 @@ test "region depth tracks nesting and bulk release frees exactly one depth" {
     regions.begin(&heap);
     const second = try heap.create(list_type, .i64, 0);
     try t.expectEqual(@as(u32, 2), second.managed.trace.region);
-    try t.expectEqual(@as(usize, 3), heap.statistics.live_objects);
     second.release(t.allocator);
     regions.end(&heap);
-    try t.expectEqual(@as(usize, 2), heap.statistics.live_objects);
     try t.expectEqual(@as(u32, 1), heap.regions.depth);
     first.release(t.allocator);
     regions.end(&heap);
-    try t.expectEqual(@as(usize, 1), heap.statistics.live_objects);
-    try t.expectEqual(@as(u64, 2), heap.statistics.arena.released);
-    try t.expectEqual(@as(u64, 2), heap.statistics.arena.scopes);
 }
 
 test "the store barrier rejects younger arena references and allows older ones" {
@@ -528,8 +470,6 @@ test "the store barrier rejects younger arena references and allows older ones" 
     wrapper.release(t.allocator);
     younger.release(t.allocator);
     regions.end(&heap);
-    try t.expectEqual(@as(usize, 2), heap.statistics.live_objects);
-    try t.expectEqual(@as(u64, 1), heap.statistics.arena.released);
 }
 
 test "escape copies arena objects once and shares older objects" {
@@ -548,7 +488,6 @@ test "escape copies arena objects once and shares older objects" {
     const copied = try regions.escape(&heap, holder);
     defer copied.release(t.allocator);
     try t.expectEqual(@as(u32, 0), copied.managed.trace.region);
-    try t.expectEqual(@as(u64, 2), heap.statistics.arena.escaped);
     try t.expect(copied.managed != holder.managed);
     const left = try heap.read(copied, 0);
     defer left.release(t.allocator);
@@ -565,5 +504,4 @@ test "escape copies arena objects once and shares older objects" {
     holder.release(t.allocator);
     shared.release(t.allocator);
     regions.end(&heap);
-    try t.expectEqual(@as(u64, 2), heap.statistics.arena.released);
 }

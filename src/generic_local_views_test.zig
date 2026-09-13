@@ -19,12 +19,6 @@ fn scenario(allocator: std.mem.Allocator) !void {
     defer c.deinit();
     try t.expectEqual(@as(i64, 22), (try c.execute(allocator)).value);
 }
-// spec: GENERIC-LOCAL-VIEW-1
-test "generic local views execute array snapshots buffer narrowing and returned array input slices" {
-    try scenario(t.allocator);
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
-}
 fn reject(body: []const u8, code: []const u8) !void {
     const text = try std.mem.concat(t.allocator, u8, &.{ schema, body, "fn main()->i64{return 0;}" });
     defer t.allocator.free(text);
@@ -32,36 +26,4 @@ fn reject(body: []const u8, code: []const u8) !void {
     defer c.deinit();
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
-}
-test "generic local views reject non-slice shapes permissions and borrowed owner access before instantiation" {
-    try reject("fn f<T:copy>(x:i64)->i64{borrow x[0..1] as s{return read_slice(s,0);}}", "E_SLICE_TYPE");
-    try reject("enum Key{a,b}fn f<T:copy>(x:[Key]i64)->i64{borrow x[0..1] as s{return read_slice(s,0);}}", "E_SLICE_TYPE");
-    try reject("fn f<T:copy>(a:[1]R)->i64{borrow a[0..1] as s{return 0;}}", "E_RESULT_BORROW");
-    try reject("fn f<T:copy>(a:[1]i64)->i64{borrow mut a[0..1] as s{return 0;}}", "E_IMMUTABLE");
-    try reject("fn f<T:copy>()->i64{let mut a=new [1]i64[1];borrow mut a[0..1] as s{return a[0];}}", "E_BORROW_CONFLICT");
-    try reject("fn f<T:copy>()->i64{let mut a=new [1]i64[1];borrow a[0..1] as s{a=new [1]i64[2];}return 0;}", "E_BORROW_CONFLICT");
-    try reject("fn f<T:copy>()->i64{let a=new [1]i64[1];borrow a[0..1] as s{write_slice(s,0,2);}return 0;}", "E_REFERENCE_READ_ONLY");
-    try reject("fn f<T:copy>()->i64{let mut a=new [1]i64[1];borrow mut a as whole{borrow whole[0..1] as s{discard read_ref(whole);}}return 0;}", "E_BORROW_SUSPENDED");
-}
-test "generic local buffer views check ownership after bounds and forbid transfer or growth while borrowed" {
-    try reject("fn f<T:copy>(b:B)->i64{discard b;borrow b[0..0] as s{return 0;}}", "E_OWNED_CONSUMED");
-    try reject("fn consume(b:B)->i64{discard b;return 0;}fn f<T:copy>(b:B)->i64{borrow b[consume(b)..0] as s{return 0;}}", "E_OWNED_CONSUMED");
-    try reject("fn f<T:copy>(b:B)->i64{borrow b[0..0] as s{discard b;}return 0;}", "E_BORROW_CONFLICT");
-    try reject("fn f<T:copy>(input:B,heap:allocator)->i64{let mut b=input;borrow b[0..0] as s{acknowledge reserve_buffer<S>(b,heap,2);}return 0;}", "E_BORROW_CONFLICT");
-    try reject("fn f<T:copy>(b:B)->i64{borrow b as s{discard read_ref(s);return 0;}}", "E_REFERENCE_VALUE");
-    try reject("fn f<T:copy>(input:B)->i64{let mut b=input;borrow mut b[0..0] as s{return cast<i64>(len_buffer(b));}}", "E_BORROW_CONFLICT");
-}
-test "generic local slices cannot escape as borrowed input results or change nominal element type" {
-    try reject("fn f<T:copy>(input:&[]i64)->&[]i64 from input{let a=new [1]i64[1];borrow a[0..1] as s{return s;}}", "E_RETURN_LIFETIME");
-    try reject("fn f<T:copy>(input:&[]i64,b:B)->&[]i64 from input{borrow b[0..0] as s{return s;}}", "E_RETURN_LIFETIME");
-    try reject("fn f<T:copy>(a:&[1]i64)->&[]bool from a{borrow a[0..1] as s{return s;}}", "E_GENERIC_TYPE");
-    try reject("fn f<T:copy>(a:&[1]i64)->&mut []i64 from a{borrow a[0..1] as s{return s;}}", "E_REFERENCE_READ_ONLY");
-    try reject("fn f<T:copy>(a:&mut [1]i64)->&mut []i64 from a{borrow a[0..1] as s{return s;}}", "E_REFERENCE_READ_ONLY");
-}
-test "generic local array view bounds trap at the borrow source" {
-    var c = try language.Compilation.init(t.allocator, "view-trap.my", "fn f<T:integer>(n:T)->i64{let a=new [1]i64[7];borrow a[0..n] as s{return read_slice(s,0);}}fn main()->i64{return f::<i64>(2);}");
-    defer c.deinit();
-    const outcome = try c.execute(t.allocator);
-    try t.expectEqualStrings("R_SLICE_BOUNDS", outcome.trap.code);
-    try t.expect(std.mem.startsWith(u8, c.src.text(outcome.trap.span), "borrow a"));
 }

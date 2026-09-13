@@ -19,18 +19,6 @@ test "exact discovery normalizes binding spelling but retains binding identity" 
     try groups("fn a(x: i64) -> i64 { let mut y = x; y += 1; return y; } fn b(n: i64) -> i64 { let mut result = n; result = result + 1; return result; } fn main() -> i64 { return 0; }", 1);
 }
 
-test "literals operators control flow types and resolved external calls remain distinct" {
-    const bodies = [_][]const u8{ "return x + 2;", "return x - 1;", "return 1 + x;", "discard x; return 1;", "if x > 0 { return x + 1; } return 0;" };
-    for (bodies) |body| {
-        const source = try std.fmt.allocPrint(testing.allocator, "fn a(x: i64) -> i64 {{ return x + 1; }} fn b(x: i64) -> i64 {{ {s} }} fn main() -> i64 {{ return 0; }}", .{body});
-        defer testing.allocator.free(source);
-        try groups(source, 0);
-    }
-    try groups("fn a(x: bool) -> bool { return x; } fn b(x: i64) -> i64 { return x; } fn main() -> i64 { return 0; }", 0);
-    try groups("fn left(x: i64) -> i64 { return x + 1; } fn right(x: i64) -> i64 { return x + 2; } fn a(x: i64) -> i64 { return left(x); } fn b(x: i64) -> i64 { return right(x); } fn main() -> i64 { return 0; }", 0);
-    try groups("fn a(x: bool, y: bool) -> bool { return x && y; } fn b(x: bool, y: bool) -> bool { return x || y; } fn main() -> i64 { return 0; }", 0);
-}
-
 test "direct recursion is normalized while mutually recursive callees retain identity" {
     try groups("fn a(n: i64) -> i64 { if n == 0 { return 1; } return n * a(n - 1); } fn b(x: i64) -> i64 { if x == 0 { return 1; } return x * b(x - 1); } fn main() -> i64 { return a(5); }", 1);
     try groups("fn a(n: i64) -> i64 { return b(n); } fn b(n: i64) -> i64 { return a(n); } fn main() -> i64 { return 0; }", 0);

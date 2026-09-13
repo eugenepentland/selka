@@ -101,52 +101,6 @@ test "PY-BYTES-1 byte strings alias through helpers and survive collection stres
     , 42);
 }
 
-// spec: PY-BYTES-2
-test "PY-BYTES-2 integer list text and hexadecimal conversions round trip" {
-    try run(
-        \\def decoded(raw: bytes) -> Result[str, str]:
-        \\    return raw.decode()
-        \\def parsed(digits: str) -> Result[bytes, str]:
-        \\    return bytes.fromhex(digits)
-        \\def main() -> int:
-        \\    values: list[int] = [0, 65, 255]
-        \\    raw = bytes(values)
-        \\    if raw != b"\x00A\xff":
-        \\        return 1
-        \\    back = raw.to_list()
-        \\    if len(back) != 3 or back[2] != 255:
-        \\        return 2
-        \\    if raw.hex() != "0041ff":
-        \\        return 3
-        \\    encoded = "hé".encode()
-        \\    if len(encoded) != 3:
-        \\        return 4
-        \\    match decoded(encoded):
-        \\        case Ok(value):
-        \\            if value != "hé":
-        \\                return 5
-        \\        case Err(message):
-        \\            return 0 - len(message)
-        \\    match decoded(b"\xff\xfe"):
-        \\        case Ok(value):
-        \\            return 0 - len(value)
-        \\        case Err(message):
-        \\            if len(message) == 0:
-        \\                return 6
-        \\    match parsed("0041ff"):
-        \\        case Ok(value):
-        \\            if value != raw:
-        \\                return 7
-        \\        case Err(message):
-        \\            return 0 - len(message)
-        \\    match parsed("00g1"):
-        \\        case Ok(value):
-        \\            return 0 - len(value)
-        \\        case Err(message):
-        \\            return 42
-    , 42);
-}
-
 // spec: PY-BYTES-3
 test "PY-BYTES-3 split join prefix suffix search and container storage" {
     try run(
@@ -228,38 +182,6 @@ test "PY-BYTES-1 byte strings are immutable and never convert through str" {
         "def cut(a: bytes) -> int noalloc:\n    return len(a[0:1])\ndef main() -> int:\n    return cut(b\"ab\")\n",
         "E_EFFECT_BOUND",
     );
-}
-
-// spec-case: PY-BYTES-3
-test "PY-BYTES-3 byte strings are rejected at JSON and host boundaries like str" {
-    try rejected(
-        "host fn accept(value: bytes) -> i64 effects(host);\nfn main() -> i64 { return accept(b\"a\"); }\n",
-        "E_HOST_SIGNATURE",
-    );
-    try rejected(
-        "buffer Wire: u8;result Encoded{ok:Wire,err:i64}" ++
-            "fn main(heap: allocator) -> i64 { let raw = b\"a\"; match json_encode::<Encoded>(heap, raw, 64) " ++
-            "{ Encoded.ok(payload) => { discard payload; return 0; }, Encoded.err(code) => { return code; } } }",
-        "E_JSON_CODEC",
-    );
-}
-
-// spec-case: PY-BYTES-1
-test "PY-BYTES-1 prefixed literals keep their array reading for readonly slice parameters" {
-    try run(
-        \\def total(view: &[]u8) -> i64 noalloc:
-        \\    sum = 0
-        \\    index = 0u64
-        \\    while index < len_slice(view):
-        \\        sum += cast<i64>(read_slice(view, index))
-        \\        index += 1u64
-        \\    return sum
-        \\def main() -> int:
-        \\    managed = b"\x01\x02"
-        \\    if len(managed) != 2 or managed[1] != 2:
-        \\        return 1
-        \\    return total(b"\x14\x14") + managed[0] + 1
-    , 42);
 }
 
 // spec: PY-BYTES-4

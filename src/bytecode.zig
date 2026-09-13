@@ -595,4 +595,3 @@ fn validateFloatUnary(op: typed.UnaryOp) Error!void {
 fn validateFloatBinary(ty: typed.Type, op: typed.BinaryOp) Error!void {
     if (std.mem.startsWith(u8, @tagName(op), "f64_") and ty != .u64) return error.InternalError;
 }
-

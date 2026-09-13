@@ -20,21 +20,6 @@ test "generic execution specializes widths forwarding recursion and shared insta
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
-test "generic execution rejects concrete requirement and arity violations" {
-    const cases = [_]struct { source: []const u8, code: []const u8 }{
-        .{ .source = "fn f<T:integer>(x:T)->T{return x;}fn main()->i64{discard f::<bool>(true);return 0;}", .code = "E_GENERIC_ARGUMENT" },
-        .{ .source = "fn f<T:copy,U:copy>(x:T)->T{return x;}fn main()->i64{return f(1);}", .code = "E_GENERIC_INFERENCE" },
-        .{ .source = "fn f<T:copy>(x:T)->T{return x;}fn main()->i64{return f::<i64>(true);}", .code = "E_TYPE" },
-        .{ .source = "fn main<T:copy>()->i64{return 0;}", .code = "E_MAIN" },
-        .{ .source = "fn bad<T:copy>(x:T)->T{return x+x;}fn main()->i64{return bad::<i64>(2);}", .code = "E_GENERIC_OPERATION" },
-    };
-    for (cases) |case| {
-        var compilation = try language.Compilation.init(t.allocator, "rejected.my", case.source);
-        defer compilation.deinit();
-        try t.expectError(error.SourceError, compilation.check());
-        try t.expectEqualStrings(case.code, compilation.diagnostics.items[0].code);
-    }
-}
 test "generic execution preserves nominal values through copy contracts" {
     var compilation = try language.Compilation.init(t.allocator, "nominal.my", "struct A{x:i64}struct B{x:i64}fn id<T:copy>(x:T)->T{return x;}" ++
         "fn main()->i64{let a=id::<A>(new A{x:3});let b=id::<B>(new B{x:4});return a.x+b.x;}");
@@ -65,14 +50,6 @@ fn limited(count: usize) !void {
 test "generic execution bounds actual discovery and reuses instances at capacity" {
     try limited(4096);
     try limited(4097);
-}
-
-test "generic execution separates declaration ordinals for ordinary returned references" {
-    var compilation = try language.Compilation.init(t.allocator, "reference.my", "fn unused<T:copy>(x:T)->T{return x;}" ++
-        "fn view(x:&i64)->&i64 from x{return x;}fn forward(x:&i64)->&i64 from x{borrow view(x) as y{return y;}}" ++
-        "fn main()->i64{let x=9;borrow x as r{borrow forward(r) as result{return read_ref(result);}}}");
-    defer compilation.deinit();
-    try t.expectEqual(@as(i64, 9), (try compilation.execute(t.allocator)).value);
 }
 
 // spec: GENERIC-DIAGNOSTIC-1

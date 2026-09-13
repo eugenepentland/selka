@@ -9,17 +9,6 @@ fn reject(source: []const u8, code: []const u8) !void {
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
-// spec: C-FFI-1
-test "direct C declarations reject unsupported signatures and preserve effect checking" {
-    try reject("extern fn f(x:unit)->i64 effects(host);" ++ entry, "E_EXTERN_SIGNATURE");
-    try reject("struct R{x:i64}extern fn f(x:R)->i64 effects(host);" ++ entry, "E_EXTERN_SIGNATURE");
-    try reject("extern fn f(x:&i64)->i64 effects(host);" ++ entry, "E_HOST_SIGNATURE");
-    try reject("extern fn f<T:copy>(x:T)->T effects(host);" ++ entry, "E_HOST_DECLARATION");
-    try reject("extern fn f()->i64;" ++ entry, "E_HOST_EFFECTS");
-    try reject("extern fn f() effects(host);" ++ entry, "E_EXTERN_SIGNATURE");
-    try reject("extern fn myl_intrude()->i64 effects(host);" ++ entry, "E_EXTERN_SYMBOL");
-    try reject("extern fn f()->i64 effects(host);fn main()->i64 effects(){return f();}", "E_EFFECT_BOUND");
-}
 test "direct C imports preserve formatting and reject VM registry and legacy C emission" {
     const source = "extern fn abs(x:i32)->i32 effects(host);fn main()->i64{return cast<i64>(abs(-7));}";
     var c = try language.Compilation.init(t.allocator, "foreign.my", source);

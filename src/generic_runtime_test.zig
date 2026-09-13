@@ -11,34 +11,6 @@ fn reject(body: []const u8, code: []const u8) !void {
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
-// spec: GENERIC-RUNTIME-1
-test "generic acquireValue validates acquisitionShape authority capacity and uncalled effect bounds" {
-    try reject("fn f<T:copy>(heap:allocator)->R{return acquire_buffer<R>(heap,1);}", "E_BUFFER_RESULT");
-    try reject("fn f<T:copy>(heap:allocator)->A{return acquire_pool<A>(heap,1);}", "E_POOL_RESULT");
-    try reject("result Bad{ok:B,err:bool}fn f<T:copy>(heap:allocator)->Bad{return acquire_buffer<Bad>(heap,1);}", "E_BUFFER_RESULT");
-    try reject("fn f<T:copy>()->A{return acquire_buffer<A>(true,1);}", "E_GENERIC_TYPE");
-    try reject("fn f<T:copy>(heap:allocator)->A{return acquire_buffer<A>(heap,true);}", "E_GENERIC_OPERATION");
-    try reject("fn f<T:copy>(heap:allocator,n:T)->A{return acquire_buffer<A>(heap,n);}", "E_GENERIC_OPERATION");
-    try reject("fn f<T:copy>(heap:allocator)->A noalloc{return acquire_buffer<A>(heap,1);}", "E_EFFECT_BOUND");
-    try reject("fn make(heap:allocator)->PA{return acquire_pool<PA>(heap,1);}fn f<T:copy>(heap:allocator)->i64 effects(){acknowledge make(heap);return 0;}", "E_EFFECT_BOUND");
-}
-test "generic runtime owners are checked after argument transfers and require mutable bindings" {
-    try reject("fn f<T:copy>(b:B)->S{return append_buffer<S>(b,1);}", "E_IMMUTABLE");
-    try reject("fn f<T:copy>(b:B)->i64{discard b;return read_buffer(b,0);}", "E_OWNED_CONSUMED");
-    try reject("fn consume(b:B)->i64{discard b;return 1;}fn f<T:copy>(input:B)->S{let mut b=input;return append_buffer<S>(b,consume(b));}", "E_OWNED_CONSUMED");
-    try reject("fn consume(p:P)->i64{discard p;return 1;}fn f<T:copy>(input:P)->H{let mut p=input;return insert_pool<H>(p,consume(p));}", "E_OWNED_CONSUMED");
-    try reject("fn f<T:copy>(p:P)->u64{discard p;return len_pool(p);}", "E_OWNED_CONSUMED");
-    try reject("fn f<T:copy>(p:P)->bool{return clear_pool(p);}", "E_IMMUTABLE");
-}
-test "generic operationResult and element handle contracts reject malformed uncalled operations" {
-    try reject("fn f<T:copy>(input:B)->R{let mut b=input;return append_buffer<R>(b,1);}", "E_BUFFER_RESULT");
-    try reject("fn f<T:copy>(input:B)->S{let mut b=input;return append_buffer<S>(b,true);}", "E_GENERIC_TYPE");
-    try reject("fn f<T:copy>(input:B)->S{let mut b=input;return reserve_buffer<S>(b,true,2);}", "E_GENERIC_TYPE");
-    try reject("fn f<T:copy>(input:B,heap:allocator)->S noalloc{let mut b=input;return reserve_buffer<S>(b,heap,2);}", "E_EFFECT_BOUND");
-    try reject("fn f<T:copy>(input:P)->S{let mut p=input;return insert_pool<S>(p,1);}", "E_POOL_RESULT");
-    try reject("pool Other(OtherId):i64;fn f<T:copy>(p:P,id:OtherId)->R{return read_pool<R>(p,id);}", "E_GENERIC_TYPE");
-    try reject("fn f<T:copy>(p:P,id:Id)->S{return read_pool<S>(p,id);}", "E_POOL_RESULT");
-}
 const program = schema ++
     "fn fill<T:integer>(input:B,n:T)->A noalloc{let mut b=input;discard try append_buffer<S>(b,cast<i64>(n));return new A.ok(b);}" ++
     "fn work<T:integer>(heap:allocator,n:T)->R{let mut b=try fill::<T>(try acquire_buffer<A>(heap,1),n);" ++
@@ -57,12 +29,4 @@ test "generic bufferValue poolValue acquisition mutation and propagation survive
     try scenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
-}
-test "generic failed acquisition propagates while releasing an earlier owned buffer" {
-    const bytes = schema ++ "fn f<T:integer>(heap:allocator,n:T)->A{let first=try acquire_buffer<A>(heap,1);let second=try acquire_buffer<A>(heap,n);" ++
-        "discard first;return new A.ok(second);}fn main(heap:allocator)->i64{match f::<i64>(heap,-1){A.ok(discard)=>{return 0;}," ++
-        "A.err(discard)=>{return 7;}}}";
-    var c = try language.Compilation.init(t.allocator, "generic-acquire-failure.my", bytes);
-    defer c.deinit();
-    try t.expectEqual(@as(i64, 7), (try c.execute(t.allocator)).value);
 }

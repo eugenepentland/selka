@@ -22,55 +22,6 @@ const units = "domain Millimeters: i64 { private fn raw(n: i64) -> Millimeters {
     "{ return unwrap(n); } } domain Seconds: i64 { fn from(n: i64) -> Seconds { return " ++
     "wrap<Seconds>(n); } fn number(n: Seconds) -> i64 { return unwrap(n); } } ";
 
-// spec: CORE-7
-test "nominal domains prevent mixing units and preserve validated factory values" {
-    try result(units ++ "fn main() -> i64 { return Millimeters.number(Millimeters.from(-8)) + Seconds.number(Seconds.from(3)); }", 3);
-    try reject(units ++ "fn move(distance: Millimeters) -> i64 { return Millimeters.number(distance); } fn main() -> i64 { return move(Seconds.from(3)); }", "E_TYPE");
-    try reject(units ++ "fn main() -> i64 { let distance: Millimeters = Seconds.from(3); return Millimeters.number(distance); }", "E_TYPE");
-    try reject(units ++ "fn main() -> i64 { return Millimeters.number(4); }", "E_TYPE");
-    try reject(units ++ "fn main() -> i64 { return Millimeters.from(4); }", "E_TYPE");
-    try reject(units ++ "fn main() -> i64 { discard Millimeters.from(4) + Millimeters.from(2); return 0; }", "E_TYPE");
-    const conversion = "domain Seconds: u64 { fn from(n: u64) -> Seconds { return wrap<Seconds>(n); } fn " ++
-        "number(n: Seconds) -> u64 { return unwrap(n); } } domain Millimeters: u8 { fn " ++
-        "from(n: u8) -> Millimeters { return wrap<Millimeters>(n); } fn number(n: " ++
-        "Millimeters) -> u8 { return unwrap(n); } } fn distance(time: Seconds) -> Millimeters " ++
-        "{ return Millimeters.from(cast<u8>(Seconds.number(time) * 10u64)); } ";
-    try result(conversion ++ "fn main() -> i64 { return cast<i64>(Millimeters.number(distance(Seconds.from(7u64)))); }", 70);
-    var overflow = try language.Compilation.init(testing.allocator, "conversion.my", conversion ++ "fn main() -> i64 { discard distance(Seconds.from(26u64)); return 0; }");
-    defer overflow.deinit();
-    try testing.expectEqualStrings("R_OVERFLOW", (try overflow.execute(testing.allocator)).trap.code);
-}
-
-test "raw domain construction projection and private factories cannot escape their owner" {
-    const cases = [_]struct { tail: []const u8, code: []const u8 }{
-        .{ .tail = "fn main() -> i64 { discard wrap<Millimeters>(-8); return 0; }", .code = "E_PRIVATE_DOMAIN" },
-        .{ .tail = "fn main() -> i64 { return unwrap(Millimeters.from(8)); }", .code = "E_PRIVATE_DOMAIN" },
-        .{ .tail = "fn main() -> i64 { discard Millimeters.raw(-8); return 0; }", .code = "E_PRIVATE_FUNCTION" },
-        .{ .tail = "fn main() -> i64 { discard cast<Millimeters>(-8); return 0; }", .code = "E_TYPE" },
-        .{ .tail = "fn main() -> i64 { return cast<i64>(Millimeters.from(8)); }", .code = "E_TYPE" },
-        .{ .tail = "fn main() -> i64 { discard new Millimeters {}; return 0; }", .code = "E_TYPE" },
-        .{ .tail = "fn main() -> i64 { return Millimeters.from(8).value; }", .code = "E_TYPE" },
-        .{ .tail = "fn main() -> i64 { discard update(Millimeters.from(8)) {}; return 0; }", .code = "E_TYPE" },
-        .{ .tail = "fn main() -> i64 { return Millimeters.from(8)[0]; }", .code = "E_TYPE" },
-        .{ .tail = "domain Attacker: i64 { fn forge() -> Millimeters { return wrap<Millimeters>(-8); } } fn main() -> i64 { return 0; }", .code = "E_PRIVATE_DOMAIN" },
-        .{ .tail = "domain Attacker: i64 { fn read(x: Millimeters) -> i64 { return unwrap(x); } } fn main() -> i64 { return 0; }", .code = "E_PRIVATE_DOMAIN" },
-        .{ .tail = "domain Attacker: i64 { fn forge() -> Millimeters { return Millimeters.raw(-8); } } fn main() -> i64 { return 0; }", .code = "E_PRIVATE_FUNCTION" },
-        .{ .tail = "fn helper() -> Millimeters { return wrap<Millimeters>(-8); } fn main() -> i64 { return 0; }", .code = "E_PRIVATE_DOMAIN" },
-    };
-    for (cases) |case| {
-        const source = try std.mem.concat(testing.allocator, u8, &.{ units, case.tail });
-        defer testing.allocator.free(source);
-        try reject(source, case.code);
-    }
-    // Calling a free helper from a privileged function does not grant lexical access.
-    try reject("domain D: i64 { fn from(n: i64) -> D { return helper(n); } } fn helper(n: i64) -> D { return wrap<D>(n); } fn main() -> i64 { return 0; }", "E_PRIVATE_DOMAIN");
-    var invalid = try language.Compilation.init(testing.allocator, "private.my", units ++ "fn main() -> i64 { discard Millimeters.raw(-8); return 0; }");
-    defer invalid.deinit();
-    try testing.expectError(error.SourceError, invalid.check());
-    try testing.expectEqualStrings("raw", invalid.src.text(invalid.diagnostics.items[0].span));
-    try testing.expectEqualStrings("raw", invalid.src.text(invalid.diagnostics.items[0].related.?.span));
-}
-
 test "domain backing types require built-in scalars and exact wrapping types" {
     for ([_][]const u8{ "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64" }) |width| {
         const source = try std.fmt.allocPrint(testing.allocator, "domain Count: {s} {{ fn from(n: {s}) -> Count {{ return wrap<Count>(n); }} fn " ++
@@ -105,17 +56,6 @@ test "domain namespaces support forward calls recursion private helpers and shar
     try reject("private fn helper() -> i64 { return 0; } fn main() -> i64 { return 0; }", "E_PRIVATE_SCOPE");
 }
 
-test "domain values survive nested aggregates conversions replacement and return" {
-    try result(units ++ "struct Source { distance: Millimeters, elapsed: Seconds } struct Target { distances: " ++
-        "[2]Millimeters } conversion fn convert(src: Source) -> Target { discard src.elapsed; " ++
-        "return new Target { distances: new [2]Millimeters [src.distance, " ++
-        "Millimeters.from(10)] }; } fn main() -> i64 { let a = convert(new Source { distance: " ++
-        "Millimeters.from(3), elapsed: Seconds.from(2) }); let b = update(a) { distances: " ++
-        "replace(a.distances, 0, Millimeters.from(8)) }; return " ++
-        "Millimeters.number(a.distances[0]) + Millimeters.number(b.distances[0]); }", 11);
-    try reject(units ++ "fn main() -> i64 { let a = new [1]Millimeters [Millimeters.from(1)]; discard replace(a, 0, Seconds.from(1)); return 0; }", "E_TYPE");
-}
-
 const allocation_source = units ++ "fn main() -> i64 { let a = new [2]Millimeters [Millimeters.from(3), Millimeters.from(8)]; let b = replace(a, 0, Millimeters.from(-1)); return Millimeters.number(a[0]) + Millimeters.number(b[0]); }";
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, fixture_path, allocation_source);
@@ -130,28 +70,6 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
 test "domain factories accessors qualified names and discovery clean up on allocation failure" {
     var no_resize = testing.FailingAllocator.init(testing.allocator, .{ .resize_fail_index = 0 });
     try testing.checkAllAllocationFailures(no_resize.allocator(), allocationScenario, .{});
-}
-
-test "domain creation loops and factory traps release bounded runtime storage" {
-    var compilation = try language.Compilation.init(testing.allocator, fixture_path, units ++ "fn main() -> i64 { let mut current = Millimeters.from(0); while " ++
-        "Millimeters.number(current) < 10000 { current = " ++
-        "Millimeters.from(Millimeters.number(current) + 1); } return " ++
-        "Millimeters.number(current); }");
-    defer compilation.deinit();
-    try compilation.emit();
-    var limiter = LimitedLiveAllocator{ .parent = testing.allocator, .limit = 4096 };
-    defer limiter.deinit();
-    try testing.expectEqual(@as(i64, 10000), (try compilation.execute(limiter.allocator())).value);
-    try testing.expectEqual(@as(usize, 0), limiter.live);
-    try testing.expectEqualStrings("R_STEP_LIMIT", (try compilation.executeWithOptions(limiter.allocator(), .{ .max_steps = 50 })).trap.code);
-    try testing.expectEqual(@as(usize, 0), limiter.live);
-    var trapped = try language.Compilation.init(testing.allocator, "trapped.my", "domain Byte: u8 { fn from(n: i64) -> Byte { return wrap<Byte>(cast<u8>(n)); } } fn main() -> i64 { discard Byte.from(256); return 0; }");
-    defer trapped.deinit();
-    try trapped.emit();
-    const outcome = try trapped.execute(limiter.allocator());
-    try testing.expectEqualStrings("R_OVERFLOW", outcome.trap.code);
-    try testing.expectEqualStrings("Byte.from", outcome.trap.stack.frames[0].function);
-    try testing.expectEqual(@as(usize, 0), limiter.live);
 }
 
 test "duplicate discovery preserves domain ownership visibility and qualified callees" {

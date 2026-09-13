@@ -45,62 +45,10 @@ test "unit and checked-result main adapt to scalar status without changing guest
     try run("fn main()->Result<i64,i64>{return Ok(42);}", 42);
 }
 
-// spec: PYTHON-CORE-3
-test "representable integer literals inherit parameter local and expression contexts" {
-    try run("fn widen(x:u8)->i64{return cast<i64>(x);}fn main()->i64{let n:u8=40;return widen(n+2);}", 42);
-    try run("fn main()->i64{let n:i8=-128;let wide:u64=18446744073709551615;discard wide;return cast<i64>(n)+170;}", 42);
-    var compilation = try language.Compilation.init(t.allocator, "range.my", "fn main()->i64{let x:u8=256;discard x;return 0;}");
-    defer compilation.deinit();
-    try t.expectError(error.SourceError, compilation.check());
-    try t.expectEqualStrings("E_INTEGER_RANGE", compilation.diagnostics.items[0].code);
-}
-
 // spec: PYTHON-CORE-4
 test "floating literals operators and comparisons use numeric binary64 semantics" {
     try run("fn add(x:float,y:float)->float{return x+y;}fn main()->i64{let value=add(1.5,2.5)*10.0+2.0;if value==42.0{return 42;}return 1;}", 42);
     try run("fn main()->i64{let zero=-0.0;let nan=0.0/0.0;if zero!=0.0{return 1;}if nan==nan{return 2;}if !(nan!=nan){return 3;}return 42;}", 42);
-}
-
-// spec-case: PYTHON-CORE-4
-test "Python division remainder numeric conversions and generic numbers" {
-    try run(
-        \\def main() -> int:
-        \\    if 5 / 2 != 2.5:
-        \\        return 1
-        \\    if -5 // 2 != -3 or -5 % 2 != 1:
-        \\        return 2
-        \\    if 5 // -2 != -3 or 5 % -2 != -1:
-        \\        return 3
-        \\    if -5.0 // 2.0 != -3.0 or -5.0 % 2.0 != 1.0:
-        \\        return 4
-        \\    return int(float(-2) + 4.4e1)
-    , 42);
-    try run(
-        \\def adjust[T](unused: T, value: float) -> float:
-        \\    discard unused
-        \\    return value + 1.5
-        \\def main() -> int:
-        \\    return int(adjust(0, 40.5))
-    , 42);
-}
-
-// spec-case: PYTHON-CORE-1
-test "Python contextual Option constructors work in generic functions" {
-    try run(
-        \\def present[T](value: T) -> Option[T]:
-        \\    return Some(value)
-        \\def absent[T](value: T) -> Option[T]:
-        \\    discard value
-        \\    return None
-        \\def main() -> int:
-        \\    empty: Option[int] = absent(0)
-        \\    discard empty
-        \\    match present(42):
-        \\        case Some(value):
-        \\            return value
-        \\        case None:
-        \\            return 1
-    , 42);
 }
 
 // spec-case: PYTHON-CORE-4

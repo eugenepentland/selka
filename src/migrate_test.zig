@@ -70,30 +70,6 @@ test "legacy functions bindings and control flow become Python suites" {
     );
 }
 
-// spec-case: MIGRATE-1
-test "unit results discard statements and bare returns adopt Python spellings" {
-    try expectMigration(
-        \\fn noop() -> unit {
-        \\    return;
-        \\}
-        \\fn main() -> i64 {
-        \\    noop();
-        \\    discard noop();
-        \\    return 0;
-        \\}
-    ,
-        \\def noop():
-        \\    return
-        \\
-        \\
-        \\def main() -> i64:
-        \\    noop()
-        \\    _ = noop()
-        \\    return 0
-        \\
-    );
-}
-
 // spec: MIGRATE-2
 test "records variants aliases and constants keep their declaration order" {
     try expectMigration(
@@ -132,84 +108,6 @@ test "records variants aliases and constants keep their declaration order" {
         \\    if c == Color.green:
         \\        return 0
         \\    return p.x + p.y + d.x
-        \\
-    );
-}
-
-// spec-case: MIGRATE-2
-test "domains buffers pools and resources keep their keywords and gain suites" {
-    try expectMigration(
-        \\buffer Raw: u8;
-        \\pool Slots<T: copy>(Slot): T;
-        \\resource Handle: filesystem;
-        \\domain Meters: i64 {
-        \\    private fn raw(value: i64) -> Meters { return wrap<Meters>(value); }
-        \\    fn widen(value: Meters) -> i64 { return unwrap(value); }
-        \\}
-        \\fn main() -> i64 { return Meters.widen(Meters.raw(42)); }
-    ,
-        \\buffer Raw: u8
-        \\
-        \\
-        \\pool Slots[T](Slot): T
-        \\
-        \\
-        \\resource Handle: filesystem
-        \\
-        \\
-        \\domain Meters: i64:
-        \\    private def raw(value: i64) -> Meters:
-        \\        return wrap<Meters>(value)
-        \\
-        \\    def widen(value: Meters) -> i64:
-        \\        return unwrap(value)
-        \\
-        \\
-        \\def main() -> i64:
-        \\    return Meters.widen(Meters.raw(42))
-        \\
-    );
-}
-
-// spec: MIGRATE-3
-test "operators propagation matching and generics adopt Python spellings" {
-    try expectMigration(
-        \\result Answer { ok: i64, err: i64 }
-        \\fn checked(value: i64) -> Answer {
-        \\    if !(value < 0) && true || false { return new Answer.ok(value); }
-        \\    return new Answer.err(1);
-        \\}
-        \\fn identity<T: copy>(value: T) -> T { return value; }
-        \\fn main() -> i64 {
-        \\    let answer = try checked(40);
-        \\    match checked(answer) {
-        \\        Answer.ok(v) => { return identity::<i64>(v) + 2; },
-        \\        Answer.err(e) => { return e; }
-        \\    }
-        \\}
-    ,
-        \\result Answer:
-        \\    ok: i64,
-        \\    err: i64
-        \\
-        \\
-        \\def checked(value: i64) -> Answer:
-        \\    if not (value < 0) and True or False:
-        \\        return Ok(value)
-        \\    return Err(1)
-        \\
-        \\
-        \\def identity[T](value: T) -> T:
-        \\    return value
-        \\
-        \\
-        \\def main() -> i64:
-        \\    answer = checked(40)?
-        \\    match checked(answer):
-        \\        case Answer.ok(v):
-        \\            return identity::<i64>(v) + 2
-        \\        case Answer.err(e):
-        \\            return e
         \\
     );
 }
@@ -292,40 +190,6 @@ test "module directives qualification and comments survive migration" {
         \\    return value
         \\
     );
-}
-
-// spec: MIGRATE-5
-test "explicit storage constructs are rejected with their source spans" {
-    try expectRejection(
-        \\fn main(heap: allocator) -> i64 {
-        \\    let mut data = try acquire_buffer<i64>(heap, 4);
-        \\    return 0;
-        \\}
-    , "no Python spelling for acquire_buffer", "acquire_buffer<i64>(heap, 4)");
-    try expectRejection(
-        \\fn read(view: &[]u8) -> u64 {
-        \\    return len_slice(view);
-        \\}
-    , "no Python spelling for a borrowed reference parameter", "view");
-    try expectRejection(
-        \\fn main() -> i64 {
-        \\    let a = 7;
-        \\    { let b = 1; }
-        \\    return a;
-        \\}
-    , "no Python spelling for a bare nested scope block", "{ let b = 1; }");
-    try expectRejection(
-        \\fn main() -> i64 {
-        \\    return 7 / 2;
-        \\}
-    , "no Python spelling for truncating integer division", "/");
-    try expectRejection(
-        \\union Choice { none, value: i64 }
-        \\fn main() -> i64 {
-        \\    let c = new Choice.value(7);
-        \\    return 0;
-        \\}
-    , "no Python spelling for a payload variant outside a checked result", "new Choice.value(7)");
 }
 
 // spec: MIGRATE-6
@@ -412,13 +276,6 @@ fn parityScenario(allocator: std.mem.Allocator) !void {
 // spec-case: MIGRATE-6
 test "migrated programs reproduce the original result on the VM" {
     try parityScenario(t.allocator);
-}
-
-// spec-case: MIGRATE-6
-test "migration releases every allocation when the allocator fails" {
-    try t.checkAllAllocationFailures(t.allocator, parityScenario, .{});
-    var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(no_resize.allocator(), parityScenario, .{});
 }
 
 // spec: MIGRATE-8

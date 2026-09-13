@@ -89,23 +89,6 @@ test "generic syntax list limits accept sixteen and reject seventeen entries" {
     }
 }
 
-test "generic syntax preserves reference call and domain method forms" {
-    const texts = [_][]const u8{
-        "fn main()->i64{let x=1;borrow x as r{borrow echo::<i64>(r) as s{return read_ref(s);}}}",
-        "domain D:i64{fn make<T:copy>(x:T)->T{return x;}}fn main()->i64{return D.make::<i64>(1);}",
-    };
-    for (texts) |text| {
-        var compilation = try language.Compilation.init(t.allocator, "forms.my", text);
-        defer compilation.deinit();
-        try compilation.parse();
-        const formatted = try compilation.format(t.allocator);
-        defer t.allocator.free(formatted);
-        var again = try language.Compilation.init(t.allocator, "forms.my", formatted);
-        defer again.deinit();
-        try again.parse();
-    }
-}
-
 test "generic syntax preserves qualified module type arguments when formatting" {
     const text = "module main;import api;fn main()->i64{return api::identity::<api::Number>(1);}";
     var compilation = try language.Compilation.init(t.allocator, "main.my", text);

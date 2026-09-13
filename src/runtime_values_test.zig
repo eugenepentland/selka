@@ -20,22 +20,3 @@ test "scalar aggregate constructors return InvalidAggregateType before allocatin
     try t.expectError(error.InvalidAggregateType, values.Value.createVariant(t.allocator, .bool, 0, null));
     try t.expectError(error.InvalidAggregateType, values.Value.createOrdered(t.allocator, .u8, &.{}, &.{}));
 }
-
-test "grouped values retain compact slots and allocator roots reject malformed sentinels" {
-    try t.expect(@sizeOf(values.Value) <= 48);
-    const memory = @import("memory.zig");
-    var store = try memory.Store.init(t.allocator);
-    defer store.deinit();
-    const root = try store.allocatorCapability();
-    try t.expectEqual(null, root.region());
-    var malformed = root;
-    malformed.region_id.index = 1;
-    try t.expectError(error.InvalidCapability, store.checkAllocator(malformed));
-    malformed = root;
-    malformed.region_id.generation = 1;
-    try t.expectError(error.InvalidCapability, store.checkAllocator(malformed));
-    const region = try store.beginRegion(root);
-    try t.expect(region.region() != null);
-    try store.endRegion(region);
-    try t.expectError(error.InvalidCapability, store.checkAllocator(region));
-}

@@ -76,17 +76,6 @@ test "typed JSON budgets bound raw syntax and typed materialization separately" 
     defer parsed.deinit();
     try t.expectError(error.CodecValueLimit, parsed.decode(t.allocator, compilation.program.?.records, find(compilation.program.?.records, "Outcome")));
 }
-test "typed JSON rejects authority or private construction anywhere in the selected type graph" {
-    var compilation = try language.Compilation.init(t.allocator, "codec.my", "domain D: i64 { fn make(x: i64) -> D { return wrap<D>(x); } } union Maybe { none, " ++
-        "some: D } buffer B: i64; resource F: filesystem; pool P(H): i64; struct Wrapped { " ++
-        "data: [0]D } fn main() -> i64 { return 0; }");
-    defer compilation.deinit();
-    try compilation.check();
-    const records = compilation.program.?.records;
-    for ([_][]const u8{ "D", "Maybe", "B", "F", "P", "H", "Wrapped" }) |name| try t.expectError(error.NoImplicitCodec, codec.checkType(t.allocator, records, find(records, name)));
-    try t.expectError(error.NoImplicitCodec, codec.checkType(t.allocator, records, .allocator));
-    try t.expectError(error.InvalidCodecType, codec.checkType(t.allocator, records, @fromBackingInt(999999)));
-}
 test "typed JSON rejects malformed host values before emitting bytes" {
     try t.expectError(error.InvalidCodecValue, codec.encode(t.allocator, &.{}, .bool, .{ .integer = .{ .ty = .bool, .value = 1 } }, .{}));
     try t.expectError(error.CodecIntegerOutOfRange, codec.encode(t.allocator, &.{}, .u8, .{ .integer = .{ .ty = .u8, .value = 256 } }, .{}));
@@ -167,7 +156,7 @@ test "typed JSON location escaping truncation and mutated limits remain bounded"
     parsed.limits.max_depth = 129;
     try t.expectError(error.InvalidCodecLimits, parsed.decodeWithLocation(t.allocator, &.{}, .bool, &location));
     try t.expect(!location.has_path);
-    try t.expectError(error.NoImplicitCodec, codec.encodeWithLocation(t.allocator, &.{}, .allocator, .{ .bool = false }, .{}, &location));
+    try t.expectError(error.NoImplicitCodec, codec.encodeWithLocation(t.allocator, &.{}, .clock_cap, .{ .bool = false }, .{}, &location));
     try t.expectEqualStrings("/type", location.text());
 }
 

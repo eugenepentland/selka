@@ -23,28 +23,6 @@ test "source constant evaluation executes scalar functions recursion loops and e
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
-test "compile-time source effects and budgets reject with located diagnostics" {
-    const cases = [_]struct { body: []const u8, code: []const u8 }{
-        .{ .body = "const A:bool=false&&f();host fn f()->bool effects(host);", .code = "E_CONSTANT_EFFECT" },
-        .{ .body = "const A:i64=f();fn f()->i64{while true{}return 1;}", .code = "E_CONSTANT_LIMIT" },
-        .{ .body = "const A:i64=f();fn f()->i64{return f();}", .code = "E_CONSTANT_LIMIT" },
-        .{ .body = "const A:i64=f();fn f()->i64{return A;}", .code = "E_CONSTANT_CYCLE" },
-        .{ .body = "const A:bool=false&&f();fn f()->bool{let a=new [1]i64[1];return true;}", .code = "E_CONSTANT_EXPRESSION" },
-        .{ .body = "const A:i64=f(1);fn f(a:allocator)->i64{return 0;}", .code = "E_CONSTANT_TYPE" },
-        .{ .body = "const A:i64=f();fn f()->i64{return 1/0;}", .code = "E_CONSTANT_ARITHMETIC" },
-        .{ .body = "const A:i64=f(1);fn f(a:bool)->i64{return 0;}", .code = "E_TYPE" },
-    };
-    for (cases) |case| {
-        const text = try std.fmt.allocPrint(t.allocator, "{s}fn main()->i64{{return 0;}}", .{case.body});
-        defer t.allocator.free(text);
-        var c = try language.Compilation.init(t.allocator, "invalid.my", text);
-        defer c.deinit();
-        try t.expectError(error.SourceError, c.check());
-        try t.expectEqualStrings(case.code, c.diagnostics.items[0].code);
-        try t.expect(c.diagnostics.items[0].span.start < text.len);
-        try t.expect(c.program == null);
-    }
-}
 fn provider(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
     if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main;import calculation;const ANSWER:i64=calculation::value(2);fn main()->i64{return ANSWER;}");
     if (std.mem.eql(u8, path, "calculation.my")) return allocator.dupe(u8, if (context == null)

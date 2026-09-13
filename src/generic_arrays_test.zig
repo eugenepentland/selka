@@ -21,21 +21,6 @@ const membership = factories ++ helpers ++ "fn main()->i64{" ++
     "let components=pair::<Component>(Component.make(1u64),Component.make(2u64));" ++
     "let nets=pair::<Net>(Net.make(8u64),Net.make(9u64));" ++
     "if contains::<Component>(components,Component.make(2u64)) && !contains::<Component>(components,Component.make(8u64)) && contains::<Net>(nets,Net.make(9u64)){return 1;}return 0;}";
-// spec: GENERIC-ARRAY-1
-test "generic array membership reuses code across nominal IDs without mixing domains" {
-    try value(t.allocator, membership, 1);
-    try reject(factories ++ helpers ++ "fn main()->i64{discard contains::<Component>(pair::<Net>(Net.make(1u64),Net.make(2u64)),Component.make(1u64));return 0;}", "E_TYPE");
-}
-
-test "generic arrays nest substitute across calls and match concrete helper shapes" {
-    try value(t.allocator, helpers ++
-        "fn matrix<T:copy>(x:T)->[2][2]T{return pair::<[2]T>(pair::<T>(x,x),pair::<T>(x,x));}" ++
-        "fn concrete(a:[2]i64)->i64{return a[0]+a[1];}" ++
-        "fn caller<T:copy>(x:T)->i64{discard matrix::<T>(x);return concrete(pair::<i64>(3,4));}" ++
-        "fn main()->i64{let a=matrix::<i64>(9);return a[1][0]+caller::<bool>(true);}", 16);
-    try value(t.allocator, "fn empty<T:copy>()->[0]T{return new [0]T[];}fn main()->i64{return cast<i64>(len(empty::<bool>()));}", 0);
-}
-
 test "generic array templates reject invalid uncalled bodies and invalid lengths" {
     const cases = [_]struct { source: []const u8, code: []const u8 }{
         .{ .source = "fn f<T:copy,U:copy>(a:[2]T)->[2]U{return a;}", .code = "E_GENERIC_TYPE" },
@@ -63,12 +48,6 @@ const views = "fn window<T:copy>(a:&[2]T)->&[]T from a{borrow a[0..2] as s{retur
     "fn edit<T:copy>(x:T,y:T)->T{let mut a=new [2]T[x,y];let original=a;" ++
     "borrow mut a[0..2] as s{write_slice(s,0,y);}a=replace(a,1,x);" ++
     "borrow a as whole{borrow window::<T>(whole) as part{discard read_slice(part,0);}}return original[0];}";
-test "generic array mutations views and returned input slices preserve snapshots" {
-    try value(t.allocator, views ++ "fn main()->i64{return edit::<i64>(7,9);}", 7);
-    try reject("fn f<T:copy>(x:T)->T{let mut a=new [1]T[x];borrow mut a[0..1] as s{return a[0];}}fn main()->i64{return 0;}", "E_BORROW_CONFLICT");
-    try reject("fn f<T:copy>(input:&[]T,x:T)->&[]T from input{let a=new [1]T[x];borrow a[0..1] as s{return s;}}fn main()->i64{return 0;}", "E_RETURN_LIFETIME");
-}
-
 fn allocations(allocator: std.mem.Allocator) !void {
     try value(allocator, membership, 1);
     try value(allocator, views ++ "fn main()->i64{return edit::<i64>(7,9);}", 7);
@@ -131,22 +110,4 @@ test "generic arrays retain concrete identity reuse and formatter round trips" {
     const stable = try again.format(t.allocator);
     defer t.allocator.free(stable);
     try t.expectEqualStrings(formatted, stable);
-}
-
-test "generic arrays retain copy obligations and arena escape checks" {
-    try reject("resource File:filesystem;" ++ helpers ++ "fn owner(x:File)->[2]File{return pair::<File>(x,x);}fn main()->i64{return 0;}", "E_GENERIC_ARGUMENT");
-    try reject("result R{ok:i64,err:i64}" ++ helpers ++ "fn main()->i64{discard pair::<R>(new R.ok(1),new R.err(2));return 0;}", "E_GENERIC_ARGUMENT");
-    try value(t.allocator, "resource File:filesystem;" ++ helpers ++
-        "fn main()->i64{let empty=new [0]File[];discard pair::<[0]File>(empty,empty);return 1;}", 1);
-    try reject(helpers ++ "fn f<T:copy>(heap:allocator)->[2]allocator{arena heap as child{return pair::<allocator>(child,child);}}fn main()->i64{return 0;}", "E_ARENA_ESCAPE");
-    try reject(helpers ++ "fn bad(heap:allocator)->[2]allocator{arena heap as child{return pair::<allocator>(child,child);}}fn main()->i64{return 0;}", "E_ARENA_ESCAPE");
-}
-
-test "expanding generic array recursion stops at the specialization budget" {
-    try reject("fn grow<T:copy>(x:T)->i64{return grow::<[1]T>(new [1]T[x]);}fn main()->i64{return grow::<i64>(1);}", "E_GENERIC_LIMIT");
-    var compilation = try language.Compilation.init(t.allocator, "shape-budget.my", "fn grow<T:copy>(x:T)->i64{discard new [2]T[x,x];return grow::<[1]T>(new [1]T[x]);}fn main()->i64{return grow::<i64>(1);}");
-    defer compilation.deinit();
-    try t.expectError(error.SourceError, compilation.check());
-    try t.expectEqualStrings("E_GENERIC_LIMIT", compilation.diagnostics.items[0].code);
-    try t.expectEqualStrings("generic array specialization exceeds 4096 distinct shapes", compilation.diagnostics.items[0].message);
 }

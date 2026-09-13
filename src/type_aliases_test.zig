@@ -58,13 +58,6 @@ test "module aliases export canonical types while private aliases remain inacces
     try t.expectError(error.SourceError, hidden.init(t.allocator, .{ .context = &marker, .read = provider }));
 }
 
-test "owned aliases do not permit copying or reuse after a move" {
-    var compilation = try language.Compilation.init(t.allocator, "owner.my", "buffer B:i64;type Owner=B;result Open{ok:Owner,err:i64}fn main(heap:allocator)->i64{" ++
-        "match acquire_buffer<Open>(heap,0){Open.ok(b)=>{let moved=b;discard b;discard moved;return 0;},Open.err(e)=>{return e;}}}");
-    defer compilation.deinit();
-    try t.expectError(error.SourceError, compilation.check());
-    try t.expectEqualStrings("E_OWNED_CONSUMED", compilation.diagnostics.items[0].code);
-}
 fn privateTarget(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
     if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
     return allocator.dupe(u8, "module main;export Public;struct Secret{value:i64}type Public=Secret;fn main()->i64{return 0;}");

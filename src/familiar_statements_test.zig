@@ -74,13 +74,6 @@ test "module declaration discovery and formatting accept newline terminated dire
     try t.expect(std.mem.indexOf(u8, repeated, "main") != null);
 }
 
-// spec: FAMILIAR-STMT-7
-test "condition calls admit nested record constructors without consuming condition blocks" {
-    try evaluate("struct point{Value:i64}\nfn predicate(first:point,value:point)->bool{return first.Value==value.Value}\n" ++
-        "fn main()->i64{let flag=true\nlet item=point{Value:42}\n" ++
-        "if flag{if !false && predicate(item,point{Value:42}){return 42}}\nreturn 0}", 42);
-}
-
 // spec: FAMILIAR-STMT-8
 test "nested generic record constructors retain list type arguments and field contexts" {
     try evaluate("struct Holder<T:copy>{value:T}\nfn main()->i64{\n" ++

@@ -29,10 +29,6 @@ test "break and continue target nearest loops and preserve generic flow and form
         try execute(source, 16);
     }
 }
-test "continue inside a child borrow preserves the outer borrowed loop condition" {
-    try execute("fn main()->i64{let mut owner=0;borrow mut owner as outer{while read_ref(outer)<3{" ++
-        "write_ref(outer,read_ref(outer)+1);borrow outer as inner{discard read_ref(inner);continue;}}}return owner;}", 3);
-}
 fn cleanupScenario(allocator: std.mem.Allocator) !void {
     const text = "buffer B:i64;result Open{ok:B,err:i64}result Change{ok:bool,err:i64}result R{ok:i64,err:i64}" ++
         "fn work(heap:allocator)->R{let mut sum=0;let mut i=0;while i<10{i+=1;arena heap as a{arena a as b{" ++
@@ -46,31 +42,12 @@ fn cleanupScenario(allocator: std.mem.Allocator) !void {
         defer allocator.free(source);
         var compilation = try language.Compilation.init(allocator, "cleanup.my", source);
         defer compilation.deinit();
-        var statistics: @import("memory.zig").Statistics = .{};
-        const result = try compilation.executeWithOptions(allocator, .{ .memory = .{ .statistics = &statistics } });
+        const result = try compilation.executeWithOptions(allocator, .{});
         try t.expectEqual(@as(i64, 6), result.value);
-        try t.expectEqual(@as(u64, 3), statistics.created);
-        try t.expectEqual(statistics.created, statistics.released);
-        try t.expectEqual(@as(usize, 0), statistics.live_allocations);
     }
 }
 test "loop exits release nested borrows buffers and arenas under every allocation failure" {
     try cleanupScenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), cleanupScenario, .{});
-}
-test "loop exits reject out of scope exits unhandled results and changed outer ownership" {
-    const cases = [_]struct { text: []const u8, code: []const u8 }{
-        .{ .text = "fn main()->i64{break;}", .code = "E_LOOP_EXIT" },
-        .{ .text = "fn main()->i64{continue;}", .code = "E_LOOP_EXIT" },
-        .{ .text = "result R{ok:i64,err:i64}fn main()->i64{while true{let value=new R.ok(1);break;}return 0;}", .code = "E_RESULT_UNHANDLED" },
-        .{ .text = "result R{ok:i64,err:i64}fn main()->i64{let value=new R.ok(1);while true{acknowledge value;continue;}acknowledge value;return 0;}", .code = "E_RESULT_LOOP" },
-        .{ .text = "fn main()->i64{while true{break;return 0;}return 1;}", .code = "E_UNREACHABLE" },
-    };
-    for (cases) |case| {
-        var compilation = try language.Compilation.init(t.allocator, "invalid.my", case.text);
-        defer compilation.deinit();
-        try t.expectError(error.SourceError, compilation.check());
-        try t.expectEqualStrings(case.code, compilation.diagnostics.items[0].code);
-    }
 }

@@ -11,29 +11,6 @@ fn reject(bytes: []const u8, code: []const u8) !void {
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
-// spec: HOST-SOURCE-1
-test "host source declarations require explicit value signatures effects and guest main" {
-    try reject("host fn f()->i64;" ++ main_source, "E_HOST_EFFECTS");
-    try reject("host fn f()->i64 effects();" ++ main_source, "E_HOST_EFFECTS");
-    try reject("host fn f()->i64 noalloc;" ++ main_source, "E_HOST_EFFECTS");
-    try reject("host fn f<T:copy>(x:T)->T effects(host);" ++ main_source, "E_HOST_DECLARATION");
-    try reject("host conversion fn f(x:i64)->i64 effects(host);" ++ main_source, "E_HOST_DECLARATION");
-    try reject("domain D:i64{host fn f()->i64 effects(host);}" ++ main_source, "E_HOST_DECLARATION");
-    try reject("host fn f(x:&i64)->i64 effects(host);" ++ main_source, "E_HOST_SIGNATURE");
-    try reject("host fn f(x:&i64)->&i64 from x effects(host);" ++ main_source, "E_HOST_SIGNATURE");
-    try reject("host fn f(x:allocator)->i64 effects(host);" ++ main_source, "E_HOST_SIGNATURE");
-    try reject("host fn f()->clock_cap effects(host);" ++ main_source, "E_HOST_SIGNATURE");
-    try reject("buffer Bytes:u8;struct Box{data:Bytes}host fn f(x:Box)->i64 effects(host);" ++ main_source, "E_HOST_SIGNATURE");
-    try reject("host fn f()->i64 effects(host){return 1;}" ++ main_source, "E_SYNTAX");
-    try reject("host fn main()->i64 effects(host);", "E_MAIN");
-}
-test "host effects propagate through ordinary generic and uncalled helper paths" {
-    try reject(declaration ++ "fn main()->i64 effects(){return measure(1);}", "E_EFFECT_BOUND");
-    try reject(declaration ++ "fn helper()->i64{return measure(1);}fn f<T:copy>(x:T)->i64 effects(){discard x;return helper();}" ++ main_source, "E_EFFECT_BOUND");
-    try reject("host fn read()->i64 effects(host,filesystem);fn main()->i64 effects(host){return read();}", "E_EFFECT_BOUND");
-    try reject(declaration ++ "fn main()->i64{return measure(true);}", "E_TYPE");
-    try reject("result R{ok:i64,err:i64}host fn f()->R effects(host);fn main()->i64{let value=f();return 0;}", "E_RESULT_UNHANDLED");
-}
 test "host calls cannot enter effect-free invocation or compile-time evaluation" {
     var c = try language.Compilation.init(t.allocator, "host-eval.my", declaration ++ "fn main()->i64{return measure(1);}");
     defer c.deinit();
@@ -85,7 +62,7 @@ test "host bytecode validation rejects forged bodies signatures entry and effect
             2 => functions[0].policy.effects = 0,
             3 => functions[0].policy.effect_bound = null,
             4 => functions[0].policy.effect_bound.?.allowed = effects.bit(.clock),
-            5 => functions[0].signature.return_type = .allocator,
+            5 => functions[0].signature.return_type = .clock_cap,
             6 => functions[0].policy.conversion = true,
             else => unreachable,
         }

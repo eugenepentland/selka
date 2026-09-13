@@ -59,7 +59,7 @@ test "host declarations reject duplicate names borrowed signatures authority and
     signature.parameters = &.{.{ .ty = .i64, .passing = .exclusive }};
     try t.expectError(error.HostBorrowUnsupported, host.Registry.init(t.allocator, &.{}, &.{.{ .name = "f", .signature = signature }}));
     signature = scalar;
-    signature.result.ty = .allocator;
+    signature.result.ty = .clock_cap;
     try t.expectError(error.NotDataType, host.Registry.init(t.allocator, &.{}, &.{.{ .name = "f", .signature = signature }}));
     signature = scalar;
     signature.effects = 0x100;

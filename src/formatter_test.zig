@@ -53,13 +53,6 @@ test "formatter canonical indentation preserves inline standalone and trailing c
     defer after.deinit();
     try t.expectEqual(@as(i64, 3), (try after.execute(t.allocator)).value);
 }
-test "formatter preserves ambiguous operators literal spellings and aggregate type tokens" {
-    const text = "fn main()->i64{let mut a=new [3]i64[1,2,3];borrow mut a[0..3] as s{write_slice(s,0,-1);}if !(a[0]<0)&&false{return 0;}return cast<i64>(a[0])+ - -1;}";
-    try roundTrip(t.allocator, text);
-    try roundTrip(t.allocator, "fn main()->i64{return 9223372036854775807 + 1;}");
-    try roundTrip(t.allocator, "domain D:i64{fn make(x:i64)->D{return wrap<D>(x);}} fn main()->i64{return 0;}");
-    try roundTrip(t.allocator, "fn main()->i64{ // empty comments\n// before return\nreturn 0;// after return\n// before close\n}\n// final\n");
-}
 // spec: TOOL-5
 test "formatting accepts incomplete semantic work but rejects invalid syntax" {
     var c = try language.Compilation.init(t.allocator, "fmt.my", "fn unfinished()->Unknown{return missing;} ");

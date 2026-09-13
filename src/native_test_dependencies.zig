@@ -158,7 +158,7 @@ test "checked metadata tracks indirect targets and allows deterministic allocati
     const span = @import("source.zig").Span{ .start = 0, .end = 0 };
     const instructions = [_]bytecode.Instruction{
         .{ .span = span, .op = .{ .function_value = .{ .function = @fromBackingInt(1), .ty = .i64 } } },
-        .{ .span = span, .op = .{ .invoke = .{ .ty = .i64, .references = &.{} } } },
+        .{ .span = span, .op = .{ .invoke = .i64 } },
     };
     var functions = [_]bytecode.Function{
         .{ .id = @fromBackingInt(0), .name = "testA", .scope = .{ .instructions = &instructions }, .policy = .{ .effects = effects.bit(.managed_allocation) } },

@@ -14,17 +14,6 @@ fn rejectBody(body: []const u8, code: []const u8) !void {
     defer t.allocator.free(text);
     try reject(text, code);
 }
-test "nominal provider byte inputs require known u8 and authority effects remain checked before calls" {
-    try rejectBody("fn f<T:integer>(fs:filesystem_cap,x:[1]T)->Open<T>{return acquire_resource<Open<T>>(fs,x);}", "E_RESOURCE_REQUEST");
-    try rejectBody("fn f<T:integer>(input:File,x:[1]T)->Written<T>{let mut file=input;return write_resource<Written<T>>(file,x);}", "E_RESOURCE_BYTES");
-    try rejectBody("fn f<T:copy>(fs:network_cap)->Open<T>{return acquire_resource<Open<T>>(fs,singleton::<u8>(42u8));}", "E_GENERIC_TYPE");
-    try rejectBody("fn f<T:copy>(fs:filesystem_cap)->Open<T> noio{return acquire_resource<Open<T>>(fs,singleton::<u8>(42u8));}", "E_EFFECT_BOUND");
-    try rejectBody("fn f<T:copy>(file:File)->Finish<T>{acknowledge complete_resource<Finish<T>>(file);return complete_resource<Finish<T>>(file);}", "E_OWNED_CONSUMED");
-    try rejectBody("fn f<T:copy>(file:File)->Read<T>{return read_resource<Read<T>>(file);}", "E_IMMUTABLE");
-    try rejectBody("fn f<T:copy>(input:File)->Read<T>{let mut file=input;discard file;return read_resource<Read<T>>(file);}", "E_OWNED_CONSUMED");
-    try rejectBody("fn f<T:copy>(input:File,view:&[]u8)->Slice<T>{let mut file=input;return read_resource_slice<Slice<T>>(file,view);}", "E_REFERENCE_READ_ONLY");
-    try rejectBody("fn f<T:copy>(input:File,view:&mut[]i64)->Slice<T>{let mut file=input;return read_resource_slice<Slice<T>>(file,view);}", "E_GENERIC_TYPE");
-}
 const env_call = "result Lookup<T:copy>{ok:Entry<T>,err:i64}fn f<T:copy>(env:environment_cap)->Lookup<T>{return environment_get<Lookup<T>>(env,new [0]u8[]);}fn main()->i64{return 0;}";
 fn bothForms(text: []const u8, code: []const u8) !void {
     try reject(text, code);

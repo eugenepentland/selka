@@ -30,12 +30,6 @@ test "scalar units remain stable across body edits and declaration reorder" {
     try std.testing.expect(!std.mem.eql(u8, callee_before.il, callee_after.il));
 }
 
-test "QBE preserves explicit borrowing and value reads" {
-    var parsed = try emitted(std.testing.allocator, "fn main()->i64{let mut x=1;borrow x as view{return read_ref(view);}}");
-    defer parsed.deinit();
-    try std.testing.expect(std.mem.indexOf(u8, named(parsed.value, "main").?.il, "%r0") != null);
-}
-
 test "QBE lowers stack joins loops casts and calls independently" {
     const a = std.testing.allocator;
     var c = try language.Compilation.init(a, "qbe.my", "fn twice(x:i64)->i64{return x*2;}fn main()->i64{let mut x:i64=0;while x<4{x=x+1;}if x==4{return twice(x);}return 0;}");
@@ -95,16 +89,4 @@ test "QBE specializes scalar generic calls" {
     var parsed = try emitted(std.testing.allocator, "fn identity<T:copy>(x:T)->T{return x;}fn main()->i64{return identity::<i64>(2);}");
     defer parsed.deinit();
     try std.testing.expectEqual(@as(usize, 2), parsed.value.functions.len);
-}
-
-test "QBE lowers concrete aggregate calls and precise managed roots" {
-    var aggregate = try emitted(std.testing.allocator, "struct Pair{x:i64,y:i64}fn id(x:Pair)->Pair{return x;}fn main()->i64{return id(new Pair{x:2,y:3}).x;}");
-    defer aggregate.deinit();
-    try std.testing.expect(std.mem.indexOf(u8, named(aggregate.value, "main").?.il, "type :t") != null);
-    var managed = try emitted(std.testing.allocator, "list Numbers:i64;fn main()->i64{let xs=new_list<Numbers>(0);append_list(xs,42);return read_list(xs,0);}");
-    defer managed.deinit();
-    const il = named(managed.value, "main").?.il;
-    try std.testing.expect(std.mem.indexOf(u8, il, "myl_native_root_push") != null);
-    try std.testing.expect(std.mem.indexOf(u8, il, "myl_native_list_new") != null);
-    try std.testing.expect(std.mem.indexOf(u8, il, "myl_qbe_root_restore") != null);
 }

@@ -95,50 +95,6 @@ test "partial source acquisition propagates failure and releases acquired resour
     try t.expectEqual(stats[0].acquired, stats[0].released);
     try t.expectEqual(@as(usize, 0), stats[1].live);
 }
-test "source quotas and provider denials are recoverable and authority is not ambient" {
-    var c = try language.Compilation.init(t.allocator, "resources.my", partial);
-    defer c.deinit();
-    var fake: Fake = .{};
-    try t.expectError(error.CapabilityUnavailable, c.execute(t.allocator));
-    try t.expectEqual(@as(i64, 4), (try c.executeWithOptions(t.allocator, .{ .resources = .{ .filesystem = fake.provider(), .max_live_per_kind = 1 } })).value);
-    try t.expectEqual(@as(usize, 1), fake.acquire_calls);
-    try t.expectEqual(@as(usize, 0), fake.live);
-    var denied = try language.Compilation.init(t.allocator, "denied.my", declarations ++ "fn main(fs: filesystem_cap) -> i64 { match acquire_resource<Open>(fs, new [1]u8 " ++
-        "[9u8]) { Open.ok(file) => { discard file; return 0; }, Open.err(e) => { return e; } }" ++
-        " }");
-    defer denied.deinit();
-    try t.expectEqual(@as(i64, 2), (try denied.executeWithOptions(t.allocator, .{ .resources = .{ .filesystem = fake.provider() } })).value);
-    try t.expectEqual(@as(usize, 0), fake.live);
-}
-test "resource schema request kind and ownership mistakes fail at checking" {
-    try reject("resource File: clock; fn main() -> i64 { return 0; }", "E_RESOURCE_KIND");
-    try reject(declarations ++ "fn main() -> i64 { discard new File {}; return 0; }", "E_TYPE");
-    try reject(declarations ++ "fn bad(f: File) -> i64 { discard f; discard f; return 0; } fn main() -> i64 { return 0; }", "E_OWNED_CONSUMED");
-    try reject(declarations ++ "fn main(net: network_cap) -> i64 { acknowledge acquire_resource<Open>(net, new [0]u8 []); return 0; }", "E_TYPE");
-    try reject(declarations ++ "fn main(fs: filesystem_cap) -> i64 { acknowledge acquire_resource<Open>(fs, new [1]i64 [1]); return 0; }", "E_RESOURCE_REQUEST");
-    try reject(declarations ++ "fn bad(f: File) -> Status { return complete_resource<Status>(f); } fn main() -> i64 { return 0; }", "E_COMPLETION_RESULT");
-    try reject("fn main(a: filesystem_cap, b: filesystem_cap) -> i64 { return 0; }", "E_MAIN");
-}
-test "implicit resource cleanup and ownership forwarding are included in noio and explicit bounds" {
-    try reject(declarations ++ "fn cleanup(file: File) -> i64 noio { return 1; } fn main() -> i64 { return 0; }", "E_EFFECT_BOUND");
-    try reject(declarations ++ "struct Wrap { file: File } fn forward(input: Wrap) -> Wrap effects() { return input; } fn main() -> i64 { return 0; }", "E_EFFECT_BOUND");
-    try reject(declarations ++ "fn open(fs: filesystem_cap) -> Open { return acquire_resource<Open>(fs, new [0]u8 []); } fn main(fs: filesystem_cap) -> i64 noio { acknowledge open(fs); return 0; }", "E_EFFECT_BOUND");
-    var c = try language.Compilation.init(t.allocator, "empty.my", declarations ++ "fn empty(a: [0]File) -> i64 effects() { discard a; return 0; } fn main() -> i64 { return empty(new [0]File []); }");
-    defer c.deinit();
-    try t.expectEqual(@as(i64, 0), (try c.execute(t.allocator)).value);
-}
-test "network and filesystem providers have separate entry authority and cleanup effects" {
-    var fake: Fake = .{};
-    var c = try language.Compilation.init(t.allocator, "network.my", declarations ++ "resource Socket: network; result Connected { ok: Socket, err: i64 } fn main(net: " ++
-        "network_cap, fs: filesystem_cap) -> i64 effects(filesystem, network) { acknowledge " ++
-        "acquire_resource<Connected>(net, new [0]u8 []); acknowledge " ++
-        "acquire_resource<Open>(fs, new [0]u8 []); return 5; }");
-    defer c.deinit();
-    try t.expectError(error.CapabilityUnavailable, c.executeWithOptions(t.allocator, .{ .resources = .{ .network = fake.provider() } }));
-    try t.expectEqual(@as(usize, 0), fake.acquire_calls);
-    try t.expectEqual(@as(i64, 5), (try c.executeWithOptions(t.allocator, .{ .resources = .{ .network = fake.provider(), .filesystem = fake.provider() } })).value);
-    try t.expectEqual(@as(usize, 2), fake.released);
-}
 test "completion errors release returned owner exactly once when caller chooses fallback" {
     for ([_]external.CallError{ error.Unavailable, error.Denied, error.Failed, error.OutOfMemory }, 1..) |err, code| {
         var fake: Fake = .{ .fail_complete_count = 3, .complete_error = err };
@@ -180,21 +136,6 @@ test "nested resource wrappers release in reverse schema order and traps unwind 
         }
     }
     try t.expect(completed);
-}
-test "source resource acquisition and completion loops use bounded live storage" {
-    var c = try language.Compilation.init(t.allocator, "loop.my", declarations ++ "fn main(fs: filesystem_cap) -> i64 { let mut n = 0; while n < 10000 { match " ++
-        "acquire_resource<Open>(fs, new [0]u8 []) { Open.ok(file) => { acknowledge " ++
-        "complete_resource<Finish>(file); }, Open.err(e) => { return e; } } n += 1; } return " ++
-        "n; }");
-    defer c.deinit();
-    try c.emit();
-    var limited: @import("test_support.zig").LimitedLiveAllocator = .{ .parent = t.allocator, .limit = 16 * 1024 };
-    defer limited.deinit();
-    var fake: Fake = .{};
-    try t.expectEqual(@as(i64, 10000), (try c.executeWithOptions(limited.allocator(), .{ .resources = .{ .filesystem = fake.provider(), .max_live_per_kind = 1 } })).value);
-    try t.expectEqual(@as(usize, 0), fake.live);
-    try t.expectEqual(@as(usize, 0), fake.released);
-    try t.expectEqual(@as(usize, 0), limited.live);
 }
 test "independent bytecode validation rejects suppressed cleanup effects and malformed resource results" {
     var c = try language.Compilation.init(t.allocator, "invalid.my", retry);

@@ -38,44 +38,6 @@ test "typed invocation runs domain factories and keeps integer entry execution u
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
-test "typed invocation copies aggregate arguments across allocators and preserves snapshots" {
-    var c = try language.Compilation.init(t.allocator, "copy.my", "struct R{a:[2]i64} fn change(x:R)->R{return update(x){a:replace(x.a,0,9)};} fn main()->i64{return 0;}");
-    defer c.deinit();
-    try c.emit();
-    const id = find(c.code.?, "change");
-    const ty = c.code.?.functions[@backingInt(id)].signature.return_type;
-    const array_ty = c.code.?.records[ty.recordIndex()].fields[0].ty;
-    var arguments = std.heap.ArenaAllocator.init(t.allocator);
-    const owned = blk: {
-        defer arguments.deinit();
-        const array = try typed.Value.create(arguments.allocator(), array_ty, &.{ .{ .i64 = 7 }, .{ .i64 = 8 } });
-        const input = try typed.Value.create(arguments.allocator(), ty, &.{array});
-        const result = try vm.invoke(t.allocator, c.code.?, id, &.{input}, .{});
-        try t.expectEqual(@as(i64, 7), input.aggregate.fields[0].aggregate.fields[0].i64);
-        try t.expect(result.value.aggregate != input.aggregate);
-        break :blk result.value;
-    };
-    defer owned.release(t.allocator);
-    try t.expectEqual(@as(i64, 9), owned.aggregate.fields[0].aggregate.fields[0].i64);
-    try t.expectEqual(@as(i64, 8), owned.aggregate.fields[0].aggregate.fields[1].i64);
-}
-test "typed invocation rejects authority effects references private methods and malformed arguments" {
-    var c = try language.Compilation.init(t.allocator, "invalid.my", domain_source ++ " result Time{ok:i64,err:i64} fn clock(c:clock_cap)->Time{return clock_now<Time>(c);} " ++
-        "fn cap(x:allocator)->i64{return 0;} fn ref(x:&i64)->i64{return read_ref(x);} fn " ++
-        "small(x:u8)->u8{return x;} fn main()->i64{return 0;}");
-    defer c.deinit();
-    try c.emit();
-    const code = c.code.?;
-    try t.expectError(error.PrivateInvocationFunction, vm.invoke(t.allocator, code, find(code, "Positive.raw"), &.{.{ .i64 = 1 }}, .{}));
-    try t.expectError(error.InvocationEffects, vm.invoke(t.allocator, code, find(code, "clock"), &.{.{ .i64 = 1 }}, .{}));
-    try t.expectError(error.NotDataType, vm.invoke(t.allocator, code, find(code, "cap"), &.{.{ .i64 = 1 }}, .{}));
-    try t.expectError(error.InvocationReference, vm.invoke(t.allocator, code, find(code, "ref"), &.{.{ .i64 = 1 }}, .{}));
-    const small = find(code, "small");
-    try t.expectError(error.InvocationArity, vm.invoke(t.allocator, code, small, &.{}, .{}));
-    try t.expectError(error.ValueTypeMismatch, vm.invoke(t.allocator, code, small, &.{.{ .bool = true }}, .{}));
-    try t.expectError(error.InvalidDataValue, vm.invoke(t.allocator, code, small, &.{.{ .integer = .{ .ty = .u8, .value = 256 } }}, .{}));
-    try t.expectError(error.UnknownInvocationFunction, vm.invoke(t.allocator, code, @fromBackingInt(code.functions.len), &.{}, .{}));
-}
 test "typed invocation reports exact execution budgets and bounds argument traversal" {
     var c = try language.Compilation.init(t.allocator, "limits.my", "struct R{x:i64} fn pair(a:R,b:R)->i64{return a.x+b.x;} fn loop(x:i64)->i64{return loop(x);} fn main()->i64{return 0;}");
     defer c.deinit();

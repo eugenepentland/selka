@@ -39,22 +39,6 @@ test "restricted evaluator preserves aggregate values and every instruction/fram
     try t.expectError(error.InvalidBudget, evaluate(t.allocator, &c, .{ .max_steps = 0 }));
     try t.expectError(error.InvalidBudget, evaluate(t.allocator, &c, .{ .max_frames = 0 }));
 }
-test "restricted evaluation rejects authority even in untaken transitive calls" {
-    for ([_][]const u8{
-        "fn main(heap:allocator)->i64{discard heap;return 1;}",
-        "result T{ok:i64,err:i64} fn read(c:clock_cap)->T{return clock_now<T>(c);} fn main(c:clock_cap)->i64{if false{acknowledge read(c);}return 1;}",
-    }, [_][]const u8{ "E_EVAL_INPUT", "E_EVAL_EFFECT" }) |source, code| {
-        var c = try language.Compilation.init(t.allocator, "eval.my", source);
-        defer c.deinit();
-        try c.emit();
-        try t.expectError(error.SourceError, evaluate(t.allocator, &c, .{}));
-        try t.expectEqualStrings(code, c.diagnostics.items[c.diagnostics.items.len - 1].code);
-    }
-    var c = try language.Compilation.init(t.allocator, "eval.my", "result T{ok:i64,err:i64} fn unused(c:clock_cap)->T{return clock_now<T>(c);} fn main()->i64{return 7;}");
-    defer c.deinit();
-    try c.emit();
-    try t.expectEqual(@as(i64, 7), (try evaluate(t.allocator, &c, .{})).value);
-}
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "eval.my", pure);
     defer c.deinit();

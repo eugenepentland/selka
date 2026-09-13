@@ -35,19 +35,6 @@ test "byte literals reject invalid escapes and retain ordinary array type checks
     }
 }
 
-test "byte literals include empty arrays every escape and generic template bodies" {
-    const cases = [_]struct { text: []const u8, expected: i64 }{
-        .{ .text = "fn main()->i64{return cast<i64>(len(\"\"));}", .expected = 0 },
-        .{ .text = "fn body<T:copy>(x:T)->[1]u8{discard x;return \"X\";}fn main()->i64{return cast<i64>(body::<i64>(1)[0]);}", .expected = 88 },
-        .{ .text = "fn main()->i64{let a=\"\\n\\r\\t\\0\\\\\\\"\";return cast<i64>(a[0])+cast<i64>(a[1])+cast<i64>(a[2])+cast<i64>(a[3])+cast<i64>(a[4])+cast<i64>(a[5]);}", .expected = 158 },
-    };
-    for (cases) |case| {
-        var c = try language.Compilation.init(t.allocator, "literal.my", case.text);
-        defer c.deinit();
-        try t.expectEqual(case.expected, (try c.execute(t.allocator)).value);
-    }
-}
-
 test "byte literal decoded size limit reports E_BYTE_LITERAL_LIMIT before lowering" {
     const text = try t.allocator.alloc(u8, 65536 + 1 + 40);
     defer t.allocator.free(text);

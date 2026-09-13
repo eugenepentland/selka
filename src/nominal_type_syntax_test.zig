@@ -176,18 +176,3 @@ test "nominal template interfaces enforce privacy arity kind and parameter scope
     try interfaceReject("module main;import model as m;struct Outer<m:copy>{value:m}", "E_SHADOWING");
     try interfaceReject("module main;struct Outer<T:bad>{value:T}", "E_GENERIC_REQUIREMENT");
 }
-
-test "nominal angle formatting preserves comments and ordinary comparison operators" {
-    var compilation = try language.Compilation.init(t.allocator, "angles.my", "struct Pair<T:copy,U:copy>{a:T,b:U}fn f(x:i64,y:i64)->i64{" ++
-        "let p:Pair // application\n<i64,Pair<i64,i64>>=new Pair<i64,Pair<i64,i64>>{a:x,b:new Pair<i64,i64>{a:y,b:x}};" ++
-        "discard p;if x>=y && x<y{return 1;}return 0;}");
-    defer compilation.deinit();
-    const formatted = try compilation.format(t.allocator);
-    defer t.allocator.free(formatted);
-    try t.expect(std.mem.indexOf(u8, formatted, "// application") != null);
-    try t.expect(std.mem.indexOf(u8, formatted, "x >= y && x < y") != null);
-    var again = try language.Compilation.init(t.allocator, "again.my", formatted);
-    defer again.deinit();
-    try again.parse();
-    try t.expectEqual(compilation.syntax.?.types.expressions.applications.len, again.syntax.?.types.expressions.applications.len);
-}

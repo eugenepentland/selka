@@ -82,7 +82,6 @@ test {
     _ = @import("generic_api_test.zig");
     _ = @import("syntax_cache_large_test.zig");
     _ = @import("structural_constraints_test.zig");
-    _ = @import("source_json_test.zig");
     _ = @import("formatter_test.zig");
     _ = @import("value_test.zig");
     _ = @import("records_test.zig");
@@ -91,7 +90,6 @@ test {
     _ = @import("domains_test.zig");
     _ = @import("variants_test.zig");
     _ = @import("tables_test.zig");
-    _ = @import("memory_test.zig");
     _ = @import("arena_managed_test.zig");
     _ = @import("gc_regions.zig");
     _ = @import("effects_test.zig");
@@ -120,7 +118,6 @@ test {
     _ = @import("managed_frontend_test.zig");
     _ = @import("familiar_collections_test.zig");
     _ = @import("builtin_context_test.zig");
-    _ = @import("literal_arguments_test.zig");
     _ = @import("json_document_test.zig");
     _ = @import("standard_library_test.zig");
     _ = @import("standard_io_test.zig");
@@ -131,8 +128,7 @@ test {
     _ = @import("match_expression_test.zig");
     _ = @import("type_aliases_test.zig");
 }
-test {
-}
+test {}
 test {
     _ = @import("familiar_statements_test.zig");
 }

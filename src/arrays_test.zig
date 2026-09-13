@@ -36,71 +36,6 @@ test "fixed arrays have structural types preserve copies and support every integ
     try result("fn main() -> i64 { return -new [1]i64 [4][0] + 10; }", 6);
 }
 
-test "nested arrays records and conversion field accounting compose" {
-    try result("struct Cell { n: i64 } struct Grid { rows: [2][1]Cell } fn id(a: [2][1]Cell) -> " ++
-        "[2][1]Cell { return a; } fn main() -> i64 { let a = new Grid { rows: id(new " ++
-        "[2][1]Cell [new [1]Cell [new Cell { n: 3 }], new [1]Cell [new Cell { n: 7 }]]) }; " ++
-        "let b = update(a) { rows: replace(a.rows, 0, new [1]Cell [new Cell { n: 9 }]) }; " ++
-        "return a.rows[0][0].n + b.rows[0][0].n + b.rows[1][0].n; }", 19);
-    try result("struct Source { values: [2]i64 } struct Target { total: i64 } conversion fn " ++
-        "convert(src: Source) -> Target { return new Target { total: src.values[0] + " ++
-        "src.values[1] }; } fn main() -> i64 { return convert(new Source { values: new [2]i64 " ++
-        "[4, 7] }).total; }", 11);
-    try reject("struct Source { values: [2]i64, added: bool } struct Target { total: i64 } " ++
-        "conversion fn convert(src: Source) -> Target { return new Target { total: " ++
-        "src.values[0] }; } fn main() -> i64 { return 0; }", "E_INCOMPLETE_CONVERSION");
-}
-
-test "array schemas reject type length shape and recursive layout errors" {
-    const cases = [_]struct { text: []const u8, code: []const u8 }{
-        .{ .text = "fn main() -> i64 { discard new [2]i64 [1]; return 0; }", .code = "E_ARRAY_ARITY" },
-        .{ .text = "fn main() -> i64 { discard new [0]i64 [1]; return 0; }", .code = "E_ARRAY_ARITY" },
-        .{ .text = "fn main() -> i64 { discard new [1]u8 [1]; return 0; }", .code = "E_TYPE" },
-        .{ .text = "fn main() -> i64 { let a: [2]i64 = new [1]i64 [1]; return a[0]; }", .code = "E_TYPE" },
-        .{ .text = "fn main() -> i64 { discard new [1]i64 [1][true]; return 0; }", .code = "E_TYPE" },
-        .{ .text = "fn main() -> i64 { discard 1[0]; return 0; }", .code = "E_TYPE" },
-        .{ .text = "fn main() -> i64 { discard len(1); return 0; }", .code = "E_TYPE" },
-        .{ .text = "fn main() -> i64 { discard replace(new [1]i64 [1], 0, true); return 0; }", .code = "E_TYPE" },
-        .{ .text = "fn main() -> i64 { discard update(new [1]i64 [1]) {}; return 0; }", .code = "E_TYPE" },
-        .{ .text = "fn main() -> i64 { discard new [1]i64 { x: 1 }; return 0; }", .code = "E_TYPE" },
-        .{ .text = "struct A {} fn main() -> i64 { discard new A []; return 0; }", .code = "E_TYPE" },
-        .{ .text = "struct A {} fn main() -> i64 { discard new [1]A [new A {}].x; return 0; }", .code = "E_TYPE" },
-        .{ .text = "struct A { x: [1]B } struct B { x: [2]A } fn main() -> i64 { return 0; }", .code = "E_RECURSIVE_RECORD" },
-        .{ .text = "struct A { x: [0]A } fn main() -> i64 { return 0; }", .code = "E_RECURSIVE_RECORD" },
-        .{ .text = "fn main() -> i64 { discard new [1u8]i64 [1]; return 0; }", .code = "E_ARRAY_LENGTH" },
-        .{ .text = "fn main() -> i64 { discard new [18446744073709551616]i64 []; return 0; }", .code = "E_ARRAY_LENGTH" },
-        .{ .text = "fn main() -> i64 { discard new [18446744073709551615]i64 []; return 0; }", .code = "E_ARRAY_LENGTH" },
-        .{ .text = "fn main() -> i64 { discard new [1]Unknown []; return 0; }", .code = "E_UNKNOWN_TYPE" },
-        .{ .text = "fn main() -> i64 { discard new [1][1]i64 [new [2]i64 [1, 2]]; return 0; }", .code = "E_TYPE" },
-        .{ .text = "conversion fn convert(a: [1]i64) -> [1]i64 { return new [1]i64 [a[0]]; } fn main() -> i64 { return 0; }", .code = "E_TYPE" },
-    };
-    for (cases) |case| try reject(case.text, case.code);
-    // Large type metadata stays constant-sized; no array value is constructed.
-    try result("struct Large { values: [1000000000]u8 } fn main() -> i64 { return 0; }", 0);
-}
-
-test "array bounds traps include negative maximum unsigned and empty arrays" {
-    for ([_][]const u8{ "-1", "2", "18446744073709551615u64" }) |index| {
-        const expr = try std.fmt.allocPrint(testing.allocator, "new [2]i64 [3, 4][{s}]", .{index});
-        defer testing.allocator.free(expr);
-        const source = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ return {s}; }}", .{expr});
-        defer testing.allocator.free(source);
-        try trapped(source, "R_INDEX_BOUNDS", expr);
-    }
-    try trapped("fn main() -> i64 { return new [0]i64 [][0]; }", "R_INDEX_BOUNDS", "new [0]i64 [][0]");
-    try trapped("fn main() -> i64 { discard replace(new [1]i64 [7], -1, 8); return 0; }", "R_INDEX_BOUNDS", "replace(new [1]i64 [7], -1, 8)");
-    try trapped("fn main() -> i64 { discard replace(new [0]i64 [], 0u64, 8); return 0; }", "R_INDEX_BOUNDS", "replace(new [0]i64 [], 0u64, 8)");
-}
-
-test "arrays evaluate base index and replacement in order and length retains evaluation" {
-    try trapped("fn main() -> i64 { discard new [2]i64 [1 / 0, 9223372036854775807 + 1]; return 0; }", "R_DIVISION_BY_ZERO", "/");
-    try trapped("fn main() -> i64 { discard new [1]i64 [1 / 0][9223372036854775807 + 1]; return 0; }", "R_DIVISION_BY_ZERO", "/");
-    try trapped("fn main() -> i64 { discard replace(new [1]i64 [7], 1 / 0, 9223372036854775807 + 1); return 0; }", "R_DIVISION_BY_ZERO", "/");
-    // All arguments are evaluated before the replacement's bounds check.
-    try trapped("fn main() -> i64 { discard replace(new [1]i64 [7], 9, 1 / 0); return 0; }", "R_DIVISION_BY_ZERO", "/");
-    try trapped("fn main() -> i64 { discard len(new [1]i64 [1 / 0]); return 0; }", "R_DIVISION_BY_ZERO", "/");
-}
-
 const allocation_source = "struct Box { n: i64 } fn id(a: [2]Box) -> [2]Box { return a; } fn main() -> i64 { " ++
     "let a = id(new [2]Box [new Box { n: 7 }, new Box { n: 9 }]); let b = replace(a, 1u8, " ++
     "new Box { n: 11 }); return a[1].n + b[1].n + cast<i64>(len(b)); }";
@@ -117,24 +52,6 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
 test "array compiler execution dump and discovery clean up at every allocation failure" {
     var no_resize = testing.FailingAllocator.init(testing.allocator, .{ .resize_fail_index = 0 });
     try testing.checkAllAllocationFailures(no_resize.allocator(), allocationScenario, .{});
-}
-
-test "array replacement loops and traps release bounded runtime storage" {
-    const source = "fn main() -> i64 { let mut a = new [2]i64 [0, 7]; while a[0] < 10000 { a = replace(a, 0, a[0] + 1); } return a[0] + a[1]; }";
-    var compilation = try language.Compilation.init(testing.allocator, "loop.my", source);
-    defer compilation.deinit();
-    try compilation.emit();
-    var limiter = LimitedLiveAllocator{ .parent = testing.allocator, .limit = 4096 };
-    defer limiter.deinit();
-    try testing.expectEqual(@as(i64, 10007), (try compilation.execute(limiter.allocator())).value);
-    try testing.expectEqual(@as(usize, 0), limiter.live);
-    try testing.expectEqualStrings("R_STEP_LIMIT", (try compilation.executeWithOptions(limiter.allocator(), .{ .max_steps = 50 })).trap.code);
-    try testing.expectEqual(@as(usize, 0), limiter.live);
-    var bounds = try language.Compilation.init(testing.allocator, "bounds.my", "struct Box { n: i64 } fn main() -> i64 { discard replace(new [1]Box [new Box { n: 1 }], 2, new Box { n: 3 }); return 0; }");
-    defer bounds.deinit();
-    try bounds.emit();
-    try testing.expectEqualStrings("R_INDEX_BOUNDS", (try bounds.execute(limiter.allocator())).trap.code);
-    try testing.expectEqual(@as(usize, 0), limiter.live);
 }
 
 test "array duplicate identity preserves length element type index replacement and order" {

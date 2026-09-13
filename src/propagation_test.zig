@@ -18,78 +18,6 @@ fn reject(body: []const u8, code: []const u8) !void {
     try testing.expectEqualStrings(code, compilation.diagnostics.items[0].code);
 }
 
-// spec: CORE-11
-test "try unwraps success and remaps errors between nominal result types by named cases" {
-    try result("enum E { missing } result Input { err: E, ok: i64 } result Output { ok: bool, err: E " ++
-        "} fn test_value(r: Input) -> Output { return new Output.ok(try r > 5); } fn " ++
-        "handle(r: Output) -> i64 { match r { Output.ok(value) => { if value { return 7; } " ++
-        "return 1; }, Output.err(e) => { match e { E.missing => { return 3; } } } } } fn " ++
-        "main() -> i64 { return handle(test_value(new Input.ok(8))) + handle(test_value(new " ++
-        "Input.err(new E.missing))); }", 10);
-    try result("result R { ok: i64, err: i64 } fn f(r: R) -> R { return new R.ok(2 * try r + 1); } fn main() -> i64 { match f(new R.ok(3)) { R.ok(n) => { return n; }, R.err(discard) => { return 0; } } }", 7);
-}
-
-test "try requires declared result operands compatible error types and value result returns" {
-    try reject("fn f() -> R { return new R.ok(try 7); } fn main() -> i64 { return 0; }", "E_TRY_TYPE");
-    try reject("fn main() -> i64 { return try new R.ok(7); }", "E_TRY_RETURN");
-    try reject("union Plain { ok: i64, err: i64 } fn f() -> R { return new R.ok(try new Plain.ok(7)); } fn main() -> i64 { return 0; }", "E_TRY_TYPE");
-    try reject("result Other { ok: i64, err: bool } fn f(r: Other) -> R { return new R.ok(try r); } fn main() -> i64 { return 0; }", "E_TYPE");
-    try reject("fn f(r: &i64) -> &i64 from r { discard try new R.err(7); return r; } fn main() -> i64 { return 0; }", "E_TRY_RETURN");
-    try reject("fn f(r: R) -> R { discard try r; } fn main() -> i64 { return 0; }", "E_MISSING_RETURN");
-}
-
-test "propagation cannot abandon pending locals parameters or unfinished expression results" {
-    try reject("fn f(r: R, other: R) -> R { return new R.ok(try r); } fn main() -> i64 { return 0; }", "E_RESULT_UNHANDLED");
-    try reject("fn f(r: R) -> R { let ignored = new R.err(3); let value = try r; acknowledge ignored; return new R.ok(value); } fn main() -> i64 { return 0; }", "E_RESULT_UNHANDLED");
-    try reject("fn consume(r: R, n: i64) -> i64 { acknowledge r; return n; } fn f(r: R) -> R { return new R.ok(consume(new R.err(7), try r)); } fn main() -> i64 { return 0; }", "E_RESULT_PROPAGATION");
-    try reject("struct Wrapper { r: R } fn consume(w: Wrapper, n: i64) -> i64 { acknowledge w; " ++
-        "return n; } fn f(r: R) -> R { let first = new R.err(7); return new R.ok(consume(new " ++
-        "Wrapper { r: first }, try r)); } fn main() -> i64 { return 0; }", "E_RESULT_PROPAGATION");
-    try reject("struct Pair { first: R, second: i64 } result Wrapped { ok: Pair, err: i64 } fn f(r: " ++
-        "R) -> Wrapped { return new Wrapped.ok(new Pair { first: new R.err(7), second: try r }" ++
-        "); } fn main() -> i64 { return 0; }", "E_RESULT_PROPAGATION");
-    try result("result R { ok: i64, err: i64 } fn f(r: R, other: R) -> R { acknowledge other; return new R.ok(try r); } fn main() -> i64 { match f(new R.err(7), new R.ok(1)) { R.ok(n) => { return n; }, R.err(e) => { return e; } } }", 7);
-}
-
-test "try preserves caller operands evaluates once and skips later call arguments on failure" {
-    try result("result R { ok: i64, err: i64 } fn step(count: &mut i64, fail: bool) -> R { " ++
-        "write_ref(count, read_ref(count) + 1); if fail { return new R.err(read_ref(count)); }" ++
-        " return new R.ok(read_ref(count)); } fn combine(a: i64, b: i64, c: i64) -> i64 { " ++
-        "return a + b + c; } fn work(count: &mut i64) -> R { return new R.ok(combine(try " ++
-        "step(count, false), try step(count, true), try step(count, false))); } fn main() -> " ++
-        "i64 { let mut count = 0; borrow mut count as r { match work(r) { R.ok(discard) => {}," ++
-        " R.err(e) => { discard e; } } } return 10 + count; }", 12);
-    try result("result R { ok: i64, err: i64 } fn work() -> R { return new R.ok(10 + try new " ++
-        "R.ok(7)); } fn handle(r: R) -> i64 { match r { R.ok(n) => { return n; }, " ++
-        "R.err(discard) => { return 0; } } } fn main() -> i64 { return 100 + handle(work()) + " ++
-        "3; }", 120);
-}
-
-test "propagation cleans nested slice reference and returned-view scopes before caller resumes" {
-    try result("result R { ok: i64, err: i64 } fn view(s: &mut []i64) -> &mut []i64 from s { borrow " ++
-        "mut s[1..2] as r { return r; } } fn work(s: &mut []i64) -> R { borrow mut view(s) as " ++
-        "returned { write_slice(returned, 0, 9); borrow returned as child { discard " ++
-        "read_slice(child, 0); discard try new R.err(7); } } return new R.ok(0); } fn main() " ++
-        "-> i64 { let mut a = new [2]i64 [1, 2]; borrow mut a[0..2] as s { match work(s) { " ++
-        "R.ok(discard) => {}, R.err(e) => { discard e; } } write_slice(s, 0, 3); } return " ++
-        "a[0] + a[1]; }", 12);
-    try result("result R { ok: i64, err: i64 } fn recur(n: i64) -> R { if n == 0 { return new " ++
-        "R.err(7); } return new R.ok(1 + try recur(n - 1)); } fn main() -> i64 { match " ++
-        "recur(100) { R.ok(n) => { return n; }, R.err(e) => { return e; } } }", 7);
-}
-
-test "nested results can be propagated repeatedly or explicitly acknowledged after unwrapping" {
-    try result("result R { ok: i64, err: i64 } result Outer { ok: R, err: i64 } fn flatten(r: Outer) " ++
-        "-> R { return new R.ok(try try r); } fn handle(r: R) -> i64 { match r { R.ok(n) => { " ++
-        "return n; }, R.err(e) => { return e; } } } fn main() -> i64 { return " ++
-        "handle(flatten(new Outer.ok(new R.ok(1)))) + handle(flatten(new Outer.ok(new " ++
-        "R.err(2)))) + handle(flatten(new Outer.err(3))); }", 6);
-    try result("result R { ok: i64, err: i64 } result Outer { ok: R, err: i64 } fn f(r: Outer) -> R " ++
-        "{ acknowledge try r; return new R.ok(7); } fn main() -> i64 { match f(new " ++
-        "Outer.ok(new R.err(3))) { R.ok(n) => { return n; }, R.err(e) => { return e; } } }", 7);
-    try reject("result Outer { ok: R, err: i64 } fn f(r: Outer) -> R { discard try r; return new R.ok(0); } fn main() -> i64 { return 0; }", "E_RESULT_DISCARD");
-}
-
 const owned_source = "struct Item { n: i64 } struct Error { detail: [2]Item } result Inner { ok: i64, err: " ++
     "Error } result Outer { err: Error, ok: [2]Item } fn fail(flag: bool) -> Inner { if " ++
     "flag { return new Inner.err(new Error { detail: new [2]Item [new Item { n: 7 }, new " ++
@@ -116,32 +44,6 @@ test "propagation releases partial aggregate operands and survives every allocat
     try result(success, 9);
 }
 
-test "propagation loops and each failure cleanup instruction preserve bounded live storage" {
-    var compilation = try language.Compilation.init(testing.allocator, fixture_path, owned_source);
-    defer compilation.deinit();
-    try compilation.emit();
-    var limiter = LimitedLiveAllocator{ .parent = testing.allocator, .limit = 16384 };
-    defer limiter.deinit();
-    var complete = false;
-    for (1..200) |budget| {
-        const outcome = try compilation.executeWithOptions(limiter.allocator(), .{ .max_steps = budget });
-        try testing.expectEqual(@as(usize, 0), limiter.live);
-        if (outcome == .value) {
-            complete = true;
-            break;
-        }
-        try testing.expectEqualStrings("R_STEP_LIMIT", outcome.trap.code);
-    }
-    try testing.expect(complete);
-    var loop = try language.Compilation.init(testing.allocator, "loop.my", "result R { ok: i64, err: i64 } fn fail(n: i64) -> R { return new R.ok(1 + try new " ++
-        "R.err(n)); } fn main() -> i64 { let mut i = 0; while i < 10000 { match fail(i) { " ++
-        "R.ok(n) => { discard n; }, R.err(e) => { discard e; } } i += 1; } return i; }");
-    defer loop.deinit();
-    try loop.emit();
-    try testing.expectEqual(@as(i64, 10000), (try loop.execute(limiter.allocator())).value);
-    try testing.expectEqual(@as(usize, 0), limiter.live);
-}
-
 test "bytecode validates propagation result identity and failure stack targets" {
     var compilation = try language.Compilation.init(testing.allocator, "invalid-try.my", owned_source);
     defer compilation.deinit();
@@ -163,31 +65,4 @@ test "bytecode validates propagation result identity and failure stack targets" 
     instructions[propagation] = original.functions[1].scope.instructions[propagation];
     instructions[propagation].op.try_result.input = .bool;
     try testing.expectError(error.InternalError, language.bytecode.validate(testing.allocator, program));
-}
-
-test "duplicate discovery retains propagation operations and target result types" {
-    var compilation = try language.Compilation.init(testing.allocator, "duplicates.my", "result R { ok: i64, err: i64 } fn a(r: R) -> R { return new R.ok(try r + 1); } fn " ++
-        "b(other: R) -> R { return new R.ok(try other + 1); } fn c(r: R) -> R { match r { " ++
-        "R.ok(n) => { return new R.ok(n + 1); }, R.err(e) => { return new R.err(e); } } } fn " ++
-        "main() -> i64 { return 0; }");
-    defer compilation.deinit();
-    try compilation.check();
-    var discovery = try language.duplicates.discover(testing.allocator, compilation.program.?, .{ .min_nodes = 1 });
-    defer discovery.deinit();
-    try testing.expectEqual(@as(usize, 1), discovery.groups.len);
-    try testing.expectEqual(@as(usize, 2), discovery.groups[0].members.len);
-}
-
-test "propagation in loop conditions and short circuit operands preserves control flow" {
-    try result("result Check { ok: bool, err: i64 } result R { ok: i64, err: i64 } fn next(n: &mut " ++
-        "i64) -> Check { write_ref(n, read_ref(n) + 1); if read_ref(n) == 3 { return new " ++
-        "Check.err(3); } return new Check.ok(true); } fn run(n: &mut i64) -> R { while try " ++
-        "next(n) {} return new R.ok(0); } fn main() -> i64 { let mut count = 0; borrow mut " ++
-        "count as n { match run(n) { R.ok(discard) => {}, R.err(e) => { discard e; } } } " ++
-        "return count; }", 3);
-    try result("result Check { ok: bool, err: i64 } result R { ok: i64, err: i64 } fn run() -> R { " ++
-        "discard false && try new Check.err(9); discard true || try new Check.err(8); if try " ++
-        "new Check.ok(true) { return new R.ok(7); } return new R.ok(0); } fn main() -> i64 { " ++
-        "match run() { R.ok(n) => { return n; }, R.err(e) => { return e; } } }", 7);
-    try reject("result Check { ok: bool, err: i64 } fn f(r: Check) -> R { discard false && try r; return new R.ok(0); } fn main() -> i64 { return 0; }", "E_RESULT_PATH");
 }

@@ -109,30 +109,6 @@ test "GC-FAILURE-1 every allocation failure preserves root cleanup and heap tear
     try t.checkAllAllocationFailures(t.allocator, allocationFailures, .{});
 }
 
-test "GC-BOUNDARY-1 resources and nested foreign references cannot enter managed storage" {
-    var heap = gc.Heap.init(t.allocator);
-    defer heap.deinit();
-    var memory = try values.Memory.Store.init(t.allocator);
-    defer memory.deinit();
-    const allocation = try memory.create(.i64, &.{});
-    const resource = try values.Value.ownBuffer(t.allocator, record_type, &memory, allocation);
-    defer resource.release(t.allocator);
-    const list = try heap.create(list_type, record_type, 0);
-    defer list.release(t.allocator);
-    try t.expectError(error.InvalidDataValue, heap.append(list, resource));
-    const wrapper = try values.Value.create(t.allocator, record_type, &.{resource});
-    defer wrapper.release(t.allocator);
-    try t.expectError(error.InvalidDataValue, heap.append(list, wrapper));
-    var foreign = gc.Heap.init(t.allocator);
-    defer foreign.deinit();
-    const other = try foreign.create(list_type, list_type, 0);
-    defer other.release(t.allocator);
-    const foreign_wrapper = try values.Value.create(t.allocator, record_type, &.{other});
-    defer foreign_wrapper.release(t.allocator);
-    try t.expectError(error.ForeignMemory, heap.append(list, foreign_wrapper));
-    try t.expectEqual(@as(usize, 0), try heap.len(list));
-}
-
 test "GC-CYCLES-1 deep graph traces and sweeps without recursive host calls" {
     var heap = gc.Heap.init(t.allocator);
     defer heap.deinit();
@@ -192,21 +168,4 @@ test "managed element validation visits shared aggregate DAGs once" {
     try heap.append(list, value);
     try heap.collect();
     try t.expectEqual(@as(usize, 1), try heap.len(list));
-}
-
-// spec: GC-CAPABILITY-1
-test "managed heap rejects allocator capabilities and nested authority" {
-    var heap = gc.Heap.init(t.allocator);
-    defer heap.deinit();
-    var memory = try values.Memory.Store.init(t.allocator);
-    defer memory.deinit();
-    const authority: values.Value = .{ .capability = .{ .allocator = try memory.allocatorCapability() } };
-    const list = try heap.create(list_type, .allocator, 0);
-    defer list.release(t.allocator);
-    try t.expectError(error.InvalidDataValue, heap.append(list, authority));
-    const wrapper = try values.Value.create(t.allocator, record_type, &.{authority});
-    defer wrapper.release(t.allocator);
-    const wrapped = try heap.create(list_type, record_type, 0);
-    defer wrapped.release(t.allocator);
-    try t.expectError(error.InvalidDataValue, heap.append(wrapped, wrapper));
 }

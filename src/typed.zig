@@ -355,4 +355,3 @@ fn providerFields(schema: Record, records: []const Record, operation: provider_c
     }
     return slots;
 }
-

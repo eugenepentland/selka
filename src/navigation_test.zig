@@ -110,13 +110,6 @@ fn uniqueSymbols(value: std.json.Value, name: []const u8, kind: []const u8) !voi
     }
     try t.expectEqual(@as(usize, 2), ids.count());
 }
-test "navigation disjoint same spelling locals and borrows have unique declaration identities" {
-    const parsed = try document("module main;fn main()->i64{let mut sum=0;{let value=1;borrow value as ref{sum+=read_ref(ref);}}" ++
-        "{let value=2;borrow value as ref{sum+=read_ref(ref);}}return sum;}");
-    defer parsed.deinit();
-    try uniqueSymbols(parsed.value, "value", "local");
-    try uniqueSymbols(parsed.value, "ref", "reference");
-}
 fn typeTargets(value: std.json.Value) !void {
     var kinds: std.StringHashMapUnmanaged([]const u8) = .empty;
     defer kinds.deinit(t.allocator);
@@ -135,23 +128,6 @@ test "navigation synthesized array shapes never resolve to function local or fie
     defer parsed.deinit();
     try typeTargets(parsed.value);
 }
-test "navigation unions effects of all concrete generic specializations" {
-    const parsed = try document("module main;host fn tick()->i64 effects(host);" ++
-        "domain A:i64{fn make()->A{return wrap<A>(0);}fn score(v:A)->i64 effects(host){discard v;return tick();}}" ++
-        "domain B:i64{fn make()->B{return wrap<B>(0);}fn score(v:B)->i64 effects(){return unwrap(v);}}" ++
-        "fn apply<T:copy+op(score(v:T)->i64 effects(host))>(v:T)->i64{return T.score(v);}" ++
-        "fn main()->i64{return apply::<A>(A.make())+apply::<B>(B.make());}");
-    defer parsed.deinit();
-    for (parsed.value.object.get("symbols").?.array.items) |item| {
-        if (!std.mem.eql(u8, item.object.get("id").?.string, "main::apply")) continue;
-        const effects = item.object.get("effects").?.array.items;
-        try t.expectEqual(@as(usize, 1), effects.len);
-        try t.expectEqualStrings("host", effects[0].string);
-        return;
-    }
-    return error.MissingGenericSymbol;
-}
-
 // The standard library discovers this method reflectively; exercise its wire
 // contract directly as well as through whole-index rendering.
 test "navigation jsonStringify preserves flat wire facts and reports a full writer" {

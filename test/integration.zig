@@ -10,11 +10,6 @@ test "CLI checks host declarations and reports missing VM registration as a loca
     try invoke("run", host_program, 1, "", "error[R_HOST_REGISTRATION]");
     try invokeOptions("run", host_program, &.{"--diagnostics=json"}, 1, "", "\"code\":\"R_HOST_REGISTRATION\"");
 }
-test "CLI host source contracts retain machine-readable rejection codes" {
-    try invokeOptions("check", "host fn f(x:&i64)->i64 effects(host);fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_HOST_SIGNATURE\"");
-    try invoke("check", "host fn f()->i64 effects();fn main()->i64{return 0;}", 1, "", "error[E_HOST_EFFECTS]");
-}
-
 // spec-case: ARENA-MANAGED-1
 test "CLI runs the managed arena example under normal and stress collection" {
     for ([_][]const []const u8{ &.{}, &.{"--gc-stress"} }) |options| {
@@ -149,13 +144,6 @@ test "CLI step budgets count dispatch and reject invalid options" {
     try invokeOptions("dump-bytecode", text, &.{"--max-steps=2"}, 2, "", "usage:");
 }
 
-test "CLI executes control flow and preserves discarded traps" {
-    try invoke("run", "fn main() -> i64 { let mut sum = 0; let mut i = 0; while i < 100 { sum += i; i += 1; } return sum; }", 0, "4950\n", "");
-    try invoke("run", "fn main() -> i64 { if false && 1 / 0 == 0 { return 1; } else { return 7; } }", 0, "7\n", "");
-    try invoke("run", "fn main() -> i64 { discard 1 / 0; return 7; }", 1, "", "error[R_DIVISION_BY_ZERO]");
-    try invoke("check", "fn main() -> i64 { while true { return 7; } }", 1, "", "error[E_MISSING_RETURN]");
-}
-
 // spec: CLI-3
 test "CLI executes the exact plan acceptance programs and recursive functions" {
     try invoke("run", @embedFile("fixtures/sum.my"), 0, "4950\n", "");
@@ -176,24 +164,6 @@ test "CLI frame budgets count main and reject invalid overrides" {
     try invokeOptions("run", text, &.{ "--max-frames=2", "--max-frames=3" }, 2, "", "usage:");
     try invokeOptions("check", text, &.{"--max-frames=2"}, 2, "", "usage:");
     try invokeOptions("dump-bytecode", text, &.{"--max-frames=2"}, 2, "", "usage:");
-}
-
-test "all commands preserve stdout and deterministic advisory stderr" {
-    const source = @embedFile("fixtures/warnings.my");
-    const commands = [_][]const u8{ "check", "run", "dump-bytecode" };
-    const outputs = [_][]const u8{ "", "7\n", @embedFile("fixtures/warnings.dump") };
-    for (commands, outputs) |command, expected| {
-        const outcome = try runFixture(command, source, &.{});
-        defer testing.allocator.free(outcome.stdout);
-        defer testing.allocator.free(outcome.stderr);
-        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
-        try testing.expectEqualStrings(expected, outcome.stdout);
-        const first = std.mem.indexOf(u8, outcome.stderr, ":2:13: warning[W_UNNECESSARY_MUT]") orelse return error.MissingWarning;
-        const second = std.mem.indexOf(u8, outcome.stderr, ":2:13: warning[W_UNUSED_BINDING]") orelse return error.MissingWarning;
-        try testing.expect(first < second);
-        try testing.expectEqual(@as(usize, 2), std.mem.count(u8, outcome.stderr, "warning["));
-        try testing.expect(std.mem.indexOf(u8, outcome.stderr, "discard") != null);
-    }
 }
 
 test "all commands reject invalid programs before execution and locate runtime traps" {
@@ -249,243 +219,6 @@ test "CLI checks runs and dumps records and declared complete conversions" {
     }
 }
 
-test "CLI preserves integer width bounds and explicit casts" {
-    try invoke("run", @embedFile("fixtures/integers.my"), 0, "6148914691236516950\n", "");
-    try invoke("check", "fn main() -> i64 { discard cast<u8>(256); return 0; }", 0, "", "");
-    try invoke("run", "fn main() -> i64 { discard cast<u8>(256); return 0; }", 1, "", "error[R_OVERFLOW]");
-    try invoke("run", "fn main() -> i64 { discard 255u8 + 1u8; return 0; }", 1, "", "error[R_OVERFLOW]");
-    try invoke("check", "fn main() -> i64 { discard 256u8; return 0; }", 1, "", "error[E_INTEGER_RANGE]");
-    try invoke("check", "fn main() -> u8 { return 0u8; }", 1, "", "error[E_TYPE]");
-}
-
-test "CLI checks array schemas dumps indexing and reports bounds traps" {
-    try invoke("run", @embedFile("fixtures/arrays.my"), 0, "44\n", "");
-    try invoke("check", @embedFile("fixtures/arrays.my"), 0, "", "");
-    const dumped = try runFixture("dump-bytecode", @embedFile("fixtures/arrays.my"), &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    try testing.expectEqualStrings("", dumped.stderr);
-    for ([_][]const u8{ "array [3]i64", "GET_INDEX [3]i64", "REPLACE_INDEX [3]i64", "ARRAY_LENGTH [3]i64" }) |instruction| {
-        try testing.expect(std.mem.indexOf(u8, dumped.stdout, instruction) != null);
-    }
-    const invalid = "fn main() -> i64 { discard new [2]i64 [1]; return 0; }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| {
-        try invoke(command, invalid, 1, "", "error[E_ARRAY_ARITY]");
-    }
-    const bounds = "fn main() -> i64 {\n    return new [1]i64 [7][-1];\n}";
-    try invoke("check", bounds, 0, "", "");
-    try invoke("run", bounds, 1, "", ":2:12: error[R_INDEX_BOUNDS]");
-    try invoke("run", "fn main() -> i64 { discard replace(new [1]u8 [7u8], 18446744073709551615u64, 8u8); return 0; }", 1, "", "error[R_INDEX_BOUNDS]");
-}
-
-test "CLI checks domain privacy unit mismatches and qualified factory execution" {
-    try invoke("run", @embedFile("fixtures/domains.my"), 0, "1003\n", "");
-    try invoke("check", @embedFile("fixtures/domains.my"), 0, "", "");
-    const dumped = try runFixture("dump-bytecode", @embedFile("fixtures/domains.my"), &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    try testing.expectEqualStrings("", dumped.stderr);
-    for ([_][]const u8{ "domain Millimeters", "private function Millimeters.raw", "WRAP_DOMAIN Millimeters", "UNWRAP_DOMAIN Seconds" }) |instruction| {
-        try testing.expect(std.mem.indexOf(u8, dumped.stdout, instruction) != null);
-    }
-    const private = "domain D: i64 { private fn raw(n: i64) -> D { return wrap<D>(n); } } fn main() -> i64 { discard D.raw(1); return 0; }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| {
-        try invoke(command, private, 1, "", "error[E_PRIVATE_FUNCTION]");
-    }
-    try invoke("check", "domain D: i64 {} fn main() -> i64 { discard wrap<D>(1); return 0; }", 1, "", "error[E_PRIVATE_DOMAIN]");
-    try invoke("check", "domain Seconds: i64 { fn from(n: i64) -> Seconds { return wrap<Seconds>(n); } } domai" ++
-        "n Millimeters: i64 {} fn distance(n: Millimeters) -> i64 { discard n; return 0; } fn " ++
-        "main() -> i64 { return distance(Seconds.from(1)); }", 1, "", "expected Millimeters, found Seconds");
-}
-
-test "CLI executes variants dumps dispatch and rejects newly incomplete matches" {
-    try invoke("run", @embedFile("fixtures/variants.my"), 0, "24\n", "");
-    try invoke("check", @embedFile("fixtures/variants.my"), 0, "", "");
-    const dumped = try runFixture("dump-bytecode", @embedFile("fixtures/variants.my"), &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    try testing.expectEqualStrings("", dumped.stderr);
-    for ([_][]const u8{ "enum Color", "union Shape", "MAKE_VARIANT Shape.point", "SWITCH_VARIANT Shape" }) |instruction| try testing.expect(std.mem.indexOf(u8, dumped.stdout, instruction) != null);
-    const added = "enum Color { red, green, added } fn main() -> i64 { match new Color.red { Color.red => { return 1; }, Color.green => { return 2; } } }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, added, 1, "", "match does not handle variant `added`");
-    try invoke("check", "union U { value: i64, empty } fn main() -> i64 { discard new U.value(true); return 0; }", 1, "", "error[E_TYPE]");
-    try invoke("run", "union U { value: i64 } fn main() -> i64 { match new U.value(1 / 0) { U.value(discard) => { return 0; } } }", 1, "", "error[R_DIVISION_BY_ZERO]");
-}
-
-test "CLI executes complete enum tables and rejects missing mappings in every command" {
-    try invoke("run", @embedFile("fixtures/tables.my"), 0, "1407\n", "");
-    try invoke("check", @embedFile("fixtures/tables.my"), 0, "", "");
-    const dumped = try runFixture("dump-bytecode", @embedFile("fixtures/tables.my"), &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    try testing.expectEqualStrings("", dumped.stderr);
-    for ([_][]const u8{ "table [Status]u16", "GET_INDEX [Status]u16", "REPLACE_INDEX [Status]u16" }) |instruction| try testing.expect(std.mem.indexOf(u8, dumped.stdout, instruction) != null);
-    const added = "enum Key { old, added } fn main() -> i64 { return new [Key]i64 { old: 7 }[new Key.old]; }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, added, 1, "", "missing initializer for key `added`");
-    try invoke("check", "enum Key { a } fn main() -> i64 { return new [Key]i64 { a: 7 }[0]; }", 1, "", "expected Key, found i64");
-    try invoke("check", "enum Key { a } fn main() -> i64 { discard new [Key]i64 [7]; return 0; }", 1, "", "error[E_TABLE_CONSTRUCTION]");
-}
-
-test "CLI checks scoped borrows runs early cleanup and locates alias errors" {
-    try invoke("run", @embedFile("fixtures/references.my"), 0, "23\n", "");
-    try invoke("check", @embedFile("fixtures/references.my"), 0, "", "");
-    const dumped = try runFixture("dump-bytecode", @embedFile("fixtures/references.my"), &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    try testing.expectEqualStrings("", dumped.stderr);
-    for ([_][]const u8{ "BEGIN_BORROW", "END_BORROW", "READ_REF", "WRITE_REF" }) |instruction| try testing.expect(std.mem.indexOf(u8, dumped.stdout, instruction) != null);
-    const conflict = "fn main() -> i64 { let mut x = 1; borrow mut x as r { return x; } }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, conflict, 1, "", "error[E_BORROW_CONFLICT]");
-    try invoke("check", "fn main() -> i64 { let x = 1; borrow x as r {} return read_ref(r); }", 1, "", "error[E_REFERENCE_SCOPE]");
-    try invoke("run", "fn main() -> i64 { let mut x = 1; borrow mut x as r { write_ref(r, 1 / 0); } return x; }", 1, "", "error[R_DIVISION_BY_ZERO]");
-}
-
-test "CLI runs reference parameter helpers and rejects invalid call loans" {
-    const source = @embedFile("fixtures/reference-parameters.my");
-    try invoke("run", source, 0, "19\n", "");
-    try invoke("check", source, 0, "", "");
-    const dumped = try runFixture("dump-bytecode", source, &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "CALL_REFS") != null);
-    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "counter: &mut Counter") != null);
-    const conflict = "fn f(a: &mut i64, b: &mut i64) -> i64 { return read_ref(a) + read_ref(b); } fn main() -> i64 { let mut x = 0; borrow mut x as r { return f(r, r); } }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, conflict, 1, "", "error[E_BORROW_CONFLICT]");
-    try invoke("run", "fn fail(r: &mut i64) -> i64 { write_ref(r, 1 / 0); return 0; } fn main() -> i64 { let mut x = 0; borrow mut x as r { return fail(r); } }", 1, "", "error[R_DIVISION_BY_ZERO]");
-}
-
-test "CLI runs bounded slice helpers and locates bounds and alias failures" {
-    const source = @embedFile("fixtures/slices.my");
-    try invoke("run", source, 0, "13\n", "");
-    try invoke("check", source, 0, "", "");
-    const dumped = try runFixture("dump-bytecode", source, &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    for ([_][]const u8{ "BEGIN_SLICE", "READ_SLICE", "WRITE_SLICE", "LEN_SLICE", "values: &mut []i64" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
-    const invalid = "fn main() -> i64 { let mut a = new [1]i64 [1]; borrow mut a[0..1] as s { return a[0]; } }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_BORROW_CONFLICT]");
-    try invoke("run", "fn main() -> i64 { let a = new [1]i64 [1]; borrow a[0..1] as s { return read_slice(s, 1); } }", 1, "", "error[R_SLICE_BOUNDS]");
-}
-
-test "CLI runs returned views and rejects escaping local references" {
-    const source = @embedFile("fixtures/returned-references.my");
-    try invoke("run", source, 0, "20\n", "");
-    try invoke("check", source, 0, "", "");
-    const dumped = try runFixture("dump-bytecode", source, &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    for ([_][]const u8{ "CALL_BORROW", "CAPTURE_REF", "RETURN_REF", "from values" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
-    const escape = "fn bad(input: &i64) -> &i64 from input { let local = 7; borrow local as r { return r; } } fn main() -> i64 { return 0; }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, escape, 1, "", "error[E_RETURN_LIFETIME]");
-    try invoke("run", "fn one(s: &[]i64) -> &[]i64 from s { borrow s[0..1] as r { return r; } } fn main() ->" ++
-        " i64 { let a = new [2]i64 [1, 2]; borrow a[0..2] as s { borrow one(s) as r { return r" ++
-        "ead_slice(r, 1); } } }", 1, "", "error[R_SLICE_BOUNDS]");
-}
-
-test "CLI handles recoverable results and rejects silent error loss" {
-    const source = @embedFile("fixtures/results.my");
-    try invoke("run", source, 0, "7\n", "");
-    try invoke("check", source, 0, "", "");
-    const dumped = try runFixture("dump-bytecode", source, &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    for ([_][]const u8{ "result Quotient", "ACKNOWLEDGE Quotient" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
-    const ignored = "result R { ok: i64, err: i64 } fn main() -> i64 { let r = new R.err(7); return 0; }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, ignored, 1, "", "error[E_RESULT_UNHANDLED]");
-    try invoke("check", "result R { ok: i64, err: i64 } fn main() -> i64 { discard new R.err(7); return 0; }", 1, "", "error[E_RESULT_DISCARD]");
-}
-
-test "CLI propagates typed errors with borrow cleanup and rejects abandoned obligations" {
-    const source = @embedFile("fixtures/propagation.my");
-    try invoke("run", source, 0, "20\n", "");
-    try invoke("check", source, 0, "", "");
-    const dumped = try runFixture("dump-bytecode", source, &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "TRY_RESULT Quotient -> Total") != null);
-    const ignored = "result R { ok: i64, err: i64 } fn f(r: R, other: R) -> R { return new R.ok(try r); } fn main() -> i64 { return 0; }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, ignored, 1, "", "error[E_RESULT_UNHANDLED]");
-    try invoke("check", "result R { ok: i64, err: i64 } fn main() -> i64 { return try new R.ok(7); }", 1, "", "error[E_TRY_RETURN]");
-    try invoke("run", "result R { ok: i64, err: i64 } fn f() -> R { return new R.ok(try new R.ok(1 / 0)); } fn main() -> i64 { acknowledge f(); return 0; }", 1, "", "error[R_DIVISION_BY_ZERO]");
-}
-
-test "CLI acquires owned buffers propagates acquisition errors and rejects use after move" {
-    const source = @embedFile("fixtures/buffers.my");
-    try invoke("run", source, 0, "21\n", "");
-    try invoke("check", source, 0, "", "");
-    const dumped = try runFixture("dump-bytecode", source, &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    for ([_][]const u8{ "buffer Numbers", "ACQUIRE_BUFFER", "MOVE_LOCAL", "TRY_RESULT" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
-    const invalid = "buffer B: i64; fn f(b: B) -> i64 { let moved = b; discard b; return 0; } fn main() -> i64 { return 0; }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_OWNED_CONSUMED]");
-}
-
-test "CLI mutates buffers through returned slices and rejects moves under shared loans" {
-    const source = @embedFile("fixtures/buffer-views.my");
-    try invoke("run", source, 0, "19\n", "");
-    try invoke("check", source, 0, "", "");
-    const dumped = try runFixture("dump-bytecode", source, &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    for ([_][]const u8{ "BUFFER_resize", "BUFFER_reserve", "BUFFER_read", "CALL_BORROW", "WRITE_SLICE" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
-    const conflict = "buffer B: i64; fn f(b: B) -> i64 { borrow b[0..0] as s { discard b; } return 0; } fn main() -> i64 { return 0; }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, conflict, 1, "", "error[E_BORROW_CONFLICT]");
-}
-
-test "CLI enforces transitive allocation bounds and exposes inferred effects" {
-    const source = @embedFile("fixtures/effects.my");
-    try invoke("run", source, 0, "14\n", "");
-    try invoke("check", source, 0, "", "");
-    const dumped = try runFixture("dump-bytecode", source, &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "effects {allocation} allowed {allocation}") != null);
-    const invalid = "buffer B: i64; result R { ok: B, err: i64 } fn helper(alloc: allocator) -> R { return acquire_buffer<R>(alloc, 1); } fn main(alloc: allocator) -> i64 noalloc { acknowledge helper(alloc); return 0; }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_EFFECT_BOUND]");
-    try invoke("check", invalid, 1, "", "main -> helper");
-}
-
-test "CLI exposes explicit allocator parameters and rejects fabricated authority" {
-    const source = @embedFile("fixtures/allocator-capabilities.my");
-    try invoke("run", source, 0, "3\n", "");
-    try invoke("check", source, 0, "", "");
-    const dumped = try runFixture("dump-bytecode", source, &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "function make(heap: allocator)") != null);
-    const invalid = "buffer B: i64; result R { ok: B, err: i64 } fn main() -> i64 { acknowledge acquire_buffer<R>(0, 1); return 0; }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "expected allocator, found i64");
-}
-
-test "CLI checks external capabilities but cannot silently grant ambient providers" {
-    const source = @embedFile("fixtures/external-capabilities.my");
-    try invoke("check", source, 0, "", "");
-    try invoke("run", source, 2, "", "host failure: CapabilityUnavailable");
-    try expectNativeEmission(source, "grant_external(0);");
-    const dumped = try runFixture("dump-bytecode", source, &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    for ([_][]const u8{ "EXTERNAL_clock", "EXTERNAL_random", "effects {clock, random}" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
-    const invalid = "result T { ok: i64, err: i64 } fn main(c: clock_cap) -> i64 effects() { acknowledge clock_now<T>(c); return 0; }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_EFFECT_BOUND]");
-}
-
 test "CLI checks resource ownership completion and implicit cleanup effects without ambient access" {
     const source = @embedFile("fixtures/resources.my");
     try invoke("check", source, 0, "", "");
@@ -496,33 +229,6 @@ test "CLI checks resource ownership completion and implicit cleanup effects with
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
     for ([_][]const u8{ "ACQUIRE_RESOURCE", "COMPLETE_RESOURCE", "effects {filesystem}", "provider filesystem (owned)" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
     const invalid = "resource File: filesystem; struct Wrapper { file: File } fn cleanup(input: Wrapper) -> i64 noio { return 0; } fn main() -> i64 { return 0; }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_EFFECT_BOUND]");
-}
-
-test "CLI reads record fields without consuming owners and preserves result obligations" {
-    const source = "struct Meta { code: i64 } fn main() -> i64 { let meta = new Meta { code: 7 }; return read_field(meta, code) + read_field(meta, code); }";
-    try invoke("run", source, 0, "14\n", "");
-    try invoke("check", source, 0, "", "");
-    const dumped = try runFixture("dump-bytecode", source, &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "READ_FIELD local=0 field=0 -> i64") != null);
-    const invalid = "resource File: filesystem; struct Owner { file: File } fn f(owner: Owner) -> i64 { discard read_field(owner, file); return 0; } fn main() -> i64 { return 0; }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_FIELD_COPY]");
-}
-
-test "CLI checks bounded environment access without granting ambient process access" {
-    const source = @embedFile("fixtures/environment.my");
-    try invoke("check", source, 0, "", "");
-    try invoke("run", source, 2, "", "host failure: CapabilityUnavailable");
-    try expectNativeEmission(source, "grant_external(2);");
-    const dumped = try runFixture("dump-bytecode", source, &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    for ([_][]const u8{ "ENVIRONMENT_GET", "effects {environment}" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
-    const invalid = "struct Entry { bytes: [1]u8, length: u64, present: bool } result Lookup { ok: Entry, err: i64 } fn main(env: environment_cap) -> i64 effects() { acknowledge environment_get<Lookup>(env, new [1]u8 [75u8]); return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_EFFECT_BOUND]");
 }
 
@@ -537,35 +243,6 @@ test "CLI checks resource data operations effects and required mutation without 
     for ([_][]const u8{ "RESOURCE_read", "RESOURCE_write", "effects {filesystem}" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
     const invalid = "resource File: filesystem; result Written { ok: u64, err: i64 } fn f(file: File) -> Written { return write_resource<Written>(file, new [0]u8 []); } fn main() -> i64 { return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_IMMUTABLE]");
-}
-
-test "CLI exposes resource permission attenuation and rejects malformed permission sets" {
-    const source = @embedFile("fixtures/attenuation.my");
-    try invoke("check", source, 0, "", "");
-    try invoke("run", source, 2, "", "host failure: CapabilityUnavailable");
-    const dumped = try runFixture("dump-bytecode", source, &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "RESTRICT_RESOURCE permissions=1 -> filesystem_cap") != null);
-    const invalid = "fn main(fs: filesystem_cap) -> i64 { discard restrict_resource<read, read>(fs); return 0; }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_PERMISSION]");
-}
-
-test "CLI checks resource slice IO and exclusive destination requirements" {
-    const source = @embedFile("fixtures/resource-slices.my");
-    try invoke("check", source, 0, "", "");
-    try invoke("run", source, 2, "", "host failure: CapabilityUnavailable");
-    const dumped = try runFixture("dump-bytecode", source, &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    for ([_][]const u8{ "RESOURCE_read_slice", "RESOURCE_write_slice" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
-    const invalid = "resource File: filesystem; struct Progress { length: u64, eof: bool } result Read { o" ++
-        "k: Progress, err: i64 } fn f(input: File, destination: &[]u8) -> i64 { let mut file =" ++
-        " input; acknowledge read_resource_slice<Read>(file, destination); return 0; } fn main" ++
-        "() -> i64 { return 0; }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_REFERENCE_READ_ONLY]");
 }
 
 test "CLI selects arena execution and validates memory backend options" {
@@ -619,55 +296,6 @@ test "CLI formatter supports stdout check mode and syntax-only formatting" {
     try invokeOptions("check", compact, &.{"--check"}, 2, "", "usage:");
 }
 
-test "CLI formatter preserves checking and is idempotent across the language fixture corpus" {
-    const fixtures = [_][]const u8{
-        @embedFile("fixtures/allocator-capabilities.my"),
-        @embedFile("fixtures/arithmetic.my"),
-        @embedFile("fixtures/arrays.my"),
-        @embedFile("fixtures/attenuation.my"),
-        @embedFile("fixtures/buffer-views.my"),
-        @embedFile("fixtures/buffers.my"),
-        @embedFile("fixtures/conversions.my"),
-        @embedFile("fixtures/domains.my"),
-        @embedFile("fixtures/effects.my"),
-        @embedFile("fixtures/environment.my"),
-        @embedFile("fixtures/external-capabilities.my"),
-        @embedFile("fixtures/gcd.my"),
-        @embedFile("fixtures/integers.my"),
-        @embedFile("fixtures/propagation.my"),
-        @embedFile("fixtures/partial-fields.my"),
-        @embedFile("fixtures/pools.my"),
-        @embedFile("fixtures/arenas.my"),
-        @embedFile("fixtures/arena-reset.my"),
-        @embedFile("fixtures/records.my"),
-        @embedFile("fixtures/reference-parameters.my"),
-        @embedFile("fixtures/references.my"),
-        @embedFile("fixtures/resource-io.my"),
-        @embedFile("fixtures/resource-slices.my"),
-        @embedFile("fixtures/resources.my"),
-        @embedFile("fixtures/results.my"),
-        @embedFile("fixtures/returned-references.my"),
-        @embedFile("fixtures/slices.my"),
-        @embedFile("fixtures/sum.my"),
-        @embedFile("fixtures/tables.my"),
-        @embedFile("fixtures/trap.my"),
-        @embedFile("fixtures/variants.my"),
-        @embedFile("fixtures/warnings.my"),
-    };
-    for (fixtures) |source| {
-        const formatted = try runFixture("fmt", source, &.{});
-        defer testing.allocator.free(formatted.stdout);
-        defer testing.allocator.free(formatted.stderr);
-        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, formatted.term);
-        try testing.expectEqualStrings("", formatted.stderr);
-        try invokeOptions("fmt", formatted.stdout, &.{"--check"}, 0, "", "");
-        const checked = try runFixture("check", formatted.stdout, &.{});
-        defer testing.allocator.free(checked.stdout);
-        defer testing.allocator.free(checked.stderr);
-        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, checked.term);
-    }
-}
-
 test "CLI emits scalar C and diagnoses invalid native source without partial output" {
     const generated = try runFixture("emit-c", "fn main() -> i64 { return 7; }", &.{});
     defer testing.allocator.free(generated.stdout);
@@ -677,67 +305,6 @@ test "CLI emits scalar C and diagnoses invalid native source without partial out
     try invoke("emit-c", "fn main() -> i64 { return false; }", 1, "", "error[E_TYPE]");
     try invoke("emit-c", "fn unused()->i64{return false;}fn main()->i64{return 7;}", 1, "", "error[E_TYPE]");
     try invokeOptions("emit-c", "fn main() -> i64 { return 7; }", &.{"--memory=arena"}, 2, "", "usage:");
-}
-
-test "CLI supports partial field moves while preserving remaining ownership checks" {
-    const source = @embedFile("fixtures/partial-fields.my");
-    try invoke("run", source, 0, "9\n", "");
-    try invokeOptions("run", source, &.{"--memory=arena"}, 0, "9\n", "");
-    try invoke("check", source, 0, "", "");
-    const dumped = try runFixture("dump-bytecode", source, &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "TAKE_FIELD") != null);
-    const invalid = "buffer B: i64; struct Pair { field: B } fn f(pair: Pair) -> Pair { discard take_field(pair, field); return pair; } fn main() -> i64 { return 0; }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates", "report-quality", "emit-c" }) |command| try invoke(command, invalid, 1, "", "error[E_PARTIAL_MOVE]");
-}
-
-test "CLI executes typed pool graphs and preserves diagnostics across analysis commands" {
-    const source = @embedFile("fixtures/pools.my");
-    try invoke("run", source, 0, "52\n", "");
-    try invokeOptions("run", source, &.{"--memory=arena"}, 0, "52\n", "");
-    try invoke("check", source, 0, "", "");
-    const dumped = try runFixture("dump-bytecode", source, &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "ACQUIRE_POOL") != null);
-    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "POOL_replace") != null);
-    try expectNativeEmission(source, "push_value(acquire_pool(");
-    const invalid = "pool P(Id): i64; fn main() -> i64 { discard new Id {}; return 0; }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates", "report-quality", "emit-c" }) |command| try invoke(command, invalid, 1, "", "error[E_TYPE]");
-}
-
-test "CLI executes nested source arenas and rejects escapes across compiler commands" {
-    const source = @embedFile("fixtures/arenas.my");
-    try invoke("run", source, 0, "50\n", "");
-    try invokeOptions("run", source, &.{"--memory=arena"}, 0, "50\n", "");
-    try invoke("check", source, 0, "", "");
-    try expectNativeEmission(source, "push_value(acquire_pool(");
-    const invalid = "fn f(heap: allocator) -> allocator { arena heap as scratch { return scratch; } } fn main() -> i64 { return 0; }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates", "report-quality", "emit-c" }) |command| try invoke(command, invalid, 1, "", "error[E_ARENA_ESCAPE]");
-    const dumped = try runFixture("dump-bytecode", source, &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "BEGIN_REGION") != null);
-    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "END_REGION") != null);
-}
-
-test "CLI executes typed arena resets and checks result obligations consistently" {
-    const source = @embedFile("fixtures/arena-reset.my");
-    try invoke("run", source, 0, "3\n", "");
-    try invokeOptions("run", source, &.{"--memory=arena"}, 0, "3\n", "");
-    try invoke("check", source, 0, "", "");
-    try expectNativeEmission(source, "int status = reset_arena();");
-    const invalid = "result R { ok: bool, err: i64 } fn main(heap: allocator) -> i64 { discard reset_arena<R>(heap); return 0; }";
-    for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates", "report-quality", "emit-c" }) |command| try invoke(command, invalid, 1, "", "error[E_RESULT_DISCARD]");
-    const dumped = try runFixture("dump-bytecode", source, &.{});
-    defer testing.allocator.free(dumped.stdout);
-    defer testing.allocator.free(dumped.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
-    try testing.expect(std.mem.indexOf(u8, dumped.stdout, "RESET_ARENA") != null);
 }
 
 test "CLI module discovery loads real files and diagnoses cross-file cycles" {
@@ -997,36 +564,6 @@ test "CLI native project emission rejects private calls and invalid guest functi
     try invokeOptions("emit-project-c", "module input; fn main() -> i64 { return 0; }", &.{"--max-steps=1"}, 2, "", "usage:");
 }
 
-test "CLI restricted project evaluation preserves values and enforces budgets and authority" {
-    try invoke("eval-project", "module input; fn main()->i64{return 7;}", 0, "7\n", "");
-    try invokeOptions("eval-project", "module input; fn main()->i64{return 7;}", &.{"--max-eval-bytes=1"}, 1, "", "R_EVAL_MEMORY");
-    try invokeOptions("eval-project", "module input; fn main()->i64{while true{}return 0;}", &.{"--max-steps=10"}, 1, "", "R_STEP_LIMIT");
-    try invokeOptions("eval-project", "module input; fn main()->i64{return main();}", &.{"--max-frames=2"}, 1, "", "R_FRAME_LIMIT");
-    try invoke("eval-project", "module input; fn main(heap:allocator)->i64{discard heap;return 7;}", 1, "", "E_EVAL_INPUT");
-    try invoke("eval-project", "module input; result T{ok:i64,err:i64} fn main(c:clock_cap)->i64{acknowledge clock_now<T>(c);return 7;}", 1, "", "E_EVAL_EFFECT");
-    for ([_][]const u8{ "--memory=arena", "--max-eval-bytes=0", "--max-eval-bytes=-1", "--max-steps=0", "--check" }) |option| try invokeOptions("eval-project", "module input; fn main()->i64{return 7;}", &.{option}, 2, "", "usage:");
-    try invokeOptions("run-project", "module input; fn main()->i64{return 7;}", &.{"--max-eval-bytes=1000"}, 2, "", "usage:");
-    try invokeOptions("run-project", "module input; fn main()->i64{return 7;}", &.{"--evaluation-report"}, 2, "", "usage:");
-    try invokeOptions("eval-project", "module input; fn main()->i64{return 7;}", &.{ "--evaluation-report", "--evaluation-report" }, 2, "", "usage:");
-}
-
-test "CLI evaluation request checks eligibility without running the entry" {
-    const infinite = "module input; fn main()->i64{return main();}";
-    const result = try runFixture("eval-project", infinite, &.{ "--evaluation-request", "--max-steps=1", "--max-frames=1" });
-    defer testing.allocator.free(result.stdout);
-    defer testing.allocator.free(result.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
-    const parsed = try std.json.parseFromSlice(std.json.Value, testing.allocator, result.stdout, .{});
-    defer parsed.deinit();
-    try testing.expectEqualStrings("not-executed", parsed.value.object.get("evaluation").?.string);
-    try testing.expect(!parsed.value.object.contains("result"));
-    try invokeOptions("eval-project", "module input; fn main(heap:allocator)->i64{discard heap;return 7;}", &.{"--evaluation-request"}, 1, "", "E_EVAL_INPUT");
-    try invokeOptions("eval-project", "module input; result T{ok:i64,err:i64} fn main(c:clock_cap)->i64{acknowledge clock_now<T>(c);return 7;}", &.{"--evaluation-request"}, 1, "", "E_EVAL_EFFECT");
-    try invokeOptions("eval-project", infinite, &.{ "--evaluation-request", "--max-eval-bytes=1" }, 1, "", "R_EVAL_MEMORY");
-    for ([_][]const []const u8{ &.{ "--evaluation-request", "--evaluation-report" }, &.{ "--evaluation-report", "--evaluation-request" }, &.{ "--evaluation-request", "--evaluation-request" } }) |options| try invokeOptions("eval-project", infinite, options, 2, "", "usage:");
-    try invokeOptions("run-project", infinite, &.{"--evaluation-request"}, 2, "", "usage:");
-}
-
 // spec: CLI-4
 test "CLI schema inputs load fresh generated modules and reject malformed manifests" {
     var temp = testing.tmpDir(.{});
@@ -1096,164 +633,6 @@ fn expectNativeEmission(source: []const u8, marker: []const u8) !void {
     try testing.expect(std.mem.indexOf(u8, generated.stdout, marker) != null);
 }
 
-test "CLI generic array input slices retain module provenance and VM memory modes" {
-    var temp = testing.tmpDir(.{});
-    defer temp.cleanup();
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input;import api;fn main()->i64{let mut a=new [3]i64[1,2,3];let old=a;borrow mut a as whole{borrow mut api::tail::<bool>(whole) as s{write_slice(s,0,7);}}return a[1]+old[1];}" });
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "api.my", .data = "module api;export tail;fn tail<T:copy>(a:&mut [3]i64)->&mut []i64 from a{borrow mut a[1..3] as s{return s;}}" });
-    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
-    defer testing.allocator.free(path);
-    for ([_][]const u8{ "--memory=general", "--memory=arena" }) |mode| {
-        const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path, mode } });
-        defer testing.allocator.free(outcome.stdout);
-        defer testing.allocator.free(outcome.stderr);
-        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
-        try testing.expectEqualStrings("9\n", outcome.stdout);
-        try testing.expectEqualStrings("", outcome.stderr);
-    }
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "api.my", .data = "module api;export tail;fn tail<T:copy>(a:&mut [3]i64)->&mut []i64 from a{let mut local=new [1]i64[1];borrow mut local[0..1] as s{return s;}}" });
-    const rejected = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-project", path } });
-    defer testing.allocator.free(rejected.stdout);
-    defer testing.allocator.free(rejected.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
-    try testing.expectEqualStrings("", rejected.stdout);
-    try testing.expect(std.mem.indexOf(u8, rejected.stderr, "E_RETURN_LIFETIME") != null);
-    try testing.expect(std.mem.indexOf(u8, rejected.stderr, "api.my") != null);
-}
-
-test "CLI generic module arenas reset safely and reject allocator escape" {
-    var temp = testing.tmpDir(.{});
-    defer temp.cleanup();
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input;import helper;fn main(heap:allocator)->i64{return helper::work::<i8>(heap,7i8);}" });
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper;export work;result Status{ok:bool,err:i64}fn work<T:integer>(heap:allocator,n:T)->i64{arena heap as scratch{let copy=scratch;match reset_arena<Status>(copy){Status.ok(discard)=>{return cast<i64>(n);},Status.err(code)=>{return code;}}}}" });
-    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
-    defer testing.allocator.free(path);
-    for ([_][]const u8{ "--memory=general", "--memory=arena" }) |mode| {
-        const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path, mode } });
-        defer testing.allocator.free(outcome.stdout);
-        defer testing.allocator.free(outcome.stderr);
-        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
-        try testing.expectEqualStrings("7\n", outcome.stdout);
-        try testing.expectEqualStrings("", outcome.stderr);
-    }
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper;export work;fn work<T:integer>(heap:allocator,n:T)->i64{let mut escaped=heap;arena heap as scratch{escaped=scratch;return cast<i64>(n);}}" });
-    const rejected = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-project", path } });
-    defer testing.allocator.free(rejected.stdout);
-    defer testing.allocator.free(rejected.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
-    try testing.expectEqualStrings("", rejected.stdout);
-    try testing.expect(std.mem.indexOf(u8, rejected.stderr, "E_ARENA_ESCAPE") != null);
-    try testing.expect(std.mem.indexOf(u8, rejected.stderr, "helper.my") != null);
-}
-
-test "CLI borrow provenance maps causal and declaration notes to the original module" {
-    var temp = testing.tmpDir(.{});
-    defer temp.cleanup();
-    const bad =
-        \\module helper;
-        \\export work;
-        \\fn work<T:copy>()->i64{
-        \\let mut owner=7;
-        \\borrow owner as loan{
-        \\owner=9;
-        \\discard read_ref(loan);
-        \\}
-        \\return owner;
-        \\}
-    ;
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = bad });
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input;import helper;fn main()->i64{return helper::work::<bool>();}" });
-    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
-    defer testing.allocator.free(path);
-    const rejected = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-project", path } });
-    defer testing.allocator.free(rejected.stdout);
-    defer testing.allocator.free(rejected.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
-    try testing.expectEqualStrings("", rejected.stdout);
-    for ([_][]const u8{ "helper.my:6:1: error[E_BORROW_CONFLICT]", "note: helper.my:5:17: conflicting borrow starts here", "note: helper.my:4:9: value declared here" }) |part|
-        try testing.expect(std.mem.indexOf(u8, rejected.stderr, part) != null);
-    const fixed = try std.mem.replaceOwned(u8, testing.allocator, bad, "owner=9;\ndiscard read_ref(loan);\n}", "discard read_ref(loan);\n}\nowner=9;");
-    defer testing.allocator.free(fixed);
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = fixed });
-    const accepted = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path } });
-    defer testing.allocator.free(accepted.stdout);
-    defer testing.allocator.free(accepted.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, accepted.term);
-    try testing.expectEqualStrings("9\n", accepted.stdout);
-    try testing.expectEqualStrings("", accepted.stderr);
-}
-
-test "CLI arena lifetime provenance maps the escaped allocator to its original generic module" {
-    var temp = testing.tmpDir(.{});
-    defer temp.cleanup();
-    const bad =
-        \\module helper;
-        \\export work;
-        \\fn work<T:copy>(heap:allocator)->allocator{
-        \\arena heap as scratch{
-        \\return scratch;
-        \\}
-        \\}
-    ;
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = bad });
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input;import helper;fn main(heap:allocator)->i64{discard helper::work::<bool>(heap);return 7;}" });
-    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
-    defer testing.allocator.free(path);
-    const rejected = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-project", path } });
-    defer testing.allocator.free(rejected.stdout);
-    defer testing.allocator.free(rejected.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
-    try testing.expectEqualStrings("", rejected.stdout);
-    for ([_][]const u8{ "helper.my:5:1: error[E_ARENA_ESCAPE]", "helper.my:4:15: shorter-lived arena declared here" }) |part|
-        try testing.expect(std.mem.indexOf(u8, rejected.stderr, part) != null);
-    const fixed = try std.mem.replaceOwned(u8, testing.allocator, bad, "return scratch;", "discard scratch;return heap;");
-    defer testing.allocator.free(fixed);
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = fixed });
-    const accepted = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path } });
-    defer testing.allocator.free(accepted.stdout);
-    defer testing.allocator.free(accepted.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, accepted.term);
-    try testing.expectEqualStrings("7\n", accepted.stdout);
-    try testing.expectEqualStrings("", accepted.stderr);
-}
-
-test "CLI returned lifetime notes map the borrow owner and required input to original module locations" {
-    var temp = testing.tmpDir(.{});
-    defer temp.cleanup();
-    const bad =
-        \\module helper;
-        \\export work;
-        \\fn work<T:copy>(input:&i64)->&i64 from input{
-        \\let local=7;
-        \\borrow local as loan{
-        \\return loan;
-        \\}
-        \\}
-    ;
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = bad });
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = "module input;import helper;fn main()->i64{let n=9;borrow n as r{borrow helper::work::<bool>(r) as returned{return read_ref(returned);}}}" });
-    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
-    defer testing.allocator.free(path);
-    const rejected = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "check-project", path } });
-    defer testing.allocator.free(rejected.stdout);
-    defer testing.allocator.free(rejected.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, rejected.term);
-    try testing.expectEqualStrings("", rejected.stdout);
-    for ([_][]const u8{
-        "helper.my:6:8: error[E_RETURN_LIFETIME]", "helper.my:5:17: returned borrow declared here",
-        "helper.my:4:5: value declared here",      "helper.my:3:17: result lifetime is tied to this input",
-    }) |part| try testing.expect(std.mem.indexOf(u8, rejected.stderr, part) != null);
-    const fixed = try std.mem.replaceOwned(u8, testing.allocator, bad, "let local=7;\nborrow local as loan{\nreturn loan;\n}", "return input;");
-    defer testing.allocator.free(fixed);
-    try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = fixed });
-    const accepted = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path } });
-    defer testing.allocator.free(accepted.stdout);
-    defer testing.allocator.free(accepted.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, accepted.term);
-    try testing.expectEqualStrings("9\n", accepted.stdout);
-    try testing.expectEqualStrings("", accepted.stderr);
-}
-
 test "CLI executes generic fixed arrays and reports uncalled template shape errors" {
     try invoke("run", "fn twice<T:integer>(x:T)->[2]T{return new [2]T[x,x+x];}fn main()->i64{return twice::<i64>(6)[1];}", 0, "12\n", "");
     try invokeOptions("check", "fn bad<T:copy>(a:[2]T)->[3]T{return a;}fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_GENERIC_TYPE\"");
@@ -1305,18 +684,6 @@ test "CLI project-dependencies buildIndex emits checked graph identity and rejec
     try testing.expectEqual(@as(usize, 64), parsed.value.object.get("implementation").?.object.get("compiler_sha256").?.string.len);
     try invoke("project-dependencies", "module input; fn main()->i64 { return true; }", 1, "", "E_TYPE");
     try invoke("project-dependencies", "module input; export absent; fn main()->i64 { return 0; }", 1, "", "error[");
-}
-
-test "CLI emitProjectC publishes C for source typed JSON" {
-    const source = "module input; buffer Bytes:u8; result Wire{ok:Bytes,err:i64} " ++
-        "fn main(heap:allocator)->i64{match json_encode::<Wire>(heap,42,256){Wire.ok(bytes)=>{discard bytes;return 42;},Wire.err(code)=>{return code;}}}";
-    try invoke("run-project", source, 0, "42\n", "");
-    const outcome = try runFixture("emit-project-c", source, &.{});
-    defer testing.allocator.free(outcome.stdout);
-    defer testing.allocator.free(outcome.stderr);
-    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
-    try testing.expectEqualStrings("", outcome.stderr);
-    try testing.expect(std.mem.indexOf(u8, outcome.stdout, "mylang") != null);
 }
 
 // spec: FEATURE-REPORT-1

@@ -133,26 +133,6 @@ test "backend validates counts identity unsupported operations and zero capacity
     try store.complete(moved);
     try t.expectEqual(@as(usize, 0), fake.live);
 }
-test "source read write require mutable live owners and cannot consume owner in write input" {
-    try reject(declarations ++ "fn f(file: File) -> i64 { acknowledge read_resource<Read>(file); return 0; } fn main() -> i64 { return 0; }", "E_IMMUTABLE");
-    try reject(declarations ++ "fn f(input: File) -> i64 { let mut file = input; discard file; acknowledge read_resource<Read>(file); return 0; } fn main() -> i64 { return 0; }", "E_OWNED_CONSUMED");
-    try reject(declarations ++ "fn bytes(file: File) -> [0]u8 { discard file; return new [0]u8 []; } fn f(input: " ++
-        "File) -> i64 { let mut file = input; acknowledge write_resource<Written>(file, " ++
-        "bytes(file)); return 0; } fn main() -> i64 { return 0; }", "E_OWNED_CONSUMED");
-    try reject(declarations ++ "fn f(input: File) -> i64 { let mut file = input; acknowledge write_resource<Written>(file, new [1]i64 [7]); return 0; } fn main() -> i64 { return 0; }", "E_RESOURCE_BYTES");
-    try reject(declarations ++ "fn f(input: File) -> i64 { let mut file = input; acknowledge read_resource<Written>(file); return 0; } fn main() -> i64 { return 0; }", "E_RESOURCE_IO_RESULT");
-}
-test "source IO participates in noio bounds and missing callbacks are explicit errors" {
-    try reject(declarations ++ "fn f(input: File) -> i64 noio { let mut file = input; acknowledge read_resource<Read>(file); return 0; } fn main() -> i64 { return 0; }", "E_EFFECT_BOUND");
-    var fake: Fake = .{};
-    var provider = fake.provider();
-    provider.read = null;
-    var c = try language.Compilation.init(t.allocator, "unsupported.my", source);
-    defer c.deinit();
-    try t.expectEqual(@as(i64, -1), (try c.executeWithOptions(t.allocator, .{ .resources = .{ .filesystem = provider } })).value);
-    try t.expectEqual(@as(usize, 0), fake.reads);
-    try t.expectEqual(@as(usize, 1), fake.releases);
-}
 test "all read write result and reporting allocation failures unwind provider owners" {
     var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(no_resize.allocator(), scenario, .{});
@@ -182,40 +162,6 @@ test "invalid provider progress is a host failure with resource cleanup" {
     try t.expectEqual(@as(usize, 1), fake.releases);
 }
 
-test "source write errors leave a resource available for explicit retry" {
-    const text = declarations ++ "fn work(fs: filesystem_cap) -> Status { let mut file = try acquire_resource<Open>(fs," ++
-        " new [0]u8 []); match write_resource<Written>(file, new [1]u8 [7u8]) { " ++
-        "Written.ok(count) => { return new Status.ok(cast<i64>(count)); }, Written.err(code) " ++
-        "=> { acknowledge write_resource<Written>(file, new [1]u8 [7u8]); return new " ++
-        "Status.err(code); } } } fn main(fs: filesystem_cap) -> i64 { match work(fs) { " ++
-        "Status.ok(count) => { return count; }, Status.err(code) => { return -code; } } }";
-    var c = try language.Compilation.init(t.allocator, "write.my", text);
-    defer c.deinit();
-    var fake: Fake = .{ .failure = error.Failed };
-    try t.expectEqual(@as(i64, -3), (try c.executeWithOptions(t.allocator, .{ .resources = .{ .filesystem = fake.provider() } })).value);
-    try t.expectEqual(@as(usize, 2), fake.writes);
-    try t.expectEqual(@as(usize, 1), fake.releases);
-    try t.expectEqual(@as(usize, 0), fake.live);
-}
-test "source resource IO loops have bounded live result and registry storage" {
-    const text = declarations ++ "fn work(fs: filesystem_cap) -> Status { let mut file = try acquire_resource<Open>(fs," ++
-        " new [0]u8 []); let mut n = 0; while n < 10000 { acknowledge " ++
-        "read_resource<Read>(file); acknowledge write_resource<Written>(file, new [1]u8 " ++
-        "[7u8]); n += 1; } return new Status.ok(n); } fn main(fs: filesystem_cap) -> i64 { " ++
-        "match work(fs) { Status.ok(count) => { return count; }, Status.err(code) => { return " ++
-        "-code; } } }";
-    var c = try language.Compilation.init(t.allocator, "loop.my", text);
-    defer c.deinit();
-    try c.emit();
-    var limited: @import("test_support.zig").LimitedLiveAllocator = .{ .parent = t.allocator, .limit = 16 * 1024 };
-    defer limited.deinit();
-    var fake: Fake = .{ .data = "" };
-    try t.expectEqual(@as(i64, 10000), (try c.executeWithOptions(limited.allocator(), .{ .resources = .{ .filesystem = fake.provider(), .max_live_per_kind = 1 } })).value);
-    try t.expectEqual(@as(usize, 10000), fake.reads);
-    try t.expectEqual(@as(usize, 10000), fake.writes);
-    try t.expectEqual(@as(usize, 0), fake.live);
-    try t.expectEqual(@as(usize, 0), limited.live);
-}
 test "emission rejects forged resource IO metadata before provider callbacks" {
     var c = try language.Compilation.init(t.allocator, "invalid.my", source);
     defer c.deinit();

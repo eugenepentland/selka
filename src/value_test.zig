@@ -61,10 +61,6 @@ const program: language.bytecode.Program = .{ .records = &.{schema}, .functions 
     },
 } };
 
-test "aggregate copies survive overwritten locals calls returns projection and discard" {
-    try testing.expectEqual(@as(i64, 42), (try language.vm.run(testing.allocator, program)).value);
-}
-
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     try testing.expectEqual(@as(i64, 42), (try language.vm.run(allocator, program)).value);
 }

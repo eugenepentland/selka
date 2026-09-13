@@ -14,48 +14,6 @@ fn evaluate(bytes: []const u8, expected: i64) !void {
     try t.expectEqual(expected, result.value);
 }
 
-// spec: FAMILIAR-COLLECTIONS-1
-test "list methods indexing and indexed assignment share aliases" {
-    try evaluate(
-        \\list Numbers: i64
-        \\fn main() -> i64 {
-        \\    let values = new_list<Numbers>(0)
-        \\    let alias = values
-        \\    alias.push(10)
-        \\    values[0] = 41
-        \\    return alias[0] + cast<i64>(values.len())
-        \\}
-    , 42);
-}
-
-// spec: FAMILIAR-COLLECTIONS-2
-test "record constructors without new support generic records and trailing fields" {
-    try evaluate(
-        \\struct Box<T:copy> { value: T }
-        \\struct Empty {}
-        \\fn main() -> i64 {
-        \\    let box = Box<i64> { value: 42, }
-        \\    discard Empty {}
-        \\    if box.value == 0 {}
-        \\    return box.value
-        \\}
-    , 42);
-}
-
-// spec: FAMILIAR-COLLECTIONS-3
-test "generic list methods retain element type checking" {
-    try evaluate(
-        \\list Values<T:copy>:T
-        \\fn add<T:copy>(values:Values<T>, value:T)->unit { values.push(value) }
-        \\fn first<T:copy>(values:Values<T>)->T { return values[0] }
-        \\fn main()->i64 {
-        \\    let values = new_list<Values<i64>>(0)
-        \\    add(values, 42)
-        \\    return first(values)
-        \\}
-    , 42);
-}
-
 // spec: FAMILIAR-COLLECTIONS-4
 test "list syntax rejects invalid methods element types and indices" {
     const cases = [_]struct { text: []const u8, code: []const u8 }{

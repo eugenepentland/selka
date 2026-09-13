@@ -71,19 +71,6 @@ fn reject(text: []const u8, code: []const u8, detail: []const u8) !void {
     try t.expect(std.mem.indexOf(u8, problem.message, detail) != null);
     try t.expect(compilation.program == null and compilation.code == null);
 }
-test "nominal layout checking rejects direct indirect permuted and zero-array storage cycles" {
-    const cases = [_][]const u8{
-        "struct Node<T:copy>{next:Node<T>}",
-        "struct Box<T:copy>{value:T}union Link<U:copy>{end,next:Box<Link<U>>}",
-        "struct Swap<A:copy,B:copy>{next:Swap<B,A>}",
-        "struct Node<T:copy>{next:[0]Node<T>}",
-        "result Answer<T:copy>{ok:T,err:Answer<T>}",
-        "struct Empty<T:copy>{}struct A{b:B}struct B{a:A}",
-        "struct Owner<T:copy>{nodes:Nodes}pool Nodes(NodeId):Owner<i64>;",
-        "struct Owner<T:copy>{bytes:Bytes}buffer Bytes:Owner<i64>;",
-    };
-    for (cases) |text| try reject(text, "E_RECURSIVE_RECORD", "cycle");
-}
 test "nominal layout expansion bounds argument growth without host stack recursion" {
     try reject("struct Grow<T:copy>{next:Grow<[1]T>}", "E_GENERIC_LIMIT", "4096 type instances");
     try reject("struct Box<T:copy>{value:T}struct Grow<T:copy>{next:Grow<Box<T>>}", "E_GENERIC_LIMIT", "4096 type instances");

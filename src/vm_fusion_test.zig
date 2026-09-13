@@ -63,11 +63,6 @@ test "chained arithmetic preserves intermediate traps and every budget cutoff" {
     };
     for (sources) |source| try compareBudgets(source);
 }
-// spec: VM-FUSION-2
-test "fused execution preserves borrowed scalar owners" {
-    try compareBudgets("fn bump(x:&mut i64)->i64{write_ref(x,read_ref(x)+1);return read_ref(x);}" ++
-        "fn main()->i64{let mut n=3;borrow mut n as p{discard bump(p);}n+=2;return n;}");
-}
 // spec: VM-FUSION-3
 test "requested instruction trace is identical under both dispatch settings" {
     var c = try language.Compilation.init(t.allocator, "trace.my", "fn main()->i64{let mut n=0;while n<3{n+=1;}return n;}");

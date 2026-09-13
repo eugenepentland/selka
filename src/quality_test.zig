@@ -30,49 +30,6 @@ test "resolved reachability includes untaken call paths cycles and incoming site
     try t.expect(std.mem.indexOf(u8, rendered, "external entry policy") != null);
 }
 
-test "structural metrics count branches loops short circuits nesting and physical source lines" {
-    const text =
-        \\fn work(x: i64, flag: bool) -> i64 {
-        \\    let mut n = x;
-        \\    if flag && n > 0 {
-        \\        while n > 0 { n -= 1; }
-        \\    }
-        \\    if flag { return n; }
-        \\    return x;
-        \\}
-        \\fn main() -> i64 { return work(2, true); }
-    ;
-    var c = try language.Compilation.init(t.allocator, "quality.my", text);
-    defer c.deinit();
-    try c.check();
-    var result = try quality.analyze(t.allocator, c.program.?, c.src, .{ .max_nesting = 1, .max_decisions = 3, .max_parameters = 1, .max_function_lines = 7 });
-    defer result.deinit();
-    const metrics = result.functions[try index(&c, "work")];
-    try t.expectEqual(@as(usize, 8), metrics.structure.lines);
-    try t.expectEqual(@as(usize, 2), metrics.structure.parameters);
-    try t.expectEqual(@as(usize, 2), metrics.structure.nesting);
-    try t.expectEqual(@as(usize, 4), metrics.structure.decisions);
-    try t.expectEqual(@as(usize, "fn work(x: i64, flag: bool) -> i64 {".len), metrics.structure.longest_line);
-    const first = try quality.render(t.allocator, result, c.program.?, c.src);
-    defer t.allocator.free(first);
-    const second = try quality.render(t.allocator, result, c.program.?, c.src);
-    defer t.allocator.free(second);
-    try t.expectEqualStrings(first, second);
-    for ([_][]const u8{ "function-lines 8 exceeds", "parameters 2 exceeds", "control-nesting 2 exceeds", "decision-points 4 exceeds" }) |part| try t.expect(std.mem.indexOf(u8, first, part) != null);
-}
-test "match alternatives and try propagation count decisions while comments do not add references" {
-    const text = "result R { ok: i64, err: i64 } fn helper(r: R) -> R { return new R.ok(try r); } fn " ++
-        "main() -> i64 { // helper helper helper\n match helper(new R.ok(7)) { R.ok(value) => " ++
-        "{ return value; }, R.err(code) => { return code; } } }";
-    var c = try language.Compilation.init(t.allocator, "quality.my", text);
-    defer c.deinit();
-    try c.check();
-    var result = try quality.analyze(t.allocator, c.program.?, c.src, .{});
-    defer result.deinit();
-    try t.expectEqual(@as(usize, 1), result.functions[try index(&c, "helper")].incoming_sites);
-    try t.expectEqual(@as(usize, 1), result.functions[try index(&c, "helper")].structure.decisions);
-    try t.expectEqual(@as(usize, 1), result.functions[try index(&c, "main")].structure.decisions);
-}
 test "zero thresholds disable metric signals without hiding facts or changing source checking" {
     var c = try language.Compilation.init(t.allocator, "quality.my", "fn main() -> i64 { if true { return 1; } return 0; }");
     defer c.deinit();

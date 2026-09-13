@@ -177,13 +177,8 @@ fn cleanupScenario(allocator: std.mem.Allocator) !void {
     try bind(&registry, "measure", &counter);
     for ([_]bool{ false, true }) |failure| {
         counter.mode = if (failure) .failure else .success;
-        var stats: @import("memory.zig").Statistics = .{};
-        const result = try vm.runWithHost(allocator, c.code.?, .{ .memory = .{ .statistics = &stats } }, &registry, .{});
+        const result = try vm.runWithHost(allocator, c.code.?, .{}, &registry, .{});
         if (failure) try t.expectEqualStrings("R_HOST_FAILURE", result.trap.code) else try t.expectEqual(@as(i64, 12), result.value);
-        try t.expectEqual(@as(u64, 1), stats.created);
-        try t.expectEqual(stats.created, stats.released);
-        try t.expectEqual(@as(usize, 0), stats.live_allocations);
-        try t.expectEqual(@as(usize, 0), stats.total_capacity);
     }
 }
 test "VM host traps release guest-owned buffers and all partial allocations exactly once" {

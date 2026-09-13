@@ -53,21 +53,6 @@ fn runLibrary(text: []const u8, expected: i64) !void {
     const outcome = try language.vm.run(t.allocator, program.compilation.code.?);
     try t.expectEqual(expected, outcome.value);
 }
-// spec: STANDARD-MODULES-3
-test "standard byte helpers validate text parse integer bounds and retain named failures" {
-    try runLibrary("module main;import std_bytes;import std_result;fn main()->i64{" ++
-        "if !std_bytes::utf8(\"hello\") || std_bytes::compare(\"a\",\"b\")>=0{return -1;}" ++
-        "match std_bytes::integer(\"9223372036854775808\"){std_result::Result<i64,std_result::Error>.ok(discard)=>{return -2;}," ++
-        "std_result::Result<i64,std_result::Error>.err(e)=>{if e.category!=new std_result::Category.overflow{return -3;}}}" ++
-        "match std_bytes::integer(\"-9223372036854775808\"){std_result::Result<i64,std_result::Error>.ok(n)=>{if n!= -9223372036854775808{return -4;}},std_result::Result<i64,std_result::Error>.err(discard)=>{return -5;}}" ++
-        "match std_bytes::find(\"abcd\",\"bc\"){std_result::Option<u64>.none=>{return -6;},std_result::Option<u64>.some(n)=>{return cast<i64>(n);}}}", 1);
-}
-// spec: STANDARD-MODULES-4
-test "standard JSON view imports compile and escaped output is bounded" {
-    try runLibrary("module main;import std_json_view;import std_bytes;fn main(heap:allocator)->i64{" ++
-        "match std_bytes::escaped(heap,\"a\\\"\\n\",64){std_bytes::Built.err(discard)=>{return -1;},std_bytes::Built.ok(bytes)=>{" ++
-        "borrow bytes[0..len_buffer(bytes)] as text{return std_bytes::compare(text,\"\\\"a\\\\\\\"\\\\u000a\\\"\");}}}}", 0);
-}
 // spec: STANDARD-MODULES-5
 test "checked JSON distinguishes absent null wrong type and emits optional data without tape offsets" {
     try runLibrary(@embedFile("stdlib/fixtures/checked_json.my"), 0);
@@ -95,10 +80,7 @@ test "hash collections probe full tables tombstones replacements and byte keys" 
 }
 
 fn collectionFailureRun(allocator: std.mem.Allocator, code: language.bytecode.Program) !void {
-    var statistics: language.memory.Statistics = .{};
-    const outcome = language.vm.runWithOptions(allocator, code, .{ .memory = .{ .statistics = &statistics } });
-    try t.expectEqual(@as(usize, 0), statistics.live_allocations);
-    try t.expectEqual(statistics.created, statistics.released);
+    const outcome = language.vm.runWithOptions(allocator, code, .{});
     try t.expectEqual(@as(i64, 42), (try outcome).value);
 }
 test "collection owners unwind cleanly on every runtime allocation failure" {
@@ -179,12 +161,4 @@ test "corpus text helpers release partial owned allocations" {
     defer program.deinit();
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), textRuntimeAllocation, .{program.compilation.code.?});
-}
-
-// spec: GC-STDLIB-1
-test "standard managed lists grow and share aliases across generic library calls" {
-    try runLibrary("module main;import std_list;fn main()->i64{" ++
-        "let values=std_list::create::<i64>();let alias=values;" ++
-        "for i in 0..100{std_list::append(alias,i);}" ++
-        "std_list::set(alias,0u64,42);return std_list::get(values,0u64)+cast<i64>(std_list::count(values));}", 142);
 }

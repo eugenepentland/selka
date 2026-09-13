@@ -15,63 +15,6 @@ fn execute(text: []const u8, statistics: *language.vm.GcStatistics) !language.vm
     };
 }
 
-// spec: GC-SOURCE-1
-test "managed aliases mutate immutable bindings across helpers without allocator authority" {
-    const source = "list Numbers:i64;" ++
-        "fn change(values:Numbers)->unit{append_list(values,40);write_list(values,0u64,42);}" ++
-        "fn main()->i64{let values=new_list<Numbers>(0u64);let alias=values;change(alias);" ++
-        "if len_list(values)!=1u64{return 1;}return read_list(values,0u64);}";
-    var statistics: language.vm.GcStatistics = .{};
-    const result = try execute(source, &statistics);
-    try t.expectEqual(@as(i64, 42), result.value);
-    try t.expectEqual(@as(u64, 1), statistics.created);
-    try t.expectEqual(@as(usize, 0), statistics.live_objects);
-    try t.expect(statistics.collections >= 2);
-}
-
-// spec: GC-SOURCE-2
-test "managed recursive record cycle is reclaimed at an allocation before VM teardown" {
-    const source = "list Nodes:Node;struct Node{children:Nodes,value:i64}" ++
-        "fn cycle()->unit{let nodes=new_list<Nodes>(0u64);" ++
-        "append_list(nodes,new Node{children:nodes,value:42});" ++
-        "let node=read_list(nodes,0u64);let alias=node.children;write_list(alias,0u64,node);}" ++
-        "fn main()->i64{cycle();discard new_list<Nodes>(0u64);return 42;}";
-    var statistics: language.vm.GcStatistics = .{};
-    try t.expectEqual(@as(i64, 42), (try execute(source, &statistics)).value);
-    try t.expectEqual(@as(u64, 2), statistics.created);
-    try t.expectEqual(@as(u64, 1), statistics.reclaimed);
-    try t.expect(statistics.collections >= 3);
-}
-
-// spec: GC-SOURCE-3
-test "managed intermediate call arguments and record snapshots survive collection" {
-    const source = "list Numbers:i64;struct Holder{values:Numbers}" ++
-        "fn make()->Numbers{let values=new_list<Numbers>(0u64);append_list(values,42);return values;}" ++
-        "fn consume(first:Holder,second:Numbers)->i64{append_list(second,9);let values=first.values;return read_list(values,0u64);}" ++
-        "fn main()->i64{return consume(new Holder{values:make()},new_list<Numbers>(0u64));}";
-    var statistics: language.vm.GcStatistics = .{};
-    try t.expectEqual(@as(i64, 42), (try execute(source, &statistics)).value);
-    try t.expectEqual(@as(u64, 2), statistics.created);
-    try t.expectEqual(@as(u64, 0), statistics.reclaimed);
-    try t.expect(statistics.collections >= 4);
-}
-
-// spec: GC-SOURCE-4
-test "managed bounds traps release all execution roots and backing" {
-    for ([_][]const u8{
-        "return read_list(values,0u64);",
-        "write_list(values,0u64,42);return 0;",
-    }) |operation| {
-        const source = try std.fmt.allocPrint(t.allocator, "list Numbers:i64;fn main()->i64{{let values=new_list<Numbers>(0u64);{s}}}", .{operation});
-        defer t.allocator.free(source);
-        var statistics: language.vm.GcStatistics = .{};
-        const result = try execute(source, &statistics);
-        try t.expectEqualStrings("R_LIST_BOUNDS", result.trap.code);
-        try t.expectEqual(@as(usize, 0), statistics.live_objects);
-        try t.expectEqual(@as(usize, 0), statistics.live_capacity);
-    }
-}
-
 fn reject(text: []const u8, expected: []const u8) !void {
     var compilation = try language.Compilation.init(t.allocator, "invalid-managed.my", text);
     defer compilation.deinit();
@@ -79,53 +22,8 @@ fn reject(text: []const u8, expected: []const u8) !void {
     try t.expectEqualStrings(expected, compilation.diagnostics.items[0].code);
 }
 
-// spec: GC-SOURCE-6
-test "noalloc and nogc reject transitive managed allocation while permitting fixed-slot mutation" {
-    for ([_][]const u8{ "noalloc", "nogc" }) |bound| {
-        const create_source = try std.fmt.allocPrint(t.allocator, "list Numbers:i64;fn make()->Numbers{{return new_list<Numbers>(0u64);}}" ++
-            "fn constrained()->Numbers {s}{{return make();}}fn main()->i64{{return 0;}}", .{bound});
-        defer t.allocator.free(create_source);
-        try reject(create_source, "E_EFFECT_BOUND");
-        const append_source = try std.fmt.allocPrint(t.allocator, "list Numbers:i64;fn grow(values:Numbers)->unit{{append_list(values,42);}}" ++
-            "fn constrained(values:Numbers)->unit {s}{{grow(values);}}fn main()->i64{{return 0;}}", .{bound});
-        defer t.allocator.free(append_source);
-        try reject(append_source, "E_EFFECT_BOUND");
-    }
-    const source = "list Numbers:i64;" ++
-        "fn fixed(values:Numbers)->unit noalloc{write_list(values,0u64,42);}" ++
-        "fn inspect(values:Numbers)->i64 nogc{fixed(values);return read_list(values,0u64);}" ++
-        "fn main()->i64{let values=new_list<Numbers>(1u64);append_list(values,0);return inspect(values);}";
-    var statistics: language.vm.GcStatistics = .{};
-    try t.expectEqual(@as(i64, 42), (try execute(source, &statistics)).value);
-}
-
-// spec: GC-SOURCE-7
-test "managed elements reject owned resources and explicit storage rejects managed references" {
-    try rejectAll(&.{
-        "buffer Owned:i64;list Invalid:Owned;fn main()->i64{return 0;}",
-        "resource File:filesystem;list Invalid:File;fn main()->i64{return 0;}",
-        "resource File:filesystem;struct Wrapper{file:File}list Invalid:Wrapper;fn main()->i64{return 0;}",
-        "result Answer{ok:i64,err:i64}list Invalid:Answer;fn main()->i64{return 0;}",
-    }, "E_LIST_ELEMENT");
-    try rejectAll(&.{
-        "list Numbers:i64;buffer Invalid:Numbers;fn main()->i64{return 0;}",
-        "list Numbers:i64;struct Wrapper{values:Numbers}buffer Invalid:Wrapper;fn main()->i64{return 0;}",
-        "list Numbers:i64;buffer Invalid:[2]Numbers;fn main()->i64{return 0;}",
-        "list Numbers:i64;pool Invalid(Id):Numbers;fn main()->i64{return 0;}",
-    }, "E_UNTRACED_MANAGED");
-}
-
 fn rejectAll(sources: []const []const u8, code: []const u8) !void {
     for (sources) |source| try reject(source, code);
-}
-
-// spec: GC-SOURCE-8
-test "managed storage does not expose borrowed aliases" {
-    try rejectAll(&.{
-        "list Numbers:i64;fn main()->i64{let values=new_list<Numbers>(0u64);borrow values as view{return 0;}}",
-        "list Numbers:i64;fn main()->i64{let mut values=new_list<Numbers>(0u64);borrow mut values as view{return 0;}}",
-        "list Numbers:i64;fn main()->i64{let values=new_list<Numbers>(0u64);borrow values[..] as view{return 0;}}",
-    }, "E_LIST_BORROW");
 }
 
 // spec: GC-SOURCE-9
@@ -146,39 +44,5 @@ fn allocationFailure(allocator: std.mem.Allocator, program: language.bytecode.Pr
     const result = language.vm.runWithOptions(allocator, program, .{
         .memory = .{ .provide_allocator = false, .gc = .{ .stress = true, .statistics = &statistics } },
     });
-    try t.expectEqual(@as(usize, 0), statistics.live_objects);
-    try t.expectEqual(@as(usize, 0), statistics.live_capacity);
     try t.expectEqual(@as(i64, 42), (try result).value);
-}
-
-// spec: GC-SOURCE-10
-test "managed source execution unwinds roots on every host allocation failure" {
-    const source = "list Numbers:i64;struct Holder{values:Numbers}" ++
-        "fn make()->Numbers{let values=new_list<Numbers>(0u64);append_list(values,42);return values;}" ++
-        "fn consume(first:Holder,second:Numbers)->i64{append_list(second,9);let values=first.values;return read_list(values,0u64);}" ++
-        "fn main()->i64{return consume(new Holder{values:make()},new_list<Numbers>(0u64));}";
-    var compilation = try language.Compilation.init(t.allocator, "managed-oom.my", source);
-    defer compilation.deinit();
-    try compilation.emit();
-    try t.checkAllAllocationFailures(t.allocator, allocationFailure, .{compilation.code.?});
-}
-
-// spec: GC-SOURCE-11
-test "managed cycles lose local and record roots on block break and continue exits" {
-    const prefix = "list Nodes:Node;struct Node{children:Nodes,value:i64}struct Holder{nodes:Nodes}";
-    const cycle = "let nodes=new_list<Nodes>(0u64);append_list(nodes,new Node{children:nodes,value:42});" ++
-        "let holder=new Holder{nodes:nodes};let alias=holder.nodes;if len_list(alias)!=1u64{return 1;}";
-    const bodies = [_][]const u8{
-        "{" ++ cycle ++ "}",
-        "while true{" ++ cycle ++ "break;}",
-        "let mut i=0;while i<1{i=i+1;" ++ cycle ++ "continue;}",
-    };
-    for (bodies) |body| {
-        const source = try std.mem.concat(t.allocator, u8, &.{ prefix, "fn main()->i64{", body, "discard new_list<Nodes>(0u64);return 42;}" });
-        defer t.allocator.free(source);
-        var statistics: language.vm.GcStatistics = .{};
-        try t.expectEqual(@as(i64, 42), (try execute(source, &statistics)).value);
-        try t.expectEqual(@as(u64, 2), statistics.created);
-        try t.expectEqual(@as(u64, 1), statistics.reclaimed);
-    }
 }

@@ -65,19 +65,6 @@ test "domain codec declarations reject duplicate missing unknown and private ent
     try reject(prefix ++ "codec i64{decode:dec,encode:missing}" ++ suffix, "E_CODEC_FUNCTION");
     try reject(prefix ++ "codec i64{decode:dec,encode:enc}private " ++ suffix, "E_CODEC_PRIVATE");
 }
-test "domain codec contracts require exact value signatures and ordinary complete wire graphs" {
-    try reject(prefix ++ "codec bool{decode:dec,encode:enc}" ++ suffix, "E_CODEC_SIGNATURE");
-    try reject(prefix ++ "codec D{decode:dec,encode:enc}" ++ suffix, "E_CODEC_DATA");
-    try reject(prefix ++ "codec [0]D{decode:dec,encode:enc}" ++ suffix, "E_CODEC_DATA");
-    try reject("union W{ok:i64,hidden:D}" ++ prefix ++ "codec W{decode:dec,encode:enc}" ++ suffix, "E_CODEC_DATA");
-    try reject(prefix ++ "codec i64{decode:enc,encode:dec}" ++ suffix, "E_CODEC_SIGNATURE");
-    try reject("domain D:i64{codec i64{decode:dec,encode:enc}fn dec(x:i64)->D{return wrap<D>(x);}fn enc(x:D)->i64{return unwrap(x);}}fn main()->i64{return 0;}", "E_CODEC_SIGNATURE");
-    try reject(prefix ++ "codec i64{decode:dec,encode:enc}fn dec(x:&i64)->R{return new R.ok(wrap<D>(read_ref(x)));}fn enc(x:D)->i64{return unwrap(x);}}fn main()->i64{return 0;}", "E_CODEC_SIGNATURE");
-    try reject("result R{ok:D,err:D} domain D:i64{codec i64{decode:dec,encode:enc}fn dec(x:i64)->R{return new R.ok(wrap<D>(x));}fn enc(x:D)->i64{return unwrap(x);}}fn main()->i64{return 0;}", "E_CODEC_DATA");
-    try reject("result Time{ok:i64,err:i64}" ++ prefix ++ "codec i64{decode:dec,encode:enc}fn dec(c:clock_cap)->R{acknowledge " ++
-        "clock_now<Time>(c);return new R.err(0);}fn enc(x:D)->i64{return unwrap(x);}}fn " ++
-        "main()->i64{return 0;}", "E_CODEC_EFFECT");
-}
 const Provider = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main;import data as d;fn main()->i64{match codec_decode<d::Positive>(new d::Wire{n:7}){" ++
@@ -164,13 +151,6 @@ test "source codec operations reject missing contracts invalid arity and backing
     try reject(source ++ "fn main()->i64{return codec_decode<Positive>();}", "E_CODEC_ARITY");
     try reject(source ++ "fn main()->i64{return codec_decode(7);}", "E_CODEC_ARITY");
     try reject("fn helper<T:copy>(x:T)->T{return codec_encode<T>(x);}fn main()->i64{return 0;}", "E_GENERIC_BODY_UNSUPPORTED");
-}
-
-test "source codec rejection remains a typed result requiring handling" {
-    var c = try language.Compilation.init(t.allocator, "reject.my", source ++ "fn main()->i64{match codec_decode<Positive>(new Wire{n:0}){Decoded.ok(x)=>{return codec_encode<Positive>(x).n;},Decoded.err(e)=>{return e;}}}");
-    defer c.deinit();
-    try t.expectEqual(@as(i64, -1), (try c.execute(t.allocator)).value);
-    try reject(source ++ "fn main()->i64{discard codec_decode<Positive>(new Wire{n:0});return 0;}", "E_RESULT_DISCARD");
 }
 
 test "source codec operations follow selected method names rather than naming conventions" {

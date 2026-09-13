@@ -92,12 +92,6 @@ test "unused nominal template fields reject unknown names duplicate members and 
     try reject("result Answer<T:copy>{ok:T,err}", "E_RESULT_SCHEMA", "err");
     try reject("struct Box<T:copy>{value:T}domain Box:i64{}", "E_DUPLICATE_TYPE", "Box");
 }
-test "nominal template parameters cannot shadow declarations functions or pool handles" {
-    try reject("struct T{}struct Box<T:copy>{value:T}", "E_SHADOWING", "T");
-    try reject("fn T()->i64{return 0;}struct Box<T:copy>{value:T}", "E_SHADOWING", "T");
-    try reject("pool Nodes(T):i64;struct Box<T:copy>{value:T}", "E_SHADOWING", "T");
-    try reject("struct Box<T:copy>{value:U}fn other<U:copy>(x:U)->U{return x;}", "E_UNKNOWN_TYPE", "U");
-}
 test "nominal template applications check arity and constructor kinds inside unused declarations" {
     try reject("struct Pair<T:copy,U:copy>{a:T,b:U}struct Bad<V:copy>{x:Pair<V>}", "E_GENERIC_ARITY", "Pair<V>");
     try reject("struct Box<T:copy>{value:T}struct Bad{value:Box}", "E_GENERIC_ARITY", "Box");

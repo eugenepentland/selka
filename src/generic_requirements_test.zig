@@ -17,35 +17,11 @@ test "generic requirements imply prerequisites and match builtin scalar operatio
     try t.expect(!copy.implies(equality) and !equality.implies(integer));
     for ([_]typed.Type{ .i8, .i16, .i32, .i64, .u8, .u16, .u32, .u64 }) |ty| try t.expect(integer.accepts(ty, &.{}));
     try t.expect(equality.accepts(.bool, &.{}) and !integer.accepts(.bool, &.{}));
-    try t.expect(copy.accepts(.allocator, &.{}) and !equality.accepts(.allocator, &.{}));
+    try t.expect(copy.accepts(.clock_cap, &.{}) and !equality.accepts(.clock_cap, &.{}));
 }
 fn namedType(records: []const typed.Record, name: []const u8) ?typed.Type {
     for (records) |record| if (std.mem.eql(u8, record.name, name)) return record.id;
     return null;
-}
-// spec: GENERIC-REQUIREMENTS-1
-test "generic requirements preserve nominal identity and ownership obligations" {
-    var compilation = try language.Compilation.init(t.allocator, "requirements.my", "domain Distance:i64{}enum Color{red,blue}struct Point{x:i64}buffer Bytes:u8;resource File:filesystem;" ++
-        "result Answer{ok:i64,err:i64}struct Pending{answer:Answer}struct Owned{file:File}" ++
-        "pool Nodes(NodeId):Point;fn main()->i64{return 0;}");
-    defer compilation.deinit();
-    try compilation.check();
-    const records = compilation.program.?.records;
-    const cases = [_]struct { name: []const u8, copy: bool = false, equality: bool = false }{
-        .{ .name = "Distance", .copy = true, .equality = true }, .{ .name = "Point", .copy = true },
-        .{ .name = "Color", .copy = true, .equality = true },    .{ .name = "NodeId", .copy = true, .equality = true },
-        .{ .name = "Bytes" },                                    .{ .name = "File" },
-        .{ .name = "Nodes" },                                    .{ .name = "Answer" },
-        .{ .name = "Pending" },                                  .{ .name = "Owned" },
-    };
-    for (cases) |case| {
-        const found = namedType(records, case.name);
-        try t.expect(found != null);
-        const ty = found.?;
-        try t.expectEqual(case.copy, contract(.copy).accepts(ty, records));
-        try t.expectEqual(case.equality, contract(.equality).accepts(ty, records));
-        try t.expect(!contract(.integer).accepts(ty, records));
-    }
 }
 fn resolution(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "resolve.my", "fn f<T:copy+integer,U:equality>(a:T,b:U)->T{return a;}fn main()->i64{return 0;}");

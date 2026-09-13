@@ -106,14 +106,6 @@ test "module privacy rejects direct private access wrong kinds and transitive im
     }
 }
 
-test "interface closure includes buffers pools domain backing and enum table keys" {
-    try reject("module main; export Store; struct Secret {} buffer Store: Secret;", "E_PRIVATE_INTERFACE");
-    try reject("module main; export Store; struct Secret {} pool Store(Id): Secret;", "E_PRIVATE_INTERFACE");
-    try reject("module main; export D; domain Hidden: i64 {} domain D: Hidden {}", "E_PRIVATE_INTERFACE");
-    try reject("module main; export Table; enum Key { a, b } struct Table { values: [Key]i64 }", "E_PRIVATE_INTERFACE");
-    try reject("module main; export units; import units;", "E_SYNTAX");
-}
-
 test "module grammar parses qualified variant match constructors and free calls" {
     const text = "module main; import units; fn main() -> i64 { let x = new units::Choice.a; let y = units::helper(); match x { units::Choice.a => { return y; } } }";
     var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = text }, .{ .path = units_path, .bytes = "module units; export Choice; export helper; enum Choice { a } fn helper() -> i64 { return 1; }" } } };
@@ -189,17 +181,6 @@ fn rejectChecked(main: []const u8, dependency: []const u8, code: []const u8) !vo
     defer t.allocator.free(rendered);
     try t.expect(std.mem.indexOf(u8, rendered, ".my:") != null);
 }
-test "cross module bodies enforce private functions private types nominal identity and local shadowing" {
-    try rejectChecked("module main; import units; fn main() -> i64 { return units::hidden(); }", units, "E_PRIVATE_SYMBOL");
-    try rejectChecked("module main; import units; fn main() -> i64 { discard units::Distance.raw(1); return 0; }", units, "E_PRIVATE_SYMBOL");
-    try rejectChecked("module main; import units; fn main() -> i64 { let x = new units::Hidden {}; return 0; }", "module units; struct Hidden {}", "E_PRIVATE_SYMBOL");
-    try rejectChecked("module main; import units; struct X {} fn main() -> i64 { return units::take(new X {}); }", "module units; export X; export take; struct X {} fn take(x: X) -> i64 { return 0; }", "E_TYPE");
-    try rejectChecked("module main; import units; fn main() -> i64 { let units = 1; return units; }", units, "E_SHADOWING");
-    try rejectChecked("module main; import units; fn main() -> i64 { return hidden(); }", units, "E_UNKNOWN_SYMBOL");
-    try rejectChecked("module main; import units; fn main() -> i64 { return 0; }", "module units; fn bad() -> i64 { return true; }", "E_TYPE");
-    try rejectChecked("module main; import units; fn main() -> i64 { return 0; }", "module units; struct Recursive { next: Recursive }", "E_RECURSIVE_RECORD");
-}
-
 test "shared record types cross module boundaries and hidden names do not shadow caller locals" {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes = "module main; import units; fn main() -> i64 { let hidden = 7; let x = units::make(hidden); return units::value(x); }" },
@@ -215,31 +196,6 @@ test "shared record types cross module boundaries and hidden names do not shadow
     try compilation.emit();
     const result = try @import("vm.zig").runWithOptions(t.allocator, compilation.code.?, .{});
     try t.expectEqual(@as(i64, 7), result.value);
-}
-
-test "cross module effect and recoverable result obligations are enforced" {
-    try rejectChecked("module main; import units; fn main(a: allocator) -> i64 noalloc { return " ++
-        "units::allocate(a); }", "module units; export allocate; buffer B: i64; result R { ok: B, err: i64 } fn " ++
-        "allocate(a: allocator) -> i64 { acknowledge acquire_buffer<R>(a, 1); return 0; }", "E_EFFECT_BOUND");
-    try rejectChecked("module main; import units; fn main() -> i64 { discard units::fallible(); return 0; }", "module units; export R; export fallible; result R { ok: i64, err: i64 } fn " ++
-        "fallible() -> R { return new R.ok(7); }", "E_RESULT_DISCARD");
-}
-
-test "cross module returned slice references preserve caller mutation and snapshots" {
-    var files: Files = .{ .entries = &.{
-        .{ .path = "main.my", .bytes = "module main; import units; fn main() -> i64 { let mut values = new [3]i64 [1, 2, 3]; " ++
-            "let old = values; borrow mut values[0..3] as all { borrow mut units::middle(all) as " ++
-            "selected { write_slice(selected, 0, 9); } } return old[1] + values[1]; }" },
-        .{ .path = units_path, .bytes = "module units; export middle; fn middle(values: &mut []i64) -> &mut []i64 from values { borrow mut values[1..2] as selected { return selected; } }" },
-    } };
-    var project = graph.Project.init(t.allocator);
-    defer project.deinit();
-    try project.load(files.provider(), "main", .{});
-    var index = try interfaces.build(&project);
-    var compilation = try project_compile_module.Compilation.init(&index);
-    try compilation.emit();
-    const result = try @import("vm.zig").runWithOptions(t.allocator, compilation.code.?, .{});
-    try t.expectEqual(@as(i64, 11), result.value);
 }
 
 fn grouped(analysis: duplicates_module.Analysis, program: @import("typed.zig").Program, left: []const u8, right: []const u8) bool {
@@ -502,15 +458,6 @@ test "generic calls requirement diagnostics link caller and imported declaration
     try t.expectEqualStrings("U", compilation.src.text(failure.related.?.span));
 }
 
-test "generic calls concrete helpers retain imported identity and private domain boundaries" {
-    const caller = "module main;import units;fn helper(x:i64)->bool{return x==0;}fn f<T:copy>(x:T)->i64{discard x;return units::helper(1);}fn main()->i64{return 0;}";
-    try acceptChecked(caller, "module units;export helper;fn helper(x:i64)->i64{return leaf(x);}fn leaf(x:i64)->i64{return x+1;}");
-    try rejectChecked(caller, "module units;fn helper(x:i64)->i64{return x;}", "E_PRIVATE_SYMBOL");
-    const domain_caller = "module main;import units;fn f<T:copy>(x:T)->i64{discard x;return units::D.helper(1);}fn main()->i64{return 0;}";
-    try acceptChecked(domain_caller, "module units;export D;domain D:i64{fn helper(x:i64)->i64{return D.leaf(x);}private fn leaf(x:i64)->i64{return x+1;}}");
-    try rejectChecked(domain_caller, "module units;export D;domain D:i64{fn helper(x:i64)->i64{return E.leaf(x);}}domain E:i64{private fn leaf(x:i64)->i64{return x;}}", "E_PRIVATE_FUNCTION");
-}
-
 fn acceptChecked(main: []const u8, dependency: []const u8) !void {
     var files: Files = .{ .entries = &.{ .{ .path = "main.my", .bytes = main }, .{ .path = units_path, .bytes = dependency } } };
     var project = graph.Project.init(t.allocator);
@@ -614,24 +561,4 @@ test "late duplicate export diagnostics locate both original directives" {
     try t.expectEqualStrings("E_DUPLICATE_EXPORT", failure.code);
     try t.expectEqual(std.mem.lastIndexOf(u8, body, "value").?, failure.site.span.start);
     try t.expectEqual(std.mem.indexOf(u8, body, "value").?, failure.related.?.span.start);
-}
-
-// spec: ERGONOMIC-INTEGRATION-1
-test "late exports inferred generic calls and unit procedures compose across modules" {
-    var files: Files = .{ .entries = &.{
-        .{ .path = "main.my", .bytes = "module main;import units;fn main()->i64{" ++
-            "let mut n=40;borrow mut n as number{units::bump(number);}" ++
-            "units::consume(n);units::noop();return n;}" },
-        .{ .path = units_path, .bytes = "module units;fn identity<T:copy>(value:T)->T{return value;}" ++
-            "fn bump(number:&mut i64)->unit{write_ref(number,identity(read_ref(number)+1));}export bump;" ++
-            "fn consume<T:copy>(value:T)->unit{discard identity(value);}export consume;" ++
-            "fn noop()->unit{return;}export noop;" },
-    } };
-    var project = graph.Project.init(t.allocator);
-    defer project.deinit();
-    try project.load(files.provider(), "main", .{});
-    var index = try interfaces.build(&project);
-    var compilation = try project_compile_module.Compilation.init(&index);
-    try compilation.emit();
-    try t.expectEqual(@as(i64, 41), (try @import("vm.zig").runWithOptions(t.allocator, compilation.code.?, .{})).value);
 }

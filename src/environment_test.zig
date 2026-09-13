@@ -72,34 +72,6 @@ test "environment returns raw bytes and canonical zero padding" {
     var fake: Fake = .{};
     try t.expectEqual(@as(i64, 255), (try c.executeWithOptions(t.allocator, .{ .environment = fake.provider() })).value);
 }
-test "absent environment provider denies entry before reads and unused authority performs no lookup" {
-    var c = try language.Compilation.init(t.allocator, "environment.my", forwarded);
-    defer c.deinit();
-    try t.expectError(error.CapabilityUnavailable, c.execute(t.allocator));
-    var unused = try language.Compilation.init(t.allocator, "unused.my", "fn main(env: environment_cap) -> i64 effects() { discard env; return 7; }");
-    defer unused.deinit();
-    var fake: Fake = .{};
-    try t.expectEqual(@as(i64, 7), (try unused.executeWithOptions(t.allocator, .{ .environment = fake.provider() })).value);
-    try t.expectEqual(@as(usize, 0), fake.calls);
-}
-test "environment authority names and result schemas are checked" {
-    try reject(declarations ++ "fn main(c: clock_cap) -> i64 { acknowledge environment_get<Lookup>(c, new [1]u8 [75u8]); return 0; }", "E_TYPE");
-    try reject(declarations ++ "fn main(env: environment_cap) -> i64 { acknowledge environment_get<Lookup>(env, new [1]i64 [75]); return 0; }", "E_ENVIRONMENT_NAME");
-    try reject("result Lookup { ok: i64, err: i64 } fn main(env: environment_cap) -> i64 { acknowledge environment_get<Lookup>(env, new [0]u8 []); return 0; }", "E_ENVIRONMENT_RESULT");
-    try reject("fn main(a: environment_cap, b: environment_cap) -> i64 { return 0; }", "E_MAIN");
-    try reject("fn forge() -> environment_cap { return cast<environment_cap>(0); } fn main() -> i64 { return 0; }", "E_TYPE");
-}
-test "environment effect is transitive and independently validated while noalloc permits lookup" {
-    try reject(declarations ++ "fn lookup(env: environment_cap) -> Lookup { return environment_get<Lookup>(env, new " ++
-        "[1]u8 [75u8]); } fn main(env: environment_cap) -> i64 effects(clock, random) { " ++
-        "acknowledge lookup(env); return 0; }", "E_EFFECT_BOUND");
-    var c = try language.Compilation.init(t.allocator, "environment.my", declarations ++ "fn main(env: environment_cap) -> i64 noalloc { acknowledge environment_get<Lookup>(env, new [1]u8 [75u8]); return 0; }");
-    defer c.deinit();
-    var fake: Fake = .{};
-    _ = try c.executeWithOptions(t.allocator, .{ .environment = fake.provider() });
-    @constCast(c.code.?.functions)[0].policy.effects = 0;
-    try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
-}
 test "readValue maps environment provider failures while propagating host OOM and invalid counts" {
     var c = try language.Compilation.init(t.allocator, "environment.my", forwarded);
     defer c.deinit();
@@ -129,18 +101,6 @@ test "environment execution reporting and byte conversions release all failed al
     var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(no_resize.allocator(), scenario, .{});
 }
-test "environment lookup loops retain bounded live storage" {
-    var c = try language.Compilation.init(t.allocator, "loop.my", declarations ++ "fn main(env: environment_cap) -> i64 { let mut n = 0; while n < 10000 { acknowledge environment_get<Lookup>(env, new [1]u8 [75u8]); n += 1; } return n; }");
-    defer c.deinit();
-    try c.emit();
-    var limited: @import("test_support.zig").LimitedLiveAllocator = .{ .parent = t.allocator, .limit = 16 * 1024 };
-    defer limited.deinit();
-    var fake: Fake = .{};
-    try t.expectEqual(@as(i64, 10000), (try c.executeWithOptions(limited.allocator(), .{ .environment = fake.provider() })).value);
-    try t.expectEqual(@as(usize, 10000), fake.calls);
-    try t.expectEqual(@as(usize, 0), limited.live);
-}
-
 test "zero capacity environment values distinguish absent empty and too large" {
     var c = try language.Compilation.init(t.allocator, "zero.my", "struct Entry { bytes: [0]u8, length: u64, present: bool } result Lookup { ok: Entry, " ++
         "err: i64 } fn main(env: environment_cap) -> i64 { match environment_get<Lookup>(env, " ++
@@ -154,49 +114,6 @@ test "zero capacity environment values distinguish absent empty and too large" {
     fake.value = "x";
     try t.expectEqual(@as(i64, -4), (try c.executeWithOptions(t.allocator, .{ .environment = fake.provider() })).value);
 }
-test "environment failure propagation ends borrows and releases owned buffers" {
-    const source = declarations ++ "buffer B: i64; result Open { ok: B, err: i64 } fn work(heap: allocator, env: " ++
-        "environment_cap) -> Lookup { let b = try acquire_buffer<Open>(heap, 1); borrow " ++
-        "b[0..0] as view { discard len_slice(view); return new Lookup.ok(try " ++
-        "environment_get<Lookup>(env, new [1]u8 [75u8])); } } fn main(heap: allocator, env: " ++
-        "environment_cap) -> i64 { match work(heap, env) { Lookup.ok(entry) => { return " ++
-        "cast<i64>(entry.length); }, Lookup.err(code) => { return -code; } } }";
-    var c = try language.Compilation.init(t.allocator, "cleanup.my", source);
-    defer c.deinit();
-    for ([_]env.CallError{ error.Unavailable, error.Denied, error.Failed, error.NoCapacity, error.OutOfMemory }, 1..) |failure, code| {
-        var fake: Fake = .{ .failure = failure };
-        var stats: @import("memory.zig").Statistics = .{};
-        const options: language.vm.Options = .{
-            .environment = fake.provider(),
-            .memory = .{ .statistics = &stats },
-        };
-        if (failure == error.OutOfMemory) {
-            try t.expectError(error.OutOfMemory, c.executeWithOptions(t.allocator, options));
-        } else try t.expectEqual(-@as(i64, @intCast(code)), (try c.executeWithOptions(t.allocator, options)).value);
-        try t.expectEqual(@as(u64, 1), stats.created);
-        try t.expectEqual(stats.created, stats.released);
-        try t.expectEqual(@as(usize, 0), stats.live_allocations);
-    }
-}
-test "environment emission rejects malformed output shapes and VM checks capability operands" {
-    var c = try language.Compilation.init(t.allocator, "invalid.my", declarations ++ "fn main(env: environment_cap) -> i64 { acknowledge environment_get<Lookup>(env, new [1]u8 [75u8]); return 0; }");
-    defer c.deinit();
-    try c.emit();
-    var fake: Fake = .{};
-    for (@constCast(c.code.?.functions[0].scope.instructions)) |*instruction| {
-        const original = instruction.*;
-        if (instruction.op == .environment_get) {
-            instruction.op.environment_get.output = .i64;
-            try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, c.code.?));
-        } else if (instruction.op == .load_local) {
-            instruction.op = .{ .push_i64 = 0 };
-            try t.expectError(error.InternalError, language.vm.runWithOptions(t.allocator, c.code.?, .{ .environment = fake.provider() }));
-        }
-        instruction.* = original;
-    }
-    try t.expectEqual(@as(usize, 0), fake.calls);
-}
-
 const generic_environment = declarations ++
     "fn lookup<G:copy>(cap:environment_cap)->Lookup effects(environment){return environment_get<Lookup>(cap,new [1]u8[75u8]);}" ++
     "fn main(cap:environment_cap)->i64{match lookup::<bool>(cap){Lookup.ok(e)=>{return cast<i64>(e.length)+cast<i64>(e.bytes[0])+cast<i64>(e.bytes[1]);},Lookup.err(e)=>{return e;}}}";

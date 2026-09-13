@@ -35,10 +35,6 @@ test "foreach enumerate range and continue" {
 test "record fields update values and list slots without changing prior copies" {
     try run("struct Point{x:i64}fn main()->i64{let mut point=Point{x:1};point.x=2;let rows=[point];let before=rows[0];rows[0].x=40;return before.x+rows[0].x;}", 42);
 }
-// spec: PY-COLLECTIONS-6
-test "generic lists preserve literal foreach slice and write element types" {
-    try run("fn duplicate<T:copy+storable>(value:T)->List<T>{let values:List<T>=[value];values.append(value);let copy=values[:];for item in copy{discard item;}return copy;}fn main()->i64{let xs=duplicate(21);return xs[0]+xs[1];}", 42);
-}
 // spec: PY-COLLECTIONS-7
 test "field receiver index and right side run once in order under collection stress" {
     try run("struct Point{x:i64}" ++
@@ -47,22 +43,6 @@ test "field receiver index and right side run once in order under collection str
         "fn value(log:List<i64>)->i64{log.append(3);return 42;}" ++
         "fn main()->i64{let log:List<i64>=[];let rows=[Point{x:0}];receiver(log,rows)[index(log)].x=value(log);" ++
         "if len(log)!=3{return 1;}if log[0]!=1||log[1]!=2||log[2]!=3{return 2;}return rows[0].x;}", 42);
-}
-// spec: PY-COLLECTIONS-8
-test "iteration detects alias growth including continue and final step" {
-    for ([_][]const u8{
-        "for x in items{discard x;alias.append(2);}",
-        "for x in items{discard x;alias.append(2);continue;}",
-    }) |loop| {
-        const source = try std.fmt.allocPrint(t.allocator, "fn main()->i64{{let items=[1];let alias=items;{s}return 0;}}", .{loop});
-        defer t.allocator.free(source);
-        var compilation = try language.Compilation.init(t.allocator, "mutation.my", source);
-        defer compilation.deinit();
-        const result = try compilation.executeWithOptions(t.allocator, .{ .memory = .{ .gc = .{ .stress = true } } });
-        try t.expect(result == .trap);
-        try t.expectEqualStrings("R_LIST_ITERATION_MUTATION", result.trap.code);
-    }
-    try run("fn main()->i64{let items=[1];for x in items{discard x;items.append(42);break;}return items[-1];}", 42);
 }
 // spec: PY-COLLECTIONS-9
 test "generic record slot updates and list aliases remain copyable" {

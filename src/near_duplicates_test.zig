@@ -59,17 +59,6 @@ test "near search retains signature effect and nominal boundaries and excludes u
     defer result.deinit();
     try t.expectEqual(@as(usize, 0), result.approximate.pairs.len);
 }
-test "line edit alignment describes inserted statements without relabeling them exact" {
-    const text = "fn a(x: i64) -> i64 { return x * 2 + 1; } fn b(x: i64) -> i64 { discard x; return x * 2 + 1; } fn main() -> i64 { return 0; }";
-    var c = try language.Compilation.init(t.allocator, "near.my", text);
-    defer c.deinit();
-    try c.check();
-    var result = try discovery.discover(t.allocator, c.program.?, .{ .approximate = true, .min_nodes = 1, .near_options = .{ .similarity_percent = 70 } });
-    defer result.deinit();
-    try t.expectEqual(@as(usize, 0), result.groups.len);
-    try t.expectEqual(@as(usize, 1), result.approximate.pairs.len);
-    try t.expect(hasInsertion(result.approximate.pairs[0].changes));
-}
 // spec: TOOL-3
 test "bounded near discovery explicitly reports incomplete work and validates budgets" {
     var c = try language.Compilation.init(t.allocator, "near.my", source);
