@@ -15,7 +15,7 @@ A function may have one contextual annotation between its result/lifetime contra
 and body:
 
 ```mylang
-// doc: skip fragment: `Numbers` and the removed slice tier are not declared here
+# doc: skip fragment: `Numbers` and the removed slice tier are not declared here
 fn edit(values: &mut []i64) -> i64 noalloc {
     write_slice(values, 0, 7);
     return read_slice(values, 0);

@@ -11,7 +11,7 @@ zig build run -- list-interfaces examples/modules/main.my
 Header order is `module`, then imports. Explicit exports may precede, follow, or be interspersed with top-level declarations:
 
 ```mylang
-// doc: skip fragment: the imported `shared.units` module is not shown
+# doc: skip fragment: the imported `shared.units` module is not shown
 module main;
 import shared.units;
 struct Measurement { distance: units::Distance }

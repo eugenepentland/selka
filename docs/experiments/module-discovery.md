@@ -13,7 +13,7 @@ Explicit `export Name;` directives may appear anywhere among the following
 top-level declarations:
 
 ```mylang
-// doc: skip fragment: header excerpt whose imported modules are not shown
+# doc: skip fragment: header excerpt whose imported modules are not shown
 module main;
 import shared.units;
 import shared.types as types;

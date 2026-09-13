@@ -14,25 +14,63 @@ def main():
     with tempfile.TemporaryDirectory(prefix='mylang-schema-') as temporary:
         root = Path(temporary)
         entry = root / 'main.my'
-        entry.write_text('module main; import data; import other; fn main() -> i64 { return 0; }')
+        entry.write_text('module main\nimport data\nimport other\n\ndef main() -> i64:\n    return 0\n')
         other = root / 'other.my'
-        other.write_text('module other; export Point; struct Point { x: bool }')
+        other.write_text('module other\nexport Point\n\nclass Point:\n    x: bool\n')
         data = root / 'data.my'
-        source = '''module data;
-export Point; export Status; export Choice; export Outcome; export Identity;
-export Node; export File;
-export copy; export sample;
-struct Point { x: u64, y: [2]bool, table: [Status]u16 }
-enum Status { ready, failed }
-union Choice { empty, point: Point }
-result Outcome { ok: Choice, err: Status }
-domain Identity: i8 { private fn raw(x: i8) -> Identity { return wrap[Identity](x); } }
-struct Node { next: Identity }
-resource File: filesystem;
-fn copy(x: Point) -> Point { return x; }
-result Time { ok: i64, err: i64 }
-fn sample(clock: clock_cap) -> i64 { match clock_now[Time](clock) { Time.ok(x) => { return x; }, Time.err(code) => { return code; } } }
-struct Hidden { secret: i32 }
+        source = '''module data
+export Point
+export Status
+export Choice
+export Outcome
+export Identity
+export Node
+export File
+export copy
+export sample
+
+class Point:
+    x: u64
+    y: [2]bool
+    table: [Status]u16
+
+enum Status:
+    ready,
+    failed
+
+union Choice:
+    empty,
+    point: Point
+
+result Outcome:
+    ok: Choice,
+    err: Status
+
+domain Identity: i8:
+    private def raw(x: i8) -> Identity:
+        return wrap[Identity](x)
+
+class Node:
+    next: Identity
+
+resource File: filesystem
+
+def copy(x: Point) -> Point:
+    return x
+
+result Time:
+    ok: i64,
+    err: i64
+
+def sample(clock: clock_cap) -> i64:
+    match clock_now[Time](clock):
+        case Time.ok(x):
+            return x
+        case Time.err(code):
+            return code
+
+class Hidden:
+    secret: i32
 '''
         data.write_text(source)
 
@@ -81,17 +119,17 @@ struct Hidden { secret: i32 }
                     assert case['payload'] in types
         # Private declaration order, source comments, and import discovery order
         # do not change the public contract or expose internal numeric type IDs.
-        data.write_text(source.replace('struct Hidden { secret: i32 }', '// changed\nstruct Secret { bits: i32 }'))
-        entry.write_text('module main; import other as o; import data as d; fn main() -> i64 { return 1; }')
+        data.write_text(source.replace('class Hidden:\n    secret: i32\n', '# changed\nclass Secret:\n    bits: i32\n'))
+        entry.write_text('module main\nimport other as o\nimport data as d\n\ndef main() -> i64:\n    return 1\n')
         assert run() == raw
         data.write_text(source.replace('y: [2]bool', 'y: [3]bool'))
         assert run() != raw
         # Every body must check, including an unexported and uncalled function.
-        data.write_text(source + 'fn broken() -> i64 { return true; }')
+        data.write_text(source + '\ndef broken() -> i64:\n    return True\n')
         assert 'E_TYPE' in run(1)
-        data.write_text(source.replace('x: u64, y:', 'x: u64, x:'))
+        data.write_text(source.replace('    x: u64\n    y:', '    x: u64\n    x:'))
         assert 'duplicate' in run(1).lower()
-        data.write_text(source.replace('export Point;', ''))
+        data.write_text(source.replace('export Point\n', ''))
         assert 'E_PRIVATE_INTERFACE' in run(1)
         data.write_text(source)
         run(2, '--evaluation-request')

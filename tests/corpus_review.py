@@ -35,8 +35,9 @@ def invoice(counts):
 
 def invoice_inputs(counts):
     names = ('books', 'cables', 'adapters')
-    return 'module inputs;\n' + ''.join(f'export {n};\n' for n in names) + ''.join(
-        f'fn {name}()->i64{{return {value};}}\n' for name, value in zip(names, counts))
+    exports = ''.join(f'export {n}\n' for n in names)
+    bodies = '\n\n'.join(f'def {name}() -> i64:\n    return {value}\n' for name, value in zip(names, counts))
+    return 'module inputs\n' + exports + '\n\n' + bodies
 
 
 def frame(kind, sequence, value=0):
@@ -60,10 +61,10 @@ def packet(data, size):
 
 
 def packet_inputs(data, size):
-    values = ','.join(str(n) + 'u8' for n in data)
-    return ('module inputs;export bytes;export size;'
-            f'fn bytes()->[9]u8{{return new [9]u8[{values}];}}'
-            f'fn size()->u64{{return {size}u64;}}')
+    values = ', '.join(str(n) + 'u8' for n in data)
+    return ('module inputs\nexport bytes\nexport size\n\n\n'
+            f'def bytes() -> [9]u8:\n    return [{values}]\n\n\n'
+            f'def size() -> u64:\n    return {size}u64\n')
 
 
 def cases(name):

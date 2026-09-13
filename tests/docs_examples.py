@@ -3,7 +3,7 @@
 
 Walks README.md, SPEC.md and docs/**/*.md, extracts fenced code blocks, and runs
 the ones tagged ``mylang`` or ``my`` through the compiler.  Blocks carry optional
-``# doc:`` (or ``// doc:``) directives on their leading lines; see
+``# doc:`` directives on their leading lines; see
 docs/experiments/doc-examples.md for the grammar.  Blocks tagged as prose that
 still look like guest source are reported as mis-tagged so stale examples cannot
 hide behind a non-executing fence.
@@ -22,17 +22,16 @@ import tempfile
 ROOT = Path(__file__).resolve().parents[1]
 EXECUTABLE_TAGS = ("mylang", "my")
 PROSE_TAGS = ("", "text", "rust", "python", "go")
-GUEST_SHAPE = re.compile(r"^(?:def main|fn main|module )", re.M)
+GUEST_SHAPE = re.compile(r"^(?:def main|module )", re.M)
 PRINT_CALL = re.compile(r"(?<![A-Za-z0-9_.])print\s*\(")
 FIXTURES = ROOT / "docs" / "fixtures"
 MODULE_LINE = re.compile(r"^module[ \t]+([A-Za-z_][A-Za-z0-9_]*)", re.M)
-MAIN_LINE = re.compile(r"^[ \t]*(?:pub[ \t]+)?(?:def|fn)[ \t]+main\b", re.M)
-DIRECTIVE = re.compile(r"^[ \t]*(?:#|//)[ \t]*doc:[ \t]*(?P<name>[A-Za-z-]+)[ \t]*(?P<rest>.*?)[ \t]*$")
+MAIN_LINE = re.compile(r"^[ \t]*(?:pub[ \t]+)?def[ \t]+main\b", re.M)
+DIRECTIVE = re.compile(r"^[ \t]*#[ \t]*doc:[ \t]*(?P<name>[A-Za-z-]+)[ \t]*(?P<rest>.*?)[ \t]*$")
 KNOWN = ("expect", "expect-error", "check", "project", "file", "skip", "not-mylang", "allow-read", "allow-write")
 TIMEOUT = 120
 # `check` and `check-project` both demand an entry point, so a declaration-only example
-# gets this neutral one appended.  Every spelling shares one file grammar, so the
-# Python-style stub compiles after brace-syntax declarations too.
+# gets this neutral one appended.
 STUB = "def main() -> int:\n    return 0\n"
 
 

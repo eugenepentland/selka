@@ -209,8 +209,7 @@ This returns `12`. `head[int](numbers)` supplies the type argument explicitly an
 ## Canonical prelude types
 
 `list`, `dict`, `str`, `bytes`, `Option` and `Result` have exactly one nominal identity
-across every module of a project, and across the Python and legacy brace spellings of the
-same program. A `Result[str, str]` returned by an imported module is the same type as one
+across every module of a project. A `Result[str, str]` returned by an imported module is the same type as one
 built locally, so no project imports a prelude module to make its signatures line up, and
 `case Ok(...)` reads a standard-library result the same way it reads yours. The identity
 is shared, not ambient: `bytes` and `float` are registered wherever their names appear in

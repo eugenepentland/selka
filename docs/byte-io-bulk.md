@@ -4,7 +4,7 @@
 Projects opt in by adding the following exports and declarations to `io.my`:
 
 ```my
-// doc: skip fragment: declarations appended to an existing host io.my module
+# doc: skip fragment: declarations appended to an existing host io.my module
 export Block;
 export read_block;
 export write_block;
@@ -33,7 +33,7 @@ partial block. This is bounded buffering, not a streaming stdout commit protocol
 For example, a complete copy can use:
 
 ```my
-// doc: skip needs host capability: the mylang-io byte host and its io.my module
+# doc: skip needs host capability: the mylang-io byte host and its io.my module
 fn main() -> i64 {
     let size = io::length();
     let mut offset = 0;

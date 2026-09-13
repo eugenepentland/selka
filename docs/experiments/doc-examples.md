@@ -29,13 +29,12 @@ goes through `check-project` or `run-project`; everything else is written to `ma
 and goes through `check` or `run`. Sources are written under a per-run temporary root
 and never into the repository.
 
-The runner is spelling-agnostic. It writes whatever the fence contains, so legacy
-brace syntax, the familiar brace spelling and canonical Python-style source all run.
+The runner writes whatever the fence contains and lets the compiler judge it, so a
+page's examples are held to exactly the surface the compiler accepts.
 
 ## Directives
 
-The leading lines of a block may carry directives written as `# doc:` comments, or as
-`// doc:` in brace-syntax blocks. Directive lines are stripped before the program is
+The leading lines of a block may carry directives written as `# doc:` comments. Directive lines are stripped before the program is
 written out. An unknown directive name fails the run.
 
 | Directive | Meaning |

@@ -74,9 +74,7 @@ native backend raises the same `R_ASSERT` code without carrying it. Assertions
 are permitted under every effect bound, including `noalloc` and `noio`, and
 inside generic function bodies, because checking a condition contributes no
 effect of its own. They are not removed in any build, so use them for invariants
-a caller cannot violate and a `Result` for errors it can. `assert` is a keyword
-only in the Python surface; legacy brace sources keep it as an ordinary
-identifier.
+a caller cannot violate and a `Result` for errors it can.
 
 ```mylang
 # doc: expect 42

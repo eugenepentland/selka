@@ -69,15 +69,16 @@ def single_files(compiler, root):
 
 def export_placement(compiler, root):
     entry = root / 'main.my'
-    for declaration in ('fn value()->i64{return 42;}', 'struct Value { n:i64 }'):
-        name = 'value' if declaration.startswith('fn') else 'Value'
-        late = 'module main;\n' + declaration + '\nexport ' + name + ';\nfn main()->i64{return 42;}'
+    body = 'def main() -> i64:\n    return 42\n'
+    for declaration in ('def value() -> i64:\n    return 42\n', 'class Value:\n    n: i64\n'):
+        name = 'value' if declaration.startswith('def') else 'Value'
+        late = 'module main\n\n\n' + declaration + '\nexport ' + name + '\n\n\n' + body
         entry.write_text(late)
         assert invoke(compiler, 'check-project', entry) == ('', [])
         assert invoke(compiler, 'run-project', entry, '--print-result') == ('42\n', [])
-        entry.write_text('module main;export ' + name + ';' + declaration + 'fn main()->i64{return 42;}')
+        entry.write_text('module main\nexport ' + name + '\n\n\n' + declaration + '\n\n' + body)
         assert invoke(compiler, 'run-project', entry, '--print-result') == ('42\n', [])
-        duplicate = late + '\nexport ' + name + ';'
+        duplicate = late + '\nexport ' + name + '\n'
         entry.write_text(duplicate)
         _, messages = invoke(compiler, 'check-project', entry, status=1)
         error = problem(messages, 'E_DUPLICATE_EXPORT')
@@ -88,8 +89,9 @@ def export_placement(compiler, root):
 
 def modules(compiler, root):
     entry, helper = root / 'main.my', root / 'helper.my'
-    entry.write_text('module main;import helper;fn main()->i64{return helper::work::<bool>(9);}')
-    bad = 'module helper;\nexport work;\nresult R{ok:i64,err:i64}\nfn work<T:copy>(input:i64)->i64{\nlet pending=new R.ok(input);\nreturn input;\n}'
+    entry.write_text('module main\nimport helper\n\n\ndef main() -> i64:\n    return helper.work[bool](9)\n')
+    bad = ('module helper\nexport work\n\n\nresult R:\n    ok: i64,\n    err: i64\n\n\n'
+           'def work[T](input: i64) -> i64:\n    pending: R = Ok(input)\n    return input\n')
     helper.write_text(bad)
     _, messages = invoke(compiler, 'check-project', entry, status=1)
     data = problem(messages, 'E_RESULT_UNHANDLED')
@@ -97,26 +99,26 @@ def modules(compiler, root):
     assert [note['role'] for note in data['notes']] == ['related']
     span = data['notes'][0]['location']['bytes']
     assert bad.encode()[span['start']:span['end']] == b'pending'
-    helper.write_text(bad.replace('let pending=new R.ok(input);\n', ''))
+    helper.write_text(bad.replace('    pending: R = Ok(input)\n', ''))
     assert invoke(compiler, 'run-project', entry, '--print-result') == ('9\n', [])
-    entry.write_text('module main;import missing;fn main()->i64{return 0;}')
+    entry.write_text('module main\nimport missing\n\n\ndef main() -> i64:\n    return 0\n')
     _, messages = invoke(compiler, 'check-project', entry, status=1)
     assert messages[0]['kind'] == 'diagnostic' and messages[0]['diagnostic']['code'].startswith('E_')
-    entry.write_text('module main;import helper;fn main()->i64{return 0;}')
-    helper.write_text('module helper;import main;')
+    entry.write_text('module main\nimport helper\n\n\ndef main() -> i64:\n    return 0\n')
+    helper.write_text('module helper\nimport main\n')
     _, messages = invoke(compiler, 'list-modules', entry, status=1)
     cycle = messages[0]['diagnostic']
     assert cycle['notes'] and cycle['location']['path'] != cycle['notes'][0]['location']['path']
-    entry.write_text('module main;fn main()->i64{return 1/0;}')
+    entry.write_text('module main\n\n\ndef main() -> i64:\n    return divtrunc(1, 0)\n')
     for command in ('run-project', 'eval-project'):
         _, messages = invoke(compiler, command, entry, status=1)
         assert problem(messages, 'R_DIVISION_BY_ZERO')['location']['path'] == 'main.my'
     request, messages = invoke(compiler, 'eval-project', entry, '--evaluation-request')
     assert json.loads(request)['evaluation'] == 'not-executed' and messages == []
-    entry.write_text('module main;fn main(c:clock_cap)->i64{_ = c;return 7;}')
+    entry.write_text('module main\n\n\ndef main(c: clock_cap) -> i64:\n    _ = c\n    return 7\n')
     _, messages = invoke(compiler, 'eval-project', entry, '--evaluation-request', status=1)
     problem(messages, 'E_EVAL_INPUT')
-    entry.write_text('module main;fn main()->i64{let unused=1;return 7;}')
+    entry.write_text('module main\n\n\ndef main() -> i64:\n    unused = 1\n    return 7\n')
     result = subprocess.run([compiler, 'check-session', str(entry), '--diagnostics=json'], input='check\ncheck\nclear\ncheck\nquit\n', capture_output=True, text=True, timeout=30)
     assert result.returncode == 0
     replies = [json.loads(line) for line in result.stdout.splitlines()]
@@ -132,7 +134,7 @@ def modules(compiler, root):
     for command, option in (('input-module', None), ('check-value-project', '--value='), ('invoke-project', '--request=')):
         _, messages = invoke(compiler, command, manifest if option is None else entry, *([] if option is None else [option + str(manifest)]), status=2 if option is None else 1)
         assert messages and all(item['kind'] == 'message' for item in messages if item.get('diagnostic', {}).get('severity') != 'warning')
-    entry.write_text('module main;export missing;fn main()->i64{return 0;}')
+    entry.write_text('module main\nexport missing\n\n\ndef main() -> i64:\n    return 0\n')
     _, messages = invoke(compiler, 'list-interfaces', entry, status=1)
     assert messages[0]['kind'] == 'diagnostic' and messages[0]['diagnostic']['location']['path'] == 'main.my'
 

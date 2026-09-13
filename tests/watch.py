@@ -27,8 +27,8 @@ def main():
         project = directory / 'project'
         project.mkdir()
         entry, data = project / 'main.my', project / 'data.my'
-        entry.write_text('module main;import data;fn main()->i64{return data::value();}')
-        valid = 'module data;export value;fn value()->i64{return 7;}'
+        entry.write_text('module main\nimport data\n\n\ndef main() -> i64:\n    return data.value()\n')
+        valid = 'module data\nexport value\n\n\ndef value() -> i64:\n    return 7\n'
         data.write_text(valid)
         command = [sys.executable, str(script), str(entry), '--compiler', compiler, '--interval=.02']
         with tempfile.TemporaryFile() as diagnostics:
@@ -51,7 +51,7 @@ def main():
                     os.utime(data, ns=(before.st_atime_ns, before.st_mtime_ns))
                     assert reply(0)['reuse'] == {'hits': 1, 'misses': 1}
                     replacement = project / 'replacement.tmp'
-                    replacement.write_text(valid.replace('7', 'true'))
+                    replacement.write_text(valid.replace('7', 'True'))
                     replacement.replace(data)
                     reply(1)
                     data.unlink()
@@ -60,9 +60,9 @@ def main():
                     reply(0)
                     nested = project / 'nested'
                     nested.mkdir()
-                    entry.write_text('module main;import nested.value as nested;fn main()->i64{return nested::value();}')
+                    entry.write_text('module main\nimport nested.value as nested\n\n\ndef main() -> i64:\n    return nested.value()\n')
                     reply(1)
-                    (nested / 'value.my').write_text('module nested.value;export value;fn value()->i64{return 4;}')
+                    (nested / 'value.my').write_text('module nested.value\nexport value\n\n\ndef value() -> i64:\n    return 4\n')
                     reply(0)
                     process.send_signal(signal.SIGTERM)
                     assert process.wait(timeout=10) == 143
@@ -74,7 +74,7 @@ def main():
         manifest = directory / 'config.json'
         manifest.write_text(json.dumps({'version': 1, 'module': 'config', 'values': [{'name': 'value', 'type': 'i64', 'value': '7'}]}))
         manifest_text = manifest.read_text()
-        entry.write_text('module main;import config;fn main()->i64{return config::value();}')
+        entry.write_text('module main\nimport config\n\n\ndef main() -> i64:\n    return config.value()\n')
         with tempfile.TemporaryFile() as diagnostics:
             process = subprocess.Popen(command + ['--inputs=' + str(manifest)], stdout=subprocess.PIPE, stderr=diagnostics)
             with selectors.DefaultSelector() as ready:
@@ -155,7 +155,7 @@ def main():
             while not started.exists():
                 assert time.monotonic() < deadline
                 time.sleep(.01)
-            entry.write_text(entry.read_text() + '\n// edit during check\n')
+            entry.write_text(entry.read_text() + '\n# edit during check\n')
             proceed.touch()
             with selectors.DefaultSelector() as ready:
                 ready.register(child.stdout, selectors.EVENT_READ)
