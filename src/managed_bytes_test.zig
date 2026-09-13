@@ -175,10 +175,12 @@ test "PY-BYTES-3 byte strings survive list storage cycles and reclaim unreachabl
     try t.expectEqual(@as(usize, 1), heap.statistics.live_objects);
 }
 
+// Collection is deliberately left off: its scratch index is keyed by object addresses, so
+// stressed collection makes the allocation count vary between runs. Rooting under stress is
+// covered by the tests above; this one checks that every constructor cleans up on failure.
 fn allocationFailures(allocator: std.mem.Allocator) !void {
     var heap = gc.Heap.init(allocator);
     defer heap.deinit();
-    heap.stress = true;
     const input = try bytes.create(&heap, bytes_type, "a,b");
     defer input.release(allocator);
     const separator = try bytes.create(&heap, bytes_type, ",");
