@@ -27,12 +27,7 @@ fn writeRecord(writer: *std.Io.Writer, program: bc.Program, record: typed.Record
         try writer.writeByte('\n');
     };
     if (record.shape.resource) |kind| try writer.print("  provider {s} (owned)\n", .{@tagName(kind)});
-    if (record.shape.pool) |pool| try writer.print("  element {s} handle {s} (owned)\n", .{
-        typed.typeName(pool.element, program.records),
-        typed.typeName(pool.handle, program.records),
-    });
-    if (record.shape.handle_pool) |pool| try writer.print("  pool {s} (inert ID)\n", .{typed.typeName(pool, program.records)});
-    if (record.shape.buffer) |element| try writer.print("  element {s} ({s})\n", .{ typed.typeName(element, program.records), if (record.managed) "managed" else "owned" });
+    if (record.shape.buffer) |element| try writer.print("  element {s} (managed)\n", .{typed.typeName(element, program.records)});
     if (record.shape.domain) |backing| try writer.print("  backing {s} (private)\n", .{typed.typeName(backing, program.records)});
     for (record.fields, 0..) |field, i| try writer.print("  field {d}: {s}: {s}\n", .{ i, field.name, typed.typeName(field.ty, program.records) });
 }
@@ -43,21 +38,9 @@ fn writeFunction(writer: *std.Io.Writer, program: bc.Program, src: Source, funct
     try writer.print("function {s}(", .{function.name});
     for (function.scope.locals[0..function.signature.parameter_count], 0..) |parameter, i| {
         if (i != 0) try writer.writeAll(", ");
-        try writer.print("{s}: {s}{s}{s}", .{
-            parameter.name,
-            if (parameter.parameter.reference_parameter) |mutable| (if (mutable) "&mut " else "&") else "",
-            if (parameter.parameter.slice_parameter) "[]" else "",
-            typed.typeName(parameter.ty, program.records),
-        });
+        try writer.print("{s}: {s}", .{ parameter.name, typed.typeName(parameter.ty, program.records) });
     }
-    if (function.signature.return_reference) |contract| {
-        try writer.print(") -> &{s}{s}{s} from {s}\n", .{
-            if (contract.mutable) "mut " else "",
-            if (contract.slice) "[]" else "",
-            typed.typeName(function.signature.return_type, program.records),
-            function.scope.locals[@backingInt(contract.parameter)].name,
-        });
-    } else try writer.print(") -> {s}\n", .{typed.typeName(function.signature.return_type, program.records)});
+    try writer.print(") -> {s}\n", .{typed.typeName(function.signature.return_type, program.records)});
     if (function.policy.c_abi) try writer.print("  extern C symbol {s}\n", .{@import("c_abi.zig").symbol(function.name)}) else if (function.policy.host != null) try writer.writeAll("  host declaration\n");
     if (function.policy.effects != 0 or function.policy.effect_bound != null) {
         try writer.writeAll("  effects ");
@@ -68,14 +51,6 @@ fn writeFunction(writer: *std.Io.Writer, program: bc.Program, src: Source, funct
         }
         try writer.writeByte('\n');
     }
-    for (function.scope.references, 0..) |reference, i| try writer.print("  reference {d}: {s}: {s} owner={d} parent={?d} mutable={}\n", .{
-        i,
-        reference.name,
-        typed.typeName(reference.ty, program.records),
-        @backingInt(reference.owner),
-        if (reference.parent) |parent| @as(?usize, @backingInt(parent)) else null,
-        reference.mutable,
-    });
     for (function.scope.instructions, 0..) |instruction, i| try writeInstruction(writer, program, src, instruction, i);
 }
 
@@ -160,7 +135,6 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
         .acquire_resource => |acquire| try writer.print("ACQUIRE_RESOURCE -> {s}", .{typed.typeName(acquire.output, program.records)}),
         .external_read => |read| try writer.print("EXTERNAL_{s} -> {s}", .{ @tagName(read.kind), typed.typeName(read.output, program.records) }),
         .acquire_pool => |ty| try writer.print("ACQUIRE_POOL {f}", .{ty}),
-        .json_codec => |codec| try writer.print("JSON_CODEC document={} decode={} input={f} output={f}", .{ codec.document, codec.decode, codec.input, codec.output }),
         .acquire_buffer => |ty| try writer.print("ACQUIRE_BUFFER {f}", .{ty}),
         .move_local => |slot| try writer.print("MOVE_LOCAL {d}", .{@backingInt(slot)}),
         .drop_local => |slot| try writer.print("DROP_LOCAL {d}", .{@backingInt(slot)}),
@@ -214,10 +188,8 @@ fn recordKind(record: typed.Record) []const u8 {
         if (variants.fallible) return "result";
         return if (variants.is_union) "union" else "enum";
     }
-    if (record.shape.pool != null) return "pool";
-    if (record.shape.handle_pool != null) return "handle";
     if (record.shape.resource != null) return "resource";
-    if (record.shape.buffer != null) return if (record.managed) "list" else "buffer";
+    if (record.shape.buffer != null) return "list";
     if (record.tableKey() != null) return "table";
     if (record.shape.array != null) return "array";
     if (record.shape.domain != null) return "domain";

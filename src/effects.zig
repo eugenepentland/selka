@@ -77,13 +77,10 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
     defer allocator.free(cleanup_masks);
     for (program.functions, 0..) |function, index| {
         if (function.policy.host) |span| try seedHost(&graph, index, function.policy.effect_bound, span);
-        try seedOwnership(&graph, index, if (function.signature.return_reference == null) function.signature.return_type else null, function.scope.locals, function.declaration, cleanup_masks);
+        try seedOwnership(&graph, index, function.signature.return_type, function.scope.locals, function.declaration, cleanup_masks);
         var walker = try @import("typed_walk.zig").Walker.init(allocator, program, function.scope.body);
         defer walker.deinit();
-        while (try walker.next()) |item| if (item == .statement) {
-            const statement = program.statements[@backingInt(item.statement)];
-            if (statement.data == .arena_scope) graph.direct(index, .allocation, statement.span);
-        } else if (item == .expression) {
+        while (try walker.next()) |item| if (item == .expression) {
             const node = program.nodes[@backingInt(item.expression)];
             switch (node.data) {
                 .acquire_resource => graph.direct(index, typed.resourceKind(typed.resultShape(node.ty, program.records).?.ok_type, program.records).?.effect(), node.span),
@@ -91,7 +88,6 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
                 .resource_io => |io| graph.direct(index, typed.resourceKind(function.scope.locals[@backingInt(io.owner)].ty, program.records).?.effect(), node.span),
                 .environment_get => graph.direct(index, .environment, node.span),
                 .external_read => |read| graph.direct(index, read.kind.effect(), node.span),
-                .json_codec, .acquire_pool => graph.direct(index, .allocation, node.span),
                 .cast => if (allocatingSequence(program.records, node.ty)) {
                     graph.direct(index, .managed_allocation, node.span);
                 },
@@ -104,11 +100,11 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
                 .index => if (allocatingSequence(program.records, node.ty)) {
                     graph.direct(index, .managed_allocation, node.span);
                 },
-                .acquire_buffer => graph.direct(index, if (program.records[node.ty.recordIndex()].managed) .managed_allocation else .allocation, node.span),
+                .acquire_buffer => graph.direct(index, .managed_allocation, node.span),
                 .buffer_operation => |op| {
                     const managed = program.records[function.scope.locals[@backingInt(op.owner)].ty.recordIndex()].managed;
                     const dictionary = program.records[function.scope.locals[@backingInt(op.owner)].ty.recordIndex()].collection.kind == .dictionary;
-                    if (managed and @import("buffer_operations.zig").managedAllocation(op.kind, dictionary)) graph.direct(index, .managed_allocation, node.span) else if (op.kind.allocates()) graph.direct(index, .allocation, node.span);
+                    if (managed and @import("buffer_operations.zig").managedAllocation(op.kind, dictionary)) graph.direct(index, .managed_allocation, node.span);
                 },
                 .invoke => |call| {
                     const contract = @import("callables.zig").signature(program.nodes[@backingInt(call.callee)].ty, program.records).?;
@@ -119,20 +115,13 @@ pub fn check(allocator: std.mem.Allocator, program: typed.Program, sink: *diagno
                     error.InternalError => unreachable, // Resolved typed function identity.
                 },
                 .arena_escape => graph.direct(index, .managed_allocation, node.span),
-                .reset_arena,
-                .pool_operation,
                 .restrict_resource,
                 .function_value,
                 .integer,
                 .boolean,
                 .unit,
                 .local,
-                .read_ref,
-                .read_field,
-                .take_field,
                 .propagate,
-                .read_slice,
-                .len_slice,
                 .wrap,
                 .variant,
                 .block_value,
@@ -210,7 +199,7 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
     defer allocator.free(cleanup_masks);
     for (program.functions, 0..) |function, index| {
         if (function.policy.host) |span| try seedHost(&graph, index, function.policy.effect_bound, span);
-        try seedOwnership(&graph, index, if (function.signature.return_reference == null) function.signature.return_type else null, function.scope.locals, .{ .start = 0, .end = 0 }, cleanup_masks);
+        try seedOwnership(&graph, index, function.signature.return_type, function.scope.locals, .{ .start = 0, .end = 0 }, cleanup_masks);
         for (function.scope.instructions) |instruction| switch (instruction.op) {
             .acquire_resource => |acquire| {
                 const shape = typed.resultShape(acquire.output, program.records) orelse return error.InternalError;
@@ -228,7 +217,6 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
             },
             .environment_get => graph.direct(index, .environment, instruction.span),
             .external_read => |read| graph.direct(index, read.kind.effect(), instruction.span),
-            .begin_region, .json_codec, .acquire_pool => graph.direct(index, .allocation, instruction.span),
             .cast_integer => |ty| if (allocatingSequence(program.records, ty)) {
                 graph.direct(index, .managed_allocation, instruction.span);
             },
@@ -241,29 +229,23 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
             .get_index => |ty| if (allocatingSequence(program.records, ty)) {
                 graph.direct(index, .managed_allocation, instruction.span);
             },
-            .acquire_buffer => |ty| graph.direct(index, if (try managedType(program.records, ty)) .managed_allocation else .allocation, instruction.span),
+            .acquire_buffer => |ty| if (try managedType(program.records, ty)) graph.direct(index, .managed_allocation, instruction.span) else return error.InternalError,
             .buffer_operation => |op| {
                 if (@backingInt(op.owner) >= function.scope.locals.len) return error.InternalError;
                 const managed = try managedType(program.records, function.scope.locals[@backingInt(op.owner)].ty);
                 const dictionary = program.records[function.scope.locals[@backingInt(op.owner)].ty.recordIndex()].collection.kind == .dictionary;
                 if (managed and @import("buffer_operations.zig").managedAllocation(op.kind, dictionary)) {
                     graph.direct(index, .managed_allocation, instruction.span);
-                } else if (op.kind.allocates()) graph.direct(index, .allocation, instruction.span);
+                }
             },
-            .invoke => |invocation| {
-                const ty = invocation.ty;
+            .invoke => |ty| {
                 const contract = @import("callables.zig").signature(ty, program.records) orelse return error.InternalError;
                 inline for (std.meta.tags(sets.Effect)) |effect| if (contract.effects & sets.bit(effect) != 0) graph.direct(index, effect, instruction.span);
             },
             .call => |callee| try graph.call(index, @backingInt(callee), instruction.span),
-            .call_refs => |call| try graph.call(index, @backingInt(call.function), instruction.span),
-            .call_borrow => |call| try graph.call(index, @backingInt(call.function), instruction.span),
             .arena_escape => graph.direct(index, .managed_allocation, instruction.span),
-            .reset_arena,
-            .end_region,
             .begin_arena,
             .end_arena,
-            .pool_operation,
             .restrict_resource,
             .function_value,
             .push_i64,
@@ -284,24 +266,12 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
             .switch_variant,
             .cmp_domain,
             .cmp_enum,
-            .cmp_handle,
             .unwrap_domain,
             .neg_integer,
             .update_record,
             .get_field,
             .replace_index,
             .array_length,
-            .split_borrow,
-            .begin_borrow,
-            .begin_slice,
-            .read_slice,
-            .write_slice,
-            .len_slice,
-            .end_borrow,
-            .read_ref,
-            .read_field,
-            .take_field,
-            .write_ref,
             .move_local,
             .drop_local,
             .load_local,
@@ -313,8 +283,6 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
             .jump,
             .jump_if_false,
             .ret,
-            .ret_ref,
-            .capture_ref,
             => {},
         };
     }
@@ -337,8 +305,8 @@ test "effect lattice propagates independent effects through cycles without conta
     try graph.infer();
     for (graph.states[0..3]) |state| try t.expectEqual(sets.all & ~sets.bit(.environment), state.mask);
     try t.expectEqual(sets.bit(.environment), graph.states[3].mask);
-    try t.expectEqual(@as(?usize, 1), graph.states[0].witnesses[@backingInt(sets.Effect.allocation)].?.via);
-    try t.expectEqual(@as(?usize, 2), graph.states[1].witnesses[@backingInt(sets.Effect.allocation)].?.via);
+    try t.expectEqual(@as(?usize, 1), graph.states[0].witnesses[@backingInt(sets.Effect.filesystem)].?.via);
+    try t.expectEqual(@as(?usize, 2), graph.states[1].witnesses[@backingInt(sets.Effect.filesystem)].?.via);
 }
 
 fn typeMask(ty: typed.Type, masks: []const sets.Mask) error{InternalError}!sets.Mask {
@@ -377,9 +345,9 @@ pub fn cleanupMasks(allocator: std.mem.Allocator, records: []const typed.Record)
 }
 fn seedOwnership(graph: *Graph, index: usize, result: ?typed.Type, locals: []const typed.Local, span: Span, masks: []const sets.Mask) !void {
     var mask: sets.Mask = if (result) |ty| try typeMask(ty, masks) else 0;
-    for (locals) |local| if (local.parameter.reference_parameter != false) {
+    for (locals) |local| {
         mask |= try typeMask(local.ty, masks);
-    };
+    }
     for (std.meta.tags(sets.Effect)) |effect| if (mask & sets.bit(effect) != 0) {
         graph.direct(index, effect, span);
     };

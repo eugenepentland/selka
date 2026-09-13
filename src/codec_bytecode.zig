@@ -19,7 +19,7 @@ fn method(program: model.Program, owner: typed.Type, id: typed.FunctionId) error
     if (@backingInt(id) >= program.functions.len) return error.InternalError;
     const function = program.functions[@backingInt(id)];
     if (function.policy.owner != owner or function.policy.restricted or function.policy.host != null or function.policy.effects != 0) return error.InternalError;
-    if (function.signature.parameter_count != 1 or function.scope.locals.len == 0 or function.signature.return_reference != null or function.scope.locals[0].parameter.reference_parameter != null) return error.InternalError;
+    if (function.signature.parameter_count != 1 or function.scope.locals.len == 0) return error.InternalError;
     return function;
 }
 fn ordinary(allocator: std.mem.Allocator, records: []const typed.Record, ty: typed.Type) (std.mem.Allocator.Error || error{InternalError})!void {

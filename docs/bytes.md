@@ -4,7 +4,7 @@
 shape as `str`: a stable identity traced by the nonmoving collector, copied by
 reference on assignment, and usable wherever a managed value is allowed. Where
 `str` holds Unicode scalar values, `bytes` holds raw octets, so byte-oriented
-code no longer needs fixed `[N]u8` arrays, borrowed `&[]u8` slices, or explicit
+code no longer needs fixed `[N]u8` arrays or explicit
 `u8` literals.
 
 A `b"..."` or `b'...'` literal produces `bytes`. `len` is signed, indexing yields

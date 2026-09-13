@@ -73,7 +73,6 @@ pub const Walker = struct {
                     try self.arguments(call.arguments);
                     if (call.evaluation) |evaluation| try self.stmt(evaluation.body);
                 },
-                .json_codec => |codec| try self.arguments(&codec.arguments),
                 .field => |field| try self.expr(field.base),
                 .unary => |u| try self.expr(u.operand),
                 .binary => |b| {
@@ -88,6 +87,10 @@ pub const Walker = struct {
                     try self.expr(r.value);
                     try self.expr(r.index);
                     try self.expr(r.base);
+                },
+                .update => |u| {
+                    try self.fields(u.fields);
+                    try self.expr(u.base);
                 },
             },
             .statement => |id| switch (self.program.statements[@backingInt(id)].data) {

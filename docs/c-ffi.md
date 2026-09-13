@@ -65,7 +65,7 @@ Unaffected pure tests can retain their results.
 Every declaration requires `effects(host)` and may declare additional effects.
 These effects propagate through callers and prohibit compile-time execution.
 Direct imports work with QBE executable and shared-library builds. The bytecode
-VM cannot execute them, and legacy C emission reports an unsupported backend.
+VM cannot execute them.
 
 C code is trusted native code. The handwritten declaration must match the actual
 C prototype; a linker cannot verify C types. Foreign calls bypass provider grants

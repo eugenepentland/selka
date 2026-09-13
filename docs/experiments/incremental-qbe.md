@@ -100,10 +100,8 @@ Large guest frames use execution-owned heap storage instead of native stack
 allocations. Execution runs on a dedicated guarded stack, with native stack and
 logical frame budgets producing `R_FRAME_LIMIT`. Unsupported lowering still
 produces `E_QBE_UNSUPPORTED`; execution never falls back to another backend.
-The C backend remains as the existing `emit-c`/`emit-project-c` compatibility
-path and a comparison oracle. Retiring it requires the complete behavior, API,
-and performance gates, followed by migration of `scripts/native.py` and the
-remaining C-specific CLI consumers and acceptance suites.
+QBE is now the only native backend: the C emitter, its `emit-c`/`emit-project-c`
+commands and `scripts/native.py` were removed on 2026-09-13.
 
 ## Object reuse and diagnostics
 

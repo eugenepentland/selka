@@ -24,13 +24,12 @@ pub fn describe(allocator: std.mem.Allocator, program: bytecode.Program, index: 
     defer builder.types.deinit(allocator);
     for (function.scope.instructions) |instruction| try builder.operation(instruction.op);
     if (function.policy.host != null) try builder.reason("host-call");
-    const deterministic = effects.bit(.allocation) | effects.bit(.managed_allocation);
+    const deterministic = effects.bit(.managed_allocation);
     const external_effects = function.policy.effects & ~deterministic;
     if (external_effects != 0) try builder.reason("external-effects");
     const cacheable = function.policy.host == null and external_effects == 0 and !builder.external;
     try builder.typeInput(function.signature.return_type);
     for (function.scope.locals) |local| try builder.typeInput(local.ty);
-    for (function.scope.references) |reference| try builder.typeInput(reference.ty);
     for (states) |state| if (state) |stack| for (stack) |ty| try builder.typeInput(ty);
     std.mem.sort(Dependency, builder.dependencies.items, {}, dependencyLess);
     std.mem.sort(TypeFact, builder.type_facts.items, {}, typeLess);
@@ -82,8 +81,6 @@ const Facts = struct {
     fn operation(self: *Facts, op: @FieldType(bytecode.Instruction, "op")) layouts.Error!void {
         switch (op) {
             .call => |id| try self.edge(id, .call),
-            .call_refs => |call| try self.edge(call.function, .call),
-            .call_borrow => |call| try self.edge(call.function, .call),
             .function_value => |value| try self.edge(value.function, .function_value),
             .invoke => {
                 try self.reason("conservative-indirect-target-set");
@@ -132,11 +129,6 @@ const Facts = struct {
         if (record.shape.domain) |ty| try self.child(hash, ty);
         if (record.shape.buffer) |ty| try self.child(hash, ty);
         if (record.collection.key) |ty| try self.child(hash, ty);
-        if (record.shape.handle_pool) |ty| try self.child(hash, ty);
-        if (record.shape.pool) |pool| {
-            try self.child(hash, pool.element);
-            try self.child(hash, pool.handle);
-        }
         if (record.shape.array) |array| {
             try self.child(hash, array.element);
             if (array.key) |ty| try self.child(hash, ty);

@@ -328,7 +328,7 @@ preserve record, array and enum-table snapshots.
 [Generic enum/union construction and matching](docs/experiments/generic-variants.md)
 now retain exact payload types and exhaustive cases.
 [Concrete generic results](docs/experiments/generic-results.md) now enforce transfers,
-acknowledgement, propagation and obligations across control-flow paths.
+handling, propagation and obligations across control-flow paths.
 [Generic partial fields](docs/experiments/generic-fields.md) now track remaining
 result obligations and reject mismatched field moves across those paths.
 [Generic provider operations](docs/experiments/generic-providers.md) now retain
@@ -343,10 +343,10 @@ validates unused template fields, identities and argument requirements.
 stored recursion from finite nesting and phantom arguments.
 [Concrete nominal instances](docs/experiments/nominal-instances.md) now execute
 records, unions, results and enum templates on the VM, preserving argument
-identity, ownership, borrowing and typed host contracts.
+identity, ownership and typed host contracts.
 `examples/nominal-instances.my` returns `16`.
 [Symbolic nominal bodies](docs/experiments/nominal-bodies.md) now check `Box<T>`
-fields, variant payloads, result propagation, ownership and borrows before calls,
+fields, variant payloads, result propagation and ownership before calls,
 then specialize the discovered concrete types for the VM.
 `examples/nominal-bodies.my` returns `7`.
 [Generic provider contracts](docs/experiments/nominal-providers.md) now support
@@ -442,7 +442,7 @@ zig-out/bin/mylang schema-project examples/schema/main.my
 ```
 
 The deterministic JSON graph includes exported types and function signatures,
-qualified identities, field/variant structure, integer bounds, borrowing contracts,
+qualified identities, field/variant structure, integer bounds,
 and inferred effects. Private declarations remain excluded; domains and runtime
 owners/capabilities retain opaque reconstruction boundaries. This establishes
 [schema derivation](docs/experiments/schemas.md). Ordinary serialization and Python

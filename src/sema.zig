@@ -7,13 +7,10 @@ const needs_list = "operation requires a managed list";
 const eListType = @import("collection_lower.zig").list_type_error;
 const call_arguments = @import("call_arguments.zig");
 const callables = @import("callables.zig");
-const eBorrowConflict = diagnostic.borrow_conflict;
 const callback_type_code = "E_CALLBACK_TYPE";
 const eResultOperation = diagnostic.result_operation;
 const eOwnedConsumed = diagnostic.owned_consumed;
-const eReferenceResult = diagnostic.reference_result;
 const eResultPath = diagnostic.result_path;
-const eReturnLifetime = diagnostic.return_lifetime;
 const eShadowing = diagnostic.shadowing;
 const eConversionBody = "E_CONVERSION_BODY";
 const eByteConversion = "E_BYTES_CONVERSION";
@@ -22,42 +19,34 @@ fn sequenceArgument(kind: BufferKind) bool {
     return kind == .split or kind == .contains or kind == .starts_with or kind == .ends_with or kind == .find;
 }
 const eResourceResult = diagnostic.resource_result;
-const eReferenceReadOnly = diagnostic.reference_read_only;
-const eBufferResult = "E_BUFFER_RESULT";
-const eResultBorrow = diagnostic.result_borrow;
 const eResourceIoResult = "E_RESOURCE_IO_RESULT";
 const eResultLoop = diagnostic.result_loop;
 const bindingDeclaredHere = "binding declared here";
-const ePoolResult = "E_POOL_RESULT";
 const eImmutable = diagnostic.immutable;
 const eResultDiscard = diagnostic.result_discard;
 const variantDeclaredHere = "variant declared here";
 const std = @import("std");
 const bufferOperation = "buffer_operation";
 const eCollectionMethod = "E_COLLECTION_METHOD";
-const eReferenceArgument = diagnostic.reference_argument;
-const source_json = @import("source_json.zig");
 const ast = @import("ast.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
 const diagnostic = @import("diagnostic.zig");
-const field_moves = @import("field_moves.zig");
 const records = @import("records.zig");
 const Error = diagnostic.Error;
 const instances = @import("generic_instances.zig");
 const Names = @import("module_names.zig").Names;
-const LoopScope = struct { id: usize, before: []const Pending, references: usize, arena_depth: usize, arenas: usize = 0 };
+const LoopScope = struct { id: usize, before: []const Pending, arenas: usize = 0 };
 const ArenaScope = struct { name: []const u8, declaration: source.Span, watermark: typed.LocalId };
 const eArenaEscape = "E_ARENA_ESCAPE";
 const eArenaBinding = "E_ARENA_BINDING";
-const Pending = struct { available: bool, fields: field_moves.State, transfer_span: ?source.Span };
+const Pending = struct { available: bool, transfer_span: ?source.Span };
 const Work = struct { default_value: bool = false, id: ast.NodeId, emit: bool = false, checkpoint: bool = false, verify: ?[]const Pending = null };
 const FieldDestination = struct { owner: typed.LocalId, index: ?typed.NodeId, value: typed.NodeId, refresh: typed.StatementId };
 const CheckedStatement = struct { id: typed.StatementId, terminates: bool };
 
 const StatementFlow = struct {
     terminates: bool = false,
-    cleanup: []const typed.ReferenceId = &.{},
     owned_cleanup: []const typed.LocalId = &.{},
 };
 
@@ -87,15 +76,11 @@ const Checker = struct {
     python_assignment_order: bool = false,
     loops: struct { active: std.ArrayList(LoopScope) = .empty, next: usize = 0 } = .{},
     return_type: typed.Type = .i64,
-    arena_depth: usize = 0,
     arenas: std.ArrayList(ArenaScope) = .empty,
     catalog: records.Catalog,
     conversion_fields: ?[]bool = null,
     managed_types: []bool = &.{},
     owner: ?typed.Type = null,
-    return_reference: ?typed.ReturnReference = null,
-    references: std.ArrayList(typed.Reference) = .empty,
-    active_refs: std.StringHashMapUnmanaged(typed.ReferenceId) = .empty,
 
     fn checkFunction(self: *Checker, i: usize) Error!typed.Function {
         const allocator = self.allocator;
@@ -110,12 +95,9 @@ const Checker = struct {
         self.resolved_nodes.clearRetainingCapacity();
         self.expected_types.clearRetainingCapacity();
         self.locals = .empty;
-        self.references = .empty;
-        self.active_refs.clearRetainingCapacity();
         self.active.clearRetainingCapacity();
         self.owner = if (function.policy.owner) |owner| try self.ty(owner) else null;
         self.return_type = try self.ty(function.signature.return_type);
-        self.return_reference = try self.returnContract(@fromBackingInt(i));
         try self.bindParameters(function);
         if (function.policy.c_abi) {
             const foreign = @import("c_abi.zig");
@@ -128,7 +110,7 @@ const Checker = struct {
         }
         self.conversion_fields = null;
         if (function.policy.conversion) {
-            if (function.signature.return_reference != null or function.signature.parameters.len != 1 or function.signature.parameters[0].reference != null) return sink.fail(
+            if (function.signature.parameters.len != 1) return sink.fail(
                 "E_CONVERSION_SIGNATURE",
                 function.name,
                 "a complete conversion requires one source record parameter",
@@ -158,7 +140,7 @@ const Checker = struct {
                 }
             }
         }
-        const implicit_unit = self.return_type == .unit and self.return_reference == null;
+        const implicit_unit = self.return_type == .unit;
         if (function.policy.host == null and !body.terminates and implicit_unit) body = try self.unitFallthrough(body, function.name);
         if (function.policy.host == null and !body.terminates) return sink.fail(
             "E_MISSING_RETURN",
@@ -176,12 +158,10 @@ const Checker = struct {
             },
             .signature = .{
                 .constant_arguments = self.instance_keys.items[i].lengths,
-                .return_reference = self.return_reference,
                 .return_type = self.return_type,
                 .parameter_count = function.signature.parameters.len,
             },
             .scope = .{
-                .references = try self.references.toOwnedSlice(allocator),
                 .body = body.id,
                 .locals = try self.locals.toOwnedSlice(allocator),
             },
@@ -292,12 +272,7 @@ const Checker = struct {
         const inference = @import("generic_inference.zig");
         var context: inference.Context = .{ .src = self.src, .catalog = self.catalog, .parameters = signature.type_parameters, .sink = self.sink, .site = span };
         for (signature.parameters, call.arguments) |parameter, input| {
-            const node = self.syntax.nodes.items[@backingInt(input)];
-            const actual = if (parameter.reference != null and node.data != .bytes) reference_type: {
-                if (node.data != .name) return self.sink.fail(eReferenceArgument, node.span, "reference parameter requires an active reference name");
-                const id = self.active_refs.get(self.src.text(node.data.name)) orelse return self.sink.fail("E_REFERENCE_SCOPE", node.span, "reference is not active in this scope");
-                break :reference_type self.references.items[@backingInt(id)].ty;
-            } else if (parameter.reference != null) typed.Type.u8 else self.nodes.items[@backingInt(self.resolved[@backingInt(input)].?)].ty;
+            const actual = self.nodes.items[@backingInt(self.resolved[@backingInt(input)].?)].ty;
             try context.match(parameter.ty, .{ .concrete = actual });
         }
         var inferred: [16]@import("symbolic_types.zig").Value = undefined;
@@ -321,18 +296,17 @@ const Checker = struct {
     }
     fn pendingState(self: *Checker, count: usize) Error![]Pending {
         const state = try self.allocator.alloc(Pending, count);
-        for (self.locals.items[0..count], state) |local, *pending| pending.* = .{ .available = local.ownership.transfer_available, .fields = local.ownership.partial_fields, .transfer_span = local.ownership.transfer_span };
+        for (self.locals.items[0..count], state) |local, *pending| pending.* = .{ .available = local.ownership.transfer_available, .transfer_span = local.ownership.transfer_span };
         return state;
     }
     fn restorePending(self: *Checker, state: []const Pending) void {
         for (self.locals.items[0..state.len], state) |*local, pending| {
             local.ownership.transfer_available = pending.available;
-            local.ownership.partial_fields = pending.fields;
             local.ownership.transfer_span = pending.transfer_span;
         }
     }
     fn samePending(self: *Checker, state: []const Pending, span: source.Span, code: []const u8) Error!void {
-        for (self.locals.items[0..state.len], state) |local, pending| if (local.ownership.transfer_available != pending.available or !field_moves.same(local.ownership.partial_fields, pending.fields)) return self.sink.failRelated(
+        for (self.locals.items[0..state.len], state) |local, pending| if (local.ownership.transfer_available != pending.available) return self.sink.failRelated(
             if (!self.requiresHandling(local.ty) and typed.moveOnly(local.ty, self.catalog.records)) (if (std.mem.eql(u8, code, eResultLoop)) "E_OWNED_LOOP" else "E_OWNED_PATH") else code,
             span,
             "ownership or result obligation must have the same state on every continuing path",
@@ -343,48 +317,20 @@ const Checker = struct {
         );
     }
     fn pendingObligation(self: *Checker, local: typed.Local) bool {
-        if (!local.ownership.transfer_available or !self.requiresHandling(local.ty)) return false;
-        if (local.ownership.partial_fields.len == 0) return true;
-        for (self.catalog.records[local.ty.recordIndex()].fields, local.ownership.partial_fields) |field, moved| {
-            if (moved == null and self.requiresHandling(field.ty)) return true;
-        }
-        return false;
+        return local.ownership.transfer_available and self.requiresHandling(local.ty);
     }
     fn requireHandled(self: *Checker, first: usize, span: source.Span) Error!void {
         for (self.locals.items[first..], first..) |local, index| {
             if (self.pendingObligation(local) and self.active.get(local.name) == @as(typed.LocalId, @fromBackingInt(index))) return self.sink.failRelated(
                 "E_RESULT_UNHANDLED",
                 span,
-                "result-bearing value leaves scope without being handled, returned, transferred, or explicitly acknowledged",
+                "result-bearing value leaves scope without being handled, returned, transferred, or explicitly discarded",
                 .{
                     .span = local.declaration,
                     .message = "unhandled result-bearing binding",
                 },
             );
         }
-    }
-    fn activeCleanup(self: *Checker) Error![]const typed.ReferenceId {
-        var refs: std.ArrayList(typed.ReferenceId) = .empty;
-        for (self.references.items, 0..) |ref, i| {
-            const id: typed.ReferenceId = @fromBackingInt(i);
-            if (self.active_refs.get(ref.name) == id) try refs.append(self.allocator, id);
-        }
-        return refs.toOwnedSlice(self.allocator);
-    }
-    fn returnContract(self: *Checker, id: typed.FunctionId) Error!?typed.ReturnReference {
-        const function = self.syntaxFunction(id);
-        const contract = function.signature.return_reference orelse return null;
-        for (function.signature.parameters, 0..) |parameter, index| {
-            if (!std.mem.eql(u8, self.src.text(parameter.name), self.src.text(contract.source))) continue;
-            const mutable = parameter.reference orelse return self.sink.fail(eReturnLifetime, contract.source, "reference result must borrow from a reference parameter");
-            if (contract.mutable and !mutable) return self.sink.fail(eReferenceReadOnly, contract.source, "shared parameter cannot supply an exclusive result");
-            const input_type = try self.functionType(id, parameter.ty);
-            const expected = if (contract.slice and !parameter.slice) try self.sliceElement(input_type, contract.source) else input_type;
-            if (parameter.slice and !contract.slice) return self.sink.fail("E_REFERENCE_KIND", function.signature.return_type, "a slice parameter cannot supply a whole-value reference result");
-            try self.require(try self.functionType(id, function.signature.return_type), expected, function.signature.return_type);
-            return .{ .parameter = @fromBackingInt(index), .mutable = contract.mutable, .slice = contract.slice };
-        }
-        return self.sink.fail(eReturnLifetime, contract.source, "result lifetime names no parameter");
     }
     const ResolvedCall = struct { declaration: instances.DeclarationId, call: @FieldType(@FieldType(ast.Node, "data"), "call") };
     fn callTarget(self: *Checker, input: @FieldType(@FieldType(ast.Node, "data"), "call"), span: source.Span) Error!typed.FunctionId {
@@ -427,52 +373,6 @@ const Checker = struct {
         );
         const bound = try call_arguments.bind(self.allocator, self.src, call, signature.signature.parameters, self.sink);
         return .{ .declaration = function, .call = bound };
-    }
-    fn reference(self: *Checker, span: source.Span) Error!typed.ReferenceId {
-        const id = self.active_refs.get(self.src.text(span)) orelse return self.sink.fail("E_REFERENCE_SCOPE", span, "reference is not active in this scope");
-        const ref = self.references.items[@backingInt(id)];
-        if (self.locals.items[@backingInt(ref.owner)].parameter.reference_parameter != null) self.locals.items[@backingInt(ref.owner)].usage.reads += 1;
-        if (ref.mutable) {
-            var cause: ?source.Span = null;
-            var entries = self.active_refs.valueIterator();
-            while (entries.next()) |child| {
-                const loan = self.references.items[@backingInt(child.*)];
-                if (loan.parent == id and (cause == null or loan.declaration.start < cause.?.start)) cause = loan.declaration;
-            }
-            if (cause) |at| return self.sink.failProvenance(
-                "E_BORROW_SUSPENDED",
-                span,
-                "exclusive reference is suspended by an active child borrow",
-                .{ .span = at, .message = "child borrow starts here" },
-                self.locals.items[@backingInt(ref.owner)].declaration,
-            );
-        }
-
-        return id;
-    }
-    fn requireReferenceKind(self: *Checker, id: typed.ReferenceId, slice: bool, span: source.Span) Error!void {
-        if (self.references.items[@backingInt(id)].mode.slice != slice) return self.sink.fail("E_REFERENCE_KIND", span, if (slice) "operation requires a slice" else "operation requires a whole-value reference");
-    }
-    fn sliceElement(self: *Checker, ty_id: typed.Type, span: source.Span) Error!typed.Type {
-        return typed.sliceElement(ty_id, self.catalog.records) orelse self.sink.fail("E_SLICE_TYPE", span, "slicing requires a fixed numeric array, buffer, or existing slice");
-    }
-
-    fn ownerAccess(self: *Checker, slot: typed.LocalId, write: bool, span: source.Span) Error!void {
-        var cause: ?source.Span = null;
-        var entries = self.active_refs.valueIterator();
-        while (entries.next()) |id| {
-            const ref = self.references.items[@backingInt(id.*)];
-            if (ref.owner == slot and ref.parent == null and (write or ref.mutable)) {
-                if (cause == null or ref.declaration.start < cause.?.start) cause = ref.declaration;
-            }
-        }
-        if (cause) |at| return self.sink.failProvenance(
-            eBorrowConflict,
-            span,
-            "owner access conflicts with an active borrow",
-            .{ .span = at, .message = "conflicting borrow starts here" },
-            self.locals.items[@backingInt(slot)].declaration,
-        );
     }
     fn requireDomainAccess(self: *Checker, domain_type: typed.Type, span: source.Span) Error!void {
         if (self.owner != domain_type) return self.sink.failRelated(
@@ -549,7 +449,7 @@ const Checker = struct {
         if (!actual.isInteger()) return self.sink.fail("E_TYPE", span, "operation requires an integer type");
     }
     fn expression(self: *Checker, root: ast.NodeId) Error!typed.NodeId {
-        return self.expressionMode(root, false);
+        return self.expressionWithTemporaries(root, &.{});
     }
     fn hint(self: *Checker, id: ast.NodeId, expected: typed.Type) Error!void {
         try self.expected_types.put(self.allocator, self.syntax.nodes.items[@backingInt(id)].span, expected);
@@ -718,7 +618,7 @@ const Checker = struct {
         }
         const expected = self.nodes.items[@backingInt(value)].ty;
         try self.hint(assignment.value, expected);
-        value = try self.expressionWithTemporaries(assignment.value, false, temporaries);
+        value = try self.expressionWithTemporaries(assignment.value, temporaries);
         try self.require(self.nodes.items[@backingInt(value)].ty, expected, node.span);
         if (destination.index == null) try self.requireArenaStore(destination.owner, value);
         const assigned = try b.local(expected);
@@ -746,7 +646,6 @@ const Checker = struct {
         const b: collections.Builder(Checker) = .{ .checker = self, .span = root.span };
         if (root.data == .name) {
             const owner = try self.resolve(root.data.name);
-            try self.ownerAccess(owner, true, root.span);
             if (!self.locals.items[@backingInt(owner)].mutable) return self.sink.fail(eImmutable, root.span, "record field assignment requires a mutable binding");
             self.locals.items[@backingInt(owner)].usage.writes += 1;
             self.locals.items[@backingInt(owner)].usage.reads += 1;
@@ -757,7 +656,7 @@ const Checker = struct {
         }
         if (root.data != .index) return self.sink.fail("E_ASSIGNMENT_TARGET", root.span, "field assignment requires a mutable local record or list slot");
         const access = root.data.index;
-        const base = try self.expressionWithTemporaries(access.base, false, temporaries);
+        const base = try self.expressionWithTemporaries(access.base, temporaries);
         const ty_value = self.nodes.items[@backingInt(base)].ty;
         if (!ty_value.isAggregate() or !self.catalog.records[ty_value.recordIndex()].managed) return self.sink.fail(eCollectionMethod, root.span, "indexed field assignment requires a list or dictionary");
         const schema = self.catalog.records[ty_value.recordIndex()];
@@ -765,7 +664,7 @@ const Checker = struct {
         const element = schema.shape.buffer.?;
         const owner = try b.local(ty_value);
         try statements.append(self.allocator, try b.stmt(.{ .initialize = .{ .slot = owner, .value = base } }));
-        const index_value = try self.expressionWithTemporaries(access.index, false, temporaries);
+        const index_value = try self.expressionWithTemporaries(access.index, temporaries);
         const dictionary = self.catalog.records[ty_value.recordIndex()].collection.kind == .dictionary;
         const key_type = if (dictionary) self.catalog.records[ty_value.recordIndex()].collection.key.? else typed.Type.i64;
         const index_slot = try b.local(key_type);
@@ -783,7 +682,7 @@ const Checker = struct {
         const values = try self.allocator.alloc(typed.NodeId, inputs.len);
         for (inputs, values) |input, *value| {
             if (element) |ty_value| try self.hint(input, ty_value);
-            value.* = try self.expressionWithTemporaries(input, false, temporaries);
+            value.* = try self.expressionWithTemporaries(input, temporaries);
             const actual = self.nodes.items[@backingInt(value.*)].ty;
             if (element) |ty_value| try self.require(actual, ty_value, self.syntax.nodes.items[@backingInt(input)].span) else element = actual;
         }
@@ -800,13 +699,13 @@ const Checker = struct {
     }
     fn checkCollectionSlice(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
         const slice = node.data.slice;
-        const base = try self.expressionWithTemporaries(slice.base, false, temporaries);
+        const base = try self.expressionWithTemporaries(slice.base, temporaries);
         const input = self.nodes.items[@backingInt(base)].ty;
         if (!input.isAggregate() or !self.catalog.records[input.recordIndex()].managed) return self.sink.fail(eCollectionMethod, node.span, "slicing requires a list or str");
         const schema = self.catalog.records[input.recordIndex()];
         if (schema.collection.kind == .dictionary) return self.sink.fail(eCollectionMethod, node.span, "dictionary keys do not support slices");
-        const start = if (slice.start) |value| try self.expressionWithTemporaries(value, false, temporaries) else null;
-        const end = if (slice.end) |value| try self.expressionWithTemporaries(value, false, temporaries) else null;
+        const start = if (slice.start) |value| try self.expressionWithTemporaries(value, temporaries) else null;
+        const end = if (slice.end) |value| try self.expressionWithTemporaries(value, temporaries) else null;
         if (start) |value| try self.requireInteger(self.nodes.items[@backingInt(value)].ty, node.span);
         if (end) |value| try self.requireInteger(self.nodes.items[@backingInt(value)].ty, node.span);
         const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
@@ -816,7 +715,7 @@ const Checker = struct {
         const base_input = operation.base;
         const kind = operation.kind;
         const inputs = operation.inputs;
-        const base = try self.expressionWithTemporaries(base_input, false, temporaries);
+        const base = try self.expressionWithTemporaries(base_input, temporaries);
         const owner_type = self.nodes.items[@backingInt(base)].ty;
         if (owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].collection.kind != .list) {
             const receiver = self.arenaReceiver(base_input);
@@ -833,7 +732,7 @@ const Checker = struct {
         for (inputs, arguments, 0..) |input, *argument, i| {
             const writes_element = kind == .append or kind == .contains or (kind == .write and i == 1);
             if (writes_element) try self.hint(input, element);
-            argument.* = try self.expressionWithTemporaries(input, false, temporaries);
+            argument.* = try self.expressionWithTemporaries(input, temporaries);
             const actual = self.nodes.items[@backingInt(argument.*)].ty;
             if (writes_element) try self.require(actual, element, node.span) else try self.requireInteger(actual, node.span);
         }
@@ -856,7 +755,7 @@ const Checker = struct {
                 break :map_argument if (index == 0) schema.collection.key.? else schema.shape.buffer.?;
             } else if (operation.kind == .join) try self.collectionListType(owner_type, node.span) else owner_type;
             try self.hint(input, expected);
-            argument.* = try self.expressionWithTemporaries(input, false, temporaries);
+            argument.* = try self.expressionWithTemporaries(input, temporaries);
             if (integer) try self.requireInteger(self.nodes.items[@backingInt(argument.*)].ty, node.span) else try self.require(self.nodes.items[@backingInt(argument.*)].ty, expected, node.span);
         }
         try self.requireArenaOperation(operation.receiver, operation.kind, arguments);
@@ -876,10 +775,6 @@ const Checker = struct {
                 }
                 return;
             }
-            if (owner_type.isAggregate()) if (self.catalog.records[owner_type.recordIndex()].shape.buffer) |element| {
-                if (operation.kind == .append and operation.arguments.len == 1) try self.hint(operation.arguments[0], element);
-                if (operation.kind == .write and operation.arguments.len == 2) try self.hint(operation.arguments[1], element);
-            };
         }
     }
     fn hintRecordFields(self: *Checker, record: @FieldType(@FieldType(ast.Node, "data"), "record")) Error!void {
@@ -894,7 +789,6 @@ const Checker = struct {
         const signature = self.syntax.functions[@backingInt(declaration)].signature;
         const function = if (signature.type_parameters.len == 0) self.ordinary_ids[@backingInt(declaration)] else if (target.type_arguments.len != 0) try self.specialize(declaration, target, span) else null;
         for (call.arguments, signature.parameters) |argument, parameter| {
-            if (parameter.reference != null) continue;
             if (function) |function_id| {
                 try self.hint(argument, try self.functionType(function_id, parameter.ty));
             } else if (self.catalog.arrays.resolved.get(parameter.ty.start)) |closed| {
@@ -968,18 +862,9 @@ const Checker = struct {
         }
         return false;
     }
-    fn queueExpression(self: *Checker, work: *std.ArrayList(Work), id: ast.NodeId, allow_reference: bool) Error!bool {
+    fn queueExpression(self: *Checker, work: *std.ArrayList(Work), id: ast.NodeId) Error!bool {
         const node = try self.collectionSyntax(id);
         switch (node.data) {
-            .pool_operation => |operation| {
-                try work.append(self.allocator, .{ .id = id, .emit = true });
-                var i = operation.arguments.len;
-                while (i > 0) {
-                    i -= 1;
-                    try work.append(self.allocator, .{ .id = operation.arguments[i] });
-                }
-                return true;
-            },
             .buffer_operation => |operation| {
                 try self.hintBufferArguments(operation);
                 try work.append(self.allocator, .{ .id = id, .emit = true });
@@ -1050,13 +935,7 @@ const Checker = struct {
                 try work.append(self.allocator, .{ .id = read.capability });
                 return true;
             },
-            .acquire_buffer, .acquire_pool => |acquire| {
-                try work.append(self.allocator, .{ .id = id, .emit = true });
-                try work.append(self.allocator, .{ .id = acquire.value });
-                if (!acquire.managed) try work.append(self.allocator, .{ .id = acquire.allocator });
-                return true;
-            },
-            .reset_arena, .cast, .wrap => |cast| {
+            .cast, .wrap => |cast| {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
                 try work.append(self.allocator, .{ .id = cast.value });
                 return true;
@@ -1084,20 +963,13 @@ const Checker = struct {
                 try work.append(self.allocator, .{ .id = field.base });
                 return true;
             },
-            .read_slice => |read| {
-                try work.append(self.allocator, .{ .id = id, .emit = true });
-                try work.append(self.allocator, .{ .id = read.index });
-                return true;
-            },
             .call => |call| {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
                 if (try self.queueBuiltinCall(work, call, node)) return true;
-                if (call.owner == null and (self.active.contains(self.src.text(call.name)) or source_json.operation(self.src.text(call.name)) != null)) {
+                if (call.owner == null and self.active.contains(self.src.text(call.name))) {
                     var index = call.arguments.len;
-                    const contract = if (self.active.get(self.src.text(call.name))) |slot| callables.signature(self.locals.items[@backingInt(slot)].ty, self.catalog.records) else null;
                     while (index > 0) {
                         index -= 1;
-                        if (contract) |signature| if (index < signature.parameters.len and signature.borrows(index)) continue;
                         try work.append(self.allocator, .{ .id = call.arguments[index] });
                     }
                     return true;
@@ -1106,17 +978,13 @@ const Checker = struct {
                 if (target.call.type_arguments.len != 0) _ = try self.specialize(target.declaration, target.call, node.span);
                 const signature = self.syntax.functions[@backingInt(target.declaration)];
                 try self.hintCallArguments(target.call, target.declaration, target.call, node.span);
-                if (signature.signature.return_reference != null and !(allow_reference)) return self.sink.fail(eReferenceResult, node.span, "reference-returning calls require a borrow scope");
                 var i = target.call.arguments.len;
                 while (i > 0) {
                     i -= 1;
                     const position = call_arguments.parameterPosition(target.call, i);
                     const argument = target.call.arguments[position];
                     const parameter = signature.signature.parameters[position];
-                    const literal_bytes = self.syntax.nodes.items[@backingInt(argument)].data == .bytes;
-                    if (parameter.reference != null and literal_bytes) try self.hint(argument, try self.ty(self.syntax.nodes.items[@backingInt(argument)].span));
-                    if (parameter.reference == null or literal_bytes)
-                        try work.append(self.allocator, .{ .id = argument, .default_value = parameter.default_value == argument });
+                    try work.append(self.allocator, .{ .id = argument, .default_value = parameter.default_value == argument });
                 }
                 return true;
             },
@@ -1137,75 +1005,11 @@ const Checker = struct {
         }
         return false;
     }
-    fn operationOwner(self: *Checker, span: source.Span, mutable: bool) Error!struct { owner: typed.LocalId, reference: ?typed.ReferenceId } {
-        if (self.active_refs.contains(self.src.text(span))) {
-            const id = try self.reference(span);
-            try self.requireReferenceKind(id, false, span);
-            const ref = self.references.items[@backingInt(id)];
-            if (mutable and !ref.mutable) return self.sink.fail(eReferenceReadOnly, span, "mutation requires an exclusive owner reference");
-            return .{ .owner = ref.owner, .reference = id };
-        }
-        const owner = try self.resolve(span);
-        try self.ownerAccess(owner, mutable, span);
-        return .{ .owner = owner, .reference = null };
-    }
-    fn checkReadField(self: *Checker, node: ast.Node, read: @FieldType(@FieldType(ast.Node, "data"), "read_field"), out: *typed.Node) Error!void {
-        const taking = node.data == .take_field;
-        const access = try self.operationOwner(read.owner, taking);
-        if (taking and access.reference != null) return self.sink.fail("E_FIELD_TAKE", read.owner, "cannot move a field out of a borrowed owner");
-        const owner = access.owner;
-        const local = &self.locals.items[@backingInt(owner)];
-        const field = try self.catalog.field(local.ty, self.src, read.field, self.sink);
-        out.ty = self.catalog.records[local.ty.recordIndex()].fields[field].ty;
-        if (!taking and self.transfers(out.ty)) return self.sink.fail("E_FIELD_COPY", read.field, "read_field cannot copy owned values or result obligations");
-        if (self.transfers(local.ty) and !local.ownership.transfer_available) return self.sink.failTransfer(eOwnedConsumed, read.owner, local.declaration, local.ownership.transfer_span);
-        if (taking and !self.transfers(local.ty)) return self.sink.fail("E_FIELD_TAKE", read.owner, "take_field requires an owned or result-bearing record; use read_field for copyable records");
-        if (local.ownership.partial_fields.len != 0) {
-            if (local.ownership.partial_fields[field]) |at| return self.sink.failMovedField(read.field, local.declaration, at);
-        }
-        if (taking) local.ownership.partial_fields = try field_moves.take(
-            self.allocator,
-            local.ownership.partial_fields,
-            self.catalog.records[local.ty.recordIndex()].fields.len,
-            field,
-            read.field,
-        );
-        local.usage.reads += 1;
-        if (self.conversion_fields) |seen| {
-            if (@backingInt(owner) == 0) seen[field] = true;
-        }
-        out.data = if (taking) .{ .take_field = .{ .owner = owner, .field = field } } else .{ .read_field = .{ .reference = access.reference, .owner = owner, .field = field } };
-    }
-    fn checkPoolOperation(self: *Checker, _: ast.Node, operation: @FieldType(@FieldType(ast.Node, "data"), "pool_operation"), out: *typed.Node) Error!void {
-        const access = try self.operationOwner(operation.owner, operation.kind.mutates());
-        const owner = access.owner;
-        const local = &self.locals.items[@backingInt(owner)];
-        if (!local.ty.isAggregate()) return self.sink.fail("E_POOL_TYPE", operation.owner, "operation requires an owned pool binding");
-        const pool = self.catalog.records[local.ty.recordIndex()].shape.pool orelse return self.sink.fail("E_POOL_TYPE", operation.owner, "operation requires an owned pool binding");
-        if (!local.ownership.transfer_available) return self.sink.failTransfer(eOwnedConsumed, operation.owner, local.declaration, local.ownership.transfer_span);
-        if (operation.kind.mutates() and access.reference == null and !local.mutable) return self.sink.fail(eImmutable, operation.owner, "pool mutation requires a let mut binding");
-        local.usage.reads += 1;
-        if (operation.kind.mutates()) local.usage.writes += 1;
-        const arguments = try self.allocator.alloc(typed.NodeId, operation.arguments.len);
-        for (operation.arguments, arguments, 0..) |input, *argument, argument_index| {
-            argument.* = self.resolved[@backingInt(input)].?;
-            try self.require(self.nodes.items[@backingInt(argument.*)].ty, if (operation.kind == .insert or argument_index == 1) pool.element else pool.handle, self.syntax.nodes.items[@backingInt(input)].span);
-        }
-        out.ty = operation.kind.output(pool);
-        if (operation.result) |result_type| {
-            const result = try self.ty(result_type);
-            const shape = typed.resultShape(result, self.catalog.records) orelse return self.sink.fail(ePoolResult, result_type, "pool operation requires a result with the operation's success type and i64 error");
-            if (shape.ok_type != out.ty or shape.error_type != .i64) return self.sink.fail(ePoolResult, result_type, "pool operation requires a result with the operation's success type and i64 error");
-            out.ty = result;
-        }
-        out.data = .{ .pool_operation = .{ .reference = access.reference, .kind = operation.kind, .owner = owner, .arguments = arguments } };
-    }
     fn collectionListType(self: *Checker, element: typed.Type, span: source.Span) Error!typed.Type {
         const state = self.catalog.templates.store orelse return error.InternalError;
         return @import("nominal_catalog.zig").instantiateLengths(&self.catalog, state.index.names.get("List").?, &.{element}, &.{}, span);
     }
-    fn checkTextDictionary(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation), access: struct { owner: typed.LocalId, reference: ?typed.ReferenceId }, out: *typed.Node) Error!void {
-        const owner = access.owner;
+    fn checkTextDictionary(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation), owner: typed.LocalId, out: *typed.Node) Error!void {
         const local = self.locals.items[@backingInt(owner)];
         const element = self.catalog.records[local.ty.recordIndex()].shape.buffer.?;
 
@@ -1251,28 +1055,17 @@ const Checker = struct {
             },
             else => return self.sink.fail(eCollectionMethod, operation.owner, "operation is not supported by this collection"),
         }
-        out.data = .{ .buffer_operation = .{ .reference = access.reference, .kind = operation.kind, .owner = owner, .arguments = arguments } };
+        out.data = .{ .buffer_operation = .{ .kind = operation.kind, .owner = owner, .arguments = arguments } };
     }
     fn checkBufferOperation(self: *Checker, _: ast.Node, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation), out: *typed.Node) Error!void {
-        const initial = try self.operationOwner(operation.owner, false);
-        const local = &self.locals.items[@backingInt(initial.owner)];
-        const managed = local.ty.isAggregate() and self.catalog.records[local.ty.recordIndex()].managed;
-        const access = if (managed) initial else try self.operationOwner(operation.owner, operation.kind.mutates());
-        const owner = access.owner;
-        if (!local.ty.isAggregate() or self.catalog.records[local.ty.recordIndex()].shape.buffer == null) return self.sink.fail("E_BUFFER_TYPE", operation.owner, "operation requires an owned buffer binding");
-        if (!managed and !local.ownership.transfer_available) return self.sink.failTransfer(eOwnedConsumed, operation.owner, local.declaration, local.ownership.transfer_span);
-        const needs_mutable_binding = !managed and operation.kind.mutates() and access.reference == null;
-        if (needs_mutable_binding and !local.mutable) return self.sink.fail(eImmutable, operation.owner, "buffer mutation requires a let mut binding");
+        const owner = try self.resolve(operation.owner);
+        const local = &self.locals.items[@backingInt(owner)];
+        if (!local.ty.isAggregate() or !self.catalog.records[local.ty.recordIndex()].managed) return self.sink.fail(eListType, operation.owner, needs_list);
         local.usage.reads += 1;
         if (operation.kind.mutates()) local.usage.writes += 1;
         const element = self.catalog.records[local.ty.recordIndex()].shape.buffer.?;
-        if ((operation.kind == .read or operation.kind == .resize) and typed.moveOnly(element, self.catalog.records)) return self.sink.fail(
-            "E_BUFFER_COPY",
-            operation.owner,
-            "owned buffer elements require take_buffer or truncate_buffer; reads and resize fill would copy ownership",
-        );
-        if (managed and self.catalog.records[local.ty.recordIndex()].collection.kind != .list) {
-            try self.checkTextDictionary(operation, .{ .owner = access.owner, .reference = access.reference }, out);
+        if (self.catalog.records[local.ty.recordIndex()].collection.kind != .list) {
+            try self.checkTextDictionary(operation, owner, out);
             return;
         }
         const arguments = try self.allocator.alloc(typed.NodeId, operation.arguments.len);
@@ -1280,34 +1073,17 @@ const Checker = struct {
             argument.* = self.resolved[@backingInt(input)].?;
             const actual = self.nodes.items[@backingInt(argument.*)].ty;
             const span = self.syntax.nodes.items[@backingInt(input)].span;
-            const writes_element = argument_index == 1 and (operation.kind == .write or operation.kind == .resize);
-            if (operation.kind == .reserve and argument_index == 0) {
-                try self.require(actual, .allocator, span);
-            } else if (operation.kind == .append or operation.kind == .contains or writes_element) {
+            const writes_element = argument_index == 1 and operation.kind == .write;
+            if (operation.kind == .append or operation.kind == .contains or writes_element) {
                 try self.require(actual, element, span);
             } else {
                 try self.requireInteger(actual, span);
             }
         }
-        try self.requireArenaOperation(if (managed) initial.owner else null, operation.kind, arguments);
-        if (managed and operation.result != null) return self.sink.fail(eListType, operation.owner, "managed list mutations return unit without a result type");
-        if (operation.result) |result_type| {
-            out.ty = try self.ty(result_type);
-            const shape = typed.resultShape(out.ty, self.catalog.records) orelse return self.sink.fail(
-                eBufferResult,
-                result_type,
-                "buffer mutation result requires matching success and i64 error payloads",
-            );
-            if (shape.ok_type != (if (operation.kind == .take) element else typed.Type.bool) or shape.error_type != .i64) return self.sink.fail(
-                eBufferResult,
-                result_type,
-                "buffer mutation result requires matching success and i64 error payloads",
-            );
-        } else {
-            if (operation.kind.mutates() and !managed) return self.sink.fail(eListType, operation.owner, "list mutation requires a managed list");
-            out.ty = if (operation.kind.mutates()) .unit else if (operation.kind == .read) element else if (operation.kind == .contains) .bool else .u64;
-        }
-        out.data = .{ .buffer_operation = .{ .reference = access.reference, .kind = operation.kind, .owner = owner, .arguments = arguments } };
+        try self.requireArenaOperation(owner, operation.kind, arguments);
+        if (operation.result != null) return self.sink.fail(eListType, operation.owner, "managed list mutations return unit without a result type");
+        out.ty = if (operation.kind.mutates()) .unit else if (operation.kind == .read) element else if (operation.kind == .contains) .bool else .u64;
+        out.data = .{ .buffer_operation = .{ .kind = operation.kind, .owner = owner, .arguments = arguments } };
     }
     fn checkAcquireResource(self: *Checker, _: ast.Node, acquire: @FieldType(@FieldType(ast.Node, "data"), "acquire_resource"), out: *typed.Node) Error!void {
         out.ty = try self.ty(acquire.ty);
@@ -1318,7 +1094,7 @@ const Checker = struct {
         const request = self.resolved[@backingInt(acquire.request)].?;
         try self.require(self.nodes.items[@backingInt(capability)].ty, if (kind == .filesystem) .filesystem_cap else .network_cap, self.syntax.nodes.items[@backingInt(acquire.capability)].span);
         const request_type = self.nodes.items[@backingInt(request)].ty;
-        if (!typed.acquisitionBytes(request_type, self.catalog.records)) return self.sink.fail("E_RESOURCE_REQUEST", self.syntax.nodes.items[@backingInt(acquire.request)].span, "request must be a fixed u8 array or owned u8 buffer");
+        if (!typed.acquisitionBytes(request_type, self.catalog.records)) return self.sink.fail("E_RESOURCE_REQUEST", self.syntax.nodes.items[@backingInt(acquire.request)].span, "request must be a fixed u8 array");
         out.data = .{ .acquire_resource = .{ .capability = capability, .request = request } };
     }
     fn checkResourceIo(self: *Checker, node: ast.Node, io: @FieldType(@FieldType(ast.Node, "data"), "resource_io"), out: *typed.Node) Error!void {
@@ -1327,19 +1103,8 @@ const Checker = struct {
         if (typed.resourceKind(local.ty, self.catalog.records) == null) return self.sink.fail("E_RESOURCE_TYPE", io.owner, "I/O requires an owned resource binding");
         if (!local.ownership.transfer_available) return self.sink.failTransfer(eOwnedConsumed, io.owner, local.declaration, local.ownership.transfer_span);
         if (!local.mutable) return self.sink.fail(eImmutable, io.owner, "resource I/O requires a let mut binding");
-        try self.ownerAccess(owner, true, io.owner);
-        const slice_reference = if (io.reference) |name| try self.reference(name) else null;
-        if (slice_reference) |id| {
-            try self.requireReferenceKind(id, true, io.reference.?);
-            const ref = self.references.items[@backingInt(id)];
-            try self.require(ref.ty, .u8, io.reference.?);
-            if (io.kind == .read and !ref.mutable) return self.sink.fail(eReferenceReadOnly, io.reference.?, "resource reads require an exclusive destination slice");
-            if (io.kind == .read) self.locals.items[@backingInt(ref.owner)].usage.writes += 1;
-        }
         out.ty = try self.ty(io.ty);
-        if (io.kind == .read and slice_reference != null) {
-            if (typed.resourceSliceReadShape(out.ty, self.catalog.records) == null) return self.sink.fail(eResourceIoResult, io.ty, "slice read result requires i64 error and record success with length: u64, eof: bool");
-        } else if (io.kind == .read) {
+        if (io.kind == .read) {
             if (typed.resourceReadShape(out.ty, self.catalog.records) == null) return self.sink.fail(eResourceIoResult, io.ty, "read result requires i64 error and record success with bytes: [N]u8, length: u64, eof: bool");
         } else {
             const shape = typed.resultShape(out.ty, self.catalog.records) orelse return self.sink.fail(eResourceIoResult, io.ty, "write result requires u64 success and i64 error");
@@ -1349,29 +1114,7 @@ const Checker = struct {
         if (value) |input| if (!typed.byteRequest(self.nodes.items[@backingInt(input)].ty, self.catalog.records)) return self.sink.fail("E_RESOURCE_BYTES", node.span, "write input must be a fixed u8 array");
         local.usage.reads += 1;
         local.usage.writes += 1;
-        out.data = .{ .resource_io = .{ .kind = io.kind, .owner = owner, .value = value, .reference = slice_reference } };
-    }
-    fn checkAcquireBuffer(self: *Checker, node: ast.Node, acquire: @FieldType(@FieldType(ast.Node, "data"), "acquire_buffer"), out: *typed.Node) Error!void {
-        const inferred = acquire.managed and acquire.ty.start == acquire.ty.end;
-        out.ty = if (inferred) self.expected_types.get(node.span) orelse return self.sink.fail("E_LIST_INFERENCE", node.span, "empty list requires an expected List type") else try self.ty(acquire.ty);
-        const is_pool = node.data == .acquire_pool;
-        const code: []const u8 = if (is_pool) ePoolResult else eBufferResult;
-        const message: []const u8 = if (is_pool) "pool acquisition requires a pool success and i64 error result" else "buffer acquisition requires a buffer success and i64 error result";
-        if (acquire.managed) {
-            if (!out.ty.isAggregate() or !self.catalog.records[out.ty.recordIndex()].managed) return self.sink.fail(eListType, acquire.ty, "new_list requires a managed list type");
-        } else {
-            const acquired = typed.acquisitionShape(out.ty, self.catalog.records, is_pool) orelse return self.sink.fail(code, acquire.ty, message);
-            if (self.catalog.records[acquired.ok_type.recordIndex()].managed) return self.sink.fail(eListType, acquire.ty, "managed lists require new_list");
-        }
-        var capacity = self.resolved[@backingInt(acquire.value)].?;
-        if (inferred) {
-            capacity = @fromBackingInt(self.nodes.items.len);
-            try self.nodes.append(self.allocator, .{ .span = node.span, .ty = .u64, .data = .{ .integer = 0 } });
-        }
-        try self.requireInteger(self.nodes.items[@backingInt(capacity)].ty, node.span);
-        const authority = self.resolved[@backingInt(acquire.allocator)].?;
-        if (!acquire.managed) try self.require(self.nodes.items[@backingInt(authority)].ty, .allocator, self.syntax.nodes.items[@backingInt(acquire.allocator)].span);
-        out.data = if (is_pool) .{ .acquire_pool = .{ .allocator = authority, .capacity = capacity } } else .{ .acquire_buffer = .{ .allocator = authority, .capacity = capacity, .managed = acquire.managed } };
+        out.data = .{ .resource_io = .{ .kind = io.kind, .owner = owner, .value = value } };
     }
     fn checkArray(self: *Checker, node: ast.Node, array: @FieldType(@FieldType(ast.Node, "data"), "array"), out: *typed.Node) Error!void {
         out.ty = try self.ty(array.ty);
@@ -1409,21 +1152,14 @@ const Checker = struct {
         const declaration = self.functions.get(key) orelse return false;
         const function = self.syntax.functions[@backingInt(declaration)];
         if (function.policy.owner != null or function.signature.type_parameters.len != 0) return self.sink.fail(callback_type_code, name, "function values require a nongeneric free function");
-        if (function.signature.return_reference != null) return self.sink.fail(callback_type_code, name, "callback values cannot return borrowed references");
         const bound = function.policy.effect_bound orelse return self.sink.fail("E_CALLBACK_EFFECTS", name, "function values require a declared effect ceiling");
         const parameters = try self.allocator.alloc(typed.Type, function.signature.parameters.len);
-        var borrowed: u16 = 0;
-        var slices: u16 = 0;
         if (parameters.len > 16) return self.sink.fail(callback_type_code, name, "callbacks support at most 16 parameters");
-        for (function.signature.parameters, parameters, 0..) |input, *parameter, i| {
-            if (input.reference == true) return self.sink.fail(callback_type_code, name, "callback context parameters are readonly borrows");
-            const bit = @as(u16, 1) << @as(u4, @intCast(i));
-            if (input.reference != null) borrowed |= bit;
-            if (input.slice) slices |= bit;
+        for (function.signature.parameters, parameters) |input, *parameter| {
             parameter.* = try self.catalog.resolve(self.src, input.ty, self.sink);
         }
         const result = try self.catalog.resolve(self.src, function.signature.return_type, self.sink);
-        out.ty = try callables.intern(self.allocator, &self.catalog, .{ .parameters = parameters, .return_type = result, .effects = bound.allowed, .borrowed = borrowed, .slices = slices }, name, self.sink);
+        out.ty = try callables.intern(self.allocator, &self.catalog, .{ .parameters = parameters, .return_type = result, .effects = bound.allowed }, name, self.sink);
         out.data = .{ .function_value = self.ordinary_ids[@backingInt(declaration)] orelse return error.InternalError };
         return true;
     }
@@ -1431,35 +1167,17 @@ const Checker = struct {
         const slot = try self.resolve(call.name);
         const contract = callables.signature(self.locals.items[@backingInt(slot)].ty, self.catalog.records) orelse return self.sink.fail(callback_type_code, call.name, "called local is not a function value");
         if (call.type_arguments.len != 0 or call.arguments.len != contract.parameters.len) return self.sink.fail("E_ARITY", call.name, "callback argument count must match its signature");
-        try self.ownerAccess(slot, false, call.name);
         self.locals.items[@backingInt(slot)].usage.reads += 1;
         const callee: typed.NodeId = @fromBackingInt(self.nodes.items.len);
         try self.nodes.append(self.allocator, .{ .span = call.name, .ty = self.locals.items[@backingInt(slot)].ty, .data = .{ .local = slot } });
         var arguments: std.ArrayList(typed.NodeId) = .empty;
-        var loans: std.ArrayList(typed.ReferenceId) = .empty;
-        for (call.arguments, contract.parameters, 0..) |input, expected, i| {
-            const argument = self.syntax.nodes.items[@backingInt(input)];
-            if (contract.borrows(i)) {
-                if (argument.data != .name) return self.sink.fail(eReferenceArgument, argument.span, "callback context requires an active reference name");
-                const id = try self.reference(argument.data.name);
-                try self.requireReferenceKind(id, contract.slice(i), argument.span);
-                try self.require(self.references.items[@backingInt(id)].ty, expected, argument.span);
-                const ref = self.references.items[@backingInt(id)];
-                for (loans.items) |previous_id| {
-                    const previous = self.references.items[@backingInt(previous_id)];
-                    const overlap = previous.owner == ref.owner and !typed.disjointReferences(self.references.items, previous_id, id);
-                    if (overlap and (previous.mutable or ref.mutable))
-                        return self.sink.fail(eBorrowConflict, argument.span, "callback contexts cannot alias exclusive access");
-                }
-                try loans.append(self.allocator, id);
-            } else {
-                const value = self.resolved[@backingInt(input)].?;
-                try self.require(self.nodes.items[@backingInt(value)].ty, expected, node.span);
-                try arguments.append(self.allocator, value);
-            }
+        for (call.arguments, contract.parameters) |input, expected| {
+            const value = self.resolved[@backingInt(input)].?;
+            try self.require(self.nodes.items[@backingInt(value)].ty, expected, node.span);
+            try arguments.append(self.allocator, value);
         }
         out.ty = contract.return_type;
-        out.data = .{ .invoke = .{ .callee = callee, .arguments = try arguments.toOwnedSlice(self.allocator), .references = try loans.toOwnedSlice(self.allocator) } };
+        out.data = .{ .invoke = .{ .callee = callee, .arguments = try arguments.toOwnedSlice(self.allocator) } };
     }
     fn checkName(self: *Checker, _: ast.Node, name: @FieldType(@FieldType(ast.Node, "data"), "name"), out: *typed.Node) Error!void {
         if (self.current_function) |id| {
@@ -1471,7 +1189,6 @@ const Checker = struct {
                 return;
             }
         }
-        if (self.active_refs.contains(self.src.text(name))) return self.sink.fail("E_REFERENCE_VALUE", name, "references cannot be copied, stored, returned, or passed to value parameters; use read_ref to copy the referenced value");
         for (self.arenas.items) |scope| if (std.mem.eql(u8, scope.name, self.src.text(name))) return self.sink.fail(
             eArenaBinding,
             name,
@@ -1488,11 +1205,6 @@ const Checker = struct {
         }
         if (!self.active.contains(self.src.text(name)) and try self.functionValue(name, out)) return;
         const slot = try self.resolve(name);
-        if (field_moves.first(self.locals.items[@backingInt(slot)].ownership.partial_fields)) |at| return self.sink.failPartialMove(
-            name,
-            self.locals.items[@backingInt(slot)].declaration,
-            at,
-        );
         if (self.transfers(self.locals.items[@backingInt(slot)].ty)) {
             const local = &self.locals.items[@backingInt(slot)];
             if (!local.ownership.transfer_available) return self.sink.failTransfer(
@@ -1504,7 +1216,6 @@ const Checker = struct {
             local.ownership.transfer_available = false;
             local.ownership.transfer_span = name;
         }
-        try self.ownerAccess(slot, self.transfers(self.locals.items[@backingInt(slot)].ty), name);
         self.locals.items[@backingInt(slot)].usage.reads += 1;
         out.ty = self.locals.items[@backingInt(slot)].ty;
         out.data = .{ .local = slot };
@@ -1565,91 +1276,25 @@ const Checker = struct {
             try call_arguments.positional(input, self.sink);
             return self.indirectCall(node, input, out);
         }
-        if (input.owner == null) if (source_json.operation(self.src.text(input.name))) |decode| {
-            try call_arguments.positional(input, self.sink);
-            return self.checkJson(input, decode, out);
-        };
         const target = try self.callDeclaration(input, node.span);
         const call = target.call;
         const function = try self.specialize(target.declaration, call, node.span);
         const signature = self.syntaxFunction(function);
         var arguments: std.ArrayList(typed.NodeId) = .empty;
-        var loans: std.ArrayList(typed.ReferenceId) = .empty;
-        var literals: std.ArrayList(typed.LiteralArgument) = .empty;
         for (call.arguments, signature.signature.parameters) |arg, parameter| {
             const argument = self.syntax.nodes.items[@backingInt(arg)];
-            if (parameter.reference) |mutable| {
-                if (argument.data == .bytes) {
-                    if (mutable or !parameter.slice or try self.functionType(function, parameter.ty) != .u8)
-                        return self.sink.fail(eReferenceArgument, argument.span, "byte literals require a readonly u8 slice parameter");
-                    if (signature.signature.return_reference != null)
-                        return self.sink.fail(eReferenceArgument, argument.span, "a call borrowing a byte literal cannot return a reference");
-                    const temporary = try self.literalArgument(arg, argument.span);
-                    try loans.append(self.allocator, temporary.reference);
-                    try literals.append(self.allocator, temporary);
-                    continue;
-                }
-                if (argument.data != .name) return self.sink.fail(eReferenceArgument, argument.span, "reference parameter requires an active reference name");
-                const id = try self.reference(argument.data.name);
-                const ref = self.references.items[@backingInt(id)];
-                try self.requireReferenceKind(id, parameter.slice, argument.span);
-                if (mutable and !ref.mutable) return self.sink.fail(eReferenceReadOnly, argument.span, "exclusive parameter requires an exclusive reference");
-                try self.require(ref.ty, try self.functionType(function, parameter.ty), argument.span);
-                for (loans.items) |previous_id| {
-                    const previous = self.references.items[@backingInt(previous_id)];
-                    const exclusive = previous.mutable or ref.mutable;
-                    if (previous.owner == ref.owner and exclusive and !typed.disjointReferences(self.references.items, previous_id, id)) return self.sink.failRelated(
-                        eBorrowConflict,
-                        argument.span,
-                        "call arguments cannot reborrow overlapping exclusive access",
-                        .{
-                            .span = previous.declaration,
-                            .message = "conflicting reference declared here",
-                        },
-                    );
-                }
-                try loans.append(self.allocator, id);
-            } else {
-                const value = self.resolved[@backingInt(arg)].?;
-                try self.require(self.nodes.items[@backingInt(value)].ty, try self.functionType(function, parameter.ty), argument.span);
-                try arguments.append(self.allocator, value);
-            }
+            const value = self.resolved[@backingInt(arg)].?;
+            try self.require(self.nodes.items[@backingInt(value)].ty, try self.functionType(function, parameter.ty), argument.span);
+            try arguments.append(self.allocator, value);
         }
         out.ty = try self.functionType(function, signature.signature.return_type);
-        out.data = .{ .call = .{ .function = function, .arguments = try arguments.toOwnedSlice(self.allocator), .references = try loans.toOwnedSlice(self.allocator), .literals = try literals.toOwnedSlice(self.allocator) } };
+        out.data = .{ .call = .{ .function = function, .arguments = try arguments.toOwnedSlice(self.allocator) } };
         try (@import("call_evaluation.zig").Context{
             .storage = .{ .nodes = &self.nodes, .locals = &self.locals, .statements = &self.statements },
             .span = node.span,
             .call = call,
             .parameters = signature.signature.parameters,
-            .arena_depth = self.arena_depth,
         }).apply(self.allocator, &out.data.call);
-    }
-    fn literalArgument(self: *Checker, arg: ast.NodeId, span: source.Span) Error!typed.LiteralArgument {
-        const value = self.resolved[@backingInt(arg)].?;
-        const value_type = self.nodes.items[@backingInt(value)].ty;
-        const owner: typed.LocalId = @fromBackingInt(self.locals.items.len);
-        const reference_id: typed.ReferenceId = @fromBackingInt(self.references.items.len);
-        try self.locals.append(self.allocator, .{ .name = "<literal>", .declaration = span, .ty = value_type, .mutable = false, .usage = .{ .reads = 1, .temporary = true } });
-        try self.references.append(self.allocator, .{ .name = "<literal>", .declaration = span, .owner = owner, .parent = null, .ty = .u8, .mutable = false, .mode = .{ .slice = true, .temporary = true } });
-        return .{ .value = value, .owner = owner, .reference = reference_id, .length = self.catalog.records[value_type.recordIndex()].shape.array.?.length };
-    }
-    fn checkJson(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call"), decode: bool, out: *typed.Node) Error!void {
-        if (call.type_arguments.len != 1 or call.arguments.len != 3) return self.sink.fail("E_JSON_ARITY", call.name, "JSON operation requires one result type and allocator, value, byte-limit arguments");
-        out.ty = try self.ty(call.type_arguments[0]);
-        const shape = typed.resultShape(out.ty, self.catalog.records) orelse return self.sink.fail("E_JSON_RESULT", call.name, "JSON operation requires a checked result with i64 error");
-        if (shape.error_type != .i64) return self.sink.fail("E_JSON_RESULT", call.name, "JSON operation requires a checked result with i64 error");
-        var arguments: [3]typed.NodeId = undefined;
-        for (call.arguments, &arguments) |input, *output| output.* = self.resolved[@backingInt(input)].?;
-        try self.require(self.nodes.items[@backingInt(arguments[0])].ty, .allocator, call.name);
-        try self.requireInteger(self.nodes.items[@backingInt(arguments[2])].ty, call.name);
-        const input = self.nodes.items[@backingInt(arguments[1])].ty;
-        const codec = source_json;
-        if (!codec.byteBuffer(if (decode) input else shape.ok_type, self.catalog.records)) return self.sink.fail("E_JSON_BYTES", call.name, "JSON wire bytes require an owned u8 buffer");
-        const document = codec.isDocument(self.src.text(call.name));
-        if (document and !codec.wordBuffer(shape.ok_type, self.catalog.records)) return self.sink.fail("E_JSON_DOCUMENT", call.name, "plain JSON parsing requires an owned i64 document buffer success");
-        if (!document and !codec.supportsCodec(if (decode) shape.ok_type else input, self.catalog.records)) return self.sink.fail("E_JSON_CODEC", call.name, "JSON values require ordinary data and explicit codecs for every domain");
-        out.data = .{ .json_codec = .{ .document = document, .decode = decode, .arguments = arguments } };
     }
     fn byteValues(self: *Checker, bytes: []const u8, span: source.Span) Error![]const typed.NodeId {
         const values = try self.allocator.alloc(typed.NodeId, bytes.len);
@@ -1658,13 +1303,6 @@ const Checker = struct {
             try self.nodes.append(self.allocator, .{ .span = span, .ty = .u8, .data = .{ .integer = byte } });
         }
         return values;
-    }
-    fn checkReadReference(self: *Checker, name: source.Span, out: *typed.Node) Error!void {
-        const id = try self.reference(name);
-        try self.requireReferenceKind(id, false, name);
-        out.ty = self.references.items[@backingInt(id)].ty;
-        if (self.transfers(out.ty)) return self.sink.fail("E_REFERENCE_VALUE", name, "read_ref cannot copy an owned value; use owner inspection or mutation operations");
-        out.data = .{ .read_ref = id };
     }
     fn numericOperands(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), "binary")) Error!struct { left: typed.NodeId, right: typed.NodeId } {
         var left = self.resolved[@backingInt(operation.left)].?;
@@ -1804,8 +1442,8 @@ const Checker = struct {
         } };
     }
     fn checkMembership(self: *Checker, node: ast.Node, membership: @FieldType(@FieldType(ast.Node, "data"), "membership"), temporaries: []const typed.Type) Error!typed.Node {
-        const needle = try self.expressionWithTemporaries(membership.needle, false, temporaries);
-        const container = try self.expressionWithTemporaries(membership.container, false, temporaries);
+        const needle = try self.expressionWithTemporaries(membership.needle, temporaries);
+        const container = try self.expressionWithTemporaries(membership.container, temporaries);
         const container_type = self.nodes.items[@backingInt(container)].ty;
         if (!container_type.isAggregate() or !self.catalog.records[container_type.recordIndex()].managed) return self.sink.fail("E_MEMBERSHIP", node.span, "membership requires a list, dictionary, or str");
         const schema = self.catalog.records[container_type.recordIndex()];
@@ -1886,8 +1524,6 @@ const Checker = struct {
             .list_operation => |op| return self.checkListAccess(node, .{ .base = op.base, .kind = op.kind, .inputs = op.arguments }, temporaries),
             .method_call => return self.checkCollectionMethod(node, temporaries),
             .slice => return self.checkCollectionSlice(node, temporaries),
-            .read_field, .take_field => |read| try self.checkReadField(node, read, &out),
-            .pool_operation => |operation| try self.checkPoolOperation(node, operation, &out),
             .buffer_operation => |operation| try self.checkBufferOperation(node, operation, &out),
             .acquire_resource => |acquire| try self.checkAcquireResource(node, acquire, &out),
             .restrict_resource => |restrict| {
@@ -1930,12 +1566,10 @@ const Checker = struct {
                 try self.require(self.nodes.items[@backingInt(capability)].ty, if (read.kind == .clock) .clock_cap else .random_cap, self.syntax.nodes.items[@backingInt(read.capability)].span);
                 out.data = .{ .external_read = .{ .kind = read.kind, .capability = capability } };
             },
-            .acquire_buffer, .acquire_pool => |acquire| try self.checkAcquireBuffer(node, acquire, &out),
             .propagate => |operand| {
                 const value = self.resolved[@backingInt(operand)].?;
                 const input = typed.resultShape(self.nodes.items[@backingInt(value)].ty, self.catalog.records) orelse return self.sink.fail("E_TRY_TYPE", node.span, "try requires a declared fallible result");
                 const output = typed.resultShape(self.return_type, self.catalog.records) orelse return self.sink.fail("E_TRY_RETURN", node.span, "try requires a function returning a declared result type");
-                if (self.return_reference != null) return self.sink.fail("E_TRY_RETURN", node.span, "try cannot propagate through a reference return");
                 try self.require(input.error_type, output.error_type, node.span);
                 try self.requireHandled(0, node.span);
                 for (temporaries[0 .. temporaries.len - 1]) |temporary| if (self.requiresHandling(temporary)) return self.sink.fail(
@@ -1944,7 +1578,7 @@ const Checker = struct {
                     "propagation could drop a pending result temporary; handle or transfer it before this expression",
                 );
                 out.ty = input.ok_type;
-                out.data = .{ .propagate = .{ .value = value, .output = self.return_type, .cleanup = try self.activeCleanup() } };
+                out.data = .{ .propagate = .{ .value = value, .output = self.return_type } };
             },
             .variant => |variant| {
                 out.ty = try self.ty(variant.ty);
@@ -2029,14 +1663,6 @@ const Checker = struct {
                 if (typed.moveOnly(out.ty, self.catalog.records)) return self.sink.fail(eArenaBinding, node.span, "escape copies managed values; owned storage and capabilities cannot be copied out of an arena");
                 out.data = .{ .arena_escape = value };
             },
-            .reset_arena => |reset| {
-                out.ty = try self.ty(reset.ty);
-                const shape = typed.resultShape(out.ty, self.catalog.records) orelse return self.sink.fail("E_ARENA_RESULT", reset.ty, "arena reset requires bool success and i64 error payloads");
-                if (shape.ok_type != .bool or shape.error_type != .i64) return self.sink.fail("E_ARENA_RESULT", reset.ty, "arena reset requires bool success and i64 error payloads");
-                const value = self.resolved[@backingInt(reset.value)].?;
-                try self.require(self.nodes.items[@backingInt(value)].ty, .allocator, node.span);
-                out.data = .{ .reset_arena = value };
-            },
             .cast => |cast| {
                 const value = self.resolved[@backingInt(cast.value)].?;
                 out.ty = try self.ty(cast.ty);
@@ -2049,30 +1675,12 @@ const Checker = struct {
                 out.ty = .bool;
                 out.data = .{ .boolean = value };
             },
-            .read_slice => |read| {
-                const id = try self.reference(read.name);
-                try self.requireReferenceKind(id, true, read.name);
-                const element_index = self.resolved[@backingInt(read.index)].?;
-                try self.requireInteger(self.nodes.items[@backingInt(element_index)].ty, self.nodes.items[@backingInt(element_index)].span);
-                out.ty = self.references.items[@backingInt(id)].ty;
-                out.data = .{ .read_slice = .{ .reference = id, .index = element_index } };
-            },
-            .len_slice => |name| {
-                const id = try self.reference(name);
-                try self.requireReferenceKind(id, true, name);
-                out.ty = .u64;
-                out.data = .{ .len_slice = id };
-            },
-            .read_ref => |name| try self.checkReadReference(name, &out),
             .name => |name| try self.checkName(node, name, &out),
             .call => |call| try self.checkCall(node, call, &out),
             .unary => |u| return self.checkUnary(node, u),
             .binary => |b| try self.checkValueBinary(b, &out),
         }
         return out;
-    }
-    fn expressionMode(self: *Checker, root: ast.NodeId, reference_result: bool) Error!typed.NodeId {
-        return self.expressionWithTemporaries(root, reference_result, &.{});
     }
     fn consumedTemporaries(self: *Checker, node: ast.Node, out: typed.Node) Error!usize {
         if (node.data == .index and out.data == .block_value) return 2;
@@ -2081,10 +1689,9 @@ const Checker = struct {
         if (node.data == .binary) return 2;
         if (node.data == .call and try self.numericConversion(node.data.call) != null) return node.data.call.arguments.len;
         return switch (out.data) {
-            .json_codec => 3,
-            .function_value, .unit, .integer, .boolean, .local, .read_ref, .read_field, .take_field, .len_slice, .block_value => 0,
-            .arena_escape, .reset_arena, .cast, .wrap, .unwrap, .length, .field, .unary, .read_slice, .propagate, .external_read, .complete_resource, .restrict_resource => 1,
-            .acquire_buffer, .acquire_pool => |acquire| if (acquire.managed) 1 else 2,
+            .function_value, .unit, .integer, .boolean, .local, .block_value => 0,
+            .arena_escape, .cast, .wrap, .unwrap, .length, .field, .unary, .propagate, .external_read, .complete_resource, .restrict_resource => 1,
+            .acquire_buffer => 1,
             .acquire_resource, .environment_get => 2,
             .index, .binary => 2,
             .replace => 3,
@@ -2093,13 +1700,12 @@ const Checker = struct {
             .record => |initializers| initializers.len,
             .update => |update| update.fields.len + 1,
             .invoke => |call| call.arguments.len,
-            .call => |call| call.arguments.len + call.literals.len,
-            .pool_operation => |operation| operation.arguments.len,
+            .call => |call| call.arguments.len,
             .buffer_operation => |operation| operation.arguments.len,
             .resource_io => |io| if (io.value != null) 1 else 0,
         };
     }
-    fn expressionWithTemporaries(self: *Checker, root: ast.NodeId, reference_result: bool, inherited: []const typed.Type) Error!typed.NodeId {
+    fn expressionWithTemporaries(self: *Checker, root: ast.NodeId, inherited: []const typed.Type) Error!typed.NodeId {
         var work: std.ArrayList(Work) = .empty;
         defer work.deinit(self.allocator);
         var temporaries: std.ArrayList(typed.Type) = .empty;
@@ -2125,7 +1731,7 @@ const Checker = struct {
             const node = try self.collectionSyntax(task.id);
             const minimum_literal = try self.minimum(node);
             if (!task.emit and minimum_literal == null) {
-                if (try self.queueExpression(&work, task.id, reference_result and task.id == root)) continue;
+                if (try self.queueExpression(&work, task.id)) continue;
             }
             const out = try self.checkedExpression(node, minimum_literal, temporaries.items);
             const consumed = try self.consumedTemporaries(node, out);
@@ -2137,29 +1743,6 @@ const Checker = struct {
             try self.nodes.append(self.allocator, out);
         }
         return self.resolved[@backingInt(root)].?;
-    }
-    fn statementArenaScope(self: *Checker, stmt: ast.Statement, scope: @FieldType(@FieldType(ast.Statement, "data"), "arena_scope"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
-        const parent = try self.expression(scope.parent);
-        try self.require(self.nodes.items[@backingInt(parent)].ty, .allocator, stmt.span);
-        const name = self.src.text(scope.name);
-        if (try self.topLevel(scope.name) or self.active.contains(name) or self.active_refs.contains(name)) return self.sink.fail(eShadowing, scope.name, "arena allocator shadows an active name");
-        self.arena_depth += 1;
-        defer self.arena_depth -= 1;
-        const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
-        try self.locals.append(self.allocator, .{
-            .ownership = .{
-                .arena_depth = self.arena_depth,
-            },
-            .name = name,
-            .declaration = scope.name,
-            .ty = .allocator,
-            .mutable = false,
-        });
-        try self.active.put(self.allocator, name, slot);
-        defer _ = self.active.remove(name);
-        const body = try self.statement(scope.body);
-        flow.terminates = body.terminates;
-        return .{ .arena_scope = .{ .parent = parent, .slot = slot, .body = body.id } };
     }
     fn needsLocalCleanup(self: *Checker, local_type: typed.Type) Error!bool {
         if (typed.moveOnly(local_type, self.catalog.records)) return true;
@@ -2270,7 +1853,7 @@ const Checker = struct {
         var name: []const u8 = "";
         if (scope.name) |declared| {
             name = self.src.text(declared);
-            if (try self.topLevel(declared) or self.active.contains(name) or self.active_refs.contains(name)) return self.sink.fail(eShadowing, declared, "arena name shadows an active name");
+            if (try self.topLevel(declared) or self.active.contains(name)) return self.sink.fail(eShadowing, declared, "arena name shadows an active name");
             for (self.arenas.items) |active| if (std.mem.eql(u8, active.name, name)) return self.sink.fail(eShadowing, declared, "arena name shadows an enclosing arena scope");
         }
         const watermark: typed.LocalId = @fromBackingInt(self.locals.items.len);
@@ -2331,7 +1914,7 @@ const Checker = struct {
             if (seen[tag]) |previous| return self.sink.failRelated("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm", .{ .span = previous, .message = "previous arm" });
             seen[tag] = arm.name;
             const payload = variants.cases[tag].payload;
-            if (arm.discard_payload and payload != null and self.requiresHandling(payload.?)) return self.sink.fail(eResultDiscard, arm.name, "nested result payload requires a binding and explicit handling or acknowledgement");
+            if (arm.discard_payload and payload != null and self.requiresHandling(payload.?)) return self.sink.fail(eResultDiscard, arm.name, "nested result payload requires a binding and explicit handling");
             if ((payload != null) != (arm.binding != null or arm.discard_payload)) return self.sink.failRelated(
                 "E_PATTERN_PAYLOAD",
                 arm.name,
@@ -2348,11 +1931,10 @@ const Checker = struct {
             var slot: ?typed.LocalId = null;
             if (arm.binding) |binding| {
                 const name = self.src.text(binding);
-                if (try self.topLevel(binding) or self.active.contains(name) or self.active_refs.contains(name)) return self.sink.fail(eShadowing, binding, "payload binding shadows an active binding or top-level name");
+                if (try self.topLevel(binding) or self.active.contains(name)) return self.sink.fail(eShadowing, binding, "payload binding shadows an active binding or top-level name");
                 slot = @fromBackingInt(self.locals.items.len);
                 try self.locals.append(self.allocator, .{
                     .ownership = .{
-                        .arena_depth = self.arena_depth,
                         .transfer_available = self.transfers(payload.?),
                     },
                     .name = name,
@@ -2384,7 +1966,7 @@ const Checker = struct {
         return .{ .match = .{ .value = value, .arms = arms } };
     }
     fn matchExpression(self: *Checker, node: ast.Node, match: @FieldType(@FieldType(ast.Node, "data"), "match_expression"), temporaries: []const typed.Type) Error!typed.Node {
-        const value = try self.expressionWithTemporaries(match.value, false, temporaries);
+        const value = try self.expressionWithTemporaries(match.value, temporaries);
         const value_type = self.nodes.items[@backingInt(value)].ty;
         const variants = try self.catalog.variants(value_type, node.span, self.sink);
         const seen = try self.allocator.alloc(?source.Span, variants.cases.len);
@@ -2401,7 +1983,7 @@ const Checker = struct {
             if (seen[tag]) |previous| return self.sink.failRelated("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm", .{ .span = previous, .message = "previous arm" });
             seen[tag] = arm.name;
             const payload = variants.cases[tag].payload;
-            if (arm.discard_payload and payload != null and self.requiresHandling(payload.?)) return self.sink.fail(eResultDiscard, arm.name, "nested result payload requires a binding and explicit handling or acknowledgement");
+            if (arm.discard_payload and payload != null and self.requiresHandling(payload.?)) return self.sink.fail(eResultDiscard, arm.name, "nested result payload requires a binding and explicit handling");
             if ((payload != null) != (arm.binding != null or arm.discard_payload)) return self.sink.failRelated(
                 "E_PATTERN_PAYLOAD",
                 arm.name,
@@ -2418,11 +2000,10 @@ const Checker = struct {
             var slot: ?typed.LocalId = null;
             if (arm.binding) |binding| {
                 const name = self.src.text(binding);
-                if (try self.topLevel(binding) or self.active.contains(name) or self.active_refs.contains(name)) return self.sink.fail(eShadowing, binding, "payload binding shadows an active binding or top-level name");
+                if (try self.topLevel(binding) or self.active.contains(name)) return self.sink.fail(eShadowing, binding, "payload binding shadows an active binding or top-level name");
                 slot = @fromBackingInt(self.locals.items.len);
                 try self.locals.append(self.allocator, .{
                     .ownership = .{
-                        .arena_depth = self.arena_depth,
                         .transfer_available = self.transfers(payload.?),
                     },
                     .name = name,
@@ -2432,7 +2013,7 @@ const Checker = struct {
                 });
                 try self.active.put(self.allocator, name, slot.?);
             }
-            const arm_value = try self.expressionWithTemporaries(arm.value, false, temporaries);
+            const arm_value = try self.expressionWithTemporaries(arm.value, temporaries);
             const arm_type = self.nodes.items[@backingInt(arm_value)].ty;
             if (result_type) |expected| try self.require(arm_type, expected, self.syntax.nodes.items[@backingInt(arm.value)].span) else result_type = arm_type;
             try self.requireHandled(first_local, node.span);
@@ -2455,158 +2036,17 @@ const Checker = struct {
         if (continuation) |state| self.restorePending(state);
         const output_type = result_type orelse return self.sink.fail("E_EMPTY_MATCH", node.span, "a value-producing match requires at least one case");
         self.locals.items[@backingInt(result_slot)].ty = output_type;
-        self.locals.items[@backingInt(result_slot)].ownership.arena_depth = self.arena_depth;
         const body: typed.StatementId = @fromBackingInt(self.statements.items.len);
         try self.statements.append(self.allocator, .{ .span = node.span, .terminates = false, .data = .{ .match = .{ .value = value, .arms = arms } } });
         const result: typed.NodeId = @fromBackingInt(self.nodes.items.len);
         try self.nodes.append(self.allocator, .{ .span = node.span, .ty = output_type, .data = .{ .local = result_slot } });
         return .{ .span = node.span, .ty = output_type, .data = .{ .block_value = .{ .body = body, .value = result } } };
     }
-    fn statementBorrowCall(self: *Checker, _: ast.Statement, borrow: @FieldType(@FieldType(ast.Statement, "data"), "borrow_call"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
-        const call_node = self.syntax.nodes.items[@backingInt(borrow.call)];
-        if (call_node.data != .call) return self.sink.fail(eReferenceResult, call_node.span, "borrow result requires a direct function call");
-        const name = self.src.text(borrow.name);
-        if (self.active.contains(name) or self.active_refs.contains(name) or try self.topLevel(borrow.name)) return self.sink.fail(eShadowing, borrow.name, "reference shadows an active binding or top-level name");
-        const call = try self.expressionMode(borrow.call, true);
-        const checked_call = self.nodes.items[@backingInt(call)].data.call;
-        const contract = (try self.returnContract(checked_call.function)) orelse return self.sink.fail(eReferenceResult, call_node.span, "borrow result requires a reference-returning function");
-        if (borrow.mutable and !contract.mutable) return self.sink.fail(eReferenceReadOnly, borrow.name, "shared function result cannot be borrowed exclusively");
-        const argument = self.syntax.nodes.items[@backingInt(call_node.data.call.arguments[@backingInt(contract.parameter)])];
-        const parent = try self.reference(argument.data.name);
-        const owner = self.references.items[@backingInt(parent)].owner;
-        const id: typed.ReferenceId = @fromBackingInt(self.references.items.len);
-        try self.references.append(self.allocator, .{ .mode = .{
-            .slice = contract.slice,
-        }, .name = name, .declaration = borrow.name, .owner = owner, .parent = parent, .ty = self.nodes.items[@backingInt(call)].ty, .mutable = borrow.mutable });
-        try self.active_refs.put(self.allocator, name, id);
-        defer _ = self.active_refs.remove(name);
-        const body = try self.statement(borrow.body);
-        flow.terminates = body.terminates;
-        return .{ .borrow_call = .{ .call = call, .reference = id, .body = body.id } };
-    }
-    fn statementSplitBorrow(self: *Checker, borrow: @FieldType(@FieldType(ast.Statement, "data"), "borrow"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
-        const split = borrow.split.?;
-        const middle = try self.expression(split.middle);
-        try self.requireInteger(self.nodes.items[@backingInt(middle)].ty, borrow.owner);
-        const parent = try self.reference(borrow.owner);
-        try self.requireReferenceKind(parent, true, borrow.owner);
-        const source_ref = self.references.items[@backingInt(parent)];
-        if (!source_ref.mutable) return self.sink.fail(eReferenceReadOnly, borrow.owner, "split requires an exclusive slice");
-        const left: typed.ReferenceId = @fromBackingInt(self.references.items.len);
-        const right: typed.ReferenceId = @fromBackingInt(self.references.items.len + 1);
-        for ([_]source.Span{ borrow.name, split.right }, [_]typed.ReferenceId{ right, left }) |span, sibling| {
-            const name = self.src.text(span);
-            if (self.active.contains(name) or self.active_refs.contains(name) or try self.topLevel(span)) return self.sink.fail(eShadowing, span, "split name shadows an active binding or top-level name");
-            const id: typed.ReferenceId = @fromBackingInt(self.references.items.len);
-            try self.references.append(self.allocator, .{ .mode = .{ .slice = true, .split_sibling = sibling }, .name = name, .declaration = span, .owner = source_ref.owner, .parent = parent, .ty = source_ref.ty, .mutable = true });
-            try self.active_refs.put(self.allocator, name, id);
-        }
-        defer _ = self.active_refs.remove(self.src.text(borrow.name));
-        defer _ = self.active_refs.remove(self.src.text(split.right));
-        const body = try self.statement(borrow.body);
-        flow.terminates = body.terminates;
-        return .{ .borrow = .{ .reference = left, .body = body.id, .split = .{ .right = right, .middle = middle } } };
-    }
-    fn wholeBorrowRange(self: *Checker, owner: typed.LocalId, parent: ?typed.ReferenceId, source_type: typed.Type, parent_slice: bool, span: source.Span) Error!typed.Range {
-        const start: typed.NodeId = @fromBackingInt(self.nodes.items.len);
-        try self.nodes.append(self.allocator, .{ .span = span, .ty = .u64, .data = .{ .integer = 0 } });
-        const end: typed.NodeId = @fromBackingInt(self.nodes.items.len);
-        const data: @FieldType(typed.Node, "data") = if (parent_slice)
-            .{ .len_slice = parent.? }
-        else if (self.catalog.records[source_type.recordIndex()].shape.array) |array|
-            .{ .integer = array.length }
-        else
-            .{ .buffer_operation = .{ .kind = .length, .owner = owner, .arguments = &.{} } };
-        try self.nodes.append(self.allocator, .{ .span = span, .ty = .u64, .data = data });
-        return .{ .start = start, .end = end };
-    }
-    fn statementBorrow(self: *Checker, _: ast.Statement, borrow: @FieldType(@FieldType(ast.Statement, "data"), "borrow"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
-        if (borrow.split != null) return self.statementSplitBorrow(borrow, flow);
-        const name = self.src.text(borrow.name);
-        if (self.active.contains(name) or self.active_refs.contains(name) or try self.topLevel(borrow.name)) return self.sink.fail(eShadowing, borrow.name, "reference shadows an active binding or top-level name");
-        var range: ?typed.Range = null;
-        if (borrow.range) |bounds| {
-            const start = try self.expression(bounds.start);
-            const end = try self.expression(bounds.end);
-            try self.requireInteger(self.nodes.items[@backingInt(start)].ty, self.nodes.items[@backingInt(start)].span);
-            try self.requireInteger(self.nodes.items[@backingInt(end)].ty, self.nodes.items[@backingInt(end)].span);
-            range = .{ .start = start, .end = end };
-        }
-        var parent: ?typed.ReferenceId = null;
-        var owner: typed.LocalId = undefined;
-        if (self.active_refs.contains(self.src.text(borrow.owner))) {
-            parent = try self.reference(borrow.owner);
-            const ref = self.references.items[@backingInt(parent.?)];
-            if (borrow.mutable and !ref.mutable) return self.sink.fail(eReferenceReadOnly, borrow.owner, "shared references cannot be reborrowed exclusively");
-            owner = ref.owner;
-        } else {
-            owner = try self.resolve(borrow.owner);
-            if (borrow.mutable and !self.locals.items[@backingInt(owner)].mutable) return self.sink.fail(eImmutable, borrow.owner, "exclusive borrowing requires a mutable owner");
-            try self.ownerAccess(owner, borrow.mutable, borrow.owner);
-            self.locals.items[@backingInt(owner)].usage.reads += 1;
-            if (borrow.mutable) self.locals.items[@backingInt(owner)].usage.mutable_borrow = true;
-        }
-        const owner_type = self.locals.items[@backingInt(owner)].ty;
-        if (owner_type.isAggregate() and self.catalog.records[owner_type.recordIndex()].managed) return self.sink.fail("E_LIST_BORROW", borrow.owner, "managed lists are passed by value; borrowing their storage is not supported");
-        if (self.transfers(owner_type) and !self.locals.items[@backingInt(owner)].ownership.transfer_available) return self.sink.failTransfer(
-            eOwnedConsumed,
-            borrow.owner,
-            self.locals.items[@backingInt(owner)].declaration,
-            self.locals.items[@backingInt(owner)].ownership.transfer_span,
-        );
-        if (self.requiresHandling(owner_type)) return self.sink.fail(eResultBorrow, borrow.owner, "result-bearing values must transfer their handling obligation by value");
-        for (self.locals.items[@backingInt(owner)].ownership.partial_fields) |moved| if (moved != null) return self.sink.fail(eResultBorrow, borrow.owner, "a partially moved owner cannot be borrowed whole");
-        const source_type = if (parent) |id| self.references.items[@backingInt(id)].ty else self.locals.items[@backingInt(owner)].ty;
-        const parent_slice = if (parent) |id| self.references.items[@backingInt(id)].mode.slice else false;
-        const slicing = range != null or borrow.whole_slice;
-        const owner_subslice = slicing and parent != null and !parent_slice;
-        if (owner_subslice and source_type.isAggregate()) {
-            if (self.catalog.records[source_type.recordIndex()].shape.buffer != null)
-                return self.sink.fail("E_SLICE_TYPE", borrow.owner, "borrow buffer elements directly from the owner in a separate lexical scope");
-        }
-        const element = if (slicing and !parent_slice) try self.sliceElement(source_type, borrow.owner) else source_type;
-        if (self.requiresHandling(element) or ((slicing or parent_slice) and self.transfers(element)))
-            return self.sink.fail(eResultBorrow, borrow.owner, "result obligations and owned slice elements cannot be exposed through references");
-        if (borrow.whole_slice) range = try self.wholeBorrowRange(owner, parent, source_type, parent_slice, borrow.owner);
-        const id: typed.ReferenceId = @fromBackingInt(self.references.items.len);
-        try self.references.append(self.allocator, .{ .mode = .{ .slice = slicing or parent_slice }, .name = name, .declaration = borrow.name, .owner = owner, .parent = parent, .ty = element, .mutable = borrow.mutable });
-        try self.active_refs.put(self.allocator, name, id);
-        defer _ = self.active_refs.remove(name);
-        const body = try self.statement(borrow.body);
-        flow.terminates = body.terminates;
-        return .{ .borrow = .{ .reference = id, .body = body.id, .range = range } };
-    }
-    fn statementWriteSlice(self: *Checker, stmt: ast.Statement, write: @FieldType(@FieldType(ast.Statement, "data"), "write_slice"), _: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
-        const id = try self.reference(write.name);
-        try self.requireReferenceKind(id, true, write.name);
-        const ref = self.references.items[@backingInt(id)];
-        if (!ref.mutable) return self.sink.fail(eReferenceReadOnly, write.name, "writing requires an exclusive slice");
-        const index = try self.expression(write.index);
-        try self.requireInteger(self.nodes.items[@backingInt(index)].ty, self.nodes.items[@backingInt(index)].span);
-        const value = try self.expression(write.value);
-        try self.require(self.nodes.items[@backingInt(value)].ty, ref.ty, stmt.span);
-        self.locals.items[@backingInt(ref.owner)].usage.writes += 1;
-        return .{ .write_slice = .{ .reference = id, .index = index, .value = value } };
-    }
-    fn statementWriteRef(self: *Checker, stmt: ast.Statement, write: @FieldType(@FieldType(ast.Statement, "data"), "write_ref"), _: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
-        const id = try self.reference(write.name);
-        try self.requireReferenceKind(id, false, write.name);
-        const ref = self.references.items[@backingInt(id)];
-        if (!ref.mutable) return self.sink.fail(eReferenceReadOnly, write.name, "writing requires an exclusive reference");
-        const value = try self.expression(write.value);
-        try self.require(self.nodes.items[@backingInt(value)].ty, ref.ty, stmt.span);
-        self.locals.items[@backingInt(ref.owner)].usage.writes += 1;
-        return .{ .write_ref = .{ .reference = id, .value = value } };
-    }
-    fn statementAcknowledge(self: *Checker, stmt: ast.Statement, expr: @FieldType(@FieldType(ast.Statement, "data"), "acknowledge"), _: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
-        const value = try self.expression(expr);
-        if (!self.requiresHandling(self.nodes.items[@backingInt(value)].ty)) return self.sink.fail("E_ACKNOWLEDGE_TYPE", stmt.span, "acknowledge requires a result-bearing value");
-        return .{ .acknowledge = value };
-    }
+    /// `_ = expr` evaluates the value and releases it, which also settles a pending
+    /// result obligation; an unwritten standalone value still needs the explicit form.
     fn statementDiscard(self: *Checker, stmt: ast.Statement, expr: @FieldType(@FieldType(ast.Statement, "data"), "discard"), _: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         const value = try self.expression(expr);
-        if (stmt.implicit_discard and self.nodes.items[@backingInt(value)].ty != .unit) return self.sink.fail("E_EXPLICIT_DISCARD_REQUIRED", stmt.span, "a standalone non-unit value requires explicit discard or result handling");
-        if (self.requiresHandling(self.nodes.items[@backingInt(value)].ty)) return self.sink.fail(eResultDiscard, stmt.span, "discard cannot erase a fallible result; match, return, transfer, or explicitly acknowledge it");
+        if (stmt.implicit_discard and self.nodes.items[@backingInt(value)].ty != .unit) return self.sink.fail("E_EXPLICIT_DISCARD_REQUIRED", stmt.span, "a standalone non-unit value requires `_ =` or result handling");
         return .{ .discard = value };
     }
     fn statementBranch(self: *Checker, stmt: ast.Statement, branch: @FieldType(@FieldType(ast.Statement, "data"), "branch"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
@@ -2631,7 +2071,7 @@ const Checker = struct {
         try self.samePending(before, stmt.span, eResultLoop);
         const loop_id = self.loops.next;
         self.loops.next += 1;
-        try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .references = self.references.items.len, .arena_depth = self.arena_depth, .arenas = self.arenas.items.len });
+        try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .arenas = self.arenas.items.len });
         defer _ = self.loops.active.pop();
         const body = try self.statement(loop.body);
         if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
@@ -2657,7 +2097,7 @@ const Checker = struct {
         const names = [_]?source.Span{ each.name, each.index_name };
         const slots = [_]typed.LocalId{ value_slot, index };
         for (names) |maybe_name| if (maybe_name) |name| {
-            if (try self.topLevel(name) or self.active.contains(self.src.text(name)) or self.active_refs.contains(self.src.text(name))) return self.sink.fail(eShadowing, name, "iteration binding shadows an active declaration");
+            if (try self.topLevel(name) or self.active.contains(self.src.text(name))) return self.sink.fail(eShadowing, name, "iteration binding shadows an active declaration");
         };
         if (each.index_name) |name| if (std.mem.eql(u8, self.src.text(name), self.src.text(each.name))) return self.sink.fail(eShadowing, name, "iteration names must differ");
         for (names, slots) |maybe_name, slot| if (maybe_name) |name| {
@@ -2671,7 +2111,7 @@ const Checker = struct {
         const before = try self.pendingState(self.locals.items.len);
         const loop_id = self.loops.next;
         self.loops.next += 1;
-        try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .references = self.references.items.len, .arena_depth = self.arena_depth, .arenas = self.arenas.items.len });
+        try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .arenas = self.arenas.items.len });
         defer _ = self.loops.active.pop();
         const body = try self.statement(each.body);
         if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
@@ -2701,7 +2141,7 @@ const Checker = struct {
     }
     fn statementForRange(self: *Checker, stmt: ast.Statement, range: @FieldType(@FieldType(ast.Statement, "data"), "for_range")) Error!@FieldType(typed.Statement, "data") {
         const name = self.src.text(range.name);
-        if (try self.topLevel(range.name) or self.active.contains(name) or self.active_refs.contains(name)) return self.sink.fail(eShadowing, range.name, "iteration binding shadows an active declaration");
+        if (try self.topLevel(range.name) or self.active.contains(name)) return self.sink.fail(eShadowing, range.name, "iteration binding shadows an active declaration");
         const zero_start = self.syntax.nodes.items[@backingInt(range.start)].data == .unit;
         const start = if (zero_start) try (collections.Builder(Checker){ .checker = self, .span = range.name }).integer(0) else try self.expression(range.start);
         const end = try self.expression(range.end);
@@ -2727,7 +2167,7 @@ const Checker = struct {
         const before = try self.pendingState(self.locals.items.len);
         const loop_id = self.loops.next;
         self.loops.next += 1;
-        try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .references = self.references.items.len, .arena_depth = self.arena_depth, .arenas = self.arenas.items.len });
+        try self.loops.active.append(self.allocator, .{ .id = loop_id, .before = before, .arenas = self.arenas.items.len });
         defer _ = self.loops.active.pop();
         const body = try self.statement(range.body);
         if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
@@ -2749,19 +2189,11 @@ const Checker = struct {
         try self.requireHandled(loop.before.len, stmt.span);
         try self.samePending(loop.before, stmt.span, eResultLoop);
         var owned: std.ArrayList(typed.LocalId) = .empty;
-        var regions: std.ArrayList(typed.LocalId) = .empty;
-        var refs: std.ArrayList(typed.ReferenceId) = .empty;
         for (self.locals.items[loop.before.len..], loop.before.len..) |local, index| {
             if (try self.needsLocalCleanup(local.ty)) try owned.append(self.allocator, @fromBackingInt(index));
-            if (local.ty == .allocator and local.ownership.arena_depth > loop.arena_depth and self.active.get(local.name) == @as(typed.LocalId, @fromBackingInt(index)))
-                try regions.append(self.allocator, @fromBackingInt(index));
-        }
-        for (self.references.items[loop.references..], loop.references..) |ref, index| {
-            if (self.active_refs.get(ref.name) == @as(typed.ReferenceId, @fromBackingInt(index))) try refs.append(self.allocator, @fromBackingInt(index));
         }
         flow.terminates = true;
         flow.owned_cleanup = try owned.toOwnedSlice(self.allocator);
-        flow.cleanup = try refs.toOwnedSlice(self.allocator);
         var arenas: std.ArrayList(typed.LocalId) = .empty;
         var open = self.arenas.items.len;
         while (open > loop.arenas) {
@@ -2771,7 +2203,6 @@ const Checker = struct {
         return .{ .loop_exit = .{
             .target = loop.id,
             .continuing = continuing,
-            .regions = try regions.toOwnedSlice(self.allocator),
             .arenas = try arenas.toOwnedSlice(self.allocator),
         } };
     }
@@ -2780,42 +2211,23 @@ const Checker = struct {
         const value: typed.NodeId = @fromBackingInt(self.nodes.items.len);
         try self.nodes.append(self.allocator, .{ .span = span, .ty = .unit, .data = .unit });
         const ret: typed.StatementId = @fromBackingInt(self.statements.items.len);
-        try self.statements.append(self.allocator, .{ .span = span, .terminates = true, .cleanup = try self.activeCleanup(), .data = .{ .ret = value } });
+        try self.statements.append(self.allocator, .{ .span = span, .terminates = true, .data = .{ .ret = value } });
         const children = try self.allocator.dupe(typed.StatementId, &.{ body.id, ret });
         const block: typed.StatementId = @fromBackingInt(self.statements.items.len);
         try self.statements.append(self.allocator, .{ .span = span, .terminates = true, .data = .{ .block = children } });
         return .{ .id = block, .terminates = true };
     }
     fn statementRet(self: *Checker, stmt: ast.Statement, expr: @FieldType(@FieldType(ast.Statement, "data"), "ret"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
-        var value: ?typed.NodeId = null;
-        var returned: ?typed.ReferenceId = null;
-        if (self.return_reference) |contract| {
-            const expression_node = self.syntax.nodes.items[@backingInt(expr)];
-            if (expression_node.data != .name) return self.sink.fail(eReferenceResult, expression_node.span, "reference return requires an active reference name");
-            returned = try self.reference(expression_node.data.name);
-            const ref = self.references.items[@backingInt(returned.?)];
-            if (ref.owner != contract.parameter) return self.sink.failReturnLifetime(
-                expression_node.span,
-                ref.declaration,
-                self.locals.items[@backingInt(ref.owner)].declaration,
-                self.locals.items[@backingInt(contract.parameter)].declaration,
-            );
-            try self.requireReferenceKind(returned.?, contract.slice, expression_node.span);
-            if (contract.mutable and !ref.mutable) return self.sink.fail(eReferenceReadOnly, expression_node.span, "shared reference cannot supply an exclusive result");
-            try self.require(ref.ty, self.return_type, stmt.span);
-        } else {
-            value = try self.expressionExpected(expr, self.return_type);
-            try self.require(self.nodes.items[@backingInt(value.?)].ty, self.return_type, stmt.span);
-            try self.requireArenaReturn(value.?, stmt.span);
-        }
+        const value = try self.expressionExpected(expr, self.return_type);
+        try self.require(self.nodes.items[@backingInt(value)].ty, self.return_type, stmt.span);
+        try self.requireArenaReturn(value, stmt.span);
         try self.requireHandled(0, stmt.span);
         flow.terminates = true;
-        flow.cleanup = try self.activeCleanup();
-        return if (returned) |id| .{ .ret_ref = id } else .{ .ret = value.? };
+        return .{ .ret = value };
     }
     fn statementBinding(self: *Checker, _: ast.Statement, b: @FieldType(@FieldType(ast.Statement, "data"), "binding"), _: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         const name = self.src.text(b.name);
-        if (try self.topLevel(b.name) or self.active.contains(name) or self.active_refs.contains(name))
+        if (try self.topLevel(b.name) or self.active.contains(name))
             return self.sink.fail(eShadowing, b.name, "binding shadows an active local or top-level function");
         for (self.arenas.items) |scope| if (std.mem.eql(u8, scope.name, name)) return self.sink.fail(eShadowing, b.name, "binding shadows an active arena name");
         const value = if (b.annotation) |annotation| try self.expressionExpected(b.value, try self.ty(annotation)) else try self.expression(b.value);
@@ -2824,7 +2236,6 @@ const Checker = struct {
         const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
         try self.locals.append(self.allocator, .{
             .ownership = .{
-                .arena_depth = self.arena_depth,
                 .transfer_available = self.transfers(value_type),
             },
             .name = name,
@@ -2837,11 +2248,10 @@ const Checker = struct {
     }
     fn statementAssignment(self: *Checker, stmt: ast.Statement, a: @FieldType(@FieldType(ast.Statement, "data"), "assignment"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         const new_python_local = a.python and a.op == .set;
-        const unbound = !self.active.contains(self.src.text(a.name)) and !self.active_refs.contains(self.src.text(a.name));
+        const unbound = !self.active.contains(self.src.text(a.name));
         if (new_python_local and unbound)
             return self.statementBinding(stmt, .{ .name = a.name, .mutable = true, .annotation = null, .value = a.value }, flow);
         const slot = try self.resolve(a.name);
-        try self.ownerAccess(slot, true, a.name);
         if (!self.locals.items[@backingInt(slot)].mutable)
             return self.sink.fail(eImmutable, a.name, "assignment requires a let mut binding");
         var value = try self.expressionExpected(a.value, self.locals.items[@backingInt(slot)].ty);
@@ -2866,7 +2276,6 @@ const Checker = struct {
             if (self.pendingObligation(self.locals.items[@backingInt(slot)])) return self.sink.fail("E_RESULT_OVERWRITE", a.name, "assignment would overwrite an unhandled result-bearing value");
             self.locals.items[@backingInt(slot)].ownership.transfer_available = true;
             self.locals.items[@backingInt(slot)].ownership.transfer_span = null;
-            self.locals.items[@backingInt(slot)].ownership.partial_fields = &.{};
         }
         self.locals.items[@backingInt(slot)].usage.writes += 1;
         return .{ .assign = .{ .slot = slot, .value = value } };
@@ -2886,15 +2295,6 @@ const Checker = struct {
                     .message = "previous parameter declaration",
                 },
             );
-            if (self.active_refs.get(name)) |previous| return sink.failRelated(
-                "E_DUPLICATE_PARAMETER",
-                parameter.name,
-                "parameter name is already declared",
-                .{
-                    .span = self.references.items[@backingInt(previous)].declaration,
-                    .message = "previous parameter declaration",
-                },
-            );
             if (try self.topLevel(parameter.name)) return sink.fail(eShadowing, parameter.name, "parameter shadows a top-level function");
             const slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
             const parameter_type = try self.ty(parameter.ty);
@@ -2902,7 +2302,6 @@ const Checker = struct {
                 const checked = try self.expressionExpected(value, parameter_type);
                 try self.require(self.nodes.items[@backingInt(checked)].ty, parameter_type, parameter.ty);
             }
-            if (parameter.reference != null and self.requiresHandling(parameter_type)) return sink.fail(eResultBorrow, parameter.ty, "result-bearing parameters must transfer their handling obligation by value");
             try self.locals.append(
                 allocator,
                 .{
@@ -2910,35 +2309,21 @@ const Checker = struct {
                     .declaration = parameter.name,
                     .ty = parameter_type,
                     .mutable = function.policy.python and function.policy.host == null,
-                    .parameter = .{
-                        .reference_parameter = parameter.reference,
-                        .slice_parameter = parameter.slice,
-                    },
                     .ownership = .{
                         .transfer_available = self.transfers(parameter_type),
                     },
                 },
             );
-            if (parameter.reference) |mutable| {
-                const reference_id: typed.ReferenceId = @fromBackingInt(self.references.items.len);
-                try self.references.append(allocator, .{ .mode = .{ .parameter = true, .slice = parameter.slice }, .name = name, .declaration = parameter.name, .owner = slot, .parent = null, .ty = parameter_type, .mutable = mutable });
-                try self.active_refs.put(allocator, name, reference_id);
-            } else try self.active.put(allocator, name, slot);
+            try self.active.put(allocator, name, slot);
         }
     }
     fn statement(self: *Checker, statement_id: ast.StatementId) Error!CheckedStatement {
         const stmt = self.syntax.statements.items[@backingInt(statement_id)];
         var flow: StatementFlow = .{};
         const data: @FieldType(typed.Statement, "data") = switch (stmt.data) {
-            .arena_scope => |scope| try self.statementArenaScope(stmt, scope, &flow),
             .managed_arena => |scope| try self.statementManagedArena(stmt, scope, &flow),
             .block => |children| try self.statementBlock(stmt, children, &flow),
             .match => |match| try self.statementMatch(stmt, match, &flow),
-            .borrow_call => |borrow| try self.statementBorrowCall(stmt, borrow, &flow),
-            .borrow => |borrow| try self.statementBorrow(stmt, borrow, &flow),
-            .write_slice => |write| try self.statementWriteSlice(stmt, write, &flow),
-            .write_ref => |write| try self.statementWriteRef(stmt, write, &flow),
-            .acknowledge => |expr| try self.statementAcknowledge(stmt, expr, &flow),
             .discard => |expr| try self.statementDiscard(stmt, expr, &flow),
             .branch => |branch| try self.statementBranch(stmt, branch, &flow),
             .loop => |loop| try self.statementLoop(stmt, loop, &flow),
@@ -2950,7 +2335,7 @@ const Checker = struct {
             .assignment => |a| try self.statementAssignment(stmt, a, &flow),
         };
         const result: typed.StatementId = @fromBackingInt(self.statements.items.len);
-        try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = flow.terminates, .owned_cleanup = flow.owned_cleanup, .cleanup = flow.cleanup, .data = data });
+        try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = flow.terminates, .owned_cleanup = flow.owned_cleanup, .data = data });
         return .{ .id = result, .terminates = flow.terminates };
     }
 };
@@ -3004,7 +2389,6 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     var checker: Checker = .{ .allocator = allocator, .src = src, .syntax = program, .sink = sink, .resolved = resolved, .catalog = catalog, .ordinary_ids = ordinary_ids };
     defer allocator.free(checker.managed_types);
     for (program.functions, 0..) |function, i| {
-        if (function.policy.owner == null and source_json.operation(src.text(function.name)) != null) return sink.fail("E_RESERVED_FUNCTION", function.name, "JSON operation names are reserved compiler intrinsics");
         const name = if (module_names) |names| try names.functionDeclaration(function.policy.owner, function.name) else try functionName(allocator, src, function.policy.owner, function.name);
         if (checker.catalog.names.contains(name) or checker.catalog.templates.names.contains(name)) return sink.fail("E_DUPLICATE_NAME", function.name, "function name conflicts with a declared type");
         if (checker.functions.get(name)) |previous| return sink.failRelated(
@@ -3031,12 +2415,11 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     const entry = program.functions[@backingInt(main_declaration)];
     const main = ordinary_ids[@backingInt(main_declaration)] orelse return sink.fail("E_MAIN", entry.name, "main cannot have type parameters");
     if (entry.policy.host != null or entry.policy.constant) return sink.fail("E_MAIN", entry.name, "main must have a guest function body");
-    if (entry.signature.return_reference != null) return sink.fail("E_MAIN", entry.name, "main must return an i64 value");
     var entry_capabilities: u8 = 0;
     for (entry.signature.parameters) |parameter| {
         const index = (try checker.ty(parameter.ty)).capabilityIndex() orelse return sink.fail("E_MAIN", parameter.ty, "entry parameters must be capabilities");
         const bit = @as(u8, 1) << index;
-        if (parameter.reference != null or entry_capabilities & bit != 0) return sink.fail("E_MAIN", parameter.name, "entry requests at most one value parameter of each capability kind");
+        if (entry_capabilities & bit != 0) return sink.fail("E_MAIN", parameter.name, "entry requests at most one value parameter of each capability kind");
         entry_capabilities |= bit;
     }
     if (!@import("entry_adapter.zig").supported(try checker.ty(entry.signature.return_type), checker.catalog.records)) return sink.fail("E_TYPE", entry.signature.return_type, "main must return int, None, or Result<None/int,int>");
@@ -3080,7 +2463,6 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
         .records = checker.catalog.records,
     };
     try @import("entry_adapter.zig").adapt(allocator, &checked);
-    try @import("region_check.zig").check(allocator, checked, sink);
     try @import("effects.zig").check(allocator, checked, sink);
     try @import("domain_codecs.zig").check(allocator, src, program.types.domains, checker.catalog, .{ .items = functions, .names = executable_names }, sink);
     try warnBindings(allocator, program, functions, sink);
@@ -3133,7 +2515,7 @@ fn warnBindings(allocator: std.mem.Allocator, syntax: ast.Program, functions: []
                 .span = local.declaration,
                 .message = "binding is never read; use it or remove it, preserving initializer effects with discard when needed",
             });
-            const redundant_mut = local.mutable and local.usage.writes == 0 and !local.usage.mutable_borrow;
+            const redundant_mut = local.mutable and local.usage.writes == 0;
             if (!python and redundant_mut) try sink.items.append(allocator, .{
                 .severity = .warning,
                 .code = "W_UNNECESSARY_MUT",

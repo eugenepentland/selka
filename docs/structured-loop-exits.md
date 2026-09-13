@@ -2,7 +2,7 @@
 
 `break;` leaves the nearest enclosing `while` loop. `continue;` starts that
 loop's next condition check. Both work in ordinary and generic functions,
-including inside `if`, `match`, borrow scopes and nested arenas.
+including inside `if`, `match` and nested arena scopes.
 
 ```my
 fn sum() -> i64 {
@@ -18,8 +18,8 @@ fn sum() -> i64 {
 }
 ```
 
-Each exit releases the borrows, owned values and arena scopes it leaves before
-jumping. A borrow or arena surrounding the loop remains active. Results created
+Each exit releases the owned values and arena scopes it leaves before
+jumping. An arena surrounding the loop remains active. Results created
 inside the iteration must still be handled, transferred, returned, or explicitly
 acknowledged before either exit. Exit statements reject outside loops; statements
 following an unconditional exit in the same block are unreachable errors.
@@ -31,7 +31,7 @@ more precise loop analysis could establish that the owner will not be used again
 Loop return analysis still permits the condition to be initially false; a return
 after the loop remains necessary when the function could fall through.
 
-Lowering uses the existing checked jumps, borrow endings, local drops and arena
-endings. VM and native C execution therefore share the same exit cleanup sequence.
+Lowering uses the existing checked jumps, local drops and arena endings. VM and
+QBE native execution therefore share the same exit cleanup sequence.
 The formatter, source maps, generic checker and duplicate analysis preserve the
 new statements.

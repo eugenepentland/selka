@@ -26,7 +26,7 @@ the bound again. `break` cleans up those scopes and skips the increment. Nested
 loops always receive their own nearest `break` or `continue`.
 
 Range loops use the same conservative outer-ownership rules and result
-obligations as while loops. They support borrows, owned values and per-iteration
+obligations as while loops. They support owned values and per-iteration
 arenas; exited resources are released before incrementing. The first iteration
 may never occur, so a range loop alone does not prove a function returns.
 

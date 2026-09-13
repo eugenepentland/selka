@@ -1,6 +1,5 @@
 //! Independent native QBE units. Source locations never enter native artifact bytes.
 const slice_abi = ":myl_slice";
-const owned_lower = @import("qbe_owned.zig");
 const scalar_lower = @import("qbe_scalar.zig");
 const zero_local = " call $memset(l %l{d}, w 0, l {d})\n";
 const managed_lower = @import("qbe_managed.zig");
@@ -90,7 +89,7 @@ fn scalar(ty: typed.Type, records: []const typed.Record) bool {
 }
 
 fn ownedPointer(record: typed.Record) bool {
-    return record.shape.buffer != null or record.shape.pool != null or record.shape.resource != null;
+    return record.shape.buffer != null or record.shape.resource != null;
 }
 
 const Emitter = struct {
@@ -198,25 +197,14 @@ const Emitter = struct {
             try self.allocateIndex("agg", pc, size);
             try self.allocateIndex("aux", pc, size);
         };
-        for (0..f.scope.references.len) |i| try self.allocateIndex("r", i, 16);
-        if (f.signature.return_reference != null) try self.allocateSlot("captured", 16);
         for (0..capacity) |i| try self.allocateIndex("s", i, 8);
         if (self.has_roots) for (0..f.scope.locals.len + capacity) |i| try self.allocateIndex("root", i, 24);
         for (f.scope.locals, 0..) |local, i| {
             if ((try self.layout(local.ty)).trace) try self.print(zero_local, .{ i, @max(8, (try self.layout(local.ty)).size) });
         }
-        for (f.scope.instructions) |instruction| if (instruction.op == .begin_region) {
-            try self.print(" storel 0, %l{d}\n", .{@backingInt(instruction.op.begin_region)});
-        };
         const packed_args = try self.packedParameters(f);
         for (f.scope.locals[0..f.signature.parameter_count], 0..) |local, i| {
             if (packed_args) try self.unpackArgument(i);
-            if (local.parameter.reference_parameter != null) {
-                for (f.scope.references, 0..) |reference, rid| if (reference.mode.parameter and @backingInt(reference.owner) == i) {
-                    if (local.parameter.slice_parameter) try self.print(" blit %a{d}, %r{d}, 16\n", .{ i, rid }) else try self.print(" storel %a{d}, %r{d}\n", .{ i, rid });
-                };
-                continue;
-            }
             if (scalar(local.ty, self.program.records)) try self.print(" storel %a{d}, %l{d}\n", .{ i, i }) else try self.print(" blit %a{d}, %l{d}, {d}\n", .{ i, i, (try self.layout(local.ty)).size });
         }
     }
@@ -238,19 +226,11 @@ const Emitter = struct {
                     }
                 },
                 .call,
-                .call_refs,
-                .call_borrow,
                 .invoke,
                 .acquire_buffer,
-                .acquire_pool,
-                .pool_operation,
                 .buffer_operation,
-                .begin_region,
-                .end_region,
                 .external_read,
                 .environment_get,
-                .json_codec,
-                .reset_arena,
                 .acquire_resource,
                 .complete_resource,
                 .resource_io,
@@ -266,7 +246,7 @@ const Emitter = struct {
                 else => {},
             }
             switch (instruction.op) {
-                .ret, .ret_ref, .jump, .jump_if_false, .switch_variant => {},
+                .ret, .jump, .jump_if_false, .switch_variant => {},
                 else => try self.print(" jmp @i{d}\n", .{pc + 1}),
             }
             if (instruction.op == .jump_if_false) try self.print("@next{d}\n jmp @i{d}\n", .{ self.serial, pc + 1 });
@@ -276,17 +256,12 @@ const Emitter = struct {
         return switch (op) {
             .cast_integer,
             .call,
-            .call_refs,
-            .call_borrow,
             .invoke,
             .acquire_buffer,
-            .acquire_pool,
-            .pool_operation,
             .buffer_operation,
             .make_record,
             .get_index,
             .binary_integer,
-            .json_codec,
             .acquire_resource,
             .complete_resource,
             .resource_io,
@@ -340,23 +315,9 @@ const Emitter = struct {
             if (!(try self.layout(local.ty)).drop) continue;
             try self.print(drop_local, .{ try self.descriptor(local.ty), index });
         }
-        var pc = self.function.scope.instructions.len;
-        while (pc > 0) {
-            pc -= 1;
-            const op = self.function.scope.instructions[pc].op;
-            if (op != .begin_region) continue;
-            const slot = @backingInt(op.begin_region);
-            const value = try self.load("l", slot);
-            const label = self.temp();
-            try self.print(" jnz %v{d}, @closeregion{d}, @regionclosed{d}\n@closeregion{d}\n", .{ value, label, label, label });
-            try self.print(" call $myl_qbe_region_end(l %ctx, l %v{d})\n storel 0, %l{d}\n", .{ value, slot });
-            try self.checkFailure("failure");
-            try self.print(" jmp @regionclosed{d}\n@regionclosed{d}\n", .{ label, label });
-        }
     }
     fn returnStorageBytes(self: *Emitter) GenerateError!u64 {
         const f = self.function;
-        if (f.signature.return_reference) |reference| return if (reference.slice) 16 else 0;
         if (self.isScalar(f.signature.return_type) or try self.largeResult(f)) return 0;
         return @max(8, (try self.layout(f.signature.return_type)).size);
     }
@@ -365,7 +326,6 @@ const Emitter = struct {
         return addFrame(0, @max(8, (try self.layout(ty)).size));
     }
     fn parameterStackBytes(self: *Emitter, local: typed.Local) GenerateError!u64 {
-        if (local.parameter.reference_parameter != null) return if (local.parameter.slice_parameter) 16 else 8;
         return self.valueStackBytes(local.ty);
     }
     /// Wide signatures pass normalized scalar words and aggregate pointers in one vector.
@@ -378,7 +338,7 @@ const Emitter = struct {
     fn packedCallback(self: *Emitter, signature: typed.Callable) GenerateError!bool {
         if (signature.parameters.len > 128) return true;
         var bytes: u64 = 0;
-        for (signature.parameters, 0..) |ty, i| bytes = try addFrame(bytes, if (signature.borrows(i)) @as(u64, if (signature.slice(i)) 16 else 8) else try self.valueStackBytes(ty));
+        for (signature.parameters) |ty| bytes = try addFrame(bytes, try self.valueStackBytes(ty));
         return bytes > 4096;
     }
     /// Read one packed ABI parameter immediately before snapshotting its local value.
@@ -395,8 +355,6 @@ const Emitter = struct {
         for (self.function.scope.instructions) |instruction| {
             const target: ?typed.FunctionId = switch (instruction.op) {
                 .call => |id| id,
-                .call_refs => |call| call.function,
-                .call_borrow => |call| call.function,
                 else => null,
             };
             if (target) |id| {
@@ -404,14 +362,13 @@ const Emitter = struct {
                 if (try self.packedParameters(f)) count = @max(count, f.signature.parameter_count);
             }
             if (instruction.op == .invoke) {
-                const sig = self.program.records[instruction.op.invoke.ty.recordIndex()].contract.callback.?;
+                const sig = self.program.records[instruction.op.invoke.recordIndex()].contract.callback.?;
                 if (try self.packedCallback(sig)) count = @max(count, sig.parameters.len);
             }
         }
         return @max(8, @as(u64, count) * 8);
     }
     fn resultStackBytes(self: *Emitter, function: bytecode.Function) GenerateError!u64 {
-        if (function.signature.return_reference) |reference| return if (reference.slice) 16 else 8;
         return self.valueStackBytes(function.signature.return_type);
     }
     fn abiStackBytes(self: *Emitter) GenerateError!u64 {
@@ -428,8 +385,6 @@ const Emitter = struct {
             var bytes: u64 = 0;
             const target: ?typed.FunctionId = switch (instruction.op) {
                 .call => |id| id,
-                .call_refs => |call| call.function,
-                .call_borrow => |call| call.function,
                 else => null,
             };
             if (target) |id| {
@@ -442,11 +397,11 @@ const Emitter = struct {
                 bytes = try addFrame(bytes, try self.resultStackBytes(function));
             }
             if (instruction.op == .invoke) {
-                const signature = self.program.records[instruction.op.invoke.ty.recordIndex()].contract.callback.?;
+                const signature = self.program.records[instruction.op.invoke.recordIndex()].contract.callback.?;
                 if (try self.packedCallback(signature)) {
                     bytes = 8;
                 } else {
-                    for (signature.parameters, 0..) |ty, i| bytes = try addFrame(bytes, if (signature.borrows(i)) @as(u64, if (signature.slice(i)) 16 else 8) else try self.valueStackBytes(ty));
+                    for (signature.parameters) |ty| bytes = try addFrame(bytes, try self.valueStackBytes(ty));
                 }
                 bytes = try addFrame(bytes, if (try self.largeValue(signature.return_type)) 8 else (try self.layout(signature.return_type)).size);
             }
@@ -464,22 +419,15 @@ const Emitter = struct {
             .try_result,
             .acquire_buffer,
             .buffer_operation,
-            .acquire_pool,
-            .pool_operation,
             .external_read,
             .environment_get,
-            .json_codec,
-            .reset_arena,
             .acquire_resource,
             .complete_resource,
             .resource_io,
             => true,
             .load_local, .move_local => |slot| !self.isScalar(self.function.scope.locals[@backingInt(slot)].ty),
-            .read_ref, .read_slice => |id| !self.isScalar(self.function.scope.references[@backingInt(id)].ty),
-            .read_field, .take_field => |field_value| !self.isScalar(field_value.output),
             .call => |id| self.largeResult(self.program.functions[@backingInt(id)]) catch false,
-            .call_refs => |call| self.largeResult(self.program.functions[@backingInt(call.function)]) catch false,
-            .invoke => |invocation| self.largeValue(self.program.records[invocation.ty.recordIndex()].contract.callback.?.return_type) catch false,
+            .invoke => |ty| self.largeValue(self.program.records[ty.recordIndex()].contract.callback.?.return_type) catch false,
             else => false,
         };
     }
@@ -496,7 +444,7 @@ const Emitter = struct {
         return size;
     }
     fn frameBytes(self: *Emitter, capacity: usize) GenerateError!u64 {
-        var size: u64 = (try self.argumentVectorBytes()) + 64 + @as(u64, capacity) * 8 + @as(u64, self.function.scope.references.len) * 16;
+        var size: u64 = (try self.argumentVectorBytes()) + 64 + @as(u64, capacity) * 8;
         for (self.function.scope.locals) |local| size = try addFrame(size, @max(8, (try self.layout(local.ty)).size));
         for (self.states, 0..) |state, pc| if (state != null and self.usesTemporary(pc)) {
             const temporary = try self.temporarySize(pc);
@@ -509,12 +457,10 @@ const Emitter = struct {
         for (self.function.scope.instructions) |instruction| {
             const target: ?typed.FunctionId = switch (instruction.op) {
                 .call => |id| id,
-                .call_refs => |call| call.function,
-                .call_borrow => |call| call.function,
                 else => null,
             };
             if (instruction.op == .invoke) {
-                const signature = self.program.records[instruction.op.invoke.ty.recordIndex()].contract.callback.?;
+                const signature = self.program.records[instruction.op.invoke.recordIndex()].contract.callback.?;
                 var arguments: u64 = 0;
                 for (signature.parameters) |ty| arguments = try addFrame(arguments, @max(8, (try self.layout(ty)).size));
                 outgoing = @max(outgoing, arguments);
@@ -544,7 +490,7 @@ const Emitter = struct {
         if (ty.isAggregate() and self.program.records[ty.recordIndex()].managed) return true;
         if (scalar(ty, self.program.records)) return true;
         const value = try self.layout(ty);
-        return value.kind == .record or value.kind == .array or value.kind == .variant or value.kind == .domain or value.kind == .pool_handle;
+        return value.kind == .record or value.kind == .array or value.kind == .variant or value.kind == .domain;
     }
     /// Shared ABI lowering for guest and trusted host wrappers.
     pub fn abiType(self: *Emitter, ty: typed.Type) GenerateError![]const u8 {
@@ -555,18 +501,16 @@ const Emitter = struct {
     pub fn largeValue(self: *Emitter, ty: typed.Type) GenerateError!bool {
         return !self.isScalar(ty) and (try self.layout(ty)).size > 4096;
     }
-    /// Returned references retain their loan ABI regardless of pointee size.
+    /// Large native values cross function boundaries through caller-owned storage.
     pub fn largeResult(self: *Emitter, function: bytecode.Function) GenerateError!bool {
-        return function.signature.return_reference == null and try self.largeValue(function.signature.return_type);
+        return self.largeValue(function.signature.return_type);
     }
     /// Shared ABI lowering for guest and trusted host wrappers.
     pub fn parameterType(self: *Emitter, local: typed.Local) GenerateError![]const u8 {
-        if (local.parameter.slice_parameter) return slice_abi;
-        return if (local.parameter.reference_parameter != null or try self.largeValue(local.ty)) "l" else self.abiType(local.ty);
+        return if (try self.largeValue(local.ty)) "l" else self.abiType(local.ty);
     }
     /// Shared ABI lowering for guest and trusted host wrappers.
     pub fn returnType(self: *Emitter, function: bytecode.Function) GenerateError![]const u8 {
-        if (function.signature.return_reference) |reference| return if (reference.slice) slice_abi else "l";
         return if (try self.largeValue(function.signature.return_type)) "l" else self.abiType(function.signature.return_type);
     }
     /// Shared ABI lowering for guest and trusted host wrappers.
@@ -698,27 +642,15 @@ const Emitter = struct {
         try self.print(" %v{d} =l {s} %v{d}, %v{d}\n", .{ result, if (predicate_value == .eq) "ceql" else "cnel", a, b });
         try self.store(height - 2, result);
     }
-    fn invoke(self: *Emitter, invocation: @FieldType(@FieldType(bytecode.Instruction, "op"), "invoke"), stack: []const typed.Type) GenerateError!void {
+    fn invoke(self: *Emitter, callback_type: typed.Type, stack: []const typed.Type) GenerateError!void {
         const h = stack.len;
-        const signature = self.program.records[invocation.ty.recordIndex()].contract.callback.?;
+        const signature = self.program.records[callback_type.recordIndex()].contract.callback.?;
         const base = h - signature.valueCount() - 1;
         const function_pointer = try self.load("s", base);
         const args = try self.allocator.alloc(usize, signature.parameters.len);
         const packed_args = try self.packedCallback(signature);
-        var vi: usize = 0;
-        var ri: usize = 0;
         for (args, 0..) |*arg, i| {
-            if (signature.borrows(i)) {
-                const reference = invocation.references[ri];
-                ri += 1;
-                if (signature.slice(i)) {
-                    arg.* = self.temp();
-                    try self.print(" %v{d} =l copy %r{d}\n", .{ arg.*, @backingInt(reference) });
-                } else arg.* = try self.load("r", @backingInt(reference));
-            } else {
-                arg.* = try self.load("s", base + 1 + vi);
-                vi += 1;
-            }
+            arg.* = try self.load("s", base + 1 + i);
             if (packed_args) try self.packArgument(i, arg.*);
         }
         const value = self.temp();
@@ -728,38 +660,15 @@ const Emitter = struct {
         if (packed_args) {
             try self.print(", l %arguments", .{});
         } else {
-            for (args, signature.parameters, 0..) |arg, ty, i| try self.print(", {s} %v{d}", .{ if (signature.slice(i)) slice_abi else if (signature.borrows(i) or try self.largeValue(ty)) "l" else try self.abiType(ty), arg });
+            for (args, signature.parameters) |arg, ty| try self.print(", {s} %v{d}", .{ if (try self.largeValue(ty)) "l" else try self.abiType(ty), arg });
         }
         try self.print(")\n", .{});
         if (indirect) try self.print(" storel %aux{d}, %s{d}\n", .{ self.pc, base }) else try self.store(base, value);
     }
-    fn compareHandle(self: *Emitter, comparison: @FieldType(@FieldType(bytecode.Instruction, "op"), "cmp_handle"), stack: []const typed.Type) GenerateError!void {
-        const h = stack.len;
-        const right = try self.load("s", h - 1);
-        const left = try self.load("s", h - 2);
-        var equal: ?usize = null;
-        for (0..3) |i| {
-            const a = try self.readValue(try self.address(left, i * 8), .u64);
-            const b = try self.readValue(try self.address(right, i * 8), .u64);
-            const same = self.temp();
-            try self.print(" %v{d} =l ceql %v{d}, %v{d}\n", .{ same, a, b });
-            if (equal) |previous| {
-                const combined = self.temp();
-                try self.print(" %v{d} =l and %v{d}, %v{d}\n", .{ combined, previous, same });
-                equal = combined;
-            } else equal = same;
-        }
-        if (comparison.predicate == .eq) try self.store(h - 2, equal.?) else {
-            const inverted = self.temp();
-            try self.print(" %v{d} =l xor %v{d}, 1\n", .{ inverted, equal.? });
-            try self.store(h - 2, inverted);
-        }
-    }
     fn acquireBuffer(self: *Emitter, ty: typed.Type, stack: []const typed.Type) GenerateError!void {
         const h = stack.len;
         const schema = self.program.records[ty.recordIndex()];
-        if (!schema.managed) return owned_lower.Lower(Emitter).acquire(self, ty, stack);
-        if (schema.collection.kind != .list) return self.reject(self.pc);
+        if (!schema.managed or schema.collection.kind != .list) return self.reject(self.pc);
         const capacity = try self.load("s", h - 1);
         if (stack[h - 1].integer().?.signed) {
             const valid = self.temp();
@@ -773,35 +682,13 @@ const Emitter = struct {
     }
     fn emitCall(self: *Emitter, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) GenerateError!void {
         const h = stack.len;
-        const target = switch (op) {
-            .call => |id| id,
-            .call_refs => |call| call.function,
-            .call_borrow => |call| call.function,
-            else => unreachable,
-        };
-        const references: []const typed.ReferenceId = switch (op) {
-            .call => &.{},
-            .call_refs => |call| call.references,
-            .call_borrow => |call| call.references,
-            else => unreachable,
-        };
+        const target = op.call;
         const callee = self.program.functions[@backingInt(target)];
         const count = bytecode.valueParameterCount(callee);
         const args = try self.allocator.alloc(usize, callee.signature.parameter_count);
         const packed_args = try self.packedParameters(callee);
-        var value_index: usize = 0;
-        var reference_index: usize = 0;
-        for (args, callee.scope.locals[0..callee.signature.parameter_count], 0..) |*arg, local, i| {
-            if (local.parameter.reference_parameter != null) {
-                if (local.parameter.slice_parameter) {
-                    arg.* = self.temp();
-                    try self.print(" %v{d} =l copy %r{d}\n", .{ arg.*, @backingInt(references[reference_index]) });
-                } else arg.* = try self.load("r", @backingInt(references[reference_index]));
-                reference_index += 1;
-            } else {
-                arg.* = try self.load("s", h - count + value_index);
-                value_index += 1;
-            }
+        for (args, 0..) |*arg, i| {
+            arg.* = try self.load("s", h - count + i);
             if (packed_args) try self.packArgument(i, arg.*);
         }
         const v = self.temp();
@@ -814,41 +701,14 @@ const Emitter = struct {
             for (args, callee.scope.locals[0..callee.signature.parameter_count]) |arg, local| try self.print(", {s} %v{d}", .{ try self.parameterType(local), arg });
         }
         try self.print(")\n", .{});
-        if (op == .call_borrow) {
-            if (callee.signature.return_reference.?.slice) {
-                try self.print(" blit %v{d}, %r{d}, 16\n", .{ v, @backingInt(op.call_borrow.destination) });
-            } else try self.print(" storel %v{d}, %r{d}\n", .{ v, @backingInt(op.call_borrow.destination) });
-        } else if (indirect) try self.print(" storel %aux{d}, %s{d}\n", .{ self.pc, h - count }) else try self.store(h - count, v);
+        if (indirect) try self.print(" storel %aux{d}, %s{d}\n", .{ self.pc, h - count }) else try self.store(h - count, v);
     }
     fn emitOp(self: *Emitter, op: @FieldType(bytecode.Instruction, "op"), stack: []const typed.Type) GenerateError!void {
         const h = stack.len;
         switch (op) {
-            .begin_borrow,
-            .begin_slice,
-            .split_borrow,
-            .end_borrow,
-            .capture_ref,
-            .ret_ref,
-            .read_ref,
-            .write_ref,
-            .read_field,
-            .take_field,
-            .read_slice,
-            .write_slice,
-            .len_slice,
-            => try @import("qbe_reference.zig").Lower(Emitter).emit(self, op, stack),
             .acquire_resource, .complete_resource, .resource_io, .restrict_resource => try @import("qbe_resources.zig").Lower(Emitter).emit(self, op, stack),
-            .external_read, .environment_get, .json_codec, .reset_arena => try @import("qbe_boundaries.zig").emit(self, op, stack),
+            .external_read, .environment_get => try @import("qbe_boundaries.zig").emit(self, op, stack),
             .begin_arena, .end_arena, .arena_escape => return self.reject(self.pc),
-            .begin_region => |slot| {
-                const authority = try self.load("s", h - 1);
-                const region = self.temp();
-                try self.print(" %v{d} =l call $myl_qbe_region_begin(l %ctx, l %v{d})\n storel %v{d}, %l{d}\n", .{ region, authority, region, @backingInt(slot) });
-            },
-            .end_region => |slot| {
-                const region = try self.load("l", @backingInt(slot));
-                try self.print(" call $myl_qbe_region_end(l %ctx, l %v{d})\n storel 0, %l{d}\n", .{ region, @backingInt(slot) });
-            },
             .try_result => |propagate| {
                 const source = try self.load("s", h - 1);
                 const input = typed.resultShape(propagate.input, self.program.records).?;
@@ -867,16 +727,9 @@ const Emitter = struct {
                 try self.store(h - 1, try self.readValue(try self.address(source, (try self.layout(propagate.input)).payload_offset), input.ok_type));
             },
             .function_value => |value| try self.print(" storel extern ${s}, %s{d}\n", .{ self.units[@backingInt(value.function)].symbol, h }),
-            .invoke => |invocation| try self.invoke(invocation, stack),
-            .acquire_pool => |ty| try owned_lower.Lower(Emitter).acquirePool(self, ty, stack),
-            .pool_operation => |operation| try owned_lower.Lower(Emitter).pool(self, operation, stack),
-            .cmp_handle => |comparison| try self.compareHandle(comparison, stack),
+            .invoke => |callback_type| try self.invoke(callback_type, stack),
             .acquire_buffer => |ty| try self.acquireBuffer(ty, stack),
-            .buffer_operation => |operation| {
-                const owner_ty = self.function.scope.locals[@backingInt(operation.owner)].ty;
-                if (!self.program.records[owner_ty.recordIndex()].managed) return owned_lower.Lower(Emitter).operation(self, operation, stack);
-                try managed_lower.Lower(Emitter).operation(self, operation, stack);
-            },
+            .buffer_operation => |operation| try managed_lower.Lower(Emitter).operation(self, operation, stack),
             .push_i64 => |v| try self.print(store_scalar, .{ v, h }),
             .push_integer => |v| try self.print(store_scalar, .{ v.value, h }),
             .push_bool => |v| try self.print(store_scalar, .{ @intFromBool(v), h }),
@@ -914,7 +767,7 @@ const Emitter = struct {
                 const v = try self.load("s", h - 1);
                 try self.returnValue(v);
             },
-            .call, .call_refs, .call_borrow => try self.emitCall(op, stack),
+            .call => try self.emitCall(op, stack),
             .binary_integer => |b| {
                 if (b.ty.isAggregate()) return managed_lower.Lower(Emitter).binary(self, b, stack);
                 try scalar_lower.Lower(Emitter).binary(self, b.op, b.ty, h);

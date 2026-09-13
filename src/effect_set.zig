@@ -2,8 +2,8 @@
 const std = @import("std");
 pub const Mask = u16;
 /// Independent capability effects tracked by source checking and interface reports.
-pub const Effect = enum(u3) { allocation, filesystem, network, clock, random, environment, host, managed_allocation };
-pub const all: Mask = 0b11111111;
+pub const Effect = enum(u3) { filesystem, network, clock, random, environment, host, managed_allocation };
+pub const all: Mask = 0b1111111;
 pub const io: Mask = bit(.filesystem) | bit(.network);
 /// Declared allowed-effect mask and the source annotation that imposed it.
 pub const Bound = struct { allowed: Mask, span: @import("source.zig").Span };

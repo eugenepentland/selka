@@ -27,8 +27,6 @@ pub fn resolve(allocator: std.mem.Allocator, catalog: *@import("type_catalog.zig
             .parameters = inputs[0..callback.parameters.len],
             .return_type = result,
             .effects = callback.effect_bound.allowed,
-            .borrowed = callback.borrowed,
-            .slices = callback.slices,
         }, span, sink);
     };
     if (catalog.templates.applications.get(span.start)) |template| {

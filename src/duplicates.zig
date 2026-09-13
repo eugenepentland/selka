@@ -1,6 +1,5 @@
 //! Exact groups and opt-in bounded near candidates over checked trees.
 //! No rewriting, execution, or validity rules.
-const reference_format = "reference {d}\n";
 /// Failures returned by discover; callers must handle these boundary errors.
 pub const DiscoverError = error{
     InternalError,
@@ -196,14 +195,6 @@ const CanonicalWriter = struct {
         writer.print("expr {s} {s} obligation {}\n", .{ typed.typeName(node.ty, program.records), @tagName(node.data), typed.requiresHandling(node.ty, program.records) }) catch return error.OutOfMemory;
         writer.print("move-only {}\n", .{typed.moveOnly(node.ty, program.records)}) catch return error.OutOfMemory;
         switch (node.data) {
-            .pool_operation => |operation| {
-                writer.print("pool {s} local {d}\n", .{ @tagName(operation.kind), @backingInt(operation.owner) }) catch return error.OutOfMemory;
-                var i = operation.arguments.len;
-                while (i > 0) {
-                    i -= 1;
-                    try work.append(allocator, .{ .expression = operation.arguments[i] });
-                }
-            },
             .buffer_operation => |operation| {
                 writer.print("buffer {s} local {d}\n", .{ @tagName(operation.kind), @backingInt(operation.owner) }) catch return error.OutOfMemory;
                 var i = operation.arguments.len;
@@ -242,9 +233,8 @@ const CanonicalWriter = struct {
                 try work.append(allocator, .{ .expression = replace.base });
             },
             .length => |base| try work.append(allocator, .{ .expression = base }),
-            .read_field, .take_field => |read| writer.print("{s} owner={d} field={d}\n", .{ @tagName(node.data), @backingInt(read.owner), read.field }) catch return error.OutOfMemory,
             .resource_io => |io| {
-                writer.print("resource {s} owner={d} reference={?d}\n", .{ @tagName(io.kind), @backingInt(io.owner), if (io.reference) |ref_id| @as(?usize, @backingInt(ref_id)) else null }) catch return error.OutOfMemory;
+                writer.print("resource {s} owner={d}\n", .{ @tagName(io.kind), @backingInt(io.owner) }) catch return error.OutOfMemory;
                 if (io.value) |value| try work.append(allocator, .{ .expression = value });
             },
             .restrict_resource => |restrict| {
@@ -264,15 +254,8 @@ const CanonicalWriter = struct {
                 writer.print("external {s}\n", .{@tagName(read.kind)}) catch return error.OutOfMemory;
                 try work.append(allocator, .{ .expression = read.capability });
             },
-            .json_codec => |codec| {
-                writer.print("json document {} decode {}\n", .{ codec.document, codec.decode }) catch return error.OutOfMemory;
-                for (codec.arguments) |argument| try work.append(allocator, .{ .expression = argument });
-            },
-            .acquire_buffer, .acquire_pool => |acquire| {
-                try work.append(allocator, .{ .expression = acquire.capacity });
-                try work.append(allocator, .{ .expression = acquire.allocator });
-            },
-            .arena_escape, .reset_arena, .cast, .wrap, .unwrap => |operand| try work.append(allocator, .{ .expression = operand }),
+            .acquire_buffer => |acquire| try work.append(allocator, .{ .expression = acquire.capacity }),
+            .arena_escape, .cast, .wrap, .unwrap => |operand| try work.append(allocator, .{ .expression = operand }),
             .record => |fields| {
                 try recordFields(allocator, writer, work, program, node.ty, fields);
             },
@@ -289,12 +272,6 @@ const CanonicalWriter = struct {
             .integer => |value| writer.print("{d}\n", .{value}) catch return error.OutOfMemory,
             .unit => writer.writeAll("unit\n") catch return error.OutOfMemory,
             .boolean => |value| writer.print("{}\n", .{value}) catch return error.OutOfMemory,
-            .read_slice => |read| {
-                writer.print(reference_format, .{@backingInt(read.reference)}) catch return error.OutOfMemory;
-                try work.append(allocator, .{ .expression = read.index });
-            },
-            .len_slice => |reference| writer.print(reference_format, .{@backingInt(reference)}) catch return error.OutOfMemory,
-            .read_ref => |reference_id| writer.print(reference_format, .{@backingInt(reference_id)}) catch return error.OutOfMemory,
             .local => |slot| writer.print("{d}\n", .{@backingInt(slot)}) catch return error.OutOfMemory,
             .unary => |unary| {
                 writer.print("{s}\n", .{@tagName(unary.op)}) catch return error.OutOfMemory;
@@ -307,7 +284,6 @@ const CanonicalWriter = struct {
             },
             .function_value => |target| writer.print("function {s}\n", .{program.functions[@backingInt(target)].name}) catch return error.OutOfMemory,
             .invoke => |call| {
-                writer.print("references {any}\n", .{call.references}) catch return error.OutOfMemory;
                 try work.append(allocator, .{ .expression = call.callee });
                 for (call.arguments) |argument| try work.append(allocator, .{ .expression = argument });
             },
@@ -320,8 +296,7 @@ const CanonicalWriter = struct {
                     const callee = program.functions[@backingInt(call.function)].name;
                     writer.print("callee {d}:{s}\n", .{ callee.len, callee }) catch return error.OutOfMemory;
                 }
-                writer.print("args {d} references {any}\n", .{ call.arguments.len, call.references }) catch return error.OutOfMemory;
-                for (call.literals) |temporary| try work.append(allocator, .{ .expression = temporary.value });
+                writer.print("args {d}\n", .{call.arguments.len}) catch return error.OutOfMemory;
                 var i = call.arguments.len;
                 while (i > 0) {
                     i -= 1;
@@ -339,11 +314,6 @@ const CanonicalWriter = struct {
         const statement = program.statements[@backingInt(id)];
         writer.print("stmt {s}\n", .{@tagName(statement.data)}) catch return error.OutOfMemory;
         switch (statement.data) {
-            .arena_scope => |scope| {
-                writer.print("arena allocator={d}\n", .{@backingInt(scope.slot)}) catch return error.OutOfMemory;
-                try work.append(allocator, .{ .statement = scope.body });
-                try work.append(allocator, .{ .expression = scope.parent });
-            },
             .managed_arena => |scope| {
                 writer.print("managed arena locals={d}\n", .{@backingInt(scope.watermark)}) catch return error.OutOfMemory;
                 try work.append(allocator, .{ .statement = scope.body });
@@ -356,35 +326,7 @@ const CanonicalWriter = struct {
                     try work.append(allocator, .{ .statement = children[i] });
                 }
             },
-            .ret, .discard, .acknowledge => |value| try work.append(allocator, .{ .expression = value }),
-            .ret_ref => |reference| writer.print(reference_format, .{@backingInt(reference)}) catch return error.OutOfMemory,
-            .borrow_call => |borrow| {
-                writer.print(reference_format, .{@backingInt(borrow.reference)}) catch return error.OutOfMemory;
-                try work.append(allocator, .{ .statement = borrow.body });
-                try work.append(allocator, .{ .expression = borrow.call });
-            },
-            .borrow => |borrow| {
-                writer.print(reference_format, .{@backingInt(borrow.reference)}) catch return error.OutOfMemory;
-                try work.append(allocator, .{ .statement = borrow.body });
-                writer.print("range {}\n", .{borrow.range != null}) catch return error.OutOfMemory;
-                if (borrow.split) |split| {
-                    writer.print(reference_format, .{@backingInt(split.right)}) catch return error.OutOfMemory;
-                    try work.append(allocator, .{ .expression = split.middle });
-                }
-                if (borrow.range) |range| {
-                    try work.append(allocator, .{ .expression = range.end });
-                    try work.append(allocator, .{ .expression = range.start });
-                }
-            },
-            .write_slice => |write| {
-                writer.print(reference_format, .{@backingInt(write.reference)}) catch return error.OutOfMemory;
-                try work.append(allocator, .{ .expression = write.value });
-                try work.append(allocator, .{ .expression = write.index });
-            },
-            .write_ref => |write| {
-                writer.print(reference_format, .{@backingInt(write.reference)}) catch return error.OutOfMemory;
-                try work.append(allocator, .{ .expression = write.value });
-            },
+            .ret, .discard => |value| try work.append(allocator, .{ .expression = value }),
             .initialize, .assign => |store| {
                 writer.print("slot {d}\n", .{@backingInt(store.slot)}) catch return error.OutOfMemory;
                 try work.append(allocator, .{ .expression = store.value });

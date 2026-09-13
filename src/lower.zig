@@ -42,21 +42,7 @@ const Emitter = struct {
     }
     fn emitCall(self: *Emitter, span: Span, call: @FieldType(@FieldType(typed.Node, "data"), "call")) !void {
         if (call.evaluation) |evaluation| for (evaluation.cleanup) |slot| try self.instruction(span, .{ .drop_local = slot });
-        for (call.literals) |literal| {
-            try self.instruction(span, .{ .drop_local = literal.owner });
-            try self.instruction(span, .{ .end_borrow = literal.reference });
-        }
-        try self.instruction(span, if (call.references.len == 0) .{ .call = call.function } else .{ .call_refs = .{ .function = call.function, .references = call.references } });
-        var n = call.literals.len;
-        while (n > 0) {
-            n -= 1;
-            const literal = call.literals[n];
-            try self.instruction(span, .{ .begin_slice = literal.reference });
-            try self.instruction(span, .{ .push_i64 = @intCast(literal.length) });
-            try self.instruction(span, .{ .push_i64 = 0 });
-            try self.instruction(span, .{ .store_local = literal.owner });
-            try self.push(.{ .expression = literal.value });
-        }
+        try self.instruction(span, .{ .call = call.function });
         var i = call.arguments.len;
         while (i > 0) {
             i -= 1;
@@ -68,9 +54,7 @@ const Emitter = struct {
         const target = self.loops.get(exit.target) orelse return error.InternalError;
         try self.push(.{ .jump = .{ .target = if (exit.continuing) target.start else target.end, .span = stmt.span } });
         for (exit.arenas) |slot| try self.instruction(stmt.span, .{ .end_arena = slot });
-        for (exit.regions) |slot| try self.instruction(stmt.span, .{ .end_region = slot });
         for (stmt.owned_cleanup) |slot| try self.instruction(stmt.span, .{ .drop_local = slot });
-        for (stmt.cleanup) |reference| try self.instruction(stmt.span, .{ .end_borrow = reference });
     }
     fn emitManagedArena(self: *Emitter, span: Span, scope: @FieldType(@FieldType(typed.Statement, "data"), "managed_arena")) !void {
         if (!self.program.statements[@backingInt(scope.body)].terminates) try self.instruction(span, .{ .end_arena = scope.watermark });
@@ -81,12 +65,6 @@ const Emitter = struct {
         const stmt = self.program.statements[@backingInt(id)];
         switch (stmt.data) {
             .managed_arena => |scope| try self.emitManagedArena(stmt.span, scope),
-            .arena_scope => |scope| {
-                if (!self.program.statements[@backingInt(scope.body)].terminates) try self.instruction(stmt.span, .{ .end_region = scope.slot });
-                try self.push(.{ .statement = scope.body });
-                try self.instruction(stmt.span, .{ .begin_region = scope.slot });
-                try self.push(.{ .expression = scope.parent });
-            },
             .block => |children| {
                 for (stmt.owned_cleanup) |slot| try self.instruction(stmt.span, .{ .drop_local = slot });
                 var i = children.len;
@@ -95,57 +73,16 @@ const Emitter = struct {
                     try self.push(.{ .statement = children[i] });
                 }
             },
-            .ret_ref => |reference| {
-                try self.instruction(stmt.span, .ret_ref);
-                for (stmt.cleanup) |cleanup_id| try self.instruction(stmt.span, .{ .end_borrow = cleanup_id });
-                try self.instruction(stmt.span, .{ .capture_ref = reference });
-            },
-            .borrow_call => |borrow| {
-                if (!self.program.statements[@backingInt(borrow.body)].terminates) try self.instruction(stmt.span, .{ .end_borrow = borrow.reference });
-                try self.push(.{ .statement = borrow.body });
-                const call_node = self.program.nodes[@backingInt(borrow.call)];
-                const call = call_node.data.call;
-                try self.instruction(call_node.span, .{ .call_borrow = .{ .function = call.function, .references = call.references, .destination = borrow.reference } });
-                var i = call.arguments.len;
-                while (i > 0) {
-                    i -= 1;
-                    try self.push(.{ .expression = call.arguments[i] });
-                }
-            },
-            .acknowledge => |value| {
-                try self.instruction(stmt.span, .{ .acknowledge = self.program.nodes[@backingInt(value)].ty });
+            .ret => |value| {
+                try self.instruction(stmt.span, .ret);
                 try self.push(.{ .expression = value });
             },
-            .ret, .discard => |value| {
-                try self.instruction(stmt.span, if (stmt.data == .ret) .ret else .pop);
-                for (stmt.cleanup) |reference| try self.instruction(stmt.span, .{ .end_borrow = reference });
+            // `_ = expr` releases a result-bearing value, which settles its obligation.
+            .discard => |value| {
+                const value_type = self.program.nodes[@backingInt(value)].ty;
+                const handled = typed.requiresHandling(value_type, self.program.records);
+                try self.instruction(stmt.span, if (handled) .{ .acknowledge = value_type } else .pop);
                 try self.push(.{ .expression = value });
-            },
-            .borrow => |borrow| {
-                if (!self.program.statements[@backingInt(borrow.body)].terminates) {
-                    try self.instruction(stmt.span, .{ .end_borrow = borrow.reference });
-                    if (borrow.split) |split| try self.instruction(stmt.span, .{ .end_borrow = split.right });
-                }
-                try self.push(.{ .statement = borrow.body });
-                if (borrow.split) |split| {
-                    try self.instruction(stmt.span, .{ .split_borrow = .{ .left = borrow.reference, .right = split.right } });
-                    try self.push(.{ .expression = split.middle });
-                } else {
-                    try self.instruction(stmt.span, if (borrow.range != null) .{ .begin_slice = borrow.reference } else .{ .begin_borrow = borrow.reference });
-                    if (borrow.range) |range| {
-                        try self.push(.{ .expression = range.end });
-                        try self.push(.{ .expression = range.start });
-                    }
-                }
-            },
-            .write_slice => |write| {
-                try self.instruction(stmt.span, .{ .write_slice = write.reference });
-                try self.push(.{ .expression = write.value });
-                try self.push(.{ .expression = write.index });
-            },
-            .write_ref => |write| {
-                try self.instruction(stmt.span, .{ .write_ref = write.reference });
-                try self.push(.{ .expression = write.value });
             },
             .initialize, .assign => |store| {
                 try self.instruction(stmt.span, .{ .store_local = store.slot });
@@ -213,7 +150,6 @@ const Emitter = struct {
                 const success = try self.label();
                 try self.push(.{ .mark = success });
                 try self.instruction(node.span, .ret);
-                for (propagate.cleanup) |reference| try self.instruction(node.span, .{ .end_borrow = reference });
                 try self.push(.{ .mark = failure });
                 try self.push(.{ .jump = .{ .target = success, .span = node.span } });
                 try self.push(.{ .propagate = .{ .input = self.program.nodes[@backingInt(propagate.value)].ty, .output = propagate.output, .target = failure, .span = node.span } });
@@ -278,36 +214,16 @@ const Emitter = struct {
             },
             .boolean => |value| try self.instruction(node.span, .{ .push_bool = value }),
             .unit => try self.instruction(node.span, .push_unit),
-            .read_slice => |read| {
-                try self.instruction(node.span, .{ .read_slice = read.reference });
-                try self.push(.{ .expression = read.index });
-            },
-            .len_slice => |reference| try self.instruction(node.span, .{ .len_slice = reference }),
-            .read_ref => |reference| try self.instruction(node.span, .{ .read_ref = reference }),
-            .pool_operation => |operation| {
-                try self.instruction(node.span, .{ .pool_operation = .{ .reference = operation.reference, .kind = operation.kind, .owner = operation.owner, .output = node.ty } });
-                var i = operation.arguments.len;
-                while (i > 0) {
-                    i -= 1;
-                    try self.push(.{ .expression = operation.arguments[i] });
-                }
-            },
             .buffer_operation => |operation| {
-                try self.instruction(node.span, .{ .buffer_operation = .{ .reference = operation.reference, .kind = operation.kind, .owner = operation.owner, .output = node.ty } });
+                try self.instruction(node.span, .{ .buffer_operation = .{ .kind = operation.kind, .owner = operation.owner, .output = node.ty } });
                 var i = operation.arguments.len;
                 while (i > 0) {
                     i -= 1;
                     try self.push(.{ .expression = operation.arguments[i] });
                 }
             },
-            .take_field => |read| try self.instruction(node.span, .{ .take_field = .{ .owner = read.owner, .field = read.field, .output = node.ty } }),
-            .read_field => |read| try self.instruction(node.span, .{ .read_field = .{ .reference = read.reference, .owner = read.owner, .field = read.field, .output = node.ty } }),
             .arena_escape => |value| {
                 try self.instruction(node.span, .{ .arena_escape = node.ty });
-                try self.push(.{ .expression = value });
-            },
-            .reset_arena => |value| {
-                try self.instruction(node.span, .{ .reset_arena = node.ty });
                 try self.push(.{ .expression = value });
             },
             .restrict_resource => |restrict| {
@@ -315,7 +231,7 @@ const Emitter = struct {
                 try self.push(.{ .expression = restrict.value });
             },
             .resource_io => |io| {
-                try self.instruction(node.span, .{ .resource_io = .{ .reference = io.reference, .kind = io.kind, .owner = io.owner, .output = node.ty, .input = if (io.value) |value| self.program.nodes[@backingInt(value)].ty else null } });
+                try self.instruction(node.span, .{ .resource_io = .{ .kind = io.kind, .owner = io.owner, .output = node.ty, .input = if (io.value) |value| self.program.nodes[@backingInt(value)].ty else null } });
                 if (io.value) |value| try self.push(.{ .expression = value });
             },
             .environment_get => |get| {
@@ -336,23 +252,14 @@ const Emitter = struct {
                 try self.instruction(node.span, .{ .external_read = .{ .kind = read.kind, .output = node.ty } });
                 try self.push(.{ .expression = read.capability });
             },
-            .json_codec => |codec| {
-                try self.instruction(node.span, .{ .json_codec = .{ .document = codec.document, .decode = codec.decode, .input = self.program.nodes[@backingInt(codec.arguments[1])].ty, .output = node.ty } });
-                var index: usize = 3;
-                while (index > 0) {
-                    index -= 1;
-                    try self.push(.{ .expression = codec.arguments[index] });
-                }
-            },
-            .acquire_buffer, .acquire_pool => |acquire| {
-                try self.instruction(node.span, if (node.data == .acquire_pool) .{ .acquire_pool = node.ty } else .{ .acquire_buffer = node.ty });
+            .acquire_buffer => |acquire| {
+                try self.instruction(node.span, .{ .acquire_buffer = node.ty });
                 try self.push(.{ .expression = acquire.capacity });
-                if (!acquire.managed) try self.push(.{ .expression = acquire.allocator });
             },
             .local => |slot| try self.instruction(node.span, if (typed.moveOnly(node.ty, self.program.records) or typed.requiresHandling(node.ty, self.program.records)) .{ .move_local = slot } else .{ .load_local = slot }),
             .function_value => |target| try self.instruction(node.span, .{ .function_value = .{ .ty = node.ty, .function = target } }),
             .invoke => |call| {
-                try self.instruction(node.span, .{ .invoke = .{ .ty = self.program.nodes[@backingInt(call.callee)].ty, .references = call.references } });
+                try self.instruction(node.span, .{ .invoke = self.program.nodes[@backingInt(call.callee)].ty });
                 var i = call.arguments.len;
                 while (i > 0) {
                     i -= 1;
@@ -438,7 +345,6 @@ const Emitter = struct {
 fn binaryInstruction(binary: anytype, nodes: []const typed.Node, records: []const typed.Record) bc.Instruction {
     const operand_type = nodes[@backingInt(binary.left)].ty;
     if (operand_type.isAggregate() and records[operand_type.recordIndex()].managed) return .{ .span = binary.op_span, .op = .{ .binary_integer = .{ .ty = operand_type, .op = binary.op } } };
-    if (operand_type.isAggregate() and records[operand_type.recordIndex()].shape.handle_pool != null) return .{ .span = binary.op_span, .op = .{ .cmp_handle = .{ .ty = operand_type, .predicate = if (binary.op == .eq) .eq else .ne } } };
     if (operand_type.isAggregate() and records[operand_type.recordIndex()].shape.domain != null) return .{ .span = binary.op_span, .op = .{ .cmp_domain = .{ .ty = operand_type, .predicate = if (binary.op == .eq) .eq else .ne } } };
     if (operand_type.isAggregate()) return .{ .span = binary.op_span, .op = .{ .cmp_enum = .{ .ty = operand_type, .predicate = if (binary.op == .eq) .eq else .ne } } };
     if (operand_type.isInteger() and operand_type != .i64)
@@ -495,12 +401,10 @@ pub fn lower(allocator: std.mem.Allocator, program: typed.Program) LowerError!bc
                 .conversion = function.policy.conversion,
             },
             .signature = .{
-                .return_reference = function.signature.return_reference,
                 .parameter_count = function.signature.parameter_count,
                 .return_type = function.signature.return_type,
             },
             .scope = .{
-                .references = function.scope.references,
                 .locals = function.scope.locals,
                 .instructions = if (function.policy.host != null) &.{} else try emitter.finish(function.scope.body),
             },

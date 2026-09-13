@@ -28,7 +28,7 @@ fn method(
         .message = "method declared here",
     });
     if (function.policy.effects != 0) return sink.failRelated("E_CODEC_EFFECT", name, "codec methods must be effect-free, including all transitive calls", .{ .span = function.declaration, .message = "effectful method declared here" });
-    if (function.signature.parameter_count != 1 or function.signature.return_reference != null or function.scope.locals[0].parameter.reference_parameter != null) {
+    if (function.signature.parameter_count != 1) {
         return sink.failRelated(signature_error, name, "codec methods require exactly one value parameter and a value result", .{
             .span = function.declaration,
             .message = "method declared here",

@@ -50,7 +50,7 @@ fn main() -> i64 {
 This invokes one length callback and two callbacks per block. Each bulk
 callback charges transferred bytes plus one work unit, in addition to the host
 registry's one unit per dispatch. Ordinary copied-value count/depth checks and
-host effect grants still apply. No borrowed guest memory crosses the callback
+host effect grants still apply. No guest memory crosses the callback by reference
 boundary.
 
 The runner accepts unique decimal flags after its project argument:

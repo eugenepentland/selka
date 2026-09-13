@@ -485,9 +485,9 @@ pub const Parser = struct {
         const token = self.current();
         if (token.tag != .ident) return null;
         const spelling = self.src.text(token.span);
-        if (std.mem.eql(u8, spelling, "noalloc") or std.mem.eql(u8, spelling, "nogc") or std.mem.eql(u8, spelling, "noio")) {
+        if (std.mem.eql(u8, spelling, "noalloc") or std.mem.eql(u8, spelling, "noio")) {
             self.cursor.pos += 1;
-            const excluded = if (std.mem.eql(u8, spelling, "noalloc")) (sets.bit(.allocation) | sets.bit(.managed_allocation)) else if (std.mem.eql(u8, spelling, "nogc")) sets.bit(.managed_allocation) else sets.io;
+            const excluded = if (std.mem.eql(u8, spelling, "noalloc")) sets.bit(.managed_allocation) else sets.io;
             return .{ .span = token.span, .allowed = sets.all & ~excluded };
         }
         if (!std.mem.eql(u8, spelling, "effects")) return null;
@@ -499,7 +499,7 @@ pub const Parser = struct {
             const effect = std.meta.stringToEnum(sets.Effect, self.src.text(name.span)) orelse return self.sink.fail(
                 "E_UNKNOWN_EFFECT",
                 name.span,
-                "unknown effect; expected allocation, filesystem, network, clock, random, environment, or host",
+                "unknown effect; expected managed_allocation, filesystem, network, clock, random, environment, or host",
             );
             if (allowed & sets.bit(effect) != 0) return self.sink.fail("E_DUPLICATE_EFFECT", name.span, "effect appears more than once in this bound");
             allowed |= sets.bit(effect);

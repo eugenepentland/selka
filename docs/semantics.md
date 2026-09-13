@@ -4,6 +4,9 @@ This file preserves successive implementation checkpoints, beginning with M0–M
 on 2026-09-05. Early restrictions below were superseded by later extensions.
 Use [the current language reference](current-language.md) and `mylang --features`
 for the supported surface; [plan.md](plan.md) records historical design targets.
+The explicit-storage tier (buffers, pools, `allocator`, references and slices) and
+the C backend were removed on 2026-09-13; entries below that describe them link
+into [docs/legacy/](legacy/) and are history, not current behavior.
 
 - A source file contains named functions and exactly one `main` returning i64.
   It accepts no parameters or one explicit `allocator` capability parameter.

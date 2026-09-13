@@ -44,7 +44,7 @@ Records retain value semantics. This release does not introduce `ref struct`,
 capturing closures, or managed hash maps. Byte literals and the managed
 [`bytes`](bytes.md) type keep their documented behavior. Owned resources, provider
 capabilities, and must-handle results cannot be hidden inside freely aliased
-lists. Managed interior borrows are not supported. Host invocation, JSON encoding
+lists. There are no interior pointers into managed storage. Host invocation, JSON encoding
 of managed graphs, and QBE native emission reject unsupported managed boundaries;
 ordinary scalar host calls from managed applications still work.
 

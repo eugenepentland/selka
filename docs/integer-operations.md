@@ -8,6 +8,6 @@ All operations take two operands of the same builtin integer type (or a generic 
 
 `wrapping_add`, `wrapping_sub` and `wrapping_mul` reduce mathematical results modulo 2 raised to the declared width. `saturating_add`, `saturating_sub` and `saturating_mul` clamp to the declared type’s bounds. Existing arithmetic operators retain checked-overflow behavior.
 
-The VM and native C backend use widened intermediates and explicit unsigned bit manipulation. Behavior does not depend on host overflow settings. Floating-point types are a separate stage.
+The VM and the QBE native backend use widened intermediates and explicit unsigned bit manipulation. Behavior does not depend on host overflow settings. Floating-point types are a separate stage.
 
-Validation: `zig test src/integer_operations_test.zig` runs width-boundary, constant/generic, allocation-failure and located trap checks in Debug and ReleaseFast. `python3 tests/native_integer_operations.py --compiler zig-out/bin/mylang` executes all eight width boundaries and invalid counts in the VM and native C at `-O0` and `-O2`, with undefined-behavior sanitization enabled.
+Validation: `zig test src/integer_operations_test.zig` runs width-boundary, constant/generic, allocation-failure and located trap checks in Debug and ReleaseFast.

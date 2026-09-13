@@ -19,14 +19,12 @@ pub fn describe(allocator: std.mem.Allocator, program: bytecode.Program, index: 
     if (!exported) return null;
     const function = program.functions[index];
     const parameters = try allocator.alloc([]const u8, function.signature.parameter_count);
-    var references = function.signature.return_reference != null;
-    var scalar = !references and scalarType(function.signature.return_type);
+    var scalar = scalarType(function.signature.return_type);
     for (function.scope.locals[0..function.signature.parameter_count], parameters) |local, *parameter| {
         parameter.* = typed.typeName(local.ty, program.records);
-        if (local.parameter.reference_parameter != null) references = true;
-        if (local.parameter.reference_parameter != null or !scalarType(local.ty)) scalar = false;
+        if (!scalarType(local.ty)) scalar = false;
     }
-    return .{ .name = function.name, .parameters = parameters, .result = typed.typeName(function.signature.return_type, program.records), .scalar = scalar, .references = references };
+    return .{ .name = function.name, .parameters = parameters, .result = typed.typeName(function.signature.return_type, program.records), .scalar = scalar, .references = false };
 }
 fn scalarType(ty: typed.Type) bool {
     return ty.isInteger() or ty == .bool;

@@ -15,9 +15,11 @@ diagnostic and skip reason, and `--report PATH` writes a `doc-examples-v1` JSON 
 
 ## What is scanned
 
-`README.md`, `SPEC.md` and every `*.md` under `docs/`, recursively. A fenced block
-whose info string is `mylang` or `my` is an executable example and a complete program
-by default. Backtick and tilde fences both work.
+`README.md`, `SPEC.md` and every `*.md` under `docs/`, recursively, except
+`docs/legacy/`. That directory holds pages whose subject was removed from the
+language, so its examples are deliberately not executed. A fenced block whose info
+string is `mylang` or `my` is an executable example and a complete program by
+default. Backtick and tilde fences both work.
 
 A block that declares no `main` is type-checked rather than executed: the runner
 appends a neutral entry point, because `check` and `check-project` both require one.
@@ -90,13 +92,13 @@ at all is a failure rather than a pass.
 ## Current inventory
 
 `README.md` and `SPEC.md` contribute no executable blocks: the README fences are all
-shell invocations, and `SPEC.md` has no fenced blocks at all. Across `docs/` the gate
-currently runs 21 examples, type-checks 11 and skips 13.
+shell invocations, and `SPEC.md` has no fenced blocks at all. Across the scanned
+documents the gate currently runs 30 examples, type-checks 11 and skips 12. Those
+figures are a snapshot; the runner's own summary is the authority.
 
 | Document | Skipped block | Reason |
 | --- | --- | --- |
-| `docs/borrow-syntax.md` | whole-slice borrow | fragment: statement body without its enclosing function or owner |
-| `docs/borrow-syntax.md` | grouped borrow | fragment: statement body without its enclosing function or owners |
+| `docs/audits/language-simplicity-2026-09-12.md` | boilerplate probe | removed feature |
 | `docs/byte-io-bulk.md` | bulk declarations | fragment: declarations appended to an existing host `io.my` module |
 | `docs/byte-io-bulk.md` | copy loop | needs host capability: the `mylang-io` byte host and its `io.my` module |
 | `docs/experiments/effects.md` | contracts | fragment: `Numbers` is declared in the complete `examples/effects.my` |
@@ -105,15 +107,17 @@ currently runs 21 examples, type-checks 11 and skips 13.
 | `docs/experiments/plain-json-ergonomics.md` | literal arguments | fragment: statements without their enclosing function or document |
 | `docs/experiments/plain-json-ergonomics.md` | document queries | fragment: statements without their enclosing function or document |
 | `docs/experiments/source-codecs.md` | codec match | fragment: statements without the `Positive` domain and `Wire` declarations |
+| `docs/experiments/source-json.md` | roundtrip | removed feature |
 | `docs/experiments/source-json.md` | generic codec | fragment: continues the `Encoded` declarations of the block above |
 | `docs/familiar-syntax.md` | record and list intro | known-wrong example: `E_SYNTAX` rejects the trailing comma after this struct declaration's last field, though calls and record construction accept one; the rest of the example returns 42 |
-| `docs/standard-library.md` | schema helper | fragment: helper body without its enclosing function, document or module |
 
 Every fragment above is a candidate for a later documentation rewrite: completing one
 into a whole program removes its `skip` directive and adds it to the executed set. The
-`docs/familiar-syntax.md` entry is different in kind, because the example and the prose
-around it disagree with the compiler; resolving that needs a language or prose decision
-rather than an edit to the block.
+two `removed feature` rows are different in kind: they are blocks in dated records
+whose syntax the language no longer has, kept for the history rather than rewritten.
+The `docs/familiar-syntax.md` entry is different again, because the example and the
+prose around it disagree with the compiler; resolving that needs a language or prose
+decision rather than an edit to the block.
 
 `README.md` and `SPEC.md` are the other standing item. Neither carries an executable
 example today, so neither is covered by this gate; examples added to them are picked up

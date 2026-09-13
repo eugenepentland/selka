@@ -98,8 +98,8 @@ const Evaluator = struct {
             if (function.policy.owner != null) continue;
             const name = if (self.context.names) |names| try names.functionDeclaration(null, function.name) else self.context.src.text(function.name);
             if (!std.mem.eql(u8, name, target)) continue;
-            if (function.policy.host != null or function.signature.type_parameters.len != 0 or function.signature.return_reference != null)
-                return self.context.sink.fail(eEffect, span, "compile-time calls cannot use host functions, generics or references");
+            if (function.policy.host != null or function.signature.type_parameters.len != 0)
+                return self.context.sink.fail(eEffect, span, "compile-time calls cannot use host functions or generics");
             const bound = try call_arguments.bind(self.context.sink.allocator, self.context.src, call, function.signature.parameters, self.context.sink);
             call_arguments.release(self.context.sink.allocator, call, bound);
             _ = try self.scalar(function.signature.return_type);
