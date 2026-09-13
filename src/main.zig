@@ -17,7 +17,7 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "--max-codec-frames=N --max-codec-calls=N --max-codec-bytes=N --max-codec-values=N\n  " ++
     "invoke-project: --request=path.json (typed-call-v1, schema-pinned public function call; " ++
     "same codec budgets)\n  input-module: reads a typed JSON manifest and writes generated " ++
-    "module source\n  run/run-project: --max-steps=N --max-frames=N --memory=general|arena --dispatch=optimized|generic --gc-stress\n  " ++
+    "module source\n  run/run-project: --max-steps=N --max-frames=N --dispatch=optimized|generic --gc-stress\n  " ++
     "run: --timings (VM execution nanoseconds on stderr; excludes source compilation)\n  " ++
     "eval-project: --max-steps=N --max-frames=N --max-eval-bytes=N " ++
     "--evaluation-report|--evaluation-request --inputs=manifest.json (repeat for up to 16 " ++
@@ -395,7 +395,6 @@ const ArgumentParser = struct {
     options: language.vm.Options = .{},
     saw_steps: bool = false,
     saw_frames: bool = false,
-    saw_memory: bool = false,
     saw_dispatch: bool = false,
     discovery: language.duplicates.Options = .{},
     reporting: Reporting = .{},

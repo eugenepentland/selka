@@ -5,7 +5,6 @@ const values = @import("runtime_values.zig");
 const t = std.testing;
 const list_type: values.Type = @fromBackingInt(@intCast(32));
 const record_type: values.Type = @fromBackingInt(@intCast(33));
-
 // spec: GC-ROOTS-1
 test "GC-ROOTS-1 retained aliases and temporaries survive stress growth" {
     var heap = gc.Heap.init(t.allocator);
@@ -23,7 +22,6 @@ test "GC-ROOTS-1 retained aliases and temporaries survive stress growth" {
     try t.expect(heap.statistics.collections >= 150);
     try t.expectEqual(@as(usize, 1), heap.statistics.live_objects);
 }
-
 // spec: GC-CYCLES-1
 test "GC-CYCLES-1 reachable self cycle survives and unreachable self cycle is reclaimed" {
     var heap = gc.Heap.init(t.allocator);
@@ -42,7 +40,6 @@ test "GC-CYCLES-1 reachable self cycle survives and unreachable self cycle is re
     try t.expectEqual(@as(usize, 0), heap.statistics.live_objects);
     try t.expectEqual(@as(u64, 1), heap.statistics.reclaimed);
 }
-
 test "GC-CYCLES-1 aggregate bridge cycles preserve external snapshots then reclaim" {
     var heap = gc.Heap.init(t.allocator);
     defer heap.deinit();
@@ -57,7 +54,6 @@ test "GC-CYCLES-1 aggregate bridge cycles preserve external snapshots then recla
     try heap.collect();
     try t.expectEqual(@as(usize, 0), heap.statistics.live_objects);
 }
-
 test "GC-CYCLES-1 two object cycle releases fields before destroying headers" {
     var heap = gc.Heap.init(t.allocator);
     defer heap.deinit();
@@ -71,7 +67,6 @@ test "GC-CYCLES-1 two object cycle releases fields before destroying headers" {
     try t.expectEqual(@as(usize, 0), heap.statistics.live_objects);
     try t.expectEqual(@as(u64, 2), heap.statistics.reclaimed);
 }
-
 // spec: GC-BOUNDARY-1
 test "GC-BOUNDARY-1 foreign heaps, wrong element types, and invalid indices reject" {
     var heap = gc.Heap.init(t.allocator);
@@ -88,7 +83,6 @@ test "GC-BOUNDARY-1 foreign heaps, wrong element types, and invalid indices reje
     try t.expectError(error.Bounds, heap.read(a, 0));
     try t.expectError(error.Bounds, heap.write(a, 0, a));
 }
-
 fn allocationFailures(allocator: std.mem.Allocator) !void {
     var heap = gc.Heap.init(allocator);
     defer heap.deinit();
@@ -103,12 +97,10 @@ fn allocationFailures(allocator: std.mem.Allocator) !void {
     defer saved.release(allocator);
     try t.expectEqual(@as(usize, 1), try heap.len(list));
 }
-
 // spec: GC-FAILURE-1
 test "GC-FAILURE-1 every allocation failure preserves root cleanup and heap teardown" {
     try t.checkAllAllocationFailures(t.allocator, allocationFailures, .{});
 }
-
 test "GC-CYCLES-1 deep graph traces and sweeps without recursive host calls" {
     var heap = gc.Heap.init(t.allocator);
     defer heap.deinit();
@@ -129,7 +121,6 @@ test "GC-CYCLES-1 deep graph traces and sweeps without recursive host calls" {
     try heap.collect();
     try t.expectEqual(@as(usize, 0), heap.statistics.live_objects);
 }
-
 test "GC-FAILURE-1 failed collection leaves aliases and cycles usable for retry" {
     var failing = t.FailingAllocator.init(t.allocator, .{});
     const allocator = failing.allocator();
@@ -151,7 +142,6 @@ test "GC-FAILURE-1 failed collection leaves aliases and cycles usable for retry"
     try heap.collect();
     try t.expectEqual(@as(usize, 0), heap.statistics.live_objects);
 }
-
 // spec: GC-GRAPH-1
 test "managed element validation visits shared aggregate DAGs once" {
     var heap = gc.Heap.init(t.allocator);
@@ -169,7 +159,6 @@ test "managed element validation visits shared aggregate DAGs once" {
     try heap.collect();
     try t.expectEqual(@as(usize, 1), try heap.len(list));
 }
-
 test "GC-BOUNDARY-1 nested foreign references cannot enter managed storage" {
     var heap = gc.Heap.init(t.allocator);
     defer heap.deinit();
@@ -184,7 +173,6 @@ test "GC-BOUNDARY-1 nested foreign references cannot enter managed storage" {
     try t.expectError(error.ForeignMemory, heap.append(list, foreign_wrapper));
     try t.expectEqual(@as(usize, 0), try heap.len(list));
 }
-
 // spec: GC-CAPABILITY-1
 test "managed heap rejects capability grants and nested authority" {
     var heap = gc.Heap.init(t.allocator);

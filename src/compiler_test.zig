@@ -488,7 +488,7 @@ test "all comparisons boolean operations and logical precedence have observable 
     }
 }
 
-test "short circuit skips traps while explicit _ = retains evaluation" {
+test "short circuit skips traps while an explicit drop retains evaluation" {
     try booleanResult("false && (1 / 0 == 0)", false);
     try booleanResult("true || (1 / 0 == 0)", true);
     try programResult("fn main() -> i64 { _ = false && (1 / 0 == 0); _ = true || (1 / 0 == 0); _ = 1 + 2; return 7; }", 7);
@@ -536,7 +536,7 @@ test "control flow requires boolean conditions and conservative complete returns
     }
 }
 
-test "_ = and compound assignment count as reads and skipped branches count syntactically" {
+test "explicit drops and compound assignment count as reads and skipped branches count syntactically" {
     const text = "fn main() -> i64 { let x = 1; _ = x; let mut y = 0; y += 1; let mut z = 0; if false { z = 1; } _ = z; return 0; }";
     var compilation = try language.Compilation.init(testing.allocator, "warnings.my", text);
     defer compilation.deinit();
@@ -570,7 +570,7 @@ test "runtime storage remains bounded across many calls and loop declarations" {
     }
 }
 
-test "located source diagnostics include EOF _ = and previous declarations" {
+test "located source diagnostics include EOF explicit drops and previous declarations" {
     for ([_][]const u8{ "\n", "\r\n" }) |newline| {
         const text = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{{s}return 1;{s}", .{ newline, newline });
         defer testing.allocator.free(text);

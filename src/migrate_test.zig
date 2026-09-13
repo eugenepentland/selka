@@ -319,3 +319,77 @@ test "python-only arena scopes and escapes reprint in their canonical spelling" 
         \\
     , reprinted);
 }
+
+// spec-case: MIGRATE-1
+test "unit results discard statements and bare returns adopt Python spellings" {
+    try expectMigration(
+        \\fn noop() -> unit {
+        \\    return;
+        \\}
+        \\fn main() -> i64 {
+        \\    noop();
+        \\    _ = noop();
+        \\    return 0;
+        \\}
+    ,
+        \\def noop():
+        \\    return
+        \\
+        \\
+        \\def main() -> i64:
+        \\    noop()
+        \\    _ = noop()
+        \\    return 0
+        \\
+    );
+}
+
+// spec: MIGRATE-3
+test "operators propagation matching and generics adopt Python spellings" {
+    try expectMigration(
+        \\result Answer { ok: i64, err: i64 }
+        \\fn checked(value: i64) -> Answer {
+        \\    if !(value < 0) && true || false { return new Answer.ok(value); }
+        \\    return new Answer.err(1);
+        \\}
+        \\fn identity<T: copy>(value: T) -> T { return value; }
+        \\fn main() -> i64 {
+        \\    let answer = checked(40)?;
+        \\    match checked(answer) {
+        \\        Answer.ok(v) => { return identity::<i64>(v) + 2; },
+        \\        Answer.err(e) => { return e; }
+        \\    }
+        \\}
+    ,
+        \\result Answer:
+        \\    ok: i64,
+        \\    err: i64
+        \\
+        \\
+        \\def checked(value: i64) -> Answer:
+        \\    if not (value < 0) and True or False:
+        \\        return Ok(value)
+        \\    return Err(1)
+        \\
+        \\
+        \\def identity[T](value: T) -> T:
+        \\    return value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    answer = checked(40)?
+        \\    match checked(answer):
+        \\        case Answer.ok(v):
+        \\            return identity::<i64>(v) + 2
+        \\        case Answer.err(e):
+        \\            return e
+        \\
+    );
+}
+
+// spec-case: MIGRATE-6
+test "migration releases every allocation when the allocator fails" {
+    try t.checkAllAllocationFailures(t.allocator, parityScenario, .{});
+    var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(no_resize.allocator(), parityScenario, .{});
+}

@@ -105,19 +105,19 @@ test "empty lists and Ok Err inherit binding return and argument contexts" {
 
 // spec: BUILTIN-CONTEXT-3
 test "record fields and nested list elements propagate empty list context" {
-    try run("struct Holder{values:List<i64>}fn choose(value:Holder,other:List<i64>)->i64{let xs=value.values;xs.push(42);return xs[0u64];}" ++
-        "fn main()->i64{let nested:List<List<i64>>=[];nested.push([]);return choose(Holder{values:[]},[]);}");
+    try run("struct Holder{values:List<i64>}fn choose(value:Holder,other:List<i64>)->i64{_ = other;let xs=value.values;xs.push(42);return xs[0u64];}" ++
+        "fn main()->i64{let nested:List<List<i64>>=[];let inner:List<i64>=[];nested.push(inner);return choose(Holder{values:[]},[]);}");
 }
 
 // spec: BUILTIN-CONTEXT-4
 test "Ok unit values preserve fallible result handling" {
     try run("fn done()->Result<unit,i64>{return Ok(());}" ++
-        "fn main()->i64{match done(){Result<unit,i64>.ok(ignored)=>{return 42;},Result<unit,i64>.err(e)=>{return e;}}}");
+        "fn main()->i64{match done(){Result<unit,i64>.ok(_)=>{return 42;},Result<unit,i64>.err(e)=>{return e;}}}");
 }
 
 // spec: BUILTIN-CONTEXT-7
 test "declared List and Result types retain their own nominal identity" {
     try run("result Result{ok:i64,err:i64}" ++
-        "fn answer()->Result{return Ok(42);}fn main()->i64{let values:List=[];values.push(42);" ++
-        "match answer(){Result.ok(n)=>{return n;},Result.err(e)=>{return e;}}}");
+        "fn answer()->Result{return Ok(42);}fn main()->i64{let values:List<i64>=[];values.push(42);" ++
+        "if values[0u64]!=42{return 0;}match answer(){Result.ok(n)=>{return n;},Result.err(e)=>{return e;}}}");
 }

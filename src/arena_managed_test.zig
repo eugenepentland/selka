@@ -505,3 +505,31 @@ test "escape copies arena objects once and shares older objects" {
     shared.release(t.allocator);
     regions.end(&heap);
 }
+
+// spec-case: ARENA-MANAGED-6
+test "ARENA-MANAGED-6 nogc still rejects arena allocation while entering a scope is free" {
+    try reject(
+        \\def grow() -> int:
+        \\    items: list[int] = []
+        \\    items.append(1)
+        \\    return len(items)
+        \\
+        \\def constrained() -> int noalloc:
+        \\    with arena() as scratch:
+        \\        return grow()
+        \\
+        \\def main() -> int:
+        \\    return constrained()
+    , "E_EFFECT_BOUND");
+    const source =
+        \\def empty() -> int noalloc:
+        \\    with arena() as scratch:
+        \\        return 7
+        \\
+        \\def main() -> int:
+        \\    return empty()
+    ;
+    var statistics: language.vm.GcStatistics = .{};
+    try t.expectEqual(@as(i64, 7), try value(source, &statistics));
+    try t.expectEqual(@as(u64, 1), statistics.arena.scopes);
+}

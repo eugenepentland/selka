@@ -66,3 +66,52 @@ test "bytecode validates propagation result identity and failure stack targets" 
     instructions[propagation].op.try_result.input = .bool;
     try testing.expectError(error.InternalError, language.bytecode.validate(testing.allocator, program));
 }
+
+// spec: CORE-11
+test "try unwraps success and remaps errors between nominal result types by named cases" {
+    try result("enum E { missing } result Input { err: E, ok: i64 } result Output { ok: bool, err: E " ++
+        "} fn test_value(r: Input) -> Output { return new Output.ok(r? > 5); } fn " ++
+        "handle(r: Output) -> i64 { match r { Output.ok(value) => { if value { return 7; } " ++
+        "return 1; }, Output.err(e) => { match e { E.missing => { return 3; } } } } } fn " ++
+        "main() -> i64 { return handle(test_value(new Input.ok(8))) + handle(test_value(new " ++
+        "Input.err(new E.missing))); }", 10);
+    try result("result R { ok: i64, err: i64 } fn f(r: R) -> R { return new R.ok(2 * r? + 1); } fn main() -> i64 { match f(new R.ok(3)) { R.ok(n) => { return n; }, R.err(ignored) => { return 0; } } }", 7);
+}
+
+test "propagation cannot abandon pending locals parameters or unfinished expression results" {
+    try reject("fn f(r: R, other: R) -> R { return new R.ok(r?); } fn main() -> i64 { return 0; }", "E_RESULT_UNHANDLED");
+    try reject("fn f(r: R) -> R { let ignored = new R.err(3); let value = r?; _ = ignored; return new R.ok(value); } fn main() -> i64 { return 0; }", "E_RESULT_UNHANDLED");
+    try reject("fn consume(r: R, n: i64) -> i64 { _ = r; return n; } fn f(r: R) -> R { return new R.ok(consume(new R.err(7), r?)); } fn main() -> i64 { return 0; }", "E_RESULT_PROPAGATION");
+    try reject("struct Wrapper { r: R } fn consume(w: Wrapper, n: i64) -> i64 { _ = w; " ++
+        "return n; } fn f(r: R) -> R { let first = new R.err(7); return new R.ok(consume(new " ++
+        "Wrapper { r: first }, r?)); } fn main() -> i64 { return 0; }", "E_RESULT_PROPAGATION");
+    try reject("struct Pair { first: R, second: i64 } result Wrapped { ok: Pair, err: i64 } fn f(r: " ++
+        "R) -> Wrapped { return new Wrapped.ok(new Pair { first: new R.err(7), second: r? }" ++
+        "); } fn main() -> i64 { return 0; }", "E_RESULT_PROPAGATION");
+    try result("result R { ok: i64, err: i64 } fn f(r: R, other: R) -> R { _ = other; return new R.ok(r?); } fn main() -> i64 { match f(new R.err(7), new R.ok(1)) { R.ok(n) => { return n; }, R.err(e) => { return e; } } }", 7);
+}
+
+test "nested results can be propagated repeatedly or explicitly acknowledged after unwrapping" {
+    try result("result R { ok: i64, err: i64 } result Outer { ok: R, err: i64 } fn flatten(r: Outer) " ++
+        "-> R { return new R.ok(r??); } fn handle(r: R) -> i64 { match r { R.ok(n) => { " ++
+        "return n; }, R.err(e) => { return e; } } } fn main() -> i64 { return " ++
+        "handle(flatten(new Outer.ok(new R.ok(1)))) + handle(flatten(new Outer.ok(new " ++
+        "R.err(2)))) + handle(flatten(new Outer.err(3))); }", 6);
+    try result("result R { ok: i64, err: i64 } result Outer { ok: R, err: i64 } fn f(r: Outer) -> R " ++
+        "{ _ = r?; return new R.ok(7); } fn main() -> i64 { match f(new " ++
+        "Outer.ok(new R.err(3))) { R.ok(n) => { return n; }, R.err(e) => { return e; } } }", 7);
+    try reject("result Outer { ok: R, err: i64 } fn f(r: Outer) -> R { _ = r?; return new R.ok(0); } fn main() -> i64 { return 0; }", "E_RESULT_DISCARD");
+}
+
+test "duplicate discovery retains propagation operations and target result types" {
+    var compilation = try language.Compilation.init(testing.allocator, "duplicates.my", "result R { ok: i64, err: i64 } fn a(r: R) -> R { return new R.ok(r? + 1); } fn " ++
+        "b(other: R) -> R { return new R.ok(other? + 1); } fn c(r: R) -> R { match r { " ++
+        "R.ok(n) => { return new R.ok(n + 1); }, R.err(e) => { return new R.err(e); } } } fn " ++
+        "main() -> i64 { return 0; }");
+    defer compilation.deinit();
+    try compilation.check();
+    var discovery = try language.duplicates.discover(testing.allocator, compilation.program.?, .{ .min_nodes = 1 });
+    defer discovery.deinit();
+    try testing.expectEqual(@as(usize, 1), discovery.groups.len);
+    try testing.expectEqual(@as(usize, 2), discovery.groups[0].members.len);
+}

@@ -63,14 +63,14 @@ test "unit calls bare returns generic fallthrough and mutable loans preserve res
 }
 
 // spec: UNIT-5
-test "unit result payloads still require handling and try only drops successful unit" {
+test "unit result payloads still require handling and propagation only drops successful unit" {
     const header = "result Done{ok:unit,err:i64}fn noop()->unit{}fn done()->Done{return new Done.ok(noop());}";
     var valid = try language.Compilation.init(t.allocator, "result.my", header ++
         "fn chained()->Done{done()?;return done();}" ++
-        "fn main()->i64{match chained(){Done.ok(ignored)=>{return 42;},Done.err(code)=>{return code;}}}");
+        "fn main()->i64{match chained(){Done.ok(_)=>{return 42;},Done.err(code)=>{return code;}}}");
     defer valid.deinit();
     try t.expectEqual(@as(i64, 42), (try valid.execute(t.allocator)).value);
-    for ([_][]const u8{ "done();", "_ = done();", "let pending=done();" }) |statement| {
+    for ([_][]const u8{ "done();", "let pending=done();" }) |statement| {
         const text = try std.fmt.allocPrint(t.allocator, "{s}fn main()->i64{{{s}return 0;}}", .{ header, statement });
         defer t.allocator.free(text);
         var invalid = try language.Compilation.init(t.allocator, "unhandled.my", text);

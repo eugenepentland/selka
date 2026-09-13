@@ -2499,7 +2499,7 @@ fn warnBindings(allocator: std.mem.Allocator, syntax: ast.Program, functions: []
                 .severity = .warning,
                 .code = "W_UNUSED_BINDING",
                 .span = local.declaration,
-                .message = "binding is never read; use it or remove it, preserving initializer effects with discard when needed",
+                .message = "binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed",
             });
             const redundant_mut = local.mutable and local.usage.writes == 0;
             if (!python and redundant_mut) try sink.items.append(allocator, .{

@@ -48,7 +48,7 @@ test "generic branches restore result state and merge only continuing paths" {
 
 test "generic matches transfer nested payloads and merge outer obligations" {
     try reject("enum E{a,b}fn f<T:copy>(e:E,r:R)->i64{match e{E.a=>{_ = r;},E.b=>{}}return 0;}", "E_RESULT_PATH");
-    try reject("union U{a:R,b}fn f<T:copy>(u:U)->i64{match u{U.a(ignored)=>{},U.b=>{}}return 0;}", "E_RESULT_DISCARD");
+    try reject("union U{a:R,b}fn f<T:copy>(u:U)->i64{match u{U.a(_)=>{},U.b=>{}}return 0;}", "E_RESULT_DISCARD");
     try reject("union U{a:R,b}fn f<T:copy>(u:U)->i64{match u{U.a(r)=>{},U.b=>{}}return 0;}", "E_RESULT_UNHANDLED");
     try run(schema ++ "enum E{a,b}fn f<T:copy>(e:E,r:R)->i64{match e{E.a=>{_ = r;return 1;},E.b=>{}}_ = r;return 2;}fn main()->i64{return f::<bool>(new E.a,new R.err(3))+f::<bool>(new E.b,new R.ok(4));}", 3);
 }

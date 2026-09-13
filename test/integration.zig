@@ -570,7 +570,7 @@ test "CLI executes concrete nominal instances and reports argument identity erro
     const definitions = "struct Box<T:copy>{value:T}union Slot<T:copy>{none,some:T}";
     const program = definitions ++ "fn main()->i64{let slot=new Slot<Box<i64>>.some(new Box<i64>{value:12});" ++
         "match slot{Slot<Box<i64>>.none=>{return 0;},Slot<Box<i64>>.some(box)=>{return box.value;}}}";
-    try invokeOptions("run", program, &.{"--memory=general"}, 0, "12\n", "");
+    try invoke("run", program, 0, "12\n", "");
     try invokeOptions("check", definitions ++
         "fn takes(box:Box<i64>)->i64{return box.value;}fn main()->i64{return takes(new Box<bool>{value:true});}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_TYPE\"");
 }
@@ -758,7 +758,7 @@ test "all commands preserve stdout and deterministic advisory stderr" {
         const second = std.mem.indexOf(u8, outcome.stderr, ":2:13: warning[W_UNUSED_BINDING]") orelse return error.MissingWarning;
         try testing.expect(first < second);
         try testing.expectEqual(@as(usize, 2), std.mem.count(u8, outcome.stderr, "warning["));
-        try testing.expect(std.mem.indexOf(u8, outcome.stderr, "ignored") != null);
+        try testing.expect(std.mem.indexOf(u8, outcome.stderr, "`_ =`") != null);
     }
 }
 test "CLI preserves integer width bounds and explicit casts" {
@@ -821,7 +821,7 @@ test "CLI executes variants dumps dispatch and rejects newly incomplete matches"
     const added = "enum Color { red, green, added } fn main() -> i64 { match new Color.red { Color.red => { return 1; }, Color.green => { return 2; } } }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, added, 1, "", "match does not handle variant `added`");
     try invoke("check", "union U { value: i64, empty } fn main() -> i64 { _ = new U.value(true); return 0; }", 1, "", "error[E_TYPE]");
-    try invoke("run", "union U { value: i64 } fn main() -> i64 { match new U.value(1 / 0) { U.value(ignored) => { return 0; } } }", 1, "", "error[R_DIVISION_BY_ZERO]");
+    try invoke("run", "union U { value: i64 } fn main() -> i64 { match new U.value(1 / 0) { U.value(_) => { return 0; } } }", 1, "", "error[R_DIVISION_BY_ZERO]");
 }
 test "CLI executes complete enum tables and rejects missing mappings in every command" {
     try invoke("run", @embedFile("fixtures/tables.my"), 0, "1407\n", "");
@@ -848,7 +848,7 @@ test "CLI handles recoverable results and rejects silent error loss" {
     for ([_][]const u8{ "result Quotient", "ACKNOWLEDGE Quotient" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
     const ignored = "result R { ok: i64, err: i64 } fn main() -> i64 { let r = new R.err(7); return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, ignored, 1, "", "error[E_RESULT_UNHANDLED]");
-    try invoke("check", "result R { ok: i64, err: i64 } fn main() -> i64 { _ = new R.err(7); return 0; }", 1, "", "error[E_RESULT_DISCARD]");
+    try invoke("check", "result R { ok: i64, err: i64 } fn main() -> i64 { new R.err(7); return 0; }", 1, "", "error[E_EXPLICIT_DISCARD_REQUIRED]");
 }
 test "CLI checks external capabilities but cannot silently grant ambient providers" {
     const source = @embedFile("fixtures/external-capabilities.my");

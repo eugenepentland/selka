@@ -50,15 +50,15 @@ test "result checking runtime ownership and rendering survive allocation failure
 }
 
 // spec: CORE-10
-test "binding transfer and explicit acknowledgement cannot silently _ = results" {
+test "binding transfer and explicit release cannot silently drop results" {
     try result("result R { ok: i64, err: i64 } fn main() -> i64 { let first = new R.err(7); let second = first; _ = second; return 1; }", 1);
     try reject("fn main() -> i64 { let ignored = new R.err(7); return 0; }", "E_RESULT_UNHANDLED");
     try reject("fn main() -> i64 { { let ignored = new R.ok(7); } return 0; }", "E_RESULT_UNHANDLED");
-    try reject("fn main() -> i64 { _ = new R.err(7); return 0; }", "E_RESULT_DISCARD");
+    try result("result R { ok: i64, err: i64 } fn main() -> i64 { _ = new R.err(7); return 0; }", 0);
     try reject("fn main() -> i64 { let r = new R.ok(7); let copied = r; _ = r; _ = copied; return 0; }", "E_RESULT_CONSUMED");
     try reject("fn main() -> i64 { _ = 7; return 0; }", "E_ACKNOWLEDGE_TYPE");
     try reject("fn swallow(r: R) -> i64 { return 0; } fn main() -> i64 { return swallow(new R.err(7)); }", "E_RESULT_UNHANDLED");
-    try reject("fn swallow(r: R) -> i64 { _ = r; return 0; } fn main() -> i64 { return 0; }", "E_RESULT_DISCARD");
+    try result("result R { ok: i64, err: i64 } fn swallow(r: R) -> i64 { _ = r; return 3; } fn main() -> i64 { return swallow(new R.err(7)); }", 3);
 }
 
 test "result obligations must agree across all continuing branch and match paths" {
@@ -81,7 +81,7 @@ test "loops and short circuit evaluation cannot conditionally lose result obliga
 
 test "mutable result slots require handling before replacement and permit explicit transfer" {
     try reject("fn main() -> i64 { let mut r = new R.err(1); r = new R.ok(2); _ = r; return 0; }", "E_RESULT_OVERWRITE");
-    try result("result R { ok: i64, err: i64 } fn main() -> i64 { let mut r = new R.err(1); let old = r; r = new R.ok(2); _ = old; match r { R.ok(n) => { return n; }, R.err(ignored) => { return 0; } } }", 2);
+    try result("result R { ok: i64, err: i64 } fn main() -> i64 { let mut r = new R.err(1); let old = r; r = new R.ok(2); _ = old; match r { R.ok(n) => { return n; }, R.err(_) => { return 0; } } }", 2);
     try result("result R { ok: i64, err: i64 } fn main() -> i64 { let mut r = new R.err(1); r = r; _ = r; return 7; }", 7);
 }
 
@@ -119,7 +119,7 @@ test "result loops and every trap boundary release bounded live runtime storage"
 test "duplicate identity retains explicit acknowledgement and fallible result types" {
     var compilation = try language.Compilation.init(testing.allocator, "duplicates.my", "result R { ok: i64, err: i64 } fn a(r: R) -> i64 { _ = r; return 1; } fn " ++
         "b(other: R) -> i64 { _ = other; return 1; } fn c(r: R) -> i64 { match r { " ++
-        "R.ok(ignored) => {}, R.err(ignored) => {} } return 1; } fn main() -> i64 { return 0; " ++
+        "R.ok(_) => {}, R.err(_) => {} } return 1; } fn main() -> i64 { return 0; " ++
         "}");
     defer compilation.deinit();
     try compilation.check();

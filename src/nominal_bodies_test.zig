@@ -88,5 +88,5 @@ test "nominal bodies bound growing function specialization before executable out
 test "nominal bodies propagate results with named error remapping and obligations" {
     try run(t.allocator, results, 12);
     try reject(definitions ++ "fn drop<T:copy>(r:R<T>)->i64{return 0;}fn main()->i64{return 0;}", "E_RESULT_UNHANDLED");
-    try reject(definitions ++ "fn drop<T:copy>(r:R<T>)->i64{_ = r;return 0;}fn main()->i64{return 0;}", "E_RESULT_DISCARD");
+    try run(t.allocator, definitions ++ "fn drop<T:copy>(r:R<T>)->i64{_ = r;return 4;}fn main()->i64{return drop::<i64>(new R<i64>.ok(1));}", 4);
 }

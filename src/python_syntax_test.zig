@@ -129,3 +129,35 @@ fn lowerAllocations(allocator: std.mem.Allocator) !void {
     defer allocator.free(tokens);
     try t.expectEqual(lexer.Tag.eof, tokens[tokens.len - 1].tag);
 }
+
+// spec: PYTHON-3
+test "Python match cases retain contextual pattern names square types and discard payloads" {
+    const text = "def extract(value: Result[int, int]) -> int:\n    match value:\n        case Ok(answer):\n            return answer\n        case Err(_):\n            return 0\n";
+    var arena = std.heap.ArenaAllocator.init(t.allocator);
+    defer arena.deinit();
+    const src = try source.Source.init(arena.allocator(), "patterns.my", text);
+    var sink: diagnostic.Sink = .{ .allocator = arena.allocator() };
+    const tokens = try lexer.lex(arena.allocator(), text, &sink);
+    var p: parser.Parser = .{ .src = src, .arena = &arena, .tokens = tokens, .sink = &sink };
+    const syntax = try p.parse();
+    try t.expectEqual(@as(usize, 1), syntax.types.expressions.applications.len);
+    const body = syntax.statements.items[@backingInt(syntax.functions[0].body)].data.block;
+    const arms = syntax.statements.items[@backingInt(body[0])].data.match.arms;
+    try t.expectEqualStrings("Ok", src.text(arms[0].name));
+    try t.expectEqual(arms[0].ty.start, arms[0].ty.end);
+    try t.expect(arms[1].discard_payload);
+}
+
+// spec-case: PYTHON-1
+test "Python mode detection does not reserve legacy identifiers or inspect quoted comments" {
+    try t.expect(!lexer.isPythonSource("fn main()->i64{let pass=42;return pass;} // def fake\n"));
+    try t.expect(!lexer.isPythonSource("fn main()->i64{_ = \"class Fake\";return 0;}"));
+    var c = try language.Compilation.init(t.allocator, "legacy.my", "fn main()->i64{let pass=42;return pass;}");
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 42), (try c.execute(t.allocator)).value);
+}
+
+// spec-case: PYTHON-1
+test "Python layout lower frees partial token allocations on every allocator failure" {
+    try t.checkAllAllocationFailures(t.allocator, lowerAllocations, .{});
+}

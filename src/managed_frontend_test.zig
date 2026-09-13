@@ -20,3 +20,13 @@ test "managed nominal indirection does not admit recursive by value records" {
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqualStrings("E_RECURSIVE_RECORD", compilation.diagnostics.items[0].code);
 }
+
+// spec: GC-GENERIC-4
+test "managed list formatting preserves contextual list case identifiers" {
+    var compilation = try language.Compilation.init(t.allocator, "managed-format.my", "enum Kind{list,atom}fn main()->i64{let values:List<i64>=[];values.push(42);return values[0];}");
+    defer compilation.deinit();
+    const formatted = try compilation.format(t.allocator);
+    defer t.allocator.free(formatted);
+    try t.expect(std.mem.indexOf(u8, formatted, "[]") != null);
+    try evaluate(formatted);
+}
