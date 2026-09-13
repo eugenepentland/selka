@@ -84,3 +84,19 @@ test "generic diagnostics retain instantiated names in runtime traces" {
     try t.expectEqualStrings("divide::<u8>", result.trap.stack.frames[0].function);
     try t.expectEqualStrings("forward::<u8>", result.trap.stack.frames[1].function);
 }
+
+test "generic execution rejects concrete requirement and arity violations" {
+    const cases = [_]struct { source: []const u8, code: []const u8 }{
+        .{ .source = "fn f<T:integer>(x:T)->T{return x;}fn main()->i64{_ = f::<bool>(true);return 0;}", .code = "E_GENERIC_ARGUMENT" },
+        .{ .source = "fn f<T:copy,U:copy>(x:T)->T{return x;}fn main()->i64{return f(1);}", .code = "E_GENERIC_INFERENCE" },
+        .{ .source = "fn f<T:copy>(x:T)->T{return x;}fn main()->i64{return f::<i64>(true);}", .code = "E_TYPE" },
+        .{ .source = "fn main<T:copy>()->i64{return 0;}", .code = "E_MAIN" },
+        .{ .source = "fn bad<T:copy>(x:T)->T{return x+x;}fn main()->i64{return bad::<i64>(2);}", .code = "E_GENERIC_OPERATION" },
+    };
+    for (cases) |case| {
+        var compilation = try language.Compilation.init(t.allocator, "rejected.my", case.source);
+        defer compilation.deinit();
+        try t.expectError(error.SourceError, compilation.check());
+        try t.expectEqualStrings(case.code, compilation.diagnostics.items[0].code);
+    }
+}

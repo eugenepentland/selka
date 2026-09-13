@@ -71,3 +71,34 @@ test "generic body contracts reject top-level and type-parameter shadowing" {
     try reject("struct T{}fn f<T:copy>(x:T)->T{return x;}", "E_SHADOWING");
     try reject("fn f<T:copy>(x:T)->T{let T=x;return T;}", "E_SHADOWING");
 }
+
+test "generic body contracts reject undeclared operations mismatches and invalid control flow" {
+    const cases = [_]struct { text: []const u8, code: []const u8 }{
+        .{ .text = "fn f<T:copy>(x:T,y:T)->T{return x+y;}", .code = "E_GENERIC_OPERATION" },
+        .{ .text = "fn f<T:copy>(x:T,y:T)->bool{return x==y;}", .code = "E_GENERIC_OPERATION" },
+        .{ .text = "fn f<T:equality>(x:T,y:T)->bool{return x<y;}", .code = "E_GENERIC_OPERATION" },
+        .{ .text = "fn f<T:integer,U:integer>(x:T,y:U)->T{return x+y;}", .code = "E_GENERIC_TYPE" },
+        .{ .text = "fn f<T:copy>(x:T)->T{return 1;}", .code = "E_GENERIC_TYPE" },
+        .{ .text = "fn f<T:integer>(x:T)->T{return x+1;}", .code = "E_GENERIC_TYPE" },
+        .{ .text = "fn f<T:copy>(x:T)->T{x=x;return x;}", .code = "E_IMMUTABLE" },
+        .{ .text = "fn f<T:copy>(x:T)->T{if true{let y=x;}return y;}", .code = "E_UNKNOWN_NAME" },
+        .{ .text = "fn f<T:copy>(x:T)->T{let x=x;return x;}", .code = "E_SHADOWING" },
+        .{ .text = "fn f<T:copy>(x:T)->T{if true{return x;}}", .code = "E_MISSING_RETURN" },
+        .{ .text = "fn f<T:copy>(x:T)->T{while true{return x;}}", .code = "E_MISSING_RETURN" },
+        .{ .text = "fn f<T:copy>(x:T)->T{return x;_ = x;}", .code = "E_UNREACHABLE" },
+        .{ .text = "fn f<T:copy>(x:T)->i8{_ = x;return 128i8;}", .code = "E_INTEGER_RANGE" },
+        .{ .text = "fn f<T:copy>(x:T)->T{return other::<T>(x);}", .code = "E_UNKNOWN_FUNCTION" },
+    };
+    for (cases) |case| try reject(case.text, case.code);
+}
+
+test "generic body contracts bound wide statement work without host execution" {
+    for ([_]usize{ 49998, 49999 }) |length| {
+        var text: std.Io.Writer.Allocating = .init(t.allocator);
+        defer text.deinit();
+        try text.writer.writeAll("fn f<T:copy>(x:T)->T{");
+        for (0..length) |_| try text.writer.writeAll("_ = x;");
+        try text.writer.writeAll("{}return x;}");
+        try checkBound(text.written(), length == 49999);
+    }
+}

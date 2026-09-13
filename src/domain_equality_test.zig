@@ -87,3 +87,62 @@ test "domain equality resolves declaration identity through module aliases" {
         }
     }
 }
+
+// spec: DOMAIN-EQUALITY-1
+test "domain equality compares every scalar backing by value" {
+    for ([_][]const u8{ "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64" }) |width| {
+        const source = try std.fmt.allocPrint(t.allocator, "domain D:{s}{{fn make(n:{s})->D{{return wrap<D>(n);}}}}fn main()->i64{{" ++
+            "let a=D.make(7{s});let b=D.make(8{s});if a==a && a!=b && !(a==b) && !(a!=a){{return 1;}}return 0;}}", .{ width, width, width, width });
+        defer t.allocator.free(source);
+        try expectValue(t.allocator, source, 1);
+    }
+    try expectValue(t.allocator, comparison, 1);
+    try expectValue(t.allocator, "domain D:i64{fn make(n:i64)->D{return wrap<D>(n);}}fn main()->i64{if D.make(-9223372036854775808)==D.make(-9223372036854775808) && D.make(-1)!=D.make(1){return 1;}return 0;}", 1);
+    try expectValue(t.allocator, "domain D:bool{fn make(n:bool)->D{return wrap<D>(n);}}fn main()->i64{let a=D.make(true);let b=D.make(false);if a==a && b==b && a!=b && !(a==b) && !(a!=a){return 1;}return 0;}", 1);
+}
+
+test "domain equality preserves opacity and rejects mixed IDs arithmetic ordering and integer requirements" {
+    const cases = [_]struct { source: []const u8, code: []const u8 = "E_TYPE" }{
+        .{ .source = "fn main()->i64{_ = Id.make(1u64)==Other.make(1u64);return 0;}" },
+        .{ .source = "fn main()->i64{_ = Id.make(1u64)!=Other.make(1u64);return 0;}" },
+        .{ .source = "fn main()->i64{_ = Id.make(1u64)==1u64;return 0;}" },
+        .{ .source = "fn main()->i64{_ = Id.make(1u64)+Id.make(1u64);return 0;}" },
+        .{ .source = "fn main()->i64{_ = Id.make(1u64)<Id.make(1u64);return 0;}" },
+        .{ .source = "fn main()->i64{_ = unwrap(Id.make(1u64));return 0;}", .code = "E_PRIVATE_DOMAIN" },
+        .{ .source = "fn same<T:integer>(a:T,b:T)->bool{return a==b;}fn main()->i64{_ = same::<Id>(Id.make(1u64),Id.make(1u64));return 0;}", .code = "E_GENERIC_ARGUMENT" },
+    };
+    for (cases) |case| {
+        const source = try std.mem.concat(t.allocator, u8, &.{ declarations, case.source });
+        defer t.allocator.free(source);
+        var compilation = try language.Compilation.init(t.allocator, "bad.my", source);
+        defer compilation.deinit();
+        try t.expectError(error.SourceError, compilation.check());
+        try t.expectEqualStrings(case.code, compilation.diagnostics.items[0].code);
+    }
+}
+
+test "domain equality participates in generic equality contracts" {
+    try expectValue(t.allocator, declarations ++ "fn same<T:equality>(a:T,b:T)->bool{return a==b;}" ++
+        "fn different<T:equality>(a:T,b:T)->bool{return a!=b;}" ++
+        "fn main()->i64{if same::<Id>(Id.make(1u64),Id.make(1u64)) && different::<Other>(Other.make(1u64),Other.make(2u64)){return 1;}return 0;}", 1);
+}
+
+test "domain equality loops and traps reclaim bounded runtime storage" {
+    var compilation = try language.Compilation.init(t.allocator, "loop.my", declarations ++
+        "fn main()->i64{let mut n=0u64;while Id.make(n)!=Id.make(10000u64){n=n+1u64;}return cast<i64>(n);}");
+    defer compilation.deinit();
+    try compilation.emit();
+    var limiter = @import("test_support.zig").LimitedLiveAllocator{ .parent = t.allocator, .limit = 4096 };
+    defer limiter.deinit();
+    try t.expectEqual(@as(i64, 10000), (try compilation.execute(limiter.allocator())).value);
+    try t.expectEqual(@as(usize, 0), limiter.live);
+    try t.expectEqualStrings("R_STEP_LIMIT", (try compilation.executeWithOptions(limiter.allocator(), .{ .max_steps = 50 })).trap.code);
+    try t.expectEqual(@as(usize, 0), limiter.live);
+    var trapped = try language.Compilation.init(t.allocator, "order.my", declarations ++
+        "fn left()->Id{return Id.make(1u64/0u64);}fn right()->Id{return Id.make(18446744073709551615u64+1u64);}" ++
+        "fn main()->i64{_ = left()==right();return 0;}");
+    defer trapped.deinit();
+    const outcome = try trapped.execute(t.allocator);
+    try t.expectEqualStrings("R_DIVISION_BY_ZERO", outcome.trap.code);
+    try t.expectEqualStrings("left", outcome.trap.stack.frames[0].function);
+}

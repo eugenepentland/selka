@@ -53,3 +53,12 @@ test "generic codecs follow imported contracts and declaring domain privacy thro
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), projectScenario, .{});
 }
+test "generic codecs preserve domain privacy arity input types and result obligations before calls" {
+    try reject("fn f<T:copy>(n:i64)->Positive{return wrap<Positive>(n);}", "E_PRIVATE_DOMAIN");
+    try reject("fn f<T:copy>(x:Positive)->i64{return unwrap(x);}", "E_PRIVATE_DOMAIN");
+    try reject("fn f<T:copy>(n:i64)->Positive{return Positive.raw(n);}", "E_PRIVATE_FUNCTION");
+    try reject("fn f<T:copy>()->Decoded{return codec_decode<Positive>();}", "E_CODEC_ARITY");
+    try reject("fn f<T:copy>(n:T)->Wire{return codec_encode<Positive>(n);}", "E_GENERIC_TYPE");
+    try reject("fn f<T:copy>(n:T)->T{return codec_encode<T>(n);}", "E_GENERIC_BODY_UNSUPPORTED");
+    try reject("fn f<T:copy>()->i64{_ = codec_decode<Positive>(new Wire{n:1});return 0;}", "E_RESULT_DISCARD");
+}

@@ -562,3 +562,23 @@ test "late duplicate export diagnostics locate both original directives" {
     try t.expectEqual(std.mem.lastIndexOf(u8, body, "value").?, failure.site.span.start);
     try t.expectEqual(std.mem.indexOf(u8, body, "value").?, failure.related.?.span.start);
 }
+
+test "cross module bodies enforce private functions private types nominal identity and local shadowing" {
+    try rejectChecked("module main; import units; fn main() -> i64 { return units::hidden(); }", units, "E_PRIVATE_SYMBOL");
+    try rejectChecked("module main; import units; fn main() -> i64 { _ = units::Distance.raw(1); return 0; }", units, "E_PRIVATE_SYMBOL");
+    try rejectChecked("module main; import units; fn main() -> i64 { let x = new units::Hidden {}; return 0; }", "module units; struct Hidden {}", "E_PRIVATE_SYMBOL");
+    try rejectChecked("module main; import units; struct X {} fn main() -> i64 { return units::take(new X {}); }", "module units; export X; export take; struct X {} fn take(x: X) -> i64 { return 0; }", "E_TYPE");
+    try rejectChecked("module main; import units; fn main() -> i64 { let units = 1; return units; }", units, "E_SHADOWING");
+    try rejectChecked("module main; import units; fn main() -> i64 { return hidden(); }", units, "E_UNKNOWN_SYMBOL");
+    try rejectChecked("module main; import units; fn main() -> i64 { return 0; }", "module units; fn bad() -> i64 { return true; }", "E_TYPE");
+    try rejectChecked("module main; import units; fn main() -> i64 { return 0; }", "module units; struct Recursive { next: Recursive }", "E_RECURSIVE_RECORD");
+}
+
+test "generic calls concrete helpers retain imported identity and private domain boundaries" {
+    const caller = "module main;import units;fn helper(x:i64)->bool{return x==0;}fn f<T:copy>(x:T)->i64{_ = x;return units::helper(1);}fn main()->i64{return 0;}";
+    try acceptChecked(caller, "module units;export helper;fn helper(x:i64)->i64{return leaf(x);}fn leaf(x:i64)->i64{return x+1;}");
+    try rejectChecked(caller, "module units;fn helper(x:i64)->i64{return x;}", "E_PRIVATE_SYMBOL");
+    const domain_caller = "module main;import units;fn f<T:copy>(x:T)->i64{_ = x;return units::D.helper(1);}fn main()->i64{return 0;}";
+    try acceptChecked(domain_caller, "module units;export D;domain D:i64{fn helper(x:i64)->i64{return D.leaf(x);}private fn leaf(x:i64)->i64{return x+1;}}");
+    try rejectChecked(domain_caller, "module units;export D;domain D:i64{fn helper(x:i64)->i64{return E.leaf(x);}}domain E:i64{private fn leaf(x:i64)->i64{return x;}}", "E_PRIVATE_FUNCTION");
+}

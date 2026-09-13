@@ -38,7 +38,6 @@ test "nominal catalog collect and VM execution clean up every allocation failure
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), allocations, .{});
 }
-
 test "nominal instances retain concrete checks within generic bodies" {
     try run(t.allocator, definitions ++ "fn identity<T:copy>(x:Box<T>)->Box<T>{return x;}fn main()->i64{return identity::<i64>(new Box<i64>{value:5}).value;}", 5);
     try reject(definitions ++ "fn bad<T:copy>()->i64{let box=new Box<i64>{value:true};return 0;}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
@@ -84,7 +83,6 @@ test "nominal concrete type names stop expansion before excessive diagnostic all
     defer t.allocator.free(text);
     try reject(text, "E_GENERIC_LIMIT");
 }
-
 fn hostEcho(call: *language.host_functions.Call) language.host_functions.CallbackError!typed.Value {
     return typed.Value.createVariant(call.allocator(), call.result_type, 0, call.arguments[0]);
 }
@@ -120,7 +118,6 @@ test "nominal exported type constructors are symbolic schema templates rather th
     try t.expect(!templates[0].object.get("contract").?.object.get("callable").?.bool);
     try t.expect(templates[0].object.get("contract").?.object.get("requires_explicit_instantiation").?.bool);
 }
-
 test "nominal instances carry domain payloads beside resource declarations" {
     const program = definitions ++
         "domain Id:i64{fn make(n:i64)->Id{return wrap<Id>(n);}fn number(n:Id)->i64{return unwrap(n);}}" ++
@@ -137,4 +134,7 @@ test "nominal instances carry domain payloads beside resource declarations" {
     };
     try t.expectEqual(@as(usize, 1), resources);
 }
-
+test "nominal instances keep growing phantom arguments outside runtime storage" {
+    try run(t.allocator, "struct Empty<T:copy>{}struct Grow<T:copy>{marker:Empty<Grow<[1]T>>}" ++
+        "fn main()->i64{_ = new Grow<i64>{marker:new Empty<Grow<[1]i64>>{}};return 1;}", 1);
+}

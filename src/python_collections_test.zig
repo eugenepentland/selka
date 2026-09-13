@@ -69,3 +69,25 @@ test "range end syntax agrees in constant and runtime evaluation" {
 test "field writeback preserves sibling changes made by its right hand side" {
     try run("struct Point{x:i64,y:i64}fn change(rows:List<Point>)->i64{rows[0].y=2;return 40;}fn main()->i64{let rows=[Point{x:0,y:0}];rows[0].x=change(rows);return rows[0].x+rows[0].y;}", 42);
 }
+
+// spec: PY-COLLECTIONS-6
+test "generic lists preserve literal foreach slice and write element types" {
+    try run("fn duplicate<T:copy+storable>(value:T)->List<T>{let values:List<T>=[value];values.append(value);let copy=values[:];for item in copy{_ = item;}return copy;}fn main()->i64{let xs=duplicate(21);return xs[0]+xs[1];}", 42);
+}
+
+// spec: PY-COLLECTIONS-8
+test "iteration detects alias growth including continue and final step" {
+    for ([_][]const u8{
+        "for x in items{_ = x;alias.append(2);}",
+        "for x in items{_ = x;alias.append(2);continue;}",
+    }) |loop| {
+        const source = try std.fmt.allocPrint(t.allocator, "fn main()->i64{{let items=[1];let alias=items;{s}return 0;}}", .{loop});
+        defer t.allocator.free(source);
+        var compilation = try language.Compilation.init(t.allocator, "mutation.my", source);
+        defer compilation.deinit();
+        const result = try compilation.executeWithOptions(t.allocator, .{ .memory = .{ .gc = .{ .stress = true } } });
+        try t.expect(result == .trap);
+        try t.expectEqualStrings("R_LIST_ITERATION_MUTATION", result.trap.code);
+    }
+    try run("fn main()->i64{let items=[1];for x in items{_ = x;items.append(42);break;}return items[-1];}", 42);
+}

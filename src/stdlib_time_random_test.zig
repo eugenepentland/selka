@@ -64,3 +64,21 @@ test "standard time random providers retain typed failures at every capability" 
     try t.expectError(error.OutOfMemory, run(t.allocator, provider_source, oom.options(), 0));
     try t.expectError(error.CapabilityUnavailable, run(t.allocator, provider_source, .{}, 0));
 }
+
+// spec: STANDARD-TIME-RANDOM-2
+test "standard time random providers retain failures and partial initialized output" {
+    var success: Provider = .{};
+    try run(t.allocator, provider_source, success.options(), 0);
+    try t.expectEqual(@as(usize, 4), success.calls);
+    var partial: Provider = .{ .fail_random = true };
+    try run(t.allocator, provider_source, partial.options(), 45);
+    var denied: Provider = .{ .failure = error.Denied };
+    try run(t.allocator, provider_source, denied.options(), 42);
+    var absent: Provider = .{ .failure = error.Unavailable };
+    try run(t.allocator, provider_source, absent.options(), 43);
+    var failed: Provider = .{ .failure = error.Failed };
+    try run(t.allocator, provider_source, failed.options(), 44);
+    var oom: Provider = .{ .failure = error.OutOfMemory };
+    try t.expectError(error.OutOfMemory, run(t.allocator, provider_source, oom.options(), 0));
+    try t.expectError(error.CapabilityUnavailable, run(t.allocator, provider_source, .{}, 0));
+}

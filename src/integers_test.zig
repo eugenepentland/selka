@@ -120,3 +120,46 @@ test "scalar loop retains exact step budget and located trap under VM audit prob
     const result = try compilation.executeWithOptions(testing.allocator, .{ .max_steps = 1310 });
     try testing.expectEqual(@as(i64, 4950), result.value);
 }
+
+// spec: CORE-4
+test "all integer widths accept their limits and reject one-past literals" {
+    const widths = [_]Type{ .i8, .i16, .i32, .i64, .u8, .u16, .u32, .u64 };
+    for (widths) |ty| {
+        const expression = try std.fmt.allocPrint(testing.allocator, "{d}{s} == {d}{s}", .{ ty.max(), @tagName(ty), ty.max(), @tagName(ty) });
+        defer testing.allocator.free(expression);
+        const text = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ if {s} {{ return 1; }} return 0; }}", .{expression});
+        defer testing.allocator.free(text);
+        var compilation = try language.Compilation.init(testing.allocator, "limits.my", text);
+        defer compilation.deinit();
+        try testing.expectEqual(@as(i64, 1), (try compilation.execute(testing.allocator)).value);
+        const minimum = try std.fmt.allocPrint(testing.allocator, "cast<i64>({d}{s})", .{ ty.min(), @tagName(ty) });
+        defer testing.allocator.free(minimum);
+        try evaluate(minimum, @intCast(ty.min()));
+        const bad = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ _ = {d}{s}; return 0; }}", .{ ty.max() + 1, @tagName(ty) });
+        defer testing.allocator.free(bad);
+        var invalid = try language.Compilation.init(testing.allocator, "range.my", bad);
+        defer invalid.deinit();
+        try testing.expectError(error.SourceError, invalid.check());
+        try testing.expectEqualStrings("E_INTEGER_RANGE", invalid.diagnostics.items[0].code);
+    }
+}
+
+test "no implicit width or boolean conversions and unknown suffixes are rejected" {
+    const cases = [_]struct { body: []const u8, code: []const u8 }{
+        .{ .body = "let source = 1; let n: i8 = source; return 0;", .code = "E_TYPE" },
+        .{ .body = "_ = 1u8 + 1u16; return 0;", .code = "E_TYPE" },
+        .{ .body = "_ = cast<u8>(true); return 0;", .code = "E_TYPE" },
+        .{ .body = "_ = cast<bool>(1); return 0;", .code = "E_TYPE" },
+        .{ .body = "_ = 1i7; return 0;", .code = "E_INTEGER_SUFFIX" },
+        .{ .body = "_ = 1bool; return 0;", .code = "E_INTEGER_SUFFIX" },
+        .{ .body = "_ = -(128i8 + 0i8); return 0;", .code = "E_INTEGER_RANGE" },
+    };
+    for (cases) |case| {
+        const source = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ {s} }}", .{case.body});
+        defer testing.allocator.free(source);
+        var compilation = try language.Compilation.init(testing.allocator, "invalid.my", source);
+        defer compilation.deinit();
+        try testing.expectError(error.SourceError, compilation.check());
+        try testing.expectEqualStrings(case.code, compilation.diagnostics.items[0].code);
+    }
+}

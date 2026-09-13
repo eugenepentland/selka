@@ -43,3 +43,17 @@ test "contextual managed source compilation and execution clean every failed all
     try allocationScenario(t.allocator);
     try t.checkAllAllocationFailures(t.allocator, allocationScenario, .{});
 }
+
+// spec: FAMILIAR-COLLECTIONS-2
+test "record constructors without new support generic records and trailing fields" {
+    try evaluate(
+        \\struct Box<T:copy> { value: T }
+        \\struct Empty {}
+        \\fn main() -> i64 {
+        \\    let box = Box<i64> { value: 42, }
+        \\    _ = Empty {}
+        \\    if box.value == 0 {}
+        \\    return box.value
+        \\}
+    , 42);
+}

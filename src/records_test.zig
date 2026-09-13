@@ -50,3 +50,24 @@ test "duplicate discovery retains nominal record and resolved field identities" 
     try testing.expectEqualStrings("a", compilation.program.?.functions[@backingInt(members[0])].name);
     try testing.expectEqualStrings("d", compilation.program.?.functions[@backingInt(members[1])].name);
 }
+
+test "complete conversion accounts named source fields and requires complete destination" {
+    try result("struct Source { x: i64, ignored: bool } struct Target { y: i64 } conversion fn " ++
+        "convert(src: Source) -> Target { _ = src.ignored; return new Target { y: src.x * " ++
+        "2 }; } fn main() -> i64 { return convert(new Source { x: 4, ignored: true }).y; }", 8);
+    try reject("struct Source { x: i64, added: bool } struct Target { y: i64 } conversion fn convert(src: Source) -> Target { return new Target { y: src.x }; } fn main() -> i64 { return 0; }", "E_INCOMPLETE_CONVERSION");
+    try reject("struct Source { x: i64 } struct Target { y: i64, added: bool } conversion fn convert(src: Source) -> Target { return new Target { y: src.x }; } fn main() -> i64 { return 0; }", "E_INCOMPLETE_CONSTRUCTION");
+    try result("struct Source { x: i64, added: bool } fn geometry(src: Source) -> i64 { return src.x; } fn main() -> i64 { return geometry(new Source { x: 5, added: true }); }", 5);
+    try reject("struct Source { x: i64 } struct Target { y: i64 } fn helper(src: Source) -> i64 { " ++
+        "return src.x; } conversion fn convert(src: Source) -> Target { return new Target { " ++
+        "y: helper(src) }; } fn main() -> i64 { return 0; }", "E_INCOMPLETE_CONVERSION");
+    try reject("struct Source { x: i64 } struct Target { y: i64 } conversion fn convert(src: Source) -> Target { let unused = src.x; return new Target { y: 0 }; } fn main() -> i64 { return 0; }", "E_CONVERSION_BODY");
+    try reject("struct Source { x: i64 } conversion fn convert(src: Source) -> Source { return src; } fn main() -> i64 { return 0; }", "E_CONVERSION_BODY");
+}
+
+test "record schemas conversion checking construction update projection and dump clean up on allocation failure" {
+    // Successful backing-heap resizes vary with address/heap state. Force the
+    // allocation fallback so fail_index identifies the same operation each run.
+    var no_resize = testing.FailingAllocator.init(testing.allocator, .{ .resize_fail_index = 0 });
+    try testing.checkAllAllocationFailures(no_resize.allocator(), allocationScenario, .{});
+}

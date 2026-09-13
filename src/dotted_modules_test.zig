@@ -68,3 +68,11 @@ test "dotted module parsing and name resolution release every failed allocation"
     var failures = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(failures.allocator(), scenario, .{ dotted, null });
 }
+
+// spec: MODULE-DOT-3
+test "dotted imports retain private symbol private domain and alias shadow checks" {
+    try scenario(t.allocator, header ++ "fn main()->i64{return api.hidden()}", "E_PRIVATE_SYMBOL");
+    try scenario(t.allocator, header ++ "fn main()->i64{_ = api.Distance.raw(42)\nreturn 42}", "E_PRIVATE_SYMBOL");
+    try scenario(t.allocator, header ++ "export Sample\nstruct Sample{input:api.Hidden}\nfn main()->i64{return 42}", "E_PRIVATE_SYMBOL");
+    try scenario(t.allocator, header ++ "fn main()->i64{let api=42\nreturn api}", "E_SHADOWING");
+}

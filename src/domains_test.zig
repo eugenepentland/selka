@@ -138,3 +138,44 @@ test "domain bytecode rejects unowned representation access and private calls" {
     } };
     try testing.expectError(error.InternalError, bc.validate(testing.allocator, program));
 }
+
+// spec: CORE-7
+test "nominal domains prevent mixing units and preserve validated factory values" {
+    try result(units ++ "fn main() -> i64 { return Millimeters.number(Millimeters.from(-8)) + Seconds.number(Seconds.from(3)); }", 3);
+    try reject(units ++ "fn move(distance: Millimeters) -> i64 { return Millimeters.number(distance); } fn main() -> i64 { return move(Seconds.from(3)); }", "E_TYPE");
+    try reject(units ++ "fn main() -> i64 { let distance: Millimeters = Seconds.from(3); return Millimeters.number(distance); }", "E_TYPE");
+    try reject(units ++ "fn main() -> i64 { return Millimeters.number(4); }", "E_TYPE");
+    try reject(units ++ "fn main() -> i64 { return Millimeters.from(4); }", "E_TYPE");
+    try reject(units ++ "fn main() -> i64 { _ = Millimeters.from(4) + Millimeters.from(2); return 0; }", "E_TYPE");
+    const conversion = "domain Seconds: u64 { fn from(n: u64) -> Seconds { return wrap<Seconds>(n); } fn " ++
+        "number(n: Seconds) -> u64 { return unwrap(n); } } domain Millimeters: u8 { fn " ++
+        "from(n: u8) -> Millimeters { return wrap<Millimeters>(n); } fn number(n: " ++
+        "Millimeters) -> u8 { return unwrap(n); } } fn distance(time: Seconds) -> Millimeters " ++
+        "{ return Millimeters.from(cast<u8>(Seconds.number(time) * 10u64)); } ";
+    try result(conversion ++ "fn main() -> i64 { return cast<i64>(Millimeters.number(distance(Seconds.from(7u64)))); }", 70);
+    var overflow = try language.Compilation.init(testing.allocator, "conversion.my", conversion ++ "fn main() -> i64 { _ = distance(Seconds.from(26u64)); return 0; }");
+    defer overflow.deinit();
+    try testing.expectEqualStrings("R_OVERFLOW", (try overflow.execute(testing.allocator)).trap.code);
+}
+
+test "domain creation loops and factory traps release bounded runtime storage" {
+    var compilation = try language.Compilation.init(testing.allocator, fixture_path, units ++ "fn main() -> i64 { let mut current = Millimeters.from(0); while " ++
+        "Millimeters.number(current) < 10000 { current = " ++
+        "Millimeters.from(Millimeters.number(current) + 1); } return " ++
+        "Millimeters.number(current); }");
+    defer compilation.deinit();
+    try compilation.emit();
+    var limiter = LimitedLiveAllocator{ .parent = testing.allocator, .limit = 4096 };
+    defer limiter.deinit();
+    try testing.expectEqual(@as(i64, 10000), (try compilation.execute(limiter.allocator())).value);
+    try testing.expectEqual(@as(usize, 0), limiter.live);
+    try testing.expectEqualStrings("R_STEP_LIMIT", (try compilation.executeWithOptions(limiter.allocator(), .{ .max_steps = 50 })).trap.code);
+    try testing.expectEqual(@as(usize, 0), limiter.live);
+    var trapped = try language.Compilation.init(testing.allocator, "trapped.my", "domain Byte: u8 { fn from(n: i64) -> Byte { return wrap<Byte>(cast<u8>(n)); } } fn main() -> i64 { _ = Byte.from(256); return 0; }");
+    defer trapped.deinit();
+    try trapped.emit();
+    const outcome = try trapped.execute(limiter.allocator());
+    try testing.expectEqualStrings("R_OVERFLOW", outcome.trap.code);
+    try testing.expectEqualStrings("Byte.from", outcome.trap.stack.frames[0].function);
+    try testing.expectEqual(@as(usize, 0), limiter.live);
+}

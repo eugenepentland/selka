@@ -48,3 +48,83 @@ test "result checking runtime ownership and rendering survive allocation failure
     var no_resize = testing.FailingAllocator.init(testing.allocator, .{ .resize_fail_index = 0 });
     try testing.checkAllAllocationFailures(no_resize.allocator(), allocationScenario, .{});
 }
+
+// spec: CORE-10
+test "binding transfer and explicit acknowledgement cannot silently _ = results" {
+    try result("result R { ok: i64, err: i64 } fn main() -> i64 { let first = new R.err(7); let second = first; _ = second; return 1; }", 1);
+    try reject("fn main() -> i64 { let ignored = new R.err(7); return 0; }", "E_RESULT_UNHANDLED");
+    try reject("fn main() -> i64 { { let ignored = new R.ok(7); } return 0; }", "E_RESULT_UNHANDLED");
+    try reject("fn main() -> i64 { _ = new R.err(7); return 0; }", "E_RESULT_DISCARD");
+    try reject("fn main() -> i64 { let r = new R.ok(7); let copied = r; _ = r; _ = copied; return 0; }", "E_RESULT_CONSUMED");
+    try reject("fn main() -> i64 { _ = 7; return 0; }", "E_ACKNOWLEDGE_TYPE");
+    try reject("fn swallow(r: R) -> i64 { return 0; } fn main() -> i64 { return swallow(new R.err(7)); }", "E_RESULT_UNHANDLED");
+    try reject("fn swallow(r: R) -> i64 { _ = r; return 0; } fn main() -> i64 { return 0; }", "E_RESULT_DISCARD");
+}
+
+test "result obligations must agree across all continuing branch and match paths" {
+    try result("result R { ok: i64, err: i64 } fn handle(flag: bool, r: R) -> i64 { if flag { _ = r; } else { _ = r; } return 7; } fn main() -> i64 { return handle(false, new R.err(3)); }", 7);
+    try result("result R { ok: i64, err: i64 } fn handle(flag: bool, r: R) -> i64 { if flag { _ = r; return 1; } _ = r; return 2; } fn main() -> i64 { return handle(false, new R.err(3)); }", 2);
+    try reject("fn f(flag: bool, r: R) -> i64 { if flag { _ = r; } return 0; } fn main() -> i64 { return 0; }", "E_RESULT_PATH");
+    try reject("fn f(flag: bool, r: R) -> i64 { if flag { return 0; } _ = r; return 1; } fn main() -> i64 { return 0; }", "E_RESULT_UNHANDLED");
+    try reject("enum E { a, b } fn f(e: E, r: R) -> i64 { match e { E.a => { _ = r; }, E.b => {} } return 0; } fn main() -> i64 { return 0; }", "E_RESULT_PATH");
+    try result("result R { ok: i64, err: i64 } enum E { a, b } fn f(e: E, r: R) -> i64 { match e { E.a => { _ = r; return 1; }, E.b => {} } _ = r; return 2; } fn main() -> i64 { return f(new E.b, new R.ok(3)); }", 2);
+}
+
+test "loops and short circuit evaluation cannot conditionally lose result obligations" {
+    try reject("fn main() -> i64 { let r = new R.err(1); while false { _ = r; } return 0; }", "E_RESULT_LOOP");
+    try reject("fn consume(r: R) -> bool { _ = r; return false; } fn main() -> i64 { let r = new R.err(1); while consume(r) {} return 0; }", "E_RESULT_LOOP");
+    try reject("fn consume(r: R) -> bool { _ = r; return true; } fn main() -> i64 { let r = new R.err(1); _ = false && consume(r); return 0; }", "E_RESULT_PATH");
+    try reject("fn consume(r: R) -> bool { _ = r; return true; } fn main() -> i64 { let r = new R.err(1); _ = true || consume(r); return 0; }", "E_RESULT_PATH");
+    try result("result R { ok: i64, err: i64 } fn consume(r: R) -> bool { _ = r; return true; } fn main() -> i64 { let r = new R.err(1); _ = consume(r) && false; _ = false && consume(new R.err(7)); return 1; }", 1);
+    try result("result R { ok: i64, err: i64 } fn main() -> i64 { let mut n = 0; let mut r = new R.ok(0); while n < 3 { _ = r; r = new R.err(n); n += 1; } _ = r; return n; }", 3);
+}
+
+test "mutable result slots require handling before replacement and permit explicit transfer" {
+    try reject("fn main() -> i64 { let mut r = new R.err(1); r = new R.ok(2); _ = r; return 0; }", "E_RESULT_OVERWRITE");
+    try result("result R { ok: i64, err: i64 } fn main() -> i64 { let mut r = new R.err(1); let old = r; r = new R.ok(2); _ = old; match r { R.ok(n) => { return n; }, R.err(ignored) => { return 0; } } }", 2);
+    try result("result R { ok: i64, err: i64 } fn main() -> i64 { let mut r = new R.err(1); r = r; _ = r; return 7; }", 7);
+}
+
+test "recoverable error returns and explicit acknowledgement preserve evaluation and borrow cleanup" {
+    try allocationScenario(testing.allocator);
+    var compilation = try language.Compilation.init(testing.allocator, "trap.my", "result R { ok: i64, err: i64 } fn main() -> i64 { _ = new R.ok(1 / 0); return 0; }");
+    defer compilation.deinit();
+    try testing.expectEqualStrings("R_DIVISION_BY_ZERO", (try compilation.execute(testing.allocator)).trap.code);
+}
+
+test "result loops and every trap boundary release bounded live runtime storage" {
+    var compilation = try language.Compilation.init(testing.allocator, fixture_path, owned_source);
+    defer compilation.deinit();
+    try compilation.emit();
+    var limiter = LimitedLiveAllocator{ .parent = testing.allocator, .limit = 16384 };
+    defer limiter.deinit();
+    var complete = false;
+    for (1..150) |budget| {
+        const outcome = try compilation.executeWithOptions(limiter.allocator(), .{ .max_steps = budget });
+        try testing.expectEqual(@as(usize, 0), limiter.live);
+        if (outcome == .value) {
+            complete = true;
+            break;
+        }
+        try testing.expectEqualStrings("R_STEP_LIMIT", outcome.trap.code);
+    }
+    try testing.expect(complete);
+    var loop = try language.Compilation.init(testing.allocator, "loop.my", "result R { ok: i64, err: i64 } fn main() -> i64 { let mut i = 0; while i < 10000 { let r = new R.err(i); _ = r; i += 1; } return i; }");
+    defer loop.deinit();
+    try loop.emit();
+    try testing.expectEqual(@as(i64, 10000), (try loop.execute(limiter.allocator())).value);
+    try testing.expectEqual(@as(usize, 0), limiter.live);
+}
+
+test "duplicate identity retains explicit acknowledgement and fallible result types" {
+    var compilation = try language.Compilation.init(testing.allocator, "duplicates.my", "result R { ok: i64, err: i64 } fn a(r: R) -> i64 { _ = r; return 1; } fn " ++
+        "b(other: R) -> i64 { _ = other; return 1; } fn c(r: R) -> i64 { match r { " ++
+        "R.ok(ignored) => {}, R.err(ignored) => {} } return 1; } fn main() -> i64 { return 0; " ++
+        "}");
+    defer compilation.deinit();
+    try compilation.check();
+    var discovery = try language.duplicates.discover(testing.allocator, compilation.program.?, .{ .min_nodes = 1 });
+    defer discovery.deinit();
+    try testing.expectEqual(@as(usize, 1), discovery.groups.len);
+    try testing.expectEqual(@as(usize, 2), discovery.groups[0].members.len);
+}

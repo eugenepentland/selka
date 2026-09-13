@@ -72,3 +72,11 @@ test "host bytecode validation rejects forged bodies signatures entry and effect
     code.main = original.id;
     try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, code));
 }
+
+test "host effects propagate through ordinary generic and uncalled helper paths" {
+    try reject(declaration ++ "fn main()->i64 effects(){return measure(1);}", "E_EFFECT_BOUND");
+    try reject(declaration ++ "fn helper()->i64{return measure(1);}fn f<T:copy>(x:T)->i64 effects(){_ = x;return helper();}" ++ main_source, "E_EFFECT_BOUND");
+    try reject("host fn read()->i64 effects(host,filesystem);fn main()->i64 effects(host){return read();}", "E_EFFECT_BOUND");
+    try reject(declaration ++ "fn main()->i64{return measure(true);}", "E_TYPE");
+    try reject("result R{ok:i64,err:i64}host fn f()->R effects(host);fn main()->i64{let value=f();return 0;}", "E_RESULT_UNHANDLED");
+}

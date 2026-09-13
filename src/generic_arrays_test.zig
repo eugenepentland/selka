@@ -111,3 +111,27 @@ test "generic arrays retain concrete identity reuse and formatter round trips" {
     defer t.allocator.free(stable);
     try t.expectEqualStrings(formatted, stable);
 }
+
+// spec: GENERIC-ARRAY-1
+test "generic array membership reuses code across nominal IDs without mixing domains" {
+    try value(t.allocator, membership, 1);
+    try reject(factories ++ helpers ++ "fn main()->i64{_ = contains::<Component>(pair::<Net>(Net.make(1u64),Net.make(2u64)),Component.make(1u64));return 0;}", "E_TYPE");
+}
+
+test "generic arrays nest substitute across calls and match concrete helper shapes" {
+    try value(t.allocator, helpers ++
+        "fn matrix<T:copy>(x:T)->[2][2]T{return pair::<[2]T>(pair::<T>(x,x),pair::<T>(x,x));}" ++
+        "fn concrete(a:[2]i64)->i64{return a[0]+a[1];}" ++
+        "fn caller<T:copy>(x:T)->i64{_ = matrix::<T>(x);return concrete(pair::<i64>(3,4));}" ++
+        "fn main()->i64{let a=matrix::<i64>(9);return a[1][0]+caller::<bool>(true);}", 16);
+    try value(t.allocator, "fn empty<T:copy>()->[0]T{return new [0]T[];}fn main()->i64{return cast<i64>(len(empty::<bool>()));}", 0);
+}
+
+test "expanding generic array recursion stops at the specialization budget" {
+    try reject("fn grow<T:copy>(x:T)->i64{return grow::<[1]T>(new [1]T[x]);}fn main()->i64{return grow::<i64>(1);}", "E_GENERIC_LIMIT");
+    var compilation = try language.Compilation.init(t.allocator, "shape-budget.my", "fn grow<T:copy>(x:T)->i64{_ = new [2]T[x,x];return grow::<[1]T>(new [1]T[x]);}fn main()->i64{return grow::<i64>(1);}");
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.check());
+    try t.expectEqualStrings("E_GENERIC_LIMIT", compilation.diagnostics.items[0].code);
+    try t.expectEqualStrings("generic array specialization exceeds 4096 distinct shapes", compilation.diagnostics.items[0].message);
+}

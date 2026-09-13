@@ -52,7 +52,6 @@ test "nominal bodies release shape catalogs and VM storage after every allocatio
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), allocations, .{});
 }
-
 const module_source = "module model;export Box;export pack;export extract;struct Box<T:copy>{value:T}" ++
     "fn pack<T:copy>(x:T)->Box<T>{return new Box<T>{value:x};}fn extract<T:copy>(box:Box<T>)->T{return box.value;}";
 const Modules = struct {
@@ -85,4 +84,9 @@ test "nominal bodies bound growing function specialization before executable out
     try t.expectError(error.SourceError, compilation.emit());
     try t.expectEqualStrings("E_GENERIC_LIMIT", compilation.diagnostics.items[0].code);
     try t.expect(compilation.program == null and compilation.code == null);
+}
+test "nominal bodies propagate results with named error remapping and obligations" {
+    try run(t.allocator, results, 12);
+    try reject(definitions ++ "fn drop<T:copy>(r:R<T>)->i64{return 0;}fn main()->i64{return 0;}", "E_RESULT_UNHANDLED");
+    try reject(definitions ++ "fn drop<T:copy>(r:R<T>)->i64{_ = r;return 0;}fn main()->i64{return 0;}", "E_RESULT_DISCARD");
 }

@@ -62,3 +62,44 @@ test "generic concrete variants construct and match with scoped payloads under a
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), variantScenario, .{});
 }
+
+test "generic concrete shapes reject mismatched nominal values and malformed constructors before instantiation" {
+    try reject("struct A{n:i64}struct B{n:i64}fn f<T:copy>(x:A)->B{return x;}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
+    try reject("struct A{n:i64}fn f<T:copy>(x:T)->A{_ = x;return new A{};}fn main()->i64{return 0;}", "E_MISSING_FIELD");
+    try reject("struct A{n:i64}fn f<T:copy>(x:T)->A{_ = x;return new A{n:1,n:2};}fn main()->i64{return 0;}", "E_DUPLICATE_FIELD");
+    try reject("struct A{n:i64}fn f<T:copy>(x:A)->i64{return x.other;}fn main()->i64{return 0;}", "E_UNKNOWN_FIELD");
+    try reject("fn f<T:copy>(x:T)->[2]i64{_ = x;return new [2]i64[1];}fn main()->i64{return 0;}", "E_ARRAY_LENGTH");
+    try reject("fn f<T:copy>(x:[2]i64)->i64{return x[true];}fn main()->i64{return 0;}", "E_GENERIC_OPERATION");
+    try reject("fn f<T:copy>(x:T)->i64{return x.n;}fn main()->i64{return 0;}", "E_GENERIC_BODY_UNSUPPORTED");
+}
+
+test "generic concrete variants reject incomplete duplicate and malformed uncalled matches" {
+    try reject("enum E{a,b}fn f<T:copy>(x:E)->i64{match x{E.a=>{return 1;}}}fn main()->i64{return 0;}", "E_INCOMPLETE_MATCH");
+    try reject("enum E{a}fn f<T:copy>(x:E)->i64{match x{E.a=>{return 1;},E.a=>{return 2;}}}fn main()->i64{return 0;}", "E_DUPLICATE_ARM");
+    try reject("union E{a:i64}fn f<T:copy>(x:E)->i64{match x{E.a=>{return 1;}}}fn main()->i64{return 0;}", "E_PATTERN_PAYLOAD");
+    try reject("enum E{a}fn f<T:copy>(x:E)->i64{match x{E.a(p)=>{return p;}}}fn main()->i64{return 0;}", "E_PATTERN_PAYLOAD");
+    try reject("union E{a:i64}fn f<T:copy>(x:T)->E{_ = x;return new E.a(true);}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
+    try reject("union E{a:i64}fn f<T:copy>(x:T)->E{_ = x;return new E.a;}fn main()->i64{return 0;}", "E_VARIANT_PAYLOAD");
+    try reject("enum E{a}enum F{a}fn f<T:copy>(x:E)->i64{match x{F.a=>{return 1;}}}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
+}
+
+test "generic match payload scopes and fallthrough preserve independent arm checking" {
+    var c = try language.Compilation.init(t.allocator, "arms.my", "union U{left:i64,right:i64}" ++
+        "fn f<T:copy>(x:T,u:U)->i64{_ = x;let mut out=0;match u{U.left(p)=>{out=p;},U.right(p)=>{out=p+1;}}return out;}" ++
+        "fn main()->i64{return f::<bool>(true,new U.left(7))+f::<bool>(false,new U.right(8));}");
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 16), (try c.execute(t.allocator)).value);
+    try reject("union U{a:i64}fn f<T:copy>(u:U)->i64{match u{U.a(p)=>{_ = p;}}return p;}fn main()->i64{return 0;}", "E_UNKNOWN_NAME");
+    try reject("enum U{a,b}fn f<T:copy>(u:U)->i64{match u{U.a=>{},U.b=>{return true;}}return 0;}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
+    try reject("enum U{a,b}fn f<T:copy>(u:U)->i64{match u{U.a=>{},U.b=>{return 1;}}}fn main()->i64{return 0;}", "E_MISSING_RETURN");
+}
+
+test "generic concrete enum tables require complete unique nominal keys" {
+    var c = try language.Compilation.init(t.allocator, "table.my", "enum K{a,b}" ++
+        "fn table<T:integer>(x:T)->[K]i64{return new [K]i64{a:cast<i64>(x),b:2};}" ++
+        "fn main()->i64{return table::<u8>(7u8)[new K.a];}");
+    defer c.deinit();
+    try t.expectEqual(@as(i64, 7), (try c.execute(t.allocator)).value);
+    try reject("enum K{a,b}fn f<T:copy>(x:T)->[K]i64{_ = x;return new [K]i64{a:1};}fn main()->i64{return 0;}", "E_INCOMPLETE_TABLE");
+    try reject("enum K{a}fn f<T:copy>(x:T)->[K]i64{_ = x;return new [K]i64{a:1,a:2};}fn main()->i64{return 0;}", "E_DUPLICATE_KEY");
+}

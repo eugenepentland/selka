@@ -150,3 +150,66 @@ test "Python string and float defaults remain typed and independent across repea
         \\    return length() + length() + length(scale=33.5)
     , 40);
 }
+
+// spec: PYTHON-CORE-1
+test "standard List Result and Option share their prelude identity" {
+    var project = language.project.Project.init(t.allocator);
+    defer project.deinit();
+    try project.load(.{ .context = null, .read = Modules.read }, "main", .{});
+    var index = try language.interfaces.build(&project);
+    var compilation = try language.project_compile.Compilation.init(&index);
+    try compilation.emit();
+    try t.expectEqual(@as(i64, 42), (try language.vm.run(t.allocator, compilation.code.?)).value);
+}
+
+// spec: PYTHON-CORE-3
+test "representable integer literals inherit parameter local and expression contexts" {
+    try run("fn widen(x:u8)->i64{return cast<i64>(x);}fn main()->i64{let n:u8=40;return widen(n+2);}", 42);
+    try run("fn main()->i64{let n:i8=-128;let wide:u64=18446744073709551615;_ = wide;return cast<i64>(n)+170;}", 42);
+    var compilation = try language.Compilation.init(t.allocator, "range.my", "fn main()->i64{let x:u8=256;_ = x;return 0;}");
+    defer compilation.deinit();
+    try t.expectError(error.SourceError, compilation.check());
+    try t.expectEqualStrings("E_INTEGER_RANGE", compilation.diagnostics.items[0].code);
+}
+
+// spec-case: PYTHON-CORE-4
+test "Python division remainder numeric conversions and generic numbers" {
+    try run(
+        \\def main() -> int:
+        \\    if 5 / 2 != 2.5:
+        \\        return 1
+        \\    if -5 // 2 != -3 or -5 % 2 != 1:
+        \\        return 2
+        \\    if 5 // -2 != -3 or 5 % -2 != -1:
+        \\        return 3
+        \\    if -5.0 // 2.0 != -3.0 or -5.0 % 2.0 != 1.0:
+        \\        return 4
+        \\    return int(float(-2) + 4.4e1)
+    , 42);
+    try run(
+        \\def adjust[T](unused: T, value: float) -> float:
+        \\    _ = unused
+        \\    return value + 1.5
+        \\def main() -> int:
+        \\    return int(adjust(0, 40.5))
+    , 42);
+}
+
+// spec-case: PYTHON-CORE-1
+test "Python contextual Option constructors work in generic functions" {
+    try run(
+        \\def present[T](value: T) -> Option[T]:
+        \\    return Some(value)
+        \\def absent[T](value: T) -> Option[T]:
+        \\    _ = value
+        \\    return None
+        \\def main() -> int:
+        \\    empty: Option[int] = absent(0)
+        \\    _ = empty
+        \\    match present(42):
+        \\        case Some(value):
+        \\            return value
+        \\        case None:
+        \\            return 1
+    , 42);
+}

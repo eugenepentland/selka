@@ -94,3 +94,10 @@ test "newline suffixes end an expression outside parentheses and continue inside
     const expression = syntax.statements.items[@backingInt(body[1])].data.discard;
     try t.expect(syntax.nodes.items[@backingInt(expression)].data == .integer);
 }
+
+// spec: FAMILIAR-STMT-7
+test "condition calls admit nested record constructors without consuming condition blocks" {
+    try evaluate("struct point{Value:i64}\nfn predicate(first:point,value:point)->bool{return first.Value==value.Value}\n" ++
+        "fn main()->i64{let flag=true\nlet item=point{Value:42}\n" ++
+        "if flag{if !false && predicate(item,point{Value:42}){return 42}}\nreturn 0}", 42);
+}

@@ -107,3 +107,53 @@ fn invokeInstruction(instructions: []language.bytecode.Instruction) !*language.b
     try t.expect(false);
     unreachable;
 }
+
+test "callbacks retain values through records arrays and ordinary generic forwarding" {
+    try run("type F=fn(i64)->i64 effects();struct Box<T:copy>{value:T}" ++
+        "fn inc(x:i64)->i64 effects(){return x+1;}fn get<T:copy>(b:Box<T>)->T{return b.value;}" ++
+        "fn repeat<T:copy>(f:F,x:i64,tag:T)->i64{_ = tag;return f(f(x));}" ++
+        "fn main()->i64{let b=new Box<F>{value:inc};let all=new [1]F [get::<F>(b)];let f=all[0];return repeat::<bool>(f,5,true);}", 7);
+    try run("fn inc(x:i64)->i64 effects(){return x+1;}fn choose()->fn(i64)->i64 effects() {return inc;}" ++
+        "fn main()->i64{let f=choose();return f(8);}", 9);
+}
+
+test "callbacks reject malformed invoke metadata and dynamically mismatched signatures" {
+    const source = "fn f(x:i64)->i64 effects(){return x;}fn g(x:bool)->i64 effects(){return 0;}" ++
+        "fn main()->i64{let unused=g;_ = unused;let cb=f;return cb(1);}";
+    var c = try language.Compilation.init(t.allocator, "malformed-invoke.my", source);
+    defer c.deinit();
+    try c.emit();
+    var program = c.code.?;
+    const functions = try t.allocator.dupe(language.bytecode.Function, program.functions);
+    defer t.allocator.free(functions);
+    const main_index = @backingInt(program.main);
+    const instructions = try t.allocator.dupe(language.bytecode.Instruction, functions[main_index].scope.instructions);
+    defer t.allocator.free(instructions);
+    functions[main_index].scope.instructions = instructions;
+    program.functions = functions;
+    const other_signature = (try functionInstruction(instructions)).op.function_value.ty;
+    for (instructions) |*instruction| {
+        if (instruction.op != .invoke) continue;
+        const saved = instruction.*;
+        instruction.op.invoke = .i64;
+        try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, program));
+        instruction.op.invoke = other_signature;
+        // Stack-height validation cannot prove a dynamically selected callback's type.
+        try language.bytecode.validate(t.allocator, program);
+        try t.expectError(error.InternalError, language.vm.run(t.allocator, program));
+        instruction.* = saved;
+        const outcome = try language.vm.run(t.allocator, program);
+        try t.expectEqual(@as(i64, 1), outcome.value);
+        return;
+    }
+    try t.expect(false);
+}
+
+const ContextFixture = struct {
+    fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
+        const source = @embedFile("stdlib/fixtures/callback_context.my");
+        if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
+        if (source.len > limit) return error.TooLarge;
+        return allocator.dupe(u8, source);
+    }
+};

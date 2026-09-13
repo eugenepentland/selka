@@ -54,3 +54,27 @@ test "public unit schemas describe a distinct type while unsupported copied ABIs
     try t.expectError(error.NotDataType, guest.compilation.invokePublic(t.allocator, "main::finish", &.{}, .{}));
     try t.expectEqual(@as(i64, 42), (try language.vm.run(t.allocator, guest.compilation.code.?)).value);
 }
+
+// spec: UNIT-1
+test "unit calls bare returns generic fallthrough and mutable loans preserve results with allocation failures" {
+    try scenario(t.allocator);
+    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
+    try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
+}
+
+// spec: UNIT-5
+test "unit result payloads still require handling and try only drops successful unit" {
+    const header = "result Done{ok:unit,err:i64}fn noop()->unit{}fn done()->Done{return new Done.ok(noop());}";
+    var valid = try language.Compilation.init(t.allocator, "result.my", header ++
+        "fn chained()->Done{done()?;return done();}" ++
+        "fn main()->i64{match chained(){Done.ok(ignored)=>{return 42;},Done.err(code)=>{return code;}}}");
+    defer valid.deinit();
+    try t.expectEqual(@as(i64, 42), (try valid.execute(t.allocator)).value);
+    for ([_][]const u8{ "done();", "_ = done();", "let pending=done();" }) |statement| {
+        const text = try std.fmt.allocPrint(t.allocator, "{s}fn main()->i64{{{s}return 0;}}", .{ header, statement });
+        defer t.allocator.free(text);
+        var invalid = try language.Compilation.init(t.allocator, "unhandled.my", text);
+        defer invalid.deinit();
+        try t.expectError(error.SourceError, invalid.check());
+    }
+}

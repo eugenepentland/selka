@@ -93,3 +93,34 @@ fn writeCallChain(output: *std.Io.Writer.Allocating) !void {
     for (0..2000) |i| try output.writer.print("fn f{d}() -> i64 {{ return f{d}(); }}\n", .{ i, i + 1 });
     try output.writer.writeAll("fn f2000() -> i64 { return 7; }\nfn main() -> i64 { return f0(); }\n");
 }
+
+test "structural metrics count branches loops short circuits nesting and physical source lines" {
+    const text =
+        \\fn work(x: i64, flag: bool) -> i64 {
+        \\    let mut n = x;
+        \\    if flag && n > 0 {
+        \\        while n > 0 { n -= 1; }
+        \\    }
+        \\    if flag { return n; }
+        \\    return x;
+        \\}
+        \\fn main() -> i64 { return work(2, true); }
+    ;
+    var c = try language.Compilation.init(t.allocator, "quality.my", text);
+    defer c.deinit();
+    try c.check();
+    var result = try quality.analyze(t.allocator, c.program.?, c.src, .{ .max_nesting = 1, .max_decisions = 3, .max_parameters = 1, .max_function_lines = 7 });
+    defer result.deinit();
+    const metrics = result.functions[try index(&c, "work")];
+    try t.expectEqual(@as(usize, 8), metrics.structure.lines);
+    try t.expectEqual(@as(usize, 2), metrics.structure.parameters);
+    try t.expectEqual(@as(usize, 2), metrics.structure.nesting);
+    try t.expectEqual(@as(usize, 4), metrics.structure.decisions);
+    try t.expectEqual(@as(usize, "fn work(x: i64, flag: bool) -> i64 {".len), metrics.structure.longest_line);
+    const first = try quality.render(t.allocator, result, c.program.?, c.src);
+    defer t.allocator.free(first);
+    const second = try quality.render(t.allocator, result, c.program.?, c.src);
+    defer t.allocator.free(second);
+    try t.expectEqualStrings(first, second);
+    for ([_][]const u8{ "function-lines 8 exceeds", "parameters 2 exceeds", "control-nesting 2 exceeds", "decision-points 4 exceeds" }) |part| try t.expect(std.mem.indexOf(u8, first, part) != null);
+}

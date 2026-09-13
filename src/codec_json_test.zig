@@ -197,3 +197,10 @@ test "codec execution rejects exhausted steps and forged wire contracts" {
     execution.max_steps = 1000000;
     try t.expectError(error.InvalidCodecContract, execution.encode(t.allocator, domain, value));
 }
+
+fn expectMemoryBound(result: anyerror!@import("value.zig").Value, stats: *const codec.Statistics, limit: usize) !void {
+    if (result) |value| {
+        value.release(t.allocator);
+        try t.expect(stats.peak_bytes <= limit);
+    } else |err| try t.expectEqual(error.CodecMemoryLimit, err);
+}

@@ -169,3 +169,33 @@ test "managed element validation visits shared aggregate DAGs once" {
     try heap.collect();
     try t.expectEqual(@as(usize, 1), try heap.len(list));
 }
+
+test "GC-BOUNDARY-1 nested foreign references cannot enter managed storage" {
+    var heap = gc.Heap.init(t.allocator);
+    defer heap.deinit();
+    const list = try heap.create(list_type, record_type, 0);
+    defer list.release(t.allocator);
+    var foreign = gc.Heap.init(t.allocator);
+    defer foreign.deinit();
+    const other = try foreign.create(list_type, list_type, 0);
+    defer other.release(t.allocator);
+    const foreign_wrapper = try values.Value.create(t.allocator, record_type, &.{other});
+    defer foreign_wrapper.release(t.allocator);
+    try t.expectError(error.ForeignMemory, heap.append(list, foreign_wrapper));
+    try t.expectEqual(@as(usize, 0), try heap.len(list));
+}
+
+// spec: GC-CAPABILITY-1
+test "managed heap rejects capability grants and nested authority" {
+    var heap = gc.Heap.init(t.allocator);
+    defer heap.deinit();
+    const authority: values.Value = .{ .capability = .{ .external = .{ .execution = 1, .kind = .clock } } };
+    const list = try heap.create(list_type, .clock_cap, 0);
+    defer list.release(t.allocator);
+    try t.expectError(error.InvalidDataValue, heap.append(list, authority));
+    const wrapper = try values.Value.create(t.allocator, record_type, &.{authority});
+    defer wrapper.release(t.allocator);
+    const wrapped = try heap.create(list_type, record_type, 0);
+    defer wrapped.release(t.allocator);
+    try t.expectError(error.InvalidDataValue, heap.append(wrapped, wrapper));
+}

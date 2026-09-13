@@ -44,7 +44,6 @@ test "raw byte registry preserves invalid text and rejects bounds with allocatio
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{program.compilation.code.?});
 }
-
 fn hostFailure(expected: anyerror, result: language.host_functions.Error!language.vm.Value) !void {
     const value = result catch |err| {
         if (err == error.OutOfMemory) return err;
@@ -57,7 +56,6 @@ fn hostFailure(expected: anyerror, result: language.host_functions.Error!languag
 test {
     _ = @import("runner.zig");
 }
-
 fn bulkProvider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
     const source = if (std.mem.eql(u8, path, "io.my"))
         "module io;export length;export byte;export put;export Block;export read_block;export write_block;" ++
@@ -144,7 +142,6 @@ test "runner limits accept explicit zero storage but reject duplicate overflow a
         try t.expectError(error.InvalidArguments, limits.parse(&.{ "io", "--project", ".", invalid }));
     try t.expectError(error.InvalidArguments, limits.parse(&.{ "io", "--project", ".", "--max-work=1", "--max-work=2" }));
 }
-
 // spec: RUNTIME-BYTES-2
 test "runner memory quotas parse zero limits and reject duplicate InvalidArguments" {
     const parse = @import("limits.zig").parse;
@@ -157,7 +154,6 @@ test "runner memory quotas parse zero limits and reject duplicate InvalidArgumen
     try t.expectError(error.InvalidArguments, parse(&.{ "mylang-io", "--project", ".", "--memory-report", "--memory-report" }));
     try t.expectError(error.InvalidArguments, parse(&.{ "mylang-io", "--project", ".", "--max-host-bytes=-1" }));
 }
-
 // spec: PHASE-TIMING-1
 test "structured timing opt-in accepts JSON and rejects duplicates and unknown formats" {
     const parse = @import("limits.zig").parse;

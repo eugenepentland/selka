@@ -86,3 +86,38 @@ test "module-local Ok and Err functions shadow contextual constructors in generi
     try compilation.emit();
     try t.expectEqual(@as(i64, 42), (try language.vm.run(t.allocator, compilation.code.?)).value);
 }
+
+// spec: BUILTIN-CONTEXT-1
+test "builtin List and Result resolve without imports or explicit declarations" {
+    try run("fn answer()->Result<i64,i64>{return new Result<i64,i64>.ok(42);}" ++
+        "fn main()->i64{let values:List<i64>=[];values.push(42);" ++
+        "match answer(){Result<i64,i64>.ok(n)=>{return n;},Result<i64,i64>.err(e)=>{return e;}}}");
+}
+
+// spec: BUILTIN-CONTEXT-2
+test "empty lists and Ok Err inherit binding return and argument contexts" {
+    try run("fn empty()->List<i64>{return [];}" ++
+        "fn answer()->Result<i64,i64>{return Ok(42);}" ++
+        "fn recover(value:Result<i64,i64>)->i64{match value{Result<i64,i64>.ok(n)=>{return n;},Result<i64,i64>.err(e)=>{return e;}}}" ++
+        "fn main()->i64{let values:List<i64>=[];values.push(42);" ++
+        "let result:Result<i64,i64>=Err(values[0u64]);_ = result;return recover(Ok(42));}");
+}
+
+// spec: BUILTIN-CONTEXT-3
+test "record fields and nested list elements propagate empty list context" {
+    try run("struct Holder{values:List<i64>}fn choose(value:Holder,other:List<i64>)->i64{let xs=value.values;xs.push(42);return xs[0u64];}" ++
+        "fn main()->i64{let nested:List<List<i64>>=[];nested.push([]);return choose(Holder{values:[]},[]);}");
+}
+
+// spec: BUILTIN-CONTEXT-4
+test "Ok unit values preserve fallible result handling" {
+    try run("fn done()->Result<unit,i64>{return Ok(());}" ++
+        "fn main()->i64{match done(){Result<unit,i64>.ok(ignored)=>{return 42;},Result<unit,i64>.err(e)=>{return e;}}}");
+}
+
+// spec: BUILTIN-CONTEXT-7
+test "declared List and Result types retain their own nominal identity" {
+    try run("result Result{ok:i64,err:i64}" ++
+        "fn answer()->Result{return Ok(42);}fn main()->i64{let values:List=[];values.push(42);" ++
+        "match answer(){Result.ok(n)=>{return n;},Result.err(e)=>{return e;}}}");
+}
