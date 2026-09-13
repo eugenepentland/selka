@@ -40,7 +40,7 @@ pub fn lower(comptime Token: type, allocator: std.mem.Allocator, bytes: []const 
             } else {
                 while (indent < levels[level]) {
                     level -= 1;
-                    try out.append(allocator, .{ .tag = .rbrace, .span = .{ .start = token.span.start, .end = token.span.start } });
+                    try out.append(allocator, .{ .tag = .dedent, .span = .{ .start = token.span.start, .end = token.span.start } });
                 }
                 if (indent != levels[level]) return sink.fail(eIndentation, token.span, "unexpected indentation or dedent does not match an enclosing block");
             }
@@ -48,7 +48,7 @@ pub fn lower(comptime Token: type, allocator: std.mem.Allocator, bytes: []const 
         previous_line = line;
         const next_line = index + 1 < input.len and (input[index + 1].tag == .eof or lineStart(bytes, input[index + 1].span.start) != line);
         if (token.tag == .colon and delimiters == 0 and next_line) {
-            token.tag = .lbrace;
+            token.tag = .indent;
             pending = true;
         } else switch (token.tag) {
             .lparen, .lbracket, .lbrace => delimiters += 1,

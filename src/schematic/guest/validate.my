@@ -91,7 +91,9 @@ def source(nodes: list[s.Node]) -> int:
                 return fail(16, s.at(nodes, i).span)
             f = i + 4
             while f < s.at(nodes, i).next:
-                if s.at(nodes, f).kind == s.Kind.string or implementsForm(nodes, f) {} elif design_blockForm(nodes, f):
+                if s.at(nodes, f).kind == s.Kind.string or implementsForm(nodes, f):
+                    pass
+                elif design_blockForm(nodes, f):
                     blocks += 1
                     if blocks != 1 or s.at(nodes, f + 2).kind != s.Kind.string:
                         return fail(16, s.at(nodes, f).span)

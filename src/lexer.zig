@@ -99,6 +99,8 @@ pub const Tag = enum {
     rbracket,
     lbrace,
     rbrace,
+    indent,
+    dedent,
     arrow,
     fat_arrow,
     semicolon,
@@ -143,10 +145,10 @@ pub fn declarationEnd(bytes: []const u8, tokens: []const Token, start: usize, br
         }
         at += 1;
         switch (tag) {
-            .lbrace, .lparen, .lbracket => depth += 1,
-            .rbrace, .rparen, .rbracket => {
+            .indent, .lbrace, .lparen, .lbracket => depth += 1,
+            .dedent, .rbrace, .rparen, .rbracket => {
                 depth -|= 1;
-                if (tag == .rbrace and depth == 0 and (braced orelse true)) return at;
+                if (tag == .dedent and depth == 0 and (braced orelse true)) return at;
             },
             .semicolon => if (depth == 0 and !(braced orelse false)) return at,
             else => {},
@@ -274,7 +276,9 @@ pub fn spelling(comptime tag: Tag) []const u8 {
         .lbracket => "[",
         .rbracket => "]",
         .lbrace => "{",
-        .rbrace => "a dedent",
+        .rbrace => "}",
+        .indent => "an indented block",
+        .dedent => "a dedent",
         .arrow => "->",
         .fat_arrow => "=>",
         .semicolon => "a newline",
@@ -410,7 +414,7 @@ fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, sink: *
 pub fn implicitTerminator(bytes: []const u8, tokens: []const Token, position: usize) bool {
     if (position == 0) return false;
     const current = tokens[position];
-    if (current.tag == .rbrace or current.tag == .eof) return true;
+    if (current.tag == .dedent or current.tag == .eof) return true;
     return std.mem.indexOfScalar(u8, bytes[tokens[position - 1].span.end..current.span.start], '\n') != null;
 }
 fn declarationHead(bytes: []const u8, token: Token) bool {

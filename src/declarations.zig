@@ -242,7 +242,7 @@ const Scan = struct {
         const at = lex.declarationEnd(self.src.bytes, self.tokens, self.pos, braced);
         if (at == self.pos) return error.InternalError;
         const last = self.tokens[at - 1];
-        if (braced and last.tag != .rbrace) return error.InternalError;
+        if (braced and last.tag != .dedent) return error.InternalError;
         if (!braced and last.tag != .semicolon) {
             if (!lex.implicitTerminator(self.src.bytes, self.tokens, at)) return error.InternalError;
         }

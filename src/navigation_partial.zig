@@ -21,8 +21,8 @@ pub fn render(allocator: std.mem.Allocator, loaded: *const project.Project, iden
         };
         var depth: usize = 0;
         for (tokens, 0..) |token, i| {
-            if (token.tag == .lbrace) depth += 1;
-            if (token.tag == .rbrace and depth > 0) depth -= 1;
+            if (token.tag == .indent) depth += 1;
+            if (token.tag == .dedent and depth > 0) depth -= 1;
             if (depth != 0 or i + 1 >= tokens.len or tokens[i + 1].tag != .ident) continue;
             const kind: []const u8 = switch (token.tag) {
                 .kw_def => "function",

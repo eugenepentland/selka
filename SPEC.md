@@ -459,7 +459,7 @@ manifest records implementation coverage, not a test certificate.
 
 ## Surface syntax
 
-- [PYTHON-1] Sources use `def`/`class` heads, colon and space-indented blocks, `#` comments, implicit continuation inside delimiters, and source-preserving virtual block delimiters. Missing blocks, inconsistent dedents, and indentation tabs are diagnosed. Indentation is the only block syntax, so `fmt` returns the text a program already has.
+- [PYTHON-1] Sources use `def`/`class` heads, colon and space-indented blocks, `#` comments, implicit continuation inside delimiters, and source-preserving virtual block delimiters. A suite opens at the `:` that ends its line and closes at its dedent; `{` and `}` are only a dictionary literal, so a brace-bodied declaration is rejected. Missing blocks, inconsistent dedents, and indentation tabs are diagnosed. Indentation is the only block syntax, so `fmt` returns the text a program already has.
 - [PYTHON-2] Functions support ordinary mutable assignment, annotated bindings, `True`/`False`/`None`, `and`/`or`/`not`, `pass`, `elif`, omitted unit return annotations, `int` as i64, and square type parameters whose omitted requirement defaults to copy. A `;` separates two statements written on one line, as it does in Python.
 - [PYTHON-3] Value records use `class` with annotated fields and named construction; square-bracket type applications and `match`/`case` preserve contextual variant names and underscore payload discards for semantic resolution. Every explicit type argument uses square brackets, including `todo[T]()`, `wrap[D](v)`, `codec_encode[D](v)` and the capability and resource operations.
 

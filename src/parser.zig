@@ -164,10 +164,10 @@ pub const Parser = struct {
     }
     fn parseCodec(self: *Parser) diagnostic.Error!ast.Codec {
         const wire = try self.typeName();
-        _ = try self.expect(.lbrace);
+        _ = try self.expect(.indent);
         var decode: ?Span = null;
         var encode: ?Span = null;
-        while (self.current().tag != .rbrace) {
+        while (self.current().tag != .dedent) {
             const key = (try self.expect(.ident)).span;
             const name = self.src.text(key);
             const target = if (std.mem.eql(u8, name, "decode")) &decode else if (std.mem.eql(u8, name, "encode")) &encode else return self.sink.fail("E_CODEC_KEY", key, "codec entries must be decode or encode");
@@ -176,7 +176,7 @@ pub const Parser = struct {
             target.* = (try self.expect(.ident)).span;
             if (!self.take(.comma)) break;
         }
-        const end = (try self.expect(.rbrace)).span;
+        const end = (try self.expect(.dedent)).span;
         return .{
             .wire = wire,
             .decode = decode orelse return self.sink.fail("E_INCOMPLETE_CODEC", end, "codec requires decode and encode entries"),
@@ -238,15 +238,15 @@ pub const Parser = struct {
                 self.cursor.pos += 1;
                 const name = try self.expect(.ident);
                 const type_parameters = try self.typeParameters();
-                _ = try self.expect(.lbrace);
+                _ = try self.expect(.indent);
                 var cases: std.ArrayList(ast.Variant) = .empty;
-                if (self.current().tag != .rbrace) while (true) {
+                if (self.current().tag != .dedent) while (true) {
                     const tag = try self.expect(.ident);
                     const payload = if (is_union and self.take(.colon)) try self.typeName() else null;
                     try cases.append(self.arena.allocator(), .{ .name = tag.span, .payload = payload });
                     if (!self.take(.comma)) break;
                 };
-                _ = try self.expect(.rbrace);
+                _ = try self.expect(.dedent);
                 try variants.append(self.arena.allocator(), .{ .type_parameters = type_parameters, .name = name.span, .fallible = fallible, .is_union = is_union, .cases = try cases.toOwnedSlice(self.arena.allocator()) });
                 continue;
             }
@@ -254,35 +254,34 @@ pub const Parser = struct {
                 const name = try self.expect(.ident);
                 _ = try self.expect(.colon);
                 const backing = try self.typeName();
-                _ = try self.expect(.lbrace);
+                _ = try self.expect(.indent);
                 var codec: ?ast.Codec = null;
-                while (self.current().tag != .rbrace) {
+                while (self.current().tag != .dedent) {
                     if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "codec")) {
                         if (codec != null) return self.sink.fail("E_DUPLICATE_CODEC", self.current().span, "a domain declares at most one codec");
                         self.cursor.pos += 1;
                         codec = try self.parseCodec();
                     } else try functions.append(self.arena.allocator(), try self.function(name.span));
                 }
-                _ = try self.expect(.rbrace);
+                _ = try self.expect(.dedent);
                 try domains.append(self.arena.allocator(), .{ .name = name.span, .backing = backing, .codec = codec });
                 continue;
             }
             if (self.take(.kw_class)) {
-                const python_record = std.mem.eql(u8, self.src.text(self.tokens[self.cursor.pos - 1].span), "class");
                 const name = try self.expect(.ident);
                 const type_parameters = try self.typeParameters();
-                _ = try self.expect(.lbrace);
+                _ = try self.expect(.indent);
                 var fields: std.ArrayList(ast.Parameter) = .empty;
-                const empty_record = python_record and self.take(.kw_pass);
+                const empty_record = self.take(.kw_pass);
                 if (empty_record) _ = try self.expect(.semicolon);
-                if (!empty_record and self.current().tag != .rbrace) while (true) {
+                if (!empty_record and self.current().tag != .dedent) while (true) {
                     const field = try self.declaredName();
                     _ = try self.expect(.colon);
                     try fields.append(self.arena.allocator(), .{ .name = field, .ty = try self.typeName() });
-                    const next_field = python_record and self.current().tag != .rbrace and lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos);
+                    const next_field = self.current().tag != .dedent and lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos);
                     if (!self.take(.comma) and !next_field) break;
                 };
-                _ = try self.expect(.rbrace);
+                _ = try self.expect(.dedent);
                 try records.append(self.arena.allocator(), .{ .type_parameters = type_parameters, .name = name.span, .fields = try fields.toOwnedSlice(self.arena.allocator()) });
                 continue;
             }
@@ -483,13 +482,13 @@ pub const Parser = struct {
     fn block(self: *Parser) diagnostic.Error!ast.StatementId {
         try self.enter();
         defer self.cursor.depth -= 1;
-        const open = try self.expect(.lbrace);
+        const open = try self.expect(.indent);
         var statements: std.ArrayList(ast.StatementId) = .empty;
-        while (self.current().tag != .rbrace) {
-            if (self.current().tag == .eof) return self.sink.fail(syntax_code, self.current().span, "expected closing brace");
+        while (self.current().tag != .dedent) {
+            if (self.current().tag == .eof) return self.sink.fail(syntax_code, self.current().span, "block is not closed before the end of the file");
             try statements.append(self.arena.allocator(), try self.statement());
         }
-        const close = try self.expect(.rbrace);
+        const close = try self.expect(.dedent);
         return self.addStatement(.{ .span = .join(open.span, close.span), .data = .{ .block = try statements.toOwnedSlice(self.arena.allocator()) } });
     }
     /// One `with` form covers both resource kinds: `with arena()` opens a managed
@@ -519,16 +518,16 @@ pub const Parser = struct {
         if (self.take(.kw_with)) return self.withStatement(first.span);
         if (self.take(.kw_match)) {
             const value = try self.conditionExpression();
-            _ = try self.expect(.lbrace);
+            _ = try self.expect(.indent);
             var arms: std.ArrayList(ast.MatchArm) = .empty;
-            if (self.current().tag != .rbrace) while (true) {
+            if (self.current().tag != .dedent) while (true) {
                 _ = try self.expect(.kw_case);
                 const pattern = try self.matchPattern();
                 const body = try self.block();
                 try arms.append(self.arena.allocator(), .{ .ty = pattern.ty, .name = pattern.name, .binding = pattern.binding, .discard_payload = pattern.discard_payload, .body = body });
                 if (self.current().tag != .kw_case) break;
             };
-            const close = try self.expect(.rbrace);
+            const close = try self.expect(.dedent);
             return self.addStatement(.{ .span = .join(first.span, close.span), .data = .{ .match = .{ .value = value, .arms = try arms.toOwnedSlice(self.arena.allocator()) } } });
         }
         if (self.take(.kw_if) or self.take(.kw_elif)) {
@@ -660,18 +659,6 @@ pub const Parser = struct {
         try self.syntax.nodes.append(self.arena.allocator(), node);
         return id;
     }
-    fn fieldInitializers(self: *Parser) diagnostic.Error![]const ast.FieldInit {
-        _ = try self.expect(.lbrace);
-        var fields: std.ArrayList(ast.FieldInit) = .empty;
-        if (self.current().tag != .rbrace) while (true) {
-            const name = try self.declaredName();
-            _ = try self.expect(.colon);
-            try fields.append(self.arena.allocator(), .{ .name = name, .value = try self.expression(0) });
-            if (!self.take(.comma) or self.current().tag == .rbrace) break;
-        };
-        _ = try self.expect(.rbrace);
-        return fields.toOwnedSlice(self.arena.allocator());
-    }
     fn expression(self: *Parser, min_precedence: u8) diagnostic.Error!ast.NodeId {
         try self.enter();
         defer self.cursor.depth -= 1;
@@ -757,7 +744,7 @@ pub const Parser = struct {
             else => return self.sink.fail("E_EXPRESSION", token.span, "expected an expression"),
         };
         while (true) {
-            if (self.cursor.delimiters == 0 and self.current().tag != .rbrace and self.current().tag != .eof) {
+            if (self.cursor.delimiters == 0 and self.current().tag != .dedent and self.current().tag != .eof) {
                 if (lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos)) break;
             }
             if (self.take(.question)) {
@@ -1010,31 +997,6 @@ pub const Parser = struct {
         return self.append(.{ .span = .join(token.span, close.span), .data = .{ .cast = .{ .ty = token.span, .value = value } } });
     }
 
-    fn parseRecord(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
-        self.cursor.pos += 1;
-        const name = try self.typeName();
-        if (self.take(.dot)) {
-            const tag = try self.expect(.ident);
-            var value: ?ast.NodeId = null;
-            if (self.take(.lparen)) {
-                value = try self.expression(0);
-                _ = try self.expect(.rparen);
-            }
-            return self.append(.{ .span = .join(token.span, self.tokens[self.cursor.pos - 1].span), .data = .{ .variant = .{ .ty = name, .name = tag.span, .value = value } } });
-        }
-        if (self.take(.lbracket)) {
-            var values: std.ArrayList(ast.NodeId) = .empty;
-            if (self.current().tag != .rbracket) while (true) {
-                try values.append(self.arena.allocator(), try self.expression(0));
-                if (!self.take(.comma)) break;
-            };
-            const close = try self.expect(.rbracket);
-            return self.append(.{ .span = .join(token.span, close.span), .data = .{ .array = .{ .ty = name, .values = try values.toOwnedSlice(self.arena.allocator()) } } });
-        }
-        const fields = try self.fieldInitializers();
-        return self.append(.{ .span = .join(token.span, self.tokens[self.cursor.pos - 1].span), .data = .{ .record = .{ .name = name, .fields = fields } } });
-    }
-
     fn parseFloatUnary(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.pos += 1;
         _ = try self.expect(.lparen);
@@ -1139,44 +1101,8 @@ pub const Parser = struct {
         }
         return pattern;
     }
-    fn parseMatchExpression(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
-        self.cursor.pos += 1;
-        const value = try self.conditionExpression();
-        _ = try self.expect(.lbrace);
-        var arms: std.ArrayList(ast.MatchValueArm) = .empty;
-        if (self.current().tag != .rbrace) while (true) {
-            const pattern = try self.matchPattern();
-            _ = try self.expect(.fat_arrow);
-            const arm = try self.expression(0);
-            try arms.append(self.arena.allocator(), .{ .ty = pattern.ty, .name = pattern.name, .binding = pattern.binding, .discard_payload = pattern.discard_payload, .value = arm });
-            if (!self.take(.comma)) break;
-            if (self.current().tag == .rbrace) break;
-        };
-        const close = (try self.expect(.rbrace)).span;
-        return self.append(.{ .span = .join(token.span, close), .data = .{ .match_expression = .{ .value = value, .arms = try arms.toOwnedSlice(self.arena.allocator()) } } });
-    }
     fn sameExpressionLine(self: *Parser) bool {
         return self.cursor.delimiters != 0 or self.cursor.pos == 0 or std.mem.indexOfScalar(u8, self.src.bytes[self.tokens[self.cursor.pos - 1].span.end..self.current().span.start], '\n') == null;
-    }
-    fn recordLiteralAhead(self: *Parser) bool {
-        if (!self.cursor.record_literals and self.cursor.delimiters <= self.cursor.record_boundary) return false;
-        var position = self.cursor.pos;
-        var angles: usize = 0;
-        while (position < self.tokens.len) : (position += 1) {
-            if (position > self.cursor.pos and angles == 0 and self.cursor.delimiters == 0 and std.mem.indexOfScalar(u8, self.src.bytes[self.tokens[position - 1].span.end..self.tokens[position].span.start], '\n') != null) return false;
-            switch (self.tokens[position].tag) {
-                .ident, .colon, .dot, .kw_i64, .kw_i8, .kw_i16, .kw_i32, .kw_u8, .kw_u16, .kw_u32, .kw_u64, .kw_bool => {},
-                .comma => if (angles == 0) return false,
-                .lt => angles += 1,
-                .gt => {
-                    if (angles == 0) return false;
-                    angles -= 1;
-                },
-                .lbrace => return angles == 0,
-                else => return false,
-            }
-        }
-        return false;
     }
     /// Recognize `Ident[...](…)`, a square-bracket type application applied to arguments.
     /// A dot after the closing bracket makes the head an ordinary index and member access
