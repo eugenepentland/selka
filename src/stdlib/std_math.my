@@ -3,8 +3,6 @@ module std_math;
 export F64;
 export min;
 export max;
-export min_or;
-export max_or;
 export Decoded;
 export Unsigned;
 export Signed;
@@ -150,29 +148,4 @@ fn max < T: integer >(a: T, b: T) -> T noalloc {
         return a;
     }
     return b;
-}
-// The fallback is returned only for an empty slice, never folded into values.
-fn min_or < T: integer >(values: &[]T, fallback: T) -> T noalloc {
-    if len_slice(values) == 0u64 {
-        return fallback;
-    }
-    let mut best = read_slice(values, 0u64);
-    let mut index = 1u64;
-    while index < len_slice(values) {
-        best = min::< T >(best, read_slice(values, index));
-        index += 1u64;
-    }
-    return best;
-}
-fn max_or < T: integer >(values: &[]T, fallback: T) -> T noalloc {
-    if len_slice(values) == 0u64 {
-        return fallback;
-    }
-    let mut best = read_slice(values, 0u64);
-    let mut index = 1u64;
-    while index < len_slice(values) {
-        best = max::< T >(best, read_slice(values, index));
-        index += 1u64;
-    }
-    return best;
 }

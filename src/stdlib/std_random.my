@@ -6,7 +6,6 @@ export Error;
 export Sample;
 export Seeded;
 export Bounded;
-export Filled;
 export Rejected;
 export FillError;
 export seed;
@@ -15,7 +14,6 @@ export bounded;
 export entropy;
 export seed_from_entropy;
 export entropy_bounded;
-export fill;
 struct Generator {
     state: u64
 }
@@ -117,7 +115,7 @@ fn entropy(cap: random_cap) -> Sample effects(random) {
     }
 }
 fn seed_from_entropy(cap: random_cap) -> Seeded effects(random) {
-    return new Seeded.ok(seed(try entropy(cap)));
+    return new Seeded.ok(seed(entropy(cap)?));
 }
 fn entropy_bounded(cap: random_cap, upper: u64, max_draws: u64) -> Sample effects(random) {
     if upper == 0u64 {
@@ -126,35 +124,11 @@ fn entropy_bounded(cap: random_cap, upper: u64, max_draws: u64) -> Sample effect
     let threshold = wrapping_sub(0u64, upper) % upper;
     let mut count = 0u64;
     while count < max_draws {
-        let word = try entropy(cap);
+        let word = entropy(cap)?;
         if word >= threshold {
             return new Sample.ok(word % upper);
         }
         count += 1u64;
     }
     return new Sample.err(new Error.exhausted);
-}
-fn fill(cap: random_cap, bytes: &mut []u8) -> Filled effects(random) {
-    let mut written = 0u64;
-    while written < len_slice(bytes) {
-        match entropy(cap) {
-            Sample.err(e) => {
-                return new Filled.err(new FillError {
-                    written: written,
-                    error: e
-                });
-            },
-            Sample.ok(word) => {
-                let mut remaining = word;
-                let mut count = 0u64;
-                while count < 8u64 && written < len_slice(bytes) {
-                    write_slice(bytes, written, cast<u8>(bit_and(remaining, 255u64)));
-                    remaining = shift_right(remaining, 8u64);
-                    written += 1u64;
-                    count += 1u64;
-                }
-            }
-        }
-    }
-    return new Filled.ok(written);
 }
