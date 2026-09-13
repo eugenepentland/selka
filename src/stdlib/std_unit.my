@@ -1,8 +1,0 @@
-// The standard value for successful operations with no useful payload.
-module std_unit;
-export Unit;
-export unit;
-struct Unit {}
-fn unit() -> Unit noalloc {
-    return new Unit {};
-}

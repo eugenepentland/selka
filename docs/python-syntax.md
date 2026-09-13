@@ -212,9 +212,8 @@ def main() -> int:
 `value = checked(42)?` propagates an error when the enclosing function returns a
 compatible `Result`. `Option[T]` represents an optional value: construct it with
 `Some(value)` or contextual `None`, then match `case Some(value)` / `case None`.
-Prelude `list`, `List`, `Result`, and `Option` share their corresponding standard
-library identities. The legacy `std_unit.Unit` empty record remains a separate
-compatibility type; ordinary procedures use `None`.
+Prelude `list`, `List`, `Result`, and `Option` have one identity across every
+module and both spellings; ordinary procedures use `None`.
 
 Generic functions and classes use square brackets, for example
 `def identity[T](value: T) -> T:`. Calls infer type arguments when possible, and
@@ -225,6 +224,11 @@ abstract type require the existing explicit generic contracts.
 Wrap a phase of work in `with arena() as scratch:` to free everything it allocates
 in one step and copy the result out with `scratch.escape(value)`; see
 [managed arenas](arenas.md).
+
+Ten modules ship inside the compiler and are imported by name: `math`, `strings`,
+`sort`, `path`, `hex`, `base64`, `json`, `pool`, `random` and `time`. They are
+ordinary Python-style source over the same managed types; see the
+[standard library](standard-library.md).
 
 Projects retain explicit `module`, `import`, and `export` declarations. Dotted
 names call imported functions and name imported types. Host capabilities and

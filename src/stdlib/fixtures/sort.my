@@ -1,0 +1,115 @@
+module main
+import sort
+
+
+class Entry:
+    name: str
+    score: int
+
+
+def by_score(entry: Entry) -> int effects():
+    return entry.score
+
+
+def orders() -> int:
+    ordered = sort.sort_ints([5, 3, 9, 1, 3])
+    if len(ordered) != 5 or ordered[0] != 1 or ordered[2] != 3 or ordered[4] != 9:
+        return 1
+    if not sort.is_sorted_ints(ordered) or sort.is_sorted_ints([2, 1]):
+        return 2
+    source = [3, 1]
+    _ = sort.sort_ints(source)
+    if source[0] != 3:
+        return 3
+    empty: list[int] = []
+    if len(sort.sort_ints(empty)) != 0:
+        return 4
+    texts = sort.sort_strs(["pear", "apple", "Apple", "apricot", "é"])
+    if texts[0] != "Apple" or texts[1] != "apple" or texts[3] != "pear" or texts[4] != "é":
+        return 5
+    floats = sort.sort_floats([2.5, 0.0 - 1.0, 10.0])
+    if floats[0] != 0.0 - 1.0 or floats[2] != 10.0:
+        return 6
+    return 0
+
+
+def keys() -> int:
+    entries = [Entry(name="c", score=3), Entry(name="a", score=1), Entry(name="b", score=1)]
+    ranked = sort.sort_by_key(entries, by_score)
+    if ranked[0].name != "a" or ranked[1].name != "b" or ranked[2].name != "c":
+        return 10
+    if entries[0].name != "c":
+        return 11
+    return 0
+
+
+def searches() -> int:
+    ordered = sort.sort_ints([5, 3, 9, 1])
+    match sort.binary_search(ordered, 9):
+        case Some(position):
+            if position != 3:
+                return 20
+        case None:
+            return 21
+    match sort.binary_search(ordered, 4):
+        case Some(_):
+            return 22
+        case None:
+            _ = 0
+    empty: list[int] = []
+    match sort.binary_search(empty, 1):
+        case Some(_):
+            return 23
+        case None:
+            _ = 0
+    return 0
+
+
+def extrema() -> int:
+    match sort.min_int([4, 0 - 2, 7]):
+        case Some(value):
+            if value != 0 - 2:
+                return 30
+        case None:
+            return 31
+    match sort.max_int([4, 0 - 2, 7]):
+        case Some(value):
+            if value != 7:
+                return 32
+        case None:
+            return 33
+    empty: list[int] = []
+    match sort.max_int(empty):
+        case Some(_):
+            return 34
+        case None:
+            _ = 0
+    match sort.min_str(["pear", "Apple"]):
+        case Some(value):
+            if value != "Apple":
+                return 35
+        case None:
+            return 36
+    return 0
+
+
+def comparisons() -> int:
+    if sort.compare_strs("a", "b") != 0 - 1 or sort.compare_strs("b", "a") != 1:
+        return 40
+    if sort.compare_strs("ab", "abc") != 0 - 1 or sort.compare_strs("x", "x") != 0:
+        return 41
+    if sort.compare_strs("", "a") != 0 - 1 or sort.compare_strs("é", "z") != 1:
+        return 42
+    if len(sort.unique_ints([1, 2, 1, 3])) != 3 or sort.unique_ints([1, 2, 1])[1] != 2:
+        return 43
+    if len(sort.unique_strs(["a", "b", "a"])) != 2:
+        return 44
+    return 0
+
+
+def main() -> int:
+    checks = [orders(), keys(), searches(), extrema(), comparisons()]
+    for value in checks:
+        if value != 0:
+            return value
+    return 42

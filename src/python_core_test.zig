@@ -15,15 +15,28 @@ fn run(text: []const u8, expected: i64) !void {
 }
 const Modules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
+        if (std.mem.eql(u8, path, "values.my")) return allocator.dupe(u8,
+            \\module values
+            \\export answer
+            \\export maybe
+            \\export items
+            \\def answer() -> Result[int, int]:
+            \\    return Ok(42)
+            \\def maybe() -> Option[int]:
+            \\    return Some(1)
+            \\def items() -> list[int]:
+            \\    return [1, 2]
+        );
         if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
-        return allocator.dupe(u8, "module main;import std_result;" ++
-            "fn answer()->Result<i64,i64>{return new std_result.Result<i64,i64>.ok(42);}" ++
-            "fn main()->i64{let option:Option<i64>=new std_result.Option<i64>.some(1);_ = option;" ++
-            "match answer(){Result<i64,i64>.ok(n)=>{return n;},Result<i64,i64>.err(e)=>{return e;}}}");
+        return allocator.dupe(u8, "module main;import values;" ++
+            "fn main()->i64{let option:Option<i64>=values::maybe();" ++
+            "match option{Option<i64>.some(n)=>{if n!=1{return 1;}},Option<i64>.none=>{return 2;}}" ++
+            "let numbers:List<i64>=values::items();if len(numbers)!=2{return 3;}" ++
+            "match values::answer(){Result<i64,i64>.ok(n)=>{return n;},Result<i64,i64>.err(e)=>{return e;}}}");
     }
 };
 // spec: PYTHON-CORE-1
-test "standard Result and Option share their prelude identity" {
+test "prelude List Result and Option keep one identity across modules and spellings" {
     var project = language.project.Project.init(t.allocator);
     defer project.deinit();
     try project.load(.{ .context = null, .read = Modules.read }, "main", .{});

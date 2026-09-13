@@ -9,7 +9,7 @@ From the repository root:
 ```sh
 python3 scripts/reference.py --compiler zig-out/bin/mylang --output /tmp/mylang-reference
 cat /tmp/mylang-reference/reference.md
-rg 'std_math::|std_iter::' /tmp/mylang-reference/api.md
+rg 'math::|sort::' /tmp/mylang-reference/api.md
 python3 scripts/reference.py --compiler zig-out/bin/mylang --output /tmp/mylang-reference --check
 ```
 
@@ -24,8 +24,9 @@ path, API path, and compiler SHA256. Full reports stay on disk:
   compiler identity, source hashes, schema hash, and template provenance.
 - `manifest.json`: artifact hashes and the input selection for freshness checks.
 
-The default selection imports `std_math`, `std_iter`, `std_result`, `std_unit`,
-`std_time`, and `std_random` into a temporary checked project.
+The default selection imports every embedded standard module -- `base64`, `hex`,
+`json`, `math`, `path`, `pool`, `random`, `sort`, `strings` and `time` -- into a
+temporary checked project.
 These modules are embedded in the executable; checkout stdlib source files are
 never used to infer their APIs. Imported dependencies appear too. This is a small
 onboarding selection, not an exhaustive inventory of language builtins or all
@@ -34,7 +35,7 @@ standard modules. The full feature report identifies additional reported feature
 Choose another set with repeated `--module` arguments:
 
 ```sh
-python3 scripts/reference.py --compiler zig-out/bin/mylang --module std_time --module std_random --output /tmp/clock-reference
+python3 scripts/reference.py --compiler zig-out/bin/mylang --module time --module random --output /tmp/clock-reference
 ```
 
 Use `--entry` instead to document a project's reachable public API:

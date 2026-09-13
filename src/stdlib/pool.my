@@ -1,0 +1,125 @@
+module pool
+export Pool
+export Handle
+export create
+export insert
+export get
+export set
+export remove
+export occupied
+export count
+export capacity
+export handles
+
+
+# A slot store with generational handles. The fields are managed lists, so a
+# copy of a Pool value refers to the same store rather than a snapshot.
+class Pool[T: copy + storable]:
+    slots: list[T]
+    generations: list[int]
+    live: list[bool]
+    free: list[int]
+    counters: list[int]
+
+
+# A copyable reference to one slot. A handle whose slot was reused or removed
+# no longer matches, so every lookup through it reports absence.
+class Handle[T: copy + storable]:
+    index: int
+    generation: int
+
+
+# Generations wrap far past any reachable insert count, so they never overflow.
+def next_generation(current: int) -> int:
+    return (current + 1) % 4611686018427387904
+
+
+# A pool holding the given values, in order, with one live handle each.
+def create[T: copy + storable](values: list[T]) -> Pool[T]:
+    slots: list[T] = []
+    generations: list[int] = []
+    live: list[bool] = []
+    free: list[int] = []
+    counters: list[int] = []
+    counters.append(0)
+    counters.append(0)
+    store = Pool[T](slots=slots, generations=generations, live=live, free=free, counters=counters)
+    for value in values:
+        _ = insert(store, value)
+    return store
+
+
+# Whether a handle still names a live slot of this pool.
+def occupied[T: copy + storable](store: Pool[T], handle: Handle[T]) -> bool:
+    if handle.index < 0 or handle.index >= len(store.slots):
+        return False
+    if not store.live[handle.index]:
+        return False
+    return store.generations[handle.index] == handle.generation
+
+
+# Add a value and return the handle that names it.
+def insert[T: copy + storable](store: Pool[T], value: T) -> Handle[T]:
+    store.counters[1] = store.counters[1] + 1
+    top = store.counters[0]
+    if top > 0:
+        slot = store.free[top - 1]
+        store.counters[0] = top - 1
+        store.slots[slot] = value
+        store.live[slot] = True
+        return Handle[T](index=slot, generation=store.generations[slot])
+    store.slots.append(value)
+    store.generations.append(0)
+    store.live.append(True)
+    return Handle[T](index=len(store.slots) - 1, generation=0)
+
+
+# The value a handle names, or nothing for a stale or foreign handle.
+def get[T: copy + storable](store: Pool[T], handle: Handle[T]) -> Option[T]:
+    if not occupied(store, handle):
+        return None
+    return Some(store.slots[handle.index])
+
+
+# Replace the value a handle names, reporting whether the handle was live.
+def set[T: copy + storable](store: Pool[T], handle: Handle[T], value: T) -> bool:
+    if not occupied(store, handle):
+        return False
+    store.slots[handle.index] = value
+    return True
+
+
+# Release the slot a handle names, reporting whether the handle was live.
+def remove[T: copy + storable](store: Pool[T], handle: Handle[T]) -> bool:
+    if not occupied(store, handle):
+        return False
+    slot = handle.index
+    store.live[slot] = False
+    store.generations[slot] = next_generation(store.generations[slot])
+    store.counters[1] = store.counters[1] - 1
+    top = store.counters[0]
+    if top < len(store.free):
+        store.free[top] = slot
+    else:
+        store.free.append(slot)
+    store.counters[0] = top + 1
+    return True
+
+
+# How many slots are live.
+def count[T: copy + storable](store: Pool[T]) -> int:
+    return store.counters[1]
+
+
+# How many slots have ever been allocated, including released ones.
+def capacity[T: copy + storable](store: Pool[T]) -> int:
+    return len(store.slots)
+
+
+# Every live handle, in slot order.
+def handles[T: copy + storable](store: Pool[T]) -> list[Handle[T]]:
+    out: list[Handle[T]] = []
+    for index, alive in enumerate(store.live):
+        if alive:
+            out.append(Handle[T](index=index, generation=store.generations[index]))
+    return out

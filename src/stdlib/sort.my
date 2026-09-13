@@ -1,0 +1,236 @@
+module sort
+export compare_strs
+export sort_ints
+export sort_floats
+export sort_strs
+export sort_by_key
+export is_sorted_ints
+export binary_search
+export min_int
+export max_int
+export min_str
+export unique_ints
+export unique_strs
+
+
+# Byte view of text; the empty literal also registers the module's bytes type.
+def octets(text: str) -> bytes:
+    if len(text) == 0:
+        return b""
+    return text.encode()
+
+
+# Three-way comparison of two texts in Unicode code point order.
+def compare_strs(a: str, b: str) -> int:
+    if a == b:
+        return 0
+    left = octets(a)
+    right = octets(b)
+    index = 0
+    while index < len(left) and index < len(right):
+        if left[index] != right[index]:
+            if left[index] < right[index]:
+                return 0 - 1
+            return 1
+        index += 1
+    if len(left) < len(right):
+        return 0 - 1
+    return 1
+
+
+# Merge two ordered integer runs, keeping equal values in their original order.
+def merge_ints(left: list[int], right: list[int]) -> list[int]:
+    out: list[int] = []
+    a = 0
+    b = 0
+    while a < len(left) and b < len(right):
+        if right[b] < left[a]:
+            out.append(right[b])
+            b += 1
+        else:
+            out.append(left[a])
+            a += 1
+    while a < len(left):
+        out.append(left[a])
+        a += 1
+    while b < len(right):
+        out.append(right[b])
+        b += 1
+    return out
+
+
+# A new ascending list of integers; the input list is not modified.
+def sort_ints(values: list[int]) -> list[int]:
+    if len(values) <= 1:
+        return values[:]
+    middle = len(values) // 2
+    return merge_ints(sort_ints(values[0:middle]), sort_ints(values[middle:len(values)]))
+
+
+# Merge two ordered float runs; not-a-number sorts after every ordered value.
+def merge_floats(left: list[float], right: list[float]) -> list[float]:
+    out: list[float] = []
+    a = 0
+    b = 0
+    while a < len(left) and b < len(right):
+        if right[b] < left[a]:
+            out.append(right[b])
+            b += 1
+        else:
+            out.append(left[a])
+            a += 1
+    while a < len(left):
+        out.append(left[a])
+        a += 1
+    while b < len(right):
+        out.append(right[b])
+        b += 1
+    return out
+
+
+# A new ascending list of floats; the input list is not modified.
+def sort_floats(values: list[float]) -> list[float]:
+    if len(values) <= 1:
+        return values[:]
+    middle = len(values) // 2
+    return merge_floats(sort_floats(values[0:middle]), sort_floats(values[middle:len(values)]))
+
+
+# Merge two ordered text runs, keeping equal values in their original order.
+def merge_strs(left: list[str], right: list[str]) -> list[str]:
+    out: list[str] = []
+    a = 0
+    b = 0
+    while a < len(left) and b < len(right):
+        if compare_strs(right[b], left[a]) < 0:
+            out.append(right[b])
+            b += 1
+        else:
+            out.append(left[a])
+            a += 1
+    while a < len(left):
+        out.append(left[a])
+        a += 1
+    while b < len(right):
+        out.append(right[b])
+        b += 1
+    return out
+
+
+# A new list of texts in Unicode code point order; the input is not modified.
+def sort_strs(values: list[str]) -> list[str]:
+    if len(values) <= 1:
+        return values[:]
+    middle = len(values) // 2
+    return merge_strs(sort_strs(values[0:middle]), sort_strs(values[middle:len(values)]))
+
+
+# Merge two runs ordered by an integer key, preserving equal-key order.
+def merge_by_key[T: copy + storable](left: list[T], right: list[T], key: fn(T) -> int effects()) -> list[T]:
+    out: list[T] = []
+    a = 0
+    b = 0
+    while a < len(left) and b < len(right):
+        if key(right[b]) < key(left[a]):
+            out.append(right[b])
+            b += 1
+        else:
+            out.append(left[a])
+            a += 1
+    while a < len(left):
+        out.append(left[a])
+        a += 1
+    while b < len(right):
+        out.append(right[b])
+        b += 1
+    return out
+
+
+# A new list ordered by an integer key function; the ordering is stable.
+def sort_by_key[T: copy + storable](values: list[T], key: fn(T) -> int effects()) -> list[T]:
+    if len(values) <= 1:
+        return values[:]
+    middle = len(values) // 2
+    left = sort_by_key(values[0:middle], key)
+    right = sort_by_key(values[middle:len(values)], key)
+    return merge_by_key(left, right, key)
+
+
+# Whether a list of integers is already in ascending order.
+def is_sorted_ints(values: list[int]) -> bool:
+    index = 1
+    while index < len(values):
+        if values[index] < values[index - 1]:
+            return False
+        index += 1
+    return True
+
+
+# Position of a target in an ascending list of integers, if it is present.
+def binary_search(values: list[int], target: int) -> Option[int]:
+    low = 0
+    high = len(values) - 1
+    while low <= high:
+        middle = low + (high - low) // 2
+        if values[middle] == target:
+            return Some(middle)
+        if values[middle] < target:
+            low = middle + 1
+        else:
+            high = middle - 1
+    return None
+
+
+# Smallest value of a list of integers, if the list has one.
+def min_int(values: list[int]) -> Option[int]:
+    if len(values) == 0:
+        return None
+    best = values[0]
+    for value in values:
+        if value < best:
+            best = value
+    return Some(best)
+
+
+# Largest value of a list of integers, if the list has one.
+def max_int(values: list[int]) -> Option[int]:
+    if len(values) == 0:
+        return None
+    best = values[0]
+    for value in values:
+        if value > best:
+            best = value
+    return Some(best)
+
+
+# Smallest text of a list in code point order, if the list has one.
+def min_str(values: list[str]) -> Option[str]:
+    if len(values) == 0:
+        return None
+    best = values[0]
+    for value in values:
+        if compare_strs(value, best) < 0:
+            best = value
+    return Some(best)
+
+
+# Integers with later duplicates removed, keeping first-occurrence order.
+def unique_ints(values: list[int]) -> list[int]:
+    seen: dict[int, bool] = {}
+    out: list[int] = []
+    for value in values:
+        if value not in seen:
+            seen[value] = True
+            out.append(value)
+    return out
+
+
+# Texts with later duplicates removed, keeping first-occurrence order.
+def unique_strs(values: list[str]) -> list[str]:
+    seen: dict[str, bool] = {}
+    out: list[str] = []
+    for value in values:
+        if value not in seen:
+            seen[value] = True
+            out.append(value)
+    return out

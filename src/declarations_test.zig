@@ -5,7 +5,7 @@ const language = @import("compiler.zig");
 
 const kinds_module =
     \\module kinds;
-    \\import std_math;
+    \\import math;
     \\import shared.units as units;
     \\// leading comment
     \\// second line
@@ -64,9 +64,9 @@ fn scenario(allocator: std.mem.Allocator) !void {
     try t.expectEqual(@as(usize, 0), wire.header.?.start);
     try t.expectEqualStrings("module kinds;", kinds_module[wire.header.?.start..wire.header.?.end]);
     try t.expectEqual(@as(usize, 2), wire.imports.len);
-    try t.expectEqualStrings("std_math", wire.imports[0].name);
+    try t.expectEqualStrings("math", wire.imports[0].name);
     try t.expect(wire.imports[0].alias == null);
-    try t.expectEqualStrings("import std_math;", kinds_module[wire.imports[0].bytes.start..wire.imports[0].bytes.end]);
+    try t.expectEqualStrings("import math;", kinds_module[wire.imports[0].bytes.start..wire.imports[0].bytes.end]);
     try t.expectEqualStrings("shared.units", wire.imports[1].name);
     try t.expectEqualStrings("units", wire.imports[1].alias.?);
     try t.expectEqual(@as(usize, 2), wire.exports.len);

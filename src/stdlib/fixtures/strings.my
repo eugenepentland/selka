@@ -1,0 +1,173 @@
+module main
+import strings
+
+
+def expect_int(text: str, wanted: int) -> bool:
+    match strings.to_int(text):
+        case Some(value):
+            return value == wanted
+        case None:
+            return False
+
+
+def rejects_int(text: str) -> bool:
+    match strings.to_int(text):
+        case Some(_):
+            return False
+        case None:
+            return True
+
+
+def expect_float(text: str, wanted: float) -> bool:
+    match strings.to_float(text):
+        case Some(value):
+            return value == wanted
+        case None:
+            return False
+
+
+def expect_text(produced: Result[str, str], wanted: str) -> bool:
+    match produced:
+        case Ok(text):
+            return text == wanted
+        case Err(_):
+            return False
+
+
+def rejects_text(produced: Result[str, str]) -> bool:
+    match produced:
+        case Ok(_):
+            return False
+        case Err(_):
+            return True
+
+
+def classes() -> int:
+    if not strings.is_digit("0123") or strings.is_digit("") or strings.is_digit("1a"):
+        return 1
+    if not strings.is_alpha("abcZ") or strings.is_alpha("a1"):
+        return 2
+    if not strings.is_alnum("a1") or strings.is_alnum("a-1"):
+        return 3
+    if not strings.is_space(" \t\n\r") or strings.is_space("a") or strings.is_space(""):
+        return 4
+    return 0
+
+
+def searches() -> int:
+    if not strings.starts_with("hello", "hell") or strings.starts_with("h", "hello"):
+        return 10
+    if not strings.starts_with("hello", "") or not strings.ends_with("hello", ""):
+        return 11
+    if not strings.ends_with("hello", "llo") or strings.ends_with("hello", "hell"):
+        return 12
+    match strings.find("hello world", "wor"):
+        case Some(position):
+            if position != 6:
+                return 13
+        case None:
+            return 14
+    match strings.find("hello", "z"):
+        case Some(_):
+            return 15
+        case None:
+            _ = 0
+    if strings.count("aaaa", "aa") != 2 or strings.count("aaaa", "") != 0:
+        return 16
+    return 0
+
+
+def trims() -> int:
+    if strings.strip("  hi \t") != "hi" or strings.strip("   ") != "":
+        return 20
+    if strings.lstrip(" hi ") != "hi " or strings.rstrip(" hi ") != " hi":
+        return 21
+    if len(strings.lines("a\r\nb\n")) != 3 or strings.lines("a\r\nb\n")[0] != "a":
+        return 22
+    if len(strings.lines("")) != 0:
+        return 23
+    if strings.upper("abcZ1") != "ABCZ1" or strings.lower("ABCz1") != "abcz1":
+        return 24
+    if strings.upper("é") != "é":
+        return 25
+    return 0
+
+
+def numbers() -> int:
+    if not expect_int("42", 42) or not expect_int("-42", 0 - 42) or not expect_int("+7", 7):
+        return 30
+    if not expect_int("-9223372036854775808", 0 - 9223372036854775807 - 1):
+        return 31
+    if not expect_int("9223372036854775807", 9223372036854775807):
+        return 32
+    if not rejects_int("9223372036854775808") or not rejects_int("-9223372036854775809"):
+        return 33
+    if not rejects_int("") or not rejects_int("4 2") or not rejects_int("-") or not rejects_int("1a"):
+        return 34
+    if not expect_float("-1.5e2", 0.0 - 150.0) or not expect_float("0.5", 0.5):
+        return 35
+    if not expect_float("2", 2.0) or not expect_float(".5", 0.5):
+        return 36
+    match strings.to_float("1e"):
+        case Some(_):
+            return 37
+        case None:
+            _ = 0
+    match strings.to_float("."):
+        case Some(_):
+            return 38
+        case None:
+            _ = 0
+    if not expect_float("0e400", 0.0) or not expect_float("0.0e-400", 0.0):
+        return 39
+    return 0
+
+
+def renders() -> int:
+    if not expect_text(strings.format_int(0 - 9223372036854775807 - 1, 10), "-9223372036854775808"):
+        return 40
+    if not expect_text(strings.format_int(255, 16), "ff") or not expect_text(strings.format_int(0, 2), "0"):
+        return 41
+    if not expect_text(strings.format_int(35, 36), "z"):
+        return 42
+    if not rejects_text(strings.format_int(1, 1)) or not rejects_text(strings.format_int(1, 37)):
+        return 43
+    if not expect_text(strings.format_float(0.0 - 3.14159, 3), "-3.142"):
+        return 44
+    if not expect_text(strings.format_float(0.5, 0), "1") or not expect_text(strings.format_float(0.0, 2), "0.00"):
+        return 45
+    if not expect_text(strings.format_float(0.0 - 0.4, 0), "0"):
+        return 46
+    if not expect_text(strings.format_float(1.0 / 0.0, 2), "inf"):
+        return 47
+    if not rejects_text(strings.format_float(1.0e30, 2)):
+        return 48
+    return 0
+
+
+def builders() -> int:
+    if not expect_text(strings.pad_left("7", 3, "0"), "007"):
+        return 50
+    if not expect_text(strings.pad_right("7", 3, "."), "7.."):
+        return 51
+    if not expect_text(strings.pad_left("long", 2, " "), "long"):
+        return 52
+    if not rejects_text(strings.pad_left("7", 3, "ab")):
+        return 53
+    if not expect_text(strings.repeat("ab", 3), "ababab") or not expect_text(strings.repeat("ab", 0), ""):
+        return 54
+    if not rejects_text(strings.repeat("ab", 0 - 1)):
+        return 55
+    if not expect_text(strings.substitute("a,b,c", ",", "-"), "a-b-c"):
+        return 56
+    if not rejects_text(strings.substitute("abc", "", "-")):
+        return 57
+    return 0
+
+
+def main() -> int:
+    checks = [classes(), searches(), trims(), numbers(), renders(), builders()]
+    for value in checks:
+        if value != 0:
+            return value
+    return 42

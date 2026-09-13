@@ -3,27 +3,13 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const external = @import("external_capabilities.zig");
-const Fixture = struct {
-    text: []const u8,
-    fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
-        const self: *Fixture = @ptrCast(@alignCast(context.?));
-        if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
-        if (self.text.len > limit) return error.TooLarge;
-        return allocator.dupe(u8, self.text);
-    }
-};
-fn run(allocator: std.mem.Allocator, text: []const u8, options: language.vm.Options, expected: i64) !void {
-    var fixture: Fixture = .{ .text = text };
-    var program: language.embedded_project.Program = undefined;
-    try program.init(allocator, .{ .context = &fixture, .read = Fixture.read });
-    defer program.deinit();
-    const outcome = try language.vm.runWithOptions(allocator, program.compilation.code.?, options);
-    try t.expectEqual(expected, outcome.value);
-}
+const fixture = @import("stdlib_fixture.zig");
+
 // spec: STANDARD-TIME-RANDOM-1
 test "standard time random boundary arithmetic and pinned deterministic vectors" {
-    try run(t.allocator, @embedFile("stdlib/fixtures/time_random.my"), .{}, 0);
+    try fixture.run(t.allocator, @embedFile("stdlib/fixtures/time_random.my"), 0);
 }
+
 const Provider = struct {
     calls: usize = 0,
     failure: ?external.CallError = null,
@@ -50,28 +36,35 @@ const provider_source = @embedFile("stdlib/fixtures/time_random_provider.my");
 // spec: STANDARD-TIME-RANDOM-2
 test "standard time random providers retain typed failures at every capability" {
     var success: Provider = .{};
-    try run(t.allocator, provider_source, success.options(), 0);
+    try fixture.expect(t.allocator, provider_source, success.options(), 0);
     try t.expectEqual(@as(usize, 2), success.calls);
     var partial: Provider = .{ .fail_random = true };
-    try run(t.allocator, provider_source, partial.options(), 9);
+    try fixture.expect(t.allocator, provider_source, partial.options(), 9);
     var denied: Provider = .{ .failure = error.Denied };
-    try run(t.allocator, provider_source, denied.options(), 42);
+    try fixture.expect(t.allocator, provider_source, denied.options(), 42);
     var absent: Provider = .{ .failure = error.Unavailable };
-    try run(t.allocator, provider_source, absent.options(), 43);
+    try fixture.expect(t.allocator, provider_source, absent.options(), 43);
     var failed: Provider = .{ .failure = error.Failed };
-    try run(t.allocator, provider_source, failed.options(), 44);
+    try fixture.expect(t.allocator, provider_source, failed.options(), 44);
     var oom: Provider = .{ .failure = error.OutOfMemory };
-    try t.expectError(error.OutOfMemory, run(t.allocator, provider_source, oom.options(), 0));
-    try t.expectError(error.CapabilityUnavailable, run(t.allocator, provider_source, .{}, 0));
+    try t.expectError(error.OutOfMemory, fixture.expect(t.allocator, provider_source, oom.options(), 0));
+    try t.expectError(error.CapabilityUnavailable, fixture.expect(t.allocator, provider_source, .{}, 0));
 }
 
 // spec: STANDARD-TIME-RANDOM-3
-test "standard time random calls preserve effect ceilings and bounded provider work" {
-    try t.expectError(error.SourceError, run(t.allocator, "module main;import std_time;fn main(c:clock_cap)->i64 effects(){_ = std_time::now(c);return 0;}", .{}, 0));
+test "standard time random calls preserve effect ceilings and reproducible draws" {
+    try fixture.reject(t.allocator, "module main\nimport time\ndef main(c: clock_cap) -> int effects():\n    _ = time.now(c)\n    return 0\n");
+    try fixture.reject(t.allocator, "module main\nimport random\ndef main(c: random_cap) -> int noalloc:\n    _ = random.from_entropy(c)\n    return 0\n");
     var provider: Provider = .{};
-    try run(t.allocator, "module main;import std_random as r;fn main(cap:random_cap)->i64{" ++
-        "match r::entropy_bounded(cap,9223372036854775809u64,3u64){" ++
-        "r::Sample.ok(_)=>{return 1;},r::Sample.err(e)=>{if e!=new r::Error.exhausted{return 2;}}}" ++
-        "return 0;}", provider.options(), 0);
-    try t.expectEqual(@as(usize, 3), provider.calls);
+    try fixture.expect(t.allocator, "module main\nimport random\n" ++
+        "def main(entropy: random_cap) -> int:\n" ++
+        "    match random.from_entropy(entropy):\n" ++
+        "        case Ok(generator):\n" ++
+        "            replay = random.from_word(generator.state[0])\n" ++
+        "            if random.next_word(generator) != random.next_word(replay):\n" ++
+        "                return 1\n" ++
+        "            return 42\n" ++
+        "        case Err(_):\n" ++
+        "            return 2\n", provider.options(), 42);
+    try t.expectEqual(@as(usize, 1), provider.calls);
 }
