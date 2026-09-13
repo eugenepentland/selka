@@ -9,7 +9,7 @@ pub const Endpoint = struct { name: []const u8, address: std.Io.net.IpAddress };
 /// One granted directory. Writing modes consider only writable roots; a relative
 /// request is tried against each root in order and the first success wins.
 pub const Root = struct { dir: std.Io.Dir, writable: bool = false };
-const Handle = union(enum) { file: std.Io.File, stream: std.Io.net.Stream, snapshot: *directory_data.Snapshot };
+const Handle = union(enum) { file: std.Io.File, append: std.Io.File, stream: std.Io.net.Stream, snapshot: *directory_data.Snapshot };
 /// Callbacks borrow this stable context and its directory/endpoint grants until stores close.
 pub const Context = struct {
     allocator: std.mem.Allocator,
@@ -42,7 +42,7 @@ pub const Context = struct {
     }
     fn close(self: *Context, handle: Handle) void {
         switch (handle) {
-            .file => |file| file.close(self.io),
+            .file, .append => |file| file.close(self.io),
             .stream => |stream| stream.close(self.io),
             .snapshot => |snapshot| snapshot.deinit(),
         }
@@ -85,12 +85,15 @@ pub const Context = struct {
             return @intCast(index);
         }
         const file = try self.open(parent, name, mode);
-        self.handles.items[index] = .{ .file = file };
+        self.handles.items[index] = if (mode == 'a') .{ .append = file } else .{ .file = file };
         return @intCast(index);
     }
     fn open(self: *Context, parent: std.Io.Dir, name: []const u8, mode: u8) CallError!std.Io.File {
         const file = if (mode == 'c')
             parent.createFile(self.io, name, .{ .exclusive = true }) catch |err| return mapError(err)
+        else if (mode == 'a')
+            // Appending keeps existing contents; each write lands at the current end.
+            parent.createFile(self.io, name, .{ .truncate = false }) catch |err| return mapError(err)
         else
             parent.openFile(self.io, name, .{ .mode = if (mode == 'r') .read_only else .write_only, .follow_symlinks = false, .allow_directory = false }) catch |err| return mapError(err);
         errdefer file.close(self.io);
@@ -116,7 +119,7 @@ pub const Context = struct {
         if (handle == .snapshot) return handle.snapshot.read(output[0..@min(output.len, 64 * 1024)]);
         var buffers = [_][]u8{output[0..@min(output.len, 64 * 1024)]};
         const length = switch (handle) {
-            .snapshot => return error.Failed,
+            .snapshot, .append => return error.Denied,
             .file => |file| file.readStreaming(self.io, &buffers) catch |err| if (err == error.EndOfStream) 0 else return mapError(err),
             .stream => |stream| stream.read(self.io, &buffers) catch |err| if (err == error.EndOfStream) 0 else return mapError(err),
         };
@@ -127,6 +130,10 @@ pub const Context = struct {
         const bytes = input[0..@min(input.len, 64 * 1024)];
         return switch (try self.get(id)) {
             .snapshot => error.Denied,
+            .append => |file| appended: {
+                const end = file.length(self.io) catch |err| return mapError(err);
+                break :appended file.writePositional(self.io, &.{bytes}, end) catch |err| return mapError(err);
+            },
             .file => |file| file.writeStreaming(self.io, &.{}, &.{bytes}, 1) catch |err| return mapError(err),
             .stream => |stream| blk: {
                 var writer = stream.writer(self.io, &.{});
@@ -166,7 +173,7 @@ pub fn fileRequest(request: []const u8, permissions: resources.Permissions) Call
 }
 /// Request modes that change the granted tree and therefore need write authority.
 pub fn writingMode(mode: u8) bool {
-    return mode == 'w' or mode == 'c' or mode == 't' or mode == 'k' or mode == 'x';
+    return mode == 'w' or mode == 'a' or mode == 'c' or mode == 't' or mode == 'k' or mode == 'x';
 }
 /// Exact configured endpoints prevent DNS rebinding and implicit network scope expansion.
 pub fn endpoint(allowed: []const Endpoint, request: []const u8) CallError!std.Io.net.IpAddress {

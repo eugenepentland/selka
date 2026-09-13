@@ -51,6 +51,7 @@ pub fn access(name: []const u8) ?Access {
 }
 
 /// Decoded `open` mode: the provider request letter and whether reads are text.
+/// The letters are the scoped provider's own request grammar.
 pub const Mode = struct { letter: u8, text: bool };
 
 /// Parse a Python open mode, rejecting combinations this surface does not offer.

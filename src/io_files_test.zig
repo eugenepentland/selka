@@ -92,20 +92,20 @@ fn reject(text: []const u8, code: []const u8) !void {
 test "IO-7 with open binds a handle whose reads follow the declared mode" {
     try expectPrinted(
         \\def main(fs: Filesystem) -> int:
-        \\    with open(fs, "notes.txt", "rb")? as f:
+        \\    with open(fs, "notes.txt", "rb") as f:
         \\        print(f.read())
         \\    return 0
     , "b'alpha\\nbeta\\n'\n", false);
     try expectPrinted(
         \\def main(fs: Filesystem) -> int:
-        \\    with open(fs, "notes.txt", "r")? as f:
+        \\    with open(fs, "notes.txt", "r") as f:
         \\        print(f.read(5))
         \\        print(f.readline())
         \\    return 0
-    , "alpha\n\nbeta\n\n", false);
+    , "alpha\n\n\n", false);
     try expectPrinted(
         \\def main(fs: Filesystem) -> int:
-        \\    with open(fs, "notes.txt", "r")? as f:
+        \\    with open(fs, "notes.txt", "r") as f:
         \\        for line in f.readlines():
         \\            print(len(line))
         \\    return 0
@@ -119,12 +119,12 @@ test "IO-8 writing modes create truncate and append through a write grant" {
     defer sandbox.deinit();
     const program =
         \\def main(fs: Filesystem) -> int:
-        \\    with open(fs, "out.txt", "w")? as f:
+        \\    with open(fs, "out.txt", "w") as f:
         \\        print(f.write("first\n"))
         \\        f.flush()
-        \\    with open(fs, "out.txt", "a")? as f:
+        \\    with open(fs, "out.txt", "a") as f:
         \\        _ = f.write("second\n")
-        \\    with open(fs, "out.txt", "w")? as f:
+        \\    with open(fs, "out.txt", "w") as f:
         \\        _ = f.write("third\n")
         \\    return 0
     ;
@@ -203,13 +203,13 @@ test "IO-11 a with scope closes its file on every exit including traps and propa
     options.resources.statistics = &statistics;
     const program =
         \\def early(fs: Filesystem) -> int:
-        \\    with open(fs, "notes.txt", "r")? as f:
+        \\    with open(fs, "notes.txt", "r") as f:
         \\        return len(f.read())
         \\
         \\def looped(fs: Filesystem) -> int:
         \\    total = 0
         \\    for index in range(3):
-        \\        with open(fs, "notes.txt", "r")? as f:
+        \\        with open(fs, "notes.txt", "r") as f:
         \\            total = total + len(f.read())
         \\            if index == 1:
         \\                break
@@ -237,14 +237,14 @@ test "IO-11 a with scope closes its file on every exit including traps and propa
     // Explicit close releases the handle before the scope ends.
     try expectPrinted(
         \\def main(fs: Filesystem) -> int:
-        \\    with open(fs, "notes.txt", "r")? as f:
+        \\    with open(fs, "notes.txt", "r") as f:
         \\        print(len(f.read()))
         \\        f.close()
         \\    return 0
     , "11\n", false);
     try expectTrap(
         \\def main(fs: Filesystem) -> int:
-        \\    with open(fs, "written.txt", "w")? as f:
+        \\    with open(fs, "written.txt", "w") as f:
         \\        f.close()
         \\        _ = f.write("late")
         \\    return 0
@@ -260,7 +260,7 @@ test "IO-12 the file surface is rejected under noio by generic bodies and by the
     , "E_EFFECT_BOUND");
     try reject(
         \\def main(fs: Filesystem) -> int:
-        \\    with open(fs, "notes.txt", "rb") as f:
+        \\    with read_text(fs, "notes.txt") as text:
         \\        return 0
     , "E_WITH_RESOURCE");
     try reject(
@@ -271,12 +271,12 @@ test "IO-12 the file surface is rejected under noio by generic bodies and by the
     try reject(
         \\def main(fs: Filesystem) -> int:
         \\    mode = "rb"
-        \\    with open(fs, "notes.txt", mode)? as f:
+        \\    with open(fs, "notes.txt", mode) as f:
         \\        return 0
     , "E_FILE_ARGUMENT");
     try reject(
         \\def main(fs: Filesystem) -> int:
-        \\    with open(fs, "notes.txt", "rb")? as f:
+        \\    with open(fs, "notes.txt", "rb") as f:
         \\        _ = f.seek(0)
         \\    return 0
     , "E_FILE_ARGUMENT");
