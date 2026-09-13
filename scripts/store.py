@@ -128,7 +128,7 @@ def tokens(text):
 
 
 def qualifiers(text):
-    """Import aliases used as `alias::name`; `name::<T>` turbofish and `.method` are not qualifications."""
+    """Import aliases used as `alias.name`; `name[T]` type arguments and a `.method` call are not qualifications."""
     stream = tokens(text)
     found = set()
     for index in range(len(stream) - 3):

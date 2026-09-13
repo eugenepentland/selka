@@ -13,14 +13,14 @@ def generate(root, modules, functions):
     for module in range(modules):
         name = f'm{module:03d}'
         imports.append(f'import {name};')
-        calls.append(f'{name}::value()')
-        body = [f'module {name}; export value;', 'fn base(x:i64)->i64{return x + 1;}']
+        calls.append(f'{name}.value()')
+        body = [f'module {name}\nexport value\n', 'def base(x: i64) -> i64:\n    return x + 1\n']
         previous = 'base'
         for index in range(functions - 1):
             current = f'f{index}'
             body.append(f'fn {current}(x:i64)->i64{{return {previous}(x) + 1;}}')
             previous = current
-        body.append(f'fn value()->i64{{return {previous}(0);}}')
+        body.append(f'def value() -> i64:\n    return {previous}(0)\n')
         (root / f'{name}.my').write_text('\n'.join(body))
     (root / 'main.my').write_text('module main;\n' + '\n'.join(imports) + '\nfn main()->i64{return ' + '+'.join(calls) + ';}')
 

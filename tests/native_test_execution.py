@@ -7,36 +7,115 @@ import subprocess
 import shutil
 import tempfile
 
-SOURCE = '''module main;
-export Pair;export Tone;export Choice;export Outcome;export Positive;export Decoded;
-export test_record;export test_array;export test_enum;export test_union;export test_result;
-export test_domain;export test_trap;export test_frames;export test_step;export test_table;
-struct Pair{number:i64,good:bool}
-enum Tone{low,high}
-union Choice{none,value:Pair}
-result Outcome{ok:Pair,err:i64}
-result Decoded{ok:Positive,err:i64}
-domain Positive:i64{
- codec i64{decode:from_wire,encode:to_wire}
- private fn raw(n:i64)->Positive{return wrap[Positive](n);}
- fn from_wire(n:i64)->Decoded{
-  if n<0{return new Decoded.err(-10);}
-  return new Decoded.ok(Positive.raw(n*2));
- }
- fn to_wire(p:Positive)->i64{return unwrap(p)+1;}
-}
-fn main()->i64{return 0;}
-fn test_record(n:i64)->Pair{return new Pair{number:n,good:true};}
-fn test_array(a:[2]u64)->[2]u64{return a;}
-fn test_enum(t:Tone)->Tone{return t;}
-fn test_table(t:[Tone]u16)->[Tone]u16{return t;}
-fn test_union(c:Choice)->Choice{return c;}
-fn test_result(r:Outcome)->Outcome{return r;}
-fn test_domain(n:Positive)->Positive{return n;}
-fn test_trap()->bool{return 1/0==0;}
-fn descend(n:i64)->bool{if n==0{return true;}return descend(n-1);}
-fn test_frames()->bool{return descend(3);}
-fn test_step()->bool{return true;}
+SOURCE = '''module main
+export Pair
+export Tone
+export Choice
+export Outcome
+export Positive
+export Decoded
+export test_record
+export test_array
+export test_enum
+export test_union
+export test_result
+export test_domain
+export test_trap
+export test_frames
+export test_step
+export test_table
+
+
+class Pair:
+    number: i64
+    good: bool
+
+
+enum Tone:
+    low,
+    high
+
+
+union Choice:
+    none,
+    value: Pair
+
+
+result Outcome:
+    ok: Pair,
+    err: i64
+
+
+result Decoded:
+    ok: Positive,
+    err: i64
+
+
+domain Positive: i64:
+    codec i64:
+        decode: from_wire,
+        encode: to_wire
+
+    private def raw(n: i64) -> Positive:
+        return wrap[Positive](n)
+
+    def from_wire(n: i64) -> Decoded:
+        if n < 0:
+            return Err(-10)
+        return Ok(Positive.raw(n * 2))
+
+    def to_wire(p: Positive) -> i64:
+        return unwrap(p) + 1
+
+
+def main() -> i64:
+    return 0
+
+
+def test_record(n: i64) -> Pair:
+    return Pair(number=n, good=True)
+
+
+def test_array(a: [2]u64) -> [2]u64:
+    return a
+
+
+def test_enum(t: Tone) -> Tone:
+    return t
+
+
+def test_table(t: [Tone]u16) -> [Tone]u16:
+    return t
+
+
+def test_union(c: Choice) -> Choice:
+    return c
+
+
+def test_result(r: Outcome) -> Outcome:
+    return r
+
+
+def test_domain(n: Positive) -> Positive:
+    return n
+
+
+def test_trap() -> bool:
+    return divtrunc(1, 0) == 0
+
+
+def descend(n: i64) -> bool:
+    if n == 0:
+        return True
+    return descend(n - 1)
+
+
+def test_frames() -> bool:
+    return descend(3)
+
+
+def test_step() -> bool:
+    return True
 '''
 
 
@@ -88,7 +167,7 @@ def main():
         for name, row in rows.items():
             if name == 'main::test_trap':
                 assert row['status'] == 'failed' and 'R_DIVISION_BY_ZERO' in row['reason'], row
-                line = SOURCE.splitlines().index('fn test_trap()->bool{return 1/0==0;}') + 1
+                line = SOURCE.splitlines().index('    return divtrunc(1, 0) == 0') + 1
                 assert f'main.my:{line}:' in row['reason'] and 'in main::test_trap' in row['reason'], row
             else:
                 assert row['status'] == 'passed', row
@@ -109,8 +188,10 @@ def main():
             assert 'InvalidTestValue' in invoke('*record', code=2)
         cases['main::test_record']['arguments'] = {'wrong': '1'}
         assert 'InvalidTestArguments' in invoke('*record', code=2)
-        entry.write_text('module main;export Secret;export test_opaque;domain Secret:i64{}'
-                         'fn main()->i64{return 0;}fn test_opaque(s:Secret)->bool{return true;}')
+        entry.write_text('module main\nexport Secret\nexport test_opaque\n\n\n'
+                         'domain Secret: i64:\n    pass\n\n\n'
+                         'def main() -> i64:\n    return 0\n\n\n'
+                         'def test_opaque(s: Secret) -> bool:\n    return True\n')
         cases = {'main::test_opaque': {'arguments': {'s': '1'}}}
         assert 'UnsupportedTestType' in invoke(code=2)
     print('Native test execution: typed trees, domain codecs, exact call budgets, source traps and strict arguments passed')

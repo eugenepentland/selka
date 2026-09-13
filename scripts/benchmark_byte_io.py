@@ -11,15 +11,18 @@ import time
 
 IO = ('module io;export length;export byte;export put;export Block;export read_block;export write_block;'
       'struct Block{bytes:[256]u8,count:i64}'
-      'host fn length()->i64 effects(host);host fn byte(index:i64)->u8 effects(host);'
-      'host fn put(value:u8)->i64 effects(host);host fn read_block(offset:i64)->Block effects(host);'
-      'host fn write_block(block:Block)->i64 effects(host);')
+      'host def length() -> i64 effects(host)\n\n\n'
+      'host def byte(index: i64) -> u8 effects(host)\n\n\n'
+      'host def put(value: u8) -> i64 effects(host)\n\n\n'
+      'host def read_block(offset: i64) -> Block effects(host)\n\n\n'
+      'host def write_block(block: Block) -> i64 effects(host)\n')
 SOURCES = {
-    'scalar': ('fn main()->i64{let size=io::length();let mut i=0;'
-               'while i<size{_ = io::put(io::byte(i));i+=1;}return 0;}'),
-    'block256': ('fn main()->i64{let size=io::length();let mut i=0;while i<size{'
-                 'let block=io::read_block(i);let count=block.count;'
-                 'if io::write_block(block)!=count{return 1;}i+=count;}return 0;}'),
+    'scalar': ('def main() -> i64:\n    size = io.length()\n    i = 0\n'
+               '    while i < size:\n        _ = io.put(io.byte(i))\n        i += 1\n    return 0\n'),
+    'block256': ('def main() -> i64:\n    size = io.length()\n    i = 0\n'
+                 '    while i < size:\n        block = io.read_block(i)\n        count = block.count\n'
+                 '        if io.write_block(block) != count:\n            return 1\n'
+                 '        i += count\n    return 0\n'),
 }
 
 

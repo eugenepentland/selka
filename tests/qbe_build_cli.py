@@ -86,7 +86,8 @@ def keys(report):
 
 
 def cache_acceptance(builder):
-    builder.source.write_text('fn square(x:i64)->i64{return x*x;}\nfn main()->i64{return square(4);}\n')
+    builder.source.write_text('def square(x: i64) -> i64:\n    return x * x\n\n\n'
+                              'def main() -> i64:\n    return square(4)\n')
     initial = builder.build()
     assert (initial['compiled_functions'], initial['reused_functions']) == (2, 0), initial
     builder.execute(b'16\n')
@@ -97,7 +98,8 @@ def cache_acceptance(builder):
     assert builder.output.stat().st_mtime_ns == previous_stat.st_mtime_ns
     assert keys(initial) == keys(repeat)
 
-    builder.source.write_text('fn square(x:i64)->i64{return x*x+1;}\nfn main()->i64{return square(4);}\n')
+    builder.source.write_text('def square(x: i64) -> i64:\n    return x * x + 1\n\n\n'
+                              'def main() -> i64:\n    return square(4)\n')
     edited = builder.build()
     assert (edited['compiled_functions'], edited['reused_functions']) == (1, 1), edited
     assert sum(keys(initial)[name] == key for name, key in keys(edited).items()) == 1
@@ -106,9 +108,12 @@ def cache_acceptance(builder):
     assert cold['compiled_functions'] == 2, cold
     builder.execute(b'17\n')
 
-    builder.source.write_text('// Formatting and declaration order are not native inputs.\n'
-                              'fn main() -> i64 { return square(4); }\n'
-                              'fn square(x:i64)->i64 { return x*x+1; }\n')
+    builder.source.write_text('# Formatting and declaration order are not native inputs.\n'
+                              'def main() -> i64:\n'
+                              '    return square(4)\n'
+                              '\n'
+                              'def square(x:i64)->i64:\n'
+                              '    return x*x+1\n')
     reordered = builder.build()
     assert reordered['compiled_functions'] == 0 and keys(reordered) == keys(edited), reordered
     damaged = Path(reordered['functions'][0]['object'])
@@ -124,16 +129,16 @@ def cache_acceptance(builder):
     release = builder.build('--mode', 'ReleaseFast')
     assert release['compiled_functions'] == 2 and keys(release) != keys(repaired), release
     builder.execute(b'17\n')
-    builder.source.write_text('fn main()->i64{return 19;}\n')
+    builder.source.write_text('def main() -> i64:\n    return 19\n')
     deleted = builder.build()
     assert len(deleted['functions']) == 1, deleted
     assert len(json.loads(builder.manifest.read_text())['functions']) == 1
     builder.execute(b'19\n')
     before = builder.snapshot()
-    builder.source.write_text('fn main()->i64{return true;}\n')
+    builder.source.write_text('def main() -> i64:\n    return True\n')
     assert builder.build(failure=True).returncode == 1
     assert builder.snapshot() == before
-    builder.source.write_text('fn main()->i64{return 20;}\n')
+    builder.source.write_text('def main() -> i64:\n    return 20\n')
     failing = builder.directory / 'failing qbe'
     failing.write_text('#!/bin/sh\nexit 1\n')
     failing.chmod(0o700)
@@ -150,7 +155,7 @@ def cache_acceptance(builder):
 def runtime_tree_acceptance(builder):
     """The bundled runtime materializes once per content hash and is shared safely."""
     cache = builder.directory / 'shared runtime cache'
-    builder.source.write_text('fn main()->i64{return 11;}\n')
+    builder.source.write_text('def main() -> i64:\n    return 11\n')
     builder.build('--cache-dir', cache)
     builder.execute(b'11\n')
     trees = sorted((cache / 'runtime').iterdir())
@@ -177,7 +182,7 @@ def concurrent_runtime_tree(builder, expected):
     for index in range(4):
         work = builder.directory / ('concurrent work %d' % index)
         work.mkdir()
-        (work / 'main.my').write_text('fn main()->i64{return %d;}\n' % (index + 1))
+        (work / 'main.my').write_text('def main() -> i64:\n    return %d\n' % (index + 1))
         command = [builder.compiler, 'build', 'main.my', '-o', 'program', '--qbe', builder.qbe,
                    '--zig', builder.zig, '--cache-dir', cache]
         running.append((work, subprocess.Popen(list(map(str, command)), stdout=subprocess.PIPE,
@@ -193,28 +198,34 @@ def concurrent_runtime_tree(builder, expected):
 
 
 def project_and_locations(builder):
-    (builder.directory / 'left.my').write_text('module left;export value;fn value()->i64{return 10;}')
-    (builder.directory / 'right.my').write_text('module right;export value;fn value()->i64{return 20;}')
+    (builder.directory / 'left.my').write_text('module left\nexport value\n\n'
+                                               'def value() -> i64:\n    return 10\n')
+    (builder.directory / 'right.my').write_text('module right\nexport value\n\n'
+                                                'def value() -> i64:\n    return 20\n')
     builder.source = builder.directory / 'main.my'
-    builder.source.write_text('module main;import left;import right;fn main()->i64{return left::value()+right::value();}')
+    builder.source.write_text('module main\nimport left\nimport right\n\n'
+                              'def main() -> i64:\n    return left.value() + right.value()\n')
     project = builder.build('--project')
     assert len(project['functions']) == 3
     assert len({unit['symbol'] for unit in project['functions']}) == 3
     builder.execute(b'30\n')
-    builder.source.write_text('module main;import right;import left;fn main()->i64{return left::value()+right::value();}')
+    builder.source.write_text('module main\nimport right\nimport left\n\n'
+                              'def main() -> i64:\n    return left.value() + right.value()\n')
     reordered = builder.build('--project')
     assert reordered['compiled_functions'] == 0 and keys(project) == keys(reordered), reordered
-    builder.source.write_text('fn divide(x:i64)->i64{return 10/x;}\nfn main()->i64{return divide(0);}\n')
+    divide = ('def divide(x: i64) -> i64:\n    return 10 // x\n\n\n'
+              'def main() -> i64:\n    return divide(0)\n')
+    builder.source.write_text(divide)
     old = builder.build()
     trapped = invoke([builder.output], env=builder.env, cwd=builder.directory)
     assert trapped.returncode != 0 and b'R_DIVISION_BY_ZERO' in trapped.stderr, trapped
-    assert (str(builder.source) + ':1:').encode() in trapped.stderr, trapped.stderr
-    builder.source.write_text('\n\nfn divide(x:i64)->i64{return 10/x;}\nfn main()->i64{return divide(0);}\n')
+    assert (str(builder.source) + ':2:').encode() in trapped.stderr, trapped.stderr
+    builder.source.write_text('\n\n' + divide)
     moved = builder.build()
     assert moved['compiled_functions'] == 0 and keys(old) == keys(moved), moved
     assert not moved['metadata_reused'], moved
     trapped = invoke([builder.output], env=builder.env, cwd=builder.directory)
-    assert (str(builder.source) + ':3:').encode() in trapped.stderr, trapped.stderr
+    assert (str(builder.source) + ':4:').encode() in trapped.stderr, trapped.stderr
 
 
 def boundary_acceptance(builder):
@@ -265,7 +276,8 @@ def temporary_runs(builder):
         assert not list(builder.cache.glob('.pending-*'))
         return result, reports
     previous = builder.snapshot()
-    builder.source.write_text('fn square(x:i64)->i64{return x*x;}fn main()->i64{return square(9);}')
+    builder.source.write_text('def square(x: i64) -> i64:\n    return x * x\n\n\n'
+                              'def main() -> i64:\n    return square(9)\n')
     result, reports = run()
     assert result.returncode == 0 and result.stdout == b'81\n', result
     assert len(reports) == 1
@@ -273,14 +285,20 @@ def temporary_runs(builder):
     assert result.returncode == 0 and reports[0]['compiled_functions'] == 0
     result, _ = run(['--', '--max-steps=1'])
     assert result.returncode == 1 and b'R_STEP_LIMIT' in result.stderr, result
-    builder.source.write_text('fn main()->i64{return 1/0;}')
+    builder.source.write_text('def main() -> i64:\n    return 1 // 0\n')
     result, _ = run()
     assert result.returncode == 1 and b'R_DIVISION_BY_ZERO' in result.stderr, result
-    builder.source.write_text('fn main()->i64{return true;}')
+    builder.source.write_text('def main() -> i64:\n    return True\n')
     result, reports = run()
     assert result.returncode == 1 and not reports, result
     assert builder.snapshot() == previous
-    builder.source.write_text('result T{ok:i64,err:i64}fn main(c:clock_cap)->i64{match clock_now[T](c){T.ok(n)=>{return n;},T.err(e)=>{return e;}}}')
+    builder.source.write_text('result T:\n    ok: i64,\n    err: i64\n\n\n'
+                              'def main(c: clock_cap) -> i64:\n'
+                              '    match clock_now[T](c):\n'
+                              '        case T.ok(n):\n'
+                              '            return n\n'
+                              '        case T.err(e):\n'
+                              '            return e\n')
     provider = builder.directory / 'run stdio.c'
     provider.write_text('#include "native_providers.h"\n#include <stdio.h>\n#include <signal.h>\n'
                         'static MylangClockResult read_clock(void *ctx){(void)ctx;int ch=getchar();'

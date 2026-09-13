@@ -30,8 +30,10 @@ ARENA_TEMPLATE = '''def main() -> int:
 
 def templates(rng):
     a, b = rng.randrange(-1000, 1001), rng.randrange(-1000, 1001)
-    concrete = f'fn add(a:i64,b:i64)->i64{{return a+b;}}fn main()->i64{{return add({a},{b});}}'
-    generic = f'fn add<T:copy>(a:T,b:T)->T{{return a;}}fn main()->i64{{return add::<i64>({a},{b})+{b};}}'
+    concrete = ('def add(a: i64, b: i64) -> i64:\n    return a + b\n\n\n'
+                f'def main() -> i64:\n    return add({a}, {b})\n')
+    generic = ('def add[T](a: T, b: T) -> T:\n    return a\n\n\n'
+               f'def main() -> i64:\n    return add[i64]({a}, {b}) + {b}\n')
     # Exercise managed allocation, region exit and the escape barrier.
     arena = ARENA_TEMPLATE.replace('DELTA', str(a))
     return [(concrete, a + b, 'concrete-arithmetic'), (generic, a + b, 'generic-copy'),

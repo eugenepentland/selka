@@ -50,10 +50,12 @@ if frozenset(DECLARATION_KINDS) != frozenset(store.KINDS):
     raise ValueError('the documented declaration kinds no longer match the store')
 # Appended to a parse failure that lands on a declaration's own header line. The
 # pilot lost ten batches there to invented syntax, so the reminder names what exists.
-SYNTAX_HELP = ('A top-level declaration starts with one of: ' + ', '.join(DECLARATION_KINDS) +
-               '. There is no record keyword; a product type is '
-               'struct Name { field: i64, other: i64 }. Casts are T(x), never T(x) or as. '
-               'Qualified references derive imports, so no import statement is ever written.')
+SYNTAX_HELP = ('A top-level declaration is one of these kinds: ' + ', '.join(DECLARATION_KINDS) +
+               '. There is no record keyword; a product type is written class Name: with one '
+               'annotated field per indented line. A function is def name(x: i64) -> i64: with '
+               'an indented suite; indentation is the block syntax and braces are only a dict '
+               'literal. Casts are i64(x), never cast<i64>(x) or x as i64. Qualified references '
+               'derive imports, so no import statement is ever written.')
 # The exact accepted fields of each batch operation, with a copy-ready example.
 OPERATION_SHAPES = {
     'replace': ('op, id, source',

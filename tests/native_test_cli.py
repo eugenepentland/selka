@@ -41,13 +41,29 @@ def main():
             assert result['version'] == 'native-tests-v1', result
             return result
 
-        source = '''module main;
-export test_first; export test_second;
-fn main()->i64{return 0;}
-fn helper()->i64{return 1;}
-fn unrelated()->i64{return 9;}
-fn test_first()->bool{return helper()>0;}
-fn test_second()->bool{return true;}
+        source = '''module main
+export test_first
+export test_second
+
+
+def main() -> i64:
+    return 0
+
+
+def helper() -> i64:
+    return 1
+
+
+def unrelated() -> i64:
+    return 9
+
+
+def test_first() -> bool:
+    return helper() > 0
+
+
+def test_second() -> bool:
+    return True
 '''
         entry.write_text(source)
         first = invoke()
@@ -61,10 +77,10 @@ fn test_second()->bool{return true;}
         receipt.write_text('corrupt')
         repaired = invoke()
         assert repaired['cached'] == 1 and repaired['executed'] == 1, repaired
-        entry.write_text(source.replace('return 9;', 'return 10;'))
+        entry.write_text(source.replace('return 9\n', 'return 10\n'))
         unrelated = invoke()
         assert unrelated['cached'] == 2 and unrelated['executed'] == 0, unrelated
-        entry.write_text(source.replace('return 1;', 'return 2;'))
+        entry.write_text(source.replace('return 1\n', 'return 2\n'))
         affected = invoke()
         assert affected['cached'] == 1 and affected['executed'] == 1, affected
         forced = invoke(extra=('--force',))
@@ -87,53 +103,113 @@ fn test_second()->bool{return true;}
         invoke(code=2)
 
         configuration.write_text('{}')
-        callback_source = '''module main;
-export test_callback;export test_stable;
-fn main()->i64{return 0;}
-fn target(n:i64)->i64 effects(){return n+1;}
-fn apply(f:fn(i64)->i64 effects(),n:i64)->i64{return f(n);}
-fn test_callback()->bool{return apply(target,1)>0;}
-fn test_stable()->bool{return true;}
+        callback_source = '''module main
+export test_callback
+export test_stable
+
+
+def main() -> i64:
+    return 0
+
+
+def target(n: i64) -> i64 effects():
+    return n + 1
+
+
+def apply(f: def(i64) -> i64 effects(), n: i64) -> i64:
+    return f(n)
+
+
+def test_callback() -> bool:
+    return apply(target, 1) > 0
+
+
+def test_stable() -> bool:
+    return True
 '''
         entry.write_text(callback_source)
         assert invoke()['executed'] == 2
         assert invoke()['cached'] == 2
-        entry.write_text(callback_source.replace('n+1', 'n+2'))
+        entry.write_text(callback_source.replace('n + 1', 'n + 2'))
         indirect = invoke()
         assert indirect['executed'] == 1 and indirect['cached'] == 1, indirect
 
-        domain_source = '''module main;
-export Positive;export Decoded;export test_domain;export test_domain_stable;
-result Decoded{ok:Positive,err:i64}
-domain Positive:i64{
- codec i64{decode:from_wire,encode:to_wire}
- private fn raw(n:i64)->Positive{return wrap[Positive](n);}
- fn from_wire(n:i64)->Decoded{return new Decoded.ok(Positive.raw(n*2));}
- fn to_wire(p:Positive)->i64{return unwrap(p)+1;}
-}
-fn main()->i64{return 0;}
-fn test_domain(n:Positive)->Positive{return n;}
-fn test_domain_stable()->bool{return true;}
+        domain_source = '''module main
+export Positive
+export Decoded
+export test_domain
+export test_domain_stable
+
+
+result Decoded:
+    ok: Positive,
+    err: i64
+
+
+domain Positive: i64:
+    codec i64:
+        decode: from_wire,
+        encode: to_wire
+
+    private def raw(n: i64) -> Positive:
+        return wrap[Positive](n)
+
+    def from_wire(n: i64) -> Decoded:
+        return Ok(Positive.raw(n * 2))
+
+    def to_wire(p: Positive) -> i64:
+        return unwrap(p) + 1
+
+
+def main() -> i64:
+    return 0
+
+
+def test_domain(n: Positive) -> Positive:
+    return n
+
+
+def test_domain_stable() -> bool:
+    return True
 '''
         entry.write_text(domain_source)
         configuration.write_text(json.dumps({'main::test_domain': {'arguments': {'n': '3'}, 'expected': '7'}}))
         assert invoke()['executed'] == 2
         assert invoke()['cached'] == 2
-        domain_source = domain_source.replace('n*2', 'n*2+0')
+        domain_source = domain_source.replace('n * 2', 'n * 2 + 0')
         entry.write_text(domain_source)
         decoder = invoke()
         assert decoder['executed'] == 1 and decoder['cached'] == 1, decoder
-        entry.write_text(domain_source.replace('unwrap(p)+1', 'unwrap(p)+2-1'))
+        entry.write_text(domain_source.replace('unwrap(p) + 1', 'unwrap(p) + 2 - 1'))
         encoder = invoke()
         assert encoder['executed'] == 1 and encoder['cached'] == 1, encoder
 
-        entry.write_text('''module main;
-export Pair;export test_pair;export test_bad;export test_trap;
-struct Pair{number:i64,valid:bool}
-fn main()->i64{return 0;}
-fn test_pair(seed:i64)->Pair{return new Pair{number:seed,valid:true};}
-fn test_bad()->bool{return false;}
-fn test_trap()->i64{return 1/0;}
+        entry.write_text('''module main
+export Pair
+export test_pair
+export test_bad
+export test_trap
+
+
+class Pair:
+    number: i64
+    valid: bool
+
+
+def main() -> i64:
+    return 0
+
+
+def test_pair(seed: i64) -> Pair:
+    return Pair(number=seed, valid=True)
+
+
+def test_bad() -> bool:
+    return False
+
+
+def test_trap() -> i64:
+    return divtrunc(1, 0)
 ''')
         configuration.write_text(json.dumps({
             'main::test_pair': {'arguments': {'seed': '17'}, 'expected': {'valid': True, 'number': '17'}},
@@ -151,28 +227,30 @@ fn test_trap()->i64{return 1/0;}
         invoke('*pair', code=2)
 
         provider = project / 'provider.my'
-        original = 'module provider;export sample;host fn sample(x:i64)->i64 effects(host);'
+        original = 'module provider\nexport sample\n\n\nhost def sample(x: i64) -> i64 effects(host)\n'
         provider.write_text(original)
-        entry.write_text('module main;import provider;export test_sample;fn main()->i64{return 0;}'
-                         'fn test_sample()->bool{return provider::sample(7)==42;}')
+        entry.write_text('module main\nimport provider\nexport test_sample\n\n\n'
+                         'def main() -> i64:\n    return 0\n\n\n'
+                         'def test_sample() -> bool:\n    return provider.sample(7) == 42\n')
         configuration.write_text('{}')
         for _ in range(2):
             external = invoke(code=1)
             assert external['cached'] == 0 and external['executed'] == 1, external
         fixture = {'main::test_sample': {'providers': {'provider.my':
-            'module provider;export sample;fn sample(x:i64)->i64{return x+35;}'}}}
+            'module provider\nexport sample\n\n\ndef sample(x: i64) -> i64:\n    return x + 35\n'}}}
         configuration.write_text(json.dumps(fixture))
         injected = invoke()
         assert injected['executed'] == 1 and injected['failed'] == 0, injected
         assert invoke()['cached'] == 1
         assert provider.read_text() == original
-        fixture['main::test_sample']['providers']['provider.my'] = 'module provider;export sample;fn sample(x:i64)->i64{return x+34;}'
+        fixture['main::test_sample']['providers']['provider.my'] = (
+            'module provider\nexport sample\n\n\ndef sample(x: i64) -> i64:\n    return x + 34\n')
         configuration.write_text(json.dumps(fixture))
         assert invoke(code=1)['executed'] == 1
         assert provider.read_text() == original
-        configuration.write_text(json.dumps({'main::test_sample': {'providers': {'main.my': 'module main;'}}}))
+        configuration.write_text(json.dumps({'main::test_sample': {'providers': {'main.my': 'module main\n'}}}))
         invoke(code=2)
-        entry.write_text('module main;fn main()->i64{return missing;}')
+        entry.write_text('module main\n\n\ndef main() -> i64:\n    return missing\n')
         configuration.write_text('{}')
         invoke(code=2)
     print('Native guest tests: assertions, traps, filtering, fixture isolation, and affected-test reuse pass')

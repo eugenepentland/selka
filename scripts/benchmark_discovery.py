@@ -43,9 +43,9 @@ def main():
             # A bounded set of repeated policies creates large groups, testing
             # that reporting does not construct every possible matching pair.
             source.write_text("".join(
-                f"fn f{i}(x: i64) -> i64 {{ let y = x * 2; return y + {i % 31}; }}\n"
+                f"def f{i}(x: i64) -> i64:\n    y = x * 2\n    return y + {i % 31}\n\n\n"
                 for i in range(size)
-            ) + "fn main() -> i64 { return f0(3); }\n")
+            ) + "def main() -> i64:\n    return f0(3)\n")
             samples = []
             for _ in range(args.repeats):
                 outcome = subprocess.run(
