@@ -62,5 +62,5 @@ test "standard modules compose with one another inside a single project" {
         "    document = json.dumps(json.object(fields))\n" ++
         "    if document != \"{\\\"name\\\":\\\"YW5zd2VyLnR4dA==\\\"}\":\n" ++
         "        return 2\n" ++
-        "    return len(document) - 4\n", 42);
+        "    return len(document) + 15\n", 42);
 }
