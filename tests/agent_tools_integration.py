@@ -25,7 +25,7 @@ def main():
             'host fn put(value:u8)->i64 effects(host);')
         (app / 'main.my').write_text(
             'module main;import io;fn main()->i64{let mut i=0;'
-            'while i<io::length(){discard io::put(io::byte(i));i+=1;}return 0;}')
+            'while i<io::length(){_ = io::put(io::byte(i));i+=1;}return 0;}')
         (app / 'input.json').write_text('{"results":[1,2]}\n')
         expected = app / 'expected.json'
         expected.write_text('{"results": [1, 2]}')

@@ -42,7 +42,7 @@ def module_edits(binary, directory):
     shutil.copyfile(ROOT / "src/schematic/guest/io.my", project / "io.my")
     entry = project / "main.my"
     helper = project / "helper.my"
-    entry.write_text('module main; import io; import helper; fn main()->i64 { discard io::put(helper::letter()); return 0; }')
+    entry.write_text('module main; import io; import helper; fn main()->i64 { _ = io::put(helper::letter()); return 0; }')
     helper.write_text('module helper; export letter; fn letter()->u8 { return 65u8; }')
     inputs = [directory / f"empty{i}.sexp" for i in range(3)]
     for path in inputs:
@@ -62,7 +62,7 @@ def module_edits(binary, directory):
     assert success(run(binary, project, inputs, directory)) == b"C"
     io = project / "io.my"
     io.write_text(io.read_text().replace('value: u8', 'value: i64'))
-    entry.write_text('module main; import io; fn main()->i64 { discard io::put(65); return 0; }')
+    entry.write_text('module main; import io; fn main()->i64 { _ = io::put(65); return 0; }')
     rejected(run(binary, project, inputs, directory), "SignatureMismatch")
     entry.unlink()
     rejected(run(binary, project, inputs, directory), "E_MODULE_READ")

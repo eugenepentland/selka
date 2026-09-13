@@ -177,10 +177,9 @@ def main():
             entry = directory / 'main.my'
             for source, expected in cases(name):
                 (directory / 'inputs.my').write_text(source)
-                for memory in ('general', 'arena'):
-                    actual = run([compiler, 'run-project', entry, f'--memory={memory}'])
-                    assert int(actual.stdout) == expected, (name, source, expected, actual.stdout)
-                    comparisons += 1
+                actual = run([compiler, 'run-project', entry])
+                assert int(actual.stdout) == expected, (name, source, expected, actual.stdout)
+                comparisons += 1
         print(f'ordinary corpus (VM only): 2 applications, 13 modules, 48 input cases, {comparisons} independent-oracle execution checks; duplicates/quality, policy, schema/bindings, declared inputs, and change-impact rejection passed')
 
 if __name__ == '__main__':

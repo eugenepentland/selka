@@ -92,7 +92,7 @@ def main():
             project = root / "project"
             project.mkdir()
             (project / "io.my").write_text("module io;export length;export byte;export put;host fn length()->i64 effects(host);host fn byte(index:i64)->u8 effects(host);host fn put(value:u8)->i64 effects(host);")
-            (project / "main.my").write_text("module main;import io;fn main()->i64{let mut i=0;while i<io::length(){discard io::put(io::byte(i));i+=1;}return 0;}")
+            (project / "main.my").write_text("module main;import io;fn main()->i64{let mut i=0;while i<io::length(){_ = io::put(io::byte(i));i+=1;}return 0;}")
             argv = [str(args.runner.resolve()), "--project", str(project)]
             (root / "input").write_bytes(raw)
             (root / "expected").write_bytes(raw)

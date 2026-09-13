@@ -19,7 +19,7 @@ spec.loader.exec_module(dev)
 
 
 def source(byte):
-    return 'module main;import io;fn main()->i64{discard io::put(' + str(byte) + 'u8);return 0;}'
+    return 'module main;import io;fn main()->i64{_ = io::put(' + str(byte) + 'u8);return 0;}'
 
 
 def wait_status(path, predicate, process):

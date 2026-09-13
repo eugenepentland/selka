@@ -280,7 +280,7 @@ manifest records implementation coverage, not a test certificate.
 - [SEMANTIC-CACHE-2] Declaration/type/import identities invalidate body reuse, generic/constant/alias configurations conservatively check fresh, and complete region/effect/codec passes rerun after every body edit.
 - [SEMANTIC-CACHE-3] Cached source spans and node/statement identities must belong to unchanged mapped intervals and their function's tables; invalid relocation falls back instead of trusting stale references.
 
-- [SEMANTIC-CACHE-4] Reusing a caller body never reuses transitive effect verdicts; a callee's new allocation rejects an unchanged noalloc caller.
+- [SEMANTIC-CACHE-4] Reusing a caller body never reuses transitive effect verdicts; a callee's new effect rejects an unchanged effect-bounded caller.
 - [SEMANTIC-CACHE-5] Failed cache publication releases only its pending snapshot; the previous successful function queries remain reusable after OutOfMemory.
 - [SEMANTIC-CACHE-6] Project queries include module paths, import/export text, signatures and type catalogs, preserving fresh/cached diagnostics and execution through source relocation and changed module interfaces.
 - [CALLBACK-1] Noncapturing function values have exact parameter/result signatures and declared effect ceilings, including parameter-dependent signatures in generic helpers. Creation stores an immediate function identity; invocation validates the target and preserves ordinary ownership/result obligations. Callback parameters and results are ordinary copied values; captured environments are rejected.

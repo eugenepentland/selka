@@ -86,18 +86,16 @@ def export_placement(compiler, root):
 
 def modules(compiler, root):
     entry, helper = root / 'main.my', root / 'helper.my'
-    entry.write_text('module main;import helper;fn main()->i64{let n=9;borrow n as r{borrow helper::work::<bool>(r) as value{return read_ref(value);}}}')
-    bad = 'module helper;\nexport work;\nfn work<T:copy>(input:&i64)->&i64 from input{\nlet local=7;\nborrow local as loan{\nreturn loan;\n}\n}'
+    entry.write_text('module main;import helper;fn main()->i64{return helper::work::<bool>(9);}')
+    bad = 'module helper;\nexport work;\nresult R{ok:i64,err:i64}\nfn work<T:copy>(input:i64)->i64{\nlet pending=new R.ok(input);\nreturn input;\n}'
     helper.write_text(bad)
     _, messages = invoke(compiler, 'check-project', entry, status=1)
-    data = problem(messages, 'E_RETURN_LIFETIME')
-    assert data['location']['path'] == 'helper.my' and data['location']['start'] == {'line': 6, 'column': 8}
-    assert [note['role'] for note in data['notes']] == ['related', 'origin', 'requirement']
-    assert [note['location']['start'] for note in data['notes']] == [{'line': 5, 'column': 17}, {'line': 4, 'column': 5}, {'line': 3, 'column': 17}]
-    for note, spelling in zip(data['notes'], (b'loan', b'local', b'input')):
-        span = note['location']['bytes']
-        assert bad.encode()[span['start']:span['end']] == spelling
-    helper.write_text(bad.replace('let local=7;\nborrow local as loan{\nreturn loan;\n}', 'return input;'))
+    data = problem(messages, 'E_RESULT_UNHANDLED')
+    assert data['location']['path'] == 'helper.my'
+    assert [note['role'] for note in data['notes']] == ['related']
+    span = data['notes'][0]['location']['bytes']
+    assert bad.encode()[span['start']:span['end']] == b'pending'
+    helper.write_text(bad.replace('let pending=new R.ok(input);\n', ''))
     assert invoke(compiler, 'run-project', entry) == ('9\n', [])
     entry.write_text('module main;import missing;fn main()->i64{return 0;}')
     _, messages = invoke(compiler, 'check-project', entry, status=1)
@@ -113,7 +111,7 @@ def modules(compiler, root):
         assert problem(messages, 'R_DIVISION_BY_ZERO')['location']['path'] == 'main.my'
     request, messages = invoke(compiler, 'eval-project', entry, '--evaluation-request')
     assert json.loads(request)['evaluation'] == 'not-executed' and messages == []
-    entry.write_text('module main;fn main(heap:allocator)->i64{discard heap;return 7;}')
+    entry.write_text('module main;fn main()->i64{let heap=7;_ = heap;return 7;}')
     _, messages = invoke(compiler, 'eval-project', entry, '--evaluation-request', status=1)
     problem(messages, 'E_EVAL_INPUT')
     entry.write_text('module main;fn main()->i64{let unused=1;return 7;}')

@@ -132,7 +132,7 @@ class NavigationTests(unittest.TestCase):
 
     def test_compiler_standard_sources_cache_without_disk_copies_or_temporary_symbols(self):
         (self.root / 'main.my').write_text(
-            'module main;import std_json;fn size(text:&[]u8)->i64{return cast<i64>(len_slice(text));}'
+            'module main;import std_math;fn size(text:i64)->i64{return std_math::min::<i64>(text,4);}'
             'fn main()->i64{return size("x");}')
         (self.root / 'std_json.my').write_text('reserved names cannot shadow the compiler library')
         index, reused = self.load()

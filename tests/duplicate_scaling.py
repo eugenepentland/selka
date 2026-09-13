@@ -18,7 +18,7 @@ def main():
             declarations = [f'domain D{i}:i64 {{}}' for i in range(size - 1)]
             for i in range(size):
                 domain = 0 if i == size - 1 else i
-                declarations.append(f'fn f{i}(x:D{domain},y:i64)->i64{{discard x;return y*2+{i};}}')
+                declarations.append(f'fn f{i}(x:D{domain},y:i64)->i64{{_ = x;return y*2+{i};}}')
             declarations.append('fn main()->i64{return 0;}')
             source.write_text('\n'.join(declarations), encoding='utf-8')
             command = [args.compiler, 'discover-duplicates', str(source), '--approximate',
@@ -38,7 +38,7 @@ def main():
                   f'one distant pair, deterministic; two-run elapsed={time.monotonic() - start:.3f}s')
 
         for statements in (50, 100, 200):
-            body = 'discard x;' * statements
+            body = '_ = x;' * statements
             source.write_text(f'fn a(x:i64)->i64{{{body}return x*2+1;}} '
                               f'fn b(x:i64)->i64{{{body}return x*2+3;}} '
                               'fn main()->i64{return 0;}', encoding='utf-8')

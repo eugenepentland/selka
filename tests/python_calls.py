@@ -37,13 +37,13 @@ def main():
         entry, data, output = (root / name for name in ('main.my', 'data.my', 'bindings.py'))
         entry.write_text('module main; import data; fn main()->i64{return 0;}')
         source = (ROOT / 'examples/domain-codecs/data.my').read_text().replace(
-            'module data;', 'module data; export shift; export zero; export unsigned; export explode; export view;')
+            'module data;', 'module data; export shift; export zero; export unsigned; export explode; export nodata;')
         source += '''
 fn shift(x:Positive,n:i64)->Decoded{return Positive.from_wire(new Wire{n:Positive.to_wire(x).n+n});}
 fn zero()->bool{return true;}
 fn unsigned(x:u64)->u64{return x;}
 fn explode(x:i64)->i64{return x/0;}
-fn view(x:&i64)->i64{return read_ref(x);}
+fn nodata()->unit{}
 '''
         data.write_text(source)
         result = subprocess.run([sys.executable, str(ROOT / 'scripts/bindings.py'), str(entry),
@@ -60,9 +60,9 @@ fn view(x:&i64)->i64{return read_ref(x);}
         assert client.call('data::shift', n=-10, x=positive(wire(7))) == err(-1)
         assert bindings.CALLS['data::zero'](client) is True
         assert bindings.CALLS['data::unsigned'](client, p_x=2**64-1) == 2**64-1
-        assert bindings.UNSUPPORTED_FUNCTIONS['data::view'] == 'reference boundary'
-        assert 'data::view' not in bindings.CALLS
-        fails(bindings.CodecError, 'UnsupportedFunction', lambda: client.call('data::view', x=1))
+        assert bindings.UNSUPPORTED_FUNCTIONS['data::nodata'] == 'unavailable wire representation'
+        assert 'data::nodata' not in bindings.CALLS
+        fails(bindings.CodecError, 'UnsupportedFunction', lambda: client.call('data::nodata'))
         fails(bindings.CodecError, 'UnknownFunction', lambda: client.call('missing'))
         fails(bindings.CodecError, 'IncompleteCodecValue', lambda: client.call('data::shift', x=positive(wire(7))))
         fails(bindings.CodecError, 'CodecIntegerOutOfRange', lambda: client.call('data::unsigned', x=-1))

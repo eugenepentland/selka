@@ -20,19 +20,16 @@ def main():
         data = root / 'data.my'
         source = '''module data;
 export Point; export Status; export Choice; export Outcome; export Identity;
-export Nodes; export NodeId; export Node; export Bytes; export File;
-export view; export reference; export sample;
+export Node; export File;
+export copy; export sample;
 struct Point { x: u64, y: [2]bool, table: [Status]u16 }
 enum Status { ready, failed }
 union Choice { empty, point: Point }
 result Outcome { ok: Choice, err: Status }
 domain Identity: i8 { private fn raw(x: i8) -> Identity { return wrap<Identity>(x); } }
-pool Nodes(NodeId): Node;
-struct Node { next: NodeId }
-buffer Bytes: u8;
+struct Node { next: Identity }
 resource File: filesystem;
-fn view(x: &mut []Point) -> &mut []Point from x { return x; }
-fn reference(x: &Point) -> &Point from x { return x; }
+fn copy(x: Point) -> Point { return x; }
 result Time { ok: i64, err: i64 }
 fn sample(clock: clock_cap) -> i64 { match clock_now<Time>(clock) { Time.ok(x) => { return x; }, Time.err(code) => { return code; } } }
 struct Hidden { secret: i32 }
@@ -68,18 +65,13 @@ struct Hidden { secret: i32 }
         assert types['data::Outcome']['kind'] == 'result' and types['data::Outcome']['requires_handling']
         assert types['u64']['maximum'] == '18446744073709551615'
         assert types['i64']['minimum'] == '-9223372036854775808'
-        assert types['data::Nodes']['element'] == 'data::Node'
-        assert types['data::Nodes']['handle'] == 'data::NodeId'
-        assert types['data::NodeId']['pool'] == 'data::Nodes'
-        assert types['data::Bytes']['opaque'] and types['data::Bytes']['move_only']
+        assert types['data::Node']['fields'][0]['type'] == 'data::Identity'
         assert types['data::File']['authority'] == 'filesystem'
         assert types['clock_cap']['opaque']
         assert functions['data::sample']['effects'] == ['clock']
-        assert functions['data::view']['parameters'] == [{'name': 'x', 'type': 'data::Point', 'mode': 'exclusive_slice'}]
-        assert functions['data::view']['return_reference'] == {'parameter': 0, 'mutable': True, 'slice': True}
-        assert functions['data::reference']['parameters'][0]['mode'] == 'shared_reference'
+        assert functions['data::copy']['parameters'] == [{'name': 'x', 'type': 'data::Point', 'mode': 'value'}]
         for definition in types.values():
-            for key in ('element', 'key', 'handle', 'pool'):
+            for key in ('element', 'key'):
                 if key in definition:
                     assert definition[key] in types
             for field in definition.get('fields', []):

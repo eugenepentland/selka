@@ -13,7 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 from workers import Limits, Pool, canonical, schema_identity
 
 SOURCE = b'''module main;
-export Stats;export analyze;export loop;export view;export clock;export Time;
+export Stats;export analyze;export loop;export nodata;export clock;export Time;
 struct Stats{sum:i64,squares:i64}
 fn analyze(values:[4]i64)->Stats{
     let mut sum=0;let mut squares=0;let mut i=0u64;
@@ -21,7 +21,7 @@ fn analyze(values:[4]i64)->Stats{
     return new Stats{sum:sum,squares:squares};
 }
 fn loop(n:i64)->i64{let mut i=n;while true{i+=1;if i==1000000{i=0;}}return i;}
-fn view(n:&i64)->i64{return read_ref(n);}
+fn nodata()->unit{}
 result Time{ok:i64,err:i64}
 fn clock(c:clock_cap)->Time{return clock_now<Time>(c);}
 fn main()->i64{return 0;}
@@ -88,7 +88,7 @@ def application(compiler, directory):
         thread.start()
         thread.join()
         assert failures == [True]
-        for function, arguments in [('main::view', {'n': '4'}), ('main::clock', {'c': False})]:
+        for function, arguments in [('main::nodata', {}), ('main::clock', {'c': False})]:
             denied = pool.wait(pool.submit(sources, request(identity, function, arguments)))
             assert denied.state == 'failed' and not denied.output, denied
         stale = pool.wait(pool.submit(sources, request('0' * 64)))

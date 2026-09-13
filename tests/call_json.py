@@ -19,13 +19,13 @@ def main():
         module = root / 'data.my'
         path = root / 'request.json'
         entry.write_text('module main;import data;fn main()->i64{return 0;}')
-        source = fixture.read_text().replace('module data;', 'module data; export shift; export zero; export unsigned; export explode; export view;')
+        source = fixture.read_text().replace('module data;', 'module data; export shift; export zero; export unsigned; export explode; export nodata;')
         source += '''
 fn shift(x:Positive,n:i64)->Decoded{return Positive.from_wire(new Wire{n:Positive.to_wire(x).n+n});}
 fn zero()->bool{return true;}
 fn unsigned(x:u64)->u64{return x;}
 fn explode(x:i64)->i64{return x/0;}
-fn view(x:&i64)->i64{return read_ref(x);}
+fn nodata()->unit{}
 fn hidden()->i64{return 9;}
 '''
         module.write_text(source)
@@ -79,7 +79,7 @@ fn hidden()->i64{return 9;}
             ('data::hidden', {}, 'UnknownPublicFunction'),
             ('main::main', {}, 'UnknownPublicFunction'),
             ('data::Positive.raw', {'x': '1'}, 'UnknownPublicFunction'),
-            ('data::view', {'x': '1'}, 'InvocationReference'),
+            ('data::nodata', {}, 'NotDataType'),
             ('data::explode', {'x': '1'}, 'InvocationTrap'),
         ):
             write(name, arguments)

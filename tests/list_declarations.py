@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ENTRY = re.compile(r'^[A-Za-z_][A-Za-z0-9_]*$')
 # index-project checks a whole module graph and hashes the running executable, so
 # the symbol comparison uses representative projects rather than every file.
-INDEXED = ('examples/modules/main.my', 'experiments/application_comparison/baselines/eda/my/main.my')
+INDEXED = ('examples/modules/main.my', 'src/schematic/guest/main.my')
 
 
 def listing(compiler, path):

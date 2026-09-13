@@ -14,7 +14,7 @@ export Pair;export Choice;export add;export echo_pair;export echo_array;export e
 struct Pair{x:i64,flag:bool}
 union Choice{none,value:i64}
 fn add(a:i64,b:i64)->i64{return a+b;}
-fn echo_pair(p:Pair)->Pair{return update(p){x:p.x+1,flag:!p.flag};}
+fn echo_pair(p:Pair)->Pair{let mut q=p;q.x=p.x+1;q.flag=!p.flag;return q;}
 fn echo_array(a:[3]i64)->[3]i64{return replace(a,1,42);}
 fn echo_choice(c:Choice)->Choice{return c;}
 fn fail(x:i64)->i64{return 1/x;}

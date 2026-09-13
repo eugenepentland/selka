@@ -9,7 +9,7 @@ SCALARS = {'bool', 'i8', 'i16', 'i32', 'i64', 'u8', 'u16', 'u32', 'u64'}
 def library_wrapper(entry, units, schema=None, wire_types=None, entry_parameters=None, codecs=None):
     entry_parameters = entry_parameters or []
     capabilities = {'clock_cap': 0, 'random_cap': 1, 'environment_cap': 2}
-    if any(t != 'allocator' and t not in capabilities for t in entry_parameters):
+    if any(t not in capabilities for t in entry_parameters):
         raise ValueError('unsupported QBE run ABI entry capability')
     exports = []
     declarations = {entry: len(entry_parameters)}
@@ -39,7 +39,7 @@ def library_wrapper(entry, units, schema=None, wire_types=None, entry_parameters
         lines.append(f'extern uint64_t {symbol}(void *' + (', const uint64_t *' if count>128 else ', uint64_t' * count) + ');')
     lines.append('static uint64_t entry_run(void *ctx) {')
     for i, ty in enumerate(entry_parameters):
-        value = '1' if ty == 'allocator' else f'myl_qbe_grant_external(ctx,{capabilities[ty]})'
+        value = f'myl_qbe_grant_external(ctx,{capabilities[ty]})'
         lines.append(f' uint64_t arg{i}={value};')
     if entry_parameters:
         lines.append(' if(myl_qbe_failed(ctx))return 0;')

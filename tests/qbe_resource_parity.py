@@ -20,13 +20,13 @@ def main():
            ('retry',example,{'COMPLETE':1},0,b'7\n',None),
            ('denied',example,{'COMPLETE':2},0,b'2\n',None),
            ('missing','fn main(fs:filesystem_cap)->i64{return 7;}',{'MISSING':1},2,b'',b'CapabilityUnavailable')]
-    reordered=prefix+'struct Pair{first:File,second:File}fn work(fs:filesystem_cap)->Run{let first=try acquire_resource<A>(fs,new [1]u8[42u8]);let second=try acquire_resource<A>(fs,new [0]u8[]);let pair=new Pair{first:second,second:first};discard pair;return new Run.ok(9);}'+finish
+    reordered=prefix+'struct Pair{first:File,second:File}fn work(fs:filesystem_cap)->Run{let first=acquire_resource<A>(fs,new [1]u8[42u8])?;let second=acquire_resource<A>(fs,new [0]u8[])?;let pair=new Pair{first:second,second:first};_ = pair;return new Run.ok(9);}'+finish
     cases.append(('record-drop-order',reordered,{},0,b'9\n',None))
     cases.extend(oracle.io_cases(prefix,finish))
     generic=(root/'examples/generic-resources.my').read_text()
     cases.extend([('generic',generic,{},0,b'8\n',None),
                   ('generic-network',generic.replace('filesystem','network'),{},0,b'8\n',None)])
-    quota=prefix+'fn work(fs:filesystem_cap,n:i64)->Run{let first=try acquire_resource<A>(fs,new [0]u8[]);if n==0{discard first;return new Run.ok(0);}let second=try acquire_resource<A>(fs,new [0]u8[]);return work(fs,n-1);}fn main(fs:filesystem_cap)->i64{match work(fs,512){Run.ok(n)=>{return n;},Run.err(first)=>{match work(fs,512){Run.ok(n)=>{return n;},Run.err(second)=>{return first+second;}}}}}'
+    quota=prefix+'fn work(fs:filesystem_cap,n:i64)->Run{let first=acquire_resource<A>(fs,new [0]u8[])?;if n==0{_ = first;return new Run.ok(0);}let second=acquire_resource<A>(fs,new [0]u8[])?;_ = second;return work(fs,n-1);}fn main(fs:filesystem_cap)->i64{match work(fs,512){Run.ok(n)=>{return n;},Run.err(first)=>{match work(fs,512){Run.ok(n)=>{return n;},Run.err(second)=>{return first+second;}}}}}'
     cases.append(('quota-reuse',quota,{},0,b'8\n',None))
     with tempfile.TemporaryDirectory(prefix='qbe-resources-') as directory:
         directory=Path(directory)

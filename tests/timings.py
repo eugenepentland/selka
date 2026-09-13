@@ -72,7 +72,7 @@ def main():
             assert timed.stdout == normal.stdout, (mode, timed)
             records(timed, 'compiler', ['source_load_parse', 'frontend', *phases, 'total'])
         (root / 'io.my').write_text('module io;export length;export byte;export put;host fn length()->i64 effects(host);host fn byte(index:i64)->u8 effects(host);host fn put(value:u8)->i64 effects(host);')
-        project.write_text('module main;import io;fn main()->i64{let mut i=0;while i<io::length(){discard io::put(io::byte(i));i+=1;}return 0;}')
+        project.write_text('module main;import io;fn main()->i64{let mut i=0;while i<io::length(){_ = io::put(io::byte(i));i+=1;}return 0;}')
         payload = b'\x00\xff\xc0\x80{broken}'
         normal = command(runner, '--project', str(root), data=payload)
         timed = command(runner, '--project', str(root), '--timings=json', data=payload)
@@ -82,7 +82,7 @@ def main():
         assert counts['input_bytes'] == counts['output_bytes'] == len(payload)
         assert counts['modules'] == 2
         assert command(runner, '--project', str(root), '--timings=json', '--timings=json').returncode != 0
-        project.write_text('module main;import io;fn main()->i64{discard io::put(65u8);return 1;}')
+        project.write_text('module main;import io;fn main()->i64{_ = io::put(65u8);return 1;}')
         failed = command(runner, '--project', str(root), '--timings=json')
         assert failed.returncode == 1 and not failed.stdout
         records(failed, 'byte_io', ['compilation_inclusive', 'stdin_read', 'vm_execution', 'total'])

@@ -53,7 +53,7 @@ def main():
             'host fn put(value:u8)->i64 effects(host);')
         entry = project / 'main.my'
         entry.write_text('module main;import io;fn main()->i64{let size=io::length();let mut i=0;'
-                         'while i<size{discard io::put(io::byte(i));i+=1;}return 0;}')
+                         'while i<size{_ = io::put(io::byte(i));i+=1;}return 0;}')
         for mode in ('Debug', 'ReleaseFast'):
             output = project / mode
             common = [sys.executable, ROOT / 'scripts/qbe.py', '--compiler', args.compiler.resolve(),

@@ -218,8 +218,8 @@ def project_and_locations(builder):
 
 
 def boundary_acceptance(builder):
-    builder.source.write_text((ROOT / 'src/native_fixtures/typed_json.my').read_text())
-    builder.build()
+    builder.source.write_text((ROOT / 'src/native_fixtures/composite.my').read_text())
+    builder.build('--provider', ROOT / 'tests/native_host_composite.c')
     builder.execute(b'42\n')
     builder.execute(b'42\n', options=['--gc-stress'])
     builder.source.write_text(native_providers.SOURCES[0])

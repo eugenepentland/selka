@@ -16,7 +16,7 @@ IO = ('module io;export length;export byte;export put;export Block;export read_b
       'host fn write_block(block:Block)->i64 effects(host);')
 SOURCES = {
     'scalar': ('fn main()->i64{let size=io::length();let mut i=0;'
-               'while i<size{discard io::put(io::byte(i));i+=1;}return 0;}'),
+               'while i<size{_ = io::put(io::byte(i));i+=1;}return 0;}'),
     'block256': ('fn main()->i64{let size=io::length();let mut i=0;while i<size{'
                  'let block=io::read_block(i);let count=block.count;'
                  'if io::write_block(block)!=count{return 1;}i+=count;}return 0;}'),

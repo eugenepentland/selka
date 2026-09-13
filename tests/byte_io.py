@@ -17,38 +17,36 @@ def main():
             (root / 'main.my').write_text('module main;import io;' + source)
             return subprocess.run([str(runner), '--project', str(root), *flags], input=data,
                                   capture_output=True, timeout=30)
-        copied = run('fn main()->i64{let mut i=0;while i<io::length(){discard io::put(io::byte(i));i+=1;}return 0;}', b'\x00\xff\xc0\x80{broken}')
+        copied = run('fn main()->i64{let mut i=0;while i<io::length(){_ = io::put(io::byte(i));i+=1;}return 0;}', b'\x00\xff\xc0\x80{broken}')
         assert copied.returncode == 0, copied.stderr
         assert copied.stdout == b'\x00\xff\xc0\x80{broken}'
-        measured = run('fn main()->i64{discard io::put(65u8);return 0;}', flags=('--memory-report',))
+        measured = run('fn main()->i64{_ = io::put(65u8);return 0;}', flags=('--memory-report',))
         assert measured.returncode == 0 and measured.stdout == b'A', measured.stderr
         accounting = json.loads(measured.stderr)
         assert accounting['version'] == 'runtime-memory-v1'
         assert accounting['total']['live'] == 0
         assert accounting['vm_categories']['guest_backing']['live'] == 0
         assert accounting['vm_categories']['bookkeeping_and_snapshots']['peak'] > 0
-        assert accounting['logical_slots']['buffers']['total_capacity'] == 0
         assert accounting['vm']['peak'] > 0 and accounting['host']['peak'] > 0
-        backed = run('buffer B:i64;result R{ok:B,err:i64}fn main(a:allocator)->i64{arena a as child{match acquire_buffer<R>(child,8){R.ok(b)=>{discard b;},R.err(e)=>{return e;}}}return 0;}', flags=('--memory-report',))
+        backed = run('fn main()->i64{let values:List<i64>=[];values.push(8);_ = values;return 0;}',
+                     flags=('--memory-report',))
         assert backed.returncode == 0, backed.stderr
         backing_report = json.loads(backed.stderr)
         assert backing_report['vm_categories']['guest_backing']['peak'] > 0
         assert backing_report['vm_categories']['guest_backing']['live'] == 0
-        assert backing_report['logical_slots']['buffers']['peak_capacity'] == 8
-        assert backing_report['logical_slots']['buffers']['total_capacity'] == 0
         for flag in ('--max-runtime-bytes=0', '--max-vm-bytes=0', '--max-host-bytes=0'):
-            exhausted = run('fn main()->i64{discard io::put(65u8);return 0;}', flags=(flag, '--memory-report'))
+            exhausted = run('fn main()->i64{_ = io::put(65u8);return 0;}', flags=(flag, '--memory-report'))
             assert exhausted.returncode != 0 and not exhausted.stdout, exhausted
             report = next(json.loads(line) for line in exhausted.stderr.splitlines() if line.startswith(b'{'))
             assert report['total']['live'] == 0, report
         # The same binary reads a changed guest source on its next invocation.
-        changed = run('fn main()->i64{discard io::put(65u8);return 0;}')
+        changed = run('fn main()->i64{_ = io::put(65u8);return 0;}')
         assert changed.returncode == 0 and changed.stdout == b'A', changed.stderr
-        for source in ['fn main()->i64{discard io::put(65u8);return 1;}',
-                       'fn main()->i64{discard io::put(65u8);discard io::byte(-1);return 0;}']:
+        for source in ['fn main()->i64{_ = io::put(65u8);return 1;}',
+                       'fn main()->i64{_ = io::put(65u8);_ = io::byte(-1);return 0;}']:
             failed = run(source)
             assert failed.returncode != 0 and failed.stdout == b'', failed
-        length = run('fn main()->i64{if io::length()==2097152{discard io::put(66u8);return 0;}return 1;}', b'x' * (2 * 1024 * 1024))
+        length = run('fn main()->i64{if io::length()==2097152{_ = io::put(66u8);return 0;}return 1;}', b'x' * (2 * 1024 * 1024))
         assert length.returncode == 0 and length.stdout == b'B', length.stderr
         oversized = run('fn main()->i64{return 0;}', b'x' * (2 * 1024 * 1024 + 1))
         assert oversized.returncode != 0 and oversized.stdout == b'', oversized
@@ -98,7 +96,7 @@ def scoped_checks(runner):
         def run(request, flags, expected=0):
             source = declarations + ('fn main(fs:filesystem_cap)->i64{match acquire_resource<Open>(fs,"' + request + '") {'
                      'Open.err(e)=>{if e==2{return 0;}return 9;},Open.ok(input)=>{let mut file=input;'
-                     'acknowledge write_resource<Written>(file,"changed");return ' + str(expected) + ';}}}')
+                     '_ = write_resource<Written>(file,"changed");return ' + str(expected) + ';}}}')
             (root / 'main.my').write_text(source)
             return subprocess.run([str(runner), '--project', str(root), *flags], input=b'', capture_output=True, timeout=15)
         grant = '--allow-dir=' + str(data)
@@ -120,7 +118,7 @@ def scoped_checks(runner):
             endpoint = '127.0.0.1:' + str(server.getsockname()[1])
             (root / 'main.my').write_text('module main;import io;resource Socket:network;result Open{ok:Socket,err:i64}'
                 'result Written{ok:u64,err:i64}fn main(net:network_cap)->i64{match acquire_resource<Open>(net,"' + endpoint + '") {'
-                'Open.err(discard)=>{return 1;},Open.ok(input)=>{let mut socket=input;acknowledge write_resource<Written>(socket,"ping");return 0;}}}')
+                'Open.err(_)=>{return 1;},Open.ok(input)=>{let mut socket=input;_ = write_resource<Written>(socket,"ping");return 0;}}}')
             result = subprocess.run([str(runner), '--project', str(root), '--allow-endpoint=' + endpoint],
                                     input=b'', capture_output=True, timeout=15)
             assert result.returncode == 0, result.stderr

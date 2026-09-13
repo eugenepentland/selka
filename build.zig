@@ -317,12 +317,6 @@ pub fn build(b: *std.Build) void {
     qbe_managed.addFileArg(qbe_tool);
     qbe_managed.setCwd(b.path("."));
     qbe_step.dependOn(&qbe_managed.step);
-    const qbe_json = b.addSystemCommand(&.{ "python3", "tests/qbe_json.py", "--compiler" });
-    qbe_json.addFileArg(exe.getEmittedBin());
-    qbe_json.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe" });
-    qbe_json.addFileArg(qbe_tool);
-    qbe_json.setCwd(b.path("."));
-    qbe_step.dependOn(&qbe_json.step);
     const qbe_providers = b.addSystemCommand(&.{ "python3", "tests/qbe_provider_parity.py", "--compiler" });
     qbe_providers.addFileArg(exe.getEmittedBin());
     qbe_providers.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe" });

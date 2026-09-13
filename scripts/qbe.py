@@ -113,8 +113,7 @@ def metadata_source(units, runtime_data="", host=None):
 
 
 def entry_wrapper(entry, parameters, provider=False):
-    capabilities = {'allocator': 'UINT64_C(1)',
-                    'clock_cap': 'myl_qbe_grant_external(ctx,0)',
+    capabilities = {'clock_cap': 'myl_qbe_grant_external(ctx,0)',
                     'random_cap': 'myl_qbe_grant_external(ctx,1)',
                     'environment_cap': 'myl_qbe_grant_external(ctx,2)',
                     'filesystem_cap': 'myl_qbe_grant_resource(ctx,0)',
@@ -245,25 +244,6 @@ def main():
                 lambda temporary, candidate: run([zig, 'build-obj', ROOT / 'src/native_format.zig',
                     '-fPIC', '-O', args.mode, '-femit-bin=' + str(candidate)]))
             objects.append(format_obj)
-        if value.get('json') is not None:
-            from qbe_json import source as json_source
-            helpers = json_source(value['json'], value['wire_types'])
-            helper_key = key_for({'environment': environment, 'json_helpers': helpers,
-                                  'json_abi': digest_file(ROOT / 'src/native_json_abi.h')})
-            def build_json_helpers(temporary, candidate):
-                source = temporary / 'json-helpers.c'
-                source.write_text(helpers)
-                run([zig, 'cc', *flags, '-I', ROOT / 'src', '-c', source, '-o', candidate])
-            helper_obj, _ = cached_object(cache, helper_key, build_json_helpers)
-            # Conservatively fingerprint all local Zig sources: normative codec
-            # support imports semantic modules transitively without the VM runner.
-            bridge_inputs = {str(p.relative_to(ROOT)): digest_file(p)
-                             for p in sorted((ROOT / 'src').rglob('*.zig'))}
-            bridge_key = key_for({'environment': environment, 'json_bridge': bridge_inputs})
-            bridge_obj, _ = cached_object(cache, bridge_key,
-                lambda temporary, candidate: run([zig, 'build-obj', ROOT / 'src/native_json_bridge.zig',
-                    '-lc', '-fPIC', '-O', args.mode, '-femit-bin=' + str(candidate)]))
-            objects.extend([helper_obj, bridge_obj])
         codegen_seconds = time.monotonic() - native_start
         link_start = time.monotonic()
         with tempfile.TemporaryDirectory(prefix='.mylang-qbe-', dir=output.parent) as directory:

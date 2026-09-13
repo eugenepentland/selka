@@ -35,7 +35,7 @@ def cases():
             maximum = (1 << (width - int(signed))) - 1
             minimum = -(1 << (width - 1)) if signed else 0
             for expression in (f'{maximum}{ty}+1{ty}', f'{minimum}{ty}-1{ty}', f'{maximum}{ty}*2{ty}'):
-                yield 'fn main()->i64{discard '+expression+';return 0;}'
+                yield 'fn main()->i64{_ = '+expression+';return 0;}'
             yield f'fn id(x:{ty})->{ty}{{return x;}}fn main()->i64{{if id({maximum}{ty})=={maximum}{ty}{{return 7;}}return 0;}}'
     # Existing boundary corpus covers all widths for bitwise/wrapping/saturating operations.
     from native_integer_operations import cases as integer_extension_cases
@@ -57,31 +57,17 @@ def extended_cases():
     medium = 'fn build()->[512]i64 effects(){return new [512]i64[' + ','.join(str(i) for i in range(512)) + '];}'
     yield medium + 'fn total(a:[512]i64,b:[512]i64)->i64 effects(){return a[511]+b[510];}fn main()->i64{let f=total;return f(build(),build());}'
     for name in ('records', 'arrays', 'variants', 'generic-records', 'generic-arrays',
-                 'generic-variants', 'callbacks', 'results', 'generic-results', 'references',
-                 'reference-parameters', 'slices', 'returned-references', 'generic-returned-references',
-                 'split-borrows', 'buffers', 'buffer-views', 'pools', 'arenas'):
+                 'generic-variants', 'callbacks', 'results', 'generic-results'):
         yield (ROOT / 'examples' / (name + '.my')).read_text()
-    yield ('buffer B:i64;result Open{ok:B,err:i64}result Work{ok:i64,err:i64}'
-           'fn early(heap:allocator)->Work{arena heap as local{let data=try acquire_buffer<Open>(local,1);return new Work.ok(42);}}'
-           'fn main(heap:allocator)->i64{let mut value=0;arena heap as outer{match early(outer){Work.ok(x)=>{value=x;},Work.err(e)=>{value=e;}}}return value;}')
-    # A failed later argument must destroy an earlier transferred owner.
-    yield ('buffer B:i64;'
-           'result Open{ok:B,err:i64}'
-           'result Work{ok:i64,err:i64}'
-           'fn fail()->Work{return new Work.err(7);}'
-           'fn consume(data:B,x:i64)->Work{discard data;return new Work.ok(x);}'
-           'fn work(heap:allocator)->Work{arena heap as local{let data=try acquire_buffer<Open>(local,1);return consume(data,try fail());}}'
-           'fn main(heap:allocator)->i64{let mut value=0;arena heap as outer{match work(outer){Work.ok(x)=>{value=x;},Work.err(e)=>{value=e;}}}return value;}')
-    # Reassignment consumes the previous owner before the region closes.
-    yield ('buffer B:i64;'
-           'result Open{ok:B,err:i64}'
-           'result Work{ok:i64,err:i64}'
-           'fn work(heap:allocator)->Work{arena heap as local{let mut data=try acquire_buffer<Open>(local,1);data=try acquire_buffer<Open>(local,2);discard data;return new Work.ok(42);}}'
-           'fn main(heap:allocator)->i64{let mut value=0;arena heap as outer{match work(outer){Work.ok(x)=>{value=x;},Work.err(e)=>{value=e;}}}return value;}')
-    yield 'list N:i64;fn build()->N{let xs=new_list<N>(0);let mut i=0;while i<40{append_list(xs,i);i+=1;}return xs;}fn main()->i64{let xs=build();let alias=xs;write_list(alias,2,42);return read_list(xs,2)+cast<i64>(len_list(xs));}'
-    yield 'list N:i64;list Rows:N;struct Box{row:N}fn main()->i64{let a=new_list<N>(0);append_list(a,42);let box=new Box{row:a};let rows=new_list<Rows>(0);append_list(rows,box.row);let mut i=0;while i<20{let garbage=new_list<N>(2);append_list(garbage,i);i+=1;}let inner=read_list(rows,0);return read_list(inner,0);}'
-    yield 'list N:i64;fn main()->i64{let xs=new_list<N>(0);return read_list(xs,0);}'
-    yield 'list N:i64;fn main()->i64{let xs=new_list<N>(-1);return 0;}'
+    # Managed list aliasing, nested managed graphs and bounds traps.
+    yield ('fn build()->List<i64>{let xs:List<i64>=[];let mut i=0;while i<40{xs.push(i);i+=1;}return xs;}'
+           'fn main()->i64{let xs=build();let alias=xs;alias[2u64]=42;return xs[2u64]+len(xs);}')
+    yield ('struct Box{row:List<i64>}'
+           'fn main()->i64{let a:List<i64>=[];a.push(42);let box=new Box{row:a};'
+           'let rows:List<List<i64>>=[];rows.push(box.row);let mut i=0;'
+           'while i<20{let garbage:List<i64>=[];garbage.push(i);i+=1;}'
+           'let inner=rows[0u64];return inner[0u64];}')
+    yield 'fn main()->i64{let xs:List<i64>=[];return xs[0u64];}'
     yield 'fn main()->i64{let xs=new [2]i64[1,2];return xs[2];}'
     yield 'fn main()->i64{if f64_div(0u64,0u64)!=9221120237041090560u64{return 1;}if !f64_eq(0u64,9223372036854775808u64){return 2;}return cast<i64>(f64_to_u64(f64_add(f64_from_u64(20u64),f64_from_u64(22u64))));}'
 

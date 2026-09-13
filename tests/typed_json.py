@@ -19,7 +19,7 @@ def main():
         entry.write_text('module main; import data; fn main() -> i64 { return 0; }')
         source = '''module data;
 export Point; export Flag; export Choice; export Outcome; export Empty;
-export Secret; export Maybe; export Bytes; export File; export Pool; export Handle;
+export Secret; export Maybe; export File;
 export Zero;
 struct Point { x: u64, flags: [Flag]bool, samples: [2]i16 }
 enum Flag { yes, no }
@@ -29,9 +29,7 @@ struct Empty {}
 domain Secret: i64 { fn make(x: i64) -> Secret { return wrap<Secret>(x); } }
 union Maybe { none, some: Secret }
 struct Zero { data: [0]Secret }
-buffer Bytes: u8;
 resource File: filesystem;
-pool Pool(Handle): i64;
 struct Private { hidden: bool }
 '''
         module.write_text(source)
@@ -100,9 +98,9 @@ struct Private { hidden: bool }
         reject('data::Point', {**point, 'samples': ['1']}, 'IncompleteCodecValue', '/value/samples/1')
         reject('data::Point', {**point, 'flags': {'yes': True}}, 'IncompleteCodecValue', '/value/flags/no')
         reject('data::Point', {**point, 'flags': {'yes': True, 'maybe': False}}, 'IncompleteCodecValue')
-        for ty, value in [('Secret', '1'), ('Maybe', {'case': 'none'}), ('Zero', {'data': []}), ('Bytes', []), ('File', '1'), ('Pool', []), ('Handle', '1')]:
+        for ty, value in [('Secret', '1'), ('Maybe', {'case': 'none'}), ('Zero', {'data': []}), ('File', '1')]:
             reject('data::' + ty, value, 'NoImplicitCodec')
-        reject('allocator', '1', 'NoImplicitCodec', '/type')
+        reject('clock_cap', '1', 'NoImplicitCodec', '/type')
         reject('data::Private', {'hidden': True}, 'UnknownPublicValueType', '/type')
         reject('missing::Point', point, 'UnknownPublicValueType')
         reject('data::Outcome', {'case': 'ok', 'value': {'case': 'point', 'value': {**point, 'samples': ['1', '40000']}}}, 'CodecIntegerOutOfRange', '/value/value/value/samples/1')

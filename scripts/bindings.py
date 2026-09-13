@@ -111,8 +111,6 @@ def generate(schema, max_bytes=MAX_BYTES, *, snapshot=None):
             raise ValueError('unresolved function type: ' + name)
         if function['effects']:
             unsupported_functions[name] = 'effectful function'
-        elif function.get('return_reference') is not None or any(p['mode'] != 'value' for p in parameters):
-            unsupported_functions[name] = 'reference boundary'
         elif any(ty in call_unsupported for ty in signature):
             unsupported_functions[name] = 'unavailable wire representation'
     runtime, generator_hash = snapshot if snapshot is not None else generator_snapshot()
