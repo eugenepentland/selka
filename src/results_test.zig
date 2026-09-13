@@ -49,6 +49,13 @@ test "result checking runtime ownership and rendering survive allocation failure
     try testing.checkAllAllocationFailures(no_resize.allocator(), allocationScenario, .{});
 }
 
+/// Reject a complete Python-surface program, which needs no brace declarations.
+fn pythonReject(source: []const u8, code: []const u8) !void {
+    var compilation = try language.Compilation.init(testing.allocator, "results.my", source);
+    defer compilation.deinit();
+    try testing.expectError(error.SourceError, compilation.check());
+    try testing.expectEqualStrings(code, compilation.diagnostics.items[0].code);
+}
 // spec: CORE-10
 test "binding transfer and explicit release cannot silently drop results" {
     try result("result R { ok: i64, err: i64 } fn main() -> i64 { let first = new R.err(7); let second = first; _ = second; return 1; }", 1);
@@ -59,6 +66,11 @@ test "binding transfer and explicit release cannot silently drop results" {
     try reject("fn main() -> i64 { new R.err(7); return 0; }", "E_EXPLICIT_DISCARD_REQUIRED");
     try reject("fn swallow(r: R) -> i64 { return 0; } fn main() -> i64 { return swallow(new R.err(7)); }", "E_RESULT_UNHANDLED");
     try result("result R { ok: i64, err: i64 } fn swallow(r: R) -> i64 { _ = r; return 3; } fn main() -> i64 { return swallow(new R.err(7)); }", 3);
+    // The Python surface releases and rejects the same way.
+    try result("def fail() -> Result[int, int]:\n    return Err(7)\n\ndef main() -> int:\n    _ = fail()\n    return 0\n", 0);
+    try result("def swallow(r: Result[int, int]) -> int:\n    _ = r\n    return 3\n\ndef main() -> int:\n    return swallow(Err(7))\n", 3);
+    try pythonReject("def fail() -> Result[int, int]:\n    return Err(7)\n\ndef main() -> int:\n    fail()\n    return 0\n", "E_EXPLICIT_DISCARD_REQUIRED");
+    try pythonReject("def fail() -> Result[int, int]:\n    return Err(7)\n\ndef main() -> int:\n    pending = fail()\n    return 0\n", "E_RESULT_UNHANDLED");
 }
 
 test "result obligations must agree across all continuing branch and match paths" {
