@@ -2,7 +2,9 @@ struct Point { x: i64, y: i64 }
 struct Segment { start: Point, end: Point, visible: bool }
 
 fn move(point: Point, dx: i64) -> Point {
-    return update(point) { x: point.x + dx };
+    let mut moved = point;
+    moved.x = point.x + dx;
+    return moved;
 }
 
 fn main() -> i64 {

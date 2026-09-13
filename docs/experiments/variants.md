@@ -59,7 +59,7 @@ Missing-variant diagnostics name the variant and point to its declaration;
 duplicate arms point to the earlier arm.
 
 A payload arm must use `Type.variant(name)` to introduce an immutable binding,
-or `Type.variant(discard)` to ignore the payload explicitly. Empty variants take
+or `Type.variant(_)` to ignore the payload explicitly. Empty variants take
 neither. Bindings have the exact payload type, cannot shadow an active binding or
 top-level name, and exist only inside their arm. Sibling arms can reuse a name.
 Unused bindings receive the ordinary warning; `_` remains an ordinary identifier.

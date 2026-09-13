@@ -9,7 +9,7 @@ fn forward<T:copy>(value:T)->T{return value;}
 fn main()->i64 {
     let pair=new Pair{tag:D.make(40),bytes:new [2]u8 [1u8,2u8]};
     match echo(new Outcome.ok(forward::<Pair>(pair))) {
-        Outcome.err(discard)=>{return -1;},
+        Outcome.err(_)=>{return -1;},
         Outcome.ok(value)=>{
             if value.tag!=D.make(40){return -2;}
             return D.value(value.tag)+cast<i64>(value.bytes[1]);

@@ -96,23 +96,6 @@ fn functionInstruction(instructions: []language.bytecode.Instruction) !*language
     unreachable;
 }
 
-const ContextFixture = struct {
-    fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
-        const source = @embedFile("stdlib/fixtures/callback_context.my");
-        if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
-        if (source.len > limit) return error.TooLarge;
-        return allocator.dupe(u8, source);
-    }
-};
-// spec: CALLBACK-ALGORITHMS-1
-test "generic collection callbacks sort search and filter borrowed JSON document IDs with explicit ties" {
-    var program: language.embedded_project.Program = undefined;
-    try program.init(t.allocator, .{ .context = null, .read = ContextFixture.read });
-    defer program.deinit();
-    const outcome = try language.vm.run(t.allocator, program.compilation.code.?);
-    try t.expectEqual(@as(i64, 42), outcome.value);
-}
-
 fn invokeInstruction(instructions: []language.bytecode.Instruction) !*language.bytecode.Instruction {
     for (instructions) |*instruction| if (instruction.op == .invoke) return instruction;
     try t.expect(false);

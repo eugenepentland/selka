@@ -1,42 +1,42 @@
 module decoder;
 import model;
 export decode;
-fn checksum(bytes: &[]u8) -> u8 {
+fn checksum(bytes: [9]u8) -> u8 {
     let mut sum = 0u16;
     let mut index = 0u64;
     while index < 8u64 {
-        sum += cast<u16>(read_slice(bytes, index));
+        sum += cast<u16>(bytes[index]);
         index += 1u64;
     }
     return cast<u8>(sum % 256u16);
 }
-fn decode(bytes: &[]u8) -> model::Decoded {
-    if len_slice(bytes) != 9u64 {
+fn decode(bytes: [9]u8) -> model::Decoded {
+    if len(bytes) != 9u64 {
         return new model::Decoded.err(new model::Error.frame_length);
     }
-    if read_slice(bytes, 0) != 1u8 {
+    if bytes[0] != 1u8 {
         return new model::Decoded.err(new model::Error.version);
     }
-    let kind = read_slice(bytes, 1);
+    let kind = bytes[1];
     if kind != 1u8 && kind != 2u8 {
         return new model::Decoded.err(new model::Error.kind);
     }
-    let length = read_slice(bytes, 2);
+    let length = bytes[2];
     if (kind == 1u8 && length != 0u8) ||(kind == 2u8 && length != 4u8) {
         return new model::Decoded.err(new model::Error.payload_length);
     }
-    if checksum(bytes) != read_slice(bytes, 8) {
+    if checksum(bytes) != bytes[8] {
         return new model::Decoded.err(new model::Error.checksum);
     }
-    let sequence = read_slice(bytes, 3);
+    let sequence = bytes[3];
     if kind == 1u8 {
         return new model::Decoded.ok(new model::Message.heartbeat(sequence));
     }
-    let high = cast<u32>(read_slice(bytes, 4)) * 16777216u32;
-    let middle = cast<u32>(read_slice(bytes, 5)) * 65536u32 + cast<u32>(read_slice(bytes, 6)) * 256u32;
+    let high = cast<u32>(bytes[4]) * 16777216u32;
+    let middle = cast<u32>(bytes[5]) * 65536u32 + cast<u32>(bytes[6]) * 256u32;
     let reading = new model::Reading {
         sequence: sequence,
-        value: high + middle + cast<u32>(read_slice(bytes, 7))
+        value: high + middle + cast<u32>(bytes[7])
     };
     return new model::Decoded.ok(new model::Message.reading(reading));
 }

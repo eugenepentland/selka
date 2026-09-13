@@ -9,9 +9,8 @@ fn main() -> i64 {
     let original = new Box<i64> {
         value: 7
     };
-    let changed = update(original) {
-        value: 9
-    };
+    let mut changed = original;
+    changed.value = 9;
     let slot = new Slot<Box<i64>>.some(changed);
     match slot {
         Slot<Box<i64>>.none => {

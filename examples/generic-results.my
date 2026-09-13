@@ -3,10 +3,10 @@ result Number {
     err: i64
 }
 fn increment < T: integer >(input: Number, amount: T) -> Number {
-    return new Number.ok((try input) + cast<i64>(amount));
+    return new Number.ok((input?) + cast<i64>(amount));
 }
 fn number < T: copy >(context: T, input: Number) -> i64 {
-    discard context;
+    _ = context;
     match input {
         Number.ok(value) => {
             return value;
@@ -17,20 +17,20 @@ fn number < T: copy >(context: T, input: Number) -> i64 {
     }
 }
 fn count < T: copy >(context: T, early: bool, input: Number) -> i64 {
-    discard context;
+    _ = context;
     if early {
-        acknowledge input;
+        _ = input;
         return 1;
     }
-    acknowledge input;
+    _ = input;
     let mut index = 0;
     let mut pending = new Number.ok(0);
     while index < 3 {
-        acknowledge pending;
+        _ = pending;
         pending = new Number.ok(index);
         index += 1;
     }
-    acknowledge pending;
+    _ = pending;
     return index;
 }
 fn main() -> i64 {

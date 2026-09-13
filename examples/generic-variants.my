@@ -6,14 +6,14 @@ fn make<T: integer>(value: T) -> Choice {
     return new Choice.value(new Payload { n: cast<i64>(value) });
 }
 fn score<T: copy>(context: T, value: Choice) -> i64 {
-    discard context;
+    _ = context;
     match value {
         Choice.none => { return 0; },
         Choice.value(payload) => { return payload.n; }
     }
 }
 fn scalar<T: copy>(context: T, value: Scalar) -> i64 {
-    discard context;
+    _ = context;
     match value {
         Scalar.empty => { return 0; },
         Scalar.number(payload) => { return payload; }

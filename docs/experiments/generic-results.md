@@ -20,7 +20,7 @@ continuing body. Short-circuit operands must agree with the skipped path. These
 checks run on uncalled templates as well as instantiated ones.
 
 Nested record, array and union payloads retain result obligations. A payload
-pattern cannot use `(discard)` for a nested result. Projection cannot erase a
+pattern cannot use `(_)` for a nested result. Projection cannot erase a
 sibling result; array indexing cannot erase other result elements. Length,
 replacement and record update reject operations that would silently drop a
 result-bearing value. Whole-value transfers and preserving updates of unrelated

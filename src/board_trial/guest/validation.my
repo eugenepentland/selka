@@ -15,7 +15,7 @@ fn add(report: m::Report, position: u64, kind: m::ViolationKind, region: m::Regi
                 region: region
             });
         },
-        m::Slot<m::Violation>.some(discard) => {}
+        m::Slot<m::Violation>.some(_) => {}
     }
     return new m::Report {
         violations: report.violations + 1u64,
@@ -34,7 +34,7 @@ fn inspect(board: m::Board, item: m::Feature, position: u64, previous: m::Report
             m::Slot<m::Region>.none => {},
             m::Slot<m::Region>.some(region) => {
                 if policy::applies(item, region) {
-                    let contact = try geometry::contact(rect, region.rect);
+                    let contact = geometry::contact(rect, region.rect)?;
                     match contact {
                         m::Contact.clear => {},
                         m::Contact.intersection => {
@@ -49,7 +49,7 @@ fn inspect(board: m::Board, item: m::Feature, position: u64, previous: m::Report
     return new m::Validation.ok(report);
 }
 fn validate(board: m::Board) -> m::Validation effects(host) {
-    discard try checks::preflight(board);
+    _ = checks::preflight(board)?;
     let mut report = new m::Report {
         violations: 0u64,
         first: new m::Slot<m::Violation>.none
@@ -59,7 +59,7 @@ fn validate(board: m::Board) -> m::Validation effects(host) {
         match board.features[i] {
             m::Slot<m::Feature>.none => {},
             m::Slot<m::Feature>.some(item) => {
-                report = try inspect(board, item, i, report);
+                report = inspect(board, item, i, report)?;
             }
         }
         i = i + 1u64;

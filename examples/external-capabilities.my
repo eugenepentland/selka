@@ -2,8 +2,8 @@ result Time { ok: i64, err: i64 }
 result Random { ok: u64, err: i64 }
 
 fn sample(clock: clock_cap, rng: random_cap) -> Time effects(clock, random) {
-    let now = try clock_now<Time>(clock);
-    discard try random_u64<Random>(rng);
+    let now = clock_now<Time>(clock)?;
+    _ = random_u64<Random>(rng)?;
     return new Time.ok(now);
 }
 

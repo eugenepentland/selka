@@ -9,16 +9,14 @@ fn divide(n: i64, d: i64) -> Quotient {
 
 fn calculate(denominator: i64) -> Total {
     let mut value = 10;
-    borrow mut value as current {
-        write_ref(current, read_ref(current) + try divide(21, denominator));
-    }
+    value = value + divide(21, denominator)?;
     return new Total.ok(value);
 }
 
 fn handle(outcome: Total) -> i64 {
     match outcome {
         Total.ok(value) => { return value; },
-        Total.err(discard) => { return 3; }
+        Total.err(_) => { return 3; }
     }
 }
 

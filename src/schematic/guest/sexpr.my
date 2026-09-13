@@ -30,7 +30,7 @@ def at(nodes: list[Node], index: int) -> Node:
     return nodes[index]
 
 
-def form(nodes: list[Node], index: int, name: &[]u8) -> bool:
+def form(nodes: list[Node], index: int, name: bytes) -> bool:
     item = at(nodes, index)
     if item.kind != Kind.list or item.next == index + 1:
         return False

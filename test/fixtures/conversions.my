@@ -6,7 +6,7 @@ fn combine(x: i64, y: i64) -> i64 {
 }
 
 conversion fn to_view(source: Source) -> View {
-    discard source.note;
+    _ = source.note;
     return new View { distance: combine(source.x, source.y) };
 }
 

@@ -9,7 +9,7 @@ fn make<T: integer>(x: T) -> Sample {
     };
 }
 fn total<T: copy>(context: T, sample: Sample) -> i64 {
-    discard context;
+    _ = context;
     return sample.values[0] + sample.values[1] + cast<i64>(len(sample.values));
 }
 fn main() -> i64 {

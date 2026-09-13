@@ -11,7 +11,7 @@ fixed payload type: use an explicit integer cast when needed.
 
 Every match checks every arm, including arms after one that can fall through.
 Case names retain their declaring type, duplicates reject, and every declared
-case must be covered. Payload cases require a binding or explicit `(discard)`;
+case must be covered. Payload cases require a binding or explicit `(_)`;
 empty cases take neither. Payload bindings exist only in their own arm, so the
 same binding name may be reused in another arm. A match establishes return flow
 only if every arm returns. These checks also apply to uncalled templates.

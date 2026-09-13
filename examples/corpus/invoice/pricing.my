@@ -51,13 +51,13 @@ conversion fn receipt(totals: Totals) -> Receipt {
 fn calculate(books: i64, cables: i64, adapters: i64) -> Invoice {
     let lines = new [3]Line[new Line {
         product: new catalog::Product.book,
-        count: try quantity::Count.parse(books)
+        count: quantity::Count.parse(books)?
     }, new Line {
         product: new catalog::Product.cable,
-        count: try quantity::Count.parse(cables)
+        count: quantity::Count.parse(cables)?
     }, new Line {
         product: new catalog::Product.adapter,
-        count: try quantity::Count.parse(adapters)
+        count: quantity::Count.parse(adapters)?
     }];
     let mut gross = money::Cents.make(0u64);
     let mut items = 0u16;

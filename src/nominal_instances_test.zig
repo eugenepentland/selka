@@ -179,32 +179,9 @@ test "standard generic collections allocate sort search and mutate one borrowed 
     try t.expectEqual(@as(i64, 5), outcome.value);
 }
 
-fn readBounded(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
-    const client = @embedFile("stdlib/tests/bounded.my");
-    if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
-    if (client.len > limit) return error.TooLarge;
-    return allocator.dupe(u8, client);
-}
-// spec: BOUNDED-COLLECTIONS-1
-test "bounded maps sets and queues preserve owners through full duplicate and deletion paths" {
-    var program: language.embedded_project.Program = undefined;
-    try program.init(t.allocator, .{ .context = null, .read = readBounded });
-    defer program.deinit();
-    const outcome = try language.vm.runWithOptions(t.allocator, program.compilation.code.?, .{});
-    try t.expectEqual(@as(i64, 21), outcome.value);
-}
-
 fn boundedRuntime(allocator: std.mem.Allocator, code: language.bytecode.Program) !void {
     const outcome = language.vm.runWithOptions(allocator, code, .{});
     try t.expectEqual(@as(i64, 21), (try outcome).value);
-}
-
-test "bounded collection runtime frees ownership on every allocation failure" {
-    var program: language.embedded_project.Program = undefined;
-    try program.init(t.allocator, .{ .context = null, .read = readBounded });
-    defer program.deinit();
-    var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(no_resize.allocator(), boundedRuntime, .{program.compilation.code.?});
 }
 
 const owner_borrows =

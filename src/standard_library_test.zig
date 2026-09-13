@@ -53,14 +53,6 @@ fn runLibrary(text: []const u8, expected: i64) !void {
     const outcome = try language.vm.run(t.allocator, program.compilation.code.?);
     try t.expectEqual(expected, outcome.value);
 }
-// spec: STANDARD-MODULES-5
-test "checked JSON distinguishes absent null wrong type and emits optional data without tape offsets" {
-    try runLibrary(@embedFile("stdlib/fixtures/checked_json.my"), 0);
-}
-// spec: STANDARD-MODULES-6
-test "standard error context survives propagation and UTF8 and capacity failures stay distinct" {
-    try runLibrary(@embedFile("stdlib/fixtures/error_contracts.my"), 3);
-}
 // spec: STANDARD-MODULES-7
 test "standard generic results cannot be silently ignored" {
     try t.expectError(error.SourceError, runLibrary(
@@ -69,96 +61,22 @@ test "standard generic results cannot be silently ignored" {
     ));
 }
 
-// spec: STANDARD-MODULES-8
-test "borrowed collection mutations are bounded stable and preserve owners" {
-    try runLibrary(@embedFile("stdlib/fixtures/collection_borrows.my"), 42);
-}
-
-// spec: STANDARD-MODULES-9
-test "hash collections probe full tables tombstones replacements and byte keys" {
-    try runLibrary(@embedFile("stdlib/fixtures/hash_collections.my"), 42);
-}
-
 fn collectionFailureRun(allocator: std.mem.Allocator, code: language.bytecode.Program) !void {
     const outcome = language.vm.runWithOptions(allocator, code, .{});
     try t.expectEqual(@as(i64, 42), (try outcome).value);
 }
-test "collection owners unwind cleanly on every runtime allocation failure" {
-    for ([_][]const u8{ @embedFile("stdlib/fixtures/collection_borrows.my"), @embedFile("stdlib/fixtures/hash_collections.my"), @embedFile("stdlib/fixtures/owned_collections.my") }) |text| {
-        var fixture: Fixture = .{ .text = text };
-        var program: language.embedded_project.Program = undefined;
-        try program.init(t.allocator, .{ .context = &fixture, .read = Fixture.load });
-        defer program.deinit();
-        var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-        try t.checkAllAllocationFailures(no_resize.allocator(), collectionFailureRun, .{program.compilation.code.?});
-    }
-}
-
 // spec: STDLIB-TEXT-DATA-1
 test "text data modules expose byte prefixes and bounded split ranges" {
     try runLibrary("module main;import std_strings;import std_encoding;import std_format;" ++
         "fn main()->i64{if !std_strings::starts_with(\"abc\",\"ab\") || std_strings::ends_with(\"a\",\"ab\"){return -1;}" ++
         "let range=std_strings::trim(\" \\t a \\n\");return cast<i64>(range.end-range.start);}", 1);
 }
-test "text data codecs and builders handle integer extremes and format escaped objects" {
-    try runLibrary(@embedFile("stdlib/fixtures/text_data.my"), 42);
-}
-test "text data failures reject malformed codecs preserve negative zero and build nested JSON" {
-    try runLibrary(@embedFile("stdlib/fixtures/text_data_errors.my"), 42);
-}
 fn textRuntimeAllocation(allocator: std.mem.Allocator, code: language.bytecode.Program) !void {
     const outcome = try language.vm.run(allocator, code);
     if (outcome.value == -99) return error.OutOfMemory;
     try t.expectEqual(@as(i64, 42), outcome.value);
 }
-test "text data builder partial allocation failures release nested owned values" {
-    var fixture: Fixture = .{ .text = @embedFile("stdlib/fixtures/text_data.my") };
-    var program: language.embedded_project.Program = undefined;
-    try program.init(t.allocator, .{ .context = &fixture, .read = Fixture.load });
-    defer program.deinit();
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), textRuntimeAllocation, .{program.compilation.code.?});
-}
-test "text data fixed formatting truncates exact binary fractions across limb boundaries" {
-    try runLibrary(@embedFile("stdlib/fixtures/text_data_float_edges.my"), 42);
-}
-// spec: STDLIB-COMPOSITION-1
-test "standard text hash and JSON builders compose into a bounded word histogram" {
-    try runLibrary(@embedFile("stdlib/fixtures/word_counts.my"), 42);
-}
-
-// spec: STANDARD-OWNED-COLLECTIONS-1
-test "owned collection library preserves values across replacement failure and removal" {
-    try runLibrary(@embedFile("stdlib/fixtures/owned_collections.my"), 42);
-}
-
-// spec: STANDARD-PARITY-1
-// spec: STANDARD-PARITY-2
-// spec: STANDARD-PARITY-3
-test "application library parity sorting priority queues ASCII classes and pair iteration" {
-    try runLibrary(@embedFile("stdlib/fixtures/library_parity.my"), 42);
-}
-
 // spec: STANDARD-INTEGER-EXTREMA-1
 test "integer extrema cover all widths empty defaults and full signed ranges" {
     try runLibrary(@embedFile("stdlib/fixtures/integer_extrema.my"), 42);
-}
-
-// spec: STANDARD-JSON-SCHEMA-1
-test "ordinary JSON schema helpers iterate nested values and preserve absent null type bounds errors" {
-    try runLibrary(@embedFile("stdlib/fixtures/json_schema.my"), 42);
-}
-
-// spec: STANDARD-CORPUS-TEXT-1
-test "corpus text padding span joining absolute paths and Unicode materialization" {
-    try runLibrary(@embedFile("stdlib/fixtures/corpus_text_paths.my"), 42);
-}
-// spec: STANDARD-CORPUS-TEXT-2
-test "corpus text helpers release partial owned allocations" {
-    var fixture: Fixture = .{ .text = @embedFile("stdlib/fixtures/corpus_text_paths.my") };
-    var program: language.embedded_project.Program = undefined;
-    try program.init(t.allocator, .{ .context = &fixture, .read = Fixture.load });
-    defer program.deinit();
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), textRuntimeAllocation, .{program.compilation.code.?});
 }

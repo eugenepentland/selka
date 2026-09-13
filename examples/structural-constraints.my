@@ -6,7 +6,7 @@ struct TaggedReading {
     value: i64
 }
 fn value < T: copy + field(value: i64) >(item: T) -> i64 {
-    return read_field(item, value);
+    return item.value;
 }
 fn forward < U: copy + field(value: i64) >(item: U) -> i64 {
     return value::< U >(item);

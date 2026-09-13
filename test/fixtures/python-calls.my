@@ -1,16 +1,18 @@
 class Empty:
     pass
 
-def mark(log: &mut int, value: int) -> int:
-    write_ref(log, read_ref(log) * 10 + value)
+
+def mark(log: list[int], value: int) -> int:
+    log[0] = log[0] * 10 + value
     return value
+
 
 def combine(a: int, b: int = 2) -> int:
     return a * 10 + b
 
+
 def main() -> int:
     _ = Empty()
-    log = 0
-    borrow mut log as view:
-        answer = combine(b=mark(view, 2), a=mark(view, 4))
-        return answer + read_ref(view) * 100
+    log: list[int] = [0]
+    answer = combine(b=mark(log, 2), a=mark(log, 4))
+    return answer + log[0] * 100

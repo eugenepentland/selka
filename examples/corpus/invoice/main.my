@@ -6,7 +6,7 @@ fn main() -> i64 {
         pricing::Invoice.ok(receipt) => {
             return receipt.total;
         },
-        pricing::Invoice.err(discard) => {
+        pricing::Invoice.err(_) => {
             return - 1;
         }
     }

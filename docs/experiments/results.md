@@ -19,7 +19,7 @@ fn divide(n: i64, d: i64) -> Quotient {
 fn value_or_zero(outcome: Quotient) -> i64 {
     match outcome {
         Quotient.ok(value) => { return value; },
-        Quotient.err(discard) => { return 0; }
+        Quotient.err(_) => { return 0; }
     }
 }
 ```
@@ -81,7 +81,7 @@ has no payload.
 
 Whole wrappers can be transferred, returned, acknowledged, or exhaustively matched
 when they are variants. Matching a result-bearing payload requires a binding;
-`(discard)` cannot silently drop a nested result. A record projection may extract
+`(_)` cannot silently drop a nested result. A record projection may extract
 its sole result-bearing field when every omitted field is ordinary. Selecting an
 ordinary field while dropping a result-bearing sibling is rejected. Single-element
 arrays permit consuming extraction; indexing larger result-bearing arrays is

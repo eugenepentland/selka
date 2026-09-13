@@ -46,7 +46,7 @@ fn main(clock: clock_cap, random: random_cap) -> i64 {
                 return 6;
             }
         },
-        r::Sample.err(discard) => {
+        r::Sample.err(_) => {
             return 7;
         }
     }
@@ -56,7 +56,7 @@ fn main(clock: clock_cap, random: random_cap) -> i64 {
                 return 8;
             }
         },
-        r::Seeded.err(discard) => {
+        r::Seeded.err(_) => {
             return 9;
         }
     }

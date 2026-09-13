@@ -17,7 +17,7 @@ does not establish those capabilities.
   Ordinary `discard` cannot acknowledge a result.
 - Acknowledgement evaluates its operand and preserves traps and side effects.
   Match payloads inherit nested handling obligations, including when wrapped in
-  records, arrays or unions. A `(discard)` payload pattern cannot drop one.
+  records, arrays or unions. A `(_)` payload pattern cannot drop one.
 - Every branch and match arm starts from the same incoming obligation state.
   Paths that continue must agree on which outer bindings remain available.
   Returning paths must discharge their outstanding obligations independently.

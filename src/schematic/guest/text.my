@@ -37,12 +37,12 @@ def equal(a: Span, b: Span) -> bool:
     return True
 
 
-def matches(a: Span, b: &[]u8) -> bool:
-    if a.end - a.start != int(len_slice(b)):
+def matches(a: Span, b: bytes) -> bool:
+    if a.end - a.start != len(b):
         return False
     i = 0
     while i < a.end - a.start:
-        if io.byte(a.file, a.start + i) != read_slice(b, i):
+        if int(io.byte(a.file, a.start + i)) != b[i]:
             return False
         i += 1
     return True
@@ -64,11 +64,11 @@ def number(a: Span) -> int:
     return value
 
 
-def write(bytes: &[]u8):
-    i = 0u64
-    while i < len_slice(bytes):
-        _ = io.put(read_slice(bytes, i))
-        i += 1u64
+def write(text: bytes):
+    i = 0
+    while i < len(text):
+        _ = io.put(cast<u8>(text[i]))
+        i += 1
     return
 
 

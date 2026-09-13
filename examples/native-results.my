@@ -8,13 +8,13 @@ fn divide(n: i64, d: i64) -> Quotient {
 }
 
 fn calculate(denominator: i64) -> Total {
-    return new Total.ok(10 + try divide(21, denominator));
+    return new Total.ok(10 + divide(21, denominator)?);
 }
 
 fn handle(outcome: Total) -> i64 {
     match outcome {
         Total.ok(value) => { return value; },
-        Total.err(discard) => { return 3; }
+        Total.err(_) => { return 3; }
     }
 }
 

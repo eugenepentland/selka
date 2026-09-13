@@ -4,7 +4,9 @@ struct Pair {
 }
 enum Key { first, second }
 fn change<T: integer>(pair: Pair, index: T, value: i64) -> Pair {
-    return update(pair) { values: replace(pair.values, index, value) };
+    let mut changed = pair;
+    changed.values = replace(pair.values, index, value);
+    return changed;
 }
 fn put<T: integer>(table: [Key]i64, key: Key, value: T) -> [Key]i64 {
     return replace(table, key, cast<i64>(value));

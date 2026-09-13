@@ -617,7 +617,8 @@ pub const Parser = struct {
                     _ = try self.expect(.equal);
                     break :assignment .{ .binding = .{ .name = first.span, .mutable = true, .annotation = annotation, .value = try self.expression(0) } };
                 }
-                if (self.cursor.python_function and std.mem.eql(u8, self.src.text(first.span), "_") and self.tokens[self.cursor.pos + 1].tag == .equal) {
+                // `_ = value` is the only spelling that drops a value, in both dialects.
+                if (std.mem.eql(u8, self.src.text(first.span), "_") and self.tokens[self.cursor.pos + 1].tag == .equal) {
                     self.cursor.pos += 2;
                     break :assignment .{ .discard = try self.expression(0) };
                 }

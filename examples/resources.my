@@ -7,11 +7,7 @@ fn retry(file: File) -> Finish effects(filesystem) {
     match complete_resource<Finish>(file) {
         Finish.ok(done) => { return new Finish.ok(done); },
         Finish.err(failure) => {
-            if read_field(failure, code) == 3 {
-                return complete_resource<Finish>(failure.resource);
-            } else {
-                return new Finish.err(failure);
-            }
+            return new Finish.err(failure);
         }
     }
 }

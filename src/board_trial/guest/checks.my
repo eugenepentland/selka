@@ -52,14 +52,14 @@ fn preflight(board: m::Board) -> m::Preflight {
     if !bounds::valid(board.outline) {
         return new m::Preflight.err(new m::Failure.input(new m::InputProblem.invalid_bounds));
     }
-    discard try inventory::checkComponents(board.components);
-    discard try inventory::checkNets(board.nets);
+    _ = inventory::checkComponents(board.components)?;
+    _ = inventory::checkNets(board.nets)?;
     let mut i = 0u64;
     while i < len(board.regions) {
         match board.regions[i] {
             m::Slot<m::Region>.none => {},
             m::Slot<m::Region>.some(value) => {
-                discard try region(board, value);
+                _ = region(board, value)?;
             }
         }
         i = i + 1u64;
@@ -69,7 +69,7 @@ fn preflight(board: m::Board) -> m::Preflight {
         match board.features[i] {
             m::Slot<m::Feature>.none => {},
             m::Slot<m::Feature>.some(value) => {
-                discard try feature(board, value);
+                _ = feature(board, value)?;
             }
         }
         i = i + 1u64;
