@@ -740,6 +740,78 @@ const Checker = struct {
             return self.sink.fail(eListType, node.span, "list elements require copyable storable values without pending results");
         return (collections.Builder(Checker){ .checker = self, .span = node.span }).literal(expected.?, values);
     }
+    /// Bind a comprehension's element name to a fresh slot for the duration of its body.
+    fn bindElement(self: *Checker, name: source.Span, slot: typed.LocalId) Error!void {
+        const text = self.src.text(name);
+        if (try self.topLevel(name) or self.active.contains(text)) return self.sink.fail(eShadowing, name, "comprehension binding shadows an active declaration");
+        self.locals.items[@backingInt(slot)].name = text;
+        self.locals.items[@backingInt(slot)].declaration = name;
+        try self.active.put(self.allocator, text, slot);
+    }
+
+    /// Build `[value for name in iterable if condition]` as a checked loop over a fresh list.
+    fn checkComprehension(self: *Checker, node: ast.Node, each: ast.Comprehension, temporaries: []const typed.Type) Error!typed.Node {
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
+        const iterable = try self.expressionWithTemporaries(each.iterable, temporaries);
+        const iterable_type = self.nodes.items[@backingInt(iterable)].ty;
+        if (!iterable_type.isAggregate() or !self.catalog.records[iterable_type.recordIndex()].managed) return self.sink.fail(eCollectionMethod, node.span, "iteration requires a list, str, or dictionary");
+        const schema = self.catalog.records[iterable_type.recordIndex()];
+        const element = switch (schema.collection.kind) {
+            .list => schema.shape.buffer.?,
+            .string => iterable_type,
+            .bytes => typed.Type.i64,
+            .dictionary => schema.collection.key.?,
+        };
+        const owner = try b.local(iterable_type);
+        const index = try b.local(.i64);
+        const limit = try b.local(.i64);
+        const value_slot = try b.local(element);
+        try self.bindElement(each.name, value_slot);
+        defer _ = self.active.remove(self.src.text(each.name));
+        const produced = try self.expression(each.output);
+        const produced_type = self.nodes.items[@backingInt(produced)].ty;
+        if (!typed.storable(produced_type, self.catalog.records) or typed.moveOnly(produced_type, self.catalog.records) or self.requiresHandling(produced_type))
+            return self.sink.fail(eListType, node.span, "list elements require copyable storable values without pending results");
+        const output = try b.local(try collections.listType(&self.catalog, produced_type, node.span));
+        const kept = try b.stmt(.{ .discard = try b.operation(output, .append, &.{produced}) });
+        const body = if (each.filter) |condition| guarded: {
+            const test_value = try self.expression(condition);
+            try self.require(self.nodes.items[@backingInt(test_value)].ty, .bool, self.syntax.nodes.items[@backingInt(condition)].span);
+            break :guarded try b.stmt(.{ .branch = .{ .condition = test_value, .then_body = kept, .else_body = null } });
+        } else kept;
+        return self.comprehensionLoop(b, .{ .owner = owner, .index = index, .limit = limit, .slot = value_slot }, body, .{ .iterable = iterable, .output = output, .kind = schema.collection.kind });
+    }
+
+    /// Assemble the fixed-bound iteration, its mutation check, and the produced list.
+    fn comprehensionLoop(
+        self: *Checker,
+        b: collections.Builder(Checker),
+        slots: struct { owner: typed.LocalId, index: typed.LocalId, limit: typed.LocalId, slot: typed.LocalId },
+        body: typed.StatementId,
+        source_values: struct { iterable: typed.NodeId, output: typed.LocalId, kind: ManagedKind },
+    ) Error!typed.Node {
+        const i = try b.read(slots.index);
+        const guard = try b.stmt(.{ .discard = try b.operation(slots.owner, .iteration_check, &.{try b.read(slots.limit)}) });
+        const iteration = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{
+            guard,
+            try b.stmt(.{ .initialize = .{ .slot = slots.slot, .value = try self.iterationValue(b, slots.owner, source_values.kind, i) } }),
+            body,
+        }) });
+        const step = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{
+            guard,
+            try b.stmt(.{ .assign = .{ .slot = slots.index, .value = try b.binary(.add, i, try b.integer(1), .i64) } }),
+        }) });
+        const loop_id = self.loops.next;
+        self.loops.next += 1;
+        return b.block(&.{
+            try b.stmt(.{ .initialize = .{ .slot = slots.owner, .value = source_values.iterable } }),
+            try b.stmt(.{ .initialize = .{ .slot = slots.index, .value = try b.integer(0) } }),
+            try b.stmt(.{ .initialize = .{ .slot = slots.limit, .value = try b.length(slots.owner) } }),
+            try b.stmt(.{ .initialize = .{ .slot = source_values.output, .value = try b.node(self.locals.items[@backingInt(source_values.output)].ty, .{ .acquire_buffer = .{ .capacity = try b.integer(0) } }) } }),
+            try b.stmt(.{ .loop = .{ .id = loop_id, .condition = try b.binary(.lt, i, try b.read(slots.limit), .bool), .body = iteration, .step = step } }),
+        }, try b.read(source_values.output));
+    }
+
     /// Convert one interpolated value to text, reusing the `str` conversion rules.
     fn formatPart(self: *Checker, value: typed.NodeId, str_type: typed.Type, span: source.Span) Error!typed.NodeId {
         const ty_value = self.nodes.items[@backingInt(value)].ty;
@@ -1628,6 +1700,7 @@ const Checker = struct {
             .field_assignment => return self.checkFieldAssignment(node, temporaries),
             .list_literal => |inputs| return self.checkListLiteral(node, inputs, temporaries),
             .format => |parts| return self.checkFormat(node, parts, temporaries),
+            .comprehension => |each| return self.checkComprehension(node, each, temporaries),
             .list_operation => |op| return self.checkListAccess(node, .{ .base = op.base, .kind = op.kind, .inputs = op.arguments }, temporaries),
             .method_call => return self.checkCollectionMethod(node, temporaries),
             .slice => return self.checkCollectionSlice(node, temporaries),
@@ -1788,7 +1861,7 @@ const Checker = struct {
         if (node.data == .bytes or node.data == .text or node.data == .integer) return 0;
         // A list literal checks its own elements, so none of them reach the caller's stack;
         // a dict literal queues every key and value, whether it builds a dict or a table.
-        if (node.data == .list_literal or node.data == .format) return 0;
+        if (node.data == .list_literal or node.data == .format or node.data == .comprehension) return 0;
         if (node.data == .dictionary_literal) return node.data.dictionary_literal.len;
         if (node.data == .binary) return 2;
         if (node.data == .call and try self.numericConversion(node.data.call) != null) return node.data.call.arguments.len;

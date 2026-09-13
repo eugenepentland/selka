@@ -21,6 +21,7 @@
     "assert-statements",
     "python-string-methods",
     "format-strings",
+    "list-comprehensions",
     "string-to-number-parsing",
     "legacy-migration",
     "python-assignments-and-value-records",

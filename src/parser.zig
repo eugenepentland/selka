@@ -769,6 +769,7 @@ pub const Parser = struct {
                 var values: std.ArrayList(ast.NodeId) = .empty;
                 if (self.current().tag != .rbracket) while (true) {
                     try values.append(self.arena.allocator(), try self.expression(0));
+                    if (values.items.len == 1 and self.current().tag == .kw_for) break :list try self.parseComprehension(token, values.items[0]);
                     if (!self.take(.comma) or self.current().tag == .rbracket) break;
                 };
                 const close = try self.expect(.rbracket);
@@ -897,6 +898,22 @@ pub const Parser = struct {
         const result = try self.append(.{ .span = span, .data = .{ .membership = .{ .needle = left, .container = container, .negate = not_in } } });
         return result;
     }
+    /// Parse the tail of `[value for name in iterable if condition]` after its value.
+    fn parseComprehension(self: *Parser, token: lex.Token, output: ast.NodeId) diagnostic.Error!ast.NodeId {
+        _ = try self.expect(.kw_for);
+        const name = try self.expect(.ident);
+        _ = try self.expect(.kw_in);
+        const iterable = try self.expression(0);
+        const filter = if (self.take(.kw_if)) try self.expression(0) else null;
+        const close = try self.expect(.rbracket);
+        return self.append(.{ .span = .join(token.span, close.span), .data = .{ .comprehension = .{
+            .output = output,
+            .name = name.span,
+            .iterable = iterable,
+            .filter = filter,
+        } } });
+    }
+
     /// Build `f"a{x}b"` as its alternating literal and interpolated pieces.
     /// Each hole is tokenized from the original bytes, so its spans stay absolute.
     fn parseFormat(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {

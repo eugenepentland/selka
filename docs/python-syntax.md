@@ -112,6 +112,19 @@ Iterating a dictionary visits keys in insertion order; changing its size during
 iteration traps. The [word-count example](../examples/python-word-count/main.my)
 puts these operations together.
 
+`[value for name in items if condition]` builds a list in one pass, with the filter
+optional and the binding confined to the comprehension. It takes one generator; nested
+generators and generator expressions are not provided, and neither are dict or set
+comprehensions.
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    source = [1, 2, 3, 4]
+    kept = [value * 7 for value in source if value > 2]
+    return kept[0] + kept[1] - 7
+```
+
 `for value in items`, `for index, value in enumerate(items)`, and
 `for index in range(end)` / `range(start, end)` support `break` and `continue`.
 List iteration fixes its initial bound and rejects length changes through aliases.

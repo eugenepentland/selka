@@ -436,6 +436,22 @@ const Checker = struct {
         for (inputs) |input| try self.same(try self.expressionExpected(input, shape.element), shape.element, node.span);
         return expected;
     }
+    /// A comprehension iterates one collection and yields a list of its produced values.
+    fn comprehensionValue(self: *Checker, each: ast.Comprehension, span: source.Span) Error!Symbolic {
+        const iterable = try self.expression(each.iterable);
+        const element = try self.collectionElement(iterable, span);
+        const text = self.src.text(each.name);
+        if (try self.topLevel(each.name) or self.active.contains(text)) return self.sink.fail(eShadowing, each.name, "comprehension binding shadows an active declaration");
+        try self.bind(each.name, element, false);
+        defer _ = self.active.remove(text);
+        const produced = try self.expression(each.output);
+        if (each.filter) |condition| try self.same(try self.expression(condition), .{ .concrete = .bool }, span);
+        try self.supports(produced, .copy, span);
+        try self.supports(produced, .storable, span);
+        self.seedEffect(.managed_allocation);
+        return self.shapes().nominal(self.catalog.templates.store.?.index.names.get("List").?, &.{produced});
+    }
+
     /// Every f-string piece converts to text, so the whole literal is `str`.
     fn formatValue(self: *Checker, parts: []const ast.NodeId, span: source.Span) Error!Symbolic {
         const str_type: Symbolic = .{ .concrete = self.catalog.names.get("str") orelse return error.InternalError };
@@ -845,6 +861,7 @@ const Checker = struct {
             .field_assignment => try self.fieldAssignment(node),
             .list_literal => |inputs| try self.listLiteral(node, inputs),
             .format => |parts| try self.formatValue(parts, node.span),
+            .comprehension => |each| try self.comprehensionValue(each, node.span),
             .list_operation => |operation| try self.listOperation(node, operation),
             .method_call => try self.listMethod(node),
             .slice => try self.listSlice(node),

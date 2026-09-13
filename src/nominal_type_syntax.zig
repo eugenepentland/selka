@@ -1,9 +1,17 @@
 //! Detect nominal template syntax before selecting semantic catalog construction.
 const Source = @import("source.zig").Source;
 const ast = @import("ast.zig");
+/// Literal forms whose values are managed collections needing the nominal catalog.
+fn managedLiteral(node: ast.Node) bool {
+    return switch (node.data) {
+        .list_literal, .text, .dictionary_literal, .format, .comprehension => true,
+        else => false,
+    };
+}
+
 /// Whether the program declares or applies a parameterized nominal type.
 pub fn present(program: ast.Program) bool {
-    for (program.nodes.items) |node| if (node.data == .list_literal or node.data == .text or node.data == .dictionary_literal or node.data == .format) return true;
+    for (program.nodes.items) |node| if (managedLiteral(node)) return true;
     inline for (.{ "records", "variants" }) |category| {
         for (@field(program.types, category)) |declaration| if (declaration.type_parameters.len != 0) return true;
     }
