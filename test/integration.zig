@@ -1384,3 +1384,52 @@ test "CLI declaration listing separates parse failures from checking and usage f
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
     try testing.expect(std.mem.indexOf(u8, outcome.stdout, "\"kind\":\"fn\",\"name\":\"main\"") != null);
 }
+
+const legacy_migration = "// Keep this note.\nstruct Point { x: i64 }\nfn main() -> i64 {\n    let p = new Point { x: 42 };\n    if !(p.x < 0) && true { return p.x; }\n    return 0;\n}\n";
+const python_migration = "# Keep this note.\nclass Point:\n    x: i64\n\n\ndef main() -> i64:\n    p = Point(x=42)\n    if not (p.x < 0) and True:\n        return p.x\n    return 0\n";
+
+// spec-case: MIGRATE-1
+test "CLI migrate prints checked Python source and is idempotent" {
+    try invoke("migrate", legacy_migration, 0, python_migration, "");
+    try invokeOptions("migrate", legacy_migration, &.{"--check"}, 0, python_migration, "");
+    try invoke("migrate", python_migration, 0, python_migration, "");
+    try invokeOptions("migrate", python_migration, &.{"--check"}, 0, python_migration, "");
+    try invoke("run", legacy_migration, 0, "42\n", "");
+    try invoke("run", python_migration, 0, "42\n", "");
+}
+
+// spec-case: MIGRATE-5
+test "CLI migrate reports unconvertible constructs and supports partial output" {
+    const scoped = "fn main() -> i64 {\n    let a = 7;\n    { let b = 1; }\n    return a;\n}\n";
+    try invoke("migrate", scoped, 1, "", "error[E_MIGRATE_UNSUPPORTED]");
+    try invokeOptions("migrate", scoped, &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_MIGRATE_UNSUPPORTED\"");
+    const partial = try runFixture("migrate", scoped, &.{"--allow-partial"});
+    defer testing.allocator.free(partial.stdout);
+    defer testing.allocator.free(partial.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, partial.term);
+    try testing.expect(std.mem.indexOf(u8, partial.stdout, "# MIGRATE: unsupported a bare nested scope block") != null);
+    try testing.expect(std.mem.indexOf(u8, partial.stderr, "warning[E_MIGRATE_UNSUPPORTED]") != null);
+    try invokeOptions("check", legacy_migration, &.{"--allow-partial"}, 2, "", "usage:");
+    try invokeOptions("migrate", legacy_migration, &.{ "--check", "--check" }, 2, "", "usage:");
+    try invokeOptions("fmt", legacy_migration, &.{"--write"}, 2, "", "usage:");
+}
+
+// spec-case: MIGRATE-6
+test "CLI migrate rewrites files in place and walks a module graph" {
+    var temp = testing.tmpDir(.{});
+    defer temp.cleanup();
+    try temp.dir.writeFile(testing.io, .{ .sub_path = "input.my", .data = legacy_migration });
+    const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const written = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "migrate", path, "--write" } });
+    defer testing.allocator.free(written.stdout);
+    defer testing.allocator.free(written.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, written.term);
+    try testing.expectEqualStrings("", written.stdout);
+    const bytes = try temp.dir.readFileAlloc(testing.io, "input.my", testing.allocator, .limited(4096));
+    defer testing.allocator.free(bytes);
+    try testing.expectEqualStrings(python_migration, bytes);
+    const module = "module input;\nexport main;\nfn main() -> i64 { let value = 42; return value; }\n";
+    try invokeOptions("migrate-project", module, &.{"--check"}, 0, "", "");
+    try invokeOptions("migrate-project", "module input;\nfn main() -> i64 { { let a = 1; } return 0; }\n", &.{"--check"}, 1, "", "error[E_MIGRATE_UNSUPPORTED]");
+}

@@ -568,3 +568,11 @@ supersede it. The manifest records implementation coverage, not a test certifica
 - [PYTHON-CALL-5] Editing a default value invalidates checked caller reuse and produces fresh call behavior.
 
 - [C-FFI-1] Explicit `extern fn` declarations use fixed-arity C scalar signatures on QBE: signed/unsigned 8/16/32/64-bit integers, bool, float as C double, and unit results as C void. They require effects(host), bypass provider registration, retain transitive external effects, and reject borrowed/aggregate/generic signatures. VM host registration and legacy C emission reject direct imports.
+
+- [MIGRATE-1] `mylang migrate` rewrites legacy `fn`/`let`/brace sources as Python `def` suites: indented blocks, `elif`, `range` loops, dropped semicolons, omitted unit return annotations, bare `return`, standalone calls and `_ =` discards.
+- [MIGRATE-2] Record, enum, union, result, domain, buffer, pool, resource, alias and constant declarations keep their source order and gain their Python spellings, with `new T { f: v }` and `T { f: v }` becoming `T(f=v)`.
+- [MIGRATE-3] Operators, propagation, matching and generics adopt Python spellings: `&&`/`||`/`!` become `and`/`or`/`not` with preserved precedence, `try e` becomes `e?`, match arms become `case` suites, `<T: copy>` becomes `[T]`, and result payload construction becomes `Ok`/`Err`.
+- [MIGRATE-4] Module, import and export directives keep Python form, `alias::name` becomes `alias.name`, and `//` comments become `#` comments in their original position with preserved blank lines.
+- [MIGRATE-5] Constructs with no Python spelling - the explicit storage tier, bare scope blocks, match expressions, fixed array literals and truncating integer division or remainder - are rejected as located `E_MIGRATE_UNSUPPORTED` diagnostics naming the construct.
+- [MIGRATE-6] `--allow-partial` emits the remaining source with a `# MIGRATE: unsupported <construct>` marker and a warning for every gap; `--check` requires the migrated source to be idempotent, to check, and to reproduce a parameter-free `main`.
+- [MIGRATE-7] Migrating Python-surface source returns it byte for byte, so migration is idempotent and safe to re-run.

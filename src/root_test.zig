@@ -23,6 +23,7 @@ test {
     _ = @import("python_syntax_test.zig");
     _ = @import("unit_test.zig");
     _ = @import("declarations_test.zig");
+    _ = @import("migrate_test.zig");
     _ = @import("vm_fusion_test.zig");
     _ = @import("stdlib_time_random_test.zig");
     _ = @import("const_lengths_test.zig");
