@@ -145,7 +145,7 @@ myl_native_bytes *myl_native_bytes_from_list(myl_native_heap *heap, myl_native_l
 myl_native_text *myl_native_bytes_hex(myl_native_heap *heap, myl_native_bytes *input) {
     static const char digits[]="0123456789abcdef";
     if (input->length>SIZE_MAX/2) return NULL;
-    unsigned char *text=malloc(input->length*2 ? input->length*2 : 1);
+    unsigned char *text=malloc(input->length ? input->length*2 : 1);
     if (!text) return NULL;
     const unsigned char *bytes=input->storage;
     for (size_t i=0;i<input->length;i++) {

@@ -37,14 +37,15 @@ const Analyzer = struct {
             if (!ty.isAggregate() or ty.recordIndex() >= self.program.records.len) return error.UnsupportedOperation;
             const record = self.program.records[ty.recordIndex()];
             if (!record.managed) return error.UnsupportedOperation;
-            const concatenation = op == .add and record.collection.kind == .string;
+            const concatenation = op == .add and (record.collection.kind == .string or record.collection.kind == .bytes);
             if (op != .eq and op != .ne and !concatenation) return error.UnsupportedOperation;
         }
     }
     fn validateCast(self: *Analyzer, ty: typed.Type) AnalyzeError!void {
         if (!ty.isInteger()) {
             if (!ty.isAggregate() or ty.recordIndex() >= self.program.records.len) return error.UnsupportedOperation;
-            if (self.program.records[ty.recordIndex()].collection.kind != .string) return error.UnsupportedOperation;
+            const kind = self.program.records[ty.recordIndex()].collection.kind;
+            if (kind != .string and kind != .bytes) return error.UnsupportedOperation;
         }
     }
     fn analyze(self: *Analyzer) AnalyzeError!usize {

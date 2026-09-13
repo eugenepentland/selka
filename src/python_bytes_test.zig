@@ -260,3 +260,45 @@ test "PY-BYTES-2 integer list text and hexadecimal conversions round trip" {
         \\            return 42
     , 42);
 }
+
+// spec: PY-BYTES-5
+test "PY-BYTES-5 the native backend lowers every byte-string operation" {
+    const source =
+        \\def parsed(digits: str) -> Result[bytes, str]:
+        \\    return bytes.fromhex(digits)
+        \\
+        \\def main() -> int:
+        \\    raw = b"a,b" + b",c"
+        \\    parts = raw.split(b",")
+        \\    if b",".join(parts) != raw or raw[0:1] != b"a":
+        \\        return 1
+        \\    if not raw.startswith(b"a") or raw.endswith(b"z") or raw.find(b"b") != 2:
+        \\        return 2
+        \\    if 97 not in raw or b"b," not in raw:
+        \\        return 3
+        \\    if bytes(raw.to_list()) != raw or raw.hex() != "612c622c63":
+        \\        return 4
+        \\    match raw.decode():
+        \\        case Ok(text):
+        \\            if text.encode() != raw:
+        \\                return 5
+        \\        case Err(message):
+        \\            return 0 - len(message)
+        \\    match parsed("612c"):
+        \\        case Ok(value):
+        \\            return len(value)
+        \\        case Err(message):
+        \\            return 0 - len(message)
+    ;
+    var compilation = try language.Compilation.init(t.allocator, "bytes-native.my", source);
+    defer compilation.deinit();
+    const manifest = compilation.emitQbe(t.allocator) catch |err| {
+        for (compilation.diagnostics.items) |d| debug.print("{s}: {s}\n", .{ d.code, d.message });
+        return err;
+    };
+    defer t.allocator.free(manifest);
+    for ([_][]const u8{ "myl_native_bytes_split", "myl_native_bytes_join", "myl_native_bytes_slice", "myl_qbe_bytes_decode", "myl_qbe_bytes_from_list" }) |symbol| {
+        try t.expect(std.mem.indexOf(u8, manifest, symbol) != null);
+    }
+    try run(source, 2);
+}

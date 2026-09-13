@@ -7,7 +7,7 @@ const typed = @import("typed.zig");
 /// Failures reported while emitting native byte-string instructions.
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 const BufferOperation = @FieldType(@FieldType(bytecode.Instruction, "op"), "buffer_operation");
-const allocation_failure = "myl_qbe_fail_allocation";
+const allocation_failure = @import("qbe_format.zig").allocation_failure;
 const load_word = @import("qbe_format.zig").load_word;
 
 /// Bind byte-string lowering to the concrete emitter without an import cycle.
@@ -88,20 +88,16 @@ fn emitSearch(comptime E: type, self: *E, op: BufferOperation, stack: []const ty
         try self.print(" %v{d} =w call $myl_native_bytes_has_byte(l %v{d}, l %v{d})\n", .{ result, input, needle });
         return emitBoolean(E, self, result, base);
     }
-    if (op.kind == .find) {
-        try self.print(" %v{d} =l call $myl_native_bytes_find(l %v{d}, l %v{d})\n", .{ result, input, needle });
-        return self.store(base, result);
+    if (op.kind == .starts_with or op.kind == .ends_with) {
+        const name = if (op.kind == .starts_with) "myl_native_bytes_starts_with" else "myl_native_bytes_ends_with";
+        try self.print(" %v{d} =w call ${s}(l %v{d}, l %v{d})\n", .{ result, name, input, needle });
+        return emitBoolean(E, self, result, base);
     }
-    const name: []const u8 = switch (op.kind) {
-        .starts_with => "myl_native_bytes_starts_with",
-        .ends_with => "myl_native_bytes_ends_with",
-        else => "myl_native_bytes_find",
-    };
-    try self.print(" %v{d} =w call ${s}(l %v{d}, l %v{d})\n", .{ result, name, input, needle });
-    if (op.kind != .contains) return emitBoolean(E, self, result, base);
+    try self.print(" %v{d} =l call $myl_native_bytes_find(l %v{d}, l %v{d})\n", .{ result, input, needle });
+    if (op.kind == .find) return self.store(base, result);
     const found = self.temp();
-    try self.print(" %v{d} =l extsw %v{d}\n %v{d} =w csgel %v{d}, 0\n", .{ found, result, result, found });
-    return emitBoolean(E, self, result, base);
+    try self.print(" %v{d} =l csgel %v{d}, 0\n", .{ found, result });
+    try self.store(base, found);
 }
 
 /// Lower one byte-string method using the native immutable byte runtime.
