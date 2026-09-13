@@ -25,8 +25,8 @@ pub fn render(allocator: std.mem.Allocator, loaded: *const project.Project, iden
             if (token.tag == .rbrace and depth > 0) depth -= 1;
             if (depth != 0 or i + 1 >= tokens.len or tokens[i + 1].tag != .ident) continue;
             const kind: []const u8 = switch (token.tag) {
-                .kw_fn => "function",
-                .kw_struct, .kw_union, .kw_enum, .kw_domain => "type",
+                .kw_def => "function",
+                .kw_class, .kw_union, .kw_enum, .kw_domain => "type",
                 .ident => if (std.mem.eql(u8, module.src.text(token.span), "result") or std.mem.eql(u8, module.src.text(token.span), "buffer") or std.mem.eql(u8, module.src.text(token.span), "pool")) "type" else continue,
                 else => continue,
             };

@@ -21,7 +21,7 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [DOMAIN-EQUALITY-1] Values of the same scalar domain support == and != by their integer or boolean backing values, including generic equality requirements. Declaration identity must match across module aliases; equality exposes no backing value, permits no implicit arithmetic or ordering, evaluates operands left to right, and preserves VM cleanup and execution limits.
 - [CORE-8] Rejects nonexhaustive matches after a variant is added, including matches on statically known values.
 - [CORE-9] Uses enum case names for table construction and indexing regardless of declaration or initializer order.
-- [CORE-10] Rejects silent result abandonment and permits `_ = value` to release the result obligation explicitly, in both the Python and brace syntaxes.
+- [CORE-10] Rejects silent result abandonment and permits `_ = value` to release the result obligation explicitly.
 - [CORE-11] Unwraps successful results and propagates compatible error payloads by case name across nominal result types. Native propagation constructs the outgoing result before releasing unfinished operands; failed construction releases the propagated payload before those operands.
 ## Ownership and capabilities
 
@@ -46,8 +46,7 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 - [TOOL-1] Groups exact duplicate bodies after binding renaming while preserving resolved binding identity.
 - [TOOL-2] Reports literal differences once per exact-group representative when discovering near duplicates.
 - [TOOL-3] Reports incomplete near-duplicate discovery when work budgets are exhausted and rejects invalid budgets.
-- [TOOL-4] Formats canonical indentation while preserving inline, standalone, and trailing source comments.
-- [TOOL-5] Permits semantically incomplete drafts during formatting but rejects syntactically invalid input.
+- [TOOL-5] `fmt` permits semantically incomplete drafts but rejects syntactically invalid input, and returns an accepted program byte for byte, because its indentation already is its canonical layout.
 - [TOOL-6] Includes calls in untaken paths and cycles when calculating static function reachability.
 ## Evaluation and wire boundaries
 
@@ -241,7 +240,6 @@ manifest records implementation coverage, not a test certificate.
 
 - [FOR-RANGE-1] for NAME in START..END iterates a half-open ascending range of matching integer types with an immutable scoped binding. Bounds evaluate once left-to-right; empty/reversed ranges execute no body. Continue performs the hidden checked increment before the next condition; break skips it. Generic ranges retain integer requirements and the same ownership cleanup rules as while.
 
-- [MATCH-VALUE-1] match expressions select one expression from an exhaustive set of variant arms, evaluate the scrutinee once, and require every arm to yield the same type. Payload bindings and owned/result values preserve existing move and must-handle rules. Match expressions retain outer temporary obligations during try propagation, keep branch ownership states compatible, and propagate arena dependencies through the selected result. Ordinary and generic bodies share these checks.
 
 - [TYPE-ALIAS-1] type NAME = TYPE declares a transparent non-parameterized alias for an existing scalar, aggregate, fixed array or concrete nominal application. Alias chains support forward references and reject cycles or declaration conflicts. They preserve target nominal identity, ownership and result obligations; they never unwrap domains. Exported aliases obey interface visibility checks and private aliases cannot be named across modules. Constants accept aliases of supported scalar types.
 
@@ -386,12 +384,12 @@ manifest records implementation coverage, not a test certificate.
 - [ARENA-MANAGED-7] Arena scopes, bulk release, and escape copies unwind cleanly on every host allocation failure, leaving no live managed objects at execution teardown.
 - [ARENA-MANAGED-8] Managed arena scopes are rejected explicitly by the native backend, which reports `E_QBE_UNSUPPORTED`. Generic function bodies reject them with `E_GENERIC_BODY_UNSUPPORTED`.
 
-- [FAMILIAR-STMT-1] Statements and unbraced declarations may omit a semicolon before a newline, closing brace, or EOF; separate statements on one line still require semicolons, and formatting preserves their boundaries.
-- [FAMILIAR-STMT-2] Postfix `?` propagates result errors and unwraps success with postfix precedence, retaining the existing `try` semantics.
-- [FAMILIAR-STMT-3] `()` spells both the unit type and unit value; bare return before a newline or closing brace returns unit.
-- [FAMILIAR-STMT-4] Calls and function parameters permit trailing commas; binary operators continue expressions across newlines, preserving existing multiline return expressions.
-- [FAMILIAR-STMT-5] Parse-only declaration listing and module formatting preserve newline-terminated module, import, export, and type directives.
-- [FAMILIAR-STMT-6] Project discovery recognizes newline-terminated directives and declarations while allowing multiline function signatures.
+- [SURFACE-STMT-1] A statement ends at its newline, at the dedent that closes its suite, or at EOF; two statements written on one line are separated by `;`.
+- [SURFACE-STMT-2] Postfix `?` propagates result errors and unwraps success with postfix precedence.
+- [SURFACE-STMT-3] `None` and `()` both spell the unit type and unit value; a bare `return` before a newline or a dedent returns unit.
+- [SURFACE-STMT-4] Calls and function parameters permit trailing commas; a delimiter continues an expression across newlines.
+- [SURFACE-STMT-5] Parse-only declaration listing and module formatting preserve newline-terminated module, import, export, and type directives.
+- [SURFACE-STMT-6] Project discovery recognizes newline-terminated directives and declarations while allowing multiline function signatures.
 
 ## Command-line authority
 
@@ -416,18 +414,18 @@ manifest records implementation coverage, not a test certificate.
 - [IO-11] A file `with` scope closes its handle exactly once at every exit: falling off the end, `return`, `?` propagation, `break`, `continue`, an explicit `f.close()`, and a trap or host allocation failure unwinding through it. A method on a closed or stale handle traps with `R_FILE`; so does any provider failure during a method, since `f.read()` yields bytes rather than a result. The trap message carries the same readable reason as the `Result` error text.
 - [IO-12] File operations contribute the `filesystem` effect, so `noio` rejects them with `E_EFFECT_BOUND`. `with` on a value that is not an arena or an open file is rejected with `E_WITH_RESOURCE`, which tells a `Result` operand to propagate with `open(...)?` or match first. A non-literal mode, an unsupported mode and an unknown handle method are rejected with `E_FILE_ARGUMENT`. Generic function bodies reject file operations, and the QBE native backend rejects them with `E_QBE_UNSUPPORTED`.
 
-## Familiar collection syntax
+## Collection and statement surface
 
-- [FAMILIAR-COLLECTIONS-1] Managed list push(value), len(), indexing, and indexed assignment preserve shared aliases through immutable bindings.
-- [FAMILIAR-COLLECTIONS-2] Record construction accepts Type { fields } without new, including generic types, empty records, and trailing field commas; control-flow braces remain unambiguous.
-- [FAMILIAR-COLLECTIONS-3] Generic managed list methods and indexing preserve abstract element type checking.
+- [SURFACE-COLLECTIONS-1] Managed list push(value), len(), indexing, and indexed assignment preserve shared aliases through immutable bindings.
+- [SURFACE-COLLECTIONS-2] Record construction names its type and fields — `Box[i64](value=42)`, `Empty()` — covering generic records, empty records declared with `pass`, and trailing argument commas.
+- [SURFACE-COLLECTIONS-3] Generic managed list methods and indexing preserve abstract element type checking.
 
-- [FAMILIAR-STMT-7] Condition expressions admit record constructors inside nested call arguments without confusing the following condition block with a constructor; record and field names remain case-sensitive identifiers.
-- [FAMILIAR-STMT-8] Record constructor syntax accepts nested generic type arguments, including List fields initialized with contextually typed empty lists.
-- [FAMILIAR-STMT-9] A newline separates postfix call suffixes from completed expressions outside parentheses, while parentheses permit multiline calls and suffixes.
+- [SURFACE-STMT-7] Condition expressions admit record constructors inside nested call arguments; record and field names remain case-sensitive identifiers.
+- [SURFACE-STMT-8] Record constructor syntax accepts nested generic type arguments, including List fields initialized with contextually typed empty lists.
+- [SURFACE-STMT-9] A newline separates postfix call suffixes from completed expressions outside parentheses, while parentheses permit multiline calls and suffixes.
 
-- [FAMILIAR-COLLECTIONS-4] Managed list methods reject invalid argument counts, unknown methods, mismatched element types, and noninteger indices.
-- [FAMILIAR-COLLECTIONS-5] Contextual managed construction and result compilation/execution release every partially allocated object on injected allocation failures.
+- [SURFACE-COLLECTIONS-4] Managed list methods reject invalid argument counts, unknown methods, mismatched element types, and noninteger indices.
+- [SURFACE-COLLECTIONS-5] Contextual managed construction and result compilation/execution release every partially allocated object on injected allocation failures.
 
 ## Familiar prelude types and contextual constructors
 
@@ -444,7 +442,7 @@ manifest records implementation coverage, not a test certificate.
 - [SCHEMATIC-INPUTS-1] The schematic host provides named circuit, pinout, and interface document handles through io.inputs; nominal Document values preserve the existing scalar byte I/O ABI, and older guests declaring only four byte callbacks remain supported.
 - [SCHEMATIC-INPUTS-2] Named input providers reject absent host documents instead of issuing unusable handles.
 
-- [MODULE-DOT-1] Direct import aliases accept dot-qualified function and type references, including generic records and imported domain methods; legacy `::` and local list methods retain their meanings.
+- [MODULE-DOT-1] Direct import aliases accept dot-qualified function and type references, including generic records and imported domain methods; local list methods retain their meanings.
 - [MODULE-DOT-2] Dot-qualified imported functions can be passed as values, and generic function bodies resolve dotted module type references through their declaring module.
 - [MODULE-DOT-3] Dotted qualification preserves private-symbol, private-domain-function, and import-alias-shadowing checks.
 - [MODULE-DOT-4] Dotted module parsing, namespace normalization, checking, and execution release all allocations on allocation failure.
@@ -454,19 +452,19 @@ manifest records implementation coverage, not a test certificate.
 
 ## Python-oriented core values
 
-- [PYTHON-CORE-1] Prelude List, Result and Option have one nominal identity shared across modules and across the Python and brace spellings; unrelated user nominal declarations remain distinct.
+- [PYTHON-CORE-1] Prelude List, Result and Option have one nominal identity shared across modules; unrelated user nominal declarations remain distinct.
 - [PYTHON-CORE-2] Unit and Result<unit/int,int> entry functions adapt to the scalar runner status convention while retaining their ordinary guest signatures.
 - [PYTHON-CORE-3] Representable unsuffixed integer constants inherit numeric contexts; explicit suffixes retain their types and out-of-range constants are rejected.
 - [PYTHON-CORE-4] Decimal float literals and ordinary arithmetic/comparisons use binary64 numeric semantics, including equal signed zeros and unordered NaNs.
 
-## Python surface syntax
+## Surface syntax
 
-- [PYTHON-1] Python `def`/`class` sources use colon and space-indented blocks, `#` comments, implicit continuation inside delimiters, and source-preserving virtual block delimiters. Missing blocks, inconsistent dedents, and indentation tabs are diagnosed. Legacy brace syntax remains accepted; formatting preserves Python layout and comments.
-- [PYTHON-2] Python functions support ordinary mutable assignment, annotated bindings, `True`/`False`/`None`, `and`/`or`/`not`, `pass`, `elif`, omitted unit return annotations, `int` as i64, and square type parameters whose omitted requirement defaults to copy.
-- [PYTHON-3] Python value records use `class` with annotated fields and named construction; square-bracket type applications and `match`/`case` preserve contextual variant names and underscore payload discards for semantic resolution.
+- [PYTHON-1] Sources use `def`/`class` heads, colon and space-indented blocks, `#` comments, implicit continuation inside delimiters, and source-preserving virtual block delimiters. Missing blocks, inconsistent dedents, and indentation tabs are diagnosed. Indentation is the only block syntax, so `fmt` returns the text a program already has.
+- [PYTHON-2] Functions support ordinary mutable assignment, annotated bindings, `True`/`False`/`None`, `and`/`or`/`not`, `pass`, `elif`, omitted unit return annotations, `int` as i64, and square type parameters whose omitted requirement defaults to copy. A `;` separates two statements written on one line, as it does in Python.
+- [PYTHON-3] Value records use `class` with annotated fields and named construction; square-bracket type applications and `match`/`case` preserve contextual variant names and underscore payload discards for semantic resolution. Every explicit type argument uses square brackets, including `todo[T]()`, `wrap[D](v)`, `codec_encode[D](v)` and the capability and resource operations.
 
-- [PY-VARIANT-1] `Type.case(value)` constructs an enum or tagged-union variant carrying its declared payload wherever the legacy surface writes `new Type.case(value)`; `Type.case` without parentheses stays the payload-free construction and contextual `Ok`/`Err`/`Some`/`None` are unchanged. The payload evaluates once and `match`/`case` patterns keep the same spelling.
-- [PY-GENERIC-1] `f[T](x)` applies explicit type arguments to a generic function, the Python spelling of legacy `f::<T>(x)`. A square-bracket application in call position names a function when the base is a declared function and a generic record otherwise, so `Box[T](field=v)` construction is unchanged and the nominal type catalog never resolves a function application as a type.
+- [PY-VARIANT-1] `Type.case(value)` constructs an enum or tagged-union variant carrying its declared payload; `Type.case` without parentheses stays the payload-free construction and contextual `Ok`/`Err`/`Some`/`None` are unchanged. The payload evaluates once and `match`/`case` patterns keep the same spelling.
+- [PY-GENERIC-1] `f[T](x)` applies explicit type arguments to a generic function. A square-bracket application in call position names a function when the base is a declared function and a generic record otherwise, so `Box[T](field=v)` construction is unchanged and the nominal type catalog never resolves a function application as a type.
 - [PY-GENERIC-2] Explicit call type arguments reach the same instance as inference, and the wrong number of arguments or an undeclared base name is rejected.
 - [PY-FLOAT-1] `sqrt`, `floor`, `ceil`, `trunc` and `abs` are prelude operations on `float`, so guest code needs no `u64` bit pattern. Each takes one float and answers a float; a non-float argument is rejected, and a local binding or declared function of the same name shadows the operation.
 - [PY-WILDCARD-1] `case _` in a `match` statement covers every variant no earlier arm named, discarding the payload of each one it covers.
@@ -528,13 +526,3 @@ manifest records implementation coverage, not a test certificate.
 
 - [C-FFI-1] Explicit `extern def` declarations use fixed-arity C scalar signatures on QBE: signed/unsigned 8/16/32/64-bit integers, bool, float as C double, and unit results as C void. They require effects(host), bypass provider registration, retain transitive external effects, and reject borrowed/aggregate/generic signatures. VM host registration and legacy C emission reject direct imports. Declaration listing and module discovery treat `extern` as a declaration head, so a newline-terminated declaration ends where the next one begins.
 
-- [MIGRATE-1] `mylang migrate` rewrites legacy `fn`/`let`/brace sources as Python `def` suites: indented blocks, `elif`, `range` loops, dropped semicolons, omitted unit return annotations, bare `return`, standalone calls and `_ =` discards.
-- [MIGRATE-2] Record, enum, union, result, domain, buffer, pool, resource, alias and constant declarations keep their source order and gain their Python spellings, with `new T { f: v }` and `T { f: v }` becoming `T(f=v)`.
-- [MIGRATE-3] Operators, propagation, matching and generics adopt Python spellings: `&&`/`||`/`!` become `and`/`or`/`not` with preserved precedence, `try e` becomes `e?`, match arms become `case` suites, `<T: copy>` becomes `[T]`, and result payload construction becomes `Ok`/`Err`. Callback parameter types keep their `effects(...)` ceiling, with a `unit` result spelled `None`.
-- [MIGRATE-4] Module, import and export directives keep Python form, `alias::name` becomes `alias.name`, and `//` comments become `#` comments in their original position with preserved blank lines.
-- [MIGRATE-5] Constructs with no Python spelling are rejected as located `E_MIGRATE_UNSUPPORTED` diagnostics naming the construct: the explicit storage tier and match expressions. A bare scope block is inlined when every name it declares is unique in its function and reported otherwise.
-- [MIGRATE-9] Payload variants print as `Type.case(value)`, a generic variant as its template name alone, fixed arrays as list literals, enum-indexed tables as dict literals keyed by `Kind.case`, and explicit call type arguments as `f[T](x)`. An unannotated binding whose value is one of these contextual literals gains the annotation that supplies its type.
-- [MIGRATE-10] Legacy truncating `/` and `%` become `//` and `%` only where an operand is certainly unsigned — an unsigned literal suffix, `len`, an unsigned cast, an unsigned parameter or binding, or a call returning one — and become `divtrunc`/`remtrunc` otherwise, so no migrated program silently changes its rounding.
-- [MIGRATE-6] `--allow-partial` emits the remaining source with a `# MIGRATE: unsupported <construct>` marker and a warning for every gap; `--check` requires the migrated source to be idempotent, to check, and to reproduce a parameter-free `main`.
-- [MIGRATE-7] Migrating Python-surface source returns it byte for byte, so migration is idempotent and safe to re-run.
-- [MIGRATE-8] The printer spells Python-only forms canonically: `with arena() as name:` / `with arena():` scopes and `name.escape(value)` reprint from the syntax tree identically to their source when the `reprint` option bypasses the byte-for-byte passthrough.

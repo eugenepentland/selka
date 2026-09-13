@@ -19,7 +19,7 @@ pub const Parser = struct {
     arena: *std.heap.ArenaAllocator,
     tokens: []const lex.Token,
     sink: *diagnostic.Sink,
-    cursor: struct { python_function: bool = false, python_mode: ?bool = null, pos: usize = 0, depth: usize = 0, equal_tail: ?usize = null, delimiters: usize = 0, record_literals: bool = true, record_boundary: usize = 0 } = .{},
+    cursor: struct { pos: usize = 0, depth: usize = 0, delimiters: usize = 0 } = .{},
     module_syntax: bool = false,
     syntax: struct {
         nodes: std.ArrayList(ast.Node) = .empty,
@@ -30,14 +30,8 @@ pub const Parser = struct {
         aliases: std.ArrayList(ast.TypeAlias) = .empty,
         import_aliases: std.StringHashMapUnmanaged(void) = .empty,
     } = .{},
-    fn pythonSyntax(self: *Parser) bool {
-        if (self.cursor.python_mode == null) self.cursor.python_mode = lex.isPythonSource(self.src.bytes);
-        return self.cursor.python_mode.?;
-    }
     fn current(self: *Parser) lex.Token {
-        const token = self.tokens[self.cursor.pos];
-        if (self.cursor.equal_tail == self.cursor.pos) return .{ .tag = .equal, .span = .{ .start = token.span.start + 1, .end = token.span.end } };
-        return token;
+        return self.tokens[self.cursor.pos];
     }
     fn take(self: *Parser, tag: lex.Tag) bool {
         if (self.current().tag != tag) return false;
@@ -75,22 +69,16 @@ pub const Parser = struct {
     }
     fn qualifiedTail(self: *Parser, first: Span) diagnostic.Error!Span {
         if (!self.module_syntax) return first;
-        if (self.current().tag == .dot and self.syntax.import_aliases.contains(self.src.text(first))) {
-            if (!self.sameExpressionLine()) return first;
-            self.cursor.pos += 1;
-            return .join(first, try self.declaredName());
-        }
-        if (self.current().tag != .colon or self.genericCallSuffix()) return first;
-        if (self.tokens[self.cursor.pos + 1].tag != .colon) return first;
+        if (self.current().tag != .dot or !self.syntax.import_aliases.contains(self.src.text(first))) return first;
+        if (!self.sameExpressionLine()) return first;
         self.cursor.pos += 1;
-        _ = try self.expect(.colon);
         return .join(first, try self.declaredName());
     }
     fn typeName(self: *Parser) diagnostic.Error!Span {
         try self.enter();
         defer self.cursor.depth -= 1;
         const token = self.current();
-        if (self.take(.kw_fn)) return self.callbackType(token.span);
+        if (self.take(.kw_def)) return self.callbackType(token.span);
         if (self.take(.kw_none)) return token.span;
         if (self.take(.lparen)) return .join(token.span, (try self.expect(.rparen)).span);
         if (self.take(.lbracket)) {
@@ -145,8 +133,7 @@ pub const Parser = struct {
     fn nominalTypeName(self: *Parser) diagnostic.Error!Span {
         const token = try self.expect(.ident);
         const name = try self.qualifiedTail(token.span);
-        const square = self.pythonSyntax() and self.take(.lbracket);
-        if (!square and !self.take(.lt)) return name;
+        if (!self.take(.lbracket)) return name;
         var arguments: std.ArrayList(Span) = .empty;
         while (true) {
             const argument = try self.genericArgument();
@@ -154,16 +141,10 @@ pub const Parser = struct {
             try arguments.append(self.arena.allocator(), argument);
             if (!self.take(.comma)) break;
         }
-        const close = if (square) try self.expect(.rbracket) else try self.closeNominalType();
+        const close = try self.expect(.rbracket);
         const span: Span = .join(name, close.span);
         try self.syntax.applications.append(self.arena.allocator(), .{ .span = span, .name = name, .arguments = try arguments.toOwnedSlice(self.arena.allocator()) });
         return span;
-    }
-    fn closeNominalType(self: *Parser) diagnostic.Error!lex.Token {
-        const token = self.current();
-        if (token.tag != .ge) return self.expect(.gt);
-        self.cursor.equal_tail = self.cursor.pos;
-        return .{ .tag = .gt, .span = .{ .start = token.span.start, .end = token.span.start + 1 } };
     }
     /// Parse module headers and bodies without loading imports or checking names.
     pub fn parseModule(self: *Parser) diagnostic.Error!ast.Program {
@@ -286,7 +267,7 @@ pub const Parser = struct {
                 try domains.append(self.arena.allocator(), .{ .name = name.span, .backing = backing, .codec = codec });
                 continue;
             }
-            if (self.take(.kw_struct)) {
+            if (self.take(.kw_class)) {
                 const python_record = std.mem.eql(u8, self.src.text(self.tokens[self.cursor.pos - 1].span), "class");
                 const name = try self.expect(.ident);
                 const type_parameters = try self.typeParameters();
@@ -333,10 +314,7 @@ pub const Parser = struct {
         const restricted = self.take(.kw_private);
         if (restricted and owner == null) return self.sink.fail("E_PRIVATE_SCOPE", self.tokens[self.cursor.pos - 1].span, "private functions must be declared inside a domain");
         const conversion = self.take(.kw_conversion);
-        const head = try self.expect(.kw_fn);
-        const previous_python = self.cursor.python_function;
-        self.cursor.python_function = std.mem.eql(u8, self.src.text(head.span), "def");
-        defer self.cursor.python_function = previous_python;
+        _ = try self.expect(.kw_def);
         const name: lex.Token = .{ .tag = .ident, .span = try self.declaredName() };
         const type_parameters = try self.typeParameters();
         _ = try self.expect(.lparen);
@@ -357,7 +335,6 @@ pub const Parser = struct {
             .policy = .{
                 .host = host,
                 .c_abi = c_abi,
-                .python = self.cursor.python_function,
                 .effect_bound = effect_bound,
                 .owner = owner,
                 .restricted = restricted,
@@ -399,15 +376,14 @@ pub const Parser = struct {
         return value;
     }
     fn typeParameters(self: *Parser) diagnostic.Error![]const ast.TypeParameter {
-        const square = self.take(.lbracket);
-        if (!square and !self.take(.lt)) return &.{};
+        if (!self.take(.lbracket)) return &.{};
         var parameters: std.ArrayList(ast.TypeParameter) = .empty;
         while (true) {
             const constant_length = self.take(.kw_const);
             const name = (try self.expect(.ident)).span;
             if (parameters.items.len == 16) return self.sink.fail(eGenericLimit, name, "at most 16 type parameters are permitted");
             for (parameters.items) |previous| if (std.mem.eql(u8, self.src.text(previous.name), self.src.text(name))) return self.sink.fail("E_GENERIC_PARAMETER", name, "duplicate type parameter");
-            if (square and !constant_length and self.current().tag != .colon) {
+            if (!constant_length and self.current().tag != .colon) {
                 try parameters.append(self.arena.allocator(), .{ .name = name, .requirements = &.{}, .default_copy = true });
                 if (!self.take(.comma)) break;
                 continue;
@@ -446,7 +422,7 @@ pub const Parser = struct {
             });
             if (!self.take(.comma)) break;
         }
-        _ = if (square) try self.expect(.rbracket) else try self.expect(.gt);
+        _ = try self.expect(.rbracket);
         return parameters.toOwnedSlice(self.arena.allocator());
     }
     fn constraintParameter(self: *Parser) diagnostic.Error!ast.Parameter {
@@ -466,29 +442,10 @@ pub const Parser = struct {
         };
         _ = try self.expect(.rparen);
         _ = try self.expect(.arrow);
-        if (self.current().tag == .ampersand) return self.sink.fail(eRequirement, self.current().span, "structural operation results currently require named value types");
         const result = try self.typeName();
         const bound = try self.effectBound() orelse return self.sink.fail(eRequirement, name, "structural operations require an explicit effects bound");
         _ = try self.expect(.rparen);
         return .{ .name = name, .parameters = try parameters.toOwnedSlice(self.arena.allocator()), .return_type = result, .effect_bound = bound };
-    }
-    fn genericCallSuffix(self: *Parser) bool {
-        if (self.cursor.pos + 2 >= self.tokens.len) return false;
-        return self.current().tag == .colon and self.tokens[self.cursor.pos + 1].tag == .colon and self.tokens[self.cursor.pos + 2].tag == .lt;
-    }
-    fn typeArguments(self: *Parser) diagnostic.Error![]const Span {
-        if (!self.genericCallSuffix()) return &.{};
-        self.cursor.pos += 3;
-        var arguments: std.ArrayList(Span) = .empty;
-        while (true) {
-            const argument = try self.genericArgument();
-            if (arguments.items.len == 16) return self.sink.fail(eGenericLimit, argument, "at most 16 type arguments are permitted");
-            try arguments.append(self.arena.allocator(), argument);
-            if (!self.take(.comma)) break;
-        }
-        _ = try self.expect(.gt);
-        if (self.current().tag != .lparen) return self.sink.fail("E_GENERIC_CALL", self.current().span, "explicit type arguments require a function call");
-        return arguments.toOwnedSlice(self.arena.allocator());
     }
     fn effectBound(self: *Parser) diagnostic.Error!?effects.Bound {
         const sets = effects;
@@ -553,31 +510,23 @@ pub const Parser = struct {
         });
     }
     fn conditionExpression(self: *Parser) diagnostic.Error!ast.NodeId {
-        const previous = self.cursor.record_literals;
-        const boundary = self.cursor.record_boundary;
-        self.cursor.record_literals = false;
-        self.cursor.record_boundary = self.cursor.delimiters;
-        defer self.cursor.record_literals = previous;
-        defer self.cursor.record_boundary = boundary;
         return self.expression(0);
     }
     fn statement(self: *Parser) diagnostic.Error!ast.StatementId {
         try self.enter();
         defer self.cursor.depth -= 1;
         const first = self.current();
-        if (first.tag == .lbrace) return self.block();
         if (self.take(.kw_with)) return self.withStatement(first.span);
         if (self.take(.kw_match)) {
             const value = try self.conditionExpression();
             _ = try self.expect(.lbrace);
             var arms: std.ArrayList(ast.MatchArm) = .empty;
             if (self.current().tag != .rbrace) while (true) {
-                const python_case = self.take(.kw_case);
+                _ = try self.expect(.kw_case);
                 const pattern = try self.matchPattern();
-                if (!python_case) _ = try self.expect(.fat_arrow);
                 const body = try self.block();
                 try arms.append(self.arena.allocator(), .{ .ty = pattern.ty, .name = pattern.name, .binding = pattern.binding, .discard_payload = pattern.discard_payload, .body = body });
-                if (!self.take(.comma) and self.current().tag != .kw_case) break;
+                if (self.current().tag != .kw_case) break;
             };
             const close = try self.expect(.rbrace);
             return self.addStatement(.{ .span = .join(first.span, close.span), .data = .{ .match = .{ .value = value, .arms = try arms.toOwnedSlice(self.arena.allocator()) } } });
@@ -585,10 +534,9 @@ pub const Parser = struct {
         if (self.take(.kw_if) or self.take(.kw_elif)) {
             const condition = try self.conditionExpression();
             const then_body = try self.block();
-            const else_body = if (self.current().tag == .kw_elif) try self.statement() else if (self.take(.kw_else))
-                if (self.current().tag == .kw_if) try self.statement() else try self.block()
-            else
-                null;
+            const else_body = if (self.current().tag == .kw_elif)
+                try self.statement()
+            else if (self.take(.kw_else)) try self.block() else null;
             const last = else_body orelse then_body;
             return self.addStatement(.{ .span = .join(first.span, self.syntax.statements.items[@backingInt(last)].span), .data = .{ .branch = .{
                 .condition = condition,
@@ -628,22 +576,14 @@ pub const Parser = struct {
                 self.cursor.pos += 1;
                 break :ret .{ .ret = if (self.current().tag == .semicolon or lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos)) try self.append(.{ .span = first.span, .data = .unit }) else try self.expression(0) };
             },
-            .kw_let => binding: {
-                self.cursor.pos += 1;
-                const mutable = self.take(.kw_mut);
-                const name = try self.expect(.ident);
-                const annotation = if (self.take(.colon)) try self.typeName() else null;
-                _ = try self.expect(.equal);
-                break :binding .{ .binding = .{ .name = name.span, .mutable = mutable, .annotation = annotation, .value = try self.expression(0) } };
-            },
             .ident => assignment: {
-                if (self.cursor.python_function and self.tokens[self.cursor.pos + 1].tag == .colon and self.tokens[self.cursor.pos + 2].tag != .colon) {
+                if (self.tokens[self.cursor.pos + 1].tag == .colon and self.tokens[self.cursor.pos + 2].tag != .colon) {
                     self.cursor.pos += 2;
                     const annotation = try self.typeName();
                     _ = try self.expect(.equal);
                     break :assignment .{ .binding = .{ .name = first.span, .mutable = true, .annotation = annotation, .value = try self.expression(0) } };
                 }
-                // `_ = value` is the only spelling that drops a value, in both dialects.
+                // `_ = value` is the only spelling that drops a value.
                 if (std.mem.eql(u8, self.src.text(first.span), "_") and self.tokens[self.cursor.pos + 1].tag == .equal) {
                     self.cursor.pos += 2;
                     break :assignment .{ .discard = try self.expression(0) };
@@ -659,7 +599,7 @@ pub const Parser = struct {
                     },
                 };
                 self.cursor.pos += 2;
-                break :assignment .{ .assignment = .{ .name = first.span, .value = try self.expression(0), .op = op, .op_span = operator.span, .python = self.cursor.python_function } };
+                break :assignment .{ .assignment = .{ .name = first.span, .value = try self.expression(0), .op = op, .op_span = operator.span } };
             },
             else => expression: {
                 implicit_discard = true;
@@ -677,10 +617,7 @@ pub const Parser = struct {
         var start: ?ast.NodeId = null;
         var end: ?ast.NodeId = null;
         var iterable = input;
-        if (self.take(.dot_dot)) {
-            start = input;
-            end = try self.conditionExpression();
-        } else {
+        {
             const node = self.syntax.nodes.items[@backingInt(input)];
             if (node.data == .call and node.data.call.owner == null) {
                 const call = node.data.call;
@@ -746,9 +683,9 @@ pub const Parser = struct {
             .kw_acquire_resource, .kw_complete_resource => try self.parseResource(token),
             .kw_clock_now, .kw_random_u64 => external: {
                 self.cursor.pos += 1;
-                _ = try self.expect(.lt);
+                _ = try self.expect(.lbracket);
                 const ty = try self.typeName();
-                _ = try self.expect(.gt);
+                _ = try self.expect(.rbracket);
                 _ = try self.expect(.lparen);
                 const capability = try self.expression(0);
                 const close = try self.expect(.rparen);
@@ -774,8 +711,8 @@ pub const Parser = struct {
             .kw_saturating_mul,
             => try self.parseIntegerOperation(token),
             .kw_f64_sqrt, .kw_f64_floor, .kw_f64_ceil, .kw_f64_trunc, .kw_f64_abs, .kw_f64_neg, .kw_f64_from_u64, .kw_f64_to_u64 => try self.parseFloatUnary(token),
-            .kw_cast, .kw_wrap => try self.parseCast(token),
-            .kw_new => try self.parseRecord(token),
+            .kw_wrap => try self.parseWrap(token),
+            .kw_i8, .kw_i16, .kw_i32, .kw_i64, .kw_u8, .kw_u16, .kw_u32, .kw_u64 => try self.parseWidthConversion(token),
             .lbracket => list: {
                 _ = self.take(.lbracket);
                 var values: std.ArrayList(ast.NodeId) = .empty;
@@ -787,7 +724,6 @@ pub const Parser = struct {
                 const close = try self.expect(.rbracket);
                 break :list try self.append(.{ .span = .join(token.span, close.span), .data = .{ .list_literal = try values.toOwnedSlice(self.arena.allocator()) } });
             },
-            .kw_match => try self.parseMatchExpression(token),
             .kw_len, .kw_replace, .kw_unwrap => try self.parseBuiltin(token),
             .kw_todo => try self.parseHole(token),
             .kw_codec_encode, .kw_codec_decode => try self.parseCodecOperation(token),
@@ -812,9 +748,6 @@ pub const Parser = struct {
             },
             .lparen => group: {
                 _ = self.take(.lparen);
-                const previous = self.cursor.record_literals;
-                self.cursor.record_literals = true;
-                defer self.cursor.record_literals = previous;
                 if (self.take(.rparen)) break :group try self.append(.{ .span = .join(token.span, self.tokens[self.cursor.pos - 1].span), .data = .unit });
                 const inner = try self.expression(0);
                 const close = try self.expect(.rparen);
@@ -825,7 +758,7 @@ pub const Parser = struct {
         };
         while (true) {
             if (self.cursor.delimiters == 0 and self.current().tag != .rbrace and self.current().tag != .eof) {
-                if (lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos) and (self.cursor.python_function or binaryPrecedence(self.current().tag) == null)) break;
+                if (lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos)) break;
             }
             if (self.take(.question)) {
                 left = try self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, self.tokens[self.cursor.pos - 1].span), .data = .{ .propagate = left } });
@@ -857,7 +790,7 @@ pub const Parser = struct {
             self.cursor.pos += 1;
             const right = try self.expression(precedence + 1);
             left = try self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, self.syntax.nodes.items[@backingInt(right)].span), .data = .{ .binary = .{
-                .op = self.binaryOperator(op.tag),
+                .op = binaryOperator(op.tag),
                 .left = left,
                 .right = right,
                 .op_span = op.span,
@@ -880,14 +813,14 @@ pub const Parser = struct {
             });
         } else return self.append(.{ .span = .join(self.syntax.nodes.items[@backingInt(left)].span, name.span), .data = .{ .field = .{ .base = left, .name = name.span } } });
     }
-    fn binaryOperator(self: *Parser, tag: lex.Tag) ast.BinaryOp {
+    fn binaryOperator(tag: lex.Tag) ast.BinaryOp {
         return switch (tag) {
             .plus => .add,
             .minus => .sub,
             .star => .mul,
-            .slash => if (self.cursor.python_function) .python_div else .div,
+            .slash => .python_div,
             .slash_slash => .floor_div,
-            .percent => if (self.cursor.python_function) .floor_rem else .rem,
+            .percent => .floor_rem,
             .and_and => .logical_and,
             .or_or => .logical_or,
             .eq_eq => .eq,
@@ -986,9 +919,9 @@ pub const Parser = struct {
     }
     fn parseRestrict(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.pos += 1;
-        _ = try self.expect(.lt);
+        _ = try self.expect(.lbracket);
         var permissions: external_resources.Permissions = 0;
-        if (self.current().tag != .gt) while (true) {
+        if (self.current().tag != .rbracket) while (true) {
             const name = try self.expect(.ident);
             const permission = std.meta.stringToEnum(external_resources.Permission, self.src.text(name.span)) orelse return self.sink.fail("E_PERMISSION", name.span, "permission must be read, write, or complete");
             const bit = external_resources.permissionBit(permission);
@@ -996,7 +929,7 @@ pub const Parser = struct {
             permissions |= bit;
             if (!self.take(.comma)) break;
         };
-        _ = try self.expect(.gt);
+        _ = try self.expect(.rbracket);
         _ = try self.expect(.lparen);
         const value = try self.expression(0);
         const close = try self.expect(.rparen);
@@ -1005,9 +938,9 @@ pub const Parser = struct {
 
     fn parseResourceIo(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.pos += 1;
-        _ = try self.expect(.lt);
+        _ = try self.expect(.lbracket);
         const ty = try self.typeName();
-        _ = try self.expect(.gt);
+        _ = try self.expect(.rbracket);
         _ = try self.expect(.lparen);
         const owner = try self.expect(.ident);
         const value = if (token.tag == .kw_write_resource) value: {
@@ -1020,9 +953,9 @@ pub const Parser = struct {
 
     fn parseEnvironment(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.pos += 1;
-        _ = try self.expect(.lt);
+        _ = try self.expect(.lbracket);
         const ty = try self.typeName();
-        _ = try self.expect(.gt);
+        _ = try self.expect(.rbracket);
         _ = try self.expect(.lparen);
         const capability = try self.expression(0);
         _ = try self.expect(.comma);
@@ -1033,9 +966,9 @@ pub const Parser = struct {
 
     fn parseResource(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.pos += 1;
-        _ = try self.expect(.lt);
+        _ = try self.expect(.lbracket);
         const ty = try self.typeName();
-        _ = try self.expect(.gt);
+        _ = try self.expect(.rbracket);
         _ = try self.expect(.lparen);
         const first = try self.expression(0);
         const request = if (token.tag == .kw_acquire_resource) request: {
@@ -1056,24 +989,25 @@ pub const Parser = struct {
         });
     }
 
-    fn parseCast(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
+    fn parseWrap(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.pos += 1;
-        _ = try self.expect(.lt);
+        _ = try self.expect(.lbracket);
         const ty = try self.typeName();
-        _ = try self.expect(.gt);
+        _ = try self.expect(.rbracket);
         _ = try self.expect(.lparen);
-        const first = try self.expression(0);
+        const value = try self.expression(0);
         const close = try self.expect(.rparen);
-        return self.append(.{
-            .span = .join(token.span, close.span),
-            .data = if (token.tag == .kw_cast) .{ .cast = .{
-                .ty = ty,
-                .value = first,
-            } } else .{ .wrap = .{
-                .ty = ty,
-                .value = first,
-            } },
-        });
+        return self.append(.{ .span = .join(token.span, close.span), .data = .{ .wrap = .{ .ty = ty, .value = value } } });
+    }
+
+    /// `i64(x)` and its siblings convert between integer widths with a runtime range
+    /// check, the way `int(x)` and `float(x)` convert between the numeric types.
+    fn parseWidthConversion(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
+        self.cursor.pos += 1;
+        _ = try self.expect(.lparen);
+        const value = try self.expression(0);
+        const close = try self.expect(.rparen);
+        return self.append(.{ .span = .join(token.span, close.span), .data = .{ .cast = .{ .ty = token.span, .value = value } } });
     }
 
     fn parseRecord(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
@@ -1149,19 +1083,15 @@ pub const Parser = struct {
         if (self.cursor.pos + 2 >= self.tokens.len) return false;
         const member = self.tokens[self.cursor.pos + 1].tag;
         if (member != .ident and member != .kw_len and member != .kw_replace) return false;
-        if (self.tokens[self.cursor.pos + 2].tag == .lparen) return true;
-        // `owner.name::<T>(…)` keeps its explicit type arguments; a bare `Owner.name:` is a
-        // member access, such as an enum case keying a table literal entry.
-        if (self.tokens[self.cursor.pos + 2].tag != .colon or self.cursor.pos + 4 >= self.tokens.len) return false;
-        return self.tokens[self.cursor.pos + 3].tag == .colon and self.tokens[self.cursor.pos + 4].tag == .lt;
+        return self.tokens[self.cursor.pos + 2].tag == .lparen;
     }
 
     fn parseHole(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.pos += 1;
-        _ = try self.expect(.lt);
+        _ = try self.expect(.lbracket);
         const types = try self.arena.allocator().alloc(Span, 1);
         types[0] = try self.typeName();
-        _ = try self.expect(.gt);
+        _ = try self.expect(.rbracket);
         _ = try self.expect(.lparen);
         const close = try self.expect(.rparen);
         return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{
@@ -1172,10 +1102,10 @@ pub const Parser = struct {
     }
     fn parseCodecOperation(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.pos += 1;
-        if (!self.take(.lt)) return self.sink.fail("E_CODEC_ARITY", token.span, "codec operation requires one explicit domain type");
+        if (!self.take(.lbracket)) return self.sink.fail("E_CODEC_ARITY", token.span, "codec operation requires one explicit domain type");
         const types = try self.arena.allocator().alloc(Span, 1);
         types[0] = try self.typeName();
-        _ = try self.expect(.gt);
+        _ = try self.expect(.rbracket);
         _ = try self.expect(.lparen);
         var arguments: std.ArrayList(ast.NodeId) = .empty;
         if (self.current().tag != .rparen) while (true) {
@@ -1252,7 +1182,6 @@ pub const Parser = struct {
     /// A dot after the closing bracket makes the head an ordinary index and member access
     /// instead, because `items[at].append(v)` and `Box[T](v)` are otherwise indistinguishable.
     fn appliedConstructorAhead(self: *Parser) bool {
-        if (!self.pythonSyntax()) return false;
         var position = self.cursor.pos;
         var brackets: usize = 0;
         var applied = false;
@@ -1299,11 +1228,6 @@ pub const Parser = struct {
             const close = try self.expect(.rparen);
             return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{ .name = name, .arguments = arguments.values, .argument_names = arguments.names } } });
         }
-        if (token.tag == .ident and self.recordLiteralAhead()) {
-            const name = try self.typeName();
-            const fields = try self.fieldInitializers();
-            return self.append(.{ .span = .join(token.span, self.tokens[self.cursor.pos - 1].span), .data = .{ .record = .{ .name = name, .fields = fields } } });
-        }
         self.cursor.pos += 1;
         var owner: ?Span = null;
         var name = if (token.tag == .ident) try self.qualifiedTail(token.span) else token.span;
@@ -1312,18 +1236,16 @@ pub const Parser = struct {
             self.cursor.pos += 1;
             name = try self.declaredName();
         }
-        const type_arguments = if (token.tag == .ident) try self.typeArguments() else &.{};
         if (token.tag == .ident and self.sameExpressionLine() and self.take(.lparen)) {
             const arguments = try self.callArguments();
             const close = try self.expect(.rparen);
-            return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{ .owner = owner, .type_arguments = type_arguments, .name = name, .arguments = arguments.values, .argument_names = arguments.names } } });
+            return self.append(.{ .span = .join(token.span, close.span), .data = .{ .call = .{ .owner = owner, .name = name, .arguments = arguments.values, .argument_names = arguments.names } } });
         }
         return self.append(.{ .span = name, .data = switch (token.tag) {
             .integer => .{ .integer = token.span },
             .bytes => literal: {
                 const decoded = try byte_literal.decode(self.arena.allocator(), self.src, token.span, self.sink);
-                const python = if (comptime @hasField(@TypeOf(self.cursor), "python_function")) self.cursor.python_function else false;
-                break :literal if (python and self.src.text(token.span)[0] != 'b') .{ .text = decoded } else .{ .bytes = decoded };
+                break :literal if (self.src.text(token.span)[0] != 'b') .{ .text = decoded } else .{ .bytes = decoded };
             },
             .ident => .{ .name = name },
             else => .{ .boolean = token.tag == .kw_true },

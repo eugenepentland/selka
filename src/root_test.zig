@@ -30,7 +30,6 @@ test {
     _ = @import("python_surface_test.zig");
     _ = @import("unit_test.zig");
     _ = @import("declarations_test.zig");
-    _ = @import("migrate_test.zig");
     _ = @import("vm_fusion_test.zig");
     _ = @import("stdlib_time_random_test.zig");
     _ = @import("stdlib_math_test.zig");
@@ -130,18 +129,17 @@ test {
     _ = @import("managed_lists_test.zig");
     _ = @import("python_collections_test.zig");
     _ = @import("managed_frontend_test.zig");
-    _ = @import("familiar_collections_test.zig");
+    _ = @import("surface_collections_test.zig");
     _ = @import("builtin_context_test.zig");
     _ = @import("json_document_test.zig");
     _ = @import("standard_library_test.zig");
     _ = @import("loop_exit_test.zig");
     _ = @import("constants_test.zig");
     _ = @import("for_range_test.zig");
-    _ = @import("match_expression_test.zig");
     _ = @import("type_aliases_test.zig");
 }
 test {
-    _ = @import("familiar_statements_test.zig");
+    _ = @import("surface_statements_test.zig");
 }
 test {
     _ = @import("dotted_modules_test.zig");

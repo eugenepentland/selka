@@ -9,7 +9,7 @@ pub const Tag = enum {
     integer,
     bytes,
     format,
-    kw_fn,
+    kw_def,
     kw_none,
     kw_pass,
     kw_assert,
@@ -28,14 +28,11 @@ pub const Tag = enum {
     kw_codec_encode,
     kw_codec_decode,
     kw_unwrap,
-    kw_struct,
+    kw_class,
     kw_conversion,
-    kw_new,
     kw_replace,
     kw_len,
     kw_return,
-    kw_let,
-    kw_mut,
     kw_true,
     kw_false,
     kw_i64,
@@ -86,7 +83,6 @@ pub const Tag = enum {
     kw_f64_neg,
     kw_f64_from_u64,
     kw_f64_to_u64,
-    kw_cast,
     kw_bool,
     kw_if,
     kw_else,
@@ -109,7 +105,6 @@ pub const Tag = enum {
     colon,
     comma,
     dot,
-    dot_dot,
     plus,
     minus,
     star,
@@ -189,12 +184,7 @@ fn keyword(word: []const u8) Tag {
         "saturating_sub",
         "saturating_mul",
 
-        "fn",
         "return",
-        "let",
-        "mut",
-        "true",
-        "false",
         "i64",
         "bool",
         "if",
@@ -206,8 +196,6 @@ fn keyword(word: []const u8) Tag {
         "for",
         "in",
         "type",
-        "struct",
-        "new",
         "conversion",
         "i8",
         "i16",
@@ -230,7 +218,6 @@ fn keyword(word: []const u8) Tag {
         "clock_now",
         "random_u64",
 
-        "cast",
         "replace",
         "len",
         "domain",
@@ -245,33 +232,27 @@ fn keyword(word: []const u8) Tag {
         "match",
         "arena",
         "as",
+        "pass",
+        "elif",
+        "case",
+        "with",
+        "assert",
     };
     inline for (words) |w| {
         if (std.mem.eql(u8, word, w)) return @field(Tag, "kw_" ++ w);
     }
-    return .ident;
-}
-fn pythonKeyword(word: []const u8) Tag {
     const aliases = .{
-        .{ "def", Tag.kw_fn },
-        .{ "class", Tag.kw_struct },
+        .{ "def", Tag.kw_def },
+        .{ "class", Tag.kw_class },
         .{ "True", Tag.kw_true },
         .{ "False", Tag.kw_false },
         .{ "None", Tag.kw_none },
-        .{ "pass", Tag.kw_pass },
-        .{ "elif", Tag.kw_elif },
-        .{ "case", Tag.kw_case },
         .{ "and", Tag.and_and },
         .{ "or", Tag.or_or },
         .{ "not", Tag.bang },
-        .{ "with", Tag.kw_with },
-        .{ "assert", Tag.kw_assert },
     };
     inline for (aliases) |alias| if (std.mem.eql(u8, word, alias[0])) return alias[1];
-    return keyword(word);
-}
-fn dialectKeyword(word: []const u8, python: bool) Tag {
-    return if (python) pythonKeyword(word) else keyword(word);
+    return .ident;
 }
 /// Check the identifier spelling rules without accepting reserved keywords.
 pub fn isIdentifier(word: []const u8) bool {
@@ -279,39 +260,9 @@ pub fn isIdentifier(word: []const u8) bool {
     for (word[1..]) |byte| if (!(std.ascii.isAlphanumeric(byte) or byte == '_')) return false;
     return keyword(word) == .ident;
 }
-/// Recognize Python declaration heads without mistaking comments or strings for code.
-pub fn isPythonSource(bytes: []const u8) bool {
-    var at: usize = 0;
-    while (at < bytes.len) {
-        const ch = bytes[at];
-        if (ch == '#' or (ch == '/' and at + 1 < bytes.len and bytes[at + 1] == '/')) {
-            while (at < bytes.len and bytes[at] != '\n') at += 1;
-        } else if (ch == '"' or ch == '\'') {
-            const quote = ch;
-            at += 1;
-            while (at < bytes.len and bytes[at] != quote) {
-                if (bytes[at] == '\\' and at + 1 < bytes.len) at += 1;
-                at += 1;
-            }
-            if (at < bytes.len) at += 1;
-        } else if (std.ascii.isAlphabetic(ch) or ch == '_') {
-            const start = at;
-            at += 1;
-            while (at < bytes.len and (std.ascii.isAlphanumeric(bytes[at]) or bytes[at] == '_')) at += 1;
-            if (std.mem.eql(u8, bytes[start..at], "def") or std.mem.eql(u8, bytes[start..at], "class")) {
-                var next = at;
-                while (next < bytes.len and (bytes[next] == ' ' or bytes[next] == '\t')) next += 1;
-                if (next > at and next < bytes.len and (std.ascii.isAlphabetic(bytes[next]) or bytes[next] == '_')) return true;
-            }
-        } else at += 1;
-    }
-    return false;
-}
 /// Allocate source-spanned tokens and report invalid input through the supplied diagnostic sink.
 pub fn lex(allocator: std.mem.Allocator, bytes: []const u8, sink: *diagnostic.Sink) diagnostic.Error![]Token {
-    const python = isPythonSource(bytes);
-    const raw = try tokenize(allocator, bytes, .{ .start = 0, .end = bytes.len }, python, sink);
-    if (!python) return raw;
+    const raw = try tokenize(allocator, bytes, .{ .start = 0, .end = bytes.len }, sink);
     defer allocator.free(raw);
     return @import("python_layout.zig").lower(Token, allocator, bytes, raw, sink);
 }
@@ -319,10 +270,10 @@ pub fn lex(allocator: std.mem.Allocator, bytes: []const u8, sink: *diagnostic.Si
 /// Tokenize one byte range with absolute source spans and no indentation lowering.
 /// Format-string interpolations reuse the ordinary grammar through this entry point.
 pub fn lexRange(allocator: std.mem.Allocator, bytes: []const u8, span: Span, sink: *diagnostic.Sink) diagnostic.Error![]Token {
-    return tokenize(allocator, bytes, span, true, sink);
+    return tokenize(allocator, bytes, span, sink);
 }
 
-fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, python: bool, sink: *diagnostic.Sink) diagnostic.Error![]Token {
+fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, sink: *diagnostic.Sink) diagnostic.Error![]Token {
     var tokens: std.ArrayList(Token) = .empty;
     errdefer tokens.deinit(allocator);
     const limit = span.end;
@@ -334,15 +285,14 @@ fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, python:
             i += 1;
             continue;
         }
-        const legacy_comment = !python and ch == '/' and i + 1 < limit and bytes[i + 1] == '/';
-        if (ch == '#' or legacy_comment) {
+        if (ch == '#') {
             while (i < limit and bytes[i] != '\n') i += 1;
             continue;
         }
         const tag: Tag = blk: {
             const quotes = i + 1 < limit and (bytes[i + 1] == '"' or bytes[i + 1] == '\'');
             const bytes_prefix = ch == 'b' and quotes;
-            const format_prefix = python and ch == 'f' and quotes;
+            const format_prefix = ch == 'f' and quotes;
             if (format_prefix) {
                 i = try @import("byte_literal.zig").end(bytes, start + 1, sink);
                 break :blk .format;
@@ -354,7 +304,7 @@ fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, python:
             if (std.ascii.isAlphabetic(ch) or ch == '_') {
                 i += 1;
                 while (i < limit and (std.ascii.isAlphanumeric(bytes[i]) or bytes[i] == '_')) i += 1;
-                break :blk dialectKeyword(bytes[start..i], python);
+                break :blk keyword(bytes[start..i]);
             }
             if (std.ascii.isDigit(ch)) {
                 i = @import("float_syntax.zig").end(bytes, start);
@@ -363,13 +313,10 @@ fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, python:
             i += 1;
             const next = if (i < limit) bytes[i] else 0;
             const pair: ?Tag = switch (ch) {
-                '/' => if (python and next == '/') .slash_slash else null,
-                '.' => if (next == '.') .dot_dot else null,
+                '/' => if (next == '/') .slash_slash else null,
                 '-' => if (next == '>') .arrow else if (next == '=') .minus_equal else null,
                 '+' => if (next == '=') .plus_equal else null,
-                '&' => if (next == '&') .and_and else null,
-                '|' => if (next == '|') .or_or else null,
-                '=' => if (next == '=') .eq_eq else if (next == '>') .fat_arrow else null,
+                '=' => if (next == '=') .eq_eq else null,
                 '!' => if (next == '=') .bang_eq else null,
                 '<' => if (next == '=') .le else null,
                 '>' => if (next == '=') .ge else null,
@@ -380,7 +327,6 @@ fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, python:
                 break :blk p;
             }
             break :blk switch (ch) {
-                '&' => .ampersand,
                 '(' => .lparen,
                 ')' => .rparen,
                 '[' => .lbracket,
@@ -397,7 +343,6 @@ fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, python:
                 '%' => .percent,
                 '-' => .minus,
                 '=' => .equal,
-                '!' => .bang,
                 '?' => .question,
                 '<' => .lt,
                 '>' => .gt,
@@ -419,7 +364,7 @@ pub fn implicitTerminator(bytes: []const u8, tokens: []const Token, position: us
 }
 fn declarationHead(bytes: []const u8, token: Token) bool {
     return switch (token.tag) {
-        .kw_fn, .kw_struct, .kw_enum, .kw_union, .kw_domain, .kw_type, .kw_const, .kw_private, .kw_conversion => true,
+        .kw_def, .kw_class, .kw_enum, .kw_union, .kw_domain, .kw_type, .kw_const, .kw_private, .kw_conversion => true,
         .ident => value: {
             const text = bytes[token.span.start..token.span.end];
             inline for (.{ "export", "resource", "result", "host", "extern" }) |word| if (std.mem.eql(u8, text, word)) break :value true;

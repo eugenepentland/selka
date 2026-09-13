@@ -1,4 +1,4 @@
-//! Familiar collection syntax preserves managed aliasing and value record semantics.
+//! collection syntax preserves managed aliasing and value record semantics.
 const std = @import("std");
 const t = std.testing;
 const debug = std.debug.print;
@@ -14,7 +14,7 @@ fn evaluate(bytes: []const u8, expected: i64) !void {
     try t.expectEqual(expected, result.value);
 }
 
-// spec: FAMILIAR-COLLECTIONS-4
+// spec: SURFACE-COLLECTIONS-4
 test "list syntax rejects invalid methods element types and indices" {
     const cases = [_]struct { text: []const u8, code: []const u8 }{
         .{ .text =
@@ -70,13 +70,13 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
     try t.expectEqual(@as(i64, 42), result.value);
 }
 
-// spec: FAMILIAR-COLLECTIONS-5
+// spec: SURFACE-COLLECTIONS-5
 test "contextual managed source compilation and execution clean every failed allocation" {
     try allocationScenario(t.allocator);
     try t.checkAllAllocationFailures(t.allocator, allocationScenario, .{});
 }
 
-// spec: FAMILIAR-COLLECTIONS-2
+// spec: SURFACE-COLLECTIONS-2
 test "record constructors without new support generic records and trailing fields" {
     try evaluate(
         \\class Box[T]:
@@ -96,7 +96,7 @@ test "record constructors without new support generic records and trailing field
     , 42);
 }
 
-// spec: FAMILIAR-COLLECTIONS-1
+// spec: SURFACE-COLLECTIONS-1
 test "list methods indexing and indexed assignment share aliases" {
     try evaluate(
         \\def main() -> i64:
@@ -108,7 +108,7 @@ test "list methods indexing and indexed assignment share aliases" {
     , 42);
 }
 
-// spec: FAMILIAR-COLLECTIONS-3
+// spec: SURFACE-COLLECTIONS-3
 test "generic list methods retain element type checking" {
     try evaluate(
         \\def add[T](values: List[T], value: T):

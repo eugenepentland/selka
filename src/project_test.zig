@@ -355,7 +355,7 @@ test "project lifecycle rejects invalid budgets repeated loading and absent diag
     try t.expectEqual(@as(usize, 0), files.reads);
 }
 
-// spec: FAMILIAR-STMT-6
+// spec: SURFACE-STMT-6
 test "project discovery respects newline imports exports and multiline declaration signatures" {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes =

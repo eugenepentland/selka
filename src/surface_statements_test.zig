@@ -1,4 +1,4 @@
-//! Familiar statement endings, unit spelling, propagation, and declaration discovery.
+//! Statement endings, unit spelling, propagation, and declaration discovery.
 const std = @import("std");
 const t = std.testing;
 const debug = std.debug;
@@ -22,8 +22,8 @@ fn evaluate(bytes: []const u8, expected: i64) !void {
     try t.expectEqualStrings(formatted, twice);
 }
 
-// spec: FAMILIAR-STMT-1
-test "newlines closing braces and EOF replace semicolons while same line statements require separation" {
+// spec: SURFACE-STMT-1
+test "a newline or a dedent ends a statement and a semicolon separates two on one line" {
     try evaluate(
         \\type Number = i64
         \\
@@ -35,13 +35,21 @@ test "newlines closing braces and EOF replace semicolons while same line stateme
         \\    value = ANSWER # retained comment
         \\    return value
     , 42);
-    var invalid = try language.Compilation.init(t.allocator, "missing-separator.my", "fn main()->i64{let x=41 return x+1}");
+    try evaluate(
+        \\def main() -> i64:
+        \\    x = 41; y = 1
+        \\    return x + y
+    , 42);
+    var invalid = try language.Compilation.init(t.allocator, "missing-separator.my",
+        \\def main() -> i64:
+        \\    x = 41 return x + 1
+    );
     defer invalid.deinit();
     try t.expectError(error.SourceError, invalid.check());
     try t.expectEqualStrings("E_SYNTAX", invalid.diagnostics.items[0].code);
 }
 
-// spec: FAMILIAR-STMT-2
+// spec: SURFACE-STMT-2
 test "postfix question propagates success and error with postfix precedence" {
     try evaluate(
         \\result R:
@@ -88,7 +96,7 @@ test "postfix question propagates success and error with postfix precedence" {
     , 42);
 }
 
-// spec: FAMILIAR-STMT-3
+// spec: SURFACE-STMT-3
 test "parentheses spell unit types values and bare returns" {
     try evaluate(
         \\type Done = None
@@ -114,7 +122,7 @@ test "parentheses spell unit types values and bare returns" {
     , 42);
 }
 
-// spec: FAMILIAR-STMT-4
+// spec: SURFACE-STMT-4
 test "trailing call commas and multiline binary operators preserve semantics" {
     try evaluate(
         \\def add(a: i64, b: i64) -> i64:
@@ -137,7 +145,7 @@ test "trailing call commas and multiline binary operators preserve semantics" {
     , 42);
 }
 
-// spec: FAMILIAR-STMT-5
+// spec: SURFACE-STMT-5
 test "module declaration discovery and formatting accept newline terminated directives" {
     const bytes =
         \\module example
@@ -168,7 +176,7 @@ test "module declaration discovery and formatting accept newline terminated dire
     try t.expect(std.mem.indexOf(u8, repeated, "main") != null);
 }
 
-// spec: FAMILIAR-STMT-8
+// spec: SURFACE-STMT-8
 test "nested generic record constructors retain list type arguments and field contexts" {
     try evaluate(
         \\class Holder[T]:
@@ -183,7 +191,7 @@ test "nested generic record constructors retain list type arguments and field co
     , 42);
 }
 
-// spec: FAMILIAR-STMT-9
+// spec: SURFACE-STMT-9
 test "newline suffixes end an expression outside parentheses and continue inside parentheses" {
     try evaluate(
         \\def add(a: i64, b: i64) -> i64:
@@ -214,7 +222,7 @@ test "newline suffixes end an expression outside parentheses and continue inside
     try t.expect(syntax.nodes.items[@backingInt(expression)].data == .integer);
 }
 
-// spec: FAMILIAR-STMT-7
+// spec: SURFACE-STMT-7
 test "condition calls admit nested record constructors without consuming condition blocks" {
     try evaluate(
         \\class point:

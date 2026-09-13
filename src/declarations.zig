@@ -214,7 +214,7 @@ const Scan = struct {
         if (host) self.pos += 1;
         _ = self.take(.kw_private);
         _ = self.take(.kw_conversion);
-        _ = try self.expect(.kw_fn);
+        _ = try self.expect(.kw_def);
         return .{ .kind = if (c_abi) .extern_fn else if (host) .host_fn else .@"fn", .name = try self.declaredName(), .braced = !host };
     }
     fn simple(self: Scan) ?Simple {
@@ -224,7 +224,7 @@ const Scan = struct {
             .kw_enum => .{ .kind = .@"enum", .braced = true },
             .kw_union => .{ .kind = .@"union", .braced = true },
             .kw_domain => .{ .kind = .domain, .braced = true },
-            .kw_struct => .{ .kind = .@"struct", .braced = true },
+            .kw_class => .{ .kind = .@"struct", .braced = true },
             .ident => if (self.word(self.pos, "resource"))
                 .{ .kind = .resource, .braced = false }
             else if (self.word(self.pos, "result"))

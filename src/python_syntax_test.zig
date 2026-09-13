@@ -149,27 +149,6 @@ test "Python match cases retain contextual pattern names square types and discar
 }
 
 // spec-case: PYTHON-1
-test "Python mode detection does not reserve legacy identifiers or inspect quoted comments" {
-    try t.expect(!lexer.isPythonSource(
-        \\def main() -> i64:
-        \\    pass = 42
-        \\    return pass # def fake
-    ));
-    try t.expect(!lexer.isPythonSource(
-        \\def main() -> i64:
-        \\    _ = b"class Fake"
-        \\    return 0
-    ));
-    var c = try language.Compilation.init(t.allocator, "legacy.my",
-        \\def main() -> i64:
-        \\    pass = 42
-        \\    return pass
-    );
-    defer c.deinit();
-    try t.expectEqual(@as(i64, 42), (try c.execute(t.allocator)).value);
-}
-
-// spec-case: PYTHON-1
 test "Python layout lower frees partial token allocations on every allocator failure" {
     try t.checkAllAllocationFailures(t.allocator, lowerAllocations, .{});
 }

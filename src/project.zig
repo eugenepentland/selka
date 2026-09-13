@@ -241,7 +241,7 @@ const Scanner = struct {
     fn skipDeclaration(self: *Scanner) void {
         const token = self.tokens[self.pos];
         const braced = switch (token.tag) {
-            .kw_fn, .kw_struct, .kw_enum, .kw_union, .kw_domain, .kw_private, .kw_conversion => true,
+            .kw_def, .kw_class, .kw_enum, .kw_union, .kw_domain, .kw_private, .kw_conversion => true,
             else => self.isWord("result"),
         };
         self.pos = lex.declarationEnd(self.project.modules.items[self.id].src.bytes, self.tokens, self.pos, braced);
