@@ -706,7 +706,7 @@ test "CLI migrate prints checked Python source and is idempotent" {
 }
 // spec-case: MIGRATE-5
 test "CLI migrate reports unconvertible constructs and supports partial output" {
-    const scoped = "fn main() -> i64 {\n    let a = 7;\n    { let b = 1; }\n    return a;\n}\n";
+    const scoped = "fn main() -> i64 {\n    let a = 7;\n    { let b = 1; _ = b; }\n    { let b = 2; _ = b; }\n    return a;\n}\n";
     try invoke("migrate", scoped, 1, "", "error[E_MIGRATE_UNSUPPORTED]");
     try invokeOptions("migrate", scoped, &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_MIGRATE_UNSUPPORTED\"");
     const partial = try runFixture("migrate", scoped, &.{"--allow-partial"});
@@ -736,13 +736,14 @@ test "CLI migrate rewrites files in place and walks a module graph" {
     try testing.expectEqualStrings(python_migration, bytes);
     const module = "module input;\nexport main;\nfn main() -> i64 { let value = 42; return value; }\n";
     try invokeOptions("migrate-project", module, &.{"--check"}, 0, "", "");
-    try invokeOptions("migrate-project", "module input;\nfn main() -> i64 { { let a = 1; } return 0; }\n", &.{"--check"}, 1, "", "error[E_MIGRATE_UNSUPPORTED]");
+    try invokeOptions("migrate-project", "module input;\nfn main() -> i64 { { let a = 1; _ = a; } { let a = 2; _ = a; } return 0; }\n", &.{"--check"}, 1, "", "error[E_MIGRATE_UNSUPPORTED]");
 }
 test "CLI executes control flow and preserves discarded traps" {
     try invoke("run", "fn main() -> i64 { let mut sum = 0; let mut i = 0; while i < 100 { sum += i; i += 1; } return sum; }", 0, "4950\n", "");
     try invoke("run", "fn main() -> i64 { if false && 1 / 0 == 0 { return 1; } else { return 7; } }", 0, "7\n", "");
     try invoke("run", "fn main() -> i64 { _ = 1 / 0; return 7; }", 1, "", "error[R_DIVISION_BY_ZERO]");
-    try invoke("check", "fn main() -> i64 { while true { return 7; } }", 1, "", "error[E_MISSING_RETURN]");
+    try invoke("run", "fn main() -> i64 { while true { return 7; } }", 0, "7\n", "");
+    try invoke("check", "fn main() -> i64 { while true { break; } }", 1, "", "error[E_MISSING_RETURN]");
 }
 test "all commands preserve stdout and deterministic advisory stderr" {
     const source = @embedFile("fixtures/warnings.my");

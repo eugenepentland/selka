@@ -196,17 +196,17 @@ test "module directives qualification and comments survive migration" {
 test "partial migration marks every gap and keeps the surrounding suite" {
     const output = try convert(t.allocator,
         \\fn main() -> i64 {
-        \\    let half = 9 / 3;
-        \\    let rest = 9 % 4;
-        \\    return half + rest;
+        \\    let first = match 1 { };
+        \\    let second = match 2 { };
+        \\    return first + second;
         \\}
     , .{ .allow_partial = true });
     defer t.allocator.free(output);
     try t.expectEqualStrings(
         \\def main() -> i64:
-        \\    half = 9 // 3  # MIGRATE: unsupported truncating integer division
-        \\    rest = 9 % 4  # MIGRATE: unsupported truncating integer remainder
-        \\    return half + rest
+        \\    first = todo<i64>()  # MIGRATE: unsupported a match expression
+        \\    second = todo<i64>()  # MIGRATE: unsupported a match expression
+        \\    return first + second
         \\
     , output);
 }
@@ -215,7 +215,7 @@ test "partial migration marks every gap and keeps the surrounding suite" {
 test "partial migration records one warning for every reported gap" {
     var compilation = try language.Compilation.init(t.allocator, path,
         \\fn main() -> i64 {
-        \\    return 9 / 3 + 9 % 4;
+        \\    return match 1 { } + match 2 { };
         \\}
     );
     defer compilation.deinit();
@@ -386,7 +386,7 @@ test "operators propagation matching and generics adopt Python spellings" {
         \\    answer = checked(40)?
         \\    match checked(answer):
         \\        case Answer.ok(v):
-        \\            return identity::<i64>(v) + 2
+        \\            return identity[i64](v) + 2
         \\        case Answer.err(e):
         \\            return e
         \\
@@ -405,28 +405,21 @@ test "constructs without a Python spelling are rejected with their source spans"
     try expectRejection(
         \\fn main() -> i64 {
         \\    let a = 7;
-        \\    { let b = 1; }
+        \\    { let a = 1; return a; }
         \\    return a;
         \\}
-    , "no Python spelling for a bare nested scope block", "{ let b = 1; }");
+    , "no Python spelling for a bare nested scope block", "{ let a = 1; return a; }");
     try expectRejection(
         \\fn main() -> i64 {
-        \\    return 7 / 2;
+        \\    return match 1 { };
         \\}
-    , "no Python spelling for truncating integer division", "/");
+    , "no Python spelling for a match expression", "match 1 { }");
     try expectRejection(
-        \\union Choice { none, value: i64 }
-        \\fn main() -> i64 {
-        \\    let c = new Choice.value(7);
-        \\    return 0;
+        \\fn delegate(fs: filesystem_cap) -> filesystem_cap effects() {
+        \\    return restrict_resource<read>(fs);
         \\}
-    , "no Python spelling for a payload variant outside a checked result", "new Choice.value(7)");
-    try expectRejection(
-        \\fn main() -> i64 {
-        \\    let a = new [2]i64 [1, 2];
-        \\    return a[0];
-        \\}
-    , "no Python spelling for a fixed array literal", "new [2]i64 [1, 2]");
+        \\fn main() -> i64 { return 0; }
+    , "no Python spelling for restrict_resource", "restrict_resource<read>(fs)");
 }
 
 // spec: MIGRATE-9

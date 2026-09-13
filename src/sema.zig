@@ -60,10 +60,13 @@ const eArenaBinding = "E_ARENA_BINDING";
 const Pending = struct { available: bool, transfer_span: ?source.Span };
 const Work = struct { default_value: bool = false, id: ast.NodeId, emit: bool = false, checkpoint: bool = false, verify: ?[]const Pending = null };
 const FieldDestination = struct { owner: typed.LocalId, index: ?typed.NodeId, value: typed.NodeId, refresh: typed.StatementId };
-const CheckedStatement = struct { id: typed.StatementId, terminates: bool };
+const CheckedStatement = struct { id: typed.StatementId, terminates: bool, looping: bool = false };
 
 const StatementFlow = struct {
     terminates: bool = false,
+    /// A loop the checker proved never exits ends control flow without making a
+    /// following statement a mistake, because its exit is inferred, not written.
+    looping: bool = false,
     owned_cleanup: []const typed.LocalId = &.{},
 };
 
@@ -1269,6 +1272,10 @@ const Checker = struct {
             try self.checkTextDictionary(operation, owner, out);
             return;
         }
+        switch (operation.kind) {
+            .append, .read, .write, .length, .capacity, .contains, .iteration_check => {},
+            else => return self.sink.fail(eCollectionMethod, operation.owner, "operation is not supported by lists"),
+        }
         const arguments = try self.allocator.alloc(typed.NodeId, operation.arguments.len);
         for (operation.arguments, arguments, 0..) |input, *argument, argument_index| {
             argument.* = self.resolved[@backingInt(input)].?;
@@ -2076,12 +2083,15 @@ const Checker = struct {
             _ = self.active.remove(local.name);
         };
         var checked: std.ArrayList(typed.StatementId) = .empty;
+        var looping = false;
         for (children) |child| {
-            if (flow.terminates) return self.sink.fail("E_UNREACHABLE", self.syntax.statements.items[@backingInt(child)].span, "statement follows a structurally terminating statement");
+            if (flow.terminates and !looping) return self.sink.fail("E_UNREACHABLE", self.syntax.statements.items[@backingInt(child)].span, "statement follows a structurally terminating statement");
             const result = try self.statement(child);
             flow.terminates = result.terminates;
+            looping = result.looping;
             try checked.append(self.allocator, result.id);
         }
+        flow.looping = looping;
         if (!flow.terminates) {
             try self.requireHandled(first_local, stmt.span);
             var owned: std.ArrayList(typed.LocalId) = .empty;
@@ -2318,6 +2328,7 @@ const Checker = struct {
         // `while True:` without a break has no exit, so control never reaches what follows.
         const always = self.nodes.items[@backingInt(condition)].data == .boolean and self.nodes.items[@backingInt(condition)].data.boolean;
         flow.terminates = always and !self.loops.active.items[self.loops.active.items.len - 1].exited;
+        flow.looping = flow.terminates;
         return .{ .loop = .{ .id = loop_id, .condition = condition, .body = body.id } };
     }
     fn statementForEach(self: *Checker, stmt: ast.Statement, each: @FieldType(@FieldType(ast.Statement, "data"), "for_each")) Error!@FieldType(typed.Statement, "data") {
@@ -2586,7 +2597,7 @@ const Checker = struct {
         };
         const result: typed.StatementId = @fromBackingInt(self.statements.items.len);
         try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = flow.terminates, .owned_cleanup = flow.owned_cleanup, .data = data });
-        return .{ .id = result, .terminates = flow.terminates };
+        return .{ .id = result, .terminates = flow.terminates, .looping = flow.looping };
     }
 };
 fn warningLess(_: void, a: diagnostic.Diagnostic, b: diagnostic.Diagnostic) bool {

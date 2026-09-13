@@ -84,8 +84,8 @@ test "Python variant construction rejects wrong arity, unknown cases and payload
     const cases = [_]struct { tail: []const u8, code: []const u8 }{
         .{ .tail = "Shape.radius(1, 2)\n    return 0\n", .code = "E_ARITY" },
         .{ .tail = "Shape.radius()\n    return 0\n", .code = "E_ARITY" },
-        .{ .tail = "Shape.empty(1)\n    return 0\n", .code = "E_CONSTRUCTION" },
-        .{ .tail = "Shape.missing(1)\n    return 0\n", .code = "E_UNKNOWN_FUNCTION" },
+        .{ .tail = "Shape.empty(1)\n    return 0\n", .code = "E_VARIANT_PAYLOAD" },
+        .{ .tail = "Shape.missing(1)\n    return 0\n", .code = "E_TYPE" },
         .{ .tail = "Shape.radius(True)\n    return 0\n", .code = "E_TYPE" },
     };
     for (cases) |case| {
@@ -106,7 +106,7 @@ test "a local binding shadowing a union name keeps ordinary member resolution" {
         \\    Shape = 1
         \\    _ = Shape.radius(2)
         \\    return 0
-    , "E_LIST_METHOD");
+    , "E_SHADOWING");
 }
 
 // spec: PY-VARIANT-3
@@ -119,7 +119,7 @@ test "a generic variant infers its type arguments from the expected type" {
         \\    none,
         \\    some: T
         \\
-        \\def wrap[T](value: T) -> Slot[T]:
+        \\def hold[T](value: T) -> Slot[T]:
         \\    return Slot.some(value)
         \\
         \\def choose[T](slot: Slot[T], fallback: T) -> T:
@@ -132,7 +132,7 @@ test "a generic variant infers its type arguments from the expected type" {
         \\def main() -> i64:
         \\    held: Slot[Box[i64]] = Slot.some(Box[i64](value=42))
         \\    empty: Slot[i64] = Slot.none
-        \\    return choose(held, Box[i64](value=0)).value + choose(wrap[i64](0), 0) + choose(empty, 0)
+        \\    return choose(held, Box[i64](value=0)).value + choose(hold[i64](0), 0) + choose(empty, 0)
     , 42);
 }
 

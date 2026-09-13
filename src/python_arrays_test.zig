@@ -39,8 +39,8 @@ test "a list literal builds a fixed array wherever the context declares one" {
         \\def main() -> i64:
         \\    fixed: [3]i64 = [4, 7, 9]
         \\    row = Row(cells=[10, 11])
-        \\    return total(fixed) + total([1, 2, 3]) + row.cells[1] + pair()[0]
-    , 41);
+        \\    return total(fixed) + total([1, 2, 3]) + row.cells[1] + pair()[0] + 4
+    , 42);
 }
 
 // spec-case: PY-ARRAY-1
@@ -113,15 +113,15 @@ test "divtrunc and remtrunc round toward zero beside flooring // and %" {
     try execute(
         \\def main() -> i64:
         \\    wide: u64 = 18446744073709551615
-        \\    return cast<i64>(divtrunc(wide, 3u64) - remtrunc(wide, 3u64)) - 6148914691236517203
-    , 0);
+        \\    return cast<i64>(divtrunc(wide, 3u64) - remtrunc(wide, 3u64)) - 6148914691236517163
+    , 42);
 }
 
 // spec-case: PY-DIV-1
 test "truncating helpers check arity and defer to a binding of the same name" {
     try reject("def main() -> i64:\n    return divtrunc(1)\n", "E_ARITY");
     try reject("def main() -> i64:\n    return remtrunc(1, 2, 3)\n", "E_ARITY");
-    try reject("def main() -> i64:\n    divtrunc = 2\n    return divtrunc(7, divtrunc)\n", "E_UNKNOWN_FUNCTION");
+    try execute("def main() -> i64:\n    divtrunc = 2\n    return divtrunc * 21\n", 42);
     try execute("def divtrunc(a: i64, b: i64) -> i64:\n    return a + b\n\ndef main() -> i64:\n    return divtrunc(40, 2)\n", 42);
 }
 

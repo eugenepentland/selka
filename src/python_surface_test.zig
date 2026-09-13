@@ -84,7 +84,20 @@ test "a subscript index may begin with a parenthesis" {
         \\def main() -> int:
         \\    values = [10, 20, 30]
         \\    n = 4
-        \\    return values[(n - 1) % 3] * 2 - 18
+        \\    return values[(n - 1) % 3] * 5 - 8
+    , 42);
+}
+
+// spec-case: PY-RESERVED-1
+test "an intrinsic name is an ordinary field, keyword argument and member" {
+    try execute(
+        \\class Buffer:
+        \\    len: int
+        \\    replace: int
+        \\
+        \\def main() -> int:
+        \\    held = Buffer(len=20, replace=22)
+        \\    return held.len + held.replace
     , 42);
 }
 

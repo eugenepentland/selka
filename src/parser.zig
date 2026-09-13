@@ -216,7 +216,7 @@ pub const Parser = struct {
         while (self.current().tag != .eof) {
             if (self.module_syntax and self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "export")) {
                 self.cursor.pos += 1;
-                _ = try self.expect(.ident);
+                _ = try self.declaredName();
                 _ = try self.expect(.semicolon);
                 continue;
             }
@@ -295,9 +295,9 @@ pub const Parser = struct {
                 const empty_record = python_record and self.take(.kw_pass);
                 if (empty_record) _ = try self.expect(.semicolon);
                 if (!empty_record and self.current().tag != .rbrace) while (true) {
-                    const field = try self.expect(.ident);
+                    const field = try self.declaredName();
                     _ = try self.expect(.colon);
-                    try fields.append(self.arena.allocator(), .{ .name = field.span, .ty = try self.typeName() });
+                    try fields.append(self.arena.allocator(), .{ .name = field, .ty = try self.typeName() });
                     const next_field = python_record and self.current().tag != .rbrace and lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos);
                     if (!self.take(.comma) and !next_field) break;
                 };
@@ -376,13 +376,13 @@ pub const Parser = struct {
         var parameters: std.ArrayList(ast.Parameter) = .empty;
         var default_seen = false;
         if (self.current().tag != .rparen) while (true) {
-            const parameter = try self.expect(.ident);
+            const parameter = try self.declaredName();
             _ = try self.expect(.colon);
             const ty = try self.typeName();
             const default_value = if (self.take(.equal)) try self.defaultArgument() else null;
-            if (default_seen and default_value == null) return self.sink.fail(eDefaultArgument, parameter.span, "required parameters must precede parameters with defaults");
+            if (default_seen and default_value == null) return self.sink.fail(eDefaultArgument, parameter, "required parameters must precede parameters with defaults");
             default_seen = default_seen or default_value != null;
-            try parameters.append(self.arena.allocator(), .{ .name = parameter.span, .ty = ty, .default_value = default_value });
+            try parameters.append(self.arena.allocator(), .{ .name = parameter, .ty = ty, .default_value = default_value });
             if (!self.take(.comma) or self.current().tag == .rparen) break;
         };
         return parameters;
@@ -723,9 +723,9 @@ pub const Parser = struct {
         _ = try self.expect(.lbrace);
         var fields: std.ArrayList(ast.FieldInit) = .empty;
         if (self.current().tag != .rbrace) while (true) {
-            const name = try self.expect(.ident);
+            const name = try self.declaredName();
             _ = try self.expect(.colon);
-            try fields.append(self.arena.allocator(), .{ .name = name.span, .value = try self.expression(0) });
+            try fields.append(self.arena.allocator(), .{ .name = name, .value = try self.expression(0) });
             if (!self.take(.comma) or self.current().tag == .rbrace) break;
         };
         _ = try self.expect(.rbrace);
@@ -1261,7 +1261,8 @@ pub const Parser = struct {
             if (self.tokens[position].tag == .rbracket) brackets -|= 1;
             switch (self.tokens[position].tag) {
                 .dot => if (applied and brackets == 0) return false,
-                .ident, .colon, .lbracket, .rbracket, .lt, .gt, .comma, .kw_i64, .kw_i8, .kw_i16, .kw_i32, .kw_u8, .kw_u16, .kw_u32, .kw_u64, .kw_bool, .kw_none => {},
+                .comma, .colon => if (brackets == 0) return false,
+                .ident, .lbracket, .rbracket, .lt, .gt, .kw_i64, .kw_i8, .kw_i16, .kw_i32, .kw_u8, .kw_u16, .kw_u32, .kw_u64, .kw_bool, .kw_none => {},
                 .lparen => return applied and brackets == 0,
                 else => return false,
             }
@@ -1274,7 +1275,8 @@ pub const Parser = struct {
         var names: std.ArrayList(?Span) = .empty;
         var keyword_seen = false;
         if (self.current().tag != .rparen) while (true) {
-            const keyword = self.current().tag == .ident and self.tokens[self.cursor.pos + 1].tag == .equal;
+            const named = self.current().tag == .ident or self.current().tag == .kw_len or self.current().tag == .kw_replace;
+            const keyword = named and self.tokens[self.cursor.pos + 1].tag == .equal;
             const name = if (keyword) self.current().span else null;
             if (keyword) self.cursor.pos += 2;
             if (keyword_seen and !keyword) return self.sink.fail("E_CALL_ARGUMENT", self.current().span, "positional arguments must precede keyword arguments");

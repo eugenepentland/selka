@@ -88,7 +88,7 @@ test "splitlines drops terminators and int/float parse a whole string" {
         \\            total = total + int(value * 2.0)
         \\        case None:
         \\            total = total - 1
-        \\    return total
+        \\    return total - 1
     , 42);
 }
 
@@ -98,6 +98,12 @@ test "string methods are rejected on lists and empty needles trap" {
         \\def main() -> int:
         \\    values = [1, 2]
         \\    _ = values.strip()
+        \\    return 0
+    , "E_COLLECTION_METHOD");
+    try reject(
+        \\def main() -> int:
+        \\    counts: dict[str, int] = {}
+        \\    _ = counts.upper()
         \\    return 0
     , "E_COLLECTION_METHOD");
     var c = try language.Compilation.init(t.allocator, "strings.my", "def main() -> int:\n    return \"ab\".find(\"\")\n");
