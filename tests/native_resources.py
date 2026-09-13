@@ -111,17 +111,26 @@ fn scenario(id:usize,source:[]const u8,acquire:u8,complete:u8,permissions:u8,mis
 
 
 def io_cases(prefix, finish):
-    finish = finish.replace("return e;", "return -e;")
-    declarations = "struct Chunk{eof:bool,bytes:[4]u8,length:u64}result Read{err:i64,ok:Chunk}result Written{err:i64,ok:u64}"
-    byte_score = "+i64(chunk.bytes[0])+i64(chunk.bytes[1])+i64(chunk.bytes[2])+i64(chunk.bytes[3])"
-    fixed = prefix + declarations + "fn work(fs:filesystem_cap)->Run{let mut file=acquire_resource[A](fs,new [0]u8[])?;let chunk=read_resource[Read](file)?;let n=write_resource[Written](file,chunk.bytes)?;let mut score=i64(chunk.length)*1000+i64(n)" + byte_score + ";if chunk.eof{score+=10000;}return new Run.ok(score);}" + finish
+    finish = finish.replace("return e\n", "return -e\n")
+    declarations = ("class Chunk:\n    eof: bool\n    bytes: [4]u8\n    length: u64\n\n\n"
+                    "result Read:\n    err: i64,\n    ok: Chunk\n\n\n"
+                    "result Written:\n    err: i64,\n    ok: u64\n\n\n")
+    byte_score = " + i64(chunk.bytes[0]) + i64(chunk.bytes[1]) + i64(chunk.bytes[2]) + i64(chunk.bytes[3])"
+    fixed = (prefix + declarations + "def work(fs: filesystem_cap) -> Run:\n"
+             "    empty: [0]u8 = []\n"
+             "    file = acquire_resource[A](fs, empty)?\n"
+             "    chunk = read_resource[Read](file)?\n"
+             "    n = write_resource[Written](file, chunk.bytes)?\n"
+             "    score = i64(chunk.length) * 1000 + i64(n)" + byte_score + "\n"
+             "    if chunk.eof:\n        score += 10000\n"
+             "    return Ok(score)\n\n\n" + finish)
     result = []
 
     def add(name, source, settings, expected, error=None):
         result.append(("io-" + name, source, settings, 2 if error else 0, b"" if error else f"{expected}\n".encode(), error))
     add("fixed", fixed, {}, 12066)
     add("network", fixed.replace("filesystem", "network"), {}, 12066)
-    add("empty-fixed", fixed.replace("bytes:[4]u8", "bytes:[0]u8").replace(byte_score, ""), {}, 10000)
+    add("empty-fixed", fixed.replace("bytes: [4]u8", "bytes: [0]u8").replace(byte_score, ""), {}, 10000)
     for mode in (1, 2, 3):
         add(f"fixed-read-{mode}", fixed, {"READ": mode}, -mode)
         add(f"write-{mode}", fixed, {"WRITE": mode}, -mode)
@@ -135,6 +144,6 @@ def io_cases(prefix, finish):
     add("overwrite", fixed, {"WRITE": 5}, 0, b"InvalidProvider")
     add("no-callbacks", fixed, {"IO_MISSING": 1}, -1)
     add("denied-before-missing", fixed, {"IO_MISSING": 1, "PERMISSIONS": 0}, -2)
-    attenuated = fixed.replace("acquire_resource[A](fs,", "acquire_resource[A](restrict_resource[read,write,complete](restrict_resource[read](fs)),")
+    attenuated = fixed.replace("acquire_resource[A](fs,", "acquire_resource[A](restrict_resource[read, write, complete](restrict_resource[read](fs)),")
     add("source-attenuation", attenuated, {}, -2)
     return result

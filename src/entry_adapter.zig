@@ -21,6 +21,10 @@ const Builder = struct {
     }
 };
 
+/// Name of the synthesized wrapper. It is not a source declaration, so nothing
+/// exports it and no public interface names it.
+pub const wrapper_name = "<entry>";
+
 /// Accept unit or checked scalar-status results in addition to the legacy int entry.
 pub fn supported(ty: typed.Type, records: []const typed.Record) bool {
     if (ty == .i64 or ty == .unit) return true;
@@ -82,7 +86,7 @@ pub fn adapt(allocator: std.mem.Allocator, program: *typed.Program) std.mem.Allo
     const id: typed.FunctionId = @fromBackingInt(program.functions.len);
     functions[program.functions.len] = .{
         .id = id,
-        .name = "<entry>",
+        .name = wrapper_name,
         .declaration = entry.declaration,
         .signature = .{ .parameter_count = count, .return_type = .i64 },
         .scope = .{ .locals = locals, .body = body },

@@ -84,6 +84,9 @@ pub const Catalog = struct {
             var result: Layout = if (ty.integer()) |integer| .{ .kind = .scalar, .size = integer.bits / 8, .alignment = @intCast(integer.bits / 8) } else switch (ty) {
                 .bool => .{ .kind = .scalar, .size = 1, .alignment = 1 },
                 .unit => .{ .kind = .scalar, .size = 0, .alignment = 1 },
+                // An open file is one owned resource word, so the ordinary local
+                // drop closes it at every scope exit.
+                .file, .text_file => .{ .kind = .resource, .size = 8, .alignment = 8, .copy = .prohibited, .trace = true, .drop = true },
                 else => .{ .kind = .handle, .size = 8, .alignment = 8 },
             };
             result.hash = try self.fingerprint(ty, result);

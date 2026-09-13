@@ -6,9 +6,31 @@ struct myl_native_object {
     struct myl_native_object *next, *pending;
     const myl_native_type *element;
     size_t count, bytes;
-    unsigned marked;
+    unsigned marked, region;
     max_align_t payload_alignment;
 };
+unsigned myl_native_object_region(const void *payload) {
+    return payload ? ((const myl_native_object *)payload - 1)->region : 0;
+}
+void myl_native_region_begin(myl_native_heap *heap) {
+    heap->region_depth++;
+    heap->arena.scopes++;
+}
+void myl_native_region_end(myl_native_heap *heap) {
+    if (!heap->region_depth) return;
+    unsigned dying = heap->region_depth;
+    myl_native_object **link = &heap->objects;
+    while (*link) {
+        myl_native_object *object = *link;
+        if (object->region < dying) { link = &object->next; continue; }
+        *link = object->next;
+        heap->bytes -= object->bytes;
+        heap->objects_live--;
+        heap->arena.released++;
+        free(object);
+    }
+    heap->region_depth = dying - 1;
+}
 static void trace(myl_native_heap *, const myl_native_type *, const void *);
 static void mark(myl_native_heap *heap, void *payload) {
     if (!payload) return;
@@ -83,16 +105,23 @@ void myl_native_heap_collect(myl_native_heap *heap) {
     heap->next_collection = heap->bytes > (SIZE_MAX-65536)/2 ? SIZE_MAX : heap->bytes*2+65536;
 }
 void *myl_native_heap_alloc(myl_native_heap *heap, const myl_native_type *element, size_t count) {
+    return myl_native_heap_alloc_at(heap, element, count, heap->region_depth);
+}
+void *myl_native_heap_alloc_at(myl_native_heap *heap, const myl_native_type *element, size_t count, unsigned region) {
     if (!element || !element->alignment || element->alignment > alignof(max_align_t)) return NULL;
     if ((element->alignment & (element->alignment - 1)) || element->size % element->alignment) return NULL;
     if (element->size && count > (SIZE_MAX - sizeof(myl_native_object)) / element->size) return NULL;
     size_t bytes = sizeof(myl_native_object) + count * element->size;
-    if (heap->stress || heap->bytes > heap->limit || bytes > heap->limit - heap->bytes || heap->bytes >= heap->next_collection || bytes > heap->next_collection - heap->bytes) myl_native_heap_collect(heap);
+    int due = heap->stress || heap->bytes > heap->limit || bytes > heap->limit - heap->bytes;
+    due = due || heap->bytes >= heap->next_collection || bytes > heap->next_collection - heap->bytes;
+    /* An escape copy suspends collection because its clones are not yet rooted. */
+    if (due && !heap->suspended) myl_native_heap_collect(heap);
     if (heap->bytes > heap->limit || bytes > heap->limit - heap->bytes) return NULL;
     myl_native_object *object = calloc(1, bytes);
     if (!object) return NULL;
     object->next = heap->objects;
     object->element = element;
+    object->region = region;
     object->count = count;
     object->bytes = bytes;
     heap->objects = object;

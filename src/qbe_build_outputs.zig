@@ -36,7 +36,7 @@ pub fn entry(allocator: std.mem.Allocator, manifest: std.json.Value, provider: b
     const name = v.text(v.get(manifest, "entry"));
     const parameters = v.array(v.get(manifest, "entry_parameters"));
     const uses_packed = parameters.len > 128;
-    try w.writeAll("#include \"qbe_runtime.h\"\n#include \"native_providers.h\"\n#include <stdlib.h>\nextern void myl_qbe_host_begin(void *);\n");
+    try w.writeAll("#include \"qbe_grants.h\"\n#include \"native_providers.h\"\n#include <stdlib.h>\nextern void myl_qbe_host_begin(void *);\n");
     try w.print("extern uint64_t {s}(void *", .{name});
     if (uses_packed) try w.writeAll(",uint64_t *") else for (parameters) |_| try w.writeAll(",uint64_t");
     try w.writeAll(");\nstatic uint64_t entry_run(void *ctx) {\n myl_qbe_host_begin(ctx); if(myl_qbe_failed(ctx))return 0;\n");
@@ -53,7 +53,7 @@ pub fn entry(allocator: std.mem.Allocator, manifest: std.json.Value, provider: b
     if (uses_packed) try w.writeAll("free(arguments);");
     try w.writeAll("return answer;}\nint main(int argc,char **argv){");
     if (provider) try w.writeAll("MylangNativeProviders providers=mylang_native_providers();");
-    try w.print("return mylang_qbe_run_providers(entry_run,argc,argv,{s});}}\n", .{if (provider) "&providers" else "NULL"});
+    try w.print("return mylang_qbe_run_grants(entry_run,argc,argv,{s});}}\n", .{if (provider) "&providers" else "NULL"});
     return buffer.toOwnedSlice();
 }
 fn grant(name: []const u8) Error![]const u8 {
@@ -74,7 +74,7 @@ test "entry and location metadata retain provider setup and byte-escaped source 
     const generated = try entry(std.testing.allocator, parsed.value, true);
     defer std.testing.allocator.free(generated);
     try std.testing.expect(std.mem.indexOf(u8, generated, "myl_qbe_grant_external(ctx,0)") != null);
-    try std.testing.expect(std.mem.indexOf(u8, generated, "&providers") != null);
+    try std.testing.expect(std.mem.indexOf(u8, generated, "mylang_qbe_run_grants(entry_run,argc,argv,&providers)") != null);
     const locations = try metadata(std.testing.allocator, parsed.value);
     defer std.testing.allocator.free(locations);
     try std.testing.expect(std.mem.indexOf(u8, locations, "main_native_meta_locations,1") != null);

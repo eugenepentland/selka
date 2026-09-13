@@ -6,9 +6,11 @@ const typed = @import("typed.zig");
 pub const Error = error{ InternalError, OutOfMemory, SourceError, WriteFailed };
 const BufferOperation = @FieldType(@FieldType(bytecode.Instruction, "op"), "buffer_operation");
 const store_unit = " storel 0, %s{d}\n";
-const allocation_failure = "myl_qbe_fail_allocation";
+const allocation_failure = @import("qbe_format.zig").allocation_failure;
 const bounds_failure = "myl_qbe_fail_list_bounds";
 const load_word = @import("qbe_format.zig").load_word;
+const bytes_lower = @import("qbe_bytes.zig");
+const arena_lower = @import("qbe_arena.zig");
 const dictionary_write = " %v{d} =w call $myl_native_dictionary_write(l %heap, l %v{d}, l %v{d}, l %v{d})\n";
 /// Bind managed lowering to the concrete emitter without dependency cycles.
 pub fn Lower(comptime E: type) type {
@@ -46,10 +48,11 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
     if (!schema.managed) return self.reject(self.pc);
     if (schema.collection.kind == .string) return textOperation(E, self, op, stack);
     if (schema.collection.kind == .dictionary) return dictionaryOperation(E, self, op, stack);
-    // Byte strings share the native list representation; only its reading operations are lowered.
+    // Byte strings share the native list representation, so length, iteration and
+    // element reads stay here while the byte-specific methods lower separately.
     if (schema.collection.kind == .bytes) switch (op.kind) {
         .length, .iteration_check, .read => {},
-        else => return self.reject(self.pc),
+        else => return bytes_lower.Lower(E).operation(self, op, stack),
     };
     const h = stack.len;
     const base = h - op.kind.arity();
@@ -86,6 +89,7 @@ fn emitOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             const position = h - 1;
             const value_pointer = self.temp();
             if (self.isScalar(element)) try self.print(" %v{d} =l copy %s{d}\n", .{ value_pointer, position }) else try self.print(" %v{d} =l loadl %s{d}\n", .{ value_pointer, position });
+            try arena_lower.Lower(E).barrier(self, list, element, value_pointer);
             if (op.kind == .append) {
                 try self.print(" %v{d} =w call $myl_native_list_append(l %heap, l %v{d}, l %v{d})\n", .{ output, list, value_pointer });
                 try self.require(output, allocation_failure);
@@ -186,6 +190,8 @@ fn emitIndex(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Ty
         const key = try operandPointer(E, self, schema.collection.key.?, base + 1);
         if (replacing) {
             const value = try operandPointer(E, self, schema.shape.buffer.?, base + 2);
+            try arena_lower.Lower(E).barrier(self, input, schema.collection.key.?, key);
+            try arena_lower.Lower(E).barrier(self, input, schema.shape.buffer.?, value);
             try self.print(dictionary_write, .{ result, input, key, value });
             try self.require(result, allocation_failure);
             try self.store(base, input);
@@ -198,6 +204,7 @@ fn emitIndex(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Ty
         const at = try normalizedIndex(E, self, input, try self.load("s", base + 1), stack[base + 1]);
         if (replacing) {
             const value = try operandPointer(E, self, schema.shape.buffer.?, base + 2);
+            try arena_lower.Lower(E).barrier(self, input, schema.shape.buffer.?, value);
             try self.print(" %v{d} =w call $myl_native_list_set(l %v{d}, l %v{d}, l %v{d})\n", .{ result, input, at, value });
             try self.require(result, bounds_failure);
             try self.store(base, input);
@@ -215,7 +222,9 @@ fn emitBinary(comptime E: type, self: *E, op: @FieldType(@FieldType(bytecode.Ins
     const right = try self.load("s", base + 1);
     const result = self.temp();
     if (op.op == .add) {
-        if (self.program.records[op.ty.recordIndex()].collection.kind != .string) return self.reject(self.pc);
+        const kind = self.program.records[op.ty.recordIndex()].collection.kind;
+        if (kind == .bytes) return bytes_lower.Lower(E).concat(self, base);
+        if (kind != .string) return self.reject(self.pc);
         try self.print(" %v{d} =l call $myl_native_text_concat(l %heap, l %v{d}, l %v{d})\n", .{ result, left, right });
         try checkedPointer(E, self, result, base);
     } else if (op.op == .eq or op.op == .ne) {
@@ -265,6 +274,7 @@ fn textOperation(comptime E: type, self: *E, op: BufferOperation, stack: []const
             try self.print(" %v{d} =w call $myl_native_text_contains(l %v{d}, l %v{d})\n", .{ result, input, needle });
             try boolean(E, self, result, base);
         },
+        .encode, .from_hex => return bytes_lower.Lower(E).textual(self, op, stack),
         else => return self.reject(self.pc),
     }
 }
@@ -302,6 +312,8 @@ fn dictionaryOperation(comptime E: type, self: *E, op: BufferOperation, stack: [
                 try boolean(E, self, result, base);
             } else if (op.kind == .write) {
                 const value = try operandPointer(E, self, schema.shape.buffer.?, base + 1);
+                try arena_lower.Lower(E).barrier(self, input, schema.collection.key.?, key);
+                try arena_lower.Lower(E).barrier(self, input, schema.shape.buffer.?, value);
                 try self.print(dictionary_write, .{ result, input, key, value });
                 try self.require(result, allocation_failure);
                 try self.print(store_unit, .{base});
@@ -345,7 +357,9 @@ fn equalResult(comptime E: type, self: *E, result: usize) Error!void {
 }
 
 fn emitCast(comptime E: type, self: *E, ty: typed.Type, stack: []const typed.Type) Error!void {
-    if (self.program.records[ty.recordIndex()].collection.kind != .string) return self.reject(self.pc);
+    const collection = self.program.records[ty.recordIndex()].collection.kind;
+    if (collection == .bytes) return bytes_lower.Lower(E).fromList(self, stack);
+    if (collection != .string) return self.reject(self.pc);
     const base = stack.len - 1;
     const input_type = stack[base];
     if (input_type == ty) return;

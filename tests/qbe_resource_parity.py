@@ -14,19 +14,44 @@ def main():
     args=parser.parse_args()
     root=Path(__file__).resolve().parents[1]
     example=(root/'examples/resources.my').read_text()
-    prefix='resource File:filesystem;result A{ok:File,err:i64}result Run{ok:i64,err:i64}'
-    finish='fn main(fs:filesystem_cap)->i64{match work(fs){Run.ok(n)=>{return n;},Run.err(e)=>{return e;}}}'
+    prefix=('resource File: filesystem\n\n\n'
+            'result A:\n    ok: File,\n    err: i64\n\n\n'
+            'result Run:\n    ok: i64,\n    err: i64\n\n\n')
+    finish=('def main(fs: filesystem_cap) -> i64:\n'
+            '    match work(fs):\n'
+            '        case Run.ok(n):\n            return n\n'
+            '        case Run.err(e):\n            return e\n')
     cases=[('normal',example,{},0,b'7\n',None),
            ('retry',example,{'COMPLETE':1},0,b'7\n',None),
            ('denied',example,{'COMPLETE':2},0,b'2\n',None),
-           ('missing','fn main(fs:filesystem_cap)->i64{return 7;}',{'MISSING':1},2,b'',b'CapabilityUnavailable')]
-    reordered=prefix+'struct Pair{first:File,second:File}fn work(fs:filesystem_cap)->Run{let first=acquire_resource[A](fs,new [1]u8[42u8])?;let second=acquire_resource[A](fs,new [0]u8[])?;let pair=new Pair{first:second,second:first};_ = pair;return new Run.ok(9);}'+finish
+           ('missing','def main(fs: filesystem_cap) -> i64:\n    return 7\n',{'MISSING':1},2,b'',b'CapabilityUnavailable')]
+    reordered=(prefix+'class Pair:\n    first: File\n    second: File\n\n\n'
+               'def work(fs: filesystem_cap) -> Run:\n'
+               '    request: [1]u8 = [42u8]\n'
+               '    first = acquire_resource[A](fs, request)?\n'
+               '    empty: [0]u8 = []\n'
+               '    second = acquire_resource[A](fs, empty)?\n'
+               '    pair = Pair(first=second, second=first)\n'
+               '    _ = pair\n'
+               '    return Ok(9)\n\n\n'+finish)
     cases.append(('record-drop-order',reordered,{},0,b'9\n',None))
     cases.extend(oracle.io_cases(prefix,finish))
     generic=(root/'examples/generic-resources.my').read_text()
     cases.extend([('generic',generic,{},0,b'8\n',None),
                   ('generic-network',generic.replace('filesystem','network'),{},0,b'8\n',None)])
-    quota=prefix+'fn work(fs:filesystem_cap,n:i64)->Run{let first=acquire_resource[A](fs,new [0]u8[])?;if n==0{_ = first;return new Run.ok(0);}let second=acquire_resource[A](fs,new [0]u8[])?;return work(fs,n-1);}fn main(fs:filesystem_cap)->i64{match work(fs,512){Run.ok(n)=>{return n;},Run.err(first)=>{match work(fs,512){Run.ok(n)=>{return n;},Run.err(second)=>{return first+second;}}}}}'
+    quota=(prefix+'def work(fs: filesystem_cap, n: i64) -> Run:\n'
+           '    empty: [0]u8 = []\n'
+           '    first = acquire_resource[A](fs, empty)?\n'
+           '    if n == 0:\n        _ = first\n        return Ok(0)\n'
+           '    second = acquire_resource[A](fs, empty)?\n'
+           '    return work(fs, n - 1)\n\n\n'
+           'def main(fs: filesystem_cap) -> i64:\n'
+           '    match work(fs, 512):\n'
+           '        case Run.ok(n):\n            return n\n'
+           '        case Run.err(first):\n'
+           '            match work(fs, 512):\n'
+           '                case Run.ok(n):\n                    return n\n'
+           '                case Run.err(second):\n                    return first + second\n')
     cases.append(('quota-reuse',quota,{},0,b'8\n',None))
     with tempfile.TemporaryDirectory(prefix='qbe-resources-') as directory:
         directory=Path(directory)

@@ -188,14 +188,20 @@ traps if any of them still reaches arena storage, then frees the arena. Normal
 exit, `return`, `?` propagation, `break` and `continue` out of the block, and
 traps unwinding through it all release the arena exactly once.
 
+The QBE native backend runs arena scopes too, with the same depth header, store
+barrier, bulk release and `escape` copy. A program with no arena scope pays for
+neither the barrier nor the per-frame depth bookkeeping.
+
 ## Interaction with collection
 
 Arenas do not turn collection off. The tracing collector still runs at managed
 allocation safepoints inside a block, arena objects are traced like any other, and
 an arena object the collector proves unreachable is swept early and leaves its
-arena. `--gc-stress` works inside arenas. `memory.gc.statistics` reports arena
+arena. `--gc-stress` works inside arenas. The VM's `memory.gc.statistics` reports arena
 scope entries and bulk-released objects separately from `reclaimed`, so a program
-can tell which mechanism freed what.
+can tell which mechanism freed what; the native heap keeps the same three counters
+— scopes entered, objects bulk released and objects copied out by `escape` — but
+exposes no guest module for them.
 
 Allocation inside an arena is still allocation: it contributes the
 `managed_allocation` effect, so `noalloc` rejects it exactly as it rejects
@@ -214,8 +220,6 @@ Honest list of what this first step does not do:
   statement; `acquire_resource`/`complete_resource` keep their existing spelling.
 - Arena scopes are rejected inside generic function bodies with
   `E_GENERIC_BODY_UNSUPPORTED`.
-- The QBE native backend rejects a program containing an arena scope explicitly,
-  with `E_QBE_UNSUPPORTED`. The VM is the backend for this feature.
 - The static rules are conservative in one direction and shallow in the other.
   They reject some safe programs (any assignment of a managed-bearing value to an
   outer binding, even one that could never reach arena storage) and they do not
