@@ -90,7 +90,7 @@
     },
     "format-strings": {
       "kind": "language",
-      "summary": "`f\"...\"` interpolates scalar expressions, with `{{` and `}}` for literal braces.",
+      "summary": "`f\"...\"` interpolates any value `print` can render, with `{{` and `}}` for literal braces.",
       "doc": "docs/text.md#format-strings"
     },
     "list-comprehensions": {
@@ -536,7 +536,7 @@
     "time_random": "Unix wall clock and explicit entropy capabilities; deterministic noncryptographic SplitMix64",
     "managed_lists": "copyable shared aliases; automatic growth; no owned/resource elements, borrowed interiors, untraced storage embedding, or host escape",
     "gc": "single-threaded nonmoving tracing; retained VM values root intermediates; collect-on-allocation stress option",
-    "python": "static fixed-width types, block-scoped locals, value records; compatibility brace syntax remains accepted",
+    "python": "static fixed-width types, block-scoped locals, value records; indentation is the only block syntax",
     "dictionaries": "managed insertion order; homogeneous int or str keys and copyable values; VM and QBE",
     "native_tests": "fresh QBE processes; exported typed-call-compatible signatures; positive deterministic receipts only; frontend checks fresh; provider snapshots at most128sources/16MiB",
     "standard_library": "ten embedded Python-syntax modules over managed types: math, strings, sort, path, hex, base64, json, pool, random, time"

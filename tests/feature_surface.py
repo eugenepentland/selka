@@ -31,9 +31,9 @@ def main():
     for path, expected in [('arena-managed/main.my', '38\n'), ('callbacks.my', '17\n'), ('gc-default/main.my', '142\n'), ('python-bytes/main.my', '51\n'), ('python-word-count/main.my', '42\n')]:
         examples.append((path, (ROOT / 'examples' / path).read_text(), expected, None))
     examples.extend([
-        ('unknown-f64-alias-excluded', 'fn main()->f64{return 0;}', '', 'E_UNKNOWN_TYPE'),
-        ('stored-references-excluded', 'struct View{value:&i64}fn main()->i64{return 0;}', '', 'E_TYPE'),
-        ('unresolved-hole-excluded', 'fn main()->i64{return todo[i64]();}', '', 'E_TYPED_HOLE'),
+        ('unknown-f64-alias-excluded', 'def main() -> f64:\n    return 0\n', '', 'E_UNKNOWN_TYPE'),
+        ('stored-references-excluded', 'class View:\n    value: &i64\n\n\ndef main() -> i64:\n    return 0\n', '', 'E_TOKEN'),
+        ('unresolved-hole-excluded', 'def main() -> i64:\n    return todo[i64]()\n', '', 'E_TYPED_HOLE'),
     ])
     rows = []
     with tempfile.TemporaryDirectory(prefix='feature-surface-') as temporary:

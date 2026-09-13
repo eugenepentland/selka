@@ -28,7 +28,8 @@ def cases():
                 ('shift_left', 1, width - 1, minimum if signed else 1 << (width - 1)),
                 ('shift_right', minimum if signed else maximum, 1, minimum // 2 if signed else maximum // 2),
             ):
-                checks.append(f'if {op}({number(a)},{number(b)})!={number(expected)}{{return {len(checks)+1};}}')
-    yield 'fn main()->i64{' + ''.join(checks) + 'return 0;}', (0, b'0\n')
-    for expression in ('shift_left(1,64)', 'shift_right(1,-1)', 'shift_left(1u8,8u8)'):
-        yield 'fn main()->i64{_ = ' + expression + ';return 0;}', None
+                checks.append(f'    if {op}({number(a)}, {number(b)}) != {number(expected)}:\n'
+                              f'        return {len(checks) + 1}\n')
+    yield 'def main() -> i64:\n' + ''.join(checks) + '    return 0\n', (0, b'0\n')
+    for expression in ('shift_left(1, 64)', 'shift_right(1, -1)', 'shift_left(1u8, 8u8)'):
+        yield f'def main() -> i64:\n    _ = {expression}\n    return 0\n', None

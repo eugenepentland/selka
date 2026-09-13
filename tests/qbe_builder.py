@@ -37,7 +37,7 @@ def main():
         def keys(report):
             return {unit['name']: unit['key'] for unit in report['functions']}
 
-        source.write_text('fn square(x:i64)->i64{return x*x;}\nfn main()->i64{return square(4);}\n')
+        source.write_text('def square(x: i64) -> i64:\n    return x * x\n\n\ndef main() -> i64:\n    return square(4)\n')
         first = build()
         assert first['compiled_functions'] == 2 and first['reused_functions'] == 0, first
         assert subprocess.check_output([output]) == b'16\n'
@@ -47,7 +47,7 @@ def main():
         assert output.stat().st_mtime_ns == previous_stat.st_mtime_ns
         assert repeat['compiled_functions'] == 0 and repeat['reused_functions'] == 2, repeat
         assert keys(first) == keys(repeat)
-        source.write_text('fn square(x:i64)->i64{return x*x+1;}\nfn main()->i64{return square(4);}\n')
+        source.write_text('def square(x: i64) -> i64:\n    return x * x + 1\n\n\ndef main() -> i64:\n    return square(4)\n')
         edited = build()
         assert edited['compiled_functions'] == 1 and edited['reused_functions'] == 1, edited
         assert sum(keys(first)[name] == key for name, key in keys(edited).items()) == 1
@@ -56,7 +56,7 @@ def main():
         cold = build(['--cache-dir', str(directory / 'cold-cache'), '-o', str(cold_output)])
         assert cold['compiled_functions'] == 2, cold
         assert subprocess.check_output([cold_output]) == subprocess.check_output([output])
-        source.write_text('// changed order and formatting\nfn main() -> i64 { return square(4); }\nfn square(x:i64)->i64 { return x*x+1; }\n')
+        source.write_text('# changed order and formatting\ndef main() -> i64:\n    return  square( 4 )\n\n\ndef square( x : i64 ) -> i64:\n    return x*x + 1\n')
         reordered = build()
         assert reordered['compiled_functions'] == 0 and keys(reordered) == keys(edited), reordered
         corrupted = Path(reordered['functions'][0]['object'])
@@ -68,7 +68,7 @@ def main():
         metadata_repaired = build()
         assert metadata_repaired['compiled_functions'] == 1, metadata_repaired
         # Removing a definition must remove its object from the current link manifest.
-        source.write_text('fn main()->i64{return 19;}\n')
+        source.write_text('def main() -> i64:\n    return 19\n')
         deleted = build()
         assert len(deleted['functions']) == 1, deleted
         manifest = json.loads(output.with_name(output.name + '.qbe-manifest.json').read_text())
@@ -76,11 +76,11 @@ def main():
         assert subprocess.check_output([output]) == b'19\n'
         previous = output.read_bytes()
         previous_manifest = output.with_name(output.name + '.qbe-manifest.json').read_bytes()
-        source.write_text('fn main()->i64{return true;}\n')
+        source.write_text('def main() -> i64:\n    return True\n')
         build(failure=True)
         assert output.read_bytes() == previous
         assert output.with_name(output.name + '.qbe-manifest.json').read_bytes() == previous_manifest
-        source.write_text('fn main()->i64{return 20;}\n')
+        source.write_text('def main() -> i64:\n    return 20\n')
         fake_qbe = directory / 'failing-qbe'
         fake_qbe.write_text('#!/bin/sh\nexit 1\n')
         fake_qbe.chmod(0o700)
@@ -88,33 +88,33 @@ def main():
         assert output.read_bytes() == previous
         assert not list(directory.glob('.mylang-qbe-*'))
         # Stable qualified identities distinguish same-named functions across modules.
-        (directory / 'left.my').write_text('module left; export value; fn value()->i64{return 10;}')
-        (directory / 'right.my').write_text('module right; export value; fn value()->i64{return 20;}')
-        source.write_text('module source; import left; import right; fn main()->i64{return left::value()+right::value();}')
+        (directory / 'left.my').write_text('module left\nexport value\n\n\ndef value() -> i64:\n    return 10\n')
+        (directory / 'right.my').write_text('module right\nexport value\n\n\ndef value() -> i64:\n    return 20\n')
+        source.write_text('module source\nimport left\nimport right\n\n\ndef main() -> i64:\n    return left.value() + right.value()\n')
         project = build(['--project'])
         assert len(project['functions']) == 3
         assert len({unit['symbol'] for unit in project['functions']}) == 3
         assert subprocess.check_output([output]) == b'30\n'
-        source.write_text('module source; import right; import left; fn main()->i64{return left::value()+right::value();}')
+        source.write_text('module source\nimport right\nimport left\n\n\ndef main() -> i64:\n    return left.value() + right.value()\n')
         reordered_project = build(['--project'])
         assert reordered_project['compiled_functions'] == 0, reordered_project
         assert keys(project) == keys(reordered_project)
         # Diagnostic coordinates update independently of machine-code identity.
-        source.write_text('fn divide(x:i64)->i64{return 10/x;}\nfn main()->i64{return divide(0);}\n')
+        source.write_text('def divide(x: i64) -> i64:\n    return divtrunc(10, x)\n\n\ndef main() -> i64:\n    return divide(0)\n')
         located = build()
         trapped = subprocess.run([output], capture_output=True)
         assert trapped.returncode != 0 and b'R_DIVISION_BY_ZERO' in trapped.stderr, trapped.stderr
-        assert (str(source)+':1:').encode() in trapped.stderr, trapped.stderr
-        source.write_text('\n\nfn divide(x:i64)->i64{return 10/x;}\nfn main()->i64{return divide(0);}\n')
+        assert (str(source)+':2:').encode() in trapped.stderr, trapped.stderr
+        source.write_text('\n\ndef divide(x: i64) -> i64:\n    return divtrunc(10, x)\n\n\ndef main() -> i64:\n    return divide(0)\n')
         relocated = build()
         assert relocated['compiled_functions'] == 0 and keys(located) == keys(relocated), relocated
         assert not relocated['metadata_reused'], relocated
         trapped = subprocess.run([output], capture_output=True)
-        assert (str(source)+':3:').encode() in trapped.stderr, trapped.stderr
+        assert (str(source)+':4:').encode() in trapped.stderr, trapped.stderr
         # Signature changes require regeneration of the changed function and its caller.
-        source.write_text('fn square(x:i64)->i64{return x*x;} fn main()->i64{return square(4);}')
+        source.write_text('def square(x: i64) -> i64:\n    return x * x\n\n\ndef main() -> i64:\n    return square(4)\n')
         build()
-        source.write_text('fn square(x:i64,y:i64)->i64{return x*y;} fn main()->i64{return square(4,5);}')
+        source.write_text('def square(x: i64, y: i64) -> i64:\n    return x * y\n\n\ndef main() -> i64:\n    return square(4, 5)\n')
         signature = build()
         assert signature['compiled_functions'] == 2, signature
         assert subprocess.check_output([output]) == b'20\n'
