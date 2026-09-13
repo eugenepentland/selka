@@ -14,9 +14,9 @@ top-level declarations:
 
 ```mylang
 # doc: skip fragment: header excerpt whose imported modules are not shown
-module main;
-import shared.units;
-import shared.types as types;
+module main
+import shared.units
+import shared.types as types
 ```
 
 The CLI takes an `identifier.my` entry file. Its containing directory is the

@@ -2,12 +2,33 @@
 from pathlib import Path
 from native_codec_dispatch import DATA
 
-MAIN = '''module main;import data;export echo;export Bundle;export Choice;export nested;
-struct Bundle{items:[2]data::Positive}
-union Choice{none,bundle:Bundle}
-fn nested(x:Choice)->Choice{return x;}
-fn echo(x:data::Positive)->data::Positive{return x;}
-fn main()->i64{return 0;}
+MAIN = '''module main
+import data
+export echo
+export Bundle
+export Choice
+export nested
+
+
+class Bundle:
+    items: [2]data.Positive
+
+
+union Choice:
+    none,
+    bundle: Bundle
+
+
+def nested(x: Choice) -> Choice:
+    return x
+
+
+def echo(x: data.Positive) -> data.Positive:
+    return x
+
+
+def main() -> i64:
+    return 0
 '''
 HOST = r'''
 int main(void) {

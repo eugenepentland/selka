@@ -12,10 +12,13 @@ Header order is `module`, then imports. Explicit exports may precede, follow, or
 
 ```mylang
 # doc: skip fragment: the imported `shared.units` module is not shown
-module main;
-import shared.units;
-struct Measurement { distance: units::Distance }
-export Measurement;
+module main
+import shared.units
+export Measurement
+
+
+class Measurement:
+    distance: units.Distance
 ```
 
 `export Measurement;` can be placed next to its declaration or in a separate list.

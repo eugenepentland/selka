@@ -1,24 +1,62 @@
 """Internal declared-codec calls preserve a live native caller and shared budgets."""
 from pathlib import Path
 
-DATA = '''module data;export Wire;export Positive;export Decoded;EXPORT_REJECTION
-fn unused<T:copy>(x:T)->T{return x;}
-struct Wire{n:i64}REJECTION
-result Decoded{ok:Positive,err:ERROR_TYPE}
-domain Positive:i64{
- codec Wire{decode:from_wire,encode:to_wire}
- private fn raw(n:i64)->Positive{return wrap[Positive](n);}
- fn from_wire(x:Wire)->Decoded{
-  if x.n==99{return new Decoded.ok(Positive.raw(1/(x.n-99)));}
-  if x.n<=0{return new Decoded.err(ERROR_VALUE);}
-  return new Decoded.ok(Positive.raw(x.n*2));
- }
- fn to_wire(x:Positive)->Wire{return new Wire{n:unwrap(x)+1};}
-}
+# EXPORT_REJECTION and REJECTION each own a whole line: a caller substitutes an
+# `export` directive and a record declaration, or an empty string for neither.
+DATA = '''module data
+export Wire
+export Positive
+export Decoded
+EXPORT_REJECTION
+
+def unused[T: copy](x: T) -> T:
+    return x
+
+
+class Wire:
+    n: i64
+
+
+REJECTION
+
+result Decoded:
+    ok: Positive,
+    err: ERROR_TYPE
+
+
+domain Positive: i64:
+    codec Wire:
+        decode: from_wire,
+        encode: to_wire
+
+    private def raw(n: i64) -> Positive:
+        return wrap[Positive](n)
+
+    def from_wire(x: Wire) -> Decoded:
+        if x.n == 99:
+            return Ok(Positive.raw(divtrunc(1, x.n - 99)))
+        if x.n <= 0:
+            return Err(ERROR_VALUE)
+        return Ok(Positive.raw(x.n * 2))
+
+    def to_wire(x: Positive) -> Wire:
+        return Wire(n=unwrap(x) + 1)
 '''
-MAIN = '''module main;import data;
-result Time{ok:i64,err:i64}
-fn main(c:clock_cap)->i64{match clock_now[Time](c){Time.ok(n)=>{return n;},Time.err(e)=>{return e;}}}
+MAIN = '''module main
+import data
+
+
+result Time:
+    ok: i64,
+    err: i64
+
+
+def main(c: clock_cap) -> i64:
+    match clock_now[Time](c):
+        case Time.ok(n):
+            return n
+        case Time.err(e):
+            return e
 '''
 HOST = r'''
 static int mode;

@@ -14,8 +14,9 @@ below keeps its original spelling and is not executed.
 A function may have one contextual annotation between its result/lifetime contract
 and body:
 
-```mylang
-# doc: skip fragment: `Numbers` and the removed slice tier are not declared here
+> The example below is quoted from the removed explicit storage tier (`&mut []T` slices, `borrow`, `discard`, `std_json`) and is not source the compiler accepts; see [docs/legacy/](../legacy/README.md).
+
+```text
 fn edit(values: &mut []i64) -> i64 noalloc {
     write_slice(values, 0, 7);
     return read_slice(values, 0);

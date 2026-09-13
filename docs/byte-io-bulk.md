@@ -5,12 +5,20 @@ Projects opt in by adding the following exports and declarations to `io.my`:
 
 ```my
 # doc: skip fragment: declarations appended to an existing host io.my module
-export Block;
-export read_block;
-export write_block;
-struct Block { bytes: [256]u8, count: i64 }
-host fn read_block(offset: i64) -> Block effects(host);
-host fn write_block(block: Block) -> i64 effects(host);
+export Block
+export read_block
+export write_block
+
+
+class Block:
+    bytes: [256]u8
+    count: i64
+
+
+host def read_block(offset: i64) -> Block effects(host)
+
+
+host def write_block(block: Block) -> i64 effects(host)
 ```
 
 Keep the existing `length`, `byte`, and `put` declarations. The host validates
@@ -34,17 +42,16 @@ For example, a complete copy can use:
 
 ```my
 # doc: skip needs host capability: the mylang-io byte host and its io.my module
-fn main() -> i64 {
-    let size = io::length();
-    let mut offset = 0;
-    while offset < size {
-        let block = io::read_block(offset);
-        let count = block.count;
-        if io::write_block(block) != count { return 1; }
-        offset += count;
-    }
-    return 0;
-}
+def main() -> i64:
+    size = io.length()
+    offset = 0
+    while offset < size:
+        block = io.read_block(offset)
+        count = block.count
+        if io.write_block(block) != count:
+            return 1
+        offset += count
+    return 0
 ```
 
 This invokes one length callback and two callbacks per block. Each bulk

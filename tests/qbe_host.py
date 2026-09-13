@@ -48,12 +48,18 @@ def main():
     args = parser.parse_args()
     with tempfile.TemporaryDirectory(prefix='mylang-qbe-host-') as directory:
         project = Path(directory)
-        (project / 'io.my').write_text('module io;export length;export byte;export put;'
-            'host fn length()->i64 effects(host);host fn byte(index:i64)->u8 effects(host);'
-            'host fn put(value:u8)->i64 effects(host);')
+        (project / 'io.my').write_text('module io\nexport length\nexport byte\nexport put\n\n\n'
+            'host def length() -> i64 effects(host)\n\n\n'
+            'host def byte(index: i64) -> u8 effects(host)\n\n\n'
+            'host def put(value: u8) -> i64 effects(host)\n')
         entry = project / 'main.my'
-        entry.write_text('module main;import io;fn main()->i64{let size=io::length();let mut i=0;'
-                         'while i<size{_ = io::put(io::byte(i));i+=1;}return 0;}')
+        entry.write_text('module main\nimport io\n\n\ndef main() -> i64:\n'
+                         '    size = io.length()\n'
+                         '    i = 0\n'
+                         '    while i < size:\n'
+                         '        _ = io.put(io.byte(i))\n'
+                         '        i += 1\n'
+                         '    return 0\n')
         for mode in ('Debug', 'ReleaseFast'):
             output = project / mode
             common = [sys.executable, ROOT / 'scripts/qbe.py', '--compiler', args.compiler.resolve(),
@@ -76,10 +82,10 @@ def main():
             native = run([composite], env=dict(os.environ, MYLANG_HOST_BAD='1'))
             assert native.returncode != 0 and b'R_HOST_CONTRACT' in native.stderr, native
             wide_source = project / 'wide.my'
-            parameters = ','.join(f'a{i}:i64' for i in range(2200))
-            arguments = ','.join(str(i) for i in range(2200))
-            wide_source.write_text(f'host fn wide({parameters})->i64 effects(host);'
-                                  f'fn main()->i64{{return wide({arguments});}}')
+            parameters = ', '.join(f'a{i}: i64' for i in range(2200))
+            arguments = ', '.join(str(i) for i in range(2200))
+            wide_source.write_text(f'host def wide({parameters}) -> i64 effects(host)\n\n\n'
+                                   f'def main() -> i64:\n    return wide({arguments})\n')
             wide_provider = project / 'wide.c'
             wide_provider.write_text('#include "native_providers.h"\n'
                 'static const char *wide(void *ctx,MylangHostCall *call){(void)ctx;'

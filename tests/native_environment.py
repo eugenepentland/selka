@@ -5,12 +5,81 @@ from pathlib import Path
 
 from native_providers import invoke
 
-PREFIX = "struct E{present:bool,length:u64,bytes:[4]u8}result R{err:i64,ok:E}struct Auth{env:environment_cap}fn get(auth:Auth)->R{return environment_get[R](auth.env,new [3]u8[75u8,0u8,255u8]);}"
+PREFIX = """class E:
+    present: bool
+    length: u64
+    bytes: [4]u8
+
+
+result R:
+    err: i64,
+    ok: E
+
+
+class Auth:
+    env: environment_cap
+
+
+def get(auth: Auth) -> R:
+    name: [3]u8 = [75u8, 0u8, 255u8]
+    return environment_get[R](auth.env, name)
+
+
+"""
 SOURCES = [
-    PREFIX + "fn main(env:environment_cap)->i64{match get(new Auth{env:env}){R.ok(e)=>{if !e.present{return -1;}return i64(e.length)*1000+i64(e.bytes[0])*100+i64(e.bytes[1])*10+i64(e.bytes[2])+i64(e.bytes[3])*1000000;},R.err(e)=>{return -10-e;}}}",
-    PREFIX + "result W{ok:i64,err:i64}fn work(env:environment_cap)->W{let a=get(new Auth{env:env})?;let b=get(new Auth{env:env})?;return new W.ok(i64(a.bytes[0])*10+i64(b.bytes[0]));}fn main(env:environment_cap)->i64{match work(env){W.ok(n)=>{return n;},W.err(e)=>{return -10-e;}}}",
-    PREFIX + "fn main(env:environment_cap)->i64{if false{_ = get(new Auth{env:env});}return 7;}",
-    "struct E{bytes:[0]u8,present:bool,length:u64}result R{ok:E,err:i64}fn main(env:environment_cap)->i64{match environment_get[R](env,new [0]u8[]){R.ok(e)=>{if e.present{return i64(e.length);}return -1;},R.err(e)=>{return -10-e;}}}",
+    PREFIX + """def main(env: environment_cap) -> i64:
+    match get(Auth(env=env)):
+        case R.ok(e):
+            if not e.present:
+                return -1
+            return i64(e.length) * 1000 + i64(e.bytes[0]) * 100 + i64(e.bytes[1]) * 10 + i64(e.bytes[2]) + i64(e.bytes[3]) * 1000000
+        case R.err(e):
+            return -10 - e
+""",
+    PREFIX + """result W:
+    ok: i64,
+    err: i64
+
+
+def work(env: environment_cap) -> W:
+    a = get(Auth(env=env))?
+    b = get(Auth(env=env))?
+    return Ok(i64(a.bytes[0]) * 10 + i64(b.bytes[0]))
+
+
+def main(env: environment_cap) -> i64:
+    match work(env):
+        case W.ok(n):
+            return n
+        case W.err(e):
+            return -10 - e
+""",
+    PREFIX + """def main(env: environment_cap) -> i64:
+    if False:
+        _ = get(Auth(env=env))
+    return 7
+""",
+    """class E:
+    bytes: [0]u8
+    present: bool
+    length: u64
+
+
+result R:
+    ok: E,
+    err: i64
+
+
+def main(env: environment_cap) -> i64:
+    empty: [0]u8 = []
+    match environment_get[R](env, empty):
+        case R.ok(e):
+            if e.present:
+                return i64(e.length)
+            return -1
+        case R.err(e):
+            return -10 - e
+""",
 ]
 CASES = [(0, mode, False, value, error, 1) for mode, value, error in (
     (0, 9755, None), (1, -1, None), (2, 0, None), (3, -14, None),
@@ -20,7 +89,7 @@ CASES = [(0, mode, False, value, error, 1) for mode, value, error in (
     (3, 1, False, -1, None, 1), (3, 2, False, 0, None, 1), (3, 0, False, -14, None, 1),
 ] + [(index, 0, True, 0, "CapabilityUnavailable", 0) for index in range(4)]
 
-SOURCES.append(SOURCES[0].replace("fn get(", "fn get<G:copy>(").replace("match get(", "match get::<bool>("))
+SOURCES.append(SOURCES[0].replace("def get(", "def get[G: copy](").replace("match get(", "match get[bool]("))
 CASES += [(4, *case[1:]) for case in CASES if case[0] == 0]
 
 

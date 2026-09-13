@@ -115,11 +115,8 @@ when every implemented feature gained a documented example, which
 | `docs/audits/language-simplicity-2026-09-12.md` | boilerplate probe | removed feature |
 | `docs/byte-io-bulk.md` | bulk declarations | fragment: declarations appended to an existing host `io.my` module |
 | `docs/byte-io-bulk.md` | copy loop | needs host capability: the `mylang-io` byte host and its `io.my` module |
-| `docs/experiments/effects.md` | contracts | fragment: `Numbers` and the removed slice tier are not declared here |
 | `docs/experiments/module-discovery.md` | module header | fragment: header excerpt whose imported modules are not shown |
 | `docs/experiments/module-interfaces.md` | export placement | fragment: the imported `shared.units` module is not shown |
-| `docs/experiments/plain-json-ergonomics.md` | literal arguments | fragment: statements without their enclosing function or document |
-| `docs/experiments/plain-json-ergonomics.md` | document queries | fragment: statements without their enclosing function or document |
 | `docs/experiments/source-codecs.md` | codec match | fragment: statements without the `Positive` domain and `Wire` declarations |
 | `docs/legacy/familiar-syntax.md` | record and list intro | known-wrong example: `E_SYNTAX` rejects the trailing comma after this struct declaration's last field, though calls and record construction accept one; the rest of the example returns 42 |
 

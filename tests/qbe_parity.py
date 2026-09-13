@@ -22,60 +22,75 @@ def signature(result):
 
 
 def cases():
-    yield 'fn fact(n:i64)->i64{if n<=1{return 1;}return n*fact(n-1);}fn main()->i64{return fact(10);}'
-    yield 'fn add(a:i64,b:i64)->i64{return a+b;}fn main()->i64{return 1+add(add(2,3),add(4,5));}'
-    yield 'fn main()->i64{let mut x=0;let mut i=0;while i<30{ i+=1;if i==4{continue;}if i==20{break;}x+=i;}return x;}'
-    yield 'fn main()->i64{if false && 1/0==0{return 1;}if true || 1/0==0{return 7;}return 0;}'
-    yield 'fn noop()->unit{return;}fn main()->i64{noop();return 42;}'
-    for expression in ('9223372036854775807+1', '-9223372036854775808-1', '3037000500*3037000500', '1/0', '1%0', '-(-9223372036854775808)', '-9223372036854775808/-1', '-7/3', '-7%3'):
-        yield 'fn main()->i64{return '+expression+';}'
+    yield ('def fact(n: i64) -> i64:\n    if n <= 1:\n        return 1\n    return n * fact(n - 1)\n\n\n'
+           'def main() -> i64:\n    return fact(10)\n')
+    yield ('def add(a: i64, b: i64) -> i64:\n    return a + b\n\n\n'
+           'def main() -> i64:\n    return 1 + add(add(2, 3), add(4, 5))\n')
+    yield ('def main() -> i64:\n    x = 0\n    i = 0\n    while i < 30:\n        i += 1\n'
+           '        if i == 4:\n            continue\n        if i == 20:\n            break\n'
+           '        x += i\n    return x\n')
+    yield ('def main() -> i64:\n    if False and divtrunc(1, 0) == 0:\n        return 1\n'
+           '    if True or divtrunc(1, 0) == 0:\n        return 7\n    return 0\n')
+    yield 'def noop() -> None:\n    return\n\n\ndef main() -> i64:\n    noop()\n    return 42\n'
+    # Truncating division and remainder are spelled as calls; `/` is float division.
+    for expression in ('9223372036854775807 + 1', '-9223372036854775808 - 1', '3037000500 * 3037000500',
+                       'divtrunc(1, 0)', 'remtrunc(1, 0)', '-(-9223372036854775808)',
+                       'divtrunc(-9223372036854775808, -1)', 'divtrunc(-7, 3)', 'remtrunc(-7, 3)'):
+        yield 'def main() -> i64:\n    return ' + expression + '\n'
     for signed in (False, True):
         for width in (8, 16, 32, 64):
             ty = ('i' if signed else 'u') + str(width)
             maximum = (1 << (width - int(signed))) - 1
             minimum = -(1 << (width - 1)) if signed else 0
-            for expression in (f'{maximum}{ty}+1{ty}', f'{minimum}{ty}-1{ty}', f'{maximum}{ty}*2{ty}'):
-                yield 'fn main()->i64{_ = '+expression+';return 0;}'
-            yield f'fn id(x:{ty})->{ty}{{return x;}}fn main()->i64{{if id({maximum}{ty})=={maximum}{ty}{{return 7;}}return 0;}}'
+            for expression in (f'{maximum}{ty} + 1{ty}', f'{minimum}{ty} - 1{ty}', f'{maximum}{ty} * 2{ty}'):
+                yield 'def main() -> i64:\n    _ = ' + expression + '\n    return 0\n'
+            yield (f'def id(x: {ty}) -> {ty}:\n    return x\n\n\n'
+                   f'def main() -> i64:\n    if id({maximum}{ty}) == {maximum}{ty}:\n        return 7\n    return 0\n')
     # Existing boundary corpus covers all widths for bitwise/wrapping/saturating operations.
     from native_integer_operations import cases as integer_extension_cases
     for text, _expected in integer_extension_cases():
         yield text
-    yield 'fn main()->i64{return i64(18446744073709551615u64);}' 
-    yield 'fn main()->i64{return i64(u8(-1));}'
+    yield 'def main() -> i64:\n    return i64(18446744073709551615u64)\n'
+    yield 'def main() -> i64:\n    return i64(u8(-1))\n'
 
 
 def extended_cases():
-    values = ','.join(str(i) for i in range(700))
-    large = 'fn build()->[700]i64 effects(){return new [700]i64[' + values + '];}'
-    yield large + 'fn read(value:[700]i64)->i64{return value[699];}fn main()->i64{return read(build());}'
-    yield large + 'fn apply(callback:fn()->[700]i64 effects())->[700]i64{return callback();}fn main()->i64{let values=apply(build);return values[698];}'
-    parameters = ','.join(f'a{i}:i64' for i in range(129))
-    arguments = ','.join(str(i) for i in range(129))
-    total = '+'.join(f'a{i}' for i in range(129))
-    yield f'fn wide({parameters})->i64{{return {total};}}fn main()->i64{{return wide({arguments});}}'
-    medium = 'fn build()->[512]i64 effects(){return new [512]i64[' + ','.join(str(i) for i in range(512)) + '];}'
-    yield medium + 'fn total(a:[512]i64,b:[512]i64)->i64 effects(){return a[511]+b[510];}fn main()->i64{let f=total;return f(build(),build());}'
+    values = ', '.join(str(i) for i in range(700))
+    large = f'def build() -> [700]i64 effects():\n    return [{values}]\n\n\n'
+    yield large + 'def read(value: [700]i64) -> i64:\n    return value[699]\n\n\ndef main() -> i64:\n    return read(build())\n'
+    yield (large + 'def apply(callback: def() -> [700]i64 effects()) -> [700]i64:\n    return callback()\n\n\n'
+           'def main() -> i64:\n    values = apply(build)\n    return values[698]\n')
+    parameters = ', '.join(f'a{i}: i64' for i in range(129))
+    arguments = ', '.join(str(i) for i in range(129))
+    total = ' + '.join(f'a{i}' for i in range(129))
+    yield f'def wide({parameters}) -> i64:\n    return {total}\n\n\ndef main() -> i64:\n    return wide({arguments})\n'
+    medium = 'def build() -> [512]i64 effects():\n    return [' + ', '.join(str(i) for i in range(512)) + ']\n\n\n'
+    yield (medium + 'def total(a: [512]i64, b: [512]i64) -> i64 effects():\n    return a[511] + b[510]\n\n\n'
+           'def main() -> i64:\n    f = total\n    return f(build(), build())\n')
     for name in ('records', 'arrays', 'variants', 'generic-records', 'generic-arrays',
                  'generic-variants', 'callbacks', 'results', 'generic-results'):
         yield (ROOT / 'examples' / (name + '.my')).read_text()
     # Managed list aliasing, nested managed graphs and bounds traps.
-    yield ('fn build()->List<i64>{let xs:List<i64>=[];let mut i=0;while i<40{xs.push(i);i+=1;}return xs;}'
-           'fn main()->i64{let xs=build();let alias=xs;alias[2u64]=42;return xs[2u64]+len(xs);}')
-    yield ('struct Box{row:List<i64>}'
-           'fn main()->i64{let a:List<i64>=[];a.push(42);let box=new Box{row:a};'
-           'let rows:List<List<i64>>=[];rows.push(box.row);let mut i=0;'
-           'while i<20{let garbage:List<i64>=[];garbage.push(i);i+=1;}'
-           'let inner=rows[0u64];return inner[0u64];}')
-    yield 'fn main()->i64{let xs:List<i64>=[];return xs[0u64];}'
-    yield 'fn main()->i64{let xs=new [2]i64[1,2];return xs[2];}'
-    yield 'fn main()->i64{if f64_div(0u64,0u64)!=9221120237041090560u64{return 1;}if !f64_eq(0u64,9223372036854775808u64){return 2;}return i64(f64_to_u64(f64_add(f64_from_u64(20u64),f64_from_u64(22u64))));}'
+    yield ('def build() -> List[i64]:\n    xs: List[i64] = []\n    i = 0\n'
+           '    while i < 40:\n        xs.push(i)\n        i += 1\n    return xs\n\n\n'
+           'def main() -> i64:\n    xs = build()\n    alias = xs\n    alias[2u64] = 42\n'
+           '    return xs[2u64] + len(xs)\n')
+    yield ('class Box:\n    row: List[i64]\n\n\n'
+           'def main() -> i64:\n    a: List[i64] = []\n    a.push(42)\n    box = Box(row=a)\n'
+           '    rows: List[List[i64]] = []\n    rows.push(box.row)\n    i = 0\n'
+           '    while i < 20:\n        garbage: List[i64] = []\n        garbage.push(i)\n        i += 1\n'
+           '    inner = rows[0u64]\n    return inner[0u64]\n')
+    yield 'def main() -> i64:\n    xs: List[i64] = []\n    return xs[0u64]\n'
+    yield 'def main() -> i64:\n    xs: [2]i64 = [1, 2]\n    return xs[2]\n'
+    yield ('def main() -> i64:\n    if f64_div(0u64, 0u64) != 9221120237041090560u64:\n        return 1\n'
+           '    if not f64_eq(0u64, 9223372036854775808u64):\n        return 2\n'
+           '    return i64(f64_to_u64(f64_add(f64_from_u64(20u64), f64_from_u64(22u64))))\n')
 
 
 
 def deep_recursion_cases():
-    source = ('fn descend(n:i64)->i64{if n==0{return 0;}return 1+descend(n-1);}'
-              'fn main()->i64{return descend(20000);}')
+    source = ('def descend(n: i64) -> i64:\n    if n == 0:\n        return 0\n    return 1 + descend(n - 1)\n\n\n'
+              'def main() -> i64:\n    return descend(20000)\n')
     yield source, ['--max-frames=25000'], (0, b'20000\n')
     yield source, [], (1, [b'R_FRAME_LIMIT'])
 
@@ -113,8 +128,8 @@ def main():
                 assert signature(vm) == signature(native), (text, options, vm, native)
             count += 1
         for text, options in (
-            ('fn main()->i64{while true{}return 0;}', ['--max-steps=17']),
-            ('fn recurse(n:i64)->i64{return recurse(n+1);}fn main()->i64{return recurse(0);}', ['--max-frames=8']),
+            ('def main() -> i64:\n    while True:\n        pass\n    return 0\n', ['--max-steps=17']),
+            ('def recurse(n: i64) -> i64:\n    return recurse(n + 1)\n\n\ndef main() -> i64:\n    return recurse(0)\n', ['--max-frames=8']),
         ):
             source.write_text(text)
             built = run([sys.executable, ROOT / 'scripts/qbe.py', source, '-o', output,
