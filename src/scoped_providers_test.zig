@@ -223,7 +223,7 @@ test "a direct root applies the whole path, allows traversal and keeps write aut
     const authority = try store.grant();
     // A scoped root would refuse `.` and `..`; a direct root resolves them, and a
     // read-only capability still refuses every writing mode.
-    const readonly = try store.restrict(authority, resources.permissionBit(.read));
+    const readonly = try store.restrict(authority, resources.permissionBit(.read) | resources.permissionBit(.complete));
     for ([_]struct { request: []const u8, allowed: bool }{
         .{ .request = "r:./notes.txt", .allowed = true },
         .{ .request = "r:nested/../notes.txt", .allowed = true },
