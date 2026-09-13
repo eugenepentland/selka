@@ -830,7 +830,6 @@ const Checker = struct {
         defer self.depth -= 1;
         return switch (node.data) {
             .name => |name| try self.namedValue(name),
-            .match_expression => |match| try self.matchExpression(match, node.span),
             .wrap => |wrap| result: {
                 const operand = try self.expression(wrap.value);
                 const target = try self.ty(wrap.ty);
@@ -1005,7 +1004,7 @@ const Checker = struct {
     fn runtimeOwner(self: *Checker, span: source.Span, mutates: bool) Error!void {
         const binding = try self.local(span);
         if (!self.shapes().managed(binding.ty) and !binding.available) return self.sink.failTransfer(diagnostic.owned_consumed, span, binding.name, binding.transfer_span);
-        if (mutates and !binding.mutable) return self.sink.fail(diagnostic.immutable, span, "mutation requires a let mut binding");
+        if (mutates and !binding.mutable) return self.sink.fail(diagnostic.immutable, span, "mutation requires a binding it may modify");
     }
     fn operationResult(self: *Checker, span: ?source.Span, success: typed.Type, code: []const u8) Error!Symbolic {
         return self.symbolicOperationResult(span, .{ .concrete = success }, code);
@@ -1133,40 +1132,6 @@ const Checker = struct {
         for (seen) |present| if (!present) return self.sink.fail("E_INCOMPLETE_MATCH", span, "match must cover every declared case");
         if (continuation) |state| self.restorePending(state);
         return terminated;
-    }
-    fn matchExpression(self: *Checker, match: @FieldType(@FieldType(ast.Node, "data"), "match_expression"), span: source.Span) Error!Symbolic {
-        const outer_temporaries = self.temporary_results;
-        const value = try self.expression(match.value);
-        const variants = try self.shapes().requireVariants(value, span);
-        const seen = try self.allocator.alloc(bool, variants.fields.len);
-        defer self.allocator.free(seen);
-        @memset(seen, false);
-        const incoming = try self.pendingState(self.locals.items.len);
-        defer self.allocator.free(incoming);
-        var continuation: ?[]Pending = null;
-        defer if (continuation) |state| self.allocator.free(state);
-        var result: ?Symbolic = null;
-        for (match.arms) |arm| {
-            self.restorePending(incoming);
-            self.temporary_results = outer_temporaries;
-            const tag = try self.patternTag(value, variants, arm.ty, arm.name);
-            if (seen[tag]) return self.sink.fail("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm");
-            seen[tag] = true;
-            const payload = variants.fields[tag].ty;
-            if (arm.discard_payload and payload != null and (try self.requiresHandling(payload.?))) return self.sink.fail(eResultDiscard, arm.name, "nested result payload requires explicit handling");
-            if ((payload != null) != (arm.binding != null or arm.discard_payload)) return self.sink.fail("E_PATTERN_PAYLOAD", arm.name, "payload cases require a binding or discard; empty cases take neither");
-            const before = self.locals.items.len;
-            defer self.endScope(before);
-            if (arm.binding) |binding| try self.bind(binding, payload.?, false);
-            const arm_type = try self.expression(arm.value);
-            if (result) |expected| try self.same(arm_type, expected, span) else result = arm_type;
-            try self.requireHandled(before, span);
-            if (continuation) |state| try self.samePending(state, span, eResultPath) else continuation = try self.pendingState(incoming.len);
-        }
-        for (seen) |present| if (!present) return self.sink.fail("E_INCOMPLETE_MATCH", span, "match must cover every declared case");
-        if (continuation) |state| self.restorePending(state);
-        self.temporary_results = outer_temporaries;
-        return result orelse self.sink.fail("E_EMPTY_MATCH", span, "a value-producing match requires at least one case");
     }
     fn arrayIndex(self: *Checker, base: Symbolic, input: ast.NodeId, span: source.Span) Error!symbolic.Array {
         const shape = try self.arrayShape(base, span);

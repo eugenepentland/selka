@@ -25,10 +25,10 @@ def main():
                     name = f'{label}_{ty}'
                     entries.append({'name': name, 'type': ty, 'value': str(value)})
                     literal = str(value) + ('' if ty == 'i64' else ty)
-                    conditions.append(f'v::{name}()=={literal}')
-        for name, value in (('enabled', 'true'), ('disabled', 'false')):
+                    conditions.append(f'v.{name}() == {literal}')
+        for name, value, literal in (('enabled', 'true', 'True'), ('disabled', 'false', 'False')):
             entries.append({'name': name, 'type': 'bool', 'value': value})
-            conditions.append(f'v::{name}()=={value}')
+            conditions.append(f'v.{name}() == {literal}')
         document = {'version': 1, 'module': 'config.values', 'values': entries}
         manifest.write_text(json.dumps(document))
 
@@ -47,7 +47,8 @@ def main():
         source = config / 'values.my'
         source.write_text(generated)
         entry = root / 'main.my'
-        entry.write_text('module main; import config.values as v; fn main()->i64{if ' + '&&'.join(conditions) + '{return 7;}return 0;}')
+        entry.write_text('module main\nimport config.values as v\n\n\ndef main() -> i64:\n    if ' +
+                         ' and '.join(conditions) + ':\n        return 7\n    return 0\n')
         result = subprocess.run([compiler, 'eval-project', str(entry)], text=True, capture_output=True, timeout=90)
         assert result.returncode == 0 and result.stdout == '7\n', result.stderr
         def evaluate_inputs(status=0, *extra):
@@ -76,7 +77,7 @@ def main():
         assert generated_input['sha256'] == hashlib.sha256(generated_now.encode()).hexdigest()
         assert evaluate_inputs(2, f'--inputs={manifest}').stdout == ''
         original_entry = entry.read_text()
-        entry.write_text('module main; fn main()->i64{return 0;}')
+        entry.write_text('module main\n\n\ndef main() -> i64:\n    return 0\n')
         assert 'not imported' in evaluate_inputs(2).stderr
         entry.write_text(original_entry)
         document['module'] = 'main'
@@ -107,8 +108,9 @@ def main():
             bindings.append(file)
 
         def multi_entry(count):
-            entry.write_text('module main;' + ''.join(f'import data.m{i};' for i in range(count)) +
-                             'fn main()->i64{return ' + '+'.join(f'm{i}::value()' for i in range(count)) + ';}')
+            entry.write_text('module main\n' + ''.join(f'import data.m{i}\n' for i in range(count)) +
+                             '\n\ndef main() -> i64:\n    return ' +
+                             ' + '.join(f'm{i}.value()' for i in range(count)) + '\n')
 
         def multi(files, status=0, request=False):
             command = [compiler, 'eval-project', str(entry), *[f'--inputs={file}' for file in files]]
@@ -136,7 +138,7 @@ def main():
             file.write_bytes(data + b' ' * (1024 * 1024 - len(data)))
         assert multi(bindings[:8]).stdout == '28\n'
         assert 'byte budget exceeded' in multi(bindings[:9], status=2).stderr
-        main_bytes = b'module main; fn main()->i64{return 0;}'
+        main_bytes = b'module main\n\n\ndef main() -> i64:\n    return 0\n'
         entry.write_bytes(main_bytes + b' ' * (4 * 1024 * 1024 - len(main_bytes)))
         assert multi([]).stdout == '0\n'
         with entry.open('ab') as stream:

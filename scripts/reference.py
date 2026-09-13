@@ -53,7 +53,7 @@ def collect(compiler, selection):
     else:
         with tempfile.TemporaryDirectory(prefix='mylang-reference-') as temporary:
             entry = Path(temporary) / 'reference.my'
-            entry.write_text('module reference;\n' + ''.join('import ' + name + ';\n' for name in selection['modules']) + 'fn main()->i64{return 0;}\n')
+            entry.write_text('module reference\n' + ''.join('import ' + name + '\n' for name in selection['modules']) + '\ndef main() -> i64:\n    return 0\n')
             report = compiler_json(compiler, ['schema-project', str(entry), '--schema-report'])
     validate_schema_report(report)
     if report['source']['implementation']['compiler_sha256'] != identity or identity_of(compiler)[0] != identity:

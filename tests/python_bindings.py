@@ -36,24 +36,72 @@ def main():
         peer = root / 'peer.my'
         output = root / 'bindings.py'
         value_file = root / 'value.json'
-        entry.write_text('module main; import data; import peer; fn main() -> i64 { return 0; }')
-        peer.write_text('module peer; export Point; struct Point { x: u64 }')
-        source = '''module data;
-export Point; export Flag; export Choice; export Outcome; export Empty;
-export Weird; export Signed; export Unsigned; export Opaque; export Maybe;
-export Large;
-struct Point { x: u64, flags: [Flag]bool, samples: [2]i16 }
-enum Flag { yes, no }
-union Choice { none, point: Point }
-result Outcome { ok: Choice, err: i8 }
-struct Empty {}
-struct Weird { class: i8, __dict__: bool, f_x: i8, f_x5fx: bool }
-struct Signed { a: i8, b: i16, c: i32, d: i64 }
-struct Unsigned { a: u8, b: u16, c: u32, d: u64 }
-domain Opaque: i64 { fn make(x: i64) -> Opaque { return wrap[Opaque](x); } }
-union Maybe { none, some: Opaque }
-struct Large { values: [65534]bool }
-struct Hidden { private_data: bool }
+        entry.write_text('module main\nimport data\nimport peer\n\ndef main() -> i64:\n    return 0\n')
+        peer.write_text('module peer\nexport Point\n\nclass Point:\n    x: u64\n')
+        source = '''module data
+export Point
+export Flag
+export Choice
+export Outcome
+export Empty
+export Weird
+export Signed
+export Unsigned
+export Opaque
+export Maybe
+export Large
+
+class Point:
+    x: u64
+    flags: [Flag]bool
+    samples: [2]i16
+
+enum Flag:
+    yes,
+    no
+
+union Choice:
+    none,
+    point: Point
+
+result Outcome:
+    ok: Choice,
+    err: i8
+
+class Empty:
+    pass
+
+class Weird:
+    lambda: i8
+    __dict__: bool
+    f_x: i8
+    f_x5fx: bool
+
+class Signed:
+    a: i8
+    b: i16
+    c: i32
+    d: i64
+
+class Unsigned:
+    a: u8
+    b: u16
+    c: u32
+    d: u64
+
+domain Opaque: i64:
+    def make(x: i64) -> Opaque:
+        return wrap[Opaque](x)
+
+union Maybe:
+    none,
+    some: Opaque
+
+class Large:
+    values: [65534]bool
+
+class Hidden:
+    private_data: bool
 '''
         data.write_text(source)
 
@@ -74,8 +122,8 @@ struct Hidden { private_data: bool }
         assert 'Hidden' not in original.decode()
         assert generate() == dict(report, installation='unchanged') and output.read_bytes() == original
         # Private bodies, comments, aliases, and import order do not change bindings.
-        data.write_text(source + '\n// private change\nfn unused() -> i64 { return 3; }')
-        entry.write_text('module main; import peer as p; import data as d; fn main() -> i64 { return 1; }')
+        data.write_text(source + '\n# private change\ndef unused() -> i64:\n    return 3\n')
+        entry.write_text('module main\nimport peer as p\nimport data as d\n\ndef main() -> i64:\n    return 1\n')
         private = generate()
         assert private['sha256'] == report['sha256'] and private['request'] == report['request'] and output.read_bytes() == original
         assert private['schema_source_sha256'] != report['schema_source_sha256']
@@ -83,7 +131,7 @@ struct Hidden { private_data: bool }
         assert bindings.SCHEMA_SHA256 == report['schema_sha256']
         assert bindings.GENERATOR_SHA256 == report['generator_sha256']
         assert bindings.TYPES['data::Point'] is not bindings.TYPES['peer::Point']
-        assert bindings.FIELDS['data::Weird'] == {'class': 'f_class', '__dict__': 'f__x5f_x5fdict_x5f_x5f', 'f_x': 'f_f_x5fx', 'f_x5fx': 'f_f_x5fx5fx'}
+        assert bindings.FIELDS['data::Weird'] == {'lambda': 'f_lambda', '__dict__': 'f__x5f_x5fdict_x5f_x5f', 'f_x': 'f_f_x5fx', 'f_x5fx': 'f_f_x5fx5fx'}
         try:
             bindings.TYPES['new'] = bool
         except TypeError:
@@ -124,7 +172,7 @@ struct Hidden { private_data: bool }
         for case in ('yes', 'no'):
             parity('data::Flag', case)
         parity('data::Empty', {})
-        parity('data::Weird', {'class': '-128', '__dict__': True, 'f_x': '1', 'f_x5fx': False})
+        parity('data::Weird', {'lambda': '-128', '__dict__': True, 'f_x': '1', 'f_x5fx': False})
         point = {'samples': ['-32768', '32767'], 'flags': {'no': False, 'yes': True}, 'x': '18446744073709551615'}
         native = parity('data::Point', point)
         assert native.f_x == (1 << 64) - 1
@@ -218,7 +266,7 @@ struct Hidden { private_data: bool }
         result = subprocess.run([sys.executable, '-I', '-c', 'import runpy; b=runpy.run_path(' + repr(str(output)) + '); assert b["loads"](' + repr('{"version":"typed-json-v1","type":"bool","value":true}') + ') is True'], capture_output=True, text=True, timeout=30)
         assert result.returncode == 0, result.stderr
         # Generator failures preserve the existing file, and atomic failures clean up.
-        data.write_text(source + 'fn broken() -> i64 { return true; }')
+        data.write_text(source + '\ndef broken() -> i64:\n    return True\n')
         assert 'E_TYPE' in generate(1)
         assert output.read_bytes() == original
         data.write_text(source)
@@ -255,7 +303,7 @@ struct Hidden { private_data: bool }
                 pid_file.unlink()
         assert output.read_bytes() == original
         # Public changes regenerate instead of reusing an old snapshot.
-        data.write_text(source.replace('x: u64, flags:', 'x: u64, added: bool, flags:'))
+        data.write_text(source.replace('    x: u64\n    flags:', '    x: u64\n    added: bool\n    flags:'))
         changed = generate()
         assert changed['schema_sha256'] != report['schema_sha256']
         assert output.read_bytes() != original

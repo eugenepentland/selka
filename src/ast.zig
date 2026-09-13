@@ -69,7 +69,6 @@ pub const Node = struct {
         membership: struct { needle: NodeId, container: NodeId, negate: bool = false },
         boolean: bool,
         unit,
-        match_expression: struct { value: NodeId, arms: []const MatchValueArm },
         name: Span,
         propagate: NodeId,
         acquire_resource: struct { ty: Span, capability: NodeId, request: NodeId },
@@ -119,7 +118,6 @@ pub const Comprehension = struct { output: NodeId, name: Span, iterable: NodeId,
 /// Checked condition with the trap message its failure reports.
 pub const Assertion = struct { condition: NodeId, message: []const u8, literal: ?Span = null };
 /// Expression match case with an optional payload binding and its yielded value.
-pub const MatchValueArm = struct { ty: Span, name: Span, binding: ?Span, discard_payload: bool, value: NodeId };
 /// Source case spelling, optional payload binding, and arm body.
 pub const MatchArm = struct { ty: Span, name: Span, binding: ?Span, discard_payload: bool, body: StatementId };
 /// Source-spelled case name and optional payload type.

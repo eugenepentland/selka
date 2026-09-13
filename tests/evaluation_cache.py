@@ -20,7 +20,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='mylang-cache-test-') as temporary:
         root = Path(temporary)
         entry = root / 'main.my'
-        entry.write_text('module main; fn main()->i64{return 7;}')
+        entry.write_text('module main\n\n\ndef main() -> i64:\n    return 7\n')
         directory = root / 'cache'
         with patch.object(cache, 'compiler_document', wraps=cache.compiler_document) as calls:
             first = cache.evaluate(compiler, entry, directory)
@@ -102,12 +102,12 @@ def main():
         budget = cache.evaluate(compiler, entry, directory, ['--max-steps=1000001'], compare_to=path)
         assert budget['cache'] == 'miss' and budget['request_sha256'] != first['request_sha256']
         assert [c['path'] for c in budget['comparison']['changes']] == ['/budgets/max_steps']
-        entry.write_text('module main; fn main()->i64{return 8;}')
+        entry.write_text('module main\n\n\ndef main() -> i64:\n    return 8\n')
         changed = cache.evaluate(compiler, entry, directory, compare_to=path)
         assert changed['cache'] == 'miss' and changed['result']['decimal'] == '8'
         assert [c['path'] for c in changed['comparison']['changes']] == ['/sources/main/sha256']
         existing = {file.name: file.read_bytes() for file in directory.iterdir()}
-        entry.write_text('module main; fn main()->i64{return true;}')
+        entry.write_text('module main\n\n\ndef main() -> i64:\n    return True\n')
         try:
             cache.evaluate(compiler, entry, directory)
         except cache.CompilerFailure as error:
@@ -115,7 +115,7 @@ def main():
         else:
             raise AssertionError('invalid source reused a cached result')
         assert existing == {file.name: file.read_bytes() for file in directory.iterdir()}
-        entry.write_text('module main; fn main()->i64{return 1/0;}')
+        entry.write_text('module main\n\n\ndef main() -> i64:\n    return 1 // 0\n')
         try:
             cache.evaluate(compiler, entry, directory)
         except cache.CompilerFailure as error:
@@ -123,13 +123,13 @@ def main():
         else:
             raise AssertionError('runtime failure was cached')
         assert existing == {file.name: file.read_bytes() for file in directory.iterdir()}
-        entry.write_text('module main; fn main()->i64{return 10;}')
+        entry.write_text('module main\n\n\ndef main() -> i64:\n    return 10\n')
         invoke = cache.compiler_document
 
         def mutate_after_request(*args):
             result = invoke(*args)
             if args[3]:
-                entry.write_text('module main; fn main()->i64{return 11;}')
+                entry.write_text('module main\n\n\ndef main() -> i64:\n    return 11\n')
             return result
 
         race_directory = root / 'racing-cache'
@@ -141,7 +141,7 @@ def main():
             else:
                 raise AssertionError('mixed snapshots were cached')
         assert not race_directory.exists()
-        entry.write_text('module main; import config; fn main()->i64{return config::value();}')
+        entry.write_text('module main\nimport config\n\n\ndef main() -> i64:\n    return config.value()\n')
         manifest = root / 'inputs.json'
         values = {'version': 1, 'module': 'config', 'values': [{'name': 'value', 'type': 'i64', 'value': '3'}]}
         manifest.write_text(json.dumps(values))
@@ -150,7 +150,8 @@ def main():
         second_manifest = root / 'second-input.json'
         second_values = {'version': 1, 'module': 'second', 'values': [{'name': 'offset', 'type': 'i64', 'value': '0'}]}
         second_manifest.write_text(json.dumps(second_values))
-        entry.write_text('module main; import config; import second; fn main()->i64{return config::value()+second::offset();}')
+        entry.write_text('module main\nimport config\nimport second\n\n\n'
+                         'def main() -> i64:\n    return config.value() + second.offset()\n')
         input_options = [f'--inputs={manifest}', f'--inputs={second_manifest}']
         generated = cache.evaluate(compiler, entry, directory, input_options)
         assert generated['cache'] == 'miss' and generated['result']['decimal'] == '3'

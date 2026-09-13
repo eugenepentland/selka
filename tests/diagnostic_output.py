@@ -27,7 +27,7 @@ def problem(messages, code):
 
 def single_files(compiler, root):
     path = root / 'quoted"é.my'
-    path.write_text('fn main()->i64{let unused=1;return 7;}')
+    path.write_text('def main() -> i64:\n    unused = 1\n    return 7\n')
     stdout, messages = invoke(compiler, 'run', path, '--print-result')
     assert stdout == '7\n'
     warning = problem(messages, 'W_UNUSED_BINDING')
@@ -36,28 +36,30 @@ def single_files(compiler, root):
     explicit = subprocess.run([compiler, 'run', str(path), '--print-result', '--diagnostics=text'], capture_output=True, text=True, timeout=30)
     assert (text.returncode, text.stdout, text.stderr) == (explicit.returncode, explicit.stdout, explicit.stderr)
     assert text.stdout == stdout and 'warning[W_UNUSED_BINDING]' in text.stderr
-    path.write_text('fn main()->i64{return absent;}')
+    path.write_text('def main() -> i64:\n    return absent\n')
     for command in ('check', 'run', 'dump-bytecode', 'report-quality', 'discover-duplicates'):
         stdout, messages = invoke(compiler, command, path, status=1)
         assert stdout == ''
         data = problem(messages, 'E_UNKNOWN_NAME')
         span = data['location']['bytes']
         assert path.read_bytes()[span['start']:span['end']] == b'absent'
-    path.write_text('fn main(')
+    path.write_text('def main(')
     for command in ('check', 'fmt', 'fmt-module'):
         _, messages = invoke(compiler, command, path, status=1)
         assert messages[0]['diagnostic']['code'] == 'E_SYNTAX'
-    path.write_text('fn divide(n:i64)->i64{return 7/n;}fn main()->i64{return divide(0);}')
+    path.write_text('def divide(n: i64) -> i64:\n    return divtrunc(7, n)\n\n\ndef main() -> i64:\n    return divide(0)\n')
     _, messages = invoke(compiler, 'run', path, status=1)
     trap = problem(messages, 'R_DIVISION_BY_ZERO')
     assert [frame['function'] for frame in trap['stack']['frames']] == ['divide', 'main']
-    path.write_text('fn recur(n:i64)->i64{return recur(n+1);}fn main()->i64{return recur(0);}')
+    path.write_text('def recur(n: i64) -> i64:\n    return recur(n + 1)\n\n\ndef main() -> i64:\n    return recur(0)\n')
     _, messages = invoke(compiler, 'run', path, '--max-frames=20', status=1)
     stack = problem(messages, 'R_FRAME_LIMIT')['stack']
     assert len(stack['frames']) == 16 and stack['omitted'] > 0
-    path.write_text('fn main()->i64{return 7;}')
-    _, messages = invoke(compiler, 'fmt', path, '--check', status=1)
-    assert messages == [{'version': 'diagnostic-v1', 'kind': 'message', 'message': 'formatting differs\n'}]
+    # Indentation is syntax, so a program the parser accepts is already canonical:
+    # `fmt --check` can no longer differ, and reports nothing on the JSON channel.
+    path.write_text('def main() -> i64:\n    return 7\n')
+    stdout, messages = invoke(compiler, 'fmt', path, '--check')
+    assert stdout == '' and messages == []
     _, messages = invoke(compiler, 'check', root / 'missing.my', status=2)
     assert messages[0]['kind'] == 'message' and 'FileNotFound' in messages[0]['message']
     for options in (['--diagnostics=xml'], ['--diagnostics=json', '--diagnostics=text']):

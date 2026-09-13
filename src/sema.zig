@@ -226,14 +226,14 @@ const Checker = struct {
         if (arguments.len == 0) return base;
         var output: std.Io.Writer.Allocating = .init(self.allocator);
         defer output.deinit();
-        output.writer.print("{s}::<", .{base}) catch return error.OutOfMemory;
+        output.writer.print("{s}[", .{base}) catch return error.OutOfMemory;
         for (arguments, 0..) |argument, index| {
             if (index != 0) output.writer.writeByte(',') catch return error.OutOfMemory;
             if (self.instance_keys.items[@backingInt(id)].length(index)) |length| {
                 output.writer.print("{d}", .{length}) catch return error.OutOfMemory;
             } else output.writer.writeAll(typed.typeName(argument, self.catalog.records)) catch return error.OutOfMemory;
         }
-        output.writer.writeByte('>') catch return error.OutOfMemory;
+        output.writer.writeByte(']') catch return error.OutOfMemory;
         return output.toOwnedSlice();
     }
     fn functionType(self: *Checker, id: typed.FunctionId, span: source.Span) Error!typed.Type {
@@ -1455,7 +1455,7 @@ const Checker = struct {
         const local = &self.locals.items[@backingInt(owner)];
         if (typed.resourceKind(local.ty, self.catalog.records) == null) return self.sink.fail("E_RESOURCE_TYPE", io.owner, "I/O requires an owned resource binding");
         if (!local.ownership.transfer_available) return self.sink.failTransfer(eOwnedConsumed, io.owner, local.declaration, local.ownership.transfer_span);
-        if (!local.mutable) return self.sink.fail(eImmutable, io.owner, "resource I/O requires a let mut binding");
+        if (!local.mutable) return self.sink.fail(eImmutable, io.owner, "resource I/O requires a binding it may modify");
         out.ty = try self.ty(io.ty);
         if (io.kind == .read) {
             if (typed.resourceReadShape(out.ty, self.catalog.records) == null) return self.sink.fail(eResourceIoResult, io.ty, "read result requires i64 error and record success with bytes: [N]u8, length: u64, eof: bool");
@@ -2027,7 +2027,6 @@ const Checker = struct {
             },
             .field => |field| try self.checkField(node, field, &out),
             .bytes, .text => |bytes| try self.checkTextLiteral(node, bytes, &out),
-            .match_expression => |match| return self.matchExpression(node, match, temporaries),
             .integer => return self.checkInteger(node),
             .wrap => |wrap| {
                 const value = self.resolved[@backingInt(wrap.value)].?;
@@ -2426,85 +2425,6 @@ const Checker = struct {
         if (continuation) |state| self.restorePending(state);
         return .{ .match = .{ .value = value, .arms = try arms.toOwnedSlice(self.allocator) } };
     }
-    fn matchExpression(self: *Checker, node: ast.Node, match: @FieldType(@FieldType(ast.Node, "data"), "match_expression"), temporaries: []const typed.Type) Error!typed.Node {
-        const value = try self.expressionWithTemporaries(match.value, temporaries);
-        const value_type = self.nodes.items[@backingInt(value)].ty;
-        const variants = try self.catalog.variants(value_type, node.span, self.sink);
-        const seen = try self.allocator.alloc(?source.Span, variants.cases.len);
-        @memset(seen, null);
-        const arms = try self.allocator.alloc(typed.MatchArm, match.arms.len);
-        const before = try self.pendingState(self.locals.items.len);
-        var continuation: ?[]Pending = null;
-        const result_slot: typed.LocalId = @fromBackingInt(self.locals.items.len);
-        try self.locals.append(self.allocator, .{ .name = "<match-result>", .declaration = node.span, .ty = .i64, .mutable = false, .usage = .{ .reads = 1, .temporary = true } });
-        var result_type: ?typed.Type = null;
-        for (match.arms, arms) |arm, *out_arm| {
-            self.restorePending(before);
-            const tag = try self.patternTag(value_type, arm.ty, arm.name);
-            if (seen[tag]) |previous| return self.sink.failRelated("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm", .{ .span = previous, .message = "previous arm" });
-            seen[tag] = arm.name;
-            const payload = variants.cases[tag].payload;
-            if (arm.discard_payload and payload != null and self.requiresHandling(payload.?)) return self.sink.fail(eResultDiscard, arm.name, "nested result payload requires a binding and explicit handling");
-            if ((payload != null) != (arm.binding != null or arm.discard_payload)) return self.sink.failRelated(
-                "E_PATTERN_PAYLOAD",
-                arm.name,
-                "payload variants require a binding or (discard); empty variants take neither",
-                .{
-                    .span = variants.cases[tag].declaration,
-                    .message = variantDeclaredHere,
-                },
-            );
-            const first_local = self.locals.items.len;
-            defer for (self.locals.items[first_local..]) |local| {
-                _ = self.active.remove(local.name);
-            };
-            var slot: ?typed.LocalId = null;
-            if (arm.binding) |binding| {
-                const name = self.src.text(binding);
-                if (try self.topLevel(binding) or self.active.contains(name)) return self.sink.fail(eShadowing, binding, "payload binding shadows an active binding or top-level name");
-                slot = @fromBackingInt(self.locals.items.len);
-                try self.locals.append(self.allocator, .{
-                    .ownership = .{
-                        .transfer_available = self.transfers(payload.?),
-                    },
-                    .name = name,
-                    .declaration = binding,
-                    .ty = payload.?,
-                    .mutable = false,
-                });
-                try self.active.put(self.allocator, name, slot.?);
-            }
-            const arm_value = try self.expressionWithTemporaries(arm.value, temporaries);
-            const arm_type = self.nodes.items[@backingInt(arm_value)].ty;
-            if (result_type) |expected| try self.require(arm_type, expected, self.syntax.nodes.items[@backingInt(arm.value)].span) else result_type = arm_type;
-            try self.requireHandled(first_local, node.span);
-            const body_id: typed.StatementId = @fromBackingInt(self.statements.items.len);
-            try self.statements.append(self.allocator, .{ .span = node.span, .terminates = false, .data = .{ .initialize = .{ .slot = result_slot, .value = arm_value } } });
-            var body: CheckedStatement = .{ .id = body_id, .terminates = false };
-            if (slot) |payload_slot| if (try self.needsLocalCleanup(payload.?)) {
-                const children = try self.allocator.dupe(typed.StatementId, &.{body.id});
-                const cleanup_slots = try self.allocator.dupe(typed.LocalId, &.{payload_slot});
-                body.id = @fromBackingInt(self.statements.items.len);
-                try self.statements.append(self.allocator, .{ .span = node.span, .terminates = false, .owned_cleanup = cleanup_slots, .data = .{ .block = children } });
-            };
-            if (continuation) |state| try self.samePending(state, node.span, eResultPath) else continuation = try self.pendingState(before.len);
-            out_arm.* = .{ .tag = tag, .slot = slot, .body = body.id };
-        }
-        for (seen, variants.cases) |covered, variant| if (covered == null) {
-            const message = try std.fmt.allocPrint(self.allocator, "match does not handle variant `{s}`; every variant requires an explicit arm", .{variant.name});
-            return self.sink.failRelated("E_INCOMPLETE_MATCH", node.span, message, .{ .span = variant.declaration, .message = "unhandled variant declared here" });
-        };
-        if (continuation) |state| self.restorePending(state);
-        const output_type = result_type orelse return self.sink.fail("E_EMPTY_MATCH", node.span, "a value-producing match requires at least one case");
-        self.locals.items[@backingInt(result_slot)].ty = output_type;
-        const body: typed.StatementId = @fromBackingInt(self.statements.items.len);
-        try self.statements.append(self.allocator, .{ .span = node.span, .terminates = false, .data = .{ .match = .{ .value = value, .arms = arms } } });
-        const result: typed.NodeId = @fromBackingInt(self.nodes.items.len);
-        try self.nodes.append(self.allocator, .{ .span = node.span, .ty = output_type, .data = .{ .local = result_slot } });
-        return .{ .span = node.span, .ty = output_type, .data = .{ .block_value = .{ .body = body, .value = result } } };
-    }
-    /// `_ = expr` evaluates the value and releases it, which also settles a pending
-    /// result obligation; an unwritten standalone value still needs the explicit form.
     fn statementDiscard(self: *Checker, stmt: ast.Statement, expr: @FieldType(@FieldType(ast.Statement, "data"), "discard"), _: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         const value = try self.expression(expr);
         if (stmt.implicit_discard and self.nodes.items[@backingInt(value)].ty != .unit) return self.sink.fail("E_EXPLICIT_DISCARD_REQUIRED", stmt.span, "a standalone non-unit value requires `_ =` or result handling");
@@ -2724,7 +2644,7 @@ const Checker = struct {
             return self.statementBinding(stmt, .{ .name = a.name, .mutable = true, .annotation = null, .value = a.value }, flow);
         const slot = try self.resolve(a.name);
         if (!self.locals.items[@backingInt(slot)].mutable)
-            return self.sink.fail(eImmutable, a.name, "assignment requires a let mut binding");
+            return self.sink.fail(eImmutable, a.name, "this binding cannot be assigned");
         var value = try self.expressionExpected(a.value, self.locals.items[@backingInt(slot)].ty);
         if (a.op != .set) {
             try self.requireInteger(self.locals.items[@backingInt(slot)].ty, a.op_span);

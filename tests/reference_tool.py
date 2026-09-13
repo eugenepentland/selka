@@ -84,19 +84,19 @@ def main():
         run('--check')
 
         entry = root / 'main.my'
-        entry.write_text('module main; import values; fn main()->i64{return 0;}')
+        entry.write_text('module main\nimport values\n\ndef main() -> i64:\n    return 0\n')
         dependency = root / 'values.my'
-        dependency.write_text('module values; export Item; struct Item { value: i64 }')
+        dependency.write_text('module values\nexport Item\n\nclass Item:\n    value: i64\n')
         run('--entry', entry)
         run('--check')
-        dependency.write_text(dependency.read_text() + '\n// private source change\n')
+        dependency.write_text(dependency.read_text() + '\n# private source change\n')
         assert 'stale reference' in run('--check', success=False).stderr
         run('--entry', entry)
-        dependency.write_text('module values; export Item; struct Item { value: u64 }')
+        dependency.write_text('module values\nexport Item\n\nclass Item:\n    value: u64\n')
         assert 'stale reference' in run('--check', success=False).stderr
         run('--entry', entry)
         assert 'values::Item' in (output / 'api.md').read_text()
-        dependency.write_text('module values; fn bad()->i64{return true;}')
+        dependency.write_text('module values\n\ndef bad() -> i64:\n    return True\n')
         assert 'compiler schema-project failed' in run('--check', success=False).stderr
     print('reference tool: pinned embedded stdlib, compact receipt, selected modules, artifact integrity, and compiler/project freshness passed')
 

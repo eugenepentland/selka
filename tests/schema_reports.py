@@ -36,11 +36,11 @@ def main():
     with tempfile.TemporaryDirectory(prefix='mylang-schema-receipt-') as temporary:
         root = Path(temporary)
         entry = root / 'main.my'
-        entry.write_text('module main; import left; import right; fn main()->i64{return 0;}')
-        (root / 'left.my').write_text('module left; import shared;')
-        (root / 'right.my').write_text('module right; import shared;')
+        entry.write_text('module main\nimport left\nimport right\n\ndef main() -> i64:\n    return 0\n')
+        (root / 'left.my').write_text('module left\nimport shared\n')
+        (root / 'right.my').write_text('module right\nimport shared\n')
         shared = root / 'shared.my'
-        shared.write_text('module shared; export Item; struct Item { value: u64 } fn hidden()->i64{return 7;}')
+        shared.write_text('module shared\nexport Item\n\nclass Item:\n    value: u64\n\ndef hidden() -> i64:\n    return 7\n')
 
         def run(path=entry, flags=('--schema-report',), expected=0):
             result = subprocess.run([str(compiler), 'schema-project', str(path), *flags], capture_output=True, text=True, timeout=30)
@@ -74,7 +74,7 @@ def main():
         (root / 'unused.my').write_text('broken and unimported')
         assert run() == first
         original = shared.read_text()
-        shared.write_text(original + '\n// private comment\n')
+        shared.write_text(original + '\n# private comment\n')
         changed = run()
         assert changed['schema_sha256'] == first['schema_sha256']
         assert changed['source_sha256'] != first['source_sha256']
@@ -82,10 +82,10 @@ def main():
         shared.write_text(original.replace('value: u64', 'value: u32'))
         assert run()['schema_sha256'] != first['schema_sha256']
         shared.write_text(original)
-        (root / 'left.my').write_text('module left; import shared as s;')
+        (root / 'left.my').write_text('module left\nimport shared as s\n')
         aliased = run()
         assert aliased['schema_sha256'] == first['schema_sha256'] and aliased['source_sha256'] != first['source_sha256']
-        shared.write_text(original + 'fn broken()->i64{return true;}')
+        shared.write_text(original + '\ndef broken() -> i64:\n    return True\n')
         assert 'E_TYPE' in run(expected=1)
         shared.write_text(original)
         run(flags=('--schema-report', '--schema-report'), expected=2)
@@ -117,7 +117,7 @@ def main():
         cache = root / 'cache'
         cold = bindings.build(compiler, entry, output, cache_dir=cache)
         before = output.read_bytes()
-        shared.write_text(original + '\n// fresh provenance\n')
+        shared.write_text(original + '\n# fresh provenance\n')
         warm = bindings.build(compiler, entry, output, cache_dir=cache)
         assert warm['cache'] == 'hit' and warm['generation'] == 'skipped'
         assert warm['request_sha256'] == cold['request_sha256'] and output.read_bytes() == before
