@@ -1,16 +1,15 @@
-module shared.units;
-export Distance;
-domain Distance: i64 {
-    private fn raw(value: i64) -> Distance {
-        return wrap<Distance>(value);
-    }
-    fn make(value: i64) -> Distance {
-        if value < 0 {
-            return Distance.raw(0);
-        }
-        return Distance.raw(value);
-    }
-    fn number(value: Distance) -> i64 {
-        return unwrap(value);
-    }
-}
+module shared.units
+export Distance
+
+
+domain Distance: i64:
+    private def raw(value: i64) -> Distance:
+        return wrap<Distance>(value)
+
+    def make(value: i64) -> Distance:
+        if value < 0:
+            return Distance.raw(0)
+        return Distance.raw(value)
+
+    def number(value: Distance) -> i64:
+        return unwrap(value)

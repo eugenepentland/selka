@@ -1,6 +1,7 @@
-module main;
-import left;
-import right;
-fn main() -> i64 {
-    return left::price(10) + right::quote(10);
-}
+module main
+import left
+import right
+
+
+def main() -> i64:
+    return left.price(10) + right.quote(10)

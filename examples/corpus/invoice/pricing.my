@@ -1,93 +1,70 @@
-module pricing;
-import money;
-import quantity;
-import catalog;
-import delivery;
-import packaging;
-import handling;
-export Receipt;
-export Invoice;
-export calculate;
-struct Line {
-    product: catalog::Product,
-    count: quantity::Count
-}
-struct Totals {
-    gross: money::Cents,
-    discount: money::Cents,
-    tax: money::Cents,
-    delivery: money::Cents,
-    packaging: money::Cents,
-    handling: money::Cents,
-    total: money::Cents,
+module pricing
+import money
+import quantity
+import catalog
+import delivery
+import packaging
+import handling
+export Receipt
+export Invoice
+export calculate
+
+
+class Line:
+    product: catalog.Product
+    count: quantity.Count
+
+
+class Totals:
+    gross: money.Cents
+    discount: money.Cents
+    tax: money.Cents
+    delivery: money.Cents
+    packaging: money.Cents
+    handling: money.Cents
+    total: money.Cents
     items: u16
-}
-struct Receipt {
-    gross: i64,
-    discount: i64,
-    tax: i64,
-    delivery: i64,
-    packaging: i64,
-    handling: i64,
-    total: i64,
+
+
+class Receipt:
+    gross: i64
+    discount: i64
+    tax: i64
+    delivery: i64
+    packaging: i64
+    handling: i64
+    total: i64
     items: u16
-}
-result Invoice {
+
+
+result Invoice:
     ok: Receipt,
-    err: quantity::InvalidQuantity
-}
-conversion fn receipt(totals: Totals) -> Receipt {
-    return new Receipt {
-        gross: money::Cents.number(totals.gross),
-        discount: money::Cents.number(totals.discount),
-        tax: money::Cents.number(totals.tax),
-        delivery: money::Cents.number(totals.delivery),
-        packaging: money::Cents.number(totals.packaging),
-        handling: money::Cents.number(totals.handling),
-        total: money::Cents.number(totals.total),
-        items: totals.items
-    };
-}
-fn calculate(books: i64, cables: i64, adapters: i64) -> Invoice {
-    let lines = new [3]Line[new Line {
-        product: new catalog::Product.book,
-        count: quantity::Count.parse(books)?
-    }, new Line {
-        product: new catalog::Product.cable,
-        count: quantity::Count.parse(cables)?
-    }, new Line {
-        product: new catalog::Product.adapter,
-        count: quantity::Count.parse(adapters)?
-    }];
-    let mut gross = money::Cents.make(0u64);
-    let mut items = 0u16;
-    let mut index = 0u64;
-    while index < len(lines) {
-        let line = lines[index];
-        let count = quantity::Count.number(line.count);
-        let cents = money::Cents.number(catalog::price(line.product)) * cast<i64>(count);
-        gross = money::Cents.add(gross, money::Cents.make(cast<u64>(cents)));
-        items += count;
-        index += 1u64;
-    }
-    let mut discount = 0;
-    if items >= 10u16 {
-        discount = money::Cents.number(gross) / 10;
-    }
-    let taxable = money::Cents.number(gross) - discount;
-    let tax =(taxable * 750 + 5000) / 10000;
-    let shipping = delivery::fee(cast<i64>(items));
-    let packing = packaging::fee(cast<i64>(items));
-    let service = handling::fee(cast<i64>(items));
-    let totals = new Totals {
-        gross: gross,
-        discount: money::Cents.make(cast<u64>(discount)),
-        tax: money::Cents.make(cast<u64>(tax)),
-        delivery: money::Cents.make(cast<u64>(shipping)),
-        packaging: money::Cents.make(cast<u64>(packing)),
-        handling: money::Cents.make(cast<u64>(service)),
-        total: money::Cents.make(cast<u64>(taxable + tax + shipping + packing + service)),
-        items: items
-    };
-    return new Invoice.ok(receipt(totals));
-}
+    err: quantity.InvalidQuantity
+
+
+conversion def receipt(totals: Totals) -> Receipt:
+    return Receipt(gross=money.Cents.number(totals.gross), discount=money.Cents.number(totals.discount), tax=money.Cents.number(totals.tax), delivery=money.Cents.number(totals.delivery), packaging=money.Cents.number(totals.packaging), handling=money.Cents.number(totals.handling), total=money.Cents.number(totals.total), items=totals.items)
+
+
+def calculate(books: i64, cables: i64, adapters: i64) -> Invoice:
+    lines: [3]Line = [Line(product=catalog.Product.book, count=quantity.Count.parse(books)?), Line(product=catalog.Product.cable, count=quantity.Count.parse(cables)?), Line(product=catalog.Product.adapter, count=quantity.Count.parse(adapters)?)]
+    gross = money.Cents.make(0u64)
+    items = 0u16
+    index = 0u64
+    while index < len(lines):
+        line = lines[index]
+        count = quantity.Count.number(line.count)
+        cents = money.Cents.number(catalog.price(line.product)) * cast<i64>(count)
+        gross = money.Cents.add(gross, money.Cents.make(cast<u64>(cents)))
+        items += count
+        index += 1u64
+    discount = 0
+    if items >= 10u16:
+        discount = divtrunc(money.Cents.number(gross), 10)
+    taxable = money.Cents.number(gross) - discount
+    tax = divtrunc(taxable * 750 + 5000, 10000)
+    shipping = delivery.fee(cast<i64>(items))
+    packing = packaging.fee(cast<i64>(items))
+    service = handling.fee(cast<i64>(items))
+    totals = Totals(gross=gross, discount=money.Cents.make(cast<u64>(discount)), tax=money.Cents.make(cast<u64>(tax)), delivery=money.Cents.make(cast<u64>(shipping)), packaging=money.Cents.make(cast<u64>(packing)), handling=money.Cents.make(cast<u64>(service)), total=money.Cents.make(cast<u64>(taxable + tax + shipping + packing + service)), items=items)
+    return Ok(receipt(totals))

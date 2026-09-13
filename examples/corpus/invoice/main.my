@@ -1,13 +1,11 @@
-module main;
-import inputs;
-import pricing;
-fn main() -> i64 {
-    match pricing::calculate(inputs::books(), inputs::cables(), inputs::adapters()) {
-        pricing::Invoice.ok(receipt) => {
-            return receipt.total;
-        },
-        pricing::Invoice.err(_) => {
-            return - 1;
-        }
-    }
-}
+module main
+import inputs
+import pricing
+
+
+def main() -> i64:
+    match pricing.calculate(inputs.books(), inputs.cables(), inputs.adapters()):
+        case pricing.Invoice.ok(receipt):
+            return receipt.total
+        case pricing.Invoice.err(_):
+            return -1

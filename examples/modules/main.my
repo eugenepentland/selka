@@ -1,13 +1,13 @@
-module main;
-import shared.units;
-export Measurement;
-struct Measurement {
-    distance: units::Distance
-}
-// The imported factory enforces Distance construction in its defining module.
-fn main() -> i64 {
-    let measurement = new Measurement {
-        distance: units::Distance.make(12)
-    };
-    return units::Distance.number(measurement.distance);
-}
+module main
+import shared.units
+export Measurement
+
+
+class Measurement:
+    distance: units.Distance
+
+
+# The imported factory enforces Distance construction in its defining module.
+def main() -> i64:
+    measurement = Measurement(distance=units.Distance.make(12))
+    return units.Distance.number(measurement.distance)

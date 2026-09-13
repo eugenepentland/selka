@@ -1,7 +1,13 @@
-module io;
-export length;
-export byte;
-export put;
-host fn length() -> i64 effects(host);
-host fn byte(index: i64) -> u8 effects(host);
-host fn put(value: u8) -> i64 effects(host);
+module io
+export length
+export byte
+export put
+
+
+host def length() -> i64 effects(host)
+
+
+host def byte(index: i64) -> u8 effects(host)
+
+
+host def put(value: u8) -> i64 effects(host)

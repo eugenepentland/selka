@@ -1,19 +1,19 @@
-module ids;
-export ComponentId;
-export NetId;
-domain ComponentId: u64 {
-    fn make(raw: u64) -> ComponentId {
-        return wrap<ComponentId>(raw);
-    }
-    fn number(value: ComponentId) -> u64 {
-        return unwrap(value);
-    }
-}
-domain NetId: u64 {
-    fn make(raw: u64) -> NetId {
-        return wrap<NetId>(raw);
-    }
-    fn number(value: NetId) -> u64 {
-        return unwrap(value);
-    }
-}
+module ids
+export ComponentId
+export NetId
+
+
+domain ComponentId: u64:
+    def make(raw: u64) -> ComponentId:
+        return wrap<ComponentId>(raw)
+
+    def number(value: ComponentId) -> u64:
+        return unwrap(value)
+
+
+domain NetId: u64:
+    def make(raw: u64) -> NetId:
+        return wrap<NetId>(raw)
+
+    def number(value: NetId) -> u64:
+        return unwrap(value)

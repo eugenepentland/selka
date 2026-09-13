@@ -1,25 +1,18 @@
-module main;
-import inputs;
-import decoder;
-import model;
-fn main() -> i64 {
-    let packet = inputs::bytes();
-    let size = inputs::size();
-    {
-        match decoder::decode(packet, size) {
-            model::Decoded.err(error) => {
-                return model::error_code(error);
-            },
-            model::Decoded.ok(message) => {
-                match message {
-                    model::Message.heartbeat(sequence) => {
-                        return cast<i64>(sequence);
-                    },
-                    model::Message.reading(reading) => {
-                        return cast<i64>(reading.sequence) * 4294967296 + cast<i64>(reading.value);
-                    }
-                }
-            }
-        }
-    }
-}
+module main
+import inputs
+import decoder
+import model
+
+
+def main() -> i64:
+    packet = inputs.bytes()
+    size = inputs.size()
+    match decoder.decode(packet, size):
+        case model.Decoded.err(error):
+            return model.error_code(error)
+        case model.Decoded.ok(message):
+            match message:
+                case model.Message.heartbeat(sequence):
+                    return cast<i64>(sequence)
+                case model.Message.reading(reading):
+                    return cast<i64>(reading.sequence) * 4294967296 + cast<i64>(reading.value)

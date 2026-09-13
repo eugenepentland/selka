@@ -1,19 +1,19 @@
-module units;
-export Micrometres;
-export Millimetres;
-domain Micrometres: i64 {
-    fn make(raw: i64) -> Micrometres {
-        return wrap<Micrometres>(raw);
-    }
-    fn number(value: Micrometres) -> i64 {
-        return unwrap(value);
-    }
-}
-domain Millimetres: i64 {
-    fn make(raw: i64) -> Millimetres {
-        return wrap<Millimetres>(raw);
-    }
-    fn toMicro(value: Millimetres) -> Micrometres {
-        return Micrometres.make(unwrap(value) * 1000);
-    }
-}
+module units
+export Micrometres
+export Millimetres
+
+
+domain Micrometres: i64:
+    def make(raw: i64) -> Micrometres:
+        return wrap<Micrometres>(raw)
+
+    def number(value: Micrometres) -> i64:
+        return unwrap(value)
+
+
+domain Millimetres: i64:
+    def make(raw: i64) -> Millimetres:
+        return wrap<Millimetres>(raw)
+
+    def toMicro(value: Millimetres) -> Micrometres:
+        return Micrometres.make(unwrap(value) * 1000)

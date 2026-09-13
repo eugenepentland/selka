@@ -1,9 +1,11 @@
-module inputs;
-export bytes;
-export size;
-fn bytes() -> [9]u8 {
-    return new [9]u8[1u8, 2u8, 4u8, 7u8, 0u8, 0u8, 1u8, 44u8, 59u8];
-}
-fn size() -> u64 {
-    return 9u64;
-}
+module inputs
+export bytes
+export size
+
+
+def bytes() -> [9]u8:
+    return [1u8, 2u8, 4u8, 7u8, 0u8, 0u8, 1u8, 44u8, 59u8]
+
+
+def size() -> u64:
+    return 9u64

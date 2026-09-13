@@ -1,21 +1,23 @@
-struct Point { x: i64, y: i64 }
-struct Segment { start: Point, end: Point, visible: bool }
+class Point:
+    x: i64
+    y: i64
 
-fn move(point: Point, dx: i64) -> Point {
-    let mut moved = point;
-    moved.x = point.x + dx;
-    return moved;
-}
 
-fn main() -> i64 {
-    let origin = new Point { y: 2, x: 3 };
-    let segment = new Segment {
-        start: origin,
-        end: move(origin, 4),
-        visible: true
-    };
-    if segment.visible {
-        return segment.start.x + segment.end.x + segment.end.y;
-    }
-    return 0;
-}
+class Segment:
+    start: Point
+    end: Point
+    visible: bool
+
+
+def move(point: Point, dx: i64) -> Point:
+    moved = point
+    moved.x = point.x + dx
+    return moved
+
+
+def main() -> i64:
+    origin = Point(y=2, x=3)
+    segment = Segment(start=origin, end=move(origin, 4), visible=True)
+    if segment.visible:
+        return segment.start.x + segment.end.x + segment.end.y
+    return 0

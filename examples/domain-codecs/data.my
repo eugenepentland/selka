@@ -1,31 +1,30 @@
-module data;
-export Wire;
-export Decoded;
-export Positive;
-struct Wire {
+module data
+export Wire
+export Decoded
+export Positive
+
+
+class Wire:
     n: i64
-}
-result Decoded {
+
+
+result Decoded:
     ok: Positive,
     err: i64
-}
-domain Positive: i64 {
-    codec Wire {
+
+
+domain Positive: i64:
+    codec Wire:
         decode: from_wire,
         encode: to_wire
-    }
-    private fn raw(x: i64) -> Positive {
-        return wrap<Positive>(x);
-    }
-    fn from_wire(x: Wire) -> Decoded {
-        if x.n <= 0 {
-            return new Decoded.err(- 1);
-        }
-        return new Decoded.ok(Positive.raw(x.n));
-    }
-    fn to_wire(x: Positive) -> Wire {
-        return new Wire {
-            n: unwrap(x)
-        };
-    }
-}
+
+    private def raw(x: i64) -> Positive:
+        return wrap<Positive>(x)
+
+    def from_wire(x: Wire) -> Decoded:
+        if x.n <= 0:
+            return Err(-1)
+        return Ok(Positive.raw(x.n))
+
+    def to_wire(x: Positive) -> Wire:
+        return Wire(n=unwrap(x))

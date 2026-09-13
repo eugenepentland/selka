@@ -1,15 +1,22 @@
-result Time { ok: i64, err: i64 }
-result Random { ok: u64, err: i64 }
+result Time:
+    ok: i64,
+    err: i64
 
-fn sample(clock: clock_cap, rng: random_cap) -> Time effects(clock, random) {
-    let now = clock_now<Time>(clock)?;
-    _ = random_u64<Random>(rng)?;
-    return new Time.ok(now);
-}
 
-fn main(clock: clock_cap, rng: random_cap) -> i64 noio {
-    match sample(clock, rng) {
-        Time.ok(now) => { return now; },
-        Time.err(code) => { return code; }
-    }
-}
+result Random:
+    ok: u64,
+    err: i64
+
+
+def sample(clock: clock_cap, rng: random_cap) -> Time effects(clock, random):
+    now = clock_now<Time>(clock)?
+    _ = random_u64<Random>(rng)?
+    return Ok(now)
+
+
+def main(clock: clock_cap, rng: random_cap) -> i64 noio:
+    match sample(clock, rng):
+        case Time.ok(now):
+            return now
+        case Time.err(code):
+            return code

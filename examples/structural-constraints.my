@@ -1,32 +1,31 @@
-struct Reading {
+class Reading:
     value: i64
-}
-struct TaggedReading {
-    tag: bool,
+
+
+class TaggedReading:
+    tag: bool
     value: i64
-}
-fn value < T: copy + field(value: i64) >(item: T) -> i64 {
-    return item.value;
-}
-fn forward < U: copy + field(value: i64) >(item: U) -> i64 {
-    return value::< U >(item);
-}
-domain Counter: i64 {
-    fn make(n: i64) -> Counter {
-        return wrap<Counter>(n);
-    }
-    fn score(item: Counter) -> i64 effects() {
-        return unwrap(item);
-    }
-}
-fn score < T: copy + op(score(item: T) -> i64 effects()) >(item: T) -> i64 effects() {
-    return T.score(item);
-}
-fn main() -> i64 {
-    return value::< Reading >(new Reading {
-        value: 2
-    }) + forward::< TaggedReading >(new TaggedReading {
-        tag: true,
-        value: 3
-    }) + score::< Counter >(Counter.make(7));
-}
+
+
+def value[T: copy + field(value: i64)](item: T) -> i64:
+    return item.value
+
+
+def forward[U: copy + field(value: i64)](item: U) -> i64:
+    return value[U](item)
+
+
+domain Counter: i64:
+    def make(n: i64) -> Counter:
+        return wrap<Counter>(n)
+
+    def score(item: Counter) -> i64 effects():
+        return unwrap(item)
+
+
+def score[T: copy + op(score(item: T) -> i64 effects())](item: T) -> i64 effects():
+    return T.score(item)
+
+
+def main() -> i64:
+    return value[Reading](Reading(value=2)) + forward[TaggedReading](TaggedReading(tag=True, value=3)) + score[Counter](Counter.make(7))

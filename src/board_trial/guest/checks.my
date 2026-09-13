@@ -1,78 +1,63 @@
-module checks;
-import model as m;
-import ids;
-import inventory;
-import bounds;
-export preflight;
-fn region(board: m::Board, item: m::Region) -> m::Preflight {
-    if !bounds::valid(item.rect) {
-        return new m::Preflight.err(new m::Failure.input(new m::InputProblem.invalid_bounds));
-    }
-    if !item.blocks.component && !item.blocks.track && !item.blocks.via {
-        return new m::Preflight.err(new m::Failure.input(new m::InputProblem.empty_blocks));
-    }
-    let mut i = 0u64;
-    while i < len(item.allow_nets) {
-        match item.allow_nets[i] {
-            m::Slot<ids::NetId>.none => {},
-            m::Slot<ids::NetId>.some(net) => {
-                if !inventory::has::< ids::NetId >(board.nets, net, len(board.nets)) {
-                    return new m::Preflight.err(new m::Failure.input(new m::InputProblem.unknown_allow_net));
-                }
-            }
-        }
-        i = i + 1u64;
-    }
-    return new m::Preflight.ok(true);
-}
-fn feature(board: m::Board, item: m::Feature) -> m::Preflight {
-    if !bounds::valid(bounds::rectangle(item)) {
-        return new m::Preflight.err(new m::Failure.input(new m::InputProblem.invalid_bounds));
-    }
-    match item {
-        m::Feature.component(value) => {
-            if !inventory::has::< ids::ComponentId >(board.components, value.id, len(board.components)) {
-                return new m::Preflight.err(new m::Failure.input(new m::InputProblem.missing_component));
-            }
-        },
-        m::Feature.track(value) => {
-            if !inventory::has::< ids::NetId >(board.nets, value.net, len(board.nets)) {
-                return new m::Preflight.err(new m::Failure.input(new m::InputProblem.missing_net));
-            }
-        },
-        m::Feature.via(value) => {
-            if !inventory::has::< ids::NetId >(board.nets, value.net, len(board.nets)) {
-                return new m::Preflight.err(new m::Failure.input(new m::InputProblem.missing_net));
-            }
-        }
-    }
-    return new m::Preflight.ok(true);
-}
-fn preflight(board: m::Board) -> m::Preflight {
-    if !bounds::valid(board.outline) {
-        return new m::Preflight.err(new m::Failure.input(new m::InputProblem.invalid_bounds));
-    }
-    _ = inventory::checkComponents(board.components)?;
-    _ = inventory::checkNets(board.nets)?;
-    let mut i = 0u64;
-    while i < len(board.regions) {
-        match board.regions[i] {
-            m::Slot<m::Region>.none => {},
-            m::Slot<m::Region>.some(value) => {
-                _ = region(board, value)?;
-            }
-        }
-        i = i + 1u64;
-    }
-    i = 0u64;
-    while i < len(board.features) {
-        match board.features[i] {
-            m::Slot<m::Feature>.none => {},
-            m::Slot<m::Feature>.some(value) => {
-                _ = feature(board, value)?;
-            }
-        }
-        i = i + 1u64;
-    }
-    return new m::Preflight.ok(true);
-}
+module checks
+import model as m
+import ids
+import inventory
+import bounds
+export preflight
+
+
+def region(board: m.Board, item: m.Region) -> m.Preflight:
+    if not bounds.valid(item.rect):
+        return Err(m.Failure.input(m.InputProblem.invalid_bounds))
+    if not item.blocks.component and not item.blocks.track and not item.blocks.via:
+        return Err(m.Failure.input(m.InputProblem.empty_blocks))
+    i = 0u64
+    while i < len(item.allow_nets):
+        match item.allow_nets[i]:
+            case m.Slot.none:
+                pass
+            case m.Slot.some(net):
+                if not inventory.has[ids.NetId](board.nets, net, len(board.nets)):
+                    return Err(m.Failure.input(m.InputProblem.unknown_allow_net))
+        i = i + 1u64
+    return Ok(True)
+
+
+def feature(board: m.Board, item: m.Feature) -> m.Preflight:
+    if not bounds.valid(bounds.rectangle(item)):
+        return Err(m.Failure.input(m.InputProblem.invalid_bounds))
+    match item:
+        case m.Feature.component(value):
+            if not inventory.has[ids.ComponentId](board.components, value.id, len(board.components)):
+                return Err(m.Failure.input(m.InputProblem.missing_component))
+        case m.Feature.track(value):
+            if not inventory.has[ids.NetId](board.nets, value.net, len(board.nets)):
+                return Err(m.Failure.input(m.InputProblem.missing_net))
+        case m.Feature.via(value):
+            if not inventory.has[ids.NetId](board.nets, value.net, len(board.nets)):
+                return Err(m.Failure.input(m.InputProblem.missing_net))
+    return Ok(True)
+
+
+def preflight(board: m.Board) -> m.Preflight:
+    if not bounds.valid(board.outline):
+        return Err(m.Failure.input(m.InputProblem.invalid_bounds))
+    _ = inventory.checkComponents(board.components)?
+    _ = inventory.checkNets(board.nets)?
+    i = 0u64
+    while i < len(board.regions):
+        match board.regions[i]:
+            case m.Slot.none:
+                pass
+            case m.Slot.some(value):
+                _ = region(board, value)?
+        i = i + 1u64
+    i = 0u64
+    while i < len(board.features):
+        match board.features[i]:
+            case m.Slot.none:
+                pass
+            case m.Slot.some(value):
+                _ = feature(board, value)?
+        i = i + 1u64
+    return Ok(True)

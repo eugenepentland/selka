@@ -1,17 +1,15 @@
-module catalog;
-import money;
-export Product;
-export price;
-enum Product {
+module catalog
+import money
+export Product
+export price
+
+
+enum Product:
     book,
     cable,
     adapter
-}
-fn price(product: Product) -> money::Cents {
-    let prices = new [Product]u64 {
-        book: 2000u64,
-        cable: 500u64,
-        adapter: 750u64
-    };
-    return money::Cents.make(prices[product]);
-}
+
+
+def price(product: Product) -> money.Cents:
+    prices: [Product]u64 = {Product.book: 2000u64, Product.cable: 500u64, Product.adapter: 750u64}
+    return money.Cents.make(prices[product])

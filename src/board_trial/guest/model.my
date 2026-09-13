@@ -1,92 +1,106 @@
-module model;
-import units;
-import ids;
-export Rect;
-export Face;
-export RegionFace;
-export Layer;
-export Blocks;
-export Component;
-export Track;
-export Via;
-export Feature;
-export Region;
-export Board;
-export Slot;
-export InputProblem;
-export GeometryFailure;
-export Failure;
-export Preflight;
-export Contact;
-export Overlap;
-export ContactResult;
-export ViolationKind;
-export RegionIndex;
-export Violation;
-export Report;
-export Validation;
-union Slot<T: copy> {
+module model
+import units
+import ids
+export Rect
+export Face
+export RegionFace
+export Layer
+export Blocks
+export Component
+export Track
+export Via
+export Feature
+export Region
+export Board
+export Slot
+export InputProblem
+export GeometryFailure
+export Failure
+export Preflight
+export Contact
+export Overlap
+export ContactResult
+export ViolationKind
+export RegionIndex
+export Violation
+export Report
+export Validation
+
+
+union Slot[T]:
     none,
     some: T
-}
-struct Rect {
-    x: units::Micrometres,
-    y: units::Micrometres,
-    width: units::Micrometres,
-    height: units::Micrometres
-}
-enum Face {
+
+
+class Rect:
+    x: units.Micrometres
+    y: units.Micrometres
+    width: units.Micrometres
+    height: units.Micrometres
+
+
+enum Face:
     top,
     bottom
-}
-enum RegionFace {
+
+
+enum RegionFace:
     top,
     bottom,
     both
-}
-enum Layer {
+
+
+enum Layer:
     front,
     back,
     inner
-}
-struct Blocks {
-    component: bool,
-    track: bool,
+
+
+class Blocks:
+    component: bool
+    track: bool
     via: bool
-}
-struct Component {
-    id: ids::ComponentId,
-    face: Face,
+
+
+class Component:
+    id: ids.ComponentId
+    face: Face
     rect: Rect
-}
-struct Track {
-    net: ids::NetId,
-    layer: Layer,
+
+
+class Track:
+    net: ids.NetId
+    layer: Layer
     rect: Rect
-}
-struct Via {
-    net: ids::NetId,
+
+
+class Via:
+    net: ids.NetId
     rect: Rect
-}
-union Feature {
+
+
+union Feature:
     component: Component,
     track: Track,
     via: Via
-}
-struct Region {
-    rect: Rect,
-    face: RegionFace,
-    blocks: Blocks,
-    allow_nets: [4]Slot<ids::NetId>
-}
-struct Board {
-    outline: Rect,
-    components: [4]Slot<ids::ComponentId>,
-    nets: [4]Slot<ids::NetId>,
-    regions: [4]Slot<Region>,
-    features: [8]Slot<Feature>
-}
-enum InputProblem {
+
+
+class Region:
+    rect: Rect
+    face: RegionFace
+    blocks: Blocks
+    allow_nets: [4]Slot[ids.NetId]
+
+
+class Board:
+    outline: Rect
+    components: [4]Slot[ids.ComponentId]
+    nets: [4]Slot[ids.NetId]
+    regions: [4]Slot[Region]
+    features: [8]Slot[Feature]
+
+
+enum InputProblem:
     invalid_bounds,
     invalid_id,
     duplicate_component,
@@ -95,49 +109,59 @@ enum InputProblem {
     unknown_allow_net,
     missing_component,
     missing_net
-}
-enum GeometryFailure {
+
+
+enum GeometryFailure:
     invalid_bounds,
     unavailable
-}
-union Failure {
+
+
+union Failure:
     input: InputProblem,
     geometry: GeometryFailure
-}
-result Preflight {
+
+
+result Preflight:
     ok: bool,
     err: Failure
-}
-enum Contact {
+
+
+enum Contact:
     clear,
     intersection
-}
-result Overlap {
+
+
+result Overlap:
     ok: Contact,
     err: GeometryFailure
-}
-result ContactResult {
+
+
+result ContactResult:
     ok: Contact,
     err: Failure
-}
-enum ViolationKind {
+
+
+enum ViolationKind:
     outside_board,
     keepout
-}
-union RegionIndex {
+
+
+union RegionIndex:
     board,
     keepout: u64
-}
-struct Violation {
-    feature: u64,
-    kind: ViolationKind,
+
+
+class Violation:
+    feature: u64
+    kind: ViolationKind
     region: RegionIndex
-}
-struct Report {
-    violations: u64,
-    first: Slot<Violation>
-}
-result Validation {
+
+
+class Report:
+    violations: u64
+    first: Slot[Violation]
+
+
+result Validation:
     ok: Report,
     err: Failure
-}

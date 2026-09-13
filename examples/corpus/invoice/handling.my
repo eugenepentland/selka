@@ -1,13 +1,12 @@
-module handling;
-export fee;
-// A similar structure is not permission to erase different fee amounts.
-fn fee(items: i64) -> i64 {
-    let mut cents = 100;
-    if items > 10 {
-        cents += 150;
-    }
-    if items == 0 {
-        return 0;
-    }
-    return cents;
-}
+module handling
+export fee
+
+
+# A similar structure is not permission to erase different fee amounts.
+def fee(items: i64) -> i64:
+    cents = 100
+    if items > 10:
+        cents += 150
+    if items == 0:
+        return 0
+    return cents

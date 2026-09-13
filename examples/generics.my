@@ -1,13 +1,16 @@
-fn identity<T: copy>(value: T) -> T {
-    return value;
-}
-fn sum<T: integer>(value: T) -> T {
-    if value == cast<T>(0) { return value; }
-    return value + sum::<T>(value - cast<T>(1));
-}
-fn main() -> i64 {
-    let small = sum::<u8>(4u8);
-    let large = sum::<i64>(5);
-    if identity::<bool>(true) { return cast<i64>(small) + large; }
-    return 0;
-}
+def identity[T](value: T) -> T:
+    return value
+
+
+def sum[T: integer](value: T) -> T:
+    if value == cast<T>(0):
+        return value
+    return value + sum[T](value - cast<T>(1))
+
+
+def main() -> i64:
+    small = sum[u8](4u8)
+    large = sum[i64](5)
+    if identity[bool](True):
+        return cast<i64>(small) + large
+    return 0

@@ -1,21 +1,18 @@
-enum State {
+enum State:
     idle,
     active
-}
-fn toggle(state: State) -> State {
-    if state == new State.idle {
-        return new State.active;
-    }
-    return new State.idle;
-}
-fn main() -> i64 {
-    let state = toggle(new State.idle);
-    match state {
-        State.active => {
-            return 7;
-        },
-        State.idle => {
-            return 0;
-        }
-    }
-}
+
+
+def toggle(state: State) -> State:
+    if state == State.idle:
+        return State.active
+    return State.idle
+
+
+def main() -> i64:
+    state = toggle(State.idle)
+    match state:
+        case State.active:
+            return 7
+        case State.idle:
+            return 0

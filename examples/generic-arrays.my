@@ -1,35 +1,32 @@
-domain ComponentId: u64 {
-    fn make(raw: u64) -> ComponentId {
-        return wrap<ComponentId>(raw);
-    }
-}
-domain NetId: u64 {
-    fn make(raw: u64) -> NetId {
-        return wrap<NetId>(raw);
-    }
-}
-fn pair < T: copy >(first: T, second: T) -> [2]T {
-    return new [2]T[first, second];
-}
-fn contains < T: equality >(items: [2]T, needle: T) -> bool {
-    let mut index = 0u64;
-    while index < len(items) {
-        if items[index] == needle {
-            return true;
-        }
-        index += 1u64;
-    }
-    return false;
-}
-fn main() -> i64 {
-    let components = pair::< ComponentId >(ComponentId.make(1u64), ComponentId.make(2u64));
-    let nets = pair::< NetId >(NetId.make(8u64), NetId.make(9u64));
-    let mut score = 0;
-    if contains::< ComponentId >(components, ComponentId.make(2u64)) {
-        score += 1;
-    }
-    if contains::< NetId >(nets, NetId.make(9u64)) {
-        score += 2;
-    }
-    return score;
-}
+domain ComponentId: u64:
+    def make(raw: u64) -> ComponentId:
+        return wrap<ComponentId>(raw)
+
+
+domain NetId: u64:
+    def make(raw: u64) -> NetId:
+        return wrap<NetId>(raw)
+
+
+def pair[T](first: T, second: T) -> [2]T:
+    return [first, second]
+
+
+def contains[T: equality](items: [2]T, needle: T) -> bool:
+    index = 0u64
+    while index < len(items):
+        if items[index] == needle:
+            return True
+        index += 1u64
+    return False
+
+
+def main() -> i64:
+    components = pair[ComponentId](ComponentId.make(1u64), ComponentId.make(2u64))
+    nets = pair[NetId](NetId.make(8u64), NetId.make(9u64))
+    score = 0
+    if contains[ComponentId](components, ComponentId.make(2u64)):
+        score += 1
+    if contains[NetId](nets, NetId.make(9u64)):
+        score += 2
+    return score

@@ -1,35 +1,34 @@
-module model;
-export Reading;
-export Message;
-export Error;
-export Decoded;
-export error_code;
-struct Reading {
-    sequence: u8,
+module model
+export Reading
+export Message
+export Error
+export Decoded
+export error_code
+
+
+class Reading:
+    sequence: u8
     value: u32
-}
-union Message {
+
+
+union Message:
     heartbeat: u8,
     reading: Reading
-}
-enum Error {
+
+
+enum Error:
     frame_length,
     version,
     kind,
     payload_length,
     checksum
-}
-result Decoded {
+
+
+result Decoded:
     ok: Message,
     err: Error
-}
-fn error_code(error: Error) -> i64 {
-    let codes = new [Error]i64 {
-        frame_length: - 1,
-        version: - 2,
-        kind: - 3,
-        payload_length: - 4,
-        checksum: - 5
-    };
-    return codes[error];
-}
+
+
+def error_code(error: Error) -> i64:
+    codes: [Error]i64 = {Error.frame_length: -1, Error.version: -2, Error.kind: -3, Error.payload_length: -4, Error.checksum: -5}
+    return codes[error]

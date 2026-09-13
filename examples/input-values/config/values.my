@@ -1,10 +1,12 @@
-// generated input manifest v1 sha256=6ca8cdea081d108206338c3f12b79f794fa34fafe9e6433a275a0cdf62fb4746
-module config.values;
-export batch_size;
-export enabled;
-fn batch_size() -> u16 {
-    return 64u16;
-}
-fn enabled() -> bool {
-    return true;
-}
+# generated input manifest v1 sha256=6ca8cdea081d108206338c3f12b79f794fa34fafe9e6433a275a0cdf62fb4746
+module config.values
+export batch_size
+export enabled
+
+
+def batch_size() -> u16:
+    return 64u16
+
+
+def enabled() -> bool:
+    return True

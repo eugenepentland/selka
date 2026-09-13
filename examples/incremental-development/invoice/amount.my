@@ -1,5 +1,6 @@
-module amount;
-export total;
-fn total() -> i64 {
-    return 42;
-}
+module amount
+export total
+
+
+def total() -> i64:
+    return 42

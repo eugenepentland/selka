@@ -1,35 +1,31 @@
-// Deliberate review corpus: the second implementation is a legacy copy.
-fn sum_to(n: i64) -> i64 {
-    let mut total = 0;
-    let mut i = 0;
-    while i < n {
-        total += i;
-        i += 1;
-    }
-    return total;
-}
+# Deliberate review corpus: the second implementation is a legacy copy.
+def sum_to(n: i64) -> i64:
+    total = 0
+    i = 0
+    while i < n:
+        total += i
+        i += 1
+    return total
 
-fn legacy_sum(limit: i64) -> i64 {
-    let mut result = 0;
-    let mut index = 0;
-    while index < limit {
-        result += index;
-        index += 1;
-    }
-    return result;
-}
 
-// Changed policy: inclusive sequence. Exact discovery must keep this separate.
-fn inclusive_sum(n: i64) -> i64 {
-    let mut total = 0;
-    let mut i = 0;
-    while i <= n {
-        total += i;
-        i += 1;
-    }
-    return total;
-}
+def legacy_sum(limit: i64) -> i64:
+    result = 0
+    index = 0
+    while index < limit:
+        result += index
+        index += 1
+    return result
 
-fn main() -> i64 {
-    return sum_to(100) + legacy_sum(100) + inclusive_sum(100);
-}
+
+# Changed policy: inclusive sequence. Exact discovery must keep this separate.
+def inclusive_sum(n: i64) -> i64:
+    total = 0
+    i = 0
+    while i <= n:
+        total += i
+        i += 1
+    return total
+
+
+def main() -> i64:
+    return sum_to(100) + legacy_sum(100) + inclusive_sum(100)

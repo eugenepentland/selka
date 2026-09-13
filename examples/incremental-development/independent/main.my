@@ -1,4 +1,5 @@
-module main;
-fn main() -> i64 {
-    return 7;
-}
+module main
+
+
+def main() -> i64:
+    return 7

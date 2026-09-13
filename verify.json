@@ -111,7 +111,7 @@
       "expect_stdout": "7\n"
     },
     {
-      "id": "immutable-mutation",
+      "id": "type-mutation",
       "kind": "mutation",
       "depends_on": [
         "build"
@@ -120,11 +120,11 @@
         [
           "zig-out/bin/mylang",
           "check",
-          "tests/verification/immutable.my"
+          "tests/verification/mistyped.my"
         ]
       ],
       "expect_exit": 1,
-      "expect_stderr_contains": "error[E_IMMUTABLE]"
+      "expect_stderr_contains": "error[E_TYPE]"
     },
     {
       "id": "semantics-link",

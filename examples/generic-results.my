@@ -1,38 +1,36 @@
-result Number {
+result Number:
     ok: i64,
     err: i64
-}
-fn increment < T: integer >(input: Number, amount: T) -> Number {
-    return new Number.ok((input?) + cast<i64>(amount));
-}
-fn number < T: copy >(context: T, input: Number) -> i64 {
-    _ = context;
-    match input {
-        Number.ok(value) => {
-            return value;
-        },
-        Number.err(code) => {
-            return 0 - code;
-        }
-    }
-}
-fn count < T: copy >(context: T, early: bool, input: Number) -> i64 {
-    _ = context;
-    if early {
-        _ = input;
-        return 1;
-    }
-    _ = input;
-    let mut index = 0;
-    let mut pending = new Number.ok(0);
-    while index < 3 {
-        _ = pending;
-        pending = new Number.ok(index);
-        index += 1;
-    }
-    _ = pending;
-    return index;
-}
-fn main() -> i64 {
-    return number::< bool >(true, increment::< u8 >(new Number.ok(7), 1u8)) + number::< bool >(true, increment::< u8 >(new Number.err(3), 1u8)) + count::< u8 >(0u8, true, new Number.err(9)) + count::< u8 >(0u8, false, new Number.ok(9));
-}
+
+
+def increment[T: integer](input: Number, amount: T) -> Number:
+    return Ok(input? + cast<i64>(amount))
+
+
+def number[T](context: T, input: Number) -> i64:
+    _ = context
+    match input:
+        case Number.ok(value):
+            return value
+        case Number.err(code):
+            return 0 - code
+
+
+def count[T](context: T, early: bool, input: Number) -> i64:
+    _ = context
+    if early:
+        _ = input
+        return 1
+    _ = input
+    index = 0
+    pending: Number = Ok(0)
+    while index < 3:
+        _ = pending
+        pending = Ok(index)
+        index += 1
+    _ = pending
+    return index
+
+
+def main() -> i64:
+    return number[bool](True, increment[u8](Ok(7), 1u8)) + number[bool](True, increment[u8](Err(3), 1u8)) + count[u8](0u8, True, Err(9)) + count[u8](0u8, False, Ok(9))

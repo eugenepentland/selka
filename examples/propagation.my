@@ -1,25 +1,36 @@
-enum ArithmeticError { zero }
-result Quotient { ok: i64, err: ArithmeticError }
-result Total { err: ArithmeticError, ok: i64 }
+enum ArithmeticError:
+    zero
 
-fn divide(n: i64, d: i64) -> Quotient {
-    if d == 0 { return new Quotient.err(new ArithmeticError.zero); }
-    return new Quotient.ok(n / d);
-}
 
-fn calculate(denominator: i64) -> Total {
-    let mut value = 10;
-    value = value + divide(21, denominator)?;
-    return new Total.ok(value);
-}
+result Quotient:
+    ok: i64,
+    err: ArithmeticError
 
-fn handle(outcome: Total) -> i64 {
-    match outcome {
-        Total.ok(value) => { return value; },
-        Total.err(_) => { return 3; }
-    }
-}
 
-fn main() -> i64 {
-    return handle(calculate(3)) + handle(calculate(0));
-}
+result Total:
+    err: ArithmeticError,
+    ok: i64
+
+
+def divide(n: i64, d: i64) -> Quotient:
+    if d == 0:
+        return Err(ArithmeticError.zero)
+    return Ok(divtrunc(n, d))
+
+
+def calculate(denominator: i64) -> Total:
+    value = 10
+    value = value + divide(21, denominator)?
+    return Ok(value)
+
+
+def handle(outcome: Total) -> i64:
+    match outcome:
+        case Total.ok(value):
+            return value
+        case Total.err(_):
+            return 3
+
+
+def main() -> i64:
+    return handle(calculate(3)) + handle(calculate(0))

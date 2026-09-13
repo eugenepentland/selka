@@ -1,17 +1,24 @@
-module main;
-export Stats;
-export analyze;
-struct Stats{sum:i64,squares:i64}
-fn analyze(values:[4]i64)->Stats{
-    let mut sum=0;
-    let mut squares=0;
-    let mut i=0u64;
-    while i<4u64{
-        let n=values[i];
-        sum+=n;
-        squares+=n*n;
-        i+=1u64;
-    }
-    return new Stats{sum:sum,squares:squares};
-}
-fn main()->i64{return 0;}
+module main
+export Stats
+export analyze
+
+
+class Stats:
+    sum: i64
+    squares: i64
+
+
+def analyze(values: [4]i64) -> Stats:
+    sum = 0
+    squares = 0
+    i = 0u64
+    while i < 4u64:
+        n = values[i]
+        sum += n
+        squares += n * n
+        i += 1u64
+    return Stats(sum=sum, squares=squares)
+
+
+def main() -> i64:
+    return 0

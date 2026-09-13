@@ -1,23 +1,28 @@
-enum DivisionError { zero }
-result Quotient { ok: i64, err: DivisionError }
+enum DivisionError:
+    zero
 
-fn divide(numerator: i64, denominator: i64) -> Quotient {
-    if denominator == 0 {
-        return new Quotient.err(new DivisionError.zero);
-    }
-    return new Quotient.ok(numerator / denominator);
-}
 
-fn value_or_zero(outcome: Quotient) -> i64 {
-    match outcome {
-        Quotient.ok(value) => { return value; },
-        Quotient.err(_) => { return 0; }
-    }
-}
+result Quotient:
+    ok: i64,
+    err: DivisionError
 
-fn main() -> i64 {
-    let first = divide(21, 3);
-    let total = value_or_zero(first) + value_or_zero(divide(21, 0));
-    _ = divide(1, 0);
-    return total;
-}
+
+def divide(numerator: i64, denominator: i64) -> Quotient:
+    if denominator == 0:
+        return Err(DivisionError.zero)
+    return Ok(divtrunc(numerator, denominator))
+
+
+def value_or_zero(outcome: Quotient) -> i64:
+    match outcome:
+        case Quotient.ok(value):
+            return value
+        case Quotient.err(_):
+            return 0
+
+
+def main() -> i64:
+    first = divide(21, 3)
+    total = value_or_zero(first) + value_or_zero(divide(21, 0))
+    _ = divide(1, 0)
+    return total

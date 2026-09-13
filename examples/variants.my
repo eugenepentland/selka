@@ -1,28 +1,40 @@
-enum Color { red, green, blue }
-struct Point { x: i64, y: i64 }
-union Shape { point: Point, radius: i64, empty }
+enum Color:
+    red,
+    green,
+    blue
 
-fn score(shape: Shape) -> i64 {
-    match shape {
-        Shape.empty => { return 0; },
-        Shape.radius(r) => { return r * r; },
-        Shape.point(p) => { return p.x + p.y; }
-    }
-}
 
-fn color_score(color: Color) -> i64 {
-    match color {
-        Color.red => { return 1; },
-        Color.green => { return 2; },
-        Color.blue => { return 3; }
-    }
-}
+class Point:
+    x: i64
+    y: i64
 
-fn main() -> i64 {
-    let shapes = new [3]Shape [
-        new Shape.point(new Point { x: 2, y: 3 }),
-        new Shape.radius(4),
-        new Shape.empty
-    ];
-    return score(shapes[0]) + score(shapes[1]) + score(shapes[2]) + color_score(new Color.blue);
-}
+
+union Shape:
+    point: Point,
+    radius: i64,
+    empty
+
+
+def score(shape: Shape) -> i64:
+    match shape:
+        case Shape.empty:
+            return 0
+        case Shape.radius(r):
+            return r * r
+        case Shape.point(p):
+            return p.x + p.y
+
+
+def color_score(color: Color) -> i64:
+    match color:
+        case Color.red:
+            return 1
+        case Color.green:
+            return 2
+        case Color.blue:
+            return 3
+
+
+def main() -> i64:
+    shapes: [3]Shape = [Shape.point(Point(x=2, y=3)), Shape.radius(4), Shape.empty]
+    return score(shapes[0]) + score(shapes[1]) + score(shapes[2]) + color_score(Color.blue)

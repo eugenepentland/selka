@@ -1,23 +1,19 @@
-struct Box<T: copy> {
+class Box[T]:
     value: T
-}
-union Slot<T: copy> {
+
+
+union Slot[T]:
     none,
     some: T
-}
-fn main() -> i64 {
-    let original = new Box<i64> {
-        value: 7
-    };
-    let mut changed = original;
-    changed.value = 9;
-    let slot = new Slot<Box<i64>>.some(changed);
-    match slot {
-        Slot<Box<i64>>.none => {
-            return 0;
-        },
-        Slot<Box<i64>>.some(box) => {
-            return original.value + box.value;
-        }
-    }
-}
+
+
+def main() -> i64:
+    original = Box[i64](value=7)
+    changed = original
+    changed.value = 9
+    slot: Slot[Box[i64]] = Slot.some(changed)
+    match slot:
+        case Slot.none:
+            return 0
+        case Slot.some(box):
+            return original.value + box.value

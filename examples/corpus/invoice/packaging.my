@@ -1,13 +1,12 @@
-module packaging;
-export fee;
-// Independent packaging tariff; changes are reviewed separately from delivery.
-fn fee(items: i64) -> i64 {
-    let mut cents = 100;
-    if items > 10 {
-        cents += 100;
-    }
-    if items == 0 {
-        return 0;
-    }
-    return cents;
-}
+module packaging
+export fee
+
+
+# Independent packaging tariff; changes are reviewed separately from delivery.
+def fee(items: i64) -> i64:
+    cents = 100
+    if items > 10:
+        cents += 100
+    if items == 0:
+        return 0
+    return cents

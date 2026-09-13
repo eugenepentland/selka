@@ -1,31 +1,31 @@
-struct Box<T: copy> {
+class Box[T]:
     value: T
-}
-union Slot<T: copy> {
+
+
+union Slot[T]:
     none,
     some: T
-}
-fn pack < T: copy >(x: T) -> Box<T> {
-    return new Box<T> {
-        value: x
-    };
-}
-fn extract < T: copy >(box: Box<T>) -> T {
-    return box.value;
-}
-fn slot < T: copy >(x: T) -> Slot<T> {
-    return new Slot<T>.some(x);
-}
-fn choose < T: copy >(x: Slot<T>, fallback: T) -> T {
-    match x {
-        Slot<T>.none => {
-            return fallback;
-        },
-        Slot<T>.some(value) => {
-            return value;
-        }
-    }
-}
-fn main() -> i64 {
-    return extract::< i64 >(pack::< i64 >(choose::< i64 >(slot::< i64 >(7), 0)));
-}
+
+
+def pack[T](x: T) -> Box[T]:
+    return Box[T](value=x)
+
+
+def extract[T](box: Box[T]) -> T:
+    return box.value
+
+
+def slot[T](x: T) -> Slot[T]:
+    return Slot.some(x)
+
+
+def choose[T](x: Slot[T], fallback: T) -> T:
+    match x:
+        case Slot.none:
+            return fallback
+        case Slot.some(value):
+            return value
+
+
+def main() -> i64:
+    return extract[i64](pack[i64](choose[i64](slot[i64](7), 0)))

@@ -1,21 +1,44 @@
-resource File: filesystem;
-result Open { ok: File, err: i64 }
-struct Chunk { bytes: [16]u8, length: u64, eof: bool }
-result Read { ok: Chunk, err: i64 }
-result Written { ok: u64, err: i64 }
-result Status { ok: i64, err: i64 }
+resource File: filesystem
 
-fn work(fs: filesystem_cap) -> Status effects(filesystem) {
-    let mut file = acquire_resource<Open>(fs, new [1]u8 [42u8])?;
-    let chunk = read_resource<Read>(file)?;
-    // The count reports actual write progress. This example sends one byte.
-    let written = write_resource<Written>(file, new [1]u8 [7u8])?;
-    return new Status.ok(cast<i64>(chunk.length) + cast<i64>(written));
-}
+result Open:
+    ok: File,
+    err: i64
 
-fn main(fs: filesystem_cap) -> i64 noalloc {
-    match work(fs) {
-        Status.ok(value) => { return value; },
-        Status.err(code) => { return -code; }
-    }
-}
+
+class Chunk:
+    bytes: [16]u8
+    length: u64
+    eof: bool
+
+
+result Read:
+    ok: Chunk,
+    err: i64
+
+
+result Written:
+    ok: u64,
+    err: i64
+
+
+result Status:
+    ok: i64,
+    err: i64
+
+
+def work(fs: filesystem_cap) -> Status effects(filesystem):
+    request: [1]u8 = [42u8]
+    file = acquire_resource<Open>(fs, request)?
+    chunk = read_resource<Read>(file)?
+    # The count reports actual write progress. This example sends one byte.
+    payload: [1]u8 = [7u8]
+    written = write_resource<Written>(file, payload)?
+    return Ok(cast<i64>(chunk.length) + cast<i64>(written))
+
+
+def main(fs: filesystem_cap) -> i64 noalloc:
+    match work(fs):
+        case Status.ok(value):
+            return value
+        case Status.err(code):
+            return -code
