@@ -65,7 +65,7 @@ pub const Fake = struct {
 /// Exercise repeated ordinary I/O before returning completion ownership for a retry.
 pub const program = declarations ++
     "fn finish<T:copy>(file:File)->Finish<T>{match complete_resource<Finish<T>>(file){Finish<T>.ok(done)=>{return new Finish<T>.ok(done);}," ++
-    "Finish<T>.err(failure)=>{if failure.code==3{return complete_resource<Finish<T>>(failure.resource);}return new Finish<T>.err(failure);}}}" ++
+    "Finish<T>.err(failure)=>{return complete_resource<Finish<T>>(failure.resource);}}}" ++
     "fn work<T:copy>(fs:filesystem_cap)->Status<T>{let mut file=acquire_resource<Open<T>>(fs,singleton::<u8>(42u8))?;" ++
     "let chunk=read_resource<Read<T>>(file)?;let n=write_resource<Written<T>>(file,singleton::<u8>(9u8))?;" ++
     "let second=read_resource<Read<T>>(file)?;" ++
