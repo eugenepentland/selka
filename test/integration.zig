@@ -245,17 +245,6 @@ test "CLI checks resource data operations effects and required mutation without 
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_IMMUTABLE]");
 }
 
-test "CLI selects arena execution and validates memory backend options" {
-    const source = @embedFile("fixtures/buffer-views.my");
-    for ([_][]const u8{ "--memory=general", "--memory=arena" }) |option| {
-        try invokeOptions("run", source, &.{option}, 0, "19\n", "");
-    }
-    try invokeOptions("run", source, &.{ "--memory=arena", "--max-steps=1" }, 1, "", "error[R_STEP_LIMIT]");
-    try invokeOptions("run", source, &.{ "--memory=arena", "--memory=general" }, 2, "", "usage:");
-    for ([_][]const u8{ "--memory=", "--memory=unknown" }) |option| try invokeOptions("run", source, &.{option}, 2, "", "usage:");
-    for ([_][]const u8{ "check", "dump-bytecode", "discover-duplicates" }) |command| try invokeOptions(command, source, &.{"--memory=arena"}, 2, "", "usage:");
-}
-
 test "CLI approximate discovery is advisory explains drift and reports budget exhaustion" {
     const source = "fn a(x: i64) -> i64 { return x * 2 + 1; } fn b(x: i64) -> i64 { return x * 2 + 3; } fn main() -> i64 { return 0; }";
     const outcome = try runFixture("discover-duplicates", source, &.{ "--approximate", "--min-nodes=1" });

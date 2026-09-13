@@ -2,6 +2,8 @@
 const std = @import("std");
 const language = @import("mylang");
 const host = language.host_functions;
+/// The declared host effect bit shared by every trusted registration.
+const host_effect = @import("mylang").effect_set.bit(.host);
 /// Located guest failure, separate from VM traps and host failures.
 pub const Issue = struct { code: i64, file: i64, position: i64 };
 /// Stable-address context borrowing documents and owning the unpublished output.
@@ -32,7 +34,7 @@ pub const Context = struct {
                 error.HostUnknownFunction => continue,
                 else => return err,
             };
-            try registry.register(rule.name, .{ .signature = .{ .parameters = rule.args, .result = rule.result, .effects = 1 << 6 }, .context = self, .invoke = rule.invoke }, 1 << 6);
+            try registry.register(rule.name, .{ .signature = .{ .parameters = rule.args, .result = rule.result, .effects = host_effect }, .context = self, .invoke = rule.invoke }, host_effect);
         }
     }
     fn context(call: *host.Call) *Context {

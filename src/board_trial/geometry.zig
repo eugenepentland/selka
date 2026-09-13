@@ -4,6 +4,8 @@ const language = @import("mylang");
 const host = language.host_functions;
 const values = @import("values.zig");
 const Kernel = @import("kernel.zig").Kernel;
+/// The declared host effect bit shared by every trusted registration.
+const host_effect = @import("mylang").effect_set.bit(.host);
 /// Stable callback context borrowing the compiled nominal catalog.
 pub const Geometry = struct {
     meta: values.Meta,
@@ -13,10 +15,10 @@ pub const Geometry = struct {
         const rect = try self.meta.find("model::Rect");
         const parameters = [_]host.Parameter{ .{ .ty = rect }, .{ .ty = rect } };
         try registry.register("geometry::overlap", .{
-            .signature = .{ .parameters = &parameters, .result = .{ .ty = try self.meta.find("model::Overlap") }, .effects = 1 << 6 },
+            .signature = .{ .parameters = &parameters, .result = .{ .ty = try self.meta.find("model::Overlap") }, .effects = host_effect },
             .context = self,
             .invoke = invoke,
-        }, 1 << 6);
+        }, host_effect);
     }
     fn invoke(call: *host.Call) host.CallbackError!values.Value {
         const self: *Geometry = @ptrCast(@alignCast(call.context.?));

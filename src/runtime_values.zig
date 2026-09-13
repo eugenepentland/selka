@@ -21,7 +21,7 @@ pub const Type = enum(usize) {
     environment_cap,
     unit,
     _,
-    pub const record_base: usize = 16;
+    pub const record_base: usize = 15;
     /// Return the compact builtin capability index, or null for non-capabilities.
     pub fn capabilityIndex(self: Type) ?u3 {
         return switch (self) {

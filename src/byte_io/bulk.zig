@@ -2,6 +2,8 @@
 const std = @import("std");
 const language = @import("mylang");
 const host = language.host_functions;
+/// The declared host effect bit shared by every trusted registration.
+const host_effect = @import("mylang").effect_set.bit(.host);
 /// Maximum useful byte payload in one copied host call.
 pub const block_size = 256;
 /// Bind the callbacks to a host context without importing its registration module.
@@ -14,7 +16,7 @@ pub fn Operations(comptime Context: type) type {
                     error.HostUnknownFunction => continue,
                     else => return err,
                 };
-                if (signature.parameters.len != 1 or signature.effects != 1 << 6) return error.HostSignatureMismatch;
+                if (signature.parameters.len != 1 or signature.effects != host_effect) return error.HostSignatureMismatch;
                 const block = if (index == 0) signature.result.ty else signature.parameters[0].ty;
                 if ((if (index == 0) signature.parameters[0].ty else signature.result.ty) != .i64) return error.HostSignatureMismatch;
                 if (!block.isAggregate()) return error.HostSignatureMismatch;
@@ -26,7 +28,7 @@ pub fn Operations(comptime Context: type) type {
                 if (!array_type.isAggregate()) return error.HostSignatureMismatch;
                 const array = registry.program.records[array_type.recordIndex()].shape.array orelse return error.HostSignatureMismatch;
                 if (array.length != block_size or array.element != .u8 or array.key != null) return error.HostSignatureMismatch;
-                try registry.register(name, .{ .signature = signature, .context = state, .invoke = if (index == 0) read else write }, 1 << 6);
+                try registry.register(name, .{ .signature = signature, .context = state, .invoke = if (index == 0) read else write }, host_effect);
             }
         }
         fn context(call: *host.Call) *Context {

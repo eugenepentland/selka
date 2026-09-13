@@ -2,6 +2,8 @@
 const std = @import("std");
 const language = @import("mylang");
 const host = language.host_functions;
+/// The declared host effect bit shared by every trusted registration.
+const host_effect = @import("mylang").effect_set.bit(.host);
 /// Borrow raw input and own unpublished output for one guest invocation.
 pub const Context = struct {
     allocator: std.mem.Allocator,
@@ -16,9 +18,9 @@ pub const Context = struct {
     pub fn install(self: *Context, registry: *language.vm_host.Registry) language.vm_host.Error!void {
         const scalar = host.Parameter{ .ty = .i64 };
         const octet = host.Parameter{ .ty = .u8 };
-        try registry.register("io::length", .{ .signature = .{ .parameters = &.{}, .result = scalar, .effects = 1 << 6 }, .context = self, .invoke = length }, 1 << 6);
-        try registry.register("io::byte", .{ .signature = .{ .parameters = &.{scalar}, .result = octet, .effects = 1 << 6 }, .context = self, .invoke = byte }, 1 << 6);
-        try registry.register("io::put", .{ .signature = .{ .parameters = &.{octet}, .result = scalar, .effects = 1 << 6 }, .context = self, .invoke = put }, 1 << 6);
+        try registry.register("io::length", .{ .signature = .{ .parameters = &.{}, .result = scalar, .effects = host_effect }, .context = self, .invoke = length }, host_effect);
+        try registry.register("io::byte", .{ .signature = .{ .parameters = &.{scalar}, .result = octet, .effects = host_effect }, .context = self, .invoke = byte }, host_effect);
+        try registry.register("io::put", .{ .signature = .{ .parameters = &.{octet}, .result = scalar, .effects = host_effect }, .context = self, .invoke = put }, host_effect);
         try @import("bulk.zig").Operations(Context).install(self, registry);
     }
     fn context(call: *host.Call) *Context {
