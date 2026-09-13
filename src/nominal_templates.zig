@@ -120,7 +120,11 @@ pub const Index = struct {
     fn addByteString(self: *Index) Error!void {
         try self.addBuiltin("bytes", 0, .buffer);
         const declaration = &self.declarations.items[self.names.get("bytes") orelse return];
-        if (declaration.builtin_name != null) declaration.fields = try self.context.allocator.dupe(Field, &.{.{ .name = .{ .start = 0, .end = 0 }, .ty = .{ .builtin = .u8 } }});
+        if (declaration.builtin_name == null) return;
+        declaration.fields = try self.context.allocator.dupe(Field, &.{.{ .name = .{ .start = 0, .end = 0 }, .ty = .{ .builtin = .u8 } }});
+        // Guarantees are inferred once; a byte string registered from a later type lookup sets its own.
+        declaration.guarantees.include(.copy);
+        declaration.guarantees.include(.storable);
     }
     fn addFloat(self: *Index) Error!void {
         if (self.names.contains("float") or self.syntax.aliases.contains("float")) return;

@@ -213,7 +213,7 @@ test "PY-BYTES-1 byte strings are immutable and never convert through str" {
     try rejected("def main() -> int:\n    raw = b\"ab\"\n    raw.append(1)\n    return 0\n", "E_COLLECTION_METHOD");
     try rejected("def main() -> int:\n    return len(str(b\"ab\"))\n", "E_TEXT_CONVERSION");
     try rejected("def main() -> int:\n    raw = b\"ab\"\n    return len(raw - raw)\n", "E_TEXT_OPERATOR");
-    try rejected("def main() -> int:\n    values: dict[bytes, int] = {}\n    return len(values)\n", "E_GENERIC_REQUIREMENT");
+    try rejected("def main() -> int:\n    values: dict[bytes, int] = {}\n    return len(values)\n", "E_DICT_KEY");
     try rejected("def main() -> int:\n    return len(bytes(\"ab\"))\n", "E_BYTES_CONVERSION");
     try rejected("def main() -> int:\n    return len(b\"ab\".encode())\n", "E_COLLECTION_METHOD");
     try rejected(
