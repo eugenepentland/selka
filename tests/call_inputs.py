@@ -18,7 +18,17 @@ def main():
     with tempfile.TemporaryDirectory(prefix='mylang-call-inputs-') as directory:
         root = Path(directory)
         entry, manifest, output = (root / name for name in ('main.my', 'inputs.json', 'bindings.py'))
-        entry.write_text('module main; import config; export read; fn read()->i64{return i64(config::value());} fn main()->i64{return 0;}')
+        entry.write_text(
+            'module main\n'
+            'import config\n'
+            'export read\n'
+            '\n\n'
+            'def read() -> i64:\n'
+            '    return i64(config.value())\n'
+            '\n\n'
+            'def main() -> i64:\n'
+            '    return 0\n'
+        )
 
         def write(value, ty='i64', module='config'):
             manifest.write_text(json.dumps({'version': 1, 'module': module, 'values': [{'name': 'value', 'type': ty, 'value': str(value)}]}))

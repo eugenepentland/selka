@@ -2,6 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
+const io_render = @import("io_render.zig");
 
 fn execute(source: []const u8, expected: i64) !void {
     var c = try language.Compilation.init(t.allocator, "format.my", source);
@@ -17,7 +18,7 @@ fn reject(source: []const u8, code: []const u8) !void {
 }
 
 // spec: PY-FSTRING-1
-test "format strings interpolate expressions and convert every scalar" {
+test "format strings interpolate expressions and render every value" {
     try execute(
         \\def label(count: int, items: list[int]) -> str:
         \\    return f"total {count} of {len(items)} items"
@@ -57,13 +58,14 @@ test "doubled braces are literal and an empty format string is empty text" {
 // spec-case: PY-FSTRING-2
 test "malformed format strings and unconvertible values are rejected" {
     const header = "def main() -> int:\n    x = 1\n    _ = ";
+    const capability = "def main(fs: Filesystem) -> int:\n    _ = f\"{fs}\"\n    return 0\n";
+    try reject(capability, "E_TEXT_CONVERSION");
     const cases = [_]struct { body: []const u8, code: []const u8 }{
         .{ .body = "f\"{}\"", .code = "E_FORMAT_STRING" },
         .{ .body = "f\"{x:.2f}\"", .code = "E_FORMAT_STRING" },
         .{ .body = "f\"a}b\"", .code = "E_FORMAT_STRING" },
         .{ .body = "f\"{1 2}\"", .code = "E_FORMAT_STRING" },
         .{ .body = "f\"{x\"", .code = "E_FORMAT_STRING" },
-        .{ .body = "f\"{[1, 2]}\"", .code = "E_TEXT_CONVERSION" },
     };
     for (cases) |case| {
         const text = try std.mem.concat(t.allocator, u8, &.{ header, case.body, "\n    return 0\n" });
@@ -73,10 +75,49 @@ test "malformed format strings and unconvertible values are rejected" {
 }
 
 // spec-case: PY-FSTRING-1
-test "an f prefix stays an ordinary identifier in legacy brace sources" {
+test "an f before anything but a quote stays an ordinary identifier" {
     try execute(
         \\def main() -> i64:
         \\    f = 42
         \\    return f
     , 42);
+}
+
+// spec-case: PY-FSTRING-1
+test "a hole renders lists, dicts, records and variants the way print writes them" {
+    try execute(
+        \\class Point:
+        \\    x: int
+        \\    y: int
+        \\
+        \\enum Colour:
+        \\    red,
+        \\    green
+        \\
+        \\def pick(n: int) -> Result[int, str]:
+        \\    if n < 0:
+        \\        return Err("nope")
+        \\    return Ok(n)
+        \\
+        \\def main() -> int:
+        \\    score = 0
+        \\    if f"{[1, 2]}" == "[1, 2]":
+        \\        score = score + 1
+        \\    counts: dict[str, int] = {"k": 1}
+        \\    if f"{counts}" == "{'k': 1}":
+        \\        score = score + 2
+        \\    if f"{Point(x=1, y=2)} {Colour.green}" == "Point(x=1, y=2) Colour.green":
+        \\        score = score + 4
+        \\    if f"{pick(3)} {pick(-1)}" == "Ok(3) Err('nope')":
+        \\        score = score + 8
+        \\    if f"{b'ab'}" == "b'ab'":
+        \\        score = score + 16
+        \\    return score
+    , 31);
+}
+
+// spec-case: PY-FSTRING-2
+test "renderAlloc releases its partial buffer when the allocator fails" {
+    var failing = t.FailingAllocator.init(t.allocator, .{ .fail_index = 0 });
+    try t.expectError(error.OutOfMemory, io_render.renderAlloc(failing.allocator(), &.{}, .{ .i64 = 42 }));
 }

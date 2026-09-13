@@ -1218,7 +1218,7 @@ const Step = struct {
             defer input.release(allocator);
             const input_type = input.typeOf();
             const floating = input_type.isAggregate() and std.mem.eql(u8, program.records[input_type.recordIndex()].name, "float");
-            const converted = managed_text.convert(self.execution.managed_heap, ty, input, floating) catch |err| return self.collectionFailure(err);
+            const converted = managed_text.convert(self.execution.managed_heap, ty, input, floating, program.records) catch |err| return self.collectionFailure(err);
             try pushOwned(stack, allocator, converted);
             return false;
         }

@@ -15,6 +15,32 @@ driver = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(driver)
 
 
+ENTRY_SOURCE = """module main
+export Point
+
+
+class Point:
+    n: i64
+
+
+def main() -> i64:
+    return 0
+"""
+
+SHAPE_SOURCE = """module main
+export Point
+
+
+class Point:
+    n: i64
+    flag: bool
+
+
+def main() -> i64:
+    return 0
+"""
+
+
 def check_wrapper_report_compatibility(path, stored, request):
     """Optional wrapper metadata must be complete and valid after checksum verification."""
     legacy = json.loads(stored)
@@ -62,7 +88,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='mylang-binding-cache-') as temporary:
         root = Path(temporary)
         entry = root / 'main.my'
-        entry.write_text('module main; export Point; struct Point { n: i64 } fn main()->i64{return 0;}')
+        entry.write_text(ENTRY_SOURCE)
         output = root / 'bindings.py'
         cache = root / 'cache'
 
@@ -81,7 +107,7 @@ def main():
             assert warm['cache'] == 'hit' and warm['generation'] == 'skipped' and warm['installation'] == 'unchanged'
             assert generation.call_count == 0 and frontend.call_count == 1
             assert (output.stat().st_ino, output.stat().st_mtime_ns) == (identity.st_ino, identity.st_mtime_ns)
-            entry.write_text(entry.read_text() + '\n// private source change\n')
+            entry.write_text(entry.read_text() + '\n# private source change\n')
             private = build()
             assert private['cache'] == 'hit' and private['schema_source_sha256'] != first['schema_source_sha256']
             assert private['request_sha256'] == first['request_sha256']
@@ -155,13 +181,13 @@ def main():
             else:
                 raise AssertionError('compiler replacement was ignored')
         assert set(cache.iterdir()) == before_entries and output.read_bytes() == original
-        entry.write_text('module main; export Point; struct Point { n: i64, flag: bool } fn main()->i64{return 0;}')
+        entry.write_text(SHAPE_SOURCE)
         shape = build()
         assert shape['cache'] == 'miss' and shape['schema_sha256'] != first['schema_sha256']
         valid_source = entry.read_text()
         valid_output = output.read_bytes()
         before_entries = set(cache.iterdir())
-        entry.write_text(valid_source + 'fn broken()->i64{return true;}')
+        entry.write_text(valid_source + '\n\ndef broken() -> i64:\n    return True\n')
         with patch.object(driver, 'generate', wraps=driver.generate) as generation:
             try:
                 build()

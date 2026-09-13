@@ -28,9 +28,9 @@ def main():
     compiler = parser.parse_args().compiler.resolve()
     with tempfile.TemporaryDirectory(prefix='dependency graph ') as temporary:
         root = Path(temporary)
-        (root / 'main.my').write_text('module main; import leaf as renamed; import config.values as v; fn main()->i64 { return renamed::value()+v::count(); }')
+        (root / 'main.my').write_text('module main\nimport leaf as renamed\nimport config.values as v\n\ndef main() -> i64:\n    return renamed.value() + v.count()\n')
         leaf = root / 'leaf.my'
-        leaf.write_text('module leaf; export value; fn value()->i64 { return 4; }')
+        leaf.write_text('module leaf\nexport value\n\ndef value() -> i64:\n    return 4\n')
         manifest = root / 'inputs.json'
         manifest.write_text(json.dumps({'version': 1, 'module': 'config.values', 'values': [{'name': 'count', 'type': 'i64', 'value': '7'}]}))
 
@@ -62,9 +62,9 @@ def main():
         assert relocated['implementation'] == first['implementation']
         manifest.write_text(manifest.read_text() + '\n')
         assert report()['manifests'][0]['sha256'] != first['manifests'][0]['sha256']
-        leaf.write_text(leaf.read_text().replace('return 4;', 'return 5;'))
+        leaf.write_text(leaf.read_text().replace('return 4', 'return 5'))
         assert next(s for s in report()['inputs'] if s['module'] == 'leaf')['sha256'] != sources['leaf']['sha256']
-        for text in ('module leaf; export value; fn value()->i64 { return true; }', 'module leaf; import missing;'):
+        for text in ('module leaf\nexport value\n\ndef value() -> i64:\n    return True\n', 'module leaf\nimport missing\n'):
             leaf.write_text(text)
             result = invoke()
             assert result.returncode != 0 and not result.stdout and b'E_' in result.stderr, result

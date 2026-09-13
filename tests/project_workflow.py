@@ -21,7 +21,7 @@ class WorkflowTests(unittest.TestCase):
         self.root = self.base / 'app'
         self.root.mkdir()
         self.entry = self.root / 'main.my'
-        self.entry.write_text('module main;fn main()->i64{return 42;}')
+        self.entry.write_text('module main\n\ndef main() -> i64:\n    return 42\n')
         self.manifest = self.root / 'verify.json'
         self.write_manifest()
 
@@ -91,7 +91,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertLess(len(json.dumps(summary)), 12000)
 
     def test_compile_failure_excerpt_and_cli_status(self):
-        self.entry.write_text('module main;fn main()->i64{return unknown;}')
+        self.entry.write_text('module main\n\ndef main() -> i64:\n    return unknown\n')
         result = self.run_cli(self.base / 'compile-failed.json')
         self.assertEqual(1, result.returncode)
         self.assertIn('E_UNKNOWN_NAME', json.dumps(json.loads(result.stdout)['diagnostics']))
@@ -107,7 +107,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn('failures', project.compact(failed)['verification'])
 
     def test_compile_failure_does_not_execute_tests(self):
-        self.entry.write_text('module main;fn main()->i64{return unknown;}')
+        self.entry.write_text('module main\n\ndef main() -> i64:\n    return unknown\n')
         self.write_manifest(code="from pathlib import Path;Path('ran').write_text('bad');print(42)")
         report = self.run_project()
         self.assertEqual('failed', report['status'])
@@ -117,7 +117,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn('diagnostics', report)
 
     def test_mutation_during_tests_discards_success(self):
-        self.write_manifest(code="from pathlib import Path;Path('main.my').write_text('module main;fn main()->i64{return 3;}');print(42)")
+        self.write_manifest(code="from pathlib import Path;Path('main.my').write_text('module main\\n\\ndef main() -> i64:\\n    return 3\\n');print(42)")
         self.assertEqual('stale', self.run_project()['status'])
 
     def test_v1_test_and_fixture_changes_invalidate_acceptance(self):
@@ -158,7 +158,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(1, counts['cached'])
         self.assertEqual(1, counts['passed'])
         self.assertEqual(0, counts['executed'])
-        self.entry.write_text('module main;fn main()->i64{return 43;}')
+        self.entry.write_text('module main\n\ndef main() -> i64:\n    return 43\n')
         changed = self.run_project()
         self.assertEqual('passed', changed['status'])
         self.assertNotEqual(first['identity'], changed['identity'])

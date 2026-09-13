@@ -954,15 +954,15 @@ const Checker = struct {
         }, try b.read(source_values.output));
     }
 
-    /// Convert one interpolated value to text, reusing the `str` conversion rules.
+    /// Convert one interpolated value to text. A hole takes whatever `print` can
+    /// render, through the same renderer, so one value has one spelling.
     fn formatPart(self: *Checker, value: typed.NodeId, str_type: typed.Type, span: source.Span) Error!typed.NodeId {
         const ty_value = self.nodes.items[@backingInt(value)].ty;
         if (ty_value == str_type) return value;
-        const numeric = ty_value.isInteger() or ty_value == .bool or ty_value == .unit;
-        if (!numeric and !numeric_surface.isFloat(ty_value, self.catalog.records)) return self.sink.fail(
+        if (!io_render.printable(ty_value, self.catalog.records)) return self.sink.fail(
             "E_TEXT_CONVERSION",
             span,
-            "format string interpolation requires a scalar or str value",
+            "format string interpolation requires a value with a rendering; capabilities, open files and callbacks have none",
         );
         const id: typed.NodeId = @fromBackingInt(self.nodes.items.len);
         try self.nodes.append(self.allocator, .{ .span = span, .ty = str_type, .data = .{ .cast = value } });

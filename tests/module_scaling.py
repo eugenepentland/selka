@@ -19,13 +19,13 @@ def invoke(compiler, command, entry, *options, status=0, code=None):
 def chain(directory, count):
     for i in range(count):
         name = 'main' if i == 0 else f'm{i}'
-        imports = f'import m{i + 1} as next;\n' if i + 1 < count else ''
-        exports = '' if i == 0 else 'export value;\n'
+        imports = f'import m{i + 1} as next\n' if i + 1 < count else ''
+        exports = '' if i == 0 else 'export value\n'
         function = 'main' if i == 0 else 'value'
-        expression = 'next::value() + 1' if imports else '1'
+        expression = 'next.value() + 1' if imports else '1'
         (directory / f'{name}.my').write_text(
-            f'module {name};\n{imports}{exports}fn {function}() -> i64 {{\n'
-            f'    return {expression};\n}}\n', encoding='utf-8')
+            f'module {name}\n{imports}{exports}def {function}() -> i64:\n'
+            f'    return {expression}\n', encoding='utf-8')
     return directory / 'main.my'
 
 
@@ -35,10 +35,10 @@ def dense(directory, edge_count):
         name = 'main' if i == 0 else f'm{i}'
         targets = list(range(i + 1, 92))[:remaining]
         remaining -= len(targets)
-        imports = ''.join(f'import m{j};\n' for j in targets)
+        imports = ''.join(f'import m{j}\n' for j in targets)
         function = 'main' if i == 0 else 'value'
         (directory / f'{name}.my').write_text(
-            f'module {name};\n{imports}fn {function}() -> i64 {{\n    return 0;\n}}\n',
+            f'module {name}\n{imports}def {function}() -> i64:\n    return 0\n',
             encoding='utf-8')
     assert remaining == 0
     return directory / 'main.my'
@@ -73,19 +73,19 @@ def main():
         assert 'm254.my:5:' in limited.stderr, limited.stderr
         leaf = deep / 'm255.my'
         saved = leaf.read_text(encoding='utf-8')
-        leaf.write_text(saved.replace('return 1;', 'return 2;'), encoding='utf-8')
+        leaf.write_text(saved.replace('return 1', 'return 2'), encoding='utf-8')
         changed = invoke(compiler, 'list-modules', entry).stdout
         before = [line for line in graph.splitlines() if ' path=' in line]
         after = [line for line in changed.splitlines() if ' path=' in line]
         assert sum(a != b for a, b in zip(before, after)) == 1
         assert invoke(compiler, 'run-project', entry, '--print-result').stdout == '257\n'
-        leaf.write_text(saved.replace('return 1;', 'return true;'), encoding='utf-8')
+        leaf.write_text(saved.replace('return 1', 'return True'), encoding='utf-8')
         invalid = invoke(compiler, 'check-project', entry, status=1)
         assert invalid.stdout == '' and 'm255.my:4:' in invalid.stderr, invalid.stderr
         for command in ('report-project-quality', 'discover-project-duplicates'):
             rejected = invoke(compiler, command, entry, status=1)
             assert rejected.stdout == '' and 'm255.my:4:' in rejected.stderr, rejected.stderr
-        leaf.write_text(saved.replace('module m255;', 'module m255;\nimport main;'), encoding='utf-8')
+        leaf.write_text(saved.replace('module m255', 'module m255\nimport main'), encoding='utf-8')
         cycle = invoke(compiler, 'check-project', entry, status=1, code='E_IMPORT_CYCLE')
         assert 'm255.my:2:' in cycle.stderr and 'main.my:1:' in cycle.stderr, cycle.stderr
         chain(deep, 257)

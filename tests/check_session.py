@@ -15,8 +15,8 @@ def main():
     with tempfile.TemporaryDirectory(prefix='mylang-check-session-') as directory:
         root = Path(directory)
         entry, data = root / 'main.my', root / 'data.my'
-        entry.write_text('module main;import data;fn main()->i64{return data::value();}')
-        valid = 'module data;export value;fn value()->i64{let unused=3;return 7;}'
+        entry.write_text('module main\nimport data\n\n\ndef main() -> i64:\n    return data.value()\n')
+        valid = 'module data\nexport value\n\n\ndef value() -> i64:\n    unused = 3\n    return 7\n'
         data.write_text(valid)
         with tempfile.TemporaryFile() as diagnostics:
             process = subprocess.Popen([compiler, 'check-session', str(entry)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=diagnostics)
@@ -50,10 +50,10 @@ def main():
                     edited = request('check')
                     assert edited['reuse'] == {'hits': 1, 'misses': 1}
                     assert edited['functions']['checked'] == 3 and edited['functions']['reused'] == 1
-                    data.write_text(valid.replace('return 7', 'return true'))
+                    data.write_text(valid.replace('return 7', 'return True'))
                     assert request('check', 1)['reuse'] == {'hits': 1, 'misses': 1}
                     assert request('check', 1)['reuse'] == {'hits': 2, 'misses': 0}
-                    data.write_text(valid.replace('export value;', ''))
+                    data.write_text(valid.replace('export value\n', ''))
                     request('check', 1)
                     data.unlink()
                     request('check', 1)
@@ -86,7 +86,7 @@ def main():
         bad = subprocess.run([compiler, 'check-session', str(entry), '--max-steps=1'], input=b'check\n', capture_output=True)
         assert bad.returncode == 2 and not bad.stdout
         manifest = root / 'inputs.json'
-        entry.write_text('module main;import config;fn main()->i64{return config::value();}')
+        entry.write_text('module main\nimport config\n\n\ndef main() -> i64:\n    return config.value()\n')
         manifest.write_text(json.dumps({'version': 1, 'module': 'config', 'values': [{'name': 'value', 'type': 'i64', 'value': '7'}]}))
         with tempfile.TemporaryFile() as diagnostics:
             process = subprocess.Popen([compiler, 'check-session', str(entry), '--inputs=' + str(manifest)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=diagnostics)

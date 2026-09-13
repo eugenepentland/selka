@@ -19,7 +19,7 @@ def main():
         library = root / 'library'
         library.mkdir()
         lib = library / 'numbers.my'
-        source = 'module numbers;export answer;fn answer()->i64{return 42;}'
+        source = 'module numbers\nexport answer\n\ndef answer() -> i64:\n    return 42\n'
         lib.write_text(source)
         config, lock, receipt = (root / name for name in ('packages.json', 'lock.json', 'receipt.json'))
         config.write_text(json.dumps({'packages': [{'name': 'numbers', 'root': 'library'}]}))
@@ -36,7 +36,7 @@ def main():
             folder = root / app
             folder.mkdir()
             entry = folder / 'main.my'
-            entry.write_text('module main;import numbers;fn main()->i64{return numbers::answer();}')
+            entry.write_text('module main\nimport numbers\n\ndef main() -> i64:\n    return numbers.answer()\n')
             assert invoke('build', entry, '--lock', lock, '--compiler', compiler,
                           '--command', 'run-project', '--receipt', receipt).stdout == '42\n'
             report = json.loads(receipt.read_text())

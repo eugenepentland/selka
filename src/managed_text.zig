@@ -2,6 +2,7 @@
 const std = @import("std");
 const gc = @import("gc_heap.zig");
 const values = @import("runtime_values.zig");
+const Record = @import("typed.zig").Record;
 const Value = values.Value;
 const Type = values.Type;
 pub const Error = gc.Error || error{ InvalidUtf8, EmptySeparator };
@@ -126,13 +127,14 @@ pub fn join(heap: *gc.Heap, separator: Value, list: Value) Error!Value {
     return result;
 }
 
-/// Format scalar values using Python spellings; float inputs carry native bits.
-pub fn convert(heap: *gc.Heap, ty: Type, value: Value, floating: bool) Error!Value {
-    if (value == .managed) {
+/// Format a value using Python spellings; float inputs carry native bits, and a
+/// record, variant, list or dictionary renders exactly as `print` writes it.
+pub fn convert(heap: *gc.Heap, ty: Type, value: Value, floating: bool, records: []const Record) Error!Value {
+    if (value == .managed and value.typeOf() == ty) {
         _ = try object(heap, value);
-        if (value.typeOf() != ty) return error.TypeMismatch;
         return value.retain();
     }
+    if (value == .managed or value == .aggregate and !floating) return rendered(heap, ty, value, records);
     if (value == .unit) return create(heap, ty, "None");
     if (value == .bool) return create(heap, ty, if (value.bool) "True" else "False");
     const bytes = if (floating) formatted: {
@@ -152,6 +154,16 @@ pub fn convert(heap: *gc.Heap, ty: Type, value: Value, floating: bool) Error!Val
         defer heap.allocator.free(suffixed);
         return create(heap, ty, suffixed);
     }
+    return create(heap, ty, bytes);
+}
+
+/// Render one value through the shared `print` renderer and copy it into a string.
+fn rendered(heap: *gc.Heap, ty: Type, value: Value, records: []const Record) Error!Value {
+    const bytes = @import("io_render.zig").renderAlloc(heap.allocator, records, value) catch |err| switch (err) {
+        error.OutOfMemory => return error.OutOfMemory,
+        else => return error.TypeMismatch,
+    };
+    defer heap.allocator.free(bytes);
     return create(heap, ty, bytes);
 }
 

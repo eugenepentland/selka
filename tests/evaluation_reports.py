@@ -43,9 +43,10 @@ def main():
         root = Path(temporary) / 'original'
         root.mkdir()
         entry = root / 'main.my'
-        entry.write_text('module main; import helper as h; fn main()->i64{return h::value();}\n')
+        entry.write_text('module main\nimport helper as h\n\n\ndef main() -> i64:\n    return h.value()\n')
         helper = root / 'helper.my'
-        helper.write_text('module helper; export value; fn value()->i64{return 9223372036854775807;}\n')
+        helper.write_text('module helper\nexport value\n\n\n'
+                          'def value() -> i64:\n    return 9223372036854775807\n')
         first = invoke(compiler, entry)
         assert first == invoke(compiler, entry), 'nondeterministic report'
         planned = invoke(compiler, entry, request=True)
@@ -75,21 +76,21 @@ def main():
             changed = invoke(compiler, entry, option)
             assert changed['request_sha256'] != first['request_sha256']
             assert changed['result'] == first['result']
-        helper.write_text(helper.read_text() + '// source-only change\n')
+        helper.write_text(helper.read_text() + '# source-only change\n')
         changed = invoke(compiler, entry)
         assert changed['request_sha256'] != first['request_sha256']
         assert changed['result'] == first['result']
         assert changed['request']['sources'][1] == request['sources'][1]
-        entry.write_text(entry.read_text().replace('as h;', 'as other;').replace('h::', 'other::'))
+        entry.write_text(entry.read_text().replace('as h\n', 'as other\n').replace('h.value()', 'other.value()'))
         aliased = invoke(compiler, entry)
         assert aliased['request_sha256'] != changed['request_sha256']
         assert aliased['result'] == first['result']
         assert aliased['request']['sources'][1]['imports'][0]['alias'] == 'other'
-        helper.write_text('module helper; export value; fn value()->i64{return 1/0;}')
+        helper.write_text('module helper\nexport value\n\n\ndef value() -> i64:\n    return 1 // 0\n')
         invoke(compiler, entry, '--max-steps=1', request=True)
         assert 'R_DIVISION_BY_ZERO' in invoke(compiler, entry, status=1).stderr
         assert 'R_EVAL_MEMORY' in invoke(compiler, entry, '--max-eval-bytes=1', status=1).stderr
-        helper.write_text('module helper; export value; fn value()->i64{return true;}')
+        helper.write_text('module helper\nexport value\n\n\ndef value() -> i64:\n    return True\n')
         invoke(compiler, entry, status=1)
         invoke(compiler, entry, status=1, request=True)
         print('evaluation receipts: canonical request hash, executable/source identities, '

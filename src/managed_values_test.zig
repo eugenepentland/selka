@@ -188,17 +188,17 @@ test "managed dictionary source literals indexing alias updates get and snapshot
 test "managed text convert formats Unicode strings integers booleans and None" {
     var heap = gc.Heap.init(t.allocator);
     defer heap.deinit();
-    const actual = try text.convert(&heap, str_type, .{ .i64 = -42 }, false);
+    const actual = try text.convert(&heap, str_type, .{ .i64 = -42 }, false, &.{});
     defer actual.release(t.allocator);
     const expected = try text.create(&heap, str_type, "-42");
     defer expected.release(t.allocator);
     try t.expect(try text.equal(&heap, expected, actual));
-    const truth = try text.convert(&heap, str_type, .{ .bool = true }, false);
+    const truth = try text.convert(&heap, str_type, .{ .bool = true }, false, &.{});
     defer truth.release(t.allocator);
     const encoded = try text.encode(&heap, truth);
     defer t.allocator.free(encoded);
     try t.expectEqualStrings("True", encoded);
-    const absent = try text.convert(&heap, str_type, .unit, false);
+    const absent = try text.convert(&heap, str_type, .unit, false, &.{});
     defer absent.release(t.allocator);
     try t.expectEqual(@as(usize, 4), try text.len(&heap, absent));
 }
