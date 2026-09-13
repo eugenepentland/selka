@@ -89,13 +89,14 @@ fn emit(a: std.mem.Allocator, writer: *std.Io.Writer, catalog: *native.Catalog, 
 
 test "native descriptors are catalog-order independent" {
     const span = @import("source.zig").Span{ .start = 0, .end = 0 };
+    const base = typed.Type.record_base;
     const records_a = [_]typed.Record{
-        .{ .id = @fromBackingInt(16), .name = "A", .declaration = span, .fields = &.{}, .shape = .{ .domain = .i64 } },
-        .{ .id = @fromBackingInt(17), .name = "B", .declaration = span, .fields = &.{}, .shape = .{ .array = .{ .element = @fromBackingInt(16), .length = 2 } } },
+        .{ .id = @fromBackingInt(base), .name = "A", .declaration = span, .fields = &.{}, .shape = .{ .domain = .i64 } },
+        .{ .id = @fromBackingInt(base + 1), .name = "B", .declaration = span, .fields = &.{}, .shape = .{ .array = .{ .element = @fromBackingInt(base), .length = 2 } } },
     };
     const records_b = [_]typed.Record{
-        .{ .id = @fromBackingInt(16), .name = "B", .declaration = span, .fields = &.{}, .shape = .{ .array = .{ .element = @fromBackingInt(17), .length = 2 } } },
-        .{ .id = @fromBackingInt(17), .name = "A", .declaration = span, .fields = &.{}, .shape = .{ .domain = .i64 } },
+        .{ .id = @fromBackingInt(base), .name = "B", .declaration = span, .fields = &.{}, .shape = .{ .array = .{ .element = @fromBackingInt(base + 1), .length = 2 } } },
+        .{ .id = @fromBackingInt(base + 1), .name = "A", .declaration = span, .fields = &.{}, .shape = .{ .domain = .i64 } },
     };
     var first = try native.Catalog.initRecords(std.testing.allocator, &records_a);
     defer first.deinit();

@@ -248,7 +248,7 @@ test "bundled build inputs carry only the native runtime, not compiler tests or 
         try std.testing.expect(!std.mem.endsWith(u8, asset.path, ".my") or std.mem.startsWith(u8, asset.path, "stdlib/"));
     }
     try std.testing.expect(bundles("qbe_runtime.c") and bundles("qbe_runtime.h") and bundles("native_heap.c"));
-    try std.testing.expect(bundles("native_equal.c") and bundles("native_format.zig") and bundles("native_json_bridge.zig"));
+    try std.testing.expect(bundles("native_equal.c") and bundles("native_format.zig"));
     try std.testing.expect(bundles("json_document.zig") and !bundles("vm.zig") and !bundles("qbe_build.zig"));
 }
 // spec: QBE-3

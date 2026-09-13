@@ -17,6 +17,11 @@ fn allocatingSequence(records: []const typed.Record, ty: typed.Type) bool {
     const kind = records[ty.recordIndex()].collection.kind;
     return kind == .string or kind == .bytes;
 }
+/// Element reads allocate only for strings, whose elements are fresh strings.
+fn allocatingElement(records: []const typed.Record, ty: typed.Type) bool {
+    if (!ty.isAggregate() or ty.recordIndex() >= records.len) return false;
+    return records[ty.recordIndex()].collection.kind == .string;
+}
 const State = struct { mask: sets.Mask = 0, witnesses: [std.meta.tags(sets.Effect).len]?Witness = @splat(null), callers: std.ArrayList(Edge) = .empty, queued: bool = false };
 const Graph = struct {
     allocator: std.mem.Allocator,
@@ -226,7 +231,7 @@ pub fn validate(allocator: std.mem.Allocator, program: @import("bytecode_model.z
             .binary_integer => |binary| if (binary.op == .add and allocatingSequence(program.records, binary.ty)) {
                 graph.direct(index, .managed_allocation, instruction.span);
             },
-            .get_index => |ty| if (allocatingSequence(program.records, ty)) {
+            .get_index => |ty| if (allocatingElement(program.records, ty)) {
                 graph.direct(index, .managed_allocation, instruction.span);
             },
             .acquire_buffer => |ty| if (try managedType(program.records, ty)) graph.direct(index, .managed_allocation, instruction.span) else return error.InternalError,

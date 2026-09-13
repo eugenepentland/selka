@@ -48,12 +48,12 @@ const Provider = struct {
 };
 const provider_source = @embedFile("stdlib/fixtures/time_random_provider.my");
 // spec: STANDARD-TIME-RANDOM-2
-test "standard time random providers retain failures and partial initialized output" {
+test "standard time random providers retain typed failures at every capability" {
     var success: Provider = .{};
     try run(t.allocator, provider_source, success.options(), 0);
-    try t.expectEqual(@as(usize, 4), success.calls);
+    try t.expectEqual(@as(usize, 2), success.calls);
     var partial: Provider = .{ .fail_random = true };
-    try run(t.allocator, provider_source, partial.options(), 45);
+    try run(t.allocator, provider_source, partial.options(), 9);
     var denied: Provider = .{ .failure = error.Denied };
     try run(t.allocator, provider_source, denied.options(), 42);
     var absent: Provider = .{ .failure = error.Unavailable };

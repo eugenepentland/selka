@@ -7,7 +7,6 @@ export Sample;
 export Seeded;
 export Bounded;
 export Rejected;
-export FillError;
 export seed;
 export next;
 export bounded;
@@ -43,14 +42,6 @@ struct Rejected {
 result Bounded {
     ok: Draw,
     err: Rejected
-}
-struct FillError {
-    written: u64,
-    error: Error
-}
-result Filled {
-    ok: u64,
-    err: FillError
 }
 result Raw {
     ok: u64,

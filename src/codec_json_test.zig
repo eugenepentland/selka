@@ -59,7 +59,11 @@ test "codec JSON shares instruction call traversal and memory budgets across nes
     const value = try codec.decode(t.allocator, code, ty, good, .{ .statistics = &stats }, &failure);
     defer value.release(t.allocator);
     const exact = stats;
-    const at_limit = try codec.decode(t.allocator, code, ty, good, .{ .max_steps = exact.steps, .max_bytes = exact.peak_bytes }, &failure);
+    var probe: codec.Statistics = .{};
+    const at_limit = codec.decode(t.allocator, code, ty, good, .{ .max_steps = exact.steps, .max_bytes = exact.peak_bytes, .statistics = &probe }, &failure) catch |err| {
+        std.debug.print("AT_LIMIT {s}: exact={d} probe={d}\n", .{ @errorName(err), exact.peak_bytes, probe.peak_bytes });
+        return err;
+    };
     at_limit.release(t.allocator);
     try t.expectError(error.CodecMemoryLimit, codec.decode(t.allocator, code, ty, good, .{ .max_bytes = 1 }, &failure));
     const tighter_limit = exact.peak_bytes - 1;
