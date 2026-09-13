@@ -6,15 +6,15 @@ const Sha = std.crypto.hash.sha2.Sha256;
 const zig_roots = [_][]const u8{ "native_format.zig", "native_json_bridge.zig" };
 /// Source bytes read once at compiler build time, keyed by path relative to `src`.
 const Sources = std.StringArrayHashMapUnmanaged([]const u8);
-/// Selected runtime inputs and the queue of Zig units still to be scanned.
-const Selection = struct { chosen: std.StringArrayHashMapUnmanaged(void) = .empty, pending: std.ArrayList([]const u8) = .empty };
+/// Every source input, the selected runtime subset, and the Zig units still to scan.
+const Selection = struct { sources: Sources, chosen: std.StringArrayHashMapUnmanaged(void) = .empty, pending: std.ArrayList([]const u8) = .empty };
 /// Build the embedded runtime asset module: the selected inputs, their content hash,
 /// and the compiler identity derived from every source input and the toolchain.
 pub fn module(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode) *std.Build.Module {
     b.dependOnDirectory(b.path("src"));
     const sources = read(b);
-    var selection: Selection = .{};
-    select(b, sources, &selection);
+    var selection: Selection = .{ .sources = sources };
+    select(b, &selection);
     const paths = selection.chosen.keys();
     std.mem.sort([]const u8, paths, {}, order);
     const files = b.addWriteFiles();
@@ -45,14 +45,14 @@ fn read(b: *std.Build) Sources {
     return sources;
 }
 /// Keep every native runtime C translation unit, every header, and the Zig runtime closure.
-fn select(b: *std.Build, sources: Sources, selection: *Selection) void {
-    for (sources.keys()) |path| {
+fn select(b: *std.Build, selection: *Selection) void {
+    for (selection.sources.keys()) |path| {
         if (std.mem.indexOfScalar(u8, path, '/') != null) continue;
         if (std.mem.endsWith(u8, path, ".c") or std.mem.endsWith(u8, path, ".h")) keep(b, selection, path, false);
     }
     for (zig_roots) |root| keep(b, selection, root, true);
     while (selection.pending.pop()) |path| {
-        const bytes = sources.get(path) orelse continue;
+        const bytes = selection.sources.get(path) orelse continue;
         const parent = std.fs.path.dirname(path) orelse "";
         references(b, selection, .{ .parent = parent, .bytes = bytes, .marker = "@import(\"", .scan = true });
         references(b, selection, .{ .parent = parent, .bytes = bytes, .marker = "@embedFile(\"", .scan = false });
@@ -73,8 +73,11 @@ fn references(b: *std.Build, selection: *Selection, scan: Scan) void {
         keep(b, selection, b.pathJoin(&.{ scan.parent, operand }), scan.scan);
     }
 }
-/// Record a path once; Zig units are queued so their own references are followed.
+/// Record a real source input once; Zig units are queued so their references are followed.
+/// A reference that does not name a file under `src` (a module name, a generated path)
+/// is simply not an asset.
 fn keep(b: *std.Build, selection: *Selection, path: []const u8, scan: bool) void {
+    if (!selection.sources.contains(path)) return;
     const entry = selection.chosen.getOrPut(b.allocator, path) catch @panic("OOM");
     if (entry.found_existing) return;
     entry.key_ptr.* = b.dupe(path);
