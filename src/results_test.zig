@@ -30,8 +30,8 @@ test "nominal typed results handle success and failure through exhaustive matche
 }
 
 const owned_source = "struct Item { n: i64 } result R { ok: Item, err: i64 } fn fallible(flag: bool) -> R " ++
-    "{ let mut x = new Item { n: 3 }; borrow mut x as r { if flag { write_ref(r, new Item " ++
-    "{ n: 9 }); return new R.ok(read_ref(r)); } return new R.err(7); } } fn main() -> i64 " ++
+    "{ let mut x = new Item { n: 3 }; if flag { x = new Item { n: 9 }; return new R.ok(x); } " ++
+    "return new R.err(7); } fn main() -> i64 " ++
     "{ let r = fallible(false); match r { R.ok(item) => { return item.n; }, R.err(code) " ++
     "=> { _ = fallible(true); return code; } } }";
 fn allocationScenario(allocator: std.mem.Allocator) !void {

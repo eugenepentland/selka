@@ -474,12 +474,12 @@ fn genericExecutionScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes = "module main;import units;fn id<T:integer>(x:T)->T{return x;}" ++
             "fn main()->i64{_ = units::id::<units::Box>(new units::Box{value:1});" ++
-            "let mut x=0;borrow mut x as r{_ = units::set::<i64>(r,2);}" ++
-            "let values=new [1]i64 [x];borrow values[0..1] as s{borrow units::view::<i64>(s) as v{return units::run()+id::<i64>(units::head::<i64>(v));}}}" },
+            "let mut x=0;x=units::set::<i64>(x,2);" ++
+            "let values=new [1]i64 [x];return units::run()+id::<i64>(units::head::<i64>(values));}" },
         .{ .path = units_path, .bytes = "module units;export run;export id;export set;export head;export view;export Box;struct Box{value:i64}" ++
-            "fn view<T:copy>(s:&[]T)->&[]T from s{return s;}" ++
-            "fn head<T:copy>(s:&[]T)->T{borrow s[0..1] as first{return read_slice(first,0);}}" ++
-            "fn set<T:copy>(x:&mut T,y:T)->T{write_ref(x,y);return read_ref(x);}fn id<T:copy>(x:T)->T{return x;}fn run()->i64{if id::<bool>(true){return id::<i64>(5);}return 0;}" },
+            "fn view<T:copy>(v:[1]T)->[1]T{return v;}" ++
+            "fn head<T:copy>(v:[1]T)->T{let seen=view::<T>(v);return seen[0];}" ++
+            "fn set<T:copy>(x:T,y:T)->T{_ = x;return y;}fn id<T:copy>(x:T)->T{return x;}fn run()->i64{if id::<bool>(true){return id::<i64>(5);}return 0;}" },
     } };
     var project = graph.Project.init(allocator);
     defer project.deinit();

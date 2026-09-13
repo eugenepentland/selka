@@ -4,7 +4,7 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const Cache = language.semantic_cache.Cache;
 const prefix = "fn helper(n:i64)->i64{return n+1;}";
-const suffix = "fn keep(n:i64)->i64{let unused=1;let mut x=n;borrow mut x as r{write_ref(r,read_ref(r)+1);}return x;}fn main()->i64{return keep(helper(40));}";
+const suffix = "fn keep(n:i64)->i64{let unused=1;let mut x=n;x=x+1;return x;}fn main()->i64{return keep(helper(40));}";
 fn compare(allocator: std.mem.Allocator, cache: *Cache, bytes: []const u8, expected: ?i64) !void {
     var cached = try language.Compilation.init(allocator, "edited.my", bytes);
     defer cached.deinit();

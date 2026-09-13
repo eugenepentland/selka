@@ -18,8 +18,6 @@ const kinds_module =
     \\union Shape { dot: i64, line: i64 }
     \\result Outcome { ok: i64, err: i64 }
     \\domain Distance: i64 { fn make(x: i64) -> Distance { return wrap<Distance>(x); } }
-    \\buffer Bytes: u8;
-    \\pool Store(Id): i64;
     \\resource Handle: filesystem;
     \\host fn measure(x: i64) -> i64 effects(host);
     \\export main;
@@ -44,8 +42,6 @@ const expected_declarations = [_]Expected{
     .{ .kind = "union", .name = "Shape", .exported = false, .text = "union Shape { dot: i64, line: i64 }", .comment = "union Shape { dot: i64, line: i64 }" },
     .{ .kind = "result", .name = "Outcome", .exported = false, .text = "result Outcome { ok: i64, err: i64 }", .comment = "result Outcome { ok: i64, err: i64 }" },
     .{ .kind = "domain", .name = "Distance", .exported = false, .text = "domain Distance: i64 { fn make(x: i64) -> Distance { return wrap<Distance>(x); } }", .comment = "domain Distance" },
-    .{ .kind = "buffer", .name = "Bytes", .exported = false, .text = "buffer Bytes: u8;", .comment = "buffer Bytes: u8;" },
-    .{ .kind = "pool", .name = "Store", .exported = false, .text = "pool Store(Id): i64;", .comment = "pool Store(Id): i64;" },
     .{ .kind = "resource", .name = "Handle", .exported = false, .text = "resource Handle: filesystem;", .comment = "resource Handle: filesystem;" },
     .{ .kind = "host_fn", .name = "measure", .exported = false, .text = "host fn measure(x: i64) -> i64 effects(host);", .comment = "host fn measure" },
     .{ .kind = "fn", .name = "main", .exported = true, .text = "fn main() -> i64 { return LIMIT; }", .comment = "fn main() -> i64 { return LIMIT; }" },

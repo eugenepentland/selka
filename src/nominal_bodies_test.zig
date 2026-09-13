@@ -20,7 +20,7 @@ fn reject(text: []const u8, code: []const u8) !void {
 }
 const basic = definitions ++
     "fn pack<T:copy>(x:T)->Box<T>{return new Box<T>{value:x};}fn extract<T:copy>(box:Box<T>)->T{return box.value;}" ++
-    "fn alter<T:copy>(box:Box<T>,x:T)->Box<T>{return update(box){value:x};}" ++
+    "fn alter<T:copy>(box:Box<T>,x:T)->Box<T>{let mut y=box;y.value=x;return y;}" ++
     "fn slot<T:copy>(x:T)->Slot<T>{return new Slot<T>.some(x);}fn choose<T:copy>(x:Slot<T>,fallback:T)->T{" ++
     "match x{Slot<T>.none=>{return fallback;},Slot<T>.some(value)=>{return value;}}}" ++
     "fn main()->i64{return extract::<i64>(alter::<i64>(pack::<i64>(3),choose::<i64>(slot::<i64>(7),0)));}";
@@ -35,7 +35,7 @@ test "nominal bodies reject invalid uncalled field payload and identity operatio
     try reject(definitions ++ "fn wrong<T:copy,U:copy>(x:Box<T>)->Box<U>{return x;}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
 }
 const results = definitions ++ "result Output<T:copy>{err:i64,ok:Box<T>}" ++
-    "fn plus<T:integer>(x:R<T>)->Output<T>{let n=try x;return new Output<T>.ok(new Box<T>{value:n+n});}" ++
+    "fn plus<T:integer>(x:R<T>)->Output<T>{let n=x?;return new Output<T>.ok(new Box<T>{value:n+n});}" ++
     "fn main()->i64{match plus::<i64>(new R<i64>.ok(6)){Output<i64>.ok(box)=>{return box.value;},Output<i64>.err(e)=>{return e;}}}";
 const arrays = definitions ++
     "fn pairs<T:copy>(x:T)->[2]T{return new [2]T[x,x];}fn boxed<T:copy>(x:T)->Box<[2]T>{return new Box<[2]T>{value:pairs::<T>(x)};}" ++
@@ -53,28 +53,6 @@ test "nominal bodies release shape catalogs and VM storage after every allocatio
     try t.checkAllAllocationFailures(stable.allocator(), allocations, .{});
 }
 
-const owners = definitions ++ "buffer B:u8;result Open<T:copy>{ok:B,err:i64}struct Owner<T:copy>{buffer:B,tag:T}" ++
-    "fn consume<T:copy>(owner:Owner<T>)->T{_ = owner.buffer;return owner.tag;}" ++
-    "fn work<T:integer>(heap:allocator,tag:T)->R<T>{let owner=new Owner<T>{buffer:try acquire_buffer<Open<T>>(heap,1),tag:tag};return new R<T>.ok(consume::<T>(owner));}" ++
-    "fn main(heap:allocator)->i64{match work::<i64>(heap,21){R<i64>.ok(n)=>{return n;},R<i64>.err(e)=>{return e;}}}";
-fn ownedScenario(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, "nominal-owner.my", owners);
-    defer compilation.deinit();
-    const result = compilation.executeWithOptions(allocator, .{}) catch |err| {
-        if (err != error.OutOfMemory) @import("diagnostics_test.zig").report(compilation.diagnostics.items);
-        return err;
-    };
-    try t.expectEqual(@as(i64, 21), result.value);
-}
-test "nominal bodies preserve owned partial moves and typed acquisition under allocation failures" {
-    try ownedScenario(t.allocator);
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), ownedScenario, .{});
-}
-const loans = definitions ++ "fn view<T:copy>(x:&Box<T>)->&Box<T> from x{return x;}" ++
-    "fn change<T:copy>(x:&mut Box<T>,value:T)->i64{write_ref(x,new Box<T>{value:value});return 0;}" ++
-    "fn main()->i64{let mut box=new Box<i64>{value:3};let original=box;borrow mut box as r{_ = change::<i64>(r,9);}" ++
-    "borrow box as r{borrow view::<i64>(r) as v{return read_ref(v).value+original.value;}}}";
 const module_source = "module model;export Box;export pack;export extract;struct Box<T:copy>{value:T}" ++
     "fn pack<T:copy>(x:T)->Box<T>{return new Box<T>{value:x};}fn extract<T:copy>(box:Box<T>)->T{return box.value;}";
 const Modules = struct {

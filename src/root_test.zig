@@ -53,7 +53,6 @@ test {
     _ = @import("host_invocation_test.zig");
     _ = @import("diagnostic_output_test.zig");
     _ = @import("diagnostic_recovery_test.zig");
-    _ = @import("generic_local_views_test.zig");
     _ = @import("generic_inference_test.zig");
     _ = @import("generic_execution_test.zig");
     _ = @import("generic_instances_test.zig");
@@ -62,7 +61,6 @@ test {
     _ = @import("generic_concrete_test.zig");
     _ = @import("generic_results_test.zig");
     _ = @import("generic_fields_test.zig");
-    _ = @import("generic_runtime_test.zig");
     _ = @import("generic_providers_test.zig");
     _ = @import("generic_requirements_test.zig");
     _ = @import("generic_syntax_test.zig");

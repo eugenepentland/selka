@@ -19,8 +19,8 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, fixture_path, "struct Inner { x: i64 } struct Source { inner: Inner, ignored: bool } struct Target " ++
         "{ value: i64 } conversion fn convert(src: Source) -> Target { _ = src.ignored; " ++
         "return new Target { value: src.inner.x }; } fn main() -> i64 { let source = new " ++
-        "Source { ignored: true, inner: new Inner { x: 7 } }; let next = update(source) { " ++
-        "inner: new Inner { x: 9 } }; return convert(next).value; }");
+        "Source { ignored: true, inner: new Inner { x: 7 } }; let mut next = source; " ++
+        "next.inner = new Inner { x: 9 }; return convert(next).value; }");
     defer compilation.deinit();
     try testing.expectEqual(@as(i64, 9), (try compilation.execute(allocator)).value);
     const dump = try compilation.dump(allocator);
@@ -29,7 +29,7 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
     defer discovery.deinit();
 }
 
-test "record schemas conversion checking construction update projection and dump clean up on allocation failure" {
+test "record schemas conversion checking construction assignment projection and dump clean up on allocation failure" {
     // Successful backing-heap resizes vary with address/heap state. Force the
     // allocation fallback so fail_index identifies the same operation each run.
     var no_resize = testing.FailingAllocator.init(testing.allocator, .{ .resize_fail_index = 0 });

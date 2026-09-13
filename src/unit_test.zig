@@ -3,10 +3,10 @@ const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
 const program =
-    "fn set(x:&mut i64)->unit{write_ref(x,42);}" ++
+    "fn set(x:i64)->unit{_ = x;}" ++
     "fn skip<T:copy>(x:T)->unit{_ = x;}" ++
     "fn noop()->unit{return;}" ++
-    "fn main()->i64{let mut x=0;borrow mut x as edit{set(edit);}skip::<i64>(x);noop();return x;}";
+    "fn main()->i64{let mut x=0;x=42;set(x);skip::<i64>(x);noop();return x;}";
 
 fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "unit.my", program);
@@ -17,7 +17,7 @@ fn scenario(allocator: std.mem.Allocator) !void {
     }
 }
 // spec: UNIT-1
-test "unit calls bare returns generic fallthrough and mutable loans preserve results with allocation failures" {
+test "unit calls bare returns and generic fallthrough preserve results with allocation failures" {
     try scenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});

@@ -28,9 +28,9 @@ fn reject(source: []const u8, code: []const u8) !void {
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
 
-const allocation_source = "struct Box{value:[2]i64}fn make(ctx:&i64,n:i64)->Box effects(){return new Box{value:new [2]i64 [n+read_ref(ctx),n+1]};}" ++
-    "fn apply<T:copy>(f:fn(&T,i64)->Box effects(),ctx:&T,n:i64)->Box{return f(ctx,n);}" ++
-    "fn main()->i64{let context=0;borrow context as ctx{let a=apply::<i64>(make,ctx,7);let f=make;let b=f(ctx,9);return a.value[0]+b.value[1];}}";
+const allocation_source = "struct Box{value:[2]i64}fn make(ctx:i64,n:i64)->Box effects(){return new Box{value:new [2]i64 [n+ctx,n+1]};}" ++
+    "fn apply<T:copy>(f:fn(T,i64)->Box effects(),ctx:T,n:i64)->Box{return f(ctx,n);}" ++
+    "fn main()->i64{let context=0;let a=apply::<i64>(make,context,7);let f=make;let b=f(context,9);return a.value[0]+b.value[1];}";
 
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "allocation-callback.my", allocation_source);
@@ -48,17 +48,23 @@ test "callbacks compile format execute and emit under every failed allocation" {
     try t.checkAllAllocationFailures(stable.allocator(), allocationScenario, .{});
 }
 
-const module_source = "module main;import std_collections as c;" ++
+const module_source = "module main;import helpers as c;" ++
     "fn descending(a:i64,b:i64)->bool effects(){return a>b;}fn twice(x:i64)->i64 effects(){return x*2;}" ++
-    "fn main()->i64{let mut a=new [4]i64 [3,1,4,2];borrow mut a[0..4] as view{" ++
-    "_ = c::sort_by_i64(view,descending);_ = c::transform_i64(view,twice);}return a[0]*10+a[3];}";
+    "fn main()->i64{let a=new [4]i64 [3,1,4,2];let sorted=c::sort_by(a,descending);" ++
+    "let doubled=c::transform(sorted,twice);return doubled[0]*10+doubled[3];}";
+const helpers_source = "module helpers;export sort_by;export transform;" ++
+    "fn sort_by(a:[4]i64,less:fn(i64,i64)->bool effects())->[4]i64{let mut v=a;let mut i=0;" ++
+    "while i<4{let mut j=0;while j<3{if less(v[j+1],v[j]){let tmp=v[j];v=replace(v,j,v[j+1]);" ++
+    "v=replace(v,j+1,tmp);}j+=1;}i+=1;}return v;}" ++
+    "fn transform(a:[4]i64,f:fn(i64)->i64 effects())->[4]i64{let mut v=a;let mut i=0;" ++
+    "while i<4{v=replace(v,i,f(v[i]));i+=1;}return v;}";
 fn moduleRead(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
-    if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
-    if (module_source.len > limit) return error.TooLarge;
-    return allocator.dupe(u8, module_source);
+    const bytes = if (std.mem.eql(u8, path, "main.my")) module_source else if (std.mem.eql(u8, path, "helpers.my")) helpers_source else return error.NotFound;
+    if (bytes.len > limit) return error.TooLarge;
+    return allocator.dupe(u8, bytes);
 }
 
-test "callbacks drive standard library sorting and visitors across module boundaries" {
+test "callbacks drive sorting and visitor helpers across module boundaries" {
     var program: language.embedded_project.Program = undefined;
     try program.init(t.allocator, .{ .context = null, .read = moduleRead });
     defer program.deinit();

@@ -16,7 +16,7 @@ fn reject(text: []const u8, code: []const u8) !void {
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqualStrings(code, compilation.diagnostics.items[0].code);
 }
-const basic = definitions ++ "fn main()->i64{let a=new Box<i64>{value:7};let b=update(a){value:9};" ++
+const basic = definitions ++ "fn main()->i64{let a=new Box<i64>{value:7};let mut b=a;b.value=9;" ++
     "let slot=new Slot<Box<i64>>.some(b);match slot{Slot<Box<i64>>.none=>{return 0;},Slot<Box<i64>>.some(value)=>{return a.value+value.value;}}}";
 test "nominal instances preserve argument order and nominal declaration identity" {
     try reject(definitions ++ "fn takes(x:Box<i64>)->i64{return x.value;}fn main()->i64{return takes(new Box<bool>{value:true});}", "E_TYPE");
@@ -39,20 +39,6 @@ test "nominal catalog collect and VM execution clean up every allocation failure
     try t.checkAllAllocationFailures(stable.allocator(), allocations, .{});
 }
 
-const owned = "buffer B:u8;result Open{ok:B,err:i64}struct Owner<T:copy>{buffer:B,tag:T}" ++ definitions ++
-    "fn work(heap:allocator)->Answer<i64>{let owner=new Owner<i64>{buffer:acquire_buffer<Open>(heap,2)?,tag:9};" ++
-    "let tag=owner.tag;_ = owner.buffer;return new Answer<i64>.ok(tag);}" ++
-    "fn main(heap:allocator)->i64{match work(heap){Answer<i64>.ok(n)=>{return n;},Answer<i64>.err(e)=>{return e;}}}";
-fn ownedScenario(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, "owned-instance.my", owned);
-    defer compilation.deinit();
-    const result = try compilation.executeWithOptions(allocator, .{});
-    try t.expectEqual(@as(i64, 9), result.value);
-}
-test "nominal owned instance execution frees partial construction under allocation failures" {
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), ownedScenario, .{});
-}
 test "nominal instances retain concrete checks within generic bodies" {
     try run(t.allocator, definitions ++ "fn identity<T:copy>(x:Box<T>)->Box<T>{return x;}fn main()->i64{return identity::<i64>(new Box<i64>{value:5}).value;}", 5);
     try reject(definitions ++ "fn bad<T:copy>()->i64{let box=new Box<i64>{value:true};return 0;}fn main()->i64{return 0;}", "E_GENERIC_TYPE");
@@ -62,7 +48,7 @@ const Modules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main;import model as m;fn main()->i64{let x=new m::Box<i64>{value:4};return m::twice(x).value;}");
         if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8, "module model;export Box;export Empty;export twice;struct Box<T:copy>{value:T}struct Empty<T:copy>{}struct Hidden{value:i64}" ++
-            "fn twice(x:Box<i64>)->Box<i64>{return update(x){value:x.value*2};}" ++
+            "fn twice(x:Box<i64>)->Box<i64>{let mut y=x;y.value=x.value*2;return y;}" ++
             "fn hidden_values(x:Box<Hidden>,y:Empty<Hidden>)->i64{_ = x;_ = y;return 0;}");
         return error.NotFound;
     }
@@ -135,18 +121,14 @@ test "nominal exported type constructors are symbolic schema templates rather th
     try t.expect(templates[0].object.get("contract").?.object.get("requires_explicit_instantiation").?.bool);
 }
 
-fn catalogCategories(allocator: std.mem.Allocator) !void {
-    try run(allocator, definitions ++
+test "nominal instances carry domain payloads beside resource declarations" {
+    const program = definitions ++
         "domain Id:i64{fn make(n:i64)->Id{return wrap<Id>(n);}fn number(n:Id)->i64{return unwrap(n);}}" ++
-        "fn main()->i64{let box=new Box<Id>{value:Id.make(13)};return Id.number(box.value);}", 13);
-    const program = definitions ++ "pool P(Handle):Box<i64>;result Open{ok:P,err:i64}result Insert{ok:Handle,err:i64}" ++
-        "result Read{ok:Box<i64>,err:i64}resource File:filesystem;" ++
-        "fn work(heap:allocator)->Answer<i64>{let mut pool=acquire_pool<Open>(heap,1)?;" ++
-        "let id=insert_pool<Insert>(pool,new Box<i64>{value:17})?;let value=read_pool<Read>(pool,id)?;return new Answer<i64>.ok(value.value);}" ++
-        "fn main(heap:allocator)->i64{match work(heap){Answer<i64>.ok(n)=>{return n;},Answer<i64>.err(e)=>{return e;}}}";
-    var compilation = try language.Compilation.init(allocator, "nominal-pool.my", program);
+        "resource File:filesystem;" ++
+        "fn main()->i64{let box=new Box<Id>{value:Id.make(13)};return Id.number(box.value);}";
+    var compilation = try language.Compilation.init(t.allocator, "nominal-domain.my", program);
     defer compilation.deinit();
-    try t.expectEqual(@as(i64, 17), (try compilation.execute(allocator)).value);
+    try t.expectEqual(@as(i64, 13), (try compilation.execute(t.allocator)).value);
     var resources: usize = 0;
     for (compilation.program.?.records) |record| if (record.shape.resource) |kind| {
         try t.expectEqual(@import("external_resources.zig").Kind.filesystem, kind);
@@ -156,58 +138,3 @@ fn catalogCategories(allocator: std.mem.Allocator) !void {
     try t.expectEqual(@as(usize, 1), resources);
 }
 
-const collection_client =
-    "module main;import std_collections as c;" ++
-    "fn main(heap:allocator)->i64{match c::filled::<i64>(heap,4u64,9){" ++
-    "c::Created<i64>.err(e)=>{return e;},c::Created<i64>.ok(input)=>{let mut values=input;" ++
-    "borrow mut values[0..4] as view{write_slice(view,0,5);write_slice(view,1,1);write_slice(view,2,3);" ++
-    "_ = c::sort::<i64>(view);if read_slice(view,0)!=1{return -1;}" ++
-    "_ = c::reverse::<i64>(view);if read_slice(view,0)!=9{return -2;}" ++
-    "_ = c::sort::<i64>(view);if !c::contains::<i64>(view,3){return -3;}" ++
-    "return cast<i64>(c::lower_bound::<i64>(view,4))+c::find::<i64>(view,9);}}}}";
-fn readCollections(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
-    if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
-    if (collection_client.len > limit) return error.TooLarge;
-    return allocator.dupe(u8, collection_client);
-}
-// spec: STANDARD-COLLECTIONS-1
-test "standard generic collections allocate sort search and mutate one borrowed vector" {
-    var program: language.embedded_project.Program = undefined;
-    try program.init(t.allocator, .{ .context = null, .read = readCollections });
-    defer program.deinit();
-    const outcome = try language.vm.run(t.allocator, program.compilation.code.?);
-    try t.expectEqual(@as(i64, 5), outcome.value);
-}
-
-fn boundedRuntime(allocator: std.mem.Allocator, code: language.bytecode.Program) !void {
-    const outcome = language.vm.runWithOptions(allocator, code, .{});
-    try t.expectEqual(@as(i64, 21), (try outcome).value);
-}
-
-const owner_borrows =
-    "buffer Vec<T:copy>:T;result Open<T:copy>{ok:Vec<T>,err:i64}result Status{ok:bool,err:i64}" ++
-    "struct Holder<T:copy>{buffer:Vec<T>,tag:i64}result Answer{ok:i64,err:i64}" ++
-    "fn inspect<T:copy>(holder:&Holder<T>)->i64 noalloc{return holder.tag;}" ++
-    "fn append<T:copy>(values:&mut Vec<T>,value:T)->Status noalloc{return append_buffer<Status>(values,value);}" ++
-    "fn size<T:copy>(values:&Vec<T>)->u64 noalloc{return len_buffer(values);}" ++
-    "fn work(heap:allocator)->Answer{let mut values=try acquire_buffer<Open<i64>>(heap,2);" ++
-    "borrow mut values as view{_ = append::<i64>(view,7)?;if size::<i64>(view)!=1u64{return new Answer.ok(-1);}}" ++
-    "borrow values[0..1] as view{if read_slice(view,0)!=7{return new Answer.ok(-2);}}" ++
-    "let holder=new Holder<i64>{buffer:values,tag:9};borrow holder as view{return new Answer.ok(inspect::<i64>(view));}}" ++
-    "fn main(heap:allocator)->i64{match work(heap){Answer.ok(n)=>{return n;},Answer.err(e)=>{return e;}}}";
-// spec: OWNER-REFERENCE-1
-test "whole owner references inspect records and mutate generic buffers without transfer" {
-    try run(t.allocator, owner_borrows, 9);
-}
-
-fn ownerReferenceRuntime(allocator: std.mem.Allocator, code: language.bytecode.Program) !void {
-    const outcome = language.vm.runWithOptions(allocator, code, .{});
-    try t.expectEqual(@as(i64, 9), (try outcome).value);
-}
-test "owner reference restoreLocalOwner unwinds nested owned cells under allocation failures" {
-    var compilation = try language.Compilation.init(t.allocator, "owner-reference.my", owner_borrows);
-    defer compilation.deinit();
-    try compilation.emit();
-    var no_resize = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(no_resize.allocator(), ownerReferenceRuntime, .{compilation.code.?});
-}

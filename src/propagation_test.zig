@@ -22,8 +22,8 @@ const owned_source = "struct Item { n: i64 } struct Error { detail: [2]Item } re
     "Error } result Outer { err: Error, ok: [2]Item } fn fail(flag: bool) -> Inner { if " ++
     "flag { return new Inner.err(new Error { detail: new [2]Item [new Item { n: 7 }, new " ++
     "Item { n: 8 }] }); } return new Inner.ok(9); } fn build(flag: bool) -> Outer { let " ++
-    "mut counter = 0; borrow mut counter as r { write_ref(r, 1); return new Outer.ok(new " ++
-    "[2]Item [new Item { n: 3 }, new Item { n: fail(flag)? }]); } } fn main() -> i64 { " ++
+    "mut counter = 0; counter = 1; _ = counter; return new Outer.ok(new " ++
+    "[2]Item [new Item { n: 3 }, new Item { n: fail(flag)? }]); } fn main() -> i64 { " ++
     "match build(true) { Outer.ok(items) => { return items[1].n; }, Outer.err(error) => { " ++
     "return error.detail[0].n; } } }";
 fn allocationScenario(allocator: std.mem.Allocator) !void {

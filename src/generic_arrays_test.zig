@@ -44,10 +44,10 @@ test "generic array templates reject invalid uncalled bodies and invalid lengths
     }
 }
 
-const views = "fn window<T:copy>(a:&[2]T)->&[]T from a{borrow a[0..2] as s{return s;}}" ++
+const views = "fn window<T:copy>(a:[2]T)->[2]T{return a;}" ++
     "fn edit<T:copy>(x:T,y:T)->T{let mut a=new [2]T[x,y];let original=a;" ++
-    "borrow mut a[0..2] as s{write_slice(s,0,y);}a=replace(a,1,x);" ++
-    "borrow a as whole{borrow window::<T>(whole) as part{_ = read_slice(part,0);}}return original[0];}";
+    "a=replace(a,0,y);a=replace(a,1,x);" ++
+    "let part=window::<T>(a);_ = part[0];return original[0];}";
 fn allocations(allocator: std.mem.Allocator) !void {
     try value(allocator, membership, 1);
     try value(allocator, views ++ "fn main()->i64{return edit::<i64>(7,9);}", 7);
