@@ -225,6 +225,7 @@ pub const Statement = struct {
     data: union(enum) {
         with_scope: struct { slot: LocalId, resource: ?NodeId, body: StatementId },
         block: []const StatementId,
+        assertion: Assertion,
         ret: NodeId,
         discard: NodeId,
         branch: struct { condition: NodeId, then_body: StatementId, else_body: ?StatementId },
@@ -235,6 +236,8 @@ pub const Statement = struct {
         assign: Store,
     },
 };
+/// Checked condition with the trap message its failure reports.
+pub const Assertion = struct { condition: NodeId, message: []const u8 };
 /// Resolved case tag, optional payload local, and checked arm body.
 pub const MatchArm = struct { tag: usize, slot: ?LocalId, body: StatementId };
 /// Local type, declaration, usage counts, and tracked ownership/borrow state.

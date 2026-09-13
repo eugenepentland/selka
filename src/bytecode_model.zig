@@ -61,6 +61,7 @@ pub const Instruction = struct {
         cmp_i64: Predicate,
         cmp_bool: Equality,
         not_bool,
+        assert_true: []const u8,
         pop,
         acknowledge: typed.Type,
         jump: usize,

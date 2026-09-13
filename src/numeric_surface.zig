@@ -62,6 +62,12 @@ pub const Builder = struct {
         const input = try self.bits(value);
         return self.node(.i64, .{ .unary = .{ .op = .f64_to_i64, .operand = input, .op_span = self.span } });
     }
+    /// Apply one binary64 unary operation, keeping the result in the float domain.
+    pub fn unary(self: Builder, op: typed.UnaryOp, value: typed.NodeId) std.mem.Allocator.Error!typed.Node {
+        const input = try self.bits(value);
+        const result = try self.append(self.node(.u64, .{ .unary = .{ .op = op, .operand = input, .op_span = self.span } }));
+        return self.wrap(result);
+    }
     /// Numeric equality compares floating values rather than their raw bit representations.
     pub fn binary(self: Builder, op: ast.BinaryOp, left: typed.NodeId, right: typed.NodeId, sink: *diagnostic.Sink) diagnostic.Error!typed.Node {
         var lhs = try self.bits(left);

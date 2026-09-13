@@ -196,17 +196,17 @@ test "module directives qualification and comments survive migration" {
 test "partial migration marks every gap and keeps the surrounding suite" {
     const output = try convert(t.allocator,
         \\fn main() -> i64 {
-        \\    let half = 9 / 3;
-        \\    let rest = 9 % 4;
-        \\    return half + rest;
+        \\    let first = match 1 { };
+        \\    let second = match 2 { };
+        \\    return first + second;
         \\}
     , .{ .allow_partial = true });
     defer t.allocator.free(output);
     try t.expectEqualStrings(
         \\def main() -> i64:
-        \\    half = 9 // 3  # MIGRATE: unsupported truncating integer division
-        \\    rest = 9 % 4  # MIGRATE: unsupported truncating integer remainder
-        \\    return half + rest
+        \\    first = todo<i64>()  # MIGRATE: unsupported a match expression
+        \\    second = todo<i64>()  # MIGRATE: unsupported a match expression
+        \\    return first + second
         \\
     , output);
 }
@@ -215,7 +215,7 @@ test "partial migration marks every gap and keeps the surrounding suite" {
 test "partial migration records one warning for every reported gap" {
     var compilation = try language.Compilation.init(t.allocator, path,
         \\fn main() -> i64 {
-        \\    return 9 / 3 + 9 % 4;
+        \\    return match 1 { } + match 2 { };
         \\}
     );
     defer compilation.deinit();
@@ -386,7 +386,7 @@ test "operators propagation matching and generics adopt Python spellings" {
         \\    answer = checked(40)?
         \\    match checked(answer):
         \\        case Answer.ok(v):
-        \\            return identity::<i64>(v) + 2
+        \\            return identity[i64](v) + 2
         \\        case Answer.err(e):
         \\            return e
         \\
@@ -405,26 +405,123 @@ test "constructs without a Python spelling are rejected with their source spans"
     try expectRejection(
         \\fn main() -> i64 {
         \\    let a = 7;
-        \\    { let b = 1; }
+        \\    { let a = 1; return a; }
         \\    return a;
         \\}
-    , "no Python spelling for a bare nested scope block", "{ let b = 1; }");
+    , "no Python spelling for a bare nested scope block", "{ let a = 1; return a; }");
     try expectRejection(
         \\fn main() -> i64 {
-        \\    return 7 / 2;
+        \\    return match 1 { };
         \\}
-    , "no Python spelling for truncating integer division", "/");
+    , "no Python spelling for a match expression", "match 1 { }");
     try expectRejection(
-        \\union Choice { none, value: i64 }
-        \\fn main() -> i64 {
-        \\    let c = new Choice.value(7);
-        \\    return 0;
+        \\fn delegate(fs: filesystem_cap) -> filesystem_cap effects() {
+        \\    return restrict_resource<read>(fs);
         \\}
-    , "no Python spelling for a payload variant outside a checked result", "new Choice.value(7)");
+        \\fn main() -> i64 { return 0; }
+    , "no Python spelling for restrict_resource", "restrict_resource<read>(fs)");
+}
+
+// spec: MIGRATE-9
+test "contextual literals print with the annotation that supplies their type" {
+    try expectMigration(
+        \\enum Kind { first, second }
+        \\union Link { none, some: i64 }
+        \\fn pick<T: copy>(value: T) -> T { return value; }
+        \\fn main() -> i64 {
+        \\    let held = new Link.some(2);
+        \\    let fixed = new [2]i64 [1, 2];
+        \\    let codes = new [Kind]i64 { first: 3, second: 4 };
+        \\    let chosen = pick::<i64>(5);
+        \\    match held {
+        \\        Link.none => { return 0; },
+        \\        Link.some(value) => { return value + fixed[0] + codes[new Kind.first] + chosen; }
+        \\    }
+        \\}
+        \\
+    ,
+        \\enum Kind:
+        \\    first,
+        \\    second
+        \\
+        \\
+        \\union Link:
+        \\    none,
+        \\    some: i64
+        \\
+        \\
+        \\def pick[T](value: T) -> T:
+        \\    return value
+        \\
+        \\
+        \\def main() -> i64:
+        \\    held = Link.some(2)
+        \\    fixed: [2]i64 = [1, 2]
+        \\    codes: [Kind]i64 = {Kind.first: 3, Kind.second: 4}
+        \\    chosen = pick[i64](5)
+        \\    match held:
+        \\        case Link.none:
+        \\            return 0
+        \\        case Link.some(value):
+        \\            return value + fixed[0] + codes[Kind.first] + chosen
+        \\
+    );
+}
+
+// spec: MIGRATE-10
+test "truncating division keeps its rounding unless an operand is certainly unsigned" {
+    try expectMigration(
+        \\fn split(signed: i64, wide: u64) -> i64 {
+        \\    let quotient = signed / 2;
+        \\    let counted = wide % 3u64;
+        \\    let sized = len(new [4]i64 [0, 0, 0, 0]) / 2;
+        \\    return quotient + cast<i64>(counted) + cast<i64>(sized) + signed % 3;
+        \\}
+        \\fn main() -> i64 { return split(7, 9u64); }
+        \\
+    ,
+        \\def split(signed: i64, wide: u64) -> i64:
+        \\    quotient = divtrunc(signed, 2)
+        \\    counted = wide % 3u64
+        \\    sized = len([0, 0, 0, 0]) // 2
+        \\    return quotient + cast<i64>(counted) + cast<i64>(sized) + remtrunc(signed, 3)
+        \\
+        \\
+        \\def main() -> i64:
+        \\    return split(7, 9u64)
+        \\
+    );
+}
+
+// spec-case: MIGRATE-5
+test "a bare scope block inlines when its bindings are unique and reports otherwise" {
+    try expectMigration(
+        \\fn main() -> i64 {
+        \\    let factor = 7;
+        \\    let mut total = 0;
+        \\    {
+        \\        let amount = 3;
+        \\        total = factor * amount;
+        \\    }
+        \\    return total;
+        \\}
+        \\
+    ,
+        \\def main() -> i64:
+        \\    factor = 7
+        \\    total = 0
+        \\    amount = 3
+        \\    total = factor * amount
+        \\    return total
+        \\
+    );
     try expectRejection(
         \\fn main() -> i64 {
-        \\    let a = new [2]i64 [1, 2];
-        \\    return a[0];
+        \\    let mut total = 0;
+        \\    { let amount = 1; total += amount; }
+        \\    { let amount = 2; total += amount; }
+        \\    return total;
         \\}
-    , "no Python spelling for a fixed array literal", "new [2]i64 [1, 2]");
+        \\
+    , "no Python spelling for a bare nested scope block", "{ let amount = 1; total += amount; }");
 }

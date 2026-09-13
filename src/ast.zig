@@ -63,6 +63,8 @@ pub const Node = struct {
         integer: Span,
         bytes: []const u8,
         text: []const u8,
+        format: []const NodeId,
+        comprehension: Comprehension,
         dictionary_literal: []const NodeId,
         membership: struct { needle: NodeId, container: NodeId, negate: bool = false },
         boolean: bool,
@@ -99,6 +101,7 @@ pub const Statement = struct {
     data: union(enum) {
         with_scope: struct { resource: ?NodeId, name: ?Span, body: StatementId },
         block: []const StatementId,
+        assertion: Assertion,
         ret: NodeId,
         loop_exit: bool,
         for_each: struct { name: Span, index_name: ?Span, iterable: NodeId, body: StatementId },
@@ -111,6 +114,10 @@ pub const Statement = struct {
         assignment: struct { python: bool = false, name: Span, value: NodeId, op: AssignmentOp, op_span: Span },
     },
 };
+/// One generator with an optional filter, producing a value per retained element.
+pub const Comprehension = struct { output: NodeId, name: Span, iterable: NodeId, filter: ?NodeId = null };
+/// Checked condition with the trap message its failure reports.
+pub const Assertion = struct { condition: NodeId, message: []const u8, literal: ?Span = null };
 /// Expression match case with an optional payload binding and its yielded value.
 pub const MatchValueArm = struct { ty: Span, name: Span, binding: ?Span, discard_payload: bool, value: NodeId };
 /// Source case spelling, optional payload binding, and arm body.

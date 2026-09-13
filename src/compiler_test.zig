@@ -517,7 +517,7 @@ test "control flow requires boolean conditions and conservative complete returns
         .{ .body = "if 1 { return 1; } else { return 0; }", .code = "E_TYPE" },
         .{ .body = "while 0 {} return 0;", .code = "E_TYPE" },
         .{ .body = "if true { return 1; }", .code = "E_MISSING_RETURN" },
-        .{ .body = "while true { return 1; }", .code = "E_MISSING_RETURN" },
+        .{ .body = "while true { break; }", .code = "E_MISSING_RETURN" },
         .{ .body = "if true { return 1; } else { return 2; } return 3;", .code = "E_UNREACHABLE" },
         .{ .body = "if true { return 1; } else { return true; }", .code = "E_TYPE" },
         .{ .body = "_ = false && unknown; return 0;", .code = "E_UNKNOWN_NAME" },

@@ -32,6 +32,26 @@ pub fn resultType(catalog: *Catalog, ok: typed.Type, failure: typed.Type, span: 
     return nominal.instantiateLengths(catalog, declaration, &.{ ok, failure }, &.{}, span);
 }
 
+/// Instantiate `Option[T]` for an operation that may have no answer.
+pub fn optionType(catalog: *Catalog, element: typed.Type, span: Span) Error!typed.Type {
+    const state = catalog.templates.store orelse return error.InternalError;
+    const declaration = state.index.names.get("Option") orelse return error.InternalError;
+    return nominal.instantiateLengths(catalog, declaration, &.{element}, &.{}, span);
+}
+
+/// Resolve the output of a Python string method that no other collection shares.
+fn textMethodType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Span) Error!typed.Type {
+    return switch (kind) {
+        .strip, .lstrip, .rstrip, .upper, .lower, .replace, .zfill => owner,
+        .splitlines => listType(catalog, owner, span),
+        .is_digit, .is_alpha, .is_space, .starts_with, .ends_with => .bool,
+        .count, .find => .i64,
+        .parse_int => optionType(catalog, .i64, span),
+        .parse_float => optionType(catalog, try preludeType(catalog, "float", span), span),
+        else => error.InternalError,
+    };
+}
+
 /// Resolve the output of a managed byte-string operation.
 fn bytesOperationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Span) Error!typed.Type {
     const element = catalog.records[owner.recordIndex()].shape.buffer.?;
@@ -76,7 +96,7 @@ pub fn operationType(catalog: *Catalog, owner: typed.Type, kind: Kind, span: Spa
         .keys => if (dictionary) listType(catalog, schema.collection.key.?, span) else error.InternalError,
         .values => if (dictionary) listType(catalog, element, span) else error.InternalError,
         .split => if (!dictionary) listType(catalog, owner, span) else error.InternalError,
-        else => error.InternalError,
+        else => if (dictionary) error.InternalError else textMethodType(catalog, owner, kind, span),
     };
 }
 

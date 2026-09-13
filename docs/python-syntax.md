@@ -58,7 +58,20 @@ Representable unsuffixed integer literals adopt an expected integer type.
 `float` is binary64 and accepts literals such as `1.5` and `4.2e1`, ordinary
 arithmetic and comparisons, and `float(integer)` / `int(float)` conversion.
 `/` produces a float; `//` rounds the quotient down and `%` follows that quotient.
-Float-to-int conversion truncates toward zero and traps outside the signed range.
+`divtrunc(a, b)` and `remtrunc(a, b)` round toward zero instead, for binary formats and
+C interfaces that need that rounding. Float-to-int conversion truncates toward zero and
+traps outside the signed range. `sqrt`, `floor`, `ceil`, `trunc` and `abs` operate on
+`float` values; `round`, `exp`, `log`, `pow` and the trigonometric functions are not
+provided.
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    spread = -7
+    floored = spread // 2
+    toward_zero = divtrunc(spread, 2)
+    return (toward_zero - floored) * 42
+```
 
 Lists infer a homogeneous element type from nonempty literals. They share mutable
 storage; assignment does not copy their contents. Use `items.append(value)`,
@@ -70,6 +83,30 @@ Strings use ordinary single or double quotes and represent immutable UTF-8 text.
 Indexing and length count Unicode scalar values, rather than bytes or grapheme
 clusters. Use concatenation, equality, `split(separator)`, `separator.join(parts)`,
 and `str(value)` for scalar conversion. Strings also support slices and iteration. `b"..."` represents bytes for binary APIs.
+
+Strings answer `strip`/`lstrip`/`rstrip`, `upper`/`lower`, `replace(old, new)`,
+`startswith`/`endswith`, `find(sub)` (-1 when absent), `count(sub)`, `zfill(width)`,
+`splitlines()`, and `isdigit`/`isalpha`/`isspace`. Every one returns a fresh value, so no
+alias changes. `ljust` and `rjust` are absent, because intrinsic methods take no defaulted
+arguments. `int(text)` and `float(text)` return `Option[int]` and `Option[float]`: the
+language has no exceptions, so a string that is not exactly one number answers `None`.
+
+An `f"..."` literal interpolates `{expression}` holes, converting each one exactly as
+`str(value)` does and concatenating the result. `{{` and `}}` write single braces. Holes take
+any expression but no format specification, so round a float or pad a number before
+interpolating it.
+
+```mylang
+# doc: expect 42
+def label(count: int, items: list[int]) -> str:
+    return f"total {count} of {len(items)}"
+
+def main() -> int:
+    if label(7, [1, 2, 3]) == "total 7 of 3":
+        return 42
+    return 0
+```
+
 Dictionaries preserve insertion order and use `int` or `str` keys. Their values
 have a single inferred or annotated type. Updates through an alias are shared.
 Use `counts[key]`, `counts[key] = value`, `counts.get(key, fallback)`,
@@ -78,6 +115,19 @@ Use `counts[key]`, `counts[key] = value`, `counts.get(key, fallback)`,
 Iterating a dictionary visits keys in insertion order; changing its size during
 iteration traps. The [word-count example](../examples/python-word-count/main.my)
 puts these operations together.
+
+`[value for name in items if condition]` builds a list in one pass, with the filter
+optional and the binding confined to the comprehension. It takes one generator; nested
+generators and generator expressions are not provided, and neither are dict or set
+comprehensions.
+
+```mylang
+# doc: expect 42
+def main() -> int:
+    source = [1, 2, 3, 4]
+    kept = [value * 7 for value in source if value > 2]
+    return kept[0] + kept[1] - 7
+```
 
 `for value in items`, `for index, value in enumerate(items)`, and
 `for index in range(end)` / `range(start, end)` support `break` and `continue`.
@@ -88,6 +138,71 @@ Classes declare **value records**, with annotated fields and named construction:
 `self`. Assigning a record copies its fields; managed fields still share their
 underlying collections. Ordinary field assignment updates a record local or a
 record held in a list slot.
+
+Enums and tagged unions declare closed cases. `Kind.first` constructs a case without a
+payload and `Kind.first(value)` constructs one with its declared payload; `match`/`case`
+uses the same spelling. A generic variant names only its template, because `Slot[int].some`
+cannot be told apart from an index followed by a member, so `Slot.some(v)` takes its type
+arguments from the expected type.
+
+```mylang
+# doc: expect 42
+class Point:
+    x: int
+    y: int
+
+union Shape:
+    empty,
+    radius: int,
+    point: Point
+
+def score(shape: Shape) -> int:
+    match shape:
+        case Shape.empty:
+            return 0
+        case Shape.radius(r):
+            return r * r
+        case Shape.point(p):
+            return p.x + p.y
+
+def main() -> int:
+    return score(Shape.point(Point(x=2, y=4))) + score(Shape.radius(6))
+```
+
+A fixed array `[N]T` and an enum-indexed table `[Kind]T` have no constructor keyword:
+a list literal becomes the array and a dict literal keyed by `Kind.case` becomes the
+table whenever the surrounding annotation, parameter, field or result demands one. The
+array length is checked statically and the table requires every case exactly once.
+
+```mylang
+# doc: expect 42
+enum Status:
+    ok,
+    missing
+
+def codes() -> [Status]int:
+    return {Status.missing: 4, Status.ok: 38}
+
+def total(values: [2]int) -> int:
+    return values[0] + values[1]
+
+def main() -> int:
+    fixed: [2]int = [0, 0]
+    table = codes()
+    return total(fixed) + table[Status.ok] + table[Status.missing]
+```
+
+`assert condition` and `assert condition, "message"` trap `R_ASSERT` when the condition is
+false, reporting the message — or the expression's own source text — and the location of the
+expression. Assertions are allowed under every effect bound and are not removed in release
+builds; use them for invariants a caller cannot violate, and `Result` for errors it can.
+
+`case _` covers every variant no earlier arm named, discarding the payload of each one it
+covers. It must be the last arm, must cover at least one variant, and is rejected when it
+would drop a payload that carries an unhandled result.
+
+A `while True` loop with no `break` never falls through, so a function whose body ends in
+one needs no unreachable trailing `return`.
 
 Checked errors use the following explicit extension to Python syntax:
 
@@ -112,7 +227,8 @@ Prelude `list`, `List`, `Result`, and `Option` have one identity across every
 module and both spellings; ordinary procedures use `None`.
 
 Generic functions and classes use square brackets, for example
-`def identity[T](value: T) -> T:`. Calls infer type arguments when possible.
+`def identity[T](value: T) -> T:`. Calls infer type arguments when possible, and
+`identity[int](2)` supplies them explicitly.
 Unconstrained parameters default to copyable values. Additional operations on an
 abstract type require the existing explicit generic contracts.
 

@@ -25,8 +25,9 @@ for the same imported type/helper normalize to the same identity, while same-nam
 types and callees in different modules remain distinct. Function IDs and imported
 alias spelling do not establish equality. Pure scalar bodies can match across module
 boundaries; direct self-recursion retains the existing normalization rule. This
-extends the accepted input scope without changing the exact-v28 or near-v1 canonical
-comparison formats.
+extends the accepted input scope without changing the near-v1 canonical comparison
+format; the exact canonical format is now `exact-v29`, which names assertion
+statements and their trap messages.
 
 The report explicitly separates structural findings from declaration visibility
 and dependency policy. Export lists are not part of body-equivalence comparison;
