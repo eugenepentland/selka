@@ -20,6 +20,13 @@ static int decode(const unsigned char *bytes, size_t length, size_t *offset, uin
     }
     return *point>=minimum && *point<=0x10ffff && !(*point>=0xd800 && *point<=0xdfff) ? 1 : -1;
 }
+int myl_native_text_valid_utf8(const unsigned char *bytes, size_t length) {
+    size_t offset=0;
+    uint32_t point;
+    int status;
+    while ((status=decode(bytes,length,&offset,&point))>0) {}
+    return status==0;
+}
 myl_native_text *myl_native_text_from_utf8(myl_native_heap *heap, const unsigned char *bytes, size_t length) {
     size_t count=0, offset=0;
     uint32_t point;

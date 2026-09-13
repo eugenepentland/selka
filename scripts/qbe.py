@@ -212,7 +212,8 @@ def main():
             'support': {name: digest_file(ROOT / 'src' / name) for name in
                         ['native_host.h', 'native_providers.h', 'native_embed.h',
                          'native_heap.h', 'native_heap.c', 'native_collections.h', 'native_collections.c', 'native_text.h', 'native_text.c',
-                         'native_dictionary.h', 'native_dictionary.c', 'qbe_stack.c', 'qbe_providers.c', 'qbe_resources.c', 'native_equal.h', 'native_equal.c']},
+                         'native_dictionary.h', 'native_dictionary.c', 'qbe_stack.c', 'qbe_providers.c', 'qbe_resources.c', 'native_equal.h', 'native_equal.c',
+                         'native_bytes.h', 'native_bytes.c', 'qbe_bytes.h', 'qbe_bytes.c']},
         }
         cache = args.cache_dir.resolve()
         cache.mkdir(parents=True, exist_ok=True)
@@ -238,7 +239,7 @@ def main():
         runtime_obj, runtime_reused = cached_object(cache, runtime_key,
             lambda temporary, candidate: run([zig, 'cc', *flags, '-c', runtime, '-o', candidate]))
         objects.append(runtime_obj)
-        for support in ['native_heap', 'native_collections', 'native_text', 'native_dictionary', 'qbe_stack', 'qbe_providers', 'qbe_resources', 'native_equal']:
+        for support in ['native_heap', 'native_collections', 'native_text', 'native_dictionary', 'qbe_stack', 'qbe_providers', 'qbe_resources', 'native_equal', 'native_bytes', 'qbe_bytes']:
             support_key = key_for({'environment': environment, 'kind': support})
             support_obj, _ = cached_object(cache, support_key,
                 lambda temporary, candidate, support=support: run([zig, 'cc', *flags, '-c', ROOT / 'src' / (support+'.c'), '-o', candidate]))
