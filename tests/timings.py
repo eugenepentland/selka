@@ -65,7 +65,7 @@ def main():
         records(trapped, 'compiler', ['source_load', 'frontend', 'bytecode_lowering', 'vm_execution', 'total'])
         project = root / 'main.my'
         project.write_text('module main;fn main()->i64{return 7;}')
-        for mode, phases in [('check-project', []), ('run-project', ['bytecode_lowering', 'vm_execution']), ('index-project', []), ('emit-project-c', ['bytecode_lowering', 'native_emission'])]:
+        for mode, phases in [('check-project', []), ('run-project', ['bytecode_lowering', 'vm_execution']), ('index-project', []), ('emit-project-qbe', ['bytecode_lowering', 'native_emission'])]:
             normal = command(compiler, mode, str(project))
             timed = command(compiler, mode, str(project), '--timings=json')
             assert timed.returncode == normal.returncode == 0, timed

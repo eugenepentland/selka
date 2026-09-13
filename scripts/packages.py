@@ -111,7 +111,7 @@ def main():
     building.add_argument('entry', type=Path)
     building.add_argument('--lock', type=Path, required=True)
     building.add_argument('--compiler', type=Path, default=Path(__file__).resolve().parents[1] / 'zig-out/bin/mylang')
-    building.add_argument('--command', choices=['check-project', 'run-project', 'index-project', 'emit-project-c'], default='check-project')
+    building.add_argument('--command', choices=['check-project', 'run-project', 'index-project', 'emit-project-qbe'], default='check-project')
     building.add_argument('--receipt', type=Path)
     args = parser.parse_args()
     try:

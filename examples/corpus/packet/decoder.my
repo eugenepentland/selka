@@ -10,8 +10,8 @@ fn checksum(bytes: [9]u8) -> u8 {
     }
     return cast<u8>(sum % 256u16);
 }
-fn decode(bytes: [9]u8) -> model::Decoded {
-    if len(bytes) != 9u64 {
+fn decode(bytes: [9]u8, size: u64) -> model::Decoded {
+    if size != 9u64 {
         return new model::Decoded.err(new model::Error.frame_length);
     }
     if bytes[0] != 1u8 {
@@ -32,11 +32,10 @@ fn decode(bytes: [9]u8) -> model::Decoded {
     if kind == 1u8 {
         return new model::Decoded.ok(new model::Message.heartbeat(sequence));
     }
-    let high = cast<u32>(bytes[4]) * 16777216u32;
-    let middle = cast<u32>(bytes[5]) * 65536u32 + cast<u32>(bytes[6]) * 256u32;
+    let high = cast<u32>(bytes[4]) * 16777216u32 + cast<u32>(bytes[5]) * 65536u32 + cast<u32>(bytes[6]) * 256u32;
     let reading = new model::Reading {
         sequence: sequence,
-        value: high + middle + cast<u32>(bytes[7])
+        value: high + cast<u32>(bytes[7])
     };
     return new model::Decoded.ok(new model::Message.reading(reading));
 }

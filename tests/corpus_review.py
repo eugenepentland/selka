@@ -143,7 +143,7 @@ def tools_review(compiler, directory, name):
         document = {'version': 'typed-json-v1', 'type': 'pricing::Receipt', 'value': {k: str(v) for k, v in invoice((2, 3, 1)).items()}}
     else:
         assert '0 candidate groups;' in discoveries[0] and '0 approximate pairs;' in discoveries[0]
-        assert 'line-bytes 103 exceeds configured 100' in quality, quality
+        assert 'line-bytes 113 exceeds configured 100' in quality, quality
         mutation(compiler, directory, 'model.my', '    reading: Reading\n}', '    reading: Reading, alarm: u8\n}', 'E_INCOMPLETE_MATCH')
         document = {'version': 'typed-json-v1', 'type': 'model::Message', 'value': {'case': 'reading', 'value': {'sequence': '7', 'value': '300'}}}
     value = directory / 'value.json'

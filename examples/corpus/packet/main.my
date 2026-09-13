@@ -4,8 +4,9 @@ import decoder;
 import model;
 fn main() -> i64 {
     let packet = inputs::bytes();
+    let size = inputs::size();
     {
-        match decoder::decode(packet) {
+        match decoder::decode(packet, size) {
             model::Decoded.err(error) => {
                 return model::error_code(error);
             },

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Retain generated JSON/arena/host-failure cleanup checks against a pinned byte runner."""
+"""Retain generated managed-arena and host-failure cleanup checks against a pinned byte runner."""
 import argparse
 import hashlib
 import json
@@ -9,7 +9,27 @@ import subprocess
 import tempfile
 import time
 
-IO = 'module io;export length;export byte;export put;host fn length()->i64 effects(host);host fn byte(index:i64)->u8 effects(host);host fn put(value:u8)->i64 effects(host);'
+IO = '''module io
+export length
+export byte
+export put
+host def length() -> int effects(host)
+host def byte(index: int) -> u8 effects(host)
+host def put(value: u8) -> int effects(host)
+'''
+
+GUEST = '''module main
+import io
+
+
+def main() -> int:
+    with arena():
+        values: list[int] = []
+        values.append(VALUE)
+        _ = io.put(cast<u8>(values[0]))
+        OPERATION
+    return 0
+'''
 
 
 def campaign(runner, seed, rounds, output):
@@ -22,11 +42,8 @@ def campaign(runner, seed, rounds, output):
         for _ in range(rounds):
             value = rng.randrange(256)
             for mode in ('success', 'provider-failure', 'callback-budget'):
-                operation = 'discard io::byte(-1);' if mode == 'provider-failure' else 'discard io::put(0u8);'
-                source = '''module main;import io;buffer Bytes:u8;result Encoded{ok:Bytes,err:i64}
-fn main(heap:allocator)->i64{arena heap as child{
-match json_encode::<Encoded>(child,VALUE,4096){Encoded.ok(bytes)=>{
-discard io::put(cast<u8>(VALUE));OPERATION discard bytes;return 0;},Encoded.err(e)=>{return e;}}}}'''.replace('VALUE', str(value)).replace('OPERATION', operation)
+                operation = '_ = io.byte(-1)' if mode == 'provider-failure' else '_ = io.put(0)'
+                source = GUEST.replace('VALUE', str(value)).replace('OPERATION', operation)
                 (root / 'main.my').write_text(source)
                 flags = ['--memory-report', '--max-steps=100000', '--max-runtime-bytes=1000000']
                 if mode == 'callback-budget':

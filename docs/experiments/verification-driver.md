@@ -7,7 +7,7 @@ groups; no package installation or service is needed.
 
 ```sh
 python3 scripts/verify.py verify.json --report /tmp/mylang-verification.json
-python3 scripts/verify.py verify.json --only memory-parity
+python3 scripts/verify.py verify.json --only dispatch-parity
 python3 scripts/verify.py verify.json --only 'tests-*'
 ```
 
@@ -90,7 +90,7 @@ observations, invalid/duplicate manifests, and actual CLI exit/report behavior.
 
 The complete repository manifest passed all 11 steps. Debug and ReleaseFast Zig
 suites passed from cache; each invocation executed all eight driver tests. The
-filtered memory-parity run selected exactly build + memory-parity and correctly
+filtered dispatch-parity run selected exactly build + dispatch-parity and correctly
 reported selected success with full-manifest success false. Formatting checks,
 source checking, expected runtime values, the mutation sentinel, specification
 marker, and three timing samples passed. Hosted CI has not run.

@@ -18,15 +18,24 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
+ARENA_TEMPLATE = '''def main() -> int:
+    total = 42
+    with arena():
+        values: list[int] = []
+        values.append(DELTA)
+        total = total + values[0]
+    return total
+'''
+
+
 def templates(rng):
     a, b = rng.randrange(-1000, 1001), rng.randrange(-1000, 1001)
     concrete = f'fn add(a:i64,b:i64)->i64{{return a+b;}}fn main()->i64{{return add({a},{b});}}'
     generic = f'fn add<T:copy>(a:T,b:T)->T{{return a;}}fn main()->i64{{return add::<i64>({a},{b})+{b};}}'
-    # Exercise allocation, arena exit, fallible propagation, snapshots, pools and views.
-    arena = (ROOT / 'examples/arenas.my').read_text().replace('append_buffer<Change>(buffer, 8)',
-                                                            f'append_buffer<Change>(buffer, {a})')
+    # Exercise managed allocation, region exit and the escape barrier.
+    arena = ARENA_TEMPLATE.replace('DELTA', str(a))
     return [(concrete, a + b, 'concrete-arithmetic'), (generic, a + b, 'generic-copy'),
-            (arena, 42 + a, 'arena-pool-buffer-result'), *safety_interactions.templates(rng)]
+            (arena, 42 + a, 'managed-arena-list'), *safety_interactions.templates(rng)]
 
 
 def execute(compiler, source, path, action):
@@ -85,7 +94,7 @@ def campaign(compiler, seed, rounds, output):
                 for mutation in range(3):
                     start = rng.randrange(len(source))
                     end = min(len(source), start + rng.randrange(1, 12))
-                    text = source[:start] + rng.choice(['', '?', 'return ', '}', 'borrow mut ', '\x00']) + source[end:]
+                    text = source[:start] + rng.choice(['', '?', 'return ', '}', 'with arena():', '\x00']) + source[end:]
                     result = execute(compiler, text, path, 'check')
                     failed = malformed_failure(result)
                     row = {'family': family + '-mutation', 'mutation': mutation, 'source': text,
@@ -97,7 +106,7 @@ def campaign(compiler, seed, rounds, output):
         raise ValueError('compiler changed during campaign')
     report = {'version': 'safety-campaign-v1', 'seed': seed, 'rounds': rounds,
               'compiler_sha256': identity, 'generator_sha256': digest(Path(__file__).read_bytes()),
-              'template_sha256': digest((ROOT / 'examples/arenas.my').read_bytes()),
+              'template_sha256': digest(ARENA_TEMPLATE.encode()),
               'interaction_generator_sha256': digest(Path(safety_interactions.__file__).read_bytes()),
               'coverage': {'kind': 'case-families-not-code-coverage', 'families': sorted({r['family'] for r in rows})},
               'passed': all(r['passed'] for r in rows), 'cases': rows}

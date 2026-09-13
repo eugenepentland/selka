@@ -86,7 +86,7 @@
       "expect_stdout": "7\n"
     },
     {
-      "id": "memory-parity",
+      "id": "dispatch-parity",
       "kind": "parity",
       "depends_on": [
         "build"
@@ -95,17 +95,17 @@
         [
           "zig-out/bin/mylang",
           "run",
-          "examples/buffer-views.my",
-          "--memory=general"
+          "tests/verification/smoke.my",
+          "--dispatch=optimized"
         ],
         [
           "zig-out/bin/mylang",
           "run",
-          "examples/buffer-views.my",
-          "--memory=arena"
+          "tests/verification/smoke.my",
+          "--dispatch=generic"
         ]
       ],
-      "expect_stdout": "19\n"
+      "expect_stdout": "7\n"
     },
     {
       "id": "immutable-mutation",
