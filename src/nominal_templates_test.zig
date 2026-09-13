@@ -7,7 +7,7 @@ const fixture = "struct Pair<T:copy,U:copy>{first:T,second:U}" ++
     "union Slot<T:copy>{none,some:T}struct Row<T:equality>{pair:Pair<T,bool>,slots:[2]Slot<T>}" ++
     "resource File:filesystem;struct Owned<T:copy>{file:File,value:T}" ++
     "result Answer<T:copy>{ok:T,err:i64}struct Pending{answer:Answer<i64>}" ++
-    "enum Tag<T:copy>{left,right}domain Id:i64{}pool Nodes(NodeId):i64;" ++
+    "enum Tag<T:copy>{left,right}domain Id:i64{}" ++
     "struct Empty{zero:[0]File}fn main()->i64{return 0;}";
 fn collect(compilation: *language.Compilation, sink: *language.diagnostic.Sink) !templates.Index {
     try compilation.parse();
@@ -34,8 +34,8 @@ fn metadataScenario(allocator: std.mem.Allocator) !void {
     try t.expectEqual(@as(usize, 0), slots.element.application.arguments[0].parameter);
     try t.expect(row.guarantees.contains(.copy));
     try t.expect(!row.guarantees.contains(.equality));
-    for ([_][]const u8{ "File", "Owned", "Answer", "Pending", "Nodes" }) |name| try t.expect(!(try named(index, name)).guarantees.contains(.copy));
-    for ([_][]const u8{ "Tag", "Id", "NodeId" }) |name| {
+    for ([_][]const u8{ "File", "Owned", "Answer", "Pending" }) |name| try t.expect(!(try named(index, name)).guarantees.contains(.copy));
+    for ([_][]const u8{ "Tag", "Id" }) |name| {
         const declaration = try named(index, name);
         try t.expect(declaration.guarantees.contains(.equality));
         try t.expect(!declaration.guarantees.contains(.integer));

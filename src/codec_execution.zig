@@ -28,7 +28,6 @@ pub const InvokeError = error{
     InvalidValueLimits,
     InvocationArity,
     InvocationEffects,
-    InvocationReference,
     InvocationTrap,
     MemoryClosed,
     NoCapacity,

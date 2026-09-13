@@ -17,7 +17,7 @@ fn run(bytes: []const u8, expected: i64) !void {
     try t.expectEqual(expected, (try c.execute(t.allocator)).value);
 }
 const scenario_source = schema ++
-    "fn step<T:copy>(r:R)->R{return new R.ok((try r)+1);}" ++
+    "fn step<T:copy>(r:R)->R{return new R.ok((r?)+1);}" ++
     "fn consume(r:R)->bool{_ = r;return true;}" ++
     "fn flow<T:copy>(flag:bool,r:R)->i64{if flag{_ = r;return 1;}_ = r;let mut n=0;" ++
     "let mut item=new R.ok(0);while n<3{_ = item;item=new R.err(n);n+=1;}_ = item;" ++

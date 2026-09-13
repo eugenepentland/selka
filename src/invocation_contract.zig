@@ -39,7 +39,7 @@ pub const RunError = error{
     ValueTypeMismatch,
 };
 /// Invocation additionally checks exported function identity and argument contracts.
-pub const InvokeError = RunError || error{ InvocationArity, InvocationEffects, InvocationReference, PrivateInvocationFunction, UnknownInvocationFunction };
+pub const InvokeError = RunError || error{ InvocationArity, InvocationEffects, PrivateInvocationFunction, UnknownInvocationFunction };
 /// Owned typed invocation result or a source-located runtime trap.
 pub const ValueResult = union(enum) { value: typed.Value, trap: @import("diagnostic.zig").Diagnostic };
 /// Authority-free invocation limits and checked argument-copy limits.

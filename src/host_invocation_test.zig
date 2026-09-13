@@ -8,7 +8,7 @@ const typed = @import("typed.zig");
 const source = "module app;export Point;export Checked;export evaluate;export transform;" ++
     "struct Point{x:i64,y:i64}struct Other{x:i64,y:i64}result Checked{ok:Point,err:i64}" ++
     "host fn transform(p:Point)->Checked effects(host);fn evaluate(p:Point)->Checked{return transform(p);}" ++
-    "fn hidden()->i64{return 9;}fn byReference(p:&Point)->i64{return read_ref(p).x;}fn authority(heap:allocator)->i64{_ = heap;return 0;}fn main()->i64{return 0;}";
+    "fn hidden()->i64{return 9;}fn nodata()->unit{}fn main()->i64{return 0;}";
 const Inputs = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
         if (!std.mem.eql(u8, path, "app.my")) return error.NotFound;
@@ -97,8 +97,7 @@ test "host typed invocation rejects hidden entries invalid arguments and absent 
     try t.expectError(error.InvocationHostDeclaration, c.invokePublicWithHost(t.allocator, "app::transform", args, &registry, .{}));
     try t.expectError(error.InvocationEffects, c.invokePublic(t.allocator, name, args, .{}));
     try t.expectError(error.UnknownInvocationFunction, vm.invokeWithHost(t.allocator, c.code.?, @fromBackingInt(c.code.?.functions.len), args, &registry, .{}));
-    try t.expectError(error.InvocationReference, vm.invokeWithHost(t.allocator, c.code.?, find(c.code.?, "app::byReference"), args, &registry, .{}));
-    try t.expectError(error.NotDataType, vm.invokeWithHost(t.allocator, c.code.?, find(c.code.?, "app::authority"), &.{.{ .i64 = 1 }}, &registry, .{}));
+    try t.expectError(error.NotDataType, vm.invokeWithHost(t.allocator, c.code.?, find(c.code.?, "app::nodata"), &.{}, &registry, .{}));
     try t.expectEqual(@as(usize, 0), callback.calls);
     const result = try c.invokePublicWithHost(t.allocator, name, args, &registry, .{});
     defer result.value.release(t.allocator);

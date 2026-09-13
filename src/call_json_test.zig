@@ -3,14 +3,14 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const codec = language.codec_json;
 const source = "module data;export D;export R;export Output;export combine;export fail;export " ++
-    "constant;export view;export cap;export clock;export Time;export loop;result R{ok:D," ++
+    "constant;export nodata;export clock;export Time;export loop;result R{ok:D," ++
     "err:i64}domain D:i64{codec i64{decode:dec,encode:enc}private fn raw(x:i64)->D{return " ++
     "wrap<D>(x);}fn dec(x:i64)->R{if x<=0{return new R.err(-1);}return new R.ok(D.raw(x));" ++
     "}fn enc(x:D)->i64{return unwrap(x);}}struct Output{value:D,total:i64}fn " ++
     "combine(left:D,right:i64)->Output{return new Output{value:left," ++
     "total:D.enc(left)+right};}fn fail(x:i64)->R{return new R.err(x);}fn " ++
-    "constant()->u64{return 18446744073709551615u64;}fn view(x:&i64)->i64{return " ++
-    "read_ref(x);}fn cap(x:allocator)->i64{return 0;}result Time{ok:i64,err:i64}fn " ++
+    "constant()->u64{return 18446744073709551615u64;}fn nodata()->unit{}" ++
+    "result Time{ok:i64,err:i64}fn " ++
     "clock(c:clock_cap)->Time{return clock_now<Time>(c);}fn hidden()->i64{return 1;}fn " ++
     "loop(x:i64)->i64{return loop(x);}";
 const Provider = struct {
@@ -67,8 +67,7 @@ test "JSON function calls reject stale schemas visibility effects references and
         .{ "data::hidden", "{}", error.UnknownPublicFunction },
         .{ "data::D.raw", "{\"x\":\"1\"}", error.UnknownPublicFunction },
         .{ "data::clock", "{\"c\":false}", error.InvocationEffects },
-        .{ "data::view", "{\"x\":\"1\"}", error.InvocationReference },
-        .{ "data::cap", "{\"x\":false}", error.NotDataType },
+        .{ "data::nodata", "{}", error.NotDataType },
         .{ "data::combine", "{}", error.InvocationArguments },
         .{ "data::combine", "{\"left\":\"0\",\"wrong\":\"5\"}", error.InvocationArguments },
         .{ "data::combine", "[]", error.InvocationArguments },

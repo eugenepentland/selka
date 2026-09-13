@@ -77,8 +77,8 @@ fn retryScenario(allocator: std.mem.Allocator) !void {
 test "source acquisition delegates authority and failed completion returns owned resource for retry" {
     try retryScenario(t.allocator);
 }
-const partial = declarations ++ "fn work(fs: filesystem_cap) -> Status { let a = try acquire_resource<Open>(fs, new " ++
-    "[0]u8 []); let b = acquire_resource<Open>(fs, new [0]u8 [])?; _ = a; discard " ++
+const partial = declarations ++ "fn work(fs: filesystem_cap) -> Status { let a = acquire_resource<Open>(fs, new " ++
+    "[0]u8 [])?; let b = acquire_resource<Open>(fs, new [0]u8 [])?; _ = a; _ = " ++
     "b; return new Status.ok(true); } fn main(fs: filesystem_cap) -> i64 { match work(fs) " ++
     "{ Status.ok(done) => { _ = done; return 9; }, Status.err(e) => { return e; } } }";
 // spec: OWN-9
@@ -114,9 +114,9 @@ test "ownExternal and source acquisition completion retry clean every allocation
 }
 const wrappers = declarations ++ "struct Inner { file: File } struct Pair { first: Inner, second: File } result " ++
     "PairResult { ok: Pair, err: i64 } fn pair(fs: filesystem_cap) -> PairResult { return " ++
-    "new PairResult.ok(new Pair { first: new Inner { file: try acquire_resource<Open>(fs, " ++
-    "new [0]u8 []) }, second: acquire_resource<Open>(fs, new [0]u8 [])? }); } fn " ++
-    "main(fs: filesystem_cap) -> i64 { match pair(fs) { PairResult.ok(value) => { discard " ++
+    "new PairResult.ok(new Pair { first: new Inner { file: acquire_resource<Open>(fs, " ++
+    "new [0]u8 [])? }, second: acquire_resource<Open>(fs, new [0]u8 [])? }); } fn " ++
+    "main(fs: filesystem_cap) -> i64 { match pair(fs) { PairResult.ok(value) => { _ = " ++
     "value; return 0; }, PairResult.err(e) => { return e; } } }";
 test "nested resource wrappers release in reverse schema order and traps unwind every instruction" {
     var c = try language.Compilation.init(t.allocator, "wrappers.my", wrappers);
@@ -183,7 +183,7 @@ test "source frame traps release the resource moved through recursive calls" {
 fn partialFieldResourceScenario(allocator: std.mem.Allocator) !void {
     const text = declarations ++ "struct Pair { first: File, second: File, code: i64 } fn work(fs: filesystem_cap) -> " ++
         "Status { let pair = new Pair { first: acquire_resource<Open>(fs, new [0]u8 [])?, " ++
-        "second: acquire_resource<Open>(fs, new [0]u8 [])?, code: 7 }; discard " ++
+        "second: acquire_resource<Open>(fs, new [0]u8 [])?, code: 7 }; _ = " ++
         "pair.first; let spare = acquire_resource<Open>(fs, new [0]u8 [])?; " ++
         "return new Status.ok(pair.code == 7); } fn main(fs: filesystem_cap) -> " ++
         "i64 { match work(fs) { Status.ok(done) => { if done { return 7; } return 0; }, " ++

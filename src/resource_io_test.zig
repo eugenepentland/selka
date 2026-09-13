@@ -64,10 +64,10 @@ fn reject(text: []const u8, code: []const u8) !void {
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
-const source = declarations ++ "fn work(fs: filesystem_cap) -> Status { let mut file = try acquire_resource<Open>(fs," ++
-    " new [0]u8 []); let first = read_resource<Read>(file)?; let second = try " ++
-    "read_resource<Read>(file); let count = try write_resource<Written>(file, new [3]u8 " ++
-    "[7u8, 8u8, 9u8]); match complete_resource<Finish>(file) { Finish.ok(done) => { " ++
+const source = declarations ++ "fn work(fs: filesystem_cap) -> Status { let mut file = acquire_resource<Open>(fs," ++
+    " new [0]u8 [])?; let first = read_resource<Read>(file)?; let second = " ++
+    "read_resource<Read>(file)?; let count = write_resource<Written>(file, new [3]u8 " ++
+    "[7u8, 8u8, 9u8])?; match complete_resource<Finish>(file) { Finish.ok(done) => { " ++
     "_ = done; }, Finish.err(failure) => { return new Status.err(failure.code); } } " ++
     "if first.eof || !second.eof { return new Status.err(99); } return new " ++
     "Status.ok(cast<i64>(first.bytes[1]) + cast<i64>(second.bytes[0]) + " ++

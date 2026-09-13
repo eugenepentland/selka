@@ -26,7 +26,7 @@ fn reject(bytes: []const u8, expected: []const u8) !void {
     try t.expectEqualStrings(expected, c.diagnostics.items[0].code);
 }
 const updates = "struct Pair{values:[2]i64,flag:bool}" ++
-    "fn change<T:integer>(p:Pair,index:T,value:i64)->Pair{return update(p){values:replace(p.values,index,value)};}" ++
+    "fn change<T:integer>(p:Pair,index:T,value:i64)->Pair{let mut q=p;q.values=replace(p.values,index,value);return q;}" ++
     "fn main()->i64{let original=new Pair{values:new [2]i64[7,8],flag:true};let changed=change::<u8>(original,0u8,20);" ++
     "if changed.flag{return original.values[0]+changed.values[0]+changed.values[1];}return 0;}";
 fn updateScenario(allocator: std.mem.Allocator) !void {

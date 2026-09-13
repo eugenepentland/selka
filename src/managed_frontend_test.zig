@@ -15,7 +15,7 @@ fn evaluate(bytes: []const u8) !void {
 }
 // spec: GC-GENERIC-3
 test "managed nominal indirection does not admit recursive by value records" {
-    var compilation = try language.Compilation.init(t.allocator, "managed-invalid.my", "list Items<T:copy>:T;struct Bad<T:copy>{nested:Bad<T>}fn main()->i64{return 0;}");
+    var compilation = try language.Compilation.init(t.allocator, "managed-invalid.my", "struct Bad<T:copy>{nested:Bad<T>}fn main()->i64{return 0;}");
     defer compilation.deinit();
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqualStrings("E_RECURSIVE_RECORD", compilation.diagnostics.items[0].code);

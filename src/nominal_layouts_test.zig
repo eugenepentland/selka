@@ -9,8 +9,7 @@ const fixture = "struct Empty<T:copy>{}struct Box<T:copy>{value:T}" ++
     "struct Model<T:copy>{a:Pair<i64,bool>,b:Pair<i64,bool>,c:Pair<bool,i64>,d:Other<i64,bool>,nested:Box<Box<T>>}" ++
     "struct Grow<T:copy>{marker:Empty<Grow<[1]T>>}" ++
     "struct Left<T:copy>{box:Box<T>}struct Right<T:copy>{box:Box<T>}" ++
-    "enum Key<T:copy>{a,b}struct Table{data:[Key<i64>]Box<i64>}" ++
-    "pool Nodes(NodeId):Node;struct Node{next:NodeId}buffer Bytes:u8;";
+    "enum Key<T:copy>{a,b}struct Table{data:[Key<i64>]Box<i64>}";
 fn root(graph: layouts.Graph, index: templates.Index, name: []const u8) !layouts.Node {
     const id = index.names.get(name);
     try t.expect(id != null);
@@ -41,10 +40,6 @@ fn scenario(allocator: std.mem.Allocator) !void {
     try t.expectEqual(@as(usize, 0), graph.nodes.items[@backingInt(grow.edges[0].target)].edges.len);
     const table = try root(graph, index, "Table");
     try t.expectEqual(@as(usize, 2), graph.nodes.items[@backingInt(table.edges[0].target)].key.base.array.length);
-    const pool = try root(graph, index, "Nodes");
-    try t.expectEqual(@as(usize, 1), pool.edges.len);
-    const handle = try root(graph, index, "NodeId");
-    try t.expectEqual(@as(usize, 0), handle.edges.len);
 }
 // spec: NOMINAL-LAYOUT-1
 test "nominal layout collect preserves identity finite nesting and phantom arguments across allocation failures" {

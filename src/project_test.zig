@@ -219,7 +219,7 @@ fn schemaScenario(allocator: std.mem.Allocator) !void {
         .{ .path = "data.my", .bytes = "module data; export Point; export Choice; export Identity; export select; struct " ++
             "Point { x: u64, y: [2]bool } union Choice { empty, point: Point } domain Identity: " ++
             "i16 { private fn raw(x: i16) -> Identity { return wrap<Identity>(x); } } fn " ++
-            "select(x: &Choice) -> &Choice from x { return x; } struct Hidden { secret: i8 }" },
+            "select(x: Choice) -> Choice { return x; } struct Hidden { secret: i8 }" },
     } };
     var project = p.Project.init(allocator);
     defer project.deinit();
@@ -236,7 +236,6 @@ fn schemaScenario(allocator: std.mem.Allocator) !void {
     try t.expectEqualStrings("language-schema-v1", parsed.value.object.get("version").?.string);
     for ([_][]const u8{ "Hidden", "secret", "raw", "i16", "type#" }) |hidden| try t.expect(std.mem.indexOf(u8, text, hidden) == null);
     try t.expect(std.mem.indexOf(u8, text, "18446744073709551615") != null);
-    try t.expect(std.mem.indexOf(u8, text, "shared_reference") != null);
 }
 test "checked public schemas retain structure and privacy with allocation failure cleanup" {
     try schemaScenario(t.allocator);

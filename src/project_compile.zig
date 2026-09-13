@@ -71,7 +71,6 @@ pub const InvokePublicError = PublicFunctionError || error{
     InvalidValueLimits,
     InvocationArity,
     InvocationEffects,
-    InvocationReference,
     MemoryClosed,
     NoCapacity,
     NotDataType,

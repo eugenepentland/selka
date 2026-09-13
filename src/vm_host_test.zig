@@ -166,8 +166,18 @@ test "VM host preflight requires unused declarations before any callback and rej
 }
 
 fn cleanupScenario(allocator: std.mem.Allocator) !void {
-    const source = "buffer B:i64;result R{ok:B,err:i64}host fn measure(x:i64)->i64 effects(host);" ++
-        "fn main(heap:allocator)->i64{match acquire_buffer<R>(heap,2){R.ok(b)=>{let n=measure(6);_ = b;return n;},R.err(e)=>{return e;}}}";
+    const source =
+        \\host def measure(x: int) -> int effects(host)
+        \\
+        \\def main() -> int:
+        \\    values: list[int] = []
+        \\    values.append(1)
+        \\    values.append(2)
+        \\    n = measure(6)
+        \\    _ = values
+        \\    return n
+        \\
+    ;
     var c = try language.Compilation.init(allocator, "host-cleanup.my", source);
     defer c.deinit();
     try c.emit();
@@ -181,7 +191,7 @@ fn cleanupScenario(allocator: std.mem.Allocator) !void {
         if (failure) try t.expectEqualStrings("R_HOST_FAILURE", result.trap.code) else try t.expectEqual(@as(i64, 12), result.value);
     }
 }
-test "VM host traps release guest-owned buffers and all partial allocations exactly once" {
+test "VM host traps release guest managed storage and all partial allocations exactly once" {
     try cleanupScenario(t.allocator);
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), cleanupScenario, .{});
