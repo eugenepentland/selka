@@ -375,7 +375,7 @@
     },
     "memory-accounting-categories": {
       "kind": "tooling",
-      "summary": "Runtime memory reports separate logical slots, guest backing and VM bookkeeping.",
+      "summary": "Runtime memory reports separate the VM and host totals, and split the VM's between guest backing and bookkeeping.",
       "doc": "docs/tooling/runtime-budgets.md#memory-accounting-categories"
     },
     "typed-holes": {
@@ -410,7 +410,7 @@
     },
     "deterministic-test-provider-fixtures": {
       "kind": "tooling",
-      "summary": "Guest tests receive deterministic clock, entropy and environment providers.",
+      "summary": "A guest test runs with no ambient authority, and a case may replace a dependency's source to make a reading deterministic.",
       "doc": "docs/tooling/guest-tests.md#deterministic-provider-fixtures"
     },
     "typed-noncapturing-function-values": {
@@ -510,7 +510,7 @@
     },
     "command-line-capability-grants": {
       "kind": "tooling",
-      "summary": "`mylang run --allow-*` grants the capabilities an entry point requests, and refuses to start without them.",
+      "summary": "`mylang run` grants every capability by default; `--restrict` denies them and `--allow-*` narrows what it grants back.",
       "doc": "docs/io.md#capabilities"
     },
     "documented-feature-coverage": {
