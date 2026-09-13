@@ -281,22 +281,6 @@ pub const Value = union(enum) {
         }
     }
 
-    /// Transfer one field from a unique aggregate without retaining it. Missing
-    /// slots are tracked separately so cleanup never touches transferred values.
-    /// Allocate bookkeeping before transfer; failure leaves the aggregate intact.
-    pub fn takeField(self: Value, allocator: std.mem.Allocator, index: usize) error{ OutOfMemory, InternalError }!Value {
-        if (self != .aggregate or self.aggregate.references != 1 or self.aggregate.active_tag != null or index >= self.aggregate.fields.len) return error.InternalError;
-        const record = self.aggregate;
-        if (record.moved_fields == null) {
-            const moved = try allocator.alloc(bool, record.fields.len);
-            @memset(moved, false);
-            record.moved_fields = moved;
-        }
-        if (record.moved_fields.?[index]) return error.InternalError;
-        record.moved_fields.?[index] = true;
-        return record.fields[index];
-    }
-
     /// Read and retain an initialized aggregate field, rejecting moved or missing fields.
     pub fn getField(self: Value, index: usize) error{InternalError}!Value {
         if (self != .aggregate or index >= self.aggregate.fields.len) return error.InternalError;

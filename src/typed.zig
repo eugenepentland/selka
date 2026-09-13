@@ -322,16 +322,6 @@ fn byteResultShape(ty: Type, records: []const Record, operation: provider_contra
     return .{ .result = result, .bytes_type = schema.fields[slots[0]].ty, .bytes_field = slots[0], .length_field = slots[1], .flag_field = slots[2] };
 }
 
-/// Result fields describing the count and EOF state of a read into a slice.
-pub const SliceReadShape = struct { result: ResultShape, length_field: usize, eof_field: usize };
-/// Recognize the result layout for a resource read into caller-owned storage.
-pub fn resourceSliceReadShape(ty: Type, records: []const Record) ?SliceReadShape {
-    const result = resultShape(ty, records) orelse return null;
-    if (result.error_type != .i64 or !result.ok_type.isAggregate() or result.ok_type.recordIndex() >= records.len) return null;
-    const slots = providerFields(records[result.ok_type.recordIndex()], records, .slice_read) orelse return null;
-    return .{ .result = result, .length_field = slots[0], .eof_field = slots[1] };
-}
-
 fn providerFields(schema: Record, records: []const Record, operation: provider_contracts.Operation) ?[3]usize {
     const required = provider_contracts.fields(operation);
     if (!schema.isRecord() or schema.fields.len != required.len) return null;

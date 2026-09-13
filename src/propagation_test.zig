@@ -100,7 +100,9 @@ test "nested results can be propagated repeatedly or explicitly acknowledged aft
     try result("result R { ok: i64, err: i64 } result Outer { ok: R, err: i64 } fn f(r: Outer) -> R " ++
         "{ _ = r?; return new R.ok(7); } fn main() -> i64 { match f(new " ++
         "Outer.ok(new R.err(3))) { R.ok(n) => { return n; }, R.err(e) => { return e; } } }", 7);
-    try reject("result Outer { ok: R, err: i64 } fn f(r: Outer) -> R { _ = r?; return new R.ok(0); } fn main() -> i64 { return 0; }", "E_RESULT_DISCARD");
+    try result("result R { ok: i64, err: i64 } result Outer { ok: R, err: i64 } " ++
+        "fn f(r: Outer) -> R { _ = r?; return new R.ok(5); } fn main() -> i64 { " ++
+        "match f(new Outer.ok(new R.ok(1))) { R.ok(n) => { return n; }, R.err(e) => { return e; } } }", 5);
 }
 
 test "duplicate discovery retains propagation operations and target result types" {

@@ -3,12 +3,6 @@
 pub const result_discard = "E_RESULT_DISCARD";
 /// Shared code for forbidden source binding/type-variable shadowing.
 pub const shadowing = "E_SHADOWING";
-/// Shared code for misuse of a reference-returning function or reference result.
-pub const reference_result = "E_REFERENCE_RESULT";
-/// Shared code for attempts to strengthen shared reference permissions.
-pub const reference_read_only = "E_REFERENCE_READ_ONLY";
-/// Shared code for mismatched or invalid declared reference provenance.
-pub const return_lifetime = "E_RETURN_LIFETIME";
 /// Shared code for aggregate operations that would erase result obligations.
 pub const result_operation = "E_RESULT_OPERATION";
 /// Shared code for inconsistent obligations across continuing control-flow paths.
@@ -108,31 +102,6 @@ pub const Sink = struct {
         return error.SourceError;
     }
 
-    /// Explain the actual returned borrow, its owner and the input required by the signature.
-    pub fn failReturnLifetime(self: *Sink, span: source.Span, loan: source.Span, owner: source.Span, input: source.Span) Error {
-        self.items.append(self.allocator, .{
-            .code = return_lifetime,
-            .span = span,
-            .message = "returned reference does not borrow from the declared input parameter",
-            .related = .{ .span = loan, .message = "returned borrow declared here" },
-            .provenance = .{
-                .origin = .{ .span = owner, .message = value_declared_here },
-                .requirement = .{ .span = input, .message = "result lifetime is tied to this input" },
-            },
-        }) catch return error.OutOfMemory;
-        return error.SourceError;
-    }
-
-    /// Identify the earlier extraction when a moved field is accessed again.
-    pub fn failMovedField(self: *Sink, span: source.Span, declaration: source.Span, transfer: source.Span) Error {
-        return self.failProvenance("E_FIELD_MOVED", span, "field has already been transferred", .{ .span = transfer, .message = "earlier field transfer on this path" }, declaration);
-    }
-
-    /// Identify a missing field when the incomplete record is used as a whole.
-    pub fn failPartialMove(self: *Sink, span: source.Span, declaration: source.Span, transfer: source.Span) Error {
-        return self.failProvenance("E_PARTIAL_MOVE", span, "record has missing fields; access remaining fields individually or replace the binding", .{ .span = transfer, .message = "earlier field transfer on this path" }, declaration);
-    }
-
     /// Diagnose reuse of a transferred value, retaining a witness from the checked path.
     pub fn failTransfer(self: *Sink, code: []const u8, span: source.Span, declaration: source.Span, transfer: ?source.Span) Error {
         const message = "value has already been transferred or handled";
@@ -147,19 +116,10 @@ pub const Sink = struct {
     }
 };
 
-/// Owned/result references remain restricted to supported copyable buffer views.
-pub const result_borrow = "E_RESULT_BORROW";
-
 /// Stable code for malformed or undeclared generic capability contracts.
 pub const generic_requirement = "E_GENERIC_REQUIREMENT";
 /// Stable code for a concrete or forwarded generic contract mismatch.
 pub const generic_argument = "E_GENERIC_ARGUMENT";
 
-/// Invalid argument to a reference parameter.
-pub const reference_argument = "E_REFERENCE_ARGUMENT";
-
 /// Constant generic length syntax, kind or specialization-bound failure.
 pub const generic_length = "E_GENERIC_LENGTH";
-
-/// An exclusive loan cannot overlap another active call argument.
-pub const borrow_conflict = "E_BORROW_CONFLICT";

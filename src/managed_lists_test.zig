@@ -52,7 +52,7 @@ test "managed aliases mutate immutable bindings across helpers without allocator
     const source = "" ++
         "fn change(values:List<i64>)->unit{values.push(40);values[0u64]=42;}" ++
         "fn main()->i64{let values:List<i64>=[];let alias=values;change(alias);" ++
-        "if len(values)!=1u64{return 1;}return values[0u64];}";
+        "if len(values)!=1{return 1;}return values[0u64];}";
     var statistics: language.vm.GcStatistics = .{};
     const result = try execute(source, &statistics);
     try t.expectEqual(@as(i64, 42), result.value);
@@ -67,7 +67,7 @@ test "managed recursive record cycle is reclaimed at an allocation before VM tea
         "fn cycle()->unit{let nodes:List<Node>=[];" ++
         "nodes.push(new Node{children:nodes,value:42});" ++
         "let node=nodes[0u64];let alias=node.children;alias[0u64]=node;}" ++
-        "fn main()->i64{cycle();_ = [];return 42;}";
+        "fn main()->i64{cycle();let spare:List<Node>=[];_ = spare;return 42;}";
     var statistics: language.vm.GcStatistics = .{};
     try t.expectEqual(@as(i64, 42), (try execute(source, &statistics)).value);
     try t.expectEqual(@as(u64, 2), statistics.created);
@@ -147,7 +147,7 @@ test "managed cycles lose local and record roots on block break and continue exi
         "let mut i=0;while i<1{i=i+1;" ++ cycle ++ "continue;}",
     };
     for (bodies) |body| {
-        const source = try std.mem.concat(t.allocator, u8, &.{ prefix, "fn main()->i64{", body, "_ = [];return 42;}" });
+        const source = try std.mem.concat(t.allocator, u8, &.{ prefix, "fn main()->i64{", body, "let spare:List<i64>=[];_ = spare;return 42;}" });
         defer t.allocator.free(source);
         var statistics: language.vm.GcStatistics = .{};
         try t.expectEqual(@as(i64, 42), (try execute(source, &statistics)).value);

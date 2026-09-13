@@ -25,22 +25,6 @@ pub const RestrictError = GrantError || error{
 pub const AcquireError = RestrictError || error{
     InvalidAggregateType,
 };
-/// Failures returned by ioSlice; callers must handle these boundary errors.
-pub const IoSliceError = AcquireError || error{
-    BorrowConflict,
-    BorrowSuspended,
-    Bounds,
-    CapacityLimit,
-    ChildrenActive,
-    ExpiredBorrow,
-    ForeignMemory,
-    InvalidAllocation,
-    MemoryClosed,
-    NoCapacity,
-    ReadOnly,
-    RegionInUse,
-    TypeMismatch,
-};
 
 const std = @import("std");
 const typed = @import("typed.zig");

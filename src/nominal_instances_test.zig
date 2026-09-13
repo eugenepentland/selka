@@ -118,6 +118,15 @@ test "nominal exported type constructors are symbolic schema templates rather th
     try t.expect(!templates[0].object.get("contract").?.object.get("callable").?.bool);
     try t.expect(templates[0].object.get("contract").?.object.get("requires_explicit_instantiation").?.bool);
 }
+/// Count move-only filesystem resource declarations in a checked program.
+fn filesystemResources(records: []const typed.Record) usize {
+    var found: usize = 0;
+    for (records) |record| {
+        const kind = record.shape.resource orelse continue;
+        if (kind == .filesystem and record.contract.move_only) found += 1;
+    }
+    return found;
+}
 test "nominal instances carry domain payloads beside resource declarations" {
     const program = definitions ++
         "domain Id:i64{fn make(n:i64)->Id{return wrap<Id>(n);}fn number(n:Id)->i64{return unwrap(n);}}" ++
@@ -126,13 +135,7 @@ test "nominal instances carry domain payloads beside resource declarations" {
     var compilation = try language.Compilation.init(t.allocator, "nominal-domain.my", program);
     defer compilation.deinit();
     try t.expectEqual(@as(i64, 13), (try compilation.execute(t.allocator)).value);
-    var resources: usize = 0;
-    for (compilation.program.?.records) |record| if (record.shape.resource) |kind| {
-        try t.expectEqual(@import("external_resources.zig").Kind.filesystem, kind);
-        try t.expect(record.contract.move_only);
-        resources += 1;
-    };
-    try t.expectEqual(@as(usize, 1), resources);
+    try t.expectEqual(@as(usize, 1), filesystemResources(compilation.program.?.records));
 }
 test "nominal instances keep growing phantom arguments outside runtime storage" {
     try run(t.allocator, "struct Empty<T:copy>{}struct Grow<T:copy>{marker:Empty<Grow<[1]T>>}" ++

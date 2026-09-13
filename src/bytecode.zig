@@ -331,8 +331,9 @@ fn validateOpExternalRead(program: Program, read: @FieldType(@FieldType(Instruct
 }
 
 fn validateOpAcquireBuffer(program: Program, ty: @FieldType(@FieldType(Instruction, "op"), "acquire_buffer")) Error!void {
-    if (!validType(ty, program) or !ty.isAggregate() or !program.records[ty.recordIndex()].managed) return error.InternalError;
-    if (program.records[ty.recordIndex()].shape.buffer == null) return error.InternalError;
+    if (!validType(ty, program) or !ty.isAggregate()) return error.InternalError;
+    const record = program.records[ty.recordIndex()];
+    if (!record.managed or record.shape.buffer == null) return error.InternalError;
 }
 
 fn validateOpMakeRecord(allocator: std.mem.Allocator, program: Program, record: @FieldType(@FieldType(Instruction, "op"), "make_record")) Error!void {

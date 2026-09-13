@@ -591,8 +591,8 @@ test "interface closure includes domain backing and enum table keys" {
 
 // spec: ERGONOMIC-INTEGRATION-1
 test "cross module effect and recoverable result obligations are enforced" {
-    try rejectChecked("module main; import units; fn main() -> i64 noalloc { return units::allocate(); }",
-        "module units; export allocate; fn allocate() -> i64 { let values: List<i64> = []; values.push(1); return values[0u64]; }", "E_EFFECT_BOUND");
-    try rejectChecked("module main; import units; fn main() -> i64 { let pending = units::fallible(); return 0; }",
-        "module units; export R; export fallible; result R { ok: i64, err: i64 } fn fallible() -> R { return new R.ok(7); }", "E_RESULT_UNHANDLED");
+    try rejectChecked("module main; import units; fn main() -> i64 noalloc { return units::allocate(); }", "module units; export allocate; fn allocate() -> i64 { let values: List<i64> = []; " ++
+        "values.push(1); return values[0u64]; }", "E_EFFECT_BOUND");
+    try rejectChecked("module main; import units; fn main() -> i64 { let pending = units::fallible(); return 0; }", "module units; export R; export fallible; result R { ok: i64, err: i64 } " ++
+        "fn fallible() -> R { return new R.ok(7); }", "E_RESULT_UNHANDLED");
 }

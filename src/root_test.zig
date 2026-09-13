@@ -124,7 +124,6 @@ test {
     _ = @import("match_expression_test.zig");
     _ = @import("type_aliases_test.zig");
 }
-test {}
 test {
     _ = @import("familiar_statements_test.zig");
 }

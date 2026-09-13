@@ -249,7 +249,7 @@ test "bundled build inputs carry only the native runtime, not compiler tests or 
     }
     try std.testing.expect(bundles("qbe_runtime.c") and bundles("qbe_runtime.h") and bundles("native_heap.c"));
     try std.testing.expect(bundles("native_equal.c") and bundles("native_format.zig"));
-    try std.testing.expect(bundles("json_document.zig") and !bundles("vm.zig") and !bundles("qbe_build.zig"));
+    try std.testing.expect(!bundles("vm.zig") and !bundles("qbe_build.zig") and !bundles("json_document.zig"));
 }
 // spec: QBE-3
 test "the runtime tree is published once per content hash and reused by later builds" {

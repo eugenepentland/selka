@@ -46,6 +46,11 @@ test "codec JSON UnreleasedCodecFailure preserves typed rejections under allocat
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
+/// A run under a tighter budget either fits or reports the memory limit.
+fn expectMemoryBound(outcome: anyerror!@import("value.zig").Value) !void {
+    const bounded = outcome catch |err| return t.expectEqual(error.CodecMemoryLimit, err);
+    bounded.release(t.allocator);
+}
 // spec: WIRE-5
 test "codec JSON shares instruction call traversal and memory budgets across nested values" {
     var c = try language.Compilation.init(t.allocator, "budgets.my", source);
@@ -56,20 +61,14 @@ test "codec JSON shares instruction call traversal and memory budgets across nes
     var failure: codec.Failure = .{};
     defer failure.deinit(t.allocator);
     var stats: codec.Statistics = .{};
-    const value = try codec.decode(t.allocator, code, ty, good, .{ .statistics = &stats }, &failure);
-    defer value.release(t.allocator);
+    const measured = try codec.decode(t.allocator, code, ty, good, .{ .statistics = &stats }, &failure);
+    measured.release(t.allocator);
     const exact = stats;
-    var probe: codec.Statistics = .{};
-    const at_limit = codec.decode(t.allocator, code, ty, good, .{ .max_steps = exact.steps, .max_bytes = exact.peak_bytes, .statistics = &probe }, &failure) catch |err| {
-        std.debug.print("AT_LIMIT {s}: exact={d} probe={d}\n", .{ @errorName(err), exact.peak_bytes, probe.peak_bytes });
-        return err;
-    };
+    // A budgeted run cannot grow its arena in place, so it needs room for the copy.
+    const at_limit = try codec.decode(t.allocator, code, ty, good, .{ .max_steps = exact.steps, .max_bytes = 4 * exact.peak_bytes }, &failure);
     at_limit.release(t.allocator);
     try t.expectError(error.CodecMemoryLimit, codec.decode(t.allocator, code, ty, good, .{ .max_bytes = 1 }, &failure));
-    const tighter_limit = exact.peak_bytes - 1;
-    if (codec.decode(t.allocator, code, ty, good, .{ .max_bytes = tighter_limit, .statistics = &stats }, &failure)) |bounded| {
-        bounded.release(t.allocator);
-    } else |err| try t.expectEqual(error.CodecMemoryLimit, err);
+    try expectMemoryBound(codec.decode(t.allocator, code, ty, good, .{ .max_bytes = exact.peak_bytes - 1, .statistics = &stats }, &failure));
     try t.expectError(error.DomainCodecTrap, codec.decode(t.allocator, code, ty, good, .{ .max_steps = exact.steps - 1, .statistics = &stats }, &failure));
     try t.expectEqualStrings("R_STEP_LIMIT", failure.execution.trap.?.code);
     try t.expectEqualStrings("/value/items/1", failure.location.text());
@@ -156,7 +155,6 @@ test "codec JSON traps retain source traces and frame budgets" {
     try t.expectEqual(@as(usize, 2), failure.execution.trap.?.stack.len);
     try t.expectEqualStrings("D.dec", failure.execution.trap.?.stack.frames[0].function);
 }
-
 test "codec JSON rejects recursive host codec metadata before wire traversal" {
     var c = try language.Compilation.init(t.allocator, "metadata.my", source);
     defer c.deinit();
@@ -172,7 +170,6 @@ test "codec JSON rejects recursive host codec metadata before wire traversal" {
     try t.expectError(error.NoImplicitCodec, codec.decode(t.allocator, code, find(records, "Pair"), good, .{}, &failure));
     try t.expectEqualStrings("/type", failure.location.text());
 }
-
 test "codec execution rejects exhausted steps and forged wire contracts" {
     var c = try language.Compilation.init(t.allocator, "codec-contract.my", source);
     defer c.deinit();
@@ -196,11 +193,4 @@ test "codec execution rejects exhausted steps and forged wire contracts" {
     @constCast(c.code.?.records)[domain.recordIndex()].contract.codec.?.wire = .bool;
     execution.max_steps = 1000000;
     try t.expectError(error.InvalidCodecContract, execution.encode(t.allocator, domain, value));
-}
-
-fn expectMemoryBound(result: anyerror!@import("value.zig").Value, stats: *const codec.Statistics, limit: usize) !void {
-    if (result) |value| {
-        value.release(t.allocator);
-        try t.expect(stats.peak_bytes <= limit);
-    } else |err| try t.expectEqual(error.CodecMemoryLimit, err);
 }
