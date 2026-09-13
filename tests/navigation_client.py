@@ -14,8 +14,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import navigate
 
 COMPILER = None
-MAIN = 'module main;import lib;fn main()->i64{return lib::twice(2);}'
-LIB = 'module lib;export twice;fn add(x:i64)->i64{return x+1;}fn twice(x:i64)->i64{return add(add(x));}'
+MAIN = 'module main\nimport lib\n\n\ndef main() -> i64:\n    return lib.twice(2)\n'
+LIB = ('module lib\nexport twice\n\n\n'
+       'def add(x: i64) -> i64:\n    return x + 1\n\n\n'
+       'def twice(x: i64) -> i64:\n    return add(add(x))\n')
 
 
 class NavigationTests(unittest.TestCase):
@@ -55,11 +57,11 @@ class NavigationTests(unittest.TestCase):
         other = self.base / 'agent two'
         shutil.copytree(self.root, other)
         self.assertTrue(self.load(other)[1])
-        (other / 'lib.my').write_text(LIB.replace('x+1', 'x+2'))
+        (other / 'lib.my').write_text(LIB.replace('x + 1', 'x + 2'))
         changed, reused = self.load(other)
         self.assertFalse(reused)
         self.assertNotEqual(first['snapshot_sha256'], changed['snapshot_sha256'])
-        (other / 'lib.my').write_text(LIB.replace('x+1', 'true'))
+        (other / 'lib.my').write_text(LIB.replace('x + 1', 'True'))
         broken, reused = self.load(other)
         self.assertFalse(reused)
         self.assertFalse(broken['checked'])
@@ -87,7 +89,7 @@ class NavigationTests(unittest.TestCase):
             result = original(*args, **kwargs)
             # Edit only while the index itself is generated; the identity query precedes it.
             if 'index-project' in args[0]:
-                (self.root / 'lib.my').write_text(LIB.replace('x+1', 'x+3'))
+                (self.root / 'lib.my').write_text(LIB.replace('x + 1', 'x + 3'))
             return result
         with patch.object(navigate.subprocess, 'run', changed):
             with self.assertRaisesRegex(ValueError, 'changed during navigation'):
@@ -118,7 +120,8 @@ class NavigationTests(unittest.TestCase):
 
     def test_parse_error_partial_index_never_reuses_old_semantic_edges(self):
         self.load()
-        (self.root / 'lib.my').write_text('module lib; export twice; fn twice(x:i64)->i64{return ;}')
+        (self.root / 'lib.my').write_text('module lib\nexport twice\n\n\n'
+                                          'def twice(x: i64) -> i64:\n    return x +\n')
         partial, reused = self.load()
         self.assertFalse(reused)
         self.assertFalse(partial['checked'])
@@ -132,8 +135,9 @@ class NavigationTests(unittest.TestCase):
 
     def test_compiler_standard_sources_cache_without_disk_copies_or_temporary_symbols(self):
         (self.root / 'main.my').write_text(
-            'module main;import math;fn size(text:i64)->i64{return math::min::<i64>(text,4);}'
-            'fn main()->i64{return size(3);}')
+            'module main\nimport math\n\n\n'
+            'def size(text: i64) -> i64:\n    return math.min[i64](text, 4)\n\n\n'
+            'def main() -> i64:\n    return size(3)\n')
         (self.root / 'math.my').write_text('reserved names cannot shadow the compiler library')
         index, reused = self.load()
         self.assertFalse(reused)

@@ -81,11 +81,14 @@ pub const Manifest = struct {
         var output: std.Io.Writer.Allocating = .init(allocator);
         errdefer output.deinit();
         const writer = &output.writer;
-        try writer.print("// generated input manifest v1 sha256={s}\nmodule {s};\n", .{ std.fmt.bytesToHex(self.digest, .lower), self.parsed.value.module });
-        for (self.parsed.value.values) |entry| try writer.print("export {s};\n", .{entry.name});
+        try writer.print("# generated input manifest v1 sha256={s}\nmodule {s}\n", .{ std.fmt.bytesToHex(self.digest, .lower), self.parsed.value.module });
+        for (self.parsed.value.values) |entry| try writer.print("export {s}\n", .{entry.name});
         for (self.parsed.value.values) |entry| {
-            const suffix = if (std.mem.eql(u8, entry.type, "bool") or std.mem.eql(u8, entry.type, "i64")) "" else entry.type;
-            try writer.print("fn {s}() -> {s} {{\n    return {s}{s};\n}}\n", .{ entry.name, entry.type, entry.value, suffix });
+            const boolean = std.mem.eql(u8, entry.type, "bool");
+            const suffix = if (boolean or std.mem.eql(u8, entry.type, "i64")) "" else entry.type;
+            // A manifest spells a boolean the way JSON does; the source spells it the way the guest does.
+            const value = if (!boolean) entry.value else if (std.mem.eql(u8, entry.value, "true")) "True" else "False";
+            try writer.print("\n\ndef {s}() -> {s}:\n    return {s}{s}\n", .{ entry.name, entry.type, value, suffix });
         }
         return output.toOwnedSlice();
     }

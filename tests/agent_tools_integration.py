@@ -8,6 +8,10 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
 
+IO_SOURCE = 'module io\nexport length\nexport byte\nexport put\n\n\nhost def length() -> i64 effects(host)\n\n\nhost def byte(index: i64) -> u8 effects(host)\n\n\nhost def put(value: u8) -> i64 effects(host)\n'
+
+MAIN_SOURCE = 'module main\nimport io\n\n\ndef main() -> i64:\n    index = 0\n    while index < io.length():\n        _ = io.put(io.byte(index))\n        index += 1\n    return 0\n'
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -18,14 +22,8 @@ def main():
         base = Path(temporary)
         app = base / 'app'
         app.mkdir()
-        (app / 'io.my').write_text(
-            'module io;export length;export byte;export put;'
-            'host fn length()->i64 effects(host);'
-            'host fn byte(index:i64)->u8 effects(host);'
-            'host fn put(value:u8)->i64 effects(host);')
-        (app / 'main.my').write_text(
-            'module main;import io;fn main()->i64{let mut i=0;'
-            'while i<io::length(){_ = io::put(io::byte(i));i+=1;}return 0;}')
+        (app / 'io.my').write_text(IO_SOURCE)
+        (app / 'main.my').write_text(MAIN_SOURCE)
         (app / 'input.json').write_text('{"results":[1,2]}\n')
         expected = app / 'expected.json'
         expected.write_text('{"results": [1, 2]}')
