@@ -168,7 +168,7 @@ that table. The pilot lost five batches to a guessed `add` shape.
 declaration kinds, checked at import against `store.KINDS`:
 
 ```text
-alias  const  pool  buffer  resource  result  enum  union  domain  struct  fn  host_fn
+alias  const  resource  result  enum  union  domain  struct  fn  host_fn  extern_fn
 ```
 
 Processing: validate shapes, protection and `if_match`; copy the branch to a

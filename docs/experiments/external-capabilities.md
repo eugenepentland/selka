@@ -5,7 +5,7 @@ and transitive clock/random effects are implemented. This record describes the
 initial clock/random experiment. Later milestones add [environment lookup](environment.md),
 [external resources](source-resources.md), [attenuation](attenuation.md),
 [arenas](../legacy/experiments/source-arenas.md), and [pools](../legacy/experiments/source-pools.md).
-[Native clock/random adapters](../legacy/experiments/native-providers.md) extend the C backend.
+[Native clock/random adapters](../legacy/experiments/native-providers.md) extended the removed C backend.
 
 ## Source contract
 
@@ -13,8 +13,8 @@ initial clock/random experiment. Later milestones add [environment lookup](envir
 result Time { ok: i64, err: i64 }
 result Random { ok: u64, err: i64 }
 fn sample(clock: clock_cap, rng: random_cap) -> Time effects(clock, random) {
-    let now = try clock_now<Time>(clock);
-    discard try random_u64<Random>(rng);
+    let now = clock_now<Time>(clock)?;
+    _ = random_u64<Random>(rng)?;
     return new Time.ok(now);
 }
 ```
@@ -27,12 +27,12 @@ quality and clock accuracy. Injected deterministic test providers are supported.
 
 Both operations evaluate their capability operand once, then invoke one provider
 callback. Short-circuit evaluation can skip the operation. Results must be handled,
-propagated, transferred, or explicitly acknowledged under the existing rules.
+propagated, transferred, or explicitly released with `_ =` under the existing rules.
 Recoverable provider errors are `Unavailable = 1`, `Denied = 2`, and `Failed = 3`.
 Provider `OutOfMemory` is a host failure; arithmetic and capability traps remain
 separate. Failure propagation releases owned locals and unfinished operands.
 
-An entry may request each of `allocator`, `clock_cap`, and `random_cap` once,
+An entry may request each of `clock_cap` and `random_cap` once,
 as value parameters in any order. Helpers receive authority through ordinary
 explicit parameters. Capabilities can be copied, returned, and wrapped; copying
 does not grant another kind of authority. Numeric construction/casts cannot mint

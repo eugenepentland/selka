@@ -2,8 +2,8 @@
 
 Status: source and backend reads/writes are implemented for injected filesystem
 and network resource providers. Operations retain ownership and expose partial
-progress. Fixed byte arrays are supported; slice-based I/O, partial field moves,
-arenas/pools, and other roadmap tracks remain pending. [Resource permission
+progress. Fixed byte arrays are supported; the slice-based I/O, partial field move and
+explicit arena/pool tracks this page once named were removed on 2026-09-13. [Resource permission
 attenuation](attenuation.md) now limits acquisition and subsequent operations. The CLI still
 provides no operating-system resource adapter or ambient authority.
 
@@ -12,9 +12,9 @@ struct Chunk { bytes: [16]u8, length: u64, eof: bool }
 result Read { ok: Chunk, err: i64 }
 result Written { ok: u64, err: i64 }
 
-let mut file = try acquire_resource<Open>(fs, new [1]u8 [42u8]);
-let chunk = try read_resource<Read>(file);
-let written = try write_resource<Written>(file, new [1]u8 [7u8]);
+let mut file = acquire_resource<Open>(fs, new [1]u8 [42u8])?;
+let chunk = read_resource<Read>(file)?;
+let written = write_resource<Written>(file, new [1]u8 [7u8])?;
 ```
 
 Both operations require a live mutable resource binding. Reading may advance a

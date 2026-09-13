@@ -19,7 +19,7 @@ RECEIPT_VERSION = 'declaration-store-receipt-v1'
 SNAPSHOT_VERSION = 'declaration-store-snapshot-v1'
 DECLARATION_VERSION = 'declaration-store-declaration-v1'
 # Exactly the kinds list-declarations emits; a new top-level construct adds one.
-KINDS = ('alias', 'const', 'struct', 'enum', 'union', 'result', 'domain', 'buffer', 'pool', 'resource', 'fn', 'host_fn')
+KINDS = ('alias', 'const', 'struct', 'enum', 'union', 'result', 'domain', 'resource', 'fn', 'host_fn', 'extern_fn')
 ASSET_KINDS = {'.json': 'json', '.md': 'markdown', '.txt': 'text', '.c': 'text', '.py': 'text', '.stdout': 'text'}
 MAX_FILES = 5000
 MAX_FILE_BYTES = 8 * 1024 * 1024

@@ -13,7 +13,7 @@ struct Point { x: i64, y: i64 }
 struct View { horizontal: i64 }
 
 conversion fn to_view(source: Point) -> View {
-    discard source.y;
+    _ = source.y;
     return new View { horizontal: source.x };
 }
 
@@ -39,13 +39,13 @@ immutable; replace a mutable record binding using `update`. Record equality is
 not defined; explicitly compare relevant fields.
 
 A `conversion fn` has one record parameter and returns a record. Its initial
-body form permits direct named source-field discards followed by one explicit
+body form permits direct named source-field releases followed by one explicit
 `return new Destination { ... };`. Arbitrary locals, branches, loops, whole-value
 returns, and implicit delegation are not accepted in this declarative form.
 Use ordinary helpers to compute transformations from explicitly selected fields.
 
 Each source field must be directly accessed through the resolved source
-parameter in a destination expression, or explicitly discarded by name. Nested
+parameter in a destination expression, or explicitly released by name. Nested
 access `source.inner.x` accounts for the top-level field `inner`; it is not a
 promise to convert every nested subfield. Passing only `source` to a helper
 accounts for no fields. Unrelated ordinary functions can inspect a subset of a
@@ -55,7 +55,7 @@ Accounting is syntactic over checked expressions, including short-circuit
 operands; it does not prove that a transformation computes the right value or
 that every operand executes. The restricted body prevents an unused local read
 from masquerading as accounting. Adding a source field breaks conversions until
-it is deliberately used or discarded; adding a destination field breaks
+it is deliberately used or released; adding a destination field breaks
 incomplete constructions. Missing-field diagnostics point to the declaration.
 
 ## Chosen storage semantics
@@ -68,7 +68,7 @@ source names in signatures, and numeric type/field identities in instructions.
 A copied aggregate may share immutable backing storage. Each operand or
 initialized local owns a reference. Loads retain, stores replace and release the
 old local, calls transfer argument references into parameter slots, returns
-release callee locals and transfer one result, and discard releases its operand.
+release callee locals and transfer one result, and `_ =` releases its operand.
 A field read retains its result before releasing the containing value. This
 produces value behavior without eagerly deep-copying unchanged nested values.
 
@@ -90,7 +90,7 @@ the resource model. Loop declarations reuse their assigned slots.
 `src/value_test.zig` exercises the new representation and internal VM instructions:
 
 - A value survives local overwrite, argument passing, return, field projection,
-  and discard, producing 42.
+  and explicit release, producing 42.
 - Step-limit traps at every instruction boundary release all owned references.
 - Allocation-failure sweeps cover aggregate construction and VM ownership paths.
 - Repeated nested fields survive destruction of the outer record.

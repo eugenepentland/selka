@@ -44,8 +44,8 @@ ARGUMENTS = {'open': set(), 'context': {'ids', 'budget'}, 'search': {'text', 'ty
 TYPE_EDGE_KINDS = ('uses_type', 'contains_type', 'returns', 'accepts', 'field_initialize', 'field_read')
 # Every accepted top-level declaration kind, in the order the participant documents
 # list them. `store.KINDS` is the authority; drift fails closed at import.
-DECLARATION_KINDS = ('alias', 'const', 'pool', 'buffer', 'resource', 'result', 'enum',
-                     'union', 'domain', 'struct', 'fn', 'host_fn')
+DECLARATION_KINDS = ('alias', 'const', 'resource', 'result', 'enum',
+                     'union', 'domain', 'struct', 'fn', 'host_fn', 'extern_fn')
 if frozenset(DECLARATION_KINDS) != frozenset(store.KINDS):
     raise ValueError('the documented declaration kinds no longer match the store')
 # Appended to a parse failure that lands on a declaration's own header line. The
