@@ -118,6 +118,8 @@ def numbers() -> int:
             return 38
         case None:
             _ = 0
+    if not expect_float("0e400", 0.0) or not expect_float("0.0e-400", 0.0):
+        return 39
     return 0
 
 

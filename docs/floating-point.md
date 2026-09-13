@@ -7,16 +7,17 @@ supplies the classification, rounding and root operations that are not operators
 
 ```mylang
 # doc: expect 42
-module main
-import math
-
 def main() -> int:
-    root = math.sqrt(1764.0)
-    if math.is_nan(root) or not math.is_finite(root):
+    if 0.1 + 0.2 == 0.3:
         return 1
-    if math.floor(root + 0.5) != root:
+    nan = 0.0 / 0.0
+    if nan == nan or not (nan != nan):
         return 2
-    return int(root)
+    if 1.0 / 0.0 <= 1.7976931348623157e308:
+        return 3
+    if 0.0 - 0.0 != 0.0:
+        return 4
+    return int(21.0 * 2.0)
 ```
 
 ## Semantics
@@ -41,18 +42,14 @@ module main
 import math
 
 def main() -> int:
-    if 0.1 + 0.2 == 0.3:
+    root = math.sqrt(1764.0)
+    if math.is_nan(root) or not math.is_finite(root):
         return 1
-    nan = 0.0 / 0.0
-    if nan == nan or not math.is_nan(nan):
+    if math.floor(root + 0.5) != root or math.trunc(0.0 - 1.9) != 0.0 - 1.0:
         return 2
-    if 1.0 / 0.0 <= 1.7976931348623157e308:
-        return 3
-    if 0.0 - 0.0 != 0.0:
-        return 4
     negative = 0.0 - 5.0
     if negative // 2.0 != 0.0 - 3.0 or negative % 2.0 != 1.0:
-        return 5
+        return 3
     return int(math.round(41.5))
 ```
 

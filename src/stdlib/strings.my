@@ -261,6 +261,8 @@ def mantissa_ceiling() -> int:
 
 # A decimal mantissa and its power-of-ten scale, combined with one rounding.
 def combined(mantissa: int, scale: int) -> float:
+    if mantissa == 0:
+        return 0.0
     magnitude = scale
     if magnitude < 0:
         magnitude = 0 - magnitude

@@ -372,9 +372,13 @@ handles[T: copy + storable](store: Pool[T]) -> list[Handle[T]]
 A pool is the escape hatch for graphs and entity tables that a tracing collector
 handles awkwardly: a stable, copyable name for a slot that stays valid while the
 slot lives and reports absence once it does not. Removing a slot bumps its
-generation, so every handle to the old occupant stops matching. A stale handle,
-an out-of-range handle and a handle from another pool all report `None` or
-`False`; none of them traps.
+generation, so every handle to the old occupant stops matching. A stale handle
+and an out-of-range handle report `None` or `False`, and no handle ever traps.
+
+A handle carries a slot index and a generation, not the identity of its pool, so
+a handle from one pool passed to another is only rejected when that pool has no
+matching live slot. Keep a handle with the pool it came from, the way an index
+belongs to its list.
 
 `Pool` is a value record whose fields are managed lists, so assigning one refers
 to the same store rather than to a snapshot. `count()` rather than `len()` reports
