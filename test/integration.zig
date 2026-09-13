@@ -205,7 +205,7 @@ test "CLI checks runs and dumps records and declared complete conversions" {
 test "CLI checks resource ownership completion and implicit cleanup effects without ambient access" {
     const source = @embedFile("fixtures/resources.my");
     try invoke("check", source, 0, "", "");
-    try invokeOptions("run", source, &.{"--restrict"}, 2, "", "did not grant; pass --allow-");
+    try invokeOptions("run", source, &.{"--restrict"}, 2, "", "--restrict is active");
     const dumped = try runFixture("dump-bytecode", source, &.{});
     defer testing.allocator.free(dumped.stdout);
     defer testing.allocator.free(dumped.stderr);
@@ -217,7 +217,7 @@ test "CLI checks resource ownership completion and implicit cleanup effects with
 test "CLI checks resource data operations effects and required mutation without ambient providers" {
     const source = @embedFile("fixtures/resource-io.my");
     try invoke("check", source, 0, "", "");
-    try invokeOptions("run", source, &.{"--restrict"}, 2, "", "did not grant; pass --allow-");
+    try invokeOptions("run", source, &.{"--restrict"}, 2, "", "--restrict is active");
     const dumped = try runFixture("dump-bytecode", source, &.{});
     defer testing.allocator.free(dumped.stdout);
     defer testing.allocator.free(dumped.stderr);
@@ -861,7 +861,7 @@ test "CLI handles recoverable results and rejects silent error loss" {
 test "CLI checks external capabilities but cannot silently grant ambient providers" {
     const source = @embedFile("fixtures/external-capabilities.my");
     try invoke("check", source, 0, "", "");
-    try invokeOptions("run", source, &.{"--restrict"}, 2, "", "did not grant; pass --allow-");
+    try invokeOptions("run", source, &.{"--restrict"}, 2, "", "--restrict is active");
     const dumped = try runFixture("dump-bytecode", source, &.{});
     defer testing.allocator.free(dumped.stdout);
     defer testing.allocator.free(dumped.stderr);
@@ -873,7 +873,7 @@ test "CLI checks external capabilities but cannot silently grant ambient provide
 test "CLI checks bounded environment access without granting ambient process access" {
     const source = @embedFile("fixtures/environment.my");
     try invoke("check", source, 0, "", "");
-    try invokeOptions("run", source, &.{"--restrict"}, 2, "", "did not grant; pass --allow-");
+    try invokeOptions("run", source, &.{"--restrict"}, 2, "", "--restrict is active");
     const dumped = try runFixture("dump-bytecode", source, &.{});
     defer testing.allocator.free(dumped.stdout);
     defer testing.allocator.free(dumped.stderr);
@@ -885,7 +885,7 @@ test "CLI checks bounded environment access without granting ambient process acc
 test "CLI exposes resource permission attenuation and rejects malformed permission sets" {
     const source = @embedFile("fixtures/attenuation.my");
     try invoke("check", source, 0, "", "");
-    try invokeOptions("run", source, &.{"--restrict"}, 2, "", "did not grant; pass --allow-");
+    try invokeOptions("run", source, &.{"--restrict"}, 2, "", "--restrict is active");
     const dumped = try runFixture("dump-bytecode", source, &.{});
     defer testing.allocator.free(dumped.stdout);
     defer testing.allocator.free(dumped.stderr);
@@ -1094,8 +1094,10 @@ test "CLI grants every capability by default and resolves paths against the work
     defer testing.allocator.free(entry);
     // A relative guest path resolves against the process working directory, and
     // a path that leaves it is an ordinary filesystem failure rather than a denial.
+    const compiler = try std.Io.Dir.cwd().realPathFileAlloc(testing.io, compiler_path, testing.allocator);
+    defer testing.allocator.free(compiler);
     const outcome = try std.process.run(testing.allocator, testing.io, .{
-        .argv = &.{ compiler_path, "run", entry },
+        .argv = &.{ compiler, "run", entry },
         .cwd = .{ .path = directory },
     });
     defer testing.allocator.free(outcome.stdout);
