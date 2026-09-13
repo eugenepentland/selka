@@ -241,6 +241,18 @@ def main() -> int:
 Generic function bodies reject file operations, and the QBE native backend
 rejects them with `E_QBE_UNSUPPORTED`; the file surface runs on the VM only.
 
+## The native backend
+
+`print` and every file operation are rejected by the QBE native lowering with a
+located `E_QBE_UNSUPPORTED`, so `mylang emit-qbe`, `mylang build` and `mylang
+build --run` all fail on a program that uses them. `mylang build --run`
+therefore takes no `--allow-*` flags; they belong to `mylang run` and
+`run-project`, which execute on the VM.
+
+Generic function bodies also reject `print` and the file builtins, with
+`E_GENERIC_BODY_UNSUPPORTED`. Write an ordinary function and call it from the
+generic one.
+
 ## Related pages
 
 - [Managed arenas](arenas.md) — the other `with` resource kind

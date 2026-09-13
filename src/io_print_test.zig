@@ -113,6 +113,12 @@ test "render reports Unprintable for authority values that have no Python spelli
     try t.expectEqualStrings("Point", io_render.shortName("module::Point"));
 }
 
+// spec-case: IO-5
+test "generic function bodies reject the reserved io builtins with a located diagnostic" {
+    try reject("def show[T](value: T) -> int:\n    print(value)\n    return 0\n\ndef main() -> int:\n    return show(7)\n", "E_GENERIC_BODY_UNSUPPORTED");
+    try reject("def look[T](fs: filesystem_cap, value: T) -> int:\n    _ = exists(fs, \"x\")\n    return 0\n\ndef main(fs: filesystem_cap) -> int:\n    return look(fs, 7)\n", "E_GENERIC_BODY_UNSUPPORTED");
+}
+
 // spec: IO-6
 test "IO-6 the native backend rejects print explicitly" {
     var compilation = try language.Compilation.init(t.allocator, module, "def main() -> int:\n    print(1)\n    return 0\n");

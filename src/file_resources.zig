@@ -275,7 +275,8 @@ pub fn method(context: Context, request: MethodRequest) Error!typed.Value {
             return sequence(context, request.text, bytes);
         },
         .read => {
-            const limit: usize = if (request.count) |count| @intCast(@max(count, 0)) else max_bytes;
+            // Python spells "read everything" as a negative count.
+            const limit: usize = if (request.count) |count| (if (count < 0) max_bytes else @intCast(count)) else max_bytes;
             const bytes = try readAll(context.allocator(), context.store, owner, limit);
             defer context.allocator().free(bytes);
             return sequence(context, request.text, bytes);

@@ -287,6 +287,11 @@ const Checker = struct {
         try self.seedCleanup(ty_value);
     }
     fn callTarget(self: *Checker, invocation: Call, call_span: source.Span) Error!ast.Function {
+        if (invocation.owner == null) {
+            const spelling = self.src.text(invocation.name);
+            const reserved = std.mem.eql(u8, spelling, "print") or @import("file_operations.zig").access(spelling) != null;
+            if (reserved and !self.functions.contains(spelling)) return self.sink.fail(eUnsupported, invocation.name, "`print` and the file builtins are not supported inside generic function bodies");
+        }
         const key = if (self.module_names) |names|
             try names.reference(invocation.owner orelse invocation.name, .function, if (invocation.owner != null) invocation.name else null, if (self.owner) |owner| self.src.text(owner) else null, self.sink)
         else
