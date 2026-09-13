@@ -1096,7 +1096,7 @@ test "CLI grants every capability by default and resolves paths against the work
     // a path that leaves it is an ordinary filesystem failure rather than a denial.
     const outcome = try std.process.run(testing.allocator, testing.io, .{
         .argv = &.{ compiler_path, "run", entry },
-        .cwd = directory,
+        .cwd = .{ .path = directory },
     });
     defer testing.allocator.free(outcome.stdout);
     defer testing.allocator.free(outcome.stderr);
