@@ -293,7 +293,7 @@ depends on it.
 
 - [STRUCTURAL-COMPOSITE-1] Structural field and operation signatures substitute fixed arrays and nominal applications. Result obligations remain transferred by value. Invalid unused templates still reject.
 
-- [SOURCE-EVAL-1] Scalar module constants may invoke nongeneric source functions with scalar arguments, locals, branches, loops and recursion. Static validation rejects external effects and unsupported memory/aggregate operations even in untaken paths. Evaluation is limited to 256 nesting levels and 65536 expression, statement and lookup work units, with located errors and no executable publication on failure. Every compilation reevaluates from its complete source/input snapshot with fixed-width target-independent scalar semantics.
+- [SOURCE-EVAL-1] Scalar module constants may invoke nongeneric source functions with scalar arguments, locals — an assignment to a fresh name binds it, as it does at run time — branches, loops and recursion. Static validation rejects external effects and unsupported memory/aggregate operations even in untaken paths. Evaluation is limited to 256 nesting levels and 65536 expression, statement and lookup work units, with located errors and no executable publication on failure. Every compilation reevaluates from its complete source/input snapshot with fixed-width target-independent scalar semantics.
 
 
 
@@ -489,7 +489,7 @@ depends on it.
 - [PYTHON-3] Value records use `class` with annotated fields and named construction; square-bracket type applications and `match`/`case` preserve contextual variant names and underscore payload discards for semantic resolution. Every explicit type argument uses square brackets, including `todo[T]()`, `wrap[D](v)`, `codec_encode[D](v)` and the capability and resource operations.
 
 - [PY-VARIANT-1] `Type.case(value)` constructs an enum or tagged-union variant carrying its declared payload; `Type.case` without parentheses stays the payload-free construction and contextual `Ok`/`Err`/`Some`/`None` are unchanged. The payload evaluates once and `match`/`case` patterns keep the same spelling.
-- [PY-GENERIC-1] `f[T](x)` applies explicit type arguments to a generic function. A square-bracket application in call position names a function when the base is a declared function and a generic record otherwise, so `Box[T](field=v)` construction is unchanged and the nominal type catalog never resolves a function application as a type.
+- [PY-GENERIC-1] `f[T](x)` applies explicit type arguments to a generic function, constant lengths included (`first[i64, 2](values)`). A square-bracket application in call position names a function when the base is a declared function and a generic record otherwise, so `Box[T](field=v)` construction is unchanged and the nominal type catalog never resolves a function application as a type.
 - [PY-GENERIC-2] Explicit call type arguments reach the same instance as inference, and the wrong number of arguments or an undeclared base name is rejected.
 - [PY-FLOAT-1] `sqrt`, `floor`, `ceil`, `trunc` and `abs` are prelude operations on `float`, so guest code needs no `u64` bit pattern. Each takes one float and answers a float; a non-float argument is rejected, and a local binding or declared function of the same name shadows the operation.
 - [PY-WILDCARD-1] `case _` in a `match` statement covers every variant no earlier arm named, discarding the payload of each one it covers.

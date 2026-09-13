@@ -5,17 +5,17 @@ loop's next condition check. Both work in ordinary and generic functions,
 including inside `if`, `match` and nested arena scopes.
 
 ```my
-fn sum() -> i64 {
-    let mut total = 0;
-    let mut i = 0;
-    while i < 10 {
-        i += 1;
-        if i == 2 { continue; }
-        total += i;
-        if total > 20 { break; }
-    }
-    return total;
-}
+def sum() -> i64:
+    total = 0
+    i = 0
+    while i < 10:
+        i += 1
+        if i == 2:
+            continue
+        total += i
+        if total > 20:
+            break
+    return total
 ```
 
 Each exit releases the owned values and arena scopes it leaves before

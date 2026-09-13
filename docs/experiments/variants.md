@@ -7,21 +7,35 @@ tables](tables.md) are also implemented, finishing A2.
 ## Declarations and construction
 
 ```mylang
-enum Color { red, green, blue }
-struct Point { x: i64, y: i64 }
-union Shape { point: Point, radius: i64, empty }
+enum Color:
+    red,
+    green,
+    blue
 
-fn score(shape: Shape) -> i64 {
-    match shape {
-        Shape.empty => { return 0; },
-        Shape.radius(r) => { return r * r; },
-        Shape.point(p) => { return p.x + p.y; }
-    }
-}
 
-fn main() -> i64 {
-    return score(new Shape.point(new Point { x: 2, y: 3 }));
-}
+class Point:
+    x: i64
+    y: i64
+
+
+union Shape:
+    point: Point,
+    radius: i64,
+    empty
+
+
+def score(shape: Shape) -> i64:
+    match shape:
+        case Shape.empty:
+            return 0
+        case Shape.radius(r):
+            return r * r
+        case Shape.point(p):
+            return p.x + p.y
+
+
+def main() -> i64:
+    return score(Shape.point(Point(x=2, y=3)))
 ```
 
 Enums contain named, payload-free variants. Tagged unions contain named variants

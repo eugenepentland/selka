@@ -4,9 +4,17 @@ A function name can be copied into a local, record or array, passed to another
 function, returned, and invoked through a local name:
 
 ```mylang
-fn increment(x:i64)->i64 effects(){return x+1;}
-fn twice(f:fn(i64)->i64 effects(),x:i64)->i64{return f(f(x));}
-fn main()->i64{let f=increment;return twice(f,5);}
+def increment(x: i64) -> i64 effects():
+    return x + 1
+
+
+def twice(f: def(i64) -> i64 effects(), x: i64) -> i64:
+    return f(f(x))
+
+
+def main() -> i64:
+    f = increment
+    return twice(f, 5)
 ```
 
 Callable types declare value parameter types, value results and an explicit

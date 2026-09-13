@@ -6,10 +6,17 @@ existing codes and original module byte ranges, sorted by source range and code.
 For example, both undefined names are reported here:
 
 ```my
-// doc: expect-error E_UNKNOWN_NAME
-fn first() -> i64 { return missing_first; }
-fn second() -> i64 { return missing_second; }
-fn main() -> i64 { return first() + second(); }
+# doc: expect-error E_UNKNOWN_NAME
+def first() -> i64:
+    return missing_first
+
+
+def second() -> i64:
+    return missing_second
+
+
+def main() -> i64:
+    return first() + second()
 ```
 
 A failed function is abandoned at its boundary. Its unfinished scopes and loans

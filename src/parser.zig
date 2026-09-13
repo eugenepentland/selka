@@ -1121,7 +1121,7 @@ pub const Parser = struct {
             switch (self.tokens[position].tag) {
                 .dot => if (applied and brackets == 0) return false,
                 .comma, .colon => if (brackets == 0) return false,
-                .ident, .lbracket, .rbracket, .lt, .gt, .kw_i64, .kw_i8, .kw_i16, .kw_i32, .kw_u8, .kw_u16, .kw_u32, .kw_u64, .kw_bool, .kw_none => {},
+                .ident, .integer, .lbracket, .rbracket, .kw_i64, .kw_i8, .kw_i16, .kw_i32, .kw_u8, .kw_u16, .kw_u32, .kw_u64, .kw_bool, .kw_none => {},
                 .lparen => return applied and brackets == 0,
                 else => return false,
             }

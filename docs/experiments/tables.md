@@ -8,21 +8,21 @@ tracks remain pending.
 ## Syntax and type identity
 
 ```mylang
-enum Status { ok, missing, failed }
+enum Status:
+    ok,
+    missing,
+    failed
 
-fn response_codes() -> [Status]u16 {
-    return new [Status]u16 {
-        failed: 500u16,
-        ok: 200u16,
-        missing: 404u16
-    };
-}
 
-fn main() -> i64 {
-    let original = response_codes();
-    let revised = replace(original, new Status.failed, 503u16);
-    return i64(revised[new Status.failed]);
-}
+def response_codes() -> [Status]u16:
+    codes: [Status]u16 = {Status.failed: 500u16, Status.ok: 200u16, Status.missing: 404u16}
+    return codes
+
+
+def main() -> i64:
+    original = response_codes()
+    revised = replace(original, Status.failed, 503u16)
+    return i64(revised[Status.failed])
 ```
 
 `[Enum]Value` is a complete table indexed by one closed enum. It is available

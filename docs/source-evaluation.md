@@ -3,15 +3,18 @@
 Module constants can call ordinary scalar source functions:
 
 ```my
-const CHECKSUM: u64 = checksum(10u64);
-fn checksum(count: u64) -> u64 {
-    let mut value = 0u64;
-    for index in 0u64..count {
-        value = wrapping_add(value, index);
-    }
-    return value;
-}
-fn main() -> i64 { return i64(CHECKSUM); }
+const CHECKSUM: u64 = checksum(10u64)
+
+
+def checksum(count: u64) -> u64:
+    value = 0u64
+    for index in range(0u64, count):
+        value = wrapping_add(value, index)
+    return value
+
+
+def main() -> i64:
+    return i64(CHECKSUM)
 ```
 
 This extends the existing constant evaluator. It does not run an unrestricted macro system or call the separate `eval-project` tool. No new source keyword is required.

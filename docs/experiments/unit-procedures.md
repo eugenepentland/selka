@@ -4,16 +4,15 @@ Use `-> unit` for a function whose purpose is its effects. Call it as a normal
 statement. A bare `return;` exits early; reaching the end returns unit naturally.
 
 ```mylang
-// doc: expect 42
-fn add(values: List<i64>, value: i64) -> unit {
+# doc: expect 42
+def add(values: List[i64], value: i64):
     values.push(value)
-}
 
-fn main() -> i64 {
-    let values: List<i64> = []
+
+def main() -> i64:
+    values: List[i64] = []
     add(values, 42)
     return values[0]
-}
 ```
 
 The distinct builtin `unit` has one zero-payload value. It is not an integer,

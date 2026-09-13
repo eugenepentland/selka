@@ -8,21 +8,19 @@ pending work.
 ## Syntax and type identity
 
 ```mylang
-fn sum(values: [3]i64) -> i64 {
-    let mut index = 0u64;
-    let mut total = 0;
-    while index < len(values) {
-        total += values[index];
-        index += 1u64;
-    }
-    return total;
-}
+def sum(values: [3]i64) -> i64:
+    index = 0u64
+    total = 0
+    while index < len(values):
+        total += values[index]
+        index += 1u64
+    return total
 
-fn main() -> i64 {
-    let original = new [3]i64 [4, 7, 9];
-    let changed = replace(original, 1, 11);
-    return sum(original) + sum(changed);
-}
+
+def main() -> i64:
+    original: [3]i64 = [4, 7, 9]
+    changed = replace(original, 1, 11)
+    return sum(original) + sum(changed)
 ```
 
 `[N]T` is a fixed array type wherever a type annotation is accepted. `N` is an

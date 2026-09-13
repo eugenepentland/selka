@@ -3,12 +3,21 @@
 Generic function calls can omit their type arguments when the argument types determine every parameter:
 
 ```my
-fn identity<T: copy>(value: T) -> T { return value; }
-fn first<T: copy, const N: u64>(items: [N]T) -> T { return items[0]; }
-fn forward<U: copy>(value: U) -> U { return identity(value); }
-fn main() -> i64 {
-    return forward(first(new [2]i64[40, 2]));
-}
+def identity[T](value: T) -> T:
+    return value
+
+
+def first[T, const N: u64](items: [N]T) -> T:
+    return items[0]
+
+
+def forward[U](value: U) -> U:
+    return identity(value)
+
+
+def main() -> i64:
+    values: [2]i64 = [40, 2]
+    return forward(first(values)) + values[1]
 ```
 
 `identity(1u8)` infers `u8`; it does not widen the argument. Explicit calls such as `identity::<u8>(1u8)` remain available and share the same specialization. Recursive and mutually recursive calls infer from signatures without expanding bodies during abstract checking.

@@ -7,7 +7,7 @@ located diagnostic rather than a value that compiles and fails later.
 
 ## Typed holes
 
-Write `todo<T>()` in expression position, where `T` is the type the missing code
+Write `todo[T]()` in expression position, where `T` is the type the missing code
 has to produce. The type is declared, not inferred from context: the checker
 validates it, then reports `E_TYPED_HOLE` at the `todo` with a related span on
 the declared type. Ordinary bodies and uncalled generic bodies each report their
@@ -27,7 +27,7 @@ def total(invoice: Invoice) -> int:
     return invoice.subtotal + invoice.tax
 
 def discount(invoice: Invoice) -> int:
-    return todo<int>()
+    return todo[int]()
 
 def main() -> int:
     invoice = Invoice(subtotal=40, tax=2)
@@ -36,7 +36,7 @@ def main() -> int:
 
 ## Limits
 
-- `todo<T>()` takes exactly one type argument and no value arguments. It is the
+- `todo[T]()` takes exactly one type argument and no value arguments. It is the
   one construct that keeps angle-bracket type arguments in the Python surface;
   ordinary generic calls are written `f[T](x)`.
 - A hole blocks `run`, `run-project`, `build` and every other command that would

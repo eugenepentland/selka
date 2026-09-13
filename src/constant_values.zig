@@ -143,7 +143,10 @@ const Evaluator = struct {
                 if (binding.annotation) |annotation| _ = try self.scalar(annotation);
                 try self.bind(binding.name, null, binding.mutable);
             },
-            .assignment => |assignment| try self.validateExpression(assignment.value, depth + 1),
+            .assignment => |assignment| {
+                try self.validateExpression(assignment.value, depth + 1);
+                if (assignment.op == .set and try self.local(assignment.name) == null) try self.bind(assignment.name, null, true);
+            },
             .branch => |branch| {
                 try self.validateExpression(branch.condition, depth + 1);
                 try self.validateStatement(branch.then_body, depth + 1);
@@ -239,9 +242,13 @@ const Evaluator = struct {
         return .next;
     }
     fn assign(self: *Evaluator, assignment: Assignment, depth: usize) Error!void {
-        const index = (try self.local(assignment.name)) orelse return self.context.sink.fail(eName, assignment.name, "compile-time assignment requires a local");
+        const existing = try self.local(assignment.name);
+        if (existing == null and assignment.op == .set) {
+            const bound = try self.expression(assignment.value, depth + 1);
+            return self.bind(assignment.name, bound, true);
+        }
+        const index = existing orelse return self.context.sink.fail(eName, assignment.name, "compile-time compound assignment requires an existing local");
         const previous = self.frame.locals.items[index];
-        if (!previous.mutable) return self.context.sink.fail("E_IMMUTABLE", assignment.name, "compile-time assignment requires a mutable local");
         var value = try self.expression(assignment.value, depth + 1);
         if (value.typeOf() != previous.value.?.typeOf()) return self.context.sink.fail("E_TYPE", assignment.op_span, "compile-time assignment types differ");
         if (assignment.op != .set) {

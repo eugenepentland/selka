@@ -7,13 +7,13 @@ escape hatch, and they change *when* managed objects are freed rather than how
 they are written.
 
 ```mylang
-// doc: expect 42
-fn main() -> i64 {
-    let values: List<i64> = []
-    let alias = values
+# doc: expect 42
+def main() -> i64:
+    values: List[i64] = []
+    alias = values
     alias.push(42)
-    return values[0]
-}
+    print(values[0])
+    return 0
 ```
 
 A list assignment or function argument copies a shared reference. `let` prevents

@@ -3,10 +3,16 @@
 A type alias supplies another spelling for an existing type:
 
 ```my
-type Count = i64;
-type Counts = [2]Count;
-struct Pair<T: copy> { left: T, right: T }
-type NumberPair = Pair<Count>;
+type Count = i64
+type Counts = [2]Count
+
+
+class Pair[T]:
+    left: T
+    right: T
+
+
+type NumberPair = Pair[Count]
 ```
 
 Aliases may target scalars, nominal types, fixed arrays, or concrete generic

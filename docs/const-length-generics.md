@@ -3,19 +3,22 @@
 Generic functions and nominal declarations can mix type parameters with explicit bounded length values:
 
 ```my
-struct Chunk<T: copy, const N: u64> {
+class Chunk[T, const N: u64]:
     items: [N]T
-}
-fn make<T: copy, const N: u64>(items: [N]T) -> Chunk<T, N> {
-    return new Chunk<T, N> { items: items };
-}
-fn first<T: copy, const N: u64>(items: [N]T) -> T {
-    return items[0];
-}
-fn main() -> i64 {
-    let chunk = make::<i64, 2>(new [2]i64[40, 2]);
-    return first::<i64, 2>(chunk.items) + chunk.items[1];
-}
+
+
+def make[T, const N: u64](items: [N]T) -> Chunk[T, N]:
+    return Chunk[T, N](items=items)
+
+
+def first[T, const N: u64](items: [N]T) -> T:
+    return items[0]
+
+
+def main() -> i64:
+    values: [2]i64 = [40, 2]
+    chunk = make[i64, 2](values)
+    return first[i64, 2](chunk.items) + chunk.items[1]
 ```
 
 A `const N: u64` parameter is a value, distinct from a type parameter. It may appear as `[N]T`, be forwarded to another length parameter, or be read as a u64 value in a generic function body. It cannot be used as a type or shadowed by a local binding. Nominal fields may store arrays sized by these parameters; constructing a nominal value from a matching existing array preserves its length and element identity.

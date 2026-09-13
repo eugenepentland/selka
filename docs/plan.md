@@ -267,22 +267,21 @@ Do not add a REPL or guest printing facility. Printing `main`'s result is enough
 ## 5. Example acceptance program
 
 ```mylang
-// doc: expect 4950
-fn sum_to(n: i64) -> i64 {
-    let mut total: i64 = 0;
-    let mut i: i64 = 0;
+# doc: expect 4950
+def sum_to(n: i64) -> i64:
+    total: i64 = 0
+    i: i64 = 0
 
-    while i < n {
-        total += i;
-        i += 1;
-    }
+    while i < n:
+        total += i
+        i += 1
 
-    return total;
-}
+    return total
 
-fn main() -> i64 {
-    return sum_to(100);
-}
+
+def main() -> i64:
+    print(sum_to(100))
+    return 0
 ```
 
 `mylang run sum.my` must print `4950`.
@@ -290,23 +289,22 @@ fn main() -> i64 {
 A second example exercises calls, local mutation, and remainder:
 
 ```mylang
-// doc: expect 6
-fn gcd(a: i64, b: i64) -> i64 {
-    let mut x = a;
-    let mut y = b;
+# doc: expect 6
+def gcd(a: i64, b: i64) -> i64:
+    x = a
+    y = b
 
-    while y != 0 {
-        let remainder = x % y;
-        x = y;
-        y = remainder;
-    }
+    while y != 0:
+        remainder = x % y
+        x = y
+        y = remainder
 
-    return x;
-}
+    return x
 
-fn main() -> i64 {
-    return gcd(48, 18);
-}
+
+def main() -> i64:
+    print(gcd(48, 18))
+    return 0
 ```
 
 This program must print `6`. Its chosen inputs are positive; the language still defines signed division and remainder below.

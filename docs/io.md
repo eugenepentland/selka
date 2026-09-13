@@ -40,7 +40,10 @@ class Point:
     x: int
     y: int
 
-enum Colour { red, green }
+enum Colour:
+    red,
+    green
+
 
 def pick(n: int) -> Result[int, str]:
     if n < 0:

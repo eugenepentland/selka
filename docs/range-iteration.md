@@ -3,15 +3,15 @@
 `for index in start..end { ... }` visits a half-open ascending integer range:
 
 ```my
-fn main() -> i64 {
-    let mut total = 0;
-    for i in 0..10 {
-        if i == 2 { continue; }
-        total += i;
-        if total > 20 { break; }
-    }
-    return total;
-}
+def main() -> i64:
+    total = 0
+    for i in range(0, 10):
+        if i == 2:
+            continue
+        total += i
+        if total > 20:
+            break
+    return total
 ```
 
 The bounds evaluate once, left to right, before the loop begins. They must have

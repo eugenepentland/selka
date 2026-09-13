@@ -10,10 +10,17 @@ For example, this unused declaration now reports `E_GENERIC_REQUIREMENT` on `U`,
 with a related location pointing to `Key`'s requirement:
 
 ```mylang
-// doc: expect-error E_GENERIC_REQUIREMENT
-struct Key<T:equality> { value: T }
-struct Bad<U:copy> { key: Key<U> }
-fn main() -> i64 { return 0; }
+# doc: expect-error E_GENERIC_REQUIREMENT
+class Key[T: equality]:
+    value: T
+
+
+class Bad[U]:
+    key: Key[U]
+
+
+def main() -> i64:
+    return 0
 ```
 
 Changing `U:copy` to `U:equality` satisfies that declaration constraint and lets

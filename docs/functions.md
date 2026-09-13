@@ -155,10 +155,10 @@ to `print` is rejected with `E_IO_ARGUMENT`.
 def double(value: int) -> int effects():
     return value * 2
 
-def chosen() -> fn(int) -> int effects():
+def chosen() -> def(int) -> int effects():
     return double
 
-def apply(callback: fn(int) -> int effects(), value: int) -> int:
+def apply(callback: def(int) -> int effects(), value: int) -> int:
     return callback(value)
 
 def main() -> int:
@@ -189,7 +189,7 @@ def announce(value: int) -> int effects(output):
     print(value)
     return value
 
-def sum_announced(values: list[int], report: fn(int) -> int effects(output)) -> int effects(output):
+def sum_announced(values: list[int], report: def(int) -> int effects(output)) -> int effects(output):
     total = 0
     for value in values:
         total += report(value)
