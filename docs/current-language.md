@@ -2,9 +2,14 @@
 
 Start with the [Python-style application guide](python-syntax.md) for canonical syntax. This index also links advanced APIs and compatibility examples.
 
-The installed executable's `--features` JSON report identifies the binary by
-SHA-256, the pinned Zig toolchain, supported features, exclusions and backend
-coverage. `language-features-v1` versions the report format; the language remains
+The installed executable's `--features` JSON report gives its compiler identity,
+the pinned Zig toolchain, supported features, exclusions and backend coverage.
+`compiler_sha256` is that identity: a SHA-256 computed when the compiler was built,
+over its own source inputs, Zig version and optimize mode — not a hash of the
+executable file, which the compiler no longer reads. The same value appears in every
+receipt's `implementation`, so a feature report and a receipt from one compiler always
+agree, and two builds of the same sources are recognisably the same compiler.
+`language-features-v1` versions the report format; the language remains
 experimental version 0.1.0. A feature being implemented is distinct from a
 particular build passing its tests. Run the acceptance suite for the binary you
 intend to use; historical counts are not current verification receipts.

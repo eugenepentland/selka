@@ -4,8 +4,10 @@ Ordinary application code uses builtin `list[T]`, `str`, and `dict[K, V]` with G
 
 Standard modules are embedded in the compiler. Import their names directly;
 projects do not need to copy these files. Allocation and external authority stay
-explicit. The installed `--features` report identifies the executable actually
-in use; this document describes the source tree.
+explicit. The installed `--features` report identifies the compiler actually in
+use, by the build-time identity described in
+[the current language reference](current-language.md); this document describes the
+source tree.
 
 | Area | Modules | Available operations |
 | --- | --- | --- |

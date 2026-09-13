@@ -1,5 +1,6 @@
 //! Checked test compilation and isolated provider variants.
 const std = @import("std");
+const bundled = @import("qbe_build_assets");
 const fs = @import("qbe_build_io.zig");
 const v = @import("qbe_build_value.zig");
 const snapshot = @import("native_test_snapshot.zig");
@@ -39,7 +40,7 @@ pub const Session = struct {
             .compiler = compiler,
             .zig = zig,
             .qbe = qbe,
-            .hashes = .{ try context.fileHash(compiler), try context.fileHash(zig), try context.fileHash(qbe) },
+            .hashes = .{ bundled.compiler_identity, try context.stamp(zig), try context.stamp(qbe) },
             .environment = try environment.capture(context),
             .directory = directory,
             .temporary = temporary,
@@ -85,11 +86,14 @@ pub const Session = struct {
         }, .{});
         return fs.hash(self.context.allocator, bytes);
     }
-    /// Never publish successful results from a source or tool set changed mid-run.
+    /// Never publish successful results from a source or tool set changed mid-run. The
+    /// running compiler cannot change underneath itself, so its embedded build-time
+    /// identity stands in for rereading a multi-hundred-megabyte executable per run.
     pub fn verify(self: Session) Error!void {
         try snapshot.verify(self.context, self.source);
-        for ([_][]const u8{ self.compiler, self.zig, self.qbe }, self.hashes) |path, old| {
-            if (!std.mem.eql(u8, old, try self.context.fileHash(path))) return error.SourceChanged;
+        if (!std.mem.eql(u8, self.hashes[0], bundled.compiler_identity)) return error.SourceChanged;
+        for ([_][]const u8{ self.zig, self.qbe }, self.hashes[1..]) |path, old| {
+            if (!std.mem.eql(u8, old, try self.context.stamp(path))) return error.SourceChanged;
         }
     }
 };
