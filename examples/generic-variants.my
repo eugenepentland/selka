@@ -18,7 +18,7 @@ union Scalar:
 
 
 def make[T: integer](value: T) -> Choice:
-    return Choice.value(Payload(n=cast<i64>(value)))
+    return Choice.value(Payload(n=i64(value)))
 
 
 def score[T](context: T, value: Choice) -> i64:
@@ -40,7 +40,7 @@ def scalar[T](context: T, value: Scalar) -> i64:
 
 
 def table[T: integer](value: T) -> [Color]i64:
-    return {Color.red: cast<i64>(value), Color.blue: 9}
+    return {Color.red: i64(value), Color.blue: 9}
 
 
 def main() -> i64:

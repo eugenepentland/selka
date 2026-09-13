@@ -51,7 +51,7 @@ const api =
     \\
     \\domain Distance: i64:
     \\    private def raw(x: i64) -> Distance:
-    \\        return wrap<Distance>(x)
+    \\        return wrap[Distance](x)
     \\
     \\    def make(x: i64) -> Distance:
     \\        return Distance.raw(x)

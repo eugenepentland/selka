@@ -4,10 +4,10 @@ export Cents
 
 domain Cents: i64:
     def make(value: u64) -> Cents:
-        return wrap<Cents>(cast<i64>(value))
+        return wrap[Cents](i64(value))
 
     def number(value: Cents) -> i64:
         return unwrap(value)
 
     def add(left: Cents, right: Cents) -> Cents:
-        return wrap<Cents>(unwrap(left) + unwrap(right))
+        return wrap[Cents](unwrap(left) + unwrap(right))

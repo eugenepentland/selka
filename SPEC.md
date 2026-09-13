@@ -113,7 +113,7 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 
 
 
-- [SOURCE-CODEC-1] `codec_decode<Domain>(wire)` returns the declared decoder's typed result and `codec_encode<Domain>(value)` returns its declared wire value. Both resolve through explicit domain codec contracts and preserve ordinary call typing, ownership, effects, runtime budgets and source diagnostics. They do not expose backing construction or provide JSON byte serialization.
+- [SOURCE-CODEC-1] `codec_decode[Domain](wire)` returns the declared decoder's typed result and `codec_encode[Domain](value)` returns its declared wire value. Both resolve through explicit domain codec contracts and preserve ordinary call typing, ownership, effects, runtime budgets and source diagnostics. They do not expose backing construction or provide JSON byte serialization.
 
 - [CHECK-CACHE-1] A persistent checking session may reuse a successful verdict only after fresh project and manifest loading and exact comparison of every loaded module name, path and source byte. Hits replay owned warnings and skip interface/semantic work; failures are never retained. Retention is bounded and clear drops syntax and verdict caches while preserving cumulative observations.
 
@@ -253,7 +253,7 @@ manifest records implementation coverage, not a test certificate.
 
 ## Explicit implementation obligations
 
-- [TYPED-HOLES-1] `todo<T>()` declares an unresolved implementation obligation with a checked required type and a located `E_TYPED_HOLE` diagnostic plus related type span. Ordinary and uncalled generic function bodies report independent holes at safe recovery boundaries. Formatting retains them. No checked program, bytecode or executable is published until every hole is replaced. This is an explicit declared type, not inferred expected-type completion.
+- [TYPED-HOLES-1] `todo[T]()` declares an unresolved implementation obligation with a checked required type and a located `E_TYPED_HOLE` diagnostic plus related type span. Ordinary and uncalled generic function bodies report independent holes at safe recovery boundaries. Formatting retains them. No checked program, bytecode or executable is published until every hole is replaced. This is an explicit declared type, not inferred expected-type completion.
 
 ## Bounded host replay
 

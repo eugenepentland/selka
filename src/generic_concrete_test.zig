@@ -9,12 +9,12 @@ const schema =
 ;
 const program = schema ++
     \\def make[T: integer](x: T) -> Sample:
-    \\    return Sample(values=[cast<i64>(x), cast<i64>(x) + 1], tag=7u8)
+    \\    return Sample(values=[i64(x), i64(x) + 1], tag=7u8)
     \\
     \\
     \\def total[T](x: T, s: Sample) -> i64:
     \\    _ = x
-    \\    return s.values[0] + s.values[1] + cast<i64>(len(s.values))
+    \\    return s.values[0] + s.values[1] + i64(len(s.values))
     \\
     \\
     \\def choose[T](x: T, a: Sample, b: Sample) -> Sample:
@@ -75,7 +75,7 @@ fn updateScenario(allocator: std.mem.Allocator) !void {
         \\
         \\
         \\def put[T: integer](p: [Key]i64, key: Key, value: T) -> [Key]i64:
-        \\    return replace(p, key, cast<i64>(value))
+        \\    return replace(p, key, i64(value))
         \\
         \\
         \\def main() -> i64:
@@ -108,7 +108,7 @@ const variants =
     \\
     \\
     \\def make[T: integer](x: T) -> Choice:
-    \\    return Choice.value(Payload(n=cast<i64>(x)))
+    \\    return Choice.value(Payload(n=i64(x)))
     \\
     \\
     \\def score[T](context: T, x: Choice) -> i64:
@@ -126,7 +126,7 @@ const variants =
     \\
     \\
     \\def mapping[T: integer](x: T) -> [Color]i64:
-    \\    return {Color.red: cast<i64>(x), Color.blue: 0}
+    \\    return {Color.red: i64(x), Color.blue: 0}
     \\
     \\
     \\def main() -> i64:
@@ -419,7 +419,7 @@ test "generic concrete enum tables require complete unique nominal keys" {
         \\
         \\
         \\def table[T: integer](x: T) -> [K]i64:
-        \\    return {K.a: cast<i64>(x), K.b: 2}
+        \\    return {K.a: i64(x), K.b: 2}
         \\
         \\
         \\def main() -> i64:

@@ -11,4 +11,4 @@ def response_codes() -> [Status]u16:
 def main() -> i64:
     original = response_codes()
     revised = replace(original, Status.failed, 503u16)
-    return cast<i64>(original[Status.failed]) + cast<i64>(revised[Status.failed]) + cast<i64>(revised[Status.missing])
+    return i64(original[Status.failed]) + i64(revised[Status.failed]) + i64(revised[Status.missing])

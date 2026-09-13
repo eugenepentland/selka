@@ -13,7 +13,7 @@ fn parse_digit(count: i64) -> ParsedDigit effects(host) {
     if value < 48u8 || value > 57u8 {
         return new ParsedDigit.err(new DigitError.invalid);
     }
-    return new ParsedDigit.ok(cast<i64>(value) - 48);
+    return new ParsedDigit.ok(i64(value) - 48);
 }
 
 fn answer() -> i64 effects(host) {
@@ -42,7 +42,7 @@ fn write_digits(value: i64) -> i64 effects(host) {
     if value >= 10 {
         discard write_digits(value / 10);
     }
-    discard io::put(cast<u8>(48 + value % 10));
+    discard io::put(u8(48 + value % 10));
     return 0;
 }
 

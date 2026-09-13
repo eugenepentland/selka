@@ -113,7 +113,7 @@ test "divtrunc and remtrunc round toward zero beside flooring // and %" {
     try execute(
         \\def main() -> i64:
         \\    wide: u64 = 18446744073709551615
-        \\    return cast<i64>(divtrunc(wide, 3u64) - remtrunc(wide, 3u64)) - 6148914691236517163
+        \\    return i64(divtrunc(wide, 3u64) - remtrunc(wide, 3u64)) - 6148914691236517163
     , 42);
 }
 

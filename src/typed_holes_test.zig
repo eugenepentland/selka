@@ -4,12 +4,12 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const source =
     \\def first() -> i64:
-    \\    return todo<i64>()
+    \\    return todo[i64]()
     \\
     \\
     \\def second[T](x: T) -> T:
     \\    _ = x
-    \\    return todo<T>()
+    \\    return todo[T]()
     \\
     \\
     \\def main() -> i64:
@@ -41,7 +41,7 @@ test "formatting retains typed holes and filling them restores executable checki
     defer c.deinit();
     const formatted = try c.format(t.allocator);
     defer t.allocator.free(formatted);
-    try t.expect(std.mem.indexOf(u8, formatted, "todo<i64>()") != null);
+    try t.expect(std.mem.indexOf(u8, formatted, "todo[i64]()") != null);
     var repaired = try language.Compilation.init(t.allocator, "fixed.my",
         \\def main() -> i64:
         \\    return 7

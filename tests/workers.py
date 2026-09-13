@@ -23,7 +23,7 @@ fn analyze(values:[4]i64)->Stats{
 fn loop(n:i64)->i64{let mut i=n;while true{i+=1;if i==1000000{i=0;}}return i;}
 fn nodata()->unit{}
 result Time{ok:i64,err:i64}
-fn clock(c:clock_cap)->Time{return clock_now<Time>(c);}
+fn clock(c:clock_cap)->Time{return clock_now[Time](c);}
 fn main()->i64{return 0;}
 '''
 

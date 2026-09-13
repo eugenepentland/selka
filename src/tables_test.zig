@@ -48,14 +48,14 @@ test "enum table construction follows names across enum and initializer reorderi
         \\def main() -> i64:
         \\    t: [One]bool = {One.only: True}
         \\    if t[One.only]:
-        \\        return cast<i64>(len(t))
+        \\        return i64(len(t))
         \\    return 0
     , 1);
     try result(color ++
         \\def main() -> i64:
         \\    old: [Color]i64 = {Color.red: 1, Color.green: 2, Color.blue: 3}
         \\    changed = replace(old, Color.red, 9)
-        \\    return old[Color.red] + changed[Color.red] + changed[Color.green] + cast<i64>(len(changed))
+        \\    return old[Color.red] + changed[Color.red] + changed[Color.green] + i64(len(changed))
     , 15);
 }
 

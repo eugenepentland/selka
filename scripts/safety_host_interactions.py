@@ -26,7 +26,7 @@ def main() -> int:
     with arena():
         values: list[int] = []
         values.append(VALUE)
-        _ = io.put(cast<u8>(values[0]))
+        _ = io.put(u8(values[0]))
         OPERATION
     return 0
 '''

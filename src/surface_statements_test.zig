@@ -131,7 +131,7 @@ test "trailing call commas and multiline binary operators preserve semantics" {
         \\
         \\def main() -> i64:
         \\    value = add(20, 22)
-        \\    return cast<i64>(value) + 0
+        \\    return i64(value) + 0
     , 42);
     try evaluate(
         \\def main() -> i64:

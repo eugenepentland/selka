@@ -48,8 +48,8 @@ def handle[T](r: Open) -> i64 effects(filesystem):
 
 def main(fs: filesystem_cap) -> i64:
     empty: [0]u8 = []
-    first = handle[bool](acquire_resource<Open>(fs, empty))
-    match acquire_resource<Open>(fs, empty):
+    first = handle[bool](acquire_resource[Open](fs, empty))
+    match acquire_resource[Open](fs, empty):
         case Open.ok(file):
             return first + drop[bool](file)
         case Open.err(code):

@@ -113,8 +113,8 @@ fn scenario(id:usize,source:[]const u8,acquire:u8,complete:u8,permissions:u8,mis
 def io_cases(prefix, finish):
     finish = finish.replace("return e;", "return -e;")
     declarations = "struct Chunk{eof:bool,bytes:[4]u8,length:u64}result Read{err:i64,ok:Chunk}result Written{err:i64,ok:u64}"
-    byte_score = "+cast<i64>(chunk.bytes[0])+cast<i64>(chunk.bytes[1])+cast<i64>(chunk.bytes[2])+cast<i64>(chunk.bytes[3])"
-    fixed = prefix + declarations + "fn work(fs:filesystem_cap)->Run{let mut file=acquire_resource<A>(fs,new [0]u8[])?;let chunk=read_resource<Read>(file)?;let n=write_resource<Written>(file,chunk.bytes)?;let mut score=cast<i64>(chunk.length)*1000+cast<i64>(n)" + byte_score + ";if chunk.eof{score+=10000;}return new Run.ok(score);}" + finish
+    byte_score = "+i64(chunk.bytes[0])+i64(chunk.bytes[1])+i64(chunk.bytes[2])+i64(chunk.bytes[3])"
+    fixed = prefix + declarations + "fn work(fs:filesystem_cap)->Run{let mut file=acquire_resource[A](fs,new [0]u8[])?;let chunk=read_resource[Read](file)?;let n=write_resource[Written](file,chunk.bytes)?;let mut score=i64(chunk.length)*1000+i64(n)" + byte_score + ";if chunk.eof{score+=10000;}return new Run.ok(score);}" + finish
     result = []
 
     def add(name, source, settings, expected, error=None):
@@ -135,6 +135,6 @@ def io_cases(prefix, finish):
     add("overwrite", fixed, {"WRITE": 5}, 0, b"InvalidProvider")
     add("no-callbacks", fixed, {"IO_MISSING": 1}, -1)
     add("denied-before-missing", fixed, {"IO_MISSING": 1, "PERMISSIONS": 0}, -2)
-    attenuated = fixed.replace("acquire_resource<A>(fs,", "acquire_resource<A>(restrict_resource<read,write,complete>(restrict_resource<read>(fs)),")
+    attenuated = fixed.replace("acquire_resource[A](fs,", "acquire_resource[A](restrict_resource[read,write,complete](restrict_resource[read](fs)),")
     add("source-attenuation", attenuated, {}, -2)
     return result

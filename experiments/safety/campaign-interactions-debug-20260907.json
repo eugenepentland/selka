@@ -287,7 +287,7 @@
     },
     {
       "family": "generic-owner-reference-arena",
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,7){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,7){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "c49da8f4485a55497d49c4de89799bf1adcc77d6e7fb8460e125a2a16ecaf3d2",
       "expected": 7,
       "passed": true,
@@ -301,7 +301,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 0,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffereturn lue));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,7){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffereturn lue));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,7){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "48291f235d63677ff0a8f9f9091c0802dcf191e27f52ae06eb89897b70011a93",
       "passed": true,
       "result": {
@@ -314,7 +314,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 1,
-      "source": "bureturn copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,7){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "bureturn copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,7){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "135a91b4eca92d16044d4a0c347f0fbdbd367427d3d9ace4f9249b240d1ab7e0",
       "passed": true,
       "result": {
@@ -327,7 +327,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 2,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,7){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspe\u000064>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,7){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspe\u000064>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "a0b32ff1a3a0a5f4fc1d3a01a47a832324660961e071920c6381853ef8a1bb04",
       "passed": true,
       "result": {
@@ -599,7 +599,7 @@
     },
     {
       "family": "generic-owner-reference-arena",
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,3){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,3){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "2928b1f2806d8f6831868cdf21df1164a36187758c2aba0b1306d44f2040d151",
       "expected": 3,
       "passed": true,
@@ -613,7 +613,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 0,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,3){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capareturn ty;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,3){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capareturn ty;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "8cd3dd551c8137635275e8282d044d3e8c88fcaa05f83943f51d315ae29a795f",
       "passed": true,
       "result": {
@@ -626,7 +626,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 1,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,3){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{retuborrow mut }}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,3){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{retuborrow mut }}}",
       "source_sha256": "a40e1216828e0c7ac81fb6a52515422bf38e23fbc7745ee15669c7a3b0323a7e",
       "passed": true,
       "result": {
@@ -639,7 +639,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 2,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,3){\nR.ok(b)=>{let mut capacity=0;borrow b as viewborrow mut capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,3){\nR.ok(b)=>{let mut capacity=0;borrow b as viewborrow mut capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "f6df5556cdefa2dac992932fe8ce963a63a1f6b82727583233721561c9dd8846",
       "passed": true,
       "result": {
@@ -911,7 +911,7 @@
     },
     {
       "family": "generic-owner-reference-arena",
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,3){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,3){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "2928b1f2806d8f6831868cdf21df1164a36187758c2aba0b1306d44f2040d151",
       "expected": 3,
       "passed": true,
@@ -925,7 +925,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 0,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match?quire_buffer<R>(child,3){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match?quire_buffer<R>(child,3){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "40fd243dddc0dcc66bbbf72dff0a55ce26383e2d7e9ed49f4e04820e92bd225e",
       "passed": true,
       "result": {
@@ -938,7 +938,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 1,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,3){\nR.ok(b)=borrow mut et mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,3){\nR.ok(b)=borrow mut et mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "48d0f547037520def1a3e2de7171eacff6501dea3c196de2f28df52f992e8331",
       "passed": true,
       "result": {
@@ -951,7 +951,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 2,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,3){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}d}card b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,3){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}d}card b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "c0e482eea18046836f05387db44a3ea4061b8438c146eb4dc7584fd9392f2e93",
       "passed": true,
       "result": {
@@ -1223,7 +1223,7 @@
     },
     {
       "family": "generic-owner-reference-arena",
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,17){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,17){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "4d95c7330124988dbf810cafffeb249cf8f66595ba1ed32e221a81a5d23473a3",
       "expected": 17,
       "passed": true,
@@ -1237,7 +1237,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 0,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{retur}cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,17){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{retur}i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,17){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "721184e1a96ffe82450ea451282f1dbaa3b505b2018bfb8743396eb170212c13",
       "passed": true,
       "result": {
@@ -1250,7 +1250,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 1,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,17){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}borrow mut ",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,17){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}borrow mut ",
       "source_sha256": "0eace4905e4683cc23a762c4d1486e9c6f02d713369d0dd47679350347d77ac0",
       "passed": true,
       "result": {
@@ -1263,7 +1263,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 2,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,17){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;reborrow mut rn capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,17){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;reborrow mut rn capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "1fee6ac0c59eb9390f9024c3c3f65857e32d427cfab7ffcea5257d82d1517a07",
       "passed": true,
       "result": {
@@ -1535,7 +1535,7 @@
     },
     {
       "family": "generic-owner-reference-arena",
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,11){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,11){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "d4cadfa5c0bd49904ac6c27d4bbf5f06b4ea6728958047261cc17d488c6c1e04",
       "expected": 11,
       "passed": true,
@@ -1549,7 +1549,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 0,
-      "source": "buffer B<T:copy>:?esult R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,11){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:?esult R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,11){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "9ce655f5f18cbb99859b1b2be416368a1ff863942cdf2e2b21bcdb723985a49f",
       "passed": true,
       "result": {
@@ -1562,7 +1562,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 1,
-      "source": "buffer B<Tborrow mut result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,11){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<Tborrow mut result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,11){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "f73e9ce0dbcc35fff65a4933fab902b3fd88accac5903a21b09e2b91280ca9c1",
       "passed": true,
       "result": {
@@ -1575,7 +1575,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 2,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,11){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=rn -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,11){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=rn -1;}}}}",
       "source_sha256": "5d89017b4e2a4a1418c9f94b3bdd09cbe1f946c52a102155bd4609fe83111667",
       "passed": true,
       "result": {
@@ -1847,7 +1847,7 @@
     },
     {
       "family": "generic-owner-reference-arena",
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "9ff0cad886a78125bcfda95f053d76b96f6625c79eef6ab8852a7a09d213376a",
       "expected": 9,
       "passed": true,
@@ -1861,7 +1861,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 0,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heborrow mut llocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heborrow mut llocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "0bac63f06ae521c58f835eb94b9d6b097763af2ec0ee78ecc4ef825cac21cf09",
       "passed": true,
       "result": {
@@ -1874,7 +1874,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 1,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=borrow mut let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=borrow mut let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "b989ad7a37adad47b40dcbed5475605219c3a50e7eb2d3c02210568166a398c6",
       "passed": true,
       "result": {
@@ -1887,7 +1887,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 2,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value)fn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value)fn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "09b7ffab09386d2fefc839c1bf9d75f211478b1828b0140cb826231d4900bc2e",
       "passed": true,
       "result": {
@@ -2159,7 +2159,7 @@
     },
     {
       "family": "generic-owner-reference-arena",
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,13){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,13){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "affde62151128eaf104ab4f7f6f7fce02218ef3f99dac3bb7e95b032c93ec210",
       "expected": 13,
       "passed": true,
@@ -2173,7 +2173,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 0,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match?e_buffer<R>(child,13){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match?e_buffer<R>(child,13){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "cd1947295e3a47f7543734bb51fc2dfb8ba86d3ad8cab381c5cb7bf49e091b5f",
       "passed": true,
       "result": {
@@ -2186,7 +2186,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 1,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn m\u0000:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,13){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn m\u0000:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,13){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "e68c44e9257b7ad491be4e87b36f2f0be4286dd788ec526e7866097febc86793",
       "passed": true,
       "result": {
@@ -2199,7 +2199,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 2,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acqu\u0000buffer<R>(child,13){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acqu\u0000buffer<R>(child,13){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "14df9aabf3f6bd6d172f0c42b0cf85cef87bc762da695dba8f07eed30b42d0e5",
       "passed": true,
       "result": {
@@ -2471,7 +2471,7 @@
     },
     {
       "family": "generic-owner-reference-arena",
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,6){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,6){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "7b9805ff0099481ef2a3069f0a3c87d0d5d6138b32363028331a9c4a72394e54",
       "expected": 6,
       "passed": true,
@@ -2485,7 +2485,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 0,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,6){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view?card b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,6){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view?card b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "a6bd89c7aae484b681492f637316b43cb6836734296ac9d3d0bd1f0ea269e03b",
       "passed": true,
       "result": {
@@ -2498,7 +2498,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 1,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i6\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,6){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i6\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,6){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "7ea9bb1e248bf9777f8d16a7599f6e55851fb1a2c9b20d78a7d672863fa1131a",
       "passed": true,
       "result": {
@@ -2511,7 +2511,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 2,
-      "source": "bu?fer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,6){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "bu?fer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,6){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "a6f70fe025092397e321311a30fb2dfbf89f31703cf7f00eb306f78c2a016d0f",
       "passed": true,
       "result": {
@@ -2783,7 +2783,7 @@
     },
     {
       "family": "generic-owner-reference-arena",
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,15){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,15){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "50d1157e906de1c2415e9d156181544e4e7c8636dd82521c08f26ee045385ea9",
       "expected": 15,
       "passed": true,
@@ -2797,7 +2797,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 0,
-      "source": "buf} B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,15){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buf} B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,15){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "a8b3a43e631e549c297b9c474de00625490f014f66e744a198c88de758301ba9",
       "passed": true,
       "result": {
@@ -2810,7 +2810,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 1,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>borrow mut fn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,15){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>borrow mut fn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,15){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "3f1ca3fb07066c110ebbee527032e2ba25c1def2317b4924db8a4d1884ea2416",
       "passed": true,
       "result": {
@@ -2823,7 +2823,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 2,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(valuereturn >i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,15){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(valuereturn >i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,15){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "fadc9783a77bfba706d2b275fa8005cc7ce47e10283102aa8e817e6f595e7514",
       "passed": true,
       "result": {
@@ -3095,7 +3095,7 @@
     },
     {
       "family": "generic-owner-reference-arena",
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,12){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,12){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "5493b23f33307c2b050ac93b28d8e7902bf3f19e61b3142562e3da2e5b36ca0e",
       "expected": 12,
       "passed": true,
@@ -3109,7 +3109,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 0,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(valureturn }\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,12){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(valureturn }\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,12){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "e4b17e91b473ed9dd02a89fa151760731d33e36a221435db5b6baa5739fe0896",
       "passed": true,
       "result": {
@@ -3122,7 +3122,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 1,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,12){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;} capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,12){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;} capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "a48f33bdfa5fd453c024330201aa387ad3099eed5e781bd58a242c5ce04aaff9",
       "passed": true,
       "result": {
@@ -3135,7 +3135,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 2,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heborrow mut cator)->i64{arena heap as child{match acquire_buffer<R>(child,12){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heborrow mut cator)->i64{arena heap as child{match acquire_buffer<R>(child,12){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "b1d040d30f31687e65d06765ce68c810cf6197ce7058acbeba5dcad5d42590bc",
       "passed": true,
       "result": {
@@ -3407,7 +3407,7 @@
     },
     {
       "family": "generic-owner-reference-arena",
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "9ff0cad886a78125bcfda95f053d76b96f6625c79eef6ab8852a7a09d213376a",
       "expected": 9,
       "passed": true,
@@ -3421,7 +3421,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 0,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=:<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=:<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "792755847018296859cf4f38d4ce24ed35f5648702468f1355f7cdacca51ed16",
       "passed": true,
       "result": {
@@ -3434,7 +3434,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 1,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(chilreturn {\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(chilreturn {\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "a4ed7b849cb3bce1fc4d33455130d01622d63321cc04a5f3f17d2369bf8fd278",
       "passed": true,
       "result": {
@@ -3447,7 +3447,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 2,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy\u0000<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy\u0000<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "0a27c409e1b849a3ca433557069a4172900499109903567d11a5d2c29e6bc3c9",
       "passed": true,
       "result": {
@@ -3719,7 +3719,7 @@
     },
     {
       "family": "generic-owner-reference-arena",
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,5){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,5){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "4ac1196e0d77d0b8440535adbd8be9a53cd3c9a3ed5cbfc90582b7206c384982",
       "expected": 5,
       "passed": true,
@@ -3733,7 +3733,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 0,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,5){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=?return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,5){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=?return -1;}}}}",
       "source_sha256": "25f7269f13d0c3e1ea73eec5fe86231803fd504d2539aa29a4883c40ac4ef465",
       "passed": true,
       "result": {
@@ -3746,7 +3746,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 1,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,5){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacitborrow mut ct::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,5){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacitborrow mut ct::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "17e773c6c81284d33d070a66658c3a05a6d4f47d0624964e77d4ed2c8b4c6af1",
       "passed": true,
       "result": {
@@ -3759,7 +3759,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 2,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(v?&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,5){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(v?&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,5){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "df8a9a9ec8edc4ec4e341f642e3bcd4dc78df4e626efcb95ce7e7d854f062d43",
       "passed": true,
       "result": {
@@ -4031,7 +4031,7 @@
     },
     {
       "family": "generic-owner-reference-arena",
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,8){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,8){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "0e2ee20525b524401cfabe291d29514d465f53ac90f5a9a0dd8e2d20dbd974c3",
       "expected": 8,
       "passed": true,
@@ -4045,7 +4045,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 0,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{ret\u0000rn cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,8){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{ret\u0000rn i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,8){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "04ac2ad39d0d0edbd55b971a04e91fe4078714c777d7004e2e1896af9d185587",
       "passed": true,
       "result": {
@@ -4058,7 +4058,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 1,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,8){\nR.ok(b)=>{let mut capacity=return ow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,8){\nR.ok(b)=>{let mut capacity=return ow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "faadd74a847ae84a15b9ba9294bcbedbc8b2158949ddd4b805057da1566f5bb9",
       "passed": true,
       "result": {
@@ -4071,7 +4071,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 2,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match areturn er<R>(child,8){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match areturn er<R>(child,8){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "f791f58fe4e1be6b67bc3217875dff9171eefe4b2dd47c3f2f218de0748444d3",
       "passed": true,
       "result": {
@@ -4343,7 +4343,7 @@
     },
     {
       "family": "generic-owner-reference-arena",
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,19){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,19){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "e9a257cfc9666f5d8df4ca4136b0081a9275a8c4050981d62c7f4807110ca0b2",
       "expected": 19,
       "passed": true,
@@ -4357,7 +4357,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 0,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(chi}{\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(chi}{\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "9cbfdcd292f5b7ad0cf8f286c874c4d14baa0697808ede0c6baa8d123e6521e7",
       "passed": true,
       "result": {
@@ -4383,7 +4383,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 2,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocatoborrow mut ->i64{arena heap as child{match acquire_buffer<R>(child,19){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocatoborrow mut ->i64{arena heap as child{match acquire_buffer<R>(child,19){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "826770110d5aa70567374f20e80f1d59439b11b7e38311d639431e7706ce3024",
       "passed": true,
       "result": {
@@ -4655,7 +4655,7 @@
     },
     {
       "family": "generic-owner-reference-arena",
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,10){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,10){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "c5ceb2fb41cd981038e709c61aceabe95d5bada577f840b46f98841f5737f31b",
       "expected": 10,
       "passed": true,
@@ -4669,7 +4669,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 0,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,10){\nR.ok(b)=>{letborrow mut t capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,10){\nR.ok(b)=>{letborrow mut t capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "ac30af147b95b1375937a3004f869f5433a8a20f7e8fcd420679cee4ef64423b",
       "passed": true,
       "result": {
@@ -4682,7 +4682,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 1,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>return eturn cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,10){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>return eturn i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,10){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "05cdfb352572e1ab797c880a729757bea9919d9794cdd8dafd01b006b258793d",
       "passed": true,
       "result": {
@@ -4695,7 +4695,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 2,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,10){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,10){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;(e)=>{return -1;}}}}",
       "source_sha256": "d3be1df1acc09903be24d9d110909e04146f604975dd868c8b9c05090020b52a",
       "passed": true,
       "result": {
@@ -4967,7 +4967,7 @@
     },
     {
       "family": "generic-owner-reference-arena",
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "9ff0cad886a78125bcfda95f053d76b96f6625c79eef6ab8852a7a09d213376a",
       "expected": 9,
       "passed": true,
@@ -4981,7 +4981,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 0,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return?pacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return?pacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "b0c42f1257101f865f8bde801817b43c0e16cbd94a9a50e27d52120681a0059d",
       "passed": true,
       "result": {
@@ -4994,7 +4994,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 1,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{mire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{mire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "b762c964505fbb21427fae178ac5bbb3ad8c21394ed8f3308eec2c33b5366ab5",
       "passed": true,
       "result": {
@@ -5007,7 +5007,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 2,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64borrow mut rena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64borrow mut rena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "cfc8a3eb944dd8f57683d6e0fdd01a0c2da3c170053216e2b7e925d4a71a3017",
       "passed": true,
       "result": {
@@ -5279,7 +5279,7 @@
     },
     {
       "family": "generic-owner-reference-arena",
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "9ff0cad886a78125bcfda95f053d76b96f6625c79eef6ab8852a7a09d213376a",
       "expected": 9,
       "passed": true,
@@ -5293,7 +5293,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 0,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;\u0000urn capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;\u0000urn capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "6c2de30fdfefb766763c5222007293a510b008bab908c4d77aa423d06201b713",
       "passed": true,
       "result": {
@@ -5306,7 +5306,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 1,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn in}<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn in}<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "3d8d15aee9b05e3d8a0d77947769a601342ec6de7cc05a454e1eb01e7e276422",
       "passed": true,
       "result": {
@@ -5319,7 +5319,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 2,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,9){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "2e0b2f464cbe83b449d0fd2cd60833b479fc95cdfd98948b801934231fc92c80",
       "passed": true,
       "result": {
@@ -5591,7 +5591,7 @@
     },
     {
       "family": "generic-owner-reference-arena",
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,2){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,2){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "1c550755255530bcbfeadca88d9086b760804e5d63f72396aac74568fec64642",
       "expected": 2,
       "passed": true,
@@ -5605,7 +5605,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 0,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(val\u0000ain(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,2){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(val\u0000ain(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,2){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "427f7fade066863f1115797b617544b3356c121d277762f63e0b68705ff1cb19",
       "passed": true,
       "result": {
@@ -5618,7 +5618,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 1,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,2){\nR.ok(b)=>{let mut capacity\u0000;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,2){\nR.ok(b)=>{let mut capacity\u0000;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "d408dc1f11498c4cf3800b27f8ac44583a107fde100f7b1a538bad841b677da9",
       "passed": true,
       "result": {
@@ -5631,7 +5631,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 2,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,2){\nR.ok(b)=>{let mut capacity=0;borrow \u0000as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,2){\nR.ok(b)=>{let mut capacity=0;borrow \u0000as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "e0ad5001b87f5a1c741165dc692e35b3b9553ffbd4e4b29f488f0f750a417c73",
       "passed": true,
       "result": {
@@ -5903,7 +5903,7 @@
     },
     {
       "family": "generic-owner-reference-arena",
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,15){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,15){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "50d1157e906de1c2415e9d156181544e4e7c8636dd82521c08f26ee045385ea9",
       "expected": 15,
       "passed": true,
@@ -5917,7 +5917,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 0,
-      "source": "buffer B<T:copy>:T;result R{ok:\u0000>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,15){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:\u0000>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,15){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "327b0cc6917862e35ad97319dd11f4742973bc2bd090bc8bf36c7973fa9c283f",
       "passed": true,
       "result": {
@@ -5930,7 +5930,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 1,
-      "source": "buffer B<T:creturn ;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,15){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:creturn ;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,15){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "145f71643d88ae438111e984e1d74548933b30883fd8e01a7fc693780abf238c",
       "passed": true,
       "result": {
@@ -5943,7 +5943,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 2,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(c}acity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,15){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(c}acity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,15){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "c5b225f950e3f8d636d5d43c90d64bd798612a2f4db0420a28b62ae58bb9d016",
       "passed": true,
       "result": {
@@ -6215,7 +6215,7 @@
     },
     {
       "family": "generic-owner-reference-arena",
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,1){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,1){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "0e07de6bc97c00cfb51100b0393ac60b51f01e79c0ee3a2e7a66433d790f02eb",
       "expected": 1,
       "passed": true,
@@ -6229,7 +6229,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 0,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,1){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.e?r(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,1){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.e?r(e)=>{return -1;}}}}",
       "source_sha256": "0971e0e9cfdc9c6795173487b928587e49dcf47000372d5dba71aadbe40fa083",
       "passed": true,
       "result": {
@@ -6242,7 +6242,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 1,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspborrow mut T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,1){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspborrow mut T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,1){\nR.ok(b)=>{let mut capacity=0;borrow b as view{capacity=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "b5f09e335782cdf01bade7f89c056d4d151ed3070cd65816455cb5da02647b6b",
       "passed": true,
       "result": {
@@ -6255,7 +6255,7 @@
     {
       "family": "generic-owner-reference-arena-mutation",
       "mutation": 2,
-      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return cast<i64>(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,1){\nR.ok(b)=>{let mut capacity=0;borrow b as view{c?=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
+      "source": "buffer B<T:copy>:T;result R{ok:B<i64>,err:i64}\nfn inspect<T:copy>(value:&B<T>)->i64{return i64(capacity_buffer(value));}\nfn main(heap:allocator)->i64{arena heap as child{match acquire_buffer<R>(child,1){\nR.ok(b)=>{let mut capacity=0;borrow b as view{c?=inspect::<i64>(view);}discard b;return capacity;},R.err(e)=>{return -1;}}}}",
       "source_sha256": "7904035e3e78aa6e30df5344e690a7f8fcb66fbba3be27332b703430c59900aa",
       "passed": true,
       "result": {

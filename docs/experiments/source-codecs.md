@@ -5,16 +5,16 @@ method names:
 
 ```mylang
 // doc: skip fragment: statements without the Positive domain and Wire declarations
-match codec_decode<Positive>(new Wire { n: 7 }) {
-    Decoded.ok(value) => { return codec_encode<Positive>(value).n; },
+match codec_decode[Positive](new Wire { n: 7 }) {
+    Decoded.ok(value) => { return codec_encode[Positive](value).n; },
     Decoded.err(error) => { return error; }
 }
 ```
 
-`codec_decode<Domain>(wire)` returns the exact result type of the declared decoder.
-`codec_encode<Domain>(value)` returns the declared ordinary wire type. Both take
+`codec_decode[Domain](wire)` returns the exact result type of the declared decoder.
+`codec_encode[Domain](value)` returns the declared ordinary wire type. Both take
 one explicit nominal domain type and one value argument. Imported aliases work,
-for example `codec_decode<units::Distance>(wire)`. The names `codec_encode` and
+for example `codec_decode[units::Distance](wire)`. The names `codec_encode` and
 `codec_decode` are reserved keywords. The formatter preserves their syntax.
 
 Resolution selects methods named by the `codec` declaration and produces ordinary

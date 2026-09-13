@@ -4,5 +4,5 @@ import config.values as inputs
 
 def main() -> i64:
     if inputs.enabled():
-        return cast<i64>(inputs.batch_size())
+        return i64(inputs.batch_size())
     return 0

@@ -222,14 +222,14 @@ fn sort(t: &[]i64, w: &mut []i64, items: &mut []std_order::Item, base: i64, size
         let next = std_json::get(t, second, 1);
         write_slice(items, i, new std_order::Item {
             value: node,
-            first: cast<u64>(start),
-            first_len: cast<u64>(std_json::get(t, first, 2) - start),
-            second: cast<u64>(next),
-            second_len: cast<u64>(std_json::get(t, second, 2) - next)
+            first: u64(start),
+            first_len: u64(std_json::get(t, first, 2) - start),
+            second: u64(next),
+            second_len: u64(std_json::get(t, second, 2) - next)
         });
         i += 1;
     }
-    discard std_order::sort(t, items, 0u64, cast<u64>(size));
+    discard std_order::sort(t, items, 0u64, u64(size));
     i = 0;
     while i < size {
         write_slice(w, base + i, read_slice(items, i).value);
@@ -258,7 +258,7 @@ fn rawid(t: &[]i64, n: i64) -> i64 {
     let mut p = std_json::get(t, n, 1);
     let end = std_json::get(t, n, 2);
     while p < end {
-        discard io::put(cast<u8>(read_slice(t, p)));
+        discard io::put(u8(read_slice(t, p)));
         p += 1;
     }
     return 0;

@@ -585,7 +585,7 @@
         "--diagnostics=json"
       ],
       "files": {
-        "byte_literal.my": "fn size(s:&[]u8)->i64{return cast<i64>(len_slice(s));}fn main()->i64{return size(\"abc\");}\n"
+        "byte_literal.my": "fn size(s:&[]u8)->i64{return i64(len_slice(s));}fn main()->i64{return size(\"abc\");}\n"
       },
       "returncode": 0,
       "stdout": "3\n",
@@ -1593,7 +1593,7 @@
         "--diagnostics=json"
       ],
       "files": {
-        "examples/structural-constraints.my": "struct Reading {\n    value: i64\n}\nstruct TaggedReading {\n    tag: bool,\n    value: i64\n}\nfn value < T: copy + field(value: i64) >(item: T) -> i64 {\n    return read_field(item, value);\n}\nfn forward < U: copy + field(value: i64) >(item: U) -> i64 {\n    return value::< U >(item);\n}\ndomain Counter: i64 {\n    fn make(n: i64) -> Counter {\n        return wrap<Counter>(n);\n    }\n    fn score(item: Counter) -> i64 effects() {\n        return unwrap(item);\n    }\n}\nfn score < T: copy + op(score(item: T) -> i64 effects()) >(item: T) -> i64 effects() {\n    return T.score(item);\n}\nfn main() -> i64 {\n    return value::< Reading >(new Reading {\n        value: 2\n    }) + forward::< TaggedReading >(new TaggedReading {\n        tag: true,\n        value: 3\n    }) + score::< Counter >(Counter.make(7));\n}\n"
+        "examples/structural-constraints.my": "struct Reading {\n    value: i64\n}\nstruct TaggedReading {\n    tag: bool,\n    value: i64\n}\nfn value < T: copy + field(value: i64) >(item: T) -> i64 {\n    return read_field(item, value);\n}\nfn forward < U: copy + field(value: i64) >(item: U) -> i64 {\n    return value::< U >(item);\n}\ndomain Counter: i64 {\n    fn make(n: i64) -> Counter {\n        return wrap[Counter](n);\n    }\n    fn score(item: Counter) -> i64 effects() {\n        return unwrap(item);\n    }\n}\nfn score < T: copy + op(score(item: T) -> i64 effects()) >(item: T) -> i64 effects() {\n    return T.score(item);\n}\nfn main() -> i64 {\n    return value::< Reading >(new Reading {\n        value: 2\n    }) + forward::< TaggedReading >(new TaggedReading {\n        tag: true,\n        value: 3\n    }) + score::< Counter >(Counter.make(7));\n}\n"
       },
       "returncode": 0,
       "stdout": "12\n",
@@ -1610,7 +1610,7 @@
         "--diagnostics=json"
       ],
       "files": {
-        "examples/source-json.my": "buffer Bytes: u8;\nresult Encoded {\n    ok: Bytes,\n    err: i64\n}\nstruct Item {\n    count: u64,\n    ready: bool\n}\nresult Decoded {\n    ok: Item,\n    err: i64\n}\nfn encode < T: codec >(heap: allocator, value: T) -> Encoded {\n    return json_encode::< Encoded >(heap, value, 4096);\n}\nfn roundtrip(heap: allocator) -> Decoded {\n    let bytes = try encode::< Item >(heap, new Item {\n        count: 42u64,\n        ready: true\n    });\n    return json_decode::< Decoded >(heap, bytes, 4096);\n}\nfn main(heap: allocator) -> i64 {\n    match roundtrip(heap) {\n        Decoded.ok(item) => {\n            if item.ready {\n                return cast<i64>(item.count);\n            }\n            return 0;\n        },\n        Decoded.err(code) => {\n            return code;\n        }\n    }\n}\n"
+        "examples/source-json.my": "buffer Bytes: u8;\nresult Encoded {\n    ok: Bytes,\n    err: i64\n}\nstruct Item {\n    count: u64,\n    ready: bool\n}\nresult Decoded {\n    ok: Item,\n    err: i64\n}\nfn encode < T: codec >(heap: allocator, value: T) -> Encoded {\n    return json_encode::< Encoded >(heap, value, 4096);\n}\nfn roundtrip(heap: allocator) -> Decoded {\n    let bytes = try encode::< Item >(heap, new Item {\n        count: 42u64,\n        ready: true\n    });\n    return json_decode::< Decoded >(heap, bytes, 4096);\n}\nfn main(heap: allocator) -> i64 {\n    match roundtrip(heap) {\n        Decoded.ok(item) => {\n            if item.ready {\n                return i64(item.count);\n            }\n            return 0;\n        },\n        Decoded.err(code) => {\n            return code;\n        }\n    }\n}\n"
       },
       "returncode": 0,
       "stdout": "42\n",
@@ -1756,7 +1756,7 @@
         "--diagnostics=json"
       ],
       "files": {
-        "source-json.my": "buffer Bytes: u8;\nresult Encoded {\n    ok: Bytes,\n    err: i64\n}\nstruct Item {\n    count: u64,\n    ready: bool\n}\nresult Decoded {\n    ok: Item,\n    err: i64\n}\nfn encode < T: codec >(heap: allocator, value: T) -> Encoded {\n    return json_encode::< Encoded >(heap, value, 4096);\n}\nfn roundtrip(heap: allocator) -> Decoded {\n    let bytes = try encode::< Item >(heap, new Item {\n        count: 42u64,\n        ready: true\n    });\n    return json_decode::< Decoded >(heap, bytes, 4096);\n}\nfn main(heap: allocator) -> i64 {\n    match roundtrip(heap) {\n        Decoded.ok(item) => {\n            if item.ready {\n                return cast<i64>(item.count);\n            }\n            return 0;\n        },\n        Decoded.err(code) => {\n            return code;\n        }\n    }\n}\n"
+        "source-json.my": "buffer Bytes: u8;\nresult Encoded {\n    ok: Bytes,\n    err: i64\n}\nstruct Item {\n    count: u64,\n    ready: bool\n}\nresult Decoded {\n    ok: Item,\n    err: i64\n}\nfn encode < T: codec >(heap: allocator, value: T) -> Encoded {\n    return json_encode::< Encoded >(heap, value, 4096);\n}\nfn roundtrip(heap: allocator) -> Decoded {\n    let bytes = try encode::< Item >(heap, new Item {\n        count: 42u64,\n        ready: true\n    });\n    return json_decode::< Decoded >(heap, bytes, 4096);\n}\nfn main(heap: allocator) -> i64 {\n    match roundtrip(heap) {\n        Decoded.ok(item) => {\n            if item.ready {\n                return i64(item.count);\n            }\n            return 0;\n        },\n        Decoded.err(code) => {\n            return code;\n        }\n    }\n}\n"
       },
       "returncode": 1,
       "stdout": "",

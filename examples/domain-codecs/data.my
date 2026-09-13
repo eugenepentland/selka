@@ -19,7 +19,7 @@ domain Positive: i64:
         encode: to_wire
 
     private def raw(x: i64) -> Positive:
-        return wrap<Positive>(x)
+        return wrap[Positive](x)
 
     def from_wire(x: Wire) -> Decoded:
         if x.n <= 0:

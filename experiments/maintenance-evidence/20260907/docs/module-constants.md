@@ -6,7 +6,7 @@ Declare a module constant with an explicit scalar type:
 const SCALE: i64 = 6;
 const ANSWER: i64 = SCALE * FACTOR;
 const FACTOR: i64 = 7;
-const MASK: u8 = cast<u8>(255);
+const MASK: u8 = u8(255);
 ```
 
 Integer widths and `bool` are supported. Initializers may contain scalar

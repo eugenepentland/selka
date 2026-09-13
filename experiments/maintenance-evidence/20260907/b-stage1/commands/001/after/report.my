@@ -4,7 +4,7 @@ import model;
 export score;
 fn score(heap: allocator, input: [4]i64, floor: i64) -> i64 {
     match ledger::summarize(heap, input, floor) {
-        model::Answer.ok(reply) => { return reply.total * 100 + cast<i64>(reply.count); },
+        model::Answer.ok(reply) => { return reply.total * 100 + i64(reply.count); },
         model::Answer.err(code) => { return -9000000 + code; }
     }
 }

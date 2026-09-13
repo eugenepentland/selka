@@ -6,12 +6,12 @@ const generic_text =
     \\def sum_range[T: integer](start: T, end: T) -> i64:
     \\    sum = 0
     \\    for i in range(start, end):
-    \\        if i == cast<T>(2):
+    \\        if i == T(2):
     \\            continue
     \\        for j in range(0, 3):
     \\            if j == 1:
     \\                break
-    \\            sum += cast<i64>(i)
+    \\            sum += i64(i)
     \\    return sum
     \\
     \\

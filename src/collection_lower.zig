@@ -105,7 +105,6 @@ pub fn Builder(comptime Checker: type) type {
     return struct {
         checker: *Checker,
         span: Span,
-        python_assignment_order: bool = false,
         const Self = @This();
         /// Add a checked expression to the shared table.
         pub fn node(self: Self, ty: typed.Type, data: @FieldType(typed.Node, "data")) Error!typed.NodeId {
@@ -184,7 +183,7 @@ pub fn Builder(comptime Checker: type) type {
             const init = try self.stmt(.{ .initialize = .{ .slot = owner, .value = base } });
             const arguments = try self.checker.allocator.dupe(typed.NodeId, inputs);
             var statements: std.ArrayList(typed.StatementId) = .empty;
-            if (kind == .write and self.python_assignment_order) {
+            if (kind == .write) {
                 const value_slot = try self.local(self.checker.nodes.items[@backingInt(arguments[1])].ty);
                 try statements.append(self.checker.allocator, try self.stmt(.{ .initialize = .{ .slot = value_slot, .value = arguments[1] } }));
                 arguments[1] = try self.read(value_slot);

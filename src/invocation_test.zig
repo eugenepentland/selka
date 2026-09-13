@@ -15,7 +15,7 @@ const domain_source =
     \\
     \\domain Positive: i64:
     \\    private def raw(x: i64) -> Positive:
-    \\        return wrap<Positive>(x)
+    \\        return wrap[Positive](x)
     \\
     \\    def decode(x: i64) -> Decoded:
     \\        if x <= 0:

@@ -7,4 +7,4 @@ extern def floor(value: float) -> float effects(host)
 def main() -> i64:
     if floor(3.9) != 3.0:
         return 1
-    return cast<i64>(abs(-42))
+    return i64(abs(-42))

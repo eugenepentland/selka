@@ -17,7 +17,7 @@ domain Count: u16:
     def parse(value: i64) -> Parsed:
         if value < 0 or value > 99:
             return Err(InvalidQuantity.outside_range)
-        return Ok(wrap<Count>(cast<u16>(value)))
+        return Ok(wrap[Count](u16(value)))
 
     def number(value: Count) -> u16:
         return unwrap(value)

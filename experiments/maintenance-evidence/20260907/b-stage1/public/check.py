@@ -14,7 +14,7 @@ def observe(compiler, directory, extra_argument, case, field=None):
     values = ','.join(str(n) for n in case['input'])
     arguments = f"heap,new [4]i64[{values}],{case['floor']}"
     if field:
-        fields = 'cast<i64>(reply.' + field + ')'
+        fields = 'i64(reply.' + field + ')'
         body = ('match ledger::summarize(' + arguments + ') {' +
                 'model::Answer.ok(reply)=>{return ' + fields + ';},' +
                 'model::Answer.err(code)=>{return -9000000+code;}}')

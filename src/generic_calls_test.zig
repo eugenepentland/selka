@@ -32,9 +32,9 @@ const valid = declarations ++
     \\
     \\
     \\def recurse[T: integer](x: T) -> T:
-    \\    if x == cast<T>(0):
+    \\    if x == T(0):
     \\        return x
-    \\    return recurse[T](x - cast<T>(1))
+    \\    return recurse[T](x - T(1))
     \\
     \\
     \\def first[T](x: T) -> T:
@@ -99,7 +99,7 @@ const helpers =
     \\
     \\
     \\def unused(c: clock_cap) -> i64:
-    \\    _ = clock_now<Time>(c)
+    \\    _ = clock_now[Time](c)
     \\    return 0
 ;
 fn helperScenario(allocator: std.mem.Allocator) !void {
@@ -229,7 +229,7 @@ test "generic calls reject reachable clock effects even behind cycles and false 
         \\
         \\def hidden(c: clock_cap) -> i64:
         \\    if False:
-        \\        _ = clock_now<Time>(c)
+        \\        _ = clock_now[Time](c)
         \\        return helper(c)
         \\    return 0
     ;

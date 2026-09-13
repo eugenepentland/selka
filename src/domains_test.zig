@@ -19,7 +19,7 @@ fn reject(source: []const u8, code: []const u8) !void {
 const units =
     \\domain Millimeters: i64:
     \\    private def raw(n: i64) -> Millimeters:
-    \\        return wrap<Millimeters>(n)
+    \\        return wrap[Millimeters](n)
     \\
     \\    def from(n: i64) -> Millimeters:
     \\        if n < 0:
@@ -32,7 +32,7 @@ const units =
     \\
     \\domain Seconds: i64:
     \\    def from(n: i64) -> Seconds:
-    \\        return wrap<Seconds>(n)
+    \\        return wrap[Seconds](n)
     \\
     \\    def number(n: Seconds) -> i64:
     \\        return unwrap(n)
@@ -40,16 +40,16 @@ const units =
 
 test "domain backing types require built-in scalars and exact wrapping types" {
     for ([_][]const u8{ "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64" }) |width| {
-        const source = try std.fmt.allocPrint(testing.allocator, "domain Count: {s} {{ fn from(n: {s}) -> Count {{ return wrap<Count>(n); }} fn " ++
+        const source = try std.fmt.allocPrint(testing.allocator, "domain Count: {s} {{ fn from(n: {s}) -> Count {{ return wrap[Count](n); }} fn " ++
             "number(n: Count) -> {s} {{ return unwrap(n); }} }} fn main() -> i64 {{ return " ++
-            "cast<i64>(Count.number(Count.from(7{s}))); }}", .{ width, width, width, width });
+            "i64(Count.number(Count.from(7{s}))); }}", .{ width, width, width, width });
         defer testing.allocator.free(source);
         try result(source, 7);
     }
     try result(
         \\domain Flag: bool:
         \\    def from(n: bool) -> Flag:
-        \\        return wrap<Flag>(n)
+        \\        return wrap[Flag](n)
         \\
         \\    def test(n: Flag) -> bool:
         \\        return unwrap(n)
@@ -103,7 +103,7 @@ test "domain backing types require built-in scalars and exact wrapping types" {
     try reject(
         \\domain Byte: u8:
         \\    def from(n: i64) -> Byte:
-        \\        return wrap<Byte>(n)
+        \\        return wrap[Byte](n)
         \\
         \\
         \\def main() -> i64:
@@ -112,7 +112,7 @@ test "domain backing types require built-in scalars and exact wrapping types" {
     try reject(
         \\domain Byte: u8:
         \\    def from(n: u8) -> Byte:
-        \\        return wrap<u8>(n)
+        \\        return wrap[u8](n)
         \\
         \\
         \\def main() -> i64:
@@ -142,7 +142,7 @@ test "domain namespaces support forward calls recursion private helpers and shar
         \\        return D.raw(from(7))
         \\
         \\    private def raw(n: i64) -> D:
-        \\        return wrap<D>(n)
+        \\        return wrap[D](n)
         \\
         \\    def number(n: D) -> i64:
         \\        return unwrap(n)
@@ -382,7 +382,7 @@ test "nominal domains prevent mixing units and preserve validated factory values
     const conversion =
         \\domain Seconds: u64:
         \\    def from(n: u64) -> Seconds:
-        \\        return wrap<Seconds>(n)
+        \\        return wrap[Seconds](n)
         \\
         \\    def number(n: Seconds) -> u64:
         \\        return unwrap(n)
@@ -390,18 +390,18 @@ test "nominal domains prevent mixing units and preserve validated factory values
         \\
         \\domain Millimeters: u8:
         \\    def from(n: u8) -> Millimeters:
-        \\        return wrap<Millimeters>(n)
+        \\        return wrap[Millimeters](n)
         \\
         \\    def number(n: Millimeters) -> u8:
         \\        return unwrap(n)
         \\
         \\
         \\def distance(time: Seconds) -> Millimeters:
-        \\    return Millimeters.from(cast<u8>(Seconds.number(time) * 10u64))
+        \\    return Millimeters.from(u8(Seconds.number(time) * 10u64))
     ;
     try result(conversion ++
         \\def main() -> i64:
-        \\    return cast<i64>(Millimeters.number(distance(Seconds.from(7u64))))
+        \\    return i64(Millimeters.number(distance(Seconds.from(7u64))))
     , 70);
     var overflow = try language.Compilation.init(testing.allocator, "conversion.my", conversion ++
         \\def main() -> i64:
@@ -431,7 +431,7 @@ test "domain creation loops and factory traps release bounded runtime storage" {
     var trapped = try language.Compilation.init(testing.allocator, "trapped.my",
         \\domain Byte: u8:
         \\    def from(n: i64) -> Byte:
-        \\        return wrap<Byte>(cast<u8>(n))
+        \\        return wrap[Byte](u8(n))
         \\
         \\
         \\def main() -> i64:

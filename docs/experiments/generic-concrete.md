@@ -9,7 +9,7 @@ The abstract checker receives the same resolved type catalog used by concrete
 specialization. It resolves imported aliases in the declaring module and retains
 nominal identities: two records with identical fields are still different types.
 Type parameters remain symbolic; an `integer` requirement does not make `T` equal
-to `i64`. An explicit `cast<i64>(value)` is needed for an i64 field.
+to `i64`. An explicit `i64(value)` is needed for an i64 field.
 
 Supported concrete operations include record and fixed-array construction,
 record field projection, array/table indexing and length, and passing/returning

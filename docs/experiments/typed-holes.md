@@ -1,6 +1,6 @@
 # Typed implementation obligations
 
-Write `todo<T>()` where an implementation is missing. The checker validates the
+Write `todo[T]()` where an implementation is missing. The checker validates the
 explicit type and emits `E_TYPED_HOLE` with a related span naming that type.
 Ordinary and uncalled generic function bodies report independent holes in the
 same check. Formatting retains the construct. Unresolved holes never produce a

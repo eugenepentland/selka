@@ -8,9 +8,9 @@ const text =
     \\
     \\
     \\def sum[T: integer](x: T) -> T:
-    \\    if x == cast<T>(0):
+    \\    if x == T(0):
     \\        return x
-    \\    return x + sum(x - cast<T>(1))
+    \\    return x + sum(x - T(1))
     \\
     \\
     \\def forward[U: integer](x: U) -> U:
@@ -21,7 +21,7 @@ const text =
     \\    small = forward(4u8)
     \\    wide = forward(5)
     \\    if id(True):
-    \\        return cast<i64>(small) + wide + sum[i64](2)
+    \\        return i64(small) + wide + sum[i64](2)
     \\    return 0
 ;
 fn scenario(allocator: std.mem.Allocator) !void {

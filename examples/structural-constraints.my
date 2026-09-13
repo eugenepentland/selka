@@ -17,7 +17,7 @@ def forward[U: copy + field(value: i64)](item: U) -> i64:
 
 domain Counter: i64:
     def make(n: i64) -> Counter:
-        return wrap<Counter>(n)
+        return wrap[Counter](n)
 
     def score(item: Counter) -> i64 effects():
         return unwrap(item)

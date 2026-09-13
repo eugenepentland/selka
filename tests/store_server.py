@@ -212,7 +212,7 @@ def rejection_details(session, results, stock):
     results.ok(row['detail'].endswith(server.SYNTAX_HELP),
                'a syntax error at a declaration header appends the kinds and the reminder')
     results.ok(all(kind in server.SYNTAX_HELP for kind in server.DECLARATION_KINDS) and
-               'record' in server.SYNTAX_HELP and 'cast<T>(x)' in server.SYNTAX_HELP,
+               'record' in server.SYNTAX_HELP and 'T(x)' in server.SYNTAX_HELP,
                'the reminder lists every accepted kind and the known guesses')
 
     deep = session.batch([{'op': 'replace', 'id': 'model::Stock', 'source': stock['source']},

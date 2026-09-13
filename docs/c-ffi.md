@@ -10,7 +10,7 @@ extern fn abs(value: i32) -> i32 effects(host);
 extern fn floor(value: float) -> float effects(host);
 
 fn main() -> i64 {
-    return cast<i64>(abs(-42));
+    return i64(abs(-42));
 }
 ```
 

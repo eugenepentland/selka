@@ -99,14 +99,14 @@ fn reject(text: []const u8, code: []const u8) !void {
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
-const source = declarations ++ "fn work(fs: filesystem_cap) -> Status { let mut file = acquire_resource<Open>(fs," ++
-    " new [0]u8 [])?; let first = read_resource<Read>(file)?; let second = " ++
-    "read_resource<Read>(file)?; let count = write_resource<Written>(file, new [3]u8 " ++
-    "[7u8, 8u8, 9u8])?; match complete_resource<Finish>(file) { Finish.ok(done) => { " ++
+const source = declarations ++ "fn work(fs: filesystem_cap) -> Status { let mut file = acquire_resource[Open](fs," ++
+    " new [0]u8 [])?; let first = read_resource[Read](file)?; let second = " ++
+    "read_resource[Read](file)?; let count = write_resource[Written](file, new [3]u8 " ++
+    "[7u8, 8u8, 9u8])?; match complete_resource[Finish](file) { Finish.ok(done) => { " ++
     "_ = done; }, Finish.err(failure) => { return new Status.err(failure.code); } } " ++
     "if first.eof || !second.eof { return new Status.err(99); } return new " ++
-    "Status.ok(cast<i64>(first.bytes[1]) + cast<i64>(second.bytes[0]) + " ++
-    "cast<i64>(first.bytes[3]) + cast<i64>(count)); } fn main(fs: filesystem_cap) -> i64 " ++
+    "Status.ok(i64(first.bytes[1]) + i64(second.bytes[0]) + " ++
+    "i64(first.bytes[3]) + i64(count)); } fn main(fs: filesystem_cap) -> i64 " ++
     "noalloc { match work(fs) { Status.ok(value) => { return value; }, Status.err(code) " ++
     "=> { return -code; } } }";
 fn scenario(allocator: std.mem.Allocator) !void {

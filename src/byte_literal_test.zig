@@ -9,7 +9,7 @@ const program =
     \\
     \\def main() -> i64:
     \\    a = first[[4]u8](b"A\x00\xffB")
-    \\    return cast<i64>(a[0]) + cast<i64>(a[2]) + cast<i64>(len(b"µ"))
+    \\    return i64(a[0]) + i64(a[2]) + i64(len(b"µ"))
 ;
 fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "bytes.my", program);

@@ -71,6 +71,6 @@ pub const program = declarations ++
     "let second=read_resource<Read<T>>(file)?;" ++
     "let m=write_resource<Written<T>>(file,new [2]u8[second.bytes[0],second.bytes[1]])?;" ++
     "match finish::<T>(file){Finish<T>.ok(done)=>{if !done{return new Status<T>.err(91);}},Finish<T>.err(failure)=>{return new Status<T>.err(failure.code);}}" ++
-    "if !chunk.eof || !second.eof{return new Status<T>.err(92);}return new Status<T>.ok(cast<i64>(chunk.length)+cast<i64>(chunk.bytes[0])+cast<i64>(chunk.bytes[1])+" ++
-    "cast<i64>(chunk.bytes[2])+cast<i64>(chunk.bytes[3])+cast<i64>(n)+cast<i64>(second.length)+cast<i64>(second.bytes[0])+cast<i64>(second.bytes[1])+cast<i64>(m));}" ++
+    "if !chunk.eof || !second.eof{return new Status<T>.err(92);}return new Status<T>.ok(i64(chunk.length)+i64(chunk.bytes[0])+i64(chunk.bytes[1])+" ++
+    "i64(chunk.bytes[2])+i64(chunk.bytes[3])+i64(n)+i64(second.length)+i64(second.bytes[0])+i64(second.bytes[1])+i64(m));}" ++
     "fn main(fs:filesystem_cap)->i64{match work::<bool>(fs){Status<bool>.ok(n)=>{return n;},Status<bool>.err(e)=>{return -e;}}}";

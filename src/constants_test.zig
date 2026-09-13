@@ -16,13 +16,13 @@ fn scenario(allocator: std.mem.Allocator) !void {
         \\const SAFE: bool = False and divtrunc(1, 0) == 1
         \\
         \\
-        \\const WIDTH: u8 = cast<u8>(BASE)
+        \\const WIDTH: u8 = u8(BASE)
         \\
         \\
         \\def work[T]() -> i64:
         \\    if SAFE:
         \\        return MIN
-        \\    return ANSWER + cast<i64>(WIDTH)
+        \\    return ANSWER + i64(WIDTH)
         \\
         \\
         \\def main() -> i64:

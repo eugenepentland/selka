@@ -126,7 +126,7 @@ def sort_strs(values: list[str]) -> list[str]:
 
 
 # Merge two runs ordered by an integer key, preserving equal-key order.
-def merge_by_key[T: copy + storable](left: list[T], right: list[T], key: fn(T) -> int effects()) -> list[T]:
+def merge_by_key[T: copy + storable](left: list[T], right: list[T], key: def(T) -> int effects()) -> list[T]:
     out: list[T] = []
     a = 0
     b = 0
@@ -147,7 +147,7 @@ def merge_by_key[T: copy + storable](left: list[T], right: list[T], key: fn(T) -
 
 
 # A new list ordered by an integer key function; the ordering is stable.
-def sort_by_key[T: copy + storable](values: list[T], key: fn(T) -> int effects()) -> list[T]:
+def sort_by_key[T: copy + storable](values: list[T], key: def(T) -> int effects()) -> list[T]:
     if len(values) <= 1:
         return values[:]
     middle = len(values) // 2

@@ -84,7 +84,7 @@ type Count = i64;                           an `alias` declaration
 host fn put(value: u8) -> i64 effects(host);           a `host_fn` declaration
 ```
 
-There is **no** `record` keyword. Casts are written `cast<T>(x)`; neither `T(x)`
+There is **no** `record` keyword. Casts are written `T(x)`; neither `T(x)`
 nor `x as T` is a cast. Imports are derived from the declarations you write, so
 `helper::multiply(argument)` is enough to import `helper` and **no import
 statement is ever written**; two aliases that derive the same import are refused.

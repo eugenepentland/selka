@@ -38,7 +38,7 @@ fn run(heap: allocator, doc: &[]i64, request: j::Node) -> b::Built {
     let mut outside = false;
     while i < count {
         let offset = try j::integer_between(doc,try j::at(doc,offsets,i),0,512);
-        if cast<u64>(offset) + 2u64 > size / 2u64 { outside = true; }
+        if u64(offset) + 2u64 > size / 2u64 { outside = true; }
         i += 1;
     }
     if outside {
@@ -50,9 +50,9 @@ fn run(heap: allocator, doc: &[]i64, request: j::Node) -> b::Built {
         borrow decoded[..] as bytes {
             i = 0;
             while i < count {
-                let offset = cast<u64>(try j::integer(doc,try j::at(doc,offsets,i)));
+                let offset = u64(try j::integer(doc,try j::at(doc,offsets,i)));
                 let value = try encoding::read_uint(bytes,offset,2u64,false);
-                values = try out::array_integer(heap,values,cast<i64>(value));
+                values = try out::array_integer(heap,values,i64(value));
                 i += 1;
             }
         }

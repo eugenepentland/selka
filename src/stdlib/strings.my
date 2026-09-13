@@ -337,13 +337,13 @@ def format_int(value: int, base: int) -> Result[str, str]:
         return Ok("0")
     magnitude = 0u64
     if value < 0:
-        magnitude = cast<u64>(0 - (value + 1)) + 1u64
+        magnitude = u64(0 - (value + 1)) + 1u64
     else:
-        magnitude = cast<u64>(value)
-    radix = cast<u64>(base)
+        magnitude = u64(value)
+    radix = u64(base)
     out = ""
     while magnitude > 0u64:
-        out = base_digits()[cast<i64>(magnitude % radix)] + out
+        out = base_digits()[i64(magnitude % radix)] + out
         magnitude = magnitude // radix
     if value < 0:
         return Ok("-" + out)

@@ -13,7 +13,7 @@ returns, discard of copyable values, blocks, branches, loops, arithmetic/compari
 Boolean operations, and checked integer casts. Arithmetic and ordered comparison
 require `integer`; equality requires `equality`. Boolean conditions require `bool`.
 No implicit conversion equates a generic integer parameter with an `i64` literal;
-`cast<T>(1)` states the conversion explicitly. Cast success is not guaranteed for
+`T(1)` states the conversion explicitly. Cast success is not guaranteed for
 every value or width; ordinary runtime bounds remain necessary at specialization.
 
 The checker enforces local scopes, type-variable identity, mutability, and

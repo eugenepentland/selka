@@ -22,7 +22,7 @@ returns, arrays, variants, and wrappers. Whole-resource borrowing remains exclud
 by the restricted borrowing experiment; data-access operations need a separate
 checked interface.
 
-`acquire_resource<Open>(fs, request)` requires `filesystem_cap` for a filesystem
+`acquire_resource[Open](fs, request)` requires `filesystem_cap` for a filesystem
 resource or `network_cap` for a network resource. The result success must be the
 nominal resource and the error must be i64. Request values currently are fixed
 `[N]u8` arrays, including empty arrays; element order and all byte values are
@@ -57,16 +57,16 @@ struct Failure { code: i64, resource: File }
 result Finish { ok: bool, err: Failure }
 
 fn retry(file: File) -> Finish effects(filesystem) {
-    match complete_resource<Finish>(file) {
+    match complete_resource[Finish](file) {
         Finish.ok(done) => { return new Finish.ok(done); },
         Finish.err(failure) => {
-            return complete_resource<Finish>(failure.resource);
+            return complete_resource[Finish](failure.resource);
         }
     }
 }
 ```
 
-`complete_resource<Finish>(file)` consumes its resource expression. The declared
+`complete_resource[Finish](file)` consumes its resource expression. The declared
 result has bool success and a nominal error record containing exactly the named
 fields `resource: File` and `code: i64`, in either declaration order. On success,
 the provider consumes the host handle and the result is `ok(true)`. On recoverable

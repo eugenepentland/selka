@@ -12,9 +12,9 @@ struct Chunk { bytes: [16]u8, length: u64, eof: bool }
 result Read { ok: Chunk, err: i64 }
 result Written { ok: u64, err: i64 }
 
-let mut file = acquire_resource<Open>(fs, new [1]u8 [42u8])?;
-let chunk = read_resource<Read>(file)?;
-let written = write_resource<Written>(file, new [1]u8 [7u8])?;
+let mut file = acquire_resource[Open](fs, new [1]u8 [42u8])?;
+let chunk = read_resource[Read](file)?;
+let written = write_resource[Written](file, new [1]u8 [7u8])?;
 ```
 
 Both operations require a live mutable resource binding. Reading may advance a

@@ -17,8 +17,8 @@ const pure =
     \\def arithmetic[T: integer](x: T, y: T) -> T noalloc:
     \\    value = x
     \\    value += y
-    \\    while value < cast<T>(10):
-    \\        value = value + cast<T>(1)
+    \\    while value < T(10):
+    \\        value = value + T(1)
     \\    if value == y:
     \\        return -value
     \\    else:

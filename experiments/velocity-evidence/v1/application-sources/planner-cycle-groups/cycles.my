@@ -30,7 +30,7 @@ fn components(edges: &[]std_graph::Edge, stack: &mut []i64, state: &mut []i64, n
     while i < n {
         discard put(state, i, 0, -1);
         discard put(state, i, 2, edge);
-        while edge < cast<i64>(len_slice(edges)) && read_slice(edges, edge).to == cast<u64>(i) {
+        while edge < i64(len_slice(edges)) && read_slice(edges, edge).to == u64(i) {
             edge += 1;
         }
         discard put(state, i, 3, edge);
@@ -50,7 +50,7 @@ fn components(edges: &[]std_graph::Edge, stack: &mut []i64, state: &mut []i64, n
             while current >= 0 {
                 let cursor = get(state, current, 2);
                 if cursor < get(state, current, 3) {
-                    let target = cast<i64>(read_slice(edges, cursor).from);
+                    let target = i64(read_slice(edges, cursor).from);
                     discard put(state, current, 2, cursor + 1);
                     if get(state, target, 0) < 0 {
                         discard discover(state, stack, target, index, top, current);
@@ -108,7 +108,7 @@ fn emit(t: &[]i64, ids: &[]i64, edges: &[]std_graph::Edge, stack: &mut []i64, st
             let mut e = 0u64;
             while e < len_slice(edges) {
                 let edge = read_slice(edges, e);
-                if edge.from == cast<u64>(i) && edge.to == cast<u64>(i) {
+                if edge.from == u64(i) && edge.to == u64(i) {
                     cyclic = true;
                 }
                 e += 1u64;

@@ -52,7 +52,7 @@ if frozenset(DECLARATION_KINDS) != frozenset(store.KINDS):
 # pilot lost ten batches there to invented syntax, so the reminder names what exists.
 SYNTAX_HELP = ('A top-level declaration starts with one of: ' + ', '.join(DECLARATION_KINDS) +
                '. There is no record keyword; a product type is '
-               'struct Name { field: i64, other: i64 }. Casts are cast<T>(x), never T(x) or as. '
+               'struct Name { field: i64, other: i64 }. Casts are T(x), never T(x) or as. '
                'Qualified references derive imports, so no import statement is ever written.')
 # The exact accepted fields of each batch operation, with a copy-ready example.
 OPERATION_SHAPES = {

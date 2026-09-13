@@ -117,7 +117,7 @@ test "semantic cache falls back for declaration type constant generic and alias 
         \\
         \\
         \\def main() -> i64:
-        \\    return cast<Number>(42)
+        \\    return Number(42)
     , 42);
     try t.expectEqual(@as(usize, 0), cache.statistics.reused);
     try t.expect(cache.statistics.bypassed >= 4);
@@ -184,11 +184,11 @@ test "semantic cache bypasses constant length function and nominal specializatio
     ;
     try compare(t.allocator, &cache, function ++
         \\def main() -> i64:
-        \\    return cast<i64>(size[2]())
+        \\    return i64(size[2]())
     , 2);
     try compare(t.allocator, &cache, function ++
         \\def main() -> i64:
-        \\    return cast<i64>(size[3]())
+        \\    return i64(size[3]())
     , 3);
     const nominal =
         \\class Chunk[const N: u64]:

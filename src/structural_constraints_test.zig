@@ -47,7 +47,7 @@ test "structural public domain operations execute with explicit type owned dispa
     try run(
         \\domain D: i64:
         \\    def make(n: i64) -> D:
-        \\        return wrap<D>(n)
+        \\        return wrap[D](n)
         \\
         \\    def score(v: D) -> i64 effects():
         \\        return unwrap(v)
@@ -144,7 +144,7 @@ test "structural fields reject incomplete forwarding unknown fields and hidden o
 const domain =
     \\domain D: i64:
     \\    def make(n: i64) -> D:
-    \\        return wrap<D>(n)
+    \\        return wrap[D](n)
     \\
     \\    def score(v: D) -> i64 effects():
     \\        return unwrap(v)
@@ -191,7 +191,7 @@ test "structural concrete operations reject private absent wrong typed and exces
     try reject(
         \\domain D: i64:
         \\    def make() -> D:
-        \\        return wrap<D>(1)
+        \\        return wrap[D](1)
         \\
         \\    private def score(v: D) -> i64 effects():
         \\        return unwrap(v)
@@ -202,7 +202,7 @@ test "structural concrete operations reject private absent wrong typed and exces
     try reject(
         \\domain D: i64:
         \\    def make() -> D:
-        \\        return wrap<D>(1)
+        \\        return wrap[D](1)
     ++ operation ++
         \\def main() -> i64:
         \\    return apply[D](D.make())
@@ -210,7 +210,7 @@ test "structural concrete operations reject private absent wrong typed and exces
     try reject(
         \\domain D: i64:
         \\    def make() -> D:
-        \\        return wrap<D>(1)
+        \\        return wrap[D](1)
         \\
         \\    def score(v: D) -> bool effects():
         \\        return True
@@ -221,7 +221,7 @@ test "structural concrete operations reject private absent wrong typed and exces
     try reject(
         \\domain D: i64:
         \\    def make() -> D:
-        \\        return wrap<D>(1)
+        \\        return wrap[D](1)
         \\
         \\    def score(v: D) -> i64 effects(host):
         \\        return unwrap(v)
@@ -284,7 +284,7 @@ const module_files = [_]language.embedded_project.File{
     \\
     \\domain D: i64:
     \\    def make(n: i64) -> D:
-    \\        return wrap<D>(n)
+    \\        return wrap[D](n)
     \\
     \\    def score(v: D) -> i64 effects():
     \\        return unwrap(v)

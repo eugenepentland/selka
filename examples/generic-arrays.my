@@ -1,11 +1,11 @@
 domain ComponentId: u64:
     def make(raw: u64) -> ComponentId:
-        return wrap<ComponentId>(raw)
+        return wrap[ComponentId](raw)
 
 
 domain NetId: u64:
     def make(raw: u64) -> NetId:
-        return wrap<NetId>(raw)
+        return wrap[NetId](raw)
 
 
 def pair[T](first: T, second: T) -> [2]T:

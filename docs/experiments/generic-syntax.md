@@ -24,7 +24,7 @@ budget; the latter still needs implementation.
 The `::<...>` suffix distinguishes explicit type arguments from existing relational
 expressions. It works after ordinary names, module-qualified names, and domain
 methods, and requires an ordinary parenthesized argument list. Existing builtin
-forms such as `cast<i64>(...)` keep their syntax. Borrowed-call parsing retains the
+forms such as `i64(...)` keep their syntax. Borrowed-call parsing retains the
 same explicit type-argument metadata.
 
 Type parameters and requirements live in the function signature AST; call type

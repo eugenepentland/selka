@@ -26,12 +26,12 @@ struct Point { x: u64, y: [2]bool, table: [Status]u16 }
 enum Status { ready, failed }
 union Choice { empty, point: Point }
 result Outcome { ok: Choice, err: Status }
-domain Identity: i8 { private fn raw(x: i8) -> Identity { return wrap<Identity>(x); } }
+domain Identity: i8 { private fn raw(x: i8) -> Identity { return wrap[Identity](x); } }
 struct Node { next: Identity }
 resource File: filesystem;
 fn copy(x: Point) -> Point { return x; }
 result Time { ok: i64, err: i64 }
-fn sample(clock: clock_cap) -> i64 { match clock_now<Time>(clock) { Time.ok(x) => { return x; }, Time.err(code) => { return code; } } }
+fn sample(clock: clock_cap) -> i64 { match clock_now[Time](clock) { Time.ok(x) => { return x; }, Time.err(code) => { return code; } } }
 struct Hidden { secret: i32 }
 '''
         data.write_text(source)

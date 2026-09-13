@@ -52,7 +52,7 @@ pub const Parser = struct {
             const end = self.tokens[self.cursor.pos - 1].span.end;
             return .{ .tag = .semicolon, .span = .{ .start = end, .end = end } };
         }
-        if (!self.take(tag)) return self.sink.fail(syntax_code, token.span, "unexpected token; expected " ++ @tagName(tag));
+        if (!self.take(tag)) return self.sink.fail(syntax_code, token.span, "unexpected token; expected " ++ comptime lex.spelling(tag));
         return token;
     }
     fn enter(self: *Parser) diagnostic.Error!void {

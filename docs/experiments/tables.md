@@ -21,7 +21,7 @@ fn response_codes() -> [Status]u16 {
 fn main() -> i64 {
     let original = response_codes();
     let revised = replace(original, new Status.failed, 503u16);
-    return cast<i64>(revised[new Status.failed]);
+    return i64(revised[new Status.failed]);
 }
 ```
 

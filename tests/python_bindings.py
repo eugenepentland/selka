@@ -50,7 +50,7 @@ struct Empty {}
 struct Weird { class: i8, __dict__: bool, f_x: i8, f_x5fx: bool }
 struct Signed { a: i8, b: i16, c: i32, d: i64 }
 struct Unsigned { a: u8, b: u16, c: u32, d: u64 }
-domain Opaque: i64 { fn make(x: i64) -> Opaque { return wrap<Opaque>(x); } }
+domain Opaque: i64 { fn make(x: i64) -> Opaque { return wrap[Opaque](x); } }
 union Maybe { none, some: Opaque }
 struct Large { values: [65534]bool }
 struct Hidden { private_data: bool }

@@ -24,26 +24,26 @@ fn trapped(expression: []const u8, code: []const u8) !void {
 }
 
 test "checked signed and unsigned operations retain each declared width" {
-    try evaluate("cast<i64>(100i8 + 20i8)", 120);
-    try evaluate("cast<i64>(-7i16 / 3i16)", -2);
-    try evaluate("cast<i64>(-7i32 % 3i32)", -1);
-    try evaluate("cast<i64>(-128i8 % -1i8)", 0);
-    try evaluate("cast<i64>(18446744073709551615u64 / 3u64)", 6148914691236517205);
-    try evaluate("cast<i64>(65535u16 - 1u16)", 65534);
-    try evaluate("cast<i64>(4294967295u32 % 10u32)", 5);
-    try evaluate("cast<i64>(-0u8)", 0);
+    try evaluate("i64(100i8 + 20i8)", 120);
+    try evaluate("i64(-7i16 / 3i16)", -2);
+    try evaluate("i64(-7i32 % 3i32)", -1);
+    try evaluate("i64(-128i8 % -1i8)", 0);
+    try evaluate("i64(18446744073709551615u64 / 3u64)", 6148914691236517205);
+    try evaluate("i64(65535u16 - 1u16)", 65534);
+    try evaluate("i64(4294967295u32 % 10u32)", 5);
+    try evaluate("i64(-0u8)", 0);
     for ([_][]const u8{ "127i8 + 1i8", "-128i8 - 1i8", "--128i8", "-128i8 / -1i8", "0u8 - 1u8", "255u8 + 1u8", "-1u8", "18446744073709551615u64 * 18446744073709551615u64" }) |expr| try trapped(expr, "R_OVERFLOW");
     try trapped("1u32 / 0u32", "R_DIVISION_BY_ZERO");
     try trapped("1i16 % 0i16", "R_DIVISION_BY_ZERO");
 }
 
 test "integer casts check narrowing signedness and retain operand traps" {
-    try evaluate("cast<i64>(cast<u8>(255))", 255);
-    try evaluate("cast<i64>(cast<i8>(-128))", -128);
-    try evaluate("cast<i64>(cast<u64>(9223372036854775807))", 9223372036854775807);
-    for ([_][]const u8{ "cast<u8>(-1)", "cast<i8>(128)", "cast<u16>(65536)", "cast<i64>(18446744073709551615u64)" }) |expr| try trapped(expr, "R_OVERFLOW");
-    try trapped("cast<u8>(1 / 0)", "R_DIVISION_BY_ZERO");
-    try trapped("cast<i64>(127i8 + 1i8)", "R_OVERFLOW");
+    try evaluate("i64(u8(255))", 255);
+    try evaluate("i64(i8(-128))", -128);
+    try evaluate("i64(u64(9223372036854775807))", 9223372036854775807);
+    for ([_][]const u8{ "u8(-1)", "i8(128)", "u16(65536)", "i64(18446744073709551615u64)" }) |expr| try trapped(expr, "R_OVERFLOW");
+    try trapped("u8(1 / 0)", "R_DIVISION_BY_ZERO");
+    try trapped("i64(127i8 + 1i8)", "R_OVERFLOW");
 }
 
 test "integer widths remain distinct in functions records compound assignment and conversions" {
@@ -57,7 +57,7 @@ test "integer widths remain distinct in functions records compound assignment an
         \\
         \\
         \\conversion def widen(x: Small) -> Wide:
-        \\    return Wide(n=cast<u64>(x.n))
+        \\    return Wide(n=u64(x.n))
         \\
         \\
         \\def bump(n: u8) -> u8:
@@ -68,7 +68,7 @@ test "integer widths remain distinct in functions records compound assignment an
         \\
         \\
         \\def main() -> i64:
-        \\    return cast<i64>(widen(Small(n=bump(9u8))).n)
+        \\    return i64(widen(Small(n=bump(9u8))).n)
     ;
     var compilation = try language.Compilation.init(testing.allocator, "widths.my", source);
     defer compilation.deinit();
@@ -92,7 +92,7 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
         \\
         \\def main() -> i64:
         \\    n = Small(n=f(254u8))
-        \\    return cast<i64>(cast<u64>(n.n) * 2u64)
+        \\    return i64(u64(n.n) * 2u64)
     );
     defer compilation.deinit();
     try testing.expectEqual(@as(i64, 510), (try compilation.execute(allocator)).value);
@@ -118,11 +118,11 @@ test "integer widths and casts remain distinct in duplicate discovery" {
         \\
         \\
         \\def c(n: u8) -> u16:
-        \\    return cast<u16>(n)
+        \\    return u16(n)
         \\
         \\
         \\def d(n: u8) -> u32:
-        \\    return cast<u32>(n)
+        \\    return u32(n)
         \\
         \\
         \\def main() -> i64:
@@ -189,7 +189,7 @@ test "all integer widths accept their limits and reject one-past literals" {
         var compilation = try language.Compilation.init(testing.allocator, "limits.my", text);
         defer compilation.deinit();
         try testing.expectEqual(@as(i64, 1), (try compilation.execute(testing.allocator)).value);
-        const minimum = try std.fmt.allocPrint(testing.allocator, "cast<i64>({d}{s})", .{ ty.min(), @tagName(ty) });
+        const minimum = try std.fmt.allocPrint(testing.allocator, "i64({d}{s})", .{ ty.min(), @tagName(ty) });
         defer testing.allocator.free(minimum);
         try evaluate(minimum, @intCast(ty.min()));
         const bad = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ _ = {d}{s}; return 0; }}", .{ ty.max() + 1, @tagName(ty) });
@@ -205,8 +205,8 @@ test "no implicit width or boolean conversions and unknown suffixes are rejected
     const cases = [_]struct { body: []const u8, code: []const u8 }{
         .{ .body = "source = 1\n    n: i8 = source\n    return 0", .code = "E_TYPE" },
         .{ .body = "_ = 1u8 + 1u16\n    return 0", .code = "E_TYPE" },
-        .{ .body = "_ = cast<u8>(True)\n    return 0", .code = "E_TYPE" },
-        .{ .body = "_ = cast<bool>(1)\n    return 0", .code = "E_TYPE" },
+        .{ .body = "_ = u8(True)\n    return 0", .code = "E_TYPE" },
+        .{ .body = "_ = bool(1)\n    return 0", .code = "E_TYPE" },
         .{ .body = "_ = 1i7\n    return 0", .code = "E_INTEGER_SUFFIX" },
         .{ .body = "_ = 1bool\n    return 0", .code = "E_INTEGER_SUFFIX" },
         .{ .body = "_ = -(128i8 + 0i8)\n    return 0", .code = "E_INTEGER_RANGE" },

@@ -254,6 +254,57 @@ fn keyword(word: []const u8) Tag {
     inline for (aliases) |alias| if (std.mem.eql(u8, word, alias[0])) return alias[1];
     return .ident;
 }
+/// How a token is written in source, for diagnostics that name what was expected.
+/// Keywords and punctuation answer their own spelling; the open categories name
+/// themselves, because no single spelling stands for all of them.
+pub fn spelling(comptime tag: Tag) []const u8 {
+    return switch (tag) {
+        .eof => "end of file",
+        .ident => "a name",
+        .integer => "a number",
+        .bytes => "a string",
+        .format => "a formatted string",
+        .kw_def => "def",
+        .kw_class => "class",
+        .kw_none => "None",
+        .kw_true => "True",
+        .kw_false => "False",
+        .lparen => "(",
+        .rparen => ")",
+        .lbracket => "[",
+        .rbracket => "]",
+        .lbrace => "{",
+        .rbrace => "a dedent",
+        .arrow => "->",
+        .fat_arrow => "=>",
+        .semicolon => "a newline",
+        .colon => ":",
+        .comma => ",",
+        .dot => ".",
+        .plus => "+",
+        .minus => "-",
+        .star => "*",
+        .slash => "/",
+        .slash_slash => "//",
+        .percent => "%",
+        .ampersand => "&",
+        .and_and => "and",
+        .or_or => "or",
+        .plus_equal => "+=",
+        .minus_equal => "-=",
+        .equal => "=",
+        .eq_eq => "==",
+        .bang => "not",
+        .bang_eq => "!=",
+        .question => "?",
+        .lt => "<",
+        .le => "<=",
+        .gt => ">",
+        .ge => ">=",
+        else => @tagName(tag)[3..],
+    };
+}
+
 /// Check the identifier spelling rules without accepting reserved keywords.
 pub fn isIdentifier(word: []const u8) bool {
     if (word.len == 0 or !(std.ascii.isAlphabetic(word[0]) or word[0] == '_')) return false;

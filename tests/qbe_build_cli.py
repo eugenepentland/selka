@@ -280,7 +280,7 @@ def temporary_runs(builder):
     result, reports = run()
     assert result.returncode == 1 and not reports, result
     assert builder.snapshot() == previous
-    builder.source.write_text('result T{ok:i64,err:i64}fn main(c:clock_cap)->i64{match clock_now<T>(c){T.ok(n)=>{return n;},T.err(e)=>{return e;}}}')
+    builder.source.write_text('result T{ok:i64,err:i64}fn main(c:clock_cap)->i64{match clock_now[T](c){T.ok(n)=>{return n;},T.err(e)=>{return e;}}}')
     provider = builder.directory / 'run stdio.c'
     provider.write_text('#include "native_providers.h"\n#include <stdio.h>\n#include <signal.h>\n'
                         'static MylangClockResult read_clock(void *ctx){(void)ctx;int ch=getchar();'

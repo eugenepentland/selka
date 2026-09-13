@@ -8,11 +8,11 @@ explicit arena/pool tracks this page once named were removed on 2026-09-13.
 
 ```text
 fn delegate(fs: filesystem_cap) -> filesystem_cap effects() {
-    return restrict_resource<read>(fs);
+    return restrict_resource[read](fs);
 }
 ```
 
-`restrict_resource<read, write, complete>(capability)` accepts any subset of the three
+`restrict_resource[read, write, complete](capability)` accepts any subset of the three
 named permissions, including an empty list. Names must be known and distinct. The
 operand is evaluated once and must be a filesystem or network capability. The result
 keeps the same capability type, provider/store identity, and shared quota ceiling.

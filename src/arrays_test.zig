@@ -37,7 +37,7 @@ test "fixed arrays have structural types preserve copies and support every integ
         \\    return first(a) + b[0] + b[1]
     , 15);
     for ([_][]const u8{ "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64" }) |width| {
-        const source = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ let a = new [2]u8 [7u8, 9u8]; return cast<i64>(a[1{s}]); }}", .{width});
+        const source = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ let a = new [2]u8 [7u8, 9u8]; return i64(a[1{s}]); }}", .{width});
         defer testing.allocator.free(source);
         try result(source, 9);
     }
@@ -47,7 +47,7 @@ test "fixed arrays have structural types preserve copies and support every integ
         \\
         \\
         \\def main() -> i64:
-        \\    return cast<i64>(len(empty([])))
+        \\    return i64(len(empty([])))
     , 0);
     try result(
         \\def main() -> i64:
@@ -67,7 +67,7 @@ const allocation_source =
     \\def main() -> i64:
     \\    a = id([Box(n=7), Box(n=9)])
     \\    b = replace(a, 1u8, Box(n=11))
-    \\    return a[1].n + b[1].n + cast<i64>(len(b))
+    \\    return a[1].n + b[1].n + i64(len(b))
 ;
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, fixture_path, allocation_source);
@@ -103,7 +103,7 @@ test "array duplicate identity preserves length element type index replacement a
         \\
         \\
         \\def e(x: [2]u8) -> i64:
-        \\    return cast<i64>(x[0])
+        \\    return i64(x[0])
         \\
         \\
         \\def f(x: [2]i64) -> i64:

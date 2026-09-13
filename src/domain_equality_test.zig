@@ -6,12 +6,12 @@ const typed = @import("typed.zig");
 const declarations =
     \\domain Id: u64:
     \\    def make(n: u64) -> Id:
-    \\        return wrap<Id>(n)
+    \\        return wrap[Id](n)
     \\
     \\
     \\domain Other: u64:
     \\    def make(n: u64) -> Other:
-    \\        return wrap<Other>(n)
+    \\        return wrap[Other](n)
 ;
 const comparison = declarations ++
     \\def main() -> i64:
@@ -128,7 +128,7 @@ test "domain equality resolves declaration identity through module aliases" {
 // spec: DOMAIN-EQUALITY-1
 test "domain equality compares every scalar backing by value" {
     for ([_][]const u8{ "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64" }) |width| {
-        const source = try std.fmt.allocPrint(t.allocator, "domain D:{s}{{fn make(n:{s})->D{{return wrap<D>(n);}}}}fn main()->i64{{" ++
+        const source = try std.fmt.allocPrint(t.allocator, "domain D:{s}{{fn make(n:{s})->D{{return wrap[D](n);}}}}fn main()->i64{{" ++
             "let a=D.make(7{s});let b=D.make(8{s});if a==a && a!=b && !(a==b) && !(a!=a){{return 1;}}return 0;}}", .{ width, width, width, width });
         defer t.allocator.free(source);
         try expectValue(t.allocator, source, 1);
@@ -137,7 +137,7 @@ test "domain equality compares every scalar backing by value" {
     try expectValue(t.allocator,
         \\domain D: i64:
         \\    def make(n: i64) -> D:
-        \\        return wrap<D>(n)
+        \\        return wrap[D](n)
         \\
         \\
         \\def main() -> i64:
@@ -148,7 +148,7 @@ test "domain equality compares every scalar backing by value" {
     try expectValue(t.allocator,
         \\domain D: bool:
         \\    def make(n: bool) -> D:
-        \\        return wrap<D>(n)
+        \\        return wrap[D](n)
         \\
         \\
         \\def main() -> i64:
@@ -235,7 +235,7 @@ test "domain equality loops and traps reclaim bounded runtime storage" {
         \\    n = 0u64
         \\    while Id.make(n) != Id.make(10000u64):
         \\        n = n + 1u64
-        \\    return cast<i64>(n)
+        \\    return i64(n)
     );
     defer compilation.deinit();
     try compilation.emit();

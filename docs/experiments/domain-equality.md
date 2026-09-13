@@ -7,7 +7,7 @@ can be equal; allocation identity is irrelevant.
 
 ```text
 domain ComponentId: u64 {
-    fn make(raw: u64) -> ComponentId { return wrap<ComponentId>(raw); }
+    fn make(raw: u64) -> ComponentId { return wrap[ComponentId](raw); }
 }
 fn sameComponent(a: ComponentId, b: ComponentId) -> bool { return a == b; }
 ```

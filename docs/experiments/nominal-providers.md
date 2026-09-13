@@ -46,14 +46,14 @@ and typed provider failures. Invalid provider output remains a host boundary err
 
 ## Concrete codecs inside generic functions
 
-A generic function can call `codec_decode<Positive>(wire)` and
-`codec_encode<Positive>(value)` when `Positive` is a known domain with a declared
+A generic function can call `codec_decode[Positive](wire)` and
+`codec_encode[Positive](value)` when `Positive` is a known domain with a declared
 codec. The checker follows the selected factories/accessors and their helper calls,
 including imported module contracts. Codec methods must remain effect-free,
 including transitive calls, and their typed results remain checked. `wrap` and `unwrap` are permitted only inside the exact declaring
 domain, and private factory methods remain private.
 
-`codec_encode<T>(value)` still reports `E_GENERIC_BODY_UNSUPPORTED`: a copy or
+`codec_encode[T](value)` still reports `E_GENERIC_BODY_UNSUPPORTED`: a copy or
 integer constraint does not promise a codec. This extension introduces no implicit
 representation serialization and does not define new codec constraints.
 

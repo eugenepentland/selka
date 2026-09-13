@@ -20,7 +20,7 @@ const source =
     \\        encode: to_wire
     \\
     \\    private def raw(x: i64) -> Positive:
-    \\        return wrap<Positive>(x)
+    \\        return wrap[Positive](x)
     \\
     \\    def from_wire(x: Wire) -> Decoded:
     \\        if x.n <= 0:
@@ -78,7 +78,7 @@ fn reject(bytes: []const u8, expected: []const u8) !void {
     try t.expectEqualStrings(expected, c.diagnostics.items[0].code);
 }
 const prefix = "result R{ok:D,err:i64} domain D:i64{";
-const suffix = "fn dec(x:i64)->R{return new R.ok(wrap<D>(x));} fn enc(x:D)->i64{return unwrap(x);}}fn main()->i64{return 0;}";
+const suffix = "fn dec(x:i64)->R{return new R.ok(wrap[D](x));} fn enc(x:D)->i64{return unwrap(x);}}fn main()->i64{return 0;}";
 // spec: WIRE-4
 test "domain codec declarations reject duplicate missing unknown and private entries" {
     try reject(prefix ++ "codec i64{decode:dec,decode:dec,encode:enc}" ++ suffix, "E_DUPLICATE_CODEC_KEY");
@@ -99,9 +99,9 @@ const Provider = struct {
             \\
             \\
             \\def main() -> i64:
-            \\    match codec_decode<d.Positive>(d.Wire(n=7)):
+            \\    match codec_decode[d.Positive](d.Wire(n=7)):
             \\        case d.Decoded.ok(x):
-            \\            return codec_encode<d.Positive>(x).n
+            \\            return codec_encode[d.Positive](x).n
             \\        case d.Decoded.err(e):
             \\            return e
         );
@@ -163,9 +163,9 @@ test "domain codec formatting preserves comments entries and checked contracts" 
 
 const source_call =
     \\def main() -> i64:
-    \\    match codec_decode<Positive>(Wire(n=7)):
+    \\    match codec_decode[Positive](Wire(n=7)):
     \\        case Decoded.ok(x):
-    \\            return codec_encode<Positive>(x).n
+    \\            return codec_encode[Positive](x).n
     \\        case Decoded.err(e):
     \\            return e
 ;
@@ -176,7 +176,7 @@ fn sourceScenario(allocator: std.mem.Allocator) !void {
     try t.expectEqual(@as(i64, 7), result.value);
     const formatted = try c.format(allocator);
     defer allocator.free(formatted);
-    try t.expect(std.mem.indexOf(u8, formatted, "codec_decode<Positive>") != null);
+    try t.expect(std.mem.indexOf(u8, formatted, "codec_decode[Positive]") != null);
     var again = try language.Compilation.init(allocator, "formatted.my", formatted);
     defer again.deinit();
     try t.expectEqual(@as(i64, 7), (try again.execute(allocator)).value);
@@ -194,24 +194,24 @@ test "source codec operations reject missing contracts invalid arity and backing
         \\
         \\
         \\def main() -> i64:
-        \\    return codec_encode<D>(0)
+        \\    return codec_encode[D](0)
     , "E_CODEC_REQUIRED");
     try reject(
         \\def main() -> i64:
-        \\    return codec_decode<i64>(0)
+        \\    return codec_decode[i64](0)
     , "E_TYPE");
     try reject(source ++
         \\def main() -> i64:
-        \\    return codec_encode<Positive>(7)
+        \\    return codec_encode[Positive](7)
     , "E_TYPE");
     try reject(source ++
         \\def main() -> i64:
-        \\    return codec_decode<Positive>()
+        \\    return codec_decode[Positive]()
     , "E_CODEC_ARITY");
     try reject(source ++ "fn main()->i64{return codec_decode(7);}", "E_CODEC_ARITY");
     try reject(
         \\def helper[T](x: T) -> T:
-        \\    return codec_encode<T>(x)
+        \\    return codec_encode[T](x)
         \\
         \\
         \\def main() -> i64:
@@ -221,8 +221,8 @@ test "source codec operations reject missing contracts invalid arity and backing
 
 test "source codec operations follow selected method names rather than naming conventions" {
     var c = try language.Compilation.init(t.allocator, "named.my", prefix ++
-        "codec i64{decode:dec,encode:enc}fn dec(x:i64)->R{return new R.ok(wrap<D>(x*2));}" ++
-        "fn enc(x:D)->i64{return unwrap(x)+1;}}fn main()->i64{match codec_decode<D>(7){R.ok(x)=>{return codec_encode<D>(x);},R.err(e)=>{return e;}}}");
+        "codec i64{decode:dec,encode:enc}fn dec(x:i64)->R{return new R.ok(wrap[D](x*2));}" ++
+        "fn enc(x:D)->i64{return unwrap(x)+1;}}fn main()->i64{match codec_decode[D](7){R.ok(x)=>{return codec_encode[D](x);},R.err(e)=>{return e;}}}");
     defer c.deinit();
     try t.expectEqual(@as(i64, 15), (try c.execute(t.allocator)).value);
 }

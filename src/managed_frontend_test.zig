@@ -98,11 +98,11 @@ test "managed lists reject nested and generic capabilities before helper alias e
         \\
         \\def main() -> i64:
         \\    values: List[Box] = []
-        \\    return cast<i64>(len(values))
+        \\    return i64(len(values))
         ,
         \\def hold[T]() -> i64:
         \\    values: List[T] = []
-        \\    return cast<i64>(len(values))
+        \\    return i64(len(values))
         \\
         \\
         \\def main() -> i64:

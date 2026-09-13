@@ -107,7 +107,7 @@ def to_milliseconds(value: Duration) -> int:
 
 # The current wall-clock instant, read through an explicit clock capability.
 def now(clock: clock_cap) -> Result[Instant, str] effects(clock, managed_allocation):
-    match clock_now<Reading>(clock):
+    match clock_now[Reading](clock):
         case Reading.ok(count):
             return Ok(Instant(unix_nanoseconds=count))
         case Reading.err(code):

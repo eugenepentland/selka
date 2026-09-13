@@ -260,7 +260,7 @@ fn schemaScenario(allocator: std.mem.Allocator) !void {
         \\
         \\domain Identity: i16:
         \\    private def raw(x: i16) -> Identity:
-        \\        return wrap<Identity>(x)
+        \\        return wrap[Identity](x)
         \\
         \\
         \\def select(x: Choice) -> Choice:

@@ -29,7 +29,7 @@ const source =
     \\        encode: enc
     \\
     \\    private def raw(x: i64) -> D:
-    \\        return wrap<D>(x)
+    \\        return wrap[D](x)
     \\
     \\    def dec(x: i64) -> R:
     \\        if x <= 0:
@@ -67,7 +67,7 @@ const source =
     \\
     \\
     \\def clock(c: clock_cap) -> Time:
-    \\    return clock_now<Time>(c)
+    \\    return clock_now[Time](c)
     \\
     \\
     \\def hidden() -> i64:

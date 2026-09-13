@@ -10,7 +10,7 @@ implemented, completing A2.
 ```text
 domain Millimeters: i64 {
     private fn raw(n: i64) -> Millimeters {
-        return wrap<Millimeters>(n);
+        return wrap[Millimeters](n);
     }
 
     fn from(n: i64) -> Millimeters {
@@ -45,7 +45,7 @@ raw constructor or an implementation helper. Private functions are still fully
 checked, even if uncalled. `private` is currently permitted only inside domains;
 module visibility remains a separate experiment.
 
-`wrap<Domain>(expression)` requires the exact backing scalar type and constructs
+`wrap[Domain](expression)` requires the exact backing scalar type and constructs
 a value of that domain. `unwrap(expression)` extracts the backing scalar. Both
 operations are permitted only inside functions declared in the value's own
 domain. Access does not propagate to free helpers called by a factory, or to

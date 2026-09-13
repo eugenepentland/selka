@@ -4,7 +4,7 @@ result Number:
 
 
 def increment[T: integer](input: Number, amount: T) -> Number:
-    return Ok(input? + cast<i64>(amount))
+    return Ok(input? + i64(amount))
 
 
 def number[T](context: T, input: Number) -> i64:

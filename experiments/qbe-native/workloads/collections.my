@@ -79,7 +79,7 @@ fn work(heap: allocator) -> Answer {
     if len_buffer(outer) != 0u64 {
         return new Answer.ok(- 10);
     }
-    return new Answer.ok(cast<i64>(read_buffer(answer, 0)));
+    return new Answer.ok(i64(read_buffer(answer, 0)));
 }
 fn once(heap: allocator) -> i64 {
     match work(heap) {

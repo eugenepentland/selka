@@ -158,7 +158,7 @@ test "cached quoted byte arrays survive source relocation and cache eviction" {
         \\
         \\def value() -> i64:
         \\    s = b"a\x00b"
-        \\    return cast<i64>(s[2])
+        \\    return i64(s[2])
     };
     try t.expectEqual(@as(i64, 98), try execute(t.allocator, &files, &cache, false));
     try t.expectEqual(@as(i64, 98), try execute(t.allocator, &files, &cache, true));

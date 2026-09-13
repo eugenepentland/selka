@@ -9,8 +9,8 @@ result Random:
 
 
 def sample(clock: clock_cap, rng: random_cap) -> Time effects(clock, random):
-    now = clock_now<Time>(clock)?
-    _ = random_u64<Random>(rng)?
+    now = clock_now[Time](clock)?
+    _ = random_u64[Random](rng)?
     return Ok(now)
 
 

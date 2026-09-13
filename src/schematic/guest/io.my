@@ -11,11 +11,11 @@ export issue
 
 domain Document: int:
     def circuit() -> Document:
-        return wrap<Document>(circuit_input())
+        return wrap[Document](circuit_input())
     def pinout() -> Document:
-        return wrap<Document>(pinout_input())
+        return wrap[Document](pinout_input())
     def interface() -> Document:
-        return wrap<Document>(interface_input())
+        return wrap[Document](interface_input())
     def id(document: Document) -> int noalloc:
         return unwrap(document)
 

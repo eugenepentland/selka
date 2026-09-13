@@ -25,8 +25,8 @@ result Entropy:
 # Two's-complement word for a signed seed, including the most negative one.
 def to_word(value: int) -> u64:
     if value < 0:
-        return wrapping_sub(0u64, cast<u64>(0 - (value + 1)) + 1u64)
-    return cast<u64>(value)
+        return wrapping_sub(0u64, u64(0 - (value + 1)) + 1u64)
+    return u64(value)
 
 
 # A reproducible generator for a raw 64-bit state word.
@@ -43,7 +43,7 @@ def seeded(seed: int) -> Random:
 
 # A generator seeded from the host entropy capability.
 def from_entropy(capability: random_cap) -> Result[Random, str] effects(random, managed_allocation):
-    match random_u64<Entropy>(capability):
+    match random_u64[Entropy](capability):
         case Entropy.ok(word):
             return Ok(from_word(word))
         case Entropy.err(code):
@@ -66,14 +66,14 @@ def next_word(generator: Random) -> u64:
 # A float uniformly drawn from the 2^53 multiples of 2^-53 in [0, 1).
 def random(generator: Random) -> float:
     drawn = shift_right(next_word(generator), 11u64)
-    return float(cast<i64>(drawn)) / 9007199254740992.0
+    return float(i64(drawn)) / 9007199254740992.0
 
 
 # Distance between two signed bounds, computed without overflowing either width.
 def span(low: int, high: int) -> u64:
     if low >= 0 or high < 0:
-        return cast<u64>(high - low)
-    return cast<u64>(high) + cast<u64>(0 - (low + 1)) + 1u64
+        return u64(high - low)
+    return u64(high) + u64(0 - (low + 1)) + 1u64
 
 
 # An unbiased word below a modulus, retrying the biased tail of the range.
@@ -91,7 +91,7 @@ def below(generator: Random, modulus: u64) -> u64:
 def offset(low: int, value: u64) -> int:
     third = value // 3u64
     rest = value - third - third
-    return low + cast<i64>(third) + cast<i64>(third) + cast<i64>(rest)
+    return low + i64(third) + i64(third) + i64(rest)
 
 
 # A uniform integer in an inclusive range, covering the full signed width.

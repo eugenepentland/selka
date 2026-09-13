@@ -297,7 +297,7 @@ test "nominal instances carry domain payloads beside resource declarations" {
     const program = definitions ++
         \\domain Id: i64:
         \\    def make(n: i64) -> Id:
-        \\        return wrap<Id>(n)
+        \\        return wrap[Id](n)
         \\
         \\    def number(n: Id) -> i64:
         \\        return unwrap(n)

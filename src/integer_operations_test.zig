@@ -36,7 +36,7 @@ fn guest(allocator: std.mem.Allocator) !void {
         \\    a = add[u8](MASK, 127u8)
         \\    b = shift_right(-8i8, 2i8)
         \\    c = wrapping_mul(255u8, 255u8)
-        \\    return cast<i64>(a) + cast<i64>(b) + cast<i64>(c) + cast<i64>(bit_and(7u8, 3u8))
+        \\    return i64(a) + i64(b) + i64(c) + i64(bit_and(7u8, 3u8))
     ;
     var compilation = try language.Compilation.init(allocator, "numbers.my", source);
     defer compilation.deinit();

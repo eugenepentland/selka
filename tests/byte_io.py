@@ -97,9 +97,9 @@ def scoped_checks(runner):
         declarations = ('module main;import io;resource File:filesystem;result Open{ok:File,err:i64}'
                         'result Written{ok:u64,err:i64}')
         def run(request, flags, expected=0):
-            source = declarations + ('fn main(fs:filesystem_cap)->i64{match acquire_resource<Open>(fs,"' + request + '") {'
+            source = declarations + ('fn main(fs:filesystem_cap)->i64{match acquire_resource[Open](fs,"' + request + '") {'
                      'Open.err(e)=>{if e==2{return 0;}return 9;},Open.ok(input)=>{let mut file=input;'
-                     '_ = write_resource<Written>(file,"changed");return ' + str(expected) + ';}}}')
+                     '_ = write_resource[Written](file,"changed");return ' + str(expected) + ';}}}')
             (root / 'main.my').write_text(source)
             return subprocess.run([str(runner), '--project', str(root), *flags], input=b'', capture_output=True, timeout=15)
         grant = '--allow-dir=' + str(data)
@@ -120,8 +120,8 @@ def scoped_checks(runner):
             server.settimeout(5)
             endpoint = '127.0.0.1:' + str(server.getsockname()[1])
             (root / 'main.my').write_text('module main;import io;resource Socket:network;result Open{ok:Socket,err:i64}'
-                'result Written{ok:u64,err:i64}fn main(net:network_cap)->i64{match acquire_resource<Open>(net,"' + endpoint + '") {'
-                'Open.err(_)=>{return 1;},Open.ok(input)=>{let mut socket=input;_ = write_resource<Written>(socket,"ping");return 0;}}}')
+                'result Written{ok:u64,err:i64}fn main(net:network_cap)->i64{match acquire_resource[Open](net,"' + endpoint + '") {'
+                'Open.err(_)=>{return 1;},Open.ok(input)=>{let mut socket=input;_ = write_resource[Written](socket,"ping");return 0;}}}')
             result = subprocess.run([str(runner), '--project', str(root), '--allow-endpoint=' + endpoint],
                                     input=b'', capture_output=True, timeout=15)
             assert result.returncode == 0, result.stderr

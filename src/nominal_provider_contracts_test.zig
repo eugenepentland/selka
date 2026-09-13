@@ -25,7 +25,7 @@ const env_call =
     \\
     \\
     \\def f[T](env: environment_cap) -> Lookup[T]:
-    \\    return environment_get<Lookup[T]>(env, [])
+    \\    return environment_get[Lookup[T]](env, [])
     \\
     \\
     \\def main() -> i64:
@@ -91,7 +91,7 @@ test "nominal provider environment contracts reject wrong missing extra and rena
         \\
         \\
         \\def f[T: integer](env: environment_cap) -> Lookup[T]:
-        \\    return environment_get<Lookup[T]>(env, [])
+        \\    return environment_get[Lookup[T]](env, [])
         \\
         \\
         \\def main() -> i64:
@@ -110,7 +110,7 @@ test "nominal provider environment contracts reject wrong missing extra and rena
         \\
         \\
         \\def f[T: integer](env: environment_cap, name: [1]T) -> Lookup[T]:
-        \\    return environment_get<Lookup[T]>(env, name)
+        \\    return environment_get[Lookup[T]](env, name)
         \\
         \\
         \\def main() -> i64:

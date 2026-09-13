@@ -101,7 +101,6 @@ const Checker = struct {
     ordinary_ids: []?typed.FunctionId,
     ordinary_count: usize = 0,
     current_function: ?typed.FunctionId = null,
-    python_assignment_order: bool = false,
     loops: struct { active: std.ArrayList(LoopScope) = .empty, next: usize = 0 } = .{},
     return_type: typed.Type = .i64,
     arenas: std.ArrayList(ArenaScope) = .empty,
@@ -118,7 +117,6 @@ const Checker = struct {
         const sink = self.sink;
         self.current_function = @fromBackingInt(i);
         const function = self.syntaxFunction(@fromBackingInt(i));
-        self.python_assignment_order = function.policy.python;
         const constant_context: @import("constant_values.zig").Context = .{ .src = self.src, .program = self.syntax, .names = self.catalog.module_names, .sink = self.sink, .catalog = self.catalog };
         const constant = if (function.policy.constant) try constant_context.evaluate(@backingInt(self.instance_keys.items[i].declaration)) else null;
         for (self.resolved_nodes.items) |node| self.resolved[node] = null;
@@ -802,7 +800,8 @@ const Checker = struct {
         if (destination.index == null) try self.requireArenaStore(destination.owner, value);
         const assigned = try b.local(expected);
         const evaluate_value = try b.stmt(.{ .initialize = .{ .slot = assigned, .value = value } });
-        if (self.python_assignment_order) try statements.insert(self.allocator, 0, evaluate_value) else try statements.append(self.allocator, evaluate_value);
+        // The assigned value is computed before the destination is refreshed.
+        try statements.insert(self.allocator, 0, evaluate_value);
         // Preserve unrelated fields changed through aliases while computing the RHS.
         try statements.append(self.allocator, destination.refresh);
         value = try b.read(assigned);
@@ -1029,7 +1028,7 @@ const Checker = struct {
             if (writes_element) try self.require(actual, element, node.span) else try self.requireInteger(actual, node.span);
         }
         try self.requireArenaOperation(self.arenaReceiver(base_input), kind, arguments);
-        return (collections.Builder(Checker){ .checker = self, .span = node.span, .python_assignment_order = self.python_assignment_order }).access(base, kind, arguments, operation.signed_length);
+        return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(base, kind, arguments, operation.signed_length);
     }
     fn checkManagedAccess(self: *Checker, node: ast.Node, operation: struct { base: typed.NodeId, kind: BufferKind, inputs: []const ast.NodeId, receiver: ?typed.LocalId = null }, temporaries: []const typed.Type) Error!typed.Node {
         const owner_type = self.nodes.items[@backingInt(operation.base)].ty;
@@ -1051,7 +1050,7 @@ const Checker = struct {
             if (integer) try self.requireInteger(self.nodes.items[@backingInt(argument.*)].ty, node.span) else try self.require(self.nodes.items[@backingInt(argument.*)].ty, expected, node.span);
         }
         try self.requireArenaOperation(operation.receiver, operation.kind, arguments);
-        return (collections.Builder(Checker){ .checker = self, .span = node.span, .python_assignment_order = self.python_assignment_order }).access(operation.base, operation.kind, arguments, false);
+        return (collections.Builder(Checker){ .checker = self, .span = node.span }).access(operation.base, operation.kind, arguments, false);
     }
     fn hintBufferArguments(self: *Checker, operation: @FieldType(@FieldType(ast.Node, "data"), bufferOperation)) Error!void {
         if (self.active.get(self.src.text(operation.owner))) |slot| {
@@ -1102,6 +1101,10 @@ const Checker = struct {
         if (try self.numericConversion(call) != null) {
             try call_arguments.positional(call, self.sink);
             if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "numeric conversions require one argument");
+            try work.append(self.allocator, .{ .id = call.arguments[0] });
+            return true;
+        }
+        if (try self.typeConversion(call) != null) {
             try work.append(self.allocator, .{ .id = call.arguments[0] });
             return true;
         }
@@ -1609,9 +1612,33 @@ const Checker = struct {
         if (call.arguments.len != 1) return self.sink.fail("E_ARITY", span, "str conversion requires one argument");
         return true;
     }
+    /// `T(x)` converts between integer widths wherever `T` names an integer type rather
+    /// than a function: a declared alias, or a type parameter of the enclosing signature.
+    /// The fixed-width keywords reach the same node straight from the parser.
+    fn typeConversion(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?typed.Type {
+        if (call.owner != null or call.arguments.len != 1 or call.argument_names.len != 0) return null;
+        const name = self.src.text(call.name);
+        if (self.active.contains(name) or self.functions.contains(name)) return null;
+        if (self.current_function) |id| {
+            for (self.syntaxFunction(id).signature.type_parameters) |parameter| {
+                if (!std.mem.eql(u8, self.src.text(parameter.name), name)) continue;
+                const resolved = try self.ty(call.name);
+                return if (resolved.isInteger()) resolved else null;
+            }
+        }
+        const declared = self.catalog.names.get(name) orelse return null;
+        return if (declared.isInteger()) declared else null;
+    }
+    fn checkTypeConversion(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), ty_value: typed.Type, out: *typed.Node) Error!void {
+        const value = self.resolved[@backingInt(call.arguments[0])].?;
+        try self.requireInteger(self.nodes.items[@backingInt(value)].ty, node.span);
+        out.ty = ty_value;
+        out.data = .{ .cast = value };
+    }
     fn checkCall(self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
         if (try self.floatIntrinsic(input)) |op| return self.checkFloatIntrinsic(node, input, op, out);
         if (try self.numericConversion(input)) |floating| return self.checkNumericConversion(node, input, floating, out);
+        if (try self.typeConversion(input)) |ty_value| return self.checkTypeConversion(node, input, ty_value, out);
         if (try self.optionConstructor(input)) return self.checkOptionConstructor(node, input, out);
         if (try self.textConstructor(input, node.span)) {
             const value = self.resolved[@backingInt(input.arguments[0])].?;
@@ -2053,6 +2080,7 @@ const Checker = struct {
         if (node.data == .dictionary_literal) return node.data.dictionary_literal.len;
         if (node.data == .binary) return 2;
         if (node.data == .call and try self.numericConversion(node.data.call) != null) return node.data.call.arguments.len;
+        if (node.data == .call and try self.typeConversion(node.data.call) != null) return 1;
         return switch (out.data) {
             .function_value, .unit, .integer, .boolean, .local, .block_value => 0,
             .arena_escape, .cast, .wrap, .unwrap, .length, .field, .unary, .propagate, .external_read, .complete_resource, .restrict_resource => 1,
@@ -2691,9 +2719,8 @@ const Checker = struct {
         return .{ .initialize = .{ .slot = slot, .value = value } };
     }
     fn statementAssignment(self: *Checker, stmt: ast.Statement, a: @FieldType(@FieldType(ast.Statement, "data"), "assignment"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
-        const new_python_local = a.python and a.op == .set;
         const unbound = !self.active.contains(self.src.text(a.name));
-        if (new_python_local and unbound)
+        if (a.op == .set and unbound)
             return self.statementBinding(stmt, .{ .name = a.name, .mutable = true, .annotation = null, .value = a.value }, flow);
         const slot = try self.resolve(a.name);
         if (!self.locals.items[@backingInt(slot)].mutable)
@@ -2752,7 +2779,7 @@ const Checker = struct {
                     .name = name,
                     .declaration = parameter.name,
                     .ty = parameter_type,
-                    .mutable = function.policy.python and function.policy.host == null,
+                    .mutable = function.policy.host == null,
                     .ownership = .{
                         .transfer_available = self.transfers(parameter_type),
                     },
@@ -2910,7 +2937,7 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
     try @import("entry_adapter.zig").adapt(allocator, &checked);
     try @import("effects.zig").check(allocator, checked, sink);
     try @import("domain_codecs.zig").check(allocator, src, program.types.domains, checker.catalog, .{ .items = functions, .names = executable_names }, sink);
-    try warnBindings(allocator, program, functions, sink);
+    try warnBindings(allocator, functions, sink);
     std.mem.sort(diagnostic.Diagnostic, sink.items.items, {}, warningLess);
     if (session) |*queries| try queries.remember(checked);
     return checked;
@@ -2960,30 +2987,17 @@ fn checkHostType(allocator: std.mem.Allocator, catalog: []const typed.Record, ty
     };
 }
 
-fn warnBindings(allocator: std.mem.Allocator, syntax: ast.Program, functions: []const typed.Function, sink: *diagnostic.Sink) Error!void {
+fn warnBindings(allocator: std.mem.Allocator, functions: []const typed.Function, sink: *diagnostic.Sink) Error!void {
     for (functions) |function| {
         if (function.policy.host != null) continue;
-        const python = pythonFunction(syntax, function.declaration);
         for (function.scope.locals) |local| {
-            if (local.usage.temporary) continue;
-            if (local.usage.reads == 0) try sink.items.append(allocator, .{
+            if (local.usage.temporary or local.usage.reads != 0) continue;
+            try sink.items.append(allocator, .{
                 .severity = .warning,
                 .code = "W_UNUSED_BINDING",
                 .span = local.declaration,
                 .message = "binding is never read; use it or remove it, preserving initializer effects with `_ =` when needed",
             });
-            const redundant_mut = local.mutable and local.usage.writes == 0;
-            if (!python and redundant_mut) try sink.items.append(allocator, .{
-                .severity = .warning,
-                .code = "W_UNNECESSARY_MUT",
-                .span = local.declaration,
-                .message = "binding is never assigned after initialization; remove mut",
-            });
         }
     }
-}
-
-fn pythonFunction(syntax: ast.Program, declaration: source.Span) bool {
-    for (syntax.functions) |function| if (function.name.start == declaration.start) return function.policy.python;
-    return false;
 }

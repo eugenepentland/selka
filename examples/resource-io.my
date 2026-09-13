@@ -28,12 +28,12 @@ result Status:
 
 def work(fs: filesystem_cap) -> Status effects(filesystem):
     request: [1]u8 = [42u8]
-    file = acquire_resource<Open>(fs, request)?
-    chunk = read_resource<Read>(file)?
+    file = acquire_resource[Open](fs, request)?
+    chunk = read_resource[Read](file)?
     # The count reports actual write progress. This example sends one byte.
     payload: [1]u8 = [7u8]
-    written = write_resource<Written>(file, payload)?
-    return Ok(cast<i64>(chunk.length) + cast<i64>(written))
+    written = write_resource[Written](file, payload)?
+    return Ok(i64(chunk.length) + i64(written))
 
 
 def main(fs: filesystem_cap) -> i64 noalloc:

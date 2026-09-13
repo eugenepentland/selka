@@ -15,15 +15,15 @@ A positive literal must fit its selected type. The signed minimum-magnitude
 exception applies independently to each signed width: `-128i8` and
 `-(128i8)` are valid, `128i8` is not, and `--128i8` traps on execution.
 
-`cast<T>(expression)` converts between integer types with a runtime range check.
+`T(expression)` converts between integer types with a runtime range check.
 It neither truncates bits nor reinterprets signedness. It evaluates its operand
-first and preserves operand traps. `cast<u8>(255)` succeeds;
-`cast<u8>(256)`, `cast<u8>(-1)`, and `cast<i64>(18446744073709551615u64)`
+first and preserves operand traps. `u8(255)` succeeds;
+`u8(256)`, `u8(-1)`, and `i64(18446744073709551615u64)`
 trap with `R_OVERFLOW`. Checking does not execute these casts. An out-of-range
 suffixed literal instead fails semantic checking with `E_INTEGER_RANGE`.
 
 There are no implicit width conversions, including from unsuffixed literals.
-Write `let value: u8 = 1u8;` or `let value = cast<u8>(1);`.
+Write `let value: u8 = 1u8;` or `let value = u8(1);`.
 Casts involving booleans or records are rejected; casts do not bypass declared
 complete-conversion or nominal record checks. `main` still returns `i64`.
 

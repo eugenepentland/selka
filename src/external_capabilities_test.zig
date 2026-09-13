@@ -37,13 +37,13 @@ const forwarded = declarations ++
     \\
     \\
     \\def read(auth: Authority) -> Time effects(clock):
-    \\    return clock_now<Time>(auth.clock)
+    \\    return clock_now[Time](auth.clock)
     \\
     \\
     \\def main(rng: random_cap, clock: clock_cap) -> i64 noio:
     \\    match read(Authority(clock=clock)):
     \\        case Time.ok(now):
-    \\            match random_u64<Random>(rng):
+    \\            match random_u64[Random](rng):
     \\                case Random.ok(word):
     \\                    if word == 18446744073709551615u64:
     \\                        return now
@@ -69,7 +69,7 @@ test "external entry grants forward through wrappers and preserve full width sam
 }
 const cleanup = declarations ++
     \\def read(c: clock_cap) -> Time:
-    \\    sample = clock_now<Time>(c)?
+    \\    sample = clock_now[Time](c)?
     \\    return Time.ok(sample)
     \\
     \\
@@ -110,8 +110,8 @@ test "external execution and emission release every failed allocation" {
 }
 const generic_provider_source = declarations ++
     \\def read[G](clock: clock_cap, random: random_cap) -> Time effects(clock,random):
-    \\    n = clock_now<Time>(clock)?
-    \\    word = random_u64<Random>(random)?
+    \\    n = clock_now[Time](clock)?
+    \\    word = random_u64[Random](random)?
     \\    if word == 18446744073709551615u64:
     \\        return Time.ok(n)
     \\    return Time.err(9)
@@ -158,7 +158,7 @@ test "all grants are checked before invoking any provider" {
 test "clock and random bounds propagate through calls independently of noio and noalloc" {
     try reject(declarations ++
         \\def read(c: clock_cap) -> Time:
-        \\    return clock_now<Time>(c)
+        \\    return clock_now[Time](c)
         \\
         \\
         \\def main(c: clock_cap) -> i64 effects():
@@ -167,7 +167,7 @@ test "clock and random bounds propagate through calls independently of noio and 
     , "E_EFFECT_BOUND");
     try reject(declarations ++
         \\def read(r: random_cap) -> Random:
-        \\    return random_u64<Random>(r)
+        \\    return random_u64[Random](r)
         \\
         \\
         \\def main(r: random_cap) -> i64 effects(clock):
@@ -176,8 +176,8 @@ test "clock and random bounds propagate through calls independently of noio and 
     , "E_EFFECT_BOUND");
     var c = try language.Compilation.init(t.allocator, "external.my", declarations ++
         \\def main(c: clock_cap, r: random_cap) -> i64 noalloc:
-        \\    _ = clock_now<Time>(c)
-        \\    _ = random_u64<Random>(r)
+        \\    _ = clock_now[Time](c)
+        \\    _ = random_u64[Random](r)
         \\    return 0
     );
     defer c.deinit();
@@ -193,7 +193,7 @@ test "repeated provider reads have bounded live storage" {
         \\def main(c: clock_cap) -> i64:
         \\    n = 0
         \\    while n < 10000:
-        \\        _ = clock_now<Time>(c)
+        \\        _ = clock_now[Time](c)
         \\        n += 1
         \\    return n
     );
@@ -209,7 +209,7 @@ test "repeated provider reads have bounded live storage" {
 test "clock preserves signed limits and short circuit skips provider calls" {
     var c = try language.Compilation.init(t.allocator, "external.my", declarations ++
         \\def positive(c: clock_cap) -> bool:
-        \\    match clock_now<Time>(c):
+        \\    match clock_now[Time](c):
         \\        case Time.ok(v):
         \\            return v > 0
         \\        case Time.err(e):
@@ -219,7 +219,7 @@ test "clock preserves signed limits and short circuit skips provider calls" {
         \\
         \\def main(c: clock_cap) -> i64:
         \\    _ = False and positive(c)
-        \\    match clock_now<Time>(c):
+        \\    match clock_now[Time](c):
         \\        case Time.ok(v):
         \\            return v
         \\        case Time.err(e):
@@ -235,7 +235,7 @@ test "clock preserves signed limits and short circuit skips provider calls" {
 test "external emission rejects wrong result shape and VM rejects wrong operand without callback" {
     var c = try language.Compilation.init(t.allocator, "external.my", declarations ++
         \\def main(c: clock_cap) -> i64:
-        \\    _ = clock_now<Time>(c)
+        \\    _ = clock_now[Time](c)
         \\    return 0
     );
     defer c.deinit();

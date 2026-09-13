@@ -1,6 +1,6 @@
 domain Millimeters: u32:
     private def raw(value: u32) -> Millimeters:
-        return wrap<Millimeters>(value)
+        return wrap[Millimeters](value)
 
     def from(value: u32) -> Millimeters:
         # Clamp to the range this domain promises to represent.
@@ -17,7 +17,7 @@ domain Millimeters: u32:
 
 domain Seconds: u32:
     def from(value: u32) -> Seconds:
-        return wrap<Seconds>(value)
+        return wrap[Seconds](value)
 
     def number(value: Seconds) -> u32:
         return unwrap(value)
@@ -30,4 +30,4 @@ class Measurement:
 
 def main() -> i64:
     sample = Measurement(distance=Millimeters.add(Millimeters.from(700u32), Millimeters.from(500u32)), elapsed=Seconds.from(3u32))
-    return cast<i64>(Millimeters.number(sample.distance)) + cast<i64>(Seconds.number(sample.elapsed))
+    return i64(Millimeters.number(sample.distance)) + i64(Seconds.number(sample.elapsed))

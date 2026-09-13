@@ -5,12 +5,12 @@ const language = @import("compiler.zig");
 const factories =
     \\domain Component: u64:
     \\    def make(n: u64) -> Component:
-    \\        return wrap<Component>(n)
+    \\        return wrap[Component](n)
     \\
     \\
     \\domain Net: u64:
     \\    def make(n: u64) -> Net:
-    \\        return wrap<Net>(n)
+    \\        return wrap[Net](n)
 ;
 const helpers =
     \\def pair[T](a: T, b: T) -> [2]T:
@@ -177,7 +177,7 @@ const Modules = struct {
             \\
             \\domain Id: i64:
             \\    def make(n: i64) -> Id:
-            \\        return wrap<Id>(n)
+            \\        return wrap[Id](n)
         );
         return error.NotFound;
     }
@@ -258,7 +258,7 @@ test "generic arrays nest substitute across calls and match concrete helper shap
         \\
         \\
         \\def main() -> i64:
-        \\    return cast<i64>(len(empty[bool]()))
+        \\    return i64(len(empty[bool]()))
     , 0);
 }
 

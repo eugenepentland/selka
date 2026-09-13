@@ -815,7 +815,7 @@ was not exercised; hosted CI has not run. The full roadmap goal remains active.
 
 ## 2026-09-05: C resource operation permission attenuation
 
-Implemented `restrict_resource<permissions>(cap)` as monotone intersection of read,
+Implemented `restrict_resource[permissions](cap)` as monotone intersection of read,
 write, and complete permissions. Original grants and existing owners remain intact;
 copies and helper forwarding cannot restore removed rights or increase shared quotas.
 Embedding options cap entry grants. Provider acquisition now receives permissions
@@ -3332,8 +3332,8 @@ incremental compilation and all other pending roadmap requirements remain open.
 
 ### Source declared domain codec operations — 2026-09-06
 
-Source expressions now support `codec_decode<Domain>(wire)` and
-`codec_encode<Domain>(value)`. They select the methods named by an explicit codec
+Source expressions now support `codec_decode[Domain](wire)` and
+`codec_encode[Domain](value)`. They select the methods named by an explicit codec
 contract and lower to ordinary checked calls, retaining public visibility,
 parameter/result typing, result obligations, effect checks and execution budgets.
 The decoder returns its declared typed result; encoding cannot accept raw backing

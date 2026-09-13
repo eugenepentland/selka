@@ -26,7 +26,7 @@ const source =
     \\    def dec(x: Wire) -> Decoded:
     \\        if x.n <= 0:
     \\            return Err(Why(code=-1))
-    \\        return Ok(wrap<Positive>(x.n))
+    \\        return Ok(wrap[Positive](x.n))
     \\
     \\    def enc(x: Positive) -> Wire:
     \\        return Wire(n=unwrap(x))
@@ -191,7 +191,7 @@ test "codec JSON keeps wire depth separate from private domain storage and prese
         \\        encode: enc
         \\
         \\    def dec(x: u64) -> R:
-        \\        return Ok(wrap<D>(x))
+        \\        return Ok(wrap[D](x))
         \\
         \\    def enc(x: D) -> u64:
         \\        return unwrap(x)

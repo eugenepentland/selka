@@ -1492,8 +1492,8 @@ incremental compilation and all other pending roadmap requirements remain open.
 
 ### Source declared domain codec operations — 2026-09-06
 
-Source expressions now support `codec_decode<Domain>(wire)` and
-`codec_encode<Domain>(value)`. They select the methods named by an explicit codec
+Source expressions now support `codec_decode[Domain](wire)` and
+`codec_encode[Domain](value)`. They select the methods named by an explicit codec
 contract and lower to ordinary checked calls, retaining public visibility,
 parameter/result typing, result obligations, effect checks and execution budgets.
 The decoder returns its declared typed result; encoding cannot accept raw backing

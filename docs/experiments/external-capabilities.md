@@ -13,14 +13,14 @@ initial clock/random experiment. Later milestones add [environment lookup](envir
 result Time { ok: i64, err: i64 }
 result Random { ok: u64, err: i64 }
 fn sample(clock: clock_cap, rng: random_cap) -> Time effects(clock, random) {
-    let now = clock_now<Time>(clock)?;
-    _ = random_u64<Random>(rng)?;
+    let now = clock_now[Time](clock)?;
+    _ = random_u64[Random](rng)?;
     return new Time.ok(now);
 }
 ```
 
-`clock_now<R>(capability)` returns Unix-epoch nanoseconds as signed i64; it is a
-wall clock, with no monotonicity guarantee. `random_u64<R>(capability)` returns
+`clock_now[R](capability)` returns Unix-epoch nanoseconds as signed i64; it is a
+wall clock, with no monotonicity guarantee. `random_u64[R](capability)` returns
 an unsigned 64-bit entropy word. The declared result must have the indicated
 success type and an i64 error payload. The provider is responsible for sample
 quality and clock accuracy. Injected deterministic test providers are supported.

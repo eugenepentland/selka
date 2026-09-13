@@ -47,16 +47,16 @@ const forwarded = declarations ++
     \\
     \\
     \\def lookup(auth: Authority) -> Lookup effects(environment):
-    \\    return environment_get<Lookup>(auth.env, [75u8])
+    \\    return environment_get[Lookup](auth.env, [75u8])
     \\
     \\
     \\def main(environment: environment_cap) -> i64 noio:
     \\    match lookup(Authority(env=environment)):
     \\        case Lookup.ok(entry):
     \\            if entry.present:
-    \\                return 10 + cast<i64>(entry.length) + cast<i64>(entry.bytes[3])
+    \\                return 10 + i64(entry.length) + i64(entry.bytes[3])
     \\            else:
-    \\                return cast<i64>(entry.length) + cast<i64>(entry.bytes[0])
+    \\                return i64(entry.length) + i64(entry.bytes[0])
     \\        case Lookup.err(code):
     \\            return -code
 ;
@@ -88,9 +88,9 @@ test "environment grants delegate explicitly and missing empty and present value
 test "environment returns raw bytes and canonical zero padding" {
     var c = try language.Compilation.init(t.allocator, "bytes.my", declarations ++
         \\def main(env: environment_cap) -> i64:
-        \\    match environment_get<Lookup>(env, [75u8]):
+        \\    match environment_get[Lookup](env, [75u8]):
         \\        case Lookup.ok(entry):
-        \\            return cast<i64>(entry.bytes[0]) + cast<i64>(entry.bytes[1]) + cast<i64>(entry.bytes[2]) + cast<i64>(entry.bytes[3])
+        \\            return i64(entry.bytes[0]) + i64(entry.bytes[1]) + i64(entry.bytes[2]) + i64(entry.bytes[3])
         \\        case Lookup.err(code):
         \\            return -code
     );
@@ -141,7 +141,7 @@ test "zero capacity environment values distinguish absent empty and too large" {
         \\
         \\
         \\def main(env: environment_cap) -> i64:
-        \\    match environment_get<Lookup>(env, [75u8]):
+        \\    match environment_get[Lookup](env, [75u8]):
         \\        case Lookup.ok(entry):
         \\            if entry.present:
         \\                return 1
@@ -160,13 +160,13 @@ test "zero capacity environment values distinguish absent empty and too large" {
 }
 const generic_environment = declarations ++
     \\def lookup[G](cap: environment_cap) -> Lookup effects(environment):
-    \\    return environment_get<Lookup>(cap, [75u8])
+    \\    return environment_get[Lookup](cap, [75u8])
     \\
     \\
     \\def main(cap: environment_cap) -> i64:
     \\    match lookup[bool](cap):
     \\        case Lookup.ok(e):
-    \\            return cast<i64>(e.length) + cast<i64>(e.bytes[0]) + cast<i64>(e.bytes[1])
+    \\            return i64(e.length) + i64(e.bytes[0]) + i64(e.bytes[1])
     \\        case Lookup.err(e):
     \\            return e
 ;

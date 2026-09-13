@@ -215,7 +215,7 @@ test "managed str conversion source evaluates argument once" {
         \\    s = str(next(xs))
         \\    expected: str = b"42"
         \\    if s == expected:
-        \\        return cast<i64>(xs.len())
+        \\        return i64(xs.len())
         \\    return 0
     , 1);
 }

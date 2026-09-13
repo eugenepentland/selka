@@ -61,11 +61,11 @@ def guest():
         'if c_bool(true) {return 2;}',
         'if c_mix(-7,1.5,18446744073709551615,-0.0) != 3.25 {return 3;}',
         'if c_stack(1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10,11,12,13,14,15,16) != 136.0 {return 4;}',
-        'c_void(); if cast<i64>(c_counter()) != 1 {return 5;}',
+        'c_void(); if i64(c_counter()) != 1 {return 5;}',
         'let nan=c_nan(); if nan == nan {return 6;}',
-        'if cast<i64>(abs(-7)) != 7 {return 7;}',
+        'if i64(abs(-7)) != 7 {return 7;}',
         'if floor(3.9) != 3.0 {return 8;}',
-        'let indirect=abs; if cast<i64>(indirect(cast<i32>(-9))) != 9 {return 9;}',
+        'let indirect=abs; if i64(indirect(i32(-9))) != 9 {return 9;}',
     ]
     return '\n'.join(declarations) + '\nfn main()->i64{' + ''.join(checks) + 'return 42;}'
 
@@ -110,11 +110,11 @@ def main():
         run([compiler, 'build', source, '--run', *tools], ok=False)
         # Module qualification must not change the linked C symbol.
         (root / 'foreign.my').write_text('module foreign;export c_version;extern fn c_version()->i32 effects(host);')
-        source.write_text('module main;import foreign;fn main()->i64{return cast<i64>(foreign::c_version());}')
+        source.write_text('module main;import foreign;fn main()->i64{return i64(foreign::c_version());}')
         assert run([compiler, 'build', source, '--project', '--run', '--link', foreign, *tools]).stdout == b'42\n'
         # No test receipt may suppress another external call, even if IL is unchanged.
         source.write_text('module main;import foreign;export test_external;export test_pure;'
-                          'fn test_external()->bool{return cast<i64>(foreign::c_version())==42;}'
+                          'fn test_external()->bool{return i64(foreign::c_version())==42;}'
                           'fn test_pure()->bool{return true;}fn main()->i64{return 0;}')
         command = [compiler, 'test', source, '--json', '--link', foreign, *tools]
         cold = json.loads(run(command).stdout)

@@ -11,14 +11,14 @@ result Lookup:
 
 def lookup(env: environment_cap) -> Lookup effects(environment):
     # The injected provider defines which names it permits; these bytes spell K.
-    return environment_get<Lookup>(env, [75u8])
+    return environment_get[Lookup](env, [75u8])
 
 
 def main(env: environment_cap) -> i64 noio:
     match lookup(env):
         case Lookup.ok(entry):
             if entry.present:
-                return cast<i64>(entry.length)
+                return i64(entry.length)
             return -1
         case Lookup.err(code):
             return -code - 1

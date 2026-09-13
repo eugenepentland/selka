@@ -16,7 +16,7 @@ def observe(compiler, directory, extra_argument, case, field=None):
     if extra_argument:
         arguments += f",{case['ceiling']}"
     if field:
-        fields = 'cast<i64>(reply.' + field + ')'
+        fields = 'i64(reply.' + field + ')'
         body = ('match ledger::summarize(' + arguments + ') {' +
                 'model::Answer.ok(reply)=>{return ' + fields + ';},' +
                 'model::Answer.err(code)=>{return -9000000+code;}}')

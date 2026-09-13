@@ -4,7 +4,7 @@ export Distance
 
 domain Distance: i64:
     private def raw(value: i64) -> Distance:
-        return wrap<Distance>(value)
+        return wrap[Distance](value)
 
     def make(value: i64) -> Distance:
         if value < 0:

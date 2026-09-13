@@ -25,7 +25,7 @@ test "binary64 IEEE boundaries canonical NaNs signed zero and FloatConversion" {
 const intrinsic_source =
     \\def main() -> i64:
     \\    root = f64_to_u64(f64_sqrt(f64_from_u64(1764u64)))
-    \\    return cast<i64>(root)
+    \\    return i64(root)
 ;
 fn intrinsicScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "float.my", intrinsic_source);
@@ -39,7 +39,7 @@ test "float intrinsics evaluate constants reject raw operands and clean failed a
         \\
         \\
         \\def main() -> i64:
-        \\    return cast<i64>(V)
+        \\    return i64(V)
     );
     defer good.deinit();
     try t.expectEqual(@as(i64, 42), (try good.execute(t.allocator)).value);

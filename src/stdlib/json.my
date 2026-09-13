@@ -47,37 +47,37 @@ def max_depth() -> int:
 
 # The JSON null value.
 def null_value() -> Json:
-    return new Json.null
+    return Json.null
 
 
 # A JSON true or false value.
 def boolean(value: bool) -> Json:
-    return new Json.boolean(value)
+    return Json.boolean(value)
 
 
 # A JSON number that is exactly a 64-bit signed integer.
 def integer(value: int) -> Json:
-    return new Json.integer(value)
+    return Json.integer(value)
 
 
 # A JSON number carried as binary64.
 def number(value: float) -> Json:
-    return new Json.number(value)
+    return Json.number(value)
 
 
 # A JSON string.
 def text(value: str) -> Json:
-    return new Json.text(value)
+    return Json.text(value)
 
 
 # A JSON array of values.
 def array(items: list[Json]) -> Json:
-    return new Json.array(items)
+    return Json.array(items)
 
 
 # A JSON object; iteration and rendering follow insertion order.
 def object(fields: dict[str, Json]) -> Json:
-    return new Json.object(fields)
+    return Json.object(fields)
 
 
 # The RFC 8259 name of a value's kind.

@@ -104,7 +104,7 @@ test "list methods indexing and indexed assignment share aliases" {
         \\    alias = values
         \\    alias.push(10)
         \\    values[0] = 41
-        \\    return alias[0] + cast<i64>(values.len())
+        \\    return alias[0] + i64(values.len())
     , 42);
 }
 

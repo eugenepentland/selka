@@ -73,10 +73,10 @@ fn reject(source: []const u8, code: []const u8) !void {
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
 const retry = declarations ++ "struct Authority { fs: filesystem_cap } fn open(auth: Authority) -> Open " ++
-    "effects(filesystem) { return acquire_resource<Open>(auth.fs, new [1]u8 [42u8]); } fn " ++
-    "retry(file: File) -> Finish { match complete_resource<Finish>(file) { " ++
+    "effects(filesystem) { return acquire_resource[Open](auth.fs, new [1]u8 [42u8]); } fn " ++
+    "retry(file: File) -> Finish { match complete_resource[Finish](file) { " ++
     "Finish.ok(done) => { return new Finish.ok(done); }, Finish.err(failure) => { " ++
-    "return complete_resource<Finish>(failure.resource); } } } fn main(fs: filesystem_cap) -> i64 " ++
+    "return complete_resource[Finish](failure.resource); } } } fn main(fs: filesystem_cap) -> i64 " ++
     "noalloc { match open(new Authority { fs: fs }) { Open.ok(file) => { match " ++
     "retry(file) { Finish.ok(done) => { if done { return 7; } else { return 0; } }, " ++
     "Finish.err(failure) => { return failure.code; } } }, Open.err(e) => { return e; } } }";
@@ -98,8 +98,8 @@ fn retryScenario(allocator: std.mem.Allocator) !void {
 test "source acquisition delegates authority and failed completion returns owned resource for retry" {
     try retryScenario(t.allocator);
 }
-const partial = declarations ++ "fn work(fs: filesystem_cap) -> Status { let a = acquire_resource<Open>(fs, new " ++
-    "[0]u8 [])?; let b = acquire_resource<Open>(fs, new [0]u8 [])?; _ = a; _ = " ++
+const partial = declarations ++ "fn work(fs: filesystem_cap) -> Status { let a = acquire_resource[Open](fs, new " ++
+    "[0]u8 [])?; let b = acquire_resource[Open](fs, new [0]u8 [])?; _ = a; _ = " ++
     "b; return new Status.ok(true); } fn main(fs: filesystem_cap) -> i64 { match work(fs) " ++
     "{ Status.ok(done) => { _ = done; return 9; }, Status.err(e) => { return e; } } }";
 // spec: OWN-9
@@ -135,8 +135,8 @@ test "ownExternal and source acquisition completion retry clean every allocation
 }
 const wrappers = declarations ++ "struct Inner { file: File } struct Pair { first: Inner, second: File } result " ++
     "PairResult { ok: Pair, err: i64 } fn pair(fs: filesystem_cap) -> PairResult { return " ++
-    "new PairResult.ok(new Pair { first: new Inner { file: acquire_resource<Open>(fs, " ++
-    "new [0]u8 [])? }, second: acquire_resource<Open>(fs, new [0]u8 [])? }); } fn " ++
+    "new PairResult.ok(new Pair { first: new Inner { file: acquire_resource[Open](fs, " ++
+    "new [0]u8 [])? }, second: acquire_resource[Open](fs, new [0]u8 [])? }); } fn " ++
     "main(fs: filesystem_cap) -> i64 { match pair(fs) { PairResult.ok(value) => { _ = " ++
     "value; return 0; }, PairResult.err(e) => { return e; } } }";
 test "nested resource wrappers release in reverse schema order and traps unwind every instruction" {
@@ -176,10 +176,10 @@ test "independent bytecode validation rejects suppressed cleanup effects and mal
 
 test "resource acquisition identity and cleanup contracts survive exact duplicate discovery" {
     const source = declarations ++ "fn a(fs: filesystem_cap) -> Open effects(filesystem) { return " ++
-        "acquire_resource<Open>(fs, new [1]u8 [42u8]); } fn b(dir: filesystem_cap) -> Open " ++
-        "effects(filesystem) { return acquire_resource<Open>(dir, new [1]u8 [42u8]); } fn " ++
+        "acquire_resource[Open](fs, new [1]u8 [42u8]); } fn b(dir: filesystem_cap) -> Open " ++
+        "effects(filesystem) { return acquire_resource[Open](dir, new [1]u8 [42u8]); } fn " ++
         "c(dir: filesystem_cap) -> Open effects(filesystem) { return " ++
-        "acquire_resource<Open>(dir, new [1]u8 [43u8]); } fn main() -> i64 { return 0; }";
+        "acquire_resource[Open](dir, new [1]u8 [43u8]); } fn main() -> i64 { return 0; }";
     var compilation = try language.Compilation.init(t.allocator, "duplicates.my", source);
     defer compilation.deinit();
     try compilation.check();
@@ -191,7 +191,7 @@ test "resource acquisition identity and cleanup contracts survive exact duplicat
 }
 test "source frame traps release the resource moved through recursive calls" {
     var c = try language.Compilation.init(t.allocator, "recursive.my", declarations ++ "fn recurse(file: File) -> i64 { return recurse(file); } fn main(fs: filesystem_cap) " ++
-        "-> i64 { match acquire_resource<Open>(fs, new [0]u8 []) { Open.ok(file) => { return " ++
+        "-> i64 { match acquire_resource[Open](fs, new [0]u8 []) { Open.ok(file) => { return " ++
         "recurse(file); }, Open.err(e) => { return e; } } }");
     defer c.deinit();
     var fake: Fake = .{};
@@ -207,7 +207,7 @@ const generic_cleanup = declarations ++
     "fn drop<T:copy>(file:File)->i64 effects(filesystem){return 1;}" ++
     "fn fields<T:copy>(value:Owned)->i64 effects(filesystem){_ = value;return 7;}" ++
     "fn handle<T:copy>(r:Open)->i64 effects(filesystem){match r{Open.ok(file)=>{return fields::<bool>(new Owned{file:forward::<bool>(file),code:7});},Open.err(code)=>{return code;}}}" ++
-    "fn main(fs:filesystem_cap)->i64{let first=handle::<bool>(acquire_resource<Open>(fs,new [0]u8[]));match acquire_resource<Open>(fs,new [0]u8[]){Open.ok(file)=>{return first+drop::<bool>(file);},Open.err(code)=>{return code;}}}";
+    "fn main(fs:filesystem_cap)->i64{let first=handle::<bool>(acquire_resource[Open](fs,new [0]u8[]));match acquire_resource[Open](fs,new [0]u8[]){Open.ok(file)=>{return first+drop::<bool>(file);},Open.err(code)=>{return code;}}}";
 fn genericCleanupScenario(allocator: std.mem.Allocator) !void {
     var fake: Fake = .{};
     defer std.debug.assert(fake.live == 0);
@@ -226,8 +226,8 @@ test "generic owned resources clean up explicit and implicit drops under allocat
 }
 
 const generic_retry = declarations ++
-    "fn open<G:copy>(cap:filesystem_cap)->Open effects(filesystem){return acquire_resource<Open>(cap,new [0]u8[]);}" ++
-    "fn finish<G:copy>(file:File)->Finish effects(filesystem){match complete_resource<Finish>(file){Finish.ok(done)=>{return new Finish.ok(done);},Finish.err(failure)=>{return complete_resource<Finish>(failure.resource);}}}" ++
+    "fn open<G:copy>(cap:filesystem_cap)->Open effects(filesystem){return acquire_resource[Open](cap,new [0]u8[]);}" ++
+    "fn finish<G:copy>(file:File)->Finish effects(filesystem){match complete_resource[Finish](file){Finish.ok(done)=>{return new Finish.ok(done);},Finish.err(failure)=>{return complete_resource[Finish](failure.resource);}}}" ++
     "fn main(cap:filesystem_cap)->i64{match open::<bool>(cap){Open.ok(file)=>{match finish::<bool>(file){Finish.ok(_)=>{return 7;},Finish.err(failure)=>{return failure.code;}}},Open.err(e)=>{return e;}}}";
 fn genericRetryScenario(allocator: std.mem.Allocator) !void {
     var fake: Fake = .{ .fail_complete_count = 1 };

@@ -9,11 +9,11 @@ field moves, attenuation, arenas/pools, and other roadmap tracks remain pending.
 struct Entry { bytes: [64]u8, length: u64, present: bool }
 result Lookup { ok: Entry, err: i64 }
 fn lookup(env: environment_cap) -> Lookup effects(environment) {
-    return environment_get<Lookup>(env, new [1]u8 [75u8]);
+    return environment_get[Lookup](env, new [1]u8 [75u8]);
 }
 ```
 
-`environment_get<Result>(capability, name)` evaluates the capability and fixed u8
+`environment_get[Result](capability, name)` evaluates the capability and fixed u8
 array name once, left to right. The capability must be `environment_cap`. The result
 must declare i64 error and a nominal record success containing exactly `bytes: [N]u8`,
 `length: u64`, and `present: bool`, in any field order. N is the caller-selected

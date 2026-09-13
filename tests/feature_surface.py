@@ -33,7 +33,7 @@ def main():
     examples.extend([
         ('unknown-f64-alias-excluded', 'fn main()->f64{return 0;}', '', 'E_UNKNOWN_TYPE'),
         ('stored-references-excluded', 'struct View{value:&i64}fn main()->i64{return 0;}', '', 'E_TYPE'),
-        ('unresolved-hole-excluded', 'fn main()->i64{return todo<i64>();}', '', 'E_TYPED_HOLE'),
+        ('unresolved-hole-excluded', 'fn main()->i64{return todo[i64]();}', '', 'E_TYPED_HOLE'),
     ])
     rows = []
     with tempfile.TemporaryDirectory(prefix='feature-surface-') as temporary:

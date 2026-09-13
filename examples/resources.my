@@ -16,16 +16,16 @@ result Finish:
 
 
 def retry(file: File) -> Finish effects(filesystem):
-    match complete_resource<Finish>(file):
+    match complete_resource[Finish](file):
         case Finish.ok(done):
             return Ok(done)
         case Finish.err(failure):
-            return complete_resource<Finish>(failure.resource)
+            return complete_resource[Finish](failure.resource)
 
 
 def main(fs: filesystem_cap) -> i64 noalloc:
     request: [1]u8 = [42u8]
-    match acquire_resource<Open>(fs, request):
+    match acquire_resource[Open](fs, request):
         case Open.ok(file):
             match retry(file):
                 case Finish.ok(done):

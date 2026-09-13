@@ -107,7 +107,7 @@ export Positive;export Decoded;export test_domain;export test_domain_stable;
 result Decoded{ok:Positive,err:i64}
 domain Positive:i64{
  codec i64{decode:from_wire,encode:to_wire}
- private fn raw(n:i64)->Positive{return wrap<Positive>(n);}
+ private fn raw(n:i64)->Positive{return wrap[Positive](n);}
  fn from_wire(n:i64)->Decoded{return new Decoded.ok(Positive.raw(n*2));}
  fn to_wire(p:Positive)->i64{return unwrap(p)+1;}
 }

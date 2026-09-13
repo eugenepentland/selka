@@ -13,19 +13,19 @@ def bounds[T: integer](low: T, high: T) -> bool:
 
 
 def widths() -> int:
-    if not bounds(cast<i8>(0 - 128), cast<i8>(127)):
+    if not bounds(i8(0 - 128), i8(127)):
         return 1
-    if not bounds(cast<i16>(0 - 32768), cast<i16>(32767)):
+    if not bounds(i16(0 - 32768), i16(32767)):
         return 2
-    if not bounds(cast<i32>(0 - 2147483648), cast<i32>(2147483647)):
+    if not bounds(i32(0 - 2147483648), i32(2147483647)):
         return 3
     if not bounds(0 - 9223372036854775807 - 1, 9223372036854775807):
         return 4
     if not bounds(0u8, 255u8):
         return 5
-    if not bounds(cast<u16>(0), cast<u16>(65535)):
+    if not bounds(u16(0), u16(65535)):
         return 6
-    if not bounds(cast<u32>(0), cast<u32>(4294967295)):
+    if not bounds(u32(0), u32(4294967295)):
         return 7
     if not bounds(0u64, 18446744073709551615u64):
         return 8

@@ -38,7 +38,7 @@ const LIMIT: i64 = 8;
 type Count = i64;                                   an alias declaration
 host fn put(value: u8) -> i64 effects(host);        a host_fn declaration
 
-There is no record keyword. Casts are written cast<T>(x); neither T(x) nor x as T is a cast. Imports are derived from the declarations you write, so helper::multiply(argument) is enough to import helper and no import statement is ever written; two aliases deriving the same import are refused. export name; is recorded as the declaration's exported flag, not written text.
+There is no record keyword. Casts are written T(x); neither T(x) nor x as T is a cast. Imports are derived from the declarations you write, so helper::multiply(argument) is enough to import helper and no import statement is ever written; two aliases deriving the same import are refused. export name; is recorded as the declaration's exported flag, not written text.
 
 First use open to list the declarations and readable documents, then asset to read GUIDE.md and CONTRACT.md, then context to read the practice sources. Make the requested practice repairs with batch. Practice the other two operation shapes as well: add one small helper declaration, confirm with open that it is listed, then remove it and confirm with open that it is gone; finish will not accept completed until one add and one remove have committed. Run check with {} and obtain passed:true, then finish with {"reason":"completed"}. That returns ready. If unable to complete practice, finish abandoned and report that. Practice budget is 1200 seconds.
 

@@ -186,10 +186,10 @@
     {
       "id": "uniform_len",
       "command": "run",
-      "source": "fn main()->i64{let xs:List<i64>=[];xs.push(42);return cast<i64>(len(xs));}",
+      "source": "fn main()->i64{let xs:List<i64>=[];xs.push(42);return i64(len(xs));}",
       "exit_code": 1,
       "stdout": "",
-      "stderr": "<probe>/main.my:1:65: error[E_TYPE]: operation requires a fixed array value\n  fn main()->i64{let xs:List<i64>=[];xs.push(42);return cast<i64>(len(xs));}\n                                                                  ^\n"
+      "stderr": "<probe>/main.my:1:65: error[E_TYPE]: operation requires a fixed array value\n  fn main()->i64{let xs:List<i64>=[];xs.push(42);return i64(len(xs));}\n                                                                  ^\n"
     },
     {
       "id": "field_list_method",
@@ -258,18 +258,18 @@
     {
       "id": "context_integer",
       "command": "run",
-      "source": "fn widen(value:u8)->i64{return cast<i64>(value);}fn main()->i64{return widen(42);}",
+      "source": "fn widen(value:u8)->i64{return i64(value);}fn main()->i64{return widen(42);}",
       "exit_code": 1,
       "stdout": "",
-      "stderr": "<probe>/main.my:1:78: error[E_TYPE]: expected u8, found i64\n  fn widen(value:u8)->i64{return cast<i64>(value);}fn main()->i64{return widen(42);}\n                                                                               ^\n"
+      "stderr": "<probe>/main.my:1:78: error[E_TYPE]: expected u8, found i64\n  fn widen(value:u8)->i64{return i64(value);}fn main()->i64{return widen(42);}\n                                                                               ^\n"
     },
     {
       "id": "context_list_integer",
       "command": "run",
-      "source": "fn main()->i64{let xs:List<u8>=[];xs.push(42);return cast<i64>(xs[0]);}",
+      "source": "fn main()->i64{let xs:List<u8>=[];xs.push(42);return i64(xs[0]);}",
       "exit_code": 1,
       "stdout": "",
-      "stderr": "<probe>/main.my:1:43: error[E_TYPE]: expected u8, found i64\n  fn main()->i64{let xs:List<u8>=[];xs.push(42);return cast<i64>(xs[0]);}\n                                            ^\n"
+      "stderr": "<probe>/main.my:1:43: error[E_TYPE]: expected u8, found i64\n  fn main()->i64{let xs:List<u8>=[];xs.push(42);return i64(xs[0]);}\n                                            ^\n"
     },
     {
       "id": "decimal_float",
@@ -290,7 +290,7 @@
     {
       "id": "string_len",
       "command": "run",
-      "source": "fn main()->i64{let text=\"abc\";return cast<i64>(len(text));}",
+      "source": "fn main()->i64{let text=\"abc\";return i64(len(text));}",
       "exit_code": 0,
       "stdout": "3\n",
       "stderr": ""
@@ -298,10 +298,10 @@
     {
       "id": "string_len_method",
       "command": "run",
-      "source": "fn main()->i64{let text=\"abc\";return cast<i64>(text.len());}",
+      "source": "fn main()->i64{let text=\"abc\";return i64(text.len());}",
       "exit_code": 1,
       "stdout": "",
-      "stderr": "<probe>/main.my:1:48: error[E_UNKNOWN_TYPE]: type is not declared\n  fn main()->i64{let text=\"abc\";return cast<i64>(text.len());}\n                                                 ^\n"
+      "stderr": "<probe>/main.my:1:48: error[E_UNKNOWN_TYPE]: type is not declared\n  fn main()->i64{let text=\"abc\";return i64(text.len());}\n                                                 ^\n"
     },
     {
       "id": "string_type",
@@ -450,7 +450,7 @@
     {
       "id": "direct_literal_slice_argument",
       "command": "run",
-      "source": "fn consume(bytes:&[]u8)->i64{return cast<i64>(len_slice(bytes));}fn main()->i64{return consume(\"abc\");}",
+      "source": "fn consume(bytes:&[]u8)->i64{return i64(len_slice(bytes));}fn main()->i64{return consume(\"abc\");}",
       "exit_code": 0,
       "stdout": "3\n",
       "stderr": ""
@@ -458,10 +458,10 @@
     {
       "id": "bound_literal_slice_argument",
       "command": "run",
-      "source": "fn consume(bytes:&[]u8)->i64{return cast<i64>(len_slice(bytes));}fn main()->i64{let text=\"abc\";return consume(text);}",
+      "source": "fn consume(bytes:&[]u8)->i64{return i64(len_slice(bytes));}fn main()->i64{let text=\"abc\";return consume(text);}",
       "exit_code": 1,
       "stdout": "",
-      "stderr": "<probe>/main.my:1:111: error[E_REFERENCE_SCOPE]: reference is not active in this scope\n  fn consume(bytes:&[]u8)->i64{return cast<i64>(len_slice(bytes));}fn main()->i64{let text=\"abc\";return consume(text);}\n                                                                                                                ^\n"
+      "stderr": "<probe>/main.my:1:111: error[E_REFERENCE_SCOPE]: reference is not active in this scope\n  fn consume(bytes:&[]u8)->i64{return i64(len_slice(bytes));}fn main()->i64{let text=\"abc\";return consume(text);}\n                                                                                                                ^\n"
     },
     {
       "id": "unit_wrapper_statement",

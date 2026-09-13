@@ -41,7 +41,7 @@ const kinds_module =
     \\
     \\domain Distance: i64:
     \\    def make(x: i64) -> Distance:
-    \\        return wrap<Distance>(x)
+    \\        return wrap[Distance](x)
     \\
     \\
     \\resource Handle: filesystem
@@ -83,7 +83,7 @@ const expected_declarations = [_]Expected{
     .{ .kind = "domain", .name = "Distance", .exported = false, .text =
     \\domain Distance: i64:
     \\    def make(x: i64) -> Distance:
-    \\        return wrap<Distance>(x)
+    \\        return wrap[Distance](x)
     , .comment = "domain Distance" },
     .{ .kind = "resource", .name = "Handle", .exported = false, .text = "resource Handle: filesystem;", .comment = "resource Handle: filesystem;" },
     .{ .kind = "host_fn", .name = "measure", .exported = false, .text =

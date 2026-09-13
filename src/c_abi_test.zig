@@ -18,7 +18,7 @@ test "direct C imports preserve formatting and reject VM registry and legacy C e
         \\
         \\
         \\def main() -> i64:
-        \\    return cast<i64>(abs(-7))
+        \\    return i64(abs(-7))
     ;
     var c = try language.Compilation.init(t.allocator, "foreign.my", source);
     defer c.deinit();
@@ -88,7 +88,7 @@ test "direct C imports preserve formatting and reject VM registry binding" {
         \\
         \\
         \\def main() -> i64:
-        \\    return cast<i64>(abs(-7))
+        \\    return i64(abs(-7))
     ;
     var c = try language.Compilation.init(t.allocator, "foreign.my", source);
     defer c.deinit();

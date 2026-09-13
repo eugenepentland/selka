@@ -8,10 +8,10 @@ import subprocess
 
 SOURCES = [
     "result T{ok:i64,err:i64}result R{err:i64,ok:u64}struct Auth{c:clock_cap,r:random_cap}"
-    "fn work(auth:Auth)->T{let n=clock_now<T>(auth.c)?;let word=random_u64<R>(auth.r)?;"
+    "fn work(auth:Auth)->T{let n=clock_now[T](auth.c)?;let word=random_u64[R](auth.r)?;"
     "if word!=18446744073709551615u64{return new T.err(90);}return new T.ok(n);}"
     "fn main(r:random_cap,c:clock_cap)->i64{match work(new Auth{c:c,r:r}){T.ok(n)=>{return n;},T.err(e)=>{return e;}}}",
-    "result T{ok:i64,err:i64}fn main(c:clock_cap,r:random_cap)->i64{_ = r;if false{_ = clock_now<T>(c);}return 7;}",
+    "result T{ok:i64,err:i64}fn main(c:clock_cap,r:random_cap)->i64{_ = r;if false{_ = clock_now[T](c);}return 7;}",
 ]
 
 SOURCES.append(SOURCES[0].replace("fn work(", "fn work<G:copy>(").replace("match work(", "match work::<bool>("))

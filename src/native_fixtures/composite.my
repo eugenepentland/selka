@@ -1,6 +1,6 @@
 domain D: i64:
     def make(value: i64) -> D:
-        return wrap<D>(value)
+        return wrap[D](value)
 
     def value(value: D) -> i64:
         return unwrap(value)
@@ -31,4 +31,4 @@ def main() -> i64:
         case Outcome.ok(value):
             if value.tag != D.make(40):
                 return -2
-            return D.value(value.tag) + cast<i64>(value.bytes[1])
+            return D.value(value.tag) + i64(value.bytes[1])

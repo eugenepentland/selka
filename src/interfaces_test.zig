@@ -28,7 +28,7 @@ const units =
     \\
     \\domain Distance: i64:
     \\    private def raw(x: i64) -> Distance:
-    \\        return wrap<Distance>(x)
+    \\        return wrap[Distance](x)
     \\
     \\    def make(x: i64) -> Distance:
     \\        return Distance.raw(x)
@@ -295,7 +295,7 @@ fn checkedScenario(allocator: std.mem.Allocator) !void {
         \\
         \\domain Distance: i64:
         \\    private def raw(x: i64) -> Distance:
-        \\        return wrap<Distance>(x)
+        \\        return wrap[Distance](x)
         \\
         \\    def make(x: i64) -> Distance:
         \\        return Distance.raw(x)
@@ -540,7 +540,7 @@ fn qualityScenario(allocator: std.mem.Allocator) !void {
         \\
         \\domain D: i64:
         \\    private def raw(x: i64) -> D:
-        \\        return wrap<D>(x)
+        \\        return wrap[D](x)
         \\
         \\    def make(x: i64) -> D:
         \\        return D.raw(x)

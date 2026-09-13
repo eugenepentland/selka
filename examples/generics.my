@@ -3,14 +3,14 @@ def identity[T](value: T) -> T:
 
 
 def sum[T: integer](value: T) -> T:
-    if value == cast<T>(0):
+    if value == T(0):
         return value
-    return value + sum[T](value - cast<T>(1))
+    return value + sum[T](value - T(1))
 
 
 def main() -> i64:
     small = sum[u8](4u8)
     large = sum[i64](5)
     if identity[bool](True):
-        return cast<i64>(small) + large
+        return i64(small) + large
     return 0

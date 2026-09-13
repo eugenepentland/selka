@@ -122,13 +122,13 @@ checked casts are implemented; see [integer semantics](experiments/integers.md).
 
 
 The integer extension adds signed/unsigned 8/16/32/64-bit types, suffixed decimal
-literals, and `cast<T>(expression)`. Unsuffixed literals retain `i64` semantics.
+literals, and `T(expression)`. Unsuffixed literals retain `i64` semantics.
 Operations require matching widths; bounds and signedness conversions are
 checked in every host mode. Boolean and record conversions remain separate.
 
 
 Nominal scalar domains are implemented: `domain Name: Scalar { ... }`, qualified
-factory/accessor functions, `private fn`, and owner-restricted `wrap<Domain>` /
+factory/accessor functions, `private fn`, and owner-restricted `wrap[Domain]` /
 `unwrap` operations. Domain values do not implicitly convert to their backing
 scalar or other domains. See [domain semantics](experiments/domains.md) for the
 representation boundary, visibility, and runtime costs.
@@ -216,8 +216,8 @@ the same execution quotas. Numeric casts and effect declarations cannot manufact
 capabilities. The embedding runtime can deny provisioning. See [allocator authority
 semantics](legacy/experiments/allocator-capabilities.md).
 
-Opaque `clock_cap` and `random_cap` entry grants authorize `clock_now<R>(cap)`
-and `random_u64<R>(cap)`. Their declared results carry i64/u64 success and i64
+Opaque `clock_cap` and `random_cap` entry grants authorize `clock_now[R](cap)`
+and `random_u64[R](cap)`. Their declared results carry i64/u64 success and i64
 errors. Grants require injected host providers; the CLI provides neither. Reads
 contribute distinct transitive effects, allowed under `noio` and `noalloc` without
 promising determinism. See [provider contracts and limits](experiments/external-capabilities.md).
@@ -226,7 +226,7 @@ Filesystem/network/environment and external resource completion/cleanup remain p
 
 `resource Name: filesystem;` and `resource Name: network;` declare move-only external
 resources. Explicit filesystem/network entry capabilities authorize acquisition
-from fixed byte-array requests. `complete_resource<Result>(owner)` consumes its
+from fixed byte-array requests. `complete_resource[Result](owner)` consumes its
 input and returns the owner inside an error record on recoverable failure; automatic
 cleanup only releases. Owned signatures/locals conservatively contribute contained
 resource cleanup effects, so noio cannot silently release external resources.
@@ -243,7 +243,7 @@ cannot be copied; shared/exclusive access rules still apply. Ordinary projection
 keeps its existing consuming behavior. See [field-read semantics](legacy/experiments/owned-field-reads.md).
 
 
-`environment_get<Result>(env, name)` uses an explicit `environment_cap` and fixed
+`environment_get[Result](env, name)` uses an explicit `environment_cap` and fixed
 byte-array name. Its result contains a bounded byte-array snapshot, present flag,
 and actual length, or i64 error. Missing and empty are distinct; oversized values
 fail without truncation. Entry grants require an injected provider. Lookup adds
@@ -251,7 +251,7 @@ an environment effect, allowed under noio/noalloc without implying determinism.
 See [environment semantics](experiments/environment.md).
 
 
-`read_resource<Result>(owner)` and `write_resource<Result>(owner, bytes)` require a
+`read_resource[Result](owner)` and `write_resource[Result](owner, bytes)` require a
 live mutable resource binding and preserve ownership. Reads return fixed byte-array
 snapshots, actual length, and explicit EOF; writes return accepted byte count. Both
 make one provider call and expose partial progress. Source and emission checks retain
@@ -259,7 +259,7 @@ filesystem/network effects and reject invalid mutable/owner/result/input metadat
 See [resource I/O semantics](experiments/resource-io.md). Slice/range I/O remains pending.
 
 
-`restrict_resource<read, write, complete>(capability)` intersects filesystem/network
+`restrict_resource[read, write, complete](capability)` intersects filesystem/network
 operation permissions with a named subset. Copies cannot restore removed rights.
 Acquisition passes restrictions to the provider; owned reads/writes/completion check
 them before callbacks. Denied operations retain ownership and fallback release stays

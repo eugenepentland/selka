@@ -11,7 +11,7 @@ fn checksum(count: u64) -> u64 {
     }
     return value;
 }
-fn main() -> i64 { return cast<i64>(CHECKSUM); }
+fn main() -> i64 { return i64(CHECKSUM); }
 ```
 
 This extends the existing constant evaluator. It does not run an unrestricted macro system or call the separate `eval-project` tool. No new source keyword is required.

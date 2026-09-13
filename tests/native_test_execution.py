@@ -18,7 +18,7 @@ result Outcome{ok:Pair,err:i64}
 result Decoded{ok:Positive,err:i64}
 domain Positive:i64{
  codec i64{decode:from_wire,encode:to_wire}
- private fn raw(n:i64)->Positive{return wrap<Positive>(n);}
+ private fn raw(n:i64)->Positive{return wrap[Positive](n);}
  fn from_wire(n:i64)->Decoded{
   if n<0{return new Decoded.err(-10);}
   return new Decoded.ok(Positive.raw(n*2));

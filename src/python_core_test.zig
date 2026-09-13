@@ -206,7 +206,7 @@ test "Python string and float defaults remain typed and independent across repea
 test "representable integer literals inherit parameter local and expression contexts" {
     try run(
         \\def widen(x: u8) -> i64:
-        \\    return cast<i64>(x)
+        \\    return i64(x)
         \\
         \\
         \\def main() -> i64:
@@ -218,7 +218,7 @@ test "representable integer literals inherit parameter local and expression cont
         \\    n: i8 = -128
         \\    wide: u64 = 18446744073709551615
         \\    _ = wide
-        \\    return cast<i64>(n) + 170
+        \\    return i64(n) + 170
     , 42);
     var compilation = try language.Compilation.init(t.allocator, "range.my",
         \\def main() -> i64:

@@ -8,9 +8,9 @@ const text =
     \\
     \\
     \\def sum[T: integer](x: T) -> T:
-    \\    if x == cast<T>(0):
+    \\    if x == T(0):
     \\        return x
-    \\    return x + sum[T](x - cast<T>(1))
+    \\    return x + sum[T](x - T(1))
     \\
     \\
     \\def forward[U: integer](x: U) -> U:
@@ -21,7 +21,7 @@ const text =
     \\    small = forward[u8](4u8)
     \\    wide = forward[i64](5)
     \\    if id[bool](True):
-    \\        return cast<i64>(small) + wide + sum[i64](2)
+    \\        return i64(small) + wide + sum[i64](2)
     \\    return 0
 ;
 fn scenario(allocator: std.mem.Allocator) !void {
@@ -126,7 +126,7 @@ test "generic diagnostics name concrete types independently of discovery order" 
 test "generic diagnostics retain instantiated names in runtime traces" {
     var compilation = try language.Compilation.init(t.allocator, "trace.my",
         \\def divide[T: integer](x: T) -> T:
-        \\    return divtrunc(x, cast<T>(0))
+        \\    return divtrunc(x, T(0))
         \\
         \\
         \\def forward[U: integer](x: U) -> U:
@@ -134,7 +134,7 @@ test "generic diagnostics retain instantiated names in runtime traces" {
         \\
         \\
         \\def main() -> i64:
-        \\    return cast<i64>(forward[u8](1u8))
+        \\    return i64(forward[u8](1u8))
     );
     defer compilation.deinit();
     const result = try compilation.execute(t.allocator);

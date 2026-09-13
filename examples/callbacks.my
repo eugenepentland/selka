@@ -6,11 +6,11 @@ def build(n: i64) -> Pair effects():
     return Pair(values=[n, n + 1])
 
 
-def apply(callback: fn(i64) -> Pair effects(), n: i64) -> Pair:
+def apply(callback: def(i64) -> Pair effects(), n: i64) -> Pair:
     return callback(n)
 
 
-def identity(callback: fn(i64) -> Pair effects()) -> fn(i64) -> Pair effects():
+def identity(callback: def(i64) -> Pair effects()) -> def(i64) -> Pair effects():
     return callback
 
 

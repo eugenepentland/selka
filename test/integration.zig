@@ -342,7 +342,7 @@ test "CLI checks resource data operations effects and required mutation without 
     defer testing.allocator.free(dumped.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
     for ([_][]const u8{ "RESOURCE_read", "RESOURCE_write", "effects {filesystem}" }) |text| try testing.expect(std.mem.indexOf(u8, dumped.stdout, text) != null);
-    const invalid = "resource File: filesystem; result Written { ok: u64, err: i64 } fn f(file: File) -> Written { return write_resource<Written>(file, new [0]u8 []); } fn main() -> i64 { return 0; }";
+    const invalid = "resource File: filesystem; result Written { ok: u64, err: i64 } fn f(file: File) -> Written { return write_resource[Written](file, new [0]u8 []); } fn main() -> i64 { return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_IMMUTABLE]");
 }
 test "CLI approximate discovery is advisory explains drift and reports budget exhaustion" {
@@ -489,7 +489,7 @@ test "CLI module interfaces parse bodies and check exported signature visibility
         \\
         \\domain Distance: i64:
         \\    def make(x: i64) -> Distance:
-        \\        return wrap<Distance>(x)
+        \\        return wrap[Distance](x)
     });
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
     defer testing.allocator.free(path);
@@ -1310,12 +1310,12 @@ test "CLI preserves integer width bounds and explicit casts" {
     try invoke("run", @embedFile("fixtures/integers.my"), 0, "6148914691236516950\n", "");
     try invoke("check",
         \\def main() -> i64:
-        \\    _ = cast<u8>(256)
+        \\    _ = u8(256)
         \\    return 0
     , 0, "", "");
     try invoke("run",
         \\def main() -> i64:
-        \\    _ = cast<u8>(256)
+        \\    _ = u8(256)
         \\    return 0
     , 1, "", "error[R_OVERFLOW]");
     try invoke("run",
@@ -1378,7 +1378,7 @@ test "CLI checks domain privacy unit mismatches and qualified factory execution"
     const private =
         \\domain D: i64:
         \\    private def raw(n: i64) -> D:
-        \\        return wrap<D>(n)
+        \\        return wrap[D](n)
         \\
         \\
         \\def main() -> i64:
@@ -1394,13 +1394,13 @@ test "CLI checks domain privacy unit mismatches and qualified factory execution"
         \\
         \\
         \\def main() -> i64:
-        \\    _ = wrap<D>(1)
+        \\    _ = wrap[D](1)
         \\    return 0
     , 1, "", "error[E_PRIVATE_DOMAIN]");
     try invoke("check",
         \\domain Seconds: i64:
         \\    def from(n: i64) -> Seconds:
-        \\        return wrap<Seconds>(n)
+        \\        return wrap[Seconds](n)
         \\
         \\
         \\domain Millimeters: i64:
@@ -1545,7 +1545,7 @@ test "CLI checks external capabilities but cannot silently grant ambient provide
         \\
         \\
         \\def main(c: clock_cap) -> i64 effects():
-        \\    _ = clock_now<T>(c)
+        \\    _ = clock_now[T](c)
         \\    return 0
     ;
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_EFFECT_BOUND]");
@@ -1572,7 +1572,7 @@ test "CLI checks bounded environment access without granting ambient process acc
         \\
         \\
         \\def main(env: environment_cap) -> i64 effects():
-        \\    _ = environment_get<Lookup>(env, [75u8])
+        \\    _ = environment_get[Lookup](env, [75u8])
         \\    return 0
     ;
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_EFFECT_BOUND]");
@@ -1586,7 +1586,7 @@ test "CLI exposes resource permission attenuation and rejects malformed permissi
     defer testing.allocator.free(dumped.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, dumped.term);
     try testing.expect(std.mem.indexOf(u8, dumped.stdout, "RESTRICT_RESOURCE permissions=1 -> filesystem_cap") != null);
-    const invalid = "fn main(fs: filesystem_cap) -> i64 { _ = restrict_resource<read, read>(fs); return 0; }";
+    const invalid = "fn main(fs: filesystem_cap) -> i64 { _ = restrict_resource[read, read](fs); return 0; }";
     for ([_][]const u8{ "check", "run", "dump-bytecode", "discover-duplicates" }) |command| try invoke(command, invalid, 1, "", "error[E_PERMISSION]");
 }
 
@@ -1597,7 +1597,7 @@ const clock_program =
     \\
     \\
     \\def main(clock: Clock) -> i64:
-    \\    match clock_now<Time>(clock):
+    \\    match clock_now[Time](clock):
     \\        case Time.ok(now):
     \\            return now - now
     \\        case Time.err(code):
@@ -1621,7 +1621,7 @@ test "CLI accepts Python capability spellings and lets a declared type keep the 
         \\
         \\
         \\def main(rng: Entropy) -> i64:
-        \\    _ = random_u64<Word>(rng)
+        \\    _ = random_u64[Word](rng)
         \\    return 0
     ;
     try invoke("check", entropy, 0, "", "");
@@ -1667,7 +1667,7 @@ test "CLI refuses an ungranted entry capability only while --restrict is active"
         \\
         \\
         \\def main(env: Environment) -> i64:
-        \\    _ = environment_get<Lookup>(env, [80u8, 65u8, 84u8, 72u8])
+        \\    _ = environment_get[Lookup](env, [80u8, 65u8, 84u8, 72u8])
         \\    return 0
     ;
     for ([_][]const u8{ clock_program, environment }) |program| {
@@ -1693,9 +1693,9 @@ test "CLI clock entropy and environment providers honour their grants" {
         \\
         \\
         \\def main(rng: Entropy) -> i64:
-        \\    match random_u64<Word>(rng):
+        \\    match random_u64[Word](rng):
         \\        case Word.ok(value):
-        \\            return cast<i64>(value % 1000u64)
+        \\            return i64(value % 1000u64)
         \\        case Word.err(code):
         \\            return code
     ;
@@ -1720,9 +1720,9 @@ test "CLI clock entropy and environment providers honour their grants" {
         \\
         \\
         \\def main(env: Environment) -> i64:
-        \\    match environment_get<Lookup>(env, [80u8, 65u8, 84u8, 72u8]):
+        \\    match environment_get[Lookup](env, [80u8, 65u8, 84u8, 72u8]):
         \\        case Lookup.ok(entry):
-        \\            return cast<i64>(entry.length) - cast<i64>(entry.length)
+        \\            return i64(entry.length) - i64(entry.length)
         \\        case Lookup.err(code):
         \\            return code
     ;

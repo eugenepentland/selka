@@ -232,7 +232,7 @@ own header line — the store parses one declaration inside a synthetic
 `module NAME;` line, so a diagnostic on line N lands on line N-1 of the
 participant's source — `store_server.SYNTAX_HELP` is appended: the accepted kinds
 above, that there is no `record` keyword and a product type is
-`struct Name { field: i64, other: i64 }`, that casts are `cast<T>(x)` and never
+`struct Name { field: i64, other: i64 }`, that casts are `T(x)` and never
 `T(x)` or `as`, and that qualified references derive imports so no import
 statement is ever written. A syntax error deeper inside a body is not a question
 about declaration kinds and gets the diagnostic alone. The pilot lost ten batches

@@ -111,7 +111,7 @@ pub const Statement = struct {
         match: struct { value: NodeId, arms: []const MatchArm },
         loop: struct { condition: NodeId, body: StatementId },
         binding: struct { name: Span, annotation: ?Span, mutable: bool, value: NodeId },
-        assignment: struct { python: bool = false, name: Span, value: NodeId, op: AssignmentOp, op_span: Span },
+        assignment: struct { name: Span, value: NodeId, op: AssignmentOp, op_span: Span },
     },
 };
 /// One generator with an optional filter, producing a value per retained element.
@@ -140,7 +140,6 @@ pub const Domain = struct { managed: bool = false, type_parameters: []const Type
 pub const Function = struct { policy: FunctionPolicy = .{}, signature: FunctionSignature, name: Span, body: StatementId };
 /// Source visibility and declared effect bound before name/type resolution.
 pub const FunctionPolicy = struct {
-    python: bool = false,
     constant: bool = false,
     c_abi: bool = false,
     host: ?Span = null,

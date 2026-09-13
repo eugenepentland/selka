@@ -5,7 +5,7 @@ export NetId
 
 domain ComponentId: u64:
     def make(raw: u64) -> ComponentId:
-        return wrap<ComponentId>(raw)
+        return wrap[ComponentId](raw)
 
     def number(value: ComponentId) -> u64:
         return unwrap(value)
@@ -13,7 +13,7 @@ domain ComponentId: u64:
 
 domain NetId: u64:
     def make(raw: u64) -> NetId:
-        return wrap<NetId>(raw)
+        return wrap[NetId](raw)
 
     def number(value: NetId) -> u64:
         return unwrap(value)

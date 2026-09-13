@@ -89,7 +89,7 @@ Retain value structs and make that choice visible. A probe that reads a struct f
 ```mylang
 # doc: skip removed feature
 fn byte_count(value: &[]u8) -> i64 {
-    return cast<i64>(len_slice(value))
+    return i64(len_slice(value))
 }
 fn main() -> i64 {
     return byte_count("abc")

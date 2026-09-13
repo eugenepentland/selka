@@ -56,7 +56,7 @@ class Empty:
 
 domain Secret: i64:
     def make(x: i64) -> Secret:
-        return wrap<Secret>(x)
+        return wrap[Secret](x)
 
 
 union Maybe:

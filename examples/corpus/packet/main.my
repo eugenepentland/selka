@@ -13,6 +13,6 @@ def main() -> i64:
         case model.Decoded.ok(message):
             match message:
                 case model.Message.heartbeat(sequence):
-                    return cast<i64>(sequence)
+                    return i64(sequence)
                 case model.Message.reading(reading):
-                    return cast<i64>(reading.sequence) * 4294967296 + cast<i64>(reading.value)
+                    return i64(reading.sequence) * 4294967296 + i64(reading.value)

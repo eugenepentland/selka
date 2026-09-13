@@ -61,7 +61,7 @@ const nested_source = schema ++
     \\
     \\
     \\def make[T: integer](n: T) -> R:
-    \\    return R.ok(cast<i64>(n))
+    \\    return R.ok(i64(n))
     \\
     \\
     \\def take[T](u: U) -> i64:
@@ -199,7 +199,7 @@ test "generic matches transfer nested payloads and merge outer obligations" {
 test "generic acknowledgement retains operand traps" {
     var c = try language.Compilation.init(t.allocator, "generic-result-trap.my", schema ++
         \\def f[T: integer](n: T) -> i64:
-        \\    _ = R.err(divtrunc(7, cast<i64>(n)))
+        \\    _ = R.err(divtrunc(7, i64(n)))
         \\    return 0
         \\
         \\

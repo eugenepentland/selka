@@ -18,7 +18,7 @@ const domain =
     \\        encode: to_wire
     \\
     \\    private def raw(x: i64) -> Positive:
-    \\        return wrap<Positive>(x)
+    \\        return wrap[Positive](x)
     \\
     \\    def from_wire(x: Wire) -> Decoded:
     \\        if x.n <= 0:
@@ -31,9 +31,9 @@ const domain =
 const helpers =
     \\def round[T](ignored: T, n: i64) -> i64:
     \\    _ = ignored
-    \\    match codec_decode<Positive>(Wire(n=n)):
+    \\    match codec_decode[Positive](Wire(n=n)):
     \\        case Decoded.ok(x):
-    \\            return codec_encode<Positive>(x).n
+    \\            return codec_encode[Positive](x).n
     \\        case Decoded.err(e):
     \\            return e
 ;
@@ -76,9 +76,9 @@ const Modules = struct {
             \\
             \\def f[T](x: T) -> i64:
             \\    _ = x
-            \\    match codec_decode<m.Positive>(m.Wire(n=23)):
+            \\    match codec_decode[m.Positive](m.Wire(n=23)):
             \\        case m.Decoded.ok(p):
-            \\            return codec_encode<m.Positive>(p).n
+            \\            return codec_encode[m.Positive](p).n
             \\        case m.Decoded.err(e):
             \\            return e
             \\
@@ -107,7 +107,7 @@ test "generic codecs follow imported contracts and declaring domain privacy thro
 test "generic codecs preserve domain privacy arity input types and result obligations before calls" {
     try reject(
         \\def f[T](n: i64) -> Positive:
-        \\    return wrap<Positive>(n)
+        \\    return wrap[Positive](n)
     , "E_PRIVATE_DOMAIN");
     try reject(
         \\def f[T](x: Positive) -> i64:
@@ -119,14 +119,14 @@ test "generic codecs preserve domain privacy arity input types and result obliga
     , "E_PRIVATE_FUNCTION");
     try reject(
         \\def f[T]() -> Decoded:
-        \\    return codec_decode<Positive>()
+        \\    return codec_decode[Positive]()
     , "E_CODEC_ARITY");
     try reject(
         \\def f[T](n: T) -> Wire:
-        \\    return codec_encode<Positive>(n)
+        \\    return codec_encode[Positive](n)
     , "E_GENERIC_TYPE");
     try reject(
         \\def f[T](n: T) -> T:
-        \\    return codec_encode<T>(n)
+        \\    return codec_encode[T](n)
     , "E_GENERIC_BODY_UNSUPPORTED");
 }

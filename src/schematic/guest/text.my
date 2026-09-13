@@ -67,7 +67,7 @@ def number(a: Span) -> int:
 def write(text: bytes):
     i = 0
     while i < len(text):
-        _ = io.put(cast<u8>(text[i]))
+        _ = io.put(u8(text[i]))
         i += 1
     return
 
@@ -110,11 +110,11 @@ def decimal(value: int):
         _ = io.put(45u8)
         if value <= - 10:
             decimal(-((value + 9) // 10))
-        _ = io.put(cast<u8>(((-(value + 1) % 10 + 1) % 10) + 48))
+        _ = io.put(u8(((-(value + 1) % 10 + 1) % 10) + 48))
         return
     if value >= 10:
         decimal(value // 10)
-    _ = io.put(cast<u8>(value % 10 + 48))
+    _ = io.put(u8(value % 10 + 48))
     return
 
 

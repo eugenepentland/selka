@@ -54,8 +54,8 @@ def calculate(books: i64, cables: i64, adapters: i64) -> Invoice:
     while index < len(lines):
         line = lines[index]
         count = quantity.Count.number(line.count)
-        cents = money.Cents.number(catalog.price(line.product)) * cast<i64>(count)
-        gross = money.Cents.add(gross, money.Cents.make(cast<u64>(cents)))
+        cents = money.Cents.number(catalog.price(line.product)) * i64(count)
+        gross = money.Cents.add(gross, money.Cents.make(u64(cents)))
         items += count
         index += 1u64
     discount = 0
@@ -63,8 +63,8 @@ def calculate(books: i64, cables: i64, adapters: i64) -> Invoice:
         discount = divtrunc(money.Cents.number(gross), 10)
     taxable = money.Cents.number(gross) - discount
     tax = divtrunc(taxable * 750 + 5000, 10000)
-    shipping = delivery.fee(cast<i64>(items))
-    packing = packaging.fee(cast<i64>(items))
-    service = handling.fee(cast<i64>(items))
-    totals = Totals(gross=gross, discount=money.Cents.make(cast<u64>(discount)), tax=money.Cents.make(cast<u64>(tax)), delivery=money.Cents.make(cast<u64>(shipping)), packaging=money.Cents.make(cast<u64>(packing)), handling=money.Cents.make(cast<u64>(service)), total=money.Cents.make(cast<u64>(taxable + tax + shipping + packing + service)), items=items)
+    shipping = delivery.fee(i64(items))
+    packing = packaging.fee(i64(items))
+    service = handling.fee(i64(items))
+    totals = Totals(gross=gross, discount=money.Cents.make(u64(discount)), tax=money.Cents.make(u64(tax)), delivery=money.Cents.make(u64(shipping)), packaging=money.Cents.make(u64(packing)), handling=money.Cents.make(u64(service)), total=money.Cents.make(u64(taxable + tax + shipping + packing + service)), items=items)
     return Ok(receipt(totals))

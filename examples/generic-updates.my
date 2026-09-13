@@ -15,7 +15,7 @@ def change[T: integer](pair: Pair, index: T, value: i64) -> Pair:
 
 
 def put[T: integer](table: [Key]i64, key: Key, value: T) -> [Key]i64:
-    return replace(table, key, cast<i64>(value))
+    return replace(table, key, i64(value))
 
 
 def main() -> i64:

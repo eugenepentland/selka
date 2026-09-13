@@ -17,7 +17,7 @@ test "const length function parameters specialize array shapes and forward value
         \\
         \\
         \\def main() -> i64:
-        \\    return forward[i64, 2]([40, 0]) + cast<i64>(size[2]())
+        \\    return forward[i64, 2]([40, 0]) + i64(size[2]())
     ;
     var c = try language.Compilation.init(t.allocator, "lengths.my", text);
     defer c.deinit();
@@ -124,7 +124,7 @@ test "one helper serves distinct nominal element types and empty lengths" {
         \\def main() -> i64:
         \\    a = first[A, 2]([A(value=40), A(value=0)])
         \\    b = first[B, 1]([B(value=2)])
-        \\    return a.value + b.value + cast<i64>(count[A, 0]([]))
+        \\    return a.value + b.value + i64(count[A, 0]([]))
     ;
     var c = try language.Compilation.init(t.allocator, "nominals.my", text);
     defer c.deinit();

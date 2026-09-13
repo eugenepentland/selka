@@ -8,7 +8,7 @@ def countdown(n: i64) effects():
     countdown(n - 1)
 
 
-def apply(callback: fn(i64) -> None effects(), value: i64):
+def apply(callback: def(i64) -> None effects(), value: i64):
     callback(value)
 
 

@@ -41,8 +41,8 @@ def cases():
     from native_integer_operations import cases as integer_extension_cases
     for text, _expected in integer_extension_cases():
         yield text
-    yield 'fn main()->i64{return cast<i64>(18446744073709551615u64);}' 
-    yield 'fn main()->i64{return cast<i64>(cast<u8>(-1));}'
+    yield 'fn main()->i64{return i64(18446744073709551615u64);}' 
+    yield 'fn main()->i64{return i64(u8(-1));}'
 
 
 def extended_cases():
@@ -69,7 +69,7 @@ def extended_cases():
            'let inner=rows[0u64];return inner[0u64];}')
     yield 'fn main()->i64{let xs:List<i64>=[];return xs[0u64];}'
     yield 'fn main()->i64{let xs=new [2]i64[1,2];return xs[2];}'
-    yield 'fn main()->i64{if f64_div(0u64,0u64)!=9221120237041090560u64{return 1;}if !f64_eq(0u64,9223372036854775808u64){return 2;}return cast<i64>(f64_to_u64(f64_add(f64_from_u64(20u64),f64_from_u64(22u64))));}'
+    yield 'fn main()->i64{if f64_div(0u64,0u64)!=9221120237041090560u64{return 1;}if !f64_eq(0u64,9223372036854775808u64){return 2;}return i64(f64_to_u64(f64_add(f64_from_u64(20u64),f64_from_u64(22u64))));}'
 
 
 

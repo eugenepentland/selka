@@ -7,7 +7,7 @@ struct Wire{n:i64}REJECTION
 result Decoded{ok:Positive,err:ERROR_TYPE}
 domain Positive:i64{
  codec Wire{decode:from_wire,encode:to_wire}
- private fn raw(n:i64)->Positive{return wrap<Positive>(n);}
+ private fn raw(n:i64)->Positive{return wrap[Positive](n);}
  fn from_wire(x:Wire)->Decoded{
   if x.n==99{return new Decoded.ok(Positive.raw(1/(x.n-99)));}
   if x.n<=0{return new Decoded.err(ERROR_VALUE);}
@@ -18,7 +18,7 @@ domain Positive:i64{
 '''
 MAIN = '''module main;import data;
 result Time{ok:i64,err:i64}
-fn main(c:clock_cap)->i64{match clock_now<Time>(c){Time.ok(n)=>{return n;},Time.err(e)=>{return e;}}}
+fn main(c:clock_cap)->i64{match clock_now[Time](c){Time.ok(n)=>{return n;},Time.err(e)=>{return e;}}}
 '''
 HOST = r'''
 static int mode;

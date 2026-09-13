@@ -81,7 +81,7 @@ const Checker = struct {
         for (function.signature.parameters) |parameter| {
             const parameter_type = try self.ty(parameter.ty);
             if (parameter.default_value) |value| try self.same(try self.expressionExpected(value, parameter_type), parameter_type, parameter.ty);
-            try self.bindMode(parameter.name, parameter_type, function.policy.python);
+            try self.bindMode(parameter.name, parameter_type, function.policy.host == null);
         }
         const implicit_unit = symbolic.same(self.result, .{ .concrete = .unit }, self.catalog);
         const terminates = try self.statement(function.body);
@@ -550,6 +550,27 @@ const Checker = struct {
     fn isFloat(self: *Checker, value: Symbolic) bool {
         return value == .concrete and numeric_surface.isFloat(value.concrete, self.catalog.records);
     }
+    /// `T(x)` converts between integer widths wherever `T` names a type parameter of this
+    /// template or a declared integer type, rather than a function.
+    fn typeConversion(self: *Checker, invocation: Call, span: source.Span) Error!?Symbolic {
+        if (invocation.owner != null or invocation.type_arguments.len != 0) return null;
+        if (invocation.arguments.len != 1 or invocation.argument_names.len != 0) return null;
+        const name = self.src.text(invocation.name);
+        if (self.active.contains(name) or self.functions.contains(name)) return null;
+        var declared = false;
+        for (self.parameters) |parameter| {
+            if (std.mem.eql(u8, self.src.text(parameter.name), name)) declared = true;
+        }
+        if (!declared) {
+            const concrete = self.catalog.names.get(name) orelse return null;
+            if (!concrete.isInteger()) return null;
+        }
+        const target = try self.ty(invocation.name);
+        const input = try self.expression(invocation.arguments[0]);
+        try self.supports(input, .integer, span);
+        try self.supports(target, .integer, span);
+        return target;
+    }
     fn scalarConstructor(self: *Checker, invocation: Call, span: source.Span) Error!?Symbolic {
         if (invocation.owner != null or invocation.type_arguments.len != 0) return null;
         const name = self.src.text(invocation.name);
@@ -631,6 +652,7 @@ const Checker = struct {
         if (try self.contextualResult(input_call, span)) |value| return value;
         if (try self.contextualOption(input_call, span)) |value| return value;
         if (try self.scalarConstructor(input_call, span)) |value| return value;
+        if (try self.typeConversion(input_call, span)) |value| return value;
         if (input_call.owner == null and self.active.contains(self.src.text(input_call.name))) {
             const value = try self.indirectCall(input_call);
             return value;
@@ -1289,7 +1311,7 @@ const Checker = struct {
                 try self.bind(binding.name, value, binding.mutable);
             },
             .assignment => |assignment| {
-                if (assignment.python and assignment.op == .set and !self.active.contains(self.src.text(assignment.name))) {
+                if (assignment.op == .set and !self.active.contains(self.src.text(assignment.name))) {
                     const value = try self.expression(assignment.value);
                     try self.bind(assignment.name, value, true);
                     return false;
