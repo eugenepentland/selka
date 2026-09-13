@@ -12,7 +12,7 @@ import textwrap
 
 from bindings import file_digest, store, validate_schema_report
 
-DEFAULT_MODULES = ('std_math', 'std_bytes', 'std_json', 'std_collections', 'std_strings', 'std_io')
+DEFAULT_MODULES = ('std_math', 'std_iter', 'std_result', 'std_unit', 'std_time', 'std_random')
 FILES = ('reference.md', 'api.md', 'features.json', 'schema.json')
 MAX_REPORT_BYTES = 32 * 1024 * 1024
 
@@ -139,7 +139,7 @@ def main():
         if selected['entry'] is not None and (not isinstance(selected['entry'], str) or not Path(selected['entry']).is_absolute()):
             raise ValueError('project entry must be an absolute path')
         if not isinstance(selected['modules'], list) or any(not isinstance(name, str) or not re.fullmatch(r'std_[a-z0-9_]+', name) for name in selected['modules']):
-            raise ValueError('modules must be standard module names such as std_bytes')
+            raise ValueError('modules must be standard module names such as std_math')
         identity, features, report = collect(compiler, selected)
         artifacts = render(identity, features, report, selected)
         if args.check:
