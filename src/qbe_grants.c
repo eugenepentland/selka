@@ -1,18 +1,22 @@
-/* Trusted host adapters behind a native executable's explicit capability
-   grants. These run in the program's own process: they are an authority
-   boundary for guest source, never a sandbox against a compromised host. */
+/* Trusted host adapters behind a native executable's capability options. These
+   run in the program's own process: they are an authority boundary for guest
+   source, never a sandbox against a compromised host. */
 #define _POSIX_C_SOURCE 200809L
 #include "qbe_grants.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+/* One requested directory grant, borrowed from argv for the process lifetime. */
+typedef struct { const char *path; int writable; } MylangRequest;
 /* Parsed authority options. Without `--restrict` every capability is granted
    and the `--allow-*` flags narrow nothing; `--allow-random=SEED` still pins the
    entropy seed, because it selects a stream rather than withholding one. */
 typedef struct {
     MylangScoped scoped;
-    int writable, clock, entropy, environment, restricted;
+    MylangRequest directories[MYLANG_SCOPED_ROOTS];
+    size_t count;
+    int clock, entropy, environment, restricted;
     const char *names;
     uint64_t state;
 } MylangGrants;
@@ -27,7 +31,8 @@ static MylangClockResult clock_now(void *context) {
     return result;
 }
 /* A reproducible SplitMix64 stream, seeded by the grant or by the wall clock.
-   This is a deterministic generator, not a cryptographic entropy source. */
+   This is a deterministic generator, not a cryptographic entropy source, and it
+   is not the VM's stream: a seeded run reproduces only on the same backend. */
 static MylangRandomResult random_u64(void *context) {
     uint64_t *state = context;
     *state += UINT64_C(0x9e3779b97f4a7c15);
@@ -74,11 +79,14 @@ static const char *optional(const char *argument, const char *flag, int *seen) {
     return argument + width + 1;
 }
 static int directory(MylangGrants *grants, const char *path, int writable) {
-    if (!*path || !mylang_scoped_grant(&grants->scoped, path, writable)) return 0;
-    grants->writable = grants->writable || writable;
+    if (!*path || grants->count == MYLANG_SCOPED_ROOTS) return 0;
+    for (size_t i = 0; i < grants->count; ++i) {
+        if (!strcmp(grants->directories[i].path, path) && grants->directories[i].writable == writable) return 0;
+    }
+    grants->directories[grants->count++] = (MylangRequest){path, writable};
     return 1;
 }
-/* Consume one recognized grant option; zero rejects the command line. */
+/* Consume one recognized authority option; zero rejects the command line. */
 static int accept(MylangGrants *grants, const char *argument, int *matched) {
     *matched = 1;
     if (!strcmp(argument, "--restrict")) return !grants->restricted && (grants->restricted = 1);
@@ -88,7 +96,7 @@ static int accept(MylangGrants *grants, const char *argument, int *matched) {
     const char *seed = optional(argument, "--allow-random", &grants->entropy);
     if (seed) {
         grants->entropy = 1;
-        grants->state = *seed ? strtoull(seed, NULL, 10) : (uint64_t)clock_now(NULL).value;
+        if (*seed) grants->state = strtoull(seed, NULL, 10);
         return 1;
     }
     const char *names = optional(argument, "--allow-env", &grants->environment);
@@ -98,29 +106,46 @@ static int accept(MylangGrants *grants, const char *argument, int *matched) {
         return 1;
     }
     if (!strcmp(argument, "--allow-all")) {
-        if (grants->clock || grants->entropy || grants->environment || grants->scoped.count) return 0;
+        if (grants->clock || grants->entropy || grants->environment || grants->count) return 0;
         grants->clock = grants->entropy = grants->environment = 1;
-        grants->state = (uint64_t)clock_now(NULL).value;
         grants->names = "";
         return directory(grants, ".", 1);
     }
-    *matched = strncmp(argument, "--allow-", 8) == 0;
+    *matched = !strncmp(argument, "--allow-", 8) || !strncmp(argument, "--restrict", 10);
     return !*matched;
 }
-/* Apply the granted authority. Write authority always implies read authority,
-   so a default or write grant can never be narrower than a read grant. */
+/* Open every root the command line asks for. The default mode opens nothing but
+   the working directory, which resolves relative paths against it and lets
+   absolute paths name themselves. */
+static int roots(MylangGrants *grants) {
+    if (!grants->restricted) return mylang_scoped_working_directory(&grants->scoped);
+    for (size_t i = 0; i < grants->count; ++i) {
+        if (!mylang_scoped_grant(&grants->scoped, grants->directories[i].path, grants->directories[i].writable)) return 0;
+    }
+    return 1;
+}
+static int writable(const MylangGrants *grants) {
+    if (!grants->restricted) return 1;
+    for (size_t i = 0; i < grants->count; ++i) if (grants->directories[i].writable) return 1;
+    return 0;
+}
+/* Apply the granted authority. A `--restrict` command line decides every
+   capability, replacing a linked provider; the default grants only fill in what
+   no linked provider already supplies. Write authority always implies read
+   authority, so a default or write grant is never narrower than a read grant. */
 static int provision(MylangGrants *grants, MylangNativeProviders *providers) {
     (void)mylang_host_charge;
-    int open = !grants->restricted;
-    if (open && !mylang_scoped_working_directory(&grants->scoped)) return 0;
-    if (grants->scoped.count) providers->filesystem = mylang_scoped_provider(&grants->scoped, open || grants->writable ? 7u : 5u);
-    if (open || grants->clock) providers->clock_now = clock_now;
-    if (open || grants->entropy) {
+    int decides = grants->restricted;
+    if (!roots(grants)) return 0;
+    if (grants->scoped.count && (decides || !providers->filesystem.acquire))
+        providers->filesystem = mylang_scoped_provider(&grants->scoped, writable(grants) ? 7u : 5u);
+    if (decides ? grants->clock : !providers->clock_now) providers->clock_now = clock_now;
+    if (decides ? grants->entropy : !providers->random_u64) {
         if (!grants->entropy) grants->state = (uint64_t)clock_now(NULL).value;
         providers->random_context = &grants->state;
         providers->random_u64 = random_u64;
     }
-    if (open || grants->environment) {
+    if (decides ? grants->environment : !providers->environment_get) {
         providers->environment_context = (void *)(uintptr_t)grants->names;
         providers->environment_get = environment_get;
     }
@@ -136,23 +161,17 @@ int mylang_qbe_run_grants(uint64_t (*entry)(void *), int argc, char **argv, cons
     if (argc > 0) kept[count++] = argv[0];
     for (int i = 1; i < argc; ++i) {
         int matched = 0;
-        int usable = accept(&grants, argv[i], &matched);
-        if (matched && !usable) {
+        if (!accept(&grants, argv[i], &matched) && matched) {
             fprintf(stderr, "mylang: the option %s is not a usable capability grant\n", argv[i]);
             free(kept);
-            mylang_scoped_close(&grants.scoped);
             return 2;
         }
         if (!matched) kept[count++] = argv[i];
     }
     MylangNativeProviders providers = base ? *base : (MylangNativeProviders){0};
-    if (!provision(&grants, &providers)) {
-        fputs("mylang: the working directory could not be opened for the default grants\n", stderr);
-        free(kept);
-        mylang_scoped_close(&grants.scoped);
-        return 2;
-    }
-    int status = mylang_qbe_run_providers(entry, count, kept, &providers);
+    int status = 2;
+    if (provision(&grants, &providers)) status = mylang_qbe_run_providers(entry, count, kept, &providers);
+    else fputs("mylang: a requested directory grant could not be opened\n", stderr);
     free(kept);
     mylang_scoped_close(&grants.scoped);
     return status;

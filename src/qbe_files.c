@@ -238,12 +238,14 @@ int myl_qbe_file_access(void *context, uint64_t authority, unsigned request, myl
     if (spelling.failed || payload.failed) { myl_qbe_fail_allocation(context); status = -1; }
     myl_native_resource *owner = NULL;
     if (!status) status = acquire(context, authority, letter_of(kind, (request >> 8) & 0xff), spelling, &owner);
+    /* A helper opens, uses and closes its resource within the call, so a failure
+       leaves no handle behind; `open` hands its live handle to the guest. */
+    if (!status && kind == MYL_FILE_OPEN) *value = (uint64_t)(uintptr_t)owner;
     if (!status && kind != MYL_FILE_OPEN) {
         status = finish(context, owner, request, payload, value);
         int completion = myl_qbe_resource_complete(context, owner);
         if (!status && completion < 0) status = -1;
-    } else if (!status) *value = (uint64_t)(uintptr_t)owner;
-    if (status > 0 && owner) myl_qbe_resource_complete(context, owner);
+    }
     free(payload.bytes);
     if (status < 0 || myl_qbe_failed(context)) { free(spelling.bytes); return -1; }
     if (kind == MYL_FILE_EXISTS) {

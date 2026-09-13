@@ -116,6 +116,35 @@ def main() -> int:
         kept = scratch.escape(cycle)
     return len(kept) + len(kept[0])
 '''
+    # Escaping a record value copies its managed fields and shares older ones.
+    yield '''class Holder:
+    label: str
+    samples: list[int]
+    flag: bool
+
+def main() -> int:
+    kept = Holder(label="", samples=[], flag=False)
+    older: list[int] = [5]
+    with arena() as scratch:
+        inner: list[int] = [1, 2]
+        kept = scratch.escape(Holder(label="deep", samples=inner, flag=True))
+    older.append(6)
+    kept.samples.append(3)
+    return len(kept.label) + len(kept.samples) * 10 + len(older)
+'''
+    # Escaping an option payload keeps the variant tag and its copied graph.
+    yield '''def main() -> int:
+    kept: Option[list[int]] = None
+    with arena() as scratch:
+        found: Option[list[int]] = Some([4, 5, 6])
+        kept = scratch.escape(found)
+    match kept:
+        case Some(values):
+            values.append(7)
+            return len(values)
+        case None:
+            return 0
+'''
     # Loop exits out of a block release the arena exactly once.
     yield '''def main() -> int:
     total = 0

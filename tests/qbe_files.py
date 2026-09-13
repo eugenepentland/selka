@@ -139,6 +139,20 @@ def main(fs: Filesystem) -> int:
     print(len(kept), kept[0])
     return 0
 ''', []
+    # A grant naming a directory that cannot be opened refuses the whole run.
+    yield '''def main(fs: Filesystem) -> int:
+    print(exists(fs, "greeting.txt"))
+    return 0
+''', ['--restrict', '--allow-read=absent-directory']
+    # A repeated authority option is a command-line usage error.
+    yield '''def main() -> int:
+    return 7
+''', ['--allow-clock', '--allow-clock']
+    # Unrestricted runs grant every capability without naming one.
+    yield '''def main(fs: Filesystem, clock: Clock, entropy: Entropy, names: Environment) -> int:
+    print(exists(fs, "greeting.txt"))
+    return 0
+''', []
     # A text handle rejects bytes that are not valid UTF-8.
     yield '''def main(fs: Filesystem) -> int:
     print(write_file(fs, "broken.bin", b"\\xff\\xfe"))
