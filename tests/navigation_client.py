@@ -133,15 +133,15 @@ class NavigationTests(unittest.TestCase):
     def test_compiler_standard_sources_cache_without_disk_copies_or_temporary_symbols(self):
         (self.root / 'main.my').write_text(
             'module main;import std_math;fn size(text:i64)->i64{return std_math::min::<i64>(text,4);}'
-            'fn main()->i64{return size("x");}')
-        (self.root / 'std_json.my').write_text('reserved names cannot shadow the compiler library')
+            'fn main()->i64{return size(3);}')
+        (self.root / 'std_math.my').write_text('reserved names cannot shadow the compiler library')
         index, reused = self.load()
         self.assertFalse(reused)
         self.assertTrue(index['checked'])
         self.assertTrue(self.load()[1])
-        self.assertTrue(any(item['path'] == '@stdlib/std_json.my' for item in index['snapshot']['inputs']))
+        self.assertTrue(any(item['path'] == '@stdlib/std_math.my' for item in index['snapshot']['inputs']))
         self.assertFalse(any(item['name'] == '<literal>' for item in index['symbols']))
-        self.assertTrue(navigate.query(index, symbol='std_json::get')['symbols'])
+        self.assertTrue(navigate.query(index, symbol='std_math::min')['symbols'])
 
     def test_impact_scan_limit_and_unicode_context_are_explicit(self):
         index, _ = self.load()

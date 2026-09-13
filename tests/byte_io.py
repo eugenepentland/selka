@@ -32,8 +32,11 @@ def main():
                      flags=('--memory-report',))
         assert backed.returncode == 0, backed.stderr
         backing_report = json.loads(backed.stderr)
+        # Managed object storage is measured apart from VM bookkeeping.
         assert backing_report['vm_categories']['guest_backing']['peak'] > 0
         assert backing_report['vm_categories']['guest_backing']['live'] == 0
+        assert backing_report['vm_categories']['bookkeeping_and_snapshots']['peak'] > 0
+        assert backing_report['total']['live'] == 0
         for flag in ('--max-runtime-bytes=0', '--max-vm-bytes=0', '--max-host-bytes=0'):
             exhausted = run('fn main()->i64{_ = io::put(65u8);return 0;}', flags=(flag, '--memory-report'))
             assert exhausted.returncode != 0 and not exhausted.stdout, exhausted

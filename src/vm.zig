@@ -61,6 +61,8 @@ pub const GcStatistics = gc_heap.Statistics;
 pub const GcOptions = struct {
     stress: bool = false,
     statistics: ?*gc_heap.Statistics = null,
+    /// Managed object storage, when a host measures it apart from VM bookkeeping.
+    backing: ?std.mem.Allocator = null,
 };
 /// Collection stress options and optional execution-memory observations.
 pub const MemoryOptions = struct {
@@ -235,7 +237,7 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
         if (function.policy.host) |span| return trap("R_HOST_REGISTRATION", "program requires explicitly registered host functions", span, &.{}, program);
     };
     var quickened: fusion.Plan = .{ .enabled = options.memory.optimize_dispatch and options.memory.trace == null };
-    var managed_heap = gc_heap.Heap.init(allocator);
+    var managed_heap = gc_heap.Heap.init(options.memory.gc.backing orelse allocator);
     managed_heap.stress = options.memory.gc.stress;
     defer {
         managed_heap.deinit();

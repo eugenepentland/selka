@@ -1343,13 +1343,11 @@ const Checker = struct {
         }
         out.data = .{ .array = items };
     }
+    /// A `b"..."` literal is always the managed bytes type; plain text keeps its array form.
     fn byteLiteralType(self: *Checker, node: ast.Node) Error!typed.Type {
         const spelling = self.src.text(node.span);
         if (spelling.len == 0 or spelling[0] != 'b') return self.ty(node.span);
-        return collections.preludeType(&self.catalog, "bytes", node.span) catch |err| switch (err) {
-            error.InternalError => self.ty(node.span),
-            else => err,
-        };
+        return collections.preludeType(&self.catalog, "bytes", node.span);
     }
     fn checkTextLiteral(self: *Checker, node: ast.Node, bytes: []const u8, out: *typed.Node) Error!void {
         out.ty = if (node.data == .text) try self.ty(node.span) else self.expected_types.get(node.span) orelse try self.byteLiteralType(node);
