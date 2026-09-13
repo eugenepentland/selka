@@ -67,6 +67,12 @@ bit pattern, so guest code cannot reach the `f64_sqrt` intrinsic, which consumes
 rather than guaranteed correctly rounded, and exact for values whose root is
 exactly representable. There are no transcendental functions yet.
 
+Prelude `sqrt`, `floor`, `ceil`, `trunc` and `abs` take one `float` and answer a
+`float`, running the host binary64 operation directly, so ordinary guest code never
+handles a `u64` bit pattern. A local binding or a declared function of the same name
+shadows each of them, which is how `math.sqrt` keeps its own definition. `round`,
+`exp`, `log`, `pow` and the trigonometric functions have no prelude spelling.
+
 ## Intrinsics and the execution environment
 
 The low-level `f64_add`, `f64_sqrt`, `f64_from_u64`, `f64_to_u64` and related

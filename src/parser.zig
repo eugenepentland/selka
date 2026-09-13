@@ -11,6 +11,8 @@ const ast = @import("ast.zig");
 const lex = @import("lexer.zig");
 const Span = @import("source.zig").Span;
 const diagnostic = @import("diagnostic.zig");
+const byte_literal = @import("byte_literal.zig");
+const format_strings = @import("format_strings.zig");
 /// Token cursor and allocator-backed syntax builder with bounded recursive nesting.
 pub const Parser = struct {
     src: @import("source.zig").Source,
@@ -63,18 +65,26 @@ pub const Parser = struct {
         if (self.cursor.depth >= 256) return self.sink.fail("E_NESTING_LIMIT", self.current().span, "parser nesting exceeds 256 levels");
         self.cursor.depth += 1;
     }
+    /// Accept a declared name that collides with an intrinsic keyword. `len` and `replace`
+    /// are intrinsics in call position only, so both remain ordinary names elsewhere.
+    fn declaredName(self: *Parser) diagnostic.Error!Span {
+        const token = self.current();
+        if (token.tag != .kw_len and token.tag != .kw_replace) return (try self.expect(.ident)).span;
+        self.cursor.pos += 1;
+        return token.span;
+    }
     fn qualifiedTail(self: *Parser, first: Span) diagnostic.Error!Span {
         if (!self.module_syntax) return first;
         if (self.current().tag == .dot and self.syntax.import_aliases.contains(self.src.text(first))) {
             if (!self.sameExpressionLine()) return first;
             self.cursor.pos += 1;
-            return .join(first, (try self.expect(.ident)).span);
+            return .join(first, try self.declaredName());
         }
         if (self.current().tag != .colon or self.genericCallSuffix()) return first;
         if (self.tokens[self.cursor.pos + 1].tag != .colon) return first;
         self.cursor.pos += 1;
         _ = try self.expect(.colon);
-        return .join(first, (try self.expect(.ident)).span);
+        return .join(first, try self.declaredName());
     }
     fn typeName(self: *Parser) diagnostic.Error!Span {
         try self.enter();
@@ -206,7 +216,7 @@ pub const Parser = struct {
         while (self.current().tag != .eof) {
             if (self.module_syntax and self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "export")) {
                 self.cursor.pos += 1;
-                _ = try self.expect(.ident);
+                _ = try self.declaredName();
                 _ = try self.expect(.semicolon);
                 continue;
             }
@@ -285,9 +295,9 @@ pub const Parser = struct {
                 const empty_record = python_record and self.take(.kw_pass);
                 if (empty_record) _ = try self.expect(.semicolon);
                 if (!empty_record and self.current().tag != .rbrace) while (true) {
-                    const field = try self.expect(.ident);
+                    const field = try self.declaredName();
                     _ = try self.expect(.colon);
-                    try fields.append(self.arena.allocator(), .{ .name = field.span, .ty = try self.typeName() });
+                    try fields.append(self.arena.allocator(), .{ .name = field, .ty = try self.typeName() });
                     const next_field = python_record and self.current().tag != .rbrace and lex.implicitTerminator(self.src.bytes, self.tokens, self.cursor.pos);
                     if (!self.take(.comma) and !next_field) break;
                 };
@@ -327,7 +337,7 @@ pub const Parser = struct {
         const previous_python = self.cursor.python_function;
         self.cursor.python_function = std.mem.eql(u8, self.src.text(head.span), "def");
         defer self.cursor.python_function = previous_python;
-        const name = try self.expect(.ident);
+        const name: lex.Token = .{ .tag = .ident, .span = try self.declaredName() };
         const type_parameters = try self.typeParameters();
         _ = try self.expect(.lparen);
         var parameters = try self.functionParameters();
@@ -366,13 +376,13 @@ pub const Parser = struct {
         var parameters: std.ArrayList(ast.Parameter) = .empty;
         var default_seen = false;
         if (self.current().tag != .rparen) while (true) {
-            const parameter = try self.expect(.ident);
+            const parameter = try self.declaredName();
             _ = try self.expect(.colon);
             const ty = try self.typeName();
             const default_value = if (self.take(.equal)) try self.defaultArgument() else null;
-            if (default_seen and default_value == null) return self.sink.fail(eDefaultArgument, parameter.span, "required parameters must precede parameters with defaults");
+            if (default_seen and default_value == null) return self.sink.fail(eDefaultArgument, parameter, "required parameters must precede parameters with defaults");
             default_seen = default_seen or default_value != null;
-            try parameters.append(self.arena.allocator(), .{ .name = parameter.span, .ty = ty, .default_value = default_value });
+            try parameters.append(self.arena.allocator(), .{ .name = parameter, .ty = ty, .default_value = default_value });
             if (!self.take(.comma) or self.current().tag == .rparen) break;
         };
         return parameters;
@@ -598,6 +608,18 @@ pub const Parser = struct {
                 self.cursor.pos += 1;
                 break :no_op .{ .block = &.{} };
             },
+            .kw_assert => check: {
+                self.cursor.pos += 1;
+                const condition = try self.expression(0);
+                var message = self.src.text(self.syntax.nodes.items[@backingInt(condition)].span);
+                var literal: ?Span = null;
+                if (self.take(.comma)) {
+                    const quoted = try self.expect(.bytes);
+                    literal = quoted.span;
+                    message = try byte_literal.decode(self.arena.allocator(), self.src, quoted.span, self.sink);
+                }
+                break :check .{ .assertion = .{ .condition = condition, .message = message, .literal = literal } };
+            },
             .kw_break, .kw_continue => exit: {
                 self.cursor.pos += 1;
                 break :exit .{ .loop_exit = first.tag == .kw_continue };
@@ -705,9 +727,9 @@ pub const Parser = struct {
         _ = try self.expect(.lbrace);
         var fields: std.ArrayList(ast.FieldInit) = .empty;
         if (self.current().tag != .rbrace) while (true) {
-            const name = try self.expect(.ident);
+            const name = try self.declaredName();
             _ = try self.expect(.colon);
-            try fields.append(self.arena.allocator(), .{ .name = name.span, .value = try self.expression(0) });
+            try fields.append(self.arena.allocator(), .{ .name = name, .value = try self.expression(0) });
             if (!self.take(.comma) or self.current().tag == .rbrace) break;
         };
         _ = try self.expect(.rbrace);
@@ -759,6 +781,7 @@ pub const Parser = struct {
                 var values: std.ArrayList(ast.NodeId) = .empty;
                 if (self.current().tag != .rbracket) while (true) {
                     try values.append(self.arena.allocator(), try self.expression(0));
+                    if (values.items.len == 1 and self.current().tag == .kw_for) break :list try self.parseComprehension(token, values.items[0]);
                     if (!self.take(.comma) or self.current().tag == .rbracket) break;
                 };
                 const close = try self.expect(.rbracket);
@@ -772,6 +795,7 @@ pub const Parser = struct {
                 self.cursor.pos += 1;
                 break :none try self.append(.{ .span = token.span, .data = .unit });
             },
+            .format => try self.parseFormat(token),
             .lbrace => try self.parseDictionary(token),
             .integer, .bytes, .ident, .kw_true, .kw_false => try self.parseLeaf(token),
             .minus, .bang => unary: {
@@ -842,8 +866,7 @@ pub const Parser = struct {
         return left;
     }
     fn parseMemberSuffix(self: *Parser, left: ast.NodeId) diagnostic.Error!ast.NodeId {
-        const name = self.current();
-        if (name.tag == .kw_len) self.cursor.pos += 1 else _ = try self.expect(.ident);
+        const name: lex.Token = .{ .tag = .ident, .span = try self.declaredName() };
         if (self.take(.lparen)) {
             var arguments: std.ArrayList(ast.NodeId) = .empty;
             if (self.current().tag != .rparen) while (true) {
@@ -885,6 +908,67 @@ pub const Parser = struct {
         const result = try self.append(.{ .span = span, .data = .{ .membership = .{ .needle = left, .container = container, .negate = not_in } } });
         return result;
     }
+    /// Parse the tail of `[value for name in iterable if condition]` after its value.
+    fn parseComprehension(self: *Parser, token: lex.Token, output: ast.NodeId) diagnostic.Error!ast.NodeId {
+        _ = try self.expect(.kw_for);
+        const name = try self.expect(.ident);
+        _ = try self.expect(.kw_in);
+        const iterable = try self.expression(0);
+        const filter = if (self.take(.kw_if)) try self.expression(0) else null;
+        const close = try self.expect(.rbracket);
+        return self.append(.{ .span = .join(token.span, close.span), .data = .{ .comprehension = .{
+            .output = output,
+            .name = name.span,
+            .iterable = iterable,
+            .filter = filter,
+        } } });
+    }
+
+    /// Build `f"a{x}b"` as its alternating literal and interpolated pieces.
+    /// Each hole is tokenized from the original bytes, so its spans stay absolute.
+    fn parseFormat(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
+        self.cursor.pos += 1;
+        const allocator = self.arena.allocator();
+        const pieces = try format_strings.split(allocator, self.src, token.span, self.sink);
+        var parts: std.ArrayList(ast.NodeId) = .empty;
+        for (pieces) |piece| switch (piece) {
+            .literal => |span| try parts.append(allocator, try self.formatLiteral(span)),
+            .brace => |span| try parts.append(allocator, try self.append(.{ .span = span, .data = .{ .text = self.src.bytes[span.start .. span.start + 1] } })),
+            .hole => |span| try parts.append(allocator, try self.formatHole(span)),
+        };
+        return self.append(.{ .span = token.span, .data = .{ .format = try parts.toOwnedSlice(allocator) } });
+    }
+
+    /// Decode one literal chunk with the ordinary escapes by lending it surrounding quotes.
+    fn formatLiteral(self: *Parser, span: Span) diagnostic.Error!ast.NodeId {
+        const quoted: Span = .{ .start = span.start - 1, .end = span.end + 1 };
+        const decoded = try byte_literal.decode(self.arena.allocator(), self.src, quoted, self.sink);
+        return self.append(.{ .span = span, .data = .{ .text = decoded } });
+    }
+
+    /// Parse one interpolation as an ordinary expression over its own token range.
+    fn formatHole(self: *Parser, span: Span) diagnostic.Error!ast.NodeId {
+        const tokens = try lex.lexRange(self.arena.allocator(), self.src.bytes, span, self.sink);
+        const outer = self.tokens;
+        const position = self.cursor.pos;
+        const delimiters = self.cursor.delimiters;
+        self.tokens = tokens;
+        self.cursor.pos = 0;
+        self.cursor.delimiters += 1;
+        defer {
+            self.tokens = outer;
+            self.cursor.pos = position;
+            self.cursor.delimiters = delimiters;
+        }
+        const value = try self.expression(0);
+        if (self.current().tag != .eof) return self.sink.fail(
+            format_strings.code,
+            self.current().span,
+            "a format string interpolation holds exactly one expression",
+        );
+        return value;
+    }
+
     fn parseDictionary(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
         self.cursor.delimiters += 1;
         defer self.cursor.delimiters -= 1;
@@ -1063,7 +1147,13 @@ pub const Parser = struct {
     fn methodSuffix(self: *Parser) bool {
         if (self.current().tag != .dot) return false;
         if (self.cursor.pos + 2 >= self.tokens.len) return false;
-        return (self.tokens[self.cursor.pos + 1].tag == .ident or self.tokens[self.cursor.pos + 1].tag == .kw_len) and (self.tokens[self.cursor.pos + 2].tag == .lparen or self.tokens[self.cursor.pos + 2].tag == .colon);
+        const member = self.tokens[self.cursor.pos + 1].tag;
+        if (member != .ident and member != .kw_len and member != .kw_replace) return false;
+        if (self.tokens[self.cursor.pos + 2].tag == .lparen) return true;
+        // `owner.name::<T>(…)` keeps its explicit type arguments; a bare `Owner.name:` is a
+        // member access, such as an enum case keying a table literal entry.
+        if (self.tokens[self.cursor.pos + 2].tag != .colon or self.cursor.pos + 4 >= self.tokens.len) return false;
+        return self.tokens[self.cursor.pos + 3].tag == .colon and self.tokens[self.cursor.pos + 4].tag == .lt;
     }
 
     fn parseHole(self: *Parser, token: lex.Token) diagnostic.Error!ast.NodeId {
@@ -1158,6 +1248,9 @@ pub const Parser = struct {
         }
         return false;
     }
+    /// Recognize `Ident[...](…)`, a square-bracket type application applied to arguments.
+    /// A dot after the closing bracket makes the head an ordinary index and member access
+    /// instead, because `items[at].append(v)` and `Box[T](v)` are otherwise indistinguishable.
     fn appliedConstructorAhead(self: *Parser) bool {
         if (!self.pythonSyntax()) return false;
         var position = self.cursor.pos;
@@ -1171,8 +1264,10 @@ pub const Parser = struct {
             }
             if (self.tokens[position].tag == .rbracket) brackets -|= 1;
             switch (self.tokens[position].tag) {
-                .ident, .dot, .colon, .lbracket, .rbracket, .lt, .gt, .comma, .kw_i64, .kw_i8, .kw_i16, .kw_i32, .kw_u8, .kw_u16, .kw_u32, .kw_u64, .kw_bool, .kw_none => {},
-                .lparen => return applied,
+                .dot => if (applied and brackets == 0) return false,
+                .comma, .colon => if (brackets == 0) return false,
+                .ident, .lbracket, .rbracket, .lt, .gt, .kw_i64, .kw_i8, .kw_i16, .kw_i32, .kw_u8, .kw_u16, .kw_u32, .kw_u64, .kw_bool, .kw_none => {},
+                .lparen => return applied and brackets == 0,
                 else => return false,
             }
         }
@@ -1184,7 +1279,8 @@ pub const Parser = struct {
         var names: std.ArrayList(?Span) = .empty;
         var keyword_seen = false;
         if (self.current().tag != .rparen) while (true) {
-            const keyword = self.current().tag == .ident and self.tokens[self.cursor.pos + 1].tag == .equal;
+            const named = self.current().tag == .ident or self.current().tag == .kw_len or self.current().tag == .kw_replace;
+            const keyword = named and self.tokens[self.cursor.pos + 1].tag == .equal;
             const name = if (keyword) self.current().span else null;
             if (keyword) self.cursor.pos += 2;
             if (keyword_seen and !keyword) return self.sink.fail("E_CALL_ARGUMENT", self.current().span, "positional arguments must precede keyword arguments");
@@ -1214,11 +1310,7 @@ pub const Parser = struct {
         if (token.tag == .ident and self.sameExpressionLine() and self.methodSuffix()) {
             owner = name;
             self.cursor.pos += 1;
-            name = if (self.current().tag == .kw_len) member: {
-                const member = self.current();
-                self.cursor.pos += 1;
-                break :member member.span;
-            } else (try self.expect(.ident)).span;
+            name = try self.declaredName();
         }
         const type_arguments = if (token.tag == .ident) try self.typeArguments() else &.{};
         if (token.tag == .ident and self.sameExpressionLine() and self.take(.lparen)) {
@@ -1229,7 +1321,7 @@ pub const Parser = struct {
         return self.append(.{ .span = name, .data = switch (token.tag) {
             .integer => .{ .integer = token.span },
             .bytes => literal: {
-                const decoded = try @import("byte_literal.zig").decode(self.arena.allocator(), self.src, token.span, self.sink);
+                const decoded = try byte_literal.decode(self.arena.allocator(), self.src, token.span, self.sink);
                 const python = if (comptime @hasField(@TypeOf(self.cursor), "python_function")) self.cursor.python_function else false;
                 break :literal if (python and self.src.text(token.span)[0] != 'b') .{ .text = decoded } else .{ .bytes = decoded };
             },

@@ -192,15 +192,22 @@ const Scan = struct {
     fn exportStatement(self: *Scan, src: source.Source) error{InternalError}!Exported {
         const start = self.tokens[self.pos].span.start;
         self.pos += 1;
-        const name = try self.expect(.ident);
+        const name = try self.declaredName();
         const end = try self.expect(.semicolon);
         return .{ .name = src.text(name), .span = name, .bytes = .{ .start = start, .end = end.end } };
+    }
+    /// Accept a declared name that collides with an intrinsic keyword, as the parser does.
+    fn declaredName(self: *Scan) error{InternalError}!source.Span {
+        const token = self.tokens[self.pos];
+        if (token.tag != .kw_len and token.tag != .kw_replace) return self.expect(.ident);
+        self.pos += 1;
+        return token.span;
     }
     /// Read the leading keywords and name of the next top-level declaration.
     fn head(self: *Scan) error{InternalError}!Head {
         if (self.simple()) |form| {
             self.pos += 1;
-            return .{ .kind = form.kind, .name = try self.expect(.ident), .braced = form.braced };
+            return .{ .kind = form.kind, .name = try self.declaredName(), .braced = form.braced };
         }
         const c_abi = self.word(self.pos, "extern");
         const host = self.word(self.pos, "host") or c_abi;
@@ -208,7 +215,7 @@ const Scan = struct {
         _ = self.take(.kw_private);
         _ = self.take(.kw_conversion);
         _ = try self.expect(.kw_fn);
-        return .{ .kind = if (c_abi) .extern_fn else if (host) .host_fn else .@"fn", .name = try self.expect(.ident), .braced = !host };
+        return .{ .kind = if (c_abi) .extern_fn else if (host) .host_fn else .@"fn", .name = try self.declaredName(), .braced = !host };
     }
     fn simple(self: Scan) ?Simple {
         return switch (self.tokens[self.pos].tag) {

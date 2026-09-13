@@ -15,11 +15,26 @@ const eResultOperation = diagnostic.result_operation;
 const eOwnedConsumed = diagnostic.owned_consumed;
 const eResultPath = diagnostic.result_path;
 const eShadowing = diagnostic.shadowing;
+const eWildcardArm = "E_WILDCARD_ARM";
 const eConversionBody = "E_CONVERSION_BODY";
 const eByteConversion = "E_BYTES_CONVERSION";
 /// Managed collection methods whose only argument has the receiver's own sequence type.
+/// Recognize `case _`, the contextual arm that stands for every remaining variant.
+fn wildcard(src: source.Source, arm: anytype) bool {
+    if (arm.ty.start != arm.ty.end or arm.binding != null or arm.discard_payload) return false;
+    return std.mem.eql(u8, src.text(arm.name), "_");
+}
+
 fn sequenceArgument(kind: BufferKind) bool {
-    return kind == .split or kind == .contains or kind == .starts_with or kind == .ends_with or kind == .find;
+    return switch (kind) {
+        .split, .contains, .starts_with, .ends_with, .find, .count, .replace => true,
+        else => false,
+    };
+}
+
+/// String methods whose only operand is a scalar width rather than more text.
+fn widthArgument(kind: BufferKind) bool {
+    return kind == .zfill;
 }
 const eResourceResult = diagnostic.resource_result;
 const eResourceIoResult = "E_RESOURCE_IO_RESULT";
@@ -31,6 +46,8 @@ const variantDeclaredHere = "variant declared here";
 const std = @import("std");
 const bufferOperation = "buffer_operation";
 const eCollectionMethod = "E_COLLECTION_METHOD";
+const unsupported_collection = "operation is not supported by this collection";
+
 const ast = @import("ast.zig");
 const typed = @import("typed.zig");
 const source = @import("source.zig");
@@ -39,7 +56,7 @@ const records = @import("records.zig");
 const Error = diagnostic.Error;
 const instances = @import("generic_instances.zig");
 const Names = @import("module_names.zig").Names;
-const LoopScope = struct { id: usize, before: []const Pending, arenas: usize = 0 };
+const LoopScope = struct { id: usize, before: []const Pending, arenas: usize = 0, exited: bool = false };
 const ArenaScope = struct { name: []const u8, declaration: source.Span, watermark: typed.LocalId };
 const eArenaEscape = "E_ARENA_ESCAPE";
 const eArenaBinding = "E_ARENA_BINDING";
@@ -48,10 +65,13 @@ const eFileArgument = "E_FILE_ARGUMENT";
 const Pending = struct { available: bool, transfer_span: ?source.Span };
 const Work = struct { default_value: bool = false, id: ast.NodeId, emit: bool = false, checkpoint: bool = false, verify: ?[]const Pending = null };
 const FieldDestination = struct { owner: typed.LocalId, index: ?typed.NodeId, value: typed.NodeId, refresh: typed.StatementId };
-const CheckedStatement = struct { id: typed.StatementId, terminates: bool };
+const CheckedStatement = struct { id: typed.StatementId, terminates: bool, looping: bool = false };
 
 const StatementFlow = struct {
     terminates: bool = false,
+    /// A loop the checker proved never exits ends control flow without making a
+    /// following statement a mistake, because its exit is inferred, not written.
+    looping: bool = false,
     owned_cleanup: []const typed.LocalId = &.{},
 };
 
@@ -59,6 +79,9 @@ const integer_literal = @import("integer_literal.zig");
 const float_syntax = @import("float_syntax.zig");
 const numeric_surface = @import("numeric_surface.zig");
 const prelude = @import("prelude.zig");
+const arrays = @import("array_literals.zig");
+const variant_calls = @import("variant_calls.zig");
+const truncating = @import("truncating_math.zig");
 
 const Checker = struct {
     allocator: std.mem.Allocator,
@@ -124,7 +147,7 @@ const Checker = struct {
             );
             const source_record = try self.catalog.record(self.locals.items[0].ty, function.signature.parameters[0].ty, sink);
             _ = try self.catalog.record(self.return_type, function.signature.return_type, sink);
-            try conversionBody(src, self.syntax, function, sink);
+            try conversionBody(self, function);
             self.conversion_fields = try allocator.alloc(bool, source_record.fields.len);
             @memset(self.conversion_fields.?, false);
         }
@@ -344,7 +367,9 @@ const Checker = struct {
         const target = try self.callDeclaration(input, span);
         return self.specialize(target.declaration, target.call, span);
     }
-    fn callDeclaration(self: *Checker, input: @FieldType(@FieldType(ast.Node, "data"), "call"), _: source.Span) Error!ResolvedCall {
+    fn callDeclaration(self: *Checker, raw: @FieldType(@FieldType(ast.Node, "data"), "call"), _: source.Span) Error!ResolvedCall {
+        const applied = try @import("call_type_arguments.zig").split(self.src, self.syntax, self.catalog.module_names, raw, self.sink);
+        const input = applied orelse raw;
         if (std.mem.eql(u8, self.src.text(input.name), "todo") and input.owner == null) {
             _ = try self.ty(input.type_arguments[0]);
             return self.sink.typedHole(input.name, input.type_arguments[0]);
@@ -499,6 +524,22 @@ const Checker = struct {
         if (std.mem.eql(u8, name, "Err")) return false;
         return null;
     }
+    /// Recognize `sqrt`, `floor`, `ceil`, `trunc` and `abs` as prelude float operations.
+    /// A local binding, a declared function or a module top-level name of the same name wins.
+    fn floatIntrinsic(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?typed.UnaryOp {
+        if (call.owner != null or call.type_arguments.len != 0) return null;
+        const name = self.src.text(call.name);
+        const op = @import("float_intrinsics.zig").operation(name) orelse return null;
+        if (self.active.contains(name) or self.functions.contains(name)) return null;
+        if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return null;
+        return op;
+    }
+    fn checkFloatIntrinsic(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), op: typed.UnaryOp, out: *typed.Node) Error!void {
+        const value = self.resolved[@backingInt(call.arguments[0])].?;
+        const ty_value = self.nodes.items[@backingInt(value)].ty;
+        if (!numeric_surface.isFloat(ty_value, self.catalog.records)) return self.sink.fail("E_TYPE", node.span, "this prelude operation requires a float argument");
+        out.* = try self.numericBuilder(node.span).unary(op, value);
+    }
     fn numericConversion(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!?bool {
         if (call.owner != null or call.type_arguments.len != 0) return null;
         const name = self.src.text(call.name);
@@ -512,7 +553,13 @@ const Checker = struct {
         const value = self.resolved[@backingInt(call.arguments[0])].?;
         const ty_value = self.nodes.items[@backingInt(value)].ty;
         const input_float = numeric_surface.isFloat(ty_value, self.catalog.records);
-        if (!input_float and !ty_value.isInteger()) return self.sink.fail("E_TYPE", node.span, "numeric conversion requires an integer or float");
+        // `int(text)` and `float(text)` parse rather than convert, so they answer an Option.
+        if (ty_value.isAggregate() and self.catalog.records[ty_value.recordIndex()].collection.kind == .string) {
+            const builder: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
+            out.* = try builder.access(value, if (floating) .parse_float else .parse_int, &.{}, false);
+            return;
+        }
+        if (!input_float and !ty_value.isInteger()) return self.sink.fail("E_TYPE", node.span, "numeric conversion requires an integer, float or str");
         if (floating) {
             out.* = if (input_float) self.nodes.items[@backingInt(value)] else try self.numericBuilder(node.span).fromInteger(value);
         } else if (input_float) {
@@ -670,6 +717,21 @@ const Checker = struct {
                 node.data = record.data;
                 return node;
             }
+            if (call.owner == null) {
+                const name = self.src.text(call.name);
+                const shadowed = self.active.contains(name) or self.functions.contains(name) or
+                    (if (self.catalog.module_names) |names| try names.topLevel(call.name) else false);
+                if (try truncating.lower(self.src, call, node.span, shadowed, self.sink)) |helper| {
+                    node.data = helper.data;
+                    return node;
+                }
+            }
+            if (call.owner == null or !self.active.contains(self.src.text(call.owner.?))) {
+                if (try variant_calls.lower(self.src, self.catalog, call, node.span, self.sink)) |variant| {
+                    node.data = variant.data;
+                    return node;
+                }
+            }
             if (call.owner) |owner| if (self.active.get(self.src.text(owner))) |slot| {
                 const value_type = self.locals.items[@backingInt(slot)].ty;
                 if (value_type.isFile()) {
@@ -696,7 +758,7 @@ const Checker = struct {
             const field = node.data.field;
             const base = self.syntax.nodes.items[@backingInt(field.base)];
             if (base.data == .name and !self.active.contains(self.src.text(base.data.name))) {
-                if (try self.catalog.variantType(self.src, base.data.name, self.sink) != null)
+                if (try variant_calls.declaresVariant(self.src, self.catalog, base.data.name, self.sink))
                     node.data = .{ .variant = .{ .ty = base.data.name, .name = field.name, .value = null } };
             }
         }
@@ -792,8 +854,21 @@ const Checker = struct {
         try statements.append(self.allocator, refresh);
         return .{ .owner = owner, .index = index, .value = try b.read(saved), .refresh = refresh };
     }
+    /// Build a fixed array from a list literal whose context already demands `[N]T`.
+    fn checkFixedArray(self: *Checker, node: ast.Node, inputs: []const ast.NodeId, temporaries: []const typed.Type, expected: typed.Type) Error!typed.Node {
+        const shape = arrays.fixed(self.catalog, expected).?;
+        if (inputs.len != shape.length) return arrays.wrongLength(self.allocator, node.span, inputs.len, shape, self.sink);
+        const values = try self.allocator.alloc(typed.NodeId, inputs.len);
+        for (inputs, values) |input, *value| {
+            try self.hint(input, shape.element);
+            value.* = try self.expressionWithTemporaries(input, temporaries);
+            try self.require(self.nodes.items[@backingInt(value.*)].ty, shape.element, self.syntax.nodes.items[@backingInt(input)].span);
+        }
+        return .{ .span = node.span, .ty = expected, .data = .{ .array = values } };
+    }
     fn checkListLiteral(self: *Checker, node: ast.Node, inputs: []const ast.NodeId, temporaries: []const typed.Type) Error!typed.Node {
         var expected = self.expected_types.get(node.span);
+        if (expected) |ty_value| if (arrays.fixed(self.catalog, ty_value) != null) return self.checkFixedArray(node, inputs, temporaries, ty_value);
         var element: ?typed.Type = if (expected) |ty_value| try self.listElement(ty_value, node.span) else null;
         if (inputs.len == 0 and expected == null) return self.sink.fail("E_LIST_INFERENCE", node.span, "empty list requires an expected List type");
         const values = try self.allocator.alloc(typed.NodeId, inputs.len);
@@ -808,6 +883,106 @@ const Checker = struct {
             return self.sink.fail(eListType, node.span, "list elements require copyable storable values without pending results");
         return (collections.Builder(Checker){ .checker = self, .span = node.span }).literal(expected.?, values);
     }
+    /// Bind a comprehension's element name to a fresh slot for the duration of its body.
+    fn bindElement(self: *Checker, name: source.Span, slot: typed.LocalId) Error!void {
+        const text = self.src.text(name);
+        if (try self.topLevel(name) or self.active.contains(text)) return self.sink.fail(eShadowing, name, "comprehension binding shadows an active declaration");
+        self.locals.items[@backingInt(slot)].name = text;
+        self.locals.items[@backingInt(slot)].declaration = name;
+        try self.active.put(self.allocator, text, slot);
+    }
+
+    /// Build `[value for name in iterable if condition]` as a checked loop over a fresh list.
+    fn checkComprehension(self: *Checker, node: ast.Node, each: ast.Comprehension, temporaries: []const typed.Type) Error!typed.Node {
+        const b: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
+        const iterable = try self.expressionWithTemporaries(each.iterable, temporaries);
+        const iterable_type = self.nodes.items[@backingInt(iterable)].ty;
+        if (!iterable_type.isAggregate() or !self.catalog.records[iterable_type.recordIndex()].managed) return self.sink.fail(eCollectionMethod, node.span, "iteration requires a list, str, or dictionary");
+        const schema = self.catalog.records[iterable_type.recordIndex()];
+        const element = switch (schema.collection.kind) {
+            .list => schema.shape.buffer.?,
+            .string => iterable_type,
+            .bytes => typed.Type.i64,
+            .dictionary => schema.collection.key.?,
+        };
+        const owner = try b.local(iterable_type);
+        const index = try b.local(.i64);
+        const limit = try b.local(.i64);
+        const value_slot = try b.local(element);
+        try self.bindElement(each.name, value_slot);
+        defer _ = self.active.remove(self.src.text(each.name));
+        const produced = try self.expression(each.output);
+        const produced_type = self.nodes.items[@backingInt(produced)].ty;
+        if (!typed.storable(produced_type, self.catalog.records) or typed.moveOnly(produced_type, self.catalog.records) or self.requiresHandling(produced_type))
+            return self.sink.fail(eListType, node.span, "list elements require copyable storable values without pending results");
+        const output = try b.local(try collections.listType(&self.catalog, produced_type, node.span));
+        const kept = try b.stmt(.{ .discard = try b.operation(output, .append, &.{produced}) });
+        const body = if (each.filter) |condition| guarded: {
+            const test_value = try self.expression(condition);
+            try self.require(self.nodes.items[@backingInt(test_value)].ty, .bool, self.syntax.nodes.items[@backingInt(condition)].span);
+            break :guarded try b.stmt(.{ .branch = .{ .condition = test_value, .then_body = kept, .else_body = null } });
+        } else kept;
+        return self.comprehensionLoop(b, .{ .owner = owner, .index = index, .limit = limit, .slot = value_slot }, body, .{ .iterable = iterable, .output = output, .kind = schema.collection.kind });
+    }
+
+    /// Assemble the fixed-bound iteration, its mutation check, and the produced list.
+    fn comprehensionLoop(
+        self: *Checker,
+        b: collections.Builder(Checker),
+        slots: struct { owner: typed.LocalId, index: typed.LocalId, limit: typed.LocalId, slot: typed.LocalId },
+        body: typed.StatementId,
+        source_values: struct { iterable: typed.NodeId, output: typed.LocalId, kind: ManagedKind },
+    ) Error!typed.Node {
+        const i = try b.read(slots.index);
+        const guard = try b.stmt(.{ .discard = try b.operation(slots.owner, .iteration_check, &.{try b.read(slots.limit)}) });
+        const iteration = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{
+            guard,
+            try b.stmt(.{ .initialize = .{ .slot = slots.slot, .value = try self.iterationValue(b, slots.owner, source_values.kind, i) } }),
+            body,
+        }) });
+        const step = try b.stmt(.{ .block = try self.allocator.dupe(typed.StatementId, &.{
+            guard,
+            try b.stmt(.{ .assign = .{ .slot = slots.index, .value = try b.binary(.add, i, try b.integer(1), .i64) } }),
+        }) });
+        const loop_id = self.loops.next;
+        self.loops.next += 1;
+        return b.block(&.{
+            try b.stmt(.{ .initialize = .{ .slot = slots.owner, .value = source_values.iterable } }),
+            try b.stmt(.{ .initialize = .{ .slot = slots.index, .value = try b.integer(0) } }),
+            try b.stmt(.{ .initialize = .{ .slot = slots.limit, .value = try b.length(slots.owner) } }),
+            try b.stmt(.{ .initialize = .{ .slot = source_values.output, .value = try b.node(self.locals.items[@backingInt(source_values.output)].ty, .{ .acquire_buffer = .{ .capacity = try b.integer(0) } }) } }),
+            try b.stmt(.{ .loop = .{ .id = loop_id, .condition = try b.binary(.lt, i, try b.read(slots.limit), .bool), .body = iteration, .step = step } }),
+        }, try b.read(source_values.output));
+    }
+
+    /// Convert one interpolated value to text, reusing the `str` conversion rules.
+    fn formatPart(self: *Checker, value: typed.NodeId, str_type: typed.Type, span: source.Span) Error!typed.NodeId {
+        const ty_value = self.nodes.items[@backingInt(value)].ty;
+        if (ty_value == str_type) return value;
+        const numeric = ty_value.isInteger() or ty_value == .bool or ty_value == .unit;
+        if (!numeric and !numeric_surface.isFloat(ty_value, self.catalog.records)) return self.sink.fail(
+            "E_TEXT_CONVERSION",
+            span,
+            "format string interpolation requires a scalar or str value",
+        );
+        const id: typed.NodeId = @fromBackingInt(self.nodes.items.len);
+        try self.nodes.append(self.allocator, .{ .span = span, .ty = str_type, .data = .{ .cast = value } });
+        return id;
+    }
+
+    /// Concatenate an f-string's literal chunks and converted interpolations.
+    fn checkFormat(self: *Checker, node: ast.Node, parts: []const ast.NodeId, temporaries: []const typed.Type) Error!typed.Node {
+        const str_type = self.catalog.names.get("str") orelse return error.InternalError;
+        const builder: collections.Builder(Checker) = .{ .checker = self, .span = node.span };
+        var result: ?typed.NodeId = null;
+        for (parts) |part| {
+            const span = self.syntax.nodes.items[@backingInt(part)].span;
+            const value = try self.formatPart(try self.expressionWithTemporaries(part, temporaries), str_type, span);
+            result = if (result) |left| try builder.binary(.add, left, value, str_type) else value;
+        }
+        return self.nodes.items[@backingInt(result orelse return error.InternalError)];
+    }
+
     fn checkCollectionMethod(self: *Checker, node: ast.Node, temporaries: []const typed.Type) Error!typed.Node {
         const call = node.data.method_call;
         const name = self.src.text(call.name);
@@ -861,13 +1036,13 @@ const Checker = struct {
         const schema = self.catalog.records[owner_type.recordIndex()];
         const dictionary = schema.collection.kind == .dictionary;
         _ = collections.operationType(&self.catalog, owner_type, operation.kind, node.span) catch |err| switch (err) {
-            error.InternalError => return self.sink.fail(eCollectionMethod, node.span, "operation is not supported by this collection"),
+            error.InternalError => return self.sink.fail(eCollectionMethod, node.span, unsupported_collection),
             else => return err,
         };
         if (operation.inputs.len != operation.kind.arity()) return self.sink.fail("E_ARITY", node.span, "collection method argument count differs from its signature");
         const arguments = try self.allocator.alloc(typed.NodeId, operation.inputs.len);
         for (operation.inputs, arguments, 0..) |input, *argument, index| {
-            const integer = !dictionary and (operation.kind == .read or operation.kind == .slice);
+            const integer = !dictionary and (operation.kind == .read or operation.kind == .slice or widthArgument(operation.kind));
             const expected = if (integer) typed.Type.i64 else if (dictionary) map_argument: {
                 break :map_argument if (index == 0) schema.collection.key.? else schema.shape.buffer.?;
             } else if (operation.kind == .join) try self.collectionListType(owner_type, node.span) else owner_type;
@@ -886,6 +1061,8 @@ const Checker = struct {
                 if (schema.collection.kind == .dictionary) {
                     if (operation.arguments.len > 0) try self.hint(operation.arguments[0], schema.collection.key.?);
                     if (operation.arguments.len == 2) try self.hint(operation.arguments[1], schema.shape.buffer.?);
+                } else if (operation.kind == .replace and operation.arguments.len == 2) {
+                    for (operation.arguments) |argument| try self.hint(argument, owner_type);
                 } else if (sequenceArgument(operation.kind) and operation.arguments.len == 1) {
                     const byte_needle = schema.collection.kind == .bytes and operation.kind == .contains;
                     if (!byte_needle) try self.hint(operation.arguments[0], owner_type);
@@ -916,6 +1093,12 @@ const Checker = struct {
         }
     }
     fn queueBuiltinCall(self: *Checker, work: *std.ArrayList(Work), call: @FieldType(@FieldType(ast.Node, "data"), "call"), node: ast.Node) Error!bool {
+        if (try self.floatIntrinsic(call) != null) {
+            try call_arguments.positional(call, self.sink);
+            if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "float operations require one argument");
+            try work.append(self.allocator, .{ .id = call.arguments[0] });
+            return true;
+        }
         if (try self.numericConversion(call) != null) {
             try call_arguments.positional(call, self.sink);
             if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "numeric conversions require one argument");
@@ -972,6 +1155,14 @@ const Checker = struct {
         }
         return false;
     }
+    /// An intrinsic demanding a fixed `[N]u8` lets a list literal adopt its own length,
+    /// so a byte sequence needs no type spelling the Python surface cannot write.
+    fn hintByteArray(self: *Checker, id: ast.NodeId) Error!void {
+        const node = self.syntax.nodes.items[@backingInt(id)];
+        if (node.data != .list_literal) return;
+        const bytes = try self.catalog.instantiateArray(self.allocator, .u8, node.data.list_literal.len, node.span, self.sink);
+        try self.hint(id, bytes);
+    }
     fn queueDictionary(self: *Checker, work: *std.ArrayList(Work), id: ast.NodeId) Error!bool {
         const node = self.syntax.nodes.items[@backingInt(id)];
         const entries = node.data.dictionary_literal;
@@ -984,14 +1175,21 @@ const Checker = struct {
             if (expected) |expected_type| if (expected_type.isAggregate() and self.catalog.records[expected_type.recordIndex()].collection.kind == .dictionary) {
                 const schema = self.catalog.records[expected_type.recordIndex()];
                 try self.hint(entries[index], if (index % 2 == 0) schema.collection.key.? else schema.shape.buffer.?);
+            } else if (arrays.table(self.catalog, expected_type)) |_| {
+                if (index % 2 == 1) try self.hint(entries[index], self.catalog.records[expected_type.recordIndex()].shape.array.?.element);
             };
             try work.append(self.allocator, .{ .id = entries[index] });
         }
         return true;
     }
+    /// Resolve a variant construction's type, letting a generic template adopt its context.
+    fn variantType(self: *Checker, variant: @FieldType(@FieldType(ast.Node, "data"), "variant"), at: source.Span) Error!typed.Type {
+        if (try variant_calls.contextual(self.src, self.catalog, variant.ty, self.expected_types.get(at), self.sink)) |found| return found;
+        return self.ty(variant.ty);
+    }
     fn queueVariant(self: *Checker, work: *std.ArrayList(Work), id: ast.NodeId, variant: @FieldType(@FieldType(ast.Node, "data"), "variant")) Error!bool {
         if (variant.value) |value| {
-            const variant_type = try self.ty(variant.ty);
+            const variant_type = try self.variantType(variant, self.syntax.nodes.items[@backingInt(id)].span);
             const tag = try self.catalog.variant(variant_type, self.src, variant.name, self.sink);
             if (self.catalog.records[variant_type.recordIndex()].shape.variants.?.cases[tag].payload) |payload| try self.hint(value, payload);
             try work.append(self.allocator, .{ .id = id, .emit = true });
@@ -1058,6 +1256,7 @@ const Checker = struct {
             },
             .environment_get => |get| {
                 try work.append(self.allocator, .{ .id = id, .emit = true });
+                try self.hintByteArray(get.name);
                 try work.append(self.allocator, .{ .id = get.name });
                 try work.append(self.allocator, .{ .id = get.capability });
                 return true;
@@ -1159,9 +1358,20 @@ const Checker = struct {
         switch (operation.kind) {
             .length => out.ty = .i64,
             .find, .starts_with, .ends_with => {
-                if (!byte_string) return self.sink.fail(eCollectionMethod, operation.owner, "prefix, suffix and search operations require bytes");
+                if (dictionary) return self.sink.fail(eCollectionMethod, operation.owner, "prefix, suffix and search operations require str or bytes");
                 try self.require(self.nodes.items[@backingInt(arguments[0])].ty, local.ty, operation.owner);
                 out.ty = if (operation.kind == .find) .i64 else .bool;
+            },
+            .strip, .lstrip, .rstrip, .upper, .lower, .splitlines, .replace, .count, .zfill, .is_digit, .is_alpha, .is_space, .parse_int, .parse_float => {
+                if (dictionary or byte_string) return self.sink.fail(eCollectionMethod, operation.owner, "this method requires str");
+                for (arguments) |argument| {
+                    const actual = self.nodes.items[@backingInt(argument)].ty;
+                    if (widthArgument(operation.kind)) try self.requireInteger(actual, operation.owner) else try self.require(actual, local.ty, operation.owner);
+                }
+                out.ty = collections.operationType(&self.catalog, local.ty, operation.kind, operation.owner) catch |err| switch (err) {
+                    error.InternalError => return self.sink.fail(eCollectionMethod, operation.owner, unsupported_collection),
+                    else => return err,
+                };
             },
             .to_list, .hex, .decode, .encode, .from_hex => out.ty = collections.operationType(&self.catalog, local.ty, operation.kind, operation.owner) catch |err| switch (err) {
                 error.InternalError => return self.sink.fail(eCollectionMethod, operation.owner, "conversion is not supported by this collection"),
@@ -1190,7 +1400,7 @@ const Checker = struct {
                 try self.require(self.nodes.items[@backingInt(arguments[0])].ty, if (operation.kind == .split) local.ty else list_type, operation.owner);
                 out.ty = if (operation.kind == .split) list_type else local.ty;
             },
-            else => return self.sink.fail(eCollectionMethod, operation.owner, "operation is not supported by this collection"),
+            else => return self.sink.fail(eCollectionMethod, operation.owner, unsupported_collection),
         }
         out.data = .{ .buffer_operation = .{ .kind = operation.kind, .owner = owner, .arguments = arguments } };
     }
@@ -1204,6 +1414,10 @@ const Checker = struct {
         if (self.catalog.records[local.ty.recordIndex()].collection.kind != .list) {
             try self.checkTextDictionary(operation, owner, out);
             return;
+        }
+        switch (operation.kind) {
+            .append, .read, .write, .length, .capacity, .contains, .iteration_check => {},
+            else => return self.sink.fail(eCollectionMethod, operation.owner, "operation is not supported by lists"),
         }
         const arguments = try self.allocator.alloc(typed.NodeId, operation.arguments.len);
         for (operation.arguments, arguments, 0..) |input, *argument, argument_index| {
@@ -1396,6 +1610,7 @@ const Checker = struct {
         return true;
     }
     fn checkCall(self: *Checker, node: ast.Node, input: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
+        if (try self.floatIntrinsic(input)) |op| return self.checkFloatIntrinsic(node, input, op, out);
         if (try self.numericConversion(input)) |floating| return self.checkNumericConversion(node, input, floating, out);
         if (try self.optionConstructor(input)) return self.checkOptionConstructor(node, input, out);
         if (try self.textConstructor(input, node.span)) {
@@ -1470,8 +1685,17 @@ const Checker = struct {
         out.data = .{ .unary = .{ .op = std.meta.stringToEnum(typed.UnaryOp, @tagName(u.op)).?, .operand = operand, .op_span = u.op_span } };
         return out;
     }
+    /// Build an enum-indexed table from a dict literal whose context already demands `[Kind]T`.
+    fn checkTableLiteral(self: *Checker, node: ast.Node, entries: []const ast.NodeId, expected: typed.Type, out: *typed.Node) Error!void {
+        const key = arrays.table(self.catalog, expected).?;
+        const context: arrays.Context = .{ .src = self.src, .syntax = self.syntax, .catalog = self.catalog, .key = key };
+        const named = try arrays.initializers(self.allocator, context, entries, self.sink);
+        out.ty = expected;
+        out.data = .{ .record = try self.fields(expected, named, true, node.span) };
+    }
     fn checkDictionaryLiteral(self: *Checker, node: ast.Node, entries: []const ast.NodeId, out: *typed.Node) Error!void {
         const expected = self.expected_types.get(node.span);
+        if (expected) |ty_value| if (arrays.table(self.catalog, ty_value) != null) return self.checkTableLiteral(node, entries, ty_value, out);
         if (expected) |expected_type| {
             out.ty = expected_type;
         } else {
@@ -1662,6 +1886,8 @@ const Checker = struct {
         } else switch (node.data) {
             .field_assignment => return self.checkFieldAssignment(node, temporaries),
             .list_literal => |inputs| return self.checkListLiteral(node, inputs, temporaries),
+            .format => |parts| return self.checkFormat(node, parts, temporaries),
+            .comprehension => |each| return self.checkComprehension(node, each, temporaries),
             .list_operation => |op| return self.checkListAccess(node, .{ .base = op.base, .kind = op.kind, .inputs = op.arguments }, temporaries),
             .method_call => return self.checkCollectionMethod(node, temporaries),
             .slice => return self.checkCollectionSlice(node, temporaries),
@@ -1723,7 +1949,7 @@ const Checker = struct {
                 out.data = .{ .propagate = .{ .value = value, .output = self.return_type } };
             },
             .variant => |variant| {
-                out.ty = try self.ty(variant.ty);
+                out.ty = try self.variantType(variant, node.span);
                 const tag = try self.catalog.variant(out.ty, self.src, variant.name, self.sink);
                 const schema = (try self.catalog.variants(out.ty, node.span, self.sink)).cases[tag];
                 const value = if (variant.value) |input| self.resolved[@backingInt(input)].? else null;
@@ -1821,6 +2047,10 @@ const Checker = struct {
         if (node.data == .index and out.data == .block_value) return 2;
         if (node.data == .length and out.data == .block_value) return 1;
         if (node.data == .bytes or node.data == .text or node.data == .integer) return 0;
+        // A list literal checks its own elements, so none of them reach the caller's stack;
+        // a dict literal queues every key and value, whether it builds a dict or a table.
+        if (node.data == .list_literal or node.data == .format or node.data == .comprehension) return 0;
+        if (node.data == .dictionary_literal) return node.data.dictionary_literal.len;
         if (node.data == .binary) return 2;
         if (node.data == .call and try self.numericConversion(node.data.call) != null) return node.data.call.arguments.len;
         return switch (out.data) {
@@ -2037,12 +2267,15 @@ const Checker = struct {
             _ = self.active.remove(local.name);
         };
         var checked: std.ArrayList(typed.StatementId) = .empty;
+        var looping = false;
         for (children) |child| {
-            if (flow.terminates) return self.sink.fail("E_UNREACHABLE", self.syntax.statements.items[@backingInt(child)].span, "statement follows a structurally terminating statement");
+            if (flow.terminates and !looping) return self.sink.fail("E_UNREACHABLE", self.syntax.statements.items[@backingInt(child)].span, "statement follows a structurally terminating statement");
             const result = try self.statement(child);
             flow.terminates = result.terminates;
+            looping = result.looping;
             try checked.append(self.allocator, result.id);
         }
+        flow.looping = looping;
         if (!flow.terminates) {
             try self.requireHandled(first_local, stmt.span);
             var owned: std.ArrayList(typed.LocalId) = .empty;
@@ -2055,7 +2288,8 @@ const Checker = struct {
     }
     fn patternTag(self: *Checker, value_type: typed.Type, type_span: source.Span, name: source.Span) Error!usize {
         if (type_span.start != type_span.end) {
-            try self.require(try self.ty(type_span), value_type, type_span);
+            const contextual = try variant_calls.contextual(self.src, self.catalog, type_span, value_type, self.sink);
+            try self.require(contextual orelse try self.ty(type_span), value_type, type_span);
             return self.catalog.variant(value_type, self.src, name, self.sink);
         }
         const spelling = self.src.text(name);
@@ -2066,18 +2300,49 @@ const Checker = struct {
         }
         return self.sink.fail("E_UNKNOWN_VARIANT", name, "case is not a variant of the matched type");
     }
+    /// Give every variant no earlier arm named the wildcard's body, discarding its payload.
+    fn wildcardArms(
+        self: *Checker,
+        arms: *std.ArrayList(typed.MatchArm),
+        shape: struct { seen: []?source.Span, variants: typed.Variants, name: source.Span },
+        body: typed.StatementId,
+    ) Error!void {
+        var covered: usize = 0;
+        for (shape.seen, shape.variants.cases, 0..) |named, variant, tag| {
+            if (named != null) continue;
+            if (variant.payload) |payload| if (self.requiresHandling(payload)) return self.sink.fail(
+                eResultDiscard,
+                shape.name,
+                "`case _` would drop a result-bearing payload; give that variant its own arm",
+            );
+            shape.seen[tag] = shape.name;
+            covered += 1;
+            try arms.append(self.allocator, .{ .tag = tag, .slot = null, .body = body });
+        }
+        if (covered == 0) return self.sink.fail(eWildcardArm, shape.name, "every variant already has an arm, so `case _` is unreachable");
+    }
     fn statementMatch(self: *Checker, stmt: ast.Statement, match: @FieldType(@FieldType(ast.Statement, "data"), "match"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         const value = try self.expression(match.value);
         const value_type = self.nodes.items[@backingInt(value)].ty;
         const variants = try self.catalog.variants(value_type, stmt.span, self.sink);
         const seen = try self.allocator.alloc(?source.Span, variants.cases.len);
         @memset(seen, null);
-        const arms = try self.allocator.alloc(typed.MatchArm, match.arms.len);
+        var arms: std.ArrayList(typed.MatchArm) = .empty;
         const before = try self.pendingState(self.locals.items.len);
         var continuation: ?[]Pending = null;
         flow.terminates = true;
-        for (match.arms, arms) |arm, *out_arm| {
+        for (match.arms, 0..) |arm, position| {
             self.restorePending(before);
+            if (wildcard(self.src, arm)) {
+                if (position + 1 != match.arms.len) return self.sink.fail(eWildcardArm, arm.name, "`case _` must be the last arm of a match");
+                const body = try self.statement(arm.body);
+                if (!body.terminates) {
+                    if (continuation) |state| try self.samePending(state, stmt.span, eResultPath) else continuation = try self.pendingState(before.len);
+                }
+                flow.terminates = flow.terminates and body.terminates;
+                try self.wildcardArms(&arms, .{ .seen = seen, .variants = variants, .name = arm.name }, body.id);
+                continue;
+            }
             const tag = try self.patternTag(value_type, arm.ty, arm.name);
             if (seen[tag]) |previous| return self.sink.failRelated("E_DUPLICATE_ARM", arm.name, "variant has more than one match arm", .{ .span = previous, .message = "previous arm" });
             seen[tag] = arm.name;
@@ -2124,14 +2389,14 @@ const Checker = struct {
                 if (continuation) |state| try self.samePending(state, stmt.span, eResultPath) else continuation = try self.pendingState(before.len);
             }
             flow.terminates = flow.terminates and body.terminates;
-            out_arm.* = .{ .tag = tag, .slot = slot, .body = body.id };
+            try arms.append(self.allocator, .{ .tag = tag, .slot = slot, .body = body.id });
         }
         for (seen, variants.cases) |covered, variant| if (covered == null) {
             const message = try std.fmt.allocPrint(self.allocator, "match does not handle variant `{s}`; every variant requires an explicit arm", .{variant.name});
             return self.sink.failRelated("E_INCOMPLETE_MATCH", stmt.span, message, .{ .span = variant.declaration, .message = "unhandled variant declared here" });
         };
         if (continuation) |state| self.restorePending(state);
-        return .{ .match = .{ .value = value, .arms = arms } };
+        return .{ .match = .{ .value = value, .arms = try arms.toOwnedSlice(self.allocator) } };
     }
     fn matchExpression(self: *Checker, node: ast.Node, match: @FieldType(@FieldType(ast.Node, "data"), "match_expression"), temporaries: []const typed.Type) Error!typed.Node {
         const value = try self.expressionWithTemporaries(match.value, temporaries);
@@ -2232,7 +2497,7 @@ const Checker = struct {
         flow.terminates = then_body.terminates and if (else_body) |other| other.terminates else false;
         return .{ .branch = .{ .condition = condition, .then_body = then_body.id, .else_body = if (else_body) |other| other.id else null } };
     }
-    fn statementLoop(self: *Checker, stmt: ast.Statement, loop: @FieldType(@FieldType(ast.Statement, "data"), "loop"), _: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
+    fn statementLoop(self: *Checker, stmt: ast.Statement, loop: @FieldType(@FieldType(ast.Statement, "data"), "loop"), flow: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         const before = try self.pendingState(self.locals.items.len);
         const condition = try self.expression(loop.condition);
         try self.require(self.nodes.items[@backingInt(condition)].ty, .bool, self.syntax.nodes.items[@backingInt(loop.condition)].span);
@@ -2244,6 +2509,10 @@ const Checker = struct {
         const body = try self.statement(loop.body);
         if (!body.terminates) try self.samePending(before, stmt.span, eResultLoop);
         self.restorePending(before);
+        // `while True:` without a break has no exit, so control never reaches what follows.
+        const always = self.nodes.items[@backingInt(condition)].data == .boolean and self.nodes.items[@backingInt(condition)].data.boolean;
+        flow.terminates = always and !self.loops.active.items[self.loops.active.items.len - 1].exited;
+        flow.looping = flow.terminates;
         return .{ .loop = .{ .id = loop_id, .condition = condition, .body = body.id } };
     }
     fn statementForEach(self: *Checker, stmt: ast.Statement, each: @FieldType(@FieldType(ast.Statement, "data"), "for_each")) Error!@FieldType(typed.Statement, "data") {
@@ -2360,6 +2629,7 @@ const Checker = struct {
         for (self.locals.items[loop.before.len..], loop.before.len..) |local, index| {
             if (try self.needsLocalCleanup(local.ty)) try owned.append(self.allocator, @fromBackingInt(index));
         }
+        if (!continuing) self.loops.active.items[self.loops.active.items.len - 1].exited = true;
         flow.terminates = true;
         flow.owned_cleanup = try owned.toOwnedSlice(self.allocator);
         var arenas: std.ArrayList(typed.LocalId) = .empty;
@@ -2392,6 +2662,12 @@ const Checker = struct {
         try self.requireHandled(0, stmt.span);
         flow.terminates = true;
         return .{ .ret = value };
+    }
+    /// `assert` traps instead of returning, so it needs no result type and no effect.
+    fn statementAssert(self: *Checker, claim: ast.Assertion) Error!@FieldType(typed.Statement, "data") {
+        const condition = try self.expressionExpected(claim.condition, .bool);
+        try self.require(self.nodes.items[@backingInt(condition)].ty, .bool, self.syntax.nodes.items[@backingInt(claim.condition)].span);
+        return .{ .assertion = .{ .condition = condition, .message = claim.message } };
     }
     fn statementBinding(self: *Checker, _: ast.Statement, b: @FieldType(@FieldType(ast.Statement, "data"), "binding"), _: *StatementFlow) Error!@FieldType(typed.Statement, "data") {
         const name = self.src.text(b.name);
@@ -2499,12 +2775,13 @@ const Checker = struct {
             .loop_exit => |continuing| try self.statementLoopExit(stmt, continuing, &flow),
             .for_each => |each| try self.statementForEach(stmt, each),
             .for_range => |range| try self.statementForRange(stmt, range),
+            .assertion => |claim| try self.statementAssert(claim),
             .binding => |b| try self.statementBinding(stmt, b, &flow),
             .assignment => |a| try self.statementAssignment(stmt, a, &flow),
         };
         const result: typed.StatementId = @fromBackingInt(self.statements.items.len);
         try self.statements.append(self.allocator, .{ .span = stmt.span, .terminates = flow.terminates, .owned_cleanup = flow.owned_cleanup, .data = data });
-        return .{ .id = result, .terminates = flow.terminates };
+        return .{ .id = result, .terminates = flow.terminates, .looping = flow.looping };
     }
 };
 fn warningLess(_: void, a: diagnostic.Diagnostic, b: diagnostic.Diagnostic) bool {
@@ -2641,13 +2918,16 @@ pub fn checkCached(allocator: std.mem.Allocator, src: source.Source, program: as
 
 // This initial conversion form is declarative. Restricting its body avoids
 // pretending arbitrary control/data flow proves source-field accounting.
-fn conversionBody(src: source.Source, program: ast.Program, function: ast.Function, sink: *diagnostic.Sink) Error!void {
+fn conversionBody(self: *Checker, function: ast.Function) Error!void {
+    const src = self.src;
+    const program = self.syntax;
+    const sink = self.sink;
     const statements = program.statements.items[@backingInt(function.body)].data.block;
     for (statements) |id| {
         const stmt = program.statements.items[@backingInt(id)];
         switch (stmt.data) {
             .ret => |value| {
-                if (program.nodes.items[@backingInt(value)].data != .record)
+                if (!try constructsRecord(self, program.nodes.items[@backingInt(value)]))
                     return sink.fail(eConversionBody, stmt.span, "conversion must return an explicit complete record construction");
             },
             .discard => |value| {
@@ -2660,6 +2940,15 @@ fn conversionBody(src: source.Source, program: ast.Program, function: ast.Functi
             else => return sink.fail(eConversionBody, stmt.span, "conversion bodies contain named source-field discards followed by a complete record construction; use helpers for transformations"),
         }
     }
+}
+
+/// Accept both record construction spellings: legacy `new T { a: 1 }` and Python `T(a=1)`.
+/// Both check with complete field accounting, so the conversion contract is unchanged.
+fn constructsRecord(self: *Checker, node: ast.Node) Error!bool {
+    if (node.data == .record) return true;
+    if (node.data != .call) return false;
+    const lowered = try @import("record_calls.zig").lower(self.allocator, self.src, self.catalog, node.data.call, self.sink);
+    return lowered != null;
 }
 
 const functionName = @import("function_identity.zig").localName;

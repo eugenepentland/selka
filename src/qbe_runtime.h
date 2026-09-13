@@ -53,6 +53,7 @@ void myl_qbe_fail_list_bounds(void *context);
 void myl_qbe_fail_list_capacity(void *context);
 void myl_qbe_fail_allocation(void *context);
 void myl_qbe_fail_iteration(void *context);
+void myl_qbe_fail_assert(void *context);
 void myl_qbe_fail_bounds(void *context);
 myl_native_heap *myl_qbe_heap(void *context);
 uint64_t myl_qbe_failed(void *context);

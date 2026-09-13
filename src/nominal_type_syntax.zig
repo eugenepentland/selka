@@ -1,9 +1,17 @@
 //! Detect nominal template syntax before selecting semantic catalog construction.
 const Source = @import("source.zig").Source;
 const ast = @import("ast.zig");
+/// Literal forms whose values are managed collections needing the nominal catalog.
+fn managedLiteral(node: ast.Node) bool {
+    return switch (node.data) {
+        .list_literal, .text, .dictionary_literal, .format, .comprehension => true,
+        else => false,
+    };
+}
+
 /// Whether the program declares or applies a parameterized nominal type.
 pub fn present(program: ast.Program) bool {
-    for (program.nodes.items) |node| if (node.data == .list_literal or node.data == .text or node.data == .dictionary_literal) return true;
+    for (program.nodes.items) |node| if (managedLiteral(node)) return true;
     inline for (.{ "records", "variants" }) |category| {
         for (@field(program.types, category)) |declaration| if (declaration.type_parameters.len != 0) return true;
     }
@@ -16,7 +24,7 @@ pub fn present(program: ast.Program) bool {
 
 /// Select builtin nominal text/numeric schemas without requiring a generic use.
 pub fn presentInSource(program: ast.Program, src: Source) bool {
-    return present(program) or textUsed(src) or byteLiteral(program, src) or fileSyntax(program, src);
+    return present(program) or preludeUsed(src) or byteLiteral(program, src) or fileSyntax(program, src);
 }
 
 /// Recognize the I/O surface, whose operands and results are `str`, `bytes` and
@@ -48,11 +56,13 @@ pub fn byteLiteral(program: ast.Program, src: Source) bool {
 }
 
 /// Recognize the literal and constructor spellings that need the managed bytes prelude type.
+/// Naming the type anywhere counts, so a bare `bytes` annotation resolves on its own.
 pub fn bytesSyntax(program: ast.Program, src: Source) bool {
     const std = @import("std");
     if (byteLiteral(program, src)) return true;
     if (fileSyntax(program, src)) return true;
     for (program.functions) |function| if (std.mem.eql(u8, src.text(function.name), "bytes")) return false;
+    if (wordUsed(src, &.{"bytes"})) return true;
     for (program.nodes.items) |node| {
         if (node.data != .call) continue;
         const call = node.data.call;
@@ -66,6 +76,11 @@ pub fn bytesSyntax(program: ast.Program, src: Source) bool {
 /// Detect text/dictionary syntax without scanning quoted or commented words.
 pub fn textUsed(src: Source) bool {
     return wordUsed(src, &.{ "str", "dict" });
+}
+
+/// Whether any prelude collection or numeric type is named, selecting the nominal catalog.
+pub fn preludeUsed(src: Source) bool {
+    return wordUsed(src, &.{ "str", "dict", "bytes", "float" });
 }
 
 /// Scan identifier words outside quoted literals and comments for any listed spelling.
@@ -97,6 +112,17 @@ pub fn wordUsed(src: Source, names: []const []const u8) bool {
 
 /// Materialize text only when a literal or explicit text type needs its schema.
 pub fn textRequired(program: ast.Program, src: Source) bool {
-    for (program.nodes.items) |node| if (node.data == .text) return true;
-    return textUsed(src);
+    for (program.nodes.items) |node| if (node.data == .text or node.data == .format) return true;
+    // Printing and the file surface format and answer text, so they need its schema too.
+    return textUsed(src) or fileSyntax(program, src) or printed(program, src);
+}
+
+/// Recognize any `print` call, whose operands are converted to text.
+fn printed(program: ast.Program, src: Source) bool {
+    const std = @import("std");
+    for (program.nodes.items) |node| {
+        if (node.data != .call or node.data.call.owner != null) continue;
+        if (std.mem.eql(u8, src.text(node.data.call.name), "print")) return true;
+    }
+    return false;
 }

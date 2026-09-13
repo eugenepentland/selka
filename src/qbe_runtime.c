@@ -50,6 +50,7 @@ void myl_qbe_fail_list_bounds(void *context) { fail(context, "R_LIST_BOUNDS"); }
 void myl_qbe_fail_list_capacity(void *context) { fail(context, "R_LIST_CAPACITY"); }
 void myl_qbe_fail_allocation(void *context) { fail(context, "OutOfMemory"); }
 void myl_qbe_fail_iteration(void *context) { fail(context, "R_LIST_ITERATION_MUTATION"); }
+void myl_qbe_fail_assert(void *context) { fail(context, "R_ASSERT"); }
 void myl_qbe_fail_bounds(void *context) {
     fail(context, "R_INDEX_BOUNDS");
 }

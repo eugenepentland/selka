@@ -8,9 +8,11 @@ pub const Tag = enum {
     ident,
     integer,
     bytes,
+    format,
     kw_fn,
     kw_none,
     kw_pass,
+    kw_assert,
     kw_elif,
     kw_case,
     kw_arena,
@@ -263,6 +265,7 @@ fn pythonKeyword(word: []const u8) Tag {
         .{ "or", Tag.or_or },
         .{ "not", Tag.bang },
         .{ "with", Tag.kw_with },
+        .{ "assert", Tag.kw_assert },
     };
     inline for (aliases) |alias| if (std.mem.eql(u8, word, alias[0])) return alias[1];
     return keyword(word);
@@ -306,31 +309,51 @@ pub fn isPythonSource(bytes: []const u8) bool {
 }
 /// Allocate source-spanned tokens and report invalid input through the supplied diagnostic sink.
 pub fn lex(allocator: std.mem.Allocator, bytes: []const u8, sink: *diagnostic.Sink) diagnostic.Error![]Token {
+    const python = isPythonSource(bytes);
+    const raw = try tokenize(allocator, bytes, .{ .start = 0, .end = bytes.len }, python, sink);
+    if (!python) return raw;
+    defer allocator.free(raw);
+    return @import("python_layout.zig").lower(Token, allocator, bytes, raw, sink);
+}
+
+/// Tokenize one byte range with absolute source spans and no indentation lowering.
+/// Format-string interpolations reuse the ordinary grammar through this entry point.
+pub fn lexRange(allocator: std.mem.Allocator, bytes: []const u8, span: Span, sink: *diagnostic.Sink) diagnostic.Error![]Token {
+    return tokenize(allocator, bytes, span, true, sink);
+}
+
+fn tokenize(allocator: std.mem.Allocator, bytes: []const u8, span: Span, python: bool, sink: *diagnostic.Sink) diagnostic.Error![]Token {
     var tokens: std.ArrayList(Token) = .empty;
     errdefer tokens.deinit(allocator);
-    const python = isPythonSource(bytes);
-    var i: usize = 0;
-    while (i < bytes.len) {
+    const limit = span.end;
+    var i: usize = span.start;
+    while (i < limit) {
         const start = i;
         const ch = bytes[i];
         if (std.ascii.isWhitespace(ch)) {
             i += 1;
             continue;
         }
-        const legacy_comment = !python and ch == '/' and i + 1 < bytes.len and bytes[i + 1] == '/';
+        const legacy_comment = !python and ch == '/' and i + 1 < limit and bytes[i + 1] == '/';
         if (ch == '#' or legacy_comment) {
-            while (i < bytes.len and bytes[i] != '\n') i += 1;
+            while (i < limit and bytes[i] != '\n') i += 1;
             continue;
         }
         const tag: Tag = blk: {
-            const bytes_prefix = ch == 'b' and i + 1 < bytes.len and (bytes[i + 1] == '"' or bytes[i + 1] == '\'');
+            const quotes = i + 1 < limit and (bytes[i + 1] == '"' or bytes[i + 1] == '\'');
+            const bytes_prefix = ch == 'b' and quotes;
+            const format_prefix = python and ch == 'f' and quotes;
+            if (format_prefix) {
+                i = try @import("byte_literal.zig").end(bytes, start + 1, sink);
+                break :blk .format;
+            }
             if (ch == '"' or ch == '\'' or bytes_prefix) {
                 i = try @import("byte_literal.zig").end(bytes, start + @as(usize, @intFromBool(ch == 'b')), sink);
                 break :blk .bytes;
             }
             if (std.ascii.isAlphabetic(ch) or ch == '_') {
                 i += 1;
-                while (i < bytes.len and (std.ascii.isAlphanumeric(bytes[i]) or bytes[i] == '_')) i += 1;
+                while (i < limit and (std.ascii.isAlphanumeric(bytes[i]) or bytes[i] == '_')) i += 1;
                 break :blk dialectKeyword(bytes[start..i], python);
             }
             if (std.ascii.isDigit(ch)) {
@@ -338,7 +361,7 @@ pub fn lex(allocator: std.mem.Allocator, bytes: []const u8, sink: *diagnostic.Si
                 break :blk .integer;
             }
             i += 1;
-            const next = if (i < bytes.len) bytes[i] else 0;
+            const next = if (i < limit) bytes[i] else 0;
             const pair: ?Tag = switch (ch) {
                 '/' => if (python and next == '/') .slash_slash else null,
                 '.' => if (next == '.') .dot_dot else null,
@@ -384,11 +407,6 @@ pub fn lex(allocator: std.mem.Allocator, bytes: []const u8, sink: *diagnostic.Si
         try tokens.append(allocator, .{ .tag = tag, .span = .{ .start = start, .end = i } });
     }
     try tokens.append(allocator, .{ .tag = .eof, .span = .{ .start = i, .end = i } });
-    if (isPythonSource(bytes)) {
-        const raw = try tokens.toOwnedSlice(allocator);
-        defer allocator.free(raw);
-        return @import("python_layout.zig").lower(Token, allocator, bytes, raw, sink);
-    }
     return tokens.toOwnedSlice(allocator);
 }
 

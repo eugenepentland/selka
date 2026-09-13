@@ -99,6 +99,10 @@ const Emitter = struct {
                 try self.instruction(stmt.span, .ret);
                 try self.push(.{ .expression = value });
             },
+            .assertion => |check| {
+                try self.instruction(self.program.nodes[@backingInt(check.condition)].span, .{ .assert_true = check.message });
+                try self.push(.{ .expression = check.condition });
+            },
             // `_ = expr` releases a result-bearing value, which settles its obligation.
             .discard => |value| {
                 const value_type = self.program.nodes[@backingInt(value)].ty;
@@ -154,8 +158,12 @@ const Emitter = struct {
                 } else if (!self.program.statements[@backingInt(loop.body)].terminates)
                     try self.push(.{ .jump = .{ .target = start, .span = stmt.span } });
                 try self.push(.{ .statement = loop.body });
-                try self.push(.{ .jump = .{ .target = end, .conditional = true, .span = self.program.nodes[@backingInt(loop.condition)].span } });
-                try self.push(.{ .expression = loop.condition });
+                // A loop the checker proved never exits emits no conditional exit, so what
+                // follows it stays unreachable instead of falling out of the function.
+                if (!stmt.terminates) {
+                    try self.push(.{ .jump = .{ .target = end, .conditional = true, .span = self.program.nodes[@backingInt(loop.condition)].span } });
+                    try self.push(.{ .expression = loop.condition });
+                }
                 try self.push(.{ .mark = start });
             },
         }
