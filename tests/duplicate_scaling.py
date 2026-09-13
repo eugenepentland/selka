@@ -15,7 +15,7 @@ def main():
     with tempfile.TemporaryDirectory(prefix='mylang-duplicate-scaling-') as directory:
         source = Path(directory) / 'scale.my'
         for size in (128, 512, 1024):
-            declarations = [f'class D{i}:\n    pass\n' for i in range(size - 1)]
+            declarations = [f'domain D{i}: i64:\n    pass\n' for i in range(size - 1)]
             for i in range(size):
                 carrier = 0 if i == size - 1 else i
                 declarations.append(

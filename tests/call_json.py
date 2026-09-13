@@ -112,7 +112,7 @@ def hidden() -> i64:
         assert run()['value'] is False  # same schema, freshly checked changed implementation
         module.write_text(source.replace('def zero() -> bool:\n    return True', 'def zero() -> i64:\n    return 0'))
         assert 'InvocationSchemaMismatch' in run(1)
-        module.write_text(source + 'fn broken()->i64{return true;}')
+        module.write_text(source + '\n\ndef broken() -> i64:\n    return True\n')
         assert 'E_TYPE' in run(1)
         module.write_text(source)
         original = write('data::shift', {'x': {'n': '0'}, 'n': '5'})

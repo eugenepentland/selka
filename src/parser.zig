@@ -256,6 +256,8 @@ pub const Parser = struct {
                 const backing = try self.typeName();
                 _ = try self.expect(.indent);
                 var codec: ?ast.Codec = null;
+                // `pass` spells an empty suite here as it does in a record.
+                if (self.take(.kw_pass)) _ = try self.expect(.semicolon);
                 while (self.current().tag != .dedent) {
                     if (self.current().tag == .ident and std.mem.eql(u8, self.src.text(self.current().span), "codec")) {
                         if (codec != null) return self.sink.fail("E_DUPLICATE_CODEC", self.current().span, "a domain declares at most one codec");
