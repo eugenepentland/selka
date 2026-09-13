@@ -129,3 +129,9 @@ test "invocation normalizes scalar bindings before optimized local access" {
     }
     return error.TestExpectedEqual;
 }
+
+// spec: VM-FUSION-2
+test "fused execution preserves managed list aliases across calls" {
+    try compareBudgets("fn bump(values:List<i64>)->i64{values[0u64]=values[0u64]+1;return values[0u64];}" ++
+        "fn main()->i64{let values:List<i64>=[];values.push(3);_ = bump(values);return values[0u64]+2;}");
+}

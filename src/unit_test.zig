@@ -7,7 +7,6 @@ const program =
     "fn skip<T:copy>(x:T)->unit{_ = x;}" ++
     "fn noop()->unit{return;}" ++
     "fn main()->i64{let mut x=0;x=42;set(x);skip::<i64>(x);noop();return x;}";
-
 fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "unit.my", program);
     defer c.deinit();
@@ -22,7 +21,6 @@ test "unit calls bare returns and generic fallthrough preserve results with allo
     var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
     try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
 }
-
 // spec: UNIT-3
 test "unit data and host boundaries reject unsupported ABI values explicitly" {
     const typed = @import("typed.zig");
@@ -36,7 +34,6 @@ test "unit data and host boundaries reject unsupported ABI values explicitly" {
     try t.expectError(error.SourceError, c.check());
     try t.expectEqualStrings("E_HOST_SIGNATURE", c.diagnostics.items[0].code);
 }
-
 fn publicUnit(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
     if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
     return allocator.dupe(u8, "module main;export finish;fn finish()->unit{}fn main()->i64{finish();return 42;}");
@@ -54,14 +51,6 @@ test "public unit schemas describe a distinct type while unsupported copied ABIs
     try t.expectError(error.NotDataType, guest.compilation.invokePublic(t.allocator, "main::finish", &.{}, .{}));
     try t.expectEqual(@as(i64, 42), (try language.vm.run(t.allocator, guest.compilation.code.?)).value);
 }
-
-// spec: UNIT-1
-test "unit calls bare returns generic fallthrough and mutable loans preserve results with allocation failures" {
-    try scenario(t.allocator);
-    var stable = t.FailingAllocator.init(t.allocator, .{ .resize_fail_index = 0 });
-    try t.checkAllAllocationFailures(stable.allocator(), scenario, .{});
-}
-
 // spec: UNIT-5
 test "unit result payloads still require handling and propagation only drops successful unit" {
     const header = "result Done{ok:unit,err:i64}fn noop()->unit{}fn done()->Done{return new Done.ok(noop());}";

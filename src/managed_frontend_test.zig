@@ -30,3 +30,35 @@ test "managed list formatting preserves contextual list case identifiers" {
     try t.expect(std.mem.indexOf(u8, formatted, "[]") != null);
     try evaluate(formatted);
 }
+
+// spec: GC-GENERIC-1
+test "managed generic list creation mutation and copy identity preserve shared aliases" {
+    try evaluate("" ++
+        "fn make<T:copy>()->List<T>{let items:List<T>=[];return items;}" ++
+        "fn add<T:copy>(items:List<T>,value:T)->unit{items.push(value);}" ++
+        "fn identity<T:copy>(value:T)->T{return value;}" ++
+        "fn main()->i64{let values=make::<i64>();let alias=identity(values);" ++
+        "add::<i64>(alias,42);return values[0];}");
+}
+
+// spec: GC-GENERIC-2
+test "managed nominal recursive list record edges allow finite reference graphs" {
+    try evaluate("struct Node<T:copy>{value:T,children:List<Node<T>>}" ++
+        "fn main()->i64{let children:List<Node<i64>>=[];" ++
+        "let node=new Node<i64>{value:42,children:children};children.push(node);" ++
+        "let child=children[0];return child.value;}");
+}
+
+// spec: GC-GENERIC-5
+test "managed lists reject nested and generic capabilities before helper alias escape" {
+    const cases = [_][]const u8{
+        "struct Box{value:[1]clock_cap}fn main()->i64{let values:List<Box>=[];return cast<i64>(len(values));}",
+        "fn hold<T:copy>()->i64{let values:List<T>=[];return cast<i64>(len(values));}fn main()->i64{return hold::<clock_cap>();}",
+    };
+    for (cases) |bytes| {
+        var compilation = try language.Compilation.init(t.allocator, "managed-capability.my", bytes);
+        defer compilation.deinit();
+        try t.expectError(error.SourceError, compilation.check());
+        try t.expectEqualStrings("E_LIST_CAPABILITY", compilation.diagnostics.items[0].code);
+    }
+}

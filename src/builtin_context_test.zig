@@ -121,3 +121,12 @@ test "declared List and Result types retain their own nominal identity" {
         "fn answer()->Result{return Ok(42);}fn main()->i64{let values:List<i64>=[];values.push(42);" ++
         "if values[0u64]!=42{return 0;}match answer(){Result.ok(n)=>{return n;},Result.err(e)=>{return e;}}}");
 }
+
+// spec: BUILTIN-CONTEXT-6
+test "contextual constructors reject ambiguity mismatched payloads and capability storage" {
+    try reject("fn main()->i64{let values=[];return 0;}", "E_LIST_INFERENCE");
+    try reject("fn main()->i64{let value=Ok(42);return 0;}", "E_RESULT_INFERENCE");
+    try reject("fn fail()->Result<bool,i64>{return Ok(42);}fn main()->i64{return 0;}", "E_TYPE");
+    try reject("fn main()->i64{let values:List<clock_cap>=[];return 0;}", "E_LIST_CAPABILITY");
+    try reject("fn main()->i64{let values:List<i64,bool>=[];return 0;}", "E_GENERIC_ARITY");
+}

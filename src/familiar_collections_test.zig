@@ -57,3 +57,29 @@ test "record constructors without new support generic records and trailing field
         \\}
     , 42);
 }
+
+// spec: FAMILIAR-COLLECTIONS-1
+test "list methods indexing and indexed assignment share aliases" {
+    try evaluate(
+        \\fn main() -> i64 {
+        \\    let values: List<i64> = []
+        \\    let alias = values
+        \\    alias.push(10)
+        \\    values[0] = 41
+        \\    return alias[0] + cast<i64>(values.len())
+        \\}
+    , 42);
+}
+
+// spec: FAMILIAR-COLLECTIONS-3
+test "generic list methods retain element type checking" {
+    try evaluate(
+        \\fn add<T:copy>(values:List<T>, value:T)->unit { values.push(value) }
+        \\fn first<T:copy>(values:List<T>)->T { return values[0] }
+        \\fn main()->i64 {
+        \\    let values: List<i64> = []
+        \\    add(values, 42)
+        \\    return first(values)
+        \\}
+    , 42);
+}

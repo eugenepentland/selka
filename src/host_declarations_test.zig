@@ -72,11 +72,24 @@ test "host bytecode validation rejects forged bodies signatures entry and effect
     code.main = original.id;
     try t.expectError(error.InternalError, language.bytecode.validate(t.allocator, code));
 }
-
 test "host effects propagate through ordinary generic and uncalled helper paths" {
     try reject(declaration ++ "fn main()->i64 effects(){return measure(1);}", "E_EFFECT_BOUND");
     try reject(declaration ++ "fn helper()->i64{return measure(1);}fn f<T:copy>(x:T)->i64 effects(){_ = x;return helper();}" ++ main_source, "E_EFFECT_BOUND");
     try reject("host fn read()->i64 effects(host,filesystem);fn main()->i64 effects(host){return read();}", "E_EFFECT_BOUND");
     try reject(declaration ++ "fn main()->i64{return measure(true);}", "E_TYPE");
     try reject("result R{ok:i64,err:i64}host fn f()->R effects(host);fn main()->i64{let value=f();return 0;}", "E_RESULT_UNHANDLED");
+}
+// spec: HOST-SOURCE-1
+test "host source declarations require explicit value signatures effects and guest main" {
+    try reject("host fn f()->i64;" ++ main_source, "E_HOST_EFFECTS");
+    try reject("host fn f()->i64 effects();" ++ main_source, "E_HOST_EFFECTS");
+    try reject("host fn f()->i64 noalloc;" ++ main_source, "E_HOST_EFFECTS");
+    try reject("host fn f<T:copy>(x:T)->T effects(host);" ++ main_source, "E_HOST_DECLARATION");
+    try reject("host conversion fn f(x:i64)->i64 effects(host);" ++ main_source, "E_HOST_DECLARATION");
+    try reject("domain D:i64{host fn f()->i64 effects(host);}" ++ main_source, "E_HOST_DECLARATION");
+    try reject("host fn f()->clock_cap effects(host);" ++ main_source, "E_HOST_SIGNATURE");
+    try reject("resource File:filesystem;host fn f(x:File)->i64 effects(host);" ++ main_source, "E_HOST_SIGNATURE");
+    try reject("host fn f(x:List<i64>)->i64 effects(host);" ++ main_source, "E_HOST_SIGNATURE");
+    try reject("host fn f()->i64 effects(host){return 1;}" ++ main_source, "E_SYNTAX");
+    try reject("host fn main()->i64 effects(host);", "E_MAIN");
 }

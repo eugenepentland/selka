@@ -71,3 +71,13 @@ test "record schemas conversion checking construction update projection and dump
     var no_resize = testing.FailingAllocator.init(testing.allocator, .{ .resize_fail_index = 0 });
     try testing.checkAllAllocationFailures(no_resize.allocator(), allocationScenario, .{});
 }
+
+// spec: CORE-5
+test "record construction nesting named order field access and immutable copies" {
+    try result("struct Pair { x: i64, y: i64 } fn main() -> i64 { let a: Pair = new Pair { y: 2, x: 3 }; let mut b = a; b.x = 8; return a.x + b.x + b.y; }", 13);
+    try result("struct Outer { inner: Inner, flag: bool } struct Inner { value: i64 } fn id(x: " ++
+        "Outer) -> Outer { return x; } fn main() -> i64 { let x = id(new Outer { flag: true, " ++
+        "inner: new Inner { value: 7 } }); if x.flag { return x.inner.value; } return 0; }", 7);
+    try result("struct Count { n: i64, keep: i64 } fn main() -> i64 { let mut state = new Count { n: 0, keep: 7 }; while state.n < 10000 { state.n = state.n + 1; } return state.n + state.keep; }", 10007);
+    try result("struct Pair { x: i64, y: i64 } fn main() -> i64 { return -new Pair { x: 4, y: 2 }.x + 10; }", 6);
+}

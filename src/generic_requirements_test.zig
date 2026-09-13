@@ -75,3 +75,30 @@ test "generic requirement resolution frees partial results for malformed caller 
         try t.expectEqualStrings(case.code, sink.items.items[0].code);
     }
 }
+
+// spec: GENERIC-REQUIREMENTS-1
+test "generic requirements preserve nominal identity and ownership obligations" {
+    var compilation = try language.Compilation.init(t.allocator, "requirements.my", "domain Distance:i64{}enum Color{red,blue}struct Point{x:i64}resource File:filesystem;" ++
+        "result Answer{ok:i64,err:i64}struct Pending{answer:Answer}struct Owned{file:File}" ++
+        "fn main()->i64{return 0;}");
+    defer compilation.deinit();
+    try compilation.check();
+    const records = compilation.program.?.records;
+    const cases = [_]struct { name: []const u8, copy: bool = false, equality: bool = false }{
+        .{ .name = "Distance", .copy = true, .equality = true },
+        .{ .name = "Point", .copy = true },
+        .{ .name = "Color", .copy = true, .equality = true },
+        .{ .name = "File" },
+        .{ .name = "Answer" },
+        .{ .name = "Pending" },
+        .{ .name = "Owned" },
+    };
+    for (cases) |case| {
+        const found = namedType(records, case.name);
+        try t.expect(found != null);
+        const ty = found.?;
+        try t.expectEqual(case.copy, contract(.copy).accepts(ty, records));
+        try t.expectEqual(case.equality, contract(.equality).accepts(ty, records));
+        try t.expect(!contract(.integer).accepts(ty, records));
+    }
+}

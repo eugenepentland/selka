@@ -155,3 +155,12 @@ test "managed cycles lose local and record roots on block break and continue exi
         try t.expectEqual(@as(u64, 1), statistics.reclaimed);
     }
 }
+
+// spec: GC-SOURCE-7
+test "managed elements reject owned resources and unchecked results" {
+    try rejectAll(&.{
+        "resource File:filesystem;fn main()->i64{let values:List<File>=[];return cast<i64>(len(values));}",
+        "resource File:filesystem;struct Wrapper{file:File}fn main()->i64{let values:List<Wrapper>=[];return cast<i64>(len(values));}",
+        "result Answer{ok:i64,err:i64}fn main()->i64{let values:List<Answer>=[];return cast<i64>(len(values));}",
+    }, "E_LIST_ELEMENT");
+}

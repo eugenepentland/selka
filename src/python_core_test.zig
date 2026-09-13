@@ -3,7 +3,6 @@ const std = @import("std");
 const t = std.testing;
 const debug = std.debug;
 const language = @import("compiler.zig");
-
 fn run(text: []const u8, expected: i64) !void {
     var compilation = try language.Compilation.init(t.allocator, "core.my", text);
     defer compilation.deinit();
@@ -14,7 +13,6 @@ fn run(text: []const u8, expected: i64) !void {
     try t.expect(result == .value);
     try t.expectEqual(expected, result.value);
 }
-
 const Modules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
@@ -24,7 +22,6 @@ const Modules = struct {
             "match answer(){Result<i64,i64>.ok(n)=>{return n;},Result<i64,i64>.err(e)=>{return e;}}}");
     }
 };
-
 // spec: PYTHON-CORE-1
 test "standard Result and Option share their prelude identity" {
     var project = language.project.Project.init(t.allocator);
@@ -35,7 +32,6 @@ test "standard Result and Option share their prelude identity" {
     try compilation.emit();
     try t.expectEqual(@as(i64, 42), (try language.vm.run(t.allocator, compilation.code.?)).value);
 }
-
 // spec: PYTHON-CORE-2
 test "unit and checked-result main adapt to scalar status without changing guest call signatures" {
     try run("fn main()->unit{}", 0);
@@ -43,13 +39,11 @@ test "unit and checked-result main adapt to scalar status without changing guest
     try run("fn main()->Result<unit,i64>{return Err(42);}", 42);
     try run("fn main()->Result<i64,i64>{return Ok(42);}", 42);
 }
-
 // spec: PYTHON-CORE-4
 test "floating literals operators and comparisons use numeric binary64 semantics" {
     try run("fn add(x:float,y:float)->float{return x+y;}fn main()->i64{let value=add(1.5,2.5)*10.0+2.0;if value==42.0{return 42;}return 1;}", 42);
     try run("fn main()->i64{let zero=-0.0;let nan=0.0/0.0;if zero!=0.0{return 1;}if nan==nan{return 2;}if !(nan!=nan){return 3;}return 42;}", 42);
 }
-
 // spec-case: PYTHON-CORE-4
 test "floating comparisons and remainder preserve operand evaluation once in source order" {
     try run(
@@ -67,7 +61,6 @@ test "floating comparisons and remainder preserve operand evaluation once in sou
         \\    return log[0] + log[1] + log[2] + log[3] + 25
     , 42);
 }
-
 // spec-case: PY-COLLECTIONS-1
 test "Python indexed assignment evaluates RHS before receiver and index exactly once" {
     try run(
@@ -89,7 +82,6 @@ test "Python indexed assignment evaluates RHS before receiver and index exactly 
         \\    return log[0] * 100 + log[1] * 10 + log[2]
     , 123);
 }
-
 // spec-case: PYTHON-3
 test "Python payloadless enum values use ordinary dotted members" {
     try run(
@@ -101,7 +93,6 @@ test "Python payloadless enum values use ordinary dotted members" {
         \\    return 1
     , 42);
 }
-
 const PythonModules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8,
@@ -129,7 +120,6 @@ const PythonModules = struct {
         return error.NotFound;
     }
 };
-
 // spec-case: PYTHON-CORE-1
 test "Python exported module signatures share builtin types and resolve enum members" {
     var project = language.project.Project.init(t.allocator);
@@ -140,7 +130,6 @@ test "Python exported module signatures share builtin types and resolve enum mem
     try compilation.emit();
     try t.expectEqual(@as(i64, 42), (try language.vm.runWithOptions(t.allocator, compilation.code.?, .{ .memory = .{ .gc = .{ .stress = true } } })).value);
 }
-
 // spec-case: PYTHON-CALL-1
 test "Python string and float defaults remain typed and independent across repeated calls" {
     try run(
@@ -150,18 +139,6 @@ test "Python string and float defaults remain typed and independent across repea
         \\    return length() + length() + length(scale=33.5)
     , 40);
 }
-
-// spec: PYTHON-CORE-1
-test "standard List Result and Option share their prelude identity" {
-    var project = language.project.Project.init(t.allocator);
-    defer project.deinit();
-    try project.load(.{ .context = null, .read = Modules.read }, "main", .{});
-    var index = try language.interfaces.build(&project);
-    var compilation = try language.project_compile.Compilation.init(&index);
-    try compilation.emit();
-    try t.expectEqual(@as(i64, 42), (try language.vm.run(t.allocator, compilation.code.?)).value);
-}
-
 // spec: PYTHON-CORE-3
 test "representable integer literals inherit parameter local and expression contexts" {
     try run("fn widen(x:u8)->i64{return cast<i64>(x);}fn main()->i64{let n:u8=40;return widen(n+2);}", 42);
@@ -171,7 +148,6 @@ test "representable integer literals inherit parameter local and expression cont
     try t.expectError(error.SourceError, compilation.check());
     try t.expectEqualStrings("E_INTEGER_RANGE", compilation.diagnostics.items[0].code);
 }
-
 // spec-case: PYTHON-CORE-4
 test "Python division remainder numeric conversions and generic numbers" {
     try run(
@@ -194,7 +170,6 @@ test "Python division remainder numeric conversions and generic numbers" {
         \\    return int(adjust(0, 40.5))
     , 42);
 }
-
 // spec-case: PYTHON-CORE-1
 test "Python contextual Option constructors work in generic functions" {
     try run(

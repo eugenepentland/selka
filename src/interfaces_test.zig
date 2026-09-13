@@ -582,3 +582,17 @@ test "generic calls concrete helpers retain imported identity and private domain
     try acceptChecked(domain_caller, "module units;export D;domain D:i64{fn helper(x:i64)->i64{return D.leaf(x);}private fn leaf(x:i64)->i64{return x+1;}}");
     try rejectChecked(domain_caller, "module units;export D;domain D:i64{fn helper(x:i64)->i64{return E.leaf(x);}}domain E:i64{private fn leaf(x:i64)->i64{return x;}}", "E_PRIVATE_FUNCTION");
 }
+
+test "interface closure includes domain backing and enum table keys" {
+    try reject("module main; export D; domain Hidden: i64 {} domain D: Hidden {}", "E_PRIVATE_INTERFACE");
+    try reject("module main; export Table; enum Key { a, b } struct Table { values: [Key]i64 }", "E_PRIVATE_INTERFACE");
+    try reject("module main; export units; import units;", "E_SYNTAX");
+}
+
+// spec: ERGONOMIC-INTEGRATION-1
+test "cross module effect and recoverable result obligations are enforced" {
+    try rejectChecked("module main; import units; fn main() -> i64 noalloc { return units::allocate(); }",
+        "module units; export allocate; fn allocate() -> i64 { let values: List<i64> = []; values.push(1); return values[0u64]; }", "E_EFFECT_BOUND");
+    try rejectChecked("module main; import units; fn main() -> i64 { let pending = units::fallible(); return 0; }",
+        "module units; export R; export fallible; result R { ok: i64, err: i64 } fn fallible() -> R { return new R.ok(7); }", "E_RESULT_UNHANDLED");
+}

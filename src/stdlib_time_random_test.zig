@@ -65,20 +65,13 @@ test "standard time random providers retain typed failures at every capability" 
     try t.expectError(error.CapabilityUnavailable, run(t.allocator, provider_source, .{}, 0));
 }
 
-// spec: STANDARD-TIME-RANDOM-2
-test "standard time random providers retain failures and partial initialized output" {
-    var success: Provider = .{};
-    try run(t.allocator, provider_source, success.options(), 0);
-    try t.expectEqual(@as(usize, 4), success.calls);
-    var partial: Provider = .{ .fail_random = true };
-    try run(t.allocator, provider_source, partial.options(), 45);
-    var denied: Provider = .{ .failure = error.Denied };
-    try run(t.allocator, provider_source, denied.options(), 42);
-    var absent: Provider = .{ .failure = error.Unavailable };
-    try run(t.allocator, provider_source, absent.options(), 43);
-    var failed: Provider = .{ .failure = error.Failed };
-    try run(t.allocator, provider_source, failed.options(), 44);
-    var oom: Provider = .{ .failure = error.OutOfMemory };
-    try t.expectError(error.OutOfMemory, run(t.allocator, provider_source, oom.options(), 0));
-    try t.expectError(error.CapabilityUnavailable, run(t.allocator, provider_source, .{}, 0));
+// spec: STANDARD-TIME-RANDOM-3
+test "standard time random calls preserve effect ceilings and bounded provider work" {
+    try t.expectError(error.SourceError, run(t.allocator, "module main;import std_time;fn main(c:clock_cap)->i64 effects(){_ = std_time::now(c);return 0;}", .{}, 0));
+    var provider: Provider = .{};
+    try run(t.allocator, "module main;import std_random as r;fn main(cap:random_cap)->i64{" ++
+        "match r::entropy_bounded(cap,9223372036854775809u64,3u64){" ++
+        "r::Sample.ok(_)=>{return 1;},r::Sample.err(e)=>{if e!=new r::Error.exhausted{return 2;}}}" ++
+        "return 0;}", provider.options(), 0);
+    try t.expectEqual(@as(usize, 3), provider.calls);
 }
