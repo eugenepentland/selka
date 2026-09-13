@@ -45,29 +45,34 @@ def guest():
             ty = ('i' if signed else 'u') + str(bits)
             value = -(2 ** (bits - 1)) if signed else 2 ** bits - 1
             result = value + 1 if signed else value - 1
-            declarations.append(f'extern fn c_{ty}(x:{ty})->{ty} effects(host);')
-            checks.append(f'let expected_{ty}:{ty}={result};if c_{ty}({value}) != expected_{ty} {{return 1;}}')
+            declarations.append(f'extern def c_{ty}(x: {ty}) -> {ty} effects(host)')
+            checks.append(f'    expected_{ty}: {ty} = {result}\n'
+                          f'    if c_{ty}({value}) != expected_{ty}:\n'
+                          f'        return 1')
     declarations += [
-        'extern fn c_bool(x:bool)->bool effects(host);',
-        'extern fn c_mix(a:i32,b:float,c:u64,d:float)->float effects(host);',
-        'extern fn c_stack(a:float,b:float,c:float,d:float,e:float,f:float,g:float,h:float,i:float,j:i64,k:i64,l:i64,m:i64,n:i64,o:i64,p:i64)->float effects(host);',
-        'extern fn c_void()->unit effects(host);',
-        'extern fn c_counter()->i32 effects(host);',
-        'extern fn c_nan()->float effects(host);',
-        'extern fn abs(x:i32)->i32 effects(host);',
-        'extern fn floor(x:float)->float effects(host);',
+        'extern def c_bool(x: bool) -> bool effects(host)',
+        'extern def c_mix(a: i32, b: float, c: u64, d: float) -> float effects(host)',
+        'extern def c_stack(a: float, b: float, c: float, d: float, e: float, f: float, g: float, '
+        'h: float, i: float, j: i64, k: i64, l: i64, m: i64, n: i64, o: i64, p: i64) -> float effects(host)',
+        'extern def c_void() -> None effects(host)',
+        'extern def c_counter() -> i32 effects(host)',
+        'extern def c_nan() -> float effects(host)',
+        'extern def abs(x: i32) -> i32 effects(host)',
+        'extern def floor(x: float) -> float effects(host)',
     ]
     checks += [
-        'if c_bool(true) {return 2;}',
-        'if c_mix(-7,1.5,18446744073709551615,-0.0) != 3.25 {return 3;}',
-        'if c_stack(1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10,11,12,13,14,15,16) != 136.0 {return 4;}',
-        'c_void(); if i64(c_counter()) != 1 {return 5;}',
-        'let nan=c_nan(); if nan == nan {return 6;}',
-        'if i64(abs(-7)) != 7 {return 7;}',
-        'if floor(3.9) != 3.0 {return 8;}',
-        'let indirect=abs; if i64(indirect(i32(-9))) != 9 {return 9;}',
+        '    if c_bool(True):\n        return 2',
+        '    if c_mix(-7, 1.5, 18446744073709551615, -0.0) != 3.25:\n        return 3',
+        '    if c_stack(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10, 11, 12, 13, 14, 15, 16) != 136.0:\n'
+        '        return 4',
+        '    c_void()\n    if i64(c_counter()) != 1:\n        return 5',
+        '    nan = c_nan()\n    if nan == nan:\n        return 6',
+        '    if i64(abs(-7)) != 7:\n        return 7',
+        '    if floor(3.9) != 3.0:\n        return 8',
+        '    indirect = abs\n    if i64(indirect(i32(-9))) != 9:\n        return 9',
     ]
-    return '\n'.join(declarations) + '\nfn main()->i64{' + ''.join(checks) + 'return 42;}'
+    return ('\n'.join(declarations) + '\n\ndef main() -> i64:\n'
+            + '\n'.join(checks) + '\n    return 42\n')
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -109,13 +114,20 @@ def main():
         assert result.stdout == b'42\n'
         run([compiler, 'build', source, '--run', *tools], ok=False)
         # Module qualification must not change the linked C symbol.
-        (root / 'foreign.my').write_text('module foreign;export c_version;extern fn c_version()->i32 effects(host);')
-        source.write_text('module main;import foreign;fn main()->i64{return i64(foreign::c_version());}')
+        (root / 'foreign.my').write_text('module foreign\nexport c_version\n'
+                                         'extern def c_version() -> i32 effects(host)\n')
+        source.write_text('module main\nimport foreign\n\n'
+                          'def main() -> i64:\n'
+                          '    return i64(foreign.c_version())\n')
         assert run([compiler, 'build', source, '--project', '--run', '--link', foreign, *tools]).stdout == b'42\n'
         # No test receipt may suppress another external call, even if IL is unchanged.
-        source.write_text('module main;import foreign;export test_external;export test_pure;'
-                          'fn test_external()->bool{return i64(foreign::c_version())==42;}'
-                          'fn test_pure()->bool{return true;}fn main()->i64{return 0;}')
+        source.write_text('module main\nimport foreign\nexport test_external\nexport test_pure\n\n'
+                          'def test_external() -> bool:\n'
+                          '    return i64(foreign.c_version()) == 42\n\n'
+                          'def test_pure() -> bool:\n'
+                          '    return True\n\n'
+                          'def main() -> i64:\n'
+                          '    return 0\n')
         command = [compiler, 'test', source, '--json', '--link', foreign, *tools]
         cold = json.loads(run(command).stdout)
         warm = json.loads(run(command).stdout)
@@ -124,8 +136,11 @@ def main():
         changed = json.loads(run(command, ok=False).stdout)
         assert changed['failed'] == 1 and changed['cached'] == 1, changed
         # Separate modules cannot assign conflicting C prototypes to one symbol.
-        (root / 'other.my').write_text('module other;export c_version;extern fn c_version()->i64 effects(host);')
-        source.write_text('module main;import foreign;import other;fn main()->i64{return 0;}')
+        (root / 'other.my').write_text('module other\nexport c_version\n'
+                                       'extern def c_version() -> i64 effects(host)\n')
+        source.write_text('module main\nimport foreign\nimport other\n\n'
+                          'def main() -> i64:\n'
+                          '    return 0\n')
         conflict = run([compiler, 'check-project', source], ok=False)
         assert b'E_EXTERN_CONFLICT' in conflict.stderr, conflict.stderr
     print('C FFI: scalar ABI, register/stack passing, libc, objects/archives, modules, and affected tests passed')

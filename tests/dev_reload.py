@@ -19,7 +19,7 @@ spec.loader.exec_module(dev)
 
 
 def source(byte):
-    return 'module main;import io;fn main()->i64{_ = io::put(' + str(byte) + 'u8);return 0;}'
+    return 'module main\nimport io\n\n\ndef main() -> i64:\n    _ = io.put(' + str(byte) + 'u8)\n    return 0\n'
 
 
 def wait_status(path, predicate, process):
@@ -49,9 +49,9 @@ def protocol(runner, project, documents):
         assert dev.prepare(host, second)['svg'] == 'B'
         assert host.request('discard')['status'] == 'discarded'
         assert host.request('commit')['failure'] == 'NoPreparedGeneration'
-        (project / 'main.my').write_text('module main;import io;import missing;fn main()->i64{return 0;}')
+        (project / 'main.my').write_text('module main\nimport io\nimport missing\n\n\ndef main() -> i64:\n    return 0\n')
         assert dev.prepare(host, dev.capture(project, documents)[1])['status'] == 'error'
-        (project / 'missing.my').write_text('module missing;')
+        (project / 'missing.my').write_text('module missing\n')
         assert dev.capture(project, documents)[0] != first_key
         assert dev.prepare(host, dev.capture(project, documents)[1])['status'] == 'prepared'
         (project / 'missing.my').unlink()
@@ -87,7 +87,7 @@ def watcher(runner, project, documents, output):
     try:
         first = wait_status(status, lambda v: v['state'] == 'fresh', process)
         assert output.read_text() == 'C'
-        (project / 'main.my').write_text('module main; broken')
+        (project / 'main.my').write_text('module main\nbroken\n')
         wait_status(status, lambda v: v['failure'] is not None, process)
         assert output.read_text() == 'C'
         (project / 'main.my').write_text(source(68))
