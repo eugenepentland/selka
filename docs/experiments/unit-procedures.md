@@ -33,8 +33,8 @@ that result. Unit return/fallthrough uses ordinary ownership and effect rules.
 
 The bytecode VM implements unit calls and returns through a zero-payload
 `Value.unit` and `PUSH_UNIT` instruction. No dummy integer appears in the language
-API. The example [`examples/unit.my`](../../examples/unit.my) exercises callbacks
-and recursion, and participates in budget-cutoff parity tests.
+API. The example [`examples/unit.my`](../../examples/unit.my) exercises unit-returning
+list mutation, recursion and a unit-returning callback.
 
 Public language schemas report `kind: unit`. Current copied data, JSON, manifest,
 and host invocation ABIs do not encode unit or graphs containing it;

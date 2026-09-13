@@ -263,7 +263,7 @@ See [resource I/O semantics](experiments/resource-io.md). Slice/range I/O remain
 operation permissions with a named subset. Copies cannot restore removed rights.
 Acquisition passes restrictions to the provider; owned reads/writes/completion check
 them before callbacks. Denied operations retain ownership and fallback release stays
-available. Provider scope and quotas remain shared. See [attenuation semantics](legacy/experiments/attenuation.md).
+available. Provider scope and quotas remain shared. See [attenuation semantics](experiments/attenuation.md).
 
 
 `read_resource_slice<Result>(owner, destination)` reads into an exclusive u8 slice;

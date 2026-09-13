@@ -1,11 +1,10 @@
 # C: resource operation permission attenuation
-> Removed on 2026-09-13: this page documents a feature that no longer exists in the language.
 
 Status: filesystem/network capability operation permissions can be narrowed in
 source and at the embedding entry boundary. Acquired resources inherit those
 permissions; runtime reads, writes, and completion enforce them before callbacks.
-Provider scope and quotas remain shared. Slice I/O, partial field moves, arenas/pools,
-and other roadmap tracks remain pending.
+Provider scope and quotas remain shared. The slice I/O, partial field move and
+explicit arena/pool tracks this page once named were removed on 2026-09-13.
 
 ```text
 fn delegate(fs: filesystem_cap) -> filesystem_cap effects() {

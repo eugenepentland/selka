@@ -3,7 +3,7 @@
 Concrete whole-value result handling is now implemented; see
 [the implementation and acceptance record](generic-results.md). The requirements
 below remain the acceptance contract. Partial field moves are now covered by
-[generic fields](generic-fields.md). Runtime operations/regions, generic result declarations
+[generic fields](../legacy/experiments/generic-fields.md). Runtime operations/regions, generic result declarations
 and associated success/error constraints are still pending; whole-value acceptance
 does not establish those capabilities.
 
@@ -54,7 +54,7 @@ these missing abstract rules.
 snapshots, restoration and continuing-path comparisons. Remaining result-bearing
 fields keep their obligations; whole-record access after a partial move rejects.
 Reassignment replenishes a binding only after remaining result obligations are
-handled. [The partial-field record](generic-fields.md) documents executable and
+handled. [The partial-field record](../legacy/experiments/generic-fields.md) documents executable and
 allocation-failure acceptance.
 
 [Concrete owned fields](../legacy/experiments/generic-owned.md) now participate in whole/partial move

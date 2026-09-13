@@ -26,7 +26,7 @@ def main():
     generic=(root/'examples/generic-resources.my').read_text()
     cases.extend([('generic',generic,{},0,b'8\n',None),
                   ('generic-network',generic.replace('filesystem','network'),{},0,b'8\n',None)])
-    quota=prefix+'fn work(fs:filesystem_cap,n:i64)->Run{let first=acquire_resource<A>(fs,new [0]u8[])?;if n==0{_ = first;return new Run.ok(0);}let second=acquire_resource<A>(fs,new [0]u8[])?;_ = second;return work(fs,n-1);}fn main(fs:filesystem_cap)->i64{match work(fs,512){Run.ok(n)=>{return n;},Run.err(first)=>{match work(fs,512){Run.ok(n)=>{return n;},Run.err(second)=>{return first+second;}}}}}'
+    quota=prefix+'fn work(fs:filesystem_cap,n:i64)->Run{let first=acquire_resource<A>(fs,new [0]u8[])?;if n==0{_ = first;return new Run.ok(0);}let second=acquire_resource<A>(fs,new [0]u8[])?;return work(fs,n-1);}fn main(fs:filesystem_cap)->i64{match work(fs,512){Run.ok(n)=>{return n;},Run.err(first)=>{match work(fs,512){Run.ok(n)=>{return n;},Run.err(second)=>{return first+second;}}}}}'
     cases.append(('quota-reuse',quota,{},0,b'8\n',None))
     with tempfile.TemporaryDirectory(prefix='qbe-resources-') as directory:
         directory=Path(directory)

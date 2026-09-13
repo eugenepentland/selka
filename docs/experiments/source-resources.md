@@ -73,13 +73,14 @@ the provider consumes the host handle and the result is `ok(true)`. On recoverab
 failure, the runtime constructs the error record containing the still-owned resource
 and error code. The original source binding remains moved in both cases. The caller
 can transfer the returned resource into another completion attempt, propagate the
-owned error, or handle/acknowledge the error and let fallback release run.
+owned error, or release the error with `_ =` and let fallback release run.
 
 Existing handling checks prevent silent loss of the result. Existing whole-value
 projection rules still apply: projecting `failure.resource` transfers its owner;
-projecting `failure.code` consumes the wrapper and releases its resource. `read_field(failure, code)` now inspects the code without consuming the wrapper,
-allowing code-dependent retry. See [non-consuming field reads](../legacy/experiments/owned-field-reads.md).
-Partial field moves and owned-wrapper borrowing remain pending.
+projecting `failure.code` consumes the wrapper and releases its resource. Reading
+the code without consuming the wrapper needed the removed `read_field`, so
+code-dependent retry is not expressible today; a completion attempt either retries
+unconditionally or propagates. Owned-wrapper borrowing remains pending.
 
 Host OOM is terminal for the run, so the resource is released if completion failed.
 If completion succeeded before a later allocation failure constructing its success

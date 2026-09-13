@@ -1,5 +1,10 @@
 # Post-MVP experiment sequence
 
+> Removed on 2026-09-13: the explicit storage tier (buffers, pools, legacy `list`
+> declarations, the `allocator` capability, references and slices, lexical borrows and
+> legacy arena scopes) and the C backend. Dated entries below that describe them are
+> history; their pages moved to [../legacy/](../legacy/).
+
 Native execution is outside the active roadmap-completion goal. Preserve the
 ability to add a backend later, but do not implement or extend native execution
 as part of completing this roadmap. The current goal is to develop the language
@@ -134,7 +139,7 @@ lifetime contracts are implemented; [the B audit](../legacy/experiments/b-audit.
 minimal error-value foundation for C/D. They preserve obligations through binding,
 wrapping, and helper calls, with exhaustive handling or explicit acknowledgement.
 [Propagation](propagation.md) now checks early-return obligations and borrow
-cleanup. [Owned-buffer transfers and partial-acquisition cleanup](../legacy/experiments/ownership.md) now have backend acceptance evidence. [Source ownership and recoverable acquisition](../legacy/experiments/owned-buffers.md) now integrate that cleanup into the VM; [buffer operations/views](../legacy/experiments/buffer-operations.md) now pass acceptance. [Transitive allocation bounds](effects.md) now pass acceptance. [Explicit allocator capabilities](../legacy/experiments/allocator-capabilities.md) now pass acceptance. [Clock/random capability operations](external-capabilities.md) now pass acceptance. [Source filesystem/network resource lifecycle and cleanup effects](source-resources.md) now pass; [bounded environment lookup](environment.md) now passes; [resource reads/writes](resource-io.md) now pass; [permission attenuation](../legacy/experiments/attenuation.md) now passes; [borrowed slice I/O](../legacy/experiments/resource-slices.md) now passes; [partial field moves](../legacy/experiments/partial-fields.md) and [source pools/handles](../legacy/experiments/source-pools.md) now pass; [source arena scopes](../legacy/experiments/source-arenas.md) now pass.
+cleanup. [Owned-buffer transfers and partial-acquisition cleanup](../legacy/experiments/ownership.md) now have backend acceptance evidence. [Source ownership and recoverable acquisition](../legacy/experiments/owned-buffers.md) now integrate that cleanup into the VM; [buffer operations/views](../legacy/experiments/buffer-operations.md) now pass acceptance. [Transitive allocation bounds](effects.md) now pass acceptance. [Explicit allocator capabilities](../legacy/experiments/allocator-capabilities.md) now pass acceptance. [Clock/random capability operations](external-capabilities.md) now pass acceptance. [Source filesystem/network resource lifecycle and cleanup effects](source-resources.md) now pass; [bounded environment lookup](environment.md) now passes; [resource reads/writes](resource-io.md) now pass; [permission attenuation](attenuation.md) now passes; [borrowed slice I/O](../legacy/experiments/resource-slices.md) now passes; [partial field moves](../legacy/experiments/partial-fields.md) and [source pools/handles](../legacy/experiments/source-pools.md) now pass; [source arena scopes](../legacy/experiments/source-arenas.md) now pass.
 
 [External resource backend acceptance](external-resources.md) now covers explicit
 fallible completion, fallback release, scoped transfers, and reverse cleanup.
@@ -557,7 +562,7 @@ shared inputs remain valid. Calls use a temporary name table and count reference
 arguments toward the work budget. Concrete instances retain ordinary borrow
 validation and VM/C execution. Generic slices, lexical borrow scopes, returned
 reference provenance, broader ownership/effects, and other roadmap work remain open.
-See `docs/experiments/generic-references.md` for scope and acceptance.
+See `docs/legacy/experiments/generic-references.md` for scope and acceptance.
 
 Validation: all 576 core tests passed in Debug and ReleaseFast, all 60 CLI tests
 passed, and native parity passed 2646 comparisons across 87 single-file and 16
@@ -576,7 +581,7 @@ instances retain runtime view lengths, bounds traps and immutable snapshots.
 Imported slice helpers execute through ordinary public wrappers. Lexical generic
 borrow scopes/narrowing, reference-result provenance, wider effect/ownership
 contracts, and other roadmap tracks remain unfinished. See
-`docs/experiments/generic-slices.md` for current scope and acceptance.
+`docs/legacy/experiments/generic-slices.md` for current scope and acceptance.
 
 Validation: all 579 core tests passed in Debug and ReleaseFast, all 60 CLI tests
 passed, and native parity passed 2664 comparisons across 90 single-file and 16
@@ -595,7 +600,7 @@ exit restores access and removes names on returns and failures. Recursive generi
 slice helpers execute through VM/C with runtime subrange bounds checks. Generic
 reference-result provenance, abstract whole-value range shape, broader ownership
 and effects, and other roadmap requirements remain unfinished. See
-`docs/experiments/generic-borrows.md` for current scope and acceptance.
+`docs/legacy/experiments/generic-borrows.md` for current scope and acceptance.
 
 Validation: all 582 core tests passed in Debug and ReleaseFast, all 60 CLI tests
 passed, and native parity passed 2676 comparisons across 92 single-file and 16
@@ -615,7 +620,7 @@ Imported result helpers execute through ordinary wrappers with internal instance
 excluded from public schema roots. Abstract whole-value-to-slice shape, broader
 nominal/composite operations, move-only/external-effect contracts, direct generic
 public invocation, and other roadmap requirements remain unfinished. See
-`docs/experiments/generic-returned-references.md` for scope and acceptance.
+`docs/legacy/experiments/generic-returned-references.md` for scope and acceptance.
 
 Validation: all 584 core tests passed in Debug and ReleaseFast, all 60 CLI tests
 passed, and native parity passed 2682 comparisons across 93 single-file and 16
@@ -652,7 +657,7 @@ a scalar entry result, bounded located traps and returning host failures. Every
 invocation releases guest storage; repeated calls reset state, and overlapping
 calls return Busy. `scripts/native.py --library` builds a shared library while
 preserving atomic and unchanged-output publication. See
-`docs/experiments/native-embedding.md` for the public C header contract.
+`docs/legacy/experiments/native-embedding.md` for the public C header contract.
 
 Focused acceptance passed 24 host programs across -O0/-O2 with undefined-behavior
 sanitization, repeated calls, frame/step budgets, reentry/concurrent rejection,
@@ -672,7 +677,7 @@ bits; integer widths, full u64 results, Booleans, counts and ranges are checked.
 Private helpers and internal generic instances remain unavailable. Located traps,
 budgets, cleanup and repeated-call recovery share the native entry machinery.
 The public C headers work with independently linked shared-library hosts. See
-`docs/experiments/native-calls.md` for the contract.
+`docs/legacy/experiments/native-calls.md` for the contract.
 
 Validation: 587 core tests passed in both Debug and ReleaseFast; all 60 CLI
 tests and formatting passed. Native parity
@@ -695,7 +700,7 @@ nodes and retain no guest allocation. Counts, type names, tags and scalar ranges
 are validated; the scalar call API shares that range implementation. Output
 capacity failures report the required size without writing output. Domains,
 resources and other runtime identities remain opaque. See
-`docs/experiments/native-wire.md` for the positional schema and ownership contract.
+`docs/legacy/experiments/native-wire.md` for the positional schema and ownership contract.
 
 Acceptance passes address/undefined-behavior sanitizer runs in -O0/-O2 and
 independent Debug/ReleaseFast shared-library hosts. Tests cover snapshots,
@@ -723,7 +728,7 @@ native scalar/record/array/table/variant/result functions only after validating
 the library's schema. Calls preserve host snapshots, report native traps and
 budgets, and do not retry output-capacity failures. Both embedded runtime sources
 participate in the generator/cache identity. See
-`docs/experiments/native-bindings.md` for usage and the synchronous native boundary.
+`docs/legacy/experiments/native-bindings.md` for usage and the synchronous native boundary.
 
 Independent metadata tests pass public field/type/case/export invalidation,
 compatible body/private/relocation stability, concurrent queries, both native
@@ -751,7 +756,7 @@ internal call boundary while the surrounding operands, frames, instruction/frame
 budgets and cleanup destination are preserved. Normal public calls retain their
 existing behavior. This is a prerequisite for codec-aware native value traversal;
 public wire calls and NativeClient still reject domain signatures. See
-`docs/experiments/native-codec-dispatch.md` for the remaining integration.
+`docs/legacy/experiments/native-codec-dispatch.md` for the remaining integration.
 
 Four sanitizer hosts pass nontrivial decoder/encoder execution, packed/boxed
 rejection ownership, caller operand/frame preservation, shared budgets, exact
@@ -778,7 +783,7 @@ call quota. Encoded output is staged before publication so each encoder runs onc
 and insufficient buffers or traps leave caller output unchanged. Implicit decoder
 rejections carry the domain identity and ordinary typed rejection tree; explicit
 public decoder calls retain ordinary language-result semantics. The original
-value API keeps its domain opacity. See `docs/experiments/native-codec-wire.md`.
+value API keeps its domain opacity. See `docs/legacy/experiments/native-codec-wire.md`.
 
 Four sanitizer hosts and four separately linked public-header hosts pass both
 optimization modes and packed/boxed rejection representations. Coverage includes

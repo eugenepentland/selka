@@ -114,40 +114,27 @@ def io_cases(prefix, finish):
     finish = finish.replace("return e;", "return -e;")
     declarations = "struct Chunk{eof:bool,bytes:[4]u8,length:u64}result Read{err:i64,ok:Chunk}result Written{err:i64,ok:u64}"
     byte_score = "+cast<i64>(chunk.bytes[0])+cast<i64>(chunk.bytes[1])+cast<i64>(chunk.bytes[2])+cast<i64>(chunk.bytes[3])"
-    fixed = prefix + declarations + "fn work(fs:filesystem_cap)->Run{let mut file=try acquire_resource<A>(fs,new [0]u8[]);let chunk=try read_resource<Read>(file);let n=try write_resource<Written>(file,chunk.bytes);let mut score=cast<i64>(chunk.length)*1000+cast<i64>(n)" + byte_score + ";if chunk.eof{score+=10000;}return new Run.ok(score);}" + finish
-    progress = "struct Progress{eof:bool,length:u64}result Read{err:i64,ok:Progress}result Written{err:i64,ok:u64}"
-    array_init = "let mut bytes=new [4]u8[7u8,8u8,9u8,10u8];let saved=bytes;"
-    snapshot_check = "if saved[1]!=8u8{return new Run.ok(-99);}"
-    sliced = prefix + progress + "fn work(fs:filesystem_cap)->Run{let mut file=try acquire_resource<A>(fs,new [0]u8[]);" + array_init + "let mut n=0u64;let mut code=0;borrow mut bytes[1..3] as dest{match read_resource_slice<Read>(file,dest){Read.ok(p)=>{n=p.length;if !p.eof{return new Run.ok(-98);}},Read.err(e)=>{code=e;}}}let mut written=0u64;borrow bytes[0..4] as input{written=try write_resource_slice<Written>(file,input);}" + snapshot_check + "return new Run.ok(code*1000+cast<i64>(n)*10+cast<i64>(written));}" + finish
-    buffer_init = "let mut bytes=try acquire_buffer<BA>(heap,4);discard try resize_buffer<BS>(bytes,4,9u8);"
-    buffered = ("buffer B:u8;result BA{ok:B,err:i64}result BS{ok:bool,err:i64}" + sliced).replace(array_init, buffer_init).replace(snapshot_check, "").replace("fn work(fs:filesystem_cap)", "fn work(heap:allocator,fs:filesystem_cap)").replace("fn main(fs:filesystem_cap)", "fn main(fs:filesystem_cap,heap:allocator)").replace("match work(fs)", "match work(heap,fs)")
+    fixed = prefix + declarations + "fn work(fs:filesystem_cap)->Run{let mut file=acquire_resource<A>(fs,new [0]u8[])?;let chunk=read_resource<Read>(file)?;let n=write_resource<Written>(file,chunk.bytes)?;let mut score=cast<i64>(chunk.length)*1000+cast<i64>(n)" + byte_score + ";if chunk.eof{score+=10000;}return new Run.ok(score);}" + finish
     result = []
+
     def add(name, source, settings, expected, error=None):
         result.append(("io-" + name, source, settings, 2 if error else 0, b"" if error else f"{expected}\n".encode(), error))
     add("fixed", fixed, {}, 12066)
-    add("slice", sliced, {}, 21)
-    add("buffer", buffered, {}, 21)
     add("network", fixed.replace("filesystem", "network"), {}, 12066)
     add("empty-fixed", fixed.replace("bytes:[4]u8", "bytes:[0]u8").replace(byte_score, ""), {}, 10000)
-    add("empty-slice", sliced.replace("bytes[1..3] as dest", "bytes[1..1] as dest"), {}, 1)
-    add("empty-buffer", buffered.replace("bytes[1..3] as dest", "bytes[1..1] as dest"), {}, 1)
     for mode in (1, 2, 3):
         add(f"fixed-read-{mode}", fixed, {"READ": mode}, -mode)
-        add(f"slice-read-{mode}", sliced, {"READ": mode}, mode * 1000 + 1)
-        add(f"buffer-read-{mode}", buffered, {"READ": mode}, mode * 1000 + 1)
-        add(f"write-{mode}", sliced, {"WRITE": mode}, -mode)
-    for source_name, source in (("fixed", fixed), ("slice", sliced), ("buffer", buffered)):
-        add(source_name + "-read-oom", source, {"READ": 4}, 0, b"OutOfMemory")
-        add(source_name + "-overread", source, {"READ": 5}, 0, b"InvalidProvider")
-        add(source_name + "-bad-eof", source, {"READ": 7}, 0, b"InvalidProvider")
-        add(source_name + "-eof", source, {"READ": 6}, 10001 if source_name == "fixed" else 1)
+        add(f"write-{mode}", fixed, {"WRITE": mode}, -mode)
+    add("fixed-read-oom", fixed, {"READ": 4}, 0, b"OutOfMemory")
+    add("fixed-overread", fixed, {"READ": 5}, 0, b"InvalidProvider")
+    add("fixed-bad-eof", fixed, {"READ": 7}, 0, b"InvalidProvider")
+    add("fixed-eof", fixed, {"READ": 6}, 10001)
     add("fixed-full", fixed, {"READ": 8}, 14406)
     add("fixed-not-eof", fixed, {"READ": 9}, 2066)
-    add("slice-not-eof", sliced, {"READ": 9}, -98)
-    add("write-oom", sliced, {"WRITE": 4}, 0, b"OutOfMemory")
-    add("overwrite", sliced, {"WRITE": 5}, 0, b"InvalidProvider")
-    add("no-callbacks", sliced, {"IO_MISSING": 1}, -1)
-    add("denied-before-missing", sliced, {"IO_MISSING": 1, "PERMISSIONS": 0}, -2)
+    add("write-oom", fixed, {"WRITE": 4}, 0, b"OutOfMemory")
+    add("overwrite", fixed, {"WRITE": 5}, 0, b"InvalidProvider")
+    add("no-callbacks", fixed, {"IO_MISSING": 1}, -1)
+    add("denied-before-missing", fixed, {"IO_MISSING": 1, "PERMISSIONS": 0}, -2)
     attenuated = fixed.replace("acquire_resource<A>(fs,", "acquire_resource<A>(restrict_resource<read,write,complete>(restrict_resource<read>(fs)),")
     add("source-attenuation", attenuated, {}, -2)
     return result

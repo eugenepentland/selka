@@ -1,4 +1,5 @@
 # Partial fields in generic bodies
+> Removed on 2026-09-13: this page documents a feature that no longer exists in the language.
 
 Generic bodies now support `read_field(owner, field)` on concrete records and
 `take_field(owner, field)` on concrete result-bearing records. The owner must be
@@ -39,7 +40,7 @@ success/error propagation. Allocation sweeps include semantic checking, executio
 and native emission. `examples/generic-fields.my` returns 17; native parity
 fixtures also cover imported schemas/helpers and a located trap after extraction.
 
-[Concrete owned graphs](../legacy/experiments/generic-owned.md) now use the same field transfer state
+[Concrete owned graphs](generic-owned.md) now use the same field transfer state
 and retain cleanup effects. Individual runtime operations, views and region scopes
 still need abstract authority and lifetime checks. Generic type constructors,
 symbolic structural constraints, codecs and public tooling remain pending.

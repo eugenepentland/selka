@@ -102,6 +102,6 @@ this backend to nominal resources, explicit grants, acquisition, completion retu
 ownership on failure, VM cleanup, and transitive effect bounds. The backend-only
 status and 283-test count above describe the historical checkpoint.
 
-[Resource operation permissions](../legacy/experiments/attenuation.md) now flow into acquisition and
+[Resource operation permissions](attenuation.md) now flow into acquisition and
 remain attached to owners through transfers. Providers must honor those restrictions
 when interpreting requests; runtime read/write/completion checks enforce them too.

@@ -9,7 +9,7 @@ From the repository root:
 ```sh
 python3 scripts/reference.py --compiler zig-out/bin/mylang --output /tmp/mylang-reference
 cat /tmp/mylang-reference/reference.md
-rg 'std_json::|std_collections::' /tmp/mylang-reference/api.md
+rg 'std_math::|std_iter::' /tmp/mylang-reference/api.md
 python3 scripts/reference.py --compiler zig-out/bin/mylang --output /tmp/mylang-reference --check
 ```
 
@@ -24,8 +24,8 @@ path, API path, and compiler SHA256. Full reports stay on disk:
   compiler identity, source hashes, schema hash, and template provenance.
 - `manifest.json`: artifact hashes and the input selection for freshness checks.
 
-The default selection imports `std_math`, `std_bytes`, `std_json`,
-`std_collections`, `std_strings`, and `std_io` into a temporary checked project.
+The default selection imports `std_math`, `std_iter`, `std_result`, `std_unit`,
+`std_time`, and `std_random` into a temporary checked project.
 These modules are embedded in the executable; checkout stdlib source files are
 never used to infer their APIs. Imported dependencies appear too. This is a small
 onboarding selection, not an exhaustive inventory of language builtins or all
@@ -34,17 +34,17 @@ standard modules. The full feature report identifies additional reported feature
 Choose another set with repeated `--module` arguments:
 
 ```sh
-python3 scripts/reference.py --compiler zig-out/bin/mylang --module std_graph --module std_queue --output /tmp/graph-reference
+python3 scripts/reference.py --compiler zig-out/bin/mylang --module std_time --module std_random --output /tmp/clock-reference
 ```
 
 Use `--entry` instead to document a project's reachable public API:
 
 ```sh
-python3 scripts/reference.py --compiler zig-out/bin/mylang --entry examples/callback-collections/main.my --output /tmp/project-reference
+python3 scripts/reference.py --compiler zig-out/bin/mylang --entry examples/corpus/invoice/main.my --output /tmp/project-reference
 ```
 
 Project entries retain their absolute location in the manifest. Modules needing
-project-supplied dependencies, such as `std_text`'s `io` host module, should be
+project-supplied dependencies, such as a host `io` module, should be
 referenced through an actual project entry. The tool does not invent host stubs or
 silently omit imports that fail checking. Invalid module selections or compiler
 errors fail generation before replacing artifacts.

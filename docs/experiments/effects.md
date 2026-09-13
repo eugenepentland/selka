@@ -15,7 +15,7 @@ A function may have one contextual annotation between its result/lifetime contra
 and body:
 
 ```mylang
-// doc: skip fragment: `Numbers` is declared in the complete examples/effects.my
+// doc: skip fragment: `Numbers` and the removed slice tier are not declared here
 fn edit(values: &mut []i64) -> i64 noalloc {
     write_slice(values, 0, 7);
     return read_slice(values, 0);
@@ -28,7 +28,6 @@ fn release(values: Numbers) -> i64 effects() {
 
 fn main() -> i64 effects(allocation) {
     // Acquisition is permitted here; no other external effect is permitted.
-    // The complete runnable example is examples/effects.my.
     return 0;
 }
 ```

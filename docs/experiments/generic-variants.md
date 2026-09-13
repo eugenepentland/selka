@@ -34,7 +34,7 @@ construction/matching and a located trap inside an imported generic match arm.
 Both scalar and record payload representations are exercised.
 
 [Concrete result-bearing variants](generic-results.md) now retain handling
-obligations across matches and propagation. [Partial field state](generic-fields.md) now supports extracting concrete
+obligations across matches and propagation. [Partial field state](../legacy/experiments/generic-fields.md) now supports extracting concrete
 result-bearing record payloads. [Concrete owned flow](../legacy/experiments/generic-owned.md) now retains cleanup effects.
 Runtime operations/regions, parameter-dependent structural types, codec
 constraints, public generic tooling and the remaining roadmap still need work.

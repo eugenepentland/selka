@@ -6,8 +6,8 @@ order and in their original gaps between tokens. It does not type-check, lower,
 execute, reorder declarations, simplify expressions, or modify files itself.
 
 ```sh
-zig build run -- fmt examples/buffer-views.my
-zig build run -- fmt examples/buffer-views.my --check
+zig build run -- fmt examples/records.my
+zig build run -- fmt examples/records.my --check
 ```
 
 Normal mode writes formatted source to stdout and exits 0. Check mode emits no

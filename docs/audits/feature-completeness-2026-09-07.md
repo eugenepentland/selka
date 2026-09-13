@@ -122,7 +122,7 @@ Start with bounded copied blocks and explicit short-read/write results, retainin
 
 **Status:** capabilities/resource operations implemented; general application integration incomplete. **Layer:** trusted host/library. **Effort:** M–L.
 
-The filesystem-entry probe fails with `CapabilityUnavailable` in the ordinary CLI. [Resource requests](../experiments/source-resources.md) are provider-defined byte protocols. [Attenuation](../legacy/experiments/attenuation.md) narrows read/write/complete operations but does not derive directory or endpoint scopes. Existing native provider experiments do not make the current VM CLI a general file/network application runner.
+The filesystem-entry probe fails with `CapabilityUnavailable` in the ordinary CLI. [Resource requests](../experiments/source-resources.md) are provider-defined byte protocols. [Attenuation](../experiments/attenuation.md) narrows read/write/complete operations but does not derive directory or endpoint scopes. Existing native provider experiments do not make the current VM CLI a general file/network application runner.
 
 Provide documented host adapters, grant configuration, directory/endpoint policies, and predictable errors. Keep process launching a separately granted future operation. Broad HTTP/TLS/async support should follow an actual application need.
 

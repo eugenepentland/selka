@@ -831,7 +831,7 @@ source/bytecode permissions, normalized discovery, and all allocation failures. 
 fixtures verify checking/dumps, absent-provider denial, and permission rejection.
 Formatting and whitespace checks pass. Discovery is exact-v23.
 
-[Attenuation semantics](legacy/experiments/attenuation.md) distinguishes resource operation
+[Attenuation semantics](experiments/attenuation.md) distinguishes resource operation
 permissions from acquisition/release authority, provider scope, revocation, and
 independent quotas. Slice I/O, partial field moves, arenas/pools, and every other
 unfinished roadmap track remain in scope. C is not complete. Guardian was not
