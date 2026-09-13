@@ -952,11 +952,12 @@ const Checker = struct {
         }
         if (try self.printBuiltin(call)) {
             _ = try io_builtins.printArguments(self.src, call, self.sink);
-            const text_type = try collections.preludeType(&self.catalog, "str", node.span);
+            // Only a keyword operand needs the text type, and only then is it materialized.
+            const text_type = if (call.argument_names.len == 0) null else try collections.preludeType(&self.catalog, "str", node.span);
             var index = call.arguments.len;
             while (index > 0) {
                 index -= 1;
-                if (call.argument_names.len != 0 and call.argument_names[index] != null) try self.hint(call.arguments[index], text_type);
+                if (call.argument_names.len != 0 and call.argument_names[index] != null) try self.hint(call.arguments[index], text_type.?);
                 try work.append(self.allocator, .{ .id = call.arguments[index] });
             }
             return true;

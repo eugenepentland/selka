@@ -205,7 +205,7 @@ test "CLI checks runs and dumps records and declared complete conversions" {
 test "CLI checks resource ownership completion and implicit cleanup effects without ambient access" {
     const source = @embedFile("fixtures/resources.my");
     try invoke("check", source, 0, "", "");
-    try invoke("run", source, 2, "", "host failure: CapabilityUnavailable");
+    try invoke("run", source, 2, "", "did not grant; pass --allow-");
     const dumped = try runFixture("dump-bytecode", source, &.{});
     defer testing.allocator.free(dumped.stdout);
     defer testing.allocator.free(dumped.stderr);
@@ -217,7 +217,7 @@ test "CLI checks resource ownership completion and implicit cleanup effects with
 test "CLI checks resource data operations effects and required mutation without ambient providers" {
     const source = @embedFile("fixtures/resource-io.my");
     try invoke("check", source, 0, "", "");
-    try invoke("run", source, 2, "", "host failure: CapabilityUnavailable");
+    try invoke("run", source, 2, "", "did not grant; pass --allow-");
     const dumped = try runFixture("dump-bytecode", source, &.{});
     defer testing.allocator.free(dumped.stdout);
     defer testing.allocator.free(dumped.stderr);
@@ -333,7 +333,12 @@ test "CLI checks and runs module programs with private boundaries and cross-file
     const path = try temp.dir.realPathFileAlloc(testing.io, "input.my", testing.allocator);
     defer testing.allocator.free(path);
     for ([_][]const u8{ "check-project", "run-project", "eval-project" }) |command| {
-        const result = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, command, path } });
+        const reporting: []const []const u8 = if (std.mem.eql(u8, command, "run-project")) &.{"--print-result"} else &.{};
+        var argv: std.ArrayList([]const u8) = .empty;
+        defer argv.deinit(testing.allocator);
+        try argv.appendSlice(testing.allocator, &.{ compiler_path, command, path });
+        try argv.appendSlice(testing.allocator, reporting);
+        const result = try std.process.run(testing.allocator, testing.io, .{ .argv = argv.items });
         defer testing.allocator.free(result.stdout);
         defer testing.allocator.free(result.stderr);
         try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, result.term);
@@ -855,7 +860,7 @@ test "CLI handles recoverable results and rejects silent error loss" {
 test "CLI checks external capabilities but cannot silently grant ambient providers" {
     const source = @embedFile("fixtures/external-capabilities.my");
     try invoke("check", source, 0, "", "");
-    try invoke("run", source, 2, "", "host failure: CapabilityUnavailable");
+    try invoke("run", source, 2, "", "did not grant; pass --allow-");
     const dumped = try runFixture("dump-bytecode", source, &.{});
     defer testing.allocator.free(dumped.stdout);
     defer testing.allocator.free(dumped.stderr);
@@ -867,7 +872,7 @@ test "CLI checks external capabilities but cannot silently grant ambient provide
 test "CLI checks bounded environment access without granting ambient process access" {
     const source = @embedFile("fixtures/environment.my");
     try invoke("check", source, 0, "", "");
-    try invoke("run", source, 2, "", "host failure: CapabilityUnavailable");
+    try invoke("run", source, 2, "", "did not grant; pass --allow-");
     const dumped = try runFixture("dump-bytecode", source, &.{});
     defer testing.allocator.free(dumped.stdout);
     defer testing.allocator.free(dumped.stderr);
@@ -879,7 +884,7 @@ test "CLI checks bounded environment access without granting ambient process acc
 test "CLI exposes resource permission attenuation and rejects malformed permission sets" {
     const source = @embedFile("fixtures/attenuation.my");
     try invoke("check", source, 0, "", "");
-    try invoke("run", source, 2, "", "host failure: CapabilityUnavailable");
+    try invoke("run", source, 2, "", "did not grant; pass --allow-");
     const dumped = try runFixture("dump-bytecode", source, &.{});
     defer testing.allocator.free(dumped.stdout);
     defer testing.allocator.free(dumped.stderr);
@@ -893,7 +898,7 @@ const clock_program =
     \\result Time { ok: i64, err: i64 }
     \\fn main(clock: Clock) -> i64 {
     \\    match clock_now<Time>(clock) {
-    \\        Time.ok(now) => { return 0; },
+    \\        Time.ok(now) => { return now - now; },
     \\        Time.err(code) => { return code; }
     \\    }
     \\}
@@ -961,7 +966,7 @@ test "CLI clock entropy and environment providers honour their grants" {
         "result Lookup { ok: Entry, err: i64 }\n" ++
         "fn main(env: Environment) -> i64 {\n" ++
         "    match environment_get<Lookup>(env, new [4]u8 [80u8, 65u8, 84u8, 72u8]) {\n" ++
-        "        Lookup.ok(entry) => { return 0; },\n" ++
+        "        Lookup.ok(entry) => { return cast<i64>(entry.length) - cast<i64>(entry.length); },\n" ++
         "        Lookup.err(code) => { return code; }\n" ++
         "    }\n" ++
         "}\n";
@@ -989,7 +994,8 @@ test "CLI directory grants scope the file surface and separate reading from writ
         \\    print(read_text(fs, "../escape"))
         \\    return 0
     ;
-    const denied = "Err('read \\'../escape\\': denied: outside the granted directories, or the mode needs a write grant')\n";
+    // These fixtures pass --print-result, so the entry point's `0` follows the program's output.
+    const denied = "Err('read \\'../escape\\': denied: outside the granted directories, or the mode needs a write grant')\n0\n";
     try invokeOptions("run", program, &.{read_grant}, 0, "Ok('alpha\\n')\n" ++
         "Err('write \\'copy.txt\\': denied: outside the granted directories, or the mode needs a write grant')\n" ++ denied, "");
     try invokeOptions("run", program, &.{write_grant}, 0, "Ok('alpha\\n')\nOk(None)\n" ++ denied, "");
@@ -1030,12 +1036,12 @@ test "CLI resolves the Python capability spellings inside projects that import m
         \\def main(clock: Clock, rng: Entropy, fs: Filesystem) -> int:
         \\    match time.now(clock):
         \\        case Ok(instant):
-        \\            print("clock")
+        \\            print("clock", instant.unix_nanoseconds - instant.unix_nanoseconds)
         \\        case Err(message):
         \\            print(message)
         \\    match random.from_entropy(rng):
         \\        case Ok(stream):
-        \\            print("entropy")
+        \\            print("entropy", len(stream.state))
         \\        case Err(message):
         \\            print(message)
         \\    print(exists(fs, "notes.txt"))
