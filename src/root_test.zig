@@ -35,6 +35,7 @@ test {
     _ = @import("float_operations_test.zig");
     _ = @import("integer_operations_test.zig");
     _ = @import("scoped_providers_test.zig");
+    _ = @import("io_print_test.zig");
     _ = @import("byte_literal_test.zig");
     _ = @import("nominal_provider_contracts_test.zig");
     _ = @import("nominal_environment_test.zig");

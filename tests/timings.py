@@ -36,14 +36,14 @@ def main():
         single.write_text('fn main()->i64{return 7;}')
         def command(*argv, data=b''):
             return subprocess.run(argv, input=data, capture_output=True, timeout=30)
-        baseline = command(compiler, 'run', str(single))
-        measured = command(compiler, 'run', str(single), '--timings=json')
+        baseline = command(compiler, 'run', str(single), '--print-result')
+        measured = command(compiler, 'run', str(single), '--print-result', '--timings=json')
         assert baseline.returncode == measured.returncode == 0
         assert baseline.stdout == measured.stdout == b'7\n' and not baseline.stderr
         counts = records(measured, 'compiler', ['source_load', 'frontend', 'bytecode_lowering', 'vm_execution', 'total'])
         assert counts['source_bytes'] == single.stat().st_size and counts['modules'] == 1
         assert counts['ast_nodes'] and counts['typed_nodes']
-        legacy = command(compiler, 'run', str(single), '--timings')
+        legacy = command(compiler, 'run', str(single), '--print-result', '--timings')
         assert legacy.returncode == 0 and legacy.stdout == baseline.stdout
         assert legacy.stderr.startswith(b'timings: bytecode_ns='), legacy
         checked = command(compiler, 'check', str(single), '--timings=json')

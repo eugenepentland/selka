@@ -150,6 +150,9 @@ fn validateInstruction(allocator: std.mem.Allocator, program: Program, function:
         .acquire_resource => |acquire| try validateOpAcquireResource(program, acquire),
         .external_read => |read| try validateOpExternalRead(program, read),
         .acquire_buffer => |ty| try validateOpAcquireBuffer(program, ty),
+        .print => |output| for (output.types) |ty| {
+            if (!validType(ty, program) or !@import("io_render.zig").printable(ty, program.records)) return error.InternalError;
+        },
         .cast_integer => |ty| {
             const text_target = validType(ty, program) and sequenceType(program, ty);
             if (!ty.isInteger() and !text_target) return error.InternalError;
@@ -432,6 +435,11 @@ fn validateFlow(allocator: std.mem.Allocator, program: Program, function: Functi
             .acquire_resource, .environment_get => {
                 if (height < 2) return error.InternalError;
                 height -= 1;
+            },
+            .print => |output| {
+                const operands = output.types.len + @intFromBool(output.separator) + @intFromBool(output.terminator);
+                if (height < operands) return error.InternalError;
+                height = height - operands + 1;
             },
             .arena_escape,
             .acquire_buffer,

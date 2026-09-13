@@ -93,7 +93,7 @@ def main():
         count = 0
         for text in cases():
             source.write_text(text)
-            vm = run([compiler, 'run', source])
+            vm = run([compiler, 'run', source, '--print-result'])
             built = run([sys.executable, ROOT / 'scripts/qbe.py', source, '-o', output,
                          '--compiler', compiler, '--qbe', args.qbe, '--zig', args.zig,
                          '--cache-dir', temp / 'cache'])
@@ -103,7 +103,7 @@ def main():
             count += 1
         for text in extended_cases():
             source.write_text(text)
-            vm = run([compiler, 'run', source])
+            vm = run([compiler, 'run', source, '--print-result'])
             built = run([sys.executable, ROOT / 'scripts/qbe.py', source, '-o', output,
                          '--compiler', compiler, '--qbe', args.qbe, '--zig', args.zig,
                          '--cache-dir', temp / 'cache'])
@@ -121,7 +121,7 @@ def main():
                          '--compiler', compiler, '--qbe', args.qbe, '--zig', args.zig,
                          '--cache-dir', temp / 'cache'])
             assert built.returncode == 0, built.stderr
-            vm = run([compiler, 'run', source, *options])
+            vm = run([compiler, 'run', source, '--print-result', *options])
             native = run([output, *options])
             assert signature(vm) == signature(native), (text, vm, native)
             count += 1
@@ -131,7 +131,7 @@ def main():
                          '--compiler', compiler, '--qbe', args.qbe, '--zig', args.zig,
                          '--cache-dir', temp / 'cache'])
             assert built.returncode == 0, built.stderr
-            vm = run([compiler, 'run', source, *options])
+            vm = run([compiler, 'run', source, '--print-result', *options])
             native = run([output, *options])
             assert signature(vm) == expected, (options, vm)
             assert signature(native) == expected, (options, native)

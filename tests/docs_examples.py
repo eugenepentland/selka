@@ -23,6 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 EXECUTABLE_TAGS = ("mylang", "my")
 PROSE_TAGS = ("", "text", "rust", "python", "go")
 GUEST_SHAPE = re.compile(r"^(?:def main|fn main|module )", re.M)
+PRINT_CALL = re.compile(r"(?<![A-Za-z0-9_.])print\s*\(")
 MODULE_LINE = re.compile(r"^module[ \t]+([A-Za-z_][A-Za-z0-9_]*)", re.M)
 MAIN_LINE = re.compile(r"^[ \t]*(?:pub[ \t]+)?(?:def|fn)[ \t]+main\b", re.M)
 DIRECTIVE = re.compile(r"^[ \t]*(?:#|//)[ \t]*doc:[ \t]*(?P<name>[A-Za-z-]+)[ \t]*(?P<rest>.*?)[ \t]*$")
@@ -216,10 +217,10 @@ def normalise(text):
     return "\n".join(line.rstrip() for line in text.strip().splitlines())
 
 
-def invoke(compiler, command, entry, verbose):
-    """Run one compiler command against an entry file."""
-    argv = [str(compiler), command, str(entry), "--diagnostics=json"]
-    if verbose:
+def invoke(compiler, command, entry, options):
+    """Run one compiler command against an entry file with extra CLI options."""
+    argv = [str(compiler), command, str(entry), "--diagnostics=json", *options.get("argv", ())]
+    if options.get("verbose"):
         print("  $ " + " ".join(argv))
     return subprocess.run(argv, capture_output=True, text=True, timeout=TIMEOUT), argv
 
@@ -234,7 +235,7 @@ def execute(unit, compiler, directory, verbose):
     wanted = intent["action"]
     command = ("check-project" if project else "check") if wanted in ("check", "expect-error") else ("run-project" if project else "run")
     try:
-        result, unit.command = invoke(compiler, command, entry, verbose)
+        result, unit.command = invoke(compiler, command, entry, {"verbose": verbose, "argv": options(unit, command)})
     except subprocess.TimeoutExpired:
         return unit.record("failed", f"'{command}' did not finish within {TIMEOUT} seconds")
     if verbose and result.stderr:
@@ -259,6 +260,16 @@ def execute(unit, compiler, directory, verbose):
             return unit.record("failed", f"expected stdout {wanted_text!r}, saw {actual!r}")
         return unit.record("run", f"stdout {wanted_text!r}")
     return unit.record("run")
+
+
+def options(unit, command):
+    """CLI options a unit needs: result reporting, plus any granted directories."""
+    if not command.startswith("run"):
+        return []
+    # An example that prints its own output asserts that output; one that does not
+    # keeps asserting the entry point's int result, which `run` reports on request.
+    prints = any(PRINT_CALL.search(member.source) for member in unit.members)
+    return [] if prints else ["--print-result"]
 
 
 def mistagged(fence):

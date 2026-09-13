@@ -2,9 +2,10 @@
 const std = @import("std");
 pub const Mask = u16;
 /// Independent capability effects tracked by source checking and interface reports.
-pub const Effect = enum(u3) { filesystem, network, clock, random, environment, host, managed_allocation };
-pub const all: Mask = 0b1111111;
-pub const io: Mask = bit(.filesystem) | bit(.network);
+pub const Effect = enum(u3) { filesystem, network, clock, random, environment, host, managed_allocation, output };
+pub const all: Mask = 0b11111111;
+/// `noio` withholds external byte streams: files, sockets and standard output.
+pub const io: Mask = bit(.filesystem) | bit(.network) | bit(.output);
 /// Declared allowed-effect mask and the source annotation that imposed it.
 pub const Bound = struct { allowed: Mask, span: @import("source.zig").Span };
 /// Return the mask bit corresponding to one effect category.

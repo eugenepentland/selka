@@ -44,6 +44,7 @@ pub const Instruction = struct {
         environment_get: struct { output: typed.Type, name: typed.Type },
         external_read: struct { kind: @import("external_capabilities.zig").Kind, output: typed.Type },
         acquire_buffer: typed.Type,
+        print: Print,
         move_local: typed.LocalId,
         drop_local: typed.LocalId,
         load_local: typed.LocalId,
@@ -68,6 +69,8 @@ pub const Instruction = struct {
         ret,
     },
 };
+/// Static argument types and whether explicit `sep=`/`end=` operands follow them.
+pub const Print = struct { types: []const typed.Type, separator: bool, terminator: bool };
 /// Checked function signature, locals, and instruction body.
 pub const Function = struct {
     policy: typed.FunctionPolicy = .{},

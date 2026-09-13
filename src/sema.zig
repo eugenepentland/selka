@@ -6,6 +6,8 @@ const collections = @import("collection_lower.zig");
 const needs_list = "operation requires a managed list";
 const eListType = @import("collection_lower.zig").list_type_error;
 const call_arguments = @import("call_arguments.zig");
+const io_builtins = @import("io_builtins.zig");
+const io_render = @import("io_render.zig");
 const callables = @import("callables.zig");
 const callback_type_code = "E_CALLBACK_TYPE";
 const eResultOperation = diagnostic.result_operation;
@@ -512,6 +514,40 @@ const Checker = struct {
             out.* = try self.numericBuilder(node.span).toInteger(value);
         } else out.* = .{ .span = node.span, .ty = .i64, .data = .{ .cast = value } };
     }
+    /// `print` is reserved unless a local binding or declared function shadows it.
+    fn printBuiltin(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
+        if (call.owner != null or !std.mem.eql(u8, self.src.text(call.name), "print")) return false;
+        if (self.active.contains("print") or self.functions.contains("print")) return false;
+        if (self.catalog.module_names) |names| if (try names.topLevel(call.name)) return false;
+        return true;
+    }
+    fn checkPrintOperand(self: *Checker, id: ast.NodeId, expected_text: bool) Error!typed.NodeId {
+        const value = self.resolved[@backingInt(id)].?;
+        const ty_value = self.nodes.items[@backingInt(value)].ty;
+        if (expected_text) {
+            const text_type = self.catalog.names.get("str") orelse return error.InternalError;
+            try self.require(ty_value, text_type, self.nodes.items[@backingInt(value)].span);
+            return value;
+        }
+        if (!io_render.printable(ty_value, self.catalog.records)) return self.sink.fail(
+            io_builtins.argument_code,
+            self.nodes.items[@backingInt(value)].span,
+            "print cannot render this value; capabilities, files, owned resources and callbacks have no Python spelling",
+        );
+        return value;
+    }
+    fn checkPrint(self: *Checker, node: ast.Node, call: @FieldType(@FieldType(ast.Node, "data"), "call"), out: *typed.Node) Error!void {
+        const split = try io_builtins.printArguments(self.src, call, self.sink);
+        const arguments = try self.allocator.alloc(typed.NodeId, split.values.len);
+        for (split.values, arguments) |id, *slot| slot.* = try self.checkPrintOperand(id, false);
+        out.ty = .unit;
+        out.data = .{ .print = .{
+            .arguments = arguments,
+            .separator = if (split.separator) |id| try self.checkPrintOperand(id, true) else null,
+            .terminator = if (split.terminator) |id| try self.checkPrintOperand(id, true) else null,
+        } };
+        _ = node;
+    }
     fn optionConstructor(self: *Checker, call: @FieldType(@FieldType(ast.Node, "data"), "call")) Error!bool {
         if (call.owner != null or call.type_arguments.len != 0 or !std.mem.eql(u8, self.src.text(call.name), "Some")) return false;
         if (self.active.contains("Some") or self.functions.contains("Some")) return false;
@@ -824,6 +860,17 @@ const Checker = struct {
             return true;
         }
 
+        if (try self.printBuiltin(call)) {
+            _ = try io_builtins.printArguments(self.src, call, self.sink);
+            const text_type = self.catalog.names.get("str");
+            var index = call.arguments.len;
+            while (index > 0) {
+                index -= 1;
+                if (call.argument_names.len != 0 and call.argument_names[index] != null) if (text_type) |ty_value| try self.hint(call.arguments[index], ty_value);
+                try work.append(self.allocator, .{ .id = call.arguments[index] });
+            }
+            return true;
+        }
         if (try self.resultConstructor(call)) |ok| {
             try call_arguments.positional(call, self.sink);
             if (call.arguments.len != 1) return self.sink.fail("E_ARITY", node.span, "Ok and Err require one payload");
@@ -1260,6 +1307,7 @@ const Checker = struct {
             out.data = .{ .cast = value };
             return;
         }
+        if (try self.printBuiltin(input)) return self.checkPrint(node, input, out);
         if (self.byteConversion(input)) |conversion| return self.checkByteConversion(node, input, conversion, out);
         if (try self.resultConstructor(input)) |ok| {
             try call_arguments.positional(input, self.sink);
@@ -1687,6 +1735,7 @@ const Checker = struct {
             .call => |call| call.arguments.len,
             .buffer_operation => |operation| operation.arguments.len,
             .resource_io => |io| if (io.value != null) 1 else 0,
+            .print => |output| output.arguments.len + @intFromBool(output.separator != null) + @intFromBool(output.terminator != null),
         };
     }
     fn expressionWithTemporaries(self: *Checker, root: ast.NodeId, inherited: []const typed.Type) Error!typed.NodeId {

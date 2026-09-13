@@ -74,6 +74,7 @@ pub const Node = struct {
         environment_get: struct { capability: NodeId, name: NodeId },
         external_read: struct { kind: @import("external_capabilities.zig").Kind, capability: NodeId },
         acquire_buffer: struct { capacity: NodeId },
+        print: Print,
         arena_escape: NodeId,
         cast: NodeId,
         wrap: NodeId,
@@ -91,6 +92,8 @@ pub const Node = struct {
         binary: struct { op: BinaryOp, left: NodeId, right: NodeId, op_span: Span },
     },
 };
+/// Rendered arguments and the optional `sep=`/`end=` text of one `print` call.
+pub const Print = struct { arguments: []const NodeId, separator: ?NodeId, terminator: ?NodeId };
 /// Resolved aggregate field index and the expression supplying its value.
 pub const FieldInit = struct { index: usize, value: NodeId };
 /// Named aggregate field with its declaration location and resolved type.

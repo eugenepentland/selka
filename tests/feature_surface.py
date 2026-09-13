@@ -43,7 +43,8 @@ def main():
             action = 'check-project' if code else 'run-project'
             if not source.lstrip().startswith('module '):
                 action = 'check' if code else 'run'
-            result = subprocess.run([str(compiler), action, str(path), '--diagnostics=json'], capture_output=True, text=True, timeout=30)
+            reporting = [] if code else ['--print-result']
+            result = subprocess.run([str(compiler), action, str(path), '--diagnostics=json', *reporting], capture_output=True, text=True, timeout=30)
             passed = result.returncode == (1 if code else 0) and result.stdout == output
             if code:
                 codes = [json.loads(line)['diagnostic']['code'] for line in result.stderr.splitlines() if line.startswith('{')]

@@ -14,7 +14,7 @@ test "CLI runs the managed arena example under normal and stress collection" {
     for ([_][]const []const u8{ &.{}, &.{"--gc-stress"} }) |options| {
         var args: std.ArrayList([]const u8) = .empty;
         defer args.deinit(testing.allocator);
-        try args.appendSlice(testing.allocator, &.{ compiler_path, "run", arena_example_path });
+        try args.appendSlice(testing.allocator, &.{ compiler_path, "run", arena_example_path, "--print-result" });
         try args.appendSlice(testing.allocator, options);
         const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
         defer testing.allocator.free(outcome.stdout);
@@ -56,6 +56,8 @@ fn runFixture(command: []const u8, text: []const u8, options: []const []const u8
     var args: std.ArrayList([]const u8) = .empty;
     defer args.deinit(testing.allocator);
     try args.appendSlice(testing.allocator, &.{ compiler_path, command, path });
+    // These fixtures assert the entry point's int result, which `run` now reports only on request.
+    if (std.mem.startsWith(u8, command, "run")) try args.append(testing.allocator, "--print-result");
     try args.appendSlice(testing.allocator, options);
     return std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
 }
@@ -339,7 +341,7 @@ test "CLI checks and runs module programs with private boundaries and cross-file
         try testing.expectEqualStrings("", result.stderr);
     }
     try temp.dir.writeFile(testing.io, .{ .sub_path = "helper.my", .data = "module helper; export value; fn value() -> i64 { return 1 / 0; }" });
-    const trap = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path } });
+    const trap = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path, "--print-result" } });
     defer testing.allocator.free(trap.stdout);
     defer testing.allocator.free(trap.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 1 }, trap.term);
@@ -371,7 +373,7 @@ test "CLI checkProjectPolicy distinguishes language failures policy failures and
     try testing.expectEqual(std.process.Child.Term{ .exited = 3 }, denied.term);
     try testing.expectEqualStrings("", denied.stderr);
     for ([_][]const u8{ "language: valid", "import-direction-v1: failed", "edges=1; denied=1", "input -> core: deny; rule=default" }) |part| try testing.expect(std.mem.indexOf(u8, denied.stdout, part) != null);
-    const ordinary = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path } });
+    const ordinary = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path, "--print-result" } });
     defer testing.allocator.free(ordinary.stdout);
     defer testing.allocator.free(ordinary.stderr);
     try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, ordinary.term);

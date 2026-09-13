@@ -42,7 +42,7 @@ def execute(compiler, source, path, action):
     path.write_text(source)
     started = time.monotonic()
     try:
-        flags = ['--max-steps=100000', '--max-frames=128'] if action == 'run' else []
+        flags = ['--print-result', '--max-steps=100000', '--max-frames=128'] if action == 'run' else []
         result = subprocess.run([str(compiler), action, str(path), '--diagnostics=json', *flags],
                                 capture_output=True, text=True, timeout=15)
         return {'exit': result.returncode, 'stdout': result.stdout, 'stderr': result.stderr,

@@ -384,6 +384,15 @@ manifest records implementation coverage, not a test certificate.
 - [FAMILIAR-STMT-5] Parse-only declaration listing and module formatting preserve newline-terminated module, import, export, and type directives.
 - [FAMILIAR-STMT-6] Project discovery recognizes newline-terminated directives and declarations while allowing multiline function signatures.
 
+## Ordinary output
+
+- [IO-1] `print(values...)` writes each argument's Python rendering to standard output, separated by single spaces and followed by one newline. `int` and the fixed-width integers render in decimal, `bool` as `True`/`False`, `None` as `None`, `float` with a `.0` suffix when it has no fractional digits and `nan`/`inf`/`-inf` for the nonfinite values, `str` raw at the top level and `repr`-quoted inside a container, and `bytes` as a Python `b'...'` literal with `\n`, `\r`, `\t`, `\'`, `\\` and `\xNN` escapes. Lists render as `[a, b]`, insertion-ordered dictionaries as `{k: v}` and fixed arrays as `[a, b]`. Nesting deeper than 24 levels renders as `...`, so a cyclic managed graph still terminates. `print()` writes only the newline.
+- [IO-2] Records render as `Name(field=value, ...)` in declaration order, enum cases as `Name.case`, union cases as `Name.case(payload)` or `Name.case`, checked results as `Ok(value)`/`Err(value)` and optionals as `Some(value)`/`None`. Module qualification is stripped from the printed name. A record with a moved field prints `<moved>` for that field rather than reading it.
+- [IO-3] `print` accepts the keyword arguments `sep=` and `end=`, each an ordinary `str` expression that replaces the separator or the trailing newline. Positional arguments must precede both keywords, neither may be repeated, and any other keyword is rejected with `E_IO_ARGUMENT`. Printed values evaluate in source order, then `sep=`, then `end=`.
+- [IO-4] `print` contributes the `output` effect. `noio` withholds `filesystem`, `network` and `output` together, so a direct or transitive `print` under `noio` is rejected with `E_EFFECT_BOUND` and a call witness; `effects(output)` permits it and `noalloc` does not constrain it. Bytecode validation independently recomputes the effect from the emitted instruction.
+- [IO-5] `print` is a reserved call spelling only while no local binding, declared function or imported top-level name shadows it; a program that declares its own `print` calls that function instead. Capabilities, files, owned resources and callback values have no rendering and are rejected with `E_IO_ARGUMENT`. A host that supplies no output writer discards program output rather than failing, and a writer that refuses bytes traps with `R_OUTPUT`.
+- [IO-6] The QBE native backend rejects `print` explicitly with `E_QBE_UNSUPPORTED`; standard output is a VM-only surface.
+
 ## Familiar collection syntax
 
 - [FAMILIAR-COLLECTIONS-1] Managed list push(value), len(), indexing, and indexed assignment preserve shared aliases through immutable bindings.

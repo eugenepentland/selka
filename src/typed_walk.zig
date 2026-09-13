@@ -55,6 +55,11 @@ pub const Walker = struct {
                 },
                 .external_read => |read| try self.expr(read.capability),
                 .acquire_buffer => |acquire| try self.expr(acquire.capacity),
+                .print => |output| {
+                    if (output.terminator) |value| try self.expr(value);
+                    if (output.separator) |value| try self.expr(value);
+                    try self.arguments(output.arguments);
+                },
                 .arena_escape, .cast, .wrap, .unwrap, .length => |value| try self.expr(value),
                 .propagate => |p| try self.expr(p.value),
                 .block_value => |block| {

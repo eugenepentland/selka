@@ -18,6 +18,7 @@ const division_zero_message = "division or remainder by zero";
 const division_zero_code = "R_DIVISION_BY_ZERO";
 const callables = @import("callables.zig");
 const capability_code = "R_CAPABILITY";
+const output_code = "R_OUTPUT";
 const slice_bounds_code = "R_SLICE_BOUNDS";
 const overflow_code = "R_OVERFLOW";
 const reference_lifetime_code = "R_REFERENCE_LIFETIME";
@@ -42,6 +43,7 @@ const external = @import("external_capabilities.zig");
 const Diagnostic = @import("diagnostic.zig").Diagnostic;
 const environment = @import("environment.zig");
 const resource_runtime = @import("resource_runtime.zig");
+const io_render = @import("io_render.zig");
 /// Host failures and invalid checked execution state returned by the VM.
 pub const RunError = invocation_contract.RunError;
 /// Invocation additionally checks exported function identity and argument contracts.
@@ -52,6 +54,8 @@ pub const Options = struct {
     environment: ?environment.Provider = null,
     resources: resource_runtime.Options = .{},
     external: external.Providers = .{},
+    /// Standard output for `print`; an absent writer discards program output.
+    output: ?*std.Io.Writer = null,
     max_steps: u64 = 10_000_000,
     max_frames: u64 = 1024,
 };
@@ -346,6 +350,7 @@ fn runValues(allocator: std.mem.Allocator, program: bc.Program, options: Options
             .complete_resource => step.executeCompleteResource(),
             .external_read => step.executeExternalRead(),
             .acquire_buffer => step.executeAcquireBuffer(),
+            .print => step.executePrint(),
             .move_local => step.executeMoveLocal(),
             .drop_local => step.executeDropLocal(),
             .load_local => step.executeLoadLocal(),
@@ -1625,6 +1630,52 @@ const Step = struct {
         return false;
     }
 
+    /// Checked `print` operands always have a rendering; a refusal is an emission fault.
+    fn write(writer: *std.Io.Writer, records: []const typed.Record, value: typed.Value) !void {
+        io_render.render(writer, records, value, 0) catch |err| switch (err) {
+            error.Unprintable => return error.InternalError,
+            else => |failure| return failure,
+        };
+    }
+    /// Render every operand once and publish the whole line through the host writer.
+    fn executePrint(self: *Step) !bool {
+        const allocator = self.execution.allocator;
+        const stack = self.execution.state.stack;
+        const frame = self.frame.*;
+        const output = self.instruction.op.print;
+        const terminator = if (output.terminator) try pop(stack, frame.operand_base) else null;
+        defer if (terminator) |value| value.release(allocator);
+        const separator = if (output.separator) try pop(stack, frame.operand_base) else null;
+        defer if (separator) |value| value.release(allocator);
+        const operands = try allocator.alloc(typed.Value, output.types.len);
+        defer {
+            releaseValues(operands, allocator);
+            allocator.free(operands);
+        }
+        var index = operands.len;
+        while (index > 0) {
+            index -= 1;
+            operands[index] = try pop(stack, frame.operand_base);
+        }
+        self.renderLine(operands, separator, terminator) catch |err| switch (err) {
+            error.WriteFailed => return self.finish(trap(output_code, "standard output rejected program output", self.instruction.span, self.execution.state.frames.items, self.execution.program)),
+            else => |failure| return failure,
+        };
+        try pushOwned(stack, allocator, .unit);
+        return false;
+    }
+    fn renderLine(self: *Step, operands: []const typed.Value, separator: ?Value, terminator: ?Value) !void {
+        const writer = self.execution.options.output orelse return;
+        const records = self.execution.program.records;
+        for (operands, 0..) |operand, index| {
+            if (index != 0) {
+                if (separator) |value| try write(writer, records, value) else try writer.writeByte(' ');
+            }
+            try write(writer, records, operand);
+        }
+        if (terminator) |value| try write(writer, records, value) else try writer.writeByte('\n');
+        try writer.flush();
+    }
     fn executeMoveLocal(self: *Step) !bool {
         const allocator = self.execution.allocator;
         const stack = self.execution.state.stack;

@@ -88,6 +88,10 @@ const Analyzer = struct {
                     pops = 2;
                     result = get.output;
                 },
+                .print => |output| {
+                    pops = output.types.len + @intFromBool(output.separator) + @intFromBool(output.terminator);
+                    result = .unit;
+                },
                 .acquire_buffer => |ty| {
                     pops = 1;
                     result = ty;

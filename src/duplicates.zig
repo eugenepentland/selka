@@ -255,6 +255,16 @@ const CanonicalWriter = struct {
                 try work.append(allocator, .{ .expression = read.capability });
             },
             .acquire_buffer => |acquire| try work.append(allocator, .{ .expression = acquire.capacity }),
+            .print => |output| {
+                writer.print("print {d} {d}{d}\n", .{ output.arguments.len, @intFromBool(output.separator != null), @intFromBool(output.terminator != null) }) catch return error.OutOfMemory;
+                if (output.terminator) |value| try work.append(allocator, .{ .expression = value });
+                if (output.separator) |value| try work.append(allocator, .{ .expression = value });
+                var index = output.arguments.len;
+                while (index > 0) {
+                    index -= 1;
+                    try work.append(allocator, .{ .expression = output.arguments[index] });
+                }
+            },
             .arena_escape, .cast, .wrap, .unwrap => |operand| try work.append(allocator, .{ .expression = operand }),
             .record => |fields| {
                 try recordFields(allocator, writer, work, program, node.ty, fields);

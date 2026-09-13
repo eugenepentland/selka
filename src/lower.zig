@@ -50,6 +50,19 @@ const Emitter = struct {
         }
         if (call.evaluation) |evaluation| try self.push(.{ .statement = evaluation.body });
     }
+    /// Values evaluate in source order, then `sep=` and finally `end=`.
+    fn emitPrint(self: *Emitter, span: Span, output: @FieldType(@FieldType(typed.Node, "data"), "print")) !void {
+        const types = try self.allocator.alloc(typed.Type, output.arguments.len);
+        for (output.arguments, types) |argument, *ty| ty.* = self.program.nodes[@backingInt(argument)].ty;
+        try self.instruction(span, .{ .print = .{ .types = types, .separator = output.separator != null, .terminator = output.terminator != null } });
+        if (output.terminator) |value| try self.push(.{ .expression = value });
+        if (output.separator) |value| try self.push(.{ .expression = value });
+        var index = output.arguments.len;
+        while (index > 0) {
+            index -= 1;
+            try self.push(.{ .expression = output.arguments[index] });
+        }
+    }
     fn emitLoopExit(self: *Emitter, stmt: typed.Statement, exit: @FieldType(@FieldType(typed.Statement, "data"), "loop_exit")) !void {
         const target = self.loops.get(exit.target) orelse return error.InternalError;
         try self.push(.{ .jump = .{ .target = if (exit.continuing) target.start else target.end, .span = stmt.span } });
@@ -256,6 +269,7 @@ const Emitter = struct {
                 try self.instruction(node.span, .{ .acquire_buffer = node.ty });
                 try self.push(.{ .expression = acquire.capacity });
             },
+            .print => |output| try self.emitPrint(node.span, output),
             .local => |slot| try self.instruction(node.span, if (typed.moveOnly(node.ty, self.program.records) or typed.requiresHandling(node.ty, self.program.records)) .{ .move_local = slot } else .{ .load_local = slot }),
             .function_value => |target| try self.instruction(node.span, .{ .function_value = .{ .ty = node.ty, .function = target } }),
             .invoke => |call| {

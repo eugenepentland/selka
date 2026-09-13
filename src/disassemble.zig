@@ -108,6 +108,7 @@ fn writeInstruction(writer: *std.Io.Writer, program: bc.Program, src: Source, in
         .acquire_resource => |acquire| try writer.print("ACQUIRE_RESOURCE -> {s}", .{typed.typeName(acquire.output, program.records)}),
         .external_read => |read| try writer.print("EXTERNAL_{s} -> {s}", .{ @tagName(read.kind), typed.typeName(read.output, program.records) }),
         .acquire_buffer => |ty| try writer.print("ACQUIRE_BUFFER {f}", .{ty}),
+        .print => |output| try writer.print("PRINT {d} sep={} end={}", .{ output.types.len, output.separator, output.terminator }),
         .move_local => |slot| try writer.print("MOVE_LOCAL {d}", .{@backingInt(slot)}),
         .drop_local => |slot| try writer.print("DROP_LOCAL {d}", .{@backingInt(slot)}),
         .load_local => |slot| try writer.print("LOAD_LOCAL {d}", .{@backingInt(slot)}),

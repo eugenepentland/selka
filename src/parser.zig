@@ -499,7 +499,7 @@ pub const Parser = struct {
             const effect = std.meta.stringToEnum(sets.Effect, self.src.text(name.span)) orelse return self.sink.fail(
                 "E_UNKNOWN_EFFECT",
                 name.span,
-                "unknown effect; expected managed_allocation, filesystem, network, clock, random, environment, or host",
+                "unknown effect; expected managed_allocation, filesystem, network, clock, random, environment, output, or host",
             );
             if (allowed & sets.bit(effect) != 0) return self.sink.fail("E_DUPLICATE_EFFECT", name.span, "effect appears more than once in this bound");
             allowed |= sets.bit(effect);
