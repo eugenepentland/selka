@@ -9,7 +9,7 @@ const pure = "fn identity<T:copy>(x:T)->T{return x;}" ++
     "fn equal<T:equality>(x:T,y:T)->bool{return x==y;}" ++
     "fn arithmetic<T:integer>(x:T,y:T)->T noalloc{let mut value=x;value+=y;" ++
     "while value<cast<T>(10){value=value+cast<T>(1);}if value==y{return -value;}else{return value;}}" ++
-    "fn minimum<T:copy>(x:T)->i8{discard x;return -128i8;}fn main()->i64{return 0;}";
+    "fn minimum<T:copy>(x:T)->i8{_ = x;return -128i8;}fn main()->i64{return 0;}";
 fn scenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "generic.my", pure);
     defer compilation.deinit();

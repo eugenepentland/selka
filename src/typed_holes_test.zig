@@ -2,7 +2,7 @@
 const std = @import("std");
 const t = std.testing;
 const language = @import("compiler.zig");
-const source = "fn first()->i64{return todo<i64>();}fn second<T:copy>(x:T)->T{discard x;return todo<T>();}fn main()->i64{return 0;}";
+const source = "fn first()->i64{return todo<i64>();}fn second<T:copy>(x:T)->T{_ = x;return todo<T>();}fn main()->i64{return 0;}";
 fn scenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "holes.my", source);
     defer compilation.deinit();

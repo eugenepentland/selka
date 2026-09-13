@@ -18,11 +18,11 @@ fn run(bytes: []const u8, expected: i64) !void {
 }
 const scenario_source = schema ++
     "fn step<T:copy>(r:R)->R{return new R.ok((try r)+1);}" ++
-    "fn consume(r:R)->bool{acknowledge r;return true;}" ++
-    "fn flow<T:copy>(flag:bool,r:R)->i64{if flag{acknowledge r;return 1;}acknowledge r;let mut n=0;" ++
-    "let mut item=new R.ok(0);while n<3{acknowledge item;item=new R.err(n);n+=1;}acknowledge item;" ++
-    "discard false&&consume(new R.err(1));return n;}" ++
-    "fn main()->i64{let n=flow::<bool>(true,new R.ok(1))+flow::<bool>(false,new R.err(2));match step::<bool>(new R.ok(4)){R.ok(value)=>{return value+n;},R.err(discard)=>{return 0;}}}";
+    "fn consume(r:R)->bool{_ = r;return true;}" ++
+    "fn flow<T:copy>(flag:bool,r:R)->i64{if flag{_ = r;return 1;}_ = r;let mut n=0;" ++
+    "let mut item=new R.ok(0);while n<3{_ = item;item=new R.err(n);n+=1;}_ = item;" ++
+    "_ = false&&consume(new R.err(1));return n;}" ++
+    "fn main()->i64{let n=flow::<bool>(true,new R.ok(1))+flow::<bool>(false,new R.err(2));match step::<bool>(new R.ok(4)){R.ok(value)=>{return value+n;},R.err(_)=>{return 0;}}}";
 const nested_source = schema ++ "union U{a:R,b}fn make<T:integer>(n:T)->R{return new R.ok(cast<i64>(n));" ++
     "}fn take<T:copy>(u:U)->i64{match u{U.a(r)=>{match r{R.ok(n)=>{return n;},R.err(n)=>{return 0-n;" ++
     "}}},U.b=>{return 0;}}}fn main()->i64{return take::<bool>(new U.a(make::<u8>(7u8)))+take::<bool>(new U.a(new R." ++

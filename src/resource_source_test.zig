@@ -54,7 +54,7 @@ const retry = declarations ++ "struct Authority { fs: filesystem_cap } fn open(a
     "effects(filesystem) { return acquire_resource<Open>(auth.fs, new [1]u8 [42u8]); } fn " ++
     "retry(file: File) -> Finish { match complete_resource<Finish>(file) { " ++
     "Finish.ok(done) => { return new Finish.ok(done); }, Finish.err(failure) => { if " ++
-    "read_field(failure, code) == 3 { return complete_resource<Finish>(failure.resource); " ++
+    "failure.code == 3 { return complete_resource<Finish>(failure.resource); " ++
     "} else { return new Finish.err(failure); } } } } fn main(fs: filesystem_cap) -> i64 " ++
     "noalloc { match open(new Authority { fs: fs }) { Open.ok(file) => { match " ++
     "retry(file) { Finish.ok(done) => { if done { return 7; } else { return 0; } }, " ++
@@ -78,9 +78,9 @@ test "source acquisition delegates authority and failed completion returns owned
     try retryScenario(t.allocator);
 }
 const partial = declarations ++ "fn work(fs: filesystem_cap) -> Status { let a = try acquire_resource<Open>(fs, new " ++
-    "[0]u8 []); let b = try acquire_resource<Open>(fs, new [0]u8 []); discard a; discard " ++
+    "[0]u8 []); let b = acquire_resource<Open>(fs, new [0]u8 [])?; _ = a; discard " ++
     "b; return new Status.ok(true); } fn main(fs: filesystem_cap) -> i64 { match work(fs) " ++
-    "{ Status.ok(done) => { discard done; return 9; }, Status.err(e) => { return e; } } }";
+    "{ Status.ok(done) => { _ = done; return 9; }, Status.err(e) => { return e; } } }";
 // spec: OWN-9
 test "partial source acquisition propagates failure and releases acquired resources once" {
     var fake: Fake = .{ .fail_acquire_at = 2 };
@@ -115,7 +115,7 @@ test "ownExternal and source acquisition completion retry clean every allocation
 const wrappers = declarations ++ "struct Inner { file: File } struct Pair { first: Inner, second: File } result " ++
     "PairResult { ok: Pair, err: i64 } fn pair(fs: filesystem_cap) -> PairResult { return " ++
     "new PairResult.ok(new Pair { first: new Inner { file: try acquire_resource<Open>(fs, " ++
-    "new [0]u8 []) }, second: try acquire_resource<Open>(fs, new [0]u8 []) }); } fn " ++
+    "new [0]u8 []) }, second: acquire_resource<Open>(fs, new [0]u8 [])? }); } fn " ++
     "main(fs: filesystem_cap) -> i64 { match pair(fs) { PairResult.ok(value) => { discard " ++
     "value; return 0; }, PairResult.err(e) => { return e; } } }";
 test "nested resource wrappers release in reverse schema order and traps unwind every instruction" {
@@ -182,10 +182,10 @@ test "source frame traps release the resource moved through recursive calls" {
 
 fn partialFieldResourceScenario(allocator: std.mem.Allocator) !void {
     const text = declarations ++ "struct Pair { first: File, second: File, code: i64 } fn work(fs: filesystem_cap) -> " ++
-        "Status { let pair = new Pair { first: try acquire_resource<Open>(fs, new [0]u8 []), " ++
-        "second: try acquire_resource<Open>(fs, new [0]u8 []), code: 7 }; discard " ++
-        "take_field(pair, first); let spare = try acquire_resource<Open>(fs, new [0]u8 []); " ++
-        "return new Status.ok(read_field(pair, code) == 7); } fn main(fs: filesystem_cap) -> " ++
+        "Status { let pair = new Pair { first: acquire_resource<Open>(fs, new [0]u8 [])?, " ++
+        "second: acquire_resource<Open>(fs, new [0]u8 [])?, code: 7 }; discard " ++
+        "pair.first; let spare = acquire_resource<Open>(fs, new [0]u8 [])?; " ++
+        "return new Status.ok(pair.code == 7); } fn main(fs: filesystem_cap) -> " ++
         "i64 { match work(fs) { Status.ok(done) => { if done { return 7; } return 0; }, " ++
         "Status.err(code) => { return -code; } } }";
     var fake: Fake = .{};
@@ -207,7 +207,7 @@ const generic_cleanup = declarations ++
     "struct Owned{file:File,code:i64}" ++
     "fn forward<T:copy>(file:File)->File effects(filesystem){return file;}" ++
     "fn drop<T:copy>(file:File)->i64 effects(filesystem){return 1;}" ++
-    "fn fields<T:copy>(value:Owned)->i64 effects(filesystem){discard take_field(value,file);return read_field(value,code);}" ++
+    "fn fields<T:copy>(value:Owned)->i64 effects(filesystem){_ = value.file;return value.code;}" ++
     "fn handle<T:copy>(r:Open)->i64 effects(filesystem){match r{Open.ok(file)=>{return fields::<bool>(new Owned{file:forward::<bool>(file),code:7});},Open.err(code)=>{return code;}}}" ++
     "fn main(fs:filesystem_cap)->i64{let first=handle::<bool>(acquire_resource<Open>(fs,new [0]u8[]));match acquire_resource<Open>(fs,new [0]u8[]){Open.ok(file)=>{return first+drop::<bool>(file);},Open.err(code)=>{return code;}}}";
 fn genericCleanupScenario(allocator: std.mem.Allocator) !void {
@@ -230,7 +230,7 @@ test "generic owned resources clean up explicit and implicit drops under allocat
 const generic_retry = declarations ++
     "fn open<G:copy>(cap:filesystem_cap)->Open effects(filesystem){return acquire_resource<Open>(cap,new [0]u8[]);}" ++
     "fn finish<G:copy>(file:File)->Finish effects(filesystem){match complete_resource<Finish>(file){Finish.ok(done)=>{return new Finish.ok(done);},Finish.err(failure)=>{return complete_resource<Finish>(failure.resource);}}}" ++
-    "fn main(cap:filesystem_cap)->i64{match open::<bool>(cap){Open.ok(file)=>{match finish::<bool>(file){Finish.ok(discard)=>{return 7;},Finish.err(failure)=>{return failure.code;}}},Open.err(e)=>{return e;}}}";
+    "fn main(cap:filesystem_cap)->i64{match open::<bool>(cap){Open.ok(file)=>{match finish::<bool>(file){Finish.ok(_)=>{return 7;},Finish.err(failure)=>{return failure.code;}}},Open.err(e)=>{return e;}}}";
 fn genericRetryScenario(allocator: std.mem.Allocator) !void {
     var fake: Fake = .{ .fail_complete_count = 1 };
     defer std.debug.assert(fake.live == 0);

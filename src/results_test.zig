@@ -33,7 +33,7 @@ const owned_source = "struct Item { n: i64 } result R { ok: Item, err: i64 } fn 
     "{ let mut x = new Item { n: 3 }; borrow mut x as r { if flag { write_ref(r, new Item " ++
     "{ n: 9 }); return new R.ok(read_ref(r)); } return new R.err(7); } } fn main() -> i64 " ++
     "{ let r = fallible(false); match r { R.ok(item) => { return item.n; }, R.err(code) " ++
-    "=> { acknowledge fallible(true); return code; } } }";
+    "=> { _ = fallible(true); return code; } } }";
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, fixture_path, owned_source);
     defer compilation.deinit();

@@ -17,7 +17,7 @@ fn reject(source: []const u8, code: []const u8) !void {
 
 fn allocationScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, fixture_path, "struct Inner { x: i64 } struct Source { inner: Inner, ignored: bool } struct Target " ++
-        "{ value: i64 } conversion fn convert(src: Source) -> Target { discard src.ignored; " ++
+        "{ value: i64 } conversion fn convert(src: Source) -> Target { _ = src.ignored; " ++
         "return new Target { value: src.inner.x }; } fn main() -> i64 { let source = new " ++
         "Source { ignored: true, inner: new Inner { x: 7 } }; let next = update(source) { " ++
         "inner: new Inner { x: 9 } }; return convert(next).value; }");

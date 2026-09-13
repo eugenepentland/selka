@@ -11,7 +11,7 @@ fn evaluate(expression: []const u8, expected: i64) !void {
     try testing.expectEqual(expected, (try compilation.execute(testing.allocator)).value);
 }
 fn trapped(expression: []const u8, code: []const u8) !void {
-    const text = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ discard {s}; return 0; }}", .{expression});
+    const text = try std.fmt.allocPrint(testing.allocator, "fn main() -> i64 {{ _ = {s}; return 0; }}", .{expression});
     defer testing.allocator.free(text);
     var compilation = try language.Compilation.init(testing.allocator, "integer.my", text);
     defer compilation.deinit();

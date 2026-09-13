@@ -420,7 +420,7 @@ test "generic calls preserve imported declaration identity and private boundarie
 fn genericCallsScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes = "module main;import units;fn forward<T:integer>(x:T)->T{return units::identity::<T>(x);}fn main()->i64{return 0;}" },
-        .{ .path = units_path, .bytes = "module units;export identity;fn identity<U:copy>(x:U)->U{discard helper(1);return x;}fn helper(x:i64)->i64{return x+1;}" },
+        .{ .path = units_path, .bytes = "module units;export identity;fn identity<U:copy>(x:U)->U{_ = helper(1);return x;}fn helper(x:i64)->i64{return x+1;}" },
     } };
     var project = graph.Project.init(allocator);
     defer project.deinit();
@@ -473,8 +473,8 @@ fn acceptChecked(main: []const u8, dependency: []const u8) !void {
 fn genericExecutionScenario(allocator: std.mem.Allocator) !void {
     var files: Files = .{ .entries = &.{
         .{ .path = "main.my", .bytes = "module main;import units;fn id<T:integer>(x:T)->T{return x;}" ++
-            "fn main()->i64{discard units::id::<units::Box>(new units::Box{value:1});" ++
-            "let mut x=0;borrow mut x as r{discard units::set::<i64>(r,2);}" ++
+            "fn main()->i64{_ = units::id::<units::Box>(new units::Box{value:1});" ++
+            "let mut x=0;borrow mut x as r{_ = units::set::<i64>(r,2);}" ++
             "let values=new [1]i64 [x];borrow values[0..1] as s{borrow units::view::<i64>(s) as v{return units::run()+id::<i64>(units::head::<i64>(v));}}}" },
         .{ .path = units_path, .bytes = "module units;export run;export id;export set;export head;export view;export Box;struct Box{value:i64}" ++
             "fn view<T:copy>(s:&[]T)->&[]T from s{return s;}" ++

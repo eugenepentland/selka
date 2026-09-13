@@ -7,11 +7,11 @@ const functions =
     "fn tail<T:copy>(a:&mut [3]i64)->&mut []i64 from a{borrow mut a[1..3] as s{return s;}}" ++
     "fn arrays<T:integer>(n:T)->i64{let mut a=new [3]i64[1,2,3];let original=a;" ++
     "borrow mut a as whole{borrow mut tail::<T>(whole) as s{write_slice(s,0,cast<i64>(n));}}" ++
-    "borrow a[3..3] as empty{discard len_slice(empty);}borrow a[0..3] as s{borrow s[1..2] as child{return read_slice(child,0)+original[1];}}}" ++
-    "fn buffers<T:integer>(heap:allocator,n:T)->R{let mut b=try acquire_buffer<A>(heap,3);" ++
-    "discard try append_buffer<S>(b,1);discard try append_buffer<S>(b,2);" ++
-    "borrow mut b[0..len_buffer(b)] as s{write_slice(s,0,cast<i64>(n));borrow s[1..2] as child{discard read_slice(child,0);}}" ++
-    "borrow b[2..2] as empty{discard len_slice(empty);}borrow b[0..2] as shared{discard read_buffer(b,0);}" ++
+    "borrow a[3..3] as empty{_ = len_slice(empty);}borrow a[0..3] as s{borrow s[1..2] as child{return read_slice(child,0)+original[1];}}}" ++
+    "fn buffers<T:integer>(heap:allocator,n:T)->R{let mut b=acquire_buffer<A>(heap,3)?;" ++
+    "_ = append_buffer<S>(b,1)?;_ = append_buffer<S>(b,2)?;" ++
+    "borrow mut b[0..len_buffer(b)] as s{write_slice(s,0,cast<i64>(n));borrow s[1..2] as child{_ = read_slice(child,0);}}" ++
+    "borrow b[2..2] as empty{_ = len_slice(empty);}borrow b[0..2] as shared{_ = read_buffer(b,0);}" ++
     "return new R.ok(read_buffer(b,0)+read_buffer(b,1));}";
 fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "local-views.my", schema ++ functions ++

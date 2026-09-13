@@ -71,7 +71,7 @@ const ConstructorModules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
         if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
         return allocator.dupe(u8, "module main;fn Ok(value:i64)->i64{return value+1;}fn Err(value:i64)->i64{return value-1;}" ++
-            "fn combine<T:copy>(ignored:T)->i64{discard ignored;return Ok(20)+Err(22);}" ++
+            "fn combine<T:copy>(ignored:T)->i64{_ = ignored;return Ok(20)+Err(22);}" ++
             "fn main()->i64{if Ok(1)!=2{return 1;}if Err(1)!=0{return 2;}return combine(true);}");
     }
 };

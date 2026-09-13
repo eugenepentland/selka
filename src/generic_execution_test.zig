@@ -35,7 +35,7 @@ fn limited(count: usize) !void {
     defer text_buffer.deinit();
     for (0..count) |index| try text_buffer.writer.print("fn g{d}<T:copy>()->i64{{return 0;}}", .{index});
     try text_buffer.writer.writeAll("fn main()->i64{");
-    for (0..count) |index| try text_buffer.writer.print("discard g{d}::<i64>();", .{index});
+    for (0..count) |index| try text_buffer.writer.print("_ = g{d}::<i64>();", .{index});
     try text_buffer.writer.writeAll("return g0::<i64>();}");
     var compilation = try language.Compilation.init(t.allocator, "limit.my", text_buffer.written());
     defer compilation.deinit();

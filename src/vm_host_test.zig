@@ -98,7 +98,7 @@ test "VM host failures and quotas locate the guest call and leave reusable sessi
 const geometry_source = "module geometry;export Point;export Checked;export validate;" ++
     "struct Point{x:i64,y:i64}result Checked{ok:Point,err:i64}" ++
     "host fn validate(point:Point)->Checked effects(host);";
-const entry_prefix = "module main;import geometry as g;fn relay<T:copy>(p:g::Point,tag:T)->g::Checked effects(host){discard tag;return g::validate(p);}" ++
+const entry_prefix = "module main;import geometry as g;fn relay<T:copy>(p:g::Point,tag:T)->g::Checked effects(host){_ = tag;return g::validate(p);}" ++
     "fn main()->i64{let r=relay::<bool>(new g::Point{x:";
 const entry_suffix = ",y:4},true);match r{g::Checked.ok(p)=>{return p.x+p.y;},g::Checked.err(e)=>{return e;}}}";
 const Inputs = struct {
@@ -167,7 +167,7 @@ test "VM host preflight requires unused declarations before any callback and rej
 
 fn cleanupScenario(allocator: std.mem.Allocator) !void {
     const source = "buffer B:i64;result R{ok:B,err:i64}host fn measure(x:i64)->i64 effects(host);" ++
-        "fn main(heap:allocator)->i64{match acquire_buffer<R>(heap,2){R.ok(b)=>{let n=measure(6);discard b;return n;},R.err(e)=>{return e;}}}";
+        "fn main(heap:allocator)->i64{match acquire_buffer<R>(heap,2){R.ok(b)=>{let n=measure(6);_ = b;return n;},R.err(e)=>{return e;}}}";
     var c = try language.Compilation.init(allocator, "host-cleanup.my", source);
     defer c.deinit();
     try c.emit();

@@ -19,9 +19,9 @@ fn result(source: []const u8, expected: i64) !void {
 }
 
 const accepted = declarations ++ "fn edit(input: B) -> R noalloc { let mut b = input; discard try " ++
-    "append_buffer<Status>(b, 7); discard try resize_buffer<Status>(b, 2, 9); borrow mut " ++
+    "append_buffer<Status>(b, 7); _ = resize_buffer<Status>(b, 2, 9)?; borrow mut " ++
     "b[0..2] as s { write_slice(s, 1, 11); } return new R.ok(b); } fn release(input: B) " ++
-    "-> i64 effects() { discard input; return 3; } fn main(alloc: allocator) -> i64 " ++
+    "-> i64 effects() { _ = input; return 3; } fn main(alloc: allocator) -> i64 " ++
     "effects(allocation) { match acquire_buffer<R>(alloc, 2) { R.ok(b) => { match edit(b) " ++
     "{ R.ok(updated) => { let n = read_buffer(updated, 1); return n + release(updated); }," ++
     " R.err(e) => { return e; } } }, R.err(e) => { return e; } } }";
@@ -36,7 +36,7 @@ fn allocationScenario(allocator: std.mem.Allocator) !void {
 }
 fn rejectionScenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, fixture_path, declarations ++ "fn helper(alloc: allocator) -> R { return acquire_buffer<R>(alloc, 1); } fn " ++
-        "main(alloc: allocator) -> i64 noalloc { acknowledge helper(alloc); return 0; }");
+        "main(alloc: allocator) -> i64 noalloc { _ = helper(alloc); return 0; }");
     defer c.deinit();
     c.check() catch |err| switch (err) {
         error.SourceError => {

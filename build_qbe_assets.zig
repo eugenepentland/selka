@@ -3,7 +3,7 @@ const std = @import("std");
 const Sha = std.crypto.hash.sha2.Sha256;
 /// Zig runtime translation units `mylang build` compiles directly; their transitive
 /// `@import`/`@embedFile` closure is bundled with them.
-const zig_roots = [_][]const u8{ "native_format.zig", "native_json_bridge.zig" };
+const zig_roots = [_][]const u8{"native_format.zig"};
 /// Source bytes read once at compiler build time, keyed by path relative to `src`.
 const Sources = std.StringArrayHashMapUnmanaged([]const u8);
 /// Every source input, the selected runtime subset, and the Zig units still to scan.

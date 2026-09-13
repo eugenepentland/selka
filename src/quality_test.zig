@@ -9,7 +9,7 @@ fn index(c: *language.Compilation, name: []const u8) !usize {
 const graph = "domain D: i64 { private fn hidden() -> i64 { return 1; } } fn leaf(x: i64) -> i64 { " ++
     "return x; } fn a(n: i64) -> i64 { if n <= 0 { return 0; } return b(n - 1); } fn b(n: " ++
     "i64) -> i64 { return a(n); } fn unused() -> i64 { return leaf(1); } fn main() -> i64 " ++
-    "{ if false { discard a(1); } return leaf(2) + leaf(3); }";
+    "{ if false { _ = a(1); } return leaf(2) + leaf(3); }";
 
 // spec: TOOL-6
 test "resolved reachability includes untaken call paths cycles and incoming sites from unreachable functions" {

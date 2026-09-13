@@ -40,8 +40,8 @@ test "nominal catalog collect and VM execution clean up every allocation failure
 }
 
 const owned = "buffer B:u8;result Open{ok:B,err:i64}struct Owner<T:copy>{buffer:B,tag:T}" ++ definitions ++
-    "fn work(heap:allocator)->Answer<i64>{let owner=new Owner<i64>{buffer:try acquire_buffer<Open>(heap,2),tag:9};" ++
-    "let tag=read_field(owner,tag);discard take_field(owner,buffer);return new Answer<i64>.ok(tag);}" ++
+    "fn work(heap:allocator)->Answer<i64>{let owner=new Owner<i64>{buffer:acquire_buffer<Open>(heap,2)?,tag:9};" ++
+    "let tag=owner.tag;_ = owner.buffer;return new Answer<i64>.ok(tag);}" ++
     "fn main(heap:allocator)->i64{match work(heap){Answer<i64>.ok(n)=>{return n;},Answer<i64>.err(e)=>{return e;}}}";
 fn ownedScenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "owned-instance.my", owned);
@@ -63,7 +63,7 @@ const Modules = struct {
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main;import model as m;fn main()->i64{let x=new m::Box<i64>{value:4};return m::twice(x).value;}");
         if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8, "module model;export Box;export Empty;export twice;struct Box<T:copy>{value:T}struct Empty<T:copy>{}struct Hidden{value:i64}" ++
             "fn twice(x:Box<i64>)->Box<i64>{return update(x){value:x.value*2};}" ++
-            "fn hidden_values(x:Box<Hidden>,y:Empty<Hidden>)->i64{discard x;discard y;return 0;}");
+            "fn hidden_values(x:Box<Hidden>,y:Empty<Hidden>)->i64{_ = x;_ = y;return 0;}");
         return error.NotFound;
     }
 };
@@ -90,7 +90,7 @@ fn largeNames(allocator: std.mem.Allocator) ![]u8 {
     defer text.deinit();
     try text.writer.writeAll("struct Pair<A:copy,B:copy>{a:A,b:B}");
     for (0..18) |i| try text.writer.print("struct Chain{d}<T:copy>{{next:Chain{d}<Pair<T,T>>}}", .{ i, i + 1 });
-    try text.writer.writeAll("struct Chain18<T:copy>{}fn takes(x:Chain0<i64>)->i64{discard x;return 0;}fn main()->i64{return 0;}");
+    try text.writer.writeAll("struct Chain18<T:copy>{}fn takes(x:Chain0<i64>)->i64{_ = x;return 0;}fn main()->i64{return 0;}");
     return text.toOwnedSlice();
 }
 test "nominal concrete type names stop expansion before excessive diagnostic allocation" {
@@ -141,8 +141,8 @@ fn catalogCategories(allocator: std.mem.Allocator) !void {
         "fn main()->i64{let box=new Box<Id>{value:Id.make(13)};return Id.number(box.value);}", 13);
     const program = definitions ++ "pool P(Handle):Box<i64>;result Open{ok:P,err:i64}result Insert{ok:Handle,err:i64}" ++
         "result Read{ok:Box<i64>,err:i64}resource File:filesystem;" ++
-        "fn work(heap:allocator)->Answer<i64>{let mut pool=try acquire_pool<Open>(heap,1);" ++
-        "let id=try insert_pool<Insert>(pool,new Box<i64>{value:17});let value=try read_pool<Read>(pool,id);return new Answer<i64>.ok(value.value);}" ++
+        "fn work(heap:allocator)->Answer<i64>{let mut pool=acquire_pool<Open>(heap,1)?;" ++
+        "let id=insert_pool<Insert>(pool,new Box<i64>{value:17})?;let value=read_pool<Read>(pool,id)?;return new Answer<i64>.ok(value.value);}" ++
         "fn main(heap:allocator)->i64{match work(heap){Answer<i64>.ok(n)=>{return n;},Answer<i64>.err(e)=>{return e;}}}";
     var compilation = try language.Compilation.init(allocator, "nominal-pool.my", program);
     defer compilation.deinit();
@@ -161,9 +161,9 @@ const collection_client =
     "fn main(heap:allocator)->i64{match c::filled::<i64>(heap,4u64,9){" ++
     "c::Created<i64>.err(e)=>{return e;},c::Created<i64>.ok(input)=>{let mut values=input;" ++
     "borrow mut values[0..4] as view{write_slice(view,0,5);write_slice(view,1,1);write_slice(view,2,3);" ++
-    "discard c::sort::<i64>(view);if read_slice(view,0)!=1{return -1;}" ++
-    "discard c::reverse::<i64>(view);if read_slice(view,0)!=9{return -2;}" ++
-    "discard c::sort::<i64>(view);if !c::contains::<i64>(view,3){return -3;}" ++
+    "_ = c::sort::<i64>(view);if read_slice(view,0)!=1{return -1;}" ++
+    "_ = c::reverse::<i64>(view);if read_slice(view,0)!=9{return -2;}" ++
+    "_ = c::sort::<i64>(view);if !c::contains::<i64>(view,3){return -3;}" ++
     "return cast<i64>(c::lower_bound::<i64>(view,4))+c::find::<i64>(view,9);}}}}";
 fn readCollections(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
     if (!std.mem.eql(u8, path, "main.my")) return error.NotFound;
@@ -187,11 +187,11 @@ fn boundedRuntime(allocator: std.mem.Allocator, code: language.bytecode.Program)
 const owner_borrows =
     "buffer Vec<T:copy>:T;result Open<T:copy>{ok:Vec<T>,err:i64}result Status{ok:bool,err:i64}" ++
     "struct Holder<T:copy>{buffer:Vec<T>,tag:i64}result Answer{ok:i64,err:i64}" ++
-    "fn inspect<T:copy>(holder:&Holder<T>)->i64 noalloc{return read_field(holder,tag);}" ++
+    "fn inspect<T:copy>(holder:&Holder<T>)->i64 noalloc{return holder.tag;}" ++
     "fn append<T:copy>(values:&mut Vec<T>,value:T)->Status noalloc{return append_buffer<Status>(values,value);}" ++
     "fn size<T:copy>(values:&Vec<T>)->u64 noalloc{return len_buffer(values);}" ++
     "fn work(heap:allocator)->Answer{let mut values=try acquire_buffer<Open<i64>>(heap,2);" ++
-    "borrow mut values as view{discard try append::<i64>(view,7);if size::<i64>(view)!=1u64{return new Answer.ok(-1);}}" ++
+    "borrow mut values as view{_ = append::<i64>(view,7)?;if size::<i64>(view)!=1u64{return new Answer.ok(-1);}}" ++
     "borrow values[0..1] as view{if read_slice(view,0)!=7{return new Answer.ok(-2);}}" ++
     "let holder=new Holder<i64>{buffer:values,tag:9};borrow holder as view{return new Answer.ok(inspect::<i64>(view));}}" ++
     "fn main(heap:allocator)->i64{match work(heap){Answer.ok(n)=>{return n;},Answer.err(e)=>{return e;}}}";

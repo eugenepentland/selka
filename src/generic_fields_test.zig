@@ -12,12 +12,12 @@ fn reject(body: []const u8, code: []const u8) !void {
     try t.expectEqualStrings(code, c.diagnostics.items[0].code);
 }
 const program = schema ++
-    "fn drain<T:copy>(flag:bool,p:Pair)->i64{if flag{acknowledge take_field(p,left);acknowledge take_field(p,right);}else{acknowledge take_field(p,right);acknowledge take_field(p,left);}return read_field(p,code);}" ++
-    "fn step<T:copy>(p:Pair)->R{acknowledge take_field(p,left);let n=try take_field(p,right);return new R.ok(n+read_field(p,code));}" ++
+    "fn drain<T:copy>(flag:bool,p:Pair)->i64{if flag{_ = p.left;_ = p.right;}else{_ = p.right;_ = p.left;}return p.code;}" ++
+    "fn step<T:copy>(p:Pair)->R{_ = p.left;let n=p.right?;return new R.ok(n+p.code);}" ++
     "fn number(r:R)->i64{match r{R.ok(n)=>{return n;},R.err(n)=>{return 0-n;}}}" ++
     "fn refill<T:copy>()->i64{let mut n=0;let mut p=new Pair{left:new R.ok(1),right:new R.err(2),code:3};" ++
-    "while n<2{acknowledge take_field(p,left);acknowledge take_field(p,right);p=new Pair{left:new R.ok(n),right:new R.ok(n)," ++
-    "code:n};n+=1;}acknowledge take_field(p,left);acknowledge take_field(p,right);return read_field(p,code);}" ++
+    "while n<2{_ = p.left;_ = p.right;p=new Pair{left:new R.ok(n),right:new R.ok(n)," ++
+    "code:n};n+=1;}_ = p.left;_ = p.right;return p.code;}" ++
     "fn main()->i64{return drain::<bool>(true,new Pair{left:new R.ok(1),right:new R.ok(2),code:3})+drain::<bool>(false," ++
     "new Pair{left:new R.ok(1),right:new R.ok(2),code:4})+number(step::<bool>(new Pair{left:new R.ok(1),right:new R.ok(5)," ++
     "code:6}))+number(step::<bool>(new Pair{left:new R.ok(1),right:new R.err(2),code:6}))+refill::<bool>();}";

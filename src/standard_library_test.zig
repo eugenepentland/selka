@@ -5,8 +5,8 @@ const language = @import("compiler.zig");
 const source =
     "module main;import std_json;fn parse(heap:allocator)->std_json::Parsed{" ++
     "let text=\"{\\\"answer\\\":42,\\\"items\\\":[\\\"a\\\",\\\"b\\\"]}\";" ++
-    "let mut bytes=try acquire_buffer<std_json::Input>(heap,len(text));" ++
-    "borrow text[0..len(text)] as view{let mut i=0u64;while i<len_slice(view){discard try append_buffer<std_json::Status>(bytes,read_slice(view,i));i+=1u64;}}" ++
+    "let mut bytes=acquire_buffer<std_json::Input>(heap,len(text))?;" ++
+    "borrow text[0..len(text)] as view{let mut i=0u64;while i<len_slice(view){_ = append_buffer<std_json::Status>(bytes,read_slice(view,i))?;i+=1u64;}}" ++
     "return std_json::parse(heap,bytes,4096);}" ++
     "fn main(heap:allocator)->i64{match parse(heap){std_json::Parsed.err(e)=>{return e;},std_json::Parsed.ok(doc)=>{" ++
     "borrow doc[0..len_buffer(doc)] as view{" ++

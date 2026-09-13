@@ -21,7 +21,7 @@ const Modules = struct {
         return allocator.dupe(u8, "module main;import std_list;import std_result;" ++
             "fn answer()->Result<i64,i64>{return new std_result.Result<i64,i64>.ok(42);}" ++
             "fn main()->i64{let values:List<i64>=std_list.create::<i64>();values.push(1);" ++
-            "std_list.append(values,41);let option:Option<i64>=new std_result.Option<i64>.some(values[1]);discard option;" ++
+            "std_list.append(values,41);let option:Option<i64>=new std_result.Option<i64>.some(values[1]);_ = option;" ++
             "match answer(){Result<i64,i64>.ok(n)=>{return n;},Result<i64,i64>.err(e)=>{return e;}}}");
     }
 };

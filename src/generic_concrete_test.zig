@@ -5,8 +5,8 @@ const language = @import("compiler.zig");
 const schema = "struct Sample{values:[2]i64,tag:u8}";
 const program = schema ++
     "fn make<T:integer>(x:T)->Sample{return new Sample{values:new [2]i64[cast<i64>(x),cast<i64>(x)+1],tag:7u8};}" ++
-    "fn total<T:copy>(x:T,s:Sample)->i64{discard x;return s.values[0]+s.values[1]+cast<i64>(len(s.values));}" ++
-    "fn choose<T:copy>(x:T,a:Sample,b:Sample)->Sample{discard x;if a.tag==b.tag{return a;}return b;}" ++
+    "fn total<T:copy>(x:T,s:Sample)->i64{_ = x;return s.values[0]+s.values[1]+cast<i64>(len(s.values));}" ++
+    "fn choose<T:copy>(x:T,a:Sample,b:Sample)->Sample{_ = x;if a.tag==b.tag{return a;}return b;}" ++
     "fn main()->i64{let p=make::<u8>(7u8);return total::<bool>(true,choose::<i64>(0,p,p));}";
 fn scenario(allocator: std.mem.Allocator) !void {
     var c = try language.Compilation.init(allocator, "concrete.my", program);
@@ -47,8 +47,8 @@ test "generic record updates and array replacement preserve snapshots under allo
 }
 const variants = "struct Payload{n:i64}enum Color{red,blue}union Choice{none,value:Payload}" ++
     "fn make<T:integer>(x:T)->Choice{return new Choice.value(new Payload{n:cast<i64>(x)});}" ++
-    "fn score<T:copy>(context:T,x:Choice)->i64{discard context;match x{Choice.none=>{return 0;},Choice.value(p)=>{return p.n;}}}" ++
-    "fn color<T:copy>(context:T)->Color{discard context;return new Color.blue;}" ++
+    "fn score<T:copy>(context:T,x:Choice)->i64{_ = context;match x{Choice.none=>{return 0;},Choice.value(p)=>{return p.n;}}}" ++
+    "fn color<T:copy>(context:T)->Color{_ = context;return new Color.blue;}" ++
     "fn mapping<T:integer>(x:T)->[Color]i64{return new [Color]i64{red:cast<i64>(x),blue:0};}" ++
     "fn main()->i64{match color::<bool>(true){Color.red=>{return 0;},Color.blue=>{return score::<i64>(0,make::<u8>(7u8))+mapping::<u8>(2u8)[new Color.red];}}}";
 fn variantScenario(allocator: std.mem.Allocator) !void {

@@ -9,9 +9,9 @@ fn provider(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: u
         "fn identity<T:copy>(value:T)->T{return value;}" ++
         "fn operation()->std_result::Result<std_unit::Unit,std_result::Error>{" ++
         "return new std_result::Result<std_unit::Unit,std_result::Error>.ok(done());}" ++
-        "fn main()->i64{discard identity::<std_unit::Unit>(done());" ++
-        "match operation(){std_result::Result<std_unit::Unit,std_result::Error>.ok(discard)=>{return 0;}," ++
-        "std_result::Result<std_unit::Unit,std_result::Error>.err(discard)=>{return 1;}}}");
+        "fn main()->i64{_ = identity::<std_unit::Unit>(done());" ++
+        "match operation(){std_result::Result<std_unit::Unit,std_result::Error>.ok(_)=>{return 0;}," ++
+        "std_result::Result<std_unit::Unit,std_result::Error>.err(_)=>{return 1;}}}");
 }
 // spec: UNIT-CONVENTION-1
 test "standard Unit replaces dummy success integers and composes with generic fallible values" {

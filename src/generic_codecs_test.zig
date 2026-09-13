@@ -6,7 +6,7 @@ const domain = "struct Wire{n:i64}result Decoded{ok:Positive,err:i64}domain Posi
     "codec Wire{decode:from_wire,encode:to_wire}private fn raw(x:i64)->Positive{return wrap<Positive>(x);}" ++
     "fn from_wire(x:Wire)->Decoded{if x.n<=0{return new Decoded.err(-1);}return new Decoded.ok(Positive.raw(x.n));}" ++
     "fn to_wire(x:Positive)->Wire{return new Wire{n:unwrap(x)};}}";
-const helpers = "fn round<T:copy>(ignored:T,n:i64)->i64{discard ignored;match codec_decode<Positive>(new Wire{n:n}){" ++
+const helpers = "fn round<T:copy>(ignored:T,n:i64)->i64{_ = ignored;match codec_decode<Positive>(new Wire{n:n}){" ++
     "Decoded.ok(x)=>{return codec_encode<Positive>(x).n;},Decoded.err(e)=>{return e;}}}";
 fn scenario(allocator: std.mem.Allocator) !void {
     var compilation = try language.Compilation.init(allocator, "generic-codecs.my", domain ++ helpers ++ "fn main()->i64{return round::<bool>(false,7)+round::<i64>(2,0);}");
@@ -33,7 +33,7 @@ fn reject(body: []const u8, expected: []const u8) !void {
 }
 const Modules = struct {
     fn read(_: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, _: usize) language.project.ReadError![]u8 {
-        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main;import model as m;fn f<T:copy>(x:T)->i64{discard x;match codec_decode<m::Positive>(new m::Wire{n:23}){" ++
+        if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, "module main;import model as m;fn f<T:copy>(x:T)->i64{_ = x;match codec_decode<m::Positive>(new m::Wire{n:23}){" ++
             "m::Decoded.ok(p)=>{return codec_encode<m::Positive>(p).n;},m::Decoded.err(e)=>{return e;}}}fn main()->i64{return f::<bool>(false);}");
         if (std.mem.eql(u8, path, "model.my")) return allocator.dupe(u8, "module model;export Wire;export Decoded;export Positive;" ++ domain);
         return error.NotFound;

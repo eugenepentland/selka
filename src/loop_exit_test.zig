@@ -32,7 +32,7 @@ test "break and continue target nearest loops and preserve generic flow and form
 fn cleanupScenario(allocator: std.mem.Allocator) !void {
     const text = "buffer B:i64;result Open{ok:B,err:i64}result Change{ok:bool,err:i64}result R{ok:i64,err:i64}" ++
         "fn work(heap:allocator)->R{let mut sum=0;let mut i=0;while i<10{i+=1;arena heap as a{arena a as b{" ++
-        "let mut values=try acquire_buffer<Open>(b,1);discard try append_buffer<Change>(values,i);" ++
+        "let mut values=acquire_buffer<Open>(b,1)?;_ = append_buffer<Change>(values,i)?;" ++
         "borrow values[0..1] as view{sum+=read_slice(view,0);if i<3{continue;}break;}}}}return new R.ok(sum);}" ++
         "fn main(heap:allocator)->i64{match work(heap){R.ok(value)=>{return value;},R.err(code)=>{return code;}}}";
     for ([_]bool{ false, true }) |generic| {

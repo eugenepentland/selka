@@ -4,7 +4,7 @@ const t = std.testing;
 const language = @import("compiler.zig");
 const program =
     "fn set(x:&mut i64)->unit{write_ref(x,42);}" ++
-    "fn skip<T:copy>(x:T)->unit{discard x;}" ++
+    "fn skip<T:copy>(x:T)->unit{_ = x;}" ++
     "fn noop()->unit{return;}" ++
     "fn main()->i64{let mut x=0;borrow mut x as edit{set(edit);}skip::<i64>(x);noop();return x;}";
 

@@ -62,7 +62,7 @@ const Modules = struct {
         if (std.mem.eql(u8, path, "main.my")) return allocator.dupe(u8, if (context == null)
             "module main;import left as a;import bridge as b;fn main()->i64{if a::Id.make(9u64)==b::make(9u64){return 1;}return 0;}"
         else
-            "module main;import left as a;import right as b;fn main()->i64{discard a::Id.make(9u64)==b::Id.make(9u64);return 0;}");
+            "module main;import left as a;import right as b;fn main()->i64{_ = a::Id.make(9u64)==b::Id.make(9u64);return 0;}");
         if (std.mem.eql(u8, path, "bridge.my")) return allocator.dupe(u8, "module bridge;import left as alias;export make;fn make(n:u64)->alias::Id{return alias::Id.make(n);}");
         if (std.mem.eql(u8, path, "left.my")) return allocator.dupe(u8, "module left;export Id;" ++ declarations);
         if (std.mem.eql(u8, path, "right.my")) return allocator.dupe(u8, "module right;export Id;" ++ declarations);

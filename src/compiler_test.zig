@@ -259,7 +259,7 @@ test "instruction limit is checked before the next dispatch" {
 }
 
 fn flowAllocationScenario(allocator: std.mem.Allocator) !void {
-    var compilation = try language.Compilation.init(allocator, "flow.my", "fn main() -> i64 { let mut i = 0; while i < 5 { if i % 2 == 0 { discard true || (1 / 0 == 0); } i += 1; } return i; }");
+    var compilation = try language.Compilation.init(allocator, "flow.my", "fn main() -> i64 { let mut i = 0; while i < 5 { if i % 2 == 0 { _ = true || (1 / 0 == 0); } i += 1; } return i; }");
     defer compilation.deinit();
     try testing.expectEqual(@as(i64, 5), (try compilation.execute(allocator)).value);
 }

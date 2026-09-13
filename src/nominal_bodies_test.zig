@@ -54,7 +54,7 @@ test "nominal bodies release shape catalogs and VM storage after every allocatio
 }
 
 const owners = definitions ++ "buffer B:u8;result Open<T:copy>{ok:B,err:i64}struct Owner<T:copy>{buffer:B,tag:T}" ++
-    "fn consume<T:copy>(owner:Owner<T>)->T{discard take_field(owner,buffer);return read_field(owner,tag);}" ++
+    "fn consume<T:copy>(owner:Owner<T>)->T{_ = owner.buffer;return owner.tag;}" ++
     "fn work<T:integer>(heap:allocator,tag:T)->R<T>{let owner=new Owner<T>{buffer:try acquire_buffer<Open<T>>(heap,1),tag:tag};return new R<T>.ok(consume::<T>(owner));}" ++
     "fn main(heap:allocator)->i64{match work::<i64>(heap,21){R<i64>.ok(n)=>{return n;},R<i64>.err(e)=>{return e;}}}";
 fn ownedScenario(allocator: std.mem.Allocator) !void {
@@ -73,7 +73,7 @@ test "nominal bodies preserve owned partial moves and typed acquisition under al
 }
 const loans = definitions ++ "fn view<T:copy>(x:&Box<T>)->&Box<T> from x{return x;}" ++
     "fn change<T:copy>(x:&mut Box<T>,value:T)->i64{write_ref(x,new Box<T>{value:value});return 0;}" ++
-    "fn main()->i64{let mut box=new Box<i64>{value:3};let original=box;borrow mut box as r{discard change::<i64>(r,9);}" ++
+    "fn main()->i64{let mut box=new Box<i64>{value:3};let original=box;borrow mut box as r{_ = change::<i64>(r,9);}" ++
     "borrow box as r{borrow view::<i64>(r) as v{return read_ref(v).value+original.value;}}}";
 const module_source = "module model;export Box;export pack;export extract;struct Box<T:copy>{value:T}" ++
     "fn pack<T:copy>(x:T)->Box<T>{return new Box<T>{value:x};}fn extract<T:copy>(box:Box<T>)->T{return box.value;}";

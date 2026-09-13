@@ -31,7 +31,7 @@ fn reject(source: []const u8, code: []const u8) !void {
 }
 const forwarded = declarations ++ "struct Authority { clock: clock_cap } fn read(auth: Authority) -> Time " ++
     "effects(clock) { return clock_now<Time>(auth.clock); } fn main(rng: random_cap, " ++
-    "heap: allocator, clock: clock_cap) -> i64 noio { discard heap; match read(new " ++
+    "heap: allocator, clock: clock_cap) -> i64 noio { _ = heap; match read(new " ++
     "Authority { clock: clock }) { Time.ok(now) => { match random_u64<Random>(rng) { " ++
     "Random.ok(word) => { if word == 18446744073709551615u64 { return now; } else { " ++
     "return 0; } }, Random.err(e) => { return e; } } }, Time.err(e) => { return e; } } }";
@@ -49,8 +49,8 @@ test "external entry grants forward through wrappers and preserve full width sam
     try scenario(t.allocator);
 }
 const cleanup = declarations ++ "buffer B: i64; result Owned { ok: B, err: i64 } fn read(heap: allocator, c: " ++
-    "clock_cap) -> Time { let b = try acquire_buffer<Owned>(heap, 1); let sample = try " ++
-    "clock_now<Time>(c); discard b; return new Time.ok(sample); } fn main(heap: allocator," ++
+    "clock_cap) -> Time { let b = acquire_buffer<Owned>(heap, 1)?; let sample = try " ++
+    "clock_now<Time>(c); _ = b; return new Time.ok(sample); } fn main(heap: allocator," ++
     " c: clock_cap) -> i64 { match read(heap, c) { Time.ok(v) => { return v; }, " ++
     "Time.err(e) => { return e; } } }";
 test "provider failures propagate recoverable codes and clean owned resources including host OOM" {
@@ -82,8 +82,8 @@ test "external execution and emission release every failed allocation" {
     try t.checkAllAllocationFailures(no_resize.allocator(), scenario, .{});
 }
 const generic_provider_source = declarations ++
-    "fn read<G:copy>(clock:clock_cap,random:random_cap)->Time effects(clock,random){let n=try clock_now<Time>(clock);" ++
-    "let word=try random_u64<Random>(random);if word==18446744073709551615u64{return new Time.ok(n);}return new Time.err(9);}" ++
+    "fn read<G:copy>(clock:clock_cap,random:random_cap)->Time effects(clock,random){let n=clock_now<Time>(clock)?;" ++
+    "let word=random_u64<Random>(random)?;if word==18446744073709551615u64{return new Time.ok(n);}return new Time.err(9);}" ++
     "fn main(clock:clock_cap,random:random_cap)->i64{match read::<bool>(clock,random){Time.ok(n)=>{return n;},Time.err(e)=>{return e;}}}";
 fn genericProviderScenario(allocator: std.mem.Allocator) !void {
     var fake: Fake = .{};
