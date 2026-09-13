@@ -12,11 +12,15 @@ pub const Context = struct {
     environ: *const std.process.Environ.Map,
     arena: *std.heap.ArenaAllocator,
     parent: std.mem.Allocator,
+    self_directory: []const u8,
     /// Own a stable child arena for every allocation made during this build.
     pub fn init(parent: std.mem.Allocator, io: std.Io, environ: *const std.process.Environ.Map) Error!Context {
         const arena = try parent.create(std.heap.ArenaAllocator);
         arena.* = std.heap.ArenaAllocator.init(parent);
-        return .{ .allocator = arena.allocator(), .arena = arena, .parent = parent, .io = io, .environ = environ };
+        const allocator = arena.allocator();
+        const own = std.Io.Dir.cwd().realPathFileAlloc(io, "/proc/self/exe", allocator) catch "";
+        const directory = if (own.len == 0) "" else std.fs.path.dirname(own) orelse "";
+        return .{ .allocator = allocator, .arena = arena, .parent = parent, .io = io, .environ = environ, .self_directory = directory };
     }
     /// Release all build-lifetime paths, captured tool output, and fingerprints.
     pub fn deinit(self: *Context) void {
@@ -29,11 +33,16 @@ pub const Context = struct {
         const cwd = try std.Io.Dir.cwd().realPathFileAlloc(self.io, ".", self.allocator);
         return std.fs.path.resolve(self.allocator, &.{ cwd, path });
     }
-    /// Resolve tool executables once so cache fingerprints match invoked tools.
+    /// Resolve an explicit path, then a tool installed beside this compiler, then `PATH`;
+    /// the working directory never selects a build tool.
     pub fn executable(self: Context, name: []const u8) Error![]const u8 {
         if (std.mem.indexOfScalar(u8, name, '/') != null) {
             if (!self.runnable(name)) return error.ToolNotFound;
             return std.Io.Dir.cwd().realPathFileAlloc(self.io, name, self.allocator);
+        }
+        if (self.self_directory.len != 0) {
+            const sibling = try std.fs.path.join(self.allocator, &.{ self.self_directory, name });
+            if (self.runnable(sibling)) return std.Io.Dir.cwd().realPathFileAlloc(self.io, sibling, self.allocator);
         }
         var paths = std.mem.splitScalar(u8, self.environ.get("PATH") orelse "", ':');
         while (paths.next()) |path| {
@@ -42,10 +51,18 @@ pub const Context = struct {
             const resolved = std.Io.Dir.cwd().realPathFileAlloc(self.io, candidate, self.allocator) catch continue;
             return resolved;
         }
-        const bundled = ".mylang-cache/toolchain/qbe";
-        if (std.mem.eql(u8, name, "qbe") and self.runnable(bundled))
-            return std.Io.Dir.cwd().realPathFileAlloc(self.io, bundled, self.allocator);
         return error.ToolNotFound;
+    }
+    /// Identify an external tool by path, size and modification time; rehashing a
+    /// multi-hundred-megabyte toolchain on every build costs more than a whole native build.
+    pub fn stamp(self: Context, path: []const u8) Error![]const u8 {
+        const info = try std.Io.Dir.cwd().statFile(self.io, path, .{});
+        return std.fmt.allocPrint(self.allocator, "{s}\x00{d}\x00{d}", .{ path, info.size, info.mtime.nanoseconds });
+    }
+    /// Report whether a content-addressed cache entry has already been published.
+    pub fn exists(self: Context, path: []const u8) bool {
+        std.Io.Dir.cwd().access(self.io, path, .{}) catch return false;
+        return true;
     }
     fn runnable(self: Context, path: []const u8) bool {
         const stat = std.Io.Dir.cwd().statFile(self.io, path, .{}) catch return false;
@@ -165,9 +182,55 @@ test "native publication repairs executable permissions and tool lookup skips di
     try environment.put("PATH", directory);
     try std.testing.expectEqualStrings(output, try context.executable("program"));
     try std.testing.expectError(error.ToolNotFound, context.executable("candidate"));
+    try std.testing.expect(context.exists(output));
+    try std.testing.expect(!context.exists(try std.fs.path.join(context.allocator, &.{ directory, "absent" })));
     const atomic_path = try std.fs.path.join(context.allocator, &.{ directory, "checksum" });
     try context.atomic(atomic_path, "updated");
     try std.testing.expectEqualStrings("updated", try context.read(atomic_path));
     _ = try context.absolute(atomic_path);
     try context.mkdir(try std.fs.path.join(context.allocator, &.{ directory, "parents/child" }));
+}
+// spec: QBE-4
+test "native tools resolve beside the compiler then PATH, never from the working directory" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary_dir = std.testing.tmpDir(.{});
+    defer temporary_dir.cleanup();
+    const directory = try temporary_dir.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    const beside = try std.fs.path.join(context.allocator, &.{ directory, "beside" });
+    const searched = try std.fs.path.join(context.allocator, &.{ directory, "searched" });
+    try context.mkdir(beside);
+    try context.mkdir(searched);
+    for ([_][]const u8{ beside, searched }) |parent| {
+        const tool = try std.fs.path.join(context.allocator, &.{ parent, "qbe" });
+        try context.write(tool, parent);
+        try std.Io.Dir.cwd().setFilePermissions(std.testing.io, tool, .executable_file, .{});
+    }
+    try environment.put("PATH", searched);
+    try std.testing.expectEqualStrings(try std.fs.path.join(context.allocator, &.{ searched, "qbe" }), try context.executable("qbe"));
+    context.self_directory = beside;
+    try std.testing.expectEqualStrings(try std.fs.path.join(context.allocator, &.{ beside, "qbe" }), try context.executable("qbe"));
+    context.self_directory = "";
+    try environment.put("PATH", "");
+    // A `.mylang-cache/toolchain/qbe` under the current directory is no longer a lookup path.
+    try std.testing.expectError(error.ToolNotFound, context.executable("qbe"));
+}
+test "tool stamps distinguish rebuilt tools without rereading their contents" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var temporary_dir = std.testing.tmpDir(.{});
+    defer temporary_dir.cleanup();
+    const directory = try temporary_dir.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    const tool = try std.fs.path.join(context.allocator, &.{ directory, "tool" });
+    try context.write(tool, "one");
+    const before = try context.stamp(tool);
+    try std.testing.expectEqualStrings(before, try context.stamp(tool));
+    try context.write(tool, "a longer replacement");
+    try std.testing.expect(!std.mem.eql(u8, before, try context.stamp(tool)));
+    try std.testing.expect(std.mem.indexOf(u8, before, tool) != null);
+    try std.testing.expectError(error.FileNotFound, context.stamp(try std.fs.path.join(context.allocator, &.{ directory, "absent" })));
 }
