@@ -250,14 +250,16 @@ const page =
     "\n### Deeper\n\nNested prose.\n\n## Signatures\n\n```text\n# doc: not-mylang\ndef answer() -> int\n```\n";
 
 // spec: DOCCOV-1
-test "sections resolve by anchor and end at the next heading of the same level" {
+test "sections resolve by anchor and end at the next heading of the same or higher level" {
     const intro = section(page, "managed-arenas").?;
     try testing.expectEqual(@as(u8, 1), intro.level);
     try testing.expect(std.mem.indexOf(u8, intro.body, "Intro prose.") != null);
-    try testing.expect(std.mem.indexOf(u8, intro.body, "Only prose here.") == null);
+    // Level-2 headings are nested under a level-1 one, so they do not end its section.
+    try testing.expect(std.mem.indexOf(u8, intro.body, "Only prose here.") != null);
     const limits = section(page, "limits").?;
     try testing.expectEqual(@as(u8, 2), limits.level);
     try testing.expect(std.mem.indexOf(u8, limits.body, "Only prose here.") != null);
+    try testing.expect(std.mem.indexOf(u8, limits.body, "mylang run main.my") == null);
     const running = section(page, "running-it").?;
     try testing.expect(std.mem.indexOf(u8, running.body, "Nested prose.") != null);
     try testing.expect(std.mem.indexOf(u8, running.body, "# doc: not-mylang") == null);
