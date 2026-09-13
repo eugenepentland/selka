@@ -9,6 +9,29 @@ fn execute(text: []const u8, expected: i64) !void {
     try t.expectEqual(expected, (try c.execute(t.allocator)).value);
 }
 
+const File = language.embedded_project.File;
+const Files = struct {
+    entries: []File,
+    fn read(context: ?*anyopaque, allocator: std.mem.Allocator, path: []const u8, limit: usize) language.project.ReadError![]u8 {
+        const self: *Files = @ptrCast(@alignCast(context.?));
+        return language.embedded_project.read(allocator, self.entries, path, limit);
+    }
+};
+
+/// Execute a module graph, so declared template names resolve through project names
+/// rather than the single-file catalog.
+fn executeProject(entries: []File, expected: i64) !void {
+    var files: Files = .{ .entries = entries };
+    var loaded = language.project.Project.init(t.allocator);
+    defer loaded.deinit();
+    try loaded.load(.{ .context = &files, .read = Files.read }, "main", .{});
+    var index = try language.interfaces.build(&loaded);
+    var compilation = try language.project_compile.Compilation.init(&index);
+    try compilation.emit();
+    const result = try language.vm.run(t.allocator, compilation.code.?);
+    try t.expectEqual(expected, result.value);
+}
+
 fn reject(text: []const u8, code: []const u8) !void {
     var c = try language.Compilation.init(t.allocator, "variant.my", text);
     defer c.deinit();
@@ -148,4 +171,46 @@ test "a generic variant without an expected type reports its missing arguments" 
         \\    _ = held
         \\    return 0
     , "E_GENERIC_INFERENCE");
+}
+
+// spec-case: PY-VARIANT-3
+test "an imported generic variant takes its arguments from the expected type across modules" {
+    const main_module =
+        \\module main
+        \\import model as m
+        \\
+        \\
+        \\def main() -> i64:
+        \\    held: m.Slot[m.Box] = m.Slot.some(m.Box(value=42))
+        \\    empty: m.Slot[m.Box] = m.Slot.none
+        \\    match empty:
+        \\        case m.Slot[m.Box].some(other):
+        \\            return other.value
+        \\        case m.Slot[m.Box].none:
+        \\            pass
+        \\    match held:
+        \\        case m.Slot[m.Box].none:
+        \\            return 0
+        \\        case m.Slot[m.Box].some(box):
+        \\            return box.value
+    ;
+    const model_module =
+        \\module model
+        \\export Box
+        \\export Slot
+        \\
+        \\
+        \\class Box:
+        \\    value: i64
+        \\
+        \\
+        \\union Slot[T]:
+        \\    none,
+        \\    some: T
+    ;
+    var entries = [_]File{
+        .{ .path = "main.my", .bytes = main_module },
+        .{ .path = "model.my", .bytes = model_module },
+    };
+    try executeProject(&entries, 42);
 }

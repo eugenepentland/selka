@@ -20,12 +20,12 @@ def listing(compiler, path):
 
 
 def trivia_only(text):
-    """Whitespace and // line comments are the only bytes permitted outside listed ranges."""
+    """Whitespace and # line comments are the only bytes permitted outside listed ranges."""
     at = 0
     while at < len(text):
         if text[at].isspace():
             at += 1
-        elif text.startswith('//', at):
+        elif text.startswith('#', at):
             newline = text.find('\n', at)
             at = len(text) if newline < 0 else newline
         else:

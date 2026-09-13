@@ -124,9 +124,9 @@ def tools_review(compiler, directory, name):
         assert '1 candidate groups;' in text and '1 approximate pairs;' in text, text
         assert all(n in text for n in ('delivery::fee', 'packaging::fee', 'handling::fee', '- 100', '+ 150'))
         assert 'no code was merged' in text
-        mutation(compiler, directory, 'catalog.my', '    adapter\n}', '    adapter, gift\n}', 'E_INCOMPLETE_TABLE')
-        mutation(compiler, directory, 'pricing.my', 'struct Totals {', 'struct Totals {\n    audit: u8,', 'E_INCOMPLETE_CONVERSION')
-        mutation(compiler, directory, 'catalog.my', 'import money;', 'import money;\nimport delivery;', status=3, command='check-policy')
+        mutation(compiler, directory, 'catalog.my', '    adapter\n', '    adapter,\n    gift\n', 'E_INCOMPLETE_TABLE')
+        mutation(compiler, directory, 'pricing.my', 'class Totals:\n', 'class Totals:\n    audit: u8\n', 'E_INCOMPLETE_CONVERSION')
+        mutation(compiler, directory, 'catalog.my', 'import money\n', 'import money\nimport delivery\n', status=3, command='check-policy')
         # An independent policy edit must not change the separate packaging source.
         path = directory / 'delivery.my'
         baseline = int(run([compiler, 'run-project', entry, '--print-result']).stdout)
@@ -143,8 +143,8 @@ def tools_review(compiler, directory, name):
         document = {'version': 'typed-json-v1', 'type': 'pricing::Receipt', 'value': {k: str(v) for k, v in invoice((2, 3, 1)).items()}}
     else:
         assert '0 candidate groups;' in discoveries[0] and '0 approximate pairs;' in discoveries[0]
-        assert 'line-bytes 113 exceeds configured 100' in quality, quality
-        mutation(compiler, directory, 'model.my', '    reading: Reading\n}', '    reading: Reading, alarm: u8\n}', 'E_INCOMPLETE_MATCH')
+        assert 'line-bytes 129 exceeds configured 100' in quality, quality
+        mutation(compiler, directory, 'model.my', '    reading: Reading\n', '    reading: Reading,\n    alarm: u8\n', 'E_INCOMPLETE_MATCH')
         document = {'version': 'typed-json-v1', 'type': 'model::Message', 'value': {'case': 'reading', 'value': {'sequence': '7', 'value': '300'}}}
     value = directory / 'value.json'
     value.write_text(json.dumps(document))

@@ -160,7 +160,7 @@ test "all commands reject invalid programs before execution and locate runtime t
         try invoke(command, "fn main() -> bool { return true; }", 1, "", "error[E_TYPE]");
     }
     try invoke("check", @embedFile("fixtures/trap.my"), 0, "", "");
-    try invoke("run", @embedFile("fixtures/trap.my"), 1, "", ":2:11: error[R_DIVISION_BY_ZERO]");
+    try invoke("run", @embedFile("fixtures/trap.my"), 1, "", ":2:9: error[R_DIVISION_BY_ZERO]");
 }
 test "oversized source is a host resource failure with no result output" {
     const text = try testing.allocator.alloc(u8, 16 * 1024 * 1024 + 1);
@@ -762,10 +762,8 @@ test "all commands preserve stdout and deterministic advisory stderr" {
         defer testing.allocator.free(outcome.stderr);
         try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
         try testing.expectEqualStrings(expected, outcome.stdout);
-        const first = std.mem.indexOf(u8, outcome.stderr, ":2:13: warning[W_UNNECESSARY_MUT]") orelse return error.MissingWarning;
-        const second = std.mem.indexOf(u8, outcome.stderr, ":2:13: warning[W_UNUSED_BINDING]") orelse return error.MissingWarning;
-        try testing.expect(first < second);
-        try testing.expectEqual(@as(usize, 2), std.mem.count(u8, outcome.stderr, "warning["));
+        try testing.expect(std.mem.indexOf(u8, outcome.stderr, ":2:5: warning[W_UNUSED_BINDING]") != null);
+        try testing.expectEqual(@as(usize, 1), std.mem.count(u8, outcome.stderr, "warning["));
         try testing.expect(std.mem.indexOf(u8, outcome.stderr, "`_ =`") != null);
     }
 }

@@ -14,9 +14,9 @@ def region(board: m.Board, item: m.Region) -> m.Preflight:
     i = 0u64
     while i < len(item.allow_nets):
         match item.allow_nets[i]:
-            case m.Slot.none:
+            case m.Slot[ids.NetId].none:
                 pass
-            case m.Slot.some(net):
+            case m.Slot[ids.NetId].some(net):
                 if not inventory.has[ids.NetId](board.nets, net, len(board.nets)):
                     return Err(m.Failure.input(m.InputProblem.unknown_allow_net))
         i = i + 1u64
@@ -47,17 +47,17 @@ def preflight(board: m.Board) -> m.Preflight:
     i = 0u64
     while i < len(board.regions):
         match board.regions[i]:
-            case m.Slot.none:
+            case m.Slot[m.Region].none:
                 pass
-            case m.Slot.some(value):
+            case m.Slot[m.Region].some(value):
                 _ = region(board, value)?
         i = i + 1u64
     i = 0u64
     while i < len(board.features):
         match board.features[i]:
-            case m.Slot.none:
+            case m.Slot[m.Feature].none:
                 pass
-            case m.Slot.some(value):
+            case m.Slot[m.Feature].some(value):
                 _ = feature(board, value)?
         i = i + 1u64
     return Ok(True)

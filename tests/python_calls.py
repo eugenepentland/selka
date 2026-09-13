@@ -35,15 +35,29 @@ def main():
     with tempfile.TemporaryDirectory(prefix='mylang-python-calls-') as directory:
         root = Path(directory)
         entry, data, output = (root / name for name in ('main.my', 'data.my', 'bindings.py'))
-        entry.write_text('module main; import data; fn main()->i64{return 0;}')
+        entry.write_text('module main\nimport data\n\n\ndef main() -> i64:\n    return 0\n')
         source = (ROOT / 'examples/domain-codecs/data.my').read_text().replace(
-            'module data;', 'module data; export shift; export zero; export unsigned; export explode; export nodata;')
+            'module data\n', 'module data\nexport shift\nexport zero\nexport unsigned\nexport explode\nexport nodata\n')
         source += '''
-fn shift(x:Positive,n:i64)->Decoded{return Positive.from_wire(new Wire{n:Positive.to_wire(x).n+n});}
-fn zero()->bool{return true;}
-fn unsigned(x:u64)->u64{return x;}
-fn explode(x:i64)->i64{return x/0;}
-fn nodata()->unit{}
+
+def shift(x: Positive, n: i64) -> Decoded:
+    return Positive.from_wire(Wire(n=Positive.to_wire(x).n + n))
+
+
+def zero() -> bool:
+    return True
+
+
+def unsigned(x: u64) -> u64:
+    return x
+
+
+def explode(x: i64) -> i64:
+    return divtrunc(x, 0)
+
+
+def nodata():
+    pass
 '''
         data.write_text(source)
         result = subprocess.run([sys.executable, str(ROOT / 'scripts/bindings.py'), str(entry),
@@ -79,9 +93,9 @@ fn nodata()->unit{}
             assert expected in failure.diagnostics, failure.diagnostics
         tiny = replace(client, limits=replace(client.limits, json=bindings.Limits(max_bytes=1)))
         fails(bindings.CodecError, 'CodecByteLimit', lambda: tiny.call('data::zero'))
-        data.write_text(source.replace('fn zero()->bool{return true;}', 'fn zero()->bool{return false;}'))
+        data.write_text(source.replace('def zero() -> bool:\n    return True', 'def zero() -> bool:\n    return False'))
         assert client.call('data::zero') is False
-        data.write_text(source.replace('fn zero()->bool{return true;}', 'fn zero()->i64{return 0;}'))
+        data.write_text(source.replace('def zero() -> bool:\n    return True', 'def zero() -> i64:\n    return 0'))
         stale = fails(bindings.CallError, 'CompilerFailure', lambda: client.call('data::zero'))
         assert 'InvocationSchemaMismatch' in stale.diagnostics
         data.write_text(source)

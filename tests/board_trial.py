@@ -92,10 +92,12 @@ def reject_transport(runner, path, first):
 
 def check_diagnostics(compiler, directory):
     source = ROOT / 'src/board_trial/guest'
-    identity = 'module main;import validation;import ids;fn mix(n:ids::NetId)->ids::ComponentId{return n;}fn main()->i64{return 0;}'
-    units = 'module main;import validation;import units;fn mix(n:units::Millimetres)->units::Micrometres{return n;}fn main()->i64{return 0;}'
+    identity = ('module main\nimport validation\nimport ids\n\n\ndef mix(n: ids.NetId) -> ids.ComponentId:\n    return n\n\n\n'
+                'def main() -> i64:\n    return 0\n')
+    units = ('module main\nimport validation\nimport units\n\n\ndef mix(n: units.Millimetres) -> units.Micrometres:\n    return n\n\n\n'
+             'def main() -> i64:\n    return 0\n')
     original = (source / 'model.my').read_text()
-    state = original.replace('    via: Via\n}', '    via: Via,\n    pad: Via\n}')
+    state = original.replace('    via: Via\n', '    via: Via,\n    pad: Via\n')
     assert state != original
     cases = [
         ('identity', 'main.my', identity, 'E_TYPE', 'ids::ComponentId, found ids::NetId'),

@@ -16,21 +16,63 @@ def main():
         entry = root / 'main.my'
         module = root / 'data.my'
         path = root / 'value.json'
-        entry.write_text('module main; import data; fn main() -> i64 { return 0; }')
-        source = '''module data;
-export Point; export Flag; export Choice; export Outcome; export Empty;
-export Secret; export Maybe; export File;
-export Zero;
-struct Point { x: u64, flags: [Flag]bool, samples: [2]i16 }
-enum Flag { yes, no }
-union Choice { none, point: Point }
-result Outcome { ok: Choice, err: i8 }
-struct Empty {}
-domain Secret: i64 { fn make(x: i64) -> Secret { return wrap<Secret>(x); } }
-union Maybe { none, some: Secret }
-struct Zero { data: [0]Secret }
-resource File: filesystem;
-struct Private { hidden: bool }
+        entry.write_text('module main\nimport data\n\n\ndef main() -> i64:\n    return 0\n')
+        source = '''module data
+export Point
+export Flag
+export Choice
+export Outcome
+export Empty
+export Secret
+export Maybe
+export File
+export Zero
+
+
+class Point:
+    x: u64
+    flags: [Flag]bool
+    samples: [2]i16
+
+
+enum Flag:
+    yes,
+    no
+
+
+union Choice:
+    none,
+    point: Point
+
+
+result Outcome:
+    ok: Choice,
+    err: i8
+
+
+class Empty:
+    pass
+
+
+domain Secret: i64:
+    def make(x: i64) -> Secret:
+        return wrap<Secret>(x)
+
+
+union Maybe:
+    none,
+    some: Secret
+
+
+class Zero:
+    data: [0]Secret
+
+
+resource File: filesystem
+
+
+class Private:
+    hidden: bool
 '''
         module.write_text(source)
 
@@ -110,7 +152,7 @@ struct Private { hidden: bool }
         assert 'JSON pointer "/version"' in run(1)
         # Long names produce an explicitly marked, valid quoted pointer prefix.
         long_name = 'x' * 5000
-        module.write_text('module data; export Long; struct Long { ' + long_name + ': bool }')
+        module.write_text('module data\nexport Long\n\n\nclass Long:\n    ' + long_name + ': bool\n')
         path.write_text(json.dumps({'version': 'typed-json-v1', 'type': 'data::Long', 'value': {long_name: 'wrong'}}))
         message = run(1)
         assert 'ValueTypeMismatch' in message and '(path truncated)' in message
@@ -141,13 +183,13 @@ struct Private { hidden: bool }
         path.write_text(path.read_text() + ' ')
         assert 'CodecByteLimit' in run(1)
         # Materialization limits count containers and scalar values, not just leaves.
-        module.write_text('module data; export Big; struct Big { data: [65534]bool }')
+        module.write_text('module data\nexport Big\n\n\nclass Big:\n    data: [65534]bool\n')
         check('data::Big', {'data': [True] * 65534})
-        module.write_text('module data; export Big; struct Big { data: [65535]bool }')
+        module.write_text('module data\nexport Big\n\n\nclass Big:\n    data: [65535]bool\n')
         reject('data::Big', {'data': [True] * 65535}, 'CodecValueLimit')
         for count in (63, 64):
-            declarations = ' '.join(f'struct R{i} {{ next: ' + (f'R{i+1}' if i + 1 < count else 'bool') + ' }' for i in range(count))
-            module.write_text('module data; ' + ' '.join(f'export R{i};' for i in range(count)) + ' ' + declarations)
+            declarations = ''.join(f'\n\nclass R{i}:\n    next: ' + (f'R{i+1}' if i + 1 < count else 'bool') + '\n' for i in range(count))
+            module.write_text('module data\n' + ''.join(f'export R{i}\n' for i in range(count)) + declarations)
             value = True
             for _ in range(count):
                 value = {'next': value}
@@ -157,16 +199,17 @@ struct Private { hidden: bool }
                 reject('data::R0', value, 'CodecDepthLimit')
         module.write_text(source)
         check('data::Point', point)
-        module.write_text(source.replace('x: u64, flags:', 'x: u64, added: bool, flags:'))
+        module.write_text(source.replace('    x: u64\n', '    x: u64\n    added: bool\n'))
         assert 'IncompleteCodecValue' in run(1)
-        module.write_text(source + 'fn invalid() -> i64 { return true; }')
+        module.write_text(source + '\n\ndef invalid() -> i64:\n    return True\n')
         assert 'E_TYPE' in run(1)
         module.write_text(source)
         run(2, ['--evaluation-request'])
         run(2, ['--value=' + str(path)])
         fixture = Path(__file__).resolve().parents[1] / 'examples' / 'domain-codecs' / 'data.my'
-        domains = fixture.read_text().replace('module data;', 'module data; export Pair; export Choice; export Key; export Table;')
-        domains += 'struct Pair{items:[2]Positive}union Choice{none,some:Positive}enum Key{a,b}struct Table{items:[Key]Positive}'
+        domains = fixture.read_text().replace('module data\n', 'module data\nexport Pair\nexport Choice\nexport Key\nexport Table\n')
+        domains += ('\n\nclass Pair:\n    items: [2]Positive\n\n\nunion Choice:\n    none,\n    some: Positive\n'
+                    '\n\nenum Key:\n    a,\n    b\n\n\nclass Table:\n    items: [Key]Positive\n')
         module.write_text(domains)
         check('data::Positive', {'n': '7'})
         pair = {'items': [{'n': '7'}, {'n': '9'}]}
@@ -199,7 +242,7 @@ struct Private { hidden: bool }
             assert misplaced.returncode == 2 and not misplaced.stdout
         # A declared decoder may deliberately canonicalize wire data. Execute both
         # methods rather than merely validating or echoing the incoming document.
-        module.write_text(domains.replace('x.n <= 0', 'x.n < 10').replace('Positive.raw(x.n)', 'Positive.raw(x.n / 10 * 10)'))
+        module.write_text(domains.replace('x.n <= 0', 'x.n < 10').replace('Positive.raw(x.n)', 'Positive.raw(x.n // 10 * 10)'))
         check('data::Positive', {'n': '19'}, {'version': 'typed-json-v1', 'type': 'data::Positive', 'value': {'n': '10'}})
         module.write_text(domains)
         path.unlink()

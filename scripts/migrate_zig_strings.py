@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-"""Migrate legacy .my sources embedded as Zig multiline string literals.
+"""Migrate legacy .my sources embedded in Zig tests to the canonical Python surface.
 
-Zig multiline literals are raw: every `\\\\` line contributes its bytes and a
-newline separator, so a run of them can be handed to `mylang migrate` unchanged
-and written back with the same indentation.
+Two literal shapes carry guest source. A run of `\\\\` multiline lines is raw: every
+line contributes its bytes and a newline separator, so it can be handed to
+`mylang migrate` unchanged and written back with the same indentation. A quoted
+literal, or a `++` chain of them, holds the whole program on one line; Python
+layout needs real newlines, so each converted chain is reshaped into a multiline
+literal indented under the line that held it.
 """
 import argparse
 import json
@@ -14,7 +17,7 @@ import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
-TARGETS = ('src/*_test.zig', 'test/integration.zig')
+TARGETS = ('src/*_test.zig', 'src/*/tests.zig', 'test/integration.zig')
 # This tool's own tests pin expected migration output, so they are never rewritten.
 EXCLUDED = ('src/migrate_test.zig',)
 # A literal is guest source only when the parser accepts it; these words avoid
@@ -80,35 +83,146 @@ def constructs(stderr):
     return found
 
 
+CACHE = {}
+
+
 def classify(compiler, text):
     if not any(hint in text for hint in HINTS):
         return None
+    if text in CACHE:
+        return CACHE[text]
     result = migrate(compiler, text, False)
     if result.returncode == 0:
         migrated = result.stdout.rstrip('\n')
-        return ('already-python' if migrated == text.rstrip('\n') else 'converted', migrated)
-    gaps = constructs(migrate(compiler, text, True).stderr)
-    if gaps:
-        return ('unsupported', gaps)
-    return ('failed', (result.stderr.strip().splitlines() or ['unknown'])[0])
+        verdict = ('already-python' if migrated == text.rstrip('\n') else 'converted', migrated)
+    else:
+        gaps = constructs(migrate(compiler, text, True).stderr)
+        verdict = ('unsupported', gaps) if gaps else ('failed', (result.stderr.strip().splitlines() or ['unknown'])[0])
+    CACHE[text] = verdict
+    return verdict
 
 
-SINGLE = re.compile(r'"((?:\\.|[^"\\])*)"')
-DECLARED = re.compile(r'\b(fn|struct|enum|union|domain|result)\s+[A-Za-z_]')
+ESCAPES = {'n': '\n', 't': '\t', 'r': '\r', '"': '"', "'": "'", '\\': '\\'}
 
 
-def single_line(path):
-    """Census of one-line quoted guest sources, which need a reshape this tool does not do."""
-    found = 0
-    for match in SINGLE.finditer(path.read_text(encoding='utf-8')):
-        body = match.group(1)
-        if DECLARED.search(body) and '{' in body:
-            found += 1
-    return found
+def decode(body):
+    """Decode one Zig quoted-literal body, or return None for bytes a multiline literal cannot hold."""
+    out = []
+    at = 0
+    while at < len(body):
+        ch = body[at]
+        if ch != '\\':
+            out.append(ch)
+            at += 1
+            continue
+        if at + 1 >= len(body):
+            return None
+        nxt = body[at + 1]
+        if nxt in ESCAPES:
+            out.append(ESCAPES[nxt])
+            at += 2
+        elif nxt == 'x' and at + 3 < len(body):
+            out.append(chr(int(body[at + 2:at + 4], 16)))
+            at += 4
+        else:
+            return None
+    text = ''.join(out)
+    if any(ch < ' ' and ch != '\n' for ch in text):
+        return None
+    return text
+
+
+def chains(text):
+    """Yield (start, end, [bodies]) for every quoted literal or `++` chain of them.
+
+    Comments, character literals and multiline-literal lines are skipped so their
+    bytes are never mistaken for a quoted literal.
+    """
+    at = 0
+    end = len(text)
+    while at < end:
+        ch = text[at]
+        if ch == '/' and text.startswith('//', at):
+            at = text.find('\n', at)
+            at = end if at < 0 else at
+        elif ch == '\\' and text.startswith('\\\\', at):
+            at = text.find('\n', at)
+            at = end if at < 0 else at
+        elif ch == "'":
+            at += 1
+            while at < end and text[at] != "'":
+                at += 2 if text[at] == '\\' else 1
+            at += 1
+        elif ch == '"':
+            start = at
+            bodies = []
+            while True:
+                at += 1
+                body = at
+                while at < end and text[at] != '"':
+                    at += 2 if text[at] == '\\' else 1
+                if at >= end:
+                    return
+                bodies.append(text[body:at])
+                at += 1
+                after = at
+                while after < end and text[after] in ' \t\n':
+                    after += 1
+                if not text.startswith('++', after):
+                    break
+                after += 2
+                while after < end and text[after] in ' \t\n':
+                    after += 1
+                if after >= end or text[after] != '"':
+                    break
+                at = after
+            yield start, at, bodies
+        else:
+            at += 1
 
 
 def rewrite(indent, migrated):
     return [indent + '\\\\' + line + '\n' for line in migrated.split('\n')]
+
+
+def quoted(compiler, path, write):
+    """Reshape every convertible one-line guest source in one file."""
+    text = path.read_text(encoding='utf-8')
+    counts = {'quoted': 0, 'converted': 0, 'already-python': 0, 'unsupported': 0, 'failed': 0, 'skipped': 0}
+    edits = []
+    for start, end, bodies in chains(text):
+        parts = [decode(body) for body in bodies]
+        if any(part is None for part in parts):
+            continue
+        source = ''.join(parts)
+        verdict = classify(compiler, source)
+        if verdict is None:
+            continue
+        counts['quoted'] += 1
+        kind, payload = verdict
+        counts[kind] += 1
+        if kind == 'converted':
+            edits.append((start, end, payload))
+    if write and edits:
+        out = []
+        at = 0
+        for start, end, migrated in edits:
+            line = text.rfind('\n', 0, start) + 1
+            # Two chains on one line need two passes: reshaping the first moves the rest
+            # of the line down, so the second is rewritten the next time the tool runs.
+            if line < at:
+                continue
+            prefix = text[line:start]
+            indent = prefix[:len(prefix) - len(prefix.lstrip())]
+            inner = indent if prefix.strip() == '' else indent + '    '
+            out.append(text[at:line])
+            out.append(indent if prefix.strip() == '' else prefix.rstrip() + '\n')
+            out.extend(inner + '\\\\' + part + '\n' for part in migrated.split('\n'))
+            out.append(indent)
+            at = end
+        out.append(text[at:])
+        path.write_text(''.join(out), encoding='utf-8')
+    return counts
 
 
 def process(compiler, path, write):
@@ -143,29 +257,32 @@ def process(compiler, path, write):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--compiler', required=True)
+    parser.add_argument('--only', default=None, help='restrict to paths containing this substring')
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument('--report', action='store_true', help='classify every literal without editing')
     group.add_argument('--write', action='store_true', help='rewrite convertible literals in place')
     arguments = parser.parse_args()
-    overall = {'literals': 0, 'converted': 0, 'already-python': 0, 'unsupported': 0, 'failed': 0, 'skipped': 0}
+    overall = {'literals': 0, 'quoted': 0, 'converted': 0, 'already-python': 0, 'unsupported': 0, 'failed': 0, 'skipped': 0}
     per_file = {}
     every_gap = {}
-    quoted = 0
     for path in targets():
-        quoted += single_line(path)
+        if arguments.only and arguments.only not in str(path):
+            continue
         counts, gaps = process(arguments.compiler, path, arguments.write)
-        if counts['literals'] == 0:
+        one = quoted(arguments.compiler, path, arguments.write)
+        for key, value in one.items():
+            counts[key] = counts.get(key, 0) + value
+        if counts['literals'] == 0 and counts['quoted'] == 0:
             continue
         per_file[str(path.relative_to(ROOT))] = counts
         for key, value in counts.items():
-            overall[key] += value
+            overall[key] = overall.get(key, 0) + value
         for gap in gaps:
             every_gap[gap] = every_gap.get(gap, 0) + 1
     report = {
-        'version': 'migrate-strings-v1',
+        'version': 'migrate-strings-v2',
         'mode': 'write' if arguments.write else 'report',
         'totals': overall,
-        'single_line_literals': quoted,
         'constructs': dict(sorted(every_gap.items(), key=lambda item: (-item[1], item[0]))),
         'files': per_file,
     }

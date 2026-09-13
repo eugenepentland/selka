@@ -18,15 +18,32 @@ def main():
         entry = root / 'main.my'
         module = root / 'data.my'
         path = root / 'request.json'
-        entry.write_text('module main;import data;fn main()->i64{return 0;}')
-        source = fixture.read_text().replace('module data;', 'module data; export shift; export zero; export unsigned; export explode; export nodata;')
+        entry.write_text('module main\nimport data\n\n\ndef main() -> i64:\n    return 0\n')
+        source = fixture.read_text().replace('module data\n', 'module data\nexport shift\nexport zero\nexport unsigned\nexport explode\nexport nodata\n')
         source += '''
-fn shift(x:Positive,n:i64)->Decoded{return Positive.from_wire(new Wire{n:Positive.to_wire(x).n+n});}
-fn zero()->bool{return true;}
-fn unsigned(x:u64)->u64{return x;}
-fn explode(x:i64)->i64{return x/0;}
-fn nodata()->unit{}
-fn hidden()->i64{return 9;}
+
+def shift(x: Positive, n: i64) -> Decoded:
+    return Positive.from_wire(Wire(n=Positive.to_wire(x).n + n))
+
+
+def zero() -> bool:
+    return True
+
+
+def unsigned(x: u64) -> u64:
+    return x
+
+
+def explode(x: i64) -> i64:
+    return divtrunc(x, 0)
+
+
+def nodata():
+    pass
+
+
+def hidden() -> i64:
+    return 9
 '''
         module.write_text(source)
         schema_run = subprocess.run([compiler, 'schema-project', str(entry)], capture_output=True, text=True, timeout=30)
@@ -91,9 +108,9 @@ fn hidden()->i64{return 9;}
         assert run() == {'version': 'typed-json-v1', 'type': 'u64', 'value': '18446744073709551615'}
         write('data::zero', {})
         assert run()['value'] is True
-        module.write_text(source.replace('fn zero()->bool{return true;}', 'fn zero()->bool{return false;}'))
+        module.write_text(source.replace('def zero() -> bool:\n    return True', 'def zero() -> bool:\n    return False'))
         assert run()['value'] is False  # same schema, freshly checked changed implementation
-        module.write_text(source.replace('fn zero()->bool{return true;}', 'fn zero()->i64{return 0;}'))
+        module.write_text(source.replace('def zero() -> bool:\n    return True', 'def zero() -> i64:\n    return 0'))
         assert 'InvocationSchemaMismatch' in run(1)
         module.write_text(source + 'fn broken()->i64{return true;}')
         assert 'E_TYPE' in run(1)

@@ -1040,7 +1040,7 @@ const Checker = struct {
         return self.variantTypeFrom(ty_span, self.expected_types.get(span));
     }
     fn variantTypeFrom(self: *Checker, ty_span: source.Span, expected: ?Symbolic) Error!Symbolic {
-        const id = variant_calls.templateDeclaration(self.src, self.catalog, ty_span) orelse return self.ty(ty_span);
+        const id = try variant_calls.templateDeclaration(self.src, self.catalog, ty_span, self.sink) orelse return self.ty(ty_span);
         if (expected) |value| if (value == .nominal and value.nominal.declaration == id) return value;
         return self.sink.fail("E_GENERIC_INFERENCE", ty_span, variant_calls.inference_message);
     }

@@ -91,8 +91,8 @@ def board_edits(binary, directory):
     shutil.copytree(original, changed)
     policy = changed / "policy.my"
     before = policy.read_text()
-    assert "return region.blocks.via &&" in before
-    policy.write_text(before.replace("return region.blocks.via &&", "return false &&"))
+    assert "return region.blocks.via and" in before
+    policy.write_text(before.replace("return region.blocks.via and", "return False and"))
     cases = json.loads((ROOT / "experiments/board_trial/cases.json").read_text())
     request = directory / "requests.json"
     request.write_text(json.dumps([{key: case[key] for key in ("name", "input", "unavailable")} for case in cases]))

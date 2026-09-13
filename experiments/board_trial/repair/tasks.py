@@ -36,26 +36,23 @@ def seed(root, language, task):
     path = root / allowed(language, task)[0]
     text = path.read_text()
     if task == 'units':
-        old = 'return Micrometres.make(unwrap(value) * 1000);' if language == 'guest' else 'return @fromBackingInt(@backingInt(value) * 1000);'
-        text = replace_once(text, old, 'return value;')
+        old = 'return Micrometres.make(unwrap(value) * 1000)' if language == 'guest' else 'return @fromBackingInt(@backingInt(value) * 1000);'
+        text = replace_once(text, old, 'return value' if language == 'guest' else 'return value;')
     elif task == 'identity':
-        old = 'inventory::has::< ids::ComponentId >(board.components, value.id, len(board.components))' if language == 'guest' else 'has(m.ComponentId, board.components, value.id)'
-        new = 'inventory::has::< ids::NetId >(board.nets, value.id, len(board.nets))' if language == 'guest' else 'has(m.NetId, board.nets, value.id)'
+        old = 'inventory.has[ids.ComponentId](board.components, value.id, len(board.components))' if language == 'guest' else 'has(m.ComponentId, board.components, value.id)'
+        new = 'inventory.has[ids.NetId](board.nets, value.id, len(board.nets))' if language == 'guest' else 'has(m.NetId, board.nets, value.id)'
         text = replace_once(text, old, new)
     elif task == 'state':
-        old = ('''        },
-        m::Feature.via(value) => {
-            if !inventory::has::< ids::NetId >(board.nets, value.net, len(board.nets)) {
-                return new m::Preflight.err(new m::Failure.input(new m::InputProblem.missing_net));
-            }
-        }
+        old = ('''        case m.Feature.via(value):
+            if not inventory.has[ids.NetId](board.nets, value.net, len(board.nets)):
+                return Err(m.Failure.input(m.InputProblem.missing_net))
 ''' if language == 'guest' else '''            .via => |value| if (!has(m.NetId, board.nets, value.net)) {
                 return .missing_net;
             },
 ''')
-        text = replace_once(text, old, '        }\n' if language == 'guest' else '')
+        text = replace_once(text, old, '')
     elif task == 'admission':
-        old = (' && !inventory::has::< ids::NetId >(region.allow_nets, value.net, len(region.allow_nets))'
+        old = (' and not inventory.has[ids.NetId](region.allow_nets, value.net, len(region.allow_nets))'
                if language == 'guest' else ' and !has(m.NetId, region.allow_nets, value.net)')
         if text.count(old) != 2:
             raise ValueError('expected track and via exemption checks')

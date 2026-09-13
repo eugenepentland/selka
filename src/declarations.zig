@@ -235,6 +235,9 @@ const Scan = struct {
         };
     }
     /// Consume one declaration through its terminating brace or semicolon.
+    /// Indentation closes a suite with zero-width braces standing at the next
+    /// declaration, so the reported bytes end at the last token the body wrote;
+    /// the comments between two declarations then belong to the second.
     fn body(self: *Scan, braced: bool) error{InternalError}!source.Span {
         const at = lex.declarationEnd(self.src.bytes, self.tokens, self.pos, braced);
         if (at == self.pos) return error.InternalError;
@@ -244,7 +247,9 @@ const Scan = struct {
             if (!lex.implicitTerminator(self.src.bytes, self.tokens, at)) return error.InternalError;
         }
         self.pos = at;
-        return last.span;
+        var written = at;
+        while (written > 1 and self.tokens[written - 1].span.start == self.tokens[written - 1].span.end) written -= 1;
+        return self.tokens[written - 1].span;
     }
 };
 

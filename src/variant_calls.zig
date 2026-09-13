@@ -15,7 +15,8 @@ const Call = @import("call_arguments.zig").Call;
 /// Report whether a name declares a closed enum or tagged union, concrete or generic.
 pub fn declaresVariant(src: source.Source, catalog: Catalog, span: source.Span, sink: *diagnostic.Sink) diagnostic.Error!bool {
     if (try catalog.variantType(src, span, sink) != null) return true;
-    return templateKind(src, catalog, span) != null;
+    const template = try templateKind(src, catalog, span, sink);
+    return template != null;
 }
 
 /// Resolve a bare generic variant template name against the expected type at its use site,
@@ -28,7 +29,7 @@ pub fn contextual(
     expected: ?typed.Type,
     sink: *diagnostic.Sink,
 ) diagnostic.Error!?typed.Type {
-    if (templateKind(src, catalog, span) == null) return null;
+    if (try templateKind(src, catalog, span, sink) == null) return null;
     if (expected) |ty| if (specializes(catalog, ty, baseName(src.text(span)))) return ty;
     return sink.fail("E_GENERIC_INFERENCE", span, inference_message);
 }
@@ -64,7 +65,7 @@ pub fn namesCase(
         }
         return false;
     }
-    const declaration = templateKind(src, catalog, owner) orelse return false;
+    const declaration = try templateKind(src, catalog, owner, sink) orelse return false;
     for (declaration.fields) |field| if (std.mem.eql(u8, src.text(field.name), case)) return true;
     return false;
 }
@@ -73,10 +74,16 @@ const Declaration = @import("nominal_templates.zig").Declaration;
 
 /// Index of the generic enum or tagged union template named by this span, or null.
 /// Symbolic checking compares this index against a nominal shape's own declaration.
-pub fn templateDeclaration(src: source.Source, catalog: Catalog, span: source.Span) ?usize {
+/// A project keys its declarations by module, so a bare or aliased spelling resolves
+/// through the project's own names before the index is consulted.
+pub fn templateDeclaration(src: source.Source, catalog: Catalog, span: source.Span, sink: *diagnostic.Sink) diagnostic.Error!?usize {
     const store = catalog.templates.store orelse return null;
     const text = src.text(span);
-    const id = store.index.names.get(text) orelse store.index.names.get(baseName(text)) orelse return null;
+    const id = store.index.names.get(text) orelse store.index.names.get(baseName(text)) orelse project: {
+        const names = catalog.module_names orelse return null;
+        if (try names.symbolKind(span) != .type) return null;
+        break :project store.index.names.get(try names.reference(span, .type, null, null, sink)) orelse return null;
+    };
     const declaration = store.index.declarations.items[id];
     if (declaration.parameters.len == 0) return null;
     return switch (declaration.kind) {
@@ -88,9 +95,9 @@ pub fn templateDeclaration(src: source.Source, catalog: Catalog, span: source.Sp
 /// Shared wording for a generic variant whose arguments no context supplies.
 pub const inference_message = "a generic variant infers its type arguments from the expected type; annotate the binding, parameter or result";
 
-fn templateKind(src: source.Source, catalog: Catalog, span: source.Span) ?Declaration {
+fn templateKind(src: source.Source, catalog: Catalog, span: source.Span, sink: *diagnostic.Sink) diagnostic.Error!?Declaration {
     const store = catalog.templates.store orelse return null;
-    const id = templateDeclaration(src, catalog, span) orelse return null;
+    const id = try templateDeclaration(src, catalog, span, sink) orelse return null;
     return store.index.declarations.items[id];
 }
 

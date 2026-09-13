@@ -422,7 +422,7 @@ fn declarationHead(bytes: []const u8, token: Token) bool {
         .kw_fn, .kw_struct, .kw_enum, .kw_union, .kw_domain, .kw_type, .kw_const, .kw_private, .kw_conversion => true,
         .ident => value: {
             const text = bytes[token.span.start..token.span.end];
-            inline for (.{ "export", "resource", "result", "host" }) |word| if (std.mem.eql(u8, text, word)) break :value true;
+            inline for (.{ "export", "resource", "result", "host", "extern" }) |word| if (std.mem.eql(u8, text, word)) break :value true;
             break :value false;
         },
         else => false,
