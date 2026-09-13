@@ -28,12 +28,12 @@ def problem(messages, code):
 def single_files(compiler, root):
     path = root / 'quoted"é.my'
     path.write_text('fn main()->i64{let unused=1;return 7;}')
-    stdout, messages = invoke(compiler, 'run', path)
+    stdout, messages = invoke(compiler, 'run', path, '--print-result')
     assert stdout == '7\n'
     warning = problem(messages, 'W_UNUSED_BINDING')
     assert warning['severity'] == 'warning' and warning['location']['path'] == str(path)
-    text = subprocess.run([compiler, 'run', str(path)], capture_output=True, text=True, timeout=30)
-    explicit = subprocess.run([compiler, 'run', str(path), '--diagnostics=text'], capture_output=True, text=True, timeout=30)
+    text = subprocess.run([compiler, 'run', str(path), '--print-result'], capture_output=True, text=True, timeout=30)
+    explicit = subprocess.run([compiler, 'run', str(path), '--print-result', '--diagnostics=text'], capture_output=True, text=True, timeout=30)
     assert (text.returncode, text.stdout, text.stderr) == (explicit.returncode, explicit.stdout, explicit.stderr)
     assert text.stdout == stdout and 'warning[W_UNUSED_BINDING]' in text.stderr
     path.write_text('fn main()->i64{return absent;}')
@@ -72,9 +72,9 @@ def export_placement(compiler, root):
         late = 'module main;\n' + declaration + '\nexport ' + name + ';\nfn main()->i64{return 42;}'
         entry.write_text(late)
         assert invoke(compiler, 'check-project', entry) == ('', [])
-        assert invoke(compiler, 'run-project', entry) == ('42\n', [])
+        assert invoke(compiler, 'run-project', entry, '--print-result') == ('42\n', [])
         entry.write_text('module main;export ' + name + ';' + declaration + 'fn main()->i64{return 42;}')
-        assert invoke(compiler, 'run-project', entry) == ('42\n', [])
+        assert invoke(compiler, 'run-project', entry, '--print-result') == ('42\n', [])
         duplicate = late + '\nexport ' + name + ';'
         entry.write_text(duplicate)
         _, messages = invoke(compiler, 'check-project', entry, status=1)
@@ -96,7 +96,7 @@ def modules(compiler, root):
     span = data['notes'][0]['location']['bytes']
     assert bad.encode()[span['start']:span['end']] == b'pending'
     helper.write_text(bad.replace('let pending=new R.ok(input);\n', ''))
-    assert invoke(compiler, 'run-project', entry) == ('9\n', [])
+    assert invoke(compiler, 'run-project', entry, '--print-result') == ('9\n', [])
     entry.write_text('module main;import missing;fn main()->i64{return 0;}')
     _, messages = invoke(compiler, 'check-project', entry, status=1)
     assert messages[0]['kind'] == 'diagnostic' and messages[0]['diagnostic']['code'].startswith('E_')
