@@ -1,5 +1,10 @@
 # Scalar MVP acceptance audit
 
+> Removed on 2026-09-13: the explicit storage tier (buffers, pools, legacy `list`
+> declarations, the `allocator` capability, references and slices, lexical borrows and
+> legacy arena scopes) and the C backend are gone. Entries below that describe them are
+> history; see [legacy/](legacy/) and [the current language reference](current-language.md).
+
 Scope: the scalar compiler and VM in plan sections 4–13, on Guardian's exact
 Zig `0.17.0-dev.1683+5ceec001b` snapshot. Plan sections 15 and 18 explicitly
 reserve ownership, effects, duplicate discovery, conversions, schemas, and
