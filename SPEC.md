@@ -41,6 +41,8 @@ The roadmap in `docs/experiments/roadmap.md` tracks unsupported and planned feat
 
 - [QBE-1] Emits deterministic independent QBE native function units with stable symbols and body-local instructions; unrelated body edits and declaration reordering preserve unchanged units. Unsupported native features fail before publishing output.
 - [QBE-2] Builds Linux x86-64 executables and shared libraries directly through the Zig CLI without Python or a compiler source checkout; bundled runtime inputs, verified object reuse, source diagnostics, and native API adapters preserve native build behavior. `--run` executes a temporary native binary with inherited I/O and propagated status, then removes it while retaining cached objects.
+- [QBE-3] The compiler bundles only the native runtime build inputs — its runtime C sources and headers and the Zig runtime units it compiles, with their reference closure — never compiler tests or guest fixtures. A build materializes that tree once per build-time content hash under `<cache-dir>/runtime/<hash>`, staging into a private directory and renaming so concurrent builds sharing a cache never observe a partial tree, and reuses it on every later build.
+- [QBE-4] Native builds identify their inputs without rereading them: the compiler's own identity is a build-time digest of its sources, the Zig toolchain and the optimize mode, and external tools are identified by path, size and modification time. Object-cache keys still change when the compiler, runtime, tools, target or mode change. Build tools resolve from an explicit option, then beside the compiler's own executable, then `PATH`; the working directory never selects one.
 
 - [EXPORT-PLACEMENT-1] Explicit `export Name;` directives may appear anywhere among top-level declarations after the module/import header. Discovery collects them in source order with original locations; duplicate and unknown exports and private interface leaks still reject. Exports inside function or type bodies reject, and formatting preserves directive order and comments.
 
@@ -236,7 +238,7 @@ sessions; editing guest files requires no Zig rebuild or language Guardian run.
 ## Guest application test tool
 
 - [NATIVE-TEST-1] `mylang test` checks the project, discovers exported `test_` functions, validates named typed JSON inputs, and compares native results structurally. Boolean results default to true; other types require expectations. Filters and reasoned skips never turn an empty or all-skipped selection into success. Each execution uses a fresh bounded native process without implicit host grants.
-- [NATIVE-TEST-2] Successful deterministic tests may reuse verified receipts keyed by semantic dependency closure, call signature, relevant layouts, case settings, execution limits, and tool/runtime identity. Whitespace and unrelated body edits preserve valid results; affected helper edits invalidate consumers. Corrupt receipts are misses; failed or externally effectful executions are not reused. `--force` executes selected unskipped tests.
+- [NATIVE-TEST-2] Successful deterministic tests may reuse verified receipts keyed by semantic dependency closure, call signature, relevant layouts, case settings, execution limits, and tool/runtime identity. That identity follows QBE-4: the compiler's embedded build-time digest, and path, size and modification time for external tools, rather than rereading executables on every run. Whitespace and unrelated body edits preserve valid results; affected helper edits invalidate consumers. Corrupt receipts are misses; failed or externally effectful executions are not reused. `--force` executes selected unskipped tests.
 - [NATIVE-TEST-3] Provider fixtures replace only existing dependency sources in private bounded snapshots, preserve the selected test signature and exported types, and never edit originals. Source/compiler changes invalidate the run before result publication. Native reports distinguish passed, cached, failed, and skipped cases; setup failures exit 2 and empty/all-skipped selections exit 3.
 
 The original `scripts/test_project.py` remains a VM comparison runner using
@@ -246,10 +248,14 @@ schema-pinned typed calls and its existing report format. See
 
 ## Installed feature identity
 
-- [FEATURE-REPORT-1] `mylang --features` reports `language-features-v1`, the running executable's
-SHA-256, pinned Zig version and embedded feature/restriction manifest. The current
-reference is `docs/current-language.md`; historical checkpoint prose does not
-supersede it. The manifest records implementation coverage, not a test certificate.
+- [FEATURE-REPORT-1] `mylang --features` reports `language-features-v1`, the compiler
+identity, pinned Zig version and embedded feature/restriction manifest, without reading
+its own executable. `compiler_sha256` is that identity: a build-time SHA-256 over the
+compiler's source inputs, Zig version and optimize mode, embedded when the compiler is
+built. The same identity appears in every receipt's `implementation`, so a receipt and a
+feature report from one compiler always agree. The current reference is
+`docs/current-language.md`; historical checkpoint prose does not supersede it. The
+manifest records implementation coverage, not a test certificate.
 - [DIAGNOSTIC-RECOVERY-1] Semantic checking recovers at ordinary and symbolic function boundaries after a source error, reports independent function faults in source order, and deduplicates repeated errors at the same source range and code. It stops within the failed function and skips whole-program verification when any body is incomplete; syntax, type-catalog, and namespace construction remain prerequisites. A failed check never publishes typed code or permits execution. Repeating a failed compilation check preserves diagnostics rather than appending duplicates.
 
 ## Proven parameter return regions

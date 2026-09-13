@@ -1,6 +1,30 @@
 const std = @import("std");
 const builtin = @import("builtin");
 const guardian = @import("guardian");
+/// QBE release vendored under `vendor/qbe`; `.qbeversion` must agree with it.
+const vendored_qbe = "1.3";
+/// Translation units of the vendored QBE release, matching its own `Makefile`.
+const qbe_sources = [_][]const u8{
+    "main.c",       "util.c",       "parse.c",      "abi.c",          "cfg.c",
+    "mem.c",        "ssa.c",        "alias.c",      "load.c",         "copy.c",
+    "fold.c",       "gvn.c",        "gcm.c",        "simpl.c",        "ifopt.c",
+    "live.c",       "spill.c",      "rega.c",       "emit.c",         "amd64/targ.c",
+    "amd64/sysv.c", "amd64/isel.c", "amd64/emit.c", "amd64/winabi.c", "arm64/targ.c",
+    "arm64/abi.c",  "arm64/isel.c", "arm64/emit.c", "rv64/targ.c",    "rv64/abi.c",
+    "rv64/isel.c",  "rv64/emit.c",
+};
+/// Compile the vendored QBE release with the pinned Zig C compiler so a native
+/// build needs no separately installed assembler and no Python installer.
+fn vendoredQbe(b: *std.Build, target: std.Build.ResolvedTarget) *std.Build.Step.Compile {
+    if (!std.mem.eql(u8, std.mem.trim(u8, @embedFile(".qbeversion"), " \t\r\n"), vendored_qbe))
+        @panic("re-vendor vendor/qbe (see vendor/README.md) when changing .qbeversion");
+    const module = b.createModule(.{ .target = target, .optimize = .ReleaseFast, .link_libc = true });
+    module.addIncludePath(b.path("vendor/qbe"));
+    module.addCSourceFiles(.{ .root = b.path("vendor/qbe"), .files = &qbe_sources, .flags = &.{ "-std=c99", "-fno-sanitize=undefined" } });
+    const exe = b.addExecutable(.{ .name = "qbe", .root_module = module });
+    b.installArtifact(exe);
+    return exe;
+}
 
 pub fn build(b: *std.Build) void {
     if (!std.mem.eql(u8, builtin.zig_version_string, "0.17.0-dev.1683+5ceec001b"))
@@ -24,6 +48,8 @@ pub fn build(b: *std.Build) void {
     const build_assets = @import("build_qbe_assets.zig").module(b, target, optimize);
     exe.root_module.addImport("qbe_build_assets", build_assets);
     b.installArtifact(exe);
+    // Installed beside `mylang`, where the native build driver looks for it before `PATH`.
+    const qbe_exe = vendoredQbe(b, target);
     const guardian_dep = b.dependency("guardian", .{ .target = target, .optimize = optimize });
     const guardian_exe = guardian_dep.artifact("guardian-check");
     const run = b.addRunArtifact(exe);
@@ -189,16 +215,21 @@ pub fn build(b: *std.Build) void {
     repair_step.dependOn(&repair_study.step);
     guardian.addAllChecks(b, guardian_exe, repair_step, .{});
     const qbe_step = b.step("test-qbe", "Run QBE native compilation, runtime, and object-cache acceptance");
-    const qbe_tool = b.option([]const u8, "qbe", "QBE executable for optional acceptance") orelse "qbe";
+    const qbe_tool: std.Build.LazyPath = if (b.option([]const u8, "qbe", "QBE executable for optional acceptance (default: the vendored QBE this project builds)")) |path|
+        .{ .cwd_relative = path }
+    else
+        qbe_exe.getEmittedBin();
     const native_test_step = b.step("test-native-tests", "Verify native guest test discovery, execution, fixtures, and affected-test reuse");
     const native_test_cli = b.addSystemCommand(&.{ "python3", "tests/native_test_cli.py", "--compiler" });
     native_test_cli.addFileArg(exe.getEmittedBin());
-    native_test_cli.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe", qbe_tool });
+    native_test_cli.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe" });
+    native_test_cli.addFileArg(qbe_tool);
     native_test_cli.setCwd(b.path("."));
     native_test_step.dependOn(&native_test_cli.step);
     const native_test_execution = b.addSystemCommand(&.{ "python3", "tests/native_test_execution.py", "--compiler" });
     native_test_execution.addFileArg(exe.getEmittedBin());
-    native_test_execution.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe", qbe_tool });
+    native_test_execution.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe" });
+    native_test_execution.addFileArg(qbe_tool);
     native_test_execution.setCwd(b.path("."));
     native_test_step.dependOn(&native_test_execution.step);
     const native_test_unit = b.addTest(.{ .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
@@ -215,7 +246,8 @@ pub fn build(b: *std.Build) void {
     const ffi_step = b.step("test-c-ffi", "Verify direct C scalar imports and native library linking");
     const ffi_cli = b.addSystemCommand(&.{ "python3", "tests/qbe_c_ffi.py", "--compiler" });
     ffi_cli.addFileArg(exe.getEmittedBin());
-    ffi_cli.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe", qbe_tool });
+    ffi_cli.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe" });
+    ffi_cli.addFileArg(qbe_tool);
     ffi_cli.setCwd(b.path("."));
     ffi_step.dependOn(&ffi_cli.step);
     const ffi_unit = b.addTest(.{ .test_runner = guardian.testRunner(guardian_dep), .root_module = b.createModule(.{
@@ -231,7 +263,8 @@ pub fn build(b: *std.Build) void {
     const qbe_build_step = b.step("test-qbe-build", "Verify native builds without Python and native adapter generation");
     const qbe_build_cli = b.addSystemCommand(&.{ "python3", "tests/qbe_build_cli.py", "--compiler" });
     qbe_build_cli.addFileArg(exe.getEmittedBin());
-    qbe_build_cli.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe", qbe_tool });
+    qbe_build_cli.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe" });
+    qbe_build_cli.addFileArg(qbe_tool);
     qbe_build_cli.setCwd(b.path("."));
     qbe_build_step.dependOn(&qbe_build_cli.step);
     qbe_step.dependOn(qbe_build_step);
@@ -247,17 +280,20 @@ pub fn build(b: *std.Build) void {
     guardian.addAllChecks(b, guardian_exe, qbe_build_step, .{});
     const qbe_tests = b.addSystemCommand(&.{ "python3", "tests/qbe_builder.py", "--compiler" });
     qbe_tests.addFileArg(exe.getEmittedBin());
-    qbe_tests.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe", qbe_tool });
+    qbe_tests.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe" });
+    qbe_tests.addFileArg(qbe_tool);
     qbe_tests.setCwd(b.path("."));
     qbe_step.dependOn(&qbe_tests.step);
     const qbe_parity = b.addSystemCommand(&.{ "python3", "tests/qbe_parity.py", "--compiler" });
     qbe_parity.addFileArg(exe.getEmittedBin());
-    qbe_parity.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe", qbe_tool });
+    qbe_parity.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe" });
+    qbe_parity.addFileArg(qbe_tool);
     qbe_parity.setCwd(b.path("."));
     qbe_step.dependOn(&qbe_parity.step);
     const qbe_corpus = b.addSystemCommand(&.{ "python3", "tests/qbe_native_cases.py", "--compiler" });
     qbe_corpus.addFileArg(exe.getEmittedBin());
-    qbe_corpus.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe", qbe_tool });
+    qbe_corpus.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe" });
+    qbe_corpus.addFileArg(qbe_tool);
     qbe_corpus.setCwd(b.path("."));
     qbe_step.dependOn(&qbe_corpus.step);
     const qbe_runtime = b.addSystemCommand(&.{ "python3", "tests/qbe_runtime.py", "--zig", b.graph.zig_exe });
@@ -271,32 +307,38 @@ pub fn build(b: *std.Build) void {
     qbe_step.dependOn(&qbe_wire.step);
     const qbe_calls = b.addSystemCommand(&.{ "python3", "tests/qbe_native_calls.py", "--compiler" });
     qbe_calls.addFileArg(exe.getEmittedBin());
-    qbe_calls.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe", qbe_tool });
+    qbe_calls.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe" });
+    qbe_calls.addFileArg(qbe_tool);
     qbe_calls.setCwd(b.path("."));
     qbe_step.dependOn(&qbe_calls.step);
     const qbe_managed = b.addSystemCommand(&.{ "python3", "tests/qbe_managed.py", "--compiler" });
     qbe_managed.addFileArg(exe.getEmittedBin());
-    qbe_managed.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe", qbe_tool });
+    qbe_managed.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe" });
+    qbe_managed.addFileArg(qbe_tool);
     qbe_managed.setCwd(b.path("."));
     qbe_step.dependOn(&qbe_managed.step);
     const qbe_json = b.addSystemCommand(&.{ "python3", "tests/qbe_json.py", "--compiler" });
     qbe_json.addFileArg(exe.getEmittedBin());
-    qbe_json.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe", qbe_tool });
+    qbe_json.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe" });
+    qbe_json.addFileArg(qbe_tool);
     qbe_json.setCwd(b.path("."));
     qbe_step.dependOn(&qbe_json.step);
     const qbe_providers = b.addSystemCommand(&.{ "python3", "tests/qbe_provider_parity.py", "--compiler" });
     qbe_providers.addFileArg(exe.getEmittedBin());
-    qbe_providers.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe", qbe_tool });
+    qbe_providers.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe" });
+    qbe_providers.addFileArg(qbe_tool);
     qbe_providers.setCwd(b.path("."));
     qbe_step.dependOn(&qbe_providers.step);
     const qbe_resources = b.addSystemCommand(&.{ "python3", "tests/qbe_resource_parity.py", "--compiler" });
     qbe_resources.addFileArg(exe.getEmittedBin());
-    qbe_resources.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe", qbe_tool });
+    qbe_resources.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe" });
+    qbe_resources.addFileArg(qbe_tool);
     qbe_resources.setCwd(b.path("."));
     qbe_step.dependOn(&qbe_resources.step);
     const qbe_host = b.addSystemCommand(&.{ "python3", "tests/qbe_host.py", "--compiler" });
     qbe_host.addFileArg(exe.getEmittedBin());
-    qbe_host.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe", qbe_tool });
+    qbe_host.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe" });
+    qbe_host.addFileArg(qbe_tool);
     qbe_host.setCwd(b.path("."));
     qbe_step.dependOn(&qbe_host.step);
     const qbe_host_runtime = b.addSystemCommand(&.{ "python3", "tests/qbe_host_runtime.py" });
@@ -304,7 +346,8 @@ pub fn build(b: *std.Build) void {
     qbe_step.dependOn(&qbe_host_runtime.step);
     const qbe_codecs = b.addSystemCommand(&.{ "python3", "tests/qbe_codecs.py", "--compiler" });
     qbe_codecs.addFileArg(exe.getEmittedBin());
-    qbe_codecs.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe", qbe_tool });
+    qbe_codecs.addArgs(&.{ "--zig", b.graph.zig_exe, "--qbe" });
+    qbe_codecs.addFileArg(qbe_tool);
     qbe_codecs.setCwd(b.path("."));
     qbe_step.dependOn(&qbe_codecs.step);
     const qbe_memory = b.addSystemCommand(&.{ "python3", "scripts/test_native_memory.py" });

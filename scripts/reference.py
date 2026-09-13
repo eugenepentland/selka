@@ -39,11 +39,16 @@ def compiler_json(compiler, arguments):
         return json.loads(data)
 
 
-def collect(compiler, selection):
-    identity = file_digest(compiler)
+def identity_of(compiler):
+    """The compiler's own build-time identity, as it reports it; not a hash of the executable."""
     features = compiler_json(compiler, ['--features'])
-    if features.get('version') != 'language-features-v1' or features.get('compiler_sha256') != identity:
-        raise ValueError('unsupported feature report or compiler identity mismatch')
+    if features.get('version') != 'language-features-v1' or not isinstance(features.get('compiler_sha256'), str):
+        raise ValueError('unsupported feature report')
+    return features['compiler_sha256'], features
+
+
+def collect(compiler, selection):
+    identity, features = identity_of(compiler)
     if selection['entry']:
         report = compiler_json(compiler, ['schema-project', selection['entry'], '--schema-report'])
     else:
@@ -52,7 +57,7 @@ def collect(compiler, selection):
             entry.write_text('module reference;\n' + ''.join('import ' + name + ';\n' for name in selection['modules']) + 'fn main()->i64{return 0;}\n')
             report = compiler_json(compiler, ['schema-project', str(entry), '--schema-report'])
     validate_schema_report(report)
-    if report['source']['implementation']['compiler_sha256'] != identity or file_digest(compiler) != identity:
+    if report['source']['implementation']['compiler_sha256'] != identity or identity_of(compiler)[0] != identity:
         raise ValueError('compiler changed while generating reference')
     return identity, features, report
 
@@ -120,8 +125,8 @@ def main():
             manifest = json.loads((output / 'manifest.json').read_text())
             if manifest.get('version') != 'agent-reference-v1' or set(manifest['artifacts']) != set(FILES):
                 raise ValueError('invalid reference manifest')
-            if file_digest(compiler) != manifest['compiler_sha256']:
-                raise ValueError('stale reference: compiler SHA256 changed')
+            if identity_of(compiler)[0] != manifest['compiler_sha256']:
+                raise ValueError('stale reference: compiler identity changed')
             for name, expected in manifest['artifacts'].items():
                 if file_digest(output / name) != expected:
                     raise ValueError('reference artifact changed: ' + name)

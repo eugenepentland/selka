@@ -51,7 +51,9 @@ Zig 0.15 APIs or update the compiler version as part of a language feature.
 
 ## Build a native application
 
-With QBE and the pinned Zig toolchain installed:
+`zig build` also compiles the vendored QBE release (`vendor/qbe`, version pinned in
+`.qbeversion`) into `zig-out/bin/qbe`, so only the pinned Zig toolchain has to be
+installed:
 
 ```sh
 zig-out/bin/mylang build examples/factorial.my -o /tmp/factorial --report
@@ -66,9 +68,10 @@ zig-out/bin/mylang build examples/factorial.my --run
 
 Add `--project` for a module entry or `--library` for a shared library. The compiler
 runs the native build directly; Python is not needed for application builds.
-`--qbe` and `--zig` select tool paths. See the
-[QBE build guide](docs/experiments/incremental-qbe.md) for installation, cache
-behavior, providers, and embedding.
+`--qbe` and `--zig` select tool paths; otherwise QBE is taken from beside the
+`mylang` executable, then `PATH`, so builds work from any working directory. See
+the [QBE build guide](docs/experiments/incremental-qbe.md) for the vendored
+toolchain, cache behavior, providers, and embedding.
 
 ## Run guest tests
 

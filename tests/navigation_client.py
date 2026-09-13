@@ -85,7 +85,9 @@ class NavigationTests(unittest.TestCase):
         original = navigate.subprocess.run
         def changed(*args, **kwargs):
             result = original(*args, **kwargs)
-            (self.root / 'lib.my').write_text(LIB.replace('x+1', 'x+3'))
+            # Edit only while the index itself is generated; the identity query precedes it.
+            if 'index-project' in args[0]:
+                (self.root / 'lib.my').write_text(LIB.replace('x+1', 'x+3'))
             return result
         with patch.object(navigate.subprocess, 'run', changed):
             with self.assertRaisesRegex(ValueError, 'changed during navigation'):

@@ -8,9 +8,11 @@ linking, and hot reload remain separate future work.
 
 ## Build and run
 
-Linux x86-64 (`amd64_sysv`) is the supported native target. Install QBE from the
-pinned release in `.qbeversion` and use the repository's pinned Zig toolchain.
-The language compiler owns the native build driver:
+Linux x86-64 (`amd64_sysv`) is the supported native target. QBE is part of this
+build: `zig build` compiles the vendored release under `vendor/qbe` (version
+pinned in `.qbeversion`) with the repository's pinned Zig toolchain and installs
+it as `zig-out/bin/qbe`, beside the compiler. Nothing else has to be installed
+and no Python is involved:
 
 ```sh
 zig build
@@ -18,17 +20,15 @@ zig-out/bin/mylang build examples/factorial.my -o /tmp/factorial --report
 /tmp/factorial
 ```
 
-`mylang build` invokes QBE and Zig directly. Python is not required for application
-builds. The installed compiler embeds its runtime sources and adapter generators,
-so it can build from outside this checkout. QBE and Zig must still be installed;
-`--qbe /path/to/qbe` and `--zig /path/to/zig` select explicit executables.
-By default, QBE is resolved from `PATH`, then `.mylang-cache/toolchain/qbe`.
+`mylang build` invokes QBE and Zig directly. The installed compiler embeds its
+native runtime sources and adapter generators, so it builds from any working
+directory. QBE is resolved in this order: `--qbe /path/to/qbe`, a `qbe`
+executable sitting next to the running `mylang`, then `PATH`. The working
+directory never selects a build tool, so builds outside this checkout behave the
+same as inside it. Zig is resolved from `--zig /path/to/zig` or `PATH`.
 
-The optional development helper `python3 scripts/install_qbe.py` downloads and
-verifies the pinned release archive before building it. Its installed executable
-can be selected with `--qbe .mylang-cache/toolchain/qbe`. The official release
-archive and checksums are at <https://c9x.me/compile/releases.html>.
-Installing QBE is separate from `mylang build`.
+See `vendor/README.md` for the upstream archive, its checksum, and how to move to
+a newer QBE release.
 
 Use `--run` instead of `-o` to execute a temporary native binary:
 
@@ -115,6 +115,26 @@ IL, ABI version, compiler/tool fingerprints, target, mode, and runtime/driver
 fingerprints. Cache hits verify object checksums; corrupt or missing entries
 rebuild. Compiler/runtime changes conservatively invalidate cached objects.
 
+Those fingerprints are established without rereading large inputs on each build.
+The compiler identity and the runtime-tree content hash are computed when the
+compiler itself is built — over its own sources, the Zig version and the optimize
+mode — and embedded as constants; external tools are identified by path, size and
+modification time. Rehashing a multi-hundred-megabyte toolchain per build used to
+cost far more than the native work it guarded.
+
+## Bundled runtime inputs
+
+The compiler embeds only what a native build compiles: its runtime C sources and
+headers, plus the Zig runtime units the driver builds and their transitive
+`@import`/`@embedFile` closure. Compiler tests and guest fixtures are not bundled.
+
+A build materializes that tree once, into `<cache-dir>/runtime/<content-hash>/`,
+and reuses it on every later build in that cache. Extraction stages into a
+private directory and renames it into place, so concurrent builds sharing a cache
+directory never observe a partial tree; a build that loses the race reuses the
+winner's tree. Runtime objects compile with the tree's path mapped to a fixed
+prefix, so a cached object does not depend on where the cache lives.
+
 Source coordinates live in a separate metadata object. Moving source lines can
 update diagnostics while reusing every function object. Type descriptors and
 host/codec adapters are independently generated metadata/support objects.
@@ -130,13 +150,16 @@ semantic dependency graph are not implemented.
 ## Acceptance and performance
 
 ```sh
-zig build test-qbe-build -Dqbe=/path/to/qbe
-zig build test-qbe -Dqbe=/path/to/qbe
+zig build test-qbe-build
+zig build test-qbe
 MYLANG_TEST_ASAN=1 python3 scripts/test_native_memory.py
 python3 tests/qbe_benchmark.py --compiler zig-out/bin/mylang \
-  --c-compiler /path/to/frozen-c-compiler --qbe /path/to/qbe \
+  --c-compiler /path/to/frozen-c-compiler --qbe zig-out/bin/qbe \
   --output /tmp/qbe-performance.json
 ```
+
+Both QBE steps default `-Dqbe` to the QBE they build from `vendor/qbe`; pass
+`-Dqbe=/path/to/qbe` only to test against a different build.
 
 The QBE target exercises the installed `mylang build` command with Python absent
 from PATH and the compiler relocated outside the checkout. It checks object-cache

@@ -69,9 +69,12 @@ pub const Cache = struct {
         const optimization = if (std.mem.eql(u8, self.mode, "Debug")) "-O0" else "-O2";
         const files = try std.fmt.allocPrint(a, "-ffile-prefix-map={s}=mylang-qbe", .{self.temporary});
         const debug = try std.fmt.allocPrint(a, "-fdebug-prefix-map={s}=mylang-qbe", .{self.temporary});
+        const shared = try std.fmt.allocPrint(a, "-ffile-prefix-map={s}=mylang-runtime", .{self.assets});
+        const shared_debug = try std.fmt.allocPrint(a, "-fdebug-prefix-map={s}=mylang-runtime", .{self.assets});
         return a.dupe([]const u8, &.{
             self.zig,                             "cc",  "-std=c11", optimization, "-fno-ident", "-fPIC",
-            "-fdebug-compilation-dir=mylang-qbe", files, debug,      "-I",         self.assets,
+            "-fdebug-compilation-dir=mylang-qbe", files, debug,      shared,       shared_debug, "-I",
+            self.assets,
         });
     }
 };

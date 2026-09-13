@@ -16,6 +16,15 @@ bindings = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(bindings)
 
 
+def compiler_identity(compiler):
+    """The compiler's embedded build-time identity, reported rather than hashed from the binary."""
+    report = subprocess.run([str(compiler), '--features'], capture_output=True, text=True, timeout=60)
+    assert report.returncode == 0, report.stderr
+    identity = json.loads(report.stdout)['compiler_sha256']
+    assert isinstance(identity, str) and len(identity) == 64
+    return identity
+
+
 def digest(value):
     return hashlib.sha256(json.dumps(value, ensure_ascii=False, separators=(',', ':')).encode()).hexdigest()
 
@@ -48,7 +57,7 @@ def main():
         assert first['schema'] == run(flags=())
         assert run() == first
         source = first['source']
-        assert source['implementation']['compiler_sha256'] == hashlib.sha256(compiler.read_bytes()).hexdigest()
+        assert source['implementation']['compiler_sha256'] == compiler_identity(compiler)
         assert source['implementation']['zig_version'] == '0.17.0-dev.1683+5ceec001b'
         assert [s['module'] for s in source['sources']] == ['shared', 'left', 'right', 'main']
         for item in source['sources']:

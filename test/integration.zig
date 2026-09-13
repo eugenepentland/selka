@@ -688,6 +688,14 @@ test "CLI features identify installed compiler without source input" {
     try testing.expectEqualStrings("language-features-v1", report.get("version").?.string);
     try testing.expectEqual(@as(usize, 64), report.get("compiler_sha256").?.string.len);
     try testing.expectEqualStrings("vm", report.get("features").?.object.get("primary_backend").?.string);
+    // The identity is the compiler's embedded build-time digest, not a fresh hash of its
+    // own executable, so a receipt from the same compiler reports exactly the same value.
+    const receipt = try runFixture("project-dependencies", "module input; fn main()->i64 { return 7; }", &.{});
+    defer testing.allocator.free(receipt.stdout);
+    defer testing.allocator.free(receipt.stderr);
+    const graph = try std.json.parseFromSlice(std.json.Value, testing.allocator, receipt.stdout, .{});
+    defer graph.deinit();
+    try testing.expectEqualStrings(report.get("compiler_sha256").?.string, graph.value.object.get("implementation").?.object.get("compiler_sha256").?.string);
 }
 
 const listing_module = "module input;\nimport std_math;\nimport shared.units as units;\n" ++

@@ -47,23 +47,25 @@ fn build(context: fs.Context, parsed: options.Options) !u8 {
     const native_start = std.Io.Timestamp.now(context.io, .awake);
     const directory = try context.absolute(parsed.cache);
     try context.mkdir(directory);
+    const assets = try materialize(context, directory);
     const temporary = try context.temporary(directory);
     defer context.remove(temporary);
-    const assets = try materialize(context, temporary);
     const environment = try std.json.Stringify.valueAlloc(a, .{
-        .version = "zig-qbe-build-v1",
+        .version = "zig-qbe-build-v2",
         .abi = abi,
-        .compiler = try context.fileHash(compiler),
-        .zig = try context.fileHash(zig),
-        .qbe = try context.fileHash(qbe),
+        .compiler = bundled.compiler_identity,
+        .runtime = bundled.content_hash,
+        .zig = try context.stamp(zig),
+        .qbe = try context.stamp(qbe),
         .zig_version = zig_version,
         .mode = parsed.mode,
         .target = parsed.target,
     }, .{});
     const cache: cache_api.Cache = .{ .context = context, .directory = directory, .temporary = temporary, .assets = assets, .environment = environment, .zig = zig, .qbe = qbe, .mode = parsed.mode };
     var state = State{ .context = context, .cache = cache, .manifest = manifest };
+    const codegen_start = std.Io.Timestamp.now(context.io, .awake);
     try state.compile();
-    const codegen = seconds(context, native_start);
+    const codegen = seconds(context, codegen_start);
     const link_start = std.Io.Timestamp.now(context.io, .awake);
     const output = if (parsed.run) try std.fs.path.join(a, &.{ temporary, "program" }) else try context.absolute(parsed.output);
     const changed = try state.link(parsed, output);
@@ -104,13 +106,25 @@ fn execute(context: fs.Context, output: []const u8, arguments: []const []const u
         else => 2,
     };
 }
-fn materialize(context: fs.Context, temporary: []const u8) ![]const u8 {
-    const directory = try std.fs.path.join(context.allocator, &.{ temporary, "src" });
+/// Publish the bundled runtime tree once per content hash and reuse it afterwards.
+/// Concurrent builds stage into private directories and rename, so a shared cache
+/// never observes a partial tree; a lost race simply reuses the winner's tree.
+fn materialize(context: fs.Context, cache: []const u8) ![]const u8 {
+    const a = context.allocator;
+    const parent = try std.fs.path.join(a, &.{ cache, "runtime" });
+    const directory = try std.fs.path.join(a, &.{ parent, bundled.content_hash });
+    if (context.exists(directory)) return directory;
+    try context.mkdir(parent);
+    const staging = try context.temporary(parent);
     for (bundled.files) |asset| {
-        const path = try std.fs.path.join(context.allocator, &.{ directory, asset.path });
+        const path = try std.fs.path.join(a, &.{ staging, asset.path });
         try context.mkdir(std.fs.path.dirname(path).?);
         try context.write(path, asset.bytes);
     }
+    context.rename(staging, directory) catch |err| {
+        context.remove(staging);
+        if (!context.exists(directory)) return err;
+    };
     return directory;
 }
 fn seconds(context: fs.Context, start: std.Io.Timestamp) f64 {
@@ -221,4 +235,37 @@ test "native build rejects incompatible tools targets and malformed manifests" {
     , .{});
     defer value.deinit();
     try std.testing.expectError(error.InvalidNativeManifest, validate(value.value));
+}
+fn bundles(name: []const u8) bool {
+    for (bundled.files) |asset| if (std.mem.eql(u8, asset.path, name)) return true;
+    return false;
+}
+test "bundled build inputs carry only the native runtime, not compiler tests or guest fixtures" {
+    try std.testing.expectEqual(@as(usize, 64), bundled.content_hash.len);
+    try std.testing.expectEqual(@as(usize, 64), bundled.compiler_identity.len);
+    for (bundled.files) |asset| {
+        try std.testing.expect(!std.mem.endsWith(u8, asset.path, "_test.zig"));
+        try std.testing.expect(!std.mem.endsWith(u8, asset.path, ".my") or std.mem.startsWith(u8, asset.path, "stdlib/"));
+    }
+    try std.testing.expect(bundles("qbe_runtime.c") and bundles("qbe_runtime.h") and bundles("native_heap.c"));
+    try std.testing.expect(bundles("native_equal.c") and bundles("native_format.zig") and bundles("native_json_bridge.zig"));
+    try std.testing.expect(bundles("json_document.zig") and !bundles("vm.zig") and !bundles("qbe_build.zig"));
+}
+// spec: QBE-3
+test "the runtime tree is published once per content hash and reused by later builds" {
+    var environment: std.process.Environ.Map = .init(std.testing.allocator);
+    defer environment.deinit();
+    var context = try fs.Context.init(std.testing.allocator, std.testing.io, &environment);
+    defer context.deinit();
+    var directory = std.testing.tmpDir(.{});
+    defer directory.cleanup();
+    const cache = try directory.dir.realPathFileAlloc(std.testing.io, ".", context.allocator);
+    const first = try materialize(context, cache);
+    try std.testing.expect(std.mem.endsWith(u8, first, bundled.content_hash));
+    try std.testing.expect(context.exists(try std.fs.path.join(context.allocator, &.{ first, "qbe_runtime.c" })));
+    try std.testing.expect(!context.exists(try std.fs.path.join(context.allocator, &.{ first, "vm.zig" })));
+    const marker = try std.fs.path.join(context.allocator, &.{ first, "reuse-marker" });
+    try context.write(marker, "kept");
+    try std.testing.expectEqualStrings(first, try materialize(context, cache));
+    try std.testing.expectEqualStrings("kept", try context.read(marker));
 }

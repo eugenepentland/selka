@@ -2,7 +2,6 @@
 """Discover exported test_* guest functions and compare schema-pinned typed results."""
 import argparse
 import fnmatch
-import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -78,7 +77,7 @@ def run(compiler, entry, pattern='*', cases=None):
                 rows.append(dict(row, status='passed' if same else 'failed', expected=expected, actual=actual))
     if navigate.sources(entry.parent) != before:
         raise ValueError('source changed during test run; results discarded')
-    if hashlib.sha256(navigate.bounded_read(compiler, 256 * 1024 * 1024)).hexdigest() != index['snapshot']['implementation']['compiler_sha256']:
+    if navigate.compiler_identity(compiler) != index['snapshot']['implementation']['compiler_sha256']:
         raise ValueError('compiler changed during test run; results discarded')
     status = 'empty' if not rows else 'failed' if any(r['status'] not in ('passed', 'skipped') for r in rows) else 'skipped' if all(r['status'] == 'skipped' for r in rows) else 'passed'
     return {'version': 'guest-tests-v1', 'status': status, 'snapshot_sha256': index['snapshot_sha256'], 'tests': rows}

@@ -17,11 +17,12 @@ def main():
     parser.add_argument('--output', type=Path)
     args = parser.parse_args()
     compiler = args.compiler.resolve()
-    identity = hashlib.sha256(compiler.read_bytes()).hexdigest()
     feature_run = subprocess.run([str(compiler), '--features'], capture_output=True, text=True, timeout=30)
     assert feature_run.returncode == 0, feature_run.stderr
     features = json.loads(feature_run.stdout)
-    assert features['compiler_sha256'] == identity
+    # The compiler reports its own build-time identity; it no longer hashes its executable.
+    identity = features['compiler_sha256']
+    assert isinstance(identity, str) and len(identity) == 64
     examples = []
     for document, expected in [('python-syntax.md', '42\n'), ('floating-point.md', '42\n'), ('source-evaluation.md', '45\n'), ('const-length-generics.md', '42\n'), ('bytes.md', '42\n')]:
         text = (ROOT / 'docs' / document).read_text()
@@ -51,7 +52,8 @@ def main():
                 passed = passed and not result.stderr
             rows.append({'case': name, 'source_sha256': hashlib.sha256(source.encode()).hexdigest(),
                          'passed': passed, 'exit': result.returncode, 'stdout': result.stdout, 'stderr': result.stderr})
-    assert hashlib.sha256(compiler.read_bytes()).hexdigest() == identity, 'compiler changed during acceptance'
+    recheck = subprocess.run([str(compiler), '--features'], capture_output=True, text=True, timeout=30)
+    assert recheck.returncode == 0 and json.loads(recheck.stdout)['compiler_sha256'] == identity, 'compiler changed during acceptance'
     report = {'version': 'feature-surface-v1', 'compiler_sha256': identity, 'feature_report': features,
               'passed': all(row['passed'] for row in rows), 'cases': rows}
     if args.output:

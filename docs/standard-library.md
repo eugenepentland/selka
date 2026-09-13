@@ -7,21 +7,21 @@ the builtins do not: fallible values, time, randomness and JSON transport.
 
 Standard modules are embedded in the compiler. Import their names directly;
 projects do not need to copy these files. External authority stays explicit. The
-installed `--features` report identifies the executable actually in use; this
-document describes the source tree.
+installed `--features` report identifies the compiler actually in use, by the
+build-time identity described in
+[the current language reference](current-language.md); this document describes the
+source tree.
 
 | Area | Modules | Available operations |
 | --- | --- | --- |
 | Results | `std_result`, `std_unit` | Copyable Option/Result, categorized errors, error context and Unit |
-| Managed collections | `std_list` | Shared growing lists, automatic growth, value reads, fixed-slot replacement and cycle collection |
 | Iteration | `std_iter` | Bounded distinct index pairs |
-| Numbers | `std_math` | Integer extrema and empty-default reductions, nominal binary64 arithmetic, checked integer conversion and exact bit codecs |
-| Data interchange | `std_json` | Document JSON parsing, node queries, field lookup and text comparison |
+| Numbers | `std_math` | Nominal binary64 arithmetic, checked integer conversion and exact bit codecs |
 | Time/random | `std_time`, `std_random` | Checked durations and wall-clock instants, explicit clock/entropy capabilities, seeded SplitMix64, bounded unbiased range sampling and byte fills |
 
-The text, formatting, collection, hashing, encoding, argument, path and I/O
-modules that used to appear here were built on the removed explicit-storage tier
-and were withdrawn on 2026-09-13. Their replacements are being rebuilt on
+The list, JSON, text, formatting, collection, hashing, encoding, argument, path
+and I/O modules that used to appear here were built on the removed
+explicit-storage tier and were withdrawn on 2026-09-13. Their replacements are being rebuilt on
 `list`, `dict`, `str` and `bytes`; until then, write that code in the application.
 
 ## Contracts to use consistently

@@ -147,6 +147,51 @@ def cache_acceptance(builder):
     assert builder.snapshot() == before
 
 
+def runtime_tree_acceptance(builder):
+    """The bundled runtime materializes once per content hash and is shared safely."""
+    cache = builder.directory / 'shared runtime cache'
+    builder.source.write_text('fn main()->i64{return 11;}\n')
+    builder.build('--cache-dir', cache)
+    builder.execute(b'11\n')
+    trees = sorted((cache / 'runtime').iterdir())
+    assert len(trees) == 1 and len(trees[0].name) == 64, trees
+    tree = trees[0]
+    bundled = {path.relative_to(tree).as_posix() for path in tree.rglob('*') if path.is_file()}
+    assert 'qbe_runtime.c' in bundled and 'qbe_runtime.h' in bundled and 'native_format.zig' in bundled
+    assert not any(name.endswith('_test.zig') for name in bundled), sorted(bundled)[:20]
+    assert 'vm.zig' not in bundled and not any(name.endswith('.my') and '/' not in name for name in bundled)
+    # A second build reuses the published tree instead of extracting it again.
+    marker = tree / 'reuse marker'
+    marker.write_text('kept')
+    reused = builder.build('--cache-dir', cache)
+    assert reused['runtime_reused'] and marker.read_text() == 'kept', reused
+    assert sorted((cache / 'runtime').iterdir()) == trees
+    assert not list(cache.glob('.pending-*')) and not list((cache / 'runtime').glob('.pending-*'))
+    concurrent_runtime_tree(builder, tree.name)
+
+
+def concurrent_runtime_tree(builder, expected):
+    """Builds racing in separate directories over one cache publish the tree atomically."""
+    cache = builder.directory / 'concurrent cache'
+    running = []
+    for index in range(4):
+        work = builder.directory / ('concurrent work %d' % index)
+        work.mkdir()
+        (work / 'main.my').write_text('fn main()->i64{return %d;}\n' % (index + 1))
+        command = [builder.compiler, 'build', 'main.my', '-o', 'program', '--qbe', builder.qbe,
+                   '--zig', builder.zig, '--cache-dir', cache]
+        running.append((work, subprocess.Popen(list(map(str, command)), stdout=subprocess.PIPE,
+                                               stderr=subprocess.PIPE, env=builder.env, cwd=work)))
+    for index, (work, process) in enumerate(running):
+        _, errors = process.communicate(timeout=600)
+        assert process.returncode == 0, (index, errors.decode(errors='replace'))
+        result = checked([work / 'program'], env=builder.env, cwd=work)
+        assert result.stdout == ('%d\n' % (index + 1)).encode(), result
+    published = sorted(path.name for path in (cache / 'runtime').iterdir())
+    assert published == [expected], published
+    assert (cache / 'runtime' / expected / 'qbe_runtime.c').is_file()
+
+
 def project_and_locations(builder):
     (builder.directory / 'left.my').write_text('module left;export value;fn value()->i64{return 10;}')
     (builder.directory / 'right.my').write_text('module right;export value;fn value()->i64{return 20;}')
@@ -266,10 +311,11 @@ def main():
         help_result = checked([compiler, 'build', '--help'], env=builder.env, cwd=directory)
         assert b'mylang build' in help_result.stdout + help_result.stderr, help_result
         cache_acceptance(builder)
+        runtime_tree_acceptance(builder)
         project_and_locations(builder)
         boundary_acceptance(builder)
         temporary_runs(builder)
-    print('mylang build: relocated executable, no Python PATH, cache reuse/recovery, atomic failure preservation, project diagnostics, JSON, providers, library APIs and temporary runs with inherited I/O, status and cleanup passed')
+    print('mylang build: relocated executable, no Python PATH, cache reuse/recovery, shared content-addressed runtime trees under concurrent builds, atomic failure preservation, project diagnostics, JSON, providers, library APIs and temporary runs with inherited I/O, status and cleanup passed')
 
 
 if __name__ == '__main__':

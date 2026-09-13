@@ -9,6 +9,15 @@ import subprocess
 import tempfile
 
 
+def compiler_identity(compiler):
+    """The compiler's embedded build-time identity, reported rather than hashed from the binary."""
+    report = subprocess.run([str(compiler), '--features'], capture_output=True, text=True, timeout=60)
+    assert report.returncode == 0, report.stderr
+    identity = json.loads(report.stdout)['compiler_sha256']
+    assert isinstance(identity, str) and len(identity) == 64
+    return identity
+
+
 def digest(data):
     return hashlib.sha256(data).hexdigest()
 
@@ -35,7 +44,7 @@ def main():
 
         first = report()
         assert first['version'] == 'project-dependencies-v1' and first['complete']
-        assert first['implementation']['compiler_sha256'] == digest(compiler.read_bytes())
+        assert first['implementation']['compiler_sha256'] == compiler_identity(compiler)
         sources = {s['module']: s for s in first['inputs']}
         assert set(sources) == {'main', 'leaf', 'config.values'}
         assert sources['main']['imports'] == [{'module': 'leaf', 'alias': 'renamed'}, {'module': 'config.values', 'alias': 'v'}]
