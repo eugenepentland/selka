@@ -212,7 +212,11 @@ const Analyzer = struct {
                     pops = 1;
                     result = if (unary == .f64_to_i64) .i64 else .u64;
                 },
-                .begin_borrow, .end_borrow, .capture_ref, .end_region => {},
+                .begin_borrow, .end_borrow, .capture_ref, .end_region, .begin_arena, .end_arena => {},
+                .arena_escape => |ty| {
+                    pops = 1;
+                    result = ty;
+                },
                 .begin_region => pops = 1,
                 .begin_slice => pops = 2,
                 .split_borrow => pops = 1,

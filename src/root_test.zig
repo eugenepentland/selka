@@ -111,6 +111,8 @@ test {
     _ = @import("pools_test.zig");
     _ = @import("regions_test.zig");
     _ = @import("arena_source_test.zig");
+    _ = @import("arena_managed_test.zig");
+    _ = @import("gc_regions.zig");
     _ = @import("arena_reset_test.zig");
     _ = @import("effects_test.zig");
     _ = @import("evaluation_test.zig");

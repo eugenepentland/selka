@@ -288,7 +288,7 @@ const CanonicalWriter = struct {
                 try work.append(allocator, .{ .expression = acquire.capacity });
                 try work.append(allocator, .{ .expression = acquire.allocator });
             },
-            .reset_arena, .cast, .wrap, .unwrap => |operand| try work.append(allocator, .{ .expression = operand }),
+            .arena_escape, .reset_arena, .cast, .wrap, .unwrap => |operand| try work.append(allocator, .{ .expression = operand }),
             .record => |fields| {
                 try recordFields(allocator, writer, work, program, node.ty, fields);
             },
@@ -359,6 +359,10 @@ const CanonicalWriter = struct {
                 writer.print("arena allocator={d}\n", .{@backingInt(scope.slot)}) catch return error.OutOfMemory;
                 try work.append(allocator, .{ .statement = scope.body });
                 try work.append(allocator, .{ .expression = scope.parent });
+            },
+            .managed_arena => |scope| {
+                writer.print("managed arena locals={d}\n", .{@backingInt(scope.watermark)}) catch return error.OutOfMemory;
+                try work.append(allocator, .{ .statement = scope.body });
             },
             .block => |children| {
                 writer.print("children {d}\n", .{children.len}) catch return error.OutOfMemory;

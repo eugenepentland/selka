@@ -68,6 +68,8 @@ pub fn write(heap: *gc.Heap, mapping: Value, key: Value, value: Value) Error!voi
     const map = try object(heap, mapping);
     if (value.typeOf() != map.element_type) return error.TypeMismatch;
     try heap.validateElement(value);
+    try heap.barrier(map, value);
+    try heap.barrier(map, key);
     if (try find(heap, map, key)) |index| {
         const retained = value.retain();
         map.items.items[index + 1].release(heap.allocator);
@@ -81,7 +83,7 @@ pub fn write(heap: *gc.Heap, mapping: Value, key: Value, value: Value) Error!voi
     defer rooted_key.release(heap.allocator);
     const rooted_value = value.retain();
     defer rooted_value.release(heap.allocator);
-    if (heap.stress or heap.statistics.live_objects >= heap.next_collection) try heap.collect();
+    if (!heap.regions.suspended and (heap.stress or heap.statistics.live_objects >= heap.next_collection)) try heap.collect();
     const previous = map.items.capacity;
     try map.items.ensureUnusedCapacity(heap.allocator, 2);
     map.items.appendAssumeCapacity(key.retain());

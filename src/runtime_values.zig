@@ -336,6 +336,10 @@ pub const ManagedKind = enum { list, string, dictionary };
 /// Representation metadata shared by checked schemas and GC headers.
 pub const CollectionShape = struct { kind: ManagedKind = .list, key: ?Type = null };
 
+/// Collector mark bit and the arena nesting depth that owns one managed object.
+/// Depth 0 is the ordinary heap; depth k is the k-th nested active arena scope.
+pub const ObjectTrace = struct { marked: bool = false, region: u32 = 0 };
+
 /// Stable GC identity with representation-specific collection metadata.
 pub const ManagedObject = struct {
     collection: CollectionShape = .{},
@@ -345,7 +349,7 @@ pub const ManagedObject = struct {
     items: std.ArrayList(Value) = .empty,
     references: usize = 1,
     next: ?*ManagedObject = null,
-    marked: bool = false,
+    trace: ObjectTrace = .{},
 
     /// Acquire another VM, aggregate, or heap-edge reference.
     pub fn retain(self: *ManagedObject) void {

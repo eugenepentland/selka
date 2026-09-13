@@ -86,6 +86,7 @@ pub const Node = struct {
         acquire_pool: Acquisition,
         acquire_buffer: Acquisition,
         reset_arena: TypedValue,
+        arena_escape: struct { arena: Span, value: NodeId },
         cast: TypedValue,
         wrap: TypedValue,
         variant: struct { ty: Span, name: Span, value: ?NodeId },
@@ -108,6 +109,7 @@ pub const Statement = struct {
     implicit_discard: bool = false,
     data: union(enum) {
         arena_scope: struct { parent: NodeId, name: Span, body: StatementId },
+        managed_arena: struct { name: ?Span, body: StatementId },
         block: []const StatementId,
         ret: NodeId,
         loop_exit: bool,

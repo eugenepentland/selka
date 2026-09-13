@@ -64,9 +64,23 @@ const Emitter = struct {
         }
         if (call.evaluation) |evaluation| try self.push(.{ .statement = evaluation.body });
     }
+    fn emitLoopExit(self: *Emitter, stmt: typed.Statement, exit: @FieldType(@FieldType(typed.Statement, "data"), "loop_exit")) !void {
+        const target = self.loops.get(exit.target) orelse return error.InternalError;
+        try self.push(.{ .jump = .{ .target = if (exit.continuing) target.start else target.end, .span = stmt.span } });
+        for (exit.arenas) |slot| try self.instruction(stmt.span, .{ .end_arena = slot });
+        for (exit.regions) |slot| try self.instruction(stmt.span, .{ .end_region = slot });
+        for (stmt.owned_cleanup) |slot| try self.instruction(stmt.span, .{ .drop_local = slot });
+        for (stmt.cleanup) |reference| try self.instruction(stmt.span, .{ .end_borrow = reference });
+    }
+    fn emitManagedArena(self: *Emitter, span: Span, scope: @FieldType(@FieldType(typed.Statement, "data"), "managed_arena")) !void {
+        if (!self.program.statements[@backingInt(scope.body)].terminates) try self.instruction(span, .{ .end_arena = scope.watermark });
+        try self.push(.{ .statement = scope.body });
+        try self.instruction(span, .{ .begin_arena = scope.watermark });
+    }
     fn emitStatement(self: *Emitter, id: typed.StatementId) !void {
         const stmt = self.program.statements[@backingInt(id)];
         switch (stmt.data) {
+            .managed_arena => |scope| try self.emitManagedArena(stmt.span, scope),
             .arena_scope => |scope| {
                 if (!self.program.statements[@backingInt(scope.body)].terminates) try self.instruction(stmt.span, .{ .end_region = scope.slot });
                 try self.push(.{ .statement = scope.body });
@@ -167,13 +181,7 @@ const Emitter = struct {
                 try self.push(.{ .jump = .{ .target = otherwise, .conditional = true, .span = self.program.nodes[@backingInt(branch.condition)].span } });
                 try self.push(.{ .expression = branch.condition });
             },
-            .loop_exit => |exit| {
-                const target = self.loops.get(exit.target) orelse return error.InternalError;
-                try self.push(.{ .jump = .{ .target = if (exit.continuing) target.start else target.end, .span = stmt.span } });
-                for (exit.regions) |slot| try self.instruction(stmt.span, .{ .end_region = slot });
-                for (stmt.owned_cleanup) |slot| try self.instruction(stmt.span, .{ .drop_local = slot });
-                for (stmt.cleanup) |reference| try self.instruction(stmt.span, .{ .end_borrow = reference });
-            },
+            .loop_exit => |exit| try self.emitLoopExit(stmt, exit),
             .loop => |loop| {
                 const start = try self.label();
                 const end = try self.label();
@@ -294,6 +302,10 @@ const Emitter = struct {
             },
             .take_field => |read| try self.instruction(node.span, .{ .take_field = .{ .owner = read.owner, .field = read.field, .output = node.ty } }),
             .read_field => |read| try self.instruction(node.span, .{ .read_field = .{ .reference = read.reference, .owner = read.owner, .field = read.field, .output = node.ty } }),
+            .arena_escape => |value| {
+                try self.instruction(node.span, .{ .arena_escape = node.ty });
+                try self.push(.{ .expression = value });
+            },
             .reset_arena => |value| {
                 try self.instruction(node.span, .{ .reset_arena = node.ty });
                 try self.push(.{ .expression = value });

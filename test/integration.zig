@@ -2,6 +2,7 @@
 const std = @import("std");
 const testing = std.testing;
 const compiler_path = @import("test_options").compiler_path;
+const arena_example_path = @import("test_options").arena_example_path;
 const host_program = "host fn measure(x:i64)->i64 effects(host);fn main()->i64{return measure(6);}";
 
 test "CLI checks host declarations and reports missing VM registration as a located trap" {
@@ -12,6 +13,35 @@ test "CLI checks host declarations and reports missing VM registration as a loca
 test "CLI host source contracts retain machine-readable rejection codes" {
     try invokeOptions("check", "host fn f(x:&i64)->i64 effects(host);fn main()->i64{return 0;}", &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_HOST_SIGNATURE\"");
     try invoke("check", "host fn f()->i64 effects();fn main()->i64{return 0;}", 1, "", "error[E_HOST_EFFECTS]");
+}
+
+// spec-case: ARENA-MANAGED-1
+test "CLI runs the managed arena example under normal and stress collection" {
+    for ([_][]const []const u8{ &.{}, &.{"--gc-stress"} }) |options| {
+        var args: std.ArrayList([]const u8) = .empty;
+        defer args.deinit(testing.allocator);
+        try args.appendSlice(testing.allocator, &.{ compiler_path, "run", arena_example_path });
+        try args.appendSlice(testing.allocator, options);
+        const outcome = try std.process.run(testing.allocator, testing.io, .{ .argv = args.items });
+        defer testing.allocator.free(outcome.stdout);
+        defer testing.allocator.free(outcome.stderr);
+        try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, outcome.term);
+        try testing.expectEqualStrings("38\n", outcome.stdout);
+        try testing.expectEqualStrings("", outcome.stderr);
+    }
+}
+
+// spec-case: ARENA-MANAGED-4
+test "CLI reports managed arena escapes as machine-readable diagnostics" {
+    const source =
+        \\def main() -> int:
+        \\    keeper: list[int] = []
+        \\    with arena() as scratch:
+        \\        keeper = [1, 2]
+        \\    return len(keeper)
+    ;
+    try invoke("check", source, 1, "", "error[E_ARENA_ESCAPE]");
+    try invokeOptions("check", source, &.{"--diagnostics=json"}, 1, "", "\"code\":\"E_ARENA_ESCAPE\"");
 }
 
 fn invoke(command: []const u8, text: []const u8, expected_status: u8, expected_stdout: []const u8, stderr_part: []const u8) !void {

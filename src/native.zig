@@ -310,6 +310,7 @@ fn checkFunction(layout: native_layout.Layout, function: bc.Function, sink: *dia
     for (function.scope.references) |reference| if (!layout.supports(reference.ty)) return sink.fail(unsupported_feature, reference.declaration, "native references require supported value types");
     for (function.scope.instructions) |instruction| switch (instruction.op) {
         .cmp_domain, .json_codec => {},
+        .begin_arena, .end_arena, .arena_escape => return sink.fail(unsupported_feature, instruction.span, "native C generation does not support managed arena scopes"),
         .make_variant => |variant| {
             if (!layout.supports(variant.ty)) return sink.fail(unsupported_feature, instruction.span, "native variant representation requires supported payloads");
         },
@@ -557,6 +558,7 @@ fn writeOperation(context: InstructionOutput) !bool {
                 try statusResult(w, layout, operation.output);
             } else try w.print("push((V)pool_{s}(container));\n", .{@tagName(operation.kind)});
         },
+        .begin_arena, .end_arena, .arena_escape => unreachable, // Rejected by checkFunction before emission.
         .begin_region => |slot| try w.print("begin_region({d});\n", .{@backingInt(slot)}),
         .end_region => |slot| try w.print("end_region({d});\n", .{@backingInt(slot)}),
         .reset_arena => |ty| {

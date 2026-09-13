@@ -1,0 +1,38 @@
+# Region allocation of ordinary managed objects. Everything collect() and
+# loudest() allocate lands in the arena and is released in bulk at the end of the
+# block; only the escaped copy survives. Prints 38.
+# Run with: zig-out/bin/mylang run examples/arena-managed/main.my
+class Reading:
+    sensor: int
+    samples: list[int]
+
+def collect(sensors: int, per_sensor: int) -> list[Reading]:
+    readings: list[Reading] = []
+    for sensor in range(sensors):
+        samples: list[int] = []
+        for index in range(per_sensor):
+            samples.append(sensor * per_sensor + index)
+        readings.append(Reading(sensor=sensor, samples=samples))
+    return readings
+
+def loudest(readings: list[Reading]) -> list[int]:
+    best: list[int] = []
+    top = -1
+    for reading in readings:
+        total = 0
+        for sample in reading.samples:
+            total = total + sample
+        if total > top:
+            top = total
+            best = reading.samples
+    return best
+
+def main() -> int:
+    winner: list[int] = []
+    with arena() as scratch:
+        readings = collect(3, 4)
+        winner = scratch.escape(loudest(readings))
+    total = 0
+    for sample in winner:
+        total = total + sample
+    return total
