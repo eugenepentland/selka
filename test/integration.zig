@@ -1016,3 +1016,47 @@ test "CLI streams program output and reports the entry result only on request" {
     try testing.expectEqualStrings("streamed\n", plain.stdout);
     try invoke("run", program, 0, "streamed\n7\n", "");
 }
+
+// spec-case: CAPABILITY-1
+test "CLI resolves the Python capability spellings inside projects that import modules" {
+    var temporary = testing.tmpDir(.{});
+    defer temporary.cleanup();
+    const entry =
+        \\module main
+        \\import time
+        \\import random
+        \\
+        \\def main(clock: Clock, rng: Entropy, fs: Filesystem) -> int:
+        \\    match time.now(clock):
+        \\        case Ok(instant):
+        \\            print("clock")
+        \\        case Err(message):
+        \\            print(message)
+        \\    match random.from_entropy(rng):
+        \\        case Ok(stream):
+        \\            print("entropy")
+        \\        case Err(message):
+        \\            print(message)
+        \\    print(exists(fs, "notes.txt"))
+        \\    return 0
+    ;
+    try temporary.dir.writeFile(testing.io, .{ .sub_path = "main.my", .data = entry });
+    const path = try temporary.dir.realPathFileAlloc(testing.io, "main.my", testing.allocator);
+    defer testing.allocator.free(path);
+    const directory = try temporary.dir.realPathAlloc(testing.io, ".", testing.allocator);
+    defer testing.allocator.free(directory);
+    const grant = try std.fmt.allocPrint(testing.allocator, "--allow-read={s}", .{directory});
+    defer testing.allocator.free(grant);
+    const granted = try std.process.run(testing.allocator, testing.io, .{
+        .argv = &.{ compiler_path, "run-project", path, "--allow-clock", "--allow-random=5", grant },
+    });
+    defer testing.allocator.free(granted.stdout);
+    defer testing.allocator.free(granted.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 0 }, granted.term);
+    try testing.expectEqualStrings("clock\nentropy\nFalse\n", granted.stdout);
+    const ungranted = try std.process.run(testing.allocator, testing.io, .{ .argv = &.{ compiler_path, "run-project", path } });
+    defer testing.allocator.free(ungranted.stdout);
+    defer testing.allocator.free(ungranted.stderr);
+    try testing.expectEqual(std.process.Child.Term{ .exited = 2 }, ungranted.term);
+    try testing.expect(std.mem.indexOf(u8, ungranted.stderr, "--allow-clock") != null);
+}

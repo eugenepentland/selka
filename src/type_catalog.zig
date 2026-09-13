@@ -2,6 +2,7 @@
 const generic_arrays = @import("generic_arrays.zig");
 const std = @import("std");
 const typed = @import("typed.zig");
+const prelude = @import("prelude.zig");
 const Source = @import("source.zig").Source;
 const Span = @import("source.zig").Span;
 const diagnostic = @import("diagnostic.zig");
@@ -34,11 +35,16 @@ pub const Catalog = struct {
         if (self.arrays.resolved.get(span.start)) |ty| return ty;
         const name = src.text(span);
         if (typed.Type.fromName(name)) |builtin| return builtin;
-        if (@import("prelude.zig").scalar(name)) if (self.names.get(name)) |ty| return ty;
+        if (prelude.scalar(name)) if (self.names.get(name)) |ty| return ty;
+        // A reserved capability or file spelling applies only where the project
+        // resolves no declaration of that name, so a declared type always wins.
+        if (self.module_names) |names| if (try names.symbolKind(span) == null) {
+            if (prelude.reservedType(name)) |reserved| return reserved;
+        };
         const key = if (self.module_names) |names| try names.reference(span, .type, null, null, sink) else name;
         if (self.templates.names.contains(key)) return sink.fail("E_GENERIC_ARITY", span, "nominal template requires explicit type arguments");
         if (self.names.get(key)) |declared| return declared;
-        return @import("prelude.zig").reservedType(name) orelse sink.fail("E_UNKNOWN_TYPE", span, "type is not declared");
+        return prelude.reservedType(name) orelse sink.fail("E_UNKNOWN_TYPE", span, "type is not declared");
     }
     /// Recognize a declared variant type before interpreting a dotted member as a field.
     pub fn variantType(self: Catalog, src: Source, span: Span, sink: *diagnostic.Sink) Error!?typed.Type {
