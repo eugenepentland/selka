@@ -86,6 +86,8 @@ pub const host_functions = @import("host_functions.zig");
 pub const vm_host = @import("vm_host.zig");
 /// Parse-only top-level declaration listing for store and tooling consumers.
 pub const declarations = @import("declarations.zig");
+/// Checked mechanical translation from the legacy brace surface to Python syntax.
+pub const migrate = @import("migrate.zig");
 const lexer = @import("lexer.zig");
 const parser = @import("parser.zig");
 const ast = @import("ast.zig");

@@ -64,3 +64,5 @@ Python-style procedures omit their return annotation or use `-> None`, bare `ret
 Statements may end at a newline, `}`, or end of file. Semicolons remain valid and separate statements written on one line. A new line ends a completed expression unless a binary operator continues it. Multiline expressions may place binary operators at either end of the line; parentheses also allow multiline postfix calls and indexing. Use an explicit semicolon to end the previous statement when a following operator, such as unary minus, must not continue its expression. Module, import, export, and unbraced type declarations follow the same newline rule. The formatter preserves line boundaries.
 
 `()` is an alternative spelling for the unit type and unit value. `return` followed by a newline or closing brace returns unit. Postfix `expression?` has the same propagation behavior as `try expression`, with postfix precedence. Calls and parameter lists accept trailing commas.
+
+[Checked legacy migration](experiments/migration.md) rewrites brace-syntax sources into the canonical Python surface and reports every construct without a Python spelling.

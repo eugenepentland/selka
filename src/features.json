@@ -14,6 +14,7 @@
     "positional-and-named-record-constructors",
     "collection-membership-and-value-equality",
     "python-indented-syntax",
+    "legacy-migration",
     "python-assignments-and-value-records",
     "canonical-prelude-types",
     "inferred-list-literals-and-slices",

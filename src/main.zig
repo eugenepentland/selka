@@ -9,7 +9,7 @@ const Reporting = struct { timings: bool = false, timings_json: bool = false, di
 const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--json] [--force]\n       mylang build <file.my> (-o <output> | --run) [--help]\n       mylang " ++
     "<invoke-project|check-value-project|schema-project|input-module|check|run|dump-bytecode|di" ++
     "scover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fm" ++
-    "t-module|fmt-project|emit-c|emit-project-c|emit-qbe|emit-project-qbe|eval-project|list-modules|list-interfaces|list-" ++
+    "t-module|fmt-project|migrate|migrate-project|emit-c|emit-project-c|emit-qbe|emit-project-qbe|eval-project|list-modules|list-interfaces|list-" ++
     "declarations|check" ++
     "-project|run-project|check-policy> <file.my>\n  schema-project: --schema-report (include " ++
     "checked source and compiler identities)\n  check-value-project: --value=path.json " ++
@@ -30,7 +30,10 @@ const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--j
     "signal)\n  check-policy: --policy=path.json (required; policy failures exit 3)\n  " ++
     "fmt-project: --check (required; checks the reachable import graph)\n  fmt/fmt-module: " ++
     "--check (otherwise writes formatted source to " ++
-    "stdout)\n  list-declarations: parse-only declarations-v1 JSON with byte ranges\n" ++
+    "stdout)\n  migrate/migrate-project: legacy or familiar source to canonical Python; " ++
+    "--write rewrites in place, --check verifies idempotence, checking and main parity, " ++
+    "--allow-partial marks unconvertible constructs instead of failing\n" ++
+    "  list-declarations: parse-only declarations-v1 JSON with byte ranges\n" ++
     "  index-project: JSON symbols, references and pinned source snapshot\n  project-dependencies: checked module graph and hashes; --inputs supported\n" ++
     "  one-shot commands: --timings=json (phase-timings-v1 JSON Lines on stderr)\n" ++
     "  all commands: --diagnostics=text|json (stderr JSON Lines; stdout unchanged)\n" ++
@@ -102,6 +105,7 @@ fn run(init: Context, parsed: Parsed) !u8 {
         .@"discover-project-duplicates",
         .@"report-project-quality",
         .@"fmt-project",
+        .@"migrate-project",
         .@"emit-project-c",
         .@"emit-project-qbe",
         => return listModules(init, parsed),
@@ -157,6 +161,7 @@ fn run(init: Context, parsed: Parsed) !u8 {
         try std.Io.File.stdout().writeStreamingAll(init.io, listing);
         return 0;
     }
+    if (parsed.command == .migrate) return migrateFile(init, &compilation, parsed, bytes);
     const check_start = if (parsed.reporting.timings) std.Io.Timestamp.now(init.io, .awake) else std.Io.Timestamp.zero;
     compilation.check() catch |err| switch (err) {
         error.SourceError => {
@@ -182,6 +187,8 @@ fn run(init: Context, parsed: Parsed) !u8 {
         .fmt,
         .@"fmt-module",
         .@"fmt-project",
+        .@"migrate-project",
+        .migrate,
         .@"list-declarations",
         .@"emit-project-c",
         .@"emit-project-qbe",
@@ -311,6 +318,8 @@ const Command = enum {
     @"emit-c",
     @"emit-qbe",
     @"list-declarations",
+    @"migrate-project",
+    migrate,
     fmt,
     check,
     run,
@@ -329,6 +338,8 @@ const Parsed = struct {
     evaluation: language.evaluation.Options,
     policy: ?[]const u8,
     format_check: bool,
+    write: bool,
+    migration: language.migrate.Options,
     quality: language.quality.Options,
     command: Command,
     path: []const u8,
@@ -353,6 +364,7 @@ fn parseArgs(args: []const []const u8) error{Usage}!Parsed {
         if (try parser.codecOption(arg)) continue;
         if (try parser.evaluationOption(arg)) continue;
         if (try parser.qualityOption(arg)) continue;
+        if (try parser.migrationOption(arg)) continue;
         if (try parser.executionOption(arg)) continue;
         if (try parser.discoveryOption(arg)) continue;
         if (std.mem.startsWith(u8, arg, policy_prefix)) {
@@ -380,6 +392,8 @@ const ArgumentParser = struct {
     quality: language.quality.Options = .{},
     quality_seen: u8 = 0,
     format_check: bool = false,
+    write: bool = false,
+    migration: language.migrate.Options = .{},
     path: ?[]const u8 = null,
     policy: ?[]const u8 = null,
     options: language.vm.Options = .{},
@@ -492,9 +506,31 @@ const ArgumentParser = struct {
         return false;
     }
 
+    fn migrates(self: *const ArgumentParser) bool {
+        return self.command == .migrate or self.command == .@"migrate-project";
+    }
+    fn checks(self: *const ArgumentParser) bool {
+        return switch (self.command) {
+            .fmt, .@"fmt-module", .@"fmt-project", .migrate, .@"migrate-project" => true,
+            else => false,
+        };
+    }
+    fn migrationOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
+        if (std.mem.eql(u8, arg, "--write")) {
+            if (!self.migrates() or self.write) return error.Usage;
+            self.write = true;
+            return true;
+        }
+        if (std.mem.eql(u8, arg, "--allow-partial")) {
+            if (!self.migrates() or self.migration.allow_partial) return error.Usage;
+            self.migration.allow_partial = true;
+            return true;
+        }
+        return false;
+    }
     fn executionOption(self: *ArgumentParser, arg: []const u8) error{Usage}!bool {
         if (std.mem.eql(u8, arg, "--check")) {
-            if ((self.command != .fmt and self.command != .@"fmt-module" and self.command != .@"fmt-project") or self.format_check) return error.Usage;
+            if (!self.checks() or self.format_check) return error.Usage;
             self.format_check = true;
         } else if (std.mem.eql(u8, arg, "--gc-stress")) {
             if (self.command != .run and self.command != .@"run-project") return error.Usage;
@@ -579,6 +615,8 @@ const ArgumentParser = struct {
             },
             .policy = self.policy,
             .format_check = self.format_check,
+            .write = self.write,
+            .migration = self.migration,
             .quality = self.quality,
             .command = self.command,
             .path = self.path orelse return error.Usage,
@@ -634,7 +672,7 @@ fn listModulesWithCache(init: Context, parsed: Parsed, cache: ?*language.syntax_
     init.timings.counts.modules = project.modules.items.len;
     init.timings.counts.source_bytes = project.counts.bytes;
     init.timings.end();
-    if (parsed.command == .@"fmt-project") return formatProject(init, &project);
+    if (try surfaceProject(init, &project, parsed)) |status| return status;
     if (try replayCheck(init, parsed.command, &project, verdict)) return 0;
     const output = if (parsed.command != .@"list-modules") result: {
         init.timings.begin("frontend", false);
@@ -848,6 +886,158 @@ fn checkValue(init: Context, compilation: *language.project_compile.Compilation,
         }
         return null;
     };
+}
+
+/// Dispatch the whole-graph source-surface commands that never lower or execute.
+fn surfaceProject(init: Context, project: *language.project.Project, parsed: Parsed) !?u8 {
+    if (parsed.command == .@"fmt-project") {
+        const status = try formatProject(init, project);
+        return status;
+    }
+    if (parsed.command == .@"migrate-project") {
+        const status = try migrateProject(init, project, parsed);
+        return status;
+    }
+    return null;
+}
+
+fn migrateSource(init: Context, compilation: *language.Compilation, options: language.migrate.Options) ![]u8 {
+    var sink: language.diagnostic.Sink = .{ .allocator = compilation.arena.allocator(), .items = compilation.diagnostics };
+    defer compilation.diagnostics = sink.items;
+    return language.migrate.render(init.gpa, compilation.src, options, &sink);
+}
+
+fn migrateFile(init: Context, compilation: *language.Compilation, parsed: Parsed, bytes: []const u8) !u8 {
+    const migrated = migrateSource(init, compilation, parsed.migration) catch |err| switch (err) {
+        error.SourceError => {
+            try report(init, compilation);
+            return 1;
+        },
+        else => return err,
+    };
+    defer init.gpa.free(migrated);
+    try report(init, compilation);
+    if (parsed.format_check) {
+        const status = try migrateVerify(init, parsed.path, bytes, migrated);
+        if (status != 0) return status;
+    }
+    if (!parsed.write) {
+        try std.Io.File.stdout().writeStreamingAll(init.io, migrated);
+        return 0;
+    }
+    if (!std.mem.eql(u8, migrated, bytes)) try std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = parsed.path, .data = migrated });
+    return 0;
+}
+
+fn migrateProject(init: Context, project: *language.project.Project, parsed: Parsed) !u8 {
+    for (project.order.items) |module_id| {
+        const src = project.modules.items[module_id].src;
+        var compilation = try language.Compilation.init(init.gpa, src.path, src.bytes);
+        defer compilation.deinit();
+        const migrated = migrateSource(init, &compilation, parsed.migration) catch |err| switch (err) {
+            error.SourceError => {
+                try report(init, &compilation);
+                return 1;
+            },
+            else => return err,
+        };
+        defer init.gpa.free(migrated);
+        try report(init, &compilation);
+        if (parsed.format_check) {
+            const status = try migrateVerify(init, src.path, src.bytes, migrated);
+            if (status != 0) return status;
+        }
+        if (parsed.write) {
+            if (!std.mem.eql(u8, migrated, src.bytes)) try std.Io.Dir.cwd().writeFile(init.io, .{ .sub_path = src.path, .data = migrated });
+            continue;
+        }
+        if (parsed.format_check) continue;
+        const header = try std.fmt.allocPrint(init.gpa, "# --- {s}\n", .{src.path});
+        defer init.gpa.free(header);
+        try std.Io.File.stdout().writeStreamingAll(init.io, header);
+        try std.Io.File.stdout().writeStreamingAll(init.io, migrated);
+    }
+    return 0;
+}
+
+/// Reject migrated output that is not idempotent, does not check, or changes behavior.
+fn migrateVerify(init: Context, path: []const u8, original: []const u8, migrated: []const u8) !u8 {
+    var again = try language.Compilation.init(init.gpa, path, migrated);
+    defer again.deinit();
+    const twice = migrateSource(init, &again, .{}) catch |err| switch (err) {
+        error.SourceError => {
+            try report(init, &again);
+            return 1;
+        },
+        else => return err,
+    };
+    defer init.gpa.free(twice);
+    if (!std.mem.eql(u8, twice, migrated)) {
+        try init.text("migrate --check: migrated source is not idempotent\n");
+        return 1;
+    }
+    if (language.migrate.isModuleSource(migrated)) return 0;
+    var before = try language.Compilation.init(init.gpa, path, original);
+    defer before.deinit();
+    var after = try language.Compilation.init(init.gpa, path, migrated);
+    defer after.deinit();
+    const rejected = try firstError(&before);
+    const status = try migrateChecks(init, &after, rejected);
+    if (status != 0 or rejected != null) return status;
+    if (!parameterlessMain(&before)) return 0;
+    return migrateParity(init, &before, &after);
+}
+
+/// Check the migrated source, allowing an original rejection to repeat identically.
+fn migrateChecks(init: Context, after: *language.Compilation, rejected: ?[]const u8) !u8 {
+    const failure = try firstError(after) orelse {
+        if (rejected == null) return 0;
+        try init.text("migrate --check: migrated source accepts a program the original rejected\n");
+        return 1;
+    };
+    const expected = rejected orelse {
+        try report(init, after);
+        return 1;
+    };
+    if (std.mem.eql(u8, expected, failure)) return 0;
+    try init.text("migrate --check: migrated source changes the original rejection\n");
+    try report(init, after);
+    return 1;
+}
+
+/// The first rejecting diagnostic code from a full check, or null when it succeeds.
+fn firstError(compilation: *language.Compilation) !?[]const u8 {
+    compilation.check() catch |err| switch (err) {
+        error.SourceError => {},
+        else => return err,
+    };
+    for (compilation.diagnostics.items) |item| if (item.severity == .err) return item.code;
+    return null;
+}
+
+fn parameterlessMain(compilation: *const language.Compilation) bool {
+    const syntax = compilation.syntax orelse return false;
+    for (syntax.functions) |item| {
+        if (item.policy.owner != null or item.policy.host != null) continue;
+        if (!std.mem.eql(u8, compilation.src.text(item.name), "main")) continue;
+        return item.signature.parameters.len == 0;
+    }
+    return false;
+}
+
+fn migrateParity(init: Context, before: *language.Compilation, after: *language.Compilation) !u8 {
+    const original = before.executeWithOptions(init.gpa, .{}) catch |err| switch (err) {
+        error.SourceError => return 0,
+        else => return err,
+    };
+    const migrated = try after.executeWithOptions(init.gpa, .{});
+    const same = switch (original) {
+        .value => |value| migrated == .value and migrated.value == value,
+        .trap => |trap| migrated == .trap and std.mem.eql(u8, migrated.trap.code, trap.code),
+    };
+    if (same) return 0;
+    try init.text("migrate --check: migrated program does not reproduce the original result\n");
+    return 1;
 }
 
 fn formatProject(init: Context, project: *language.project.Project) !u8 {

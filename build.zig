@@ -520,6 +520,13 @@ pub fn build(b: *std.Build) void {
     native_corpus.addArgs(&.{ "--native", "--zig", b.graph.zig_exe });
     native_corpus.setCwd(b.path("."));
     native_step.dependOn(&native_corpus.step);
+    const migrate_runtime = b.addSystemCommand(&.{ "python3", "tests/migrate.py", "--compiler" });
+    migrate_runtime.addFileArg(exe.getEmittedBin());
+    migrate_runtime.setCwd(b.path("."));
+    test_step.dependOn(&migrate_runtime.step);
+    const migrate_step = b.step("test-migrate", "Migrate every tracked guest source and report unconverted constructs");
+    migrate_step.dependOn(&migrate_runtime.step);
+    guardian.addAllChecks(b, guardian_exe, migrate_step, .{});
     const schema_reports = b.addSystemCommand(&.{ "python3", "tests/schema_reports.py", "--compiler" });
     schema_reports.addFileArg(exe.getEmittedBin());
     schema_reports.setCwd(b.path("."));
