@@ -265,10 +265,14 @@ schema-pinned typed calls and its existing report format. See
 
 ## Installed feature identity
 
-- [FEATURE-REPORT-1] `mylang --features` reports `language-features-v1`, the running executable's
-SHA-256, pinned Zig version and embedded feature/restriction manifest. The current
-reference is `docs/current-language.md`; historical checkpoint prose does not
-supersede it. The manifest records implementation coverage, not a test certificate.
+- [FEATURE-REPORT-1] `mylang --features` reports `language-features-v1`, the compiler
+identity, pinned Zig version and embedded feature/restriction manifest, without reading
+its own executable. `compiler_sha256` is that identity: a build-time SHA-256 over the
+compiler's source inputs, Zig version and optimize mode, embedded when the compiler is
+built. The same identity appears in every receipt's `implementation`, so a receipt and a
+feature report from one compiler always agree. The current reference is
+`docs/current-language.md`; historical checkpoint prose does not supersede it. The
+manifest records implementation coverage, not a test certificate.
 - [DIAGNOSTIC-RECOVERY-1] Semantic checking recovers at ordinary and symbolic function boundaries after a source error, reports independent function faults in source order, and deduplicates repeated errors at the same source range and code. It stops within the failed function and skips whole-program verification when any body is incomplete; syntax, type-catalog, and namespace construction remain prerequisites. A failed check never publishes typed code or permits execution. Repeating a failed compilation check preserves diagnostics rather than appending duplicates.
 
 ## Proven parameter return regions

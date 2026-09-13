@@ -17,7 +17,7 @@ from verification.core import run_manifest, tree
 
 
 def identity(compiler, entry, manifest):
-    return {'compiler_sha256': hashlib.sha256(navigate.bounded_read(compiler, 256 * 1024 * 1024)).hexdigest(),
+    return {'compiler_sha256': navigate.compiler_identity(compiler),
             'sources': navigate.sources(entry.parent),
             'project_files': tree(entry.parent),
             'manifest_sha256': hashlib.sha256(navigate.bounded_read(manifest, 4 * 1024 * 1024)).hexdigest()}

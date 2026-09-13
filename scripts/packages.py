@@ -81,7 +81,7 @@ def snapshot(entry, lock_path, directory):
 
 def run(entry, lock_path, compiler, action, receipt_path=None):
     compiler = compiler.resolve()
-    compiler_hash = hashlib.sha256(navigate.bounded_read(compiler, 256 * 1024 * 1024)).hexdigest()
+    compiler_hash = navigate.compiler_identity(compiler)
     with tempfile.TemporaryDirectory(prefix='mylang-packages-') as temporary:
         stage = Path(temporary)
         manifest = snapshot(entry.resolve(), lock_path.resolve(), stage)
@@ -94,7 +94,7 @@ def run(entry, lock_path, compiler, action, receipt_path=None):
                    'compiler_sha256': compiler_hash, 'dependencies': json.loads(dependencies.stdout)}
         result = subprocess.run([str(compiler), action, str(staged_entry)],
                                 capture_output=True, text=True, timeout=60)
-        if hashlib.sha256(navigate.bounded_read(compiler, 256 * 1024 * 1024)).hexdigest() != compiler_hash:
+        if navigate.compiler_identity(compiler) != compiler_hash:
             raise ValueError('compiler changed during package build')
         if receipt_path is not None and result.returncode == 0:
             receipt_path.write_text(json.dumps(receipt, indent=2) + '\n')

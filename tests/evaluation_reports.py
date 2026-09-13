@@ -9,6 +9,15 @@ import subprocess
 import tempfile
 
 
+def compiler_identity(compiler):
+    """The compiler's embedded build-time identity, reported rather than hashed from the binary."""
+    report = subprocess.run([str(compiler), '--features'], capture_output=True, text=True, timeout=60)
+    assert report.returncode == 0, report.stderr
+    identity = json.loads(report.stdout)['compiler_sha256']
+    assert isinstance(identity, str) and len(identity) == 64
+    return identity
+
+
 def invoke(compiler, entry, *options, status=0, request=False):
     flag = '--evaluation-request' if request else '--evaluation-report'
     result = subprocess.run([compiler, 'eval-project', str(entry), flag, *options],
@@ -47,7 +56,7 @@ def main():
         assert request['entry'] == 'main'
         assert request['policy'] == 'effect-free-parameter-free-v1'
         assert first['result'] == {'type': 'i64', 'decimal': '9223372036854775807'}
-        assert request['implementation']['compiler_sha256'] == hashlib.sha256(Path(compiler).read_bytes()).hexdigest()
+        assert request['implementation']['compiler_sha256'] == compiler_identity(compiler)
         assert request['implementation']['zig_version'] == '0.17.0-dev.1683+5ceec001b'
         assert request['budgets'] == {'max_steps': 1000000, 'max_frames': 256, 'max_bytes': 16777216}
         assert [source['module'] for source in request['sources']] == ['helper', 'main']

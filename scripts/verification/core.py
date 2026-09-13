@@ -14,6 +14,7 @@ import shutil
 import tempfile
 import time
 import stat
+import subprocess
 
 
 def module_graph(root, filename):
@@ -58,6 +59,38 @@ def bounded_bytes(path, limit=512 * 1024 * 1024):
 
 def file_hash(path):
     return hashlib.sha256(bounded_bytes(path)).hexdigest()
+
+
+_REPORTED_IDENTITIES = {}
+
+
+def compiler_identities(root, tools):
+    """Build-time identities reported by whichever declared tools are mylang compilers.
+
+    A compiler receipt records the compiler's own identity - a build-time digest of its
+    sources and toolchain - not a hash of its executable, so pinning a receipt to a
+    declared tool means asking that tool who it is. Answers are memoized per path and
+    content hash, and a tool that does not answer contributes no identity.
+    """
+    found = set()
+    for tool in tools.values():
+        path = Path(tool["path"])
+        key = (tool["path"], tool["sha256"])
+        if key not in _REPORTED_IDENTITIES:
+            _REPORTED_IDENTITIES[key] = reported_identity(path if path.is_absolute() else root / path)
+        if _REPORTED_IDENTITIES[key] is not None:
+            found.add(_REPORTED_IDENTITIES[key])
+    return found
+
+
+def reported_identity(path):
+    try:
+        result = subprocess.run([str(path), "--features"], capture_output=True, timeout=60)
+        report = json.loads(result.stdout) if result.returncode == 0 else {}
+        identity = report.get("compiler_sha256") if report.get("version") == "language-features-v1" else None
+        return identity if isinstance(identity, str) else None
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return None
 
 
 def capture_tree(root, destination, entries):
@@ -186,7 +219,7 @@ def inventory(root, data):
                             "path_environment": os.environ.get("PATH", os.defpath)}
         if graph and graph["valid"]:
             compiler_hash = graph["receipt"].get("implementation", {}).get("compiler_sha256")
-            if compiler_hash not in {tool["sha256"] for tool in jobs[step["id"]]["tools"].values()}:
+            if compiler_hash not in compiler_identities(root, jobs[step["id"]]["tools"]):
                 graph.update(valid=False, reason="receipt compiler must be a declared current tool")
         complete = step.get("complete", False) and (graph is None or graph["valid"])
         complete = complete and all(jobs[name]["complete"] for name in step.get("depends_on", []))

@@ -35,8 +35,10 @@ def main():
         manifest = json.loads((output / 'manifest.json').read_text())
         features = json.loads((output / 'features.json').read_text())
         schema = json.loads((output / 'schema.json').read_text())
-        identity = hashlib.sha256(compiler.read_bytes()).hexdigest()
-        assert identity == manifest['compiler_sha256'] == features['compiler_sha256']
+        # The reference pins the compiler's reported identity, not a digest of the executable.
+        identity = features['compiler_sha256']
+        assert isinstance(identity, str) and len(identity) == 64
+        assert identity == manifest['compiler_sha256']
         assert identity == schema['source']['implementation']['compiler_sha256']
         for filename, expected in manifest['artifacts'].items():
             assert hashlib.sha256((output / filename).read_bytes()).hexdigest() == expected
@@ -54,11 +56,16 @@ def main():
         assert 'artifact changed' in run('--check', success=False).stderr
         (output / 'api.md').write_text(api)
 
+        # Identity is the compiler's own build-time digest, so a padded copy of the same
+        # executable is still the same compiler and the reference stays fresh.
         other_compiler = root / 'compiler'
         shutil.copy2(compiler, other_compiler)
         with other_compiler.open('ab') as stream:
             stream.write(b'changed')
-        assert 'compiler SHA256 changed' in run('--check', success=False, executable=other_compiler).stderr
+        run('--check', executable=other_compiler)
+        stale = dict(manifest, compiler_sha256='f' * 64)
+        (output / 'manifest.json').write_text(json.dumps(stale, ensure_ascii=False, indent=2) + '\n')
+        assert 'compiler identity changed' in run('--check', success=False).stderr
 
         run('--module', 'std_math')
         small_schema = json.loads((output / 'schema.json').read_text())

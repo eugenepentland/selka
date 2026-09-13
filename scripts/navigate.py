@@ -48,6 +48,23 @@ def sources(root):
     return dict(sorted(inventory.items()))
 
 
+def compiler_identity(compiler):
+    """Ask the compiler for its own identity.
+
+    The compiler embeds a build-time digest of its sources, Zig version and optimize
+    mode and reports it as `compiler_sha256`, in `--features` and in every receipt.
+    Hashing the executable here instead would compare two different things, and cost
+    seconds per call on a large debug build.
+    """
+    result = subprocess.run([str(compiler), '--features'], capture_output=True, timeout=60)
+    if result.returncode or len(result.stdout) > MAX_INDEX_BYTES:
+        raise ValueError('compiler identity query failed: ' + result.stderr.decode(errors='replace')[:4096])
+    report = json.loads(result.stdout)
+    if report.get('version') != 'language-features-v1' or not isinstance(report.get('compiler_sha256'), str):
+        raise ValueError('unsupported compiler feature report')
+    return report['compiler_sha256']
+
+
 def prune(directory, keep):
     entries = []
     for path in directory.glob('*.json'):
@@ -85,7 +102,7 @@ def validate(index, inventory, compiler_hash):
 def load(compiler, entry, cache_dir=None):
     compiler, entry = compiler.resolve(), entry.resolve()
     before = sources(entry.parent)
-    compiler_hash = hashlib.sha256(bounded_read(compiler, 256 * 1024 * 1024)).hexdigest()
+    compiler_hash = compiler_identity(compiler)
     key = digest({'version': 'navigation-cache-v1', 'compiler': compiler_hash,
                   'entry': entry.name, 'sources': before})
     path = cache_dir / (key + '.json') if cache_dir else None
@@ -104,7 +121,7 @@ def load(compiler, entry, cache_dir=None):
             raise ValueError('index generation failed: ' + result.stderr.decode(errors='replace')[:4096])
         index = json.loads(result.stdout)
         validate(index, before, compiler_hash)
-    if sources(entry.parent) != before or hashlib.sha256(bounded_read(compiler, 256 * 1024 * 1024)).hexdigest() != compiler_hash:
+    if sources(entry.parent) != before or compiler_identity(compiler) != compiler_hash:
         raise ValueError('source or compiler changed during navigation; retry on a stable snapshot')
     if path is not None and not reused:
         path.parent.mkdir(parents=True, exist_ok=True)

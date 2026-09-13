@@ -821,20 +821,24 @@ fn reportProject(init: Context, compilation: *language.project_compile.Compilati
     }
 }
 
+/// `compiler_sha256` is a build-time digest of the compiler's own source inputs, Zig
+/// version and optimize mode, embedded by `build.zig`. Re-reading the installed
+/// executable to hash it cost seconds per report on a Debug build and told receipts
+/// nothing extra: two builds of the same sources share this identity, and any source,
+/// toolchain or mode change still changes it.
 fn compilerIdentity(io: std.Io) !language.evaluation_report.Identity {
-    const executable = try std.process.openExecutable(io, .{});
-    defer executable.close(io);
-    var hash = std.crypto.hash.sha2.Sha256.init(.{});
-    var buffer: [65536]u8 = undefined;
-    var offset: u64 = 0;
-    while (true) {
-        const count = try executable.readPositional(io, &.{&buffer}, offset);
-        if (count == 0) break;
-        hash.update(buffer[0..count]);
-        offset += count;
-    }
+    _ = io;
     const builtin = @import("builtin");
-    return .{ .compiler_sha256 = hash.finalResult(), .zig_version = builtin.zig_version_string, .architecture = @tagName(builtin.cpu.arch), .os = @tagName(builtin.os.tag), .abi = @tagName(builtin.abi), .optimize = @tagName(builtin.mode) };
+    return .{ .compiler_sha256 = build_identity, .zig_version = builtin.zig_version_string, .architecture = @tagName(builtin.cpu.arch), .os = @tagName(builtin.os.tag), .abi = @tagName(builtin.abi), .optimize = @tagName(builtin.mode) };
+}
+const build_identity: [32]u8 = identity: {
+    const text = @import("qbe_build_assets").compiler_identity;
+    var decoded: [32]u8 = undefined;
+    for (&decoded, 0..) |*byte, index| byte.* = nibble(text[index * 2]) << 4 | nibble(text[index * 2 + 1]);
+    break :identity decoded;
+};
+fn nibble(character: u8) u8 {
+    return if (character <= '9') character - '0' else character - 'a' + 10;
 }
 
 fn parseInputManifest(init: Context, path: []const u8, bytes: []const u8) !?language.input_manifest.Manifest {
