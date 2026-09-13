@@ -54,7 +54,7 @@ int main(void) {
 def main():
     metadata = {
         'types': [{'name': 'i8', 'kind': 'scalar', 'size': 1, 'alignment': 1, 'bits': 8, 'signed': True, 'count': 0}],
-        'declarations': [{'name': 'test', 'symbol': 'myl_f_test', 'parameters': ['i8'], 'result': 'i8', 'effects': 64}],
+        'declarations': [{'name': 'test', 'symbol': 'myl_f_test', 'parameters': ['i8'], 'result': 'i8', 'effects': 32}],
     }
     compiler = shlex.split(os.environ.get('CC', 'cc'))
     with tempfile.TemporaryDirectory(prefix='mylang-host-runtime-') as directory:
