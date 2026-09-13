@@ -1,0 +1,55 @@
+resource File: filesystem;
+result Open {
+    ok: File,
+    err: i64
+}
+struct Failure {
+    code: i64,
+    resource: File
+}
+result Finish {
+    err: Failure,
+    ok: bool
+}
+result Status {
+    ok: bool,
+    err: i64
+}
+struct Owned {
+    file: File,
+    code: i64
+}
+fn forward < T: copy >(file: File) -> File effects(filesystem) {
+    return file;
+}
+fn drop < T: copy >(file: File) -> i64 effects(filesystem) {
+    return 1;
+}
+fn fields < T: copy >(value: Owned) -> i64 effects(filesystem) {
+    _ = value;
+    return 7;
+}
+fn handle < T: copy >(r: Open) -> i64 effects(filesystem) {
+    match r {
+        Open.ok(file) => {
+            return fields::< bool >(new Owned {
+                file: forward::< bool >(file),
+                code: 7
+            });
+        },
+        Open.err(code) => {
+            return code;
+        }
+    }
+}
+fn main(fs: filesystem_cap) -> i64 {
+    let first = handle::< bool >(acquire_resource<Open>(fs, new [0]u8[]));
+    match acquire_resource<Open>(fs, new [0]u8[]) {
+        Open.ok(file) => {
+            return first + drop::< bool >(file);
+        },
+        Open.err(code) => {
+            return code;
+        }
+    }
+}

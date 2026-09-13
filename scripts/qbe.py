@@ -13,11 +13,25 @@ import sys
 import tempfile
 import time
 
-from native import publish
 from qbe_embed import library_wrapper
 from qbe_host import source as host_source
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def publish(candidate, output):
+    """Keep identical executable files; atomically replace only a complete build."""
+    if output.is_file() and os.access(output, os.X_OK):
+        if candidate.stat().st_size == output.stat().st_size:
+            with candidate.open('rb') as fresh, output.open('rb') as old:
+                while True:
+                    chunk = fresh.read(65536)
+                    if chunk != old.read(65536):
+                        break
+                    if not chunk:
+                        return False
+    os.replace(candidate, output)
+    return True
 
 
 def digest_file(path):
