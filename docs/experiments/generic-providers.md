@@ -1,8 +1,8 @@
 # Provider operations in generic bodies
 
 Generic bodies now support clock/random reads, bounded environment lookup,
-filesystem/network acquisition and completion, capability attenuation, fixed-byte
-resource I/O and I/O through caller-supplied slices. Concrete result schemas and
+filesystem/network acquisition and completion, capability attenuation and
+fixed-byte resource I/O. Concrete result schemas and
 capability types are checked before instantiation, including for uncalled templates.
 
 Clock success is `i64`, random success is `u64`, and both use `i64` errors.
@@ -41,14 +41,11 @@ permission attenuation and caller-supplied slices. Sanitizers and allocation
 injection check cleanup and provider trace agreement. The provider builder fixture
 is selected explicitly so its expectation does not depend on source-list order.
 
-`examples/generic-provider-slices.my` takes explicit filesystem authority and uses
-a caller-owned byte array. Its result is the reported read length plus write length,
-so the numerical result depends on the selected provider's partial I/O behavior.
+The caller-supplied slice cases above were retired with the explicit storage tier
+on 2026-09-13; generic resource I/O now uses fixed byte arrays.
 
 ## Remaining work
 
-Local arena/reset scopes and constructing buffer/array views inside templates still
-need abstract origin, lifetime and borrowing rules. Existing caller-supplied slices
-and lexical reborrows remain distinct from those pending local view operations.
-Structural generic types, generic codec constraints, public generic tooling, source
-byte serialization and the remaining roadmap tracks remain open.
+Structural generic types, generic codec constraints, public generic tooling and the
+remaining roadmap tracks remain open. The arena/reset, buffer view and borrowing
+tracks this section once named were removed with the explicit storage tier.

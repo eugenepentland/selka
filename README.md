@@ -332,8 +332,6 @@ preserve record, array and enum-table snapshots.
 now retain exact payload types and exhaustive cases.
 [Concrete generic results](docs/experiments/generic-results.md) now enforce transfers,
 handling, propagation and obligations across control-flow paths.
-[Generic partial fields](docs/experiments/generic-fields.md) now track remaining
-result obligations and reject mismatched field moves across those paths.
 [Generic provider operations](docs/experiments/generic-providers.md) now retain
 capability, result and effect contracts.
 [Generic fixed arrays](docs/experiments/generic-arrays.md) now support `[N]T`

@@ -655,8 +655,8 @@ the other unfinished roadmap tracks.
 Generated C now offers `mylang_native_run_v1` with explicit providers and budgets,
 a scalar entry result, bounded located traps and returning host failures. Every
 invocation releases guest storage; repeated calls reset state, and overlapping
-calls return Busy. `scripts/native.py --library` builds a shared library while
-preserving atomic and unchanged-output publication. See
+calls return Busy. The removed `scripts/native.py --library` built a shared library
+while preserving atomic and unchanged-output publication. See
 `docs/legacy/experiments/native-embedding.md` for the public C header contract.
 
 Focused acceptance passed 24 host programs across -O0/-O2 with undefined-behavior
