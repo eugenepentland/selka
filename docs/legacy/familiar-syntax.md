@@ -1,5 +1,9 @@
 # Legacy familiar application syntax
 
+> **Removed on 2026-09-13.** This page describes the brace dialect, which the
+> compiler no longer accepts. See [the language guide](../python-syntax.md) for
+> the surface that replaced it.
+
 New code should use the [Python-style guide](python-syntax.md). This page documents the compatible brace spelling.
 
 

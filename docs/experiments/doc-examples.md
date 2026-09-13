@@ -122,13 +122,13 @@ when every implemented feature gained a documented example, which
 | `docs/experiments/plain-json-ergonomics.md` | literal arguments | fragment: statements without their enclosing function or document |
 | `docs/experiments/plain-json-ergonomics.md` | document queries | fragment: statements without their enclosing function or document |
 | `docs/experiments/source-codecs.md` | codec match | fragment: statements without the `Positive` domain and `Wire` declarations |
-| `docs/familiar-syntax.md` | record and list intro | known-wrong example: `E_SYNTAX` rejects the trailing comma after this struct declaration's last field, though calls and record construction accept one; the rest of the example returns 42 |
+| `docs/legacy/familiar-syntax.md` | record and list intro | known-wrong example: `E_SYNTAX` rejects the trailing comma after this struct declaration's last field, though calls and record construction accept one; the rest of the example returns 42 |
 
 Every fragment above is a candidate for a later documentation rewrite: completing one
 into a whole program removes its `skip` directive and adds it to the executed set. The
 `removed feature` row is different in kind: it is a block in a dated record whose syntax
 the language no longer has, kept for the history rather than rewritten.
-The `docs/familiar-syntax.md` entry is different again, because the example and the
+The `docs/legacy/familiar-syntax.md` entry is different again, because the example and the
 prose around it disagree with the compiler; resolving that needs a language or prose
 decision rather than an edit to the block.
 

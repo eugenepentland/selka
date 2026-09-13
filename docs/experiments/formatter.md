@@ -1,67 +1,57 @@
 # T: canonical source formatter
 
 Status: implemented as `fmt`, with `fmt --check` for verification. The formatter
-parses syntax, formats existing token spellings, and preserves line comments in
-order and in their original gaps between tokens. It does not type-check, lower,
-execute, reorder declarations, simplify expressions, or modify files itself.
+parses syntax and returns the accepted program unchanged. It does not type-check,
+lower, execute, reorder declarations, simplify expressions, or modify files itself.
 
 ```sh
 zig build run -- fmt examples/records.my
 zig build run -- fmt examples/records.my --check
 ```
 
-Normal mode writes formatted source to stdout and exits 0. Check mode emits no
-source, exits 0 for canonical input, and exits 1 with `formatting differs` otherwise.
+Normal mode writes the source to stdout and exits 0. Check mode emits no source,
+exits 0 for canonical input, and exits 1 with `formatting differs` otherwise.
 Syntax errors exit 1 with source diagnostics; usage and host failures exit 2. The
 check option is fmt-only and accepted once. Input files retain their original bytes.
 
 ## Format contract
 
-The single style uses four spaces per brace level, LF line endings, a final newline
-for nonempty output, statement/block line breaks, and consistent token spacing.
-Empty braces remain compact; record/variant fields and match arms break at commas
-inside braces. Commas inside parentheses, brackets, and builtin type arguments stay
-inline. Builtin type arguments remain compact, while comparison operators are
-spaced. Numeric spelling, punctuation, parentheses, and token order are preserved.
-No trailing comma is added and no optional syntax is removed.
+Indentation is syntax on this surface. A suite opens at the `:` that ends its line
+and closes at the dedent that leaves it, so the layout of a program the parser
+accepts already is that program's canonical form: four spaces per level, LF line
+endings, comments in their own gaps, blank lines where the author put them.
+Reprinting from tokens could only move bytes that carry meaning, so `fmt` returns
+what it read and `fmt --check` succeeds on everything that parses.
 
-Line comments keep their content, including trailing spaces, with CRLF line endings
-normalized to LF. A comment that follows a token on the same original line remains
-inline; standalone comments remain standalone. Each stays between the same pair of
-source tokens. Blank lines and arbitrary whitespace are normalized rather than
-preserved. Whitespace-only input becomes empty; comment-only input is accepted.
-
-Formatting is idempotent. There is no width-based reflow or configurable competing
-style. Long lines remain visible to the separate advisory quality report. Formatting
-must not split or restructure a coherent expression merely to satisfy a metric.
+This is a narrower contract than a brace language's formatter, and deliberately so.
+There is no competing style to settle, no width-based reflow, and no configuration.
+Long lines remain visible to the separate advisory quality report.
 
 ## Syntax versus semantic work
 
-Compilation now exposes a cached parse stage. Both checking and formatting reuse
-its owned tokens and syntax. Formatting does not require main, valid names/types,
-or satisfied ownership/effect rules; this allows formatting code while it is being
+Compilation exposes a cached parse stage. Both checking and formatting reuse its
+owned tokens and syntax. Formatting does not require main, valid names/types, or
+satisfied ownership/effect rules; this allows formatting code while it is being
 written. Invalid syntax still rejects formatting, rather than guessing a repair.
 A formatted file can still fail semantic checking for its original reason.
 
-For valid syntax, emitting each original token spelling in order and retaining each
-comment's token gap preserves the parser's input meaning. Token-level round-trip
-tests verify this invariant separately from checking and execution. New syntax or
-comment forms must extend the formatter and its fixture coverage.
+`fmt-module` applies the same rule to a module file, parsing the header, imports
+and exports without loading the imported modules, so an unresolved draft still
+formats.
 
 ## Acceptance evidence
 
-`src/formatter_test.zig` covers exact output with inline/standalone/trailing comments,
-CRLF normalization, unchanged token tags and spelling, comment order, idempotence,
-arrays/type arguments/operators, empty/comment-only inputs, syntax-only formatting,
-syntax failures, execution of a formatted program, and every allocation failure
-through parsing/formatting/round trips. Allocating-writer failures are consistently
-reported as OutOfMemory, with request and output storage released.
+`src/formatter_test.zig` covers the byte-for-byte round trip with inline,
+standalone and trailing comments, idempotence, empty and comment-only inputs,
+syntax-only formatting, syntax failures, execution of a formatted program, module
+headers with unresolved drafts, and every allocation failure through parsing and
+formatting. Allocating-writer failures are consistently reported as OutOfMemory,
+with request and output storage released.
 
-Actual CLI tests verify stdout/check behavior, unchanged-file check success,
-formatting differences, duplicate/wrong-command options, and syntax diagnostics.
-All 32 semantically valid language CLI fixtures are formatted, checked again, and
-verified idempotent, covering aggregates/domains/variants/tables, results, borrowing,
-owned buffers, effects/capabilities, resource array/slice I/O, source pool graphs, lexical arenas, and typed arena reset.
+CLI tests verify stdout and check behavior, unchanged-file check success,
+duplicate and wrong-command options, and syntax diagnostics. Every semantically
+valid language CLI fixture is formatted, checked again, and verified idempotent.
 
-[The project-verification driver](verification-driver.md) is now implemented. Formatter checks can participate
-in that driver without becoming source type-validity rules or runtime coverage.
+[The project-verification driver](verification-driver.md) is implemented. Formatter
+checks can participate in that driver without becoming source type-validity rules
+or runtime coverage.

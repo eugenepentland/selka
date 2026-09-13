@@ -1,5 +1,9 @@
 # Historical semantics checkpoints
 
+> **Removed on 2026-09-13.** This page describes the brace dialect, which the
+> compiler no longer accepts. See [the language guide](../python-syntax.md) for
+> the surface that replaced it.
+
 This file preserves successive implementation checkpoints, beginning with M0–M5
 on 2026-09-05. Early restrictions below were superseded by later extensions.
 Use [the current language reference](current-language.md) and `mylang --features`

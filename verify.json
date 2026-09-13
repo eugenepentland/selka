@@ -129,8 +129,8 @@
     {
       "id": "semantics-link",
       "kind": "spec",
-      "path": "docs/semantics.md",
-      "contains": "# Implemented semantics"
+      "path": "docs/legacy/semantics.md",
+      "contains": "# Historical semantics checkpoints"
     },
     {
       "id": "quality",

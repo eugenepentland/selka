@@ -580,7 +580,7 @@ Create these modules as the corresponding milestone needs them; empty scaffoldin
 | `test/fixtures/` | Accepted, rejected, and trapping source programs |
 | `test/integration.zig` | CLI fixture runner |
 | `examples/` | Small programs users can edit and run |
-| `docs/semantics.md` | Rules actually implemented |
+| `docs/legacy/semantics.md` | Rules each milestone implemented |
 | `README.md` | Exact Zig version, commands, limitations, next milestone |
 
 Keep the dependency direction simple: CLI orchestrates compilation and VM execution; lowering consumes typed nodes; the VM consumes bytecode and source metadata. The VM should not resolve names or ask the parser what an expression means.
@@ -782,7 +782,7 @@ Start with M0 and M1 only. This is a suitable instruction to give an implementat
 
 > Create a Zig project for the scalar-language MVP in this plan. Use the pinned Guardian Zig snapshot, `0.17.0-dev.1683+5ceec001b`, and record its exact version. Implement the smallest complete pipeline that accepts `fn main() -> i64 { return 1 + 2 * 3; }`, checks it, lowers it to an inspectable instruction list, and executes it to produce `7`. Keep the untyped AST, typed representation, and VM instructions separate. Include source spans, a readable instruction dump, checked addition/subtraction/multiplication, and focused precedence and malformed-input tests. Do not add locals, branches, function calls, native code generation, or future-language syntax until this vertical slice works. Report the implemented subset, commands, and test results.
 
-After that works, proceed milestone by milestone. Keep any design change in `docs/semantics.md` and update the relevant fixtures in the same change.
+After that works, proceed milestone by milestone. Keep any design change in `SPEC.md` and update the relevant fixtures in the same change.
 
 ## 17. Implementation references and status
 

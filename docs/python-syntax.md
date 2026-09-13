@@ -1,8 +1,9 @@
-# Python-style application code
+# The language
 
-Use Python-style syntax for new application code. The compiler checks types before
-execution and manages ordinary lists, strings and dictionaries with tracing GC.
-There are no allocator arguments or ownership annotations in ordinary data code.
+This is the language guide. There is one syntax: `def`, `class`, indentation and
+`#` comments. The compiler checks types before execution and manages ordinary
+lists, strings and dictionaries with tracing GC. There are no allocator arguments
+or ownership annotations in ordinary data code.
 
 ```mylang
 # doc: expect 42
@@ -26,11 +27,17 @@ project with imports. The [schematic application](../src/schematic/guest/main.my
 larger example; its [instructions](../experiments/schematic/README.md) describe
 rendering and GC stress testing.
 
-Use `def`, `class`, four-space indentation, `#` comments, `True`, `False`, `None`,
-and `and`/`or`/`not`. Semicolons are unnecessary. Parenthesized expressions and
+Write `def`, `class`, four-space indentation, `#` comments, `True`, `False`,
+`None`, and `and`/`or`/`not`. A statement ends at its newline; a `;` separates two
+statements written on one line, as it does in Python. Parenthesized expressions and
 collection literals may continue across lines. Tabs in indentation are rejected.
 `pass` represents an empty suite. An omitted function return annotation means
 `None`; functions may end naturally or use bare `return`.
+
+Fixed-width conversions read like the numeric ones: `i64(x)`, `u8(x)` and their
+siblings convert with a runtime range check, as `int(x)` and `float(x)` do between
+`int`, `float` and `str`. Explicit type arguments are always square: `f[T](x)`,
+`Box[int](value=1)`, `todo[int]()`, `wrap[Metres](n)`.
 
 Assignments create mutable bindings and infer their types. An annotation is
 needed when inference is ambiguous: `children: list[Node] = []` or
@@ -270,11 +277,13 @@ In particular:
   have no step. Changing a list's length during iteration traps.
 - GC collections execute in the VM. Native GC roots and collection transport
   across host/JSON boundaries are not implemented.
-- Formatting validates Python source and preserves its layout and comments.
+- Formatting validates source and returns it unchanged: indentation already is
+  the canonical layout, so `fmt --check` accepts everything that parses.
 
 Byte-oriented code uses the managed `bytes` type; see
 [managed byte strings](bytes.md) for its literals, operations and conversions.
 
-Legacy brace syntax remains accepted for existing code and advanced API examples.
-The [historical familiar syntax](familiar-syntax.md) page describes that spelling;
-new application examples should follow this guide.
+A brace dialect — `fn`, `let`, `struct`, `new T { … }`, `alias::name`,
+`f::<T>(x)`, `cast<T>(x)`, `//` comments — was accepted until 2026-09-13 and is
+now rejected. [The removed-features index](legacy/README.md) records what each
+spelling became.

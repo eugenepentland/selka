@@ -1,6 +1,6 @@
 # Current language reference
 
-Start with the [Python-style application guide](python-syntax.md) for canonical syntax. This index also links advanced APIs and compatibility examples.
+Start with [the language guide](python-syntax.md). This index links the advanced APIs and the pages that describe them.
 
 The installed executable's `--features` JSON report gives its compiler identity,
 the pinned Zig toolchain, supported features, exclusions and backend coverage.
@@ -17,7 +17,7 @@ intend to use; historical counts are not current verification receipts.
 | Area | Supported surface | Executable example / restriction |
 | --- | --- | --- |
 | Values | `int`, binary64 `float`, booleans, managed Unicode strings/dictionaries/lists, byte literals, value records, checked Result/Option, domains/arrays, scalar constants and transparent aliases | [constants](module-constants.md), [aliases](type-aliases.md); [bounded scalar source evaluation](source-evaluation.md) |
-| Control flow | Indented if/elif/else, while, foreach/enumerate/range, break/continue and match/case | [range iteration](range-iteration.md), [match expressions](match-expressions.md); conservative outer ownership on loop exits |
+| Control flow | Indented if/elif/else, while, foreach/enumerate/range, break/continue and match/case | [range iteration](range-iteration.md), [matching a variant](match-expressions.md); conservative outer ownership on loop exits |
 | Generics | Functions and nominal records/unions/results/enums; structural field/operation contracts and const length parameters | [structural contracts](../examples/structural-constraints.my); [inferred call type arguments](generic-inference.md) |
 | Managed allocation | Shared growing lists and dictionaries, immutable strings, nonmoving tracing GC and cycle reclamation | [Managed memory](managed-memory.md); managed graph host/native boundaries remain excluded |
 | Managed arenas | `with arena() as name:` region blocks over ordinary managed objects, bulk release, `escape` copy-out, static and runtime escape checks | [Managed arenas](arenas.md); [runnable example](../examples/arena-managed/main.my); VM only, rejected by the QBE native backend |
@@ -35,7 +35,7 @@ intend to use; historical counts are not current verification receipts.
 | Execution | Typed bytecode VM; QBE native builds through `mylang build`, `emit-qbe` and `emit-project-qbe` | [native experiments](experiments/roadmap.md); [direct C imports](c-ffi.md) and [guest tests](experiments/guest-tests.md) describe the native route |
 
 The detailed [SPEC](../SPEC.md) and focused experiment references describe
-operation contracts and their tests. [semantics.md](semantics.md) preserves
+operation contracts and their tests. [legacy/semantics.md](legacy/semantics.md) preserves
 historical checkpoints and must not be read as one current feature inventory.
 
 Absent features include capturing closures, guest shared-memory threads, arbitrary
@@ -66,11 +66,11 @@ The [standard library guide](standard-library.md) lists the ten embedded modules
 
 Python-style procedures omit their return annotation or use `-> None`, bare `return`, and natural fallthrough; ordinary calls may stand alone only when returning unit. See [unit procedures](experiments/unit-procedures.md).
 
-Statements may end at a newline, `}`, or end of file. Semicolons remain valid and separate statements written on one line. A new line ends a completed expression unless a binary operator continues it. Multiline expressions may place binary operators at either end of the line; parentheses also allow multiline postfix calls and indexing. Use an explicit semicolon to end the previous statement when a following operator, such as unary minus, must not continue its expression. Module, import, export, and unbraced type declarations follow the same newline rule. The formatter preserves line boundaries.
+A statement ends at its newline, at the dedent that closes its suite, or at end of file. A `;` separates two statements written on one line, as it does in Python. A new line ends a completed expression; a delimiter continues it, so parentheses also allow multiline calls and indexing. Use an explicit `;` to end the previous statement when a following operator, such as unary minus, must not continue its expression. Module, import, export and type declarations follow the same newline rule.
 
-`()` is an alternative spelling for the unit type and unit value. `return` followed by a newline or closing brace returns unit. Postfix `expression?` propagates a failed result to the caller, with postfix precedence. Calls and parameter lists accept trailing commas.
+`None` and `()` both spell the unit type and unit value. `return` followed by a newline or a dedent returns unit. Postfix `expression?` propagates a failed result to the caller, with postfix precedence. Calls and parameter lists accept trailing commas.
 
-[Checked legacy migration](experiments/migration.md) rewrites brace-syntax sources into the canonical Python surface and reports every construct without a Python spelling.
+The brace dialect this language grew out of was removed on 2026-09-13, together with the `migrate` tool that converted it; [the removed-features index](legacy/README.md) records what each spelling became.
 
 ## Feature reference pages
 
@@ -82,7 +82,7 @@ section.
 
 Language surface:
 
-- [Python-style application code](python-syntax.md) — the canonical syntax, end to end
+- [The language](python-syntax.md) — the syntax, end to end
 - [Statements and bindings](statements.md), [functions and calls](functions.md)
 - [Records, unions and enums](records-and-unions.md), [results and options](results-and-options.md)
 - [Text and strings](text.md), [managed byte strings](bytes.md)

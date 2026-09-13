@@ -22,10 +22,11 @@ Expensive geometry can remain in Zig/C/Rust behind explicit typed wrappers.
 QBE is the only native backend. LLVM and a custom native backend remain future
 work.
 
-New application code uses [Python-style syntax](docs/python-syntax.md): `def`,
-indented blocks, ordinary assignments, `list[T]`, strings, dictionaries, and
-tracing GC. Static types and checked results remain explicit. See the
-[GC example](examples/gc-default/main.my) and [schematic entry](src/schematic/guest/main.my).
+The language reads like Python: `def`, `class`, indented blocks, ordinary
+assignments, `list[T]`, strings, dictionaries, and tracing GC — with static types
+and checked results kept explicit. [The language guide](docs/python-syntax.md)
+covers it; see the [GC example](examples/gc-default/main.my) and
+[schematic entry](src/schematic/guest/main.my).
 
 Current supported features and restrictions are indexed in the
 [current language reference](docs/current-language.md). Run `mylang --features`
@@ -265,7 +266,7 @@ Resource/capability operations and modules have subsequent implemented milestone
 below. Broader native interfaces, generic contracts, and other pending roadmap work
 are not yet complete.
 
-See [implemented semantics](docs/semantics.md) and [verification/progress](docs/progress.md).
+See [the language reference](docs/current-language.md) and [verification/progress](docs/progress.md); [historical checkpoints](docs/legacy/semantics.md) record what each milestone implemented.
 
 
 [Typed recoverable results](docs/experiments/results.md) now carry handling
