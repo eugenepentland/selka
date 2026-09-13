@@ -8,6 +8,9 @@ test {
     _ = @import("native_test_execute.zig");
     _ = @import("native_test_wire.zig");
 
+    _ = @import("doc_coverage.zig");
+    _ = @import("doc_coverage_command.zig");
+
     _ = @import("qbe_build_test.zig");
     _ = @import("qbe_build.zig");
     _ = @import("qbe_build_cache.zig");

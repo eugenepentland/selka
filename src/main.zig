@@ -6,7 +6,8 @@ const std = @import("std");
 const language = @import("mylang");
 const diagnostic_output = language.diagnostic_output;
 const Reporting = struct { print_result: bool = false, timings: bool = false, timings_json: bool = false, diagnostics: ?diagnostic_output.Format = null };
-const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--json] [--force]\n       mylang build <file.my> (-o <output> | --run) [--help]\n       mylang " ++
+const usage = "usage: mylang test <entry.my> [--filter GLOB] [--cases FILE] [--json] [--force]\n       mylang build <file.my> (-o <output> | --run) [--help]\n" ++
+    "       mylang doc-coverage [<repo-root>] (every implemented feature and standard export needs a documented example)\n       mylang " ++
     "<invoke-project|check-value-project|schema-project|input-module|check|run|dump-bytecode|di" ++
     "scover-duplicates|discover-project-duplicates|report-project-quality|report-quality|fmt|fm" ++
     "t-module|fmt-project|migrate|migrate-project|emit-qbe|emit-project-qbe|eval-project|list-modules|list-interfaces|list-" ++
@@ -77,6 +78,7 @@ fn dispatch(process: std.process.Init) !u8 {
     }
     if (args.len >= 2 and std.mem.eql(u8, args[1], "build")) return @import("qbe_build.zig").run(process, args[2..]);
     if (args.len >= 2 and std.mem.eql(u8, args[1], "test")) return @import("native_test_command.zig").run(process, args[2..]);
+    if (args.len >= 2 and std.mem.eql(u8, args[1], "doc-coverage")) return @import("doc_coverage_command.zig").run(process, args[2..]);
     const parsed = parseArgs(args[1..]) catch {
         try std.Io.File.stderr().writeStreamingAll(process.io, usage);
         return 2;

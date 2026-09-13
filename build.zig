@@ -472,6 +472,12 @@ pub fn build(b: *std.Build) void {
     docs_examples.setCwd(b.path("."));
     b.step("test-docs", "Execute every fenced documentation example").dependOn(&docs_examples.step);
     test_step.dependOn(&docs_examples.step);
+    const doc_coverage = b.addRunArtifact(exe);
+    doc_coverage.addArgs(&.{ "doc-coverage", "." });
+    doc_coverage.setCwd(b.path("."));
+    doc_coverage.has_side_effects = true;
+    b.step("test-doc-coverage", "Require a documented example for every feature and standard export").dependOn(&doc_coverage.step);
+    test_step.dependOn(&doc_coverage.step);
     const fmt = b.addFmt(.{ .paths = &.{ b.path("build.zig"), b.path("src"), b.path("tests"), b.path("test") }, .check = true });
     b.step("fmt-check", "Check canonical Zig formatting").dependOn(&fmt.step);
 }
