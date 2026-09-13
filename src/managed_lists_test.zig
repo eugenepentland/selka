@@ -105,7 +105,7 @@ test "managed bounds traps release all execution roots and backing" {
 }
 
 // spec: GC-SOURCE-6
-test "noalloc and nogc reject transitive managed allocation while permitting fixed-slot mutation" {
+test "noalloc rejects transitive managed allocation while permitting fixed-slot mutation" {
     for ([_][]const u8{ "noalloc", "noalloc" }) |bound| {
         const create_source = try std.fmt.allocPrint(t.allocator, "fn make()->List<i64>{{return [];}}" ++
             "fn constrained()->List<i64> {s}{{return make();}}fn main()->i64{{return 0;}}", .{bound});

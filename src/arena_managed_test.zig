@@ -507,7 +507,7 @@ test "escape copies arena objects once and shares older objects" {
 }
 
 // spec-case: ARENA-MANAGED-6
-test "ARENA-MANAGED-6 nogc still rejects arena allocation while entering a scope is free" {
+test "ARENA-MANAGED-6 noalloc still rejects arena allocation while entering a scope is free" {
     try reject(
         \\def grow() -> int:
         \\    items: list[int] = []
